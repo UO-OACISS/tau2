@@ -166,11 +166,11 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec ]
       then
         c_compiler=$myarg
       else
-      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC' and 'pgcc' "
+      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec' and 'pgcc' "
 #      exit 1
     fi
     shift
@@ -178,11 +178,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs' and 'pgCC' and 'FCC' "
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC' and 'guidec++' "
 #      exit 1
     fi
     shift
@@ -814,6 +814,13 @@ case $cxx_compiler in
       fixmakeargs="$fixmakeargs FUJITSU"
       ;;
 
+   guidec++)
+      echo "Default C++ compiler will be KAI KAP/Pro OpenMP guidec++ Compiler"
+      kai=yes
+      fixmakeargs="$fixmakeargs KAI GUIDE OPENMP"
+      tauoptions="${tauoptions}-guide"
+      ;;
+
    *)
       echo "ERROR Unknown C++ compiler"
       exit 1
@@ -1336,6 +1343,7 @@ fi
 if [ $openmp = yes ]
   then
     fixmakeargs="$fixmakeargs OPENMP"
+    tauoptions="${tauoptions}-openmp"
 fi
 
 if [ $dyninst = yes ]
