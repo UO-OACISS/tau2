@@ -18,6 +18,7 @@ Version 2.9 changes (from 2.8):
 6. Introduced TAU Java source instrumentation API.
 7. Added support for enabling and disabling group level instrumentation.
 8. Added support for PCL 2.0.
+9. Fixed tau_instrumentor for PDT 1.3 using SGI CC and examples.
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
