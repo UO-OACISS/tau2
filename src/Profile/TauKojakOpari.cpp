@@ -58,6 +58,10 @@ static int omp_fin_called = 0;
 
 extern "C" {
 /****************************/
+void pomp_finalize() {
+  POMP_Finalize();
+}
+
 void pomp_finalize_() {
   POMP_Finalize();
 }
@@ -71,6 +75,10 @@ void POMP_FINALIZE() {
 }
 
 /****************************/
+
+void pomp_init() {
+  POMP_Init();
+}
 
 void pomp_init_() {
   POMP_Init();
@@ -86,6 +94,10 @@ void POMP_INIT() {
 
 /****************************/
 
+void pomp_off() {
+  omp_tracing = 0;
+}
+
 void pomp_off_() {
   omp_tracing = 0;
 }
@@ -99,6 +111,10 @@ void POMP_OFF() {
 }
 
 /****************************/
+
+void pomp_on() {
+  omp_tracing = 1;
+}
 
 void pomp_on_() {
   omp_tracing = 1;
@@ -114,6 +130,10 @@ void POMP_ON() {
 
 /****************************/
 
+void pomp_atomic_enter(int* id) {
+  if ( omp_tracing ) POMP_Atomic_enter(pomp_rd_table[*id]);
+}
+
 void pomp_atomic_enter_(int* id) {
   if ( omp_tracing ) POMP_Atomic_enter(pomp_rd_table[*id]);
 }
@@ -126,6 +146,10 @@ void POMP_ATOMIC_ENTER(int* id) {
 }
 
 /****************************/
+
+void pomp_atomic_exit(int* id) {
+  if ( omp_tracing ) POMP_Atomic_exit(pomp_rd_table[*id]);
+}
 
 void pomp_atomic_exit_(int* id) {
   if ( omp_tracing ) POMP_Atomic_exit(pomp_rd_table[*id]);
@@ -141,6 +165,10 @@ void POMP_ATOMIC_EXIT(int* id) {
 
 /****************************/
 
+void pomp_barrier_enter(int* id) {
+  if ( omp_tracing ) POMP_Barrier_enter(pomp_rd_table[*id]);
+}
+
 void pomp_barrier_enter_(int* id) {
   if ( omp_tracing ) POMP_Barrier_enter(pomp_rd_table[*id]);
 }
@@ -154,6 +182,10 @@ void POMP_BARRIER_ENTER(int* id) {
 }
 
 /****************************/
+
+void pomp_barrier_exit(int* id) {
+  if ( omp_tracing ) POMP_Barrier_exit(pomp_rd_table[*id]);
+}
 
 void pomp_barrier_exit_(int* id) {
   if ( omp_tracing ) POMP_Barrier_exit(pomp_rd_table[*id]);
@@ -169,6 +201,10 @@ void POMP_BARRIER_EXIT(int* id) {
 
 /****************************/
 
+void pomp_critical_begin(int* id) {
+  if ( omp_tracing ) POMP_Critical_begin(pomp_rd_table[*id]);
+}
+
 void pomp_critical_begin_(int* id) {
   if ( omp_tracing ) POMP_Critical_begin(pomp_rd_table[*id]);
 }
@@ -182,6 +218,10 @@ void POMP_CRITICAL_BEGIN(int* id) {
 }
 
 /****************************/
+
+void pomp_critical_end(int* id) {
+  if ( omp_tracing ) POMP_Critical_end(pomp_rd_table[*id]);
+}
 
 void pomp_critical_end_(int* id) {
   if ( omp_tracing ) POMP_Critical_end(pomp_rd_table[*id]);
@@ -197,6 +237,10 @@ void POMP_CRITICAL_END(int* id) {
 
 /****************************/
 
+void pomp_critical_enter(int* id) {
+  if ( omp_tracing ) POMP_Critical_enter(pomp_rd_table[*id]);
+}
+
 void pomp_critical_enter_(int* id) {
   if ( omp_tracing ) POMP_Critical_enter(pomp_rd_table[*id]);
 }
@@ -210,6 +254,10 @@ void POMP_CRITICAL_ENTER(int* id) {
 }
 
 /****************************/
+
+void pomp_critical_exit(int* id) {
+  if ( omp_tracing ) POMP_Critical_exit(pomp_rd_table[*id]);
+}
 
 void pomp_critical_exit_(int* id) {
   if ( omp_tracing ) POMP_Critical_exit(pomp_rd_table[*id]);
@@ -225,6 +273,10 @@ void POMP_CRITICAL_EXIT(int* id) {
 
 /****************************/
 
+void pomp_do_enter(int* id) {
+  if ( omp_tracing ) POMP_For_enter(pomp_rd_table[*id]);
+}
+
 void pomp_do_enter_(int* id) {
   if ( omp_tracing ) POMP_For_enter(pomp_rd_table[*id]);
 }
@@ -238,6 +290,10 @@ void POMP_DO_ENTER(int* id) {
 }
 
 /****************************/
+
+void pomp_do_exit(int* id) {
+  if ( omp_tracing ) POMP_For_exit(pomp_rd_table[*id]);
+}
 
 void pomp_do_exit_(int* id) {
   if ( omp_tracing ) POMP_For_exit(pomp_rd_table[*id]);
@@ -253,6 +309,10 @@ void POMP_DO_EXIT(int* id) {
 
 /****************************/
 
+void pomp_master_begin(int* id) {
+  if ( omp_tracing ) POMP_Master_begin(pomp_rd_table[*id]);
+}
+
 void pomp_master_begin_(int* id) {
   if ( omp_tracing ) POMP_Master_begin(pomp_rd_table[*id]);
 }
@@ -266,6 +326,10 @@ void POMP_MASTER_BEGIN(int* id) {
 }
 
 /****************************/
+
+void pomp_master_end(int* id) {
+  if ( omp_tracing ) POMP_Master_end(pomp_rd_table[*id]);
+}
 
 void pomp_master_end_(int* id) {
   if ( omp_tracing ) POMP_Master_end(pomp_rd_table[*id]);
@@ -281,6 +345,10 @@ void POMP_MASTER_END(int* id) {
 
 /****************************/
 
+void pomp_parallel_begin(int* id) {
+  if ( omp_tracing ) POMP_Parallel_begin(pomp_rd_table[*id]);
+}
+
 void pomp_parallel_begin_(int* id) {
   if ( omp_tracing ) POMP_Parallel_begin(pomp_rd_table[*id]);
 }
@@ -294,6 +362,10 @@ void POMP_PARALLEL_BEGIN(int* id) {
 }
 
 /****************************/
+
+void pomp_parallel_end(int* id) {
+  if ( omp_tracing ) POMP_Parallel_end(pomp_rd_table[*id]);
+}
 
 void pomp_parallel_end_(int* id) {
   if ( omp_tracing ) POMP_Parallel_end(pomp_rd_table[*id]);
@@ -309,6 +381,10 @@ void POMP_PARALLEL_END(int* id) {
 
 /****************************/
 
+void pomp_parallel_fork(int* id) {
+  if ( omp_tracing ) POMP_Parallel_fork(pomp_rd_table[*id]);
+}
+
 void pomp_parallel_fork_(int* id) {
   if ( omp_tracing ) POMP_Parallel_fork(pomp_rd_table[*id]);
 }
@@ -322,6 +398,10 @@ void POMP_PARALLEL_FORK(int* id) {
 }
 
 /****************************/
+
+void pomp_parallel_join(int* id) {
+  if ( omp_tracing ) POMP_Parallel_join(pomp_rd_table[*id]);
+}
 
 void pomp_parallel_join_(int* id) {
   if ( omp_tracing ) POMP_Parallel_join(pomp_rd_table[*id]);
@@ -337,6 +417,10 @@ void POMP_PARALLEL_JOIN(int* id) {
 
 /****************************/
 
+void pomp_section_begin(int* id) {
+  if ( omp_tracing ) POMP_Section_begin(pomp_rd_table[*id]);
+}
+
 void pomp_section_begin_(int* id) {
   if ( omp_tracing ) POMP_Section_begin(pomp_rd_table[*id]);
 }
@@ -350,6 +434,10 @@ void POMP_SECTION_BEGIN(int* id) {
 }
 
 /****************************/
+
+void pomp_section_end(int* id) {
+  if ( omp_tracing ) POMP_Section_end(pomp_rd_table[*id]);
+}
 
 void pomp_section_end_(int* id) {
   if ( omp_tracing ) POMP_Section_end(pomp_rd_table[*id]);
@@ -365,6 +453,10 @@ void POMP_SECTION_END(int* id) {
 
 /****************************/
 
+void pomp_sections_enter(int* id) {
+  if ( omp_tracing ) POMP_Sections_enter(pomp_rd_table[*id]);
+}
+
 void pomp_sections_enter_(int* id) {
   if ( omp_tracing ) POMP_Sections_enter(pomp_rd_table[*id]);
 }
@@ -378,6 +470,10 @@ void POMP_SECTIONS_ENTER(int* id) {
 }
 
 /****************************/
+
+void pomp_sections_exit(int* id) {
+  if ( omp_tracing ) POMP_Sections_exit(pomp_rd_table[*id]);
+}
 
 void pomp_sections_exit_(int* id) {
   if ( omp_tracing ) POMP_Sections_exit(pomp_rd_table[*id]);
@@ -393,6 +489,10 @@ void POMP_SECTIONS_EXIT(int* id) {
 
 /****************************/
 
+void pomp_single_begin(int* id) {
+  if ( omp_tracing ) POMP_Single_begin(pomp_rd_table[*id]);
+}
+
 void pomp_single_begin_(int* id) {
   if ( omp_tracing ) POMP_Single_begin(pomp_rd_table[*id]);
 }
@@ -406,6 +506,10 @@ void POMP_SINGLE_BEGIN(int* id) {
 }
 
 /****************************/
+
+void pomp_single_end(int* id) {
+  if ( omp_tracing ) POMP_Single_end(pomp_rd_table[*id]);
+}
 
 void pomp_single_end_(int* id) {
   if ( omp_tracing ) POMP_Single_end(pomp_rd_table[*id]);
@@ -421,6 +525,10 @@ void POMP_SINGLE_END(int* id) {
 
 /****************************/
 
+void pomp_single_enter(int* id) {
+  if ( omp_tracing ) POMP_Single_enter(pomp_rd_table[*id]);
+}
+
 void pomp_single_enter_(int* id) {
   if ( omp_tracing ) POMP_Single_enter(pomp_rd_table[*id]);
 }
@@ -434,6 +542,10 @@ void POMP_SINGLE_ENTER(int* id) {
 }
 
 /****************************/
+
+void pomp_single_exit(int* id) {
+  if ( omp_tracing ) POMP_Single_exit(pomp_rd_table[*id]);
+}
 
 void pomp_single_exit_(int* id) {
   if ( omp_tracing ) POMP_Single_exit(pomp_rd_table[*id]);
@@ -449,6 +561,10 @@ void POMP_SINGLE_EXIT(int* id) {
 
 /****************************/
 
+void pomp_workshare_enter(int* id) {
+  if ( omp_tracing ) POMP_Workshare_enter(pomp_rd_table[*id]);
+}
+
 void pomp_workshare_enter_(int* id) {
   if ( omp_tracing ) POMP_Workshare_enter(pomp_rd_table[*id]);
 }
@@ -462,6 +578,10 @@ void POMP_WORKSHARE_ENTER(int* id) {
 }
 
 /****************************/
+
+void pomp_workshare_exit(int* id) {
+  if ( omp_tracing ) POMP_Workshare_exit(pomp_rd_table[*id]);
+}
 
 void pomp_workshare_exit_(int* id) {
   if ( omp_tracing ) POMP_Workshare_exit(pomp_rd_table[*id]);
@@ -477,6 +597,10 @@ void POMP_WORKSHARE_EXIT(int* id) {
 
 /****************************/
 
+void pomp_begin(int* id) {
+  if ( omp_tracing ) POMP_Begin(pomp_rd_table[*id]);
+}
+
 void pomp_begin_(int* id) {
   if ( omp_tracing ) POMP_Begin(pomp_rd_table[*id]);
 }
@@ -490,6 +614,10 @@ void POMP_BEGIN(int* id) {
 }
 
 /****************************/
+
+void pomp_end(int* id) {
+  if ( omp_tracing ) POMP_End(pomp_rd_table[*id]);
+}
 
 void pomp_end_(int* id) {
   if ( omp_tracing ) POMP_End(pomp_rd_table[*id]);
@@ -505,6 +633,10 @@ void POMP_END(int* id) {
 
 /****************************/
 
+void pomp_flush_enter(int* id) {
+  if ( omp_tracing ) POMP_Flush_enter(pomp_rd_table[*id]);
+}
+
 void pomp_flush_enter_(int* id) {
   if ( omp_tracing ) POMP_Flush_enter(pomp_rd_table[*id]);
 }
@@ -518,6 +650,10 @@ void POMP_FLUSH_ENTER(int* id) {
 }
 
 /****************************/
+
+void pomp_flush_exit(int* id) {
+  if ( omp_tracing ) POMP_Flush_exit(pomp_rd_table[*id]);
+}
 
 void pomp_flush_exit_(int* id) {
   if ( omp_tracing ) POMP_Flush_exit(pomp_rd_table[*id]);
@@ -1244,8 +1380,8 @@ int  POMP_Test_nest_lock(omp_nest_lock_t *s) {
 
 /***************************************************************************
  * $RCSfile: TauKojakOpari.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2003/07/19 21:29:38 $
- * POOMA_VERSION_ID: $Id: TauKojakOpari.cpp,v 1.1 2003/07/19 21:29:38 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2003/07/19 21:47:19 $
+ * POOMA_VERSION_ID: $Id: TauKojakOpari.cpp,v 1.2 2003/07/19 21:47:19 sameer Exp $
  ***************************************************************************/
 
 
