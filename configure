@@ -1764,6 +1764,10 @@ EOF
     ret = MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
     return ret;
   }
+  int bar (MPI_Datatype type, MPI_Datatype *newtype)
+  {
+    return MPI_Type_dup(type, newtype);
+  }
 EOF
 
   cat <<EOF > mpi2iorequest.C
@@ -3210,6 +3214,7 @@ then
        echo "**************************************************"
      else
        cat ${tauroot}/tools/src/tau_compiler.sh | sed -e 's#/bin/bash#'$bashpath'#'  > ${tauroot}/${architecture}/bin/tau_compiler.sh
+       chmod +x ${tauroot}/${architecture}/bin/tau_compiler.sh
      fi
    else
      cp ${tauroot}/tools/src/tau_compiler.sh ${tauroot}/${architecture}/bin
