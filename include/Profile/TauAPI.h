@@ -60,8 +60,8 @@
         Profiler *timer = new Profiler(timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
         timer->Start(tau_tid);
 
-#define TAU_GLOBAL_TIMER_STOP()  int tau_threadid = RtsLayer::myThread(); \
-                Profiler::CurrentProfiler[tau_threadid]->Stop(tau_threadid);
+#define TAU_GLOBAL_TIMER_STOP()  {int tau_threadid = RtsLayer::myThread(); \
+                Profiler::CurrentProfiler[tau_threadid]->Stop(tau_threadid);}
 
 /* The above macros are for use with global timers in a multi-threaded application */
 
@@ -156,6 +156,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2001/07/05 20:07:45 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.10 2001/07/05 20:07:45 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 2001/07/16 21:41:41 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.11 2001/07/16 21:41:41 sameer Exp $ 
  ***************************************************************************/
