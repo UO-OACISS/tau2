@@ -363,7 +363,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			    }
 			    catch(Exception e){
 				//Display an error
-				JOptionPane.showMessageDialog(this, "An error occured whilst trying to save jRacy preferences.", "Error!"
+				JOptionPane.showMessageDialog(this, "An error occured whilst trying to save ParaProf preferences.", "Error!"
 							      ,JOptionPane.ERROR_MESSAGE);
 			    }
 			}
