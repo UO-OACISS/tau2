@@ -548,7 +548,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optCompileOpts="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
         -optLinkingOpts="$(TAU_MPI_LIBS) $(TAU_LIBS) $(TAU_CXXLIBS)"
 #############################################
-TAU_COMPILER=$(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/bin/taucompiler.sh $(TAUCOMPILEROPTS)
+TAU_COMPILER=$(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/bin/tau_compiler.sh $(TAUCOMPILEROPTS)
 #############################################
 # These options could be included in the application Makefile as 
 #CFLAGS        	= $(TAUDEFS) $(TAUINC)

@@ -2988,8 +2988,8 @@ then
   cp ${tauroot}/tools/src/contrib/junit.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauroot}/${architecture}/lib
   echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauroot}/${architecture}/lib"
-  cp ${tauroot}/tools/src/taucompiler.sh ${tauroot}/${architecture}/bin
-  echo "TAU: installed taucompiler.sh in ${tauroot}/${architecture}/bin"
+  cp ${tauroot}/tools/src/tau_compiler.sh ${tauroot}/${architecture}/bin
+  echo "TAU: installed tau_compiler.sh in ${tauroot}/${architecture}/bin"
 else
   if [ ! -d ${tauprefix} ]
   then
@@ -3035,8 +3035,8 @@ else
   cp ${tauroot}/tools/src/contrib/junit.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
   echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauprefix}/${architecture}/lib"
-  cp ${tauroot}/tools/src/taucompiler.sh ${tauprefix}/${architecture}/bin
-  echo "TAU: installed taucompiler.sh in ${tauprefix}/${architecture}/bin"
+  cp ${tauroot}/tools/src/tau_compiler.sh ${tauprefix}/${architecture}/bin
+  echo "TAU: installed tau_compiler.sh in ${tauprefix}/${architecture}/bin"
 fi
 
 
