@@ -4,17 +4,11 @@
   
   Title:      ParaProf
   Author:     Robert Bell
-  Description:  This class is the heart of Racy's static data system.
-  This class is rather an ongoing project.  Much work needs
-  to be done with respect to data format.
-  The use of tokenizers here could impact the performance
-  with large data sets, but for now, this will be sufficient.
-  The naming and creation of the tokenizers has been done mainly
-  to improve the readability of the code.
-          
-  It must also be noted that the correct funtioning of this
-  class is heavily dependent on the format of the pprof -d format.
-  It is NOT resistant to change in that format at all.
+  Description: The manner in which this class behaves is slightly different from its parent.
+               It behaves more as a container for its DataSession, than a setting for it. So,
+	       in a sense the roll is almost reverse (but not quite). This is a result of
+	       the fact that ParaProf must maintain the majority of its data itself, and as
+	       such, ParaProfTrial serves as the reference through which data is accessed.
 */
 
 package paraprof;
@@ -31,6 +25,11 @@ import dms.dss.*;
 public class ParaProfTrial extends Trial{
     public ParaProfTrial(){
 	super();}
+
+    public void initialize(Object obj){
+	dataSession = new TauPprofOutputSession();
+	dataSession.initialize(obj);
+    }
 
     public void setExperiment(ParaProfExperiment experiment){
 	this.experiment = experiment;}
@@ -204,8 +203,9 @@ public class ParaProfTrial extends Trial{
 	    sMW.setVisible(false);
 	}
     }
+    
     //####################################
-    //Functions that control the openning and closing of the static main window for
+    //Functions that control the opening and closing of the static main window for
     //this trial.
     //####################################
   
@@ -349,6 +349,7 @@ public class ParaProfTrial extends Trial{
     //####################################
     //Instance data.
     //####################################
+    TauPprofOutputSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     private Vector metrics = new Vector();

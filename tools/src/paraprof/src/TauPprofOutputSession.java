@@ -28,7 +28,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	DataSessionIterator
      * @see	Application
      */
-    public ListIterator getApplicationList(){}
+    public ListIterator getApplicationList(){
+	return null;}
 
     /**
      * Returns a ListIterator of Experiment objects
@@ -38,7 +39,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	Experiment
      * @see	DataSession#setApplication
      */
-    public ListIterator getExperimentList(){}
+    public ListIterator getExperimentList(){
+	return null;}
 
     /**
      * Returns a ListIterator of Trial objects
@@ -49,7 +51,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	DataSession#setApplication
      * @see	DataSession#setExperiment
      */
-    public ListIterator getTrialList(){}
+    public ListIterator getTrialList(){
+	return null;}
 
 
     /**
@@ -106,7 +109,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	DataSession#setContext
      * @see	DataSession#setThread
      */
-    public ListIterator getFunctions(){}
+    public ListIterator getFunctions(){
+	return null;}
 
     /**
      * Set the Function for this DataSession.  The DataSession object will maintain a reference to the Function referenced by the id.  To clear this reference, call setFunction(Function) with a null reference.
@@ -115,7 +119,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	Function
      * @see	DataSession#setFunction(Function)
      */
-    public Function setFunction(int id){}
+    public Function setFunction(int id){
+	return null;}
 
     /**
      * Returns the Function identified by the unique function id.
@@ -124,7 +129,8 @@ public class TauPprofOutputSession extends DataSession{
      * @return	Function object identified by the unique function id.
      * @see	Function
      */
-    public Function getFunction(int functionID){}
+    public Function getFunction(int functionID){
+	return null;}
 	
     /**
      * Returns a ListIterator of UserEvent objects.
@@ -139,7 +145,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	DataSession#setContext
      * @see	DataSession#setThread
      */
-    public ListIterator getUserEvents(){}
+    public ListIterator getUserEvents(){
+	return null;}
 
     /**
      * Set the UserEvent for this DataSession.  The DataSession object will maintain a reference to the UserEvent referenced by the id.  To clear this reference, call setUserEvent(UserEvent) with a null reference.
@@ -148,7 +155,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	UserEvent
      * @see	DataSession#setUserEvent(UserEvent)
      */
-    public UserEvent setUserEvent(int id){}
+    public UserEvent setUserEvent(int id){
+	return null;}
 
     /**
      * Returns the UserEvent identified by the unique user event id.
@@ -157,7 +165,8 @@ public class TauPprofOutputSession extends DataSession{
      * @return	UserEvent object identified by the unique user event id.
      * @see	UserEvent
      */
-    public UserEvent getUserEvent(int userEventID){}
+    public UserEvent getUserEvent(int userEventID){
+	return null;}
 	
     /**
      * Returns the FunctionData for this DataSession
@@ -173,7 +182,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	DataSession#setThread
      * @see	DataSession#setFunction
      */
-    public ListIterator getFunctionData(){}
+    public ListIterator getFunctionData(){
+	return null;}
 
     /**
      * Returns the UserEventData for this DataSession
@@ -189,7 +199,8 @@ public class TauPprofOutputSession extends DataSession{
      * @see	DataSession#setThread
      * @see	DataSession#setUserEvent
      */
-    public ListIterator getUserEventData(){}
+    public ListIterator getUserEventData(){
+	return null;}
 
     /**
      * Initialize the DataSession object.
@@ -210,7 +221,7 @@ public class TauPprofOutputSession extends DataSession{
 	    //Frequently used items.
 	    //######
 	    int metric = 0;
-	    GlobalMappingElement globalMappingElement;
+	    GlobalMappingElement globalMappingElement = null;
 
 	    int nodeID = -1;
 	    int contextID = -1;
@@ -291,10 +302,7 @@ public class TauPprofOutputSession extends DataSession{
 		    return;
 		}
 	    }
-	    //Now initialize the global mapping with the correct number of mappings for mapping position 0.
-	    if(firstRead)
-		initializeGlobalMapping(Integer.parseInt(tokenString), 0);
-      
+
 	    //Set the counter name.
 	    String counterName = getCounterName(inputString);
       
@@ -372,215 +380,193 @@ public class TauPprofOutputSession extends DataSession{
       
 	    while((inputString = br.readLine()) != null){
 		genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-          
-		//Check to See if the String begins with a t.
+
+		int lineType = -1;
+		/*
+		  (0) t-exclusive
+		  (1) t-inclusive
+		  (2) m-exclusive
+		  (3) m-inclusive
+		  (4) exclusive
+		  (5) inclusive
+		  (6) userevent
+		*/
+	    
+		//Determine the lineType.
 		if((inputString.charAt(0)) == 't'){
-		    mappingID = getMappingID(inputString);
-		    value = getValue(inputString);
-		    if(checkForExcInc(inputString, true, false)){
-			mappingNameString = getMappingName(inputString);
-			mappingID = getMappingID(inputString);
-			
-			if(firstRead){ 
-			    //Grab the group names.
-			    groupNamesString = getGroupNames(inputString);
-			    if(groupNamesString != null){
-				StringTokenizer st = new StringTokenizer(groupNamesString, " |");
-				while (st.hasMoreTokens()){
-				    String tmpString = st.nextToken();
-				    if(tmpString != null){
-					//The potential new group is added here.  If the group is already present, the the addGlobalMapping
-					//function will just return the already existing group id.  See the GlobalMapping class for more details.
-					int tmpInt = globalMapping.addGlobalMapping(tmpString, 1);
-					//The group is either already present, or has just been added in the above line.  Now, using the addGroup
-					//function, update this mapping to be a member of this group.
-					globalMapping.addGroup(mappingID, tmpInt, 0);
-					if((tmpInt != -1) && (ParaProf.debugIsOn))
-					    System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + mappingNameString);
-				    }    
-				}    
-			    }
-			}
-                  
-			if(firstRead){
-			    //Now that we have the mapping name and id, fill in the global mapping element
-			    //for this mapping.  I am assuming here that pprof's output lists only the
-			    //global ids.
-			    if(!(globalMapping.setMappingNameAt(mappingNameString, mappingID, 0)))
-				System.out.println("There was an error adding mapping to the global mapping");
-			}
-			globalMapping.setTotalExclusiveValueAt(metric, value, mappingID, 0);
-		    }
-		    else{
-			globalMapping.setTotalInclusiveValueAt(metric, value, mappingID, 0);
-		    }
-		} //End - Check to See if the String begins with a t.
-		//Check to See if the String begins with a mt.
+		    if(checkForExcInc(inputString, true, false))
+			lineType = 0;
+		    else
+			lineType = 1;
+		}
 		else if((inputString.charAt(0)) == 'm'){
-		    mappingID = getMappingID(inputString);
+		    if(checkForExcInc(inputString, true, false))
+			lineType = 2;
+		    else
+		       lineType = 3;
+		}
+		else if(checkForExcInc(inputString, true, true))
+		    lineType = 4;
+		else if(checkForExcInc(inputString, false, true)) 
+		    lineType = 5;
+		else if(noue(inputString))
+		    lineType = 6;
+	    
+		//Common things to grab
+		if((lineType!=6) && (lineType!=-1)){
 		    value = getValue(inputString);
 		    percentValue = getPercentValue(inputString);
-		    //Grab the correct global mapping element.
+		    mappingNameString = getMappingName(inputString);
+		    mappingID = globalMapping.addGlobalMapping(mappingNameString, 0);
 		    globalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
-                
-		    if(checkForExcInc(inputString, true, false)){
-			//Now set the values correctly.
-			if((this.getMaxMeanExclusiveValue(metric)) < value){
-			    this.setMaxMeanExclusiveValue(metric, value);}
-			if((this.getMaxMeanExclusivePercentValue(metric)) < percentValue){
-			    this.setMaxMeanExclusivePercentValue(metric, percentValue);}
-			
-			globalMappingElement.setMeanExclusiveValue(metric, value);
-			globalMappingElement.setMeanExclusivePercentValue(metric, percentValue);
+		}
+
+		switch(lineType){
+		case 0:
+		    if(firstRead){ 
+			//Grab the group names.
+			groupNamesString = getGroupNames(inputString);
+			if(groupNamesString != null){
+			    StringTokenizer st = new StringTokenizer(groupNamesString, " |");
+			    while (st.hasMoreTokens()){
+				String tmpString = st.nextToken();
+				if(tmpString != null){
+				    //The potential new group is added here.  If the group is already present, the the addGlobalMapping
+				    //function will just return the already existing group id.  See the GlobalMapping class for more details.
+				    int tmpInt = globalMapping.addGlobalMapping(tmpString, 1);
+				    //The group is either already present, or has just been added in the above line.  Now, using the addGroup
+				    //function, update this mapping to be a member of this group.
+				    globalMapping.addGroup(mappingID, tmpInt, 0);
+				    if((tmpInt != -1) && (ParaProf.debugIsOn))
+					System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + mappingNameString);
+				}    
+			    }    
+			}
 		    }
-		    else{
-			//Now set the values correctly.
-			if((this.getMaxMeanInclusiveValue(metric)) < value){
-			    this.setMaxMeanInclusiveValue(metric, value);}
-			if((this.getMaxMeanInclusivePercentValue(metric)) < percentValue){
-			    this.setMaxMeanInclusivePercentValue(metric, percentValue);}
-                  
-			globalMappingElement.setMeanInclusiveValue(metric, value);
-			globalMappingElement.setMeanInclusivePercentValue(metric, percentValue);
-                  
-			//Set number of calls/subroutines/usersec per call.
-			inputString = br.readLine();
-			this.setNumberOfCSUMean(metric, inputString, globalMappingElement);
-			globalMappingElement.setMeanValuesSet(true);
-		    }
-		}//End - Check to See if the String begins with a m.
-		//String does not begin with either an m or a t, the rest of the checks go here.
-		else{
-		    if(checkForExcInc(inputString, true, true)){ 
-			
-			//Stuff common to a non-first run and a first run.
-			//Grab the mapping ID.
-			mappingID = getMappingID(inputString);
-			//Grab the value.
-			value = getValue(inputString);
-			percentValue = getPercentValue(inputString);
-			
-			//Update the max values if required.
-			//Grab the correct global mapping element.
-			globalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
-			if((globalMappingElement.getMaxExclusiveValue(metric)) < value)
-			    globalMappingElement.setMaxExclusiveValue(metric, value);
-			if((globalMappingElement.getMaxExclusivePercentValue(metric)) < percentValue)
-			    globalMappingElement.setMaxExclusivePercentValue(metric, percentValue);
-			//Get the node,context,thread.
-			nodeID = getNCT(0,inputString, false);
-			contextID = getNCT(1,inputString, false);
-			threadID = getNCT(2,inputString, false);
-			
-			if(firstRead){
-			    //Now the complicated part.  Setting up the node,context,thread data.
-			    //These first two if statements force a change if the current node or
-			    //current context changes from the last, but without a corresponding change
-			    //in the thread number.  For example, if we have the sequence:
-			    //0,0,0 - 1,0,0 - 2,0,0 or 0,0,0 - 0,1,0 - 1,0,0.
-			    if(lastNodeID != nodeID){
-				lastContextID = -1;
-				lastThreadID = -1;
-			    }
-			    if(lastContextID != contextID){
-				lastThreadID = -1;
-			    }
-			    if(lastThreadID != threadID){
-				if(threadID == 0){
-				    //Create a new thread ... and set it to be the current thread.
-				    currentThread = new Thread(nodeID, contextID, threadID);
-				    //Add the correct number of global thread data elements.
-				    currentThread.initializeFunctionList(this.getNumberOfMappings());
-				    //Update the thread number.
-				    lastThreadID = threadID;
-				    
-				    //Set the appropriate global thread data element.
-				    Vector tmpVector = currentThread.getFunctionList();
-				    GlobalThreadDataElement tmpGTDE = null;
-				    
-				    tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
-				    
-				    if(tmpGTDE == null){
-					tmpGTDE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
-					currentThread.addFunction(tmpGTDE, mappingID);
-				    }
-				    tmpGTDE.setMappingExists();
-				    tmpGTDE.setExclusiveValue(metric, value);
-				    tmpGTDE.setExclusivePercentValue(metric, percentValue);
-				    //Now check the max values on this thread.
-				    if((currentThread.getMaxExclusiveValue(metric)) < value)
-					currentThread.setMaxExclusiveValue(metric, value);
-				    if((currentThread.getMaxExclusivePercentValue(metric)) < value)
-					currentThread.setMaxExclusivePercentValue(metric, percentValue);
-				    
-				    //Check to see if the context is zero.
-				    if(contextID == 0){
-					//Create a new context ... and set it to be the current context.
-					currentContext = new Context(nodeID, contextID);
-					//Add the current thread
-					currentContext.addThread(currentThread);
-					
-					//Create a new server ... and set it to be the current server.
-					currentNode = new Node(nodeID);
-					//Add the current context.
-					currentNode.addContext(currentContext);
-					//Add the current server.
-					this.nodes.addElement(currentNode);
-					
-					//Update last context and last node.
-					lastContextID = contextID;
-					lastNodeID = nodeID;
-				    }
-				    else{
-					//Context number is not zero.  Create a new context ... and set it to be current.
-					currentContext = new Context(nodeID, contextID);
-					//Add the current thread
-					currentContext.addThread(currentThread);
-					
-					//Add the current context.
-					currentNode.addContext(currentContext);
-					
-					//Update last context and last node.
-					lastContextID = contextID;
-				    }
+		    globalMapping.setTotalExclusiveValueAt(metric, value, mappingID, 0);
+		    break;
+		case 1:
+		    globalMapping.setTotalInclusiveValueAt(metric, value, mappingID, 0);
+		    break;
+		case 2:
+		    //Now set the values correctly.
+		    if((this.getMaxMeanExclusiveValue(metric)) < value){
+			this.setMaxMeanExclusiveValue(metric, value);}
+		    if((this.getMaxMeanExclusivePercentValue(metric)) < percentValue){
+			this.setMaxMeanExclusivePercentValue(metric, percentValue);}
+		    
+		    globalMappingElement.setMeanExclusiveValue(metric, value);
+		    globalMappingElement.setMeanExclusivePercentValue(metric, percentValue);
+		    break;
+		case 3:
+		    //Now set the values correctly.
+		    if((this.getMaxMeanInclusiveValue(metric)) < value){
+			this.setMaxMeanInclusiveValue(metric, value);}
+		    if((this.getMaxMeanInclusivePercentValue(metric)) < percentValue){
+			this.setMaxMeanInclusivePercentValue(metric, percentValue);}
+		    
+		    globalMappingElement.setMeanInclusiveValue(metric, value);
+		    globalMappingElement.setMeanInclusivePercentValue(metric, percentValue);
+		    
+		    //Set number of calls/subroutines/usersec per call.
+		    inputString = br.readLine();
+		    this.setNumberOfCSUMean(metric, inputString, globalMappingElement);
+		    globalMappingElement.setMeanValuesSet(true);
+		    break;
+		case 4:
+		    if((globalMappingElement.getMaxExclusiveValue(metric)) < value)
+			globalMappingElement.setMaxExclusiveValue(metric, value);
+		    if((globalMappingElement.getMaxExclusivePercentValue(metric)) < percentValue)
+			globalMappingElement.setMaxExclusivePercentValue(metric, percentValue);
+		    //Get the node,context,thread.
+		    nodeID = getNCT(0,inputString, false);
+		    contextID = getNCT(1,inputString, false);
+		    threadID = getNCT(2,inputString, false);
+		    
+		    if(firstRead){
+			//Now the complicated part.  Setting up the node,context,thread data.
+			//These first two if statements force a change if the current node or
+			//current context changes from the last, but without a corresponding change
+			//in the thread number.  For example, if we have the sequence:
+			//0,0,0 - 1,0,0 - 2,0,0 or 0,0,0 - 0,1,0 - 1,0,0.
+			if(lastNodeID != nodeID){
+			    lastContextID = -1;
+			    lastThreadID = -1;
+			}
+			if(lastContextID != contextID){
+			    lastThreadID = -1;
+			}
+			if(lastThreadID != threadID){
+			    if(threadID == 0){
+				//Create a new thread ... and set it to be the current thread.
+				currentThread = new Thread(nodeID, contextID, threadID);
+				//Add the correct number of global thread data elements.
+				currentThread.initializeFunctionList(this.getNumberOfMappings());
+				//Update the thread number.
+				lastThreadID = threadID;
+				
+				//Set the appropriate global thread data element.
+				Vector tmpVector = currentThread.getFunctionList();
+				GlobalThreadDataElement tmpGTDE = null;
+				
+				tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
+				
+				if(tmpGTDE == null){
+				    tmpGTDE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
+				    currentThread.addFunction(tmpGTDE, mappingID);
 				}
-				else{
-				    //Thread number is not zero.  Create a new thread ... and set it to be the current thread.
-				    currentThread = new Thread(nodeID, contextID, threadID);
-				    //Add the correct number of global thread data elements.
-				    currentThread.initializeFunctionList(this.getNumberOfMappings());
-				    //Update the thread number.
-				    lastThreadID = threadID;
-				    
-				    //Not thread changes.  Just set the appropriate global thread data element.
-				    Vector tmpVector = currentThread.getFunctionList();
-				    GlobalThreadDataElement tmpGTDE = null;
-				    tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
-				    				    
-				    if(tmpGTDE == null){
-					tmpGTDE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
-					currentThread.addFunction(tmpGTDE, mappingID);
-				    }
-				    
-				    tmpGTDE.setMappingExists();
-				    tmpGTDE.setExclusiveValue(metric, value);
-				    tmpGTDE.setExclusivePercentValue(metric, percentValue);
-				    //Now check the max values on this thread.
-				    if((currentThread.getMaxExclusiveValue(metric)) < value)
-					currentThread.setMaxExclusiveValue(metric, value);
-				    if((currentThread.getMaxExclusivePercentValue(metric)) < value)
-					currentThread.setMaxExclusivePercentValue(metric, percentValue);
-				    
+				tmpGTDE.setMappingExists();
+				tmpGTDE.setExclusiveValue(metric, value);
+				tmpGTDE.setExclusivePercentValue(metric, percentValue);
+				//Now check the max values on this thread.
+				if((currentThread.getMaxExclusiveValue(metric)) < value)
+				    currentThread.setMaxExclusiveValue(metric, value);
+				if((currentThread.getMaxExclusivePercentValue(metric)) < value)
+				    currentThread.setMaxExclusivePercentValue(metric, percentValue);
+				
+				//Check to see if the context is zero.
+				if(contextID == 0){
+				    //Create a new context ... and set it to be the current context.
+				    currentContext = new Context(nodeID, contextID);
 				    //Add the current thread
 				    currentContext.addThread(currentThread);
+				    
+				    //Create a new server ... and set it to be the current server.
+				    currentNode = new Node(nodeID);
+				    //Add the current context.
+				    currentNode.addContext(currentContext);
+				    //Add the current server.
+				    this.nodes.addElement(currentNode);
+				    
+				    //Update last context and last node.
+				    lastContextID = contextID;
+				    lastNodeID = nodeID;
+				}
+				else{
+				    //Context number is not zero.  Create a new context ... and set it to be current.
+				    currentContext = new Context(nodeID, contextID);
+				    //Add the current thread
+				    currentContext.addThread(currentThread);
+				    
+				    //Add the current context.
+				    currentNode.addContext(currentContext);
+				    
+				    //Update last context and last node.
+				    lastContextID = contextID;
 				}
 			    }
 			    else{
+				//Thread number is not zero.  Create a new thread ... and set it to be the current thread.
+				currentThread = new Thread(nodeID, contextID, threadID);
+				//Add the correct number of global thread data elements.
+				currentThread.initializeFunctionList(this.getNumberOfMappings());
+				//Update the thread number.
+				lastThreadID = threadID;
+				
 				//Not thread changes.  Just set the appropriate global thread data element.
 				Vector tmpVector = currentThread.getFunctionList();
 				GlobalThreadDataElement tmpGTDE = null;
 				tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
-				
 				
 				if(tmpGTDE == null){
 				    tmpGTDE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
@@ -593,131 +579,142 @@ public class TauPprofOutputSession extends DataSession{
 				//Now check the max values on this thread.
 				if((currentThread.getMaxExclusiveValue(metric)) < value)
 				    currentThread.setMaxExclusiveValue(metric, value);
-				if((currentThread.getMaxExclusivePercentValue(metric)) < percentValue)
+				if((currentThread.getMaxExclusivePercentValue(metric)) < value)
 				    currentThread.setMaxExclusivePercentValue(metric, percentValue);
+				
+				//Add the current thread
+				currentContext.addThread(currentThread);
 			    }
 			}
 			else{
-			    Thread thread = this.getThread(nodeID,contextID,threadID);
-			    GlobalThreadDataElement tmpGTDE = thread.getFunction(mappingID);
+			    //Not thread changes.  Just set the appropriate global thread data element.
+			    Vector tmpVector = currentThread.getFunctionList();
+			    GlobalThreadDataElement tmpGTDE = null;
+			    tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
+			    
+			    
+			    if(tmpGTDE == null){
+				tmpGTDE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
+				currentThread.addFunction(tmpGTDE, mappingID);
+			    }
+			    
+			    tmpGTDE.setMappingExists();
 			    tmpGTDE.setExclusiveValue(metric, value);
 			    tmpGTDE.setExclusivePercentValue(metric, percentValue);
-			    if((thread.getMaxExclusiveValue(metric)) < value)
-				thread.setMaxExclusiveValue(metric, value);
-			    if((thread.getMaxExclusivePercentValue(metric)) < percentValue)
-				thread.setMaxExclusivePercentValue(metric, percentValue);
+			    //Now check the max values on this thread.
+			    if((currentThread.getMaxExclusiveValue(metric)) < value)
+				currentThread.setMaxExclusiveValue(metric, value);
+			    if((currentThread.getMaxExclusivePercentValue(metric)) < percentValue)
+				currentThread.setMaxExclusivePercentValue(metric, percentValue);
 			}
 		    }
-		    else if(checkForExcInc(inputString, false, true)){
-			//Grab the mapping ID.
-			mappingID = getMappingID(inputString);
-			//Grab the value.
-			value = getValue(inputString);
-			percentValue = getPercentValue(inputString);
-			
-			//Update the max values if required.
-			//Grab the correct global mapping element.
-			globalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
-			
-			if((globalMappingElement.getMaxInclusiveValue(metric)) < value)
-			    globalMappingElement.setMaxInclusiveValue(metric, value);
-			
-			if((globalMappingElement.getMaxInclusivePercentValue(metric)) < percentValue)
-			    globalMappingElement.setMaxInclusivePercentValue(metric, percentValue);
-			
-			//Print out the node,context,thread.
-			nodeID = getNCT(0,inputString, false);
-			contextID = getNCT(1,inputString, false);
-			threadID = getNCT(2,inputString, false);
+		    else{
 			Thread thread = this.getThread(nodeID,contextID,threadID);
 			GlobalThreadDataElement tmpGTDE = thread.getFunction(mappingID);
-			
-			tmpGTDE.setInclusiveValue(metric, value);
-			tmpGTDE.setInclusivePercentValue(metric, percentValue);
-			if((thread.getMaxInclusiveValue(metric)) < value)
-			    thread.setMaxInclusiveValue(metric, value);
-			if((thread.getMaxInclusivePercentValue(metric)) < percentValue)
-			    thread.setMaxInclusivePercentValue(metric, percentValue);
-			
-			//Get the number of calls and number of sub routines
-			inputString = br.readLine();
-			this.setNumberOfCSU(metric, inputString, globalMappingElement, thread, tmpGTDE);
+			tmpGTDE.setExclusiveValue(metric, value);
+			tmpGTDE.setExclusivePercentValue(metric, percentValue);
+			if((thread.getMaxExclusiveValue(metric)) < value)
+			    thread.setMaxExclusiveValue(metric, value);
+			if((thread.getMaxExclusivePercentValue(metric)) < percentValue)
+			    thread.setMaxExclusivePercentValue(metric, percentValue);
 		    }
-		    else if(noue(inputString)){
-			//Just ignore the string if this is not the first check.
-			//Assuming is that user events do not change for each counter value.
-			if(firstRead){
-			    //The first time a user event string is encountered, get the number of user events and 
-			    //initialize the global mapping for mapping position 2.
-			    if(!(userEventsPresent())){
-				//Get the number of user events.
-				numberOfUserEvents = getNumberOfUserEvents(inputString);
-				this.setNumberOfUserEvents(numberOfUserEvents);
-				initializeGlobalMapping(numberOfUserEvents, 2);
-				if(ParaProf.debugIsOn){
-				    System.out.println("The number of user events defined is: " + numberOfUserEvents);
-				    System.out.println("Initializing mapping selection 2 (The loaction of the user event mapping) for " +
-						       numberOfUserEvents + " mappings.");
-				}
-			    } 
+		case 5:
+		    if((globalMappingElement.getMaxInclusiveValue(metric)) < value)
+			globalMappingElement.setMaxInclusiveValue(metric, value);
+		    
+		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < percentValue)
+			globalMappingElement.setMaxInclusivePercentValue(metric, percentValue);
+		    
+		    //Print out the node,context,thread.
+		    nodeID = getNCT(0,inputString, false);
+		    contextID = getNCT(1,inputString, false);
+		    threadID = getNCT(2,inputString, false);
+		    Thread thread = this.getThread(nodeID,contextID,threadID);
+		    GlobalThreadDataElement tmpGTDE = thread.getFunction(mappingID);
+		    
+		    tmpGTDE.setInclusiveValue(metric, value);
+		    tmpGTDE.setInclusivePercentValue(metric, percentValue);
+		    if((thread.getMaxInclusiveValue(metric)) < value)
+			thread.setMaxInclusiveValue(metric, value);
+		    if((thread.getMaxInclusivePercentValue(metric)) < percentValue)
+			thread.setMaxInclusivePercentValue(metric, percentValue);
+		    
+		    //Get the number of calls and number of sub routines
+		    inputString = br.readLine();
+		    this.setNumberOfCSU(metric, inputString, globalMappingElement, thread, tmpGTDE);
+		case 6:
+		    //Just ignore the string if this is not the first check.
+		    //Assuming is that user events do not change for each counter value.
+		    if(firstRead){
+			//The first time a user event string is encountered, get the number of user events and 
+			//initialize the global mapping for mapping position 2.
+			if(!(userEventsPresent())){
+			    //Get the number of user events.
+			    numberOfUserEvents = getNumberOfUserEvents(inputString);
+			    this.setNumberOfUserEvents(numberOfUserEvents);
+			    if(ParaProf.debugIsOn){
+				System.out.println("The number of user events defined is: " + numberOfUserEvents);
+				System.out.println("Initializing mapping selection 2 (The loaction of the user event mapping) for " +
+						   numberOfUserEvents + " mappings.");
+			    }
+			} 
+			
+			//The first line will be the user event heading ... skip it.
+			br.readLine();
+			//Now that we know how many user events to expect, we can grab that number of lines.
+			for(int j=0; j<numberOfUserEvents; j++){
+			    s1 = br.readLine();
+			    s2 = br.readLine();
+			    UserEventData ued = getData(s1,s2, userEventsPresent);
 			    
-			    //The first line will be the user event heading ... skip it.
-			    br.readLine();
-			    //Now that we know how many user events to expect, we can grab that number of lines.
-			    for(int j=0; j<numberOfUserEvents; j++){
-				s1 = br.readLine();
-				s2 = br.readLine();
-				UserEventData ued = getData(s1,s2, userEventsPresent);
-
-				//Initialize the user list for this thread.
-				if(j == 0){
-				    //Note that this works correctly because we process the user events in a different manner.
-				    //ALL the user events for each THREAD NODE are processed in the above for-loop.  Therefore,
-				    //the below for-loop is only run once on each THREAD NODE.
-
-				    Thread thread = this.getThread(nodeID,contextID,threadID);
-				    if(firstRead){
-					thread.initializeUsereventList(numberOfUserEvents);
-				    }
-				}
-				//Only need to set the name in the global mapping once.
-				if(!(userEventsPresent())){
-				    if(!(globalMapping.setMappingNameAt(ued.name, ued.id, 2)))
-					System.out.println("There was an error adding mapping to the global mapping");
-				}
-				if(ued.noc != 0){
-				    //Update the max values if required.
-				    //Grab the correct global mapping element.
-				    globalMappingElement = globalMapping.getGlobalMappingElement(ued.id, 2);
-				    if((globalMappingElement.getMaxUserEventNumberValue()) < ued.noc)
-					globalMappingElement.setMaxUserEventNumberValue(ued.noc);
-				    if((globalMappingElement.getMaxUserEventMinValue()) < ued.min)
-					globalMappingElement.setMaxUserEventMinValue(ued.min);
-				    if((globalMappingElement.getMaxUserEventMaxValue()) < ued.max)
-					globalMappingElement.setMaxUserEventMaxValue(ued.max);
-				    if((globalMappingElement.getMaxUserEventMeanValue()) < ued.mean)
-					globalMappingElement.setMaxUserEventMeanValue(ued.mean);
-				    
-				    GlobalThreadDataElement tmpGTDEUE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 2), true);
-				    tmpGTDEUE.setUserEventNumberValue(ued.noc);
-				    tmpGTDEUE.setUserEventMinValue(ued.min);
-				    tmpGTDEUE.setUserEventMaxValue(ued.max);
-				    tmpGTDEUE.setUserEventMeanValue(ued.mean);
-				    (this.getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, ued.id);
+			    //Initialize the user list for this thread.
+			    if(j == 0){
+				//Note that this works correctly because we process the user events in a different manner.
+				//ALL the user events for each THREAD NODE are processed in the above for-loop.  Therefore,
+				//the below for-loop is only run once on each THREAD NODE.
+				
+				if(firstRead){
+				    (this.getThread(nodeID,contextID,threadID)).initializeUsereventList(numberOfUserEvents);
 				}
 			    }
-			    //Now set the userEvents flag.
-			    setUserEventsPresent(true);
+
+			    int userEventID = globalMapping.addGlobalMapping(ued.name, 2);
+			    if(ued.noc != 0){
+				//Update the max values if required.
+				//Grab the correct global mapping element.
+				globalMappingElement = globalMapping.getGlobalMappingElement(userEventID, 2);
+				if((globalMappingElement.getMaxUserEventNumberValue()) < ued.noc)
+				    globalMappingElement.setMaxUserEventNumberValue(ued.noc);
+				if((globalMappingElement.getMaxUserEventMinValue()) < ued.min)
+				    globalMappingElement.setMaxUserEventMinValue(ued.min);
+				if((globalMappingElement.getMaxUserEventMaxValue()) < ued.max)
+				    globalMappingElement.setMaxUserEventMaxValue(ued.max);
+				if((globalMappingElement.getMaxUserEventMeanValue()) < ued.mean)
+				    globalMappingElement.setMaxUserEventMeanValue(ued.mean);
+				
+				GlobalThreadDataElement tmpGTDEUE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 2), true);
+				tmpGTDEUE.setUserEventNumberValue(ued.noc);
+				tmpGTDEUE.setUserEventMinValue(ued.min);
+				tmpGTDEUE.setUserEventMaxValue(ued.max);
+				tmpGTDEUE.setUserEventMeanValue(ued.mean);
+				(this.getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, ued.id);
+			    }
 			}
+			//Now set the userEvents flag.
+			setUserEventsPresent(true);
 		    }
+		default:
+		    ParaProf.systemError(null, null, "Unexpected line type - TPOS value: " + lineType);
+		    break;
 		}
+		   
 		//Increment the loop counter.
 		bSDCounter++;
 	    }
 	    
 	    //Close the file.
 	    br.close();
-
+	    
 	    if(ParaProf.debugIsOn){
 		System.out.println("The total number of threads is: " + this.getTotalNumberOfThreads());
 		System.out.println("The number of mappings is: " + this.getNumberOfMappings());
@@ -733,7 +730,7 @@ public class TauPprofOutputSession extends DataSession{
 		System.out.println("No callpath data found.");
 	    }
 	    System.out.println("Done - Processing callpath data!");
-      
+	    
 	    time = (System.currentTimeMillis()) - time;
 	    System.out.println("Done processing data file, please wait ......");
 	    System.out.println("Time to process file (in milliseconds): " + time);
@@ -961,51 +958,23 @@ public class TauPprofOutputSession extends DataSession{
 	return ued;
     }
 
-    private String getMappingName(String inString){
+    private String getMappingName(String string){
 	try{
-	    String tmpString;
-	    
-	    StringTokenizer getMappingNameTokenizer = new StringTokenizer(inString, "\"");
-	    
-	    //Since we know that the mapping name is the only one in the quotes, just ignore the
-	    //first token, and then grab the next.
-	    
-	    //Grab the first token.
-	    tmpString = getMappingNameTokenizer.nextToken();
-      
-	    //Grab the second token.
-	    tmpString = getMappingNameTokenizer.nextToken();
-      
-	    //Now return the second string.
-	    return tmpString;
+	    StringTokenizer st = new StringTokenizer(string, "\"");
+	    st.nextToken();
+	    return st.nextToken();
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD08");
 	}
-	
 	return null;
     }
     
-    private int getMappingID(String inString)
-    {
+    private int getMappingID(String string){
 	try{
-	    String tmpString;
-      
-	    StringTokenizer getMappingIDTokenizer = new StringTokenizer(inString, " \t\n\r");
-      
-	    //The mapping id will be the second token on its line.
-      
-	    //Grab the first token.
-	    tmpString = getMappingIDTokenizer.nextToken();
-      
-	    //Grab the second token.
-	    tmpString = getMappingIDTokenizer.nextToken();
-      
-      
-	    //Now return the id.
-	    //Integer tmpInteger = new Integer(tmpString);
-	    //int tmpInt = tmpInteger.intValue();
-	    return Integer.parseInt(tmpString);
+	    StringTokenizer st = new StringTokenizer(string, " \t\n\r");
+ 	    st.nextToken();
+ 	    return Integer.parseInt(st.nextToken());
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD09");

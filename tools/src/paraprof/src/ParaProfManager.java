@@ -751,7 +751,7 @@ public class ParaProfManager extends JFrame implements ActionListener
 			    trial.setDMTN(trialNode);
 			    trial.setProfilePathName(tmpString1);
 			    trial.setName(tmpString3);
-			    trial.buildStaticData(file);
+			    trial.initialize(file);
           
 			    //Now update the tree.
 			    //Populate the metrics list for this trial.
@@ -855,14 +855,14 @@ public class ParaProfManager extends JFrame implements ActionListener
                         
 						    trial.setProfilePathName(tmpString1);
 						    trial.setName(tmpString3);
-						    trial.buildStaticData(testFile);
+						    trial.initialize(testFile);
                     
 						    System.out.println("Found: " + newString);
                     
 						    foundSomething = true;
 						}
 						else{
-						    trial.buildStaticData(testFile);
+						    trial.initialize(testFile);
 						} 
 					    }
 					}

@@ -107,7 +107,7 @@ public class ParaProf implements ActionListener{
 		trial.setProfilePathName(tmpString2);
 		trial.setName(tmpString3);
 		
-		trial.buildStaticData(testForPprofDat);
+		trial.initialize(testForPprofDat);
 		foundSomething = true;
 	    }
 	    else{
@@ -154,14 +154,14 @@ public class ParaProf implements ActionListener{
 				    trial.setProfilePathName(tmpString2);
 				    trial.setName(tmpString3);
 				    
-				    trial.buildStaticData(testFile);
+				    trial.initialize(testFile);
 				    
 				    System.out.println("Found: " + newString);
 				    
 				    foundSomething = true;
 				}
 				else{
-				    trial.buildStaticData(testFile);
+				    trial.initialize(testFile);
 				} 
 			    }
 			}
