@@ -3,6 +3,10 @@ CLASS=W
 NPROCS=1
 SFILE=config/suite.def
 
+taudefault: suite
+
+install : suite
+
 default: header
 	@ sys/print_instructions
 
