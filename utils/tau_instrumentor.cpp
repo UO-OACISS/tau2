@@ -61,6 +61,9 @@ static bool itemEqual(const itemRef* r1, const itemRef* r2) {
            (r1->col  == r2->col)); 
 }
  
+/* -------------------------------------------------------------------------- */
+/* -- Get a list of instrumentation points for a C++ program ---------------- */
+/* -------------------------------------------------------------------------- */
 void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
   PDB::croutinevec routines = pdb.getCRoutineVec();
@@ -143,6 +146,9 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   sort(itemvec.begin(), itemvec.end(), locCmp);
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- Get a list of instrumentation points for a C program ------------------ */
+/* -------------------------------------------------------------------------- */
 /* Create a vector of items that need action: such as BODY_BEGIN, RETURN etc.*/
 void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   PDB::croutinevec routines = pdb.getCRoutineVec();
@@ -216,6 +222,9 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 #endif /* DEBUG */
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- Get a list of instrumentation points for a F90 program ---------------- */
+/* -------------------------------------------------------------------------- */
 void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
   PDB::froutinevec routines = pdb.getFRoutineVec();
@@ -272,7 +281,9 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 
 const int INBUF_SIZE = 2048;
 
-/* returns true is string is void else returns false */
+/* -------------------------------------------------------------------------- */
+/* -- Returns true is string is void else returns false --------------------- */
+/* -------------------------------------------------------------------------- */
 bool isVoidRoutine(itemRef * i)
 {
   string return_string = ((pdbRoutine *)(i->item))->signature()->returnType()->name() ;
@@ -283,7 +294,9 @@ bool isVoidRoutine(itemRef * i)
 }
 	
 
-/* to instrument the file */
+/* -------------------------------------------------------------------------- */
+/* -- Instrumentation routine for a C++ program ----------------------------- */
+/* -------------------------------------------------------------------------- */
 int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile) 
 {
   string file(f->name());
@@ -430,7 +443,9 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile)
   return 0;
 }
 
-/* BodyBegin for a routine that does returns some value */
+/* -------------------------------------------------------------------------- */
+/* -- BodyBegin for a routine that does return some value ------------------- */
+/* -------------------------------------------------------------------------- */
 void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
 {
 
@@ -462,6 +477,10 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
   ostr <<"\tTAU_PROFILE_START(tautimer); "<<endl;
 	
 }
+
+/* -------------------------------------------------------------------------- */
+/* -- Body Begin for a void C routine --------------------------------------- */
+/* -------------------------------------------------------------------------- */
 void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
 {
   ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
@@ -488,6 +507,9 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
   ostr <<"\tTAU_PROFILE_START(tautimer);"<<endl;
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- Writes the return expression to the instrumented file  ---------------- */
+/* -------------------------------------------------------------------------- */
 void processReturnExpression(ostream& ostr, string& ret_expression)
 {
   ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); return tau_ret_val; }"<<endl;
@@ -495,7 +517,9 @@ void processReturnExpression(ostream& ostr, string& ret_expression)
 
 
 
-
+/* -------------------------------------------------------------------------- */
+/* -- Instrumentation routine for a C++ program ----------------------------- */
+/* -------------------------------------------------------------------------- */
 int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile) 
 { 
   string file(f->name());
@@ -736,10 +760,15 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 } /* End of instrumentCFile */ 
 
 
+#define WRITE_SPACE(os, c) { char ch = c; if (!((ch == ' ') || (ch == '\t'))) ch = ' '; \
+				os << ch; }
 
 
+/* -------------------------------------------------------------------------- */
+/* -- Get a list of instrumentation points for a C++ program ---------------- */
+/* -------------------------------------------------------------------------- */
 int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile) 
-{ /* To be implemented */
+{ 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
@@ -763,34 +792,28 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
   getFReferences(itemvec, pdb, f);
 
   int inputLineNo = 0;
-  int lastInstrumentedLineNo = 0;
   bool is_if_stmt;
-  for(vector<itemRef *>::iterator it = itemvec.begin(); it != itemvec.end();
-        ++it)
+  vector<itemRef *>::iterator lit = itemvec.begin();
+
+  /* Iterate through the list of instrumentation requests */
+  while (lit != itemvec.end())
   {
     // Read one line each till we reach the desired line no.
 #ifdef DEBUG
-    cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
+    cout <<"S: "<< (*lit)->item->fullName() << " line "<< (*lit)->line << " col " << (*lit)->col << endl;
 #endif
     bool instrumented = false;
     bool isProgram = false;
-    if (lastInstrumentedLineNo >= (*it)->line )
-    {
-      // Hey! This line has already been instrumented. Go to the next
-      // entry in the func
-#ifdef DEBUG
-      cout <<"Entry already instrumented - reached next routine! line = "<<(*it)->line <<endl;
-#endif
-      continue; // takes you to the next iteration in the for loop
-    }
 
     while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
     {
       inputLineNo ++;
-      is_if_stmt = false; /* initialize variable now. Check for it later */
-      if (inputLineNo < (*it)->line)
+      if (inputLineNo < (*lit)->line)
       {
         // write the input line in the output stream
+#ifdef DEBUG
+	cout <<"Writing (3): "<<inbuf<<endl;
+#endif /* DEBUG */
         ostr << inbuf <<endl;
       }
       else
@@ -798,27 +821,65 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
         int inbufLength = strlen(inbuf);
         // we're at the desired line no. go to the specified col
 #ifdef DEBUG 
-	cout <<"Line " <<(*it)->line <<" Col " <<(*it)->col <<endl;
+	cout <<"Line " <<(*lit)->line <<" Col " <<(*lit)->col <<endl;
 #endif /* DEBUG */
-        for(int i=0; i< ((*it)->col)-1; i++)
-	{ 
-	  ostr << inbuf[i];
-	}
-	/* set instrumented = true after inserting instrumentation */
-	switch((*it)->kind)
-	{
-	  case BODY_BEGIN:
+	/* Now look at instrumentation requests for that line */
+        vector<itemRef *>::iterator it;
+	int write_upto = 0;
+	bool print_cr = true;
+	for(it = lit; ((it != itemvec.end()) && ((*it)->line == (*lit)->line));
+ 	    ++it)
+        { /* it/lit */
+          if (it+1 != itemvec.end())
+	  {
+	    if ((*(it+1))->line == (*it)->line)
+	    {
+ 	      write_upto = (*(it+1))->col - 1; 
+	      print_cr = false;
+	    }
+	    else
+	    {
+	      write_upto = inbufLength;
+	      print_cr = true;
+	    }
+	  /* 
+          write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col-1 : inbufLength; 
+	  */
+  	
+#ifdef DEBUG
+	  cout <<"CHECKING write_upto = "<<write_upto<<endl;
+	  cout <<"inbuf = "<<inbuf<<endl;
+	  cout <<"it = "<<(*it)->line<<", "<<(*it)->col<<") ; ";
+	  cout <<"it+1 = "<<(*(it+1))->line <<", "<<(*(it+1))->col <<") ;"<<endl;
+#endif /* DEBUG */
+	  }
+	  else
+	  {
+	    write_upto = inbufLength; 
+	    print_cr = true;
+	  }
+	  /* set instrumented = true after inserting instrumentation */
+	  switch((*it)->kind)
+	  {
+	    case BODY_BEGIN:
 
 #ifdef DEBUG
-	  cout <<"Body Begin: Routine " <<(*it)->item->fullName()<<endl;
+	    cout <<"Body Begin: Routine " <<(*it)->item->fullName()<<endl;
 #endif /* DEBUG */
+             	for(int i=0; i< ((*it)->col)-1; i++)
+		{ 
+#ifdef DEBUG
+	  	  cout << "Writing (1): "<<inbuf[i]<<endl;
+#endif /* DEBUG */
+	  	  WRITE_SPACE(ostr,inbuf[i])
+		}
 		ostr <<"integer profiler(2)"<<endl;
 		/* spaces */
      		for (int space = 0; space < (*it)->col-1 ; space++) 
-		  ostr << inbuf[space] ;
+		  WRITE_SPACE(ostr, inbuf[space]) 
 		ostr <<"save profiler"<<endl<<endl;
      		for (int space = 0; space < (*it)->col-1 ; space++) 
-		    ostr << inbuf[space]; 
+		  WRITE_SPACE(ostr, inbuf[space]) 
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG)
 		{
 #ifdef DEBUG
@@ -828,69 +889,90 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
 		  isProgram = true;
 		  /* put spaces on the next line */
      		  for (int space = 0; space < (*it)->col-1 ; space++) 
-		    ostr << inbuf[space]; 
+		    WRITE_SPACE(ostr, inbuf[space]) 
 		}
 		ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
 		  (*it)->item->fullName()<< "')"<<endl;
 		/* spaces */
      		for (int space = 0; space < (*it)->col-1 ; space++) 
-		  ostr << inbuf[space]; 
+		  WRITE_SPACE(ostr, inbuf[space]) 
 		ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
-/* DON'T CALL TAU_PROFILE_SET_NODE here. 
-   Call it in TAU_PROFILE_INIT if MPI is not used */ 		
-		/* 
-	        if (isProgram) 
-		{
-     		  for (int space = 0; space < (*it)->col-1 ; space++) 
-		    ostr << inbuf[space]; 
-		  ostr <<"call TAU_PROFILE_SET_NODE(0)"<<endl;
-		}
-		*/
-		/* spaces */
-     		for (int space = 0; space < (*it)->col-1 ; space++) 
-		  ostr << inbuf[space]; 
+
+		/* write the original statement */
+     		for (int k = 0; k < write_upto ; k++) 
+		  ostr<< inbuf[k];
+
+		/* should we write the carriage return? */
+	 	if (print_cr)
+		  ostr<< endl;
+
 		instrumented = true;
 		break;
 	  case RETURN:
 #ifdef DEBUG
 	        cout <<"RETURN statement "<<endl;
+		cout <<"inbuf = "<<inbuf<<endl;
+	        cout <<"line ="<<(*it)->line<<" col = "<<(*it)->col<<endl;
 #endif /* DEBUG */
-		if (strstr(inbuf,"if") != NULL)
-		{ 
+		/* Check to see if it is not a comment and has a "if" in the string */
+      		if ((!((inbuf[0] == 'c') || (inbuf[0] == 'C') || (inbuf[0] == '!'))) && 
+	  	    (strstr(inbuf,"if") != NULL))
 		  is_if_stmt = true;
+                else
+		  is_if_stmt = false;
+
+	        if (lit == it)
+		{ /* Has body begin already written the beginning of the statement? */
+		  /* No. Write it (since it is same as lit) */
+        	  for(int i=0; i< ((*it)->col)-1; i++)
+		  { 
+#ifdef DEBUG
+	  	    cout << "Writing (1): "<<inbuf[i]<<endl;
+#endif /* DEBUG */
+	  	    ostr <<inbuf[i]; 
+		  }
+		}
+
+		if (is_if_stmt)
+		{ 
 		  ostr << "then"<<endl;
 		  ostr << "          ";
 		}
 	
 		ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
+
      		for (int space = 0; space < (*it)->col-1 ; space++) 
-		{
- 		  char c = inbuf[space]; 
-		  if (!((c == ' ') || (c == '\t')))
-		    c = ' ';
-		  ostr << c; 
-		}
+		  WRITE_SPACE(ostr, inbuf[space])
+
 		instrumented = true;
+	
+        	for(int j= ((*it)->col)-1; j <write_upto; j++)
+		{ 
+#ifdef DEBUG
+	  	  cout <<"Writing(2): "<<inbuf[j]<<endl;
+#endif /* DEBUG */
+	  	  ostr << inbuf[j];
+		}
+
+		ostr<<endl;
+
+		if (is_if_stmt)
+		{
+	  	  ostr <<"         endif"<<endl;
+		}      
+
 		break;
 		 
-	  default:
+	    default:
 		cout <<"Unknown option in instrumentFFile:"<<(*it)->kind<<endl;
 		instrumented = true;
 		break;
-	}
-
-        for(int j= ((*it)->col)-1; j <inbufLength; j++)
-	{ 
-	  ostr << inbuf[j];
-	}
-	ostr<<endl;
-	if (is_if_stmt) 
-	{
-	  ostr <<"         endif"<<endl;
-	}      
+	  } /* end of switch statement */
+        } /* for it/lit */
+        lit = it;		
       } /* reached line */
     } /* while */
-  } /* for */
+  } /* while lit!= end */
   // For loop is over now flush out the remaining lines to the output file
   while (istr.getline(inbuf, INBUF_SIZE) )
   {
@@ -901,6 +983,9 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
 }
 
 
+/* -------------------------------------------------------------------------- */
+/* -- Instrument the program using C, C++ or F90 instrumentation routines --- */
+/* -------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
   string outFileName("out.ins.C");
@@ -987,3 +1072,10 @@ int main(int argc, char **argv)
 
   
   
+/***************************************************************************
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.24 $   $Date: 2001/12/04 00:33:04 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.24 2001/12/04 00:33:04 sameer Exp $
+ ***************************************************************************/
+
+
