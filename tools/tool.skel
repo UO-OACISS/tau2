@@ -32,7 +32,7 @@ if [info exists env(TAUROOT)] {
 
 set myself @TOOL@
 set TAUDIR $TAUROOT/tools
-set BINDIR $TAUROOT/bin/@ARCH@
+set BINDIR $TAUROOT/@ARCH@/bin
 set REMSH @REMSH@
 set jstools_library $TAUROOT/extern/jstools-tk4.0v4.0/lib
 set auto_path [linsert $auto_path 0 $jstools_library]
