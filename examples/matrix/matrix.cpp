@@ -30,7 +30,7 @@
 #include <iostream.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "mpi.h"
+#include <mpi.h>
 #include <Profile/Profiler.h>
 #include <string.h>
 
@@ -322,7 +322,7 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
   int procsFilled; // true if all processors have been assigned at least one
                    // task of multiplying two vectors   
   int terminate;   // false until master sends SLAVE_TERMINATE msg to slave
-  int i, j;
+  int i, j, recvcount;
   T ans;
   T* vctr1 = new T[ncols];  // a row of this that is bcast'ed to slave
   T* vctr2 = new T[ncols];  // a column of arg sent to slave & returned to 
@@ -363,8 +363,13 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
 
       // tell slaves to expect broadcast
       for (i=1; i<nprocs; i++)
+      {
+	TAU_TRACE_SENDMSG(SLAVE_EXPECT_BROADCAST, i, 0);
         MPI_Send(0, 0, MPI_INT, i, SLAVE_EXPECT_BROADCAST, MPI_COMM_WORLD);
+      }
       // broadcast row of left matrix to slaves
+      for(i=1; i<nprocs; i++)
+	TAU_TRACE_SENDMSG(master, i, ncols*sizeof(T));
       MPI_Bcast(a[currRow], ncols * sizeof(T), MPI_BYTE, master, 
 		MPI_COMM_WORLD);    
       
@@ -380,6 +385,7 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
         if (!procsFilled)      
           sender = procs;
         // tell slave to expect message
+	TAU_TRACE_SENDMSG(SLAVE_EXPECT_MESSAGE, sender, 0);
         MPI_Send(0, 0, MPI_INT, sender, SLAVE_EXPECT_MESSAGE, 
 		 MPI_COMM_WORLD);
 
@@ -388,8 +394,10 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
         //      processors
         for (j=0; j<ncols; j++)
           vctr2[j] = arg.a[j][currCol];
+	TAU_TRACE_SENDMSG(currCol, sender, ncols * sizeof(T));
         MPI_Send(vctr2, ncols * sizeof(T), MPI_BYTE, sender, currCol, 
 		 MPI_COMM_WORLD);
+	
         currCol++;
         
         if (procs == (nprocs-1))
@@ -398,6 +406,8 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
           // we have sent something to all of our slaves so wait for result
           MPI_Recv(&ans, sizeof(T), MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG,
 		   MPI_COMM_WORLD, &stat);
+	  MPI_Get_count(&stat, MPI_BYTE, &recvcount);
+	  TAU_TRACE_RECVMSG(stat.MPI_TAG, stat.MPI_SOURCE, recvcount);
           procsFilled = TRUE;
           procs--;
           resultCol = stat.MPI_TAG;
@@ -411,6 +421,8 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
       {
         MPI_Recv(&ans, sizeof(T), MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG,
 		 MPI_COMM_WORLD, &stat);
+	MPI_Get_count(&stat, MPI_BYTE, &recvcount);
+	TAU_TRACE_RECVMSG(stat.MPI_TAG, stat.MPI_SOURCE, recvcount);
         resultCol = stat.MPI_TAG;
         rm.a[currRow][resultCol] = ans;
 
@@ -422,7 +434,10 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
     
     // master is finished so broadcast termination message
     for (i=1; i<nprocs; i++)
+    {
+       TAU_TRACE_SENDMSG(SLAVE_TERMINATE, i, 0);
        MPI_Send(0, 0, MPI_INT, i, SLAVE_TERMINATE, MPI_COMM_WORLD);
+    }
 
   }
 
@@ -436,6 +451,8 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
     {
       // receive primary message
       MPI_Recv(0, 0, MPI_INT, master, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+      MPI_Get_count(&stat, MPI_BYTE, &recvcount);
+      TAU_TRACE_RECVMSG(stat.MPI_TAG, stat.MPI_SOURCE, recvcount );
       
       switch(stat.MPI_TAG)
       {  
@@ -457,11 +474,14 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
           // receive a unique vector to multiply with b
           MPI_Recv(vctr2, ncols * sizeof(T), MPI_BYTE, master, MPI_ANY_TAG,
 		   MPI_COMM_WORLD,&stat);
+	  MPI_Get_count(&stat, MPI_BYTE, &recvcount);
+	  TAU_TRACE_RECVMSG(stat.MPI_TAG, stat.MPI_SOURCE, recvcount);
           // now compute the vector product vctr1 * vctr2
           ans = 0;
           for (i=0; i<ncols; i++)
             ans = ans + (vctr1[i] * vctr2[i]);
           // now send answer back to master
+	  TAU_TRACE_SENDMSG(stat.MPI_TAG, master, sizeof(T));
           MPI_Send(&ans, sizeof(T), MPI_BYTE, master, stat.MPI_TAG, 
 		   MPI_COMM_WORLD);
       
