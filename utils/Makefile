@@ -106,15 +106,15 @@ LDFLAGS	      = $(PCXX_OPT)
 
 MAKEFILE      = Makefile
 
-OBJS	      = pprof.o  tau_events.o tau_merge.o tau_selective.o \
-		tau_instrumentor.o 
+OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_merge.o tau_selective.o \
+		tau_instrumentor.o user_event_data.o function_data.o pprof_elem.o
 
 PRINT	      = pr
 
 SRCS	      = pcxx_merge.c \
 		pcxx_convert.c
 
-EXECUTABLES =	pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
+EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
 		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN)
 
 all:		$(EXECUTABLES)
@@ -171,8 +171,29 @@ $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a:
 ar2pcxx : ar2pcxx.c 
 		$(LINKER) ar2pcxx.c -o $@
 
-pprof:		pprof.cpp
-		$(CXX) $(CFLAGS)  pprof.cpp -o pprof -lm $(LEXTRA)
+tau_reduce:	tau_reduce.o pprof_elem.o
+		$(CXX) $(CFLAGS) tau_reduce.o pprof_elem.o -o tau_reduce -lm $(LEXTRA)
+
+tau_reduce.o: 	tau_reduce.cpp
+		$(CXX) $(CFLAGS) -c tau_reduce.cpp
+
+pprof_elem.o: 	pprof_elem.cpp
+		$(CXX) $(CFLAGS) -c pprof_elem.cpp
+
+#pprof:		pprof.cpp
+#		$(CXX) $(CFLAGS)  function_data.cpp user_event_data.cpp pprof.cpp -o pprof -lm $(LEXTRA)
+
+pprof:		pprof.o function_data.o user_event_data.o
+		$(CXX) $(CFLAGS) pprof.o user_event_data.o function_data.o -o pprof -lm $(LEXTRA)
+
+pprof.o:	pprof.cpp
+		$(CXX) $(CFLAGS) -c pprof.cpp
+
+function_data.o:	function_data.cpp
+		$(CXX) $(CFLAGS) -c function_data.cpp
+
+user_event_data.o:	user_event_data.cpp
+		$(CXX) $(CFLAGS) -c user_event_data.cpp
 
 clean:
 		/bin/rm -f $(OBJS) $(EXECUTABLES) *.dep lib*$(LSX)
@@ -184,6 +205,12 @@ $(INSTALLDEST)/pprof: pprof
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+
+$(INSTALLDEST)/tau_reduce: tau_reduce
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+		  else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 $(INSTALLDEST)/tau_merge: tau_merge
@@ -244,7 +271,7 @@ $(INSTALLDEST)/tau_run: tau_run
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN)
 
 program:        $(PROGRAM)
 

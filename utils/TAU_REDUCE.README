@@ -1,0 +1,90 @@
+tau_reduce 
+version 1.0
+Nick Trebon
+
+tau_reduce is an application that will apply a set of user-defined rules 
+to a pprof dump file in order to create a select file that will include 
+an exclude list for selective implementation for TAU. The user must 
+specify the name of the pprof dump file in the current directory that the 
+this application will use.  This is done with the -f filename flag.  If 
+no rule file is specified, then a single default rule will be applied to 
+the file.  This rule is numcalls > 1000000 & usecs/call < 2, which will 
+exclude all methods that are called at least 1,000,000 times and average 
+less then two microseconds per call.  If a rule file is specified, then 
+this rule is not applied. If no output file is specified, then the results 
+will be printed out to the screen.
+
+OPTIONS:
+tau_reduce has the following options available at the command line:
+    -f <filename> : specify *F*ilename of pprof dump file (default: temp.out)
+    -p : *P*rint out all methods with their attributes (for debugging)
+    -o <filename> : specify filename for select file *O*utput (default: print 
+                    to screen)
+    -r <filename> : specify filename for *R*ule file
+    -v : *V*erbose mode (for each rule, print out rule and all methods 
+	 that it excludes)
+
+RULES:
+Users can specify a set of rules for tau_reduce to apply.  The rules should
+be specified in a separate file, one rule per line, and the file name should
+be specifed with the appropriate option on the command line.  The grammar 
+for a rule is: FIELD OPERATOR NUMBER.  A FIELD is any of the method attributes 
+listed in the following table:
+
+--------------------------------------------------------------------
+|ATTRIBUTE NAME| 	MEANING                                    |
+--------------------------------------------------------------------
+| numcalls     | Number of times this method is called             |
+--------------------------------------------------------------------
+| numsubrs     | Number of subroutines that this method contains   |
+--------------------------------------------------------------------
+| percent      | Percent of total implementation time              |
+--------------------------------------------------------------------
+| usec         | Exclusive method running time, in microseconds    |
+--------------------------------------------------------------------
+| cumusec      | Inclusive method running time, in microseconds    |
+--------------------------------------------------------------------
+| count	       | Exclusive hardware count                          |
+--------------------------------------------------------------------
+| totalcount   | Inclusive hardware count                          |
+--------------------------------------------------------------------
+| stddev       | Standard deviation                                |
+--------------------------------------------------------------------
+| usecs/call   | Microseconds per call                             |
+--------------------------------------------------------------------
+| counts/call  | Hardware counts per call                          |
+--------------------------------------------------------------------
+
+Some FIELDS are only available for certain files.  If hardware counters are
+used, then usec, cumusec, usecs/per call are not applicable and a error is 
+reported.  The opposite is true if timing data is used rather than hardware
+counters.  Also, stddev is only available for certain files that contain that
+data. 
+
+An OPERATOR is any of the following: < (less than), > (greater than), or =
+(equals).
+
+A NUMBER is any number.
+
+A compound rule may be formed by using the & (and) symbol in between two 
+simple rules.  There is no "OR" because there is an implied or between 
+two separate simple rules, each on a separate line.  (ie the compound 
+rule usec < 1000 OR numcalls = 1 is the same as the two simple rules 
+"usec < 1000"  and  "numcalls = 1").
+
+EXAMPLES:
+#exclude all methods that have less than 1000 microseconds
+usec < 1000     
+
+#exclude all methods that have less than 1000 microseconds and are 
+#called only once.
+usec < 1000 & numcalls = 1   
+			     
+#exclude all methods that have less than 1000 usecs per call OR have a percent
+#less than 5
+usecs/call < 1000
+percent < 5
+
+NOTE: Any line in the rule file that begins with a # is a comment line. 
+
+
