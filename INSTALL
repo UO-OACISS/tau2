@@ -53,14 +53,14 @@ TAU Configuration Utility
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
 -c++=<compiler>  ............................ specify the C++ compiler.
-  options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc].
+    options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
 -cc=<compiler> ................................ specify the C compiler.
-                              options [cc|gcc|KCC|pgcc|guidec|xlc|ecc].
+                            options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc].
 -pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
- options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
+    options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
-                                                 kai|nec|hitachi|intel]
+  	                                         kai|nec|hitachi|intel]
 -useropt='<parameters>' ............... list of commandline parameters.
 -pthread .................................. Use pthread thread package.
 -sproc .................................. Use SGI sproc thread package.
@@ -375,6 +375,31 @@ The following  command-line options are available to configure:
      -mpiinc=/usr/packages/mpich/include -mpilib=/usr/packages/mpich/lib
    Use OpenMP+MPI using KAI's Guide compiler suite and use PAPI for accessing
    hardware performance counters for measurements.
+
+***********************************************************************
+   To install *multiple* (typical) configurations of TAU at a site, you may use the 
+   script 'installtau'. It takes options similar to those described above. It 
+   invokes ./configure <opts>; make clean install;  to create multiple libraries that 
+   may be requested by the users at a site. 
+   % installtau -help
+
+TAU Configuration Utility 
+***********************************************************************
+Usage: installtau [OPTIONS]
+  where [OPTIONS] are:
+-arch=<arch>  
+-fortran=<compiler>  
+-cc=<compiler>   
+-c++=<compiler>   
+-useropt=<options>  
+-pdt=<pdtdir>  
+-papi=<papidir>  
+-mpiinc=<mpiincdir>  
+-mpilib=<mpilibdir>  
+-mpilibrary=<mpilibrary>  
+-opari=<oparidir>  
+***********************************************************************
+
 
 2. Compilation.
 
