@@ -76,12 +76,12 @@ void check_bounds
 #define _THROW_LENGTH_OUTRANGE
 #define _THROW_ALLOC_LENGTH_OUTRANGE
 
-#ifdef POOMA_STDSTL
+#ifdef TAU_STDCXXLIB
 #include <vector>
 using std::vector;
-#else
+#else /* TAU_STDCXXLIB */
 #include <vector.h>
-#endif
+#endif /* TAU_STDCXXLIB */
 
 #ifdef __MMULTITHREAD
 #include "mutex.h"

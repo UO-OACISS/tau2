@@ -30,57 +30,40 @@
 
 #include <string.h>
 
-#if (defined(POOMA_KAI) || defined (TAU_STDCXXLIB))
+#if (defined(TAU_DOT_H_LESS_HEADERS) || defined (TAU_STDCXXLIB))
 #include <string>
-using std::string;
-#else
-#define __BOOL_DEFINED 
-#include "Profile/bstring.h"
-#endif /* POOMA_KAI */
-
-
-#ifndef NO_RTTI /* RTTI is present  */
-#ifdef TAU_DOT_H_LESS_HEADERS
-#include <typeinfo>
-#else /* TAU_DOT_H_LESS_HEADERS */
-#include <typeinfo.h>
-#endif /* TAU_DOT_H_LESS_HEADERS */
-#endif /* NO_RTTI  */
-
-#ifdef POOMA_STDSTL
 #include <vector>
 #include <utility>
 #include <list>
 #include <map>
+using std::string;
 using std::vector;
 using std::pair;
 using std::list;
 using std::map;
 #else
-#ifdef  TAU_DOT_H_LESS_HEADERS
-#include <vector>
-#include <map>
-#include <list>
-#else /* TAU_DOT_H_LESS_HEADERS */
+#define __BOOL_DEFINED 
+#include "Profile/bstring.h"
 #include <vector.h>
 #include <map.h>
 #include <list.h>
-#endif /* TAU_DOT_H_LESS_HEADERS */
-
-#if !defined(KAI)
-#ifdef  TAU_DOT_H_LESS_HEADERS
-#include <utility>
-#else /* TAU_DOT_H_LESS_HEADERS */
 #include <pair.h>
-#endif /* TAU_DOT_H_LESS_HEADERS */
-#else
-#include <utility.h>
-#endif /* not KAI */
-#endif /* POOMA_STDSTL */
+#endif /* TAU_DOT_H_LESS_HEADERS  || TAU_STDCXXLIB */
+
+#ifndef NO_RTTI /* RTTI is present */
+#ifdef RTTI 
+#include <typeinfo.h>
+#else /* RTTI */
+#include <typeinfo>
+using std::type_info;
+/* This is by default */ 
+#endif /* RTTI */
+#endif /* NO_RTTI */
+
 
 #endif /* _PROFILE_HEADERS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileHeaders.h,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1999/06/20 17:33:25 $
- * POOMA_VERSION_ID: $Id: ProfileHeaders.h,v 1.4 1999/06/20 17:33:25 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 1999/06/22 22:32:19 $
+ * POOMA_VERSION_ID: $Id: ProfileHeaders.h,v 1.5 1999/06/22 22:32:19 sameer Exp $ 
  ***************************************************************************/
