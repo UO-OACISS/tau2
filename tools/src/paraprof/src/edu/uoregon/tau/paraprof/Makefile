@@ -16,11 +16,14 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
              ColorPair.java LedgerWindow.java ParaProfImageInterface.java ParaProfImageOptionsPanel.java \
              ParaProfImageFormatFileFilter.java LedgerDataElement.java DataSorter.java CallGraphWindow.java \
              PPThread.java ThreadDataWindowPanel.java LedgerWindowPanel.java PPFunctionProfile.java \
-             UserEventWindow.java DBConfiguration.java ParaProfMetric.java SavedPreferences.java \
+             UserEventWindow.java DBConfiguration.java ParaProfMetric.java Preferences.java \
 	     UserEventWindowPanel.java PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java \
              ParaProfManagerWindow.java StatWindow.java LoadTrialWindow.java DataSourceThreadControl.java \
              ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java DisplayProperties.java ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java ParaProfObserver.java
+             StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java DisplayProperties.java \
+	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java ParaProfObserver.java \
+	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
+	     enums/CallGraphOption.java enums/SortType.java enums/UserEventValueType.java enums/ValueType.java
 
 NEW_SOURCES=$(BASE_SOURCES) ParaProfImageOutput.java
 
