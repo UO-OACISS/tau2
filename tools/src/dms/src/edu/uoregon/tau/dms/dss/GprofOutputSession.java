@@ -411,8 +411,14 @@ index  % time    self  children called     name
 		else
 	    	lineData.d1 = 0.0;
 
+		// check if the counts 'spill' into the name field.
+		String spillTest = string.substring(calledStart,string.length()).trim();
+		int space = spillTest.indexOf(" ");
+		if (space > (nameStart - calledStart))
+			tmpStr = spillTest.substring(0,space).trim();
+		else
+			tmpStr = string.substring(calledStart,nameStart).trim();
 		// check for a ratio
-		tmpStr = string.substring(calledStart,nameStart).trim();
 		if (tmpStr.indexOf("/") >= 0) {
 	   		StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
 			// the number of times self was called from parent 
@@ -426,8 +432,13 @@ index  % time    self  children called     name
 		}
 
 		// the rest is the name
-		int end = string.lastIndexOf("[") - 1;
-	    lineData.s0 = string.substring(nameStart,end).trim();
+		if (space > (nameStart - calledStart)) {
+			int end = spillTest.lastIndexOf("[") - 1;
+			lineData.s0 = spillTest.substring(space,end).trim();
+		} else  {
+			int end = string.lastIndexOf("[") - 1;
+	    	lineData.s0 = string.substring(nameStart,end).trim();
+		}
 	}
 	catch(Exception e){
 		System.out.println("***\n" + string + "\n***");
