@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.12 2004/04/16 23:08:44 bertie Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.13 2004/04/16 23:17:12 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -655,4 +655,21 @@ public abstract class DataSession {
     //End - Functions interfacing to object structure representation of data mirrored on ParaProf's usage.
     //######
 
+    /**
+     * Resets the DataSession object.
+     *
+     */
+    public void reset() {
+	application = null;
+	experiment = null;
+	trial = null;
+	nodes = null;
+	contexts = null;
+	threads = null;
+	functions = null;
+	metrics = null;
+	functionData = null;
+	userEvents = null;
+	userEventData = null;
+    }
 };
