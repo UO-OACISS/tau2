@@ -58,6 +58,7 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    long time = System.currentTimeMillis();
 	    
 	    int numberOfMetrics = this.getNumberOfMetrics();
+		System.out.println("Found " + numberOfMetrics + " metrics.");
 	    for(int i=0;i<numberOfMetrics;i++)
 		this.getGlobalMapping().increaseVectorStorage();
 
