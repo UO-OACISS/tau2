@@ -111,6 +111,8 @@ cxx_compiler=default
 fixmakeargs=""
 pcxxopt=-g
 useropt=
+mpiinc=
+mpilib=
 extradir=
 awe=no
 pthread=no
@@ -267,6 +269,16 @@ do
 
   -useropt=*)
     useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
+    shift
+    ;;
+
+  -mpiinc=*)
+    mpiinc=`echo $arg | sed -e 's/-mpiinc=//' -e 's/ /#/g'`
+    shift
+    ;;
+
+  -mpilib=*)
+    mpilib=`echo $arg | sed -e 's/-mpilib=//' -e 's/ /#/g'`
     shift
     ;;
 
@@ -753,6 +765,96 @@ case $cxx_compiler in
 esac
 
 ######################################################################
+# Set MPI options
+if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" ]
+then
+  #echo "MPI is specified"
+  fixmakeargs="$fixmakeargs MPI"
+else
+  fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+fi
+
+
+if [ "x$mpiinc" != "x" ]
+then 
+  if [ -d $mpiinc ]
+  then
+    #echo "Include dir found. adding -I$mpiinc to INC"
+    mpiincargs="$mpiincargs -I$mpiinc"
+    mpiincargs=`echo $mpiincargs | sed  -e 's/ /#/g'`
+    fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs"
+  fi
+fi
+  
+if [ "x$mpilib" != "x" ]
+then
+  mpilibargs="-L$tauroot/$machine/lib -lTauMpi"
+  if [ -d $mpilib ]
+  then
+    #echo "Lib dir found. adding -L$mpilib to LIB"
+    mpilibargs="$mpilibargs -L$mpilib"
+    if [ -f $mpilib/libfmpi.* ]
+    then
+      #echo "Fortran fmpi.* found"
+      mpiflibargs="-L$mpilib -lfmpi -L$tauroot/$machine/lib -lTauMpi"
+    else
+      if [ -f $mpilib/libfmpich.* ]
+      then
+        #echo "Fortran fmpich.* found"
+        mpiflibargs="-L$mpilib -lfmpich -L$tauroot/$machine/lib -lTauMpi"
+      else 
+        #echo "No Fortran interface found"
+        mpiflibargs="$mpiflibargs -L$tauroot/$machine/lib -lTauMpi -L$mpilib"
+      fi
+    fi
+  
+    #echo "mpilibargs = $mpilibargs"
+    # Cases
+    if [ -r $mpilib/libmpi.* ]
+    then
+      #echo "libmpi.* found!!"
+      if [ -r $mpilib/libpmpi.* ] 
+      then 
+        #echo "libpmpi.* found "
+        mpilibargs="$mpilibargs -lpmpi -lmpi"
+        mpiflibargs="$mpiflibargs -lpmpi -lmpi"
+      else
+        #echo "libpmpi.* not found -lmpi probably contains PMPI routines"
+        mpilibargs="$mpilibargs -lmpi" 
+        mpiflibargs="$mpiflibargs -lmpi" 
+      fi
+    else
+      #echo "libmpi.* not found!! Checking for mpich.*..."
+      if [ -r $mpilib/libmpich.* ]
+      then 
+        #echo "MPICH found "
+      
+        if [ -r $mpilib/libpmpich.* ] 
+        then 
+          #echo "pmpich found"
+          mpilibargs="$mpilibargs -lpmpich -lmpich"
+          mpiflibargs="$mpiflibargs -lpmpich -lmpich"
+        else
+          #echo "pmpich not found"
+          mpilibargs="$mpilibargs -lmpich"
+          mpiflibargs="$mpiflibargs -lmpich"
+        fi
+      fi
+    fi
+    # libmpi.* found. But libpmpi* not found. 
+    # both found.
+    # libmpi.* not found - look for libmpich.*
+    # For fortran libfmpich.* look for libpmpi
+    mpilibargs=`echo $mpilibargs | sed  -e 's/ /#/g'`
+    mpiflibargs=`echo $mpiflibargs | sed  -e 's/ /#/g'`
+    #echo "mpiincargs= $mpiincargs"
+    #echo "mpilibargs= $mpilibargs"
+    #echo "mpiflibargs= $mpiflibargs"
+    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+  fi # If -d mpilib
+fi # if mpilib is specified
+
+######################################################################
 # Set default CC compiler in all Makefiles
 
 gcclibdir=unknown
@@ -851,22 +953,6 @@ echo "" >> ./build/Config.info
 
 ######################################################################
 ## STATIC ANALYSIS: Ductape/Program Database Toolkit/IL Analyser
-## If cxxparse exists, modify it to contain the correct path
-#pdt_root_dir=${tauroot}/pdt
-#if [ -d $pdt_root_dir ]
-#  then
-#  if [ ! -d $pdt_root_dir/$machine ] 
-#    then
-#      mkdir $pdt_root_dir/$machine
-#      mkdir $pdt_root_dir/$machine/bin
-#      mkdir $pdt_root_dir/$machine/lib
-#  fi
-#  /bin/rm -f $pdt_root_dir/$machine/bin/cxxparse
-#  cat utils/cxxparse | 
-#  sed -e 's,@DUCTAPEROOT@,'$pdt_root_dir/',' -e 's,@CXXINCLUDES@,'"$stdinc"',' -e 's,@ARCH@,'$machine/',' > $pdt_root_dir/$machine/bin/cxxparse
-#  chmod +x $pdt_root_dir/$machine/bin/cxxparse
-#  echo "Installed cxxparse in the PDT directory $pdt_root_dir"
-#fi
     
 # NOW PDT configuration handled in PDT
 ######################################################################
