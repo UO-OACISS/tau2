@@ -90,7 +90,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
         popup.add(showThisMappingOnlyItem);
         
         //Add items to the popu menu.
-        JMenuItem showAllButMappingsItem = new JMenuItem("Show All Groupss Except This One");
+        JMenuItem showAllButMappingsItem = new JMenuItem("Show All Groups Except This One");
         showAllButMappingsItem.addActionListener(this);
         popup.add(showAllButMappingsItem);
         
