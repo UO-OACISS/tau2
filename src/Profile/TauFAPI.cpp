@@ -28,6 +28,7 @@
 
 /* Fortran Wrapper layer for TAU Portable Profiling */
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 #include "Profile/ProfileGroups.h"
@@ -42,6 +43,8 @@ void tau_start_timer(void *);
 void tau_stop_timer(void *);
 void tau_exit(char *);
 void tau_init(int, char **);
+void tau_enable_group(TauGroup_t group);
+void tau_disable_group(TauGroup_t group);
 void tau_set_node(int);
 void tau_set_context(int);
 void tau_register_thread(void);
@@ -58,21 +61,45 @@ void tau_report_thread_statistics(void);
 * The following routines are called by the Fortran program and they in turn
 * invoke the corresponding C routines. 
 *****************************************************************************/
-void tau_profile_timer_(void **ptr, char *fname, int *flen)
+
+void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
 {
+
+  char * fname = (char *) malloc((size_t) slen+1);
+  strncpy(fname, infname, slen);
+  fname[slen] = '\0';  
+  
+#ifdef DEBUG_PROF
+  printf("Inside tau_profile_timer_ fname=%s\n", fname);
+#endif /* DEBUG_PROF */emacs
+  
+  if (*ptr == 0) 
+  {
+    *ptr = tau_get_profiler(fname, (char *)" ", *group);
+  }
+
+#ifdef DEBUG_PROF 
+  printf("get_profiler returns %x\n", *ptr);
+#endif /* DEBUG_PROF */
+
+  return;
+}
+
+
+
+void tau_profile_timer_(void **ptr, char *infname, int slen)
+{
+  
+  char * fname = (char *) malloc((size_t)slen+1);
+  strncpy(fname, infname, slen);
+  fname[slen] = '\0';
+
 #ifdef DEBUG_PROF
   printf("Inside tau_profile_timer_ fname=%s\n", fname);
 #endif /* DEBUG_PROF */
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
-    for(int i=0; i<1024; i++)
-    {
-      if (!isprint(fname[i]))
-      { 
-        fname[i] = '\0';
-        break;
-      }
-    }
+    
     *ptr = tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
   }
 
@@ -110,6 +137,16 @@ void tau_profile_init_(int *argc, char ***argv)
 {
   /* tau_init(*argc, *argv); */
   return;
+}
+
+void tau_enable_group_(TauGroup_t *group)
+{
+  tau_enable_group(*group);
+}
+
+void tau_disable_group_(TauGroup_t *group)
+{
+  tau_disable_group(*group);
 }
 
 void tau_profile_set_node_(int *node)
@@ -524,7 +561,7 @@ void tau_report_thread_statistics__(void)
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2001/01/11 19:33:48 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.14 2001/01/11 19:33:48 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: bertie $
+ * $Revision: 1.15 $   $Date: 2001/02/14 21:55:16 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.15 2001/02/14 21:55:16 bertie Exp $ 
  ***************************************************************************/
