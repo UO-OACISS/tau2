@@ -43,11 +43,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-//#define STORAGE(type, variable) map<int, type> variable 
-//#define STORAGE(type, variable) vector<type > variable 
 #define STORAGE(type, variable) type  variable[TAU_MAX_THREADS] 
-#define NOTHREADSTORAGE(type, variable) type variable[TAU_MAX_THREADS] 
-
 
 class FunctionInfo
 {
@@ -116,7 +112,7 @@ private:
 
 	// A record of the information unique to this function.
 	// Statistics about calling this function.
-#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(TAU_WINDOWS))
+
 	STORAGE(long, NumCalls);
 	STORAGE(long, NumSubrs);
 	STORAGE(double, ExclTime);
@@ -125,17 +121,6 @@ private:
 #ifdef PROFILE_STATS
 	STORAGE(double, SumExclSqr);
 #endif //PROFILE_STATS 
-#else 
-	NOTHREADSTORAGE(long, NumCalls);
-	NOTHREADSTORAGE(long, NumSubrs);
-	NOTHREADSTORAGE(double, ExclTime);
-	NOTHREADSTORAGE(double, InclTime);
-	NOTHREADSTORAGE(bool, AlreadyOnStack);
-#ifdef PROFILE_STATS
-	NOTHREADSTORAGE(double, SumExclSqr);
-#endif //PROFILE_STATS 
-#endif // PTHREADS
-	// Expands macro as map<int, long> NumCalls; etc. 
 
 public:
 	string Name;
@@ -222,7 +207,7 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2001/10/03 20:59:13 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.15 2001/10/03 20:59:13 sameer Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
+ * $Revision: 1.16 $   $Date: 2002/01/16 23:38:21 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.16 2002/01/16 23:38:21 bertie Exp $ 
  ***************************************************************************/
