@@ -97,6 +97,11 @@ fi
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
 	;;
 
+     jdkdir=*)
+        jdkdir=`echo $1 | sed -e 's/^jdkdir=//'`
+	echo "s,^JDKDIR=.*$,JDKDIR=$jdkdir,g" >> $sedout
+	;;
+
      tulipdir=*)
         tulipdir=`echo $1 | sed -e 's/^tulipdir=//'`
 	echo "s,^TULIPDIR=.*$,TULIPDIR=$tulipdir,g" >> $sedout
@@ -443,6 +448,10 @@ fi
 	;;
      PDT)
 	echo "NOTE: Using PDT for TAU Source Code Instrumentation ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     JAVA)
+	echo "NOTE: Using JVMPI for Java Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PCLPTHREAD)
