@@ -24,7 +24,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/research/paraducks/apps/pdt/dev/tau2
+TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -35,9 +35,6 @@ CC  = $(TAU_CC)
 
 CEXTRA = 
 
-##############################################
-#SOL2CC#EXTRAOBJS		= Templates.DB/*.o  #ENDIF#
-#############################################
 ##############################################
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
 #############################################
@@ -91,6 +88,11 @@ ARFLAGS	      = rcv
 ############# For FUJITSU FCC compiler, replace AR accordingly #######
 #FUJITSU#AR			= $(CXX) --ar 		   #ENDIF#
 #FUJITSU#ARFLAGS	        = -o			   #ENDIF#
+##################################################################
+
+############# For SUN CC compiler, replace AR accordingly #######
+#SOL2CC#AR			= $(CXX) -xar 		   #ENDIF#
+#SOL2CC#ARFLAGS			= -o			   #ENDIF#
 ##################################################################
 
 RM 	      = /bin/rm -f
