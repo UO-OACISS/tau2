@@ -446,7 +446,8 @@ proc bargraph {win bgtitle rightlabels percent values tags {nodes {}} {mode per}
                             [expr 40+$i*20]
   }
 
-  set w [expr $max_llabel_width + $max_bar_width + $max_rlabel_width + 40]
+  #set w [expr $max_llabel_width + $max_bar_width + $max_rlabel_width + 40]
+    set w [expr [expr $max_llabel_width + $max_bar_width + $max_rlabel_width]*500]
   set h [expr ($num+2)*20];       # height of window
   $win configure -scrollregion [list 0 0 $w $h]
   #$win xview moveto 1; # to shift view of canvas to right
@@ -512,6 +513,7 @@ proc showText {node name} {
     set win2 [ toplevel .text$node]
     wm minsize $win2 1000 250
     wm title .text$node "$name profile"
+   # $win2 configure  -scrollregion [list 0 0 1500 250]
 
     frame .text$node.mbar -relief raised -borderwidth 2
 
@@ -759,7 +761,15 @@ proc order {source target tags value field NA} {
 
 proc specialOrder {source target tags value field} {
   global data alltags
-
+  if [DEBUG] {
+    puts "\nspecialOrder:"
+    puts "  source: $source"
+    puts "  target: $target"
+    puts "  tags: $tags"
+    puts "  value: $value"
+    puts "  field: $field"
+    puts "  NA: $NA"
+  }
   if { $source == $target } {
     return $data($target,$value$field)
   } else {
@@ -983,6 +993,11 @@ proc bargraphmenu {parent prefix func node name} {
 proc showBargraph {node name} {
   global barorder barmode barvalue barunit
   global proforder profvalue profmode profunit
+  if [DEBUG] {
+    puts "\nshowBargraph:"
+    puts "  node: $node"
+    puts "  name: $name"
+  }
 
   if { ! [winfo exists .bar$node] } {
     #if { $proforder(all) == "glob" } {
@@ -1038,7 +1053,11 @@ proc redrawBargraph {node name} {
   global data
   global barorder barmode barvalue barunit
   global tagname alltags
-    
+  if [DEBUG] {
+    puts "\nredrawBargraph:"
+    puts "  node: $node"
+    puts "  name: $name"
+  }    
   set v $barvalue($node)
   #foreach t $data($barorder($node),${v}tags) 
   #foreach t $alltags {
@@ -1094,11 +1113,12 @@ proc multiFuncgraph {win leftlabels nodes percents tags} {
   global racy_progfile
 
   if [DEBUG] {
-	puts "multiFuncgraph:"
-	puts "  leftlabels: $leftlabels"
-	puts "  nodes: $nodes"
-	puts "  percents: $percents"
-	puts "  tags: $tags"
+      puts "multiFuncgraph:"
+      puts "  leftlabels: $leftlabels"
+      puts "  nodes: $nodes"
+      puts "  percents: $percents"
+      puts "  tags: $tags"
+      puts "  minheight: $minheight"
   }
 
   set num [llength $leftlabels];  #number of bars
@@ -1502,6 +1522,9 @@ proc readProfile {} {
 	    mheading \
 	    column \
 	    BINDIR REMBINDIR REMSH TAUDIR
+  if [DEBUG] {
+    puts "\nreadProfile:"
+  }
 
     set dir $depfile(dir)
     if {$depfile(host) == "localhost"} {
@@ -1831,7 +1854,10 @@ proc showFuncgraph {tag} {
   global proforder profvalue profmode profunit
   global tagname
 
-  
+  if [DEBUG] {
+    puts "\nshowFuncgraph:"
+    puts "  tags: $tags"
+  }  
 
   if { ! [winfo exists .func$tag] } {
     set funcvalue($tag) $profvalue(all)
@@ -1882,7 +1908,11 @@ proc redrawFuncgraph {tag dummy} {
   global funodes fulabels
   global funcvalue funcmode funcunit
   global tagname
-
+  if [DEBUG] {
+    puts "\nredrawFuncgraph:"
+    puts "  tags: $tags"
+    puts "  dummy: $dummy"
+  }
   # -- compute arguments for bargraph widget
   set value $funcvalue($tag)
   foreach n $funodes {
@@ -2353,6 +2383,10 @@ proc computeMultiBars {} {
   global coll colls
   global aggr aggrs
   global minheight
+
+  if [DEBUG] {
+    puts "\ncomputeMultiBars:"
+  }
 
   foreach n $nodes {
     set p ""
