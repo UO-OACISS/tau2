@@ -32,7 +32,7 @@
 */
 
 
-extern time_t time(time_t * t);
+extern "C" time_t time(time_t * t);
 
 __private unsigned long int pcxx_ev_class = PCXX_EC_TRACER | PCXX_EC_TIMER;
 
