@@ -117,7 +117,10 @@ public class GprofOutputSession extends ParaProfDataSession{
 			
 			if(callPathSection){
 				if((inputString.indexOf("index") == 0) && 
-				   (inputString.endsWith("index"))) {
+				   (inputString.indexOf("time") >= 0) && 
+				   (inputString.indexOf("self") >= 0) && 
+				   (inputString.indexOf("called") >= 0) && 
+				   (inputString.indexOf("name") >= 0)) {
 				   // this line has the lengths of the fields.
 				   // we need this.
 				   getFieldLengths(inputString);
@@ -245,27 +248,37 @@ public class GprofOutputSession extends ParaProfDataSession{
 
 	/* parse a line that looks like:
 index  %time    self descendants  called+self    name       index
+...or...
+index  % time   self    children  called         name       index
 [xxxx] 100.0 xxxx.xx xxxxxxxx.xx xxxxxxx+xxxxxxx ssssss...
 	*/
 	    StringTokenizer st = new StringTokenizer(string, " \t\n\r");
 		String index = st.nextToken();
 		String percent = st.nextToken();
+		if (percent.compareTo("%") == 0)
+			percent += " " + st.nextToken();
 		String self = st.nextToken();
 		String descendants = st.nextToken();
 		String called = st.nextToken();
 		String name = st.nextToken();
 		// this should be 0, left justified
 		indexStart = string.indexOf(index);
+		System.out.println("index at: " + indexStart);
 		// this should be about 7, right justified
 		percentStart = string.indexOf(percent);
+		System.out.println("percent at: " + percentStart);
 		// this should be about 13, right justified
 		selfStart = string.indexOf(percent) + percent.length() + 1;
+		System.out.println("self at: " + selfStart);
 		// this should be about 21, right justified
 		descendantsStart = string.indexOf(self) + self.length() + 1;
+		System.out.println("descendants at: " + descendantsStart);
 		// this should be about 33, left justified
 		calledStart = string.indexOf(descendants) + descendants.length() + 1;
+		System.out.println("called at: " + calledStart);
 		// this should be about 49, left justified
 		nameStart = string.indexOf(name);
+		System.out.println("name at: " + nameStart);
 		return;
 	}
 
@@ -316,8 +329,9 @@ index  %time    self descendants  called+self    name       index
 		// two numbers, separated by a `+'. The first number 
 		// counts non-recursive calls, and the second counts 
 		// recursive calls. 
-	    if(numberOfTokens!=7)
-		lineData.i0 = 1;
+	    if(numberOfTokens < 7)
+			// if the number of calls is absent, assume 1.
+			lineData.i0 = 1;
 	    else {
 		String tmpStr = st.nextToken();
 		if (tmpStr.indexOf("+") >= 0) {
@@ -330,8 +344,11 @@ index  %time    self descendants  called+self    name       index
 		}
 	    
 	    lineData.s0 = st.nextToken(); //Name
-		while (st.hasMoreTokens())
-	    	lineData.s0 += " " + st.nextToken(); //Name
+		while (st.hasMoreTokens()) {
+			String tmp = st.nextToken();
+			if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
+	    		lineData.s0 += " " + tmp; //Name
+		}
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GOS02");
@@ -369,8 +386,11 @@ index  %time    self descendants  called+self    name       index
 		}
 
 	    lineData.s0 = st1.nextToken(); //Name
-		while (st1.hasMoreTokens())
-	    	lineData.s0 += " " + st1.nextToken(); //Name
+		while (st1.hasMoreTokens()) {
+			String tmp = st1.nextToken();
+			if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
+	    		lineData.s0 += " " + tmp; //Name
+		}
 	}
 	catch(Exception e){
 		System.out.println("***\n" + string + "\n***");
@@ -446,7 +466,8 @@ index  % time    self  children called     name
 		}
 
 		// the rest is the name
-	    lineData.s0 = string.substring(40,string.length()).trim();
+		int end = string.lastIndexOf("[") - 1;
+	    lineData.s0 = string.substring(40,end).trim();
 	}
 	catch(Exception e){
 		System.out.println("***\n" + string + "\n***");
@@ -487,8 +508,11 @@ index  % time    self  children called     name
 		}
 
 	    lineData.s0 = st1.nextToken(); //Name
-		while (st1.hasMoreTokens())
-	    	lineData.s0 += " " + st1.nextToken(); //Name
+		while (st1.hasMoreTokens()) {
+			String tmp = st1.nextToken();
+			if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
+	    		lineData.s0 += " " + tmp; //Name
+		}
 	}
 	catch(Exception e){
 		System.out.println("***\n" + string + "\n***");
@@ -517,8 +541,11 @@ index  % time    self  children called     name
 		}
 	    
 	    lineData.s0 = st.nextToken(); //Name
-		while (st.hasMoreTokens())
-	    	lineData.s0 += " " + st.nextToken(); //Name
+		while (st.hasMoreTokens()) {
+			String tmp = st.nextToken();
+			if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
+	    		lineData.s0 += " " + tmp; //Name
+		}
 	}
 	catch(Exception e){
 		System.out.println(string);
