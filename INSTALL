@@ -10,7 +10,7 @@
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
  *                           Version 2.6                           *
- *                        Developer Release 1                      *
+ *                        Developer Release 2                      *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -123,9 +123,12 @@ The following  command-line options are available to configure:
    root directory. PCL provides a common interface to access hardware 
    performance counters on modern microprocessors. The library supports 
    Sun UltraSparc I/II, PowerPC 604e under AIX, MIPS R10000/12000 under IRIX, 
-   Compaq Alpha 21164 under Tru64Unix and Cray Unicos (T3E) and the 
+   Compaq Alpha 21164, 21264 under Tru64Unix and Cray Unicos (T3E) and the 
    Intel Pentium family of microprocessors under Linux. This option specifies 
    the use of hardware performance counters for profiling (instead of time).  
+   To measure floating point instructions, set the environment variable 
+   PCL_EVENT to PCL_FP_INSTR (for example). Refer to the TAU User's Guide or
+   PCL Documentation (pcl.h) for other event names.
    [ Ref : http://www.fz-juelich.de/zam/PCL ]
    
 -mpiinc=<dir>
