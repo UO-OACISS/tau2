@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.3 2004/05/05 23:16:28 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.4 2004/05/18 21:18:30 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -807,8 +807,8 @@ public class PerfDMFSession extends DataSession {
 		vacuumDatabase();
 		long stop = System.currentTimeMillis();
 		long elapsedMillis = stop - start;
-		double elapsedSeconds = (double)(elapsedMillis) / 100.0;
-		System.out.println("Elapsed time: " + elapsedSeconds);
+		double elapsedSeconds = (double)(elapsedMillis) / 1000.0;
+		System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
 		return newTrialID;
     }
 

@@ -93,6 +93,12 @@ public class LoadTrial implements ParaProfObserver {
 			v.add(inFile);
 			dataSession = new MpiPOutputSession();
 			break;
+		case 4:
+			inFile[0] = new File (sourceFile);
+			v = new Vector();
+			v.add(inFile);
+			dataSession = new HPMToolkitDataSession();
+			break;
 	}
 
 	trial = new Trial();
@@ -107,7 +113,7 @@ public class LoadTrial implements ParaProfObserver {
     }
 
     public void saveTrial() {
-	// if (fileType == 3) return;
+	//if (fileType == 4) return;
 	// set some things in the trial
 	int[] maxNCT = dataSession.getMaxNCTNumbers();
 	trial.setNodeCount(maxNCT[0]+1);
@@ -240,6 +246,8 @@ public class LoadTrial implements ParaProfObserver {
 			fileType = 2;
 		} else if (fileTypeString.equals("mpip")) {
 			fileType = 3;
+		} else if (fileTypeString.equals("hpm")) {
+			fileType = 4;
 /*
 		} else if (fileTypeString.equals("gprof")) {
 			fileType = 0;
