@@ -29,7 +29,7 @@ OPARI_TOOL	= $(OPARIDIR)/tool/opari
 
 CFLAGS 		= $(TAU_INCLUDE) $(TAU_DEFS)  
 
-FFLAGS        	= 
+FFLAGS        	= $(TAU_F90_SUFFIX) -g
 
 LIBS            =  $(TAU_LIBS)  $(TAU_FORTRANLIBS)  $(LEXTRA1)
 #LIBS            = $(TAU_DISABLE)  $(TAU_FORTRANLIBS)
