@@ -38,6 +38,8 @@
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void * function_info);
 extern "C" void Tau_stop_timer(void * function_info); 
+extern "C" void Tau_create_top_level_timer_if_necessary(void);
+extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 #define TAU_PROFILE(name, type, group) \
@@ -212,6 +214,6 @@ extern "C" void Tau_stop_timer(void * function_info);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 2003/12/11 22:16:06 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.28 2003/12/11 22:16:06 sameer Exp $ 
+ * $Revision: 1.29 $   $Date: 2004/01/27 23:15:42 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.29 2004/01/27 23:15:42 sameer Exp $ 
  ***************************************************************************/
