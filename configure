@@ -1049,6 +1049,15 @@ if [ $machine = t3e -a $cxx_compiler = KCC ]
     fi
 fi
 
+if [ $machine = crayx1 ]
+  then 
+    if [ $fortran_compiler = no ]
+    then
+      fixmakeargs="$fixmakeargs CRAY_X1_FORTRAN"
+    fi
+fi
+
+
 if [ $debugprof = yes ]
   then
     fixmakeargs="$fixmakeargs DEBUGPROF"
@@ -1271,7 +1280,12 @@ case $fortran_compiler in
 
    cray)
       echo "Default Fortran compiler will be Cray f90"
-      fixmakeargs="$fixmakeargs CRAY_FORTRAN"
+      if [ $machine = crayx1 ] 
+      then 
+        fixmakeargs="$fixmakeargs CRAY_X1_FORTRAN"
+      else
+        fixmakeargs="$fixmakeargs CRAY_FORTRAN"
+      fi
       ;;
 
    pgi)
@@ -1399,7 +1413,7 @@ then
   linux) 
 	mpiinc=/usr/local/packages/mpich/include
 	;;
-  t3e)
+  t3e|crayx1)
 	mpiinc=/opt/ctl/mpt/mpt/include
 	;;
   *)
