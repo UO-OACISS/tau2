@@ -54,17 +54,27 @@ set tcl_precision 17
 #    magenta green red blue yellow purple orange gold brown \
 #    tan grey coral forestgreen skyblue seagreen beige steelblue1 royalblue \
 #    pink cyan violet snow steelblue white ]
+#set Colors [list \
+#    coral  lavender cornflowerblue turquoise yellow palevioletred \
+#    mediumaquamarine dodgerblue1 salmon cadetblue1 orchid peachpuff1 \
+#    springgreen papayawhip hotpink royalblue mistyrose powderblue \
+#    chartreuse plum ] 
+#set TextColors [list \
+#    black black black white black white black black white \
+#    black black black black black black black black black \
+#    black black black black black black ]
 
 set Colors [list \
-    coral  lavender cornflowerblue turquoise yellow palevioletred \
-    mediumaquamarine dodgerblue1 salmon cadetblue1 orchid peachpuff1 \
-    springgreen papayawhip hotpink royalblue mistyrose powderblue \
-    chartreuse plum ] 
+    lightseagreen  lightskyblue1  lemonchiffon1  rosybrown1 \
+    royalblue4 darkcyan mistyrose  cornflowerblue lightcoral \
+    mediumaquamarine lavenderblush1   palevioletred3  \
+    lightgoldenrodyellow lightblue papayawhip   paleturquoise \
+    peachpuff1 powderblue ] 
 
 set TextColors [list \
-    black black black white black white black black white \
-    black black black black black black black black black \
-    black black black black black black ]
+    black black black black white white black black black \
+    black black black black black black black black black ]
+
 
 set Stipples [list \
     hline1.bm cross.bm xline1.bm gray1.bm hline22.bm \
@@ -79,10 +89,12 @@ set Stipples [list \
 #
 rename exit exit.old
 proc exit {{status 0}} {
-    global myself
+    global myself uEventFlag
 
-    PM_RemGlobalSelect $myself \
- 	{ global_selectFuncTag }
+    PM_RemGlobalSelect $myself { global_selectFuncTag }
+    if {$uEventFlag != 0} {
+	PM_RemGlobalSelect $myself { global_selectUserTag }
+    }
     PM_RemTool $myself
     exit.old
 }
@@ -126,17 +138,41 @@ proc max3 {x1 x2 x3} {
 }
 
 #
+# max4: returns maximum of four values
+#
+
+proc max4 {x1 x2 x3 x4} {
+  if { $x1 >= $x2 && $x1 >= $x3 && $x1 >= $x4} {
+      return $x1  
+  } elseif { $x2 >= $x1 && $x2 >= $x3 && $x2 >= $x4} {
+      return $x2
+  } elseif { $x3 >= $x1 && $x3 >= $x2 && $x3 >= $x4} {
+      return $x3
+  } else {return $x4}
+}
+
+#
 # vectorsum: returns sum of all elements in a vector
 #
 
 proc vectorsum {vector} {
+
   upvar $vector v
+
+  if [DEBUG] {
+      puts "vectorsum:"
+      puts "  vector: $vector"
+      puts "  v: $v"
+  }
+
   set r 0.0
   foreach elem $v {
     set r [expr $r+$elem]
   }
   return $r
 }
+
+
 
 #
 # vectormax: returns maximum of all elements in a vector
@@ -157,6 +193,13 @@ proc vectormax {vector} {
 
 proc vectorop {vector op val} {
   upvar $vector v
+
+  if [DEBUG] {
+      puts "vectorop:"
+      puts "  vector: $vector"
+      puts "  v: $v"
+  }
+
   set r ""
   foreach elem $v {
     lappend r [format "%.1f" [expr ${elem}${op}${val}]]
@@ -178,6 +221,7 @@ proc vectorpercent {vector max scale} {
   }
   return $r
 }
+
 
 #
 # numberInput: widget for input of 1 integer number
@@ -204,6 +248,7 @@ proc numberInput {win label varname} {
 }
 
 set pr_sel_tag -99;  # currently selected function
+set ue_sel_tag -99;  # currently selected user-defined event
 
 #
 # bargraph: horizontal bargraph widget
@@ -227,12 +272,15 @@ proc bargraph {win bgtitle rightlabels percent values tags {nodes {}} {mode per}
   if [DEBUG] {
       puts " "
       puts "bargraph: "
-      #puts "  rightlabels: $rightlabels"
-      #puts "  percent: $percent"
-      #puts "  values: $values"
-      #puts "  tags: $tags"
-      #puts "  nodes: $nodes"
-      #puts "  mode: $mode"
+      puts "  bgtitle: $bgtitle"
+      puts "  rightlabels: $rightlabels"
+      puts "  percent: $percent"
+      puts "  values: $values"
+      puts "  tags: $tags"
+      puts "  nodes: $nodes"
+      puts "  mode: $mode"
+      puts "  pr_sel_tag: $pr_sel_tag"
+      puts "  racy_progfile: $racy_progfile"
   }
 
   set num [llength $rightlabels];  # number of bars
@@ -455,6 +503,309 @@ proc bargraph {win bgtitle rightlabels percent values tags {nodes {}} {mode per}
 }
 
 #
+# UserEbargraph: horizontal bargraph widget
+#
+#         win: pathname for bargraph
+#     bgtitle: title for bargraph
+# rightlabels: list of labels
+#     percent: list of percent values
+#      values: list of values
+#        tags: list of corresponding Sage++ id of functions
+#       nodes: list of corresponding node identifiers
+#              (if nonempty used instead of tags)
+#        mode: what to show as labels on the right side: per / val / none
+#
+
+#proc UserEbargraph {win bgtitle labels numval maxval minval stdval tags {unodes {}} {mode num} {orient right} } {
+proc UserEbargraph {win bgtitle labels numval maxval minval  tags {unodes {}} {mode num} {orient right} } {
+  global uecol uestip event
+  global ue_sel_tag
+  global racy_progfile
+
+  if [DEBUG] {
+      puts " "
+      puts "UserEbargraph: "
+      puts "  labels: $labels"
+      puts "  numval: $numval"
+      puts "  maxval: $maxval"
+      puts "  minval: $minval"
+      #puts "  stdval: $stdval"
+      puts "  tags: $tags"
+      puts "  unodes: $unodes"
+      puts "  mode: $mode"
+      puts "  ue_sel_tag: $ue_sel_tag"
+  }
+
+  set num [llength $labels];  # number of bars
+
+  # -- create or reset canvas
+  if { [winfo exists $win] } {
+    $win delete all
+  } else {
+    canvas $win -background white
+  }
+
+  switch -exact $mode {
+      num    { set totalnum [vectorsum numval] }
+      max    { set totalmax [vectorsum maxval] }
+      min    { set totalmin [vectorsum minval] }
+      #stddev { set totalstd [vectorsum stdval] }
+  }
+   #------------------------------------------------------
+   # display function name on the left side of bar graph
+   #------------------------------------------------------
+  if { $orient == "left" } {
+    set max_llabel_width 0
+    for {set i 0} {$i<$num} {incr i} {
+    # -- create left labels; highlight selected functions in red
+    set t [lindex $tags $i]
+    if { $t == $ue_sel_tag } {
+      set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+               -text "[lindex $labels $i]" -anchor e -fill red \
+               -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+    } else {
+      set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+               -text "[lindex $labels $i]" -anchor e \
+               -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+    }
+    set bbox [$win bbox $ll_obj($i)]
+    set llabel_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+    if {$llabel_width > $max_llabel_width} {set max_llabel_width $llabel_width}
+
+    # -- setup bindings for clicking on left labels
+    if { $unodes == {} } {
+      $win bind $ll_obj($i) <Button-1> "showuserEgraph $t"
+      $win bind $ll_obj($i) <Button-3> \
+	  "PM_GlobalSelect $racy_progfile global_selectUserTag $t"
+    } else {
+      $win bind $ll_obj($i) <Button-1> \
+	  "showUserEBargraph [lindex $unodes $i] {[lindex $labels $i]}"
+      $win bind $ll_obj($i) <Button-2> \
+	  "showUserEText [lindex $unodes $i] {[lindex $labels $i]}"
+    }
+  }
+
+  # -- create title
+  set title [$win create text 0 20 \
+		 -text "$bgtitle" -anchor e \
+		 -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+  set bbox [$win bbox $title]
+  set title_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+  set max_l_width [max $title_width $max_llabel_width]
+  $win coords $title [expr $max_l_width+5] 20
+
+  set max_r_width 0
+  for {set i 0} {$i<$num} {incr i} {
+    # -- position left labels
+    $win coords $ll_obj($i) [expr $max_l_width+5] [expr 40+$i*20]
+
+    # -- display bars and right labels according to mode
+
+    if { [llength $numval] != 1 } {
+      switch -exact $mode {
+	  num { set p [format "%4.0f" [expr [lindex $numval $i] / $totalnum * 100]] }
+	  max { set p [ expr [lindex $maxval $i] / $totalmax * 100 ] }
+	  min { set p [ expr [lindex $minval $i] / $totalmin * 100 ] }
+	  #stddev { set p [ expr [lindex $stdval $i] / $totalstd * 100 ] }
+      }
+    } else {
+      switch -exact $mode {
+	  num {  set totalnum [vectorsum event($unodes,$mode)]
+	         set p [format "%4.0f" [expr [lindex $numval $i] / $totalnum * 100]] }
+	  max {  set totalmax [vectorsum event($unodes,$mode)]
+	         set p [ expr [lindex $maxval $i] / $totalmax * 100 ] }
+	  min {  set totalmin [vectorsum event($unodes,$mode)]
+	         set p [ expr [lindex $minval $i] / $totalmin * 100 ] }
+	  #stddev { set totalstd [vectorsum event($unodes,$mode)]
+	  #         set p [ expr [lindex $stdval $i] / $totalstd * 100 ] }
+      }	
+    }
+    if { $p > 0 } {
+      set t [lindex $tags $i]
+      $win create rectangle \
+	  [expr $max_l_width+10]\
+	  [expr 31+$i*20] \
+	  [expr $max_l_width+10+$p*2] \
+	  [expr 49+$i*20] \
+	  -fill $uecol($t) -stipple $uestip($t)
+      switch -exact $mode {
+	  num   { set rl_obj [$win create text \
+				  [expr $max_l_width+15+$p*2] \
+				  [expr 40+$i*20] \
+				  -text "[lindex $numval $i]" -anchor w \
+				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+	  max   { set rl_obj [$win create text \
+				  [expr $max_l_width+15+$p*2] \
+				  [expr 40+$i*20] \
+				  -text "[wraplindex $maxval $i]" -anchor w \
+				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+	  min   { set rl_obj [$win create text \
+				  [expr $max_l_width+15+$p*2] \
+				  [expr 40+$i*20] \
+				  -text "[wraplindex $minval $i]" -anchor w \
+				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+	  #stddev   { set rl_obj [$win create text \
+	  #			  [expr $max_l_width+15+$p*2] \
+	  #      		  [expr 40+$i*20] \
+	  #			  -text "[wraplindex $stdval $i]" -anchor w \
+	  #			  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+          none  {}
+      }
+      set bbox [$win bbox $rl_obj]
+      set r_width [expr $p*2 + [lindex $bbox 2] - [lindex $bbox 0]]
+      if {$r_width > $max_r_width} {set max_r_width $r_width}
+    }
+  }
+
+  set w [expr $max_l_width + $max_r_width + 20]
+  set h [expr ($num+2)*20];       # height of window
+  $win configure -scrollregion [list 0 0 $w $h]
+  $win xview moveto 1; # to shift view of canvas to right
+
+  } else {
+   #-------------------------------------------------------
+   # display function name on the right side of bar graph
+   #-------------------------------------------------------
+  set max_llabel_width 0
+  set max_bar_width 0
+
+  
+  for {set i 0} {$i<$num} {incr i} {
+    # -- display left labels according to mode
+    if { [llength $numval] != 1 } {
+      switch -exact $mode {
+	  num { set p [format "%4.0f" [expr [lindex $numval $i] / $totalnum * 100]] }
+	  max { set p [ expr [lindex $maxval $i] / $totalmax * 100 ] }
+	  min { set p [ expr [lindex $minval $i] / $totalmin * 100 ] }
+	  #stddev { set p [ expr [lindex $stdval $i] / $totalstd * 100 ] }
+      }
+    } else {
+      switch -exact $mode {
+	  num {  set totalnum [vectorsum event($unodes,$mode)]
+	         set p [format "%4.0f" [expr [lindex $numval $i] / $totalnum * 100]] }
+	  max {  set totalmax [vectorsum event($unodes,$mode)]
+	         set p [ expr [lindex $maxval $i] / $totalmax * 100 ] }
+	  min {  set totalmin [vectorsum event($unodes,$mode)]
+	         set p [ expr [lindex $minval $i] / $totalmin * 100 ] }
+	  #stddev { set totalstd [vectorsum event($unodes,$mode)]
+	  #         set p [ expr [lindex $stdval $i] / $totalstd * 100 ] }
+      }	
+    }
+
+    if { $p > 0 } {
+      # -- set the width of bar graph
+      set bar_width($i) [expr $p*2]
+      if {$bar_width($i) > $max_bar_width} {set max_bar_width $bar_width($i)}
+      # -- create left label according to its mode
+      switch -exact $mode {
+	  num   { set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+				  -text "[wraplindex $numval $i]" -anchor e \
+				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+	  max   { set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+				  -text "[wraplindex $maxval $i]" -anchor e \
+				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+	  min   { set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+				  -text "[lindex $minval $i]" -anchor e \
+				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+	  #stddev   { set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+	  #			  -text "[wraplindex $stdval $i]" -anchor e \
+	  #			  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+          none  {}
+      }
+      set bbox [$win bbox $ll_obj($i)]
+      set llabel_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+      if {$llabel_width > $max_llabel_width} {set max_llabel_width $llabel_width}
+    }
+  }
+  set max_llabel_width [expr $max_llabel_width + 10]
+  set max_rlabel_width 0
+  for {set i 0} {$i<$num} {incr i} {
+    # -- create right labels/function names; highlight selected functions in red
+    set t [lindex $tags $i]
+    switch -exact $mode {
+	num { set p [lindex $numval $i] }
+	max { set p [lindex $maxval $i] }
+	min { set p [lindex $minval $i] }
+	#stddev { set p [lindex $stdval $i] }
+    }
+    if { $t == $ue_sel_tag } {
+      set rl_obj($i) [$win create text 0 [expr 40+$i*20] \
+                             -text "[lindex $labels $i]" -anchor w -fill red \
+                             -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+    } else {
+      set rl_obj($i) [$win create text 0 [expr 40+$i*20] \
+                             -text "[lindex $labels $i]" -anchor w \
+                             -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+    }
+    set bbox [$win bbox $rl_obj($i)]
+    set rlabel_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+    if {$rlabel_width > $max_rlabel_width} {set max_rlabel_width $rlabel_width}
+
+    # -- setup bindings for clicking on right labels
+    if { $unodes == {} } {
+	$win bind $rl_obj($i) <Button-1> "showuserEgraph $t"
+	$win bind $rl_obj($i) <Button-3> \
+	    "PM_GlobalSelect $racy_progfile global_selectUserTag $t"
+    } else {
+	$win bind $rl_obj($i) <Button-1> \
+	    "showUserEBargraph [lindex $unodes $i] {[lindex $labels $i]}"
+	$win bind $rl_obj($i) <Button-2> \
+	    "showUserEText [lindex $unodes $i] {[lindex $labels $i]}"
+    }
+  }
+
+  # -- create title
+  set title [$win create text 0 20 \
+		 -text "$bgtitle" -anchor w \
+		 -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+  set bbox [$win bbox $title]
+  set title_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+  set max_r_width [max $title_width $max_rlabel_width]
+  $win coords $title [expr $max_llabel_width + $max_bar_width + 5] 20
+
+  # -- display bars and left labels according to mode
+  for {set i 0} {$i<$num} {incr i} {
+    switch -exact $mode {
+	num { set p [lindex $numval $i] }
+	max { set p [lindex $maxval $i] }
+	min { set p [lindex $minval $i] }
+	#stddev { set p [lindex $stdval $i] }
+    }
+    if { $p > 0 } {
+	# -- position left labels
+	$win coords $ll_obj($i) [expr $max_llabel_width+$max_bar_width-$bar_width($i)-5] \
+                            [expr 40+$i*20]
+
+	# -- display bars and right labels according to mode
+    	set t [lindex $tags $i]
+	$win create rectangle \
+	  [expr $max_llabel_width+$max_bar_width-1-$bar_width($i)]  \
+	  [expr 31+$i*20] \
+	  [expr $max_llabel_width+$max_bar_width] \
+	  [expr 49+$i*20] \
+	  -fill $uecol($t) -stipple $uestip($t)
+    }
+    # -- position right labels
+    $win coords $rl_obj($i) [expr $max_llabel_width + $max_bar_width + 5] \
+                            [expr 40+$i*20]
+  }
+
+  #set w [expr $max_llabel_width + $max_bar_width + $max_rlabel_width + 40]
+  set w [expr [expr $max_llabel_width + $max_bar_width + $max_rlabel_width]*500]
+  set h [expr ($num+2)*20];       # height of window
+  $win configure -scrollregion [list 0 0 $w $h]
+  #$win xview moveto 1; # to shift view of canvas to right
+  }
+}
+
+#
 # selectFuncTag: implementation of global feature "selectFunction" for racy
 #                display all instances of selected function in red and
 #                show function profile, if possible
@@ -471,10 +822,50 @@ proc selectFuncTag {progfile tag} {
       return
   }
 
+  if [DEBUG] {
+    puts "\nselectFuncTag:"
+    puts "  progfile: $progfile"
+    puts "  racy_progfile: $racy_progfile"
+    puts "  pr_sel_tag: $pr_sel_tag"
+    puts "  tag: $tag"
+  }
+
   set pr_sel_tag $tag
   redraw {} {}
   if [ info exists tagname($tag) ] { showFuncgraph $tag }
 }
+
+#
+# selectUserTag: implementation of global feature "selectUserEvent" for racy
+#                display all instances of selected event in red and
+#                show user-defined event profile, if possible
+#
+#           progfile: had better be == racy_progfile
+#           tag: id of user-defined event to select
+#
+
+proc selectUserTag {progfile tag} {
+  global ue_sel_tag \
+	  uename racy_progfile
+
+  if {$progfile != $racy_progfile} {
+      return
+  }
+
+  if [DEBUG] {
+    puts "\nselectUserTag:"
+    puts "  progfile: $progfile"
+    puts "  racy_progfile: $racy_progfile"
+    puts "  ue_sel_tag: $ue_sel_tag"
+    puts "  tag: $tag"
+  }
+
+  set ue_sel_tag $tag
+  redrawue {} {}
+  if [ info exists uename($tag) ] { showuserEgraph $tag }
+}
+
+
 
 #
 # showText: display text node profile window
@@ -714,6 +1105,177 @@ proc redrawText {node name} {
 }
 
 #
+# showUserEText: display text node profile window
+#
+#     node: id of node
+#     name: full nameof node
+#
+
+proc showUserEText {node name} {
+  global myevent
+  global event
+  global uetextorder1
+  global eventorder eventmode
+
+  if [DEBUG] {
+    puts "\nshowUserEText:"
+    puts "  node: $node"
+    puts "  name: $name"
+  }
+
+  if { ! [winfo exists .eventtext$node] } {
+    if { $eventorder(all) == "all" } {
+      set uetextorder1($node) $node
+    } else {
+      set uetextorder1($node) $eventorder(all)
+    }
+
+    set winU2 [ toplevel .eventtext$node]
+    wm minsize $winU2 700 250
+    wm title .eventtext$node "$name profile"
+
+    frame .eventtext$node.mbar -relief raised -borderwidth 2
+
+    menubutton .eventtext$node.mbar.b1 -text File -menu .eventtext$node.mbar.b1.m1 \
+                                  -underline 0
+    menu .eventtext$node.mbar.b1.m1
+    .eventtext$node.mbar.b1.m1 add command -label "Close"  -underline 0 \
+                    -command "destroy .eventtext$node"
+
+    menubutton .eventtext$node.mbar.b2 -text Order -menu .eventtext$node.mbar.b2.m1 \
+                                  -underline 0
+    menu .eventtext$node.mbar.b2.m1
+    uesubmenu1 .eventtext$node.mbar.b2.m1 uetextorder1 redrawUserEText $node {$name}
+
+    menubutton .eventtext$node.mbar.b3 -text Help -menu .eventtext$node.mbar.b3.m1 \
+                                  -underline 0
+    menu .eventtext$node.mbar.b3.m1
+##HERE##
+    #if [ALONE] {
+    #  .eventtext$node.mbar.b3.m1 add command -label "on text node profile" \
+    #	  -underline 3 \
+    #	  -command "showHelp $myevent 1.2.3-text 1"
+    #} else {
+    #  .eventtext$node.mbar.b3.m1 add command -label "on text node profile" \
+    #	  -underline 3 \
+    #	  -command "xsend tau \[list showHelp $myevent 1.2.3-text 1\]"
+    #} 
+
+    pack .eventtext$node.mbar.b1 .eventtext$node.mbar.b2 -side left -padx 5
+    pack .eventtext$node.mbar.b3 -side right -padx 5
+
+    redrawUserEText $node {$name}
+
+    scrollbar .eventtext$node.sv -orient vert -relief sunken \
+	-command ".eventtext$node.text yview"
+    .eventtext$node.text configure -yscrollcommand ".eventtext$node.sv set"
+
+    scrollbar .eventtext$node.sh -orient horiz -relief sunken \
+	-command ".eventtext$node.text xview"
+    .eventtext$node.text configure -xscrollcommand ".eventtext$node.sh set"
+
+    button .eventtext$node.but -text "close" -command "destroy .eventtext$node"
+
+    pack .eventtext$node.mbar -side top -fill x
+    pack .eventtext$node.but -side bottom -fill x
+    pack .eventtext$node.sh -side bottom -fill x
+    pack .eventtext$node.sv -side right -fill y
+    #pack .eventtext$node.text -side left -ipadx 10 -ipady 10 -anchor center
+    pack .eventtext$node.text -side left -fill both -expand yes
+  } else {
+    raise .eventtext$node
+  }
+}
+
+#
+# redrawUserEText: create or update contents of user-defined events
+#                  text node profile window
+#
+#       node: id of node
+#       name: full nameof node
+#
+
+proc redrawUserEText {node name} {
+  global event
+  global uename uecol uecol uefcol
+  global uetextorder1
+  global ue_sel_tag
+  global racy_progfile usertags
+  global eventheading
+
+  if [DEBUG] {
+    puts "\nredrawUserEText:"
+    puts "  node: $node"
+    puts "  name: $name"
+  }
+
+  set winU .eventtext$node.text
+
+  if {$uetextorder1($node) == "glob"} {
+    set tags $usertags
+  } else {
+    set tags $event($node,tags)
+  }
+
+  # -- create or reset text widget
+  if { [winfo exists $winU] } {
+    $winU configure -state normal
+    $winU delete 1.0 end
+    $winU configure -height [min 35 [expr 3+[llength $tags]]]
+  } else {
+      text $winU -height [min 35 [expr 3+[llength $tags]]] \
+	  -background white -foreground black -padx 5 -pady 5
+  }
+
+  # -- redraw text area
+
+  $winU insert end \
+     "---------------------------------------------------------------------------------------------------------------\n"
+    foreach line $eventheading {
+       $winU insert end "$line\n"
+    }
+    $winU insert end \
+     "---------------------------------------------------------------------------------------------------------------\n"
+
+
+
+  set n 3
+  set txt [ueorder $uetextorder1($node) $node $tags  text {}]
+
+  foreach line $txt {
+    incr n
+
+    set t [lindex $tags [expr $n-4]]
+    if { $line == "" } {
+	$winU insert end \
+	    "                                                                        $uename($t)\n"
+    } else {
+	$winU insert end "$line\n"
+
+
+      if { $t == $ue_sel_tag } {
+	  $winU tag add seltag $n.0 $n.56
+	  $winU tag configure seltag -foreground red
+      }
+    }
+
+    $winU tag add t$n $n.56 "$n.56 lineend"   
+    
+    if { [winfo depth .] == 2 } {
+      $winU tag configure t$n -background white -foreground black
+    } else {
+      $winU tag configure t$n -background $uecol($t) -foreground $uefcol($t)
+    }
+    $winU tag bind t$n <Button-1> "showuserEgraph $t"
+    $winU tag bind t$n <Button-3> "PM_GlobalSelect $racy_progfile global_selectUserTag $t"
+  }
+
+  $winU configure -wrap none
+  $winU configure -state disabled
+}
+
+
+#
 # order: return field of a data item in the same order it appear in
 #        other data item. order is determined by "tags" field
 #
@@ -795,6 +1357,85 @@ proc specialOrder {source target tags value field} {
     return $result
   }
 }
+
+#
+# ueorder: return field of a data item in the same order it appear in
+#          other data item. order is determined by "tags" field
+#
+#  source: id of data which values determine sorting
+#  target: id of data to order
+#   field: field of data to be sorted: num max min stddev
+#      NA: NULL value for this field
+#
+
+proc ueorder {source target tags field NA} {
+  global event usertags
+  if [DEBUG] {
+    puts "\nueorder:"
+    puts "  source: $source"
+    puts "  target: $target"
+    puts "  tags: $tags"
+    puts "  field: $field"
+    puts "  NA: $NA"
+  }
+
+  if { $source == $target } {
+    return $event($target,$field)
+  } else {
+    set result ""
+    foreach t $tags {
+      set i [lsearch -exact $event($target,tags) $t]
+      if { $i == -1 } {
+        lappend result $NA
+      } else {
+        lappend result [lindex $event($target,$field) $i]
+      }
+    }
+    return $result
+  }
+}
+
+#
+# uespecialOrder: basically like order above, but only for numeric fields
+#               corrects "other" entry in field
+#
+
+proc uespecialOrder {source target tags field} {
+  global event usertags
+  if [DEBUG] {
+    puts "\nuespecialOrder:"
+    puts "  source: $source"
+    puts "  target: $target"
+    puts "  tags: $tags"
+    puts "  field: $field"
+  }
+  if { $source == $target } {
+    return $event($target,$field)
+  } else {
+    set result ""
+    set na [vectorsum event($target,$field)];
+    #set total $na
+    foreach t $tags {
+      set i [lsearch -exact $event($target,tags) $t]
+      if { $i == -1 } {
+        lappend result 0.0
+      } else {
+        set x [lindex $event($target,$field) $i]
+        if { $t == -1 } {
+          # -- tag -1 is the "others" element; always last one
+          # -- use "notused" values instead of precalculated ones
+	    lappend result [format "%4.2f" [expr $na/$total*100]]
+        } else {
+          set na [expr $na-$x]; #value used; subtract it from "notused" value
+	    #lappend result [expr $x/$total*100]
+	    lappend result $x
+        }
+      }
+      }
+    return $result
+  }
+}
+
 
 #
 # submenu2: create "Value" menu
@@ -930,6 +1571,86 @@ proc submenu6a {menu var func node name} {
 }
 
 #
+# uesubmenu1: create "Order" menu
+#
+#      menu: pathname of menu
+#       var: basename of global variable to store selection
+#      func: function to call for redraw
+# node,name: arguments to func
+#
+
+proc uesubmenu1 {uemenu var func node name} {
+  global uenodes uelabels
+
+  $uemenu add radiobutton -label "global" \
+            -underline 0 -variable ${var}($node) -value glob \
+            -command "$func $node {$name}"
+  $uemenu add radiobutton -label "decreasing" \
+            -underline 0 -variable ${var}($node) -value $node \
+            -command "$func $node {$name}" \
+            -state disabled
+  $uemenu add cascade -label "node" \
+            -underline 0 -menu $uemenu.1
+
+  # -- create "node" submenu
+  menu $uemenu.1
+  set i 0
+  foreach n $uenodes {
+    if { $n != {} } {
+      $uemenu.1 add radiobutton -label [lindex $uelabels $i] \
+                  -variable ${var}($node) -value $n \
+	          -command "$func {$node} {$name}"
+    } else {
+      $uemenu.1 add separator
+    }
+    incr i
+  }
+}
+
+
+#
+# uesubmenu2: create "Mode" menu
+#
+#      menu: pathname of menu
+#       var: basename of global variable to store selection
+#      func: function to call for redrawevent
+# node,name: arguments to func
+#
+
+proc uesubmenu2 {uemenu var func node name} {
+  $uemenu add radiobutton -label "number" \
+                 -underline 0 -variable ${var}($node) -value num \
+                 -command "$func $node {$name}"
+  $uemenu add radiobutton -label "maximum" \
+                 -underline 0 -variable ${var}($node) -value max \
+                 -command "$func $node {$name}"
+  $uemenu add radiobutton -label "minimum" \
+                 -underline 0 -variable ${var}($node) -value min \
+                 -command "$func $node {$name}"
+  $uemenu add radiobutton -label "standard deviation" \
+                 -underline 0 -variable ${var}($node) -value stddev \
+                 -command "$func $node {$name}" \
+                 -state disabled
+}
+#
+# uesubmenu3: create "Orient" menu
+#
+#      menu: pathname of menu
+#       var: basename of global variable to store selection
+#      func: function to call for redrawevent
+# node,name: arguments to func
+#
+
+proc uesubmenu3 {uemenu var func node name} {
+  $uemenu add radiobutton -label "left" \
+                 -underline 0 -variable ${var}($node) -value left \
+                 -command "$func $node {$name}" 
+  $uemenu add radiobutton -label "right" \
+                 -underline 0 -variable ${var}($node) -value right \
+                 -command "$func $node {$name}"
+}
+
+#
 # bargraphmenu: create menubar for node profile windows
 #
 #       parent: pathname for parent of menubar
@@ -940,7 +1661,14 @@ proc submenu6a {menu var func node name} {
 
 proc bargraphmenu {parent prefix func node name} {
   global myself
-
+  if [DEBUG] {
+    puts "\nbargraphmenu:"
+    puts "  parent: $parent"
+    puts "  prefix: $prefix"
+    puts "  func: $func"
+    puts "  node: $node"
+    puts "  name: $name"
+  }
   set menubar $parent.mbar
   frame $menubar -relief raised -borderwidth 2
   menubutton $menubar.b1 -text File -menu $menubar.b1.m1 -underline 0
@@ -983,6 +1711,63 @@ proc bargraphmenu {parent prefix func node name} {
 }
 
 #
+# eventbargraphmenu: create menubar for node profile windows
+#
+#            parent: pathname for parent of menubar
+#            prefix: prefix for global variables to store selections
+#              func: function to call for redraw
+#         node,name: arguments to func
+#
+
+proc eventbargraphmenu {parent prefix func node name} {
+  global myevent
+  if [DEBUG] {
+    puts "\neventbargraphmenu:"
+    puts "  parent: $parent"
+    puts "  prefix: $prefix"
+    puts "  func: $func"
+    puts "  node: $node"
+    puts "  name: $name"
+  }
+  set menubar $parent.mbar
+  frame $menubar -relief raised -borderwidth 2
+  menubutton $menubar.b1 -text File -menu $menubar.b1.m1 -underline 0
+  menu $menubar.b1.m1
+  $menubar.b1.m1 add command -label "Print" -underline 0 \
+                    -command "printCanvas .eventbar${node}.bar node.$node"
+  $menubar.b1.m1 add separator
+  $menubar.b1.m1 add command -label "Close" -underline 0 \
+                    -command "destroy .eventbar$node"
+
+  menubutton $menubar.b2 -text Order -menu $menubar.b2.m1 -underline 0
+  menu $menubar.b2.m1
+  uesubmenu1 $menubar.b2.m1 ${prefix}order $func $node {$name}
+
+  menubutton $menubar.b3 -text Mode -menu $menubar.b3.m1 -underline 0
+  menu $menubar.b3.m1
+  uesubmenu2 $menubar.b3.m1 ${prefix}mode $func $node {$name}
+
+  menubutton $menubar.b4 -text Orientation -menu $menubar.b4.m1 -underline 0 
+  menu $menubar.b4.m1 
+  uesubmenu3 $menubar.b4.m1 ${prefix}orient $func $node {$name}
+
+  menubutton $menubar.b5 -text Help -menu $menubar.b5.m1 -underline 0
+  menu $menubar.b5.m1
+##HERE##
+  #if [ALONE] {
+  #  $menubar.b5.m1 add command -label "on node profile" -underline 3 \
+  #	              -command "showHelp $myevent 1.2.2-node 1"
+  #} else {
+  #  $menubar.b5.m1 add command -label "on node profile" -underline 3 \
+  #	              -command "xsend tau \[list showHelp $myevent 1.2.2-node 1\]"
+  #}
+
+  pack $menubar.b1 $menubar.b2 $menubar.b3 $menubar.b4 \
+       -side left -fill x -padx 5
+  pack $menubar.b5 -side right -fill x -padx 5
+}
+
+#
 # showBargraph: display node profile window
 #
 #         node: id of node
@@ -996,6 +1781,14 @@ proc showBargraph {node name} {
     puts "\nshowBargraph:"
     puts "  node: $node"
     puts "  name: $name"
+    #puts "  barorder($node): $barorder($node)"
+    #puts "  barmode($node): $barmode($node)"
+    #puts "  barvalue($node): $barvalue($node)"
+    #puts "  barunit($node): $barunit($node)"
+    puts "  proforder(all): $proforder(all)"
+    puts "  profvalue(all): $profvalue(all)"
+    puts "  profmode(all): $profmode(all)"
+    puts "  profunit(all): $profunit(all)"
   }
 
   if { ! [winfo exists .bar$node] } {
@@ -1056,6 +1849,12 @@ proc redrawBargraph {node name} {
     puts "\nredrawBargraph:"
     puts "  node: $node"
     puts "  name: $name"
+    puts "  barorder($node): $barorder($node)"
+    puts "  barmode($node): $barmode($node)"
+    puts "  barvalue($node): $barvalue($node)"
+    puts "  barunit($node): $barunit($node)"
+    #puts "  tagname: $tagname"
+    puts "  alltags: $alltags"
   }    
   set v $barvalue($node)
   #foreach t $data($barorder($node),${v}tags) 
@@ -1065,6 +1864,7 @@ proc redrawBargraph {node name} {
   if {$barorder($node) == "glob"} {
       set currtags $alltags
   } else {
+      #puts " data($barorder($node),${v}tags): $data($barorder($node),${v}tags)"
       set currtags $data($barorder($node),${v}tags)
   }
   foreach t $currtags {
@@ -1097,6 +1897,117 @@ proc redrawBargraph {node name} {
 }
 
 #
+# showUserEBargraph: display user-event node profile window
+#
+#         node: id of node
+#         name: full name of node
+#
+
+proc showUserEBargraph {node name} {
+  global eventmode eventorder eventorient
+  global eventbarmode eventbarorder eventbarorient
+
+  if [DEBUG] {
+    puts "\nshowUserEBargraph:"
+    puts "  node: $node"
+    puts "  name: $name"
+    puts "  eventorder(all): $eventorder(all)"
+    puts "  eventmode(all): $eventmode(all)"
+    puts "  eventorient(all): $eventorient(all)"
+  }
+
+  if { ! [winfo exists .eventbar$node] } {
+    if { $eventorder(all) == "all" } {
+      set eventbarorder($node) $node
+    } else {
+      set eventbarorder($node) $eventorder(all)
+    }
+    set eventbarmode($node) $eventmode(all)
+    set eventbarorient($node) $eventorient(all)
+
+    set win [toplevel .eventbar$node]
+    wm title $win "$name - event profile"
+    #wm minsize $win 250 250
+    wm minsize $win 500 250
+
+    eventbargraphmenu .eventbar$node eventbar redrawUserEBargraph $node {$name}
+    redrawUserEBargraph $node {$name}
+
+    scrollbar .eventbar$node.sv -orient vert -relief sunken \
+	-command ".eventbar$node.bar yview"
+    .eventbar$node.bar configure -yscrollcommand ".eventbar$node.sv set"
+
+    scrollbar .eventbar$node.sh -orient horiz -relief sunken \
+	-command ".eventbar$node.bar xview"
+    .eventbar$node.bar configure -xscrollcommand ".eventbar$node.sh set"
+
+    button .eventbar$node.but -text "close" -command "destroy $win"
+
+    pack .eventbar$node.mbar -side top -fill x
+    pack .eventbar$node.but -side bottom -fill x
+    pack .eventbar$node.sh -side bottom -fill x
+    pack .eventbar$node.sv -side right -fill y
+    pack .eventbar$node.bar -side left -fill both -expand yes
+  } else {
+    raise .eventbar$node
+  }
+}
+
+#
+# redrawUserEBargraph: create or update contents of node profile window
+#
+#           node: id of node
+#           name: full nameof node
+#
+
+proc redrawUserEBargraph {node name} {
+  global event
+  global eventbarorder eventbarmode eventbarorient
+  global usertags uename
+  if [DEBUG] {
+    puts "\nredrawUserEBargraph:"
+    puts "  node: $node"
+    puts "  name: $name"
+  }    
+
+  if {$eventbarorder($node) == "glob"} {
+      set currtags $usertags
+  } else {
+      set currtags $event($eventbarorder($node),tags)
+  }
+  foreach t $currtags {
+      lappend n $uename($t)
+  }
+ 
+  set nm [uespecialOrder $eventbarorder($node) $node $currtags num]
+  set mx [uespecialOrder $eventbarorder($node) $node $currtags max]
+  set mn [uespecialOrder $eventbarorder($node) $node $currtags min]
+  #set sd [uespecialOrder $eventbarorder($node) $node $currtags stddev]
+
+  # -- add title within window for bargraph
+  # -- $name is not always available, so must use $node
+  switch $node {
+      t       {set title "total"}
+      m       {set title "mean"}
+#      <       {set title "min"}
+#      >       {set title "max"}
+      default {
+	  set title ""
+	  set title [append $title "n,c,t " $node]
+      }
+  }
+
+#  UserEbargraph .eventbar$node.bar $title $n $nm $mx $mn $sd \
+#                        [ueorder $eventbarorder($node) $node $currtags tags -2] \
+#                         {} $eventbarmode($node) $eventbarorient($node)
+# This doesn't have std dev option...
+  UserEbargraph .eventbar$node.bar $title $n $nm $mx $mn  \
+      [ueorder $eventbarorder($node) $node $currtags tags -2] \
+      {} $eventbarmode($node) $eventbarorient($node)
+}
+
+
+#
 # multiFuncgraph: create summary function bargraphs
 #
 #            win: pathname for canvas
@@ -1115,9 +2026,10 @@ proc multiFuncgraph {win leftlabels nodes percents tags} {
       puts "multiFuncgraph:"
       puts "  leftlabels: $leftlabels"
       puts "  nodes: $nodes"
-      #puts "  percents: $percents"
+      puts "  percents: $percents"
       puts "  tags: $tags"
       puts "  minheight: $minheight"
+      puts "  racy_progfile: $racy_progfile"
   }
 
   set num [llength $leftlabels];  #number of bars
@@ -1498,6 +2410,100 @@ proc multiAggrgraph {win leftlabels idents percents \
 }
 
 #
+# multiEventgraph: create user events bargraphs
+#
+#            win: pathname for canvas
+#     leftlabels: list of labels for left side of bargraphs
+#          nodes: list of node ids
+#       percents: list of list of user defined values
+#           tags: list of tags 
+#
+
+proc multiEventgraph {win leftlabels nodes values tags} {
+  global uecol uestip
+  global minheight
+  global TAUDIR
+  global racy_progfile
+
+  if [DEBUG] {
+      puts "multiEventgraph:"
+      puts "  leftlabels: $leftlabels"
+      puts "  nodes: $nodes"
+      puts "  values: $values"
+      puts "  tags: $tags"
+      puts "  minheight: $minheight"
+      #puts "  racy_progfile: $racy_progfile"
+  }
+
+  set num [llength $leftlabels];  #number of bars
+  set h [expr ($num+1)*20];       #height of the display
+
+  # -- create or reset canvas
+  if { [winfo exists $win] } {
+    $win delete all
+    $win configure -height [min 420 $minheight]
+  } else {
+    canvas $win -width 300 -height [min 420 $minheight] -background white
+    bind $win <2> "$win scan mark %x %y"
+    bind $win <B2-Motion> "$win scan dragto %x %y"
+  }
+  $win configure -scrollregion [list 0 0 300 $h]
+
+  set max_rlabel_width 0 ;# previously constant at 60
+  for {set i 0} {$i<$num} {incr i} {
+      # -- draw left labels
+      if {[lindex $leftlabels $i] != {}} {
+	  set rl_obj($i) [$win create text 0 [expr 20+$i*20] \
+		  -text "[lindex $leftlabels $i]" -anchor e \
+		  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+	  set bbox [$win bbox $rl_obj($i)]
+	  set lwidth [expr [lindex $bbox 2] - [lindex $bbox 0]]
+	  if {$lwidth > $max_rlabel_width} {set max_rlabel_width $lwidth}
+	  
+	  # -- setup bindings for left labels, if necessary
+ 	  $win bind $rl_obj($i) <Button-1> \
+	  	  "showUserEBargraph [lindex $nodes $i] {[lindex $leftlabels $i]}"
+	  $win bind $rl_obj($i) <Button-2> \
+	  	  "showUserEText [lindex $nodes $i] {[lindex $leftlabels $i]}"
+      }
+  }
+
+  for {set i 0} {$i<$num} {incr i} {
+    
+    # -- move the right labels into place
+    if {[lindex $leftlabels $i] != {}} {
+      $win coords $rl_obj($i) \
+	      [expr $max_rlabel_width + 5] [expr 20+$i*20]
+    }
+      
+    # -- display multibar, and create bindings for each subbar
+    set p [lindex $values $i]
+    set sum 0.0
+    for {set j 0} {$j<[llength $p]} {incr j} {
+      #fix the jagged edge of multiFuncgraph
+      if { [lindex $p $j] > 0 } {
+        set obj [$win create rectangle \
+		[expr $max_rlabel_width+10+$sum*2] \
+		[expr 29+$i*20] \
+		[expr $max_rlabel_width+11+($sum+[lindex $p $j])*2] \
+		[expr 11+$i*20]\
+		-fill $uecol([lindex $tags $j]) \
+		-stipple $uestip([lindex $tags $j])]
+        set t [lindex $tags $j]
+          $win bind $obj <Button-1> "showuserEgraph $t"
+	  $win bind $obj <Button-3> "PM_GlobalSelect $racy_progfile global_selectUserTag $t"
+        set sum [expr $sum+[lindex $p $j]]
+      }
+    }
+  } 
+
+  set w [expr $max_rlabel_width + 230]
+  $win configure -width $w
+  $win configure -scrollregion [list 0 0 $w $h]
+}
+
+
+#
 # readProfile: read in profile data by using the "pprof" tool
 #
 #         dir: directory in which profile data should be looked for
@@ -1508,17 +2514,23 @@ set wantnum 100
 proc readProfile {} {
     global depfile \
 	    alltags \
+	    usertags \
 	    data \
 	    nodes \
 	    numfunc wantnum \
+	    numaggr \
+	    numevents \
 	    tagname tagcol tagfcol tagstip Colors TextColors Stipples \
 	    evcol evstip evname \
+	    uecol uefcol uestip uename \
 	    coll colls \
 	    aggr aggrs \
+	    event events uEventFlag uenodes\
 	    newver \
 	    stddev \
 	    heading \
-	    column \
+	    eventheading \
+	    column ucolumn\
 	    BINDIR REMBINDIR REMSH TAUDIR
   if [DEBUG] {
     puts "\nreadProfile:"
@@ -1575,9 +2587,6 @@ proc readProfile {} {
 	    set stddev 1
 	    gets $in line
 	    set column [expr [llength $line]-1]
-	    #lappend heading $line
-	    #gets $in line
-	    #lappend mheading $line
 	    if { $column == 0 } {
 		lappend heading $line
 	    } else {
@@ -1585,14 +2594,6 @@ proc readProfile {} {
 		set heading {}
 		lappend heading $line
 	    }
-	    #gets $in line
-	    #set length [expr [llength $line]-1] 
-	    #if { $length == 0 } {
-	    #   lappend mheading $line
-	    #} else {
-	    #	set mheading {}
-	    #	lappend mheading $line
-	    #}
 	} else {
 	    set stddev 0
 	    gets $in line
@@ -1607,14 +2608,8 @@ proc readProfile {} {
 	}
     } else {
 	set newver 0
-	#check if the profile includes standard deviation
-	#set two [lindex $line 2]
-	#set three [lindex $line 3]
-	#if {$two == "-stddev" || $three == "-stddev"} {
-	#    set stddev 1
-	#} else {
-	#    set stddev 0
-	#}
+	#old version ignores the heading line
+	gets $in line
     }
    
 
@@ -1622,21 +2617,32 @@ proc readProfile {} {
     set depfile(path) $dir/$depfile(file)
     set tagcol(-1) black
     set evcol(-1) black
+    set uecol(-1) black
     set tagfcol(-1) white
+    set uefcol(-1) white
     set tagstip(-1) {}
     set evstip(-1) {}
+    set uestip(-1) {}
     set tagname(-1) "-others-"
     set evname(-1) "-others-"
+    set uename(-1) "-other-"
     set tagcol(-2) white
     set evcol(-2) white
+    set uecol(-2) white
     set tagfcol(-2) black
+    set uefcol(-2) black
     set tagstip(-2) {}
     set evstip(-2) {}
+    set uestip(-2) {}
     set tagname(-2) ""
     set i 0
     set j 0
+    set k 0
     set colls ""
     set aggrs ""
+    set events ""
+    set uEventFlag 0
+    set lastnode NA
     
     # -- read line by line
     while {[gets $in line] >= 0} {
@@ -1734,49 +2740,123 @@ proc readProfile {} {
 		    lappend aggr($no,counter_set) $eid
 		}
 	    }
-	} else {
-	    # -- function profile data
-	    #scan $line "%s %d %s %s %g %g %f" node tag name mode usec per
-	    set tag   [lindex $line 1]
-	    set name  [lindex $line 2]
-	    set mode  [lindex $line 3]
-	    set usec  [lindex $line 4]
-	    set per   [lindex $line 5]
-	    if {![info exists alltags_tmp($tag)]} {
-		set alltags_tmp($tag) 1
-		lappend alltags $tag
+	} elseif {$node == "userevent"} {
+	    #user defined events
+	    set uEventFlag 1
+	    # -- event profile data
+	    #scan $line "%s %d %s %i %g %g %g %g" 
+	    #    node utag uname unum umax umin umean ustddev
+	    set node [lindex $line 1]
+	    set utag [lindex $line 2]
+	    set uname [lindex $line 3]
+
+	    if {![info exists usertags_tmp($utag)]} {
+		set usertags_tmp($utag) 1
+		lappend usertags $utag
 	    }
 	    if {![string match "*,*,*" $node]} {
 		if {$node != "t" && $node != "m"} {
 		    set node "$node,0,0"
 		}
 	    }
-	    if { $n != $node && $mode == "incl"} {
-		set n $node
-		lappend nodes $node
+	    if { $lastnode != $node } {
+		set lastnode $node
+		lappend uenodes $node
+		lappend events $node
 	    }
-	    
-	    lappend data($node,${mode}tags) $tag
-	    lappend data($node,${mode}usecs) [format "%8.4G" $usec]
-#	    lappend data($node,${mode}usecs) $usec
-	    lappend data($node,${mode}percent) [format "%4.2f" $per]
-	    
-	    if { ! [info exists tagcol($tag)] } {
+	    set unum [lindex $line 4]
+	    set umax [lindex $line 5]
+	    set umin [lindex $line 6]
+	    set umean [lindex $line 7]
+	    set ustddev [lindex $line 8]
+		
+	    lappend event($node,tags) $utag
+	    if { ! [info exists uecol($utag)] } {
 		if { [winfo depth .] == 2 } {
-		    set tagcol($tag) black
-		    set tagfcol($tag) white
-		    set tagstip($tag) @$TAUDIR/xbm/[wraplindex $Stipples $i]
+		    set uecol($utag) black
+		    set uefcol($utag) white
+		    set uestip($utag) @$TAUDIR/xbm/[wraplindex $Stipples $k]
 		} else {
-		    set tagcol($tag) [wraplindex $Colors $i]
-		    set tagfcol($tag) [wraplindex $TextColors $i]
-		    set tagstip($tag) {}
+		    set uecol($utag) [wraplindex $Colors $k]
+		    set uefcol($utag) [wraplindex $TextColors $k]
+		    set uestip($utag) {}
 		}
-		set tagname($tag) $name
-		incr i
+		set uename($utag) $uname
+		incr k
 	    }
+	    
+	    lappend event($node,num) [format "%4.2f" $unum]
+	    lappend event($node,max) [format "%4.2f" $umax]
+	    lappend event($node,min) [format "%4.2f" $umin]
+	    lappend event($node,mean) [format "%4.2f" $umean]
+	    lappend event($node,stddev) [format "%4.2f" $ustddev]
 
+	    #second line of data
 	    gets $in line
-	    lappend data($node,${mode}text) $line
+	    lappend event($node,text) $line
+	
+	} else {
+	    # -- this could be either headings of function profile data
+	    # check if it is headings
+	    set g [lindex $line 1]
+	    if { $g == "aggregates" } {
+		scan $line "%d" numaggr
+	    } elseif { $g == "userevents" } {
+		scan $line "%d" numevents
+		# next line is heading for user-defined events
+		gets $in line
+		set ucolumn [ llength $line]
+		if { $ucolumn == 0 } {
+		    lappend eventheading $line
+		} else {
+		    set eventheading {}
+		    lappend eventheading $line
+		}
+	    } else {
+		# -- function profile data
+		#scan $line "%s %d %s %s %g %g %f" node tag name mode usec per
+		set tag   [lindex $line 1]
+		set name  [lindex $line 2]
+		set mode  [lindex $line 3]
+                set usec  [lindex $line 4]
+		set per   [lindex $line 5]
+
+		if {![info exists alltags_tmp($tag)]} {
+		    set alltags_tmp($tag) 1
+		    lappend alltags $tag
+		}
+		if {![string match "*,*,*" $node]} {
+		    if {$node != "t" && $node != "m"} {
+			set node "$node,0,0"
+		    }
+		}
+		if { $n != $node && $mode == "incl"} {
+		    set n $node
+		    lappend nodes $node
+		}
+		
+		lappend data($node,${mode}tags) $tag
+		lappend data($node,${mode}usecs) [format "%8.4G" $usec]
+#               lappend data($node,${mode}usecs) $usec
+		lappend data($node,${mode}percent) [format "%4.2f" $per]
+		
+		if { ! [info exists tagcol($tag)] } {
+		    if { [winfo depth .] == 2 } {
+			set tagcol($tag) black
+			set tagfcol($tag) white
+			set tagstip($tag) @$TAUDIR/xbm/[wraplindex $Stipples $i]
+		    } else {
+			set tagcol($tag) [wraplindex $Colors $i]
+			set tagfcol($tag) [wraplindex $TextColors $i]
+			set tagstip($tag) {}
+		    }
+		    set tagname($tag) $name
+		    incr i
+		}
+
+		gets $in line
+		lappend data($node,${mode}text) $line
+	    }
 	}
     }
 #    if [catch {close $in} errmsg] {
@@ -1787,7 +2867,6 @@ proc readProfile {} {
     if { ! [info exists nodes] } {
 	return NOT_OK
     }
-
     return OK
 }
 
@@ -1802,6 +2881,10 @@ proc readProfile {} {
 
 proc funcgraphmenu {parent prefix func node name} {
   global myself
+
+  if [DEBUG] {
+    puts "\nfuncgraphmenu:"
+  }
 
   set menubar $parent.mbar
   frame $menubar -relief raised -borderwidth 2
@@ -1945,6 +3028,166 @@ proc redrawFuncgraph {tag dummy} {
     .func$tag.mbar.b5 configure -state disabled
   }
 }
+
+#
+# userEgraphmenu: create menubar for function profile windows
+#
+#        parent: pathname for parent of menubar
+#        prefix: prefix for global variables to store selections
+#          func: function to call for redraw
+#     node,name: arguments to func
+#
+
+proc userEgraphmenu {parent prefix func node name} {
+  global myevent
+
+  if [DEBUG] {
+    puts "\nuserEgraphmenu:"
+  }
+
+  set menubar $parent.mbar
+  frame $menubar -relief raised -borderwidth 2
+  menubutton $menubar.b1 -text File -menu $menubar.b1.m1 -underline 0
+  menu $menubar.b1.m1
+  $menubar.b1.m1 add command -label "Print" -underline 0 \
+                    -command "printCanvas .usrevent${node}.bar func.$node"
+  $menubar.b1.m1 add separator
+  $menubar.b1.m1 add command -label "Close" -underline 0 \
+                    -command "destroy .usrevent$node"
+
+  menubutton $menubar.b3 -text Mode -menu $menubar.b3.m1 -underline 0
+  menu $menubar.b3.m1
+  uesubmenu2 $menubar.b3.m1 ${prefix}mode $func $node {$name}
+
+  menubutton $menubar.b4 -text Orientation -menu $menubar.b4.m1 -underline 0 
+  menu $menubar.b4.m1 
+  uesubmenu3 $menubar.b4.m1 ${prefix}orient $func $node {$name}
+
+
+  menubutton $menubar.b5 -text Help -menu $menubar.b5.m1 -underline 0
+  menu $menubar.b5.m1
+## HERE ##
+  #if [ALONE] {
+  #  $menubar.b5.m1 add command -label "on events profile" -underline 3 \
+  #	              -command "showHelp $myevent 1.2.4-func 1"
+  #} else {
+  #  $menubar.b5.m1 add command -label "on events profile" -underline 3 \
+  #	              -command "xsend tau \[list showHelp $myevent 1.2.4-func 1\]"
+  #}
+
+  pack $menubar.b1 $menubar.b3 $menubar.b4 \
+       -side left -fill x -padx 5
+  pack $menubar.b5 -side right -fill x -padx 5
+}
+
+
+#
+# showuserEgraph: display function profile window
+#
+#           tag: Sage++ id of function
+#
+
+proc showuserEgraph {tag} {
+  global event
+  global eventbarmode
+  global eventorder eventmode
+  global uename
+
+  if [DEBUG] {
+    puts "\nshowuserEgraph:"
+    #puts "  tags: $tags"
+  }  
+
+  if { ! [winfo exists .usrevent$tag] } {
+    set eventbarmode($tag) $eventmode(all)
+
+    set win [toplevel .usrevent$tag]
+    set name $uename($tag)
+    wm title $win "$name profile"
+    wm minsize $win 250 250
+
+    userEgraphmenu .usrevent$tag eventbar redrawuserEgraph $tag {}
+    redrawuserEgraph $tag {}
+
+    scrollbar .usrevent$tag.sv -orient vert -relief sunken \
+	-command ".usrevent$tag.bar yview"
+    .usrevent$tag.bar configure -yscrollcommand ".usrevent$tag.sv set"
+
+    scrollbar .usrevent$tag.sh -orient horiz -relief sunken \
+	-command ".usrevent$tag.bar xview"
+    .usrevent$tag.bar configure -xscrollcommand ".usrevent$tag.sh set"
+
+    button .usrevent$tag.but -text "close" -command "destroy .usrevent$tag"
+
+    bind .usrevent$tag.bar <2> ".usrevent$tag.bar scan mark %x %y"
+    bind .usrevent$tag.bar <B2-Motion> ".usrevent$tag.bar scan dragto %x %y"
+
+    pack .usrevent$tag.mbar -side top -fill x
+    pack .usrevent$tag.but -side bottom -fill x
+    pack .usrevent$tag.sh -side bottom -fill x
+    pack .usrevent$tag.sv -side right -fill y
+    pack .usrevent$tag.bar -side left -fill both -expand yes
+  } else {
+    raise .usrevent$tag
+  }
+}
+
+#
+# redrawuserEgraph: create or update contents of user-defined event profile window
+#
+#             tag: Sage++ id of function
+#           dummy: unused parameter so it can be used with the generic
+#                  menu construction functions
+#
+
+proc redrawuserEgraph {tag dummy} {
+  global event
+  global uenodes uelabels
+  global eventbarmode
+  global uename
+  if [DEBUG] {
+    puts "\nredrawuserEgraph:"
+    #puts "  tags: $tags"
+    #puts "  dummy: $dummy"
+  }
+  # -- compute arguments for bargraph widget
+  #set value $funcvalue($tag)
+  foreach n $uenodes {
+    if { $n == "" } {
+      lappend evnum 0.0
+      lappend evmax 0.0
+      lappend evmin 0.0
+      lappend evstd 0.0
+      lappend tags -2
+    } else {
+      set i [lsearch -exact $event($n,tags) $tag]
+      if { $i == -1 } {
+	lappend evnum 0.0
+	lappend evmax 0.0
+	lappend evmin 0.0
+	lappend evstd 0.0
+      } else {
+        lappend evnum [lindex $event($n,num) $i]
+        lappend evmax [lindex $event($n,max) $i]
+        lappend evmin [lindex $event($n,min) $i]
+        lappend evstd [lindex $event($n,stddev) $i]
+      }
+      lappend tags $tag
+    }
+  }
+
+
+  # -- create display using bargraph widget
+#  UserEbargraph .usrevent$tag.bar $uename($tag) $uelabels \
+#                         $evnum $evmax $evmin $evstd \
+#                         $tags $uenodes $usreventmode($tag)
+  UserEbargraph .usrevent$tag.bar $uename($tag) $uelabels \
+                         $evnum $evmax $evmin  \
+                         $tags $uenodes $eventbarmode($tag)
+
+}
+
+
 
 #
 # collgraphmenu: create menubar for collection profile windows
@@ -2375,15 +3618,17 @@ proc redrawAggrgraph {ident dummy} {
 
 proc computeMultiBars {} {
   global data alltags
-  global nodes funodes conodes agnodes
-  global fulabels colabels clabels aglabels alabels
-  global exclpercent collpercent aggrpercent
+  global nodes funodes conodes agnodes uenodes
+  global fulabels colabels clabels aglabels alabels uelabels
+  global exclpercent collpercent aggrpercent eventscale
   global coll colls
   global aggr aggrs
+  global event usertags uEventFlag eventmode 
   global minheight
 
   if [DEBUG] {
     puts "\ncomputeMultiBars:"
+    #puts "  uenodes: $uenodes"
   }
 
   foreach n $nodes {
@@ -2400,7 +3645,7 @@ proc computeMultiBars {} {
         } else {
           set na [expr $na-$x]
           lappend p $x
-        }
+	}
       }
     }
     set data($n,meanper) $p
@@ -2410,6 +3655,7 @@ proc computeMultiBars {} {
   set fulabels [list "mean" {}]
   set colabels [list "total" {}]
   set aglabels [list "total" {}]
+
   #set exclpercent \
   #    [list $data(m,exclpercent) $data(<,meanper) $data(>,meanper) {}]
   #  set exclpercent [list $data(m,exclpercent) {}]
@@ -2442,16 +3688,47 @@ proc computeMultiBars {} {
       lappend alabels $aggr($c,variable_name)
 
       set tmp_percents [list]
-      foreach event $aggr($c,counter_set) {
-	  lappend tmp_percents $aggr($c,counter_t,$event,percent)
+      foreach agevent $aggr($c,counter_set) {
+	  lappend tmp_percents $aggr($c,counter_t,$agevent,percent)
       }
       lappend aggrpercent $tmp_percents
   }
+
+    if {$uEventFlag != 0} {
+	set eventscale ""
+	foreach nd $uenodes {
+	    set e ""
+	    set ns [vectorsum event($nd,num)]
+	    set total $ns
+	    foreach ut $usertags {
+		set i [lsearch -exact $event($nd,tags) $ut]
+		if { $i == -1 } {
+		    lappend e 0.0
+		} else {
+		    set x [lindex $event($nd,num) $i]
+		    if { $ut == -1 } {
+			lappend e [format "%.4f" [expr $ns/$total * 100]]
+		    } else {
+			set ns [expr $ns - $x]
+			lappend e [format "%.4f" [expr $x/$total * 100]]
+		    }
+		}
+	    }
+	   
+	    set  temp_scale $e
+	}
+	
+	foreach n $uenodes {
+	    lappend uelabels [format "n,c,t %5s" $n]  
+	    lappend eventscale $temp_scale
+	}
+    }
 
     set minheight [expr ([max3 [llength $fulabels] \
 			       [llength $clabels] \
 			       [llength $alabels] ]+1)*20]
 }
+
 
 
 #
@@ -2472,7 +3749,9 @@ proc redraw {dummy1 dummy2} {
   global funcmode funcvalue funcunit
   global proforder profvalue profmode profunit
   global collmode colls aggrmode aggrs
-
+  if [DEBUG] {
+    puts "\nredraw:"
+  }
 
 
   # -- redraw node and text node profile windows
@@ -2551,7 +3830,7 @@ proc redraw {dummy1 dummy2} {
     redrawFuncLegend .$myself.led.can
   }
   if [winfo exists .$myself.eventled.can] {
-    redrawEventLegend .$myself.eventled.can
+    redrawUserELegend .$myself.eventled.can
   }
 
   if { $profmode(all) == "val" } {
@@ -2562,12 +3841,80 @@ proc redraw {dummy1 dummy2} {
 }
 
 #
+# redrawue: redraw all user-defined event windows currently displayed, 
+#           after user selected global mode from Configure main menu
+#
+#   dummy1:
+#   dummy2: unused parameters so it can be used with the generic
+#         menu construction functions
+#
+
+proc redrawue {dummy1 dummy2} {
+  global myevent
+  global event
+  global uenodes uelabels uetextorder1
+  global eventbarorder eventbarmode eventbarorient
+  global eventmode eventorder eventorient
+
+  if [DEBUG] {
+    puts "\nredrawue:"
+    puts "  uenodes: $uenodes"
+  }
+
+
+  # -- redraw node and text node profile windows
+  set i 0
+  foreach n $uenodes {
+    if [winfo exists .eventbar$n] {
+      if { $eventorder(all) == "glob" } {
+        set eventbarorder($n) $eventorder(all)
+      } else {
+        set eventbarorder($n) $n
+      }
+      if { $eventorder(all) == "all" } {
+        set eventbarorder($n) $n
+      } else {
+        set eventbarorder($n) $eventorder(all)
+      }
+      set eventbarmode($n) $eventmode(all)
+      set eventbarorient($n) $eventorient(all)
+      redrawUserEBargraph $n [lindex $uelabels $i]
+    }
+    if [winfo exists .eventtext$n] {
+      set uetextorder1($n) $eventorder(all)
+      redrawUserEText $n [lindex $uelabels $i]
+    }
+    incr i
+  }
+
+  # -- redraw event profile windows
+  foreach t $event($n,tags) {
+    if [winfo exists .usrevent$t] {
+      set eventbarmode($t) $eventmode(all)
+      set eventbarorient($t) $eventorient(all)
+      redrawuserEgraph $t {}
+    }
+  }
+
+
+  # -- redraw function/event legends
+  if [winfo exists .$myevent.led.can] {
+    redrawUserELegend .$myevent.led.can
+  }
+
+
+}
+
+
+#
 # showFuncLegend: display function legend
 #
 
 proc showFuncLegend {} {
   global myself
-
+  if [DEBUG] {
+    puts "\nshowFuncLegend:"
+  }
   if { ! [winfo exists .$myself.led] } {
     toplevel .$myself.led
     wm title .$myself.led "Function Legend"
@@ -2600,8 +3947,8 @@ proc showFuncLegend {} {
 
 #
 # showEventLegend: display event legend
+#  (for Agg-graph)
 #
-
 proc showEventLegend {} {
   global myself
 
@@ -2623,6 +3970,48 @@ proc showEventLegend {} {
   }
 }
 
+
+#
+# showUserELegend: display user-defined event legend
+#
+
+proc showUserELegend {} {
+  global myevent
+  if [DEBUG] {
+    puts "\nshowUserLegend:"
+  }
+  if { ! [winfo exists .$myevent.led] } {
+    toplevel .$myevent.led
+    wm title .$myevent.led "User-defined Event Legend"
+    wm minsize .$myevent.led 250 250
+
+    # -- create canvas, scrollbars, "close" button
+    canvas .$myevent.led.can -background white
+
+    scrollbar .$myevent.led.sv -orient vert -relief sunken \
+	                      -command ".$myevent.led.can yview"
+    .$myevent.led.can configure -yscrollcommand ".$myevent.led.sv set"
+
+    scrollbar .$myevent.led.sh -orient horiz -relief sunken \
+                              -command ".$myevent.led.can xview"
+    .$myevent.led.can configure -xscrollcommand ".$myevent.led.sh set"
+
+    button .$myevent.led.b -text close -command "destroy .$myevent.led"
+
+    pack .$myevent.led.b -side bottom -fill x
+    pack .$myevent.led.sh -side bottom -fill x
+    pack .$myevent.led.sv -side right -fill y
+    pack .$myevent.led.can -side left -fill both -expand yes
+
+    # -- draw color legend 
+    redrawUserELegend .$myevent.led.can
+  } else {
+    raise .$myevent.led
+  }
+}
+
+
+
 #
 # redrawFuncLegend: draw or update function legend canvas
 #
@@ -2633,7 +4022,9 @@ proc redrawFuncLegend {can} {
   global tagcol tagstip tagname alltags
   global pr_sel_tag
   global racy_progfile
-
+  if [DEBUG] {
+    puts "\nredrawFuncLegend:"
+  }
   # -- generate alphabetical list of functions
   #foreach t [array names tagcol] 
   foreach t $alltags {
@@ -2681,7 +4072,7 @@ proc redrawFuncLegend {can} {
 
 #
 # redrawEventLegend: draw or update event legend canvas
-#
+#  (for Agg-graph)
 #          can: canvas id
 #
 
@@ -2720,6 +4111,60 @@ proc redrawEventLegend {can} {
     }
     incr i 20
   }
+}
+
+#
+# redrawUserELegend: draw or update event legend canvas
+#
+#             uecan: canvas id
+#
+
+proc redrawUserELegend {can} {
+  global uecol uestip uename usertags
+  global ue_sel_tag
+  global racy_progfile
+
+  # -- generate alphabetical list of functions
+    foreach tg $usertags {
+    if { $tg != -2 && $tg != -1 } {
+      lappend uemap [list $uename($tg) $tg $uecol($tg) $uestip($tg)]
+    }
+  }
+  set uemap [lsort $uemap]
+  lappend uemap [list $uename(-1) -1 $uecol(-1) {}]
+
+  # -- set height of uemap
+  set unum [llength $uemap];     # number of funcs
+  set ht [expr ($unum+1)*20];    # height of canvas
+
+
+  # -- draw color legend
+  $can delete all
+  set d 11
+  set max_width 0
+  foreach mp $uemap {
+    set tg [lindex $mp 1]
+    $can create rectangle 10 [expr $d] 28 [expr 18+$d] \
+         -fill [lindex $mp 2] -tag evl$tg -stipple [lindex $mp 3]
+    if { $tg == $ue_sel_tag } {
+	set uelabel [$can create text 40 [expr 9+$d] -text [lindex $mp 0] \
+		       -anchor w -tag evl$tg -fill red \
+		       -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+    } else {
+	set uelabel [$can create text 40 [expr 9+$d] -text [lindex $mp 0] \
+		       -anchor w -tag evl$tg \
+		       -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+    }
+    set bbox [$can bbox $uelabel]
+    set width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+    if {$width > $max_width} {set max_width $width}
+    $can bind evl$tg <Button-1> "showuserEgraph $tg"
+    $can bind evl$tg <Button-3> "PM_GlobalSelect $racy_progfile global_selectUserTag $tg"
+    incr d 20
+  }
+
+  set wd [expr $max_width + 50]
+  $can configure -scrollregion [list 0 0 $wd $ht]
 }
 
 #
@@ -2772,7 +4217,10 @@ proc setNumFunc {} {
 
 proc mainmenu {parent prefix func node name} {
   global myself colls aggrs
-
+  if [DEBUG] {
+      puts "mainmenu: "
+      puts "  prefix: $prefix"
+  }
   set menubar $parent.mbar
   frame $menubar -relief raised -borderwidth 2
 
@@ -2872,6 +4320,74 @@ proc mainmenu {parent prefix func node name} {
 }
 
 #
+#  uemainmenu: create menubar for main window of user-defined events
+#
+#      parent: pathname for parent of menubar
+#      prefix: prefix for global variables to store selections
+#        func: function to call for redraw
+#   node,name: arguments to func
+#
+
+proc uemainmenu {parent prefix func node name} {
+  global myevent
+  if [DEBUG] {
+      puts "uemainmenu: "
+      puts "  prefix: $prefix"
+  }
+
+  set uemenubar $parent.mbar
+  frame $uemenubar -relief raised -borderwidth 2
+
+  menubutton $uemenubar.b1 -text File -menu $uemenubar.b1.m1 -underline 0
+  menu $uemenubar.b1.m1
+  $uemenubar.b1.m1 add command -label "set #User Events" -underline 0 \
+                    -command setNumEvent -state disabled
+  $uemenubar.b1.m1 add command -label "show User Event Legend" -underline 16 \
+                    -command showUserELegend
+  $uemenubar.b1.m1 add command -label "print User Events" -underline 0 \
+                    -command "printCanvas .$myevent.ue.bar profile.ue"
+  $uemenubar.b1.m1 add separator
+  $uemenubar.b1.m1 add command -label "Close" -underline 0 \
+                    -command "destroy .$myevent"
+
+
+
+  menubutton $uemenubar.b2 -text Configure -menu $uemenubar.b2.m1 -underline 0
+  menu $uemenubar.b2.m1
+
+  $uemenubar.b2.m1 add cascade -label "Order" -menu $uemenubar.b2.m1.1 -underline 0
+  menu $uemenubar.b2.m1.1
+  uesubmenu1 $uemenubar.b2.m1.1 ${prefix}order $func $node {$name}
+
+  $uemenubar.b2.m1 add cascade -label "Mode" -menu $uemenubar.b2.m1.2 -underline 0
+  menu $uemenubar.b2.m1.2
+  uesubmenu2 $uemenubar.b2.m1.2 ${prefix}mode $func $node {$name}
+
+
+  menubutton $uemenubar.b3 -text Help -menu $uemenubar.b3.m1 -underline 0
+  menu $uemenubar.b3.m1
+
+#  $uemenubar.b3.m1 add command -label "on $myevent" -underline 3 \
+#      -command "showHelp $myevent 1-$myevent 1"
+#  $uemenubar.b3.m1 add separator
+#  $uemenubar.b3.m1 add command -label "on uemenubar" -underline 3 \
+#      -command "showHelp $myevent 1.1-menu 1"
+#  $uemenubar.b3.m1 add command -label "on user event summary" -underline 3 \
+#      -command "showHelp $myevent 1.2-eventsum 1"
+
+#  $uemenubar.b3.m1 add separator
+#  $uemenubar.b3.m1 add command -label "on using help" -underline 3 \
+#      -command "showHelp general 1-help 1"
+
+
+  pack $uemenubar.b1 $uemenubar.b2  -side left -padx 5
+
+  pack $uemenubar.b3  -side right -padx 5
+
+}
+
+
+#
 # loadProfile: switch to another application
 #              this is invoked from the TAU master control window
 #
@@ -2891,7 +4407,13 @@ proc loadProfile {} {
   global colls coll clabels collpercent
   global aggrs aggr alabels aggrpercent
   global depfile alltags
-
+  global event events
+  global uecol uefcol uestip uename uenodes uelabels eventscale
+  global eventmode eventorder eventorient usertags uetextorder1
+  global eventbarmode eventbarorder eventbarorient
+  if [DEBUG] {
+    puts "\nloadProfile:"
+  }
   set dir  $depfile(dir)
   set root $depfile(root)
   set arch $depfile(arch)
@@ -2920,15 +4442,20 @@ proc loadProfile {} {
   unset agnodes aglabels evname evcol evstip alabels aggrpercent
   unset tagname tagcol tagfcol tagstip
   unset clabels collpercent
-  if { [info exists barorder]   } { unset barorder barmode barvalue barunit }
-  if { [info exists textorder1] } { unset textorder1 textorder2 }
-  if { [info exists funcmode]   } { unset funcmode funcvalue funcunit }
-  if { [info exists collmode]   } { unset collmode }
-  if { [info exists aggrmode]   } { unset aggrmode }
-  if { [info exists colls]      } { unset colls }
-  if { [info exists coll]       } { unset coll }
-  if { [info exists aggrs]      } { unset aggrs }
-  if { [info exists aggr]       } { unset aggr }
+  if { [info exists barorder]    } { unset barorder barmode barvalue barunit }
+  if { [info exists textorder1]  } { unset textorder1 textorder2 }
+  if { [info exists funcmode]    } { unset funcmode funcvalue funcunit }
+  if { [info exists collmode]    } { unset collmode }
+  if { [info exists aggrmode]    } { unset aggrmode }
+  if { [info exists colls]       } { unset colls }
+  if { [info exists coll]        } { unset coll }
+  if { [info exists aggrs]       } { unset aggrs }
+  if { [info exists aggr]        } { unset aggr }
+  if { [info exists event]       } { unset event eventscale usertags uenodes \
+                                           uecol uefcol uestip uename uelabels} 
+  if { [info exists eventmode]   } { unset eventmode eventorder eventorient}
+  if { [info exists eventbarmode]} { unset eventbarmode eventbarorder eventbarorient}
+  if { [info exists uetextorder1]} { unset uetextorder1 }
 
   # -- reset global configuration parameters
   set profvalue(all) excl
@@ -2936,6 +4463,11 @@ proc loadProfile {} {
   set proforder(all) all
   set profmode(all) per
   set profunit(all) 1.0
+  if { uEventFlag != 0} {         
+      set eventorder(all) glob
+      set eventmode(all) num
+      set eventorient(all) right
+  }
 
   # -- read new profile data
   if { [readProfile] == "NOT_OK" } {
@@ -2957,6 +4489,9 @@ proc loadProfile {} {
       multiCollgraph .$myself.co.bar $clabels $colls $collpercent
   } elseif [llength $aggrs] {
       multiAggrgraph .$myself.ag.bar $alabels $aggrs $aggrpercent
+  }
+  if {$uEventFlag != 0} {
+      multiEventgraph .$myevent.ue.bar $uelabels $uenodes $eventscale $usertags
   }
 
   # -- rebuild configure-order-node submenu
@@ -2983,8 +4518,13 @@ proc createWindow {} {
   global TAUDIR
   global data
   global fulabels funodes clabels colls collpercent exclpercent \
-	  aggrs alabels aggrpercent alltags
-
+	 aggrs alabels aggrpercent alltags \
+ 
+  if [DEBUG] {
+      puts " "
+      puts "createWindow: "
+      puts "  myself: $myself"
+  }
   toplevel .$myself
   wm title .$myself "RACY"
   wm minsize .$myself 300 50
@@ -3028,11 +4568,51 @@ proc createWindow {} {
       pack .$myself.ag.bar -side left -fill both -expand yes
       pack .$myself.fu .$myself.ag -side left -padx 15 -pady 15 \
 	      -fill both -expand yes
-  } else {
+  }  else {
       pack .$myself.fu -side left -padx 15 -pady 15 \
 	      -fill both -expand yes
   }
 }
+
+#
+# createEventWindow: create and display main window of user-defined events
+#
+
+proc createEventWindow {} {
+  global myevent myself
+  global TAUDIR
+  global events uelabels uenodes usertags eventscale
+  if [DEBUG] {
+      puts " "
+      puts "createEventWindow: "
+  }
+  set myevent user
+  toplevel .$myevent
+  wm title .$myevent "USER EVENTS"
+  wm minsize .$myevent 300 50
+  wm iconbitmap .$myevent @$TAUDIR/xbm/$myself.xbm
+
+  uemainmenu .$myevent event redrawue all {}
+  pack .$myevent.mbar -side top -fill x
+
+  frame .$myevent.ue
+  label .$myevent.ue.l1 -text UserEvents -relief raised
+  multiEventgraph .$myevent.ue.bar $uelabels $uenodes $eventscale $usertags
+  scrollbar .$myevent.ue.s1 -orient vert -relief sunken \
+      -command ".$myevent.ue.bar yview"
+  .$myevent.ue.bar configure -yscrollcommand ".$myevent.ue.s1 set"
+  pack .$myevent.ue.l1 -side top -fill x
+  pack .$myevent.ue.s1 -side right -fill y
+  pack .$myevent.ue.bar -side left -fill both -expand yes
+  pack .$myevent.ue .$myevent.ue -side left -padx 15 -pady 15 \
+      -fill both -expand yes
+
+  pack .$myevent.ue -side left -padx 15 -pady 15 \
+      -fill both -expand yes
+  
+}
+
+
 
 #
 # getColorCode: return list of actual function name <-> color mapping
@@ -3040,7 +4620,9 @@ proc createWindow {} {
 
 proc getColorCode {} {
   global tagcol
-
+  if [DEBUG] {
+    puts "\ngetColorCode:"
+  }
   foreach t [array names tagcol] {
     if { $t != -2 } { lappend result [list $t $tagcol($t)] }
   }
@@ -3050,8 +4632,12 @@ proc getColorCode {} {
 
 proc Tool_AcceptChanges {progfiles flag} {
     global myself depfile \
-	    showFile selectBox racy_progfile
+	    showFile selectBox racy_progfile \
+	   myevent uEventFlag
 
+  if [DEBUG] {
+    puts "\nTool_AcceptChanges:"
+  }
     switch $flag {
 
         d {
@@ -3089,6 +4675,7 @@ proc Tool_AcceptChanges {progfiles flag} {
 	    set racy_progfile "";
 	    
 	    destroy .$myself
+	    if [winfo exists .$myevent] { destroy .$myevent }
 	    initRacy
 	    if { [readProfile] == "NOT_OK" } {
 		#showError "No profile data available in current directory."
@@ -3096,6 +4683,7 @@ proc Tool_AcceptChanges {progfiles flag} {
 	    }
 	    computeMultiBars
 	    createWindow
+	    if {$uEventFlag != 0} { createEventWindow }
 	}
     }
 }
@@ -3112,6 +4700,10 @@ proc initRacy {} {
     set file [Bdb_GetMaintag]
     set racy_progfile [lindex $file 0]
 
+  if [DEBUG] {
+    puts "\ninitRacy:"
+    puts "  file: $file"
+  }
     if {0} {
     set files [PM_GetFiles]
     if {[llength $files] != 1} {
@@ -3138,6 +4730,10 @@ set profvalue(all) excl
 set proforder(all) all
 set profmode(all) per
 set profunit(all) 1.0
+set uEventFlag 0
+set eventorder(all) glob
+set eventmode(all) num
+set eventorient(all) right
 
 # racy is currently a standalone tool
 set ALONE_SET 1
@@ -3236,6 +4832,10 @@ initRacy
 # -- create new toplevel window
 computeMultiBars
 createWindow
+if {$uEventFlag != 0} {
+    createEventWindow
+    PM_AddGlobalSelect $myself {global_selectUserTag}
+}
 if {![ALONE]} {
     launchTAU
 }
