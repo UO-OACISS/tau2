@@ -26,6 +26,7 @@ Version 2.12 changes (from 2.11):
 14. Added support for DyninstAPI 4.0 including binary rewriting. [U. Maryland]
 15. Added support for KOJAK's implementation of Opari and EPILOG. [FZJ]
 16. Added support for file level selective instrumentation (PDT, Dyninst). [Utah] 
+17. Fixed Apple's OS X sscanf bug for reading long doubles in pprof. 
 
 
 Version 2.11 changes (from 2.10):
