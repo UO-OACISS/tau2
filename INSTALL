@@ -156,6 +156,12 @@ The following  command-line options are available to configure:
    Specifies the location of the Java 2 development kit (jdk1.2+). See
    README.JAVA on instructions on using TAU with Java 2 applications. 
 
+-dyninst=<directory>
+   Specifies the location of the DynInst (dynamic instrumentation) package. 
+   See README.DYNINST for instructions on using TAU with DynInstAPI for 
+   binary runtime instrumentation (instead of manual instrumentation). 
+   [ Ref: http://www.cs.umd.edu/projects/dyninstAPI/ ]
+
 -mpiinc=<dir>
    
    Specifies the directory  where mpi header files reside (such as mpi.h and 
