@@ -34,6 +34,12 @@
 # include "function_data.h"
 # include "user_event_data.h"
 # include "tau_platforms.h"
+#ifdef APPLECXX
+#define APPLE_SSCANF_BUG 1 
+/* developer.apple.com: Fixed sscanf() now works as expected for reading long doubles. (r. 2757634). */    
+#include <sstream>
+using namespace std;
+#endif /* APPLECXX */
 
 static struct p_func_descr {
 #ifdef USE_LONG
@@ -370,10 +376,23 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
       sscanf(&line[j+1], "%ld %ld %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 #else // DEFAULT double
 #ifdef APPLECXX
+#ifdef DEBUG
+      printf("line = %s\n", &line[j+1]);
+#endif /* DEBUG */
+#ifdef APPLE_SSCANF_BUG
+      istringstream ist(&line[j+1]);
+      ist >> numcalls >> numsubrs >> excl >> incl >> numinvocations ; 
+#else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e;
-      sscanf(&line[j+1], "%d %d %d %d %d", &a, &b, &c, &d, &e);
+      sscanf(&line[j+1], "%d %d %lG %lG %d", &a, &b, &c, &d, &e);
       numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
       incl = (double) d; numinvocations = (double) e;
+#endif /* APPLE_SSCANF_BUG */
+#ifdef DEBUG
+      cout <<"calls " <<numcalls<<" subrs "<<numsubrs << " ex "<<excl <<endl;
+      cout <<"incl " <<incl <<" invocations "<<numinvocations<<endl;
+#endif /* DEBUG */
+           
 #else 
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 #endif 
@@ -385,10 +404,15 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
 #else // DEFAULT double
 #ifdef APPLECXX
       {
+#ifdef APPLE_SSCANF_BUG
+        istringstream ist(&line[j+1]);
+        ist >> numcalls >> numsubrs >> excl >> incl >> sumexclsqr >> numinvocations ; 
+#else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e, f;
       sscanf(&line[j+1], "%d %d %d %d %d %d", &a, &b, &c, &d, &e, &f);
       numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
       incl = (double) d; sumexclsqr = (double) e; numinvocations = (double) f;
+#endif /* APPLE_SSCANF_BUG */
       }
 #else 
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
@@ -628,10 +652,15 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
       sscanf(&line[j+1], "%ld %ld %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 #else // DEFAULT double
 #ifdef APPLECXX
+#ifdef APPLE_SSCANF_BUG
+      istringstream ist(&line[j+1]);
+      ist >> numcalls >> numsubrs >> excl >> incl >> numinvocations ; 
+#else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e;
       sscanf(&line[j+1], "%d %d %d %d %d", &a, &b, &c, &d, &e);
       numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
       incl = (double) d; numinvocations = (double) e;
+#endif /* APPLE_SSCANF_BUG */
 #else 
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 
@@ -644,10 +673,15 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
       sscanf(&line[j+1], "%ld %ld %lG %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
 #else // DEFAULT double
 #ifdef APPLECXX
+#ifdef APPLE_SSCANF_BUG
+      istringstream ist(&line[j+1]);
+      ist >> numcalls >> numsubrs >> excl >> incl >> sumexclsqr >> numinvocations; 
+#else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e, f;
       sscanf(&line[j+1], "%d %d %d %d %d", &a, &b, &c, &d, &e, &f);
       numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
       incl = (double) d; sumexclsqr = (double) e; numinvocations = (double) f;
+#endif /* APPLE_SSCANF_BUG */
 #else 
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
 #endif 
@@ -1091,9 +1125,14 @@ void  Processuser_event_data(FILE *fp, int node, int ctx, int thr, int numberOfU
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
 #ifdef APPLECXX
+#ifdef APPLE_SSCANF_BUG
+    istringstream ist(&line[j+1]);
+    ist >> userNumEvents >> userMax >> userMin >> userMean >> userSumSqr ; 
+#else /* APPLE_SSCANF_BUG */
     int a1, b1, c1, d1, e1;
     sscanf(&line[j+1], "%d %d %d %d %d", &a1, &b1, &c1, &d1, &e1);
     userNumEvents = (double) a1; userMax = (double) b1; userMin = (double) c1; userMean = (double) d1; userSumSqr = (double) e1;  
+#endif /* APPLE_SSCANF_BUG */
 #else 
     sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &userNumEvents, &userMax, 
 	   &userMin, &userMean, &userSumSqr);
@@ -2598,6 +2637,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.40 $   $Date: 2002/11/17 14:23:46 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.40 2002/11/17 14:23:46 sameer Exp $                                
+ * $Revision: 1.41 $   $Date: 2003/07/18 23:43:56 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.41 2003/07/18 23:43:56 sameer Exp $                                
  ***************************************************************************/
