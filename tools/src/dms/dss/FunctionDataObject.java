@@ -1,10 +1,7 @@
 package dms.dss;
 
-public class FunctionDataObject {
+public class FunctionDataObject extends DataObject{
 	private int functionID;
-	private int nodeID;
-	private int contextID;
-	private int threadID;
 	private double inclusivePercentage;
 	private double inclusive;
 	private double exclusivePercentage;
@@ -15,18 +12,6 @@ public class FunctionDataObject {
 
 	public void setFunctionIndexID (int functionID) {
 		this.functionID = functionID;
-	}
-
-	public void setNodeID (int nodeID) {
-		this.nodeID = nodeID;
-	}
-
-	public void setContextID (int contextID) {
-		this.contextID = contextID;
-	}
-
-	public void setThreadID (int threadID) {
-		this.threadID = threadID;
 	}
 
 	public void setInclusivePercentage (double inclusivePercentage) {
@@ -59,18 +44,6 @@ public class FunctionDataObject {
 
 	public int getFunctionIndexID () {
 		return this.functionID;
-	}
-
-	public int getNodeID () {
-		return this.nodeID;
-	}
-
-	public int getContextID () {
-		return this.contextID;
-	}
-
-	public int getThreadID () {
-		return this.threadID;
 	}
 
 	public double getInclusivePercentage () {
