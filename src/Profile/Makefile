@@ -24,7 +24,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/ftg1/sameer/tau2
+TAUROOT=/home/grads/sameer/gar/rs/pcl-tau/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -59,7 +59,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
 		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h      \
 	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
-		$(INCDIR)/TauFAPI.h
+		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h
 
 LDFLAGS	      = $(PCXX_OPT)
 
@@ -67,12 +67,12 @@ MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
-		$(EVENTS_O) $(THR_O) 
+		$(EVENTS_O) $(THR_O) $(PCL_O)
 
 PRINT	      = pr
 
 SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp \
-		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp
+		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp 
 
 AR	      = ar
 
@@ -162,6 +162,9 @@ TauFAPI.o   : TauFAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauMapping.o   : TauMapping.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+PclLayer.o 	: PclLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauDisable.o 	: TauDisable.cpp $(HDRS)
