@@ -126,7 +126,7 @@ bool& RtsLayer::TheEnableInstrumentation(void)
 /////////////////////////////////////////////////////////////////////////
 int& RtsLayer::TheNode(void)
 {
-  static int Node = 0;
+  static int Node =-1;
  
   return Node;
 }
@@ -1067,6 +1067,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.49 $   $Date: 2003/12/11 22:42:43 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.49 2003/12/11 22:42:43 sameer Exp $ 
+ * $Revision: 1.50 $   $Date: 2003/12/18 00:56:37 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.50 2003/12/18 00:56:37 sameer Exp $ 
  ***************************************************************************/
