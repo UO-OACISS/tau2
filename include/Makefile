@@ -58,8 +58,8 @@ TAU_PREFIX_INSTALL_DIR=
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
 TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(USER_OPT)
 DEFINES =
-INSTALL = /bin/cp
-SHELL = /bin/sh
+TAU_INSTALL = /bin/cp
+TAU_SHELL = /bin/sh
 LSX = .a
 #############################################
 # JAVA DEFAULT ARCH 

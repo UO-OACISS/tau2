@@ -172,20 +172,20 @@ $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
-		$(INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_OPTIONS)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_OPTIONS)
 
 $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 		$(RM) $(INSTALLDEST)/libTAU.so
 		ln -s $@ $(INSTALLDEST)/libTAU.so
 
@@ -196,7 +196,7 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
 		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
                    else mkdir $(TAU_JAVA_INSTALLDIR) ;fi
-		$(INSTALL) $? $(TAU_JAVA_INSTALLDIR)
+		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
 		
 install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1)
 

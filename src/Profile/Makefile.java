@@ -44,7 +44,7 @@ $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 clean: 	
 	$(RM) core TauJava.o $(TARGET)
 ##############################################

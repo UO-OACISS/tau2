@@ -18,8 +18,8 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=
-PDTDIR=
+TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
+PDTDIR=/home/users/sameer/pdt
 DYNINSTDIR=
 #######################################################################
  
@@ -28,8 +28,8 @@ DYNINSTDIR=
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
 CXX = $(CONFIG_CXX) $(ABI) $(ISA)
-INSTALL = /bin/cp
-SHELL = /bin/sh
+TAU_INSTALL = /bin/cp
+TAU_SHELL = /bin/sh
 LSX = .a
 #############################################
 
@@ -167,43 +167,43 @@ $(INSTALLDEST)/pprof: pprof
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 $(INSTALLDEST)/tau_merge: tau_merge
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 $(INSTALLDEST)/tau_convert: tau_convert
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 $(INSTALLDEST)/tau_instrumentor: tau_instrumentor
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 $(INSTALLDEST)/tau_run: tau_run
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 #$(INSTALLDEST)/$(RUNTIME1): $(RUNTIME1)
 #		@echo Installing $? in $(INSTALLDEST)
 #		if [ -d $(INSTALLDEST) ] ; then true; \
 #                   else mkdir $(INSTALLDEST) ;fi
-#		$(INSTALL) $? $(INSTALLDEST)
+#		$(TAU_INSTALL) $? $(INSTALLDEST)
 #
 #$(INSTALLDEST)/$(RUNTIME2): $(RUNTIME2)
 #		@echo Installing $? in $(INSTALLDEST)
 #		if [ -d $(INSTALLDEST) ] ; then true; \
 #                   else mkdir $(INSTALLDEST) ;fi
-#		$(INSTALL) $? $(INSTALLDEST)
+#		$(TAU_INSTALL) $? $(INSTALLDEST)
 #
 #$(INSTALLDEST)/$(RUNTIME3): $(INSTALLDEST)/$(RUNTIME2)
 #		@echo Installing $? in $(INSTALLDEST)
@@ -216,13 +216,13 @@ $(INSTALLDEST)/tau_run: tau_run
 #		@echo Installing $? in $(INSTALLDEST)
 #		if [ -d $(INSTALLDEST) ] ; then true; \
 #                   else mkdir $(INSTALLDEST) ;fi
-#		$(INSTALL) $? $(INSTALLDEST)
+#		$(TAU_INSTALL) $? $(INSTALLDEST)
 #
 #$(INSTALLDEST)/$(RUNTIME5): $(RUNTIME5)
 #		@echo Installing $? in $(INSTALLDEST)
 #		if [ -d $(INSTALLDEST) ] ; then true; \
 #                   else mkdir $(INSTALLDEST) ;fi
-#		$(INSTALL) $? $(INSTALLDEST)
+#		$(TAU_INSTALL) $? $(INSTALLDEST)
 #
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#

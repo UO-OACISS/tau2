@@ -19,7 +19,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=
 #######################################################################
  
 include include/Makefile
@@ -27,8 +27,8 @@ include include/Makefile
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
 CXX = $(CONFIG_CXX) $(ABI) $(ISA)
-INSTALL = /bin/cp
-SHELL = /bin/sh
+TAU_INSTALL = /bin/cp
+TAU_SHELL = /bin/sh
 LSX = .a
 #############################################
 #PDT#PDTEXAMPLE = examples/autoinstrument #ENDIF#
