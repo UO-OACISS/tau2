@@ -34,7 +34,7 @@ using namespace std;
 #include "BPatch_snippet.h"
 //#include "test_util.h"
 
-int debugPrint = 1;
+int debugPrint = 0;
 
 template class BPatch_Vector<BPatch_variableExpr*>;
 void checkCost(BPatch_snippet snippet);
