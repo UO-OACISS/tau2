@@ -81,6 +81,7 @@ extern "C" {
     }
 #endif //TAU_WINDOWS
 
+    TauJavaLayer::Init(options);
 
 #ifdef DEBUG_PROF 
     fprintf(stdout, "TAU> .... ok \n\n");
@@ -89,6 +90,39 @@ extern "C" {
   }
 }
 
+static char **TauExcludeList=NULL;
+static int TauExcludeListSize = 0;
+void TauJavaLayer::Init(char *options){
+char *token;
+int num_tokens = 0;
+int token_len;
+
+  if(strlen(options))
+  {
+#ifdef DEBUG_PROF
+    fprintf(stdout,"Init: options = %s, len=%d\n", options, strlen(options));
+#endif // DEBUG_PROF
+
+    token=strtok(options, "=,");
+
+    if (strcmp(token,"exclude")==0) {
+      TauExcludeList = (char **) malloc(256); // 256 items max in exclude list
+      while(token=strtok(NULL,"=,")) 
+      {
+#ifdef DEBUG_PROF
+        printf("token=%s\n",token);
+#endif // DEBUG_PROF
+	token_len = strlen(token);
+	TauExcludeList[num_tokens]=(char *)malloc(token_len+1);
+	strcpy(TauExcludeList[num_tokens], token);
+        num_tokens++;
+      }
+      TauExcludeListSize = num_tokens;
+    }
+
+    
+  }
+}
 
 // function for handling event notification
 void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
@@ -149,7 +183,23 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 #else  /* TAU_MPI */
   //static int j = TAU_MAPPING_PROFILE_SET_NODE(getpid(), tid);
 #endif /* TAU_MPI */
+
+int origkey = 1;
   
+  if (TauExcludeListSize) 
+  {
+    for (i=0; i < TauExcludeListSize; i++)
+    {
+      if (strncmp(event->u.class_load.class_name, 
+	  TauExcludeList[i], strlen(TauExcludeList[i])) == 0) 
+      {
+#ifdef DEBUG_PROF
+        printf("Excluding %s\n", event->u.class_load.class_name);
+#endif // DEBUG_PROF
+	origkey = 0;
+      }
+    }
+  }
   for (i = 0; i < event->u.class_load.num_methods; i++)
   {
     /* Create FunctionInfo objects for each of these methods */
@@ -166,9 +216,23 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
     sprintf(classname, "%s", event->u.class_load.class_name); 
     groupname = strtok(classname, " /=");
 
+/* old
     TAU_MAPPING_CREATE(funcname, " ",
 	  (long)  event->u.class_load.methods[i].method_id, 
 		     groupname, tid); 
+*/
+    if (origkey == 1)
+    {
+      TAU_MAPPING_CREATE(funcname, " ",
+	  (long)  event->u.class_load.methods[i].method_id, 
+		     groupname, tid); 
+    } else {
+      TAU_MAPPING_CREATE1(funcname, " ",
+	  (long)  event->u.class_load.methods[i].method_id, origkey,
+		     groupname, tid); 
+    }
+   
+
 #ifdef DEBUG_PROF 
     printf("TAU> %s, id: %ld group:  %s\n", funcname,
 		event->u.class_load.methods[i].method_id, groupname);
@@ -181,12 +245,15 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 void TauJavaLayer::MethodEntry(JVMPI_Event *event)
 {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
-  TAU_MAPPING_OBJECT(TauMethodName);
+  TAU_MAPPING_OBJECT(TauMethodName=NULL);
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
   
-  TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
-  TAU_MAPPING_PROFILE_START(TauTimer, tid);
+  // If the method is not masked, (has non-zero group id), execute it
+  if(TauMethodName->GetProfileGroup()) { 
+    TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
+    TAU_MAPPING_PROFILE_START(TauTimer, tid);
 
+  }
 #ifdef DEBUG_PROF 
   fprintf(stdout, "TAU> Method Entry %s %s:%ld TID = %d\n", 
   		TauMethodName->GetName(), TauMethodName->GetType(), 
@@ -198,8 +265,12 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event)
 {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
 
-  TAU_MAPPING_PROFILE_STOP(tid);
-
+  TAU_MAPPING_OBJECT(TauMethodName=NULL);
+  TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
+  
+  if(TauMethodName->GetProfileGroup()) { // stop only if it has a finite group 
+    TAU_MAPPING_PROFILE_STOP(tid);
+  }
 #ifdef DEBUG_PROF
   fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
 	 	(long) event->u.method.method_id, tid);
@@ -273,7 +344,7 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 2000/04/14 23:08:46 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.17 2000/04/14 23:08:46 sameer Exp $
+ * $Revision: 1.18 $   $Date: 2000/11/28 21:40:17 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.18 2000/11/28 21:40:17 sameer Exp $
  ***************************************************************************/
 
