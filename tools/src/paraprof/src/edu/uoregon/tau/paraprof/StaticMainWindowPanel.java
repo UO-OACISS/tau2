@@ -826,7 +826,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                 } else if (arg.equals("Show Mean Call Graph")) {
                     PPThread ppThread = (PPThread) clickedOnObject;
 
-                    CallGraphWindow tmpRef = new CallGraphWindow(trial, -1, -1, -1, window.getDataSorter());
+                    CallGraphWindow tmpRef = new CallGraphWindow(trial, trial.getDataSource().getMeanData());
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
 
@@ -836,8 +836,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     //        trial.getNCT().getThread(ppThread.getNodeID(),
                     //                ppThread.getContextID(), ppThread.getThreadID()));
 
-                    CallGraphWindow tmpRef = new CallGraphWindow(trial, ppThread.getNodeID(),
-                            ppThread.getContextID(), ppThread.getThreadID(), window.getDataSorter());
+                    CallGraphWindow tmpRef = new CallGraphWindow(trial, ppThread.getThread());
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
 

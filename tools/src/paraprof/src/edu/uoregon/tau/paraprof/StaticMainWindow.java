@@ -94,6 +94,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         //Windows menu
         windowsMenu = new JMenu("Windows");
 
+//        menuItem = new JMenuItem("Show 3D Window");
+//        menuItem.addActionListener(this);
+//        windowsMenu.add(menuItem);
+
         menuItem = new JMenuItem("Show ParaProf Manager");
         menuItem.addActionListener(this);
         windowsMenu.add(menuItem);
@@ -148,7 +152,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     
     public StaticMainWindow(ParaProfTrial ppTrial, boolean debug) {
         //This window needs to maintain a reference to its trial.
-        this.trial = ppTrial;
+        this.ppTrial = ppTrial;
         
         //Window Stuff.
         setTitle("ParaProf: " + ppTrial.getTrialIdentifier(true));
@@ -237,8 +241,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
                 } else if (arg.equals("Show ParaProf Manager")) {
                     (new ParaProfManagerWindow()).show();
+                } else if (arg.equals("Show 3D Window")) {
+                    //(new ThreeDeeWindow(ppTrial)).show();
                 } else if (arg.equals("Preferences...")) {
-                    trial.getPreferences().showPreferencesWindow();
+                    ppTrial.getPreferences().showPreferencesWindow();
                 }
                 //		
                 //		else if(arg.equals("Save to XML File")){
@@ -339,27 +345,27 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                     else
                         displaySliders(false);
                 } else if (arg.equals("Show Path Title in Reverse"))
-                    this.setTitle("ParaProf: " + trial.getTrialIdentifier(pathTitleCheckBox.isSelected()));
+                    this.setTitle("ParaProf: " + ppTrial.getTrialIdentifier(pathTitleCheckBox.isSelected()));
                 else if (arg.equals("Show Meta Data in Panel"))
                     this.setHeader();
                 else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0)).show();
+                    (new LedgerWindow(ppTrial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1)).show();
+                    (new LedgerWindow(ppTrial, 1)).show();
                 } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2)).show();
+                    (new LedgerWindow(ppTrial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(),
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, this.getDataSorter(),
                             2);
-                    trial.getSystemEvents().addObserver(tmpRef);
+                    ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Show Full Call Graph")) {
-                    CallGraphWindow tmpRef = new CallGraphWindow(trial, -1, -1, -1, this.getDataSorter());
-                    trial.getSystemEvents().addObserver(tmpRef);
+                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
+                    ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
                     //Close the all subwindows.
-                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+                    ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                 } else if (arg.equals("About ParaProf")) {
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
                 } else if (arg.equals("Show Help Window")) {
@@ -383,12 +389,12 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
     public void menuSelected(MenuEvent evt) {
         try {
-            if (trial.groupNamesPresent())
+            if (ppTrial.groupNamesPresent())
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
 
-            if (trial.userEventsPresent())
+            if (ppTrial.userEventsPresent())
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
@@ -443,7 +449,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
-            Preferences p = trial.getPreferences();
+            Preferences p = ppTrial.getPreferences();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
             sp.setColumnHeaderView(jTextArea);
@@ -452,7 +458,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     }
 
     public String getHeaderString() {
-        return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Value Type: "
+        return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getSelectedMetricID())) + "\n" + "Value Type: "
                 + UtilFncs.getValueTypeString(2) + "\n";
     }
 
@@ -599,7 +605,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     }
 
     //Instance data.
-    ParaProfTrial trial = null;
+    ParaProfTrial ppTrial = null;
 
     //Create a file chooser to allow the user to select files for loading data.
     JFileChooser fileChooser = new JFileChooser();

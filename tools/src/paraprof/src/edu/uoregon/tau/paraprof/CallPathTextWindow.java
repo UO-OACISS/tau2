@@ -11,14 +11,41 @@ import edu.uoregon.tau.dms.dss.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.14 2005/01/10 20:12:26 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.15 2005/01/19 02:33:25 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
 public class CallPathTextWindow extends JFrame implements ActionListener, MenuListener, Observer {
 
+    private ParaProfTrial trial = null;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
+    private DataSorter dataSorter = null;
+    private int windowType = 0; //0: mean data,1: function data, 2: global relations.
+
+    private JMenu optionsMenu = null;
+    private JMenu windowsMenu = null;
+    private JMenu unitsSubMenu = null;
+
+    private JCheckBoxMenuItem sortByName = null;
+    private JCheckBoxMenuItem descendingOrder = null;
+    private JCheckBoxMenuItem collapsedView = null;
+    private JCheckBoxMenuItem showPathTitleInReverse = null;
+    private JCheckBoxMenuItem showMetaData = null;
+
+    private JScrollPane sp = null;
+    private CallPathTextWindowPanel panel = null;
+
+    private Vector list = null;
+
+    private boolean name = false; //true: sort by name,false: sort by value.
+    private int order = 0; //0: descending order,1: ascending order.
+    private int valueType = 2; //2-exclusive,4-inclusive,6-number of
+    // calls,8-number of subroutines,10-per call value.
+    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
     
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
@@ -596,42 +623,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //End - Panel header.
     //######
 
-    void closeThisWindow() {
+    public void closeThisWindow() {
         setVisible(false);
         trial.getSystemEvents().deleteObserver(this);
         ParaProf.decrementNumWindows();
         dispose();
     }
-
-    //Instance data.
-    private ParaProfTrial trial = null;
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
-    private DataSorter dataSorter = null;
-    private int windowType = 0; //0: mean data,1: function data, 2: global
-    // relations.
-
-    private JMenu optionsMenu = null;
-    private JMenu windowsMenu = null;
-    private JMenu unitsSubMenu = null;
-
-    private JCheckBoxMenuItem sortByName = null;
-    private JCheckBoxMenuItem descendingOrder = null;
-    private JCheckBoxMenuItem collapsedView = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
-    private JCheckBoxMenuItem showMetaData = null;
-
-    private JScrollPane sp = null;
-    private CallPathTextWindowPanel panel = null;
-
-    private Vector list = null;
-
-    private boolean name = false; //true: sort by name,false: sort by value.
-    private int order = 0; //0: descending order,1: ascending order.
-    private int valueType = 2; //2-exclusive,4-inclusive,6-number of
-    // calls,8-number of subroutines,10-per call
-    // value.
-    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
-
 }

@@ -10,11 +10,17 @@ import java.util.*;
  * This object runs a datasource's load method, then notify's the observers when done 
  *  
  * 
- * <P>CVS $Id: DataSourceThreadControl.java,v 1.3 2005/01/04 01:16:26 amorris Exp $</P>
+ * <P>CVS $Id: DataSourceThreadControl.java,v 1.4 2005/01/19 02:33:25 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class DataSourceThreadControl implements Runnable {
+
+    private DataSource dataSource = null;
+    private Vector observers = new Vector();
+    private boolean loadedOk = false;
+    private Exception exception = null;
+
     public DataSourceThreadControl() {
         super();
     }
@@ -67,10 +73,5 @@ public class DataSourceThreadControl implements Runnable {
             ParaProfUtils.handleException(e);
         }
     }
-
-    private DataSource dataSource = null;
-    private Vector observers = new Vector();
-    private boolean loadedOk = false;
-    private Exception exception = null;
 
 }

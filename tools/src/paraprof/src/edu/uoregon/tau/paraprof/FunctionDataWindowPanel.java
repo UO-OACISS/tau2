@@ -14,9 +14,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.9 2005/01/12 18:56:51 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.10 2005/01/19 02:33:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -324,7 +324,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                 } else if (arg.equals("Show Mean Call Graph")) {
                     PPThread ppThread = (PPThread) clickedOnObject;
 
-                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, -1, -1, -1, window.getDataSorter());
+                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppThread.getThread());
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
 
@@ -359,8 +359,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                 } else if (arg.equals("Show Thread Call Graph")) {
                     PPThread ppThread = (PPThread) clickedOnObject;
 
-                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppThread.getNodeID(),
-                            ppThread.getContextID(), ppThread.getThreadID(), window.getDataSorter());
+                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppThread.getThread());
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
 

@@ -5,14 +5,25 @@ import edu.uoregon.tau.dms.dss.*;
 /**
  * CallPathDrawObject: This object is used to hold data for the CallPathTextWindowPanel
  *   
- * <P>CVS $Id: CallPathDrawObject.java,v 1.5 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: CallPathDrawObject.java,v 1.6 2005/01/19 02:33:25 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		CallPathTextWindow
  * @see		CallPathTextWindowPanel
  */
 public class CallPathDrawObject {
 
+    private Function function = null;
+    private boolean parent = false;
+    private boolean child = false;
+    private boolean spacer = false;
+    private boolean expanded = false;
+
+    private double exclusiveValue = 0.0;
+    private double inclusiveValue = 0.0;
+    private double numberOfCallsFromCallPathObjects = 0;
+    private double numberOfCalls = 0;
+    
     public CallPathDrawObject(Function function, boolean parent, boolean child, boolean spacer) {
         this.function = function;
         this.parent = parent;
@@ -87,16 +98,4 @@ public class CallPathDrawObject {
     public boolean isExpanded() {
         return this.expanded;
     }
-
-    //Instance Data.
-    Function function = null;
-    boolean parent = false;
-    boolean child = false;
-    boolean spacer = false;
-    boolean expanded = false;
-
-    private double exclusiveValue = 0.0;
-    private double inclusiveValue = 0.0;
-    private double numberOfCallsFromCallPathObjects = 0;
-    private double numberOfCalls = 0;
 }

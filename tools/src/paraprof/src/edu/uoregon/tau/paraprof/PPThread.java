@@ -20,6 +20,10 @@ public class PPThread {
         this.thread = thread;
     }
 
+    public edu.uoregon.tau.dms.dss.Thread getThread() {
+        return thread;
+    }
+    
     public int getNodeID() {
         return this.thread.getNodeID();
     }
@@ -219,9 +223,9 @@ public class PPThread {
 
     
     private ParaProfTrial ppTrial;
-    edu.uoregon.tau.dms.dss.Thread thread = null;
-    Vector functions = new Vector();
-    Vector userevents = new Vector();
+    private edu.uoregon.tau.dms.dss.Thread thread = null;
+    private Vector functions = new Vector();
+    private Vector userevents = new Vector();
     //To aid with drawing searches.
     int yDrawCoord = -1;
 }

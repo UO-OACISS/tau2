@@ -177,7 +177,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
             //bad read (exception in datasource load)
             //            JOptionPane.showMessageDialog(this, "Error loading profile: \n" + ((Exception)obj).toString());
 
-            new ParaProfErrorDialog((Exception) obj);
+            ParaProfUtils.handleException((Exception) obj);
 
             jTimer.stop();
 

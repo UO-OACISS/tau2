@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.9 2005/01/14 17:37:47 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.10 2005/01/19 02:33:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -688,8 +688,8 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     private JLabel barLengthLabel = new JLabel("Bar Multiple");
     private JSlider barLengthSlider = new JSlider(0, 40, 1);
 
-    FunctionDataWindowPanel panel = null;
-    JScrollPane sp = null;
+    private FunctionDataWindowPanel panel = null;
+    private JScrollPane sp = null;
 
     private Vector list = null;
 

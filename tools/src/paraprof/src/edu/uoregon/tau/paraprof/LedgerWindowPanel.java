@@ -12,11 +12,11 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.5 2005/01/06 22:49:43 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.6 2005/01/19 02:33:26 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -24,10 +24,28 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
         ParaProfImageInterface {
 
 
+    private int xPanelSize = 300;
+    private int yPanelSize = 400;
+
+    private int barHeight = -1;
+    private int barSpacing = -1;
+
+    private ParaProfTrial ppTrial = null;
+    private LedgerWindow window = null;
+
+    private JPopupMenu popup = new JPopupMenu();
+    private Object clickedOnObject = null;
+
+    private Vector list = null;
+
+    private boolean widthSet = false;
+    private int windowType = -1;
+
+
     public void setupMenus() {
         JMenuItem jMenuItem = null;
         switch (windowType) {
-        case FUNCTION_LEDGER:
+        case LedgerWindow.FUNCTION_LEDGER:
             jMenuItem = new JMenuItem("Show Function Details");
             jMenuItem.addActionListener(this);
             popup.add(jMenuItem);
@@ -41,7 +59,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             popup.add(jMenuItem);
 
             break;
-        case GROUP_LEDGER:
+        case LedgerWindow.GROUP_LEDGER:
 
             jMenuItem = new JMenuItem("Change Group Color");
             jMenuItem.addActionListener(this);
@@ -64,7 +82,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             popup.add(jMenuItem);
 
             break;
-        case USEREVENT_LEDGER:
+        case LedgerWindow.USEREVENT_LEDGER:
             jMenuItem = new JMenuItem("Show User Event Details");
             jMenuItem.addActionListener(this);
             popup.add(jMenuItem);
@@ -87,7 +105,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
         setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         setBackground(Color.white);
 
-        this.trial = trial;
+        this.ppTrial = trial;
         this.window = window;
         this.windowType = windowType;
 
@@ -137,14 +155,14 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
         //To make sure the bar details are set, this
         //method must be called.
-        trial.getPreferences().setBarDetails(g2D);
+        ppTrial.getPreferences().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        barSpacing = trial.getPreferences().getBarSpacing();
-        barHeight = trial.getPreferences().getBarHeight();
+        barSpacing = ppTrial.getPreferences().getBarSpacing();
+        barHeight = ppTrial.getPreferences().getBarHeight();
 
         //Obtain the font and its metrics.
-        Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+        Font font = new Font(ppTrial.getPreferences().getParaProfFont(), ppTrial.getPreferences().getFontStyle(),
                 barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
@@ -225,8 +243,8 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                 g2D.setColor(lde.getColor());
                 g2D.fillRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 
-                if (lde.isHighlighted(trial.getColorChooser())) {
-                    g2D.setColor(lde.getHighlightColor(trial.getColorChooser()));
+                if (lde.isHighlighted(ppTrial.getColorChooser())) {
+                    g2D.setColor(lde.getHighlightColor(ppTrial.getColorChooser()));
                     g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
                     g2D.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
                 } else {
@@ -300,19 +318,19 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                     if (arg.equals("Show Function Details")) {
                         // Highlight the function and bring up the Function Data
                         // Window
-                        trial.getColorChooser().setHighlightedFunction(lde.getFunction());
-                        FunctionDataWindow tmpRef = new FunctionDataWindow(trial, lde.getFunction(),
-                                trial.getStaticMainWindow().getDataSorter());
-                        trial.getSystemEvents().addObserver(tmpRef);
+                        ppTrial.getColorChooser().setHighlightedFunction(lde.getFunction());
+                        FunctionDataWindow tmpRef = new FunctionDataWindow(ppTrial, lde.getFunction(),
+                                ppTrial.getStaticMainWindow().getDataSorter());
+                        ppTrial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
 
                     } else if (arg.equals("Show User Event Details")) {
                         // Highlight the user event and bring up the User Event
                         // Window
-                        trial.getColorChooser().setHighlightedUserEvent(lde.getUserEvent());
-                        UserEventWindow tmpRef = new UserEventWindow(trial, lde.getUserEvent(),
-                                trial.getStaticMainWindow().getDataSorter());
-                        trial.getSystemEvents().addObserver(tmpRef);
+                        ppTrial.getColorChooser().setHighlightedUserEvent(lde.getUserEvent());
+                        UserEventWindow tmpRef = new UserEventWindow(ppTrial, lde.getUserEvent(),
+                                ppTrial.getStaticMainWindow().getDataSorter());
+                        ppTrial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
                     } else if ((arg.equals("Change Function Color")) || (arg.equals("Change User Event Color"))
                             || (arg.equals("Change Group Color"))) {
@@ -323,23 +341,23 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                         if (color != null) {
                             lde.setSpecificColor(color);
                             lde.setColorFlag(true);
-                            trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                            ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
                         }
                     } else if (arg.equals("Reset to Generic Color")) {
                         lde.setColorFlag(false);
-                        trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                        ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
                     } else if (arg.equals("Show This Group Only")) {
-                        trial.setSelectedGroup(lde.getGroup());
-                        trial.setGroupFilter(1);
-                        trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+                        ppTrial.setSelectedGroup(lde.getGroup());
+                        ppTrial.setGroupFilter(1);
+                        ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
                     } else if (arg.equals("Show All Groups Except This One")) {
-                        trial.setSelectedGroup(lde.getGroup());
-                        trial.setGroupFilter(2);
-                        trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+                        ppTrial.setSelectedGroup(lde.getGroup());
+                        ppTrial.setGroupFilter(2);
+                        ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
                     } else if (arg.equals("Show All Groups")) {
-                        trial.setSelectedGroup(null);
-                        trial.setGroupFilter(0);
-                        trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+                        ppTrial.setSelectedGroup(null);
+                        ppTrial.setGroupFilter(0);
+                        ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
                     }
                 }
             }
@@ -372,12 +390,12 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                             popup.show(this, evt.getX(), evt.getY());
                             return;
                         } else { // left click
-                            if (windowType == USEREVENT_LEDGER) {
-                                trial.getColorChooser().toggleHighlightedUserEvent(lde.getUserEvent());
-                            } else if (windowType == GROUP_LEDGER) {
-                                trial.getColorChooser().toggleHighlightedGroup(lde.getGroup());
+                            if (windowType == LedgerWindow.USEREVENT_LEDGER) {
+                                ppTrial.getColorChooser().toggleHighlightedUserEvent(lde.getUserEvent());
+                            } else if (windowType == LedgerWindow.GROUP_LEDGER) {
+                                ppTrial.getColorChooser().toggleHighlightedGroup(lde.getGroup());
                             } else {
-                                trial.getColorChooser().toggleHighlightedFunction(lde.getFunction());
+                                ppTrial.getColorChooser().toggleHighlightedFunction(lde.getFunction());
                             }
                         }
                         //Nothing more to do ... return.
@@ -424,32 +442,5 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     public Dimension getPreferredSize() {
         return new Dimension((xPanelSize + 10), (yPanelSize + 10));
     }
-
-    //Instance data.
-    private int xPanelSize = 300;
-    private int yPanelSize = 400;
-
-    private int barHeight = -1;
-    private int barSpacing = -1;
-
-    private ParaProfTrial trial = null;
-    private LedgerWindow window = null;
-
-    
-
-    private JPopupMenu popup = new JPopupMenu();
-    private Object clickedOnObject = null;
-
-    Vector list = null;
-
-    private boolean widthSet = false;
-
-
-    
-    public static final int FUNCTION_LEDGER = 0;
-    public static final int GROUP_LEDGER = 1;
-    public static final int USEREVENT_LEDGER = 2;
-    private int windowType = -1;
-
 
 }

@@ -17,11 +17,10 @@ import edu.uoregon.tau.dms.dss.*;
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
     public LoadTrialWindow(ParaProfManagerWindow paraProfManager, ParaProfApplication application,
-            ParaProfExperiment experiment, boolean dBTrial) {
-        this.paraProfManager = paraProfManager;
+            ParaProfExperiment experiment) {
+        this.paraProfManagerWindow = paraProfManager;
         this.application = application;
         this.experiment = experiment;
-        this.dBTrial = dBTrial;
 
         //Window Stuff.
         int windowWidth = 400;
@@ -164,7 +163,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                                 + " does not exist");
                         return;
                     }
-                    paraProfManager.addTrial(application, experiment, files, trialTypes.getSelectedIndex(),
+                    paraProfManagerWindow.addTrial(application, experiment, files, trialTypes.getSelectedIndex(),
                             false);
                 } else {
                     if (selectedFiles == null) {
@@ -176,7 +175,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                             return;
                         }
                     }
-                    paraProfManager.addTrial(application, experiment, selectedFiles,
+                    paraProfManagerWindow.addTrial(application, experiment, selectedFiles,
                             trialTypes.getSelectedIndex(), false);
                 }
                 closeThisWindow();
@@ -211,20 +210,16 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         dispose();
     }
 
-    //Instance data.
-    ParaProfManagerWindow paraProfManager = null;
-    ParaProfApplication application = null;
-    ParaProfExperiment experiment = null;
-    boolean dBTrial = false;
-    JTextField dirLocationField = new JTextField(System.getProperty("user.dir"), 30);
+    private ParaProfManagerWindow paraProfManagerWindow = null;
+    private ParaProfApplication application = null;
+    private ParaProfExperiment experiment = null;
+    private JTextField dirLocationField = new JTextField(System.getProperty("user.dir"), 30);
     //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun.
     //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP",
     // "hpmtoolkit", "gprof", "psrun"};
-    String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
+    private String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
             "PSRun" };
-    JComboBox trialTypes = null;
-
-    File selectedFiles[];
-    JButton selectButton = null;
-
+    private JComboBox trialTypes = null;
+    private File selectedFiles[];
+    private JButton selectButton = null;
 }

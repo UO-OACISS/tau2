@@ -8,13 +8,14 @@ import edu.uoregon.tau.dms.dss.*;
  * This controls the adding of applications to the system.
  *  
  * 
- * <P>CVS $Id: ApplicationManager.java,v 1.4 2004/12/29 00:09:47 amorris Exp $</P>
+ * <P>CVS $Id: ApplicationManager.java,v 1.5 2005/01/19 02:33:25 amorris Exp $</P>
  * @author	Robert Bell
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  */
 public class ApplicationManager extends Observable {
-    public ApplicationManager() {
-    }
+
+    private Vector applications = new Vector();
+
     public ParaProfApplication addApplication() {
         ParaProfApplication application = new ParaProfApplication();
         application.setID((applications.size()));
@@ -35,7 +36,7 @@ public class ApplicationManager extends Observable {
     }
 
     public boolean isEmpty() {
-        if ((applications.size()) == 0)
+        if (applications.size() == 0)
             return true;
         else
             return false;
@@ -56,11 +57,9 @@ public class ApplicationManager extends Observable {
     public boolean isApplicationPresent(String name) {
         for (Enumeration e = applications.elements(); e.hasMoreElements();) {
             ParaProfApplication application = (ParaProfApplication) e.nextElement();
-            if (name.equals(application.getName()))
+            if (name.compareTo(application.getName()) == 0)
                 return true;
         }
         return false;
     }
-
-    Vector applications = new Vector();
 }

@@ -87,6 +87,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     }
 
     public void setLoading(boolean loading) {
+        //System.out.println ("setting loading to " + loading);
         this.loading = loading;
     }
 
@@ -136,36 +137,21 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     }
 
     public String toString() {
-        return super.getName();
+        if (this.loading()) {
+            return super.getName() + " (Loading...)";
+        } else {
+            return super.getName();
+        }
     }
 
-    //    public ParaProfDataSession getParaProfDataSession() {
-    //      return (ParaProfDataSession) dataSession;
-    //  }
-
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ParaProfTreeUserObject
-    //######
     public void clearDefaultMutableTreeNodes() {
         this.setDMTN(null);
     }
 
-    //######
-    //End - ParaProfTreeUserObject
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
 
     //####################################
     //Functions that control the obtaining and the opening
-    //and closing of the static main window for
-    //this trial.
+    //and closing of the static main window for this trial.
     //####################################
     public StaticMainWindow getStaticMainWindow() {
         return sMW;
@@ -230,7 +216,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         return this.getMetric(this.getSelectedMetricID()).getDerivedMetric();
     }
 
-    //Overide this function.
+    //Override this function.
     public Vector getMetrics() {
         return dataSource.getMetrics();
     }
@@ -281,7 +267,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         return dataSource.getCallPathDataPresent();
     }
 
-    //Overides the parent getMaxNCTNumbers.
+    //Overrides the parent getMaxNCTNumbers.
     public int[] getMaxNCTNumbers() {
         return dataSource.getMaxNCTNumbers();
     }
@@ -380,13 +366,12 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         // set the colors
         clrChooser.setColors(this, -1);
 
-        //Set this trial's loading flag to false.
-        this.setLoading(false);
 
         //upload to database if necessary
 
         //Check to see if this trial needs to be uploaded to the database.
         if (this.upload()) {
+            
             DatabaseAPI databaseAPI = ParaProf.paraProfManager.getDBSession();
             if (databaseAPI != null) {
                 this.setID(databaseAPI.saveParaProfTrial(this, -1));
@@ -396,13 +381,24 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
             //Now safe to set this to be a dbTrial.
             this.setDBTrial(true);
         } else {
+            //Set this trial's loading flag to false.
+            this.setLoading(false);
             ParaProf.paraProfManager.populateTrialMetrics(this);
         }
+
+        //Set this trial's loading flag to false.
+        this.setLoading(false);
 
     }
 
     public void update() {
     }
+    
+    
+//    public boolean getUploading() {
+//        return uploading;
+//    }
+
 
     public void setDebug(boolean debug) {
         this.debug = debug;
@@ -412,12 +408,10 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         return debug;
     }
 
-    //####################################
-    //Instance data.
-    //####################################
-    boolean defaultTrial = false;
-    ParaProfExperiment experiment = null;
-    DefaultMutableTreeNode defaultMutableTreeNode = null;
+//    private boolean uploading;
+    private boolean defaultTrial = false;
+    private ParaProfExperiment experiment = null;
+    private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBTrial = false;
     private boolean upload = false;
@@ -433,7 +427,4 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     private int selectedMetricID = 0;
     private Vector observers = new Vector();
     private boolean debug = false;
-    //####################################
-    //Instance data.
-    //####################################
 }

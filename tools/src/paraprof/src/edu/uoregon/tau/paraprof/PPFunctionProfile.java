@@ -3,10 +3,10 @@
  * 
  * Title: ParaProf 
  * Author: Robert Bell 
- * Description: The primary function of
- * this class are: 1)Pass data calls onto the objects which contain function
- * userevent, mean, and other data. 2)Implement the Comparable interface to
- * allow it to be sorted. 3)Hold drawing information.
+ * Description: The primary function of this class are: 
+ * 1) Pass data calls onto the objects which contain function userevent, mean, and other data. 
+ * 2) Implement the Comparable interface to allow it to be sorted. 
+ * 3) Hold drawing information.
  * 
  * Thus, it can be considered loosly as representing a particular object that
  * will be drawn onto the screen at some point. It is not set up to represent
@@ -24,6 +24,20 @@ import java.awt.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class PPFunctionProfile implements Comparable {
+
+    private ParaProfTrial trial = null;
+    private edu.uoregon.tau.dms.dss.Thread thread;
+
+    private FunctionProfile functionProfile;
+    private FunctionProfile meanProfile;
+    private int sortType;
+
+    // drawing coordinates for this object
+    private int xBeg = 0;
+    private int xEnd = 0;
+    private int yBeg = 0;
+    private int yEnd = 0;
+
 
     public PPFunctionProfile(ParaProfTrial trial, edu.uoregon.tau.dms.dss.Thread thread, FunctionProfile fp) {
         this.trial = trial;
@@ -299,21 +313,5 @@ public class PPFunctionProfile implements Comparable {
                 + UtilFncs.lpad("#Subrs", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
     }
 
-    //Instance data.
-
-    private ParaProfTrial trial = null;
-    private edu.uoregon.tau.dms.dss.Thread thread;
-
-    private FunctionProfile functionProfile;
-    private FunctionProfile meanProfile;
-
-
-    // drawing coordinates for this object
-    private int xBeg = 0;
-    private int xEnd = 0;
-    private int yBeg = 0;
-    private int yEnd = 0;
-
-    private int sortType;
-
+    
 }

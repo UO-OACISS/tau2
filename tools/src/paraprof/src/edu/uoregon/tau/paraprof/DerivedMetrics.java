@@ -15,15 +15,11 @@ import java.util.*;
 
 public class DerivedMetrics {
 
-    public DerivedMetrics() {
-    }
-
     public static ParaProfMetric applyOperation(ParaProfMetric operand1, Object operand2, String inOperation) {
 
         try {
-            boolean constant = false; //Indicates whether we are just applying
-            // a constant
-            //as an argument for the second operand.
+            boolean constant = false; // Indicates whether we are just applying a constant as an argument 
+                                      // for the second operand.
             double constantValue = 0.00;
             ParaProfTrial trialOpA = null;
             ParaProfTrial trialOpB = null;
@@ -42,8 +38,7 @@ public class DerivedMetrics {
                 opB = ((ParaProfMetric) operand2).getID();
             }
 
-            //We do not support metric from different trials yet. Check for
-            // this.
+            //We do not support metric from different trials yet. Check for this.
             if ((!constant) && (trialOpA != trialOpB)) {
                 JOptionPane.showMessageDialog(ParaProf.paraProfManager,
                         "Sorry, please select metrics from the same trial!", "ParaProf Error",
@@ -76,28 +71,25 @@ public class DerivedMetrics {
                 newMetricName = ((ParaProfMetric) trialOpA.getMetrics().elementAt(opA)).getName()
                         + newMetricName + ((ParaProfMetric) trialOpA.getMetrics().elementAt(opB)).getName();
 
-
             ParaProfMetric newMetric = trialOpA.addMetric();
             newMetric.setTrial(trialOpA);
             newMetric.setName(newMetricName);
             newMetric.setDerivedMetric(true);
             int metric = newMetric.getID();
-//            trialOpA.setSelectedMetricID(metric);
+            //            trialOpA.setSelectedMetricID(metric);
 
             Iterator l = trialOpA.getDataSource().getFunctions();
 
-
             edu.uoregon.tau.dms.dss.Thread meanThread;
-            
+
             meanThread = trialOpA.getDataSource().getMeanData();
             meanThread.incrementStorage();
 
             edu.uoregon.tau.dms.dss.Thread totalThread;
-            
+
             totalThread = trialOpA.getDataSource().getTotalData();
             totalThread.incrementStorage();
-            
-            
+
             l = meanThread.getFunctionProfileIterator();
             while (l.hasNext()) {
                 FunctionProfile functionProfile = (FunctionProfile) l.next();
@@ -105,7 +97,6 @@ public class DerivedMetrics {
                     functionProfile.incrementStorage();
                 }
             }
-
 
             l = totalThread.getFunctionProfileIterator();
             while (l.hasNext()) {
@@ -123,7 +114,6 @@ public class DerivedMetrics {
             //of the latter.
             //######
 
-            
             for (Iterator it = trialOpA.getDataSource().getNodes(); it.hasNext();) {
                 Node node = (Node) it.next();
                 for (Iterator it2 = node.getContexts(); it2.hasNext();) {
@@ -151,8 +141,6 @@ public class DerivedMetrics {
 
                                 functionProfile.setExclusive(metric, result);
 
-//                                if ((function.getMaxExclusive(metric)) < result)
-//                                    function.setMaxExclusive(metric, result);
 
                                 d1 = functionProfile.getInclusive(opA);
                                 if (!constant) {
@@ -163,14 +151,9 @@ public class DerivedMetrics {
 
                                 functionProfile.setInclusive(metric, result);
 
-                                functionProfile.setInclusivePerCall(metric, functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
+                                functionProfile.setInclusivePerCall(metric,
+                                        functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
 
-//                                if ((result > thread.getMaxInclusive(metric))) {
-//                                    thread.setMaxInclusive(metric, result);
-//                                }
-
-//                                if ((function.getMaxInclusive(metric)) < result)
-//                                    function.setMaxInclusive(metric, result);
                             }
                         }
                         thread.setThreadData(metric);
@@ -181,19 +164,15 @@ public class DerivedMetrics {
             //Done with this metric, compute the mean values.
             trialOpA.setMeanData(metric);
 
-            
             trialOpA.getDataSource().getMeanData().setThreadData(metric);
+            trialOpA.getDataSource().getTotalData().setThreadData(metric);
 
             return newMetric;
-        } catch (Exception e) {
-            if (e instanceof NumberFormatException) {
-                //Display an error
-                JOptionPane.showMessageDialog(ParaProf.paraProfManager,
-                        "Did not recognize arguments! Note: DB apply not supported.",
-                        "Argument Error!", JOptionPane.ERROR_MESSAGE);
-            } else {
-                ParaProfUtils.handleException(e);
-            }
+        } catch (NumberFormatException e) {
+            //Display an error
+            JOptionPane.showMessageDialog(ParaProf.paraProfManager,
+                    "Did not recognize arguments! Note: DB apply not supported.", "Argument Error!",
+                    JOptionPane.ERROR_MESSAGE);
             return null;
         }
     }

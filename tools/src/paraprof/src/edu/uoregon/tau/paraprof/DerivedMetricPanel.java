@@ -14,7 +14,13 @@ import javax.swing.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class DerivedMetricPanel extends JPanel implements ActionListener {
-
+    
+    private ParaProfManagerWindow paraProfManager = null;
+    private JTextField arg1Field = new JTextField("Argument 1 (x:x:x:x)", 30);
+    private JTextField arg2Field = new JTextField("Argument 2 (x:x:x:x)", 30);
+    private String operationStrings[] = { "Add", "Subtract", "Multiply", "Divide" };
+    private JComboBox operation = new JComboBox(operationStrings);
+    
     public DerivedMetricPanel(ParaProfManagerWindow paraProfManager) {
         this.paraProfManager = paraProfManager;
 
@@ -125,10 +131,4 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
         this.add(c, gbc);
     }
 
-    //Instance data.
-    ParaProfManagerWindow paraProfManager = null;
-    JTextField arg1Field = new JTextField("Argument 1 (x:x:x:x)", 30);
-    JTextField arg2Field = new JTextField("Argument 2 (x:x:x:x)", 30);
-    String operationStrings[] = { "Add", "Subtract", "Multiply", "Divide" };
-    JComboBox operation = new JComboBox(operationStrings);
 }

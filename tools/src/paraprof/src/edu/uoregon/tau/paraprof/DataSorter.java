@@ -9,12 +9,16 @@ import edu.uoregon.tau.dms.dss.*;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.7 2005/01/10 20:12:26 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.8 2005/01/19 02:33:25 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 public class DataSorter {
 
+    private ParaProfTrial trial = null;
+    private double maxExclusiveSum = 0;
+    private double maxExclusives[];
+    
     public DataSorter(ParaProfTrial trial) {
         this.trial = trial;
     }
@@ -219,7 +223,5 @@ public class DataSorter {
         return maxExclusives;
     }
     
-    private ParaProfTrial trial = null;
-    private double maxExclusiveSum = 0;
-    private double maxExclusives[];
+   
 }

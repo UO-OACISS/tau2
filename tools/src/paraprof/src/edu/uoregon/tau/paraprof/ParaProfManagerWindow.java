@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.7 2005/01/12 01:36:26 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.8 2005/01/19 02:33:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -141,7 +141,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jSplitInnerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, getPanelHelpMessage(0));
         jSplitInnerPane.setContinuousLayout(true);
         jSplitInnerPane.setResizeWeight(0.5);
-                
+
         //         (getContentPane()).add(jSplitOuterPane, "Center");
 
         this.getContentPane().add(jSplitInnerPane, "Center");
@@ -164,19 +164,14 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         //Components have to be realized on the screen before
         //the dividers can be set.
 
-
         this.show();
         //setVisible(true);
-        
-        jSplitInnerPane.setDividerLocation(0.5);
 
-        
+        jSplitInnerPane.setDividerLocation(0.5);
 
         ParaProf.incrementNumWindows();
     }
 
-    
-    
     void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
@@ -276,7 +271,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     if (application != null) {
                         ParaProfExperiment experiment = addExperiment(false, application);
                         if (experiment != null)
-                            (new LoadTrialWindow(this, application, experiment, false)).show();
+                            (new LoadTrialWindow(this, application, experiment)).show();
                     }
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
@@ -369,7 +364,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                                 //Remove any loaded trials associated with this application.
                                 for (Enumeration e = loadedTrials.elements(); e.hasMoreElements();) {
                                     ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-                                    if (loadedTrial.getApplicationID() == application.getID())
+                                    if (loadedTrial.getApplicationID() == application.getID() && loadedTrial.loading() == false)
                                         loadedTrials.remove(loadedTrial);
                                 }
                                 treeModel.removeNodeFromParent(application.getDMTN());
@@ -391,7 +386,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                                 for (Enumeration e = loadedTrials.elements(); e.hasMoreElements();) {
                                     ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
                                     if (loadedTrial.getApplicationID() == experiment.getApplicationID()
-                                            && loadedTrial.getExperimentID() == experiment.getID())
+                                            && loadedTrial.getExperimentID() == experiment.getID()&& loadedTrial.loading() == false)
                                         loadedTrials.remove(loadedTrial);
                                 }
                                 treeModel.removeNodeFromParent(experiment.getDMTN());
@@ -415,7 +410,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                                     ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
                                     if (loadedTrial.getApplicationID() == trial.getApplicationID()
                                             && loadedTrial.getExperimentID() == trial.getID()
-                                            && loadedTrial.getID() == trial.getID())
+                                            && loadedTrial.getID() == trial.getID()&& loadedTrial.loading() == false)
                                         loadedTrials.remove(loadedTrial);
                                 }
                                 treeModel.removeNodeFromParent(trial.getDMTN());
@@ -467,32 +462,29 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         if (application != null) {
                             ParaProfExperiment experiment = addExperiment(false, application);
                             if (experiment != null)
-                                (new LoadTrialWindow(this, application, experiment, false)).show();
+                                (new LoadTrialWindow(this, application, experiment)).show();
                         }
                     } else if (clickedOnObject == dbApps) {
                         ParaProfApplication application = addApplication(true, dbApps);
                         if (application != null) {
                             ParaProfExperiment experiment = addExperiment(true, application);
                             if (experiment != null)
-                                (new LoadTrialWindow(this, application, experiment, false)).show();
+                                (new LoadTrialWindow(this, application, experiment)).show();
                         }
                     } else if (clickedOnObject instanceof ParaProfApplication) {
                         ParaProfApplication application = (ParaProfApplication) clickedOnObject;
                         if (application.dBApplication()) {
                             ParaProfExperiment experiment = addExperiment(true, application);
                             if (experiment != null)
-                                (new LoadTrialWindow(this, null, experiment, false)).show();
+                                (new LoadTrialWindow(this, null, experiment)).show();
                         } else {
                             ParaProfExperiment experiment = addExperiment(false, application);
                             if (experiment != null)
-                                (new LoadTrialWindow(this, null, experiment, false)).show();
+                                (new LoadTrialWindow(this, null, experiment)).show();
                         }
                     } else if (clickedOnObject instanceof ParaProfExperiment) {
                         ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
-                        if (experiment.dBExperiment()) {
-                            (new LoadTrialWindow(this, null, experiment, true)).show();
-                        } else
-                            (new LoadTrialWindow(this, null, experiment, false)).show();
+                        (new LoadTrialWindow(this, null, experiment)).show();
                     }
                 } else if (arg.equals("Upload Trial to DB")) {
                     if (clickedOnObject instanceof ParaProfTrial) {
@@ -737,10 +729,14 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             } else if (userObject instanceof ParaProfTrial) {
                 ParaProfTrial ppTrial = (ParaProfTrial) userObject;
                 if (ppTrial.dBTrial()) {
-                    //Test to see if trial has been loaded already.
+
+                    //Test to see if trial has already been loaded.
                     boolean loadedExists = false;
                     for (Enumeration e = loadedTrials.elements(); e.hasMoreElements();) {
                         ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+                        //                        if (ppTrial == loadedTrial) {
+                        //                            loadedExists = true;
+                        //                        }
                         if ((ppTrial.getID() == loadedTrial.getID())
                                 && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                                 && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
@@ -751,6 +747,11 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     }
 
                     if (!loadedExists) {
+                        
+                        if (ppTrial.loading()) {
+                            return;
+                        }
+                        
                         //Need to load the trial in from the db.
                         //System.out.println("Loading trial ...");
                         ppTrial.setLoading(true);
@@ -1057,9 +1058,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         ppTrial.setName(ppTrial.getPathReverse());
         ppTrial.setLoading(true);
         if (experiment.dBExperiment()) {
-            ppTrial.setUpload(true); //This trial is not set to a db
-            // trial until after it has
-            // finished loading.
+            loadedTrials.add(ppTrial);
+            ppTrial.setUpload(true); // This trial is not set to a db trial until after it has finished loading.
         } else {
             experiment.addTrial(ppTrial);
         }
@@ -1073,9 +1073,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         //            dataSourceThreadControl.addObserver(trial);
         //            dataSourceThreadControl.initialize(dataSource, true);
 
-        if (experiment.dBExperiment()) //Check need to occur on the
-            // experiment as trial not
-            // yet a recognized db trial.
+        if (experiment.dBExperiment()) // Check needs to occur on the experiment as trial 
+                                       // not yet a recognized db trial.
             this.expandTrial(2, ppTrial.getApplicationID(), ppTrial.getExperimentID(), ppTrial.getID(),
                     application, experiment, ppTrial);
         else
@@ -1100,7 +1099,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         try {
             if (trial.upload()) {
                 //Add to the list of loaded trials.
-                loadedTrials.add(trial);
                 trial.setUpload(false);
             }
 
@@ -1381,7 +1379,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private JCheckBoxMenuItem showApplyOperationItem = null;
     private DerivedMetricPanel pPMLPanel = new DerivedMetricPanel(this);
 
-    JScrollPane treeScrollPane;
+    private JScrollPane treeScrollPane;
 
     private Vector loadedTrials = new Vector();
 
