@@ -502,18 +502,8 @@ void Profiler::theFunctionList(const char ***inPtr, int *numOfFunctions, bool ad
   //static const char *const functionList[START_SIZE];
   static int numberOfFunctions = 0;
   static int sizeOfArray = 2;
-  static const char **functionList = ( char const **) malloc( sizeof(char *) * 2);
 
   if(addName){
-    //Note that the add only occurs when a thread is initializing a FunctionInfo
-    //object.  As such, we already have a lock in progress.
-    if(numberOfFunctions == sizeOfArray){
-      //Increase the size of the array.
-      sizeOfArray *= 2;
-      functionList = (const char **) realloc(functionList, sizeof(char *) * sizeOfArray);
-    }
-
-    functionList[numberOfFunctions] = inString;
     numberOfFunctions++;
   }
   else{
@@ -521,8 +511,13 @@ void Profiler::theFunctionList(const char ***inPtr, int *numOfFunctions, bool ad
     *inPtr = ( char const **) malloc( sizeof(char *) * numberOfFunctions);
 
     for(int i=0;i<numberOfFunctions;i++)
+    {
+	    /*
       (*inPtr)[i] = functionList[i]; //Need the () in (*inPtr)[i] or the dereferrencing is
     //screwed up!
+	    */
+      (*inPtr)[i] = TheFunctionDB()[i]->GetName(); //Need the () in (*inPtr)[i] or the dereferrencing is
+    }
 
     *numOfFunctions = numberOfFunctions;
   }
@@ -635,7 +630,7 @@ void Profiler::getFunctionValues(const char **inFuncs,
     currentFuncPos = -1;
     tmpFunctionName = (*it)->GetName();
     for(int fc=0;fc<numOfFuncs;fc++){
-      if(strcmp(inFuncs[fc], tmpFunctionName) == 0){
+      if((inFuncs != 0) && (strcmp(inFuncs[fc], tmpFunctionName) == 0)){
 	functionCheck = true;
 	currentFuncPos = fc;
 	break;
@@ -820,7 +815,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	  functionCheck = false;
 	  tmpFunctionName = (*it)->GetName();
 	  for(int fc=0;fc<numOfFuncs;fc++){
-	    if(strcmp(inFuncs[fc], tmpFunctionName) == 0){
+            if((inFuncs != 0) && (strcmp(inFuncs[fc], tmpFunctionName) == 0)){
 	      functionCheck = true;
 	      break;
 	    }
@@ -1549,7 +1544,7 @@ void Profiler::getFunctionValues(const char **inFuncs,
     currentFuncPos = -1;
     tmpFunctionName = (*it)->GetName();
     for(int fc=0;fc<numOfFuncs;fc++){
-      if(strcmp(inFuncs[fc], tmpFunctionName) == 0){
+      if((inFuncs != 0) && (strcmp(inFuncs[fc], tmpFunctionName) == 0)){
 	functionCheck = true;
 	currentFuncPos = fc;
 	break;
@@ -1756,7 +1751,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	functionCheck = false;
 	tmpFunctionName = (*it)->GetName();
 	for(int fc=0;fc<numOfFuncs;fc++){
-	  if(strcmp(inFuncs[fc], tmpFunctionName) == 0){
+          if((inFuncs != 0) && (strcmp(inFuncs[fc], tmpFunctionName) == 0)){
 	    functionCheck = true;
 	    break;
 	  }
@@ -2514,8 +2509,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.77 $   $Date: 2002/08/08 22:23:19 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.77 2002/08/08 22:23:19 sameer Exp $ 
+ * $Revision: 1.78 $   $Date: 2002/10/22 18:54:53 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.78 2002/10/22 18:54:53 sameer Exp $ 
  ***************************************************************************/
 
 	
