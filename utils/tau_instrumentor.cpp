@@ -315,11 +315,11 @@ void print_tau_profile_init(ostream& ostr, pdbCRoutine *main_routine)
    pdbType::argvec av = main_routine->signature()->arguments();
    if (av.size() == 2) {
      int arg_count = 0;
-     ostr<<"  TAU_PROFILE_INIT(";
+     ostr<<"  TAU_INIT(";
      for(pdbType::argvec::const_iterator argsit = av.begin();
          argsit != av.end(); argsit++, arg_count++)
      {
-       ostr<<(*argsit).name();
+       ostr<<"&"<<(*argsit).name();
        if (arg_count == 0) ostr<<", ";
      }
    ostr<<"); "<<endl;
@@ -1206,8 +1206,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.30 $   $Date: 2002/01/10 02:55:53 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.30 2002/01/10 02:55:53 sameer Exp $
+ * $Revision: 1.31 $   $Date: 2002/01/15 04:14:38 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.31 2002/01/15 04:14:38 sameer Exp $
  ***************************************************************************/
 
 
