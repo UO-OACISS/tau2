@@ -1,0 +1,7 @@
+#!/bin/sh
+
+PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
+XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
+JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
+
+java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.configure.Configure 

@@ -1,0 +1,17 @@
+<?xml version="1.0"? standalone="no"?>
+<!DOCTYPE Sys_Info SYSTEM "Sys_Info.dtd"> 
+
+<System>
+	<name>pyros@cs.uoregon.edu</name>
+	<machine-type>SGI_Power_Challenge</machine-type>
+	<arch>sgi32</arch>
+	<OS>IRIX6.5.4</OS>	
+	<hw-spec>
+		<memory-size> </memory-size>
+		<processor-amt>8pes</processor-amt>
+		<cache-size>
+			<L1></L1>
+			<L2></L2>
+		</cache-size>
+	</hw-spec>
+</System>

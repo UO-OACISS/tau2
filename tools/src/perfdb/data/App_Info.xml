@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<application>
+    <name>example</name>
+    <version>1.0</version>
+    <description></description>
+    <language></language>
+    <para_diag></para_diag>
+    <usage></usage>
+    <exe_opt></exe_opt>
+</application>
