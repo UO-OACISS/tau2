@@ -1,6 +1,7 @@
 package dms.dss;
 
 import java.util.*;
+import dms.dss.*;
 
 public abstract class DataSession {
 	protected Application application = null;
