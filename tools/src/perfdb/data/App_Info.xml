@@ -4,7 +4,7 @@
     <version>1.0</version>
     <description>description</description>
     <language>language</language>
-    <para_diag>para</para_diag>
+    <paradigm>para</paradigm>
     <usage>usage</usage>
     <exe_opt>exe opt</exe_opt>
     <userdata>this is some custom data</userdata>
