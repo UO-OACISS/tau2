@@ -75,6 +75,8 @@
 
 #include <Profile/WindowsThreadLayer.h>
 
+#include <Profile/TauMuse.h>
+
 //////////////////////////////////////////////////////////////////////
 //
 // class Profiler
@@ -183,6 +185,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.46 $   $Date: 2003/07/18 18:49:49 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.46 2003/07/18 18:49:49 sameer Exp $ 
+ * $Revision: 1.47 $   $Date: 2003/10/10 00:42:08 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.47 2003/10/10 00:42:08 sameer Exp $ 
  ***************************************************************************/
