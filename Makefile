@@ -18,7 +18,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/research/parallel/mikek/tau2
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		  #ENDIF#
