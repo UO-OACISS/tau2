@@ -608,6 +608,11 @@ double  mpi_wtime(  )
   return MPI_Wtime(  );
 }
 
+double  mpi_wtime_(  )
+{
+  return MPI_Wtime(  );
+}
+
 void  mpi_address_( location, address , ierr)
 void * location;
 MPI_Aint * address;
