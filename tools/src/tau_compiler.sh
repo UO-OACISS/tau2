@@ -145,71 +145,6 @@ for arg in "$@"
 			printUsage 0 
 			;;
 
-		*.cc|*.CC|*.cpp|*.CPP|*.cxx|*.CXX|*.C)
-			fileName=$arg
-			arrFileName[$numFiles]=$arg
-			numFiles=numFiles+1
-			pdtParserType=cxxparse
-			groupType=$group_C
-			;;
-
-		*.c)
-			fileName=$arg
-			arrFileName[$numFiles]=$arg
-			numFiles=numFiles+1
-			pdtParserType=cparse
-			groupType=$group_c
-			;;
-
-		*.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
-			fileName=$arg
-			arrFileName[$numFiles]=$arg
-			numFiles=numFiles+1
-			if [ $fortranParserDefined == $FALSE ]; then
-				#If it is not passed EXPLICITY, use the default f95parse.
-				pdtParserF="$optPdtDir""/f95parse"
-			fi
-			groupType=$group_f_F
-			;;
-
-		-I*|-D*)
-			optPdtCFlags="$arg $optPdtCFlags"
-			optPdtCxxFlags="$arg $optPdtCxxFlags"
-			optPdtF95="$arg $optPdtF95"
-			optCompile="$arg $optCompile"
-			;;
-		-c)
-			isForCompilation=$TRUE
-			argsRemaining="$argsRemaining $arg"
-			;;
-
-
-		*.o)
-			objectOutputFile="$arg"
-			hasAnObjectOutputFile=$TRUE
-			listOfObjectFiles="$listOfObjectFiles $arg"
-			#List of object Files is simply passed
-			#at the linking stage. It is not
-			#processed anywhere.
-			temp=$counterForOutput+1
-
-			if [ $temp == $tempCounter ]; then
-				#Assumption: Executable/outputFile would appear immediately after -o option
-				passedOutputFile="$arg"
-				echoIfDebug "\tOutput file is $passedOutputFile"
-			fi
-			;;
-
-		-o)
-			hasAnOutputFile=$TRUE
-			counterForOutput=$tempCounter
-			echoIfDebug "\tHas an output file"
-			#With compilation, a new output file is created and is written with -o
-			#options, so no need to append it to argsRemaining. WIth
-			#others it is simply added to the command.
-			#-o is added later
-			;;
-
 		-opt*)
 			counterForOptions=counterForOptions+1
 			case $arg in
@@ -348,6 +283,73 @@ for arg in "$@"
 
 			esac #end case for parsing script Options
 			;;
+
+		*.cc|*.CC|*.cpp|*.CPP|*.cxx|*.CXX|*.C)
+			fileName=$arg
+			arrFileName[$numFiles]=$arg
+			numFiles=numFiles+1
+			pdtParserType=cxxparse
+			groupType=$group_C
+			;;
+
+		*.c)
+			fileName=$arg
+			arrFileName[$numFiles]=$arg
+			numFiles=numFiles+1
+			pdtParserType=cparse
+			groupType=$group_c
+			;;
+
+		*.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
+			fileName=$arg
+			arrFileName[$numFiles]=$arg
+			numFiles=numFiles+1
+			if [ $fortranParserDefined == $FALSE ]; then
+				#If it is not passed EXPLICITY, use the default f95parse.
+				pdtParserF="$optPdtDir""/f95parse"
+			fi
+			groupType=$group_f_F
+			;;
+
+		-I*|-D*)
+			optPdtCFlags="$arg $optPdtCFlags"
+			optPdtCxxFlags="$arg $optPdtCxxFlags"
+			optPdtF95="$arg $optPdtF95"
+			optCompile="$arg $optCompile"
+			;;
+
+		-c)
+			isForCompilation=$TRUE
+			argsRemaining="$argsRemaining $arg"
+			;;
+
+
+		*.o)
+			objectOutputFile="$arg"
+			hasAnObjectOutputFile=$TRUE
+			listOfObjectFiles="$listOfObjectFiles $arg"
+			#List of object Files is simply passed
+			#at the linking stage. It is not
+			#processed anywhere.
+			temp=$counterForOutput+1
+
+			if [ $temp == $tempCounter ]; then
+				#Assumption: Executable/outputFile would appear immediately after -o option
+				passedOutputFile="$arg"
+				echoIfDebug "\tOutput file is $passedOutputFile"
+			fi
+			;;
+
+		-o)
+			hasAnOutputFile=$TRUE
+			counterForOutput=$tempCounter
+			echoIfDebug "\tHas an output file"
+			#With compilation, a new output file is created and is written with -o
+			#options, so no need to append it to argsRemaining. WIth
+			#others it is simply added to the command.
+			#-o is added later
+			;;
+
 
 		$CMD)
 			;;
