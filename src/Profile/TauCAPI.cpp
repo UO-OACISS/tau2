@@ -269,7 +269,7 @@ extern "C" TauGroup_t Tau_disable_all_groups(void)
 
 /* TAU's totalnodes implementation follows */
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int tau_totalnodes(int set_or_get, int value)
+extern "C" int& tau_totalnodes(int set_or_get, int value)
 {
   static int nodes = 1;
   if (set_or_get == 1) /* SET (in is 1) , GET (out is 0) */
@@ -415,8 +415,8 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: bertie $
- * $Revision: 1.31 $   $Date: 2002/11/28 00:53:00 $
- * VERSION: $Id: TauCAPI.cpp,v 1.31 2002/11/28 00:53:00 bertie Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.32 $   $Date: 2003/05/06 21:47:19 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.32 2003/05/06 21:47:19 sameer Exp $
  ***************************************************************************/
 
