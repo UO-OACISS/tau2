@@ -3680,7 +3680,7 @@ void MPI_FILE_IREAD_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MP
   local_fh = MPI_File_f2c(*fh);
   local_type = MPI_Type_f2c(*datatype);
   *ierr = MPI_File_iread_at( local_fh, *offset, buf, *count, local_type, &local_request) ; 
-  *request = MPI_Request_c2f(local_request);
+  *request = MPIO_Request_c2f(local_request);
   return ; 
 }
 
@@ -3740,7 +3740,7 @@ void MPI_FILE_IWRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
   local_fh = MPI_File_f2c(*fh);
   local_type = MPI_Type_f2c(*datatype);
   *ierr = MPI_File_iwrite_at( local_fh, *offset, buf, *count, local_type, &local_request) ; 
-  *request = MPI_Request_c2f(local_request);
+  *request = MPIO_Request_c2f(local_request);
   return ; 
 }
 
@@ -4535,7 +4535,7 @@ void MPI_FILE_IREAD( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint
   local_type = MPI_Type_f2c(*datatype);
   *ierr = MPI_File_iread( local_fh, buf, *count, local_type, &local_request) ; 
   *fh = MPI_File_c2f(local_fh);
-  *request = MPI_Request_c2f(local_request);
+  *request = MPIO_Request_c2f(local_request);
   return ; 
 }
 
@@ -4596,7 +4596,7 @@ void MPI_FILE_IREAD_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
   local_type = MPI_Type_f2c(*datatype);
 
   *ierr = MPI_File_iread_shared( local_fh, buf, *count, local_type, &local_request) ; 
-  *request = MPI_Request_c2f(local_request);
+  *request = MPIO_Request_c2f(local_request);
   return ; 
 }
 
@@ -4654,7 +4654,7 @@ void MPI_FILE_IWRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
   local_fh = MPI_File_f2c(*fh);
   *ierr = MPI_File_iwrite( local_fh, buf, *count, MPI_Type_f2c(*datatype), &local_request) ; 
   *fh = MPI_File_c2f(local_fh);
-  *request = MPI_Request_c2f(local_request);
+  *request = MPIO_Request_c2f(local_request);
   return ; 
 }
 
@@ -4712,7 +4712,7 @@ void MPI_FILE_IWRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
   local_fh = MPI_File_f2c(*fh);
   *ierr = MPI_File_iwrite_shared( local_fh, buf, *count, MPI_Type_f2c(*datatype), &local_request) ; 
   *fh = MPI_File_c2f(local_fh);
-  *request = MPI_Request_c2f(local_request);
+  *request = MPIO_Request_c2f(local_request);
   return ; 
 }
 
