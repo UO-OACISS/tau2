@@ -8,11 +8,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.10 2004/12/29 00:00:44 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.11 2005/01/04 01:05:47 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class DatabaseAPI {
 
@@ -987,7 +987,6 @@ public class DatabaseAPI {
         buf.append("WHERE trial = ");
         buf.append(this.trial.getID());
         buf.append(" ORDER BY id ");
-        System.out.println(buf.toString());
 
         // get the results
         try {

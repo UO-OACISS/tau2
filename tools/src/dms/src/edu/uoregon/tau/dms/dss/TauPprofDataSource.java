@@ -45,9 +45,6 @@ public class TauPprofDataSource extends DataSource {
     }
 
     public void load() throws FileNotFoundException, IOException {
-        //######
-        //Frequently used items.
-        //######
         int metric = 0;
 
         Function function = null;

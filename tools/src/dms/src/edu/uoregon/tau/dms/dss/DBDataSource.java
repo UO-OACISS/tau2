@@ -298,7 +298,7 @@ public class DBDataSource extends DataSource {
                 
             }
 
-            System.out.println("Processing callpath data ...");
+            //System.out.println("Processing callpath data ...");
             if (CallPathUtilFuncs.isAvailable(getTrialData().getFunctions())) {
                 setCallPathDataPresent(true);
                 if (CallPathUtilFuncs.buildRelations(getTrialData()) != 0) {
@@ -307,8 +307,8 @@ public class DBDataSource extends DataSource {
             }
 
             time = (System.currentTimeMillis()) - time;
-            System.out.println("Done processing data file!");
-            System.out.println("Time to process file (in milliseconds): " + time);
+            //System.out.println("Done processing data file!");
+            //System.out.println("Time to process file (in milliseconds): " + time);
         
     }
 

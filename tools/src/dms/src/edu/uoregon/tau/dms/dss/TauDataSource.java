@@ -42,7 +42,6 @@ public class TauDataSource extends DataSource {
     }
 
     public void load() throws FileNotFoundException, IOException, DataSourceException {
-        //Record time.
         long time = System.currentTimeMillis();
 
         Vector v = (Vector) initializeObject;
