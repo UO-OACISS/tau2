@@ -101,14 +101,15 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 
 // Since FunctionInfo constructor is called once for each function (static)
 // we know that it couldn't be already on the call stack.
-	SetAlreadyOnStack(false, tid);
+	RtsLayer::LockDB();
+// Use LockDB to avoid a possible race condition.
     	for (int i=0; i < TAU_MAX_THREADS; i++)
    	{
      	  NumCalls[i] = 0;
      	  NumSubrs[i] = 0;
      	  ExclTime[i] = 0;
      	  InclTime[i] = 0;
-	  AlreadyOnStack[i] = false;
+	  SetAlreadyOnStack(false, i);
  	}
 
 #ifdef PROFILE_STATS
@@ -124,7 +125,6 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 	// While accessing the global function database, lock it to ensure
 	// an atomic operation in the push_back and size() operations. 
 	// Important in the presence of concurrent threads.
-	RtsLayer::LockDB();
 	TheFunctionDB().push_back(this);
 #ifdef TRACING_ON
 	// FOR Tracing, we should make the two a single operation 
@@ -226,6 +226,6 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 1998/09/22 01:08:11 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.8 1998/09/22 01:08:11 sameer Exp $ 
+ * $Revision: 1.9 $   $Date: 1998/09/23 14:38:02 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.9 1998/09/23 14:38:02 sameer Exp $ 
  ***************************************************************************/
