@@ -31,3 +31,12 @@ The list of macros that are used in this example are:
  is indexed by these two dimensions. numOfCalls and numOfSubRoutines are one
  dimensional arrays. See the simple.cpp file for its usage. 
 
+* TAU_DUMP_FUNC_VALS_INCR(inFuncs, 1);
+ Does the same as above, except that it dumps the results with a date
+ stamp to the filename: sel_dump__Thu-Mar-28-16:30:48-2002__.0.0.0
+ The result is that previous TAU_DUMP_FUNC_VALS_INCR(...) are not
+ overwritten (unless they occur within a second).
+
+* TAU_DB_DUMP_INCR();
+ Similar to TAU_DB_DUMP except that it, like the above, dumps
+ with a date stamp to the file name.
