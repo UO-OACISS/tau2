@@ -184,8 +184,8 @@ public:
   	static void CallStackTrace(int tid = RtsLayer::myThread());
 #endif /* PROFILE_CALLSTACK  */
 #ifdef TAU_PROFILEPHASE
-	bool Profiler::GetPhase(void);
-	void Profiler::SetPhase(bool flag);
+	bool GetPhase(void);
+	void SetPhase(bool flag);
 #endif /* TAU_PROFILEPHASE */
 
 private:
@@ -210,6 +210,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.53 $   $Date: 2005/01/11 00:44:11 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.53 2005/01/11 00:44:11 sameer Exp $ 
+ * $Revision: 1.54 $   $Date: 2005/01/11 00:51:20 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.54 2005/01/11 00:51:20 sameer Exp $ 
  ***************************************************************************/
