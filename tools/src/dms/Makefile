@@ -1,6 +1,5 @@
-# these are classpaths for the build.  The first classpath is for the src/edu/uoregon/tau/dms/database
-# directory.  The second is for everything else.
-
+# these are classpaths for the build.  The second classpath is for the 
+# src/edu/uoregon/tau/dms/loader directory.  The first is for everything else.
 CLASSPATH=./classes
 LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar
 

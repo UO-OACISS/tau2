@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.1 2004/05/05 17:43:38 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.2 2004/05/05 19:26:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -657,7 +657,6 @@ public class PerfDMFSession extends DataSession {
 
 				// get the total data
 				System.out.print("\rGetting the intervalEvents: " + ++fcount + " intervalEvents found...");
-				/*
 				IntervalLocationProfile funTS = new IntervalLocationProfile(metricCount);
 				IntervalLocationProfile funMS = new IntervalLocationProfile(metricCount);
 				for (int i = 0 ; i < metricCount ; i++) {
@@ -678,7 +677,6 @@ public class PerfDMFSession extends DataSession {
 				}
 				intervalEvent.setTotalSummary(funTS);
 				intervalEvent.setMeanSummary(funMS);
-				*/
 	    	}
 	    }
 
