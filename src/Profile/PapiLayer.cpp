@@ -67,10 +67,17 @@ long long PapiLayer::getCounters(int tid)
 	  PAPI_CounterList[j] = -1;
 	}
       
-     if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
-           cout << "Wrong version of PAPI library" << endl;
-           return -1;
-       }
+      
+      int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
+      if (papi_ver < 0) {
+	cout << "PAPI Initialization error: " << papi_ver << endl;
+	return -1;
+      }
+      
+      if (papi_ver != PAPI_VER_CURRENT) {
+	cout << "Wrong version of PAPI library" << endl;
+	return -1;
+      }
 
 #ifndef PAPI_VERSION
 /* PAPI 2 support goes here */
