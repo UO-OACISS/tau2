@@ -20,23 +20,12 @@ public class PPML{
 
     public PPML(){}
 
-    public static Metric applyOperation(String tmpString1, String tmpString2, String inOperation){
+    public static Metric applyOperation(Metric operand1, Metric operand2, String inOperation){
 	try{
-	    StringTokenizer st = new StringTokenizer(tmpString1, ":");
-	    int applicationID = Integer.parseInt(st.nextToken());
-	    int experimentID = Integer.parseInt(st.nextToken());
-	    int trialID = Integer.parseInt(st.nextToken());
-	    int metricID = Integer.parseInt(st.nextToken());
-	    ParaProfTrial trialOpA = ParaProf.applicationManager.getTrial(applicationID, experimentID, trialID);
-	    int opA = metricID;
-	    
-	    st = new StringTokenizer(tmpString2, ":");
-	    applicationID = Integer.parseInt(st.nextToken());
-	    experimentID = Integer.parseInt(st.nextToken());
-	    trialID = Integer.parseInt(st.nextToken());
-	    metricID = Integer.parseInt(st.nextToken());
-	    ParaProfTrial trialOpB = ParaProf.applicationManager.getTrial(applicationID, experimentID, trialID);
-	    int opB = metricID;
+	    ParaProfTrial trialOpA = operand1.getTrial();
+	    ParaProfTrial trialOpB = operand2.getTrial();
+	    int opA = operand1.getID();
+	    int opB = operand1.getID();
 	
 
 	    //We do not support metric from different trials yet.  Check for this.

@@ -273,7 +273,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			    else{
 				if(evt.getClickCount()==2){
 				    if(userObject instanceof Metric)
-					metric(path,true);
+					metric((Metric)userObject,true);
 				}
 			    }
 			    
@@ -673,7 +673,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jSplitInnerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof Metric)
-	    this.metric(path,false);
+	    this.metric((Metric)userObject,false);
     }
     //######
     //End - TreeSelectionListener
@@ -964,22 +964,31 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //Tree selection helpers.
     //####################################
 
-    //Improve this function so that db trials can be passed through.
-    private void metric(TreePath path, boolean show){
-	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
-	Object userObject = selectedNode.getUserObject();
-
-	ParaProfTrial trial  =  (ParaProfTrial) parentNode.getUserObject();
-	Metric metric = (Metric) userObject;
-	jSplitInnerPane.setRightComponent(getTable(userObject));
+    private void metric(Metric metric, boolean show){
+	jSplitInnerPane.setRightComponent(getTable(metric));
 	jSplitInnerPane.setDividerLocation(0.5);
-	if(!trial.dBTrial()){
-	    pPMLPanel.setArg2Field(pPMLPanel.getArg1Field());
-	    pPMLPanel.setArg1Field(metric.getApplicationID()+":"+metric.getExperimentID()+":"+metric.getTrialID()+":"+metric.getID());
-	}
+	this.operand2 = this.operand1;
+	pPMLPanel.setArg2Field(pPMLPanel.getArg1Field());
+	operand1 = metric;
+	pPMLPanel.setArg1Field(metric.getApplicationID()+":"+metric.getExperimentID()+":"+metric.getTrialID()+":"+metric.getID()+" - "+metric.getName());
 	if(show)
-	    this.showMetric(trial, metric);
+	    this.showMetric(metric);
+    }
+
+    public Metric getOperand1(){
+	return operand1;}
+
+    public Metric getOperand2(){
+	return operand2;}
+
+    public void uploadMetric(Metric metric){
+	if(metric!=null){
+	    PerfDMFSession perfDMFSession = this.getDBSession();
+	    if(perfDMFSession!=null){
+		perfDMFSession.saveParaProfTrial(metric.getTrial(), metric.getID());
+		perfDMFSession.terminate();
+	    }
+	}
     }
 
     public void clearDefaultMutableTreeNodes(DefaultMutableTreeNode defaultMutableTreeNode){
@@ -1263,8 +1272,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	}
     }
 
-    private void showMetric(ParaProfTrial trial, Metric metric){
+    private void showMetric(Metric metric){
 	try{
+	    ParaProfTrial trial = metric.getTrial();
 	    trial.setSelectedMetricID(metric.getID());
 	    trial.getSystemEvents().updateRegisteredObjects("dataEvent");
 	    trial.showMainWindow();
@@ -1496,6 +1506,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     private JPopupMenu popup5 = new JPopupMenu();
 
     private Object clickedOnObject = null;
+    private Metric operand1 = null;
+    private Metric operand2 = null;
     //######
     //End - Popup menu stuff.
     //######

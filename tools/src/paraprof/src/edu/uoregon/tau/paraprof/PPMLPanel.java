@@ -96,11 +96,14 @@ public class PPMLPanel extends JPanel implements ActionListener{
 	return arg2Field.getText().trim();}
 
     public void applyOperation(){
-	Metric metric = PPML.applyOperation(arg1Field.getText().trim(),
-					    arg2Field.getText().trim(),
+	Metric metric = PPML.applyOperation(paraProfManager.getOperand1(),
+					    paraProfManager.getOperand2(),
 					    (String) operation.getSelectedItem());
-	if(metric!=null)
+	if(metric!=null){
+	    if(metric.getTrial().dBTrial())
+		paraProfManager.uploadMetric(metric);
 	    paraProfManager.populateTrialMetrics(metric.getTrial());
+	}
     }
     
     //####################################
