@@ -1,18 +1,18 @@
 *****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/paracomp/tau    **
 *****************************************************************************
-**    Copyright 1997-2003 				   	           **
+**    Copyright 1997-2004 				   	           **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **	
 *****************************************************************************
 *****************************************************************************
 **  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO)
-**		 Robert Michael Ansell Bell (UO)		
+**		 Robert Michael Ansell-Bell (UO)		
 **		 Kathleen Lindlan, Ariya Lohavanichbutr, Nick Trebon,
-**		 Peter Beckman, Steve Karmesin,  
-**  Principal Investigators : 
+**		 Peter Beckman, Steve Karmesin  
+**  Principal Investigator : 
 **		 Allen Malony (UO)
 **  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 
 **  Darryl Brown, et. al. and directed by Allen Malony at University of Oregon.
@@ -40,13 +40,12 @@ are described below.
 
 TAU Portable Profiling Package
 ****************************** 
-The model that TAU uses to profile parallel, multi-threaded C++, C, Fortran 90,
-and Java programs maintains performance data for each thread, context, and node 
-in use by an application.  The profiling instrumentation needed to implement the
-model captures data for functions, methods, basic blocks, and statement
-execution at these levels.  The instrumentation is complicated, however, by
-advanced features in the C++ language, such as templates and namespaces.
-All C++ language features are supported in the TAU profiling
+The model that TAU uses to profile parallel, multi-threaded C++, C, Fortran 90, Python and Java programs maintains performance data for each thread, context, 
+and node in use by an application.  The profiling instrumentation needed to 
+implement the model captures data for functions, methods, basic blocks, and 
+statement execution at these levels.  The instrumentation is complicated, 
+however, by advanced features in the C++ language, such as templates and 
+namespaces. All C++ language features are supported in the TAU profiling
 instrumentation, which is available through an API at the library or
 application level.  The API also provides selection of profiling groups for
 organizing and controlling instrumentation.  ACTS software layers have
@@ -62,7 +61,7 @@ inclusive time per call was.  Time information can also be displayed
 relative to nodes, contexts, and threads.  Instead of time, hardware
 performance data can be shown.  Also, user-level profiling is possible.
 
-TAU's profile visualization tool, jracy, provides graphical displays of all
+TAU's profile visualization tool, paraprof, provides graphical displays of all
 the performance analysis results, in aggregate and per node/context/thread
 form.  The user can quickly identify sources of performance bottlenecks in
 the application using the graphical interface.  In addition, TAU can
