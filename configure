@@ -899,7 +899,6 @@ case $machine in
              c_compiler=xlc
            else
              cxx_compiler=g++
-             tauoptions="${tauoptions}-gnu"
          fi
      fi
 
@@ -1362,11 +1361,13 @@ case $fortran_compiler in
 
    ibm)
       echo "Default Fortran compiler will be IBM xlf90"
+      extradir=`which xlf90 | sed s/xlf90/../`
       fixmakeargs="$fixmakeargs IBM_FORTRAN"
       ;;
 
    ibm64)
       echo "Default Fortran compiler will be IBM xlf90 (64 bits)"
+      extradir=`which xlf90 | sed s/xlf90/../`
       fixmakeargs="$fixmakeargs IBM64_FORTRAN"
       ;;
 
@@ -1935,6 +1936,15 @@ case $machine in
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
+     ppc64)
+	echo "Found an IBM PPC-64 Linux configuration definition"
+	fixmakeargs="arch=$machine PPC64 $fixmakeargs"
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs PPC64PAPI"
+	fi
+        ;; 
+
      ia64)
 	echo "Found an IA-64 configuration definition"
 	fixmakeargs="arch=$machine $fixmakeargs"
@@ -1946,7 +1956,17 @@ case $machine in
 	;;
      ibm64)
 	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine $fixmakeargs SP1 IBM64"
+        if [ `uname -s` = AIX ]
+        then
+	  fixmakeargs="arch=$machine $fixmakeargs SP1 IBM64"
+        else 
+          if [ `uname -s ` = Linux ] 
+          then
+	    fixmakeargs="arch=$machine $fixmakeargs PPC64 IBM64"
+          else
+	    fixmakeargs="arch=$machine $fixmakeargs IBM64"
+          fi
+        fi
 
 	if [ $papi = yes ]
  	  then

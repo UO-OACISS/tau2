@@ -65,6 +65,7 @@ TAU_PREFIX_INSTALL_DIR=
 #USE_IBMXLC#IBM_ABI    	     = $(IBM_XLC_ABI) 	  #ENDIF#
 #GNU#IBM_ABI	     	     = $(IBM_GNU_ABI) 	  #ENDIF#
 #SP1# ABI		     = $(IBM_ABI)	  #ENDIF#
+#PPC64# ABI		     = $(IBM_ABI)	  #ENDIF#
 #######################################################################
 F90_ABI	= $(ABI) 
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
@@ -292,6 +293,9 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #GNU#TAU_IBM64_FORTRANLIBS      =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 -Wl,-b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
 #KAI#TAU_IBM64_FORTRANLIBS      =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 --backend -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
 #IBM64_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM64_FORTRANLIBS) #ENDIF#
+#IBM64_FORTRAN#TAU_FORLIBDIR=lib64 #ENDIF#
+#IBM_FORTRAN#TAU_FORLIBDIR=lib #ENDIF#
+#PPC64#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl #ENDIF#
 
 #IBMXLFAPPLE#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib -lxlf90 -lxlfmath -lxl      #ENDIF#
 
@@ -333,7 +337,9 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SGICC#TAU_CXXLIBS      	= $(TAU_SGI_INIT) -lC #ENDIF#
 #APPLECXX#TAU_CXXLIBS 		= -lstd -lC #ENDIF#
 #SOL2#TAU_CXXLIBS               = -lCstd -lCrun #ENDIF#
-#USE_IBMXLC#TAU_CXXLIBS         = -lC            #ENDIF#
+#USE_IBMXLC#TAU_XLCLIBS         = -lC            #ENDIF#
+#PPC64#TAU_XLCLIBS         = -lstdc++            #ENDIF#
+#USE_IBMXLC#TAU_CXXLIBS         = $(TAU_XLCLIBS) #ENDIF#
 #USE_DECCXX#TAU_CXXLIBS         = -lcxxstd -lcxx #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS        = -lcprts -lPEPCF90 #ENDIF#
 #APPLECXX#TAU_CXXLIBS 		= -lstdc++ #ENDIF#
@@ -403,6 +409,7 @@ TAU_RANLIB = echo "Built"
 ##############################################
 TAU_AR                 = ar             #ENDIF#
 #IBM64#TAU_AR          = ar -X64        #ENDIF#
+#PPC64#TAU_AR          = ar 		#ENDIF#
 
 
 ##############################################

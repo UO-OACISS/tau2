@@ -519,6 +519,10 @@ fi
 	echo "NOTE: *** Using IBM 64 bit options.  ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PPC64)
+	echo "NOTE: *** IBM pSeries Linux environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      T3D)
 	echo "NOTE: *** CRAY T3D development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -784,6 +788,10 @@ fi
 	;;
      IA64PAPI)
 	echo "NOTE: Using PAPI with IA-64 options (-lpapi) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PPC64PAPI)
+	echo "NOTE: Using PAPI with PPC64 options (-lpapi) ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SGI64PAPI)
