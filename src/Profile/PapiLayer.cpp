@@ -108,7 +108,9 @@ long long PapiLayer::getCounters(int tid)
 	}
 	else
 	{
+#ifndef TAU_EPILOG
 	  cout << "Error - You must define the PAPI_EVENT environment variable." << endl;
+#endif /* TAU_EPILOG */
 
 	  return -1;
 	}

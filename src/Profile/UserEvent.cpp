@@ -224,9 +224,11 @@ void TauUserEvent::SetMonotonicallyIncreasing(bool value)
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid)
 { 
 #ifdef TRACING_ON
+#ifndef TAU_EPILOG
   TraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
   TraceEvent(GetEventId(), (x_uint64) data, tid, 0, 0); 
   TraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
+#endif /* TAU_EPILOG */
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
 #endif /* TRACING_ON */
 
@@ -472,7 +474,7 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 }
 
 /***************************************************************************
- * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.14 $   $Date: 2004/09/01 18:52:36 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.14 2004/09/01 18:52:36 amorris Exp $ 
+ * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
+ * $Revision: 1.15 $   $Date: 2004/10/09 00:29:55 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.15 2004/10/09 00:29:55 sameer Exp $ 
  ***************************************************************************/
