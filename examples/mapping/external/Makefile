@@ -31,7 +31,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-TARGET	      	= inst
+TARGET	      	= external
 
 EXTRAOBJS     	= 
 
@@ -44,8 +44,8 @@ install: 	$(TARGET)
 $(TARGET):	$(TARGET).o
 	$(CXX) $(LDFLAGS) $(TARGET).o -o $@ $(LIBS)
 
-$(TARGET).o : $(TARGET).cpp
-	$(CXX) $(CFLAGS) -c $(TARGET).cpp
+$(TARGET).o : inst.cpp
+	$(CXX) $(CFLAGS) -c inst.cpp -o $@
 
 clean: 	
 	$(RM) $(TARGET).o $(TARGET)
