@@ -676,13 +676,16 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	this.metrics = metrics;}
 
     protected void addMetric(String metricName){
-	metrics.add(metricName);}
+	Metric newMetric = new Metric();
+	newMetric.setName(metricName);
+	metrics.add(newMetric);}
 
     protected int getNumberOfMetrics(){
 	return metrics.size();}
 
     protected String getMetricName(int metricID){
-	return (String) metrics.elementAt(metricID);}
+	Metric tmpMetric = (Metric)metrics.elementAt(metricID);
+	return tmpMetric.getName();}
 
     protected void setProfileStatsPresent(boolean profileStatsPresent){
 	this.profileStatsPresent = profileStatsPresent;}
