@@ -1,29 +1,38 @@
 default: dms.jar 
 
-all: dms.jar javadoc .buildtest .simple
+all: dms.jar javadoc buildtest simple copytest
 
-dms.jar: classes/dms/dss/*.class
+dms.jar: classes/dms/perfdb/*.class classes/dms/dss/*.class
 	jar -cvf dms.jar -C classes .
 
-classes/dms/dss/*.class: dss/*.java
-	javac -d ./classes -classpath ./classes:./../perfdb/jars/perfdb.jar ./dss/*.java	
+classes/dms/perfdb/*.class: ./src/dms/perfdb/*.java
+	javac -d ./classes -classpath ./classes:../contrib/postgresql.jar:../contrib/jargs.jar:../contrib/xerces.jar:../paraprof/bin/ParaProf.jar ./src/dms/perfdb/*.java ./src/dms/dss/*.java	
 
-./examples/TestPerfDBSession.class: dms.jar ./examples/TestPerfDBSession.java
-	javac -d ./examples -classpath ./classes:./dms.jar ./examples/TestPerfDBSession.java
+classes/dms/dss/*.class: ./src/dms/dss/*.java
+	javac -d ./classes -classpath ./classes ./src/dms/dss/*.java	
 
-./examples/SimpleExample.class: dms.jar ./examples/SimpleExample.java
-	javac -d ./examples -classpath ./classes:./dms.jar ./examples/SimpleExample.java
+./src/examples/TestPerfDBSession.class: dms.jar ./src/examples/TestPerfDBSession.java
+	javac -d ./src/examples -classpath ./dms.jar ./src/examples/TestPerfDBSession.java
 
-buildtest: examples/TestPerfDBSession.class
-	examples/testBuild
+./src/examples/SimpleExample.class: dms.jar ./src/examples/SimpleExample.java
+	javac -d ./src/examples -classpath ./dms.jar ./src/examples/SimpleExample.java
+
+./src/examples/CopyTest.class: dms.jar ./src/examples/CopyTest.java
+	javac -d ./src/examples -classpath ./dms.jar ./src/examples/CopyTest.java
+
+buildtest: src/examples/TestPerfDBSession.class
+	src/examples/testBuild
 
 clean:
-	rm -rf dms.jar classes/dms examples/*.class .buildtest .simple doc/[a-z]*
+	rm -rf dms.jar ./classes/dms ./src/examples/*.class ./doc/[a-z]*
 
-simple: examples/SimpleExample.class
-	examples/testSimpleExample
+simple: ./src/examples/SimpleExample.class
+	./src/examples/testSimpleExample
 
-javadoc: ./dss/*.java ./dss/package.html
-	javadoc -d ./doc -classpath ./classes:./../perfdb/jars/perfdb.jar ./dss/*.java	
+copytest: ./src/examples/CopyTest.class
+	./src/examples/testCopy
+
+javadoc: ./src/dms/dss/*.java ./src/dms/dss/package.html
+	javadoc -d ./doc -classpath ./classes ./src/dms/dss/*.java	
 
 remake: clean all
