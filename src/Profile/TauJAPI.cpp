@@ -2,6 +2,13 @@
 #include "Profile/Profiler.h"
 #include "Profile/TauJAPI.h"
 #include "Profile/TauJava.h"
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+using namespace std;
+#else /* TAU_DOT_H_LESS_HEADERS */
+#include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
+
 
 /*
  * Class:     Profile
@@ -112,7 +119,7 @@ JNIEXPORT void JNICALL Java_TAU_Profile_NativeStop
 
 /***************************************************************************
  * $RCSfile: TauJAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2000/12/02 19:50:02 $
- * TAU_VERSION_ID: $Id: TauJAPI.cpp,v 1.1 2000/12/02 19:50:02 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2000/12/02 20:44:25 $
+ * TAU_VERSION_ID: $Id: TauJAPI.cpp,v 1.2 2000/12/02 20:44:25 sameer Exp $
  ***************************************************************************/
 
