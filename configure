@@ -1858,18 +1858,20 @@ if ( xrdb -query ) 1>/dev/null 2>&1
 fi
 
 echo "TAU: installing TAU's jracy profile browser" 
+taushell=sh
+if [ $machine = solaris2 ]
+then
+  taushell=ksh
+fi
 if [ $tauprefix = unknown ]
 then
-  taushell=sh
-  if [ $machine = solaris2 ]
-  then
-    taushell=ksh
-  fi
   cat ${tauroot}/tools/src/jRacy/jracy.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$machine',' \
 	> ${tauroot}/${machine}/bin/jracy
   chmod a+rx ${tauroot}/${machine}/bin/jracy
   echo "TAU: installed jracy in ${tauroot}/${machine}/bin"
+  cp ${tauroot}/tools/src/jRacy/jRacy.jar ${tauroot}/${machine}/lib
+  echo "TAU: installed jRacy.jar in ${tauroot}/${machine}/lib"
 else
   if [ ! -d ${tauprefix} ]
   then
@@ -1885,10 +1887,12 @@ else
   fi
 
   cat ${tauroot}/tools/src/jRacy/jracy.skel | 
-  sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@ARCH@,'$machine',' \
+  sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$machine',' \
 	> ${tauprefix}/${machine}/bin/jracy
   chmod a+rx ${tauprefix}/${machine}/bin/jracy
   echo "TAU: installed jracy in ${tauprefix}/${machine}/bin"
+  cp ${tauroot}/tools/src/jRacy/jRacy.jar ${tauprefix}/${machine}/lib
+  echo "TAU: installed jRacy.jar in ${tauprefix}/${machine}/lib"
 fi
 
 # -- determine Tcl/Tk version

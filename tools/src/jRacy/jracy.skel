@@ -34,4 +34,4 @@ if [ -f ~/.jRacy/jRacyPreferences.dat ] ; then
     cp ~/.jRacy/jRacyPreferences.dat . ; \
 fi
 
-java -jar ${TAUROOT}/tools/src/jRacy/jRacy.jar 
+java -jar ${TAUROOT}/${MACHINE}/lib/jRacy.jar 
