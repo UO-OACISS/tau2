@@ -45,7 +45,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     //######
     //Command line options related.
     //######
-    public static String USAGE = "USAGE: paraprof [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-p,--filenameprefix} filenameprefix] [{-i --fixnames}] [{-d,--debug} debug]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, hpm, gprof, psrun, sddf (svpablo)\n";
+    public static String USAGE = "USAGE: paraprof [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-p,--filenameprefix} filenameprefix] [{-i --fixnames}] [{-d,--debug}]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, hpm, gprof, psrun, sddf (svpablo)\n";
     private static int fileType = -1; //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun 
     private static boolean dump = false;
     private static int dumptype = -1;
@@ -425,7 +425,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	}
 	catch (Exception e) {
   	    System.out.println("An un-caught exception has occurred within the program!");
-	    System.out.println("The details of this execption has been stored in a file named: exception.err");
+	    System.out.println("The details of this exception have been stored in a file named: exception.err");
 	    System.out.println("Please email this file to Robert Bell at bertie@cs.uoregon.edu ");
 	    e.printStackTrace();
 	}

@@ -213,16 +213,22 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	return selectedMetricID;}
   
     public boolean isTimeMetric(){
-	String trialName = this.getMetricName(this.getSelectedMetricID());
-	trialName = trialName.toUpperCase();
-	if(trialName.indexOf("TIME") == -1)
+	String metricName = this.getMetricName(this.getSelectedMetricID());
+	metricName = metricName.toUpperCase();
+	if(metricName.indexOf("TIME") == -1)
 	    return false;
 	else
 	    return true;
     }
 
-    public boolean isDerivedMetric(){
-	return this.getMetric(this.getSelectedMetricID()).getDerivedMetric();}
+    public boolean isDerivedMetric() {
+	
+	// We can't do this, HPMToolkit stuff has /'s and -'s all over the place
+	//String metricName = this.getMetricName(this.getSelectedMetricID());
+	//if (metricName.indexOf("*") != -1 || metricName.indexOf("/") != -1)
+	//    return true;
+	return this.getMetric(this.getSelectedMetricID()).getDerivedMetric();
+    }
 	
     //Overide this function.
     public Vector getMetrics(){

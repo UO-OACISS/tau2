@@ -124,6 +124,11 @@ public class PPML{
 			    
 				globalThreadDataElement.setInclusiveValue(metric, result);			    
 				//Now do the global mapping element inclusive stuff.
+
+				if ((result > thread.getMaxInclusiveValue(metric))) {
+				    thread.setMaxInclusiveValue(metric, result);
+				}
+				
 				if((globalMappingElement.getMaxInclusiveValue(metric)) < result)
 				    globalMappingElement.setMaxInclusiveValue(metric, result);
 			    }

@@ -43,6 +43,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     }
     
     public ThreadDataWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, StaticMainWindowData sMWData, int windowType, boolean debug){
+
 	try{
 	    this.trial = trial;
 	    this.sMWData = sMWData;
@@ -51,6 +52,30 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    this.threadID = threadID;
 	    this.windowType = windowType;
 	    this.debug = debug;
+
+	    // for derived metrics, default to values, percentages usually don't mean much
+	    if (trial.isDerivedMetric()) {
+		percent = false;
+	    }
+
+
+	    if (windowType == 0) { // if this is a 'mean' window
+		if (trial.getGlobalMapping().getMaxMeanExclusiveValue(trial.getSelectedMetricID()) > 100) {
+		    exclusivePercentOver100 = true;
+		    percent = false;
+		}
+
+	    } else {
+		
+		edu.uoregon.tau.dms.dss.Thread thread;
+		thread = trial.getNCT().getThread(nodeID,contextID,threadID);
+
+		if (thread.getMaxExclusivePercentValue(trial.getSelectedMetricID()) > 100) {
+		    exclusivePercentOver100 = true;
+		    percent = false;
+		}
+	    }
+
 
 	    setLocation(new java.awt.Point(300, 200));
 	    setSize(new java.awt.Dimension(700, 450));
@@ -153,9 +178,14 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    descendingOrder.addActionListener(this);
 	    optionsMenu.add(descendingOrder);
 	    
-	    showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", true);
+	    showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", percent);
 	    showValuesAsPercent.addActionListener(this);
 	    optionsMenu.add(showValuesAsPercent);
+
+
+	    //	    if (percent == false) {
+	    //		showValuesAsPercent.setEnabled(false);
+	    //	    }
 	    
 	    //Units submenu.
 	    unitsSubMenu = new JMenu("Select Units");
@@ -405,7 +435,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		else if(arg.equals("Show Values as Percent")){
 		    if(showValuesAsPercent.isSelected()){
 			percent = true;
-			units = 0;
+			//units = 0;
 		    }
 		    else
 			percent = false;
@@ -414,6 +444,14 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		    panel.repaint();
 		}
 		else if(arg.equals("Exclusive")){
+
+		    // turn off showing percentages when exclusive will go over 100%
+		    if (exclusivePercentOver100) {
+			percent = false;
+			showValuesAsPercent.setEnabled(false);
+			showValuesAsPercent.setSelected(false);
+		    }
+
 		    valueType = 2;
 		    this.setHeader();
 		    sortLocalData();
@@ -427,21 +465,21 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		else if(arg.equals("Number of Calls")){
 		    valueType = 6;
-		    units = 0;
+		    //units = 0;
 		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
 		    valueType = 8;
-		    units = 0;
+		    //units = 0;
 		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
 		    valueType = 10;
-		    units = 0;
+		    //units = 0;
 		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
@@ -531,19 +569,31 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     //MenuListener.
     //######
     public void menuSelected(MenuEvent evt){
-	try{
-	    if(valueType > 4){
+	System.out.println ("ThreadDataWindow::menuSelected\n");
+	try {
+	    
+	    if (valueType > 4) {
 		showValuesAsPercent.setEnabled(false);
-		unitsSubMenu.setEnabled(false);}
-	    else if(percent){
+		unitsSubMenu.setEnabled(false);
+	    } else if (percent) {
 		showValuesAsPercent.setEnabled(true);
-		unitsSubMenu.setEnabled(false);}
-	    else if(trial.isTimeMetric()){
+		unitsSubMenu.setEnabled(false);
+	    } else if (trial.isTimeMetric()) {
 		showValuesAsPercent.setEnabled(true);
-		unitsSubMenu.setEnabled(true);}
-	    else{
+		unitsSubMenu.setEnabled(true);
+	    } else {
 		showValuesAsPercent.setEnabled(true);
-		unitsSubMenu.setEnabled(false);}
+		unitsSubMenu.setEnabled(false);
+	    }
+
+	    // turn off showing percentages when exclusive will go over 100%
+	    if (valueType == 2) { // exclusive
+		if (exclusivePercentOver100) {
+		    percent = false;
+		    showValuesAsPercent.setEnabled(false);
+		}
+	    }
+
 
 	    if(trial.groupNamesPresent())
 		((JMenuItem)windowsMenu.getItem(1)).setEnabled(true);
@@ -657,8 +707,13 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     public int getValueType(){
 	return valueType;}
     
-    public int units(){
-	return units;}
+    public int units() {
+	// hack so that we remember units if someone switches to #calls and then back to exclusive
+	if (valueType == 2 || valueType == 4)
+	    return units;
+	else
+	    return 0;
+    }
 
     public Dimension getViewportSize(){
 	return sp.getViewport().getExtentSize();}
@@ -871,6 +926,14 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
 
     private boolean debug = false; //Off by default.
+
+
+    // for derived metrics the exclusive could be higher than the inclusive, so the percent
+    // will be higher than 100.  This may confuse users so we disable showing percentages if one
+    // goes over 100.
+    private boolean exclusivePercentOver100 = false;
+
+
     //####################################
     //End - Instance data.
     //####################################
