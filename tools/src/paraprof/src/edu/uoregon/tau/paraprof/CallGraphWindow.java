@@ -105,6 +105,14 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public String getToolTipText(MouseEvent event) {
             Object cell = getFirstCellForLocation(event.getX(), event.getY());
 
+            Object origCell = cell;
+            
+            if (cell instanceof Edge) 
+                cell = getNextCellForLocation(cell, event.getX(), event.getY());
+            while (cell instanceof Edge && cell != origCell) {
+                cell = getNextCellForLocation(cell, event.getX(), event.getY());
+            }
+            
             if (cell instanceof GraphCell) {
                 return ((GraphCell) cell).getToolTipString();
             }
@@ -1621,6 +1629,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     public void handleColorEvent() {
 
+        System.out.println ("--handleColorEvent: Start");
         Map attributeMap = new Hashtable();
 
         // color all edges black
@@ -1738,6 +1747,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         graph.getGraphLayoutCache().edit(attributeMap, null, null, null);
 
+        System.out.println ("--handleColorEvent: End");
     }
 
     public void update(Observable o, Object arg) {
@@ -1800,14 +1810,17 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void mouseClicked(MouseEvent evt) {
-        System.out.println("mouseClicked");
         // Get Cell under Mousepointer
         int x = evt.getX(), y = evt.getY();
         Object cell = this.graph.getFirstCellForLocation(x, y);
+        Object origCell = cell;
         // Print Cell Label
         if (cell != null) {
 
-            while (cell instanceof Edge) {
+            
+            if (cell instanceof Edge) 
+                cell = this.graph.getNextCellForLocation(cell, x, y);
+            while (cell instanceof Edge && cell != origCell) {
                 cell = this.graph.getNextCellForLocation(cell, x, y);
             }
 
@@ -1831,13 +1844,14 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     //functionDataWindow.show();
                 }
             } else {
-                System.out.println("Not a GraphCell");
+                //System.out.println("Not a GraphCell");
 
             }
         } else {
 
-            System.out.println("Didn't click on anything");
+//            System.out.println("Didn't click on anything");
         }
+
     }
 
     public void stateChanged(ChangeEvent event) {
@@ -2012,7 +2026,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     }
                     recreateGraph();
                 }
-}
+            }
 
             String arg = evt.getActionCommand();
 
