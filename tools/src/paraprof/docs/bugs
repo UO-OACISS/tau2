@@ -1,0 +1,29 @@
+
+Start Date: 27th Feburary 2004
+
+Description: A list of bugs to be attended to in ParaProf. The list includes
+and indication of status (ie, completed, outstanding, abandoned).
+
+------
+# Date: 27th Feburary 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon)
+when I clicked on the last event in the event ledger and selected
+"show event details".
+------
+
+------
+# Date: 27th Feburary 2004
+# Status: (completed - 2nd March 2004 Robert Bell)
+# Reporter: Sameer Shende (University of Oregon)
+The text string in the total stat window begins its color at the total
+time column.  Should start it at the name column.
+------
+
+------
+# Date: 1nd March 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon)
+Trying to click on show userevent stat option causes
+ParaProf to crash.
+------
