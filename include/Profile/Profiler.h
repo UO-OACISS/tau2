@@ -67,7 +67,8 @@ SPACE for 			0x00080000
 
 #define TAU_MAX_THREADS 1024
 
-#ifdef PROFILING_ON
+#if (defined(PROFILING_ON) || defined(TRACING_ON))
+
 
 #include <string.h>
 
@@ -101,7 +102,6 @@ using std::list;
 #include <list.h>
 #endif /* POOMA_STDSTL */
 
-
 /////////////////////////////////////////////////////////////////////
 //
 // class FunctionInfo
@@ -119,8 +119,13 @@ class FunctionInfo
 {
 public:
 	// Construct with the name of the function and its type.
-	FunctionInfo(const char* name, const char * type, unsigned int ProfileGroup = TAU_DEFAULT);
-	FunctionInfo(const char* name, string& type, unsigned int ProfileGroup = TAU_DEFAULT);
+	FunctionInfo(const char* name, const char * type, 
+          unsigned int ProfileGroup = TAU_DEFAULT, 
+	  const char *ProfileGroupName = "TAU_DEFAULT");
+	FunctionInfo(const char* name, string& type, 
+	  unsigned int ProfileGroup = TAU_DEFAULT,
+	  const char *ProfileGroupName = "TAU_DEFAULT");
+
 	FunctionInfo(const FunctionInfo& X) ;
 	// When we exit, we have to clean up.
 	~FunctionInfo();
@@ -178,9 +183,13 @@ private:
 public:
 	string Name;
 	string Type;
+	string GroupName;
+	long   FunctionId;
 	// Cough up the information about this function.
 	const char* GetName() const { return Name.c_str(); }
 	const char* GetType() const { return Type.c_str(); }
+	const char* GetPrimaryGroup() const { return GroupName.c_str(); }
+	long GetFunctionId() const { return FunctionId; }
 	long GetCalls() const { return NumCalls; }
 	long GetSubrs() const { return NumSubrs; }
 	double GetExclTime() const { return ExclTime; }
@@ -333,7 +342,12 @@ class RtsLayer
 
         static void ProfileInit(int argc, char **argv);
 
+	static string PrimaryGroup(const char *ProfileGroupName);
+
         static bool isCtorDtor(const char *name);
+	
+	static void TraceSendMsg(int type, int destination, int length);
+	static void TraceRecvMsg(int type, int source, int length);
 
 	inline
 	static const char * CheckNotNull(const char * str) {
@@ -347,11 +361,10 @@ class RtsLayer
 
 	static double   getUSecD(void); 
 
-        // Set the node no.
-        static int setMyNode(int NodeId) {
-          Node  = NodeId;
-          return Node;
-        }
+	static int 	setMyNode(int NodeId);
+
+	// For tracing 
+	static int 	DumpEDF(void); 
 
   	// Return the number of the 'current' node.
 	static int myNode()  { return Node;}
@@ -371,9 +384,9 @@ class RtsLayer
 // is turned off, these macros expand to null.
 //////////////////////////////////////////////////////////////////////
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
-#define TAU_PROFILE(name, type, group)   static FunctionInfo tauFI(name, type, group);\
+#define TAU_PROFILE(name, type, group)   static FunctionInfo tauFI(name, type, group, #group);\
 				         Profiler tauFP(&tauFI, group); 
-#define TAU_PROFILE_TIMER(var, name, type, group)   static FunctionInfo var##fi(name, type, group);\
+#define TAU_PROFILE_TIMER(var, name, type, group)   static FunctionInfo var##fi(name, type, group, #group);\
 				         Profiler var(&var##fi, group, true); 
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
 // e.g., FunctionInfo loop1fi(); Profiler loop1(); 
@@ -414,11 +427,18 @@ class RtsLayer
 
 #endif /* PROFILING_ON */
 
+#ifdef TRACING_ON
+#define TAU_TRACE_SENDMSG(type, destination, length) RtsLayer::TraceSendMsg(type, destination, length); 
+#define TAU_TRACE_RECVMSG(type, source, length) RtsLayer::TraceRecvMsg(type, source, length); 
 
+#else /* TRACING_ON */
+#define TAU_TRACE_SENDMSG(type, destination, length) 
+#define TAU_TRACE_RECVMSG(type, source, length)
+#endif /* TRACING_ON */
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: mikek $
- * $Revision: 1.5 $   $Date: 1997/12/05 20:47:43 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.5 1997/12/05 20:47:43 mikek Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.6 $   $Date: 1997/12/29 23:05:22 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.6 1997/12/29 23:05:22 sameer Exp $ 
  ***************************************************************************/
