@@ -31,7 +31,7 @@ TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
 LSX = .a
 #############################################
-#PDT#PDTEXAMPLE = examples/autoinstrument #ENDIF#
+#PDT#PDTEXAMPLE = examples/autoinstrument examples/reduce #ENDIF#
 #MPI#MPIEXAMPLES = examples/pi examples/NPB2.3 #ENDIF#
 
 # Pete Beckman  (3/16/95)

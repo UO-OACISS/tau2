@@ -82,6 +82,7 @@ Usage: configure [OPTIONS]
                            the TAU MPI Profiling and Tracing Interface.
 -mpilibrary=<library> ................ Specify a different MPI library.
             e.g., -mpilibrary=-lmpi_r                                  
+-nocomm  ........ Disable tracking communication events in MPI library.
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
@@ -243,6 +244,11 @@ The following  command-line options are available to configure:
    -lmpi or -lmpich as the MPI library. This option allows the user to specify
    another library. e.g., -mpilibrary=-lmpi_r  for specifying a thread-safe MPI 
    library.
+
+-nocomm
+   Allows the user to turn off tracking of messages (synchronous/asynchronous) in
+   TAU's MPI wrapper interposition library. Entry and exit events for MPI routines 
+   are still tracked. Affects both profiling and tracing.
    
 -epilog=<dir>
    
