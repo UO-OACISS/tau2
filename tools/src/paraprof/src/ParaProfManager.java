@@ -435,7 +435,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	tmpJButton = new JButton("Add ParaProfExperiment");
 	tmpJButton.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent evt){
-		    addParaProfExperimentButtonFunction();}
+		    addExperiment();}
 	    });
 	tmpJPanel.add(tmpJButton);
 	return tmpJPanel;
@@ -443,18 +443,17 @@ public class ParaProfManager extends JFrame implements ActionListener{
   
     private Component getParaProfTrialTypeNodeLowerLeft(){
 	JPanel jPanel = new JPanel();
-	JButton jButton = new JButton("Add Trail");
-	
-	ButtonGroup buttonGroup = new ButtonGroup();
-	pprof = new JRadioButton("Pprof -d File");
-	profile = new JRadioButton("Tau Output");
-	phil = new JRadioButton("phil");
-	jeff = new JRadioButton("jeff");
 
-	buttonGroup.add(pprof);
-	buttonGroup.add(profile);
-	buttonGroup.add(phil);
-	buttonGroup.add(jeff);
+	JButton jButton = new JButton("Add Trail");
+	jButton.addActionListener(new ActionListener(){
+                public void actionPerformed(ActionEvent evt){
+		    addTrial();}
+	    });
+
+	String trialTypeStrings[] = {"Pprof -d File", "Tau Output", "other-1", "other-2"};
+	trialType = new JComboBox(trialTypeStrings);
+	
+	JLabel jLabel = new JLabel("Trial Type");//, SwingConstants.RIGHT);
 
 	//Now add the components to the panel.
 	GridBagLayout gbl = new GridBagLayout();
@@ -462,76 +461,25 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	GridBagConstraints gbc = new GridBagConstraints();
 	gbc.insets = new Insets(5, 5, 5, 5);
 
-
-	jButton.addActionListener(new ActionListener(){
-                public void actionPerformed(ActionEvent evt){
-		    addParaProfTrialSVTButtonFunction();}
-	    });
-      
-	return jPanel;
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.WEST;
+	gbc.weightx = 100;
+	gbc.weighty = 0;
+	panelAdd(jPanel, jButton, gbc, 0, 0, 2, 1);
 	
-	/*gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, tmpJButton, gbc, 0, 0, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, serverFieldLabel, gbc, 0, 1, 1, 1);
-    
 	gbc.fill = GridBagConstraints.BOTH;
 	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(jPanel, jLabel, gbc, 0, 1, 1, 1);
+
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.WEST;
 	gbc.weightx = 100;
 	gbc.weighty = 0;
-	panelAdd(tmpJPanel, serverField, gbc, 1, 1, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, usernameFieldLabel, gbc, 0, 2, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 100;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, usernameField, gbc, 1, 2, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, passwordFieldLabel, gbc, 0, 3, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 100;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, passwordField, gbc, 1, 3, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, connectDisconnectButton, gbc, 0, 4, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, refreshButton, gbc, 1, 4, 1, 1);
-    
-	return tmpJPanel;*/
+	panelAdd(jPanel, trialType, gbc, 1, 1, 1, 1);
 
-
-
-
-
-
-
+	return jPanel;
     }
   
     private Component getDBAppTypeNodeLowerLeft(){
@@ -753,20 +701,18 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	inJSP2.setDividerLocation(inDouble2);
     }
   
-    void addParaProfExperimentButtonFunction(){
-    
+    void addExperiment(){
 	JOptionPane.showMessageDialog(this, "Only the default experiment allowed in this release!", "Warning!"
                                       ,JOptionPane.ERROR_MESSAGE);
 	return;
     }
-    void addParaProfTrialSVTButtonFunction()
-    {
-    
-	try{
+
+    void addTrial(){
+    	try{
 	    ParaProfTrial trial = null;
-	    String tmpString1 = null;
-	    String tmpString2 = null;
-	    String tmpString3 = null;
+	    String string1 = null;
+	    String string2 = null;
+	    String string3 = null;
       
 	    //Get the selected trial placeholder, and then its parent experiment node.
 	    TreePath path = tree.getSelectionPath();
@@ -793,105 +739,59 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		return;
 	    }
 	    //Create a file chooser to allow the user to select the pprof dump file.
-	    JFileChooser pprofDumpFileChooser = new JFileChooser();
-	    //Set the directory to the current directory.
-	    pprofDumpFileChooser.setCurrentDirectory(null);
-	    //Bring up the file chooser.
-	    int resultValue = pprofDumpFileChooser.showOpenDialog(this);
-      
-	    if(resultValue == JFileChooser.APPROVE_OPTION)
-		{
-		    //Try and get the file name.
-		    File file = pprofDumpFileChooser.getSelectedFile();
-        
-		    //Test to see if valid.
-		    if(file != null)
-			{ 
-			    tmpString1 = file.getCanonicalPath();
-			    tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
-			    tmpString3 = newTrailName + " : " + tmpString2;
-          
-			    //Pop up the dialog if there is already an experiment with this name.
-			    if(exp.isTrialPresent(tmpString3)){
-				JOptionPane.showMessageDialog(this, "A run already exists with that name!", "Warning!"
-							      ,JOptionPane.ERROR_MESSAGE);
-				return;
-			    }
-          
-			    trial = exp.addTrial();
-			    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
-			    trial.setDMTN(trialNode);
-			    trial.setProfilePathName(tmpString1);
-			    trial.setName(tmpString3);
-			    trial.initialize(file);
-          
-			    //Now update the tree.
-			    //Populate the metrics list for this trial.
-			    for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
-				Metric metric = (Metric) e.nextElement();
-				DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
-				metric.setDMTN(metricNode);
-				metricNode.setAllowsChildren(false);
-				trialNode.add(metricNode);
-			    }
-			    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
-			}
-		    else
-			{
-			    System.out.println("There was some sort of internal error!");
+	    JFileChooser jFileChooser = new JFileChooser(System.getProperties("user.dir"));
+	    if((jFileChooser.showOpenDialog(this)) == JFileChooser.APPROVE_OPTION){
+		//Obtain the selected file or directory.
+		File file = jFileChooser.getSelectedFile();
+		if(file != null){
+		    if(file.isDirectory()){
+		    }
+		    else{
+			string1 = file.getCanonicalPath();
+			string2 = ParaProf.applicationManager.getPathReverse(string1);
+			string3 = newTrailName + " : " + string2;
+			
+			//Pop up the dialog if there is already an experiment with this name.
+			if(exp.isTrialPresent(string3)){
+			    JOptionPane.showMessageDialog(this, "A metric already exists with that name!", "Warning!"
+							  ,JOptionPane.ERROR_MESSAGE);
 			    return;
 			}
+			
+			trial = exp.addTrial();
+			DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+			trial.setDMTN(trialNode);
+			trial.setProfilePathName(string1);
+			trial.setName(string3);
+			trial.initialize(file);
+			
+			//Update the tree.
+			for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
+			    Metric metric = (Metric) e.nextElement();
+			    DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+			    metric.setDMTN(metricNode);
+			    metricNode.setAllowsChildren(false);
+			    trialNode.add(metricNode);
+			}
+			treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+		    }
 		}
-	}
-	catch(Exception e)
-	    {
-      
-		ParaProf.systemError(e, null, "ELM01");
+		else{
+		    System.out.println("There was some sort of internal error!");
+		    return;
+		}
 	    }
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "ELM01");
+	}
     }
   
     void addParaProfTrialMVTButtonFunction()
     {
     
 	try{
-	    ParaProfTrial trial = null;
-	    DefaultMutableTreeNode trialNode = null;
-	    String tmpString1 = null;
-	    String tmpString2 = null;
-	    String tmpString3 = null;
-      
-	    //Get the selected trial placeholder, and then its parent experiment node.
-	    TreePath path = tree.getSelectionPath();
-	    if(path == null){
-		System.out.println("Error adding trial ... aborted.");
-		return;}
-	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-	    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
-	    if(parentNode == null){
-		System.out.println("Error adding trial ... aborted.");
-		return;}
-	    Object userObject = parentNode.getUserObject();
-	    if(!(userObject instanceof ParaProfExperiment)){
-		System.out.println("Error adding trial ... aborted.");
-		return;}
-        
-	    ParaProfExperiment exp = (ParaProfExperiment) userObject;
-      
-	    //First get the name of the new run.
-	    String newTrailName = JOptionPane.showInputDialog(this, "Please enter a new trial name, click ok, and then select a pprof dump file!");
-	    if((newTrailName == null) || "".equals(newTrailName)){
-		JOptionPane.showMessageDialog(this, "You must enter a name!", "Error!"
-					      ,JOptionPane.ERROR_MESSAGE);
-		return;
-	    }
-	    //Create a file chooser to allow the user to select the pprof dump file.
-	    JFileChooser pprofDumpDirectoryChooser = new JFileChooser();
-	    pprofDumpDirectoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-	    //Set the directory to the current directory.
-	    pprofDumpDirectoryChooser.setCurrentDirectory(null);
-	    //Bring up the file chooser.
-	    int resultValue = pprofDumpDirectoryChooser.showOpenDialog(this);
-      
+
 	    if(resultValue == JFileChooser.APPROVE_OPTION)
 		{
 		    boolean foundSomething = false;
@@ -1433,12 +1333,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     private JTextField usernameField = null;
     private JPasswordField passwordField = null;
 
-    private JButton singleMetricTrial = null;
-    private JButton multipleMetricTrial = null;
-    private JRadioButton pprof = new JRadioButton("Pprof -d File");
-    private JRadioButton profile = new JRadioButton("Tau Profile Files");
-    private JRadioButton phil = new JRadioButton("phil");
-    private JRadioButton jeff = new JRadioButton("jeff");
+    private JComboBox trialType = null;
   
     private JComboBox operation = null;
     private JTextField opA = null;
