@@ -338,10 +338,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    }
 	    else if(tmpString.equals("dataEvent")){
 		sortLocalData();
+		this.setHeader();
 		panel.repaint();
-	    }
-	    else if(tmpString.equals("dataSetChangeEvent")){
-		sortLocalData();
 	    }
 	}
 	catch(Exception e){
@@ -373,7 +371,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     }
 
     public String getHeaderString(){
-	return "Metric Name: " + (trial.getCounterName())+"\n";}
+	return "Metric Name: " + (trial.getCounterName())+"\n" +
+	    "Value Type: "+UtilFncs.getValueTypeString(2)+"\n";
+    }
     //######
     //End - Panel header.
     //######

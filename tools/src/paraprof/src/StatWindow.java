@@ -79,7 +79,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    optionsMenu = new JMenu("Options");
 	    optionsMenu.addMenuListener(this);
 	    UtilFncs.optionMenuItems(optionsMenu,this);
-	    //This window does need the sliders menu, thus grey it out.
+	    //This window does need the value/percent or sliders menu option, thus grey them out.
+	    ((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(false);
 	    ((JCheckBoxMenuItem)optionsMenu.getItem(5)).setEnabled(false);
 	    
 	    //Windows menu
@@ -116,11 +117,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    //Panel and ScrollPane definition.
 	    //######
 	    panel = new StatWindowPanel(trial,nodeID,contextID,threadID,this,windowType);
-	    //The scroll panes into which the list shall be placed.
-	    JScrollPane sp = new JScrollPane(panel);
-	    JScrollBar vsb = sp.getVerticalScrollBar();
-	    vsb.setUnitIncrement(35);
-	    sp.setPreferredSize(new Dimension(500, 450));
+	    sp = new JScrollPane(panel);
+	    this.setHeader();
 	    //######
 	    //End - Panel and ScrollPane definition.
 	    //######
@@ -189,14 +187,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		    sortLocalData();
 		    panel.repaint();
 		}
-		else if(arg.equals("Show Values as Percent")){
-		    if(((JCheckBoxMenuItem)optionsMenu.getItem(2)).isSelected())
-			percent = true;
-		    else
-			percent = false;
-		    sortLocalData();
-		    panel.repaint();
-		}
 		else if(arg.equals("Exclusive")){
 		    valueType = 2;
 		    sortLocalData();
@@ -224,18 +214,22 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		}
 		else if(arg.equals("Microseconds")){
 		    units = 0;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Milliseconds")){
 		    units = 1;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Seconds")){
 		    units = 2;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("hr:min:sec")){
 		    units = 3;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Show Function Ledger")){
@@ -271,18 +265,12 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //######
     public void menuSelected(MenuEvent evt){
 	try{
-	    if(valueType > 4){
-		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(false);
-		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
-	    else if(percent){
-		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
-		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
-	    else if(trial.isTimeMetric()){
-		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
-		((JMenu)optionsMenu.getItem(3)).setEnabled(true);}
-	else{
-		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
-		((JMenuItem)optionsMenu.getItem(3)).setEnabled(false);}
+	    if(valueType > 4)
+		((JMenu)optionsMenu.getItem(3)).setEnabled(false);
+	    else if(trial.isTimeMetric())
+		((JMenu)optionsMenu.getItem(3)).setEnabled(true);
+	    else
+		((JMenuItem)optionsMenu.getItem(3)).setEnabled(false);
 	    
 	    if(trial.groupNamesPresent())
 		((JMenuItem)windowsMenu.getItem(1)).setEnabled(true);
@@ -322,6 +310,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    else if(tmpString.equals("dataEvent")){
 		if(!(trial.isTimeMetric()))
 		    units = 0;
+		
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){ 
@@ -418,15 +407,36 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public int getWindowType(){
 	return windowType;}
 
-    public boolean isPercent(){
-	return percent;}
-    
     public int getValueType(){
 	return valueType;}
     
     public int units(){
 	return units;}
-    
+
+    //######
+    //Panel header.
+    //######
+    //This process is separated into two functions to provide the option
+    //of obtaining the current header string being used for the panel
+    //without resetting the actual header. Printing and image generation
+    //use this functionality for example.
+    public void setHeader(){
+	JTextArea jTextArea = new JTextArea();
+	jTextArea.setLineWrap(true);
+	jTextArea.setWrapStyleWord(true);
+	jTextArea.setEditable(false);
+	jTextArea.append(this.getHeaderString());
+	sp.setColumnHeaderView(jTextArea);
+    }
+
+    public String getHeaderString(){
+	return "Metric Name: " + (trial.getCounterName())+"\n" +
+	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n";
+    }
+    //######
+    //End - Panel header.
+    //######
+
     //Respond correctly when this window is closed.
     void thisWindowClosing(java.awt.event.WindowEvent e){
 	closeThisWindow();}
@@ -468,7 +478,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
   
     private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.
-    private boolean percent = true; //true: show values as percent,false: show actual values.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
     //####################################

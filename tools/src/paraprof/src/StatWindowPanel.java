@@ -140,17 +140,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    int startThreadElement = 0;
 	    int endThreadElement = 0;
       
-	    yCoord = yCoord + (spacing);
-	    //######
-	    //Draw the counter name if required.
-	    String counterName = trial.getCounterName();
-	    if(counterName != null){
-		g2D.drawString("COUNTER NAME: " + counterName + UtilFncs.getUnitsString(sWindow.units(), trial.isTimeMetric()), 5, yCoord);
-		yCoord = yCoord + (spacing);
-	    }
-	    //End - Draw the counter name if required.
-	    //######
-
 	    //Draw the heading!
 	    switch(windowType){
 	    case 0:

@@ -376,6 +376,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		sortLocalData();
 		if(!(trial.isTimeMetric()))
 		    units = 0;
+		this.setHeader();
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){

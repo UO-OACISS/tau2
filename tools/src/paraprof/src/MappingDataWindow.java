@@ -333,7 +333,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    else if(trial.isTimeMetric()){
 		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
 		((JMenu)optionsMenu.getItem(3)).setEnabled(true);}
-	else{
+	    else{
 		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
 		((JMenuItem)optionsMenu.getItem(3)).setEnabled(false);}
 	    
@@ -376,11 +376,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		sortLocalData();
 		if(!(trial.isTimeMetric()))
 		    units = 0;
-		String counterName = trial.getCounterName();
-		String heading = null;
-		if(counterName != null)
-		    heading = "COUNTER NAME: " + counterName + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName;
-		label.setText(heading);
+		this.setHeader();
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){
@@ -595,7 +591,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     
     MappingDataWindowPanel panel = null;
     JScrollPane sp = null;
-    JLabel label = null;
 
     private Vector list = null;
   

@@ -313,10 +313,6 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	    else if(tmpString.equals("colorEvent")){
 		panel.repaint();
 	    }
-	    else if(tmpString.equals("dataSetChangeEvent")){
-		sortLocalData();
-		panel.repaint();
-	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){
 		closeThisWindow();
 	    }
