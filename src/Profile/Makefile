@@ -149,8 +149,6 @@ TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 #CRAYX1CC#TAU_NULL=X#ENDIF#
 #USE_NECCXX# TAU_SHLIB	= #ENDIF#
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
-TAU_RANLIB = echo "Built $(TAU_TARGET)" 
-#APPLECXX#TAU_RANLIB = ranlib $(TAU_TARGET) #ENDIF#
 
 ##############################################
 # If JAVA or DYNINST is defined, TAU_DSO is defined
@@ -176,7 +174,7 @@ all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYT
 $(TAU_TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TAU_TARGET) $(OBJS) $(EXTRAOBJS)
-		$(TAU_RANLIB)
+		$(TAU_RANLIB) $(TAU_TARGET)
 
 
 $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS)
@@ -187,7 +185,7 @@ $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
 
 libTauMpi$(TAU_OPTIONS)$(LSX): 
-		$(MAKE) -f Makefile.wrapper 
+		$(MAKE) -f Makefile.wrapper  
 
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)
@@ -211,7 +209,7 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 
 $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX): libTauMpi$(TAU_OPTIONS)$(LSX)
-		$(MAKE) -f Makefile.wrapper install
+		$(MAKE) -f Makefile.wrapper install 
 
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
