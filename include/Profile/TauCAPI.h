@@ -172,6 +172,8 @@ extern TauGroup_t Tau_enable_group_name(char *group);
 extern TauGroup_t Tau_disable_group_name(char *group);
 extern TauGroup_t Tau_get_profile_group(char *group);
 extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, char *group_name);
+extern void Tau_create_top_level_timer_if_necessary(void);
+extern void Tau_stop_top_level_timer_if_necessary(void);
 
 
 
@@ -254,7 +256,7 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2003/11/14 19:56:05 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.27 2003/11/14 19:56:05 sameer Exp $
+ * $Revision: 1.28 $   $Date: 2004/01/05 19:08:16 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.28 2004/01/05 19:08:16 sameer Exp $
  ***************************************************************************/
 
