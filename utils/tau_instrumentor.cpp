@@ -1310,6 +1310,9 @@ bool fuzzyMatch(const string& a, const string& b)
      /home/pkg/foo.cpp */
   if (a == b)
   { /* the two files do match */
+#ifdef DEBUG
+    cout <<"fuzzyMatch returns true for "<<a<<" and "<<b<<endl;
+#endif /* DEBUG */
     return true;
   }
   else 
@@ -1327,10 +1330,16 @@ bool fuzzyMatch(const string& a, const string& b)
     */
     if (trunca == truncb) 
     {
+#ifdef DEBUG
+      cout <<"fuzzyMatch returns true for "<<a<<" and "<<b<<endl;
+#endif /* DEBUG */
       return true;
     }
     else
     {
+#ifdef DEBUG
+      cout <<"fuzzyMatch returns false for "<<a<<" and "<<b<<endl;
+#endif /* DEBUG */
       return false;
     }
   }
@@ -1470,6 +1479,7 @@ int main(int argc, char **argv)
 
   bool instrumentThisFile;
   bool fuzzyMatchResult;
+  bool fileInstrumented = false;
   for (PDB::filevec::const_iterator it=p.getFileVec().begin();
        it!=p.getFileVec().end(); ++it) 
   {
@@ -1479,6 +1489,7 @@ int main(int argc, char **argv)
          (instrumentThisFile = processFileForInstrumentation(string(filename))))
      { /* should we instrument this file? Yes */
        PDB::lang_t l = p.language();
+       fileInstrumented = true; /* We will instrument this file */
 
 #ifdef DEBUG
        cout <<" *** FILE *** "<< (*it)->name()<<endl;
@@ -1526,7 +1537,7 @@ int main(int argc, char **argv)
        }
      }
   }
-  if (instrumentThisFile == false)
+  if (fileInstrumented == false)
   { /* no files were processed */
 #ifdef DEBUG
     cout <<"No files were processed"<<endl;
@@ -1562,8 +1573,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.61 $   $Date: 2004/06/17 17:49:02 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.61 2004/06/17 17:49:02 sameer Exp $
+ * $Revision: 1.62 $   $Date: 2004/06/21 17:13:09 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.62 2004/06/21 17:13:09 sameer Exp $
  ***************************************************************************/
 
 
