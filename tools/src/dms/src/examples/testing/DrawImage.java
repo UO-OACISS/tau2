@@ -11,6 +11,7 @@ import java.lang.reflect.Array;
 public class DrawImage extends JPanel {
    
    private Image img = null;
+   public String metricName;
    
    public DrawImage(String config, String trialID, String metricID) {
 
@@ -34,6 +35,7 @@ public class DrawImage extends JPanel {
          // Metric metric = (Metric)(metrics.elementAt(0));
          // Metric metric = (Metric)(metrics.elementAt(7));
          Metric metric = (Metric)(metrics.elementAt(Integer.parseInt(metricID)));
+		 metricName = new String(metric.getName());
 
          DistanceAnalysis distance = 
 			new ThreadDistance((PerfDMFSession)session, trial, metric);  
@@ -41,12 +43,13 @@ public class DrawImage extends JPanel {
          distance.getManhattanDistance();
 
          int[] pixels = distance.toImage(true, true);
+         // int[] pixels = distance.toColorImage(true, false);
 		 int size = (int)(java.lang.StrictMath.sqrt(Array.getLength(pixels)));
-         MemoryImageSource purpleMIS = new MemoryImageSource(size, size, pixels, 0, size); 
+         MemoryImageSource MIS = new MemoryImageSource(size, size, pixels, 0, size); 
          // toolkit is an interface to the environment
          Toolkit toolkit = getToolkit();
          // create the image using the toolkit
-         img = toolkit.createImage(purpleMIS);
+         img = toolkit.createImage(MIS);
          session.terminate();
       } catch (Exception e) {
          e.printStackTrace();
@@ -70,7 +73,7 @@ public class DrawImage extends JPanel {
          // create the panel
          DrawImage dimg = new DrawImage(args[0], args[1], args[2]);
          // create the window
-         final JFrame f = new PlotDrawingWindow("TEST");
+         final JFrame f = new PlotDrawingWindow("TEST: " + dimg.metricName);
          // create and add an event handler for window closing event
          f.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {

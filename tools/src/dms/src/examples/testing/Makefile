@@ -25,7 +25,7 @@ $(TARGET).class: $(TARGET).java
 	javac -classpath $(CLASSPATH) *.java
 
 run: all
-	java -classpath $(CLASSPATH) $(TARGET) $(CONFIG_FILE) 55 0
+	java -classpath $(CLASSPATH) $(TARGET) $(CONFIG_FILE) 105 5
 
 clean:
 	rm -f *.class
