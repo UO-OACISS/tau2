@@ -20,6 +20,9 @@
 /* For C instrumentation */
 enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT};
 
+/* For Pooma, add a -noinline flag */
+bool noinline_flag = false; /* instrument inlined functions by default */
+
 struct itemRef {
   itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
     line = i->location().line();
@@ -61,8 +64,18 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
        rit!=routines.end(); ++rit) 
   {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
-	 ((*rit)->kind() != pdbItem::RO_EXT)) 
+	 ((*rit)->kind() != pdbItem::RO_EXT) ) 
     {
+	if ((*rit)->isInline())
+  	{ 
+	  if (noinline_flag)
+	  {
+#ifdef DEBUG
+	    cout <<"Dont instrument "<<(*rit)->fullName()<<endl;
+#endif /* DEBUG */
+	    continue; /* Don't instrument it*/
+	  }
+	}
 	
 	if ((*rit)->isStatic()) 
 	{
@@ -772,18 +785,19 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
 
 }
 
+
 int main(int argc, char **argv)
 {
   string outFileName("out.ins.C");
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline]"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
   const char * filename = argv[2];  
 
-  if (argc == 5) 
+  if ((argc == 5) || (argc == 6))
   {
 #ifdef DEBUG
     cout <<"5 argc "<<endl;
@@ -797,8 +811,18 @@ int main(int argc, char **argv)
     }
     else 
     {
-      cout<<"Hey! 5 args but -o doesn't show up as 4th arg." <<endl;
+      cout<<"Hey! 5/6 args but -o doesn't show up as 4th arg." <<endl;
       cout <<"argv[4] is "<<argv[4] <<endl;
+    }
+    if (argc == 6) 
+    {
+      if (strcmp(argv[5], "-noinline") == 0)	
+      {
+        noinline_flag = true;
+#ifdef DEBUG
+        cout <<"Setting noinline_flag to true "<<endl;
+#endif /* DEBUG */
+      }
     }
   }
   else 
