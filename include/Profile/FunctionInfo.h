@@ -146,8 +146,17 @@ public:
 	const char* GetType() const { return Type.c_str(); }
 	const char* GetPrimaryGroup() const { return GroupName.c_str(); }
 	const char* GetAllGroups() const { return AllGroups.c_str(); }
-	void SetPrimaryGroupName(const char *newname) { GroupName = newname; }
-	void SetPrimaryGroupName(string newname) { GroupName = newname; }
+	void SetPrimaryGroupName(const char *newname) 
+	{ 
+	  GroupName = newname;
+    	  AllGroups = newname; /* to make it to the profile */
+	}
+	void SetPrimaryGroupName(string newname) 
+        { 
+	  GroupName = newname; 
+	  AllGroups = newname; /* to make it to the profile */
+	}
+
 	long GetFunctionId() ;
 	long GetCalls(int tid) { return NumCalls[tid]; }
 	void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
@@ -278,6 +287,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2002/08/05 20:45:00 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.24 2002/08/05 20:45:00 sameer Exp $ 
+ * $Revision: 1.25 $   $Date: 2002/11/08 02:09:41 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.25 2002/11/08 02:09:41 sameer Exp $ 
  ***************************************************************************/
