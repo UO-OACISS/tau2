@@ -141,6 +141,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM_FORTRAN#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM64_FORTRAN#TAU_F90       = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#IBMXLFAPPLE#TAU_F90       = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAY_FORTRAN#TAU_F90        = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAY_X1_FORTRAN#TAU_F90     = ftn              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PGI_FORTRAN#TAU_F90         = pgf90            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -159,6 +160,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #IBM64_FORTRAN#TAU_F90_FIXED      = -qfixed  #ENDIF#
 #IBM_FORTRAN#TAU_F90_FIXED      = -qfixed  #ENDIF#
 #IBM_FORTRAN#TAU_F90_SUFFIX     = -qsuffix=f=f90  #ENDIF#
+#IBMXLFAPPLE#TAU_F90_FIXED      = -qfixed  #ENDIF#
+#IBMXLFAPPLE#TAU_F90_SUFFIX     = -qsuffix=f=f90  #ENDIF#
 #IBM64_FORTRAN#TAU_F90_SUFFIX     = -qsuffix=f=f90  #ENDIF#
 
 ############# Profiling Options #############
@@ -392,6 +395,10 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #USE_INTELCXX#AR_SHFLAGS        = -shared               #ENDIF#
 #ACC#AR_SHFLAGS                 = -b            #ENDIF#
 TAU_SHFLAGS = $(AR_SHFLAGS) -o
+
+############# RANLIB Options #############
+TAU_RANLIB = echo "Built" 
+#APPLECXX#TAU_RANLIB      = ranlib  #ENDIF#
 
 ##############################################
 TAU_AR                 = ar             #ENDIF#
