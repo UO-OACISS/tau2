@@ -76,11 +76,11 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 ##############################################
 
 ############# TAU Options ####################
-TAUDEFS 	= $(PROFILEOPTS)
+TAUDEFS 	= $(PROFILEOPTS) $(USER_OPT)
 
 TAUINC        	= -I$(TAUROOT)/include
 
-TAULIBS		= -L$(TAUROOT)/lib/$(CONFIG_ARCH) -lprof -lm $(LEXTRA)
+TAULIBS		= -L$(TAUROOT)/lib/$(CONFIG_ARCH) -lprof $(LEXTRA)
 
 #############################################
 # These options could be included in the application Makefile as 
