@@ -38,7 +38,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     private JPopupMenu popup2 = new JPopupMenu();
   
     JMenuItem tUESWItem = null;
-    JMenuItem globalCallpathItem = null;
     JMenuItem threadCallpathItem = null;
     
     //**********
@@ -152,10 +151,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    tUESWItem = new JMenuItem("Show Total User Event Statistics Windows");
 	    tUESWItem.addActionListener(this);
 	    popup2.add(tUESWItem);
-
-	    globalCallpathItem = new JMenuItem("Show Global Call Path Relations");
-	    globalCallpathItem.addActionListener(this);
-	    popup2.add(globalCallpathItem);
 
 	    threadCallpathItem = new JMenuItem("Show Call Path Thread Relations");
 	    threadCallpathItem.addActionListener(this);
@@ -494,12 +489,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    trial.getSystemEvents().addObserver(tmpRef);
 			    tmpRef.show();
 			}
-		    else if(arg.equals("Show Global Call Path Relations")){
-			CallPathTextWindow tmpRef = new CallPathTextWindow(trial, serverNumber, contextNumber,
-									   threadNumber, sMWindow.getSMWData(),true);
-			trial.getSystemEvents().addObserver(tmpRef);
-			tmpRef.show();
-		    }
 		    else if(arg.equals("Show Call Path Thread Relations")){
 			CallPathUtilFuncs.trimCallPathData(trial,serverNumber,contextNumber,threadNumber);
 			CallPathTextWindow tmpRef = new CallPathTextWindow(trial, serverNumber, contextNumber,
@@ -1301,11 +1290,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		}
 
 		if(trial.callPathDataPresent()){
-		    globalCallpathItem.setEnabled(true);
 		    threadCallpathItem.setEnabled(true);
 		}
 		else{
-		    globalCallpathItem.setEnabled(false);
 		    threadCallpathItem.setEnabled(true);
 		}
 	    }

@@ -150,7 +150,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 	    if ((clipRect != null))
 		{
 		    //Draw the heading!
-		    tmpString = GlobalThreadDataElement.getTStatStringHeading();
+		    tmpString = GlobalThreadDataElement.getTStatStringHeading(trial);
 		    int tmpInt = tmpString.length();
         
 		    for(int i=0; i<tmpInt; i++)

@@ -179,13 +179,15 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		    }
 		}
 		
-		g.drawString("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 20, yCoord);
-		yCoord = yCoord + (spacing);
-		l1 = gm.getMappingIterator(0);
-		while(l1.hasNext()){
-		    gme1 = (GlobalMappingElement) l1.next();
-		    g.drawString("["+gme1.getGlobalID()+"] - "+gme1.getMappingName(), 20, yCoord);
+		if(ParaProf.debugIsOn){
+		    g.drawString("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 20, yCoord);
 		    yCoord = yCoord + (spacing);
+		    l1 = gm.getMappingIterator(0);
+		    while(l1.hasNext()){
+			gme1 = (GlobalMappingElement) l1.next();
+			g.drawString("["+gme1.getGlobalID()+"] - "+gme1.getMappingName(), 20, yCoord);
+			yCoord = yCoord + (spacing);
+		    }
 		}
 	    }
 	    else{

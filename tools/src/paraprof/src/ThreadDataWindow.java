@@ -652,11 +652,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     try
     {
       String trialName = trial.getCounterName();
-      trialName = trialName.toUpperCase();
       boolean isDefault = false;
       boolean isTimeMetric = false;
       
-      if(trialName.equals("DEFAULT")) 
+      if(trialName.equals("Default")) 
         isDefault = true;
       else if(trialName.indexOf("TIME") != -1)
         isTimeMetric = true;

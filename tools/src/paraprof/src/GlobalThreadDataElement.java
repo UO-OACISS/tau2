@@ -93,59 +93,66 @@ public class GlobalThreadDataElement
 	return 97;
     }
   
-    public static String getTStatStringHeading(){
+    public static String getTStatStringHeading(Trial trial){
+	String metricType = null;
+	String trialName = trial.getCounterName();
+	if((trialName.equals("Default"))||(trialName.indexOf("TIME") != -1))
+	    metricType = "time";
+	else
+	    metricType = "counts";
+	
 	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
-	    int initialBufferLength = 101;
+	    int initialBufferLength = 103;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
 	    char [] tmpArray;
 	    String tmpString;
       
-	    insertSpaces(statStringArray , 0, 100);
+	    insertSpaces(statStringArray , 0, 103);
       
-	    tmpArray = ("%time").toCharArray();
+	    tmpArray = ("%"+metricType).toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
       
-	    position = 7;
-	    tmpArray = ("counts").toCharArray();
+	    position = 9;
+	    tmpArray = (metricType).toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
       
-	    position = 25;
-	    tmpArray = ("total counts").toCharArray();
+	    position = 27;
+	    tmpArray = ("total "+metricType).toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
       
-	    position = 43;
+	    position = 45;
 	    tmpArray = ("#calls").toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
       
-	    position = 61;
+	    position = 63;
 	    tmpArray = ("#subrs").toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
       
-	    position = 79;
+	    position = 81;
 	    tmpArray = ("count/call").toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
       
-	    position = 97;
+	    position = 99;
 	    tmpArray = ("name").toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -165,13 +172,13 @@ public class GlobalThreadDataElement
     public String getTStatString(int dataValueLocation){
 	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
-	    int initialBufferLength = 97;
+	    int initialBufferLength = 99;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
 	    char [] tmpArray;
 	    String tmpString;
       
-	    this.insertSpaces(statStringArray , 0, 97);
+	    this.insertSpaces(statStringArray , 0, 99);
       
 	    DecimalFormat dF = new DecimalFormat();
 	    dF.applyPattern("##0.0");
@@ -182,7 +189,7 @@ public class GlobalThreadDataElement
 		position++;
 	    }
       
-	    position = 7;
+	    position = 9;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getExclusiveValue(dataValueLocation),
 										  defaultNumberPrecision)));
@@ -192,7 +199,7 @@ public class GlobalThreadDataElement
 		position++;
 	    }
       
-	    position = 25;
+	    position = 27;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getInclusiveValue(dataValueLocation),
 										  defaultNumberPrecision)));
@@ -202,7 +209,7 @@ public class GlobalThreadDataElement
 		position++;
 	    }
       
-	    position = 43;
+	    position = 45;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getNumberOfCalls(),
 										  defaultNumberPrecision)));
@@ -212,7 +219,7 @@ public class GlobalThreadDataElement
 		position++;
 	    }
       
-	    position = 61;
+	    position = 63;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getNumberOfSubRoutines(),
 										  defaultNumberPrecision)));
@@ -222,7 +229,7 @@ public class GlobalThreadDataElement
 		position++;
 	    }
       
-	    position = 79;
+	    position = 81;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getUserSecPerCall(dataValueLocation),
 										  defaultNumberPrecision)));

@@ -152,7 +152,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
         if ((clipRect != null))
         {
           //Draw the heading!
-        tmpString = GlobalThreadDataElement.getTStatStringHeading();//.getHeading();
+        tmpString = GlobalThreadDataElement.getTStatStringHeading(trial);//.getHeading();
         int tmpInt = tmpString.length();
         
         for(int i=0; i<tmpInt; i++)

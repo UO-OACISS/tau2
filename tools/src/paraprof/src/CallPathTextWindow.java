@@ -45,7 +45,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    setSize(new java.awt.Dimension(800, 600));
       
 	    //Now set the title.
-	    this.setTitle("Call Path Data " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber + " - " + trial.getProfilePathName());
+	    if(global)
+		this.setTitle("Call Path Data Relations - " + trial.getProfilePathName());
+	    else
+		this.setTitle("Call Path Data " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber + " - " + trial.getProfilePathName());
       
 	    server = inServerNumber;
 	    context = inContextNumber;
@@ -59,22 +62,26 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		});
         
 	    //Set the help window text if required.
-	    if(ParaProf.helpWindow.isVisible())
-		{
-		    ParaProf.helpWindow.clearText();
-		    //Since the data must have been loaded.  Tell them someting about
-		    //where they are.
-		    ParaProf.helpWindow.writeText("This is the total function statistics window.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("This window shows you the total statistics for all functions on this thread.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Right click on any function within this window to bring up a popup");
-		    ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-		    ParaProf.helpWindow.writeText("for the function, or to show more details about the function.");
-		    ParaProf.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
-		}
+	    if(ParaProf.helpWindow.isVisible()){
+		ParaProf.helpWindow.clearText();
+		//Since the data must have been loaded.  Tell them someting about
+		//where they are.
+		ParaProf.helpWindow.writeText("Call path text window.");
+		ParaProf.helpWindow.writeText("");
+		ParaProf.helpWindow.writeText("This window displays call path relationships in two ways:");
+		ParaProf.helpWindow.writeText("1- If this window has been invoked from the \"windows\" menu of");
+		ParaProf.helpWindow.writeText("ParaProf, the information displayed is all call path relations found.");
+		ParaProf.helpWindow.writeText("That is, all the parent/child relationships.");
+		ParaProf.helpWindow.writeText("Thus, in this case, given the parallel nature of ParaProf, this information");
+		ParaProf.helpWindow.writeText("might not be valid for a particular thread. It is however useful to observe");
+		ParaProf.helpWindow.writeText("all the realtionships that exist in the data.");
+		ParaProf.helpWindow.writeText("");
+		ParaProf.helpWindow.writeText("2- If this window has been invoked from the popup menu to the left of a thread bar");
+		ParaProf.helpWindow.writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
+		ParaProf.helpWindow.writeText("and will thus contain both parent/child relations and the data relating to those");
+		ParaProf.helpWindow.writeText("relationships.");
+
+	    }
       
       
 	    //******************************
@@ -354,16 +361,20 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    ParaProf.helpWindow.show();
 		    //Since the data must have been loaded.  Tell them someting about
 		    //where they are.
-		    ParaProf.helpWindow.writeText("This is the total function statistics window.");
+		    ParaProf.helpWindow.writeText("Call path text window.");
 		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("This window shows you the total statistics for all functions on this thread.");
+		    ParaProf.helpWindow.writeText("This window displays call path relationships in two ways:");
+		    ParaProf.helpWindow.writeText("1- If this window has been invoked from the \"windows\" menu of");
+		    ParaProf.helpWindow.writeText("ParaProf, the information displayed is all call path relations found.");
+		    ParaProf.helpWindow.writeText("That is, all the parent/child relationships.");
+		    ParaProf.helpWindow.writeText("Thus, in this case, given the parallel nature of ParaProf, this information");
+		    ParaProf.helpWindow.writeText("might not be valid for a particular thread. It is however useful to observe");
+		    ParaProf.helpWindow.writeText("all the realtionships that exist in the data.");
 		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Right click on any function within this window to bring up a popup");
-		    ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-		    ParaProf.helpWindow.writeText("for the function, or to show more details about the function.");
-		    ParaProf.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+		    ParaProf.helpWindow.writeText("2- If this window has been invoked from the popup menu to the left of a thread bar");
+		    ParaProf.helpWindow.writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
+		    ParaProf.helpWindow.writeText("and will thus contain both parent/child relations and the data relating to those");
+		    ParaProf.helpWindow.writeText("relationships.");
 		}
 	    }
 	}

@@ -595,7 +595,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
       boolean isDefault = false;
       boolean isTimeMetric = false;
       
-      if(trialName.equals("DEFAULT")) 
+      if(trialName.equals("Default")) 
         isDefault = true;
       else if(trialName.indexOf("TIME") != -1)
         isTimeMetric = true;

@@ -285,7 +285,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    //Panel and scroll bar definitions.
 	    //**********
 	    panel = new MappingDataWindowPanel(trial, inMappingID, this);
-	    JScrollPane sp = new JScrollPane(panel);
+	    sp = new JScrollPane(panel);
 	    JLabel label = new JLabel(mappingName);
             sp.setColumnHeaderView(label);
 	    //**********
@@ -486,7 +486,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    boolean isDefault = false;
 	    boolean isTimeMetric = false;
 	    
-	    if(trialName.equals("DEFAULT")) 
+	    if(trialName.equals("Default")) 
 		isDefault = true;
 	    else if(trialName.indexOf("TIME") != -1)
 		isTimeMetric = true;
@@ -605,7 +605,8 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 
     private void displaySiders(boolean displaySliders){
 	if(displaySliders){
-	    
+	    contentPane.remove(sp);
+
 	    gbc.fill = GridBagConstraints.NONE;
 	    gbc.anchor = GridBagConstraints.EAST;
 	    gbc.weightx = 0;
@@ -641,7 +642,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    contentPane.remove(sliderMultiple);
 	    contentPane.remove(barLengthLabel);
 	    contentPane.remove(barLengthSlider);
-	    contentPane.remove(panel);
+	    contentPane.remove(sp);
 
 	    gbc.fill = GridBagConstraints.BOTH;
 	    gbc.anchor = GridBagConstraints.CENTER;

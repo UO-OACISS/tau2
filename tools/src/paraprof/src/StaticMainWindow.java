@@ -227,6 +227,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  userEventLedgerItem = new JMenuItem("Show User Event Ledger");
 	  userEventLedgerItem.addActionListener(this);
 	  windowsMenu.add(userEventLedgerItem);
+
+	  //Add a submenu.
+	  callPathItem = new JMenuItem("Show Call Path Relations");
+	  callPathItem.addActionListener(this);
+	  windowsMenu.add(callPathItem);
       
 	  //Add a submenu.
 	  JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
@@ -492,6 +497,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		else if(arg.equals("Show User Event Ledger")){
 		    (trial.getGlobalMapping()).displayMappingLedger(2);
 		}
+		else if(arg.equals("Show Call Path Relations")){
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true);
+		    trial.getSystemEvents().addObserver(tmpRef);
+		    tmpRef.show();
+		}
 		else if(arg.equals("Close All Sub-Windows")){
 		//Close the all subwindows.
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -527,6 +537,14 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		userEventLedgerItem.setEnabled(true);
 	    else
 		userEventLedgerItem.setEnabled(false);
+
+	    if(trial.callPathDataPresent()){
+		callPathItem.setEnabled(true);
+	    }
+	    else{
+		callPathItem.setEnabled(false);
+	    }
+
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "SMW03");
@@ -783,23 +801,24 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     JFileChooser fileChooser = new JFileChooser();
     
     //References for some of the componants for this frame.
-    private StaticMainWindowPanel sMWPanel;
-    private StaticMainWindowData sMWData;
+    private StaticMainWindowPanel sMWPanel = null;
+    private StaticMainWindowData sMWData = null;
     
-    private ButtonGroup sortGroup;
-    private ButtonGroup sortOrderGroup;
+    private ButtonGroup sortGroup = null;
+    private ButtonGroup sortOrderGroup = null;
     
-    private JRadioButtonMenuItem mappingIDButton;
-    private JRadioButtonMenuItem nameButton;
-    private JRadioButtonMenuItem millisecondButton;
+    private JRadioButtonMenuItem mappingIDButton = null;
+    private JRadioButtonMenuItem nameButton = null;
+    private JRadioButtonMenuItem millisecondButton = null;
     
-    private JRadioButtonMenuItem ascendingButton;
-    private JRadioButtonMenuItem descendingButton;
+    private JRadioButtonMenuItem ascendingButton = null;
+    private JRadioButtonMenuItem descendingButton = null;
     
-    private JRadioButtonMenuItem displaySlidersButton;
+    private JRadioButtonMenuItem displaySlidersButton = null;
     
-    private JMenuItem mappingGroupLedgerItem;
-    private JMenuItem userEventLedgerItem;
+    private JMenuItem mappingGroupLedgerItem = null;
+    private JMenuItem userEventLedgerItem = null;
+    private JMenuItem callPathItem = null;
     
     private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
     private JComboBox sliderMultiple;

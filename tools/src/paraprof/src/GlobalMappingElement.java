@@ -329,13 +329,13 @@ public class GlobalMappingElement implements Serializable, Comparable{
   
 	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
-	    int initialBufferLength = 97;
+	    int initialBufferLength = 99;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
 	    char [] tmpArray;
 	    String tmpString;
       
-	    this.insertSpaces(statStringArray , 0, 97);
+	    this.insertSpaces(statStringArray , 0, 99);
       
 	    DecimalFormat dF = new DecimalFormat();
 	    dF.applyPattern("##0.0");
@@ -346,7 +346,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 		position++;
 	    }
       
-	    position = 7;
+	    position = 9;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getMeanExclusiveValue(dataValueLocation),
 										  defaultNumberPrecision)));
@@ -356,7 +356,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 		position++;
 	    }
       
-	    position = 25;
+	    position = 27;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getMeanInclusiveValue(dataValueLocation),
 										  defaultNumberPrecision)));
@@ -366,7 +366,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 		position++;
 	    }
       
-	    position = 43;
+	    position = 45;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getMeanNumberOfCalls(),
 										  defaultNumberPrecision)));
@@ -376,7 +376,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 		position++;
 	    }
       
-	    position = 61;
+	    position = 63;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getMeanNumberOfSubRoutines(),
 										  defaultNumberPrecision)));
@@ -386,7 +386,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 		position++;
 	    }
       
-	    position = 79;
+	    position = 81;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getMeanUserSecPerCall(dataValueLocation),
 										  defaultNumberPrecision)));
