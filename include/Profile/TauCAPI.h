@@ -57,7 +57,7 @@ extern "C" {
 #define TAU_PROFILE_CREATE_TIMER(var,name,type,group) Tau_profile_c_timer(&var, name, type, group, #group);
 
 
-#define TAU_PROFILE_START(var) 			Tau_start_timer(var);
+#define TAU_PROFILE_START(var) 			Tau_start_timer(var, 0);
 #define TAU_PROFILE_STOP(var) 			Tau_stop_timer(var);
 #define TAU_PROFILE_STMT(stmt) 			stmt;
 #define TAU_PROFILE_EXIT(msg)  			Tau_exit(msg);
@@ -149,7 +149,7 @@ extern void Tau_reducescatter_data(int data);
 extern void Tau_scan_data(int data);
 
 extern void * Tau_get_profiler(char *fname, char *type, TauGroup_t  group, char *gr_name);
-extern void Tau_start_timer(void *profiler);
+extern void Tau_start_timer(void *profiler, int phase);
 extern void Tau_stop_timer(void *profiler);
 extern void Tau_exit(char *msg);
 extern void Tau_init(int argc, char **argv);
@@ -290,7 +290,7 @@ extern void Tau_set_interrupt_interval(int value);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.33 $   $Date: 2004/10/30 00:34:08 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.33 2004/10/30 00:34:08 sameer Exp $
+ * $Revision: 1.34 $   $Date: 2005/01/11 00:44:11 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.34 2005/01/11 00:44:11 sameer Exp $
  ***************************************************************************/
 

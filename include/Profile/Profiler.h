@@ -183,6 +183,10 @@ public:
   	double ExclTime_cs;
   	static void CallStackTrace(int tid = RtsLayer::myThread());
 #endif /* PROFILE_CALLSTACK  */
+#ifdef TAU_PROFILEPHASE
+	bool Profiler::GetPhase(void);
+	void Profiler::SetPhase(bool flag);
+#endif /* TAU_PROFILEPHASE */
 
 private:
 	TauGroup_t MyProfileGroup_;
@@ -192,6 +196,7 @@ private:
 	   of FunctionStack that can't be done with
 	   just the constructor.
 	   friend class ProfilerInitializer; */
+	bool 	PhaseFlag;
 };
 
 
@@ -205,6 +210,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.52 $   $Date: 2004/10/30 00:34:08 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.52 2004/10/30 00:34:08 sameer Exp $ 
+ * $Revision: 1.53 $   $Date: 2005/01/11 00:44:11 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.53 2005/01/11 00:44:11 sameer Exp $ 
  ***************************************************************************/

@@ -36,7 +36,7 @@
 // To ensure that Profiling does not add any runtime overhead when it 
 // is turned off, these macros expand to null.
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_start_timer(void * function_info);
+extern "C" void Tau_start_timer(void * function_info, int phase );
 extern "C" void Tau_stop_timer(void * function_info); 
 extern "C" void Tau_create_top_level_timer_if_necessary(void);
 extern "C" void Tau_stop_top_level_timer_if_necessary(void);
@@ -50,18 +50,52 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
         static TauGroup_t tau_gr = group; \
         static FunctionInfo tauFI(name, type, tau_gr, #group); \
         Profiler tauFP(&tauFI, tau_gr);
+
+#ifdef TAU_PROFILEPHASE
+#define TAU_PHASE(name, type, group) \
+        static TauGroup_t tau_group = group; \
+        static FunctionInfo tauFInfo(name, type, tau_group, #group); \
+        Profiler tauFProf(&tauFInfo, tau_group); \
+	tauFProf.SetPhase(1);
+#else /* TAU_PROFILEPHASE */
+#define TAU_PHASE TAU_PROFILE
+#endif /* TAU_PROFILEPHASE */
+
 #define TAU_PROFILE_TIMER(var, name, type, group) \
         static TauGroup_t var##tau_gr = group; \
         static FunctionInfo var##fi(name, type, var##tau_gr, #group);
 
+#ifdef TAU_PROFILEPHASE
+#define TAU_PHASE_CREATE_STATIC(var, name, type, group) \
+        static TauGroup_t var##tau_group = group; \
+	static FunctionInfo *var##finfo = NULL; \
+        tauCreateFI(&var##finfo, name, type, var##tau_group, #group); 
+
+#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) \
+        TauGroup_t var##tau_group = group; \
+	FunctionInfo *var##finfo = NULL; \
+        tauCreateFI(&var##finfo, name, type, var##tau_group, #group); 
+
+#define TAU_PHASE_START(var) if (var##tau_group & RtsLayer::TheProfileMask()) \
+                                Tau_start_timer(var##finfo, 1);
+
+#define TAU_PHASE_STOP(var)  if (var##tau_group & RtsLayer::TheProfileMask()) \
+                                Tau_stop_timer(var##finfo);
+#else /* TAU_PROFILEPHASE */
+#define TAU_PHASE_CREATE_STATIC TAU_PROFILE_TIMER
+#define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER
+#define TAU_PHASE_START TAU_PROFILE_START
+#define TAU_PHASE_STOP  TAU_PROFILE_STOP
+#endif /* TAU_PROFILEPHASE */
+
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
 // e.g., FunctionInfo loop1fi(); Profiler loop1();
 #define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
-                                Tau_start_timer(&var##fi);
+                                Tau_start_timer(&var##fi, 0);
 #define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
                                 Tau_stop_timer(&var##fi);
 
-#else 
+#else  /* TAU_MAX_THREADS */
 // Multithreaded, we should use thread-safe tauCreateFI to create the FunctionInfo object
 // Note: It's still not absolutely theoretically 100% thread-safe, since the static 
 // initializer is not in a lock, but we don't want to pay that price for every function call 
@@ -70,20 +104,58 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 	static FunctionInfo *tauFI = NULL; \
         tauCreateFI(&tauFI, name, type, tau_gr, #group); \
 	Profiler tauFP(tauFI, tau_gr); 
+
+#ifdef TAU_PROFILEPHASE
+#define TAU_PHASE(name, type, group) \
+	static TauGroup_t tau_group = group; \
+	static FunctionInfo *tauFInfo = NULL; \
+        tauCreateFI(&tauFInfo, name, type, tau_group, #group); \
+	Profiler tauFProf(tauFInfo, tau_group); \
+	tauFProf.SetPhase(1);
+#else
+#define TAU_PHASE TAU_PROFILE
+#endif /* TAU_PROFILEPHASE */
+
 #define TAU_PROFILE_TIMER(var, name, type, group) \
 	static TauGroup_t var##tau_gr = group; \
 	static FunctionInfo *var##fi = NULL; \
         tauCreateFI(&var##fi, name, type, var##tau_gr, #group); 
 
+#ifdef TAU_PROFILEPHASE
+#define TAU_PHASE_CREATE_STATIC(var, name, type, group) \
+	static TauGroup_t var##tau_group = group; \
+	static FunctionInfo *var##finfo = NULL; \
+        tauCreateFI(&var##finfo, name, type, var##tau_group, #group); 
+
+#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) \
+	TauGroup_t var##tau_group = group; \
+	FunctionInfo *var##finfo = NULL; \
+        tauCreateFI(&var##finfo, name, type, var##tau_group, #group); 
+
+#else
+#define TAU_PHASE_CREATE_STATIC TAU_PROFILE_TIMER
+#define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER
+#endif /* TAU_PROFILEPHASE */
+
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
 // e.g., FunctionInfo loop1fi(); Profiler loop1(); 
 #define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
- 				Tau_start_timer(var##fi);
-#define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
-				Tau_stop_timer(var##fi);
+ 				Tau_start_timer(var##fi, 0);
 
-#endif
-//	Profiler var(&var##fi, var##tau_gr, true); 
+#ifdef TAU_PROFILEPHASE
+#define TAU_PHASE_START(var) if (var##tau_group & RtsLayer::TheProfileMask()) \
+ 				Tau_start_timer(var##finfo, 1);
+#else
+#define TAU_PHASE_START TAU_PROFILE_START
+#endif /* TAU_PROFILEPHASE */
+
+#ifdef TAU_PROFILEPHASE
+#define TAU_PHASE_STOP(var)  if (var##tau_group & RtsLayer::TheProfileMask()) \
+				Tau_stop_timer(var##finfo);
+#else
+#define TAU_PHASE_STOP TAU_PROFILE_STOP
+#endif /* TAU_PROFILEPHASE */
+#endif  /* TAU_MAX_THREADS */
 
 #define TAU_PROFILE_STMT(stmt) stmt;
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
@@ -97,12 +169,12 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  t##fi.SetType(newname);
 #define TAU_PROFILE_TIMER_SET_GROUP(t, id) t##fi.SetProfileGroup(id); 
 
-#define TAU_GLOBAL_TIMER(timer, name, type, group) FunctionInfo& timer () { \
+#define TAU_GLOBAL_TIMER(timer, name, type, group) FunctionInfo& timer (void) { \
 	static FunctionInfo *timer##fi = NULL; \
         tauCreateFI(&timer##fi, name, type, group, #group); \
 	return *timer##fi; }
 
-#define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
+#define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (void); \
 	int tau_tid = RtsLayer::myThread(); \
 	Profiler *t = new Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
         t->Start(tau_tid); }
@@ -113,6 +185,34 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 		delete p; \
 		}
 
+#define TAU_GLOBAL_TIMER_EXTERNAL(timer)  extern FunctionInfo& timer(void);
+
+#ifdef TAU_PROFILEPHASE
+#define TAU_GLOBAL_PHASE(timer, name, type, group) FunctionInfo& timer() { \
+	static FunctionInfo *timer##fi = NULL; \
+        tauCreateFI(&timer##fi, name, type, group, #group); \
+	return *timer##fi; }
+
+#define TAU_GLOBAL_PHASE_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
+	int tau_tid = RtsLayer::myThread(); \
+	Profiler *t = new Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
+	t->SetPhase(1); \
+        t->Start(tau_tid); }
+
+#define TAU_GLOBAL_PHASE_STOP()  {int tau_threadid = RtsLayer::myThread(); \
+                Profiler *p = Profiler::CurrentProfiler[tau_threadid]; \
+		p->Stop(tau_threadid); \
+		delete p; \
+		}
+
+#define TAU_GLOBAL_PHASE_EXTERNAL(timer) extern FunctionInfo& timer(void);
+#else /* TAU_PROFILEPHASE */
+#define TAU_GLOBAL_PHASE 	TAU_GLOBAL_TIMER
+#define TAU_GLOBAL_PHASE_START	TAU_GLOBAL_TIMER_START
+#define TAU_GLOBAL_PHASE_STOP	TAU_GLOBAL_TIMER_STOP
+#define TAU_GLOBAL_PHASE_EXTERNAL TAU_GLOBAL_TIMER_EXTERNAL
+
+#endif /* TAU_PROFILEPHASE */
 
 /* The above macros are for use with global timers in a multi-threaded application */
 
@@ -270,7 +370,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.41 $   $Date: 2005/01/08 01:18:05 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.41 2005/01/08 01:18:05 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.42 $   $Date: 2005/01/11 00:44:11 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.42 2005/01/11 00:44:11 sameer Exp $ 
  ***************************************************************************/
