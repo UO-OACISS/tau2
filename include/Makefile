@@ -28,11 +28,11 @@
 #######################################################################
 
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=sgi8k
-CONFIG_CC=cc
-CONFIG_CXX=CC
+CONFIG_ARCH=default
+CONFIG_CC=gcc
+CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=
+USER_OPT=-g
 TAUROOT=/home/grads/sameer/tau2
 TULIPDIR=/users/sameer/s
 TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
@@ -55,7 +55,7 @@ LSX = .a
 
 
 ############# Profiling Options #############
-PROFILEOPT1           = -DPROFILING_ON        #ENDIF##PROFILE#
+#PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
 #SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS          #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS     #ENDIF#
 #PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS       #ENDIF#
@@ -68,7 +68,7 @@ PROFILEOPT1           = -DPROFILING_ON        #ENDIF##PROFILE#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI#PROFILEOPT12	       = 		       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used   #ENDIF#
-#PROFILEOPT14	       = -ptused 	       #ENDIF##SGICC#
+#SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
 #PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS           #ENDIF#
 #TULIPTHREADS#PROFILEOPT16 = -DTULIPTHREADS            #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
@@ -76,7 +76,7 @@ PROFILEOPT1           = -DPROFILING_ON        #ENDIF##PROFILE#
 #PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o        #ENDIF#
 #TULIPTHREADS#THR_O       = TulipThreadLayer.o         #ENDIF#
 #TULIPTHREADS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/Tuliplib   #ENDIF#
-#SMARTS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/lib   #ENDIF#
+#SMARTS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/lib -I$(TULIPDIR)/machine-specific/$(HOSTTYPE)  #ENDIF#
 #SMARTS#PROFILEOPT18  = -DSMARTS   #ENDIF#
 #KAI#PROFILEOPT19  	       = -DKAI   #ENDIF#
 #KAINOEX#PROFILEOPT20  	       = --no_exceptions   #ENDIF#
