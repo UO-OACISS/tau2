@@ -76,9 +76,10 @@ JDKARCH                 = linux
 #############################################
 # DYNINST DEFAULT ARCH
 #############################################
-DYNINST_PLATFORM = i386-unknown-linux2.0
+DYNINST_PLATFORM = i386-unknown-linux2.2
 #SOL2#DYNINST_PLATFORM 	= sparc-sun-solaris2.4 #ENDIF#
 #SP1#DYNINST_PLATFORM 	= rs6000-ibm-aix4.1    #ENDIF#
+#SGIMP#DYNINST_PLATFORM = mips-sgi-irix6.5     #ENDIF#
 
 
 #PCL#include $(TAUROOT)/include/makefiles/PCLMakefile.stub	  #ENDIF#
@@ -175,6 +176,8 @@ TAU_DEFS	= $(TAUDEFS)
 TAU_INCLUDE 	= -I$(TAUROOT)/include
 
 TAU_LIBS	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA)
+
+TAU_SHLIBS	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTAU $(LEXTRA)
 
 TAU_DISABLE	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauDisable
 
