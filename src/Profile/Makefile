@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/root/Install/papi/tau2
+TAUROOT=/home/users/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -60,7 +60,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h      \
 	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
-		$(INCDIR)/PapiLayer.h
+		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h
 
 LDFLAGS	      = $(PCXX_OPT)
 
@@ -198,6 +198,9 @@ Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TulipThreadLayer.o   : TulipThreadLayer.cpp $(HDRS)
