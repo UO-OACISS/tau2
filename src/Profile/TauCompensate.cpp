@@ -89,15 +89,15 @@ int TauCalibrateNullTimer(void)
 
   /* Get thread id */
   tid = RtsLayer::myThread();
-  int n = tnullfi.GetCalls(tid);
+  int n = tnullfi->GetCalls(tid);
 #ifndef TAU_MULTIPLE_COUNTERS 
-  TheTauNullTimerOverhead() = tnullfi.GetInclTime(tid)/n;
+  TheTauNullTimerOverhead() = tnullfi->GetInclTime(tid)/n;
   /* n*(a+b+c+d) + b+c = tone */
   /* a+b+c+d = Toverhead = (tone - tnull) / n */
-  TheTauFullTimerOverhead() = (tonefi.GetInclTime(tid) - TheTauNullTimerOverhead() ) / n; 
+  TheTauFullTimerOverhead() = (tonefi->GetInclTime(tid) - TheTauNullTimerOverhead() ) / n; 
 #else /* TAU_MULTIPLE_COUNTERS */
-  double *nullincltime = tnullfi.GetInclTime(tid);
-  double *oneincltime  = tonefi.GetInclTime(tid);
+  double *nullincltime = tnullfi->GetInclTime(tid);
+  double *oneincltime  = tonefi->GetInclTime(tid);
   for (i=0; i < MAX_TAU_COUNTERS; i++) 
   {
     /* n*(a+b+c+d) + b+c = tone */
