@@ -13,7 +13,7 @@ import java.util.*;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.7 2003/08/27 17:07:39 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.8 2003/10/14 00:27:55 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -28,6 +28,7 @@ public class Trial {
 	private int trialID;
 	private int experimentID;
 	private int applicationID;
+        private String name;
 	private String time;
 	private int problemSize;
 	private int nodeCount;
@@ -60,6 +61,15 @@ public class Trial {
  */
 	public int getApplicationID () {
 		return applicationID;
+	}
+
+/**
+ * Gets the name of the current trial object.
+ *
+ * @return	the name of the trial
+ */
+	public String getName() {
+		return name;
 	}
 
 /**
@@ -156,6 +166,17 @@ public class Trial {
  */
 	public void setApplicationID (int applicationID) {
 		this.applicationID = applicationID;
+	}
+
+/**
+ * Sets the name of the current trial object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	name the trial name
+ */
+	public void setName(String name) {
+		this.name = name;
 	}
 
 /**
