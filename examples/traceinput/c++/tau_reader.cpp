@@ -89,6 +89,25 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
   return 0;
 }
 
+int DefUserEvent( void *userData, unsigned int userEventToken,
+		const char *userEventName )
+{
+
+  dprintf("DefUserEvent event id %d user event name %s\n", userEventToken,
+		  userEventName);
+  return 0;
+}
+
+int EventTrigger( void *userData, double time, 
+		unsigned int nodeToken,
+		unsigned int threadToken,
+	       	unsigned int userEventToken,
+		long long userEventValue)
+{
+  dprintf("EventTrigger: time %g, nid %d tid %d event id %d triggered value %ld \n", time, nodeToken, threadToken, userEventToken, userEventValue);
+  return 0;
+}
+
 int SendMessage( void *userData, double time, 
 		unsigned int sourceNodeToken,
 		unsigned int sourceThreadToken, 
@@ -173,6 +192,8 @@ int main(int argc, char **argv)
   cb.DefThread = DefThread;
   cb.DefStateGroup = DefStateGroup;
   cb.DefState = DefState;
+  cb.DefUserEvent = DefUserEvent;
+  cb.EventTrigger = EventTrigger;
   cb.EndTrace = EndTrace;
 
   /* should state transitions be displayed? */
