@@ -591,7 +591,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    }
 	    else{
 		if(windowType==0)
-		    list = sMWData.getMeanData(18+valueType+order); 
+		    list = sMWData.getMeanData(18+valueType+order);
 		else if(windowType==1)
 		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, valueType+order); 
 		else

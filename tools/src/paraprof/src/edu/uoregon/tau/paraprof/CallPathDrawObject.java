@@ -51,16 +51,16 @@ public class CallPathDrawObject implements Mapping{
     public double getInclusiveValue(){
 	return this.inclusiveValue;}
 
-    public void setNumberOfCallsFromCallPathObjects(int numberOfCallsFromCallPathObjects){
+    public void setNumberOfCallsFromCallPathObjects(double numberOfCallsFromCallPathObjects){
 	this.numberOfCallsFromCallPathObjects = numberOfCallsFromCallPathObjects;}
 
-    public int getNumberOfCallsFromCallPathObjects(){
+    public double getNumberOfCallsFromCallPathObjects(){
 	return numberOfCallsFromCallPathObjects;}
 
-    public void setNumberOfCalls(int numberOfCalls){
+    public void setNumberOfCalls(double numberOfCalls){
 	this.numberOfCalls = numberOfCalls;}
 
-    public int getNumberOfCalls(){
+    public double getNumberOfCalls(){
 	return numberOfCalls;}
 
     public boolean isParent(){
@@ -91,8 +91,8 @@ public class CallPathDrawObject implements Mapping{
 
     private double exclusiveValue = 0.0;
     private double inclusiveValue = 0.0;
-    private int numberOfCallsFromCallPathObjects = 0;
-    private int numberOfCalls = 0;
+    private double numberOfCallsFromCallPathObjects = 0;
+    private double numberOfCalls = 0;
     //####################################
     //End - Instance Data.
     //####################################

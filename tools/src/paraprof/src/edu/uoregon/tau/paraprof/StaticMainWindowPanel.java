@@ -57,9 +57,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
       
-	    /*jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
+	    jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
 	    jMenuItem.addActionListener(this);
-	    popup1.add(jMenuItem);*/
+	    popup1.add(jMenuItem);
 	    //######
 	    //End - Add items to the first popup menu.
 	    //######
@@ -601,6 +601,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    }
 		}
 		else if(arg.equals("Show Mean Call Path Thread Relations")){
+			SMWThread sMWThread = (SMWThread) clickedOnObject;
+			CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial,-1,-1,-1,sMWindow.getSMWData(),0, this.debug());
+			trial.getSystemEvents().addObserver(callPathTextWindow);
+			callPathTextWindow.show();
+		}
+		else if(arg.equals("Show Call Path Thread Relations")){
 		    if(clickedOnObject instanceof SMWThread){
 			SMWThread sMWThread = (SMWThread) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThread.getNodeID(),

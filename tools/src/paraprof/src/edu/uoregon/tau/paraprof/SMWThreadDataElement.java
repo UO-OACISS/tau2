@@ -44,11 +44,13 @@ public class SMWThreadDataElement implements Comparable{
 		this.globalMappingElement = globalMapping.getGlobalMappingElement(globalThreadDataElement.getMappingID(), 2);
 	    else
 		this.globalMappingElement = globalMapping.getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
+	    objType = true;
 	    
 	}
 	else if(obj instanceof GlobalMappingElement){
 	    globalMapping = trial.getGlobalMapping();
 	    this.globalMappingElement = (GlobalMappingElement) obj;
+	    objType = false;
 	}
 	else{
 	    UtilFncs.systemError(null, null, "Unexpected object type - SMWTDE value: " + obj.getClass().getName());
@@ -86,24 +88,6 @@ public class SMWThreadDataElement implements Comparable{
     //####################################
     //Function interface.
     //####################################
-    public Vector getParents(){
-	return globalThreadDataElement.getParents();}
-
-    public Vector getChildren(){
-	return globalThreadDataElement.getChildren();}
-
-    public ListIterator getParentsIterator(){
-	return globalThreadDataElement.getParentsIterator();}
-
-    public ListIterator getChildrenIterator(){
- 	return globalThreadDataElement.getChildrenIterator();}
-
-    public ListIterator getCallPathIDParents(int id){
-	return globalThreadDataElement.getCallPathIDParents(id);}
-
-    public ListIterator getCallPathIDChildren(int id){
-	return globalThreadDataElement.getCallPathIDChildren(id);}
-  
     public double getInclusiveValue(){
 	return globalThreadDataElement.getInclusiveValue(trial.getSelectedMetricID());}
   
@@ -184,6 +168,56 @@ public class SMWThreadDataElement implements Comparable{
     //####################################
     //End - Mean interface.
     //####################################
+
+    //####################################
+    //Parent/child interface.
+    //####################################
+    public Vector getParents(){
+	if(objType)
+	    return globalThreadDataElement.getParents();
+	else
+	    return globalMappingElement.getParents();
+    }
+
+    public Vector getChildren(){
+	if(objType)
+	    return globalThreadDataElement.getChildren();
+	else
+	    return globalMappingElement.getChildren();
+    }
+
+    public ListIterator getParentsIterator(){
+	if(objType)
+	    return globalThreadDataElement.getParentsIterator();
+	else
+	    return globalMappingElement.getParentsIterator();
+    }
+    
+
+    public ListIterator getChildrenIterator(){
+	if(objType)
+	    return globalThreadDataElement.getChildrenIterator();
+	else
+	    return globalMappingElement.getChildrenIterator();
+    }
+
+    public ListIterator getCallPathIDParents(int id){
+	if(objType)
+	    return globalThreadDataElement.getCallPathIDParents(id);
+	else
+	    return globalMappingElement.getCallPathIDParents(id);
+    }
+
+    public ListIterator getCallPathIDChildren(int id){
+	if(objType)
+	    return globalThreadDataElement.getCallPathIDChildren(id);
+	else
+	    return globalMappingElement.getCallPathIDChildren(id);
+    }
+    //####################################
+    //Parent/child interface.
+    //####################################
+
 
 
     /*
@@ -366,6 +400,8 @@ public class SMWThreadDataElement implements Comparable{
     boolean highlighted = false;
   
     int sortType;
+
+    boolean objType = true;  //false: GME type,true: GTDE type.
     //####################################
     //End - Instance data.
     //####################################
