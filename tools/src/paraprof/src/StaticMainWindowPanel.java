@@ -1143,7 +1143,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     //####################################
     private ParaProfTrial trial = null;
     StaticMainWindow sMWindow = null;
-    private Vector[] list = new Vector[2]; //list[0]:The result of a call to getSMWGeneralData in StaticMainWindowData
+    private Vector[] list = {new Vector(), new Vector()}; //list[0]:The result of a call to getSMWGeneralData in StaticMainWindowData
                                            //list[1]:The result of a call to getMeanData in StaticMainWindowData
   
     int xPanelSize = 600;

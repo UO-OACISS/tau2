@@ -39,16 +39,18 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	int windowWidth = 400;
 	int windowHeight = 200;
 
-	//Grab the screen size.
-	Toolkit tk = Toolkit.getDefaultToolkit();
-	Dimension screenDimension = tk.getScreenSize();
-	int screenHeight = screenDimension.height;
-	int screenWidth = screenDimension.width;
-	
+	//Grab paraProfManager position and size.
+	Point parentPosition = paraProfManager.getLocationOnScreen();
+	Dimension parentSize = paraProfManager.getSize();
+	int parentWidth = parentSize.width;
+	int parentHeight = parentSize.height;
 	
 	//Set the window to come up in the center of the screen.
-	int xPosition = (screenWidth - windowWidth) / 2;
-	int yPosition = (screenHeight - windowHeight) / 2;
+	int xPosition = (parentWidth - windowWidth) / 2;
+	int yPosition = (parentHeight - windowHeight) / 2;
+
+	xPosition = (int) parentPosition.getX() + xPosition;
+	yPosition = (int) parentPosition.getY() + yPosition;
 
 	this.setLocation(xPosition, yPosition);
 	setSize(new java.awt.Dimension(windowWidth, windowHeight));

@@ -38,9 +38,16 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    int screenWidth = screenDimension.width;
 	    
 	    
-	    //Set the window to come up in the center of the screen.
+	    //Find the center position with respect to this window.
 	    int xPosition = (screenWidth - windowWidth) / 2;
 	    int yPosition = (screenHeight - windowHeight) / 2;
+
+	    //Offset a little so that we do not interfere too much with the
+	    //main window which comes up in the centre of the screen.
+	    if(xPosition>50)
+		xPosition = xPosition-50;
+	    if(yPosition>50)
+		yPosition = yPosition-50;
 	    
 	    this.setLocation(xPosition, yPosition);
 	    setSize(new java.awt.Dimension(windowWidth, windowHeight));

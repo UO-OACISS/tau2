@@ -87,6 +87,7 @@ public class ParaProf implements ActionListener{
 	    trial.setName("Default Trial");
 	    FileList fl = new FileList();
 	    Vector v = null;
+	    boolean showTrial = false;
 	    if(type!=-1){
 		trial = new ParaProfTrial(null, type);
 		trial.setName("Default Trial");
@@ -116,7 +117,7 @@ public class ParaProf implements ActionListener{
 		    trial.setPaths(fl.getPath());
 		    trial.initialize(v);
 		    experiment.addTrial(trial);
-		    trial.showMainWindow();
+		    showTrial = true;
 		}
 		else{
 		    System.out.println("No profile files found in the current directory.");
@@ -132,7 +133,7 @@ public class ParaProf implements ActionListener{
 		    trial.setPaths(fl.getPath());
 		    trial.initialize(v);
 		    experiment.addTrial(trial);
-		    trial.showMainWindow();
+		    showTrial = true;
 		}
 		else{
 		    //Try finding profile.*.*.* files.
@@ -146,7 +147,7 @@ public class ParaProf implements ActionListener{
 			trial.setPaths(fl.getPath());
 			trial.initialize(v);
 			experiment.addTrial(trial);
-			trial.showMainWindow();
+			showTrial = true;
 		    }
 		    else{
 			System.out.println("No profile files found in the current directory.");
@@ -156,6 +157,8 @@ public class ParaProf implements ActionListener{
 	    }		
 	    ParaProfManager paraProfManager = new ParaProfManager();
 	    paraProfManager.expandDefaultParaProfTrialNode();
+	    if(showTrial)
+		trial.showMainWindow();
 	}
 	catch (Exception e) {
     
