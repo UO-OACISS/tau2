@@ -32,7 +32,7 @@
 #define TAU_FREE_LOCAL(l) free(l)
 
 /******************************************************/
-#ifdef sgi
+#ifdef TAU_MPI_NEEDS_STATUS
 #define MPI_Status_c2f(c,f) *f=*(MPI_Fint *)c 
 #define MPI_Status_f2c(f,c) *c=*(MPI_Status *)f
 #endif /* sgi */

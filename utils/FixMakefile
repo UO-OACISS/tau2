@@ -275,6 +275,11 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+    MPINEEDSTATUSCONV)
+        echo "NOTE: Using TAU's MPI_Status_c2f/f2c routines"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPI_THREADED)
         echo NOTE: Using the TAU MPI_Init_thread Profiling Interface Wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

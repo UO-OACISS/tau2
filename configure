@@ -1886,6 +1886,17 @@ EOF
 
 EOF
 
+cat << EOF > mpistatus.C
+
+  #include <mpi.h>
+  int foo(MPI_Fint *status)
+  {
+    MPI_Status s;
+    return MPI_Status_f2c(status, &s);
+  }
+EOF
+  
+
   if [ $machine = sgi64 -a $cxx_compiler = CC ]
   then
     orig_useropt="$orig_useropt -64"
@@ -1967,7 +1978,13 @@ EOF
     fixmakeargs="$fixmakeargs MPIADDERROR"
   fi
 
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C mpi2hpconst.o mpi2hpconst.C mpi2attr.o mpi2attr.C mpi2typeex.o mpi2typeex.C mpi2add.o mpi2add.C
+  if ! $cxx_compiler $orig_useropt $mpi_include -c mpistatus.C  1> /dev/null 2>&1
+  then
+    echo "MPI_Status c2f/f2c functions are needed"
+    fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
+  fi
+
+  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C mpi2hpconst.o mpi2hpconst.C mpi2attr.o mpi2attr.C mpi2typeex.o mpi2typeex.C mpi2add.o mpi2add.C mpistatus.C mpistatus.o
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
