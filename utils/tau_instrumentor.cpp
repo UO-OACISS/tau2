@@ -431,7 +431,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      ostr << "\", \" \", "; // null type arg to TAU_PROFILE 
 	    }
 
-	    if (strstr((*it)->item->name().c_str(), "main")) 
+	    if (strcmp((*it)->item->name().c_str(), "main")==0) 
 	    { /* it is main() */
 	      ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
 #ifdef SPACES
@@ -504,7 +504,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
     ((pdbRoutine *)(i->item))->name() << "\", \"" <<
     ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
-  if (strstr(i->item->name().c_str(), "main"))
+  if (strcmp(i->item->name().c_str(), "main")==0)
   { /* it is main() */
      ostr << "TAU_DEFAULT);" <<endl; // give an additional line
 #ifdef SPACES
@@ -535,7 +535,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
     ((pdbRoutine *)(i->item))->name() << "\", \"" <<
     ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
-  if (strstr(i->item->fullName().c_str(), "main("))
+  if (strcmp(i->item->name().c_str(), "main")==0)
   { /* it is main() */
      ostr << "TAU_DEFAULT);" <<endl; // give an additional line
 #ifdef SPACES
@@ -1206,8 +1206,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2002/01/15 04:14:38 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.31 2002/01/15 04:14:38 sameer Exp $
+ * $Revision: 1.32 $   $Date: 2002/01/18 02:01:44 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.32 2002/01/18 02:01:44 sameer Exp $
  ***************************************************************************/
 
 
