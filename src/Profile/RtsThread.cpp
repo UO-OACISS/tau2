@@ -100,6 +100,69 @@ void RtsLayer::RegisterThread()
 }
 
 //////////////////////////////////////////////////////////////////////
+// RegisterFork is called before any other profiling function in a 
+// process that is forked off (child process)
+//////////////////////////////////////////////////////////////////////
+void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
+{
+  vector<FunctionInfo*>::iterator it;
+  Profiler *current;
+
+  if (opcode == TAU_EXCLUDE_PARENT_DATA)
+  {
+  // If opcode is TAU_EXCLUDE_PARENT_DATA then we clear out the 
+  // previous values in the TheFunctionDB()
+
+  // Get the current time
+     double CurrentTimeOrCounts = getUSecD(myThread());
+     for (int tid = 0; tid < TAU_MAX_THREADS; tid++)
+     { // For each thread of execution 
+#ifdef PROFILING_ON
+       for(it=TheFunctionDB().begin(); it!=TheFunctionDB().end(); it++)
+       { // Iterate through each FunctionDB item 
+	 // Clear all values 
+	 (*it)->SetCalls(tid, 0);
+	 (*it)->SetSubrs(tid, 0);
+	 (*it)->SetExclTime(tid, 0);
+	 (*it)->SetInclTime(tid, 0);
+#ifdef PROFILE_STATS
+	 (*it)->SetSumExclSqr(tid, 0);
+#endif // PROFILE_STATS 
+	/* Do we need to change AlreadyOnStack? No*/
+	DEBUGPROFMSG("FI Zap: Inside "<< (*it)->GetName() <<endl;);
+       }
+       // Now that the FunctionDB is cleared, we need to add values to it 
+       //	corresponding to the present state.
+       current = Profiler::CurrentProfiler[tid];
+       while (current != 0) 
+       { // Iterate through each profiler on the callstack and 
+	 // fill Values in it 
+	 DEBUGPROFMSG("P Correct: Inside "<< current->ThisFunction->GetName() 
+			<<endl;);
+	 current->ThisFunction->IncrNumCalls(tid);
+	 if (current->ParentProfiler != 0)
+	 { // Increment the number of called functions in its parent
+	   current->ParentProfiler->ThisFunction->IncrNumSubrs(tid);
+	 }
+	 current->StartTime = CurrentTimeOrCounts;
+#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
+	 current->ExclTimeThisCall = 0;
+#endif   //  PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
+	 current = current->ParentProfiler;
+       } // Until the top of the stack
+#endif   // PROFILING_ON
+	 // Put logic for TRACING here. 
+     } // for tid loop
+     // DONE! 
+   }
+   // If it is TAU_INCLUDE_PARENT_DATA then there's no need to do anything.
+   // fork would copy over all the parent data as it is. 
+   TAU_PROFILE_SET_NODE(nodeid);
+}
+	 
+	
+     
+//////////////////////////////////////////////////////////////////////
 // This ensure that the FunctionDB (global) is locked while updating
 //////////////////////////////////////////////////////////////////////
 
@@ -143,8 +206,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2000/06/09 22:10:26 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.10 2000/06/09 22:10:26 sameer Exp $
+ * $Revision: 1.11 $   $Date: 2000/10/11 18:38:52 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.11 2000/10/11 18:38:52 sameer Exp $
  ***************************************************************************/
 
 

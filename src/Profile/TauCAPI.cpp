@@ -127,6 +127,12 @@ extern "C" void tau_register_thread(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_register_fork(int nodeid, enum TauFork_t opcode)
+{
+  TAU_REGISTER_FORK(nodeid, opcode);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void tau_trace_sendmsg(int type, int destination, int length)
 {
   TAU_TRACE_SENDMSG(type, destination, length);
@@ -226,7 +232,7 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2000/09/25 17:55:29 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.11 2000/09/25 17:55:29 sameer Exp $
+ * $Revision: 1.12 $   $Date: 2000/10/11 18:38:52 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.12 2000/10/11 18:38:52 sameer Exp $
  ***************************************************************************/
 
