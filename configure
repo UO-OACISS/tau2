@@ -2354,7 +2354,7 @@ then
 	> ${tauroot}/${architecture}/bin/paraprof
   chmod a+rx ${tauroot}/${architecture}/bin/paraprof
   echo "TAU: installed paraprof in ${tauroot}/${architecture}/bin"
-  cp ${tauroot}/tools/src/ParaProf/bin/ParaProf.jar ${tauroot}/${architecture}/bin
+  cp ${tauroot}/tools/src/paraprof/bin/ParaProf.jar ${tauroot}/${architecture}/bin
   echo "TAU: installed ParaProf.jar in ${tauroot}/${architecture}/bin"
 else
   if [ ! -d ${tauprefix} ]
@@ -2383,12 +2383,12 @@ else
     fi
   fi
 
-  cat ${tauroot}/tools/src/ParaProf/bin/paraprof.skel | 
+  cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
 	> ${tauprefix}/${architecture}/bin/paraprof
   chmod a+rx ${tauprefix}/${architecture}/bin/paraprof
   echo "TAU: installed paraprof in ${tauprefix}/${architecture}/bin"
-  cp ${tauroot}/tools/src/ParaProf/bin/ParaProf.jar ${tauprefix}/${architecture}/bin
+  cp ${tauroot}/tools/src/paraprof/bin/ParaProf.jar ${tauprefix}/${architecture}/bin
   echo "TAU: installed ParaProf.jar in ${tauprefix}/${architecture}/bin"
 fi
 
