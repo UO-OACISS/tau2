@@ -1,3 +1,13 @@
+*****************************************************************************
+**                      Tuning and Analysis Utilities                      **
+**			http://www.cs.uoregon.edu/research/paracomp/tau    **
+*****************************************************************************
+**    Copyright 1997-2004                                                  **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+**    Research Center Juelich, ZAM Germany                                 **
+*****************************************************************************
+
 *************************************************************************
 *			USING TAU WITH MUSE	 	      		*	
 * Author	: Suravee Suthikulpanit (suravee@cs.uoregon.edu)	*

@@ -1,7 +1,7 @@
 /******************************************************************* 
  *                                                                 *
  *       	Tuning and Analysis Utilities Credits  		   *
- *                           Version 2.10                          *
+ *                           Version 2.13                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -10,7 +10,8 @@
  *    For a tutorial on using TAU, open html/index.html in your    *
  *        web browser.                                             *
  *    For more information, including updates and new releases,    *
- *        and documentation, see http://www.acl.lanl.gov/tau       *
+ *        and documentation, see                                   *
+ *        http://www.cs.uoregon.edu/research/paracomp/tau          *
  *    For help, reporting bugs, and making suggestions, please     *
  *        send e-mail to tau-bugs@cs.uoregon.edu                   *
  *******************************************************************/
@@ -18,8 +19,12 @@
 
 TAU Portable Profiling:
 -----------------------
-Sameer Shende, Los Alamos National Laboratory, University of Oregon
-Robert Michael Ansell Bell, University of Oregon
+Sameer Shende, University of Oregon
+Robert Michael Ansell-Bell, University of Oregon
+Kevin Huck, University of Oregon
+Nicholas Trebon, University of Oregon
+Kai Li, University of Oregon
+Li Li, University of Oregon
 Kathleen Lindlan, University of Oregon
 Ariya Lohavanichbutr, University of Oregon
 Peter Beckman, Los Alamos National Laboratory
@@ -33,7 +38,10 @@ Prof. Janice Cuny, University of Oregon
 
 Thanks to: 
 ----------
+Susan Post
 Rod Oldehoeft
+Matt Sottile
+Craig Rasmussen
 Todd Veldhuizen
 Suvas Vajracharya
 Lars Hansen
@@ -48,6 +56,7 @@ James Crotinger
 Timothy Williams
 NAS Parallel Benchmarks Group for allowing us to use their code as an example
 of TAU instrumentation with Fortran and MPI (http://www.nas.nasa.gov/NAS/NPB/).
-The TAU project was directed by Allen Malony at the University of Orgeon.
+
+The TAU project is directed by Allen Malony at the University of Orgeon.
 
 
