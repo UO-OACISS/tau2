@@ -1,3 +1,14 @@
+/***********************************************************************
+ *
+ * File        : Directive.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Class to represent special directive or properties to
+ *               use during data analysis. Data location and format is
+ *               just one example.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class Directive implements SyntaxElement {

@@ -1,3 +1,13 @@
+/***********************************************************************
+ *
+ * File        : Instrumentation.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Represents a instrumentation scenario based on a
+ *               given program data type.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class Instrumentation implements SyntaxElement {

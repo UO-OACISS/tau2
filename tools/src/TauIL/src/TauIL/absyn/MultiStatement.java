@@ -1,3 +1,14 @@
+/***********************************************************************
+ *
+ * File        : MultiStatement.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Not to be confused with a list of statements. This
+ *               class represents a concatenation of statements that
+ *               form a single analysis.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class MultiStatement extends SyntaxList implements Statement {

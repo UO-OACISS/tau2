@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : StatementList.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Representation of a list of statements.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class StatementList extends SyntaxList implements Statement {

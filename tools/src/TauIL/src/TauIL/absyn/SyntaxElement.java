@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : SyntaxElement.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : See Declaration.java for a discussion.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 // import java.io.OutputStream;

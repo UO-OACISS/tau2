@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : DecList.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : List type for representing a decleration list.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class DecList extends SyntaxList implements Declaration {

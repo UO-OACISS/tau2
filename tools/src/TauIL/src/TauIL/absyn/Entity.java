@@ -1,3 +1,14 @@
+/***********************************************************************
+ *
+ * File        : Entity.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Class represents some sort of data entity or event
+ *               attribute. Events, files, and groups are currently
+ *               supported.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class Entity implements SyntaxAttribute {

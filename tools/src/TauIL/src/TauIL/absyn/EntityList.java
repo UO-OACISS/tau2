@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : EntityList.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Class for representing lists of entities.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class EntityList extends SyntaxList implements SyntaxAttribute {

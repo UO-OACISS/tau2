@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : Operator.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Represents a binary operator.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class Operator implements SyntaxAttribute {

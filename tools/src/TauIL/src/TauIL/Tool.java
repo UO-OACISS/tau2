@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : Tool.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Main class and entry point for the tau_analyze tool.
+ *
+ ***********************************************************************/
+
 package TauIL;
 
 import TauIL.util.GetOpt;

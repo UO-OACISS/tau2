@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : TauIL.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Class containing the TauIL version information.
+ *
+ ***********************************************************************/
+
 package TauIL;
 
 public class TauIL {

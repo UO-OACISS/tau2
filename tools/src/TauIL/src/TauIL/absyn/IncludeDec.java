@@ -1,3 +1,13 @@
+/***********************************************************************
+ *
+ * File        : IncludeDec.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Decleration type that represents the inclusion
+ *               behavior for a given list of entities.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class IncludeDec implements Declaration {

@@ -1,3 +1,13 @@
+/***********************************************************************
+ *
+ * File        : Field.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Class represents a type of profile data to use in
+ *               analysis.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class Field implements SyntaxAttribute {

@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : GroupList.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Representation of a list of groups.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class GroupList extends SyntaxList implements SyntaxAttribute {

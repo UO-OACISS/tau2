@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : OperatorStatement.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Represents a statement involving a binary operation.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class OperatorStatement implements Statement {

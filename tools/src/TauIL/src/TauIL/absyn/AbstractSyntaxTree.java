@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : AbstractSyntaxTree.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Class representing the root of an abstract syntax tree.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 import java.util.Date;

@@ -1,3 +1,13 @@
+/***********************************************************************
+ *
+ * File        : SyntaxList.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Generic list implementation. Base class of all other
+ *               abstract syntax lists.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 abstract public class SyntaxList implements AbstractSyntax {	

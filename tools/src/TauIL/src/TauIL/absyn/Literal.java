@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : Literal.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Represents a double percision floating point literal.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class Literal implements SyntaxAttribute {

@@ -1,3 +1,15 @@
+/***********************************************************************
+ *
+ * File        : ListManager.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Helper class for constructing syntax lists based on
+ *               a given list model. Useful when dealing with
+ *               different parsing techniques. See Parser.java for
+ *               use examples.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class ListManager {

@@ -1,3 +1,12 @@
+/***********************************************************************
+ *
+ * File        : InstrumentationList.java
+ * Author      : Tyrel Datwyler
+ *
+ * Description : Representation of a list of instrumentation scenarios.
+ *
+ ***********************************************************************/
+
 package TauIL.absyn;
 
 public class InstrumentationList extends SyntaxList implements SyntaxElement {
