@@ -77,10 +77,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 		long time = System.currentTimeMillis();
 		//Need to call increaseVectorStorage() on all objects that require it.
 		this.increaseVectorStorage();
-		    
-		Metric metricRef = this.addMetric();
-		metric = metricRef.getID();
-
+		
 		files = (File[]) e.nextElement();
 		for(int i=0;i<files.length;i++){
 		    if(this.debug()){
@@ -93,6 +90,52 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 		    InputStreamReader inReader = new InputStreamReader(fileIn);
 		    BufferedReader br = new BufferedReader(inReader);
 
+		    //For Dynaprof, we assume that the number of metrics remain fixed over
+		    //all threads. Since this information is stored in the header of the papiprobe
+		    //output of each file, we only need to get this information from the first file.
+		    
+		    
+		    if(this.firstMetric()){
+			//If header is present, its lines will begin with '#'
+			inputString = br.readLine();
+			if(inputString == null){
+			    System.out.println("Error processing file: " + files[i].getName());
+			    System.out.println("Unexpected end of file!");
+			    return;
+			}
+			else if((inputString.charAt(0)) == '#'){
+			    //Header present.
+			    //Do not need second header line at the moment..
+			    br.readLine();
+			    //Third header line contains the number of metrics.
+			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+			    genericTokenizer.nextToken();
+			    tokenString = genericTokenizer.nextToken();
+			    for(int j=(Integer.parseInt(tokenString));j>0;j--){
+				inputString = br.readLine();
+				genericTokenizer = new StringTokenizer(inputString, " :\t\n\r");
+				Metric metricRef = this.addMetric();
+				metricRef.setName(genericTokenizer.nextToken());
+				
+			    }
+			    if(this.debug()){
+				System.out.println("Header present");
+				System.out.println("Number of metrics: " + this.getNumberOfMetrics());
+			    }
+			}
+			else{
+			    if(this.debug())
+				System.out.println("No header present");
+			    Metric metricRef = this.addMetric();
+			    metric = metricRef.getID();
+			    metricRef.setName("default");
+			}
+			
+			for(int j=this.getNumberOfMetrics();j>0;j--)
+			    this.increaseVectorStorage();
+		    }
+		    
+		    //Metrics and names should be set by now.
 		    int[] nct = this.getNCT(files[i].getName());
 		    nodeID = nct[0];
 		    contextID = nct[1];
@@ -108,6 +151,12 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 		    if(thread==null){
 			thread = context.addThread(threadID);
 			thread.setDebug(this.debug());
+			for(int j=this.getNumberOfMetrics();j>0;j--)
+			    thread.incrementStorage();
+			//For Dynaprof, we can be reasonable sure that functions are the only
+			//things likely to be tracked.  See comment before Thread.initializeFunctionList(...)
+			//in TauOutputSession for more details on the positioning in that class.
+			thread.initializeFunctionList(this.getNumberOfMappings());
 		    }
 		    if(this.debug())
 			System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
@@ -115,324 +164,36 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 		    //####################################
 		    //First  Line
 		    //####################################
-		    inputString = br.readLine();
-		    if(inputString == null){
-			System.out.println("Error processing file: " + files[i].getName());
-			System.out.println("Unexpected end of file!");
-			return;
-		    }
-		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-		    //It's first token will be the number of function present.
-		    tokenString = genericTokenizer.nextToken();
-		    
-		    if(i==0){
-			//Set the counter name.
-			String counterName = getCounterName(inputString);
-			//Now set the counter name.
-			if(counterName == null)
-			    counterName = new String("Time");
-			System.out.println("Counter name is: " + counterName);
-			
-			metricRef.setName(counterName);
-		    }
-		    //####################################
-		    //End - First Line
-		    //####################################
-		    
-		    //####################################
-		    //Second Line
-		    //####################################
-		    inputString = br.readLine();
-		    if(inputString == null){
-			System.out.println("Error processing file: " + files[i].getName());
-			System.out.println("Unexpected end of file!");
-			return;
-		    }
-		    if(i==0){
-			//Determine if profile stats or profile calls data is present.
-			if(inputString.indexOf("SumExclSqr")!=-1)
-			    this.setProfileStatsPresent(true);
-		    }
-		    //####################################
-		    //End - Second Line
-		    //####################################
-
-		    //Process the appropriate number of function lines.
-		    if(this.debug()){
-			System.out.println("######");
-			System.out.println("processing functions");
-		    }
-		    numberOfLines = Integer.parseInt(tokenString);
-		    for(int j=0;j<numberOfLines;j++){
-			if(j==0&&(this.firstMetric()))
-			    thread.initializeFunctionList(this.getNumberOfMappings());
-
+		    while((inputString = br.readLine()) != null){
 			inputString = br.readLine();
-			if(inputString==null){
-			    System.out.println("Error processing file: " + files[i].getName());
-			    System.out.println("Unexpected end of file!");
-			    return;
-			}
 			this.getFunctionDataLine(inputString);
-			String groupNames = this.getGroupNames(inputString);
 			//Calculate usec/call
 			double usecCall = functionDataLine.d0/functionDataLine.i0;
 			if(this.debug()){
 			    System.out.println("function line: " + inputString);
-			    System.out.println("Name:"+functionDataLine.s0);
-			    System.out.println("Calls:"+functionDataLine.i0);
-			    System.out.println("Subrs:"+functionDataLine.i1);
-			    System.out.println("Excl:"+functionDataLine.d0);
-			    System.out.println("Incl:"+functionDataLine.d1);
-			    System.out.println("SumExclSqr:"+functionDataLine.d2);
-			    System.out.println("ProfileCalls:"+functionDataLine.i2);
-			    System.out.println("groupNames:"+groupNames);
+			    System.out.println("name:"+functionDataLine.s0);
+			    System.out.println("number_of_children:"+functionDataLine.i0);
+			    System.out.println("excl.total:"+functionDataLine.d0);
+			    System.out.println("excl.calls:"+functionDataLine.i1);
+			    System.out.println("excl.min:"+functionDataLine.d1);
+			    System.out.println("excl.max:"+functionDataLine.d2);
+			    System.out.println("incl.total:"+functionDataLine.d3);
+			    System.out.println("incl.calls:"+functionDataLine.i2);
+			    System.out.println("incl.min:"+functionDataLine.d4);
+			    System.out.println("incl.max:"+functionDataLine.d5);
 			}
-			if(functionDataLine.i0 !=0){
-			    mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0);
-			    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
-			    globalMappingElement.incrementCounter();
-			    globalThreadDataElement = thread.getFunction(mappingID);
-			    
-			    if(globalThreadDataElement == null){
-				globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
-				thread.addFunction(globalThreadDataElement, mappingID);
-			    }
-			    
-			    globalThreadDataElement.setMappingExists();
-			    globalThreadDataElement.setExclusiveValue(metric, functionDataLine.d0);
-			    globalThreadDataElement.setInclusiveValue(metric, functionDataLine.d1);
-			    globalThreadDataElement.setNumberOfCalls(functionDataLine.i0);
-			    globalThreadDataElement.setNumberOfSubRoutines(functionDataLine.i1);
-			    globalThreadDataElement.setUserSecPerCall(metric, usecCall);
-			    
-			    globalMappingElement.incrementTotalExclusiveValue(functionDataLine.d0);
-			    globalMappingElement.incrementTotalInclusiveValue(functionDataLine.d1);
-			    
-			    //Set the max values.
-			    if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
-				globalMappingElement.setMaxExclusiveValue(metric, functionDataLine.d0);
-			    if((thread.getMaxExclusiveValue(metric)) < functionDataLine.d0)
-				thread.setMaxExclusiveValue(metric, functionDataLine.d0);
-			    
-			    if((globalMappingElement.getMaxInclusiveValue(metric)) < functionDataLine.d1)
-				globalMappingElement.setMaxInclusiveValue(metric, functionDataLine.d1);
-			    if((thread.getMaxInclusiveValue(metric)) < functionDataLine.d1)
-				thread.setMaxInclusiveValue(metric, functionDataLine.d1);
-			    
-			    if(globalMappingElement.getMaxNumberOfCalls() < functionDataLine.i0)
-				globalMappingElement.setMaxNumberOfCalls(functionDataLine.i0);
-			    if(thread.getMaxNumberOfCalls() < functionDataLine.i0)
-				thread.setMaxNumberOfCalls(functionDataLine.i0);
-			    
-			    if(globalMappingElement.getMaxNumberOfSubRoutines() < functionDataLine.i1)
-				globalMappingElement.setMaxNumberOfSubRoutines(functionDataLine.i1);
-			    if(thread.getMaxNumberOfSubRoutines() < functionDataLine.i1)
-				thread.setMaxNumberOfSubRoutines(functionDataLine.i1);
-			    
-			    if(globalMappingElement.getMaxUserSecPerCall(metric) < usecCall)
-				globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
-			    if(thread.getMaxUserSecPerCall(metric) < usecCall)
-				thread.setMaxUserSecPerCall(metric, usecCall);
-			    
-			    if(!(globalMappingElement.groupsSet())){
-				if(this.firstMetric()){ 
-				    if(groupNames != null){
-					StringTokenizer st = new StringTokenizer(groupNames, " |");
-					while (st.hasMoreTokens()){
-					    String group = st.nextToken();
-					    if(group != null){
-						//The potential new group is added here.  If the group is already present, the the addGlobalMapping
-						//function will just return the already existing group id.  See the GlobalMapping class for more details.
-						int groupID = this.getGlobalMapping().addGlobalMapping(group, 1);
-						if((groupID != -1) && (this.debug())){
-						    System.out.println("######");
-						    System.out.println("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
-						    System.out.println("######");
-						}
-						globalMappingElement.addGroup(groupID);
-					    }    
-					}    
-				    }
-				}
-			    }
-
-			}
-			
-			if(this.debug()){
-			    System.out.println("######");
-			    System.out.println("processing profile calls for function: " + functionDataLine.s0);
-			}
-			//Process the appropriate number of profile call lines.
-			for(int k=0;k<functionDataLine.i2;k++){
-			    this.setProfileCallsPresent(true);
-			    inputString = br.readLine();
-			    if(this.debug())
-				System.out.println("Profile Calls line: " + inputString);
-			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-			    //Arguments are evaluated left to right.
-			    globalThreadDataElement.addCall(Double.parseDouble(genericTokenizer.nextToken()),
-							    Double.parseDouble(genericTokenizer.nextToken()));
-			}
-			if(this.debug()){
-			    System.out.println("######");
-			    System.out.println("done processing profile calls for function: " + functionDataLine.s0);
+			for(int j=0;j<functionDataLine.i0;j++){
+			   this.getFunctionChildDataLine(inputString);
+			   if(this.debug()){
+			       System.out.println("function child line: " + inputString);
+			       System.out.println("name:"+functionDataLine.s0);
+			       System.out.println("incl.total:"+functionDataLine.d3);
+			       System.out.println("incl.calls:"+functionDataLine.i2);
+			       System.out.println("incl.min:"+functionDataLine.d4);
+			       System.out.println("incl.max:"+functionDataLine.d5);
+			   }
 			}
 		    }
-		    if(this.debug()){
-			System.out.println("done processing functions");
-			System.out.println("######");
-		    }
-		    
-		    if(this.debug()){
-			System.out.println("######");
-			System.out.println("processing aggregates");
-		    }
-		    //Process the appropriate number of aggregate lines.
-		    inputString = br.readLine();
-		    //A valid profile.*.*.* will always contain this line.
-		    if(inputString==null){
-			System.out.println("Error processing file: " + files[i].getName());
-			System.out.println("Unexpected end of file!");
-			return;
-		    }
-		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-		    //It's first token will be the number of aggregates.
-		    tokenString = genericTokenizer.nextToken();
-		    
-		    numberOfLines = Integer.parseInt(tokenString);
-		    for(int j=0;j<numberOfLines;j++){
-			this.setAggregatesPresent(true);
-			inputString = br.readLine();
-			if(this.debug())
-			    System.out.println("Aggregates line: " + inputString);
-		    }
-		    if(this.debug()){
-			System.out.println("done processing aggregates");
-			System.out.println("######");
-		    }
-
-		    if(this.firstMetric()){
-			//Process the appropriate number of userevent lines.
-			if(this.debug()){
-			    System.out.println("######");
-			    System.out.println("processing userevents");
-			}
-			inputString = br.readLine();
-			if(inputString==null){
-			    if(this.debug())
-				System.out.println("No userevent data in this file.");
-			}
-			else{
-			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-			    //It's first token will be the number of userevents
-			    tokenString = genericTokenizer.nextToken();
-			    numberOfLines = Integer.parseInt(tokenString);
-			    //Skip the heading.
-			    br.readLine();
-			    for(int j=0;j<numberOfLines;j++){
-				if(j==0){
-				    thread.initializeUsereventList(this.getNumberOfUserEvents());
-				    setUserEventsPresent(true);
-				}
-				
-				inputString = br.readLine();
-				if(inputString==null){
-				    System.out.println("Error processing file: " + files[i].getName());
-				    System.out.println("Unexpected end of file!");
-				    return;
-				}
-				this.getUserEventData(inputString);
-				if(this.debug()){
-				    System.out.println("userevent line: " + inputString);
-				    System.out.println("eventname:"+usereventDataLine.s0);
-				    System.out.println("numevents:"+usereventDataLine.i0);
-				    System.out.println("max:"+usereventDataLine.d0);
-				    System.out.println("min:"+usereventDataLine.d1);
-				    System.out.println("mean:"+usereventDataLine.d2);
-				    System.out.println("sumsqr:"+usereventDataLine.d3);
-				}
-				if(usereventDataLine.i0 !=0){
-				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
-				    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
-				    globalMappingElement.incrementCounter();
-				    globalThreadDataElement = thread.getUserevent(mappingID);
-				    
-				    if(globalThreadDataElement == null){
-					globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 2), true);
-					thread.addUserevent(globalThreadDataElement, mappingID);
-				    }
-				    
-				    globalThreadDataElement.setUserEventNumberValue(usereventDataLine.i0);
-				    globalThreadDataElement.setUserEventMaxValue(usereventDataLine.d0);
-				    globalThreadDataElement.setUserEventMinValue(usereventDataLine.d1);
-				    globalThreadDataElement.setUserEventMeanValue(usereventDataLine.d2);
-				    
-				    if((globalMappingElement.getMaxUserEventNumberValue()) < usereventDataLine.i0)
-					globalMappingElement.setMaxUserEventNumberValue(usereventDataLine.i0);
-				    if((globalMappingElement.getMaxUserEventMaxValue()) < usereventDataLine.d0)
-					globalMappingElement.setMaxUserEventMaxValue(usereventDataLine.d0);
-				    if((globalMappingElement.getMaxUserEventMinValue()) < usereventDataLine.d1)
-					globalMappingElement.setMaxUserEventMinValue(usereventDataLine.d1);
-				    if((globalMappingElement.getMaxUserEventMeanValue()) < usereventDataLine.d2)
-					globalMappingElement.setMaxUserEventMeanValue(usereventDataLine.d2);
-				}
-			    }
-			}
-			if(this.debug()){
-			    System.out.println("done processing userevents");
-			    System.out.println("######");
-			}
-		    }
-		    
-		    //The thread object takes care of computing maximums and totals for a given metric, as
-		    //well as the percent.  Must do the order correctly to get the correct results.
-		    thread.setThreadSummaryData(metric);
-		    thread.setPercentData(metric);
-		    //Call the setThreadSummaryData function again on this thread so that
-		    //it can fill in all the summary data.
-		    thread.setThreadSummaryData(metric);
-		}
-		
-		ListIterator l = this.getGlobalMapping().getMappingIterator(0);
-		double exclusiveTotal = 0.0;
-		while(l.hasNext()){
-		    globalMappingElement = (GlobalMappingElement) l.next();
-		    if((globalMappingElement.getCounter()) != 0){
-			double d = (globalMappingElement.getTotalExclusiveValue())/(globalMappingElement.getCounter());
-			//Increment the total values.
-			exclusiveTotal+=d;
-			globalMappingElement.setMeanExclusiveValue(metric, d);
-			if((this.getMaxMeanExclusiveValue(metric) < d))
-			    this.setMaxMeanExclusiveValue(metric, d);
-		
-			d = (globalMappingElement.getTotalInclusiveValue())/(globalMappingElement.getCounter());
-			globalMappingElement.setMeanInclusiveValue(metric, d);
-			if((this.getMaxMeanInclusiveValue(metric) < d))
-			    this.setMaxMeanInclusiveValue(metric, d);
-		    }
-		}
-		
-		double inclusiveMax = this.getMaxMeanInclusiveValue(metric);
-
-		l = this.getGlobalMapping().getMappingIterator(0);
-		while(l.hasNext()){
-		    globalMappingElement = (GlobalMappingElement) l.next();
-	    
-		    if(exclusiveTotal!=0){
-			double tmpDouble = ((globalMappingElement.getMeanExclusiveValue(metric))/exclusiveTotal) * 100;
-			globalMappingElement.setMeanExclusivePercentValue(metric, tmpDouble);
-			if((this.getMaxMeanExclusivePercentValue(metric) < tmpDouble))
-			    this.setMaxMeanExclusivePercentValue(metric, tmpDouble);
-		    }
-      
-		    if(inclusiveMax!=0){
-			double tmpDouble = ((globalMappingElement.getMeanInclusiveValue(metric))/inclusiveMax) * 100;
-			globalMappingElement.setMeanInclusivePercentValue(metric, tmpDouble);
-			if((this.getMaxMeanInclusivePercentValue(metric) < tmpDouble))
-			    this.setMaxMeanInclusivePercentValue(metric, tmpDouble);
-		    }
-		    globalMappingElement.setMeanValuesSet(true);
 		}
 		time = (System.currentTimeMillis()) - time;
 		System.out.println("Done processing data!");
@@ -504,36 +265,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 	}
     }
 
-    private String getGroupNames(String string){
-	try{  
-	    StringTokenizer getMappingNameTokenizer = new StringTokenizer(string, "\"");
- 	    getMappingNameTokenizer.nextToken();
-	    String str = getMappingNameTokenizer.nextToken();
-        
-	    //Just do the group check once.
-	    if(!(this.groupCheck())){
-		//If present, "GROUP=" will be in this token.
-		int tmpInt = str.indexOf("GROUP=");
-		if(tmpInt > 0){
-		    this.setGroupNamesPresent(true);
-		}
-		this.setGroupCheck(true);
-	    }
-	    
-	    if(groupNamesPresent()){
-		 str = getMappingNameTokenizer.nextToken();
-		    return str;
-	    }
-	    //If here, this profile file does not track the group names.
-	    return null;
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD12");
-	}
-	return null;
-    }
-
-    private void getUserEventData(String string){
+    private void getFunctionChildDataLine(String string){
 	try{
 	    StringTokenizer st1 = new StringTokenizer(string, "\"");
 	    usereventDataLine.s0 = st1.nextToken();

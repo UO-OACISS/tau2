@@ -214,6 +214,9 @@ public abstract class ParaProfDataSession  extends DataSession{
     public Vector getMetrics(){
 	return metrics;}
 
+    public int getNumberOfMetrics(){
+	return metrics.size();}
+
     public GlobalMapping getGlobalMapping(){
 	return globalMapping;}
 

@@ -759,46 +759,23 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    
 	    FileList fl = new FileList();
 	    Vector v = fl.getFileList(null, this, type,ParaProf.debugIsOn);
-	    File[] files = null;
 
-	    switch(type){
-	    case 0:
-		for(Enumeration e1 = v.elements(); e1.hasMoreElements() ;){
-		    files = (File[]) e1.nextElement();
-		    //Note: files.length should be one with this file type.
-		    for(int i=0;i<files.length;i++){
-			trial.initialize(files[i]);
-			dataAdded = true;
-		    }
-		}
-		break;
-	    case 1:
-		break;
-	    case 2:
-		break;
-	    case 3:
-		break;
-	    default:
-		break;
-	    }
+	    trial.initialize(v);
 	    
-	    //Add the new trial to experiment if the trial received some data.
-	    if(dataAdded){
-		experiment.addTrial(trial);
-		
-		DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
-		trial.setDMTN(trialNode);
-		
-		//Update the tree.
-		for(Enumeration e2 = (trial.getMetrics()).elements(); e2.hasMoreElements() ;){
-		    Metric metric = (Metric) e2.nextElement();
-		    DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
-		    metric.setDMTN(metricNode);
-		    metricNode.setAllowsChildren(false);
-		    trialNode.add(metricNode);
-		}
-		treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+	    experiment.addTrial(trial);
+	    
+	    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+	    trial.setDMTN(trialNode);
+	    
+	    //Update the tree.
+	    for(Enumeration e2 = (trial.getMetrics()).elements(); e2.hasMoreElements() ;){
+		Metric metric = (Metric) e2.nextElement();
+		DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+		metric.setDMTN(metricNode);
+		metricNode.setAllowsChildren(false);
+		trialNode.add(metricNode);
 	    }
+	    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 	}
 	catch(Exception e){
 	    System.out.println("Error adding trial ... aborted.");

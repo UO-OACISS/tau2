@@ -201,6 +201,9 @@ public class TauOutputSession extends ParaProfDataSession{
 		    }
 		    numberOfLines = Integer.parseInt(tokenString);
 		    for(int j=0;j<numberOfLines;j++){
+			//On the off chance that we start supporting profiles with no functions in them
+			//(for example only userevents), don't initialize the function list until now.
+			//Just as for userevents, this will cut down on storage.
 			if(j==0&&(this.firstMetric()))
 			    thread.initializeFunctionList(this.getNumberOfMappings());
 

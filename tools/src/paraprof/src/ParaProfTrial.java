@@ -39,6 +39,8 @@ public class ParaProfTrial extends Trial{
 	    dataSession.setDebug(ParaProf.debugIsOn);
 	    break;
 	case 2:
+	    dataSession = new DynaprofOutputSession();
+	    dataSession.setDebug(ParaProf.debugIsOn);
 	    break;
 	case 3:
 	    break;

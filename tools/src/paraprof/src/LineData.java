@@ -23,12 +23,14 @@ public class LineData{
     public double d2 = 0.0;
     public double d3 = 0.0;
     public double d4 = 0.0;
+    public double d5 = 0.0;
 
     public int i0 = 0;
     public int i1 = 0;
     public int i2 = 0;
     public int i3 = 0;
     public int i4 = 0;
+    public int i5 = 0;
     //####################################
     //End - Instance Data.
     //####################################
