@@ -20,8 +20,6 @@ int pID;
 
 int main(int argc, char *argv[])
 {
-    int i;
-
     TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
     TAU_PROFILE_INIT(argc, argv);
     TAU_PROFILE_SET_NODE(0);
@@ -64,9 +62,9 @@ int someC()
 	{
 	 // If we'd used the TAU_INCLUDE_PARENT_DATA, we'd get the performance 
 	 // data from the parent in this process as well. 
-		TAU_REGISTER_FORK(pID, TAU_EXCLUDE_PARENT_DATA);
+		TAU_REGISTER_FORK(1, TAU_EXCLUDE_PARENT_DATA);
 	 // Aliter:
-	 //     TAU_REGISTER_FORK(pID, TAU_INCLUDE_PARENT_DATA);
+	 //     TAU_REGISTER_FORK(1, TAU_INCLUDE_PARENT_DATA);
 		printf("Child : pid = %d - sleeping for 2 secs\n", pID);
 		sleep(2);
 		someD();
@@ -84,7 +82,7 @@ int someD()
 
 /***************************************************************************
  * $RCSfile: fork.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2000/10/26 19:25:00 $
- * VERSION: $Id: fork.cpp,v 1.2 2000/10/26 19:25:00 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2000/11/02 01:20:46 $
+ * VERSION: $Id: fork.cpp,v 1.3 2000/11/02 01:20:46 sameer Exp $
  ***************************************************************************/
 
