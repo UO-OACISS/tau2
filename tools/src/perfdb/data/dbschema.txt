@@ -7,14 +7,14 @@ CREATE TABLE application (
     paradigm                VARCHAR(100),
     usage_text              TEXT,
     execution_options       TEXT,
-    experiment_table_name   VARCHAR(100)    DEFAULT 'experiment',
-    userdata                TEXT
+    userdata                TEXT,
+    experiment_table_name   VARCHAR(100)    DEFAULT 'experiment'
 );
 
 CREATE TABLE experiment (
     id                      SERIAL          NOT NULL    PRIMARY KEY,
-    name                    VARCHAR(100),
     application             INT             NOT NULL,
+    name                    VARCHAR(100),
 	system_name             VARCHAR(100),
 	system_machine_type     VARCHAR(100),
 	system_arch             VARCHAR(100),
@@ -38,8 +38,8 @@ CREATE TABLE experiment (
 	configure_jdk           VARCHAR(100),
 	configure_profile       VARCHAR(3),
     configure_userdata      TEXT,
-    trial_table_name        VARCHAR(100)    DEFAULT 'trial',
-    userdata                TEXT
+    userdata                TEXT,
+    trial_table_name        VARCHAR(100)    DEFAULT 'trial'
 );
 
 

@@ -251,7 +251,7 @@ public void endElement(String url, String name, String qname) {
 			   + systemUserData + "', '"
 			   + compilerUserData + "', '"
 			   + configureUserData + "'); ");       
-	    	System.out.println(buf.toString());
+	    	// System.out.println(buf.toString());
 	    	try {
 		    	getDB().executeUpdate(buf.toString());
 		    	buf.delete(0, buf.toString().length());
