@@ -1605,10 +1605,17 @@ then
   case $machine in 
   rs6000|ibm64)
 	mpiinc=/usr/lpp/ppe.poe/include
+	mpiincf90dir='-I/usr/lpp/ppe.poe/include/thread'
+	if [ $machine = ibm64 ]
+	then
+	  mpiincf90dir='-I/usr/lpp/ppe.poe/include/thread64'
+	fi 
+
         if [ $ibmxlc_r = yes ] 
         then
           additional_mpiincs='-I/usr/lpp/ssp/css/include'
         fi
+	additional_mpiincs="$additional_mpiincs $mpiincf90dir"
         ;;
   i386_linux) 
 	mpiinc=/usr/local/packages/mpich/include
