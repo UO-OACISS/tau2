@@ -152,6 +152,17 @@ void printFileExcludeList(void)
 
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- print the contents of the file exclude list --------------------------- */
+/* -------------------------------------------------------------------------- */
+bool areFileIncludeExcludeListsEmpty(void)
+{
+  /* Always use empty() instead of size() == 0 for efficiency! [Meyers] */
+  if (fileincludelist.empty() && fileexcludelist.empty()) 
+    return true; /* yes, the lists are empty */
+  else
+    return false; /* no, there are some entries in these lists */
+}
 
 /* -------------------------------------------------------------------------- */
 /* -- report a match or a mismatch between two strings ---------------------- */
@@ -307,7 +318,6 @@ bool processFileForInstrumentation(const string& file_name)
   if (fileincludelist.empty())
   {
 #ifdef DEBUG
-    printFileIncludeList();
     cout <<"Instrumenting ... "<< file_name
 	 << " FILE INCLUDE list is empty" <<endl;
 #endif /* DEBUG */
@@ -348,6 +358,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2003/07/14 21:41:30 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.2 2003/07/14 21:41:30 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2003/07/14 21:58:49 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.3 2003/07/14 21:58:49 sameer Exp $
  ***************************************************************************/
