@@ -178,9 +178,11 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
-#PAPI#LEXTRA	       	       = $(PAPIDIR)/src/libpapi.a #ENDIF#
+#PAPI#LEXTRA	       	       = -L$(PAPIDIR)/src -L$(PAPIDIR)/lib -lpapi #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/src/libpapi.a -lcpc #ENDIF#
-#IBMPAPI#LEXTRA  = $(PAPIDIR)/src/libpapi.a -L/usr/lpp/pmtoolkit/lib -lpmapi#ENDIF#
+#IBMPAPI#LEXTRA  = -L$(PAPIDIR)/src -L$(PAPIDIR)/lib -lpapi -L/usr/lpp/pmtoolkit/lib -lpmapi#ENDIF#
+#SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/src -L$(PAPIDIR)/lib -lpapi64 #ENDIF#
+#PAPI#TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/lib -rpath $(PAPIDIR)/src #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#

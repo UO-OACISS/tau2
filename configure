@@ -1486,6 +1486,13 @@ case $machine in
         if [ $machine = sgi64 ] 
 	  then
 	    fixmakeargs="$fixmakeargs ENABLE64BIT"
+	    if [ $papi = yes ]
+	    then
+		if [ -f $papidir/lib/libpapi64.so -o -f $papidir/src/libpapi64.so ]
+		then 
+	    	  fixmakeargs="$fixmakeargs SGI64PAPI"
+		fi
+	    fi		
 	fi
 
         if [ $machine = sgi32 ] 
