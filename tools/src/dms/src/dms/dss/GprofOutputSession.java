@@ -31,6 +31,9 @@ public class GprofOutputSession extends ParaProfDataSession{
 
     public void run(){
 	try{
+	    //Record time.
+	    long time = System.currentTimeMillis();
+
 	    //######
 	    //Frequently used items.
 	    //######
@@ -49,6 +52,9 @@ public class GprofOutputSession extends ParaProfDataSession{
 	    StringTokenizer genericTokenizer;
 	    
 	    int mappingID = -1;
+	    int callPathMappingID = -1;
+	    GlobalMappingElement gme1 = null;
+	    GlobalMappingElement gme2 = null;
 	    
 	    Vector v = null;
 	    File[] files = null;
@@ -62,11 +68,13 @@ public class GprofOutputSession extends ParaProfDataSession{
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
 		files = (File[]) e.nextElement();
 		System.out.println("Processing data file, please wait ......");
-		long time = System.currentTimeMillis();
 
 		FileInputStream fileIn = new FileInputStream(files[0]);
 		InputStreamReader inReader = new InputStreamReader(fileIn);
 		BufferedReader br = new BufferedReader(inReader);
+
+		//Need to call increaseVectorStorage() on all objects that require it.
+		this.getGlobalMapping().increaseVectorStorage();
 
 		//Since this is gprof output, there will only be one node,context, and thread.
 		node = this.getNCT().addNode(0);
@@ -75,6 +83,7 @@ public class GprofOutputSession extends ParaProfDataSession{
 		thread.setDebug(this.debug());
 		if(this.debug())
 		    this.outputToFile("n,c,t: " + 0 + "," + 0 + "," + 0);
+		thread.initializeFunctionList(this.getGlobalMapping().getNumberOfMappings(0));
 
 		//Time is the only metric tracked with gprof.
 		this.addMetric("Time");
@@ -112,20 +121,58 @@ public class GprofOutputSession extends ParaProfDataSession{
 				parent=false;
 			    }
 			    else if(inputString.charAt(0)=='-'){
+				//Add self to the global mapping.
+				mappingID = this.getGlobalMapping().addGlobalMapping(self.s0, 0, 1);
+				gme1 = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
+
+				globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(gme1.getMappingID(), 0), false);
+				thread.addFunction(globalThreadDataElement, gme1.getMappingID());
+				globalThreadDataElement.setInclusiveValue(0,self.d1);
+				globalThreadDataElement.setExclusiveValue(0,self.d2);
+				globalThreadDataElement.setNumberOfCalls(self.i0);
+				globalThreadDataElement.setNumberOfSubRoutines(children.size());
+				//globalThreadDataElement.setUserSecPerCall(0,self.d1/self.i0); //Check that this is done using inclusive.
+				System.out.println("SELF:"+"["+gme1.getMappingID()+ "]   " +self.s0);
+
 				int size = parents.size();
 				for(int i=0;i<size;i++){
 				    LineData lineDataParent = (LineData) parents.elementAt(i);
 				    mappingID = this.getGlobalMapping().addGlobalMapping(lineDataParent.s0, 0, 1);
-				    System.out.println("PARENT:"+"["+mappingID + "] " +lineDataParent.s0); 
+				    String s = lineDataParent.s0 + " => " + self.s0;
+				    callPathMappingID = this.getGlobalMapping().addGlobalMapping(lineDataParent.s0 + " => " + self.s0, 0, 1);
+				    this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).setCallPathObject(true);
+				    //gme2 = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
+				    //gme2.addChild(gme1.getMappingID(),callPathMappingID);
+				    //gme1.addParent(mappingID,callPathMappingID);
+
+				    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0), false);
+				    thread.addFunction(globalThreadDataElement, callPathMappingID);
+				    globalThreadDataElement.setInclusiveValue(0,lineDataParent.d0);
+				    globalThreadDataElement.setExclusiveValue(0,lineDataParent.d1);
+				    globalThreadDataElement.setNumberOfCalls(lineDataParent.i0);
+				    System.out.println("PARENT:"+"["+mappingID+ "] "+lineDataParent.s0);
+				    System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
 				}
 				parents.clear();
-				mappingID = this.getGlobalMapping().addGlobalMapping(self.s0, 0, 1);
-				System.out.println("SELF:"+"["+mappingID + "]   " +self.s0);
+				
 				size = children.size();
 				for(int i=0;i<size;i++){
 				    LineData lineDataChild = (LineData) children.elementAt(i);
 				    mappingID = this.getGlobalMapping().addGlobalMapping(lineDataChild.s0, 0, 1);
-				    System.out.println("CHILD:"+"["+mappingID + "]  " +lineDataChild.s0); 
+				    String s = self.s0 + " => " + lineDataChild.s0;
+				    callPathMappingID = this.getGlobalMapping().addGlobalMapping(self.s0 + " => " + lineDataChild.s0, 0, 1);
+				    this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).setCallPathObject(true);
+				    //gme2 = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
+				    //gme2.addParent(gme1.getMappingID(),callPathMappingID);
+				    //gme1.addChild(mappingID,callPathMappingID);
+
+				    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0), false);
+				    thread.addFunction(globalThreadDataElement, callPathMappingID);
+				    globalThreadDataElement.setInclusiveValue(0,lineDataChild.d0);
+				    globalThreadDataElement.setExclusiveValue(0,lineDataChild.d1);
+				    globalThreadDataElement.setNumberOfCalls(lineDataChild.i0);
+				    System.out.println("CHILD:"+"["+mappingID+"]  "+lineDataChild.s0);
+				    System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
 				}
 				children.clear();
 				System.out.println(inputString);
@@ -144,9 +191,29 @@ public class GprofOutputSession extends ParaProfDataSession{
 		    }
 		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 		}
-
-	    System.exit(0);
 	    }
+	    thread.setThreadData(0);
+	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
+
+	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
+		setCallPathDataPresent(true);
+		CallPathUtilFuncs.buildRelations(getGlobalMapping());
+	    }
+
+	    time = (System.currentTimeMillis()) - time;
+	    System.out.println("Done processing data!");
+	    System.out.println("Time to process (in milliseconds): " + time);
+
+	    //Need to notify observers that we are done.  Be careful here.
+	    //It is likely that they will modify swing elements.  Make sure
+	    //to dump request onto the event dispatch thread to ensure
+	    //safe update of said swing elements.  Remember, swing is not thread
+	    //safe for the most part.
+	    EventQueue.invokeLater(new Runnable(){
+		    public void run(){
+			GprofOutputSession.this.notifyObservers();
+		    }
+		});
 	}
         catch(Exception e){
 	    UtilFncs.systemError(e, null, "GOS01");
