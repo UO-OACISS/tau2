@@ -602,7 +602,17 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 #ifdef DEBUG 
 		cout <<"Body Begin" <<endl;
 #endif /* DEBUG */
+/*
 		return_string = ((pdbRoutine *)((*it)->item))->signature()->returnType()->name() ;
+*/
+		{
+   		const pdbType *t = ((pdbRoutine *)((*it)->item))->signature()->returnType();
+   		if ( const pdbGroup* gr = t->isGroup() )
+     		  return_string = gr->name();
+   		else
+     		  return_string = t->name();
+		}
+
 		if (isVoidRoutine(*it))
 		{
 #ifdef DEBUG 
@@ -1074,8 +1084,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2001/12/04 00:33:04 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.24 2001/12/04 00:33:04 sameer Exp $
+ * $Revision: 1.25 $   $Date: 2001/12/21 17:42:14 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.25 2001/12/21 17:42:14 sameer Exp $
  ***************************************************************************/
 
 
