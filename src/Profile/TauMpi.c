@@ -2313,11 +2313,23 @@ int * flag;
 MPI_Status * status;
 {
   int   returnVal;
+#ifdef TAU_TRACK_MSG
+  MPI_Request saverequest;
+#endif /* TAU_TRACK_MSG */
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Test()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
+#ifdef TAU_TRACK_MSG
+  saverequest = *request;
+#endif /* TAU_TRACK_MSG */
+
   returnVal = PMPI_Test( request, flag, status );
+
+#ifdef TAU_TRACK_MSG
+  if (*flag)
+    TauProcessRecv(saverequest, status, "MPI_Test");
+#endif /* TAU_TRACK_MSG */
 
   TAU_PROFILE_STOP(tautimer); 
   return returnVal;
@@ -2330,12 +2342,30 @@ int * flag;
 MPI_Status * array_of_statuses;
 {
   int  returnVal;
+#ifdef TAU_TRACK_MSG
+  int i;
+  MPI_Request saverequest[TAU_MAX_REQUESTS];
+#endif /* TAU_TRACK_MSG */
 
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Testall()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
+#ifdef TAU_TRACK_MSG
+  for (i = 0; i < count; i++)
+  {
+    saverequest[i] = array_of_requests[i]; 
+  }
+#endif /* TAU_TRACK_MSG */
   
   returnVal = PMPI_Testall( count, array_of_requests, flag, array_of_statuses );
+
+#ifdef TAU_TRACK_MSG
+  if (*flag)
+  { /* at least one completed */
+    for(i=0; i < count; i++)
+      TauProcessRecv(saverequest[i], &array_of_statuses[i], "MPI_Testall");
+  }
+#endif /* TAU_TRACK_MSG */
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -2404,12 +2434,30 @@ int * array_of_indices;
 MPI_Status * array_of_statuses;
 {
   int  returnVal;
+#ifdef TAU_TRACK_MSG
+  int i;
+  MPI_Request saverequest[TAU_MAX_REQUESTS];
+#endif /* TAU_TRACK_MSG */
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Testsome()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
+
+#ifdef TAU_TRACK_MSG
+  for (i = 0; i < incount; i++)
+  {
+    saverequest[i] = array_of_requests[i]; 
+  }
+#endif /* TAU_TRACK_MSG */
   
   returnVal = PMPI_Testsome( incount, array_of_requests, outcount, array_of_indices, array_of_statuses );
 
+#ifdef TAU_TRACK_MSG
+  for (i=0; i < *outcount; i++) {
+    TauProcessRecv( (saverequest [array_of_indices[i]]),
+			        &(array_of_statuses [array_of_indices[i]]),
+			        "MPI_Testsome" );
+  }
+#endif /* TAU_TRACK_MSG */
 
   TAU_PROFILE_STOP(tautimer); 
 
