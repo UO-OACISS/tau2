@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.11 2004/04/16 14:25:42 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.12 2004/04/16 23:08:44 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -170,7 +170,6 @@ public abstract class DataSession {
  * @see	Trial
  */
 	public void setTrial(Trial trial) {
-		this.metrics = null;
 		this.trial = trial;
 		/* don't know if we want to do this
 		if (this.experiment == null && this.trial != null) {
@@ -268,7 +267,7 @@ public abstract class DataSession {
 /**
  * Set the metric for this DataSession.  The DataSession object will maintain the value of the metric identified by the String.  To clear this value, call setMetric(Metric) with null.
  *
- * @param	name value of the metric to be saved.
+ * @param	metric value of the metric to be saved.
  */
 	public void setMetric(Metric metric) {
 		if (metric == null) {
@@ -282,7 +281,7 @@ public abstract class DataSession {
 /**
  * Set a Vector of metrics for this DataSession.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(Metric) with null.
  *
- * @param	names Vector of metric values to be saved.
+ * @param	metrics Vector of metric values to be saved.
  */
 	public void setMetrics(Vector metrics) {
 		this.metrics = metrics;
@@ -291,7 +290,7 @@ public abstract class DataSession {
 /**
  * Adds a metric to this data sessions metrics.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
  *
- *@param	String name of metric.
+ *@param	metric name of metric.
  *
  * @return	Metric the newly added metric.
  */
@@ -330,7 +329,7 @@ public abstract class DataSession {
 /**
  * Get the metric with the given id..  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
  *
- * @param	int metric id.
+ * @param	metricID metric id.
  *
  * @return	Metric with given id.
  */
@@ -352,7 +351,7 @@ public abstract class DataSession {
 /**
  * Get the metric name corresponding to the given id.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
  *
- * @param	int metric id.
+ * @param	metricID metric id.
  *
  * @return	The metric name as a String.
  */
@@ -373,7 +372,7 @@ public abstract class DataSession {
 /**
  * Get the metric id corresponding to the given string.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
  *
- *@param	String the metric name.
+ *@param	string the metric name.
  *
  * @return	The metric name as a String.
  */
@@ -583,7 +582,7 @@ public abstract class DataSession {
 /**
  * Saves the Trial.
  *
- * @param function
+ * @param  trial
  * @return ID of the saved trial
  */
 	abstract public int saveTrial(Trial trial) ;
@@ -624,7 +623,7 @@ public abstract class DataSession {
 /**
   * Sets this data session's NCT object.
   *
-  * @param An NCT object.
+  * @param nct NCT object.
   */
     public void setNCT(NCT nct){
 	this.nct = nct;}
@@ -640,7 +639,7 @@ public abstract class DataSession {
 /**
   * Sets this data session's GlobalMapping object.
   *
-  * @param A GlobalMapping object.
+  * @param globalMapping GlobalMapping object.
   */
     public void setGlobalMapping(GlobalMapping globalMapping){
 	this.globalMapping = globalMapping;}
@@ -655,23 +654,5 @@ public abstract class DataSession {
     //######
     //End - Functions interfacing to object structure representation of data mirrored on ParaProf's usage.
     //######
-
-/**
-  * Resets the DataSession object.
-  *
-  */
-	public void reset() {
-		application = null;
-		experiment = null;
-		trial = null;
-		nodes = null;
-		contexts = null;
-		threads = null;
-		functions = null;
-		metrics = null;
-		functionData = null;
-		userEvents = null;
-		userEventData = null;
-	}
 
 };
