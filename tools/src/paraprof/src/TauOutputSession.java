@@ -259,7 +259,8 @@ public class TauOutputSession extends ParaProfDataSession{
 		    System.out.println("Processing file: " + files[i].getName());
 		    int[] nct = this.getNCT(files[i].getName());
 		    System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
-		    
+
+		    /*		    
 		    //####################################
 		    //Second  Line
 		    //####################################
@@ -291,59 +292,59 @@ public class TauOutputSession extends ParaProfDataSession{
 		    //Need to call increaseVectorStorage() on all objects that require it.
 		    this.increaseVectorStorage();
 		    
-		//Only need to call addDefaultToVectors() if not the first run.
-		if(!(this.firstMetric())){
-		    if(ParaProf.debugIsOn)
-			System.out.println("Increasing the storage for the new counter.");
-		
-		    for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
-			GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
-			tmpGME.incrementStorage();
-		    }
-	  
-		    for(Enumeration e2 = (this.getGlobalMapping().getMapping(2)).elements(); e2.hasMoreElements() ;){
-			GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
-			tmpGME.incrementStorage();
-		    }
-	  
-		    for(Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements() ;){
-			node = (Node) e3.nextElement();
-			for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
-			    context = (Context) e4.nextElement();
-			    for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
-				thread = (Thread) e5.nextElement();
-				thread.incrementStorage();
-				for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
-				    GlobalThreadDataElement ref = (GlobalThreadDataElement) e6.nextElement();
-				    //Only want to add an element if this mapping existed on this thread.
-				    //Check for this.
-				    if(ref != null)
-					ref.incrementStorage();
+		    //Only need to call addDefaultToVectors() if not the first run.
+		    if(!(this.firstMetric())){
+			if(ParaProf.debugIsOn)
+			    System.out.println("Increasing the storage for the new counter.");
+			
+			for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
+			    GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
+			    tmpGME.incrementStorage();
+			}
+			
+			for(Enumeration e2 = (this.getGlobalMapping().getMapping(2)).elements(); e2.hasMoreElements() ;){
+			    GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
+			    tmpGME.incrementStorage();
+			}
+			
+			for(Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements() ;){
+			    node = (Node) e3.nextElement();
+			    for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
+				context = (Context) e4.nextElement();
+				for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
+				    thread = (Thread) e5.nextElement();
+				    thread.incrementStorage();
+				    for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
+					GlobalThreadDataElement ref = (GlobalThreadDataElement) e6.nextElement();
+					//Only want to add an element if this mapping existed on this thread.
+					//Check for this.
+					if(ref != null)
+					    ref.incrementStorage();
+				    }
 				}
 			    }
 			}
+			
+			if(ParaProf.debugIsOn)
+			    System.out.println("Done increasing the storage for the new counter.");
 		    }
-	  
-		    if(ParaProf.debugIsOn)
-			System.out.println("Done increasing the storage for the new counter.");
-		}
-      
-		//Now set the counter name.
-		if(counterName == null)
-		    counterName = new String("Time");
-
-		System.out.println("Counter name is: " + counterName);
-      
-		Metric metricRef = this.addMetric();
-		metricRef.setName(counterName);
-		metric = metricRef.getID();
-		System.out.println("The number of mappings in the system is: " + tokenString);
-      
-		bSDCounter++;
-		//####################################
-		//End - Second  Line
-		//####################################
-
+		    
+		    //Now set the counter name.
+		    if(counterName == null)
+			counterName = new String("Time");
+		    
+		    System.out.println("Counter name is: " + counterName);
+		    
+		    Metric metricRef = this.addMetric();
+		    metricRef.setName(counterName);
+		    metric = metricRef.getID();
+		    System.out.println("The number of mappings in the system is: " + tokenString);
+		    
+		    bSDCounter++;
+		    //####################################
+		    //End - Second  Line
+		    //####################################
+		    */
 
 
 
