@@ -35,6 +35,9 @@ CC  = $(TAU_CC)
 
 
 CEXTRA =  
+############# For KAI KCC compiler, use --one_instantiation_per_object ##
+#KAI#CEXTRA			= --one_per	   	   #ENDIF#
+##############################################
 
 ##############################################
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
