@@ -458,7 +458,7 @@ void MultipleCounterLayer::papiMCL(int tid, double values[]){
 	  cout <<"allowed by this hardware, or the combination of events chosen." << endl;
 	  cout << endl;
 	  cout <<"The papi layer calls are being disabled!" << endl;
-	  cout <<"Deleting papiMCL in position: " << papiMCL_FP << end;
+	  cout <<"Deleting papiMCL in position: " << papiMCL_FP << endl;
 	  cout <<"Setting papi flags in counterUsed array to false ... " << endl;
 	  for(int h=0;h<numberOfPapiHWCounters;h++){
 	    MultipleCounterLayer::counterUsed[papiMCL_CP[h]] = false;
