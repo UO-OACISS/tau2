@@ -1885,9 +1885,6 @@ MPI_Request * request;
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Isend()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
-  
-  returnVal = PMPI_Isend( buf, count, datatype, dest, tag, comm, request );
-
 
 #ifdef TAU_TRACK_MSG
   if (dest != MPI_PROC_NULL) {
@@ -1895,6 +1892,10 @@ MPI_Request * request;
     TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
   }
 #endif /* TAU_TRACK_MSG */
+  
+  returnVal = PMPI_Isend( buf, count, datatype, dest, tag, comm, request );
+
+
   TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
