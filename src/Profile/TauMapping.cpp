@@ -44,7 +44,6 @@ struct lTauGroup
   }
 };
 
-
 //////////////////////////////////////////////////////////////////////
 // This global variable is used to keep the function information for
 // mapping. It is passed to the Profiler. It takes the key and returns
@@ -53,9 +52,13 @@ struct lTauGroup
 //////////////////////////////////////////////////////////////////////
 FunctionInfo *& TheTauMapFI(TauGroup_t Pgroup )
 { 
-  //static FunctionInfo *TauMapFI = (FunctionInfo *) NULL;
+  static FunctionInfo *TauMapFI = (FunctionInfo *) NULL;
   static map<TauGroup_t, FunctionInfo *, lTauGroup > TauMapGroups;
+  map<TauGroup_t, FunctionInfo *, lTauGroup >::iterator it;
 
-  return TauMapGroups[Pgroup];
+  if ((it = TauMapGroups.find(Pgroup)) == TauMapGroups.end())
+    return TauMapFI;
+  else
+    return (*it).second;
 }
 // EOF
