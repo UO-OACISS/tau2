@@ -92,7 +92,8 @@
 #define TAU_DISABLE_GROUP(group)		RtsLayer::disableProfileGroup(group)
 
 #ifdef NO_RTTI
-#define CT(obj) string(#obj)
+/* #define CT(obj) string(#obj) */
+#define CT(obj) " "
 #else // RTTI is present
 #define CT(obj) string(RtsLayer::CheckNotNull(typeid(obj).name())) 
 #endif //NO_RTTI
@@ -156,6 +157,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2001/07/16 21:41:41 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.11 2001/07/16 21:41:41 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 2001/07/25 21:01:49 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.12 2001/07/25 21:01:49 sameer Exp $ 
  ***************************************************************************/
