@@ -569,9 +569,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     //MenuListener.
     //######
     public void menuSelected(MenuEvent evt){
-	System.out.println ("ThreadDataWindow::menuSelected\n");
 	try {
-	    
 	    if (valueType > 4) {
 		showValuesAsPercent.setEnabled(false);
 		unitsSubMenu.setEnabled(false);
