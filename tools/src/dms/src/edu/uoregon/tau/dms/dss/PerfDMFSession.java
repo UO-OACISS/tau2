@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.9 2004/06/16 23:52:15 bertie Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.10 2004/06/17 19:08:58 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -35,37 +35,51 @@ public class PerfDMFSession extends DataSession {
 // Initialization / termination routines
 
     public void initialize (Object obj){
-	initialize (obj, true);
+	try{
+	    initialize(obj, true, false);
+	}
+	catch(Exception e){
+	   System.exit(0);
+	} 
+    }
+    
+    public void initialize (Object obj, boolean prompt, boolean catchException) throws Exception{
+	configFileName = new String((String)(obj));
+	//Initialize the connection to the database,
+	//using the configuration settings.
+	try{
+	    connector = new ConnectionManager(configFileName, prompt);
+	    connector.connect();
+	    db = connector.getDB();
+	}
+	catch(Exception e){
+	    if(catchException)
+		System.exit(0);
+	    else
+		throw e;
+	}
     }
 
-	public void initialize (Object obj, boolean prompt) {
-		configFileName = new String((String)(obj));
-		// initialize the connection to the database,
-		// using the configuration settings.
-		try {
-			connector = new ConnectionManager(configFileName, prompt);
-			connector.connect();
-			db = connector.getDB();
-		} catch ( Exception e ) {
-			System.exit(0);
-		}
+    public void initialize (Object obj, String password, boolean catchException) throws Exception{
+	String configFileName = (String)(obj);
+	//Initialize the connection to the database,
+	//using the configuration settings.
+	try{
+	    connector = new ConnectionManager(configFileName, password);
+	    connector.connect();
+	    db = connector.getDB();
 	}
-
-	public void initialize (Object obj, String password) {
-		String configFileName = (String)(obj);
-		// initialize the connection to the database,
-		// using the configuration settings.
-		try {
-			connector = new ConnectionManager(configFileName, password);
-			connector.connect();
-			db = connector.getDB();
-		} catch ( Exception e ) {
-		}
+	catch(Exception e){
+	    if(catchException)
+		System.exit(0);
+	    else
+		throw e;
 	}
-
-	public void terminate () {
-		connector.dbclose();
-	}
+    }
+    
+    public void terminate () {
+	connector.dbclose();
+    }
 
     public ConnectionManager getConnector(){
 		return connector;
