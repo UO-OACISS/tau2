@@ -182,7 +182,7 @@ dyninst=no
 java=no
 openmp=no
 ibmxlc=no
-ibmxlc_r=no
+ibmxlc_r=no 
 fortran_compiler=no
 
 # debug:
@@ -817,7 +817,7 @@ case $machine in
              c_compiler=xlc
            else
              cxx_compiler=g++
-             tauoptions=-gnu
+             tauoptions="${tauoptions}-gnu"
          fi
      fi
 
@@ -931,6 +931,7 @@ fi
 if [ $callpath = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLPATH"
+    tauoptions="${tauoptions}-callpath"
 fi
 
 if [ $profilecallstack = yes ]
@@ -1353,6 +1354,12 @@ else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
 
+if [ $mpi = yes -a $machine = ibm64 ]
+then
+  ibmxlc_r=yes
+  echo "Enabling threaded MPI libraries for IBM64"
+fi
+
 if [ $mpi = yes -a "x$mpiinc" = "x" ] 
 then
   case $machine in 
@@ -1728,7 +1735,7 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = egcs ]
     fixmakeargs="$fixmakeargs GNU"
     if [ $machine = ibm64 -o $machine = rs6000 ]
     then
-      tauoptions=-gnu
+      tauoptions="${tauoptions}-gnu"
     fi
 fi
 ######################################################################
