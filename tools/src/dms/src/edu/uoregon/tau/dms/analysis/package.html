@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<!--
+
+  $Id: package.html,v 1.1 2004/07/27 23:18:48 khuck Exp $
+
+-->
+</head>
+<body bgcolor="white">
+
+Provides an API for performing distance analysis in a parallel application.
+
+<p>
+This code is largely based on the work of Sherwood, Perelman, Hamerly
+and Calder, in their paper "Automatically Characterizing Large Scale
+Program Behavior", 2002.  In that paper, they describe the algorithm for
+calculating distance metrics between phases of a serial executable.  In
+this implementation, the phases are replaced by threads or events.
+Instead of comparing blocks of code to find phases of execution, the user
+can compare either threads or events.  See the referenced paper for more
+details.
+</p>
+
+<h2>Package Specification</h2>
+
+N/A
+<!--
+<ul>
+  <li><a href="">##### REFER TO ANY FRAMEMAKER SPECIFICATION HERE #####</a>
+</ul>
+-->
+
+<h2>Related Documentation</h2>
+
+For overviews, tutorials, examples, guides, and tool documentation, please see:
+<ul>
+  <li><a href="../../../../../../src/examples/AnalysisTest.java">TestPerfDMFSession.java</a>
+</ul>
+
+<!-- Put @see and @since tags down here. -->
+@see edu.uoregon.tau.dms.dss.PerfDMFSession
+@see edu.uoregon.tau.dms.analysis.DistanceAnalysis
+@since 0.1
+
+</body>
+</html>

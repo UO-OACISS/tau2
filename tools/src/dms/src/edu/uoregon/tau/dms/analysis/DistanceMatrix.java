@@ -25,7 +25,7 @@ public class DistanceMatrix {
 		}
 	}
 
-	public void getEuclidianDistance() {
+	public void getEuclideanDistance() {
 		this.distanceMatrix = new double[matrixSize][matrixSize];
 		double tmpVar = 0;
 		double runningTotal = 0;

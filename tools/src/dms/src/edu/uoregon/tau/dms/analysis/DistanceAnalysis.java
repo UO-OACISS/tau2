@@ -8,12 +8,35 @@ import java.sql.SQLException;
 import java.util.Vector;
 import java.util.ListIterator;
 
+/**
+ * This is the top level class for doing distance analysis.
+ * This code is largely based on the work of Sherwood, Perelman, Hamerly
+ * and Calder, in their paper "Automatically Characterizing Large Scale
+ * Program Behavior", 2002.  In that paper, they describe the algorithm for
+ * calculating distance metrics between phases of a serial executable.  In
+ * this implementation, the phases are replaced by threads or events.
+ * Instead of comparing blocks of code to find phases of execution, the user
+ * can compare either threads or events.  See the referenced paper for more
+ * details.
+ *
+ * <P>CVS $Id: DistanceAnalysis.java,v 1.2 2004/07/27 23:18:49 khuck Exp $</P>
+ * @author	Kevin Huck
+ * @version	0.1
+ * @since	0.1
+ */
 abstract public class DistanceAnalysis {
 	protected DB db = null;
 	protected DistanceMatrix results = null;
 	protected Trial trial = null;
 	protected Metric metric = null;
 
+/**
+ * Basic constructor for the DistanceAnalysis object.
+ *
+ * @param	session	a reference to a PerfDMFSession database session object.
+ * @param	inTrial	a reference to a PerfDMF Trial object of interest.
+ * @param	inMetric	a reference to a PerfDMF Metric object of interest.
+ */
 	public DistanceAnalysis (PerfDMFSession session, Trial inTrial, Metric inMetric) {
 		this.db = session.db();
 		this.trial = inTrial;
@@ -69,24 +92,78 @@ abstract public class DistanceAnalysis {
 		getMatrixData();
 	}
 
+/**
+ * This method gets the total timer/counter vector across all dimensions.
+ * This method should be implemented for all class extensions that wish to
+ * build a distance matrix.  In the case of an EventDistance object, this
+ * method gets the total amount that each event spent on all threads.  In the
+ * case of a ThreadDistance object, this method gets the total amount that
+ * each thread spent in all events.
+ *
+ */
 	abstract protected void getTotals();
 
+/**
+ * This method gets the relative timer/counter value matrix for all threads,
+ * all events.
+ * This method should be implemented for all class extensions that wish to
+ * build a distance matrix.  In the case of an EventDistance object, this
+ * method gets the amount that each event spent on each thread.  In the
+ * case of a ThreadDistance object, this method gets the amount that
+ * each thread spent in each event.
+ *
+ */
 	abstract protected void getMatrixData();
 
+/**
+ * This method creates the appropriate DistanceMatrix for the analysis.
+ * This method should be implemented by any classes that wish to build a
+ * distance matrix.  In the case of a ThreadDistance object, this method
+ * creates a threadCount X eventCount matrix.  In the case of an EventDistance
+ * object, this method creates an eventCount X threadCount matrix.
+ *
+ * @param	threadCount the number of threads in the parallel execution.
+ * @param	eventCount the number of events in the parallel execution.
+ * @return	a reference to a DistanceMatrix object.
+ */
 	abstract protected DistanceMatrix createTheMatrix(int threadCount, int eventCount);
 	
+/**
+ * This method calculates the Manhattan distance.
+ * Each row in the relative data matrix is compared to every other row in
+ * the relative data matrix, using a Manhattan distance calculation.
+ * If there are NxE values in the relative data matrix, this results in 
+ * an NxN distance matrix.  Values will be in the range 0.0 to 2.0.
+ *
+ * @return	a two-dimensional array which stores the relative distances 
+ */
 	public double[][] getManhattanDistance() {
 		if (results == null) getRawData();
 		results.getManhattanDistance();
 		return results.distanceMatrix;
 	}
 
-	public double[][] getEuclidianDistance() {
+/**
+ * This method calculates the Euclidean distance.
+ * Each row in the relative data matrix is compared to every other row in
+ * the relative data matrix, using a Euclidian distance calculation. 
+ * If there are NxE values in the relative data matrix, this results in 
+ * an NxN distance matrix.  Values will be in the range 0.0 to 1.4-ish.
+ *
+ * @return	a two-dimensional array which stores the relative distances 
+ */
+	public double[][] getEuclideanDistance() {
 		if (results == null) getRawData();
-		results.getEuclidianDistance();
+		results.getEuclideanDistance();
 		return results.distanceMatrix;
 	}
 
+/**
+ * This method dumps the data in the distance matrix to a string.
+ * This is a debug method used to check the output from the distance calculation.
+ *
+ * @return	a String with the distances from the distance matrix.
+ */
 	public String toString() { return results == null ? new String("") : results.toString(); }
 }
 
