@@ -105,7 +105,7 @@ void Profiler::Start(void)
   	tid = RtsLayer::myThread();
 	
 #ifdef TRACING_ON
-	pcxx_Event(ThisFunction->GetFunctionId(), 1); // 1 is for entry
+	TraceEvent(ThisFunction->GetFunctionId(), 1, tid); // 1 is for entry
 #endif /* TRACING_ON */
 
 #ifdef PROFILING_ON
@@ -664,8 +664,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 1998/09/22 01:09:59 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.17 1998/09/22 01:09:59 sameer Exp $ 
+ * $Revision: 1.18 $   $Date: 1998/09/26 15:40:49 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.18 1998/09/26 15:40:49 sameer Exp $ 
  ***************************************************************************/
 
 	
