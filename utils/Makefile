@@ -19,7 +19,7 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
-PDTDIR=/home/users/sameer/pdt
+PDTDIR=/home/grads/sameer/pdt
 DYNINSTDIR=
 #######################################################################
  
@@ -62,7 +62,7 @@ WARNINGSOPT	= -w
 #PGI#CEXTRA = -DPGI -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 #FUJITSU#CEXTRA = -DFUJITSU -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 CWARNING	= $(WARNINGSOPT)
-#PDT#PDTOPTS 	= -I$(PDTDIR)/include -L$(PDTDIR)/$(CONFIG_ARCH)/lib -lpdb #ENDIF#
+#PDT#PDTOPTS 	= -L$(PDTDIR)/$(CONFIG_ARCH)/lib -lpdb #ENDIF#
 #PDT#INSTR 		= tau_instrumentor #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
 #DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h #ENDIF#
@@ -99,7 +99,8 @@ LDFLAGS	      = $(PCXX_OPT)
 
 MAKEFILE      = Makefile
 
-OBJS	      = pprof.o  tau_events.o tau_merge.o
+OBJS	      = pprof.o  tau_events.o tau_merge.o tau_selective.o \
+		tau_instrumentor.o 
 
 PRINT	      = pr
 
@@ -136,11 +137,20 @@ tau_merge.o: 	tau_merge.c
 tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
 
-tau_instrumentor: 	tau_instrumentor.cpp  $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a 
-		$(CXX) $(CFLAGS) tau_instrumentor.cpp -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+tau_instrumentor: tau_instrumentor.o tau_selective.o $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a 
+		$(CXX) $(CFLAGS) tau_instrumentor.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
-tau_run: 	tau_run.cpp  
-		$(CXX) $(CFLAGS) $(DYNINC) tau_run.cpp -o $@ $(DYNLIBS) $(LEXTRA) 
+tau_instrumentor.o: tau_instrumentor.cpp 
+		$(CXX) $(CFLAGS) -I$(PDTDIR)/include -c tau_instrumentor.cpp
+
+tau_selective.o: tau_selective.cpp 
+		$(CXX) $(CFLAGS) -c tau_selective.cpp
+
+tau_run: 	tau_run.o tau_selective.o  
+		$(CXX) $(CFLAGS) tau_run.o tau_selective.o -o $@ $(DYNLIBS) $(LEXTRA) 
+
+tau_run.o: 	tau_run.cpp
+		$(CXX) $(CFLAGS) $(DYNINC) -c tau_run.cpp
 
 $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a:
 		@echo 
