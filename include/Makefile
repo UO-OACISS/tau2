@@ -41,11 +41,11 @@ PAPIDIR=
 PDTDIR=
 DYNINSTDIR=
 JDKDIR=
+TAU_OPTIONS=
 TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
 TAU_PREFIX_INSTALL_DIR=
-TAU_OPTIONS=
 #######################################################################
  
 #ENABLE64BIT#ABI 	     = -64		  #ENDIF#
