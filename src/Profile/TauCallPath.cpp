@@ -126,7 +126,15 @@ long* TauFormulateComparisonArray(Profiler *p)
   long *ary = new long [depth+1];
 
   int i = 0;
+  int j; 
   Profiler *current = p; /* argument */
+
+  /* initialize the array */
+  for (j = 0; j < depth+1; j++)
+  {
+    ary[j] = 0L;
+  }
+  /* use the clean array now */
    
   if (ary)
   {
@@ -267,6 +275,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2004/02/27 19:55:59 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.14 2004/02/27 19:55:59 sameer Exp $ 
+ * $Revision: 1.15 $   $Date: 2004/05/24 22:00:19 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.15 2004/05/24 22:00:19 sameer Exp $ 
  ***************************************************************************/
