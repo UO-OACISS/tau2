@@ -18,16 +18,13 @@ include $(TAUROOTDIR)/include/Makefile
 CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
-#CC		= cc 
 
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) -I/usr/local/packages/mpich/include
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INC)
 
 RM		= /bin/rm -f
 
-#AR		= $(TAU_CXX)
 AR		= ar
 
-#ARFLAGS		= -ar -o
 ARFLAGS		= rcv
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib

@@ -24,7 +24,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/grads/sameer/gar/rs/pcl-tau/tau2
+TAUROOT=/research/paraducks/apps/pdt/dev/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -41,6 +41,7 @@ CEXTRA =
 ##############################################
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
 #############################################
+
 
 
 LINKER	= $(TAU_CC)
@@ -98,8 +99,13 @@ TARGET	      = libtau$(TAU_OPTIONS)$(LSX)
 
 TAU_DISABLE   = libTauDisable$(LSX)
 
-#all:		$(TARGET) $(TAU_DISABLE)  $(TAUHELPER)
-all:		$(TARGET) $(TAU_DISABLE)  
+##############################################
+#MPI#MPI_WRAPPER   = libTauMpi$(LSX)  #ENDIF#
+#MPI#MPI_WRAPPER_O = TauMpi.o  #ENDIF#
+#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(LSX)  #ENDIF#
+##############################################
+
+all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER)
 
 $(TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
@@ -107,6 +113,9 @@ $(TARGET):	$(OBJS)
 
 $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
+
+libTauMpi$(LSX): 
+		$(MAKE) -f Makefile.wrapper 
 
 $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
@@ -121,8 +130,10 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 
-#install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(TAUHELPER)
-install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) 
+$(INSTALLDEST)/libTauMpi$(LSX): libTauMpi$(LSX)
+		$(MAKE) -f Makefile.wrapper install
+
+install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL)
 		
 
 Profiler.o 	: Profiler.cpp $(HDRS)
@@ -173,6 +184,7 @@ TauDisable.o 	: TauDisable.cpp $(HDRS)
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
+
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(EXTRAOBJS) *.ii *.ti ti_files/*
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(EXTRAOBJS) *.ii *.ti ti_files/*
 
