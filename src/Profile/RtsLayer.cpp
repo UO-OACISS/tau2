@@ -124,6 +124,13 @@ bool& RtsLayer::TheEnableInstrumentation(void)
 }
 
 /////////////////////////////////////////////////////////////////////////
+long RtsLayer::GenerateUniqueId(void)
+{ /* This routine is called in a locked region (RtsLayer::LockDB/UnLockDB)*/
+  static long UniqueId = 0;
+  return ++UniqueId;
+}
+
+/////////////////////////////////////////////////////////////////////////
 int& RtsLayer::TheNode(void)
 {
 #ifdef TAU_SETNODE0
@@ -1030,6 +1037,7 @@ int RtsLayer::DumpEDF(int tid)
 {
 #ifdef TRACING_ON 
   	vector<FunctionInfo*>::iterator it;
+  	vector<TauUserEvent*>::iterator uit;
 	char filename[1024], errormsg[1024];
 	char *dirname;
 	FILE* fp;
@@ -1060,7 +1068,10 @@ int RtsLayer::DumpEDF(int tid)
 	// id group tag "name type" parameters
 
 	numExtra = 9; // Number of extra events
+	/* OLD
 	numEvents = TheFunctionDB().size();
+	*/
+	numEvents = TheFunctionDB().size() + TheEventDB().size();
 
 	numEvents += numExtra;
 
@@ -1078,6 +1089,18 @@ int RtsLayer::DumpEDF(int tid)
 	
 	  fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (*it)->GetFunctionId(),
 	    (*it)->GetPrimaryGroup(), (*it)->GetName(), (*it)->GetType() );
+	}
+
+	/* Now write the user defined event */
+ 	for (uit = TheEventDB().begin(); 
+	  uit != TheEventDB().end(); uit++)
+	{
+  	  DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping EDF Id : " 
+	    << (*uit)->GetEventId() << " " 
+	    << " 0 " << (*uit)->GetEventName() << " " 
+	    << " TriggerValue" << endl;); 
+	
+	  fprintf(fp, "%ld TAUEVENT 0 \"%s\" TriggerValue\n", (*uit)->GetEventId(), (*uit)->GetEventName());
 	}
 	// Now add the nine extra events 
 	fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) PCXX_EV_INIT); 
@@ -1122,6 +1145,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.56 $   $Date: 2004/03/03 01:07:49 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.56 2004/03/03 01:07:49 sameer Exp $ 
+ * $Revision: 1.57 $   $Date: 2004/07/26 23:58:36 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.57 2004/07/26 23:58:36 sameer Exp $ 
  ***************************************************************************/
