@@ -592,8 +592,7 @@ if [ $gotoNextStep == $TRUE ]; then
 
 			tempTauFileName=${arrTau[$tempCounter]##*/}
 			instrumentedFileForCompilation="$tempTauFileName"
-			newCmd="$CMD  $instrumentedFileForCompilation  $OUTPUTARGSFORTAU "
-			newCmd="$newCmd $optCompile $argsRemaining"
+			newCmd="$CMD  $argsRemaining $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile"
 
 			#echoIfDebug "cmd before appending the .o file is $newCmd"
 			if [ $hasAnOutputFile == $TRUE ]; then
@@ -638,8 +637,7 @@ if [ $gotoNextStep == $TRUE ]; then
 			tempTauFileName=${arrTau[$tempCounter]##*/}
 			instrumentedFileForCompilation=" $tempTauFileName"
 
-			newCmd="$CMD  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU "
-			newCmd="$newCmd $optCompile $argsRemaining -o $outputFile"
+			newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
 
 			evalWithDebugMessage "$newCmd" "Compiling (Individually) with Instrumented Code"
 			if [  ! -e $outputFile ]; then
@@ -656,8 +654,7 @@ if [ $gotoNextStep == $TRUE ]; then
 			passedOutputFile="a.out"
 		fi
 
-		newCmd="$CMD  $listOfObjectFiles $objectFilesForLinking $OUTPUTARGSFORTAU "
-		newCmd="$newCmd $optLinking $argsRemaining -o $passedOutputFile"
+		newCmd="$CMD  $argsRemaining $listOfObjectFiles $objectFilesForLinking $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
 		evalWithDebugMessage "$newCmd" "Linking (Together) object files"
 
 		if [ ! -e $passedOutputFile ] ; then
