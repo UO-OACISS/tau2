@@ -11,31 +11,33 @@
 **		   (from U. Maryland). 					   **
 **		   Profile/trace data is generated as the program executes **
 ****************************************************************************/
- 
-#include <iostream.h>
-#include <stdio.h>
-#include <string.h>
-#if defined(sparc_sun_sunos4_1_3) || defined(sparc_sun_solaris2_4)
-#include <unistd.h>
-#endif
+
+#include "BPatch.h"
+#include "BPatch_Vector.h"
+#include "BPatch_thread.h"
+#include "BPatch_snippet.h" 
+
+//#include <iostream.h>
+//#include <stdio.h>
+//#include <string.h>
 #include <unistd.h>
 
-#define FUNCNAMELEN 32*1024
 #ifdef i386_unknown_nt4_0
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 
-#include <string>
-using namespace std;
+#include "tau_platforms.h"
 
-#include "BPatch.h"
-#include "BPatch_Vector.h"
-#include "BPatch_thread.h"
-#include "BPatch_snippet.h"
-//#include "test_util.h"
+//#include <string>
+//using namespace std;
 
-int debugPrint = 0;
+#define MUTNAMELEN 64
+#define FUNCNAMELEN 32*1024
+#define NO_ERROR -1
+
+int expectError = NO_ERROR;
+int debugPrint = 1;
 
 template class BPatch_Vector<BPatch_variableExpr*>;
 void checkCost(BPatch_snippet snippet);
@@ -45,20 +47,15 @@ BPatch *bpatch;
 // control debug printf statements
 #define dprintf if (debugPrint) printf
 
-
-#define NO_ERROR -1
-
-int expectError = NO_ERROR;
-
 /* For selective instrumentation */
 extern int processInstrumentationRequests(char *fname);
+extern void printExcludeList();
 extern bool instrumentEntity(const string& function_name);
 
 //
 // Error callback routine. 
 //
-void errorFunc(BPatchErrorLevel level, int num, const char **params)
-{
+void errorFunc(BPatchErrorLevel level, int num, const char **params){
     char line[256];
 
     const char *msg = bpatch->getEnglishErrorString(num);
@@ -66,13 +63,11 @@ void errorFunc(BPatchErrorLevel level, int num, const char **params)
 
     if (num != expectError) {
         printf("Error #%d (level %d): %s\n", num, level, line);
-
         // We consider some errors fatal.
-        if (num == 101) {
-            exit(-1);
-        }
-    }
-}
+        if (num == 101)
+	  exit(-1);
+    }//if
+}//errorFunc()
 
 
 //
@@ -82,138 +77,121 @@ void errorFunc(BPatchErrorLevel level, int num, const char **params)
 BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
 	BPatch_image *appImage, BPatch_function *function, 
 	BPatch_procedureLocation loc, BPatch_function *callee, 
-	BPatch_Vector<BPatch_snippet *> *callee_args)
-{
-
+	BPatch_Vector<BPatch_snippet *> *callee_args){
+  
     // First create the snippet using the callee and the args 
     const BPatch_snippet *snippet = new BPatch_funcCallExpr(*callee, *callee_args);
 
     if (snippet == NULL) {
         fprintf(stderr, "Unable to create snippet to call callee\n");
         exit(1);
-    }
+    }//if
 
     // Then find the points using loc (entry/exit) for the given function
     const BPatch_Vector<BPatch_point *> *points = function->findPoint(loc); 
 
-    // Insert the given snippet at the given point 
-    if (loc == BPatch_entry)
-    { 
-      appThread->insertSnippet(*snippet, *points, BPatch_callBefore, BPatch_lastSnippet);
-    }
-    else
-    { // the default is BPatch_callBefore which is used for exit
-      appThread->insertSnippet(*snippet, *points);
-    }
+    if(points!=NULL){
+      // Insert the given snippet at the given point 
+      if (loc == BPatch_entry){
+	appThread->insertSnippet(*snippet, *points, BPatch_callBefore, BPatch_lastSnippet);
+	//      appThread->insertSnippet(*snippet, *points);
+      }//if
+      else{
+	appThread->insertSnippet(*snippet, *points);
+      }//else
+    }//if
     delete snippet; // free up space
-      
-
-}
+}//invokeRoutineInFunction()
 
 // 
 // Initialize calls TauInitCode, the initialization routine in the user
 // application. It is executed exactly once, before any other routine.
 //
 void Initialize(BPatch_thread *appThread, BPatch_image *appImage, 
-	BPatch_Vector<BPatch_snippet *>& initArgs)
-{
+	BPatch_Vector<BPatch_snippet *>& initArgs){
   // Find the initialization function and call it
   BPatch_function *call_func = appImage->findFunction("TauInitCode");
-  if (call_func == NULL) 
-  {
+  if (call_func == NULL) {
     fprintf(stderr, "Unable to find function TauInitCode\n");
     exit(1);
-  }
+  }//if
 
   BPatch_funcCallExpr call_Expr(*call_func, initArgs);
   // checkCost(call_Expr);
   appThread->oneTimeCode(call_Expr);
-}
+}//Initialize()
 
 // FROM TEST3
-
-// check that the cost of a snippet is sane.  Due to differences between
+//   check that the cost of a snippet is sane.  Due to differences between
 //   platforms, it is impossible to check this exactly in a machine independent
 //   manner.
-void checkCost(BPatch_snippet snippet)
-{
+void checkCost(BPatch_snippet snippet){
     float cost;
     BPatch_snippet copy;
 
     // test copy constructor too.
     copy = snippet;
-
     cost = snippet.getCost();
-    if (cost < 0.0) {
-        printf("*Error*: negative snippet cost\n");
-    } else if (cost == 0.0) {
-        printf("*Warning*: zero snippet cost\n");
-    } else if (cost > 0.01) {
-        printf("*Error*: snippet cost of %f, exceeds max expected of 0.1",
-            cost);
-    }
-
-}
+    if (cost < 0.0)
+      printf("*Error*: negative snippet cost\n");
+    else if (cost == 0.0) 
+      printf("*Warning*: zero snippet cost\n");
+    else if (cost > 0.01) 
+      printf("*Error*: snippet cost of %f, exceeds max expected of 0.1",cost);
+}//checkCost()
 
 int errorPrint = 0; // external "dyninst" tracing
-void errorFunc1(BPatchErrorLevel level, int num, const char **params)
-{
+void errorFunc1(BPatchErrorLevel level, int num, const char **params){
     if (num == 0) {
-        // conditional reporting of warnings and informational messages
-        if (errorPrint) {
-            if (level == BPatchInfo)
-              { if (errorPrint > 1) printf("%s\n", params[0]); }
-            else
-                printf("%s", params[0]);
-        }
-    } else {
-        // reporting of actual errors
-        char line[256];
-        const char *msg = bpatch->getEnglishErrorString(num);
-        bpatch->formatErrorString(line, sizeof(line), msg, params);
-        
-        if (num != expectError) {
-            printf("Error #%d (level %d): %s\n", num, level, line);
-        
-            // We consider some errors fatal.
-            if (num == 101) {
-               exit(-1);
-            }
-        }
-    }
-}
+      // conditional reporting of warnings and informational messages
+      if (errorPrint) {
+	if (level == BPatchInfo){ 
+	  if (errorPrint > 1) 
+	    printf("%s\n", params[0]); 
+	}//if
+	else
+	  printf("%s", params[0]);
+      }//if
+    }//if 
+    else {
+      // reporting of actual errors
+      char line[256];
+      const char *msg = bpatch->getEnglishErrorString(num);
+      bpatch->formatErrorString(line, sizeof(line), msg, params);      
+      if (num != expectError) {
+	printf("Error #%d (level %d): %s\n", num, level, line);        
+	// We consider some errors fatal.
+	if (num == 101)
+	  exit(-1);
+      }//if
+    }//else
+}//errorFunc1()
 
 // We've a null error function when we don't want to display an error
-void errorFuncNull(BPatchErrorLevel level, int num, const char **params)
-{
+void errorFuncNull(BPatchErrorLevel level, int num, const char **params){
   // It does nothing.
-} 
-// END OF TEST3 code
+}//errorFuncNull()
  
+// END OF TEST3 code
 // Constraints for instrumentation. Returns true for those modules that 
 // shouldn't be instrumented. 
-int moduleConstraint(char *fname)
-{ // fname is the name of module/file 
+int moduleConstraint(char *fname){ // fname is the name of module/file 
   int len = strlen(fname);
 
   if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
      ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
      ((fname[len-3] == '.') && (fname[len-2] == 'c') && (fname[len-1] == 'c')) || 
-      (strcmp(fname, "LIBRARY_MODULE") == 0))
-  {
+      (strcmp(fname, "LIBRARY_MODULE") == 0)){
     /* It is ok to instrument this module. Constraint doesn't exist. */
     return false;
-  }
+  }//if
   else
-  {
     return true;
-  }
-}
+}//moduleConstraint()
 
 // Constriant for routines. The constraint returns true for those routines that 
 // should not be instrumented.
-int routineConstraint(char *fname)
-{ // fname is the function name
+int routineConstraint(char *fname){ // fname is the function name
   if ((strncmp(fname, "Tau", 3) == 0) ||
             (strncmp(fname, "Profiler", 8) == 0) ||
             (strstr(fname, "FunctionInfo") != 0) ||
@@ -221,154 +199,154 @@ int routineConstraint(char *fname)
             (strncmp(fname, "DYNINST", 7) == 0) ||
             (strncmp(fname, "PthreadLayer", 12) == 0) ||
             (strncmp(fname, "threaded_func", 13) == 0) ||
-            (strncmp(fname, "The", 3) == 0)) 
-  {
-    return true; /* Don't instrument */
-  }
-  else
-  { /* Should the routine fname be instrumented? */
-    if (instrumentEntity(string(fname)))
-    { /* Yes it should be instrumented. Return false */
+            (strncmp(fname, "The", 3) == 0)){
+    return true; // Don't instrument 
+  }//if
+  else{ // Should the routine fname be instrumented?
+    if (instrumentEntity(string(fname))){ // Yes it should be instrumented. Return false
       return false; 
-    }
-    else
-    { /* No. The selective instrumentation file says: don't instrument it */
+    }//if
+    else{ // No. The selective instrumentation file says: don't instrument it
       return true;
-    }
-  }
-}
+    }//else
+  }//else
+}//routineConstraint()
 
 // 
 // check if the application has an MPI library routine MPI_Comm_rank
 // 
 int checkIfMPI(BPatch_image * appImage, BPatch_function * & mpiinit,
-		BPatch_function * & mpiinitstub)
-{
+		BPatch_function * & mpiinitstub){
 
   mpiinit 	= appImage->findFunction("PMPI_Comm_rank");
   mpiinitstub 	= appImage->findFunction("TauMPIInitStub");
 
-  if (mpiinitstub == (BPatch_function *) NULL) {
+  if (mpiinitstub == (BPatch_function *) NULL)
     printf("*** TauMPIInitStub not found! \n");
-  }
   
   if (mpiinit == (BPatch_function *) NULL) {
     dprintf("*** PMPI_Comm_rank not found looking for MPI_Comm_rank...\n");
     mpiinit = appImage->findFunction("MPI_Comm_rank");
-  }
+  }//if
   
   if (mpiinit == (BPatch_function *) NULL) { 
     dprintf("*** MPI_Comm_rank also not found. This is not an MPI Application! \n");
     return 0;  // It is not an MPI application
-  }
+  }//if
   else
     return 1;   // Yes, it is an MPI application.
-  
-}
+}//checkIfMPI()
 
 
 //
 // entry point 
 //
-int main(int argc, char **argv)
-{
-  int i,j, answer;
-  int instrumented=0;
-  bool loadlib=false;
-  char fname[FUNCNAMELEN], libname[FUNCNAMELEN];
-  BPatch_thread *appThread;
-  BPatch_function *mpiinit;
+int main(int argc, char **argv){
+  int i,j;                                       //for loop variables
+  int instrumented=0;                            //count of instrumented functions
+  int errflag=0;                                 //determine if error has occured.  default 0
+  bool loadlib=false;                            //do we have a library loaded? default false
+  char mutname[MUTNAMELEN];                      //variable to hold mutator name (ie tau_run)
+  char fname[FUNCNAMELEN], libname[FUNCNAMELEN]; //function name and library name variables
+  BPatch_thread *appThread;                      //application thread
+  BPatch_function *mpiinit;                      
   BPatch_function *mpiinitstub;
-  bpatch = new BPatch; // create a new version. 
-  string functions;
+  bpatch = new BPatch;                           //create a new version. 
+  string functions;                              //string variable to hold function names 
 
-  // parse the command line arguments 
+  // parse the command line arguments--first, there need to be atleast two arguments,
+  // the program name (tau_run) and the application it is running.  If there are not
+  // at least two arguments, set the error flag.
   if ( argc < 2 )
-  {
+    errflag=1;
+  //now can loop through the options.  If the first character is '-', then we know we have 
+  //an option.  Check to see if it is one of our options and process it.  If it is unrecognized,
+  //then set the errflag to report an error.  When we come to a non '-' charcter, then we must
+  //be at the application name.
+  else{
+    strncpy(mutname, argv[0],strlen(argv[0])+1);
+    while(argv[1][0]=='-'){
+      if( strncasecmp (argv[1], "-Xrun", 5) == 0 ){ // Load the library.
+	loadlib = true;
+	sprintf(libname,"lib%s.so", &argv[1][5]);
+	fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+	argv++;
+      }//if
+      else if (strncasecmp (argv[1], "-f", 3) == 0){ // Load the selective instrumentation file
+	processInstrumentationRequests(argv[2]);
+	dprintf("Loading instrumentation requests file %s\n", argv[2]);
+	argv += 2;
+      }//if
+      else{ //oops! we got an unrecognized argument!
+	errflag=1;
+      }//else
+    }//while
+  }//else
+  
+  //did we load a library?  if not, load the default
+  if(!loadlib){
+    sprintf(libname,"libTAU.so");
+    loadlib=true;
+  }//if
+
+  //has an error occured in the command line arguments?
+  if(errflag){
     fprintf (stderr, "usage: %s [-Xrun<Taulibrary> ] [-f <inst_req> ] <application> [args]\n", argv[0]);
     fprintf (stderr, "%s instruments and executes <application> to generate performance data\n", argv[0]);
     fprintf (stderr, "e.g., \n");
     fprintf (stderr, "%%%s -XrunTAU -f sel.dat a.out 100 \n", argv[0]);
     fprintf (stderr, "Loads libTAU.so from $LD_LIBRARY_PATH, loads selective instrumentation requests from file sel.dat and executes a.out \n"); 
     exit (1);
-  }
-  else 
-  {
-    if ( strncasecmp (argv[1], "-Xrun", 5) == 0 )
-    { // Load the library.
-      loadlib = true;
-      sprintf(libname,"lib%s.so", &argv[1][5]);
-      fprintf(stderr, "%s> Loading %s ...\n", argv[0], libname);
-      argv++;
-    }
-    else
-    { /* No -Xrun<> was specified. Load libTAU.so anyway */
-      loadlib=true;
-      sprintf(libname, "libTAU.so"); 
-    }
-    if (strncasecmp (argv[1], "-f", 3) == 0)
-    { // Load the selective instrumentation file 
-      processInstrumentationRequests(argv[2]);
-      dprintf("Loading instrumentation requests file %s\n", argv[2]);
-      argv += 2;
-    }
-  }
+  }//if(errflag)
+
   // Register a callback function that prints any error messages
   bpatch->registerErrorCallback(errorFunc1);
 
   dprintf("Before createProcess\n");
-  /* Specially added to disable Dyninst 2.0 feature of debug parsing. We were
-     getting an assertion failure under Linux otherwise */
+  // Specially added to disable Dyninst 2.0 feature of debug parsing. We were
+  // getting an assertion failure under Linux otherwise 
   bpatch->setDebugParsing(false); 
   appThread = bpatch->createProcess(argv[1], &argv[1] , NULL);
   dprintf("After createProcess\n");
-  if (!appThread)
-  { 
-    dprintf("tau_run> createProcess failed\n");
+
+  if (!appThread){ 
+    printf("tau_run> createProcess failed\n");
     exit(1);
-  }
+  }//if
+
+  //get image
   BPatch_image *appImage = appThread->getImage();
+  BPatch_Vector<BPatch_module *> *m = appImage->getModules();
 
-  if (appThread == NULL)
-  { 
-    cout <<"create Process failed" << endl;
-  }
   // Load the TAU library that has entry and exit routines.
-
-  if (loadlib == true)
-  {
-    if (appThread->loadLibrary(libname) == true)
-    {  
+  if (loadlib == true){
+    //try and load the library
+    if (appThread->loadLibrary(libname) == true){  
+      //now, check to see if the library is listed as a module in the
+      //application image
       char name[FUNCNAMELEN];
-      dprintf("DSO loaded properly\n");
       bool found = false;
-      BPatch_Vector<BPatch_module *> *m = appImage->getModules();
       for (i = 0; i < m->size(); i++) {
         (*m)[i]->getName(name, sizeof(name));
         if (strcmp(name, libname) == 0) {
-  	found = true;
+	  found = true;
           break;
-        } 
-      }
+        }//if 
+      }//for
       if (found) {
   	dprintf("%s loaded properly\n", libname);
-      }
+      }//if
       else {
 	printf("Error in loading library %s\n", libname);
  	exit(1);
-      }
-    }
-    else
-    {
+      }//else
+    }//if
+    else{
       printf("ERROR:%s not loaded properly. \n", libname);
       printf("Please make sure that its path is in your LD_LIBRARY_PATH environment variable.\n");
       exit(1);
-    }
-  } // loadlib == true
-
-
-
-  BPatch_Vector<BPatch_module *> *m = appImage->getModules();
+    }//else
+  }//loadlib == true
 
   BPatch_function *inFunc;
   BPatch_function *enterstub = appImage->findFunction("TauRoutineEntry");
@@ -382,31 +360,21 @@ int main(int argc, char **argv)
     BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
     dprintf("%s", modulename);
 
-
-
-    if (!moduleConstraint(fname)) 
-    { // constraint 
-
-      for (i=0; i < p->size(); i++) 
-      {
+    if (!moduleConstraint(fname)) { // constraint 
+      for (i=0; i < p->size(); i++) {
         // For all procedures within the module, iterate  
-        //memset(fname, 0x0, FUNCNAMELEN); 
         (*p)[i]->getName(fname, FUNCNAMELEN);
         dprintf("Name %s\n", fname);
-        if (routineConstraint(fname))
-        { // The above procedures shouldn't be instrumented
+        if (routineConstraint(fname)){ // The above procedures shouldn't be instrumented
            dprintf("don't instrument %s\n", fname);
-        } /* Put the constraints above */ 
-        else 
-        { // routines that are ok to instrument
-         
+        }//if
+        else{ // routines that are ok to instrument
 	  functions.append("|");
 	  functions.append(fname);
-
-	}
-      }
-    } /* DEFAULT */
-  } /* Module */
+	}//else
+      }//for
+    }//if(!moduleConstraint)
+  }//for - Module 
 
   // form the args to InitCode
   BPatch_constExpr funcName(functions.c_str());
@@ -421,55 +389,39 @@ int main(int argc, char **argv)
   // way, it works for both MPI and sequential tasks. 
   
   bpatch->registerErrorCallback(errorFuncNull); // turn off error reporting
-
   BPatch_constExpr isMPI(checkIfMPI(appImage, mpiinit, mpiinitstub));
-
-
   bpatch->registerErrorCallback(errorFunc1); // turn it back on
 
   initArgs.push_back(&funcName);
   initArgs.push_back(&isMPI);
 
-
   Initialize(appThread, appImage, initArgs);
   dprintf("Did Initialize\n");
 
-  /* In our tests, the routines started execution concurrently with the 
-     one time code. To avoid this, we first start the one time code and then
-     iterate through the list of routines to select for instrumentation and
-     instrument these. So, we need to iterate twice. */
-
+  // In our tests, the routines started execution concurrently with the 
+  // one time code. To avoid this, we first start the one time code and then
+  // iterate through the list of routines to select for instrumentation and
+  // instrument these. So, we need to iterate twice. 
 
   for (j=0; j < m->size(); j++) {
     sprintf(modulename, "Module %s\n", (*m)[j]->getName(fname, FUNCNAMELEN));
     BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
     dprintf("%s", modulename);
 
-
-    if (!moduleConstraint(fname)) 
-    { // constraint
-
-      for (i=0; i < p->size(); i++)
-      {
+    if (!moduleConstraint(fname)) { // constraint
+      for (i=0; i < p->size(); i++){
         // For all procedures within the module, iterate
-        //memset(fname, 0x0, FUNCNAMELEN);
         (*p)[i]->getName(fname, FUNCNAMELEN);
         dprintf("Name %s\n", fname);
-  	if (routineConstraint(fname))
-        { // The above procedures shouldn't be instrumented
+  	if (routineConstraint(fname)){ // The above procedures shouldn't be instrumented
            dprintf("don't instrument %s\n", fname);
-        } /* Put the constraints above */
-        else
-        { // routines that are ok to instrument
-
+        } // Put the constraints above 
+        else{ // routines that are ok to instrument
  	  dprintf("Assigning id %d to %s\n", instrumented, fname);
           instrumented ++;
           BPatch_Vector<BPatch_snippet *> *callee_args = new BPatch_Vector<BPatch_snippet *>();
           BPatch_constExpr *constExpr = new BPatch_constExpr(instrumented);
-	  // Don't pass name
-          //BPatch_constExpr *constName = new BPatch_constExpr(fname);
-          callee_args->push_back(constExpr);
-          // callee_args->push_back(constName);
+	  callee_args->push_back(constExpr);
     
           inFunc = (*p)[i];
           dprintf("Instrumenting-> %s Entry\n", fname);	  
@@ -477,15 +429,12 @@ int main(int argc, char **argv)
           dprintf("Instrumenting-> %s Exit...", fname);	  
           invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_exit, exitstub, callee_args);
 	  dprintf("Done\n");
-
           delete callee_args;
           delete constExpr;
-        } // routines that are ok to instrument
-      } // for procedures 
-
-    } // module constraint
-
-  } // for modules
+        }//else -- routines that are ok to instrument
+      }//for -- procedures 
+    }//if -- module constraint
+  }//for -- modules
 
   BPatch_function *exitpoint = appImage->findFunction("_exit");
 
@@ -494,21 +443,19 @@ int main(int argc, char **argv)
     // exit(1);
   }
   else {
-
-    /* When _exit is invoked, call TauProgramTermination routine */
+    // When _exit is invoked, call TauProgramTermination routine 
     BPatch_Vector<BPatch_snippet *> *exitargs = new BPatch_Vector<BPatch_snippet *>();
     BPatch_constExpr *Name = new BPatch_constExpr("_exit");
     exitargs->push_back(Name);
     invokeRoutineInFunction(appThread, appImage, exitpoint, BPatch_entry, terminationstub , exitargs);
     delete exitargs;
     delete Name;
-  }
+  }//else
 
-  
   if (mpiinit == NULL) { 
     dprintf("*** MPI_Comm_rank not found. This is not an MPI Application! \n");
   }
-  else { /* we've found either MPI_Comm_rank or PMPI_Comm_rank! */
+  else { // we've found either MPI_Comm_rank or PMPI_Comm_rank! 
    dprintf("FOUND MPI_Comm_rank or PMPI_Comm_rank! \n");
    BPatch_Vector<BPatch_snippet *> *mpistubargs = new BPatch_Vector<BPatch_snippet *>();
    BPatch_paramExpr paramRank(1);
@@ -518,19 +465,21 @@ int main(int argc, char **argv)
    delete mpistubargs;
   }
 
+  cout<<"Executing..."<<endl;
   dprintf("Executing...\n");
   appThread->continueExecution();
   
-  while (!appThread->isTerminated())
-   {        bpatch->waitForStatusChange();
+  while (!appThread->isTerminated()){        
+    bpatch->waitForStatusChange();
     sleep(1);
-   }
-    		
-  if (appThread->isTerminated()) {
-        dprintf("End of application\n");
-  }
+  }//while
 
+  if (appThread->isTerminated()){
+    cout<<"End of application..."<<endl;
+    dprintf("End of application\n");
+  }//if
+
+  //cleanup
+  delete bpatch;
   return 0;
-}
-
-// EOF tau_run.cpp
+}// EOF tau_run.cpp
