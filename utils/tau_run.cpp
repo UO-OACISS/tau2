@@ -403,7 +403,11 @@ int main(int argc, char **argv){
   // Load the TAU library that has entry and exit routines.
   // Do not load the TAU library if we're rewriting the binary. Use LD_PRELOAD
   // instead. The library may be loaded at a different location. 
+#ifdef __SP1__
+  if (loadlib==true) {
+#else /* SP1 */
   if ((loadlib == true) && (binaryRewrite == 0)) {
+#endif /* SP1 */
     //try and load the library
     if (appThread->loadLibrary(libname, true) == true){  
       //now, check to see if the library is listed as a module in the
