@@ -29,8 +29,7 @@ import javax.swing.event.*;
 import javax.swing.tree.*;
 //import javax.swing.Timer;
 
-public class Trial extends Thread
-{
+public class Trial extends Thread{
   
     long timer = 0;
     
@@ -129,8 +128,7 @@ public class Trial extends Thread
 	return trialName;
     }
   
-    public Vector getStaticServerList()
-    {
+    public Vector getStaticServerList(){
 	return StaticServerList;
     }
   
@@ -194,23 +192,19 @@ public class Trial extends Thread
     //The following funtion initializes the GlobalMapping object.
     //Since we are in the static mode, the number of mappings is known,
     //therefore, the appropriate number of GlobalMappingElements are created.
-    void initializeGlobalMapping(int inNumberOfMappings, int mappingSelection)
-    {
-	for(int i=0; i<inNumberOfMappings; i++)
-	    {
-		//globalMapping.addGlobalMapping("Error ... the mapping name has not been set!");
-		globalMapping.addGlobalMapping(null, mappingSelection);
-	    }
+    void initializeGlobalMapping(int inNumberOfMappings, int mappingSelection){
+	for(int i=0; i<inNumberOfMappings; i++){
+	    //globalMapping.addGlobalMapping("Error ... the mapping name has not been set!");
+	    globalMapping.addGlobalMapping(null, mappingSelection);
+	}
     }
   
     //Rest of the public functions.
-    GlobalMapping getGlobalMapping()
-    {
+    GlobalMapping getGlobalMapping(){
 	return globalMapping;
     }
   
-    public String getCounterName()
-    {
+    public String getCounterName(){
 	Value tmpValue = (Value) values.elementAt(currentValueLocation);
 	return tmpValue.getValueName();
     }
@@ -306,7 +300,7 @@ public class Trial extends Thread
 		numberOfMappings = Integer.parseInt(tokenString);
 	    }
 	    else{
-		if(numberOfMappings != Integer.parseInt(tokenString)){//Depth5
+		if(numberOfMappings != Integer.parseInt(tokenString)){
 		    System.out.println("***********************");
 		    System.out.println("The number of mappings does not match!!!");
 		    System.out.println("");
@@ -421,9 +415,6 @@ public class Trial extends Thread
 	    //End - Third Line
 	    //********************	
       
-
-
-      
 	    while((inputString = br.readLine()) != null){
 	  
 		//Allow other threads in the system a chance.
@@ -434,55 +425,54 @@ public class Trial extends Thread
 		genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
           
 		//Check to See if the String begins with a t.
-		if((inputString.charAt(0)) == 't')
-		    {
-			counter++;
+		if((inputString.charAt(0)) == 't'){
+		    counter++;
+		    mappingID = getMappingID(inputString);
+		    value = getValue(inputString);
+		    if(checkForExcInc(inputString, true, false)){
+			mappingNameString = getMappingName(inputString);
 			mappingID = getMappingID(inputString);
-			value = getValue(inputString);
-			if(checkForExcInc(inputString, true, false)){
-			    mappingNameString = getMappingName(inputString);
-			    mappingID = getMappingID(inputString);
-			    if(mappingID > maxID)
-				maxID = mappingID;
-                  
-			    if(firstRun){ 
-				//Grab the group names.
-				groupNamesString = getGroupNames(inputString);
-				if(groupNamesString != null){
-				    StringTokenizer st = new StringTokenizer(groupNamesString, " |");
-				    while (st.hasMoreTokens()){
-					String tmpString = st.nextToken();
-					if(tmpString != null){
-					    //The potential new group is added here.  If the group is already present, the the addGlobalMapping
-					    //function will just return the already existing group id.  See the GlobalMapping class for more details.
-					    int tmpInt = globalMapping.addGlobalMapping(tmpString, 1);
-					    //The group is either already present, or has just been added in the above line.  Now, using the addGroup
-					    //function, update this mapping to be a member of this group.
-					    globalMapping.addGroup(mappingID, tmpInt, 0);
-					    if((tmpInt != -1) && (ParaProf.debugIsOn))
-						System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + mappingNameString);
-					}    
+			if(mappingID > maxID)
+			    maxID = mappingID;
+			
+			if(firstRun){ 
+			    //Grab the group names.
+			    groupNamesString = getGroupNames(inputString);
+			    if(groupNamesString != null){
+				StringTokenizer st = new StringTokenizer(groupNamesString, " |");
+				while (st.hasMoreTokens()){
+				    String tmpString = st.nextToken();
+				    if(tmpString != null){
+					//The potential new group is added here.  If the group is already present, the the addGlobalMapping
+					//function will just return the already existing group id.  See the GlobalMapping class for more details.
+					int tmpInt = globalMapping.addGlobalMapping(tmpString, 1);
+					//The group is either already present, or has just been added in the above line.  Now, using the addGroup
+					//function, update this mapping to be a member of this group.
+					globalMapping.addGroup(mappingID, tmpInt, 0);
+					if((tmpInt != -1) && (ParaProf.debugIsOn))
+					    System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + mappingNameString);
 				    }    
-				}
+				}    
 			    }
-                  
-			    if(firstRun){
-				//Now that we have the mapping name and id, fill in the global mapping element
-				//for this mapping.  I am assuming here that pprof's output lists only the
-				//global ids.
-				if(!(globalMapping.setMappingNameAt(mappingNameString, mappingID, 0)))
-				    System.out.println("There was an error adding mapping to the global mapping");
-			    }
-                  
-			    //Set the value for this mapping.
-			    if(!(globalMapping.setTotalExclusiveValueAt(currentValueLocation, value, mappingID, 0)))
-				System.out.println("There was an error setting Exc/Inc total time");  
 			}
-			else{
-			    if(!(globalMapping.setTotalInclusiveValueAt(currentValueLocation, value, mappingID, 0)))
-				System.out.println("There was an error setting Exc/Inc total time");
+                  
+			if(firstRun){
+			    //Now that we have the mapping name and id, fill in the global mapping element
+			    //for this mapping.  I am assuming here that pprof's output lists only the
+			    //global ids.
+			    if(!(globalMapping.setMappingNameAt(mappingNameString, mappingID, 0)))
+				System.out.println("There was an error adding mapping to the global mapping");
 			}
-		    } //End - Check to See if the String begins with a t.
+                  
+			//Set the value for this mapping.
+			if(!(globalMapping.setTotalExclusiveValueAt(currentValueLocation, value, mappingID, 0)))
+			    System.out.println("There was an error setting Exc/Inc total time");  
+		    }
+		    else{
+			if(!(globalMapping.setTotalInclusiveValueAt(currentValueLocation, value, mappingID, 0)))
+			    System.out.println("There was an error setting Exc/Inc total time");
+		    }
+		} //End - Check to See if the String begins with a t.
 		//Check to See if the String begins with a mt.
 		else if((inputString.charAt(0)) == 'm'){
 		    mappingID = getMappingID(inputString);
@@ -519,7 +509,6 @@ public class Trial extends Thread
 		}//End - Check to See if the String begins with a m.
 		//String does not begin with either an m or a t, the rest of the checks go here.
 		else{
-		    ///GOTTOHERE
 		    if(checkForExcInc(inputString, true, true)){ 
 			
 			//Stuff common to a non-first run and a first run.
@@ -551,13 +540,10 @@ public class Trial extends Thread
 				lastContext = -1;
 				lastThread = -1;
 			    }
-			    
 			    if(lastContext != context){
 				lastThread = -1;
 			    }
-			    
 			    if(lastThread != thread){
-				
 				if(thread == 0){
 				    //Create a new thread ... and set it to be the current thread.
 				    currentGlobalThread = new GlobalThread();
@@ -707,7 +693,6 @@ public class Trial extends Thread
 				tmpGT.setMaxExclusiveValue(currentValueLocation, value);
 			    if((tmpGT.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
 				tmpGT.setMaxExclusivePercentValue(currentValueLocation, percentValue);
-			    
 			}
 		    }
 		    else if(checkForExcInc(inputString, false, true)){
@@ -716,7 +701,6 @@ public class Trial extends Thread
 			//Grab the value.
 			value = getValue(inputString);
 			percentValue = getPercentValue(inputString);
-			
 			
 			//Update the max values if required.
 			//Grab the correct global mapping element.
@@ -823,13 +807,8 @@ public class Trial extends Thread
 				    
 				    tmpGlobalThreadDataElementListUE = tmpGT.getUserThreadDataList();
 				}
-				
-				
-				//Extract all the information out of the string that I need.
-				
 				//Grab the mapping ID.
 				userEventID = getUserEventID(inputString);
-				
 				//Only need to set the name in the global mapping once.
 				if(!(userEventsPresent())){
 				    //Grab the mapping name.
@@ -837,7 +816,6 @@ public class Trial extends Thread
 				    if(!(globalMapping.setMappingNameAt(userEventNameString, userEventID, 2)))
 					System.out.println("There was an error adding mapping to the global mapping");
 				}
-				
 				int userEventNumberValue = getUENValue(inputString);
 				double userEventMinValue = getUEMinValue(inputString);
 				double userEventMaxValue = getUEMaxValue(inputString);
@@ -950,16 +928,13 @@ public class Trial extends Thread
 	    //int tmpInt = tmpInteger.intValue();
 	    return Integer.parseInt(tmpString);
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD09");
-	    }
-    
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD09");
+	}
 	return -1;
     }
-  
-    boolean checkForExcInc(String inString, boolean exclusive, boolean checkString)
-    {
+    
+    boolean checkForExcInc(String inString, boolean exclusive, boolean checkString){
 	boolean result = false;
     
 	try{
@@ -1043,10 +1018,9 @@ public class Trial extends Thread
 		inGT.setMaxUserSecPerCall(currentValueLocation, tmpDouble);
 	    inGTDE.setUserSecPerCall(currentValueLocation, tmpDouble);
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD10");
-	    }
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD10");
+	}
     }
     
     private void setNumberOfCSUMean(String inString, GlobalMappingElement inGME){ //Set the number of calls/subroutines/usersec per call for mean.
@@ -1085,8 +1059,7 @@ public class Trial extends Thread
 	    }
     }
   
-    String getGroupNames(String inString)
-    {
+    String getGroupNames(String inString){
     
 	try{  
 	    String tmpString = null;
@@ -1135,8 +1108,7 @@ public class Trial extends Thread
 	return null;
     }
   
-    double getValue(String inString)
-    {
+    double getValue(String inString){
 	try{
 	    String tmpString;
       
@@ -1163,8 +1135,7 @@ public class Trial extends Thread
 	return -1;
     }
   
-    double getPercentValue(String inString)
-    {
+    double getPercentValue(String inString){
 	try{
 	    String tmpString;
       
@@ -1193,8 +1164,7 @@ public class Trial extends Thread
 	return -1;
     }
   
-    boolean checkForUserEvents(String inString)
-    {
+    boolean checkForUserEvents(String inString){
 	try{
 	    String tmpString;
       
@@ -1222,8 +1192,7 @@ public class Trial extends Thread
 	return false;
     }
   
-    int getNumberOfUserEvents(String inString)
-    {
+    int getNumberOfUserEvents(String inString){
 	try{
 	    StringTokenizer getNumberOfUserEventsTokenizer = new StringTokenizer(inString, " \t\n\r");
       
@@ -1243,8 +1212,7 @@ public class Trial extends Thread
 	return -1;
     }
                     
-    String getUserEventName(String inString)
-    {
+    String getUserEventName(String inString){
 	try{
 	    String tmpString;
       
@@ -1262,12 +1230,10 @@ public class Trial extends Thread
 	    //Now return the second string.
 	    return tmpString;
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD17");
-	    }
-    
-	return null;
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD17");
+	}
+    	return null;
     }
   
     int getUserEventID(String inString)
@@ -1290,17 +1256,13 @@ public class Trial extends Thread
       
 	    return Integer.parseInt(tmpString);
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD18");
-	    }
-    
-	return -1;
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD18");
+	}
+    	return -1;
     }
   
-    int getUENValue(String inString)
-    {
-    
+    int getUENValue(String inString){
 	try{
 	    String tmpString;
       
@@ -1319,16 +1281,13 @@ public class Trial extends Thread
 	    //Now return the value obtained.
 	    return (int) Double.parseDouble(tmpString);
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD19");
-	    }
-    
-	return -1;
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD19");
+	}
+    	return -1;
     }
   
-    double getUEMinValue(String inString)
-    {
+    double getUEMinValue(String inString){
 	try{
 	    String tmpString;
       
@@ -1349,16 +1308,13 @@ public class Trial extends Thread
 	    //Now return the value obtained.
 	    return Double.parseDouble(tmpString);
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD20");
-	    }
-    
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD20");
+	}
 	return -1;
     }
   
-    double getUEMaxValue(String inString)
-    {
+    double getUEMaxValue(String inString){
 	try{
 	    String tmpString;
       
@@ -1378,16 +1334,13 @@ public class Trial extends Thread
 	    //Now return the value obtained.
 	    return Double.parseDouble(tmpString);
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD21");
-	    }
-    
-	return -1;
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD21");
+	}
+    	return -1;
     }
   
-    double getUEMeanValue(String inString)
-    {
+    double getUEMeanValue(String inString){
 	try{
 	    String tmpString;
       
@@ -1409,12 +1362,10 @@ public class Trial extends Thread
 	    //Now return the value obtained.
 	    return Double.parseDouble(tmpString);
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD22");
-	    }
-    
-	return -1;
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD22");
+	}
+    	return -1;
     }
   
     public int getNCT(int selector, String inString, boolean UEvent){
@@ -1461,28 +1412,23 @@ public class Trial extends Thread
 	return nCT;
     }
   
-    String getCounterName(String inString)
-    {
+    String getCounterName(String inString){
 	try{
 	    String tmpString = null;
 	    int tmpInt = inString.indexOf("_MULTI_");
       
-	    if(tmpInt > 0)
-		{
-		    //We are reading data from a multiple counter run.
-		    //Grab the counter name.
-		    tmpString = inString.substring(tmpInt+7);
-		    return tmpString;
-		}
-      
-	    //We are not reading data from a multiple counter run.
-	    return tmpString; 
-      
-	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD26");
+	    if(tmpInt > 0){
+		//We are reading data from a multiple counter run.
+		//Grab the counter name.
+		tmpString = inString.substring(tmpInt+7);
+		return tmpString;
 	    }
+      	    //We are not reading data from a multiple counter run.
+	    return tmpString; 
+      	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD26");
+	}
     
 	return null;
     }
@@ -1490,15 +1436,7 @@ public class Trial extends Thread
     //******************************
     //End - Helper functions for buildStatic data.
     //******************************
-  
-  
-  
-  
-  
-  
-  
-  
-  
+    
     //******************************
     //Operation functions to work on the stored data.
     //******************************
@@ -1563,239 +1501,232 @@ public class Trial extends Thread
 	//Get a reference to the global data.
 	Vector tmpVector = this.getStaticServerList();
     
-	for(Enumeration e3 = tmpVector.elements(); e3.hasMoreElements() ;)
-	    {
-		tmpGlobalServer = (GlobalServer) e3.nextElement();
+	for(Enumeration e3 = tmpVector.elements(); e3.hasMoreElements() ;){
+	    tmpGlobalServer = (GlobalServer) e3.nextElement();
       
-		//Enter the context loop for this server.
-		tmpContextList = tmpGlobalServer.getContextList();
+	    //Enter the context loop for this server.
+	    tmpContextList = tmpGlobalServer.getContextList();
         
-		for(Enumeration e4 = tmpContextList.elements(); e4.hasMoreElements() ;)
-		    {
-			tmpGlobalContext = (GlobalContext) e4.nextElement();
+	    for(Enumeration e4 = tmpContextList.elements(); e4.hasMoreElements() ;){
+		tmpGlobalContext = (GlobalContext) e4.nextElement();
           
-			//Enter the thread loop for this context.
-			tmpThreadList = tmpGlobalContext.getThreadList();
-			for(Enumeration e5 = tmpThreadList.elements(); e5.hasMoreElements() ;)
-			    {
-				tmpGlobalThread = (GlobalThread) e5.nextElement();
-				tmpGlobalThread.addDefaultToVectors();
+		//Enter the thread loop for this context.
+		tmpThreadList = tmpGlobalContext.getThreadList();
+		for(Enumeration e5 = tmpThreadList.elements(); e5.hasMoreElements() ;){
+		    tmpGlobalThread = (GlobalThread) e5.nextElement();
+		    tmpGlobalThread.addDefaultToVectors();
           
-				tmpThreadDataList = tmpGlobalThread.getThreadDataList();
-				for(Enumeration e6 = tmpThreadDataList.elements(); e6.hasMoreElements() ;)
-				    {
-					tmpGlobalThreadDataElement = (GlobalThreadDataElement) e6.nextElement();
+		    tmpThreadDataList = tmpGlobalThread.getThreadDataList();
+		    for(Enumeration e6 = tmpThreadDataList.elements(); e6.hasMoreElements() ;){
+			tmpGlobalThreadDataElement = (GlobalThreadDataElement) e6.nextElement();
             
-					//Only want to add an element if this mapping existed on this thread.
-					//Check for this.
-					if(tmpGlobalThreadDataElement != null)
-					    {
-						int mappingID = tmpGlobalThreadDataElement.getMappingID();
-						GlobalMappingElement tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
-						tmpGlobalMappingElement.incrementCounter();
+			//Only want to add an element if this mapping existed on this thread.
+			//Check for this.
+			if(tmpGlobalThreadDataElement != null){
+			    int mappingID = tmpGlobalThreadDataElement.getMappingID();
+			    GlobalMappingElement tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
+			    tmpGlobalMappingElement.incrementCounter();
               
-						tmpGlobalThreadDataElement.incrementStorage();
+			    tmpGlobalThreadDataElement.incrementStorage();
               
-						double tmpDouble1 = 0;
-						double tmpDouble2 = 0;
+			    double tmpDouble1 = 0;
+			    double tmpDouble2 = 0;
               
-						double tmpDouble = 0;
+			    double tmpDouble = 0;
               
               
-						switch(operation){
-						case(0):
-						    tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(opA);
-						    tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
+			    switch(operation){
+			    case(0):
+				tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(opA);
+				tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
                   
-						    tmpDouble = tmpDouble1+tmpDouble2;
-						    tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
-						    if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-							tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-						    tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
+				tmpDouble = tmpDouble1+tmpDouble2;
+				tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
+				if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+				    tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
                     
-						    //Now do the global mapping element exclusive stuff.
-						    if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-							tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-						    tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
+				//Now do the global mapping element exclusive stuff.
+				if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+				    tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
                   
                   
                   
-						    tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
-						    tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
+				tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
+				tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
                   
-						    tmpDouble = tmpDouble1+tmpDouble2;
-						    tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
-						    if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-							tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-						    tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
+				tmpDouble = tmpDouble1+tmpDouble2;
+				tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
+				if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+				    tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
                     
-						    //Now do the global mapping element inclusive stuff.
-						    if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-							tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-						    tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
+				//Now do the global mapping element inclusive stuff.
+				if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+				    tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
             
-						    break;
-						case(1):
-						    tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(opA);
-						    tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
+				break;
+			    case(1):
+				tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(opA);
+				tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
                   
-						    if(tmpDouble1 > tmpDouble2){
-							tmpDouble = tmpDouble1 - tmpDouble2;
-							tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
-							if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-							    tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-							tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
+				if(tmpDouble1 > tmpDouble2){
+				    tmpDouble = tmpDouble1 - tmpDouble2;
+				    tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
+				    if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+					tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				    tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
                       
-							//Now do the global mapping element exclusive stuff.
-							if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-							    tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-							tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
-						    }
+				    //Now do the global mapping element exclusive stuff.
+				    if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+					tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				    tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
+				}
                   
-						    tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
-						    tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
+				tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
+				tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
                   
-						    if(tmpDouble1 > tmpDouble2){
-							tmpDouble = tmpDouble1 - tmpDouble2;
-							tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
-							if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-							    tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-							tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
+				if(tmpDouble1 > tmpDouble2){
+				    tmpDouble = tmpDouble1 - tmpDouble2;
+				    tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
+				    if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+					tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				    tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
                       
-							//Now do the global mapping element inclusive stuff.
-							if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-							    tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-							tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
-						    }
+				    //Now do the global mapping element inclusive stuff.
+				    if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+					tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				    tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
+				}
                   
-						    break;
-						case(2):
-						    tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(opA);
-						    tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
+				break;
+			    case(2):
+				tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(opA);
+				tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
                   
-						    tmpDouble = tmpDouble1*tmpDouble2;
-						    tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
-						    if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-							tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-						    tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
+				tmpDouble = tmpDouble1*tmpDouble2;
+				tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
+				if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+				    tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
                     
-						    //Now do the global mapping element exclusive stuff.
-						    if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-							tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-						    tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
+				//Now do the global mapping element exclusive stuff.
+				if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+				    tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
                   
-						    tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
-						    tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
+				tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
+				tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
                   
-						    tmpDouble = tmpDouble1*tmpDouble2;
-						    tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
-						    if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-							tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-						    tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
+				tmpDouble = tmpDouble1*tmpDouble2;
+				tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
+				if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+				    tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
                   
-						    //Now do the global mapping element inclusive stuff.
-						    if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-							tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-						    tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
+				//Now do the global mapping element inclusive stuff.
+				if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+				    tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
                   
                   
-						    break;
-						case(3):
-						    tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(opA);
-						    tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
+				break;
+			    case(3):
+				tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(opA);
+				tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
                   
-						    if(tmpDouble2 != 0){
-							tmpDouble = tmpDouble1/tmpDouble2;
+				if(tmpDouble2 != 0){
+				    tmpDouble = tmpDouble1/tmpDouble2;
                     
-							tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
-							if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-							    tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-							tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
+				    tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
+				    if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+					tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				    tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
                     
-							//Now do the global mapping element exclusive stuff.
-							if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-							    tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-							tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
-						    }
+				    //Now do the global mapping element exclusive stuff.
+				    if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+					tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				    tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
+				}
                   
-						    tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
-						    tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
+				tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
+				tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
                   
-						    if(tmpDouble2 != 0){
-							tmpDouble = tmpDouble1/tmpDouble2;
-							tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
-							if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-							    tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-							tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
+				if(tmpDouble2 != 0){
+				    tmpDouble = tmpDouble1/tmpDouble2;
+				    tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
+				    if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+					tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				    tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
                     
-							//Now do the global mapping element inclusive stuff.
-							if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-							    tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-							tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
-						    }
+				    //Now do the global mapping element inclusive stuff.
+				    if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+					tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				    tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
+				}
               
-						    break;
-						default:
-						    break;
-						}
-					    }
-				    }
-          
-				//Now try setting the percent values.
-				for(Enumeration e7 = tmpThreadDataList.elements(); e7.hasMoreElements() ;)
-				    {
-					tmpGlobalThreadDataElement = (GlobalThreadDataElement) e7.nextElement();
-            
-					double exclusiveTotal = tmpGlobalThread.getTotalExclusiveValue();
-					double inclusiveMax = tmpGlobalThread.getMaxInclusiveValue(currentValueLocation);
-            
-					boolean excl = false;
-					boolean incl = false;
-            
-					if(exclusiveTotal != 0)
-					    excl = true;
-              
-					if(inclusiveMax != 0)
-					    incl = true;
-            
-            
-					//Only want to add an element if this mapping existed on this thread.
-					//Check for this.
-					if(tmpGlobalThreadDataElement != null)
-					    {
-						int mappingID = tmpGlobalThreadDataElement.getMappingID();
-						GlobalMappingElement tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
-            
-						double tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(currentValueLocation);
-						double tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(currentValueLocation);
-              
-						if(excl){
-						    double result = (tmpDouble1/exclusiveTotal) * 100;
-						    tmpGlobalThreadDataElement.setExclusivePercentValue(currentValueLocation, result);
-						    if((tmpGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < result)
-							tmpGlobalThread.setMaxExclusivePercentValue(currentValueLocation, result);
-                
-						    //Now do the global mapping element exclusive stuff.
-						    if((tmpGlobalMappingElement.getMaxExclusivePercentValue(currentValueLocation)) < result)
-							tmpGlobalMappingElement.setMaxExclusivePercentValue(currentValueLocation, result);
-						}
-              
-						if(incl){
-						    double result = (tmpDouble2/inclusiveMax) * 100;
-						    tmpGlobalThreadDataElement.setInclusivePercentValue(currentValueLocation, result);
-						    if((tmpGlobalThread.getMaxInclusivePercentValue(currentValueLocation)) < result){
-							tmpGlobalThread.setMaxInclusivePercentValue(currentValueLocation, result);}
-                  
-						    //Now do the global mapping element exclusive stuff.
-						    if((tmpGlobalMappingElement.getMaxInclusivePercentValue(currentValueLocation)) < result)
-							tmpGlobalMappingElement.setMaxInclusivePercentValue(currentValueLocation, result);
-						}
-              
-					    }
-				    }
+				break;
+			    default:
+				break;
 			    }
+			}
 		    }
+          
+		    //Now try setting the percent values.
+		    for(Enumeration e7 = tmpThreadDataList.elements(); e7.hasMoreElements() ;){
+			tmpGlobalThreadDataElement = (GlobalThreadDataElement) e7.nextElement();
+            
+			double exclusiveTotal = tmpGlobalThread.getTotalExclusiveValue();
+			double inclusiveMax = tmpGlobalThread.getMaxInclusiveValue(currentValueLocation);
+            
+			boolean excl = false;
+			boolean incl = false;
+            
+			if(exclusiveTotal != 0)
+			    excl = true;
+              
+			if(inclusiveMax != 0)
+			    incl = true;
+            
+            
+			//Only want to add an element if this mapping existed on this thread.
+			//Check for this.
+			if(tmpGlobalThreadDataElement != null){
+			    int mappingID = tmpGlobalThreadDataElement.getMappingID();
+			    GlobalMappingElement tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
+            
+			    double tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(currentValueLocation);
+			    double tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(currentValueLocation);
+              
+			    if(excl){
+				double result = (tmpDouble1/exclusiveTotal) * 100;
+				tmpGlobalThreadDataElement.setExclusivePercentValue(currentValueLocation, result);
+				if((tmpGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < result)
+				    tmpGlobalThread.setMaxExclusivePercentValue(currentValueLocation, result);
+                
+				//Now do the global mapping element exclusive stuff.
+				if((tmpGlobalMappingElement.getMaxExclusivePercentValue(currentValueLocation)) < result)
+				    tmpGlobalMappingElement.setMaxExclusivePercentValue(currentValueLocation, result);
+			    }
+              
+			    if(incl){
+				double result = (tmpDouble2/inclusiveMax) * 100;
+				tmpGlobalThreadDataElement.setInclusivePercentValue(currentValueLocation, result);
+				if((tmpGlobalThread.getMaxInclusivePercentValue(currentValueLocation)) < result){
+				    tmpGlobalThread.setMaxInclusivePercentValue(currentValueLocation, result);}
+                  
+				//Now do the global mapping element exclusive stuff.
+				if((tmpGlobalMappingElement.getMaxInclusivePercentValue(currentValueLocation)) < result)
+				    tmpGlobalMappingElement.setMaxInclusivePercentValue(currentValueLocation, result);
+			    }
+              
+			}
+		    }
+		}
 	    }
+	}
     
 	//Ok,  now compute some mean values.
 	for(Enumeration e10 = (this.globalMapping.getMapping(0)).elements(); e10.hasMoreElements() ;){
@@ -1850,22 +1781,12 @@ public class Trial extends Thread
 		    this.setMaxMeanInclusivePercentValue(this.getCurValLoc(), tmpDouble);
 	    }
 	}
-    
-    
-    
 	return newValue;
     }
   
     //******************************
     //End - Operation functions to work on the stored data.
     //******************************
-  
-  
-  
-  
-  
-  
-  
   
     //******************************
     //Useful functions to help the drawing windows.
