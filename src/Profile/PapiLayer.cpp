@@ -72,7 +72,16 @@ long long PapiLayer::getCounters(int tid)
            return -1;
        }
 
-     if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0) != PAPI_OK)
+#ifndef PAPI_VERSION
+/* PAPI 2 support goes here */
+    if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0) != PAPI_OK)
+#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
+/* PAPI 3 support goes here */
+    if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread)) != PAPI_OK)
+#else
+/* PAPI future support goes here */
+#error "Compiling against a not yet released PAPI version"
+#endif 
        {
 	 cout << "There was a problem with papi's thread init" << endl;
 	 return -1;
@@ -136,7 +145,16 @@ long long PapiLayer::getCounters(int tid)
       PAPI_create_eventset(&(ThreadList[tid]->EventSet));
 
       //Adding the events and starting the counter.
+#ifndef PAPI_VERSION
+/* PAPI 2 support goes here */
       Result = PAPI_add_events(&(ThreadList[tid]->EventSet) ,PAPI_CounterList ,NUMBER_OF_COUNTERS);
+#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
+/* PAPI 3 support goes here */
+      Result = PAPI_add_events(ThreadList[tid]->EventSet ,PAPI_CounterList ,NUMBER_OF_COUNTERS);
+#else
+/* PAPI future support goes here */
+#error "Compiling against a not yet released PAPI version"
+#endif 
       if(Result != PAPI_OK)
 	{
 	  cout << "Something went wrong adding events!" << endl;
@@ -189,8 +207,17 @@ int PapiLayer::PapiLayerInit(bool lock)
       cout << "Wrong version of PAPI library" << endl;
       return -1;
     }
-  
+ 
+#ifndef PAPI_VERSION
+/* PAPI 2 support goes here */
     if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0) != PAPI_OK)
+#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
+/* PAPI 3 support goes here */
+    if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread)) != PAPI_OK)
+#else
+/* PAPI future support goes here */
+#error "Compiling against a not yet released PAPI version"
+#endif 
     {
       cout << "There was a problem with papi's thread init" << endl;
       return -1;

@@ -837,9 +837,20 @@ void MultipleCounterLayer::papiMCL(int tid, double values[]){
       
       PAPI_create_eventset(&(ThreadList[tid]->EventSet));
       
+#ifndef PAPI_VERSION
+/* PAPI 2 support goes here */
       int resultCode = PAPI_add_events(&(ThreadList[tid]->EventSet),
 				       PAPI_CounterCodeList,
 				       numberOfPapiHWCounters);
+#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
+/* PAPI 3 support goes here */
+      int resultCode = PAPI_add_events(ThreadList[tid]->EventSet,
+				       PAPI_CounterCodeList,
+				       numberOfPapiHWCounters);
+#else
+/* PAPI future support goes here */
+#error "Compiling against a not yet released PAPI version"
+#endif 
 
       if(resultCode != PAPI_OK){
 	cout << "Error adding Papi events!" << endl;
