@@ -1,0 +1,42 @@
+#!/bin/sh
+# This shell script takes 4 arguments:
+# tau2slog2.skel $jdkdir $tauroot $slog2dir $tauarch
+echo '#!/bin/sh'
+echo
+
+echo JVM=$1/bin/java
+echo JVMFLAGS=
+echo 
+echo '# Set PATH to the shared library of the TRACE-API implementation'
+echo TRACE_LIBDIR=$2/$4/lib
+
+echo '# Set PATH to the jar needed by the program'
+echo GUI_LIBDIR=$3/lib
+echo
+
+echo 'GUI_HOME=${GUI_LIBDIR}/..'
+echo 'MAIN_LIB=${GUI_LIBDIR}/traceTOslog2.jar'
+echo
+echo 'if [ -z "${GUI_LIBDIR}" -o "${GUI_LIBDIR}" = "/lib" ]; then'
+echo '    echo "GUI_LIBDIR is NOT set!"'
+echo '    exit 1'
+echo 'else'
+echo '    echo "GUI_LIBDIR is set. GUI_LIBDIR = "${GUI_LIBDIR}'
+echo 'fi'
+echo 
+echo 'if [ -z "${TRACE_LIBDIR}" -o "${TRACE_LIBDIR}" = "/lib" ]; then'
+echo '    echo "TRACE_LIBDIR is NOT set!"'
+echo '    exit 1'
+echo 'else'
+echo '    echo "TRACE_LIBDIR is set. TRACE_LIBDIR = "${TRACE_LIBDIR}'
+echo 'fi'
+echo 
+echo 'if [ -z "`echo $JVMFLAGS | grep '\''\-Xms'\''`" ] ; then'
+echo '    JVMFLAGS="-Xms32m $JVMFLAGS"'
+echo 'fi'
+echo 'if [ -z "`echo $JVMFLAGS | grep '\''\-Xmx'\''`" ] ; then'
+echo '    JVMFLAGS="-Xmx64m $JVMFLAGS"'
+echo 'fi'
+echo 
+echo '${JVM} -Djava.library.path=${TRACE_LIBDIR} ${JVMFLAGS} -jar ${MAIN_LIB} "$@"'
+
