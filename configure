@@ -344,24 +344,44 @@ do
   -tulipthread=*)
       tulipthread=yes
       tulipdir=`echo $arg | sed -e 's/-tulipthread=//'`
+      if [ ! -d $tulipdir ]
+      then
+        echo "Error: Cannot access TULIP directory $tulipdir"
+        exit 1
+      fi
     shift
     ;;
 
   -pcl=*)
       pcl=yes
       pcldir=`echo $arg | sed -e 's/-pcl=//'`
+      if [ ! -d $pcldir ]
+      then
+        echo "Error: Cannot access PCL directory $pcldir"
+        exit 1
+      fi
     shift
     ;;
 
   -papi=*)
       papi=yes
       papidir=`echo $arg | sed -e 's/-papi=//'`
+      if [ ! -d $papidir ]
+      then
+        echo "Error: Cannot access PAPI directory $papidir"
+        exit 1
+      fi
     shift
     ;;
 
   -opari=*)
       opari=yes
       oparidir=`echo $arg | sed -e 's/-opari=//'`
+      if [ ! -d $oparidir ]
+      then
+        echo "Error: Cannot access OPARI directory $oparidir"
+        exit 1
+      fi
       openmp=yes
     shift
     ;;
@@ -379,18 +399,33 @@ do
   -epilog=*)
       epilog=yes
       epilogdir=`echo $arg | sed -e 's/-epilog=//'`
+      if [ ! -d $epilogdir ]
+      then
+        echo "Error: Cannot access EPILOG directory $epilogdir"
+        exit 1
+      fi
     shift
     ;;
 
   -pdt=*)
       pdt=yes
       pdtdir=`echo $arg | sed -e 's/-pdt=//'`
+      if [ ! -d $pdtdir ]
+      then
+        echo "Error: Cannot access PDT directory $pdtdir"
+        exit 1
+      fi
     shift
     ;;
 
   -dyninst=*)
       dyninst=yes
       dyninstdir=`echo $arg | sed -e 's/-dyninst=//'`
+      if [ ! -d $dyninstdir ]
+      then
+        echo "Error: Cannot access DyninstAPI directory $dyninstdir"
+        exit 1
+      fi
     shift
     ;;
 
@@ -402,6 +437,11 @@ do
   -jdk=*)
       java=yes
       jdkdir=`echo $arg | sed -e 's/-jdk=//'`
+      if [ ! -d $jdkdir ]
+      then
+        echo "Error: Cannot access JDK directory $jdkdir"
+        exit 1
+      fi
     shift
     ;;
 
@@ -423,11 +463,21 @@ do
 
   -mpiinc=*)
     mpiinc=`echo $arg | sed -e 's/-mpiinc=//' -e 's/ /#/g'`
+    if [ ! -d $mpiinc ]
+    then
+      echo "Error: Cannot access MPI include directory $mpiinc"
+      exit 1
+    fi
     shift
     ;;
 
   -mpilib=*)
     mpilib=`echo $arg | sed -e 's/-mpilib=//' -e 's/ /#/g'`
+    if [ ! -d $mpilib ]
+    then
+      echo "Error: Cannot access MPI lib directory $mpilib"
+      exit 1
+    fi
     shift
     ;;
 
@@ -438,12 +488,22 @@ do
 
   -pythoninc=*)
     pythoninc=`echo $arg | sed -e 's/-pythoninc=//' -e 's/ /#/g'`
+    if [ ! -d $pythoninc ]
+    then
+      echo "Error: Cannot access Python include directory $pythoninc"
+      exit 1
+    fi
     python=yes
     shift
     ;;
 
   -pythonlib=*)
     pythonlib=`echo $arg | sed -e 's/-pythonlib=//' -e 's/ /#/g'`
+    if [ ! -d $pythonlib ]
+    then
+      echo "Error: Cannot access Python lib directory $pythonlib"
+      exit 1
+    fi
     python=yes
     shift
     ;;
