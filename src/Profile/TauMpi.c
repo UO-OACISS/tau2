@@ -553,7 +553,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Reduce_scatter( sendbuf, recvbuf, recvcnts, datatype, op, comm );
   MPI_Type_size( datatype, &typesize );
-  TAU_REDUCE_DATA(typesize*(*recvcnts));
+  TAU_REDUCESCATTER_DATA(typesize*(*recvcnts));
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -600,7 +600,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Scan( sendbuf, recvbuf, count, datatype, op, comm );
   MPI_Type_size( datatype, &typesize );
-  TAU_REDUCE_DATA(typesize*count);
+  TAU_SCAN_DATA(typesize*count);
 
   TAU_PROFILE_STOP(tautimer); 
 
