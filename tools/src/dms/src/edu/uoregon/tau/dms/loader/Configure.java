@@ -149,21 +149,38 @@ public class Configure {
 	    if (tmpString.length() > 0) jdbc_db_type = tmpString;
 
 
-	    if (jdbc_db_type.compareTo("postgresql") == 0 && old_jdbc_db_type.compareTo("postgresql") != 0) {
-		// if the user has chosen postgresql and the config file is not already set for it
-		jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "postgresql.jar";
-		jdbc_db_driver = "org.postgresql.Driver";
-		db_schemafile = perfdmf_home + "/data/" +"dbschema.txt";
-		db_portnum = "5432";
-	    } else if (jdbc_db_type.compareTo("mysql") == 0 && old_jdbc_db_type.compareTo("mysql") != 0) {
-		// if the user has chosen mysql and the config file is not already set for it
-		jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "mysql.jar";
-		jdbc_db_driver = "org.gjt.mm.mysql.Driver";
-		db_schemafile = perfdmf_home + "/data/" + "dbschema.mysql.txt";
-		db_portnum = "3306";
+	    if (configFileFound) {
+
+		if (jdbc_db_type.compareTo("postgresql") == 0 && old_jdbc_db_type.compareTo("postgresql") != 0) {
+		    // if the user has chosen postgresql and the config file is not already set for it
+		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "postgresql.jar";
+		    jdbc_db_driver = "org.postgresql.Driver";
+		    db_schemafile = perfdmf_home + "/data/" +"dbschema.txt";
+		    db_portnum = "5432";
+		} else if (jdbc_db_type.compareTo("mysql") == 0 && old_jdbc_db_type.compareTo("mysql") != 0) {
+		    // if the user has chosen mysql and the config file is not already set for it
+		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "mysql.jar";
+		    jdbc_db_driver = "org.gjt.mm.mysql.Driver";
+		    db_schemafile = perfdmf_home + "/data/" + "dbschema.mysql.txt";
+		    db_portnum = "3306";
+		}
+	    } else {
+
+		if (jdbc_db_type.compareTo("postgresql") == 0) {
+		    // if the user has chosen postgresql and the config file is not already set for it
+		    jdbc_db_jarfile = "postgresql.jar";
+		    jdbc_db_driver = "org.postgresql.Driver";
+		    db_schemafile = "dbschema.txt";
+		    db_portnum = "5432";
+		} else if (jdbc_db_type.compareTo("mysql") == 0) {
+		    // if the user has chosen mysql and the config file is not already set for it
+		    jdbc_db_jarfile = "mysql.jar";
+		    jdbc_db_driver = "org.gjt.mm.mysql.Driver";
+		    db_schemafile = "dbschema.mysql.txt";
+		    db_portnum = "3306";
+		}
 	    }
-
-
+		
 						
 	    // Prompt for JDBC jar file
 	    if (configFileFound)
