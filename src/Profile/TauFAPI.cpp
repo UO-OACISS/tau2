@@ -177,6 +177,16 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
   return;
 }
 
+void tau_phase_create_static_(void **ptr, char *infname, int slen)
+{
+  tau_profile_timer_(ptr, infname, slen);
+}
+
+void tau_phase_create_dynamic_(void **ptr, char *infname, int slen)
+{
+  *ptr = 0;  /* reset it each time so it creates a new timer */
+  tau_profile_timer_(ptr, infname, slen);
+}
 
 void tau_profile_start_(void **profiler)
 { 
@@ -189,6 +199,18 @@ void tau_profile_start_(void **profiler)
 }
 
 void tau_profile_stop_(void **profiler)
+{
+  Tau_stop_timer(*profiler);
+  return;
+}
+
+void tau_phase_start_(void **profiler)
+{
+  Tau_start_timer(*profiler, 1); /* 1 indicates phase based profiling */
+  return;
+}
+
+void tau_phase_stop_(void **profiler)
 {
   Tau_stop_timer(*profiler);
   return;
@@ -1044,12 +1066,76 @@ void tau_set_interrupt_interval__(int* value)
   Tau_set_interrupt_interval(*value);
 } 
 
+void tau_phase_create_static__(void **ptr, char *infname, int slen)
+{
+  tau_phase_create_static_(ptr, infname, slen);
+}
+
+void tau_phase_create_dynamic__(void **ptr, char *infname, int slen)
+{
+  tau_phase_create_dynamic__(ptr, infname, slen);
+}
+
+void tau_phase_start__(void **profiler)
+{
+  tau_phase_start_(profiler);
+}
+
+void tau_phase_stop__(void **profiler)
+{
+  tau_phase_stop_(profiler);
+}
 
 #endif /* TAU_GNU || TAU_PATHSCALE */
+//////////////////////////////////////////////////////
+// PHASE BASED PROFILING
+//////////////////////////////////////////////////////
+
+void tau_phase_create_static(void **ptr, char *infname, int slen)
+{
+  tau_phase_create_static_(ptr, infname, slen);
+}
+
+void tau_phase_create_dynamic(void **ptr, char *infname, int slen)
+{
+  tau_phase_create_dynamic__(ptr, infname, slen);
+}
+
+void tau_phase_start(void **profiler)
+{
+  tau_phase_start_(profiler);
+}
+
+void tau_phase_stop(void **profiler)
+{
+  tau_phase_stop_(profiler);
+}
+
+void TAU_PHASE_CREATE_STATIC(void **ptr, char *infname, int slen)
+{
+  tau_phase_create_static_(ptr, infname, slen);
+}
+
+void TAU_PHASE_CREATE_DYNAMIC(void **ptr, char *infname, int slen)
+{
+  tau_phase_create_dynamic__(ptr, infname, slen);
+}
+
+void TAU_PHASE_START(void **profiler)
+{
+  tau_phase_start_(profiler);
+}
+
+void TAU_PHASE_STOP(void **profiler)
+{
+  tau_phase_stop_(profiler);
+}
+
+
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.36 $   $Date: 2005/01/11 00:45:40 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.36 2005/01/11 00:45:40 sameer Exp $ 
+ * $Revision: 1.37 $   $Date: 2005/01/12 02:50:11 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.37 2005/01/12 02:50:11 sameer Exp $ 
  ***************************************************************************/
