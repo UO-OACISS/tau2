@@ -71,7 +71,8 @@ typedef int (*Ttf_RecvMessageT)( void*  userData,
 
 typedef int (*Ttf_DefUserEvent)( void *userData,
 				unsigned int userEventToken,
-				const char *userEventName
+				const char *userEventName,
+				int monotonicallyIncreasing
 				);
 
 typedef int (*Ttf_EventTrigger)( void *userData, 
@@ -168,8 +169,8 @@ Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle );
 
 /***************************************************************************
  * $RCSfile: TAU_tf.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2004/07/26 23:53:14 $
- * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.2 2004/07/26 23:53:14 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 2004/08/13 00:38:49 $
+ * TAU_VERSION_ID: $Id: TAU_tf.h,v 1.3 2004/08/13 00:38:49 sameer Exp $ 
  ***************************************************************************/
 
 
