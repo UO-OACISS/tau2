@@ -2756,11 +2756,23 @@ sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadapp
 echo "TAU: installed perfdb_loadapp in ${tauroot}/${architecture}/bin"
 
+cat ${tauroot}/tools/src/dms/bin/createapp.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/${architecture}/bin/perfdb_createapp
+chmod a+rx ${tauroot}/${architecture}/bin/perfdb_createapp
+echo "TAU: installed perfdb_createapp in ${tauroot}/${architecture}/bin"
+
 cat ${tauroot}/tools/src/dms/bin/loadexp.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${tauroot}/${architecture}/bin/perfdb_loadexp
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadexp
 echo "TAU: installed perfdb_loadexp in ${tauroot}/${architecture}/bin"
+
+cat ${tauroot}/tools/src/dms/bin/createexp.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/${architecture}/bin/perfdb_createexp
+chmod a+rx ${tauroot}/${architecture}/bin/perfdb_createexp
+echo "TAU: installed perfdb_createexp in ${tauroot}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/dms/bin/loadschema.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
@@ -2773,12 +2785,6 @@ sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$
  > ${tauroot}/${architecture}/bin/perfdb_loadtrial
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadtrial
 echo "TAU: installed perfdb_loadtrial in ${tauroot}/${architecture}/bin"
-
-cat ${tauroot}/tools/src/dms/bin/translate.skel | 
-sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${tauroot}/${architecture}/bin/perfdb_translate
-chmod a+rx ${tauroot}/${architecture}/bin/perfdb_translate
-echo "TAU: installed perfdb_translate in ${tauroot}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/dms/src/examples/testBuild.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
