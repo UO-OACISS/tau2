@@ -340,6 +340,8 @@ double TauWindowsUsecD(void)
 	  _ftime(&tp);
 	  return ( (double) tp.time * 1e6 + tp.millitm * 1e3);
   }
+#else  /* TAU_WINDOWS */
+  return 0; 
 #endif /* TAU_WINDOWS */
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -739,6 +741,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 2000/08/17 01:06:14 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.21 2000/08/17 01:06:14 sameer Exp $ 
+ * $Revision: 1.22 $   $Date: 2000/08/18 17:26:54 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.22 2000/08/18 17:26:54 sameer Exp $ 
  ***************************************************************************/
