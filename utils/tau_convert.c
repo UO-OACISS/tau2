@@ -1631,7 +1631,7 @@ int main (int argc, char *argv[])
     else if ( outFormat == pv )
       {
 	ev = GetEventStruct (erec->ev);
-	if (( ev->tag != 0 ) || (dynamictrace)) /* dynamic trace doesn't use tag*/
+	if ((ev!= 0) &&( ( ev->tag != 0 ) || (dynamictrace))) /* dynamic trace doesn't use tag*/
 	  {
 	    if ( (ev->tag == SEND_EVENT) && pvComm )
 
