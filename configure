@@ -452,6 +452,7 @@ do
 
   -vtf=*)
       vtf=yes
+      trace=yes
       vtfdir=`echo $arg | sed -e 's/-vtf=//'`
       if [ ! -d $vtfdir ]
       then
