@@ -305,6 +305,7 @@ do
     ;;
 
   -PROFILECALLSTACK)
+    profile=yes
     profilecallstack=yes
     shift
     ;;
@@ -1118,9 +1119,9 @@ cat << EOF > /tmp/tau$$
 	
 EOF
 
-if tversion=`( wish4.0 -f /tmp/tau$$ ) 2>/dev/null`
+if tversion=`( wish8.0 -f /tmp/tau$$ ) 2>/dev/null`
 then
-  wishname=wish4.0
+  wishname=wish8.0
   echo "Found Tcl/Tk wish $tversion"
 else
   if tversion=`( wish -f /tmp/tau$$ ) 2>/dev/null`
