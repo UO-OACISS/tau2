@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <iostream.h>
 
+TAU_REGISTER_EVENT(getdata, "Get Data values");
 
 class NoTempl { // Simple class with Get and Set methods
   private :
@@ -28,6 +29,7 @@ class NoTempl { // Simple class with Get and Set methods
     };
     int GetData (void) { 
       TAU_PROFILE("NoTempl::GetData()","void ()", TAU_UTILITY | TAU_USER);
+      TAU_EVENT(getdata,(double) Data);
       return Data;
     }
     int SetData (int d) {
@@ -68,6 +70,7 @@ class TemplClass { // Simple class template with Get and Set methods
     T GetData(void) {
       TAU_TYPE_STRING(taustr, CT(*this) + " void (void)");
       TAU_PROFILE("TemplClass::GetData()", taustr, TAU_ACLMPL | TAU_USER);
+      TAU_EVENT(getdata,(double) Data * 2);
       return Data;
     }
     T SetData(T d) {
