@@ -32,7 +32,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	this.setExperimentID(-1);
 	this.setApplicationID(-1);
 	this.setName("");
-	this.setTime("");
 	this.setProblemDefinition("");
 	this.setNodeCount(-1);
 	this.setNumContextsPerNode(-1);
