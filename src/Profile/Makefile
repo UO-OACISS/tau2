@@ -26,18 +26,20 @@
 
 TAUROOT=/users/sameer/rs/tau2
 include $(TAUROOT)/include/Makefile
+
+CXX = $(TAU_CXX)
+CC  = $(TAU_CC)
+
 #This includes all profile options in $(PROFILEOPTS).
 
 
 
 ##############################################
-#KAI#AR			= $(CONFIG_CXX)     #ENDIF#
-#KAI#ARFLAGS			= -o		    #ENDIF#
 #SOL2CC#EXTRAOBJS		= Templates.DB/*.o  #ENDIF#
 #############################################
 
 
-LINKER	= $(CC)
+LINKER	= $(TAU_CC)
 
 INSTALLDEST	= $(TAUROOT)/lib/$(CONFIG_ARCH)
 
@@ -73,13 +75,13 @@ AR	      = ar
 
 ARFLAGS	      = rcv 
 ############# For KAI KCC compiler, replace AR accordingly #######
-#KAI#AR			= $(CONFIG_CXX) 		   #ENDIF#
+#KAI#AR			= $(CXX) 		   	   #ENDIF#
 #KAI#ARFLAGS			= --one_per -o		 	   #ENDIF#
 ##################################################################
 
 ############# For SGI CC compiler, replace AR accordingly #######
-#SGICC#AR			= $(CONFIG_CXX) -ar 		   #ENDIF#
-#SGICC#ARFLAGS			= -o				   #ENDIF#
+#SGICC#AR			= $(CXX) -ar 		   #ENDIF#
+#SGICC#ARFLAGS			= -o			   #ENDIF#
 ##################################################################
 
 RM 	      = /bin/rm -f
