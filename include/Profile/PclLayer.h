@@ -15,7 +15,7 @@
 
   struct ThreadValue{
   int ThreadID;
-  long long CounterValue;
+  PCL_FP_CNT_TYPE CounterValue;
   };
 
 
@@ -28,7 +28,7 @@ class PCL_Layer
 
   public:
     //Default getCounters ... without sychronization of resources.
-    static long long getCounters(int tid);
+    static PCL_FP_CNT_TYPE getCounters(int tid);
 };
 
 #endif /* TAU_PCL */
