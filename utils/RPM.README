@@ -1,0 +1,10 @@
+To install TAU in a Linux RPM, I do:
+
+% cd /usr/local/packages
+% rpm -bb TAU-2.4-0.spec
+% ls /usr/src/redhat/RPMS/i386/
+
+TAU-2.4-0.i386.rpm
+% rpm -i --prefix /tmp/TAU24 /usr/src/redhat/RPMS/i386/TAU-2.4-0.i386.rpm
+Installed TAU 2.4. See INSTALL file and %./configure and % make install 
+%
