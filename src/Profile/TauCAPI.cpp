@@ -204,7 +204,7 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 #endif /* DEBUG_PROF */
   if (*ptr == 0)
   {  // remove garbage characters from the end of name
-    for(int i=0; i<1024; i++)
+    for(int i=0; i<strlen(fname); i++)
     {
       if (!isprint(fname[i]))
       {
@@ -226,7 +226,7 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2000/07/27 19:25:30 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.10 2000/07/27 19:25:30 sameer Exp $
+ * $Revision: 1.11 $   $Date: 2000/09/25 17:55:29 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.11 2000/09/25 17:55:29 sameer Exp $
  ***************************************************************************/
 
