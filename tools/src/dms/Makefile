@@ -1,3 +1,7 @@
+# settings set automatically by the configure script.
+CONFIG_ARCH=default
+TAUROOT=
+
 # these are classpaths for the build.  The second classpath is for the 
 # src/edu/uoregon/tau/dms/loader directory.  The first is for everything else.
 CLASSPATH=./classes
@@ -23,6 +27,9 @@ all: dms.jar javadoc rebuilddb buildtest simple
 
 dms.jar: $(DATABASE_CLASSES) $(DSS_CLASSES) $(LOADER_CLASSES) $(ANALYSIS_CLASSES)
 	jar -cvf dms.jar -C classes .
+
+install:
+	cp dms.jar $(TAUROOT)/$(CONFIG_ARCH)/lib/dms.jar
 
 $(DATABASE_CLASSES): $(DATABASE_SOURCES)
 	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(DATABASE_SOURCES)
@@ -76,9 +83,11 @@ testsave: $(EXAMPLE_CLASSES)
 	./src/examples/testSave
 
 rebuilddb: dms.jar
-	dropdb perfdmf
-	createdb perfdmf
+	dropdb perfdmf_buildtest
+	createdb perfdmf_buildtest
 	perfdmf_loadschema
 	perfdmf_loadapp -x data/App_Info.xml
 	perfdmf_loadexp -x data/Exp_Info.xml -a 1
 	perfdmf_loadtrial -e 1 -f pprof -s data/pprof.dat -n Test
+
+rebuilddb_and_test: rebuilddb simple buildtest

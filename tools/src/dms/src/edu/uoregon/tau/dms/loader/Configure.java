@@ -23,6 +23,7 @@ public class Configure {
     // todo - consider using a hash table!
     private String perfdmf_home = "";
     private String tau_root = "";
+    private String arch = "";
     private String jdbc_db_jarfile = "postgresql.jar";
     private String jdbc_db_driver = "org.postgresql.Driver";
     private String jdbc_db_type = "postgresql";
@@ -38,9 +39,10 @@ public class Configure {
 		
     private String configFileName;
 
-    public Configure(String tauroot) {
+    public Configure(String tauroot, String arch) {
 		super();
 		this.tau_root = tauroot;
+		this.arch = arch;
 		this.perfdmf_home = tauroot + "/tools/src/dms";
     }
 
@@ -129,12 +131,12 @@ public class Configure {
 	    if (configFileFound)
 		System.out.print("Please enter the JDBC jar file.\n(" + jdbc_db_jarfile + "):");
 	    else
-		System.out.print("Please enter the JDBC jar file.\n(" + tau_root + "/tools/src/contrib/" + jdbc_db_jarfile + "):");
+		System.out.print("Please enter the JDBC jar file.\n(" + tau_root + "/" + arch + "/lib/" + jdbc_db_jarfile + "):");
 						
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) jdbc_db_jarfile = tmpString;
 	    else if (!configFileFound) 
-		jdbc_db_jarfile = tau_root + "/tools/src/contrib/" + jdbc_db_jarfile;
+		jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + jdbc_db_jarfile;
 						
 	    // Prompt for JDBC driver name
 	    System.out.print("Please enter the JDBC Driver name.\n(" + jdbc_db_driver + "):");
@@ -197,11 +199,11 @@ public class Configure {
 	    if (configFileFound)
 		System.out.print("Please enter the XML Parser jar file.\n(" + xml_parser + "):");
 	    else
-		System.out.print("Please enter the XML Parser jar file.\n(" + tau_root + "/tools/src/contrib/" + xml_parser + "):");
+		System.out.print("Please enter the XML Parser jar file.\n(" + tau_root + "/" + arch + "/lib/" + xml_parser + "):");
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) xml_parser = tmpString;
 	    else if (!configFileFound)
-		xml_parser = perfdmf_home + "/tools/src/contrib/" + xml_parser;
+		xml_parser = perfdmf_home + "/" + arch + "/lib/" + xml_parser;
 	}
 	catch (IOException e) {
 	    // todo - get info from the exception
@@ -398,6 +400,7 @@ public class Configure {
 	CmdLineParser parser = new CmdLineParser();
 	CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
 	CmdLineParser.Option homeOpt = parser.addStringOption('t', "tauroot");
+	CmdLineParser.Option archOpt = parser.addStringOption('a', "arch");
 	CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
 	try {
 		parser.parse(args);
@@ -410,6 +413,7 @@ public class Configure {
 
 	String configFile = (String)parser.getOptionValue(configfileOpt);
 	String tauroot = (String)parser.getOptionValue(homeOpt);
+	String arch = (String)parser.getOptionValue(archOpt);
 	Boolean help = (Boolean)parser.getOptionValue(helpOpt);
 
 	if (help != null && help.booleanValue()) {
@@ -419,10 +423,11 @@ public class Configure {
 
 	if (configFile == null) configFile = new String("");
 	if (tauroot == null) tauroot = new String("");
+	if (arch == null) arch = new String("");
 
 	// Create a new Configure object, which will walk the user through
 	// the process of creating/editing a configuration file.
-	Configure config = new Configure(tauroot);
+	Configure config = new Configure(tauroot, arch);
 	config.initialize(configFile);
 				
 	// Give the user the ability to modify any/everything

@@ -1,11 +1,13 @@
 #!/bin/@SHELL@
 TAUROOT=@TAUROOTDIR@
+CONFIG_ARCH=@ARCH@
 
 PERFDMF_HOME=${TAUROOT}/tools/src/dms
-PERFDMF_JAR=${PERFDMF_HOME}/dms.jar
-XMLSAX_JAR=${TAUROOT}/tools/src/contrib/xerces.jar
-JDBC_JAR=${TAUROOT}/tools/src/contrib/postgresql.jar
-JARGS_JAR=${TAUROOT}/tools/src/contrib/jargs.jar
+PERFDMF_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/dms.jar
+XMLSAX_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
+JDBC_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/postgresql.jar
+JARGS_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
+CONFIG_FILE=${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.cfg
 
 if [ "x$TAUROOT" = "x" ] 
 then
@@ -49,4 +51,4 @@ fi
 java \
 -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
 edu.uoregon.tau.dms.loader.LoadExperiment \
--g ${PERFDMF_HOME}/data/perfdmf.cfg $@
+-g ${CONFIG_FILE} $@
