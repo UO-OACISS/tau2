@@ -1,0 +1,1272 @@
+/* 
+	
+	MeanDataWindowPanel.java
+	
+	Title:			jRacy
+	Author:			Robert Bell
+	Description:	
+*/
+
+package jRacy;
+
+import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
+
+
+public class MeanDataWindowPanel extends JPanel implements ActionListener, MouseListener, ChangeListener
+{
+	int xPanelSize = 700;
+	int yPanelSize = 450;
+	
+	public MeanDataWindowPanel()
+	{
+		try{
+			setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+			
+			//Schedule a repaint of this panel.
+			this.repaint();
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDWP01");
+		}
+	
+	}
+	
+	
+	public MeanDataWindowPanel(MeanDataWindow inMDWindow, StaticMainWindowData inSMWData)
+	{
+		try{
+			setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+			setBackground(Color.white);
+			
+			//Add this object as a mouse listener.
+			addMouseListener(this);
+			
+			staticNodeList = jRacy.staticSystemData.getStaticServerList();
+
+			mDWindow = inMDWindow;
+			sMWData = inSMWData;
+			
+			//Add items to the popu menu.
+			JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
+			functionDetailsItem.addActionListener(this);
+			popup.add(functionDetailsItem);
+			
+			JMenuItem changeColorItem = new JMenuItem("Change Function Color");
+			changeColorItem.addActionListener(this);
+			popup.add(changeColorItem);
+			
+			JMenuItem maskFunctionItem = new JMenuItem("Reset to Generic Color");
+			maskFunctionItem.addActionListener(this);
+			popup.add(maskFunctionItem);
+			
+			//Schedule a repaint of this panel.
+			this.repaint();
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDWP02");
+		}
+	
+	}
+	
+
+	public void paintComponent(Graphics g)
+	{
+		try{
+			super.paintComponent(g);
+			
+			//Set the numberOfColors variable.
+			numberOfColors = jRacy.clrChooser.getNumberOfColors();
+			
+			//Do the standard font and spacing stuff.
+			if(!(jRacy.jRacyPreferences.areBarDetailsSet()))
+			{
+				
+				//Create font.
+				Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), 12);
+				g.setFont(font);
+				FontMetrics fmFont = g.getFontMetrics(font);
+				
+				//Set up the bar details.
+				
+				//Compute the font metrics.
+				int maxFontAscent = fmFont.getAscent();
+				int maxFontDescent = fmFont.getMaxDescent();
+				
+				int tmpInt = maxFontAscent + maxFontDescent;
+				
+				jRacy.jRacyPreferences.setBarDetails(maxFontAscent, (tmpInt + 5));
+				
+				jRacy.jRacyPreferences.setSliders(maxFontAscent, (tmpInt + 5));
+			}
+			
+			//Set local spacing and bar heights.
+			barSpacing = jRacy.jRacyPreferences.getBarSpacing();
+			barHeight = jRacy.jRacyPreferences.getBarHeight();
+			
+			//Create font.
+			Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), barHeight);
+			g.setFont(font);
+			FontMetrics fmFont = g.getFontMetrics(font);
+
+			double tmpSum;
+			double tmpDataValue;
+			Color tmpColor;
+			String tmpString;
+			int stringWidth;
+			int stringStart;
+			
+			//Convenient counters.
+			int colorCounter = 0;
+		
+			int yCoord = 0;
+			
+			int tmpXWidthCalc = 0;
+			
+			//An XCoord used in drawing the bars.
+			int barXCoord = 0;
+			yCoord = 0;
+		
+			//Grab the appropriate thread.
+			tmpMeanDataElementList = mDWindow.getStaticMainWindowSystemData();
+			
+			//Cycle through the data values for this thread to get the total.
+			tmpSum = 0.00;
+			
+			Rectangle clipRect = g.getClipBounds();
+			
+			int yBeg = (int) clipRect.getY();
+			int yEnd = (int) (yBeg + clipRect.getHeight());
+			int startMeanElement = 0;
+			int endMeanElement = 0;
+			
+		    //To be on the safe side, have an alternative to the clip rectangle.
+		    if ((clipRect != null))
+		    {	
+		    	//@@@In the clipping section. - This comment aids in matching up if/else statements.@@@
+		    	
+		    	
+		    	//Set up some panel dimensions.
+		    	newYPanelSize = yCoord + ((tmpMeanDataElementList.size() + 1) * barSpacing);
+		    	
+		    	startMeanElement = ((yBeg - yCoord) / barSpacing) - 1;
+		    	endMeanElement  = ((yEnd - yCoord) / barSpacing) + 1;
+		    	
+		    	if(startMeanElement < 0)
+		    		startMeanElement = 0;
+		    		
+		    	if(endMeanElement < 0)
+		    		endMeanElement = 0;
+		    	
+		    	if(startMeanElement > (tmpMeanDataElementList.size() - 1))
+		    		startMeanElement = (tmpMeanDataElementList.size() - 1);
+		    		
+		    	if(endMeanElement > (tmpMeanDataElementList.size() - 1))
+		    		endMeanElement = (tmpMeanDataElementList.size() - 1);
+		    	
+		    	yCoord = yCoord + (startMeanElement * barSpacing);
+		    	
+				//Test for the different menu options for this window.
+				if((mDWindow.isInclusive()))
+				{
+				
+					//@@@In the inclusive section. - This comment aids in matching up if/else statements.@@@
+				
+					
+					double maxValue = jRacy.staticSystemData.getMaxMeanInclusivePercentValue();
+					int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
+					barXCoord = tmpValue + 60;
+					
+					if(mDWindow.isPercent())
+					{
+						
+						//@@@In the percent section. - This comment aids in matching up if/else statements.@@@
+								
+						
+						//Need to figure out how long the percentage string will be.
+						tmpString = new String(maxValue + "%");
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+						
+						for(int i = startMeanElement; i <= endMeanElement; i++)
+		    			{		
+		    				tmpSMWMeanDataElement = (SMWMeanDataElement) tmpMeanDataElementList.elementAt(i);
+							
+							yCoord = yCoord + (barSpacing);
+							
+							tmpDataValue = tmpSMWMeanDataElement.getMeanInclusivePercentValue();
+							
+							int xLength;
+							double tmpDouble;
+							tmpDouble = (tmpDataValue / 100.00);
+							xLength = (int) (tmpDouble * defaultBarLength);
+							if(xLength == 0)
+								xLength = 1;
+							
+							//Now set the color values for drawing!
+							//Get the appropriate color.
+							tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+							g.setColor(tmpColor);
+							
+							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
+							{
+								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								{
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+								}
+							}
+							else
+							{
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else
+								{
+									tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+									g.setColor(tmpColor);
+								}
+								
+								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+							}
+							
+							//Now print the percentage to the left of the bar.
+							g.setColor(Color.black);
+							//Need to figure out how long the percentage string will be.
+							tmpString = new String(tmpDataValue + "%");
+							stringWidth = fmFont.stringWidth(tmpString);
+							//Now draw the percent value to the left of the bar.
+							stringStart = barXCoord - xLength - stringWidth - 5;
+							g.drawString(tmpDataValue + "%", stringStart, yCoord);
+							
+							//Now print the name of the function to the right of the bar.
+							tmpString = tmpSMWMeanDataElement.getFunctionName();
+							g.drawString(tmpString, (barXCoord + 5), yCoord);
+							
+							//Figure out how wide that string was for x coord reasons.
+							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
+							if(tmpXWidthCalc < stringWidth)
+							{
+								tmpXWidthCalc = stringWidth + 15;
+							}
+							
+							//Update the drawing coordinates.
+							tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+																			
+						}
+					}
+					else
+					{//@@@ End - isPercent
+					
+					
+						//@@@In the value section. - This comment aids in matching up if/else statements.@@@
+					
+				
+						//Now get the raw values for printing at the end of the bars.
+						tmpDataValue = jRacy.staticSystemData.getMaxMeanInclusiveValue();
+						//Check to see what the units are.
+						if((mDWindow.units()).equals("Seconds"))
+						{
+							tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						else if((mDWindow.units()).equals("Milliseconds"))
+						{
+							tmpString = new String((Double.toString((tmpDataValue / 1000))));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						else
+						{
+							tmpString = new String(Double.toString(tmpDataValue));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						
+						for(int i = startMeanElement; i <= endMeanElement; i++)
+		    			{		
+		    				tmpSMWMeanDataElement = (SMWMeanDataElement) tmpMeanDataElementList.elementAt(i);
+							
+							yCoord = yCoord + (barSpacing);
+							
+							tmpDataValue = tmpSMWMeanDataElement.getMeanInclusivePercentValue();
+							
+							int xLength;
+							double tmpDouble;
+							tmpDouble = (tmpDataValue / 100.00);
+							xLength = (int) (tmpDouble * defaultBarLength);
+							if(xLength == 0)
+								xLength = 1;
+							
+							//Now set the color values for drawing!
+							//Get the appropriate color.
+							tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+							g.setColor(tmpColor);
+							
+							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
+							{
+								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								{
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+								}
+							}
+							else
+							{
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else
+								{
+									tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+									g.setColor(tmpColor);
+								}
+								
+								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+							}
+							
+							//Now print the percentage to the left of the bar.
+							g.setColor(Color.black);
+							
+							//Now get the raw values for printing at the end of the bars.
+							tmpDataValue = tmpSMWMeanDataElement.getMeanInclusiveValue();
+							//Check to see what the units are.
+							if((mDWindow.units()).equals("Seconds"))
+							{
+								tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+							}
+							else if((mDWindow.units()).equals("Milliseconds"))
+							{
+								tmpString = new String((Double.toString((tmpDataValue / 1000))));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+							}
+							else
+							{
+								tmpString = new String(Double.toString(tmpDataValue));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+							}				
+							
+							//Now print the name of the function to the right of the bar.
+							tmpString = tmpSMWMeanDataElement.getFunctionName();
+							g.drawString(tmpString, (barXCoord + 5), yCoord);
+							
+							//Figure out how wide that string was for x coord reasons.
+							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
+							if(tmpXWidthCalc < stringWidth)
+							{
+								tmpXWidthCalc = stringWidth + 15;
+							}
+							
+							//Update the drawing coordinates.
+							tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);																	
+						}
+					}
+				}
+				else	//Case of exclusive selection.
+				{
+					
+					
+					//@@@In the exclusive section. - This comment aids in matching up if/else statements.@@@
+					
+					
+					
+					//Case of exclusive selection.
+					//Get the maximum on this thread, and set the draw positions appropriately.
+					double maxValue = jRacy.staticSystemData.getMaxMeanExclusivePercentValue();
+					int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
+					barXCoord = tmpValue + 60;
+					
+					if(mDWindow.isPercent())
+					{	
+						
+						
+						//@@@In the percent section. - This comment aids in matching up if/else statements.@@@
+						
+						
+						//Need to figure out how long the percentage string will be.
+						tmpString = new String(maxValue + "%");
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+						
+						
+						for(int i = startMeanElement; i <= endMeanElement; i++)
+		    			{		
+		    				tmpSMWMeanDataElement = (SMWMeanDataElement) tmpMeanDataElementList.elementAt(i);
+							
+							yCoord = yCoord + (barSpacing);
+							
+							tmpDataValue = tmpSMWMeanDataElement.getMeanExclusivePercentValue();
+							
+							int xLength;
+							double tmpDouble;
+							tmpDouble = (tmpDataValue / 100.00);
+							xLength = (int) (tmpDouble * defaultBarLength);
+							if(xLength == 0)
+								xLength = 1;
+								
+							//Now set the color values for drawing!
+							//Get the appropriate color.
+							tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+							g.setColor(tmpColor);
+							
+							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
+							{
+								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								{
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+								}
+							}
+							else
+							{
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else
+								{
+									tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+									g.setColor(tmpColor);
+								}
+								
+								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+							}
+							
+							//Now print the percentage to the left of the bar.
+							g.setColor(Color.black);
+							//Need to figure out how long the percentage string will be.
+							tmpString = new String(tmpDataValue + "%");
+							stringWidth = fmFont.stringWidth(tmpString);
+							stringStart = barXCoord - xLength - stringWidth - 5;
+							//Now draw the percent value to the left of the bar.
+							g.drawString(tmpDataValue + "%", stringStart, yCoord);
+							
+							//Now print the name of the function to the right of the bar.
+							tmpString = tmpSMWMeanDataElement.getFunctionName();
+							
+							g.drawString(tmpString, (barXCoord + 5), yCoord);
+							
+							//Figure out how wide that string was for x coord reasons.
+							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
+							if(tmpXWidthCalc < stringWidth)
+							{
+								tmpXWidthCalc = stringWidth + 15;
+							}
+							
+							//Update the drawing coordinates.
+							tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+						}
+					}
+					else //@@@ End - isPercent.
+					{
+					
+					
+						//@@@In the value section. - This comment aids in matching up if/else statements.@@@
+					
+					
+						//Add the correct amount to barXCoord.
+						tmpDataValue = jRacy.staticSystemData.getMaxMeanExclusiveValue();
+						
+						if((mDWindow.units()).equals("Seconds"))
+						{
+							tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						else if((mDWindow.units()).equals("Milliseconds"))
+						{
+							tmpString = new String((Double.toString((tmpDataValue / 1000))));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						else
+						{
+							tmpString = new String(Double.toString(tmpDataValue));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						
+						
+						
+						for(int i = startMeanElement; i <= endMeanElement; i++)
+		    			{		
+		    				tmpSMWMeanDataElement = (SMWMeanDataElement) tmpMeanDataElementList.elementAt(i);
+							
+							yCoord = yCoord + (barSpacing);
+							
+							tmpDataValue = tmpSMWMeanDataElement.getMeanExclusivePercentValue();
+							
+							int xLength;
+							double tmpDouble;
+							tmpDouble = (tmpDataValue / 100.00);
+							xLength = (int) (tmpDouble * defaultBarLength);
+							if(xLength == 0)
+								xLength = 1;
+							
+							//Now set the color values for drawing!
+							//Get the appropriate color.
+							tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+							g.setColor(tmpColor);
+							
+							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
+							{
+								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								{
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+								}
+							}
+							else
+							{
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else
+								{
+									tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+									g.setColor(tmpColor);
+								}
+								
+								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+							}
+							
+							//Now print the percentage to the left of the bar.
+							g.setColor(Color.black);
+							
+							//Now get the raw values for printing at the end of the bars.
+							tmpDataValue = tmpSMWMeanDataElement.getMeanExclusiveValue();
+							
+							//Check to see what the units are.
+							if((mDWindow.units()).equals("Seconds"))
+							{
+								tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+							}
+							else if((mDWindow.units()).equals("Milliseconds"))
+							{
+								tmpString = new String((Double.toString((tmpDataValue / 1000))));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+							}
+							else
+							{
+								tmpString = new String(Double.toString(tmpDataValue));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+							}				
+							
+							//Now print the name of the function to the right of the bar.
+							tmpString = tmpSMWMeanDataElement.getFunctionName();
+							g.drawString(tmpString, (barXCoord + 5), yCoord);
+							
+							//Figure out how wide that string was for x coord reasons.
+							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
+							if(tmpXWidthCalc < stringWidth)
+							{
+								tmpXWidthCalc = stringWidth + 15;
+							}
+							
+							//Update the drawing coordinates.
+							tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+						}
+					}
+				}
+			}
+			else
+			{
+				
+				//@@@In the non-clipping section. - This comment aids in matching up if/else statements.@@@
+				
+				//Test for the different menu options for this window.
+				if((mDWindow.isInclusive()))
+				{
+					//Get the maximum on this thread, and set the draw positions appropriately.
+					double maxValue = jRacy.staticSystemData.getMaxMeanInclusivePercentValue();
+					int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
+					barXCoord = tmpValue + 60;
+					
+					if(mDWindow.isPercent())
+					{		
+						
+						//Need to figure out how long the percentage string will be.
+						tmpString = new String(maxValue + "%");
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+						
+						for(Enumeration e1 = tmpMeanDataElementList.elements(); e1.hasMoreElements() ;)
+						{
+							
+							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
+							yCoord = yCoord + (barSpacing);
+							
+							tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+							tmpDataValue = tmpSMWMeanDataElement.getMeanInclusivePercentValue();
+							
+							int xLength;
+							double tmpDouble;
+							tmpDouble = (tmpDataValue / 100.00);
+							xLength = (int) (tmpDouble * defaultBarLength);
+							if(xLength == 0)
+								xLength = 1;
+							
+							//Now set the color values for drawing!
+							//Get the appropriate color.
+							tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+							g.setColor(tmpColor);
+							
+							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
+							{
+								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								{
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+								}
+							}
+							else
+							{
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else
+								{
+									tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+									g.setColor(tmpColor);
+								}
+								
+								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+							}
+							
+							//Now print the percentage to the left of the bar.
+							g.setColor(Color.black);
+							//Need to figure out how long the percentage string will be.
+							tmpString = new String(tmpDataValue + "%");
+							stringWidth = fmFont.stringWidth(tmpString);
+							//Now draw the percent value to the left of the bar.
+							stringStart = barXCoord - xLength - stringWidth - 5;
+							g.drawString(tmpDataValue + "%", stringStart, yCoord);
+							
+							//Now print the name of the function to the right of the bar.
+							tmpString = tmpSMWMeanDataElement.getFunctionName();
+							g.drawString(tmpString, (barXCoord + 5), yCoord);
+							
+							//Figure out how wide that string was for x coord reasons.
+							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
+							if(tmpXWidthCalc < stringWidth)
+							{
+								tmpXWidthCalc = stringWidth + 15;
+							}
+							
+							//Update the drawing coordinates.
+							tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+						}
+					}
+					else
+					{//@@@
+				
+						//Now get the raw values for printing at the end of the bars.
+						tmpDataValue = jRacy.staticSystemData.getMaxMeanInclusiveValue();
+						//Check to see what the units are.
+						if((mDWindow.units()).equals("Seconds"))
+						{
+							tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						else if((mDWindow.units()).equals("Milliseconds"))
+						{
+							tmpString = new String((Double.toString((tmpDataValue / 1000))));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						else
+						{
+							tmpString = new String(Double.toString(tmpDataValue));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						
+						for(Enumeration e2 = tmpMeanDataElementList.elements(); e2.hasMoreElements() ;)
+						{
+							
+							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
+							yCoord = yCoord + (barSpacing);
+							
+							tmpSMWMeanDataElement = (SMWMeanDataElement) e2.nextElement();
+							tmpDataValue = tmpSMWMeanDataElement.getMeanInclusivePercentValue();
+							
+							int xLength;
+							double tmpDouble;
+							tmpDouble = (tmpDataValue / 100.00);
+							xLength = (int) (tmpDouble * defaultBarLength);
+							if(xLength == 0)
+								xLength = 1;
+							
+							//Now set the color values for drawing!
+							//Get the appropriate color.
+							tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+							g.setColor(tmpColor);
+							
+							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
+							{
+								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								{
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+								}
+							}
+							else
+							{
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else
+								{
+									tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+									g.setColor(tmpColor);
+								}
+								
+								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+							}
+							
+							//Now print the percentage to the left of the bar.
+							g.setColor(Color.black);
+							
+							//Now get the raw values for printing at the end of the bars.
+							tmpDataValue = tmpSMWMeanDataElement.getMeanInclusiveValue();
+							//Check to see what the units are.
+							if((mDWindow.units()).equals("Seconds"))
+							{
+								tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+							}
+							else if((mDWindow.units()).equals("Milliseconds"))
+							{
+								tmpString = new String((Double.toString((tmpDataValue / 1000))));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+							}
+							else
+							{
+								tmpString = new String(Double.toString(tmpDataValue));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+							}				
+							
+							//Now print the name of the function to the right of the bar.
+							tmpString = tmpSMWMeanDataElement.getFunctionName();
+							g.drawString(tmpString, (barXCoord + 5), yCoord);
+							
+							//Figure out how wide that string was for x coord reasons.
+							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
+							if(tmpXWidthCalc < stringWidth)
+							{
+								tmpXWidthCalc = stringWidth + 15;
+							}
+							
+							//Update the drawing coordinates.
+							tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+						}
+					}
+				}
+				else	//Case of exclusive selection.
+				{
+					
+					//Get the maximum on this thread, and set the draw positions appropriately.
+					double maxValue = jRacy.staticSystemData.getMaxMeanExclusivePercentValue();
+					int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
+					barXCoord = tmpValue + 60;
+					
+					if(mDWindow.isPercent())
+					{	
+						
+						//Need to figure out how long the percentage string will be.
+						tmpString = new String(maxValue + "%");
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+						
+						
+						for(Enumeration e3 = tmpMeanDataElementList.elements(); e3.hasMoreElements() ;)
+						{
+							
+							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
+							yCoord = yCoord + (barSpacing);
+							
+							tmpSMWMeanDataElement = (SMWMeanDataElement) e3.nextElement();
+							tmpDataValue = tmpSMWMeanDataElement.getMeanExclusivePercentValue();
+							
+							int xLength;
+							double tmpDouble;
+							tmpDouble = (tmpDataValue / 100.00);
+							xLength = (int) (tmpDouble * defaultBarLength);
+							if(xLength == 0)
+								xLength = 1;
+							
+							//Now set the color values for drawing!
+							//Get the appropriate color.
+							tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+							g.setColor(tmpColor);
+							
+							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
+							{
+								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								{
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+								}
+							}
+							else
+							{
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else
+								{
+									tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+									g.setColor(tmpColor);
+								}
+								
+								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+							}
+							
+							//Now print the percentage to the left of the bar.
+							g.setColor(Color.black);
+							//Need to figure out how long the percentage string will be.
+							tmpString = new String(tmpDataValue + "%");
+							stringWidth = fmFont.stringWidth(tmpString);
+							stringStart = barXCoord - xLength - stringWidth - 5;
+							//Now draw the percent value to the left of the bar.
+							g.drawString(tmpDataValue + "%", stringStart, yCoord);
+							
+							//Now print the name of the function to the right of the bar.
+							tmpString = tmpSMWMeanDataElement.getFunctionName();
+							g.drawString(tmpString, (barXCoord + 5), yCoord);
+							
+							//Figure out how wide that string was for x coord reasons.
+							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
+							if(tmpXWidthCalc < stringWidth)
+							{
+								tmpXWidthCalc = stringWidth + 15;
+							}
+							
+							//Update the drawing coordinates.
+							tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+						}
+					}
+					else
+					{
+						//Add the correct amount to barXCoord.
+						tmpDataValue = jRacy.staticSystemData.getMaxMeanExclusiveValue();
+						
+						if((mDWindow.units()).equals("Seconds"))
+						{
+							tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						else if((mDWindow.units()).equals("Milliseconds"))
+						{
+							tmpString = new String((Double.toString((tmpDataValue / 1000))));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						else
+						{
+							tmpString = new String(Double.toString(tmpDataValue));
+							stringWidth = fmFont.stringWidth(tmpString);
+							barXCoord = barXCoord + stringWidth;
+						}
+						
+						
+						
+						for(Enumeration e5 = tmpMeanDataElementList.elements(); e5.hasMoreElements() ;)
+						{
+							
+							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
+							yCoord = yCoord + (barSpacing);
+							
+							tmpSMWMeanDataElement = (SMWMeanDataElement) e5.nextElement();
+							tmpDataValue = tmpSMWMeanDataElement.getMeanExclusivePercentValue();
+							
+							int xLength;
+							double tmpDouble;
+							tmpDouble = (tmpDataValue / 100.00);
+							xLength = (int) (tmpDouble * defaultBarLength);
+							if(xLength == 0)
+								xLength = 1;
+							
+							//Now set the color values for drawing!
+							//Get the appropriate color.
+							tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+							g.setColor(tmpColor);
+							
+							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
+							{
+								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								{
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+								}
+							}
+							else
+							{
+								if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else
+								{
+									tmpColor = tmpSMWMeanDataElement.getFunctionColor();
+									g.setColor(tmpColor);
+								}
+								
+								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+							}
+							
+							//Now print the percentage to the left of the bar.
+							g.setColor(Color.black);
+							
+							//Now get the raw values for printing at the end of the bars.
+							tmpDataValue = tmpSMWMeanDataElement.getMeanExclusiveValue();
+							
+							//Check to see what the units are.
+							if((mDWindow.units()).equals("Seconds"))
+							{
+								tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+							}
+							else if((mDWindow.units()).equals("Milliseconds"))
+							{
+								tmpString = new String((Double.toString((tmpDataValue / 1000))));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+							}
+							else
+							{
+								tmpString = new String(Double.toString(tmpDataValue));
+								stringWidth = fmFont.stringWidth(tmpString);
+								stringStart = barXCoord - xLength - stringWidth - 5;
+								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+							}				
+							
+							//Now print the name of the function to the right of the bar.
+							tmpString = tmpSMWMeanDataElement.getFunctionName();
+							g.drawString(tmpString, (barXCoord + 5), yCoord);
+							
+							//Figure out how wide that string was for x coord reasons.
+							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
+							if(tmpXWidthCalc < stringWidth)
+							{
+								tmpXWidthCalc = stringWidth + 15;
+							}
+							
+							//Update the drawing coordinates.
+							tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+						}
+					}
+				}
+			}
+				
+				
+			
+			//Resize the panel if needed.
+			if((newYPanelSize >= yPanelSize) || (tmpXWidthCalc  >= xPanelSize))
+			{
+				yPanelSize = newYPanelSize + 1;
+				xPanelSize = tmpXWidthCalc + 1;
+				
+				revalidate();
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDWP03");
+		}
+		
+		
+	}
+	
+	//******************************
+	//Event listener code!!
+	//******************************
+	
+	
+	//ActionListener code.
+	public void actionPerformed(ActionEvent evt)
+	{
+		try{
+			Object EventSrc = evt.getSource();
+			
+			SMWMeanDataElement tmpSMWMeanDataElement = null;
+			
+			if(EventSrc instanceof JMenuItem)
+			{
+				String arg = evt.getActionCommand();
+				if(arg.equals("Show Function Details"))
+				{
+					
+					if(clickedOnObject instanceof SMWMeanDataElement)
+					{
+						tmpSMWMeanDataElement = (SMWMeanDataElement) clickedOnObject;
+						//Bring up an expanded data window for this function, and set this function as highlighted.
+						jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWMeanDataElement.getFunctionID());
+						FunctionDataWindow tmpRef = new FunctionDataWindow(tmpSMWMeanDataElement.getFunctionName(), sMWData);
+						jRacy.systemEvents.addObserver(tmpRef);
+						tmpRef.show();
+					}
+				}
+				else if(arg.equals("Change Function Color"))
+				{	
+					int functionID = -1;
+					
+					//Get the clicked on object.
+					if(clickedOnObject instanceof SMWMeanDataElement)
+						functionID = ((SMWMeanDataElement) clickedOnObject).getFunctionID();
+					
+					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+					
+					Color tmpCol = tmpGME.getFunctionColor();
+					
+					JColorChooser tmpJColorChooser = new JColorChooser();
+					tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
+					if(tmpCol != null)
+					{
+						tmpGME.setSpecificColor(tmpCol);
+						tmpGME.setColorFlag(true);
+						
+						jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+					}
+				}
+				
+				else if(arg.equals("Reset to Generic Color"))
+				{	
+					
+					int functionID = -1;
+					
+					//Get the clicked on object.
+					if(clickedOnObject instanceof SMWMeanDataElement)
+						functionID = ((SMWMeanDataElement) clickedOnObject).getFunctionID();
+					
+					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+					
+					tmpGME.setColorFlag(false);
+					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDWP04");
+		}
+	}
+	
+	//Ok, now the mouse listeners for this panel.
+	public void mouseClicked(MouseEvent evt)
+	{
+		try{
+			//Get the location of the mouse.
+			int xCoord = evt.getX();
+			int yCoord = evt.getY();
+			
+			//Get the number of times clicked.
+			int clickCount = evt.getClickCount();
+			
+			for(Enumeration e1 = tmpMeanDataElementList.elements(); e1.hasMoreElements() ;)
+			{
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+									
+				if(yCoord <= (tmpSMWMeanDataElement.getYEnd()))
+				{
+					if((yCoord >= (tmpSMWMeanDataElement.getYBeg())) && (xCoord >= (tmpSMWMeanDataElement.getXBeg()))
+																		  && (xCoord <= (tmpSMWMeanDataElement.getXEnd())))
+					{
+						if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0)
+						{
+							//Set the clickedSMWMeanDataElement.
+							clickedOnObject = tmpSMWMeanDataElement;
+							popup.show(this, evt.getX(), evt.getY());
+							
+							//Return from this function.
+							return;
+						}
+						else
+						{
+							//Want to set the clicked on function to the current highlight color or, if the one
+							//clicked on is already the current highlighted one, set it back to normal.
+							if((jRacy.clrChooser.getHighlightColorFunctionID()) == -1)
+							{
+								jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWMeanDataElement.getFunctionID());
+							}
+							else
+							{
+								if(!((jRacy.clrChooser.getHighlightColorFunctionID()) == (tmpSMWMeanDataElement.getFunctionID())))
+									jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWMeanDataElement.getFunctionID());
+								else
+									jRacy.clrChooser.setHighlightColorFunctionID(-1);
+							}
+						}
+						//Nothing more to do ... return.
+						return;
+					}
+					else
+					{
+						//If we get here, it means that we are outside the function draw area.  That is, we
+						//are either to the left or right of the draw area, or just above it.
+						//It is better to return here as we do not want the sysstem to cycle through the
+						//rest of the objects, which would be pointless as we know that it will not be
+						//one of the others.  Significantly improves performance.
+						return;
+					}
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDWP05");
+		}
+	}
+	
+	public void mousePressed(MouseEvent evt) {}
+	public void mouseReleased(MouseEvent evt) {}
+	public void mouseEntered(MouseEvent evt) {}
+	public void mouseExited(MouseEvent evt) {}
+	
+	public void stateChanged(ChangeEvent event)
+	{
+		try{
+			int tmpInt = mDWindow.getSliderValue();
+			defaultBarLength = 250*tmpInt;
+			this.repaint();
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDWP06");
+		}		
+	}
+	
+	public Dimension getPreferredSize()
+	{
+		return new Dimension(xPanelSize, (yPanelSize + 10));
+	}
+	
+	//Instance stuff.
+	Vector staticNodeList;
+	
+	int newXPanelSize = 0;
+	int newYPanelSize = 0;
+	
+	
+	int barHeight;
+	int barSpacing;
+	int defaultBarLength = 250;
+	int maxXLength = 0;
+	int numberOfColors = 0;
+	
+	MeanDataWindow mDWindow;
+ 	
+ 	StaticMainWindowData sMWData;
+ 	Vector tmpMeanDataElementList;
+ 	SMWMeanDataElement tmpSMWMeanDataElement;
+ 	
+ 	//**********
+	//Popup menu definitions.
+	private JPopupMenu popup = new JPopupMenu();
+	//**********
+ 	
+ 	//**********
+	//Other useful variables.
+	Object clickedOnObject = null;
+	//End - Other useful variables.
+	//**********
+}
+
+//Now compute the length of the bar for this object.
+							//The default length for the bar shall be 200.
+							
+							/*  Some notes on the drawing.
+								
+								Drawing of the bars starts from position 200, and goes to the left.
+								The percent value is then draw to the left of it.  The function name
+								is then drawn to the right of the bar.
+								
+							*/

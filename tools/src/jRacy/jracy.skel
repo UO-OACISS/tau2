@@ -1,0 +1,37 @@
+#!/bin/sh
+TAUROOT=@TAUROOTDIR@
+MACHINE=@ARCH@
+
+pprof_path=${TAUROOT}/${MACHINE}/bin/pprof
+if [ "x$pprof_path" = "x" ]
+then
+   echo "pprof not found ... will start jRacy anyway."
+   echo "Unless you have a pprof.dat file already present,"
+   echo "you will have to load one manually."
+else
+    echo "Found pprof in ${pprof_path}"
+    if [ -r pprof.dat ] 
+    then
+      echo "Found pprof.dat"
+      if [ profile.0.0.0 -nt pprof.dat ]
+      then
+        echo "Regenerating pprof.dat file ..." 
+	${pprof_path} -d > pprof.dat
+      else 
+	echo "pprof.dat is current"
+      fi
+    else
+      echo "Please wait while I generate the pprof.dat file ..."
+      ${pprof_path} -d > pprof.dat
+    fi
+   
+    echo "Done ... now starting jRacy ..."
+fi
+#Searching for a preference file.
+
+if [ -f ~/.jRacy/jRacyPreferences.dat ] ; then
+    echo "Found a global jRacy pref." ; \
+    cp ~/.jRacy/jRacyPreferences.dat . ; \
+fi
+
+java -jar ${TAUROOT}/tools/src/jRacy/jRacy.jar 
