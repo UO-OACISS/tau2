@@ -200,24 +200,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jMenuItem = new JMenuItem("Delete");
 	    jMenuItem.addActionListener(this);
 	    popup4.add(jMenuItem);
-	    
-	    jMenuItem = new JMenuItem("Upload Trial to DB");
-	    jMenuItem.addActionListener(this);
-	    popup4.add(jMenuItem);
 	    //######
 	    //End - Add items to the fourth popup menu.
 	    //######
 
-	    //######
-	    //Add items to the fifth popup menu.
-	    //######
-	    uploadMetricItem = new JMenuItem("Upload Metric to DB");
-	    uploadMetricItem.addActionListener(this);
-	    popup5.add(uploadMetricItem);
-	    //######
-	    //End - Add items to the fifth popup menu.
-	    //######
-   
 	    //####################################
 	    //Create the tree.
 	    //####################################
@@ -264,14 +250,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				else if(userObject instanceof ParaProfTrial){
 				    clickedOnObject = userObject;
 				    popup4.show(ParaProfManager.this, evt.getX(), evt.getY());
-				}
-				else if(userObject instanceof Metric){
-				    clickedOnObject = userObject;
-				    if(((Metric)userObject).getTrial().dBTrial())
-					uploadMetricItem.setEnabled(false);
-				    else
-					uploadMetricItem.setEnabled(true);
-				    popup5.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 			    }
 			    else{
@@ -1580,7 +1558,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     private JPopupMenu popup2 = new JPopupMenu();
     private JPopupMenu popup3 = new JPopupMenu();
     private JPopupMenu popup4 = new JPopupMenu();
-    private JPopupMenu popup5 = new JPopupMenu();
     private JMenuItem uploadMetricItem = null;
 
     private Object clickedOnObject = null;
