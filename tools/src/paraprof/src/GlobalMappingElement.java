@@ -69,7 +69,6 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	//Don't add group if already a member.
 	if(this.isGroupMember(id))
 	    return;
-	
 	if(groups==null)
 	    groups = new int[5];
 	else if(groups.length<=numberOfGroups){
@@ -95,7 +94,11 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     }
 
     public int[] getGroups(){
-	return groups;}
+	int[] groups = new int[numberOfGroups];
+	for(int i=0;i<numberOfGroups;i++)
+	    groups[i]=this.groups[i];
+	return groups;
+    }
 
     public void setGroupsSet(boolean groupsSet){
 	this.groupsSet = groupsSet;}

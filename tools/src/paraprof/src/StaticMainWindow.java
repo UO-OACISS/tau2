@@ -9,6 +9,7 @@
 package paraprof;
 
 import java.util.*;
+import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -18,10 +19,10 @@ import java.awt.print.*;
 
 public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener{ 
   
-  public StaticMainWindow(ParaProfTrial inParaProfTrial, boolean debug){
+  public StaticMainWindow(ParaProfTrial trial, boolean debug){
       try{
 	  //This window needs to maintain a reference to its trial.
-	  trial = inParaProfTrial;
+	  this.trial = trial;
 	  this.debug = debug;
 
 	  //####################################
@@ -92,6 +93,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  menuItem.addActionListener(this);
 	  subMenu.add(menuItem);
 	  
+	  menuItem = new JMenuItem("Save to XML File");
+	  menuItem.addActionListener(this);
+	  subMenu.add(menuItem);
+
 	  menuItem = new JMenuItem("Save Image");
 	  menuItem.addActionListener(this);
 	  subMenu.add(menuItem);
@@ -310,6 +315,23 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		else if(arg.equals("Edit ParaProf Preferences!")){
 		    trial.getPreferences().showPreferencesWindow();
+		}
+		else if(arg.equals("Save to XML File")){
+		    //Ask the user for a filename and location.
+		    JFileChooser fileChooser = new JFileChooser();
+		    fileChooser.setDialogTitle("Save XML File");
+		    //Set the directory.
+		    fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		    int resultValue = fileChooser.showSaveDialog(this);
+		    if(resultValue == JFileChooser.APPROVE_OPTION){
+			System.out.println("Saving XML file ...");
+			//Get both the file.
+			File file = fileChooser.getSelectedFile();
+			XMLSupport xMLSupport = new XMLSupport(trial);
+			xMLSupport.writeXmlFiles(trial.getSelectedMetricID(),file);
+			System.out.println("Done saving XML file ...");
+		    }
 		}
 		else if(arg.equals("Save Image")){
 		    ParaProfImageOutput imageOutput = new ParaProfImageOutput();

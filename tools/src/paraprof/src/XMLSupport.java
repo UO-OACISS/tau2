@@ -21,11 +21,11 @@ public class XMLSupport{
     public XMLSupport(ParaProfTrial paraProfTrial){
 	this.paraProfTrial = paraProfTrial;}
 
-    public void writeXmlFiles(int metricID, String fileName){
+    public void writeXmlFiles(int metricID, File file){
 	GlobalMapping globalMapping = paraProfTrial.getGlobalMapping();
 	
 	//Build an array of group names.  This speeds lookup of group names.
-	Vector groups = globalMapping.getMapping(2);
+	Vector groups = globalMapping.getMapping(1);
 	String[] groupNames = new String[groups.size()];
 	int position = 0;
 	for(Enumeration e = groups.elements(); e.hasMoreElements() ;){
@@ -45,8 +45,7 @@ public class XMLSupport{
 	    String version = "";
 	    String hostname = InetAddress.getLocalHost().getHostName();
 
-	    File writeXml = new File(fileName);
-	    BufferedWriter xwriter = new BufferedWriter(new FileWriter(writeXml));
+	    BufferedWriter xwriter = new BufferedWriter(new FileWriter(file));
 
 	    xwriter.write("<?xml version=\"1.0\"?>", 0, ("<?xml version=\"1.0\"?>").length());
 	    xwriter.newLine();
@@ -84,11 +83,29 @@ public class XMLSupport{
 	    xwriter.newLine();
 	    
 	    xwriter.write("\t<UserEventAmt>" + globalMapping.getNumberOfMappings(2) + "</UserEventAmt>", 0, ("\t<UserEventAmt>" 
-													     + globalMapping.getNumberOfMappings(0) + "</UserEventAmt>").length());
+													     + globalMapping.getNumberOfMappings(2) + "</UserEventAmt>").length());
 	    xwriter.newLine();
 	    
 	    xwriter.write("\t<Pprof>", 0, ("\t<Pprof>").length());
 	    xwriter.newLine();
+
+	    //Write out function name to id mapping.
+	    writeBeginObject(xwriter,20);
+	    for(Enumeration e = globalMapping.getMapping(0).elements(); e.hasMoreElements() ;){
+		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
+		if(globalMappingElement!=null)
+		    writeNameIDMap(xwriter,globalMappingElement.getMappingName(),globalMappingElement.getMappingID());
+	    }
+	    writeEndObject(xwriter,20);
+	    
+	    //Write out userevent name to id mapping.
+	    writeBeginObject(xwriter,21);
+	    for(Enumeration e = globalMapping.getMapping(0).elements(); e.hasMoreElements() ;){
+		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
+		if(globalMappingElement!=null)
+		    writeNameIDMap(xwriter,globalMappingElement.getMappingName(),globalMappingElement.getMappingID());
+	    }
+	    writeEndObject(xwriter,21);
 	    
 	    StringBuffer groupsStringBuffer = new StringBuffer(10);
 	    Vector nodes = paraProfTrial.getNCT().getNodes();
@@ -109,13 +126,19 @@ public class XMLSupport{
 			    GlobalThreadDataElement function = (GlobalThreadDataElement) e4.nextElement();
 			    if (function!=null){
 				writeBeginObject(xwriter,16);
+				/* @@@ Commented out as is questionable functionality.  Add back in for legacy support.
 				writeFunctionName(xwriter,function.getMappingName());
+				*/
 				writeInt(xwriter,11,function.getMappingID());
 				//Build group string.
 				groupsStringBuffer.delete(0,groupsStringBuffer.length());
 				int[] groupIDs = function.getGroups();
 				for(int i=0;i<groupIDs.length;i++){
-				    groupsStringBuffer.append(groupNames[groupIDs[i]]);}
+				    if(i==0)
+					groupsStringBuffer.append(groupNames[groupIDs[i]]);
+				    else
+					groupsStringBuffer.append(":"+groupNames[groupIDs[i]]);
+				}
 				writeString(xwriter,14,groupsStringBuffer.toString());
 				writeDouble(xwriter,0,function.getInclusivePercentValue(metricID));
 				writeDouble(xwriter,1,function.getInclusiveValue(metricID));
@@ -128,21 +151,25 @@ public class XMLSupport{
 			    }
 			}
 			//Write out user event data for this thread.
-			for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
-			    GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
-			    if (userevent!=null){
-				writeBeginObject(xwriter,17);
-				writeString(xwriter,15,userevent.getUserEventName());
-				writeInt(xwriter,12,userevent.getUserEventID());
-				writeInt(xwriter,13,userevent.getUserEventNumberValue());
-				writeDouble(xwriter,7,userevent.getUserEventMaxValue());
-				writeDouble(xwriter,8,userevent.getUserEventMinValue());
-				writeDouble(xwriter,9,userevent.getUserEventMeanValue());
-				//writeDouble(xwriter,10,userevent.getUserEventStdDevValue());@@@Commented out due to lack of ParaProf data support. Should probably add methods which
-				//generate this data. @@@
-				writeBeginObject(xwriter,17);
+			if(userevents!=null){
+			    for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
+				GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
+				if (userevent!=null){
+				    writeBeginObject(xwriter,17);
+				    /* @@@ Commented out as is questionable functionality.  Add back in for legacy support.
+				    writeString(xwriter,15,userevent.getUserEventName());
+				    */
+				    writeInt(xwriter,12,userevent.getUserEventID());
+				    writeInt(xwriter,13,userevent.getUserEventNumberValue());
+				    writeDouble(xwriter,7,userevent.getUserEventMaxValue());
+				    writeDouble(xwriter,8,userevent.getUserEventMinValue());
+				    writeDouble(xwriter,9,userevent.getUserEventMeanValue());
+				    //writeDouble(xwriter,10,userevent.getUserEventStdDevValue());@@@Commented out due to lack of ParaProf data support. Should probably add methods which
+				    //generate this data. @@@
+				    writeBeginObject(xwriter,17);
+				}
 			    }
-			}			
+			}
 		    }
 		}    
 	    }
@@ -204,7 +231,11 @@ public class XMLSupport{
 		    groupsStringBuffer.delete(0,groupsStringBuffer.length());
 		    int[] groupIDs = globalMappingElement.getGroups();
 		    for(int i=0;i<groupIDs.length;i++){
-			groupsStringBuffer.append(groupNames[groupIDs[i]]);}
+			if(i==0)
+			    groupsStringBuffer.append(groupNames[groupIDs[i]]);
+			else
+			    groupsStringBuffer.append(":"+groupNames[groupIDs[i]]);
+		    }
 		    writeString(xwriter,14,groupsStringBuffer.toString());
 		    writeDouble(xwriter,0,globalMappingElement.getMeanInclusivePercentValue(metricID));
 		    writeDouble(xwriter,1,globalMappingElement.getMeanInclusiveValue(metricID));
@@ -318,6 +349,23 @@ public class XMLSupport{
 
     }
 
+    public void writeNameIDMap(BufferedWriter writer, String funname, int id){
+	try{
+	    String tmpString;
+	    funname = replace(funname, "&", "&amp;");
+	    funname = replace(funname, "<", "&lt;");
+	    funname = replace(funname, ">", "&gt;");
+	    tmpString = "\t\t<nameid>"+"\""+funname+"\""+id+"</nameid>";
+	    writer.write(tmpString, 0, tmpString.length());
+	    writer.newLine();
+	}
+	catch(Exception e){
+	    xmlWriteError.location = "writeFunctionName(BufferedWriter writer, String funname)";
+	    UtilFncs.systemError(xmlWriteError, null, null);
+       	}
+
+    }
+
     public void writeString(BufferedWriter writer, int type, String s1){
 	try{
 	    String s2 = this.lookupBegin[type]+s1+this.lookupEnd[type];
@@ -394,21 +442,23 @@ public class XMLSupport{
     private ParaProfTrial paraProfTrial = null;
 
     private String[] lookupBegin = {"\t\t<inclperc>","\t\t<inclutime>","\t\t<exclperc>","\t\t<exclutime>", //0,1,2,3
-				  "\t\t<inclutimePcall>", //4
-				  "\t\t<call>","\t\t<subrs>", //5,6
-				  "\t\t<maxvalue>","\t\t<minvalue>","\t\t<meanvalue>","\t\t<stddevvalue>", //7,8,9,10
-				  "\t\t<funID>","\t\t<ueID>","\t\t<numofsamples>", //11,12,13
-				  "\t\t<fungroup>","\t\t<uename>", //14,15
-				  "\t   <instrumentedobj>","\t   <userevent>","\t   <totalfunction>", //16,17,18
-				  "\t   <meanfunction>"}; //19
+				    "\t\t<inclutimePcall>", //4
+				    "\t\t<call>","\t\t<subrs>", //5,6
+				    "\t\t<maxvalue>","\t\t<minvalue>","\t\t<meanvalue>","\t\t<stddevvalue>", //7,8,9,10
+				    "\t\t<funID>","\t\t<ueID>","\t\t<numofsamples>", //11,12,13
+				    "\t\t<fungroup>","\t\t<uename>", //14,15
+				    "\t   <instrumentedobj>","\t   <userevent>","\t   <totalfunction>", //16,17,18
+				    "\t   <meanfunction>", //19
+				    "\t   <funnameidmap>","\t   <uenameidmap>"}; //20,21
     private String[] lookupEnd = {"</inclperc>","</inclutime>","</exclperc>","</exclutime>", //0,1,2,3
-				"</inclutimePcall>", //4
-				"</call>","</subrs>", //5,6
-				"</maxvalue>","</minvalue>","</meanvalue>","</stddevvalue>", //7,8,9,10
-				"</funID>","</ueID>","</numofsamples>", //11,12,13
-				"\t\t<fungroup>","\t\t<uename>", //14,15
-				"\t   </instrumentedobj>","\t   </userevent>","\t   </totalfunction>", //16,17,18
-				"\t   </meanfunction>"}; //19
+				  "</inclutimePcall>", //4
+				  "</call>","</subrs>", //5,6
+				  "</maxvalue>","</minvalue>","</meanvalue>","</stddevvalue>", //7,8,9,10
+				  "</funID>","</ueID>","</numofsamples>", //11,12,13
+				  "<fungroup>","<uename>", //14,15
+				  "\t   </instrumentedobj>","\t   </userevent>","\t   </totalfunction>", //16,17,18
+				  "\t   </meanfunction>", //19
+				  "\t   </funnameidmap>","\t   </uenameidmap>"}; //20,21
 
     //######
     //Error outupt.
