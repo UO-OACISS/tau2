@@ -924,10 +924,12 @@ void Profiler::PurgeData(int tid)
 //////////////////////////////////////////////////////////////////////
 #else //TAU_MULTIPLE_COUNTERS
 
+
 bool Profiler::createDirectories(){
-  
   char *dirname;
-  
+  static bool flag = true;
+  RtsLayer::LockDB();
+  if (flag) {
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
     if(MultipleCounterLayer::getCounterUsed(i)){
       char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
@@ -949,6 +951,9 @@ bool Profiler::createDirectories(){
       system(mkdircommand);
     }
   }
+    flag = false;
+  }
+  RtsLayer::UnLockDB();
   return true;
 }
 
@@ -971,7 +976,7 @@ int Profiler::StoreData(int tid){
 #ifdef PROFILING_ON
   
   //Create directories for storage.
-  static bool createFlag = Profiler::createDirectories();
+  static bool createFlag = createDirectories();
 
   if ((dirname = getenv("PROFILEDIR")) == NULL) {
     // Use default directory name .
@@ -1115,7 +1120,7 @@ int Profiler::DumpData(int tid){
 
 
   //Create directories for storage.
-  static bool createFlag = Profiler::createDirectories();
+  static bool createFlag = createDirectories();
 
   if ((dirname = getenv("PROFILEDIR")) == NULL) {
     // Use default directory name .
@@ -1471,9 +1476,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.63 $   $Date: 2002/03/16 00:26:19 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.63 2002/03/16 00:26:19 bertie Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.64 $   $Date: 2002/03/16 02:16:25 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.64 2002/03/16 02:16:25 sameer Exp $ 
  ***************************************************************************/
 
 	

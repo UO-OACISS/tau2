@@ -177,19 +177,27 @@ long long PapiLayer::getCounters(int tid)
 /////////////////////////////////////////////////
 int PapiLayer::PapiLayerInit(void)
 { 
-     // Initialization routine for PAPI timers
-     if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
-           cout << "Wrong version of PAPI library" << endl;
-           return -1;
-       }
+  static bool flag = true;
+
+  RtsLayer::LockDB();
+  if (flag)
+  {
+    flag = false; 
+    // Initialization routine for PAPI timers
+    if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
+      cout << "Wrong version of PAPI library" << endl;
+      return -1;
+    }
   
-     if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0) != PAPI_OK)
-       {
-	 cout << "There was a problem with papi's thread init" << endl;
-	 return -1;
-       }
+    if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0) != PAPI_OK)
+    {
+      cout << "There was a problem with papi's thread init" << endl;
+      return -1;
+    }
      
-     return 0;
+  }
+  RtsLayer::UnLockDB();
+  return 0;
 }
 
 void PapiLayer::multiCounterPapiInit(void)

@@ -88,11 +88,17 @@ bool MultipleCounterLayer::counterUsed[] = { };
 
 bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 {
+  static bool flag = true;
   bool returnValue = true;
   int functionPosition = 0;
 
-  //Initializing data.
-  for(int a=0; a<MAX_TAU_COUNTERS; a++){
+  RtsLayer::LockDB();
+  if (flag)
+  { 
+    flag = false;
+
+    //Initializing data.
+    for(int a=0; a<MAX_TAU_COUNTERS; a++){
       functionArray[a] = NULL;
       MultipleCounterLayer::names[a] = NULL;
       MultipleCounterLayer::counterUsed[a] = false;
@@ -110,55 +116,55 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 #endif//TAU_PCL
     }
 
-  MultipleCounterLayer::gettimeofdayMCL_CP[0] = -1;
-  MultipleCounterLayer::gettimeofdayMCL_FP = -1;
+    MultipleCounterLayer::gettimeofdayMCL_CP[0] = -1;
+    MultipleCounterLayer::gettimeofdayMCL_FP = -1;
 #ifdef TAU_LINUX_TIMERS
-  MultipleCounterLayer::linuxTimerMCL_CP[0] = -1;
-  MultipleCounterLayer::linuxTimerMCL_FP = -1;
+    MultipleCounterLayer::linuxTimerMCL_CP[0] = -1;
+    MultipleCounterLayer::linuxTimerMCL_FP = -1;
 #endif //TAU_LINUX_TIMERS
 
 #ifdef SGI_TIMERS
-  MultipleCounterLayer::sgiTimersMCL_CP[0] = -1;
-  MultipleCounterLayer::sgiTimersMCL_FP = -1;
+    MultipleCounterLayer::sgiTimersMCL_CP[0] = -1;
+    MultipleCounterLayer::sgiTimersMCL_FP = -1;
 #endif // SGI_TIMERS
 
 #ifdef CPU_TIME
-  MultipleCounterLayer::cpuTimeMCL_CP[0] = -1;
-  MultipleCounterLayer::cpuTimeMCL_FP = -1;
+    MultipleCounterLayer::cpuTimeMCL_CP[0] = -1;
+    MultipleCounterLayer::cpuTimeMCL_FP = -1;
 #endif // CPU_TIME
 
 #ifdef TAU_PAPI
-  MultipleCounterLayer::papiWallClockMCL_CP[0] = -1;
-  MultipleCounterLayer::papiVirtualMCL_CP[0] = -1;
-  MultipleCounterLayer::papiMCL_FP = -1;
-  MultipleCounterLayer::papiWallClockMCL_FP = -1;
-  MultipleCounterLayer::papiVirtualMCL_FP = -1;
-  MultipleCounterLayer::numberOfPapiHWCounters = 0;
+    MultipleCounterLayer::papiWallClockMCL_CP[0] = -1;
+    MultipleCounterLayer::papiVirtualMCL_CP[0] = -1;
+    MultipleCounterLayer::papiMCL_FP = -1;
+    MultipleCounterLayer::papiWallClockMCL_FP = -1;
+    MultipleCounterLayer::papiVirtualMCL_FP = -1;
+    MultipleCounterLayer::numberOfPapiHWCounters = 0;
 #endif//TAU_PAPI
 #ifdef TAU_PCL
-  MultipleCounterLayer::numberOfPCLHWCounters = 0;
-  MultipleCounterLayer::pclMCL_FP = -1;
+    MultipleCounterLayer::numberOfPCLHWCounters = 0;
+    MultipleCounterLayer::pclMCL_FP = -1;
 #endif//TAU_PCL
 
   //Get the counter names from the environment.
-  for(int c=0; c<MAX_TAU_COUNTERS; c++)
+    for(int c=0; c<MAX_TAU_COUNTERS; c++)
     {
       MultipleCounterLayer::names[c] = getenv(environment[c]);
     }
 
   
-  //  cout << "The names obtained were:" << endl;
-  //for(int d=0; d<MAX_TAU_COUNTERS; d++)
-  //{
-  //  if(MultipleCounterLayer::names[d] != NULL){
-  //cout << "COUNTER" << d << " = " ;
-  //cout << MultipleCounterLayer::names[d] << endl;
-  //  }
-  //}
+    //  cout << "The names obtained were:" << endl;
+    //for(int d=0; d<MAX_TAU_COUNTERS; d++)
+    //{
+    //  if(MultipleCounterLayer::names[d] != NULL){
+    //cout << "COUNTER" << d << " = " ;
+    //cout << MultipleCounterLayer::names[d] << endl;
+    //  }
+    //}
 
 
-  //Initialize the function array with the correct active functions.
-  for(int e=0; e<SIZE_OF_INIT_ARRAY; e++)
+    //Initialize the function array with the correct active functions.
+    for(int e=0; e<SIZE_OF_INIT_ARRAY; e++)
     {
       if(MultipleCounterLayer::initArray[e](functionPosition)){
 	  //If this check is true, then this function is active,
@@ -177,11 +183,14 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
       }
     }
 
-  //Check to see that we have at least one counter defined.
-  //Give a warning of not.  It should not break the system,
-  //but it is nice to give a warning.
-  if(numberOfActiveFunctions == 0)
-    cout << "Warning: No functions active ... no profiles will be created!" << endl;
+    //Check to see that we have at least one counter defined.
+    //Give a warning of not.  It should not break the system,
+    //but it is nice to give a warning.
+    if(numberOfActiveFunctions == 0)
+      cout << "Warning: No functions active ... no profiles will be created!" << endl;
+  }
+  RtsLayer::UnLockDB(); // mutual exclusion primitive
+   
   return returnValue;
 }
 
