@@ -1,4 +1,4 @@
-package perfdb.configure;
+package perfdb;
 
 import java.io.IOException;
 
@@ -13,7 +13,7 @@ public class PasswordField {
    *@return The password as entered by the user.
    */
 
-   String getPassword(String prompt) throws IOException {
+   public String getPassword(String prompt) throws IOException {
       // password holder
       String password = "";
       MaskingThread maskingthread = new MaskingThread(prompt);

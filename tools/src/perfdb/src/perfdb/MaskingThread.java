@@ -1,4 +1,4 @@
-package perfdb.configure;
+package perfdb;
 
 /**
  * This class attempts to erase characters echoed to the console.
