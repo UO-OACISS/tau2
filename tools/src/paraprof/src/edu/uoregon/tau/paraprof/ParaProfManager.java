@@ -155,9 +155,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
 
-	    addTrialMI1 = new JMenuItem("Add Trial");
-	    addTrialMI1.addActionListener(this);
-	    popup1.add(addTrialMI1);
+	    jMenuItem = new JMenuItem("Add Trial");
+	    jMenuItem.addActionListener(this);
+	    popup1.add(jMenuItem);
 	    //######
 	    //End - Add items to the first popup menu.
 	    //######
@@ -165,10 +165,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add items to the second popup menu.
 	    //######
-	    updateApplicationMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
-	    updateApplicationMetaDataMenuItem.addActionListener(this);
-	    popup2.add(updateApplicationMetaDataMenuItem);
-
 	    jMenuItem = new JMenuItem("Add Experiment");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
@@ -177,10 +173,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 
-	    addTrialMI2 = new JMenuItem("Add Trial");
-	    addTrialMI2.addActionListener(this);
-	    popup2.add(addTrialMI2);
-
+	    jMenuItem = new JMenuItem("Add Trial");
+	    jMenuItem.addActionListener(this);
+	    popup2.add(jMenuItem);
 	    //######
 	    //End - Add items to the second popup menu.
 	    //######
@@ -188,17 +183,13 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add items to the third popup menu.
 	    //######
-	    updateExperimentMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
-	    updateExperimentMetaDataMenuItem.addActionListener(this);
-	    popup3.add(updateExperimentMetaDataMenuItem);
-
 	    jMenuItem = new JMenuItem("Delete");
 	    jMenuItem.addActionListener(this);
 	    popup3.add(jMenuItem);
 
-	    addTrialMI3 = new JMenuItem("Add Trial");
-	    addTrialMI3.addActionListener(this);
-	    popup3.add(addTrialMI3);
+	    jMenuItem = new JMenuItem("Add Trial");
+	    jMenuItem.addActionListener(this);
+	    popup3.add(jMenuItem);
 	    //######
 	    //End - Add items to the third popup menu.
 	    //######
@@ -206,10 +197,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add items to the fourth popup menu.
 	    //######
-	    updateTrialMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
-	    updateTrialMetaDataMenuItem.addActionListener(this);
-	    popup4.add(updateTrialMetaDataMenuItem);
-
 	    jMenuItem = new JMenuItem("Delete");
 	    jMenuItem.addActionListener(this);
 	    popup4.add(jMenuItem);
@@ -224,10 +211,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add items to the fifth popup menu.
 	    //######
-	    updateMetricMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
-	    updateMetricMetaDataMenuItem.addActionListener(this);
-	    popup5.add(updateMetricMetaDataMenuItem);
-	    
 	    jMenuItem = new JMenuItem("Upload Metric to DB");
 	    jMenuItem.addActionListener(this);
 	    popup5.add(jMenuItem);
@@ -268,51 +251,21 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				Object userObject = selectedNode.getUserObject();
 				if((selectedNode==standard)||(selectedNode==dbApps)){
 				   clickedOnObject = selectedNode;
-				   if(selectedNode==dbApps)
-				       addTrialMI1.setEnabled(false);
-				   else
-				       addTrialMI1.setEnabled(true);
 				   popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 				else if(userObject instanceof ParaProfApplication){
-				    if(((ParaProfApplication)userObject).dBApplication()){
-					updateApplicationMetaDataMenuItem.setEnabled(true);
-					addTrialMI2.setEnabled(false);
-				    }
-				    else{
-					updateApplicationMetaDataMenuItem.setEnabled(false);
-					addTrialMI2.setEnabled(true);
-				    }
 				    clickedOnObject = userObject;
 				    popup2.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 				else if(userObject instanceof ParaProfExperiment){
-				    if(((ParaProfExperiment)userObject).dBExperiment()){
-					updateExperimentMetaDataMenuItem.setEnabled(true);
-					addTrialMI3.setEnabled(false);
-				    }
-				    else{
-					updateExperimentMetaDataMenuItem.setEnabled(false);
-					addTrialMI3.setEnabled(true);
-				    }
 				    clickedOnObject = userObject;
 				    popup3.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 				else if(userObject instanceof ParaProfTrial){
-				    if(((ParaProfTrial)userObject).dBTrial()){
-					updateTrialMetaDataMenuItem.setEnabled(true);
-				    }
-				    else{
-					updateTrialMetaDataMenuItem.setEnabled(false);
-				    }
 				    clickedOnObject = userObject;
 				    popup4.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 				else if(userObject instanceof Metric){
-				    if(((Metric)userObject).dBMetric())
-					updateMetricMetaDataMenuItem.setEnabled(true);
-				    else
-					updateMetricMetaDataMenuItem.setEnabled(false);
 				    clickedOnObject = userObject;
 				    popup5.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
@@ -443,32 +396,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    ParaProf.helpWindow.writeText("");
 		    ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
 		}
-		else if(arg.equals("Update Meta Data in DB")){
-		    if(clickedOnObject instanceof ParaProfApplication){
-			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
-			PerfDMFSession perfDMFSession = new PerfDMFSession();
-			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			perfDMFSession.saveApplication(application);
-			perfDMFSession.terminate();
-			System.out.println("Application meta data updated!");
-		    }
-		    else if(clickedOnObject instanceof ParaProfExperiment){
-			ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
-			PerfDMFSession perfDMFSession = new PerfDMFSession();
-			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			perfDMFSession.saveExperiment(experiment);
-			perfDMFSession.terminate();
-			System.out.println("Experiment meta data updated!");
-		    }
-		    else if(clickedOnObject instanceof ParaProfTrial){
-			ParaProfTrial trial = (ParaProfTrial) clickedOnObject;
-			PerfDMFSession perfDMFSession = new PerfDMFSession();
-			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			perfDMFSession.saveTrial(trial);
-			perfDMFSession.terminate();
-			System.out.println("Trial meta data updated!");
-		    }
-		}
 		else if(arg.equals("Delete")){
 		    if(clickedOnObject instanceof ParaProfApplication){
 			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
@@ -477,7 +404,23 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 			    perfDMFSession.deleteApplication(application.getID());
 			    perfDMFSession.terminate();
-			    System.out.println("Deleted application!");
+			    //Remove any loaded trials associated with this application.
+			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
+			    for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+				ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+				if(loadedTrial.getApplicationID()==application.getID())
+				    loadedTrials.remove(loadedTrial);
+			    }
+			    System.out.println("Done - Removing associated loaded trials!");
+			    treeModel.removeNodeFromParent(application.getDMTN());
+			    System.out.println("Application deleted!");
+			}
+			else{
+			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
+			    ParaProf.applicationManager.removeApplication(application);
+			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
+			    treeModel.removeNodeFromParent(application.getDMTN());
+			    System.out.println("Application deleted!");
 			}
 		    }
 		    else if(clickedOnObject instanceof ParaProfExperiment){
@@ -503,164 +446,112 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		else if(arg.equals("Add Application")){
 		    if(clickedOnObject == standard){
-			ParaProfApplication application  = ParaProf.applicationManager.addApplication();
-			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-			application.setDMTN(applicationNode);
-			application.setName("Application - LocalID: "+ application.getID());
-			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
+			ParaProfApplication application = addApplication(false, standard);
+			this.expandApplicationType(0,application.getID(),application);
 		    }
 		    else if(clickedOnObject == dbApps){
-			ParaProfApplication application  = new ParaProfApplication();
-			application.setDBApplication(true);
-			application.setName("New Application");
-			PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			application.setID(perfDMFSession.saveApplication(application));
-			perfDMFSession.terminate();
-			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-			application.setDMTN(applicationNode);
-			treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
+			ParaProfApplication application = addApplication(true, dbApps);
+			this.expandApplicationType(2,application.getID(),application);
 		    }
 		}
 		else if(arg.equals("Add Experiment")){
 		    if(clickedOnObject == standard){
-			//First add the application.
-			ParaProfApplication application  = ParaProf.applicationManager.addApplication();
-			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-			application.setDMTN(applicationNode);
-			application.setName("New Application");
-			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
-			//Now add the experiment.
-			ParaProfExperiment experiment = application.addExperiment();
-			DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
-			experiment.setName("New Experiment");
-			treeModel.insertNodeInto(experimentNode, application.getDMTN(), application.getDMTN().getChildCount());
+			ParaProfApplication application = addApplication(false, standard);
+			ParaProfExperiment experiment = addExperiment(false, application);
+			if(application!=null||experiment!=null)
+			    this.expandApplication(0,application.getID(),experiment.getID(),application,experiment);
+			else
+			    System.out.println("There was an error adding the experiment!");
 		    }
 		    else if(clickedOnObject == dbApps){
-			ParaProfApplication application  = new ParaProfApplication();
-			application.setDBApplication(true);
-			application.setName("New Application");
-			PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			application.setID(perfDMFSession.saveApplication(application));
-			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-			application.setDMTN(applicationNode);
-			treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
-			//Now add the experiment.
-			ParaProfExperiment experiment  = new ParaProfExperiment();
-			experiment.setDBExperiment(true);
-			experiment.setApplicationID(application.getID());
-			experiment.setName("New Experiment");
-			experiment.setID(perfDMFSession.saveExperiment(experiment));
-			perfDMFSession.terminate();
+			ParaProfApplication application = addApplication(true, dbApps);
+			ParaProfExperiment experiment = addExperiment(true, application);
+			if(application!=null||experiment!=null)
+			    this.expandApplication(2,application.getID(),experiment.getID(),application,experiment);
+			else
+			    System.out.println("There was an error adding the experiment!");
 		    }
 		    if(clickedOnObject instanceof ParaProfApplication){
 			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
 			if(application.dBApplication()){
-			    ParaProfExperiment experiment  = new ParaProfExperiment();
-			    experiment.setDBExperiment(true);
-			    experiment.setApplicationID(application.getID());
-			    experiment.setName("New Experiment");
-			    PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			    experiment.setID(perfDMFSession.saveExperiment(experiment));
-			    perfDMFSession.terminate();
-			    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
-			    experiment.setDMTN(experimentNode);
-			    treeModel.insertNodeInto(experimentNode, application.getDMTN(), application.getDMTN().getChildCount());
+			    ParaProfExperiment experiment = addExperiment(true, application);
+			    if(experiment!=null)
+				this.expandApplication(2,application.getID(),experiment.getID(),null,experiment);
+			    else
+				System.out.println("There was an error adding the experiment!");
 			}
 			else{
-			    ParaProfExperiment experiment = application.addExperiment();
-			    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
-			    experiment.setDMTN(experimentNode);
-			    experiment.setName("New Experiment");
-			    System.out.println("About to add an experiment!");
-			    treeModel.insertNodeInto(experimentNode, application.getDMTN(), application.getDMTN().getChildCount());
+			    ParaProfExperiment experiment = addExperiment(false, application);
+			    if(experiment!=null)
+				this.expandApplication(2,application.getID(),experiment.getID(),null,experiment);
+			    else
+				System.out.println("There was an error adding the experiment!");
 			}
 		    }
 		}
 		else if(arg.equals("Add Trial")){
 		    if(clickedOnObject == standard){
-			//First add the application.
-			ParaProfApplication application  = ParaProf.applicationManager.addApplication();
-			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-			application.setDMTN(applicationNode);
-			application.setName("New Application");
-			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
-			//Now add the experiment.
-			ParaProfExperiment experiment = application.addExperiment();
-			DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
-			experiment.setName("New Experiment");
-			//Now show the load trial window.
-			(new LoadTrialPanel(this, experiment, false)).show();
+			ParaProfApplication application = addApplication(false, standard);
+			if(application!=null){
+			    ParaProfExperiment experiment = addExperiment(false, application);
+			    if(experiment!=null)
+				(new LoadTrialPanel(this, application, experiment, false)).show();
+			}
 		    }
 		    else if(clickedOnObject == dbApps){
-			/*ParaProfApplication application  = new ParaProfApplication();
-			application.setName("New Application");
-			PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			perfDMFSession.setApplication(application);
-			perfDMFSession.saveApplication();
-			//Now add the experiment.
-			ParaProfExperiment experiment  = new ParaProfExperiment();
-			experiment.setApplicationID(application.getID());
-			experiment.setName("New Experiment");
-			perfDMFSession.setExperiment(experiment);
-			perfDMFSession.saveExperiment();
-
-			Trial trial = new Trial();
-			trial.setDataSession(paraProfTrial.getDataSession());
-			trial.setName(paraProfTrial.getName());
-			trial.setExperimentID(array[1]);
-			int[] maxNCT = paraProfTrial.getMaxNCTNumbers();
-			trial.setNodeCount(maxNCT[0]+1);
-			trial.setNumContextsPerNode(maxNCT[1]+1);
-			trial.setNumThreadsPerContext(maxNCT[2]+1);
-			perfDMFSession.saveParaProfTrial(trial, -1);
-
-			perfDMFSession.terminate();*/
+			ParaProfApplication application = addApplication(true, dbApps);
+			if(application!=null){
+			    ParaProfExperiment experiment = addExperiment(true, application);
+			    if(experiment!=null)
+				(new LoadTrialPanel(this, application, experiment, false)).show();
+			}
 		    }
 		    else if(clickedOnObject instanceof ParaProfApplication){
 			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
-			
 			if(application.dBApplication()){
-			    //(new LoadTrialPanel(this, experiment, true)).show();
+			    ParaProfExperiment experiment = addExperiment(true, application);
+			    if(experiment!=null)
+				(new LoadTrialPanel(this, null, experiment, false)).show();
 			}
 			else{
-			    ParaProfExperiment experiment = application.addExperiment();
-			    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
-			    experiment.setDMTN(experimentNode);
-			    experiment.setName("New Experiment");
-			    treeModel.insertNodeInto(experimentNode, application.getDMTN(), (application.getDMTN()).getChildCount());
-			    (new LoadTrialPanel(this, experiment, false)).show();
+			    ParaProfExperiment experiment = addExperiment(false, application);
+			    if(experiment!=null)
+				(new LoadTrialPanel(this, null, experiment, false)).show();
 			}
 		    }
 		    else if(clickedOnObject instanceof ParaProfExperiment){
 			ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
 			if(experiment.dBExperiment()){
-			    //(new LoadTrialPanel(this, experiment, true)).show();
+			    (new LoadTrialPanel(this, null, experiment, true)).show();
 			}
 			else
-			    (new LoadTrialPanel(this, experiment, false)).show();
+			    (new LoadTrialPanel(this, null, experiment, false)).show();
 		    }
 		}
 		else if(arg.equals("Upload Trial to DB")){
 		    if(clickedOnObject instanceof ParaProfTrial){
-			ParaProfTrial paraProfTrial = (ParaProfTrial) clickedOnObject;
+			ParaProfTrial clickedOnTrial = (ParaProfTrial) clickedOnObject;
 			int[] array = this.getSelectedDBExperiment();
 			if(array!=null){
-			    PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			    Trial trial = new Trial();
-			    trial.setDataSession(paraProfTrial.getDataSession());
-			    trial.setName(paraProfTrial.getName());
-			    trial.setExperimentID(array[1]);
-			    int[] maxNCT = paraProfTrial.getMaxNCTNumbers();
-			    trial.setNodeCount(maxNCT[0]+1);
-			    trial.setNumContextsPerNode(maxNCT[1]+1);
-			    trial.setNumThreadsPerContext(maxNCT[2]+1);
-			    perfDMFSession.saveParaProfTrial(trial, -1);
-			    perfDMFSession.terminate();
+			    System.out.println("Uploading trial: " + clickedOnTrial.getApplicationID() + "," +
+			       clickedOnTrial.getExperimentID() + "," +
+			       clickedOnTrial.getID() + " to the database. Please wait ...");
+			    PerfDMFSession perfDMFSession = this.getDBSession();
+			    if(perfDMFSession!=null){
+				Trial trial = new Trial();
+				trial.setDataSession(clickedOnTrial.getDataSession());
+				trial.setName(clickedOnTrial.getName());
+				trial.setExperimentID(array[1]);
+				int[] maxNCT = clickedOnTrial.getMaxNCTNumbers();
+				trial.setNodeCount(maxNCT[0]+1);
+				trial.setNumContextsPerNode(maxNCT[1]+1);
+				trial.setNumThreadsPerContext(maxNCT[2]+1);
+				perfDMFSession.saveParaProfTrial(trial, -1);
+				perfDMFSession.terminate();
+			    }
+			    System.out.println("Done uploading trial: " + clickedOnTrial.getApplicationID() + "," +
+			       clickedOnTrial.getExperimentID() + "," +
+			       clickedOnTrial.getID());
 			}
 		    }
 		}
@@ -669,21 +560,22 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			Metric metric = (Metric) clickedOnObject;
 			int[] array = this.getSelectedDBTrial();
 			if(array!=null){
-			    PerfDMFSession perfDMFSession = new PerfDMFSession();
-			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			    Trial trial = new Trial();
-			    trial.setDataSession(metric.getTrial().getDataSession());
-			    trial.setID(array[2]);
-			    perfDMFSession.saveParaProfTrial(trial, metric.getID());
-			    perfDMFSession.terminate();
-
-			    //Now need to make sure this metric's trial is reloaded when
-			    //clicked upon.
-			    for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
-				ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-				if((trial.getID()==array[2])&&(trial.getExperimentID()==array[1])
-				   &&(trial.getApplicationID()==array[0])){
-				    loadedTrials.remove(loadedTrial);
+			    PerfDMFSession perfDMFSession = this.getDBSession();
+			    if(perfDMFSession!=null){
+				Trial trial = new Trial();
+				trial.setDataSession(metric.getTrial().getDataSession());
+				trial.setID(array[2]);
+				perfDMFSession.saveParaProfTrial(trial, metric.getID());
+				perfDMFSession.terminate();
+				
+				//Now need to make sure this metric's trial is reloaded when
+				//clicked upon.
+				for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+				    ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+				    if((trial.getID()==array[2])&&(trial.getExperimentID()==array[1])
+				       &&(trial.getApplicationID()==array[0])){
+					loadedTrials.remove(loadedTrial);
+				    }
 				}
 			    }
 			}
@@ -798,12 +690,12 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	TreePath path = event.getPath();
 	if(path == null)
 	    return;
-	if(UtilFncs.debug)
+	//if(UtilFncs.debug)
 	    System.out.println("In treeWillExpand - path:" + path.toString());
 	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
 	Object userObject = selectedNode.getUserObject();
-
+	
 	if(selectedNode.isRoot()){
 	    //Do not need to do anything here.
 	    return;
@@ -1040,15 +932,15 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
 	Object userObject = selectedNode.getUserObject();
 
-	ParaProfTrial paraProfTrial  =  (ParaProfTrial) parentNode.getUserObject();
+	ParaProfTrial trial  =  (ParaProfTrial) parentNode.getUserObject();
 	Metric metric = (Metric) userObject;
 	jSplitInnerPane.setRightComponent(getTable(userObject));
 	jSplitInnerPane.setDividerLocation(0.5);
-	if(!paraProfTrial.dBTrial()){
+	if(!trial.dBTrial()){
 	    pPMLPanel.setArg2Field(pPMLPanel.getArg1Field());
 	    pPMLPanel.setArg1Field(metric.getApplicationID()+":"+metric.getExperimentID()+":"+metric.getTrialID()+":"+metric.getID());
 	}
-	this.showMetric(paraProfTrial, metric);
+	this.showMetric(trial, metric);
     }
 
     public void clearDefaultMutableTreeNodes(DefaultMutableTreeNode defaultMutableTreeNode){
@@ -1118,12 +1010,12 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 	    Object userObject = selectedNode.getUserObject();
 	    if(userObject instanceof ParaProfTrial){
-		ParaProfTrial paraProfTrial = (ParaProfTrial) userObject;
-		if(paraProfTrial.dBTrial()){
+		ParaProfTrial trial = (ParaProfTrial) userObject;
+		if(trial.dBTrial()){
 		    int[] array = new int[3];
-		    array[0] = paraProfTrial.getApplicationID();
-		    array[1] = paraProfTrial.getExperimentID();
-		    array[2] = paraProfTrial.getID();
+		    array[0] = trial.getApplicationID();
+		    array[1] = trial.getExperimentID();
+		    array[2] = trial.getID();
 		    return array;
 		}
 		else
@@ -1183,7 +1075,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     }
 
     private Component getTable(Object obj){
-	return (new JScrollPane(new JTable(new ParaProfManagerTableModel(obj, treeModel))));}
+	return (new JScrollPane(new JTable(new ParaProfManagerTableModel(this, obj, treeModel))));}
 
     private Component getLoadingTrialPanel(Object obj){
 	JPanel jPanel = new JPanel();
@@ -1221,13 +1113,48 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //End - Component functions.
     //####################################
 
-    public void addApplication(){
+    public ParaProfApplication addApplication(boolean dBApplication, DefaultMutableTreeNode treeNode){
+	ParaProfApplication application = null;
+	if(dBApplication){
+	    PerfDMFSession perfDMFSession = this.getDBSession();
+	    if(perfDMFSession!=null){
+		application = new ParaProfApplication();
+		application.setDBApplication(true);
+		application.setName("New Application");
+		application.setID(perfDMFSession.saveApplication(application));
+		perfDMFSession.terminate();
+	    }
+	}
+	else{
+	    application  = ParaProf.applicationManager.addApplication();
+	    application.setName("New Application");
+	}
+	return application;
     }
 
-    public void addExperiment(){
+    public ParaProfExperiment addExperiment(boolean dBExperiment, ParaProfApplication application){
+	ParaProfExperiment experiment = null;
+	if(dBExperiment){
+	    PerfDMFSession perfDMFSession = this.getDBSession();
+	    if(perfDMFSession!=null){
+		experiment  = new ParaProfExperiment();
+		experiment.setDBExperiment(true);
+		experiment.setApplicationID(application.getID());
+		experiment.setName("New Experiment");
+		experiment.setID(perfDMFSession.saveExperiment(experiment));
+		perfDMFSession.terminate();
+		
+	    }
+	}
+	else{
+	    experiment = application.addExperiment();
+	    experiment.setName("New Experiment");
+	}
+	return experiment;
     }
 
-    public void addTrial(ParaProfExperiment experiment, File location, String filePrefix, int type){
+    public void addTrial(ParaProfApplication application, ParaProfExperiment experiment,
+			 File location, String filePrefix, int type){
     	try{
 	    ParaProfTrial trial = null;
 	    FileList fl = new FileList();
@@ -1266,17 +1193,21 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    trial.setExperiment(experiment);
 		    trial.setApplicationID(experiment.getApplicationID());
 		    trial.setExperimentID(experiment.getID());
+		    trial.setDBTrial(experiment.dBExperiment());
+		    if(trial.dBTrial())
+		       trial.setUpload(true);
 		    trial.setPaths(fl.getPath());
 		    trial.setName(trial.getPathReverse());
 		    trial.setLoading(true);
 		    trial.initialize(v);
 
-		    if((experiment.getDMTN()) != null){ //This checks whether the experiment node is visible.
-			DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
-			trial.setDMTN(trialNode);
-			treeModel.insertNodeInto(trialNode, experiment.getDMTN(), experiment.getDMTN().getChildCount());
-			trial.setTreePath(new TreePath(trialNode.getPath()));
-		    }
+		    
+		    if(trial.dBTrial())
+			this.expandTrial(2,trial.getApplicationID(),trial.getExperimentID(),trial.getID(),
+					 application,experiment,trial);
+		    else
+			this.expandTrial(0,trial.getApplicationID(),trial.getExperimentID(),trial.getID(),
+					 application,experiment,trial);
 		}
 		else{
 		    System.out.println("No profile files found in the selected directory.");
@@ -1303,29 +1234,173 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	}
     }
 
-    public void populateTrialMetrics(ParaProfTrial inTrial, boolean showDefaultTrial){
-	DefaultMutableTreeNode defaultMutableTreeNode = inTrial.getDMTN();
-	if(defaultMutableTreeNode!=null){
-	    //Calling expand path on this trial will generate a tree will expand event.
-	    //This is handled in the implementation of the TreeWillExpandListener for this class.
-	    TreePath defaultTreePath = new TreePath(inTrial.getDMTN().getPath());
-	    if(UtilFncs.debug)
-		System.out.println("Expanding path: " + defaultTreePath.toString());
-	    tree.collapsePath(new TreePath(inTrial.getDMTN().getPath()));
-	    tree.expandPath(defaultTreePath);
+    public void populateTrialMetrics(ParaProfTrial trial){
+	//Check to see if this trial needs to be uploaded to the database.
+	if(trial.upload()){
+	    System.out.println("Uploading trial: " + trial.getApplicationID() + "," +
+			       trial.getExperimentID() + "," +
+			       trial.getID() + " to the database. Please wait ...");
+	    PerfDMFSession perfDMFSession = this.getDBSession();
+	    if(perfDMFSession!=null){
+		perfDMFSession.saveParaProfTrial(trial, -1);
+		perfDMFSession.terminate();
+	    }
+	    trial.setUpload(false);
+	    System.out.println("Done uploading trial: " + trial.getApplicationID() + "," +
+			       trial.getExperimentID() + "," +
+			       trial.getID());
+	    //Add to the list of loaded trials.
+	    loadedTrials.add(trial);
 	}
-	else if(showDefaultTrial){
+
+	if(trial.dBTrial())
+	    this.expandTrial(2,trial.getApplicationID(),trial.getExperimentID(),trial.getID(),null,null,trial);
+	else
+	    this.expandTrial(0,trial.getApplicationID(),trial.getExperimentID(),trial.getID(),null,null,trial);
+    }
+
+    public DefaultMutableTreeNode expandApplicationType(int type, int applicationID, ParaProfApplication application){
+	switch(type){
+	case 0:
+	    //Test to see if standard is expanded, if not, expand it.
+	    if(!(tree.isExpanded(new TreePath(standard.getPath()))))
+		tree.expandPath(new TreePath(standard.getPath()));
+	    
+	    //Try and find the required application node.
+	    for(int i=standard.getChildCount(); i>0; i--){
+		DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) standard.getChildAt(i-1);
+		if(applicationID==((ParaProfApplication)defaultMutableTreeNode.getUserObject()).getID())
+		    return defaultMutableTreeNode;
+	    }
+	    //Required application node was not found, try adding it.
+	    if(application!=null){
+		    DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+		    application.setDMTN(applicationNode);
+		    treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
+		    return applicationNode;
+	    }
+	    return null;
+	case 1:
+	    break;
+	case 2:
+	    //Test to see if dbApps is expanded, if not, expand it.
+	    if(!(tree.isExpanded(new TreePath(dbApps.getPath()))))
+		tree.expandPath(new TreePath(dbApps.getPath()));
+	    
+	    //Try and find the required application node.
+	    for(int i=dbApps.getChildCount(); i>0; i--){
+		DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) dbApps.getChildAt(i-1);
+		if(applicationID==((ParaProfApplication)defaultMutableTreeNode.getUserObject()).getID())
+		    return defaultMutableTreeNode;
+	    }
+	    //Required application node was not found, try adding it.
+	    if(application!=null){
+		    DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+		    application.setDMTN(applicationNode);
+		    treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
+		    return applicationNode;
+	    }
+	    return null;
+	default:
+	    break;
+	}
+	return null;
+    }
+    
+    //Expands the given application
+    public DefaultMutableTreeNode expandApplication(int type, int applicationID, int experimentID,
+						   ParaProfApplication application, ParaProfExperiment experiment){
+	DefaultMutableTreeNode applicationNode = this.expandApplicationType(type,applicationID,application);
+	if(applicationNode!=null){
+	    //Expand the application.
+	    tree.expandPath(new TreePath(applicationNode.getPath()));
+
+	    //Try and find the required experiment node.
 	    tree.expandPath(new TreePath(standard.getPath()));
-	    //Get Application Node.
-	    defaultMutableTreeNode = standard.getFirstLeaf();
-	    tree.expandPath(new TreePath(defaultMutableTreeNode.getPath()));
-	    //Get Experiment Node.
-	    defaultMutableTreeNode = defaultMutableTreeNode.getFirstLeaf();
-	    tree.expandPath(new TreePath(defaultMutableTreeNode.getPath()));
-	    //Get Trial Node.
-	    defaultMutableTreeNode = defaultMutableTreeNode.getFirstLeaf();
-	    tree.expandPath(new TreePath(defaultMutableTreeNode.getPath()));
+	    for(int i=applicationNode.getChildCount(); i>0; i--){
+		DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) applicationNode.getChildAt(i-1);
+		if(experimentID==((ParaProfExperiment)defaultMutableTreeNode.getUserObject()).getID())
+		    return defaultMutableTreeNode;
+	    }
+	    //Required experiment node was not found, try adding it.
+	    if(experiment!=null){
+		DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+		experiment.setDMTN(experimentNode);
+		treeModel.insertNodeInto(experimentNode, applicationNode, applicationNode.getChildCount());
+		return experimentNode;
+	    }
+	    return null;
 	}
+	return null;
+    }
+
+    public DefaultMutableTreeNode expandExperiment(int type, int applicationID, int experimentID, int trialID,
+						   ParaProfApplication application, ParaProfExperiment experiment,
+						   ParaProfTrial trial){
+	DefaultMutableTreeNode experimentNode = this.expandApplication(type,applicationID,experimentID,application,experiment);
+	if(experimentNode!=null){
+	    //Expand the experiment.
+	    tree.expandPath(new TreePath(experimentNode.getPath()));
+
+	    //Try and find the required trial node.
+	    for(int i=experimentNode.getChildCount(); i>0; i--){
+		DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) experimentNode.getChildAt(i-1);
+		if(trialID==((ParaProfTrial)defaultMutableTreeNode.getUserObject()).getID())
+		    return defaultMutableTreeNode;
+	    }
+	    //Required trial node was not found, try adding it.
+	    if(trial!=null){
+		DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+		trial.setDMTN(trialNode);
+		treeModel.insertNodeInto(trialNode, experimentNode, experimentNode.getChildCount());
+		return trialNode;
+	    }
+	    return null;
+	}
+	return null;
+    }
+
+    public DefaultMutableTreeNode expandTrial(int type, int applicationID, int experimentID, int trialID,
+					      ParaProfApplication application, ParaProfExperiment experiment, ParaProfTrial trial){
+	DefaultMutableTreeNode trialNode = this.expandExperiment(type,applicationID,experimentID,trialID,
+								 application,experiment,trial);
+	if(trialNode!=null){
+	    //Try and find the required trial node.
+	    for(int i=trialNode.getChildCount(); i>0; i--){
+		DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) trialNode.getChildAt(i-1);
+		if(trialID==((ParaProfTrial)defaultMutableTreeNode.getUserObject()).getID()){
+		    tree.expandPath(new TreePath(defaultMutableTreeNode.getPath()));
+		    return defaultMutableTreeNode;
+		}
+	    }
+	    return null;
+	}
+	return null;
+    }
+
+    public PerfDMFSession getDBSession(){
+	//Check to see if the user has set configuration information.
+	if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null
+	   ||ParaProf.savedPreferences.getDatabasePassword()==null){
+	    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
+					  "DB Configuration Error!",
+					  JOptionPane.ERROR_MESSAGE);
+	    return null;
+	}
+	else{//Test to see if configurataion file exists.
+	    File file = new File(ParaProf.savedPreferences.getDatabaseConfigurationFile());
+	    if(!file.exists()){
+		JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
+					      "DB Configuration Error!",
+					      JOptionPane.ERROR_MESSAGE);
+		return null;
+	    }
+	}
+	//Basic checks done, try to access the db.
+	PerfDMFSession perfDMFSession = new PerfDMFSession(); 
+	perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),
+				  ParaProf.savedPreferences.getDatabasePassword());
+	return perfDMFSession;
     }
     
     //Respond correctly when this window is closed.
@@ -1383,15 +1458,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     private JPopupMenu popup3 = new JPopupMenu();
     private JPopupMenu popup4 = new JPopupMenu();
     private JPopupMenu popup5 = new JPopupMenu();
-
-    JMenuItem addTrialMI1 = null;
-    JMenuItem addTrialMI2 = null;
-    JMenuItem addTrialMI3 = null;
-
-    JMenuItem updateApplicationMetaDataMenuItem = null;
-    JMenuItem updateExperimentMetaDataMenuItem = null;
-    JMenuItem updateTrialMetaDataMenuItem = null;
-    JMenuItem updateMetricMetaDataMenuItem = null;
 
     private Object clickedOnObject = null;
     //######
