@@ -193,6 +193,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	  << " Group :  " << MyProfileGroup_ 
 	  << " Type : " << GetType() << endl;);
 
+#ifdef TAU_PROFILEMEMORY
+	MemoryEvent = new TauUserEvent(string(Name+" "+Type+" - Heap Memory (KB)").c_str());
+#endif /* TAU_PROFILEMEMORY */
 	return;
 }
 //////////////////////////////////////////////////////////////////////
@@ -308,6 +311,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.32 $   $Date: 2003/05/20 18:44:28 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.32 2003/05/20 18:44:28 sameer Exp $ 
+ * $Revision: 1.33 $   $Date: 2004/07/20 23:24:26 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.33 2004/07/20 23:24:26 sameer Exp $ 
  ***************************************************************************/

@@ -169,6 +169,9 @@ void Profiler::Start(int tid)
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
       DEBUGPROFMSG("Profiler::Start Entering " << ThisFunction->GetName()<<endl;);
 	
+#ifdef TAU_PROFILEMEMORY
+      ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
+#endif /* TAU_PROFILEMEMORY */
 #ifdef TAU_COMPENSATE
 	SetNumChildren(0); /* for instrumentation perturbation compensation */
 #endif /* TAU_COMPENSATE */
@@ -2635,8 +2638,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.97 $   $Date: 2004/06/16 00:26:55 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.97 2004/06/16 00:26:55 sameer Exp $ 
+ * $Revision: 1.98 $   $Date: 2004/07/20 23:24:26 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.98 2004/07/20 23:24:26 sameer Exp $ 
  ***************************************************************************/
 
 	
