@@ -60,7 +60,7 @@ public class SavedPreferences implements Serializable {
         this.userEventHighlightColor = userEventHighlightColor;
     }
 
-    public Color getUserEventHightlightColor() {
+    public Color getUserEventHighlightColor() {
         return userEventHighlightColor;
     }
 

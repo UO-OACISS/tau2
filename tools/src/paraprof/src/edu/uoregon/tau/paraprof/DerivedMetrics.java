@@ -144,8 +144,7 @@ public class DerivedMetrics {
                                     result = DerivedMetrics.apply(operation, d1, constantValue);
 
                                 functionProfile.setExclusive(metric, result);
-                                //Now do the global mapping element exclusive
-                                // stuff.
+
                                 if ((function.getMaxExclusive(metric)) < result)
                                     function.setMaxExclusive(metric, result);
 
@@ -159,9 +158,6 @@ public class DerivedMetrics {
                                 functionProfile.setInclusive(metric, result);
 
                                 functionProfile.setInclusivePerCall(metric, functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
-
-                                //Now do the global mapping element inclusive
-                                // stuff.
 
                                 if ((result > thread.getMaxInclusive(metric))) {
                                     thread.setMaxInclusive(metric, result);

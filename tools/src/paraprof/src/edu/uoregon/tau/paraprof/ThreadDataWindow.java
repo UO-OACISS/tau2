@@ -570,14 +570,14 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             ParaProf.helpWindow.show();
         ParaProf.helpWindow.writeText("This is the thread data window");
         ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("This window shows you the values for all mappings on this thread.");
+        ParaProf.helpWindow.writeText("This window shows you the values for all functions on this thread.");
         ParaProf.helpWindow.writeText("");
         ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
         ParaProf.helpWindow.writeText("");
-        ParaProf.helpWindow.writeText("Right click on any mapping within this window to bring up a popup");
-        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-        ParaProf.helpWindow.writeText("for the mapping, or to show more details about the mapping.");
-        ParaProf.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
+        ParaProf.helpWindow.writeText("Right click on any function within this window to bring up a popup");
+        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
+        ParaProf.helpWindow.writeText("for the function, or to show more details about the function.");
+        ParaProf.helpWindow.writeText("You can also left click any function to highlight it in the system.");
     }
 
     public DataSorter getDataSorter() {

@@ -13,9 +13,9 @@ import java.text.*;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.12 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.13 2005/01/07 19:56:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -488,7 +488,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 l1 = window.getDataIterator();
                 while (l1.hasNext()) {
                     smwtde = (PPFunctionProfile) l1.next();
-                    //Don't draw callpath mapping objects.
+                    //Don't draw callpath functions
                     if (!(smwtde.isCallPathObject())) {
                         l2 = smwtde.getParents();
                         while (l2.hasNext()) {
@@ -840,9 +840,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
                 l1 = window.getDataIterator();
                 while (l1.hasNext()) {
-                    Function function = (Function) l1.next(); //Don't draw
-                    // callpath
-                    // mapping objects.
+                    Function function = (Function) l1.next(); 
                     if (!(function.isCallPathFunction())) {
                         l2 = function.getParents();
                         while (l2.hasNext()) {
@@ -1121,8 +1119,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 if (arg.equals("Show Function Details")) {
                     if (clickedOnObject instanceof CallPathDrawObject) {
                         callPathDrawObject = (CallPathDrawObject) clickedOnObject;
-                        //Bring up an expanded data window for this mapping,
-                        // and set this mapping as highlighted.
                         trial.getColorChooser().setHighlightedFunction(callPathDrawObject.getFunction());
                         FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial,
                                 callPathDrawObject.getFunction(), trial.getStaticMainWindow().getDataSorter());

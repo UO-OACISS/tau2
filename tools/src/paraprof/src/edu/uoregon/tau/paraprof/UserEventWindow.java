@@ -419,7 +419,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
         ParaProf.helpWindow.writeText("");
         ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
+        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
         ParaProf.helpWindow.writeText("for this userevent.");
     }
 

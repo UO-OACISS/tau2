@@ -422,24 +422,12 @@ public class Preferences extends JFrame implements ActionListener, Observer {
                                 PrintWriter out = new PrintWriter(new FileWriter(file));
 
                                 System.out.println("Saving color map ...");
-                                if (UtilFncs.debug) {
-                                    System.out.println("**********************");
-                                    System.out.println("Color values loaded were:");
-                                }
                                 for (Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements();) {
                                     ColorPair tmpCP = (ColorPair) e1.nextElement();
                                     Color tmpColor = tmpCP.getColor();
-                                    if (UtilFncs.debug) {
-                                        System.out.println("MAPPING_NAME=\"" + (tmpCP.getName()) + "\""
-                                                + " RGB=\"" + tmpColor.getRed() + "," + tmpColor.getGreen()
-                                                + "," + tmpColor.getBlue() + "\"");
-                                    }
-                                    out.println("MAPPING_NAME=\"" + (tmpCP.getName()) + "\"" + " RGB=\""
+                                    out.println("NAME=\"" + (tmpCP.getName()) + "\"" + " RGB=\""
                                             + tmpColor.getRed() + "," + tmpColor.getGreen() + ","
                                             + tmpColor.getBlue() + "\"");
-                                }
-                                if (UtilFncs.debug) {
-                                    System.out.println("**********************");
                                 }
                                 System.out.println("Done saving color map!");
                                 out.close();
@@ -561,21 +549,21 @@ public class Preferences extends JFrame implements ActionListener, Observer {
 
         //Read in the file line by line!
         while ((tmpString = br.readLine()) != null) {
-            StringTokenizer getMappingNameTokenizer = new StringTokenizer(tmpString, "\"");
+            StringTokenizer getNameTokenizer = new StringTokenizer(tmpString, "\"");
 
-            //The mapping name will be within the first set of quotes.
+            //The name will be within the first set of quotes.
             //Grab the first token.
-            tmpString = getMappingNameTokenizer.nextToken();
+            tmpString = getNameTokenizer.nextToken();
             //Grab the second token.
-            tmpString = getMappingNameTokenizer.nextToken();
+            tmpString = getNameTokenizer.nextToken();
 
             String name = tmpString;
 
             //The RGB values will be within the next set of quotes.
             //Grab the third token.
-            tmpString = getMappingNameTokenizer.nextToken();
+            tmpString = getNameTokenizer.nextToken();
             //Grab the forth token.
-            tmpString = getMappingNameTokenizer.nextToken();
+            tmpString = getNameTokenizer.nextToken();
 
             StringTokenizer getColorTokenizer = new StringTokenizer(tmpString, ",");
 
@@ -676,8 +664,8 @@ public class Preferences extends JFrame implements ActionListener, Observer {
     String inExValue = "Exclusive";
 
     //Variable to determine which sorting paradigm has been chosen.
-    String sortBy = "mappingID"; //Possible values are:
-    //mappingID
+    String sortBy = "id"; //Possible values are:
+    //id
     //millDes
     //millAsc
 

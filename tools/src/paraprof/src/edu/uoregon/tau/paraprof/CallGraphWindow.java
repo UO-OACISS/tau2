@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.11 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.12 2005/01/07 19:56:43 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -1616,15 +1616,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
                             // now iterate through every edge in this callpath
                             while (location != -1) {
-                                String parentString = s.substring(0, location - 1);
+                                String parentString = s.substring(0, location);
 
                                 int next = s.indexOf("=>", location + 1);
 
                                 if (next == -1) {
-                                    next = s.length() - 1;
+                                    next = s.length();
                                 }
 
-                                String childString = s.substring(location + 3, next - 1);
+                                String childString = s.substring(location + 2, next);
 
                                 //System.out.println(parentString + "=>" + childString);
 

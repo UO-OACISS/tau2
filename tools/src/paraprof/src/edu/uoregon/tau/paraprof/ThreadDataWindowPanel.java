@@ -101,16 +101,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         //End - Some declarations.
         //######
 
-        //With group support present, it is possible that the number of
-        // mappings in
-        //our data list is zero. This can occur when the user's selected
-        // groups to display are
-        //not present on this thread ... for example. If so, just return.
+        // With group support present, it is possible that the number of
+        // functions in our data list is zero. This can occur when the user's selected
+        // groups to display are not present on this thread ... for example. If so, just return.
+
         if ((list.size()) == 0)
             return;
 
-        //To make sure the bar details are set, this
-        //method must be called.
+        //To make sure the bar details are set, this method must be called.
         trial.getPreferences().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
@@ -236,7 +234,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         int stringStart = 0;
 
         Function f = ppFunctionProfile.getFunction();
-        String mappingName = ppFunctionProfile.getFunctionName();
+        String functionName = ppFunctionProfile.getFunctionName();
         boolean groupMember = ppFunctionProfile.isGroupMember(trial.getColorChooser().getHighlightedGroup());
 
         d = (value / maxValue);
@@ -287,11 +285,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         stringStart = barXCoord - xLength - stringWidth - 5;
         g2D.drawString(s, stringStart, yCoord);
 
-        //Now draw the mapping to the right of the bar.
-        g2D.drawString(mappingName, (barXCoord + 5), yCoord);
+        g2D.drawString(functionName, (barXCoord + 5), yCoord);
 
-        //Grab the width of the mappingName.
-        stringWidth = fmFont.stringWidth(mappingName);
+        stringWidth = fmFont.stringWidth(functionName);
         //Update the drawing coordinates if we are drawing to the screen.
         if (toScreen)
             ppFunctionProfile.setDrawCoords(stringStart, (barXCoord + 5 + stringWidth), (yCoord - barHeight),
@@ -318,8 +314,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                 if (arg.equals("Show Function Details")) {
                     if (clickedOnObject instanceof Function) {
                         Function function = (Function) clickedOnObject;
-                        //Bring up an expanded data window for this mapping,
-                        // and set this mapping as highlighted.
                         trial.getColorChooser().setHighlightedFunction(function);
                         FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial, function,
                                 window.getDataSorter());
@@ -327,7 +321,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                         functionDataWindow.show();
                     }
                 } else if (arg.equals("Change Function Color")) {
-                    //Get the clicked on object.
                     if (clickedOnObject instanceof Function) {
                         Function function = (Function) clickedOnObject;
                         Color color = function.getColor();
@@ -339,7 +332,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                         }
                     }
                 } else if (arg.equals("Reset to Generic Color")) {
-                    //Get the clicked on object.
                     if (clickedOnObject instanceof Function) {
                         Function function = (Function) clickedOnObject;
                         function.setColorFlag(false);

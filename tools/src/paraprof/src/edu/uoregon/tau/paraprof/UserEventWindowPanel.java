@@ -36,13 +36,13 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         addMouseListener(this);
 
         //Add items to the popu menu.
-        JMenuItem changeColorItem = new JMenuItem("Change User Event Color");
-        changeColorItem.addActionListener(this);
-        popup.add(changeColorItem);
+        JMenuItem jMenuItem = new JMenuItem("Change User Event Color");
+        jMenuItem.addActionListener(this);
+        popup.add(jMenuItem);
 
-        JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
-        maskMappingItem.addActionListener(this);
-        popup.add(maskMappingItem);
+        jMenuItem = new JMenuItem("Reset to Generic Color");
+        jMenuItem.addActionListener(this);
+        popup.add(jMenuItem);
     }
 
     public void paintComponent(Graphics g) {
@@ -98,9 +98,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
-        //***
-        //Set the max values for this mapping.
-        //***
         switch (window.getValueType()) {
         case 12:
             maxValue = userEvent.getMaxUserEventNumberValue();
@@ -125,9 +122,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         // this window. Thus pass
         // in 0 for type.
         barXCoord = barXCoord + stringWidth;
-        //***
-        //End - Set the max values for this mapping.
-        //***
 
         //At this point we can determine the size this panel will
         //require. If we need to resize, don't do any more drawing,
@@ -207,9 +201,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         //End - Draw the header if required.
         //######
 
-        //######
-        //Draw thread information for this mapping.
-        //######
         for (int i = startElement; i <= endElement; i++) {
             ppUserEventProfile = (PPUserEventProfile) list.elementAt(i);
             switch (window.getValueType()) {

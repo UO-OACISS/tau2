@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.6 2005/01/04 01:16:26 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.7 2005/01/07 19:56:44 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -475,7 +475,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
         ParaProf.helpWindow.writeText("");
         ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
+        ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default color");
         ParaProf.helpWindow.writeText("for this function.");
     }
 

@@ -108,8 +108,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
         list = window.getData();
 
-        //With group support present, it is possible that the number of
-        // mappings in
+        //With group support present, it is possible that the number of functions in
         //our data list is zero. If so, just return.
         if ((list.size()) == 0)
             return;

@@ -142,41 +142,8 @@ public class HelpWindow extends JFrame implements ActionListener, Observer {
 
                 if (arg.equals("Display General Help")) {
                     clearText();
-
                     writeText("Welcome to ParaProf!");
                     writeText("");
-                    writeText("More detailed information can be found in the ParaProfHelp.txt that is distributed with TAU."
-                            + " What follows is a brief summary of the new features.");
-                    writeText("");
-                    writeText("1) Added new group tracking in ParaProf:");
-                    writeText("pprof has been updated to track group names, and ParaProf has also been updated to take"
-                            + " advantage of this.  At present, a new group ledger window has been added to display groups."
-                            + " Clicking on one of the groups in this window will cause all members of the group to be"
-                            + " highlighted in all open windows, except for the total stat windows."
-                            + " This is only the first stage of group capabilities, but it has proved more time consuming"
-                            + " than expected to add all the features.  Much more to follow!");
-                    writeText("");
-                    writeText("2) Add the ability to save color maps between sessions:");
-                    writeText("When you save a color map, a text file is created with the current map."
-                            + " Loading a map causes the system to try and match the mapping names it know about"
-                            + " with names in the selected color map file. If it finds a match, it updates the color."
-                            + " This means that you do not need to have exactly the same mappings in the system as when"
-                            + " the map was saved.");
-                    writeText("");
-                    writeText("3) Sliders have been added to all windows that have bars.");
-                    writeText("To display the sliders, select the display sliders option from the options menu"
-                            + " of any window containing bars.  This will display the sliders for that window.  The slider"
-                            + " options are as follows: A drop down list selecting a portion of the original length, and a bar"
-                            + " giving a multiple of this length.  This has proved useful in tailoring the exact lengths of"
-                            + " bars needed.");
-                    writeText("");
-                    writeText("4) Added more color selections for mapping group colors.");
-                    writeText("");
-                    writeText("5) Added full masking of groups.");
-                    writeText("");
-                    writeText("6) A number of other minor changes and bug fixes.  As always, this is an ongoing project"
-                            + " as such, ANY suggestions are welcome.  There will also be a clean up of the code to provide"
-                            + " more effective searching as some things have been implimented just to get it working.");
                 } else if (arg.equals("Close ParaProf Help Window")) {
                     setVisible(false);
                 } else if (arg.equals("Exit ParaProf!")) {

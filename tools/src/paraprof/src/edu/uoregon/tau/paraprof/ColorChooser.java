@@ -24,10 +24,10 @@ public class ColorChooser implements WindowListener {
             groupColors = savedPreferences.getGroupColors();
             functionHighlightColor = savedPreferences.getHighlightColor();
             groupHighlightColor = savedPreferences.getGroupHighlightColor();
-            userEventHighlightColor = savedPreferences.getUserEventHightlightColor();
+            userEventHighlightColor = savedPreferences.getUserEventHighlightColor();
             miscFunctionColor = savedPreferences.getMiscFunctionColor();
         } else {
-            //Set the default colours.
+            //Set the default colors.
             this.setDefaultColors();
             this.setDefaultGroupColors();
         }
@@ -153,7 +153,7 @@ public class ColorChooser implements WindowListener {
     }
 
     // User Event Colors
-    public void setUserEventHightlightColor(Color userEventHighlightColor) {
+    public void setUserEventHighlightColor(Color userEventHighlightColor) {
         this.userEventHighlightColor = userEventHighlightColor;
     }
 
@@ -193,7 +193,7 @@ public class ColorChooser implements WindowListener {
         //Clear the colors vector.
         colors.clear();
 
-        //Add the default colours.
+        //Add the default colors.
         addColor(new Color(70, 156, 168));
         addColor(new Color(255, 153, 0));
 
@@ -228,7 +228,7 @@ public class ColorChooser implements WindowListener {
         //Clear the globalColors vector.
         groupColors.clear();
 
-        //Add the default colours.
+        //Add the default colors.
         addGroupColor(new Color(102, 0, 102));
         addGroupColor(new Color(51, 51, 0));
         addGroupColor(new Color(204, 0, 51));
@@ -470,7 +470,7 @@ class ColorChooserFrame extends JFrame implements ActionListener, MouseListener 
         //End - Create and add the components.
         //####################################
 
-        //Now populate the colour list.
+        //Now populate the color list.
         populateColorList();
     }
 
@@ -544,7 +544,7 @@ class ColorChooserFrame extends JFrame implements ActionListener, MouseListener 
                         } else if ((values[i]) == (totalNumberOfColors + 1)) {
                             trial.getColorChooser().setGroupHighlightColor(color);
                         } else if ((values[i]) == (totalNumberOfColors + 2)) {
-                            trial.getColorChooser().setUserEventHightlightColor(color);
+                            trial.getColorChooser().setUserEventHighlightColor(color);
                         } else if ((values[i]) == (totalNumberOfColors + 3)) {
                             trial.getColorChooser().setMiscFunctionColor(color);
                         } else if ((values[i]) < trial.getColorChooser().getNumberOfColors()) {
@@ -565,7 +565,7 @@ class ColorChooserFrame extends JFrame implements ActionListener, MouseListener 
                     colorChooser.setDefaultGroupColors();
                     colorChooser.setHighlightColor(Color.red);
                     colorChooser.setGroupHighlightColor(new Color(0, 255, 255));
-                    colorChooser.setUserEventHightlightColor(new Color(255, 255, 0));
+                    colorChooser.setUserEventHighlightColor(new Color(255, 255, 0));
                     colorChooser.setMiscFunctionColor(Color.black);
                     listModel.clear();
                     populateColorList();

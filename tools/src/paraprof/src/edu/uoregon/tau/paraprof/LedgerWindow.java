@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.6 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.7 2005/01/07 19:56:44 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -261,13 +261,13 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
             ParaProf.helpWindow.writeText("To see more information about any of the functionProfiles shown here,");
             ParaProf.helpWindow.writeText("right click on that function, and select from the popup menu.");
             ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+            ParaProf.helpWindow.writeText("You can also left click any function to highlight it in the system.");
         } else if (windowType == 1) {
             ParaProf.helpWindow.writeText("This is the group ledger window.");
             ParaProf.helpWindow.writeText("");
             ParaProf.helpWindow.writeText("This window shows all the groups tracked in this profile.");
             ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("Left click any group to hightlight it in the system.");
+            ParaProf.helpWindow.writeText("Left click any group to highlight it in the system.");
             ParaProf.helpWindow.writeText("Right click on any group, and select from the popup menu"
                     + " to display more options for masking or displaying functionProfiles in a particular group.");
         } else {

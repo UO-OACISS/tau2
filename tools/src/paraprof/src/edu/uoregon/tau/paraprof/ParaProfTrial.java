@@ -351,6 +351,9 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //######
     public void update(Object obj) throws DatabaseException {
 
+        if (obj instanceof DataSourceException) {
+            ParaProfUtils.handleException((Exception) obj);
+        }
         DataSource dataSource = (DataSource) obj;
 
         //Data session has finished loading. Call its terminate method to

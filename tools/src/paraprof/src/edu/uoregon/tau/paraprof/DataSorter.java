@@ -9,9 +9,9 @@ import edu.uoregon.tau.dms.dss.*;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.5 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.6 2005/01/07 19:56:44 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class DataSorter {
 
@@ -29,12 +29,10 @@ public class DataSorter {
         for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
             userEventProfile = (UserEventProfile) e1.nextElement();
             if (userEventProfile != null) {
-                //        if (trialData.displayMapping(userEventProfile.getMappingID())) {
                 PPUserEventProfile ppUserEventProfile = new PPUserEventProfile(trial, nodeID, contextID,
                         threadID, userEventProfile);
                 ppUserEventProfile.setSortType(sortType);
                 newList.addElement(ppUserEventProfile);
-                //      }
             }
         }
         Collections.sort(newList);
@@ -99,7 +97,7 @@ public class DataSorter {
 
                     //Counts the number of ppFunctionProfiles that are actually added.
                     //It is possible (because of selection criteria - groups for example) to filter
-                    //out all mappings on a particular thread. The default at present is not to add.
+                    //out all functions on a particular thread. The default at present is not to add.
 
                     int counter = 0; //Counts the number of PPFunctionProfile that are actually added.
                     ppThread = new PPThread(thread);
