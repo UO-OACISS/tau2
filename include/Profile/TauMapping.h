@@ -31,26 +31,29 @@
 #define _TAU_MAPPING_H_
 
 #if (PROFILING_ON || TRACING_ON)
+Profiler * TauProfG;
 Profiler *& TheTauMapProf();
+FunctionInfo *TauFIG;
 // For Mapping, global variables used between layers
 #define TAU_MAPPING(stmt)   \
-  { static char TauStmtUsed[1] = {'Y'}; \
-    static Profiler *TauThisStatement; \
-    static FunctionInfo taufimap(#stmt, " ", TAU_USER, "TAU_USER"); \
-    if (TauStmtUsed[0] != (char) NULL) \
-    { \
-	TheTauMapProf() = new Profiler(&taufimap, TAU_USER, true);\
-	TauThisStatement = TheTauMapProf(); \
-    } \
-    else { \
-	TauStmtUsed[0] = (char) NULL; \
-	TheTauMapProf() = TauThisStatement; \
-    } \
-  } \
-  TheTauMapProf()->Start(); \
-  stmt; \
-  cout <<#stmt <<endl; \
-  TheTauMapProf()->Stop();
+  { \
+    static FunctionInfo TauFIG(#stmt, " " , TAU_USER, "TAU_USER"); \
+    TauProfG = new Profiler (&TauFIG, TAU_USER, true); \
+    TheTauMapProf() = TauProfG; \
+    int tid = RtsLayer::myThread(); \
+    if (tid == 0) \
+      cout <<"Thr "<< tid <<" Stmt: "<<#stmt <<" CurrProf " \
+       << Profiler::CurrentProfiler[tid]\
+       <<" StmtProfiler "<<TauProfG<<endl; \
+    TauProfG->Start(); \
+    stmt; \
+    cout <<#stmt <<endl; \
+    TauProfG->Stop(); \
+    if (tid == 0) \
+    cout <<"Thr "<< tid <<" Stmt: "<<#stmt <<" CurrProf " \
+       << Profiler::CurrentProfiler[tid]\
+       <<" StmtProfiler "<<TauProfG<<endl; \
+  } 
 
 #else
 #define TAU_MAPPING(stmt) stmt
