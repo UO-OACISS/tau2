@@ -76,7 +76,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 	    //End - Add items to the popu menu.
 	    //######
-	    
+
 	    //Schedule a repaint of this panel.
 	    this.repaint();
 	}

@@ -543,8 +543,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     public void mouseExited(MouseEvent evt){}
     //End - Mouse listeners for this panel.
     //**********
-  
-  
+   
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
