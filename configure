@@ -2093,6 +2093,10 @@ case $machine in
 	;;
 
      alpha)
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs ALPHAPAPI"
+	fi
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs"
 	fixmakeargs="COMPAQ_ALPHA $fixmakeargs"
@@ -2181,6 +2185,10 @@ case $machine in
 	if [ $cxx_compiler = CC ]  
 	  then
 	    fixmakeargs="$fixmakeargs SOL2CC"
+	    if [ $openmp = yes ]
+	    then
+	      fixmakeargs="$fixmakeargs SOL2CC_OPENMP"
+	    fi
 	    if [ $fortran_compiler = no ]  
 	    then
 	      fixmakeargs="$fixmakeargs SUN_FORTRAN"
