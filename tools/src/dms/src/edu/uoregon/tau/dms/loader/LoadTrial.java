@@ -14,7 +14,7 @@ import java.io.*;
 
 public class LoadTrial implements ParaProfObserver {
 
-	public static String USAGE = "USAGE: perfdmf_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, xprof, sddf (svpablo)\n";
+	public static String USAGE = "USAGE: perfdmf_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n";
     private File readPprof;
     private File writeXml;
     private String trialTime;
@@ -109,6 +109,24 @@ public class LoadTrial implements ParaProfObserver {
 					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
 			}
 			dataSession = new HPMToolkitDataSession();
+			break;
+		case 6:
+			if (fileExists()) {
+				inFile[0] = new File (sourceFile);
+				v = new Vector();
+				v.add(inFile);
+			} else {
+				fl = new FileList();
+				String[] sourcePath = extractSourcePath();
+				if (sourcePath[0] != null)
+					v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
+				else
+					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+			}
+			dataSession = new PSRunDataSession();
+			break;
+		default:
+		case 5:
 			break;
 	}
 
@@ -290,6 +308,8 @@ public class LoadTrial implements ParaProfObserver {
 			fileType = 3;
 		} else if (fileTypeString.equals("hpm")) {
 			fileType = 4;
+		} else if (fileTypeString.equals("psrun")) {
+			fileType = 6;
 /*
 		} else if (fileTypeString.equals("gprof")) {
 			fileType = 0;

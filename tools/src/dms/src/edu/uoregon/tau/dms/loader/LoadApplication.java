@@ -107,9 +107,9 @@ public class LoadApplication {
 		int exitval = 0;
 	
     	/***** Load appliation into PerfDMF *********/
-			String appid = loadApp.storeApp(xmlFile);
-			if (appid != null)
-				exitval = Integer.parseInt(appid);
+		String appid = loadApp.storeApp(xmlFile);
+		if (appid != null)
+			exitval = Integer.parseInt(appid);
 
 		loadApp.getConnector().dbclose();
 		// System.exit(exitval);

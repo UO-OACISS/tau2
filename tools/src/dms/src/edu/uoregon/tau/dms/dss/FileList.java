@@ -27,7 +27,7 @@ public class FileList{
 	Vector result = new Vector();
 
 	//Check to see if type is valid.
-	if(type>5){
+	if(type>6){
 	    System.out.println("Unexpected Type -  " + type + ":");
 	    System.out.println("Location - ParaProfManager.getFileList(...) 0");
 	    return new Vector();
@@ -98,6 +98,7 @@ public class FileList{
 			    break;
 			case 3:
 			case 4:
+			case 6:
 			    filePrefix = JOptionPane.showInputDialog("Enter file prefix");
 			    if((filePrefix == null) || "".equals(filePrefix)){
 				System.out.println("No prefix given!");
@@ -134,7 +135,7 @@ public class FileList{
 			    }
 			}
 		    }
-		    else if(type==2 || type==3 || type==4){
+		    else if(type==2 || type==3 || type==4 || type==6){
 			files = this.helperGetFileList(selection[0], type, filePrefix, debug);
 			if(files.length > 0)
 			    result.add(files);
@@ -219,7 +220,7 @@ public class FileList{
 			files[0] = file;
 		    }
 		}
-		else if(type==1||type==2||type==3||type==4){
+		else if(type==1||type==2||type==3||type==4||type==6){
 		    files = directory.listFiles();
 		    Vector v = new Vector();
 		    for(int i = 0;i<files.length;i++){
