@@ -154,11 +154,11 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc ]
       then
         c_compiler=$myarg
       else
-      echo "WARNING: valid options for cc are 'cc', 'gcc' and 'KCC'"
+      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC' and 'pgcc' "
 #      exit 1
     fi
     shift
@@ -702,7 +702,14 @@ case $cxx_compiler in
    pgCC)
       echo "Default C++ compiler will be PGI pgCC C++ Compiler"
       pgi=yes
-      fixmakeargs="$fixmakeargs PGI"
+      pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l`
+      if [ $pgiflag = 1 ] 
+      then
+	echo  "Using PGI ver 1.7 Compiler"
+        fixmakeargs="$fixmakeargs PGI PGI1.7"
+      else
+        fixmakeargs="$fixmakeargs PGI"
+      fi
       ;;
 
    *)
@@ -749,12 +756,12 @@ fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt 
 
 if [ $cxx_compiler = pgCC ] 
 then
-  cat << EOF > get_stdinc.C
+cat << EOF > get_stdinc.C
 #include <stddef.h>
 #include <iostream>
 EOF
 else
-  cat << EOF > get_stdinc.C
+cat << EOF > get_stdinc.C
 #include <stddef.h>
 #include <iostream.h>
 EOF
