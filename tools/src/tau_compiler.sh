@@ -15,6 +15,7 @@ declare -i isForCompilation=$FALSE
 declare -i hasAnObjectOutputFile=$FALSE
 declare -i hasMpi=$TRUE
 declare -i needToCleanPdbInstFiles=$TRUE
+declare -i pdbFileSpecified=$FALSE
 
 declare -i isVerbose=$FALSE
 declare -i isDebug=$FALSE
@@ -46,6 +47,7 @@ printUsage () {
 	echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
 	echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
 	echo -e "  -optTauSelectFile=\"\"\t\tSpecify selective instrumentation file for tau_instrumentor"
+	echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
 	echo -e "  -optTau=\"\"\t\t\tSpecify options for tau_instrumentor"
 	echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
 	echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
@@ -253,6 +255,11 @@ for arg in "$@"
 				optCompile=${arg#"-optReset="}
 				echoIfDebug "\tCompiling Options are: $optCompile"
 				;;
+			-optPDBFile*)
+				optPDBFile="${arg#"-optPDBFile="}"
+				pdbFileSpecified=$TRUE
+				echoIfDebug "\tPDB File used: $optPDBFile"
+				;;
 
 			-optPdtCReset*)
 				optPdtCFlags=${arg#"-optPdtCReset="}
@@ -408,7 +415,11 @@ while [ $tempCounter -lt $numFiles ]; do
 	newFile=${base}.inst${suf}
 	arrTau[$tempCounter]="${OUTPUTARGSFORTAU}${newFile}"
 	arrPdbForTau[$tempCounter]="${PDBARGSFORTAU}${newFile}"
-	newFile=${base}.pdb
+	if [ $pdbFileSpecified == $FALSE ]; then
+	  newFile=${base}.pdb
+	else
+	  newFile=$optPDBFile; 
+	fi
 	arrPdb[$tempCounter]="${PDBARGSFORTAU}${newFile}"
 	tempCounter=tempCounter+1
 done
@@ -495,7 +506,9 @@ if [ $gotoNextStep == $TRUE ]; then
 		esac
 
 		if [ $disablePdtStep == $FALSE ]; then
-		  evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
+		  if [ $pdbFileSpecified == $FALSE ]; then
+		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
+		  fi
 		else
 		  echo "tau_compiler.sh> WARNING: Disabling instrumentation of source code. TAU was not configured with -pdt=<dir> option."
 		  gotoNextStep=$FALSE
@@ -659,7 +672,9 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	tempCounter=0
 	while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
 		eval "rm ${arrTau[$tempCounter]##*/}"
-		eval "rm ${arrPdb[$tempCounter]##*/}"
+		if [ $pdbFileSpecified == $FALSE ]; then
+		  eval "rm ${arrPdb[$tempCounter]##*/}"
+		fi
 		tempCounter=tempCounter+1
 	done
 fi
