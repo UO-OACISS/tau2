@@ -106,7 +106,7 @@ public class ParaProfImageOutput{
 			ImageWriteParam iwp = writer.getDefaultWriteParam();
 			iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 			iwp.setCompressionQuality(paraProfImageOptionsPanel.getImageQuality());
-			System.out.println("Qulity is: " + iwp.getCompressionQuality());
+			System.out.println("Quality is: " + iwp.getCompressionQuality());
 			writer.write(null, iioImage, iwp);
 		    }
 		    else

@@ -34,6 +34,11 @@ public class StaticMainWindowData{
 		    int counter = 0; //Counts the number of SMWThreadDataElements that are actually added.
 		    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
 		    SMWThread sMWThread = new SMWThread(thread);
+
+
+
+		    double sum = 0.0;
+
 		    //Do not add thread to the context until we have verified counter is not zero (done after next loop).
 		    //Now enter the thread data loops for this thread.
 		    for(Enumeration e4 = thread.getFunctionList().elements(); e4.hasMoreElements() ;){
@@ -43,8 +48,18 @@ public class StaticMainWindowData{
 			    sMWThreadDataElement.setSortType(sortType);
 			    sMWThread.addFunction(sMWThreadDataElement);
 			    counter++;
+
+			    sum += sMWThreadDataElement.getExclusiveValue();
+
 			}
 		    }
+
+
+		    if (sum > maxExclusiveSum) {
+			maxExclusiveSum = sum;
+		    }
+
+
 		    //Sort thread and add to context if required (see above for an explanation).
 		    if(counter!=0){
 			Collections.sort(sMWThread.getFunctionList());
@@ -112,12 +127,17 @@ public class StaticMainWindowData{
 		    context = (Context) e2.nextElement();
 		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
 			thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+			
+
 			//Only want to add an the element with the correct mapping id.
 			if(listType==1)
 			    globalThreadDataElement = thread.getFunction(mappingID);
 			else
 			    globalThreadDataElement = thread.getUserevent(mappingID);
-			if(globalThreadDataElement != null){
+			
+			if (globalThreadDataElement != null) {
+
+
 			    //Create a new thread data object.
 			    sMWThreadDataElement = new SMWThreadDataElement(trial, node.getNodeID(), context.getContextID(), thread.getThreadID(), globalThreadDataElement);
 			    sMWThreadDataElement.setSortType(sortType);
@@ -166,11 +186,17 @@ public class StaticMainWindowData{
     
     public boolean debug(){
 	return debug;}
+
+
+    public double getMaxExclusiveSum() {
+	return maxExclusiveSum;
+    }
     //####################################
     //Instance Data.
     //####################################
     private ParaProfTrial trial = null;
     private boolean debug = false; //Off by default.
+    private double maxExclusiveSum = 0;
     //####################################
     //End - Instance Data.
     //####################################

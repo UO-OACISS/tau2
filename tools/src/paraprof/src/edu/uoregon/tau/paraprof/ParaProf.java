@@ -29,7 +29,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     static String homeDirectory = null;
     static File paraProfHomeDirectory = null;
     static String profilePathName = null;       //This contains the path to the currently loaded profile data.
-    static int defaultNumberPrecision = 4;
+    static int defaultNumberPrecision = 6;
     static boolean dbSupport = false;
     static ParaProfLisp paraProfLisp = null;
     static SavedPreferences savedPreferences = null;
@@ -344,10 +344,10 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    System.out.println("No profile files found in the current directory.");
 		    System.out.println("Use ParaProf's manager window to load them manually.");
 		}
-	    }
-	    else{
-		if(sourceFile==null){
-		    if(filePrefix==null)
+	    } else {
+		// no file type given, I think
+		if (sourceFile == null) {
+		    if (filePrefix == null)
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", UtilFncs.debug);
 		    else
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, UtilFncs.debug);
@@ -363,7 +363,8 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 			fl.setPath(file.getPath());
 		    }
 		}
-		if(v.size()>0){
+
+		if (v.size()>0) {
 		    dataSession = new TauPprofOutputSession();
 		    trial = new ParaProfTrial(0);
 		    trial.setApplicationID(0);
@@ -379,16 +380,15 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    dataSessionThreadControl.setDebug(UtilFncs.debug);
 		    dataSessionThreadControl.addObserver(this);
 		    dataSessionThreadControl.initialize(dataSession,v,true);
-		}
-		else{
+		} else {
 		    //Try finding profile.*.*.* files.
-		    if(sourceFile==null){
-			if(filePrefix==null)
-			    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", UtilFncs.debug);
+		    if (sourceFile == null) {
+			if (filePrefix == null)
+			    //v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", UtilFncs.debug);
+			    v = fl.helperFindProfiles(System.getProperty("user.dir"));
 			else
 			    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, UtilFncs.debug);
-		    }
-		    else{
+		    } else {
 			v = new Vector();
 			File file = new File(sourceFile);
 			if(file.exists()){
@@ -478,7 +478,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	trial.showMainWindow();
 
 	//See if the user has defined any lisp code to run.
-	try{
+	try {
 	    FileInputStream file = new FileInputStream("ParaProfLisp.lp");
 	    //If here, means that no exception was thrown, and there is a lisp file present.
 	    InputStreamReader isr = new InputStreamReader(file);
@@ -499,12 +499,10 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    thread.start();
 	    if(UtilFncs.debug)
 		System.out.println("Done starting the interpreter!");
-	}
-	catch(Exception e){
-	    if(e instanceof FileNotFoundException){
+	} catch(Exception e) {
+	    if (e instanceof FileNotFoundException) {
 		System.out.println("No ParaProfLisp.lp file present!");
-	    }
-	    else{
+	    } else {
 		//Print some kind of error message, and quit the system.
 		System.out.println("There was an internal error whilst trying to read the ParaProfLisp.pl");
 		System.out.println("Please delete this file, or replace it with a valid one!");
@@ -522,7 +520,14 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 
     //This method is reponsible for any cleanup required in ParaProf before an exit takes place.
     public static void exitParaProf(int exitValue){
-	if(UtilFncs.objectDebug != null){
+
+// 	    try {
+// 		throw new Exception();
+// 	    } catch (Exception e) {
+// 		e.printStackTrace();
+// 	    }
+
+	if (UtilFncs.objectDebug != null) {
 	    UtilFncs.objectDebug.outputToFile("ParaProf exiting!!");
 	    UtilFncs.objectDebug.flushDebugFileBuffer();
 	    UtilFncs.objectDebug.closeDebugFile();

@@ -55,7 +55,33 @@ public class SMWThread{
   
     public int getYDrawCoord(){
 	return yDrawCoord;}
+
+
+    public void setMiscCoords(int xBeg, int xEnd, int yBeg, int yEnd){
+	this.miscXBeg = xBeg;
+	this.miscXEnd = xEnd;
+	this.miscYBeg = yBeg;
+	this.miscYEnd = yEnd;
+    }
+  
+    public int getMiscXBeg(){
+	return miscXBeg;}
+  
+    public int getMiscXEnd(){
+	return miscXEnd;}
+  
+    public int getMiscYBeg(){
+	return miscYBeg;}
+  
+    public int getMiscYEnd(){
+	return miscYEnd;}
+
     
+    int miscXBeg;
+    int miscXEnd;
+    int miscYBeg;
+    int miscYEnd;
+
     //####################################
     //Instance data.
     //####################################

@@ -21,7 +21,6 @@ public class PPML{
     public PPML(){}
 
     public static Metric applyOperation(Metric operand1, Object operand2, String inOperation){
-	System.out.println("Here1");
 	try{
 	    boolean constant = false; //Indicates whether we are just applying a constant
 	                              //as an argument for the second operand.

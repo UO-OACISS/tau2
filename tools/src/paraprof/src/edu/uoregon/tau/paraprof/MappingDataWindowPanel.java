@@ -431,7 +431,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	g2D.setColor(Color.black);
 	//Do not want to put a percent sign after the bar if we are not exclusive or inclusive.
 	if((mDWindow.isPercent()) && ((mDWindow.getValueType())<=4))					
-	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
+	    s = (UtilFncs.adjustDoublePresision(value, 4)) + "%";
 	else
 	    s = UtilFncs.getOutputString(mDWindow.units(),value,ParaProf.defaultNumberPrecision);
 	stringWidth = fmFont.stringWidth(s);
@@ -659,7 +659,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	try{
 	    double sliderValue = (double) mDWindow.getSliderValue();
 	    double sliderMultiple = mDWindow.getSliderMultiple();
-	    barLength = baseBarLength*((int)(sliderValue*sliderMultiple));
+	    barLength = (int)(baseBarLength*((double)(sliderValue*sliderMultiple)));
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "MDWP06");

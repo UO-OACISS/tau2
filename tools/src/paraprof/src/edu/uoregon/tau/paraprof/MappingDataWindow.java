@@ -150,11 +150,11 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    ButtonGroup group = null;
 	    JRadioButtonMenuItem button = null;
 	    
-	    sortByNCT = new JCheckBoxMenuItem("Sort By N,C,T", false);
+	    sortByNCT = new JCheckBoxMenuItem("Sort By N,C,T", true);
 	    sortByNCT.addActionListener(this);
 	    optionsMenu.add(sortByNCT);
 	    
-	    descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
+	    descendingOrder = new JCheckBoxMenuItem("Descending Order", false);
 	    descendingOrder.addActionListener(this);
 	    optionsMenu.add(descendingOrder);
 	    
@@ -838,8 +838,8 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 
     private Vector list = null;
   
-    private boolean nct = false; //true: sort by node, context and thread,false: don't.
-    private int order = 0; //0: descending order,1: ascending order.
+    private boolean nct = true; //true: sort by node, context and thread,false: don't.
+    private int order = 1; //0: descending order,1: ascending order.
     private boolean percent = true; //true: show values as percent,false: show actual values.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.

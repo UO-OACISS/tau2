@@ -135,7 +135,7 @@ public class UserEventMainWindow extends JFrame implements ActionListener, MenuL
 	  nameCheckBox.addActionListener(this);
 	  optionsMenu.add(nameCheckBox);
 
-	  orderCheckBox = new JCheckBoxMenuItem("Decending Order", true);
+	  orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
 	  orderCheckBox.addActionListener(this);
 	  optionsMenu.add(orderCheckBox);
 
@@ -379,7 +379,7 @@ public class UserEventMainWindow extends JFrame implements ActionListener, MenuL
 		    sortLocalData();
 		    panel.repaint();
 		}
-		else if(arg.equals("Decending Order")){
+		else if(arg.equals("Descending Order")){
 		    if(orderCheckBox.isSelected())
 			order = 0;
 		    else

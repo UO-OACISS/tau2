@@ -69,6 +69,10 @@ public class SMWThreadDataElement implements Comparable{
 
     public GlobalThreadDataElement getGTDE(){
 	return globalThreadDataElement;}
+
+    public GlobalMappingElement getGME() {
+	return globalMappingElement;
+    }
     
     public String getMappingName(){
 	return globalMappingElement.getMappingName();}
@@ -238,8 +242,8 @@ public class SMWThreadDataElement implements Comparable{
       (28) mean per call value
       (30) n,c,t.
 
-      The even values represent these items sorted in decending order,
-      the odd values in ascending order. Thus (0) is name decending, and
+      The even values represent these items sorted in descending order,
+      the odd values in ascending order. Thus (0) is name descending, and
       (1) is name ascending. Set sortType to the integer value required.
     */
 
@@ -338,6 +342,7 @@ public class SMWThreadDataElement implements Comparable{
     }
  
     public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd){
+	//	System.out.println ("xBeg = " + xBeg + ", xEnd = " + xEnd);
 	this.xBeg = xBeg;
 	this.xEnd = xEnd;
 	this.yBeg = yBeg;

@@ -137,7 +137,7 @@ public class  ParaProfImageOptionsPanel extends JPanel implements PropertyChange
     //Instance data.
     //####################################
     private Component component = null;
-    private JCheckBox fullScreen = new JCheckBox("Full Screen");
+    private JCheckBox fullScreen = new JCheckBox("Full Window");
     private JCheckBox prependHeader = new JCheckBox("Prepend Header");
     private JLabel imageQualityLabel = new JLabel("Image Quality");
     private String imageQualityStrings[] = {"1.0", "0.75", "0.5", "0.25", "0.15", "0.1"};

@@ -139,9 +139,25 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  nameCheckBox.addActionListener(this);
 	  optionsMenu.add(nameCheckBox);
 
-	  orderCheckBox = new JCheckBoxMenuItem("Decending Order", true);
+
+	  normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
+	  normalizeCheckBox.addActionListener(this);
+	  optionsMenu.add(normalizeCheckBox);
+
+
+	  orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
+	  orderByMeanCheckBox.addActionListener(this);
+	  optionsMenu.add(orderByMeanCheckBox);
+
+
+	  orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
 	  orderCheckBox.addActionListener(this);
 	  optionsMenu.add(orderCheckBox);
+
+	  stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
+	  stackBarsCheckBox.addActionListener(this);
+	  optionsMenu.add(stackBarsCheckBox);
+
 
 	  slidersCheckBox = new JCheckBoxMenuItem("Display Sliders", false);
 	  slidersCheckBox.addActionListener(this);
@@ -295,6 +311,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     //ActionListener.
     //######
     public void actionPerformed(ActionEvent evt){
+
 	try{
 	    Object EventSrc = evt.getSource();
 	    
@@ -315,7 +332,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    jRM.show();
 		}
 		else if(arg.equals("Bin Window")){
-		    //BinWindow bW = new BinWindow(trial, sMWData, true, -1);
+		    //BinWindow bW = new BinWindow(trial, sMWData, true, 0, false);
 		    //bW.show();
 		}
 		else if(arg.equals("Edit ParaProf Preferences!")){
@@ -366,7 +383,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    dispose();
 		    ParaProf.exitParaProf(0);
 		}
-		else if(arg.equals("name")){
+		else if(arg.equals("Sort By Name")){
 		    if(nameCheckBox.isSelected())
 			name = true;
 		    else
@@ -374,7 +391,42 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    sortLocalData();
 		    panel.repaint();
 		}
-		else if(arg.equals("Decending Order")){
+		else if(arg.equals("Normalize Bars")){
+		    if (normalizeCheckBox.isSelected())
+			normalizeBars = true;
+		    else
+			normalizeBars = false;
+		    panel.repaint();
+
+		} else if(arg.equals("Stack Bars Together")){
+		    if (stackBarsCheckBox.isSelected()) {
+
+			normalizeCheckBox.setEnabled(true);
+			orderByMeanCheckBox.setEnabled(true);
+
+			stackBars = true;
+		    } else {
+			stackBars = false;
+
+			normalizeCheckBox.setSelected(false);
+			normalizeCheckBox.setEnabled(false);
+			normalizeBars = false;
+			orderByMeanCheckBox.setSelected(true);
+			orderByMeanCheckBox.setEnabled(false);
+			orderByMean = true;
+		    }
+		    panel.repaint();
+		}
+
+		else if(arg.equals("Order By Mean")){
+		    if(orderByMeanCheckBox.isSelected())
+			orderByMean = true;
+		    else
+			orderByMean = false;
+		    sortLocalData();
+		    panel.repaint();
+		}
+		else if(arg.equals("Descending Order")){
 		    if(orderCheckBox.isSelected())
 			order = 0;
 		    else
@@ -384,9 +436,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		else if(arg.equals("Display Sliders")){
 		    if(slidersCheckBox.isSelected())
-			displaySiders(true);
+			displaySliders(true);
 		    else
-			displaySiders(false);
+			displaySliders(false);
 		}
 		else if(arg.equals("Show Path Title in Reverse"))
 		    this.setTitle("ParaProf: " + trial.getTrialIdentifier(pathTitleCheckBox.isSelected()));
@@ -432,8 +484,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
      //######
     //ChangeListener.
     //######
-    public void stateChanged(ChangeEvent event){
-	panel.changeInMultiples();}
+
+    public void stateChanged(ChangeEvent event) {
+	panel.changeInMultiples();
+    }
+
     //######
     //End - ChangeListener.
     //######
@@ -537,15 +592,18 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     //End - Panel header.
     //######
 
-    public int getSliderValue(){
-	int tmpInt = -1;
-	try{
-	    tmpInt = barLengthSlider.getValue();
-	}
-	catch(Exception e){
-	    UtilFncs.systemError(e, null, "SMW05");
-	}
-	return tmpInt;
+    public double getSliderValue(){
+
+	return (double)barLengthSlider.getValue();
+
+// 	int tmpInt = -1;
+// 	try{
+// 	    tmpInt = barLengthSlider.getValue();
+// 	}
+// 	catch(Exception e){
+// 	    UtilFncs.systemError(e, null, "SMW05");
+// 	}
+// 	return tmpInt;
     }
   
     public double getSliderMultiple(){
@@ -561,9 +619,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	return 0;
     }
     
-    private void displaySiders(boolean displaySliders){
-	if(displaySliders){
-	     contentPane.remove(sp);
+    private void displaySliders(boolean displaySliders){
+	if (displaySliders)  {
+	    contentPane.remove(sp);
 	    
 	    gbc.fill = GridBagConstraints.NONE;
 	    gbc.anchor = GridBagConstraints.EAST;
@@ -582,7 +640,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    gbc.weightx = 0.10;
 	    gbc.weighty = 0.01;
 	    addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
-	    
+	   
+
 	    gbc.fill = GridBagConstraints.HORIZONTAL;
 	    gbc.anchor = GridBagConstraints.WEST;
 	    gbc.weightx = 0.70;
@@ -594,8 +653,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    gbc.weightx = 1.0;
 	    gbc.weighty = 0.99;
 	    addCompItem(sp, gbc, 0, 1, 4, 1);
-	}
-	else{
+	} else {
 	    contentPane.remove(sliderMultipleLabel);
 	    contentPane.remove(sliderMultiple);
 	    contentPane.remove(barLengthLabel);
@@ -632,25 +690,30 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     }
     
     //Updates the sorted lists after a change of sorting method takes place.
-    private void sortLocalData(){
-	try{
-	    if(name){
+    private void sortLocalData() {
+	try {
+	    if (name) { // if sort by name
 		list[0] = sMWData.getAllThreadData(0+order);
-		list[1] = sMWData.getMeanData(18+order);
+		list[1] = sMWData.getMeanData(0+order);
+	    } else {
+
+		if (orderByMean) {
+		    list[0] = sMWData.getAllThreadData(20+order);
+		    list[1] = sMWData.getMeanData(20+order);
+		} else {
+		    list[0] = sMWData.getAllThreadData(2+order);
+		    list[1] = sMWData.getMeanData(20+order);
+		}
 	    }
-	    else{
-		list[0] = sMWData.getAllThreadData(2+order);
-		list[1] = sMWData.getMeanData(20+order);
-	    }
-	}
-	catch(Exception e){
+	} catch(Exception e) {
 	    UtilFncs.systemError(e, null, "SMW08");
 	}
 	
     }
 
     public Vector[] getData(){
-	return list;}
+	return list;
+    }
     
     private boolean mShown = false;
     public void addNotify(){
@@ -684,6 +747,15 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	}
     }
 
+
+    public boolean getNormalizeBars() {
+	return this.normalizeBars;
+    }
+
+    public boolean getStackBars() {
+	return this.stackBars;
+    }
+
     public void setDebug(boolean debug){
 	this.debug = debug;}
     
@@ -704,6 +776,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     private JMenu optionsMenu = null;
     private JMenu windowsMenu = null;
     private JCheckBoxMenuItem nameCheckBox = null;
+    private JCheckBoxMenuItem normalizeCheckBox = null;
+    private JCheckBoxMenuItem stackBarsCheckBox = null;
+    private JCheckBoxMenuItem orderByMeanCheckBox = null;
     private JCheckBoxMenuItem orderCheckBox = null;
     private JCheckBoxMenuItem slidersCheckBox = null;
     private JCheckBoxMenuItem pathTitleCheckBox = null;
@@ -721,6 +796,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     
     private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.
+    private boolean normalizeBars = true;
+    private boolean orderByMean = true;
+    private boolean stackBars = true;
 
     boolean displaySliders = false;
     

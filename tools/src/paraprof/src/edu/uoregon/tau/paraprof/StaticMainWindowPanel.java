@@ -110,8 +110,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     }
   
     public String getToolTipText(MouseEvent evt){
-	String S = null;
-	
+
 	try{
 	    //Get the location of the mouse.
 	    int xCoord = evt.getX();
@@ -126,9 +125,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		index = (yCoord)/(trial.getPreferences().getBarSpacing())-1;
 	    }
 
-	    if(index==-1){
-		if(xCoord<barXCoord){
-		    if(ParaProf.helpWindow.isShowing()){
+	    if (index == -1) { // mean
+		if (xCoord < barXCoord) {
+		    if (ParaProf.helpWindow.isShowing()) {
 			//Clear the window first.
 			ParaProf.helpWindow.clearText();
 			
@@ -141,38 +140,37 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    }
 		    //Return a string indicating that clicking before the display bar
 		    //will cause thread data to be displayed.
-		    return new String("Left or right click for more options");
-		}
-		else{
+		    return "Left or right click for more options";
+		} else {
 		    DataSessionIterator l = new DataSessionIterator(list[1]);
 		    while(l.hasNext()){
 			SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
-			if(xCoord < sMWThreadDataElement.getXEnd()){
-			   if(ParaProf.helpWindow.isShowing()){
+			if (xCoord <= sMWThreadDataElement.getXEnd() && xCoord >= sMWThreadDataElement.getXBeg()) {
+			    if(ParaProf.helpWindow.isShowing()){
 				//Clear the window first.
-			       ParaProf.helpWindow.clearText();
+				ParaProf.helpWindow.clearText();
 			       
-			       //Now send the help info.
-			       ParaProf.helpWindow.writeText("Your mouse is over the mean draw bar!");
-			       ParaProf.helpWindow.writeText("");
-			       ParaProf.helpWindow.writeText("Current function name is: " + sMWThreadDataElement.getMappingName());
-			       ParaProf.helpWindow.writeText("");
-			       ParaProf.helpWindow.writeText("The mean draw bars give a visual representation of the" +
-							     " mean values for the functions which have run in the system." +
-							     "  The funtions are assigned a color from the current" +
-							     " ParaProf color set.  The colors are cycled through when the" +
-							     " number of funtions exceeds the number of available" +
-							     " colors. In the preferences section, you can add more colors." +
-							     "  Use the right and left mouse buttons " +
-							     "to give additional information.");
-			   }
-			   //Return the name of the mapping in the current thread data object.
-			   return sMWThreadDataElement.getMappingName();
+				//Now send the help info.
+				ParaProf.helpWindow.writeText("Your mouse is over the mean draw bar!");
+				ParaProf.helpWindow.writeText("");
+				ParaProf.helpWindow.writeText("Current function name is: " + sMWThreadDataElement.getMappingName());
+				ParaProf.helpWindow.writeText("");
+				ParaProf.helpWindow.writeText("The mean draw bars give a visual representation of the" +
+							      " mean values for the functions which have run in the system." +
+							      "  The funtions are assigned a color from the current" +
+							      " ParaProf color set.  The colors are cycled through when the" +
+							      " number of funtions exceeds the number of available" +
+							      " colors. In the preferences section, you can add more colors." +
+							      "  Use the right and left mouse buttons " +
+							      "to give additional information.");
+			    }
+			    //Return the name of the mapping in the current thread data object.
+			    return sMWThreadDataElement.getMappingName();
 			}
 		    }
 		    //If in here, and at this position, it means that the mouse is not over
 		    //a bar. However, we might be over the misc. mapping section.  Check for this.
-		    if(xCoord <= (barXCoord + barLength)){
+		    if (xCoord <= meanMiscXEnd && xCoord >= meanMiscXBeg) {
 			//Output data to the help window if it is showing.
 			if(ParaProf.helpWindow.isShowing()){
 			    //Clear the window fisrt.
@@ -210,13 +208,13 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    
 		    //Return a string indicating that clicking before the display bar
 		    //will cause thread data to be displayed.
-		    return new String("Left or right click for more options");
+		    return "Left or right click for more options";
 		}
 		else{
 		    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 		    while(l.hasNext()){
 			SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
-			if(xCoord < sMWThreadDataElement.getXEnd()){
+			if (xCoord <= sMWThreadDataElement.getXEnd() && xCoord >= sMWThreadDataElement.getXBeg()) {
 			    if(ParaProf.helpWindow.isShowing()){
 				ParaProf.helpWindow.clearText();
 				ParaProf.helpWindow.writeText("Your mouse is over one of the thread draw bars!");
@@ -227,7 +225,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							      " functions which have run on this thread." +
 							      "  The funtions are assigned a color from the current" +
 							      " Racy color set.  The colors are cycled through when the" +
-							      " number of funtions exceeds the number of available" +
+							      " number of functions exceeds the number of available" +
 							      " colors." +
 							      "  Use the right and left mouse buttons " +
 							      "to give additional information.");
@@ -238,7 +236,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    }
 		    //If in here, and at this position, it means that the mouse is not over
 		    //a bar. However, we might be over the misc. mapping section.  Check for this.
-		    if(xCoord <= (barXCoord + barLength)){
+		    //		    if(xCoord <= (barXCoord + barLength)){
+		    if (xCoord <= sMWThread.getMiscXEnd() && xCoord >= sMWThread.getMiscXBeg()) {
 			//Output data to the help window if it is showing.
 			if(ParaProf.helpWindow.isShowing()){
 			    //Clear the window fisrt.
@@ -263,7 +262,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "SMWP03");
 	}
-	return S;
+	
+	return null;
     }
 
     public void paintComponent(Graphics g){
@@ -278,12 +278,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
     public int print(Graphics g, PageFormat pf, int page){
 	
-	if(pf.getOrientation() == PageFormat.PORTRAIT)
+	if (pf.getOrientation() == PageFormat.PORTRAIT)
 	    System.out.println("PORTRAIT");
-	else if(pf.getOrientation() == PageFormat.LANDSCAPE)
+	else if (pf.getOrientation() == PageFormat.LANDSCAPE)
 	    System.out.println("LANDSCAPE");
 	
-	if(page >=3)
+	if (page >= 3)
 	    return Printable.NO_SUCH_PAGE;
 	Graphics2D g2 = (Graphics2D)g;
 	g2.translate(pf.getImageableX(), pf.getImageableY());
@@ -338,10 +338,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //At this point we can determine the size this panel will
 	    //require. If we need to resize, don't do any more drawing,
 	    //just call revalidate.
-	    if(resizePanel(fmFont, barXCoord) && instruction==0){
-		this.revalidate();
-		return;
-	    }
+	    // 	    if(resizePanel(fmFont, barXCoord) && instruction==0){
+	    // 		this.revalidate();
+	    // 		return;
+	    // 	    }
 
 	    int yBeg = 0;
 	    int yEnd = 0;
@@ -366,7 +366,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    yEnd = (int) (yBeg + viewRect.getHeight());
 		    /*
 		      System.out.println("Viewing Rectangle: xBeg,xEnd: "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+
-					   " yBeg,yEnd: "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
+		      " yBeg,yEnd: "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
 		    */
 		}
 		//Because tooltip redraw can louse things up.  Add an extra one to draw.
@@ -425,31 +425,37 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //End - Draw the header if required.
 	    //######
 
-	    //######
-	    //Drawing the mean bar.
-	    //######
-	    yCoord = yCoord + (barSpacing); //Still need to update the yCoord even if the mean bar is not drawn.
-	    if(startElement==0)
-		drawBar(g2D, fmFont, "mean", null, barXCoord, yCoord, barHeight, instruction, true);
-	    
-	    //######
-	    //Draw thread information for this mapping.
-	    //######
 
+	    int maxBarWidth = 0;
+
+	    // Draw the mean bar
+	    yCoord = yCoord + (barSpacing); //Still need to update the yCoord even if the mean bar is not drawn.
+	    if (startElement==0) {
+		int width = drawBar(g2D, fmFont, "mean", null, barXCoord, yCoord, barHeight, instruction, true);
+		if (width > maxBarWidth)
+		    maxBarWidth = width;
+	    }
+	    // Draw the thread bar
 	    if (list != null) {
 		for(int i = startElement; i <= endElement; i++){
 		    sMWThread = (SMWThread) list[0].elementAt(i);
 		    yCoord = yCoord + (barSpacing);
-		    drawBar(g2D, fmFont,
-			    "n,c,t " + (sMWThread.getNodeID()) +
-			    "," + (sMWThread.getContextID()) +
-			    "," + (sMWThread.getThreadID()), sMWThread,
-			    barXCoord, yCoord, barHeight, instruction, false);
+		    int width = drawBar(g2D, fmFont,
+					"n,c,t " + (sMWThread.getNodeID()) + "," + (sMWThread.getContextID()) +
+					"," + (sMWThread.getThreadID()), sMWThread,
+					barXCoord, yCoord, barHeight, instruction, false);
+		    
+		    if (width > maxBarWidth)
+			maxBarWidth = width;
+
 		} 
 	    }
-	    //######
-	    //End - Draw thread information for this mapping.
-	    //######
+
+	    if(resizePanel(fmFont, maxBarWidth + 5) && instruction==0){
+		this.revalidate();
+		return;
+	    }
+
 	    if(this.debug()){
 		System.out.println("####################################");
 		System.out.println("End - StaticMainWindowPanel.renderIt(...)");
@@ -461,85 +467,332 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }
     
-    private void drawBar(Graphics2D g2D, FontMetrics fmFont, String text, SMWThread sMWThread,
-			 int barXCoord, int yCoord, int barHeight, int instruction, boolean mean){
+
+
+    
+    
+    private int drawStackedBar(Graphics2D g2D, FontMetrics fmFont, String text, SMWThread sMWThread,
+			       int barXCoord, int yCoord, int barHeight, int instruction, boolean mean) {
+	
 	DataSessionIterator l = null;
 	int selectedGroupID = trial.getColorChooser().getGroupHighlightColorID();
 	boolean highlighted = false;
 
-	int barXEnd = barXCoord+barLength;
+	int barXEnd = (int)((double)barXCoord+barLength);
 
 	g2D.setColor(Color.black);
 	g2D.drawString(text, (barXCoord - (fmFont.stringWidth(text)) - 5), yCoord);
 
 	//Calculate the sum for this thread.
 	double sum = 0.00;
-	if(mean)
+
+	if (mean) {
 	    l = new DataSessionIterator(list[1]);
-	else
+	} else {
 	    l = (DataSessionIterator) sMWThread.getFunctionListIterator();
-	while(l.hasNext()){
+	}
+
+	while (l.hasNext()) {
 	    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
-	    if(mean)
+	    if (mean)
 		sum += sMWThreadDataElement.getMeanExclusiveValue();
 	    else
 		sum += sMWThreadDataElement.getExclusiveValue();
 	}
 
 	l.reset();
-	while(l.hasNext()){
-	    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
-	    double value =0.00;
-	    if(mean)
+	double valueSum = 0;
+	int lengthDrawn = 0;
+
+	//	System.out.println ("---------------"); 
+	
+	while (l.hasNext()) {
+	    
+	    SMWThreadDataElement sMWThreadDataElement;
+	    
+	    sMWThreadDataElement = (SMWThreadDataElement) l.next();
+	    
+	    //System.out.println ("mapping name = " + sMWThreadDataElement.getMappingName());
+	    
+	    double value = 0.00;
+	    if (mean)
 		value = sMWThreadDataElement.getMeanExclusiveValue();
 	    else
 		value = sMWThreadDataElement.getExclusiveValue();
-	    if(value > 0.0){
-		//Now compute the length of the bar for this object.
-		int xLength = (int) ((value/sum)*barLength);
-		if(xLength > 2){   //Only draw if there is something to draw.
-		    if(barHeight > 2){
+	    
+	    int xLength = 0;
+	    
+	    if (sMWindow.getNormalizeBars()) {
+		// normalize the bars so that they're all the same length, so we find percentages
+		// in each thread instead of against the maximum
+		xLength = (int) ((value/sum)*barLength);
+	    } else {
+		xLength = (int) (((value + valueSum)/sMWindow.getSMWData().getMaxExclusiveSum())*barLength) - lengthDrawn;
+	    }
+	    
+	    if (xLength > 2) {   // only draw if there is something to draw
+		valueSum += value;
+		lengthDrawn += xLength;
+		
+		if (barHeight > 2) {
+		    g2D.setColor(sMWThreadDataElement.getColor());
+		    g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+		    
+		    if ((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID())){ 
+			highlighted = true;
+			g2D.setColor(trial.getColorChooser().getHighlightColor());
+			g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+			g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+		    } else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
+			highlighted = true;
+			g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
+			g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+			g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+		    } else {
+			g2D.setColor(Color.black);
+			if (highlighted) {
+			    //Manually draw in the lines for consistancy.
+			    g2D.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
+			    g2D.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
+			    g2D.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
+			    highlighted = false;
+			}
+			else
+			    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+		    }
+		    
+		    //Set the draw coords.
+		    if (instruction==0)
+			sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+		    
+		    //Update barXCoord.
+		    barXCoord = (barXCoord + xLength);
+		} else {
+		    
+		    // barHeight less than 2!
+		    
+		    //Now set the color values for drawing!
+		    //Get the appropriate color.
+		    if ((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID()))
+			g2D.setColor(trial.getColorChooser().getHighlightColor());
+		    else if ((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID())))
+			g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
+		    else
+			g2D.setColor(sMWThreadDataElement.getColor());
+		    
+		    g2D.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+		    g2D.setColor(Color.black);
+		    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+		    
+		    //Set the draw coords.
+		    if (instruction==0)
+			sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+		    
+		    //Update barXCoord.
+		    barXCoord = (barXCoord + xLength);
+		}
+		
+	    } else {
+		
+		//Still want to set the draw coords for this mapping, were it to be none zero.
+		//This aids in mouse click and tool tip events.
+		if (instruction==0)
+		    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+	    }
+	    
+	}
+	
+	//We have reached the end of the cycle for this thread.  However, we might be less
+	//than the max length of the bar.  Therefore, fill in the rest of the bar with the
+	//misc. mapping colour.
+	
+	if (sMWindow.getNormalizeBars()) {
+	    
+	    if (barXCoord < barXEnd){
+		g2D.setColor(trial.getColorChooser().getMiscMappingsColor());
+		g2D.fillRect(barXCoord, (yCoord - barHeight), (barXEnd - barXCoord), barHeight);
+		g2D.setColor(Color.black);
+		g2D.drawRect(barXCoord, (yCoord - barHeight), (barXEnd - barXCoord), barHeight);
+		
+		if (mean) {
+		    meanMiscXBeg = barXCoord;
+		    meanMiscXEnd = barXEnd;
+		} else {
+		    sMWThread.setMiscCoords(barXCoord, barXEnd, (yCoord - barHeight), yCoord);
+		}
+		
+		barXCoord = barXEnd;
+	    }
+	} else {
+	    
+	    double diff = sum - valueSum;
+	    
+	    
+	    //int thisLength = (int) ((sum/sMWindow.getSMWData().maxExclusiveSum)*barLength);
+	    
+	    
+	    //int diffLength = (int) ((diff/sMWindow.getSMWData().maxExclusiveSum)*barLength);
+	    
+	    int diffLength = (int) (((diff + valueSum)/sMWindow.getSMWData().getMaxExclusiveSum())*barLength) - lengthDrawn;
+	    
+	    g2D.setColor(trial.getColorChooser().getMiscMappingsColor());
+	    g2D.fillRect(barXCoord, (yCoord - barHeight), diffLength, barHeight);
+	    g2D.setColor(Color.black);
+	    g2D.drawRect(barXCoord, (yCoord - barHeight), diffLength, barHeight);
+	    
+
+
+	    
+	    if (mean) {
+		meanMiscXBeg = barXCoord;
+		meanMiscXEnd = diffLength + barXCoord;
+	    } else {
+		sMWThread.setMiscCoords(barXCoord, barXCoord + diffLength, (yCoord - barHeight), yCoord);
+	    }
+	    
+	    barXCoord += diffLength;
+
+	    
+	}
+	    
+	return barXCoord;
+    }
+    
+    private int drawBar(Graphics2D g2D, FontMetrics fmFont, String text, SMWThread sMWThread,
+			int barXCoord, int yCoord, int barHeight, int instruction, boolean mean) {
+	
+	if (sMWindow.getStackBars())
+	    return drawStackedBar(g2D, fmFont, text, sMWThread, barXCoord, yCoord, barHeight, instruction, mean);
+	
+
+	DataSessionIterator l = null;
+	int selectedGroupID = trial.getColorChooser().getGroupHighlightColorID();
+	boolean highlighted = false;
+
+	int barXEnd = (int)((double)barXCoord+barLength);
+
+	g2D.setColor(Color.black);
+	g2D.drawString(text, (barXCoord - (fmFont.stringWidth(text)) - 5), yCoord);
+
+	//Calculate the sum for this thread.
+	double sum = 0.00;
+
+
+	DataSessionIterator allFuncs;
+
+	if (mean) {
+	    l = new DataSessionIterator(list[1]);
+	} else {
+	    l = (DataSessionIterator) sMWThread.getFunctionListIterator();
+	}
+
+	allFuncs = new DataSessionIterator(list[1]);
+
+	while (l.hasNext()) {
+	    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
+	    if (mean)
+		sum += sMWThreadDataElement.getMeanExclusiveValue();
+	    else
+		sum += sMWThreadDataElement.getExclusiveValue();
+	}
+	
+	l.reset();
+	double valueSum = 0;
+	int lengthDrawn = 0;
+
+	//	System.out.println ("---------------"); 
+
+	//while (l.hasNext()) {
+
+	SMWThreadDataElement sMWThreadDataElement;
+
+	if (!l.hasNext()) {
+	    return 0;
+	}
+
+
+
+	sMWThreadDataElement = (SMWThreadDataElement) l.next();
+
+	while (allFuncs.hasNext()) {
+	    SMWThreadDataElement meanThreadDataElement = (SMWThreadDataElement) allFuncs.next();
+	    
+	    
+	    GlobalMappingElement gme;
+	    double maxForThisFunc;
+	    int maxBarLength;
+	    
+	    gme = meanThreadDataElement.getGME();
+	    maxForThisFunc = gme.getMaxExclusiveValue(0);
+	    maxBarLength = (int) (((maxForThisFunc / sMWindow.getSMWData().getMaxExclusiveSum())*barLength));
+	    
+	    if (meanThreadDataElement.getMappingID() != sMWThreadDataElement.getMappingID()) {
+		// This thread didn't call this function, so just put some space
+		// Note that we only do this if some other function is going to show it (maxBarLength > 2)
+		if (maxBarLength > 2)
+		    barXCoord += maxBarLength + 5;
+	    } else {
+		
+		
+		//System.out.println ("mapping name = " + sMWThreadDataElement.getMappingName());
+		
+		double value = 0.00;
+		if (mean)
+		    value = sMWThreadDataElement.getMeanExclusiveValue();
+		else
+		    value = sMWThreadDataElement.getExclusiveValue();
+		
+		int xLength = 0;
+		
+		if (sMWindow.getNormalizeBars()) {
+		    // normalize the bars so that they're all the same length, so we find percentages
+		    // in each thread instead of against the maximum
+		    xLength = (int) ((value/sum)*barLength);
+		} else {
+		    
+		    xLength = (int) ((value/sMWindow.getSMWData().getMaxExclusiveSum())*barLength);
+		    if (xLength < 1)
+			xLength = 1;
+		}
+		
+		if (xLength > 2 || maxBarLength > 2) {   // only draw if there is something to draw
+		    valueSum += value;
+		    lengthDrawn += xLength;
+		    
+		    if (barHeight > 2) {
 			g2D.setColor(sMWThreadDataElement.getColor());
 			g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 			
-			if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID())){ 
+			if ((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID())){ 
 			    highlighted = true;
 			    g2D.setColor(trial.getColorChooser().getHighlightColor());
 			    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 			    g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-			}
-			else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
+			} else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
 			    highlighted = true;
 			    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 			    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 			    g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-			}
-			else{
+			} else {
 			    g2D.setColor(Color.black);
-			    if(highlighted){
-				//Manually draw in the lines for consistancy.
-				g2D.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
-				g2D.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
-				g2D.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
-				highlighted = false;
-			    }
-			    else
-				g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+			    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 			}
 			
 			//Set the draw coords.
-			if(instruction==0)
+			if (instruction==0)
 			    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 			
 			//Update barXCoord.
 			barXCoord = (barXCoord + xLength);
-		    }
-		    else{
+		    } else {
+
+			// barHeight less than 2!
+
 			//Now set the color values for drawing!
 			//Get the appropriate color.
-			if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID()))
+			if ((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID()))
 			    g2D.setColor(trial.getColorChooser().getHighlightColor());
-			else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID())))
+			else if ((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID())))
 			    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 			else
 			    g2D.setColor(sMWThreadDataElement.getColor());
@@ -549,41 +802,77 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 			
 			//Set the draw coords.
-			if(instruction==0)
+			if (instruction==0)
 			    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
 			
 			//Update barXCoord.
 			barXCoord = (barXCoord + xLength);
 		    }
 		    
+		} else {
+		
+		    //Still want to set the draw coords for this mapping, were it to be none zero.
+		    //This aids in mouse click and tool tip events.
+		    if (instruction==0)
+			sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 		}
+
+		// skip some space
 		
-		//Still want to set the draw coords for this mapping, were it to be none zero.
-		//This aids in mouse click and tool tip events.
-		if(instruction==0)
-		    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+		if (maxBarLength > 2)
+		    barXCoord += maxBarLength - xLength + 5;
 		
-	    }
-	    else{
-		//Still want to set the draw coords for this mapping, were it to be none zero.
-		//This aids in mouse click and tool tip events.
-		if(instruction==0)
-		    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+		if (l.hasNext()) {
+		    sMWThreadDataElement = (SMWThreadDataElement) l.next();
+		}
 	    }
 	}
+	
 	//We have reached the end of the cycle for this thread.  However, we might be less
 	//than the max length of the bar.  Therefore, fill in the rest of the bar with the
 	//misc. mapping colour.
-	if(barXCoord < barXEnd){
+	
+	double diff = sum - valueSum;
+	//System.out.println ("sum = " + sum + ", valuesum = " + valueSum + ", diff = " + diff);
+	
+	if (diff > 0) {
+	    //int thisLength = (int) ((sum/sMWindow.getSMWData().maxExclusiveSum)*barLength);
+	    
+	    
+	    //int diffLength = (int) ((diff/sMWindow.getSMWData().maxExclusiveSum)*barLength);
+	    
+	    int diffLength = (int) (((diff + valueSum)/sMWindow.getSMWData().getMaxExclusiveSum())*barLength) - lengthDrawn;
+	    
 	    g2D.setColor(trial.getColorChooser().getMiscMappingsColor());
-	    g2D.fillRect(barXCoord, (yCoord - barHeight), (barXEnd - barXCoord), barHeight);
+	    g2D.fillRect(barXCoord, (yCoord - barHeight), diffLength, barHeight);
 	    g2D.setColor(Color.black);
-	    g2D.drawRect(barXCoord, (yCoord - barHeight), (barXEnd - barXCoord), barHeight);
+	    g2D.drawRect(barXCoord, (yCoord - barHeight), diffLength, barHeight);
+	    
+	    if (mean) {
+		meanMiscXBeg = barXCoord;
+		meanMiscXEnd = diffLength + barXCoord;
+	    } else {
+		sMWThread.setMiscCoords(barXCoord, barXCoord + diffLength, (yCoord - barHeight), yCoord);
+	    }
+	    
+	    barXCoord += diffLength;
 	}
+	
+	
+	
+// 	g2D.setColor(Color.red);
+// 	g2D.fillRect(barXCoord, (yCoord - barHeight), 200, barHeight);
+// 	g2D.setColor(Color.black);
+// 	g2D.drawRect(barXCoord, (yCoord - barHeight), 200, barHeight);
+	
+	
+	
+	return barXCoord;
+	// 	System.out.println ("barXCoord = " + barXCoord + ", sumLength = " + sumLength);
     }
-
-    //####################################
-    //Interface code.
+    
+//####################################
+//Interface code.
     //####################################
     
     //######
@@ -612,10 +901,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    }
 		}
 		else if(arg.equals("Show Mean Call Path Thread Relations")){
-			SMWThread sMWThread = (SMWThread) clickedOnObject;
-			CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial,-1,-1,-1,sMWindow.getSMWData(),0, this.debug());
-			trial.getSystemEvents().addObserver(callPathTextWindow);
-			callPathTextWindow.show();
+		    SMWThread sMWThread = (SMWThread) clickedOnObject;
+		    CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial,-1,-1,-1,sMWindow.getSMWData(),0, this.debug());
+		    trial.getSystemEvents().addObserver(callPathTextWindow);
+		    callPathTextWindow.show();
 		}
 		else if(arg.equals("Show Call Path Thread Relations")){
 		    if(clickedOnObject instanceof SMWThread){
@@ -679,7 +968,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    }
 		}
 		else if(arg.equals("Reset to Generic Color")){ 
-		   //Get the clicked on object.
+		    //Get the clicked on object.
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			int mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 			GlobalMapping globalMapping = trial.getGlobalMapping();
@@ -712,99 +1001,104 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    
 	    SMWThread sMWThread = null;
 	    
-	    //Calculate which SMWThreadDataElement was clicked on.
+	    // figure out which row was hit
 	    int index = (yCoord)/(trial.getPreferences().getBarSpacing())-1;
 	    
-	    if(index<list[0].size()){
-		if(index!=-1)
-		    sMWThread = (SMWThread) list[0].elementAt(index);
-		if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-		    if(xCoord<barXCoord){
-			clickedOnObject = sMWThread;
-			if(index==-1)
-			    popup1.show(this, evt.getX(), evt.getY());
-			else
-			    popup2.show(this, evt.getX(), evt.getY());
-		    }
-		    else{
-			if(index==-1){
-			    //Find the appropriate SMWThreadDataElement.
-			    DataSessionIterator l = new DataSessionIterator(list[1]);
-			    while(l.hasNext()){
-				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
-				if(xCoord < sMWThreadDataElement.getXEnd()){
-				    //Set the clickedSMWDataElement.
-				    clickedOnObject = sMWThreadDataElement;
-				    popup3.show(this, evt.getX(), evt.getY());
-				    return;
-				}
+	    if (index >= list[0].size()) {
+		// un-highlight
+		trial.getColorChooser().setHighlightColorID(-1);
+		return;
+	    }
+
+	    if (index != -1) // not mean
+		sMWThread = (SMWThread) list[0].elementAt(index);
+	    
+	    if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) { // Right Click
+		
+		if (xCoord < barXCoord) { // user clicked on the N,C,T
+		    clickedOnObject = sMWThread;
+		    if (index == -1) // mean
+			popup1.show(this, evt.getX(), evt.getY());
+		    else
+			popup2.show(this, evt.getX(), evt.getY());
+		} else {
+
+		    if (index == -1) { // mean
+			DataSessionIterator l = new DataSessionIterator(list[1]);
+			while (l.hasNext()) {
+			    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
+			    if (xCoord <= sMWThreadDataElement.getXEnd() && xCoord >= sMWThreadDataElement.getXBeg()) {
+				clickedOnObject = sMWThreadDataElement;
+				popup3.show(this, evt.getX(), evt.getY());
+				return;
 			    }
 			}
-			else{
-			    //Find the appropriate SMWThreadDataElement.
-			    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
-			    while(l.hasNext()){
-				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
-				if(xCoord < sMWThreadDataElement.getXEnd()){
-				    //Set the clickedSMWDataElement.
-				    clickedOnObject = sMWThreadDataElement;
-				    popup3.show(this, evt.getX(), evt.getY());
-				    return;
-				}
+		    } else {
+			//Find the appropriate SMWThreadDataElement.
+			DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
+			while (l.hasNext()) {
+			    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
+				
+			    if (xCoord <= sMWThreadDataElement.getXEnd() && xCoord >= sMWThreadDataElement.getXBeg()) {
+				clickedOnObject = sMWThreadDataElement;
+				popup3.show(this, evt.getX(), evt.getY());
+				return;
 			    }
 			}
 		    }
 		}
-		else{
-		    if(xCoord<barXCoord){
-			if(index==-1){
-			    ThreadDataWindow threadDataWindow = new ThreadDataWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
-			    trial.getSystemEvents().addObserver(threadDataWindow);
-			    threadDataWindow.show();
-			}
-			else{
-			    ThreadDataWindow  threadDataWindow = new ThreadDataWindow(trial, sMWThread.getNodeID(),
-										      sMWThread.getContextID(),
-										      sMWThread.getThreadID(),
-										      sMWindow.getSMWData(),
-										      1, this.debug());
-			    trial.getSystemEvents().addObserver(threadDataWindow);
-			    threadDataWindow.show();
-			}
+	    } else {
+		// Left Click
+
+		if (xCoord < barXCoord) { // user clicked on N,C,T 
+		    if (index == -1) { // mean
+			ThreadDataWindow threadDataWindow = new ThreadDataWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
+			trial.getSystemEvents().addObserver(threadDataWindow);
+			threadDataWindow.show();
+		    } else {
+			ThreadDataWindow  threadDataWindow = new ThreadDataWindow(trial, sMWThread.getNodeID(),
+										  sMWThread.getContextID(),
+										  sMWThread.getThreadID(),
+										  sMWindow.getSMWData(),
+										  1, this.debug());
+			trial.getSystemEvents().addObserver(threadDataWindow);
+			threadDataWindow.show();
 		    }
-		    else{
-			if(index==-1){
-			    //Find the appropriate SMWThreadDataElement.
-			    DataSessionIterator l = new DataSessionIterator(list[1]);
-			    while(l.hasNext()){
-				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
-				if(xCoord < sMWThreadDataElement.getXEnd()){
-				    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-				    //Now display the MappingDataWindow for this mapping.
-				    MappingDataWindow mappingDataWindow = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(),
-												(sMWindow.getSMWData()), this.debug());
-				    trial.getSystemEvents().addObserver(mappingDataWindow);
-				    mappingDataWindow.show();
-				    return;
-				}
+		} else {
+		    if (index == -1) { // mean
+			//Find the appropriate SMWThreadDataElement.
+			DataSessionIterator l = new DataSessionIterator(list[1]);
+			while (l.hasNext()) {
+			    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
+			    if (xCoord <= sMWThreadDataElement.getXEnd() && xCoord >= sMWThreadDataElement.getXBeg()){
+				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
+				//Now display the MappingDataWindow for this mapping.
+				MappingDataWindow mappingDataWindow = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(),
+											    (sMWindow.getSMWData()), this.debug());
+				trial.getSystemEvents().addObserver(mappingDataWindow);
+				mappingDataWindow.show();
+				return;
 			    }
 			}
-			else{
-			    //Find the appropriate SMWThreadDataElement.
-			    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
-			    while(l.hasNext()){
-				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
-				if(xCoord < sMWThreadDataElement.getXEnd()){
-				    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-				    //Now display the MappingDataWindow for this mapping.
-				    MappingDataWindow mappingDataWindow = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(),
-												(sMWindow.getSMWData()), this.debug());
-				    trial.getSystemEvents().addObserver(mappingDataWindow);
-				    mappingDataWindow.show();
-				    return;
-				}
+			trial.getColorChooser().setHighlightColorID(-1);
+
+		    } else {
+			//Find the appropriate SMWThreadDataElement.
+			DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
+			while(l.hasNext()){
+			    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
+			    if (xCoord <= sMWThreadDataElement.getXEnd() && xCoord >= sMWThreadDataElement.getXBeg()){
+				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
+				//Now display the MappingDataWindow for this mapping.
+				MappingDataWindow mappingDataWindow = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(),
+											    (sMWindow.getSMWData()), this.debug());
+				trial.getSystemEvents().addObserver(mappingDataWindow);
+				mappingDataWindow.show();
+				return;
 			    }
 			}
+			trial.getColorChooser().setHighlightColorID(-1);
+			    
 		    }
 		}
 	    }
@@ -875,7 +1169,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	try{
 	    double sliderValue = (double) sMWindow.getSliderValue();
 	    double sliderMultiple = sMWindow.getSliderMultiple();
-	    barLength = baseBarLength*((int)(sliderValue*sliderMultiple));
+	    barLength = (int)(baseBarLength*((double)(sliderValue*sliderMultiple)));
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "MDWP06");
@@ -883,11 +1177,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     }
 
     //This method sets both xPanelSize and yPanelSize.
-    private boolean resizePanel(FontMetrics fmFont, int barXCoord){
+    private boolean resizePanel(FontMetrics fmFont, int width){
 	boolean resized = false;
 	try{
 	    int newYPanelSize = (((sMWindow.getData())[0].size())+2)*barSpacing+10;
-	    int newXPanelSize = barXCoord+barLength+5;
+	    int newXPanelSize = width;
 	    if((newYPanelSize!=yPanelSize)||(newXPanelSize!=xPanelSize)){
 		yPanelSize = newYPanelSize;
 		xPanelSize = newXPanelSize;
@@ -954,6 +1248,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     //######
     //End - Popup menu stuff.
     //######
+
+    // what a joke
+    private int meanMiscXBeg = 0;
+    private int meanMiscXEnd = 0;
 
     private boolean debug = false; //Off by default.
     //####################################
