@@ -184,6 +184,49 @@ FunctionInfo::FunctionInfo(const char *name, string& type,
 
 //////////////////////////////////////////////////////////////////////
 
+FunctionInfo::FunctionInfo(string& name, const char * type, 
+	unsigned int ProfileGroup , const char *ProfileGroupName)
+{
+      if (ProfileGroup & RtsLayer::ProfileMask) {
+
+        Name = name;
+  	Type = type;
+#ifdef TRACING_ON
+	GroupName = RtsLayer::PrimaryGroup(ProfileGroupName);
+#endif //TRACING_ON 
+        NumCalls = 0;
+        NumSubrs = 0;
+  	ExclTime = 0;
+  	InclTime = 0;
+
+// Since FunctionInfo constructor is called once for each function (static)
+// we know that it couldn't be already on the call stack.
+        SetAlreadyOnStack(false);
+
+#ifdef PROFILE_STATS
+	SumExclSqr = 0;
+#endif //PROFILE_STATS
+
+#ifdef PROFILE_CALLS
+	ExclInclCallList = new list<pair<double, double> >();
+#endif //PROFILE_CALLS
+	// Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
+	
+        MyProfileGroup_ = ProfileGroup ;
+	FunctionDB[RtsLayer::myThread()].push_back(this);
+#ifdef TRACING_ON
+	// Function Id is the index into the DB vector
+	FunctionId = FunctionDB[RtsLayer::myThread()].size();
+#endif //TRACING_ON
+		
+        DEBUGPROFMSG("Thr "<< RtsLayer::myNode() 
+          << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
+	  << " Type : " << GetType() << endl;);
+      }
+}
+
+//////////////////////////////////////////////////////////////////////
+
 FunctionInfo::FunctionInfo(string& name, string& type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
 {
@@ -1259,8 +1302,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1998/03/20 21:46:31 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.7 1998/03/20 21:46:31 sameer Exp $ 
+ * $Revision: 1.8 $   $Date: 1998/03/28 01:11:46 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.8 1998/03/28 01:11:46 sameer Exp $ 
  ***************************************************************************/
 
 	
