@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.3 2004/03/31 18:32:07 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.4 2004/04/02 23:28:17 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -35,13 +35,10 @@ import java.sql.ResultSet;
  * @see		FunctionDataObject
  */
 public class Function {
-	private int functionIndexID;
 	private int functionID;
 	private String name;
 	private String group;
 	private int trialID;
-	private int experimentID;
-	private int applicationID;
 	private Vector meanSummary = null;
 	private Vector totalSummary = null;
 	private DataSession dataSession = null;
@@ -55,17 +52,7 @@ public class Function {
  *
  * @return	the unique identifier of the function
  */
-	public int getIndexID () {
-		return this.functionIndexID;
-	}
-
-/**
- * Gets the TAU identifier of this function object.
- * This identifier is only unique within the trial.
- *
- * @return	the TAU identifier of the function
- */
-	public int getFunctionID () {
+	public int getID () {
 		return this.functionID;
 	}
 
@@ -94,24 +81,6 @@ public class Function {
  */
 	public int getTrialID () {
 		return this.trialID;
-	}
-
-/**
- * Gets the trial ID of this function object.
- *
- * @return	the trial ID for the function.
- */
-	public int getExperimentID () {
-		return this.experimentID;
-	}
-
-/**
- * Gets the application ID of this function object.
- *
- * @return	the application ID for the function.
- */
-	public int getApplicationID () {
-		return this.applicationID;
 	}
 
 /**
@@ -216,19 +185,7 @@ public class Function {
  *
  * @param	id unique ID associated with this function
  */
-	public void setIndexID (int id) {
-		this.functionIndexID = id;
-	}
-
-/**
- * Sets the TAU identifier of this function object.
- * This identifier is only unique within the trial.
- * <i> NOTE: This method is used by the DataSession object to initialize
- * the object.  Not currently intended for use by any other code.</i>
- *
- * @param	id the TAU identifier of the function
- */
-	public void setFunctionID (int id) {
+	public void setID (int id) {
 		this.functionID = id;
 	}
 
@@ -263,28 +220,6 @@ public class Function {
  */
 	public void setTrialID (int id) {
 		this.trialID = id;
-	}
-
-/**
- * Sets the experiment ID of this function object.
- * <i> NOTE: This method is used by the DataSession object to initialize
- * the object.  Not currently intended for use by any other code.</i>
- *
- * @param	id the experiment ID for the function.
- */
-	public void setExperimentID (int id) {
-		this.experimentID = id;
-	}
-
-/**
- * Sets the application ID of this function object.
- * <i> NOTE: This method is used by the DataSession object to initialize
- * the object.  Not currently intended for use by any other code.</i>
- *
- * @param	id the application ID for the function.
- */
-	public void setApplicationID (int id) {
-		this.applicationID = id;
 	}
 
 /**
@@ -338,9 +273,8 @@ public class Function {
 		Vector funs = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct id, function_number, name, ");
-		buf.append("group_name, trial, experiment, application ");
-		buf.append("from function_trial_experiment_view ");
+		buf.append("select distinct id, name, group_name, trial ");
+		buf.append("from function ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
 
@@ -350,13 +284,10 @@ public class Function {
 			Function tmpFunction = null;
 	    	while (resultSet.next() != false) {
 				Function fun = new Function(dataSession);
-				fun.setIndexID(resultSet.getInt(1));
-				fun.setFunctionID(resultSet.getInt(2));
-				fun.setName(resultSet.getString(3));
-				fun.setGroup(resultSet.getString(4));
-				fun.setTrialID(resultSet.getInt(5));
-				fun.setExperimentID(resultSet.getInt(6));
-				fun.setApplicationID(resultSet.getInt(7));
+				fun.setID(resultSet.getInt(1));
+				fun.setName(resultSet.getString(2));
+				fun.setGroup(resultSet.getString(3));
+				fun.setTrialID(resultSet.getInt(4));
 				funs.addElement(fun);
 	    	}
 			resultSet.close(); 
@@ -369,21 +300,20 @@ public class Function {
 	}
 
 	public int saveFunction(DB db, int newTrialID, Vector metricID) {
-		int newFunctionIndexID = 0;
+		int newFunctionID = 0;
 		try {
 			PreparedStatement statement = null;
-			statement = db.prepareStatement("INSERT INTO function (trial, function_number, name, group_name) VALUES (?, ?, ?, ?)");
+			statement = db.prepareStatement("INSERT INTO function (trial, name, group_name) VALUES (?, ?, ?)");
 			statement.setInt(1, newTrialID);
-			statement.setInt(2, functionID);
-			statement.setString(3, name);
-			statement.setString(4, group);
+			statement.setString(2, name);
+			statement.setString(3, group);
 			statement.executeUpdate();
 			String tmpStr = new String();
 			if (db.getDBType().compareTo("mysql") == 0)
 				tmpStr = "select LAST_INSERT_ID();";
 			else
 				tmpStr = "select currval('function_id_seq');";
-			newFunctionIndexID = Integer.parseInt(db.getDataItem(tmpStr));
+			newFunctionID = Integer.parseInt(db.getDataItem(tmpStr));
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the function.");
 			e.printStackTrace();
@@ -395,7 +325,7 @@ public class Function {
 			FunctionDataObject fdo;
 			while (enum.hasMoreElements()) {
 				fdo = (FunctionDataObject)enum.nextElement();
-				fdo.saveMeanSummary(db, newFunctionIndexID, metricID);
+				fdo.saveMeanSummary(db, newFunctionID, metricID);
 			}
 		}
 
@@ -405,10 +335,10 @@ public class Function {
 			FunctionDataObject fdo;
 			while (enum.hasMoreElements()) {
 				fdo = (FunctionDataObject)enum.nextElement();
-				fdo.saveTotalSummary(db, newFunctionIndexID, metricID);
+				fdo.saveTotalSummary(db, newFunctionID, metricID);
 			}
 		}
-			return newFunctionIndexID;
+			return newFunctionID;
 	}
 }
 

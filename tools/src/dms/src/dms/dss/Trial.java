@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.3 2004/04/02 00:56:05 bertie Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.4 2004/04/02 23:28:17 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -406,7 +406,7 @@ public class Trial {
 	    newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
 
 	    // save the metrics for this trial
-	    Enumeration enum = metric.elements();
+	    Enumeration enum = getDataSession().getMetrics().elements();
 	    Metric metric;
 	    PreparedStatement stmt1 = null;
 	    stmt1 = db.prepareStatement("INSERT INTO metric (name, trial) VALUES (?, ?)");

@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.10 2004/04/02 00:56:05 bertie Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.11 2004/04/02 23:28:17 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -169,7 +169,7 @@ public class PerfDBSession extends DataSession {
 		Function fun;
         for(Enumeration en = functions.elements(); en.hasMoreElements() ;) {
 			fun = (Function) en.nextElement();
-			functionHash.put(new Integer(fun.getIndexID()),fun);
+			functionHash.put(new Integer(fun.getID()),fun);
 		}
 		return new DataSessionIterator(functions);
 	}
@@ -177,7 +177,7 @@ public class PerfDBSession extends DataSession {
 	// gets the mean & total data for a function
 	public void getFunctionDetail(Function function) {
 		StringBuffer buf = new StringBuffer();
-		buf.append(" where id = " + function.getIndexID());
+		buf.append(" where id = " + function.getID());
 		if (metrics != null && metrics.size() > 0) {
 			buf.append(" and metric in (");
 			Metric metric;
@@ -298,7 +298,7 @@ public class PerfDBSession extends DataSession {
 			Function function;
         	for(Enumeration en = functions.elements(); en.hasMoreElements() ;) {
 				function = (Function) en.nextElement();
-				buf.append(function.getIndexID());
+				buf.append(function.getID());
 				if (en.hasMoreElements())
 					buf.append(", ");
 				else
@@ -402,7 +402,7 @@ public class PerfDBSession extends DataSession {
 			} //else exception?
 			if (functionHash == null)
 				functionHash = new Hashtable();
-			functionHash.put(new Integer(function.getIndexID()),function);
+			functionHash.put(new Integer(function.getID()),function);
 		}
 		return function;
 	}
@@ -445,7 +445,7 @@ public class PerfDBSession extends DataSession {
 		while (enum.hasMoreElements()) {
 			function = (Function)enum.nextElement();
 			int newFunctionID = function.saveFunction(db, newTrialID, metrics);
-			newFunHash.put (new Integer(function.getIndexID()), new Integer(newFunctionID));
+			newFunHash.put (new Integer(function.getID()), new Integer(newFunctionID));
 		}
 		return newFunHash;
 	}
@@ -544,7 +544,7 @@ public class PerfDBSession extends DataSession {
  * @return the database index ID of the saved trial record
  */
 
-	public int saveParaProfTrial(Trial trial) {
+	public int saveParaProfTrial(Trial trial, int saveMetricID) {
 		GlobalMapping mapping = trial.getDataSession().getGlobalMapping();
 	
 		//Build an array of group names.  This speeds lookup of group names.
@@ -557,7 +557,7 @@ public class PerfDBSession extends DataSession {
 		}
 
 		// get the metric count
-		metrics = trial.getMetrics();
+		metrics = trial.getDataSession().getMetrics();
 		int metricCount = metrics.size();
 
 		// create the Vectors to store the data
@@ -566,6 +566,7 @@ public class PerfDBSession extends DataSession {
 		userEvents = new Vector();
 		userEventData = new Vector();
 
+		if (saveMetricID < 0) {
 		// create the functions
 		for(Enumeration e = mapping.getMapping(0).elements(); e.hasMoreElements() ;) {
 			GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
@@ -573,8 +574,7 @@ public class PerfDBSession extends DataSession {
 				// create a function
 				Function function = new Function(this);
 				function.setName(element.getMappingName());
-				function.setFunctionID(element.getMappingID());
-				function.setIndexID(element.getMappingID());
+				function.setID(element.getMappingID());
 				// function.setTrialID(newTrialID);
 				// build the group name
 				int[] groupIDs = element.getGroups();
@@ -636,6 +636,13 @@ public class PerfDBSession extends DataSession {
 	    	}
 	    }
 
+		// if this is NOT a new trial...
+		} else {
+			// build the hashtable of function lookups
+			this.trial = trial;
+			getFunctions();
+		}
+
 	    StringBuffer groupsStringBuffer = new StringBuffer(10);
 	    Vector nodes = trial.getDataSession().getNCT().getNodes();
 	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
@@ -660,7 +667,15 @@ public class PerfDBSession extends DataSession {
 					fdo.setNumCalls(function.getNumberOfCalls());
 					fdo.setNumSubroutines(function.getNumberOfSubRoutines());
 					// fdo.setInclusivePerCall(function.getUserSecPerCall());
-					for (int i = 0 ; i < metricCount ; i++) {
+					int start;
+					int end;
+					if (saveMetricID < 0) {
+						start = 0;
+						end = metricCount;
+					} else {
+						end = start = saveMetricID;
+					}
+					for (int i = start ; i < end ; i++) {
 						fdo.setInclusive(i, function.getInclusiveValue(i));
 						fdo.setExclusive(i, function.getExclusiveValue(i));
 						fdo.setInclusivePercentage(i, function.getInclusivePercentValue(i));
@@ -672,7 +687,7 @@ public class PerfDBSession extends DataSession {
 			}
 
 			//Write out user event data for this thread.
-			if(userevents!=null){
+			if(userevents!=null && saveMetricID <0){
 			    for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
 				GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
 				if (userevent!=null){

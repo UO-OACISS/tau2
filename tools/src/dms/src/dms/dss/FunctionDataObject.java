@@ -24,7 +24,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.3 2004/03/31 00:47:07 bertie Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.4 2004/04/02 23:28:17 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -383,8 +383,7 @@ public class FunctionDataObject extends Object {
 		buf.append("metric, ");
 		buf.append("total_inclusive_percentage, total_inclusive, ");
 		buf.append("total_exclusive_percentage, total_exclusive, ");
-		buf.append("total_call, total_subroutines, total_inclusive_per_call, ");
-		buf.append("trial ");
+		buf.append("total_call, total_subroutines, total_inclusive_per_call ");
 		buf.append("from function_detail ");
 		buf.append(whereClause);
 		buf.append(" order by id, metric");
@@ -428,7 +427,7 @@ public class FunctionDataObject extends Object {
 		buf.append("inclusive_percentage, ");
 		buf.append("inclusive, exclusive_percentage, exclusive, ");
 		buf.append("call, subroutines, inclusive_per_call ");
-		buf.append("from function_interval1 ");
+		buf.append("from function_interval ");
 		buf.append(whereClause);
 		buf.append(" order by function, metric, node, context, thread ");
 		// System.out.println(buf.toString());

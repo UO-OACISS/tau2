@@ -61,7 +61,6 @@ CREATE TABLE metric (
 CREATE TABLE function (
     id                      SERIAL          NOT NULL    PRIMARY KEY,
     trial                   INT             NOT NULL,
-    function_number         INT				NOT NULL,
     name                    TEXT            NOT NULL,
     group_name              VARCHAR(50)
 );
@@ -136,18 +135,6 @@ CREATE INDEX interval_total_function_metric_index on interval_total_summary (fun
 CREATE INDEX interval_mean_function_metric_index on interval_mean_summary (function, metric);
 CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (function, metric, node, context, thread);
 
-CREATE VIEW function_trial_view 
-	( id, function_number, name, group_name, trial, experiment )
-	AS SELECT 
-	f.id, f.function_number, f.name, f.group_name, f.trial, t.experiment
-	FROM function f INNER JOIN trial t ON f.trial = t.id;
-
-CREATE VIEW function_trial_experiment_view 
-	( id, function_number, name, group_name, trial, experiment, application )
-	AS SELECT 
-	f.id, f.function_number, f.name, f.group_name, f.trial, f.experiment, e.application
-	FROM function_trial_view f INNER JOIN experiment e ON f.experiment = e.id;
-
 CREATE VIEW function_detail1
 	( id, trial, metric, inclusive_percentage, inclusive, 
 	exclusive_percentage, exclusive, call, subroutines, 
@@ -174,7 +161,7 @@ CREATE VIEW function_detail
 	FROM function_detail1 f inner join interval_total_summary ts 
 	ON f.id = ts.function and f.metric = ts.metric;
 	
-CREATE VIEW function_interval1
+CREATE VIEW function_interval
 	( trial, function, metric, node, context, thread, inclusive_percentage, 
 	inclusive, exclusive_percentage, exclusive, call, 
 	subroutines, inclusive_per_call )
@@ -186,27 +173,3 @@ CREATE VIEW function_interval1
 	FROM function f inner join interval_location_profile p
 	ON f.id = p.function;
 	
-CREATE VIEW function_interval2
-	( experiment, trial, function, metric, node, context, thread, 
-	inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, 
-	subroutines, inclusive_per_call )
-	AS SELECT
-	t.experiment, p.trial, p.function, p.metric, p.node, p.context, p.thread,
-	p.inclusive_percentage, p.inclusive, 
-	p.exclusive_percentage, p.exclusive, p.call, p.subroutines, 
-	p.inclusive_per_call
-	FROM function_interval1 p inner join trial t
-	ON p.trial = t.id;
-	
-CREATE VIEW function_interval
-	( application, experiment, trial, function, metric, node, context, thread, 
-	inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, 
-	subroutines, inclusive_per_call )
-	AS SELECT
-	e.application, p.experiment, p.trial, p.function, p.metric, p.node, 
-	p.context, p.thread, p.inclusive_percentage, p.inclusive, 
-	p.exclusive_percentage, p.exclusive, p.call, p.subroutines, 
-	p.inclusive_per_call
-	FROM function_interval2 p inner join experiment e
-	ON p.experiment = e.id;
-
