@@ -8,12 +8,12 @@
 **    Research Center Juelich, ZAM Germany			           **	
 *****************************************************************************
 *****************************************************************************
-**  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO, LANL)
-**		 Peter Beckman, Steve Karmesin (ACL, LANL)
-**		 Kathleen Lindlan, Ariya Lohavanichbutr, 
+**  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO)
 **		 Robert Michael Ansell Bell (UO)		
+**		 Kathleen Lindlan, Ariya Lohavanichbutr, Nick Trebon,
+**		 Peter Beckman, Steve Karmesin,  
 **  Principal Investigators : 
-**		 Janice Cuny, Allen Malony (UO)
+**		 Allen Malony (UO)
 **  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 
 **  Darryl Brown, et. al. and directed by Allen Malony at University of Oregon.
 **  The TAU Portable Profiling Package uses part of TAU.
@@ -73,5 +73,5 @@ TAU is being developed jointly by the University of Oregon, Los Alamos
 National Laboratory, and Research Centre Jülich, ZAM, Germany.  It can be
 found at:
 
-        http://www.acl.lanl.gov/tau/
+        http://www.cs.uoregon.edu/research/paracomp/tau
 
