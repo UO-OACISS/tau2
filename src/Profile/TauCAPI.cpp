@@ -197,11 +197,36 @@ extern "C" void tau_event_disable_stddev(void *ue)
 
 ///////////////////////////////////////////////////////////////////////////
 
+extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group)
+{
+#ifdef DEBUG_PROF
+  printf("Inside tau_profile_timer_ fname=%s *ptr = %x\n", fname, *ptr);
+#endif /* DEBUG_PROF */
+  if (*ptr == 0)
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(fname[i]))
+      {
+        fname[i] = '\0';
+        break;
+      }
+    }
+    *ptr = tau_get_profiler(fname, type, group);
+  }
+
+#ifdef DEBUG_PROF
+  printf("get_profiler returns %x\n", *ptr);
+#endif /* DEBUG_PROF */
+
+  return;
+}
+
 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2000/07/22 21:05:16 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.9 2000/07/22 21:05:16 sameer Exp $
+ * $Revision: 1.10 $   $Date: 2000/07/27 19:25:30 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.10 2000/07/27 19:25:30 sameer Exp $
  ***************************************************************************/
 
