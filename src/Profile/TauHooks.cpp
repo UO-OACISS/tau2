@@ -99,6 +99,7 @@ void TauRoutineEntry(int id )
   TauMethodName = TauDynFI[id];
 #endif /* retrieve it from the vector */
   
+  dprintf("<tid %d> Entry <id %d> <<<<< name = %s\n", tid, id, TauMethodName->GetName());
   TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
   TAU_MAPPING_PROFILE_START(TauTimer, tid);
   dprintf("Entry into %s: id = %d\n", TauMethodName->GetName(), id);
@@ -110,33 +111,51 @@ void TauRoutineExit(int id)
 {
   int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
+  id --; 
+  FunctionInfo *fi = TauDynFI[id];
+  dprintf("<tid %d> Exit <id %d> >>>>>> name = %s\n", tid, id, fi->GetName());
   TAU_MAPPING_PROFILE_STOP(tid);
-  dprintf("Exit from id = %d\n", id-1);
   TAU_MONITOR_EXIT(tid);
 }
 
 void TauRoutineEntryTest(int id )
 {
-  int tid =  RtsLayer::myThread();
+  int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
   id --; 
+  dprintf("<tid %d> Entry <id %d>\n", tid, id);
   FunctionInfo *fi = TauDynFI[id];
-  printf("Tid = %d, Entry into id = %d, name = %s\n", tid, id, fi->GetName());
+  dprintf("<tid %d> Entry <id %d> <<<<< name = %s\n", tid, id, fi->GetName());
+
   TAU_MONITOR_EXIT(tid);
 }
   
 void TauRoutineExitTest(int id)
 {
   int tid = RtsLayer::myThread();
-  printf("EXIT tid = %d\n", tid); 
   TAU_MONITOR_ENTER(tid);
   id --; 
-  printf("Exit into id = %d\n", id);
+  dprintf("<tid %d> Exit <id %d>\n", tid, id);
+  FunctionInfo *fi = TauDynFI[id];
+  printf("<tid %d> Exit <id %d> >>>>>> name = %s\n", tid, id, fi->GetName());
   TAU_MONITOR_EXIT(tid);
 }
+
+void HookEntry(char *name)
+{
+  dprintf("Entry ->: %s\n",name);
+  return;
+}
+
+void HookExit(char *name)
+{
+  dprintf("Exit <-: %s\n",name);
+  return;
+}
+
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2000/02/07 02:08:22 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.4 2000/02/07 02:08:22 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 2000/02/22 23:29:57 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.5 2000/02/22 23:29:57 sameer Exp $ 
  ***************************************************************************/
