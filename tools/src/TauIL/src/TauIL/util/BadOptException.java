@@ -1,3 +1,13 @@
+/************************************************************
+ *
+ *           File : BadOptException.java
+ *         Author : Tyrel Datwyler
+ *
+ *    Description : Thrown in the event of a command line
+ *                  switch parsing error.
+ *
+ ************************************************************/
+
 package TauIL.util;
 
 public class BadOptException extends Exception {
