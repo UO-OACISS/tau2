@@ -1,6 +1,5 @@
 
 Windows Readme.
----------------
 Author: Robert Ansell-Bell
 Contact: bertie@cs.uoregon.edu
 October 1999.
