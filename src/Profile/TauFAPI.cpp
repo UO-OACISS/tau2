@@ -400,7 +400,7 @@ void tau_profile_timer__(void **ptr, char *fname, int *flen)
 
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
-    for(int i=0; i<1024; i++)
+    for(int i=0; i<strlen(fname); i++)
     {
       if (!isprint(fname[i]))
       { 
@@ -504,6 +504,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2000/09/25 18:47:55 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.11 2000/09/25 18:47:55 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 2000/09/25 19:11:38 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.12 2000/09/25 19:11:38 sameer Exp $ 
  ***************************************************************************/
