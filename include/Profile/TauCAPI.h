@@ -48,6 +48,9 @@
 
 #define TAU_PROFILE_TIMER(var,name, type, group) static void *var=NULL; tau_profile_c_timer(&var, name, type, group);
 
+#define TAU_PROFILE_DECLARE_TIMER(var) static void *var=NULL;
+#define TAU_PROFILE_CREATE_TIMER(var,name,type,group) tau_profile_c_timer(&var, name, type, group);
+
 
 #define TAU_PROFILE_START(var) 			tau_start_timer(var);
 #define TAU_PROFILE_STOP(var) 			tau_stop_timer(var);
@@ -172,8 +175,8 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: tjaqua $
- * $Revision: 1.10 $   $Date: 2001/02/16 23:54:16 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.10 2001/02/16 23:54:16 tjaqua Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.11 $   $Date: 2001/02/28 00:03:28 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.11 2001/02/28 00:03:28 sameer Exp $
  ***************************************************************************/
 
