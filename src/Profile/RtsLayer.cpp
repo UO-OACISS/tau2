@@ -480,11 +480,15 @@ double TauWindowsUsecD(void)
 }
 ///////////////////////////////////////////////////////////////////////////
 
+#ifdef TAU_MULTIPLE_COUNTERS
+RtsLayer::getUSecD (int tid, double *values){
+  MultipleCounterLayer::getCounters(tid, values);
+}
+#else //TAU_MULTIPLE_COUNTERS
 double RtsLayer::getUSecD (int tid) {
-
 #ifdef TAU_PCL
   return PCL_Layer::getCounters(tid);
-#else  // TAU_PCL 
+#else  // TAU_PCL
 #ifdef TAU_PAPI
   static const char *papi_env = getenv("PAPI_EVENT");
   if (papi_env != NULL)
@@ -533,7 +537,8 @@ double RtsLayer::getUSecD (int tid) {
 #endif // CPU_TIME
 #endif // TAU_PAPI
 #endif  // TAU_PCL
-        }
+}
+#endif //TAU_MULTIPLE_COUNTERS
 
 ///////////////////////////////////////////////////////////////////////////
 //Note: This is similar to Tulip event classes during tracing
@@ -1009,7 +1014,7 @@ int RtsLayer::DumpEDF(int tid)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.37 $   $Date: 2002/01/25 19:56:58 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.37 2002/01/25 19:56:58 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: bertie $
+ * $Revision: 1.38 $   $Date: 2002/03/08 21:42:13 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.38 2002/03/08 21:42:13 bertie Exp $ 
  ***************************************************************************/
