@@ -163,3 +163,13 @@ navigating to it and clicking "OK/Select" (with a second Cancel button) might be
 Re-write the setting of thread data for all metrics to make it more efficient.
 ------
 
+------
+# Report 18
+# Date: 13th August 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+We do not support max stats. in the thread objects for anything other than
+mapping selection 1.  We probalby should, or re-think whether to just
+re-generate that information on the fly.
+------
+
