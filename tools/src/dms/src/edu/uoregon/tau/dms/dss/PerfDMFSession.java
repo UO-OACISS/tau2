@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.7 2004/06/09 20:56:43 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.8 2004/06/09 21:17:55 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -479,11 +479,11 @@ public class PerfDMFSession extends DataSession {
 	// override the saveTrial method
 	public int saveTrial () {
 		int newTrialID = trial.saveTrial(db);
-		Hashtable newMetHash = saveMetrics(newTrialID, trial, -1);
-		Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, -1);
-		saveIntervalEventData(newFunHash, newMetHash, -1);
-		Hashtable newUEHash = saveAtomicEvents(newTrialID);
-		saveAtomicEventData(newUEHash);
+		// Hashtable newMetHash = saveMetrics(newTrialID, trial, -1);
+		// Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, -1);
+		// saveIntervalEventData(newFunHash, newMetHash, -1);
+		// Hashtable newUEHash = saveAtomicEvents(newTrialID);
+		// saveAtomicEventData(newUEHash);
 		return newTrialID;
 	}
 
