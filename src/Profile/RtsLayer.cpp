@@ -32,6 +32,9 @@
 //////////////////////////////////////////////////////////////////////
 
 //#define DEBUG_PROF
+#ifdef TAU_AIX
+#include "Profile/aix.h" 
+#endif /* TAU_AIX */
 #include "Profile/Profiler.h"
 
 
@@ -582,6 +585,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 1998/09/26 15:41:49 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.6 1998/09/26 15:41:49 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 1999/03/17 23:23:50 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.7 1999/03/17 23:23:50 sameer Exp $ 
  ***************************************************************************/
