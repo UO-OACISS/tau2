@@ -428,6 +428,12 @@ public class TauDataSource extends DataSource {
             functionDataLine.d2 = Double.parseDouble(st2.nextToken()); //SumExclSqr
         functionDataLine.i2 = Integer.parseInt(st2.nextToken()); //ProfileCalls
 
+        
+        if (functionDataLine.d0 < 0) {
+            System.err.println ("Warning, negative values found in profile, ignoring");
+            functionDataLine.d0 = 0;
+        }
+        
     }
 
     private String getGroupNames(String string) {
