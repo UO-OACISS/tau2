@@ -2559,7 +2559,7 @@ fi
 # CHECK if Intel 8.0 compilers are available. 
 if [ $fortran_compiler = intel ]
 then
-  intelifort=`which ifort`
+  intelifort=`which ifort 2>/dev/null`
   if [ -x $intelifort ]
   then
     echo "Using Intel ifort as the Fortran Compiler"
