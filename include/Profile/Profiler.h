@@ -36,11 +36,11 @@
 
 #include <Profile/ProfileGroups.h>
 
-#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP))
+#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC))
 #define TAU_MAX_THREADS 128
 #else
 #define TAU_MAX_THREADS 1
-#endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS*/
+#endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
 
 #include <Profile/TauAPI.h>
 
@@ -53,6 +53,8 @@
 #include <Profile/TulipThreadLayer.h>
 
 #include <Profile/JavaThreadLayer.h>
+
+#include <Profile/SprocLayer.h>
 
 #include <Profile/RtsLayer.h>
 
@@ -136,6 +138,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2001/03/08 23:52:01 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.31 2001/03/08 23:52:01 sameer Exp $ 
+ * $Revision: 1.32 $   $Date: 2001/06/20 20:25:53 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.32 2001/06/20 20:25:53 sameer Exp $ 
  ***************************************************************************/
