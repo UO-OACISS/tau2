@@ -70,7 +70,7 @@ void tau_profile_timer_(void **ptr, char *fname, int *flen)
         break;
       }
     }
-    *ptr = tau_get_profiler(fname, " ", TAU_DEFAULT);
+    *ptr = tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
   }
 
 #ifdef DEBUG_PROF 
@@ -300,6 +300,6 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 1999/08/03 20:19:57 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.8 1999/08/03 20:19:57 sameer Exp $ 
+ * $Revision: 1.9 $   $Date: 1999/09/14 23:42:11 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.9 1999/09/14 23:42:11 sameer Exp $ 
  ***************************************************************************/
