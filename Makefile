@@ -13,14 +13,15 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=sgi8k
+CONFIG_ARCH=default
 CONFIG_CC=gcc
-CONFIG_CXX=KCC
+CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
+TAUROOT=/research/parallel/sameer/gar/research/tau2
 #######################################################################
  
-#MIPSR8K#ABI 	     = -64		  #ENDIF#
+#MIPSR8K##ABI 	     = -64		  #ENDIF#
 #MIPSR8K#ISA          = -mips4             #ENDIF#
 
 ############# Standard Defines ##############

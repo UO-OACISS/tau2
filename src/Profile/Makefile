@@ -25,14 +25,15 @@
 #****************************************************************************
 
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=sgi8k
+CONFIG_ARCH=default
 CONFIG_CC=gcc
-CONFIG_CXX=KCC
+CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
+TAUROOT=/research/parallel/sameer/gar/research/tau2
 #######################################################################
  
-#MIPSR8K#ABI 	     = -64		   #ENDIF#
+#MIPSR8K##ABI 	     = -64		   #ENDIF#
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
@@ -44,32 +45,30 @@ LSX = .a
 #############################################
 
 ############# Profiling Options #############
-PROFILEOPT1           = -DPROFILING_ON    #ENDIF##PROFILE#
-PROFILEOPT2         = -DSGI_TIMERS      #ENDIF##SGITIMERS#
+#PROFILE#PROFILEOPT1           = -DPROFILING_ON    #ENDIF#
+#SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS      #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS #ENDIF#
 #PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS   #ENDIF#
 #PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS   #ENDIF#
 #DEBUGPROF#PROFILEOPT6	       = -DDEBUG_PROF	   #ENDIF#
-PROFILEOPT7	       = -DTAU_STDCXXLIB   #ENDIF##KAI#
+#KAI#PROFILEOPT7	       = -DTAU_STDCXXLIB   #ENDIF#
 #INTELTFLOP#PROFILEOPT8        = -DPOOMA_TFLOP	   #ENDIF#
 #SOL2CC#PROFILEOPT9	       = -DNO_RTTI	   #ENDIF#
 #GNU#PROFILEOPT10	       = -DNO_RTTI	   #ENDIF#
-TRACEOPT		       = -DTRACING_ON	   #ENDIF##TRACE#
-EVENTS_O		       = pcxx_events.o     #ENDIF##TRACE#
+#TRACE#TRACEOPT		       = -DTRACING_ON	   #ENDIF#
+#TRACE#EVENTS_O		       = pcxx_events.o     #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1) $(PROFILEOPT2) $(PROFILEOPT3) $(PROFILEOPT4) \
 	      $(PROFILEOPT5) $(PROFILEOPT6) $(PROFILEOPT7) $(PROFILEOPT8) \
 	      $(PROFILEOPT9) $(PROFILEOPT10) $(TRACEOPT)
 ##############################################
-AR			= $(CONFIG_CXX)     #ENDIF##KAI#
-ARFLAGS			= -o		    #ENDIF##KAI#
+#KAI#AR			= $(CONFIG_CXX)     #ENDIF#
+#KAI#ARFLAGS			= -o		    #ENDIF#
 #SOL2CC#EXTRAOBJS		= Templates.DB/*.o  #ENDIF#
 #############################################
 
 
 LINKER	= $(CC)
-
-TAUROOT		= ../..
 
 INSTALLDEST	= $(TAUROOT)/lib/$(CONFIG_ARCH)
 
@@ -97,8 +96,8 @@ AR	      = ar
 
 ARFLAGS	      = rcv 
 ############# For KAI KCC compiler, replace AR accordingly #######
-AR			= $(CONFIG_CXX) 		   #ENDIF##KAI#
-ARFLAGS			= -o				   #ENDIF##KAI#
+#KAI#AR			= $(CONFIG_CXX) 		   #ENDIF#
+#KAI#ARFLAGS			= -o				   #ENDIF#
 ##################################################################
 
 RM 	      = /bin/rm -f
