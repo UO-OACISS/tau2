@@ -200,8 +200,9 @@ char *note;
     }
     
     if (rq->status & RQ_SEND) {
-      TAU_TRACE_SENDMSG(rq->tag, rq->otherParty, rq->size); 
-      
+      /* TAU_TRACE_SENDMSG(rq->tag, rq->otherParty, rq->size); */
+	/* If we post a send after the corresponding receive happens, it 
+	   shows up as violating Lamport's law. */
       /*
       prof_send( procid_0, rq->otherParty, rq->tag, rq->size, note );
       */
@@ -1250,6 +1251,31 @@ char *** argv;
   return returnVal;
 }
 
+int  MPI_Init_thread (argc, argv, required, provided )
+int * argc;
+char *** argv;
+int required;
+int *provided;
+{
+  int  returnVal;
+
+ 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
+  TAU_PROFILE_START(tautimer);
+ 
+  returnVal = PMPI_Init_thread( argc, argv, required, provided );
+
+  TAU_PROFILE_STOP(tautimer);
+
+  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+  TAU_PROFILE_SET_NODE(procid_0 );
+  requests_head_0 = requests_tail_0 = 0;
+
+  return returnVal;
+}
+
+
+
 /*
 int  MPI_Initialized( flag )
 int * flag;
@@ -1363,7 +1389,6 @@ MPI_Request * request;
   
   returnVal = PMPI_Bsend_init( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
@@ -1376,7 +1401,9 @@ MPI_Request * request;
       newrq->next = 0;
       rq_add( requests_head_0, requests_tail_0, newrq );
     }
+    TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -1512,7 +1539,6 @@ MPI_Request * request;
   
   returnVal = PMPI_Send_init( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
@@ -1525,7 +1551,9 @@ MPI_Request * request;
       newrq->next = 0;
       rq_add( requests_head_0, requests_tail_0, newrq );
     }
+    TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -1586,7 +1614,6 @@ MPI_Request * request;
   
   returnVal = PMPI_Ibsend( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
@@ -1599,7 +1626,9 @@ MPI_Request * request;
       newrq->next = 0;
       rq_add( requests_head_0, requests_tail_0, newrq );
     }
+    TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -1678,7 +1707,6 @@ MPI_Request * request;
   
   returnVal = PMPI_Irsend( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
@@ -1691,7 +1719,9 @@ MPI_Request * request;
       newrq->next = 0;
       rq_add( requests_head_0, requests_tail_0, newrq );
     }
+    TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -1718,7 +1748,6 @@ MPI_Request * request;
   
   returnVal = PMPI_Isend( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
@@ -1731,7 +1760,9 @@ MPI_Request * request;
       newrq->next = 0;
       rq_add( requests_head_0, requests_tail_0, newrq );
     }
+    TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -1758,7 +1789,6 @@ MPI_Request * request;
   
   returnVal = PMPI_Issend( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
@@ -1771,7 +1801,9 @@ MPI_Request * request;
       newrq->next = 0;
       rq_add( requests_head_0, requests_tail_0, newrq );
     }
+    TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -1916,7 +1948,6 @@ MPI_Request * request;
   
   returnVal = PMPI_Rsend_init( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
@@ -1929,7 +1960,9 @@ MPI_Request * request;
       newrq->next = 0;
       rq_add( requests_head_0, requests_tail_0, newrq );
     }
+    TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -1992,11 +2025,11 @@ MPI_Status * status;
     prof_send( procid_0, dest, sendtag,
                typesize1*sendcount, "MPI_Sendrecv" );
     */
-  } 	
+  }
   
   returnVal = PMPI_Sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status );
 
-  if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+  if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) { 
     PMPI_Get_count( status, MPI_BYTE, &count );
     TAU_TRACE_RECVMSG(status->MPI_TAG, status->MPI_SOURCE, count);
     /*
@@ -2004,7 +2037,7 @@ MPI_Status * status;
 	       "MPI_Sendrecv" );
     NOTE: shouldn't we look at the status to get the tag and source?
     */
-  }
+  } 
   TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
@@ -2104,7 +2137,6 @@ MPI_Request * request;
   
   returnVal = PMPI_Ssend_init( buf, count, datatype, dest, tag, comm, request );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
@@ -2117,7 +2149,9 @@ MPI_Request * request;
       newrq->next = 0;
       rq_add( requests_head_0, requests_tail_0, newrq );
     }
+    TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -2166,11 +2200,11 @@ MPI_Status * status;
   
   returnVal = PMPI_Test( request, flag, status );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (*flag) 
     ProcessWaitTest_0( request, status, "MPI_Test" );
 
+  TAU_PROFILE_STOP(tautimer); 
   return returnVal;
 }
 
@@ -2190,7 +2224,6 @@ MPI_Status * array_of_statuses;
   
   returnVal = PMPI_Testall( count, array_of_requests, flag, array_of_statuses );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (*flag) {
     for (i3=0; i3 < count; i3++) {
@@ -2199,6 +2232,7 @@ MPI_Status * array_of_statuses;
 				  "MPI_Testall" );
     }
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -2218,12 +2252,12 @@ MPI_Status * status;
   
   returnVal = PMPI_Testany( count, array_of_requests, index, flag, status );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   if (*flag) 
     ProcessWaitTest_0( &(array_of_requests[*index]),
 			        status, "MPI_Testany" );
 
+  TAU_PROFILE_STOP(tautimer); 
   return returnVal;
 }
 
@@ -2260,7 +2294,6 @@ MPI_Status * array_of_statuses;
   
   returnVal = PMPI_Testsome( incount, array_of_requests, outcount, array_of_indices, array_of_statuses );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   for (i2=0; i2 < *outcount; i2++) {
     ProcessWaitTest_0( &(array_of_requests
@@ -2269,6 +2302,7 @@ MPI_Status * array_of_statuses;
 			          [array_of_indices[i2]]),
 			        "MPI_Testsome" );
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -2512,9 +2546,9 @@ MPI_Status * status;
   
   returnVal = PMPI_Wait( request, status );
 
-  TAU_PROFILE_STOP(tautimer); 
-
   ProcessWaitTest_0( request, status, "MPI_Wait" );
+
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -2535,13 +2569,13 @@ MPI_Status * array_of_statuses;
   
   returnVal = PMPI_Waitall( count, array_of_requests, array_of_statuses );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   for (i1=0; i1 < count; i1++) {
     ProcessWaitTest_0( &(array_of_requests[i1]),
 			        &(array_of_statuses[i1]),
 			        "MPI_Waitall" );
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
@@ -2561,11 +2595,11 @@ MPI_Status * status;
   
   returnVal = PMPI_Waitany( count, array_of_requests, index, status );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   ProcessWaitTest_0( &(array_of_requests[*index]),
 			status, "MPI_Waitany" );
 
+  TAU_PROFILE_STOP(tautimer); 
   return returnVal;
 }
 
@@ -2587,7 +2621,6 @@ MPI_Status * array_of_statuses;
   
   returnVal = PMPI_Waitsome( incount, array_of_requests, outcount, array_of_indices, array_of_statuses );
 
-  TAU_PROFILE_STOP(tautimer); 
 
   for (i=0; i < *outcount; i++) {
     ProcessWaitTest_0( &(array_of_requests
@@ -2596,6 +2629,7 @@ MPI_Status * array_of_statuses;
 			          [array_of_indices[i]]),
 			        "MPI_Waitsome" );
   }
+  TAU_PROFILE_STOP(tautimer); 
 
   return returnVal;
 }
