@@ -7,7 +7,13 @@
 /////////////////////////////////////////////////
 
 #include "Profile/Profiler.h"
+#ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
+using namespace std;
+#else /* TAU_DOT_H_LESS_HEADERS */
+#include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
+
 
 //Helper function used to determine the counter value
 //from the event name.
