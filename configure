@@ -2176,7 +2176,7 @@ fi
 
 echo "TAU: installing TAU's jracy profile browser" 
 taushell=sh
-if [ $machine = solaris2 ]
+if [ $machine = solaris2 -o $machine = alpha ]
 then
   taushell=ksh
 fi
