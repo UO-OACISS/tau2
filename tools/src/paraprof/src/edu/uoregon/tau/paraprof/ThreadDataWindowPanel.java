@@ -18,6 +18,7 @@ import java.awt.geom.*;
 import java.text.*;
 import java.awt.font.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.enums.*;
 
 public class ThreadDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
         ParaProfImageInterface {
@@ -110,14 +111,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             return;
 
         //To make sure the bar details are set, this method must be called.
-        trial.getPreferences().setBarDetails(g2D);
+        trial.getPreferencesWindow().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        barSpacing = trial.getPreferences().getBarSpacing();
-        barHeight = trial.getPreferences().getBarHeight();
+        barSpacing = trial.getPreferencesWindow().getBarSpacing();
+        barHeight = trial.getPreferencesWindow().getBarHeight();
 
         //Obtain the font and its metrics.
-        Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+        Font font = new Font(trial.getPreferencesWindow().getParaProfFont(), trial.getPreferencesWindow().getFontStyle(),
                 barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
@@ -128,7 +129,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
         //maxValue = ParaProfUtils.getMaxThreadValue(thread, window.getValueType(), window.isPercent(), trial);
 
-        maxValue = window.getPPThread().getMaxValue(window.getValueType(), window.isPercent());
+        maxValue = window.getDataSorter().getValueType().getThreadMaxValue(window.getPPThread().getThread(), window.getDataSorter().getSelectedMetricID());
+//        maxValue = window.getPPThread().getMaxValue(window.getValueType(), window.isPercent());
 
         
         if (window.isPercent()) {
@@ -222,8 +224,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         for (int i = startElement; i <= endElement; i++) {
             ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
 
-            value = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), window.isPercent());
-
+            //value = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), window.isPercent());
+            value = ppFunctionProfile.getValue();
+            
             yCoord = yCoord + (barSpacing);
             drawBar(g2D, fmFont, value, maxValue, barXCoord, yCoord, barHeight, ppFunctionProfile, toScreen);
         }
@@ -239,7 +242,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
         Function f = ppFunctionProfile.getFunction();
         String functionName = ppFunctionProfile.getFunctionName();
-        boolean groupMember = ppFunctionProfile.isGroupMember(trial.getColorChooser().getHighlightedGroup());
+        boolean groupMember = ppFunctionProfile.isGroupMember(trial.getHighlightedGroup());
 
         d = (value / maxValue);
         xLength = (int) (d * barLength);
@@ -250,7 +253,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             g2D.setColor(ppFunctionProfile.getColor());
             g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
-            if (f == (trial.getColorChooser().getHighlightedFunction())) {
+            if (f == (trial.getHighlightedFunction())) {
                 g2D.setColor(trial.getColorChooser().getHighlightColor());
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
                 g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
@@ -263,7 +266,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
             }
         } else {
-            if (f == (trial.getColorChooser().getHighlightedFunction()))
+            if (f == (trial.getHighlightedFunction()))
                 g2D.setColor(trial.getColorChooser().getHighlightColor());
             else if (groupMember)
                 g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
@@ -277,7 +280,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         g2D.setColor(Color.black);
         //Do not want to put a percent sign after the bar if we are not
         // exclusive or inclusive.
-        if (window.isPercent() && window.getValueType() <= 4) {
+        
+        if (window.getDataSorter().getValueType() == ValueType.EXCLUSIVE_PERCENT
+                || window.getDataSorter().getValueType() == ValueType.INCLUSIVE_PERCENT) {
             //s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
             //s = (UtilFncs.adjustDoublePresision(value, 4)) + "%";
             s = UtilFncs.getOutputString(0, value, 6) + "%";
@@ -318,9 +323,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                 if (arg.equals("Show Function Details")) {
                     if (clickedOnObject instanceof Function) {
                         Function function = (Function) clickedOnObject;
-                        trial.getColorChooser().setHighlightedFunction(function);
-                        FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial, function,
-                                window.getDataSorter());
+                        trial.setHighlightedFunction(function);
+                        FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial, function);
                         trial.getSystemEvents().addObserver(functionDataWindow);
                         functionDataWindow.show();
                     }
@@ -360,7 +364,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             PPFunctionProfile ppFunctionProfile = null;
 
             //Calculate which PPFunctionProfile was clicked on.
-            int index = (yCoord) / (trial.getPreferences().getBarSpacing());
+            int index = (yCoord) / (trial.getPreferencesWindow().getBarSpacing());
 
             if (list != null && index < list.size()) {
                 ppFunctionProfile = (PPFunctionProfile) list.elementAt(index);
@@ -369,7 +373,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                     popup.show(this, evt.getX(), evt.getY());
                     return;
                 } else {
-                    trial.getColorChooser().toggleHighlightedFunction(ppFunctionProfile.getFunction());
+                    trial.toggleHighlightedFunction(ppFunctionProfile.getFunction());
                 }
             }
         } catch (Exception e) {

@@ -151,8 +151,8 @@ public class DerivedMetrics {
 
                                 functionProfile.setInclusive(metric, result);
 
-                                functionProfile.setInclusivePerCall(metric,
-                                        functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
+                                //functionProfile.setInclusivePerCall(metric,
+                                //        functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
 
                             }
                         }

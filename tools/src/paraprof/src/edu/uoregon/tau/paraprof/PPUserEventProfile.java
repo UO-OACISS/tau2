@@ -18,14 +18,17 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.enums.*;
 
 public class PPUserEventProfile implements Comparable {
-    public PPUserEventProfile(ParaProfTrial trial, int nodeID, int contextID, int threadID,
+    public PPUserEventProfile(DataSorter dataSorter, int nodeID, int contextID, int threadID,
             UserEventProfile userEventProfile) {
 
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;
+
+        this.dataSorter = dataSorter;
 
         this.userEventProfile = userEventProfile;
         this.userEvent = userEventProfile.getUserEvent();
@@ -55,6 +58,10 @@ public class PPUserEventProfile implements Comparable {
         return userEvent.getColor();
     }
 
+    public UserEventProfile getUserEventProfile() {
+        return userEventProfile;
+    }
+
     public int getUserEventNumberValue() {
         return userEventProfile.getUserEventNumberValue();
     }
@@ -76,55 +83,54 @@ public class PPUserEventProfile implements Comparable {
     }
 
     public String getUserEventStatString(int precision) {
-            int initialBufferLength = 90;
-            int position = 0;
-            char[] statStringArray = new char[initialBufferLength];
-            char[] tmpArray;
-            String tmpString;
+        int initialBufferLength = 90;
+        int position = 0;
+        char[] statStringArray = new char[initialBufferLength];
+        char[] tmpArray;
+        String tmpString;
 
-            PPUserEventProfile.insertSpaces(statStringArray, 0, 90);
+        PPUserEventProfile.insertSpaces(statStringArray, 0, 90);
 
-            tmpArray = (Integer.toString(this.getUserEventNumberValue()).toCharArray());
-            for (int i = 0; i < tmpArray.length; i++) {
-                statStringArray[position] = tmpArray[i];
-                position++;
-            }
+        tmpArray = (Integer.toString(this.getUserEventNumberValue()).toCharArray());
+        for (int i = 0; i < tmpArray.length; i++) {
+            statStringArray[position] = tmpArray[i];
+            position++;
+        }
 
+        position = 18;
+        tmpString = UtilFncs.getOutputString(0, this.getUserEventMaxValue(), precision);
+        tmpArray = tmpString.toCharArray();
+        for (int i = 0; i < tmpArray.length; i++) {
+            statStringArray[position] = tmpArray[i];
+            position++;
+        }
 
-            position = 18;
-            tmpString = UtilFncs.getOutputString(0, this.getUserEventMaxValue(), precision);
-            tmpArray = tmpString.toCharArray();
-            for (int i = 0; i < tmpArray.length; i++) {
-                statStringArray[position] = tmpArray[i];
-                position++;
-            }
+        position = 36;
+        tmpString = UtilFncs.getOutputString(0, this.getUserEventMinValue(), precision);
+        tmpArray = tmpString.toCharArray();
+        for (int i = 0; i < tmpArray.length; i++) {
+            statStringArray[position] = tmpArray[i];
+            position++;
+        }
 
-            position = 36;
-            tmpString = UtilFncs.getOutputString(0, this.getUserEventMinValue(), precision);
-            tmpArray = tmpString.toCharArray();
-            for (int i = 0; i < tmpArray.length; i++) {
-                statStringArray[position] = tmpArray[i];
-                position++;
-            }
+        position = 54;
+        tmpString = UtilFncs.getOutputString(0, this.getUserEventMeanValue(), precision);
+        tmpArray = tmpString.toCharArray();
+        for (int i = 0; i < tmpArray.length; i++) {
+            statStringArray[position] = tmpArray[i];
+            position++;
+        }
 
-            position = 54;
-            tmpString = UtilFncs.getOutputString(0, this.getUserEventMeanValue(), precision);
-            tmpArray = tmpString.toCharArray();
-            for (int i = 0; i < tmpArray.length; i++) {
-                statStringArray[position] = tmpArray[i];
-                position++;
-            }
+        position = 72;
+        tmpString = UtilFncs.getOutputString(0, this.getStdDev(), precision);
+        tmpArray = tmpString.toCharArray();
+        for (int i = 0; i < tmpArray.length; i++) {
+            statStringArray[position] = tmpArray[i];
+            position++;
+        }
 
-            position = 72;
-            tmpString = UtilFncs.getOutputString(0, this.getStdDev(), precision);
-            tmpArray = tmpString.toCharArray();
-            for (int i = 0; i < tmpArray.length; i++) {
-                statStringArray[position] = tmpArray[i];
-                position++;
-            }
-
-            //Everything should be added now except the function name.
-            return new String(statStringArray);
+        //Everything should be added now except the function name.
+        return new String(statStringArray);
     }
 
     private static int insertSpaces(char[] inArray, int position, int number) {
@@ -135,9 +141,41 @@ public class PPUserEventProfile implements Comparable {
         return position;
     }
 
-    //####################################
-    //End - Userevent interface.
-    //####################################
+    private int checkDescending(int value) {
+        if (dataSorter.getDescendingOrder())
+            return -value;
+        return value;
+    }
+
+    public int compareTo(Object inObject) {
+        UserEventValueType valueType = dataSorter.getUserEventValueType();
+
+        PPUserEventProfile other = (PPUserEventProfile) inObject;
+
+        if (dataSorter.getSortType() == SortType.NAME) {
+            return checkDescending(other.getUserEventName().compareTo(this.getUserEventName()));
+
+        } else if (dataSorter.getSortType() == SortType.NCT) {
+            if (other.getNodeID() != this.getNodeID())
+                return checkDescending(this.getNodeID() - other.getNodeID());
+            else if (other.getContextID() != this.getContextID())
+                return checkDescending(this.getContextID() - other.getContextID());
+            else
+                return checkDescending(this.getThreadID() - other.getThreadID());
+            //        } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
+            //
+            //            return checkDescending(Double.compare(valueType.getValue(other.meanProfile,
+            //                    dataSorter.getSelectedMetricID()), valueType.getValue(this.meanProfile,
+            //                    dataSorter.getSelectedMetricID())));
+            //
+        } else if (dataSorter.getSortType() == SortType.VALUE) {
+            return checkDescending(Double.compare(valueType.getValue(this.getUserEventProfile()),
+                    valueType.getValue(other.getUserEventProfile())));
+
+        } else {
+            throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
+        }
+    } 
 
     /*
      * (0) name (2) exclusive (4) inclusive (6) number of calls (8) number of
@@ -151,63 +189,62 @@ public class PPUserEventProfile implements Comparable {
      * ascending. Set sortType to the integer value required.
      */
 
-    public int compareTo(Object inObject) {
-        switch (sortType) {
-        case 0:
-            return (((PPUserEventProfile) inObject).getUserEventName()).compareTo(this.getUserEventName());
-        case 1:
-            return (this.getUserEventName()).compareTo(((PPUserEventProfile) inObject).getUserEventName());
-        case 12:
-            return compareToHelper(((PPUserEventProfile) inObject).getUserEventNumberValue(),
-                    this.getUserEventNumberValue());
-        case 13:
-            return compareToHelper(this.getUserEventNumberValue(),
-                    ((PPUserEventProfile) inObject).getUserEventNumberValue());
-        case 14:
-            return compareToHelper(((PPUserEventProfile) inObject).getUserEventMinValue(),
-                    this.getUserEventMinValue());
-        case 15:
-            return compareToHelper(this.getUserEventMinValue(),
-                    ((PPUserEventProfile) inObject).getUserEventMinValue());
-        case 16:
-            return compareToHelper(((PPUserEventProfile) inObject).getUserEventMaxValue(),
-                    this.getUserEventMaxValue());
-        case 17:
-            return compareToHelper(this.getUserEventMaxValue(),
-                    ((PPUserEventProfile) inObject).getUserEventMaxValue());
-        case 18:
-            return compareToHelper(((PPUserEventProfile) inObject).getUserEventMeanValue(),
-                    this.getUserEventMeanValue());
-        case 19:
-            return compareToHelper(this.getUserEventMeanValue(),
-                    ((PPUserEventProfile) inObject).getUserEventMeanValue());
-        case 20:
-            return compareToHelper(this.getStdDev(), ((PPUserEventProfile) inObject).getStdDev());
-        case 21:
-            return compareToHelper(this.getUserEventMeanValue(),
-                    ((PPUserEventProfile) inObject).getUserEventMeanValue());
-
-        case 30:
-            PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) inObject;
-            if (ppUserEventProfile.getNodeID() != this.getNodeID())
-                return ppUserEventProfile.getNodeID() - this.getNodeID();
-            else if (ppUserEventProfile.getContextID() != this.getContextID())
-                return ppUserEventProfile.getContextID() - this.getContextID();
-            else
-                return ppUserEventProfile.getThreadID() - this.getThreadID();
-        case 31:
-            ppUserEventProfile = (PPUserEventProfile) inObject;
-            if (ppUserEventProfile.getNodeID() != this.getNodeID())
-                return this.getNodeID() - ppUserEventProfile.getNodeID();
-            else if (ppUserEventProfile.getContextID() != this.getContextID())
-                return this.getContextID() - ppUserEventProfile.getContextID();
-            else
-                return this.getThreadID() - ppUserEventProfile.getThreadID();
-        default:
-            throw new ParaProfException("Unexpected sort type: " + sortType);
-        }
-    }
-
+    //    public int compareTo(Object inObject) {
+    //        switch (sortType) {
+    //        case 0:
+    //            return (((PPUserEventProfile) inObject).getUserEventName()).compareTo(this.getUserEventName());
+    //        case 1:
+    //            return (this.getUserEventName()).compareTo(((PPUserEventProfile) inObject).getUserEventName());
+    //        case 12:
+    //            return compareToHelper(((PPUserEventProfile) inObject).getUserEventNumberValue(),
+    //                    this.getUserEventNumberValue());
+    //        case 13:
+    //            return compareToHelper(this.getUserEventNumberValue(),
+    //                    ((PPUserEventProfile) inObject).getUserEventNumberValue());
+    //        case 14:
+    //            return compareToHelper(((PPUserEventProfile) inObject).getUserEventMinValue(),
+    //                    this.getUserEventMinValue());
+    //        case 15:
+    //            return compareToHelper(this.getUserEventMinValue(),
+    //                    ((PPUserEventProfile) inObject).getUserEventMinValue());
+    //        case 16:
+    //            return compareToHelper(((PPUserEventProfile) inObject).getUserEventMaxValue(),
+    //                    this.getUserEventMaxValue());
+    //        case 17:
+    //            return compareToHelper(this.getUserEventMaxValue(),
+    //                    ((PPUserEventProfile) inObject).getUserEventMaxValue());
+    //        case 18:
+    //            return compareToHelper(((PPUserEventProfile) inObject).getUserEventMeanValue(),
+    //                    this.getUserEventMeanValue());
+    //        case 19:
+    //            return compareToHelper(this.getUserEventMeanValue(),
+    //                    ((PPUserEventProfile) inObject).getUserEventMeanValue());
+    //        case 20:
+    //            return compareToHelper(this.getStdDev(), ((PPUserEventProfile) inObject).getStdDev());
+    //        case 21:
+    //            return compareToHelper(this.getUserEventMeanValue(),
+    //                    ((PPUserEventProfile) inObject).getUserEventMeanValue());
+    //
+    //        case 30:
+    //            PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) inObject;
+    //            if (ppUserEventProfile.getNodeID() != this.getNodeID())
+    //                return ppUserEventProfile.getNodeID() - this.getNodeID();
+    //            else if (ppUserEventProfile.getContextID() != this.getContextID())
+    //                return ppUserEventProfile.getContextID() - this.getContextID();
+    //            else
+    //                return ppUserEventProfile.getThreadID() - this.getThreadID();
+    //        case 31:
+    //            ppUserEventProfile = (PPUserEventProfile) inObject;
+    //            if (ppUserEventProfile.getNodeID() != this.getNodeID())
+    //                return this.getNodeID() - ppUserEventProfile.getNodeID();
+    //            else if (ppUserEventProfile.getContextID() != this.getContextID())
+    //                return this.getContextID() - ppUserEventProfile.getContextID();
+    //            else
+    //                return this.getThreadID() - ppUserEventProfile.getThreadID();
+    //        default:
+    //            throw new ParaProfException("Unexpected sort type: " + sortType);
+    //        }
+    //    }
     private int compareToHelper(double d1, double d2) {
         double result = d1 - d2;
         if (result < 0.00)
@@ -268,6 +305,8 @@ public class PPUserEventProfile implements Comparable {
     private int threadID = -1;
 
     UserEventProfile userEventProfile;
+
+    private DataSorter dataSorter;
 
     UserEvent userEvent = null;
 

@@ -287,7 +287,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                 if (arg.equals("Print")) {
                     ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
-                    trial.getPreferences().showPreferencesWindow();
+                    trial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();
                     imageOutput.saveImage((ParaProfImageInterface) panel);
@@ -428,7 +428,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void sortLocalData() {
-        list = dataSorter.getUserEventData(userEvent, valueType + order);
+        list = dataSorter.getUserEventData(userEvent);
     }
 
     public Vector getData() {

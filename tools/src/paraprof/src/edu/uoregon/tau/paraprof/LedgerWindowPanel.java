@@ -12,11 +12,11 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.6 2005/01/19 02:33:26 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.7 2005/03/08 01:11:18 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * @see LedgerDataElement
  * @see LedgerWindow
  */
@@ -153,16 +153,15 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
         int barXCoord = 0;
         int tmpXWidthCalc = 0;
 
-        //To make sure the bar details are set, this
-        //method must be called.
-        ppTrial.getPreferences().setBarDetails(g2D);
+        //To make sure the bar details are set, this method must be called.
+        ppTrial.getPreferencesWindow().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        barSpacing = ppTrial.getPreferences().getBarSpacing();
-        barHeight = ppTrial.getPreferences().getBarHeight();
+        barSpacing = ppTrial.getPreferencesWindow().getBarSpacing();
+        barHeight = ppTrial.getPreferencesWindow().getBarHeight();
 
         //Obtain the font and its metrics.
-        Font font = new Font(ppTrial.getPreferences().getParaProfFont(), ppTrial.getPreferences().getFontStyle(),
+        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),
                 barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
@@ -243,7 +242,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                 g2D.setColor(lde.getColor());
                 g2D.fillRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 
-                if (lde.isHighlighted(ppTrial.getColorChooser())) {
+                if (lde.isHighlighted(ppTrial)) {
                     g2D.setColor(lde.getHighlightColor(ppTrial.getColorChooser()));
                     g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
                     g2D.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
@@ -318,16 +317,15 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                     if (arg.equals("Show Function Details")) {
                         // Highlight the function and bring up the Function Data
                         // Window
-                        ppTrial.getColorChooser().setHighlightedFunction(lde.getFunction());
-                        FunctionDataWindow tmpRef = new FunctionDataWindow(ppTrial, lde.getFunction(),
-                                ppTrial.getStaticMainWindow().getDataSorter());
+                        ppTrial.setHighlightedFunction(lde.getFunction());
+                        FunctionDataWindow tmpRef = new FunctionDataWindow(ppTrial, lde.getFunction());
                         ppTrial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
 
                     } else if (arg.equals("Show User Event Details")) {
                         // Highlight the user event and bring up the User Event
                         // Window
-                        ppTrial.getColorChooser().setHighlightedUserEvent(lde.getUserEvent());
+                        ppTrial.setHighlightedUserEvent(lde.getUserEvent());
                         UserEventWindow tmpRef = new UserEventWindow(ppTrial, lde.getUserEvent(),
                                 ppTrial.getStaticMainWindow().getDataSorter());
                         ppTrial.getSystemEvents().addObserver(tmpRef);
@@ -391,11 +389,11 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                             return;
                         } else { // left click
                             if (windowType == LedgerWindow.USEREVENT_LEDGER) {
-                                ppTrial.getColorChooser().toggleHighlightedUserEvent(lde.getUserEvent());
+                                ppTrial.toggleHighlightedUserEvent(lde.getUserEvent());
                             } else if (windowType == LedgerWindow.GROUP_LEDGER) {
-                                ppTrial.getColorChooser().toggleHighlightedGroup(lde.getGroup());
+                                ppTrial.toggleHighlightedGroup(lde.getGroup());
                             } else {
-                                ppTrial.getColorChooser().toggleHighlightedFunction(lde.getFunction());
+                                ppTrial.toggleHighlightedFunction(lde.getFunction());
                             }
                         }
                         //Nothing more to do ... return.

@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.10 2005/01/31 23:11:08 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.11 2005/03/08 01:11:18 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -188,7 +188,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
                 if (arg.equals("Print")) {
                     ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
-                    trial.getPreferences().showPreferencesWindow();
+                    trial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();
                     imageOutput.saveImage((ParaProfImageInterface) panel);

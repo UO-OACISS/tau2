@@ -133,7 +133,7 @@ public class PPThread {
         
     }
     
-    public Vector getSortedFunctionProfiles(int sortType, boolean getAll) {
+    public Vector getSortedFunctionProfiles(DataSorter dataSorter, boolean getAll) {
         Vector newList = null;
 
         Vector functionList = thread.getFunctionProfiles();
@@ -151,18 +151,17 @@ public class PPThread {
             FunctionProfile functionProfile = (FunctionProfile) e1.nextElement();
             if (functionProfile != null) {
                 if (getAll || ppTrial.displayFunction(functionProfile.getFunction())) {
-                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(ppTrial, thread, functionProfile);
-                    ppFunctionProfile.setSortType(sortType);
+                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(dataSorter, thread, functionProfile);
                     newList.addElement(ppFunctionProfile);
 
                  
-                    maxExclusive = Math.max(maxExclusive, functionProfile.getExclusive(ppTrial.getSelectedMetricID()));
-                    maxInclusive = Math.max(maxInclusive, functionProfile.getInclusive(ppTrial.getSelectedMetricID()));
-                    maxExclusivePercent = Math.max(maxExclusivePercent, functionProfile.getExclusivePercent(ppTrial.getSelectedMetricID()));
-                    maxInclusivePercent = Math.max(maxInclusivePercent, functionProfile.getInclusivePercent(ppTrial.getSelectedMetricID()));
+                    maxExclusive = Math.max(maxExclusive, functionProfile.getExclusive(ppTrial.getDefaultMetricID()));
+                    maxInclusive = Math.max(maxInclusive, functionProfile.getInclusive(ppTrial.getDefaultMetricID()));
+                    maxExclusivePercent = Math.max(maxExclusivePercent, functionProfile.getExclusivePercent(ppTrial.getDefaultMetricID()));
+                    maxInclusivePercent = Math.max(maxInclusivePercent, functionProfile.getInclusivePercent(ppTrial.getDefaultMetricID()));
                     maxNumCalls = Math.max(maxNumCalls, functionProfile.getNumCalls());
                     maxNumSubr = Math.max(maxNumSubr, functionProfile.getNumSubr());
-                    maxInclusivePerCall = Math.max(maxInclusivePerCall, functionProfile.getInclusivePerCall(ppTrial.getSelectedMetricID()));
+                    maxInclusivePerCall = Math.max(maxInclusivePerCall, functionProfile.getInclusivePerCall(ppTrial.getDefaultMetricID()));
                     
                 }
             }

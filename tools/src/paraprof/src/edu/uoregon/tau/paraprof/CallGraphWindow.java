@@ -7,16 +7,12 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.enums.*;
 
 import org.jgraph.JGraph;
 import org.jgraph.graph.*;
 
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JScrollPane;
-import javax.swing.BorderFactory;
-import javax.swing.JSlider;
+import javax.swing.*;
 
 import java.util.Hashtable;
 import java.awt.Dimension;
@@ -35,9 +31,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.19 2005/01/31 23:11:08 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.20 2005/03/08 01:11:17 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.19 $
+ * @version	$Revision: 1.20 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -98,9 +94,11 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public String getToolTipString() {
             return (String) this.getUserObject();
         }
+
         public Function getFunction() {
             return function;
         }
+
         public Vertex getVertex() {
             return vertex;
         }
@@ -111,8 +109,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public String getToolTipText(MouseEvent event) {
             double x = event.getX() / this.getScale();
             double y = event.getY() / this.getScale();
-            
-            GraphCell gc = callGraphWindow.getGraphCellForLocation((int)x,(int)y);
+
+            GraphCell gc = callGraphWindow.getGraphCellForLocation((int) x, (int) y);
 
             if (gc != null) {
                 return gc.getToolTipString();
@@ -143,6 +141,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             this.a = a;
             this.b = b;
         }
+
         private Vertex a, b;
     }
 
@@ -182,7 +181,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         private FunctionProfile functionProfile;
         private boolean visited;
 
-
         private int downPriority;
         private int upPriority;
 
@@ -208,6 +206,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     public CallGraphWindow(ParaProfTrial trial, edu.uoregon.tau.dms.dss.Thread thread) {
         this.ppTrial = trial;
+        this.colorMetricID = trial.getDefaultMetricID();
+        this.widthMetricID = trial.getDefaultMetricID();
 
         if (thread.getNodeID() < 0)
             this.meanWindow = true;
@@ -227,10 +227,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         //Now set the title.
         if (meanWindow)
-            this.setTitle("Full Call Graph (all threads) - " + trial.getTrialIdentifier(true));
+            this.setTitle("Mean Call Graph - " + trial.getTrialIdentifier(true));
         else
-            this.setTitle("Call Graph " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID() + " - "
-                    + trial.getTrialIdentifier(true));
+            this.setTitle("Call Graph " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID() + ","
+                    + thread.getThreadID() + " - " + trial.getTrialIdentifier(true));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -258,8 +258,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         this.getContentPane().setLayout(gbl);
 
         // obtain the font and its metrics
-        font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
-                trial.getPreferences().getBarHeight());
+        font = new Font(trial.getPreferencesWindow().getParaProfFont(), trial.getPreferencesWindow().getFontStyle(),
+                trial.getPreferencesWindow().getBarHeight());
         FontMetrics fm = getFontMetrics(font);
 
         // set the box height to the font height + 5
@@ -298,12 +298,85 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         ParaProf.incrementNumWindows();
     }
 
-    private void helperAddRadioMenuItem(String name, String command, boolean on, ButtonGroup group, JMenu menu) {
-        JRadioButtonMenuItem item = new JRadioButtonMenuItem(name, on);
-        item.addActionListener(this);
-        item.setActionCommand(command);
-        group.add(item);
-        menu.add(item);
+    private Component createWidthMetricMenu(final CallGraphOption option, boolean enabled, ButtonGroup group) {
+        JRadioButtonMenuItem button = null;
+
+        if (ppTrial.getNumberOfMetrics() == 1) {
+            button = new JRadioButtonMenuItem(option.toString(), enabled);
+
+            button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    widthOption = option;
+                    recreateGraph();
+                }
+            });
+            return button;
+        } else {
+            JMenu subSubMenu = new JMenu(option.toString() + "...");
+            for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
+
+                if (i == this.widthMetricID && enabled) {
+                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName(), true);
+                } else {
+                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName());
+                }
+                final int m = i;
+
+                button.addActionListener(new ActionListener() {
+                    final int metric = m;
+
+                    public void actionPerformed(ActionEvent evt) {
+                        widthOption = option;
+                        widthMetricID = metric;
+                        recreateGraph();
+                    }
+                });
+                group.add(button);
+                subSubMenu.add(button);
+            }
+            return subSubMenu;
+        }
+    }
+
+    
+    private Component createColorMetricMenu(final CallGraphOption option, boolean enabled, ButtonGroup group) {
+        JRadioButtonMenuItem button = null;
+
+        if (ppTrial.getNumberOfMetrics() == 1) {
+            button = new JRadioButtonMenuItem(option.toString(), enabled);
+
+            button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    colorOption = option;
+                    recreateGraph();
+                }
+            });
+            return button;
+        } else {
+            JMenu subSubMenu = new JMenu(option.toString() + "...");
+            for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
+
+                if (i == this.widthMetricID && enabled) {
+                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName(), true);
+                } else {
+                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName());
+                }
+                final int m = i;
+
+                button.addActionListener(new ActionListener() {
+                    final int metric = m;
+
+                    public void actionPerformed(ActionEvent evt) {
+                        colorOption = option;
+                        colorMetricID = metric;
+                        recreateGraph();
+                    }
+                });
+                group.add(button);
+                subSubMenu.add(button);
+            }
+            return subSubMenu;
+        }
     }
 
     private void setupMenus() {
@@ -354,24 +427,102 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         // box width submenu
         subMenu = new JMenu("Box width by...");
         group = new ButtonGroup();
-        helperAddRadioMenuItem("Static", "Box Width Static", false, group, subMenu);
-        helperAddRadioMenuItem("Name Length", "Box Width Name Length", false, group, subMenu);
-        helperAddRadioMenuItem("Exclusive Value", "Box Width Exclusive", true, group, subMenu);
-        helperAddRadioMenuItem("Inclusive Value", "Box Width Inclusive", false, group, subMenu);
-        helperAddRadioMenuItem("Number of Calls", "Box Width NumCalls", false, group, subMenu);
-        helperAddRadioMenuItem("Number of Subroutines", "Box Width NumSubr", false, group, subMenu);
-        helperAddRadioMenuItem("Inclusive Per Call Value", "Box Width InclPerCall", false, group, subMenu);
+
+        subMenu.add(createWidthMetricMenu(CallGraphOption.EXCLUSIVE, CallGraphOption.EXCLUSIVE == widthOption, group));
+        subMenu.add(createWidthMetricMenu(CallGraphOption.INCLUSIVE, CallGraphOption.INCLUSIVE == widthOption, group));
+        subMenu.add(createWidthMetricMenu(CallGraphOption.EXCLUSIVE_PER_CALL,
+                CallGraphOption.EXCLUSIVE_PER_CALL == widthOption, group));
+        subMenu.add(createWidthMetricMenu(CallGraphOption.INCLUSIVE_PER_CALL,
+                CallGraphOption.INCLUSIVE_PER_CALL == widthOption, group));
+
+        button = new JRadioButtonMenuItem("Number of Calls", CallGraphOption.NUMCALLS == widthOption);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                widthOption = CallGraphOption.NUMCALLS;
+                recreateGraph();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+
+        button = new JRadioButtonMenuItem("Number of Child Calls", CallGraphOption.NUMSUBR == widthOption);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                widthOption = CallGraphOption.NUMSUBR;
+                recreateGraph();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+
+
+        button = new JRadioButtonMenuItem("Static", CallGraphOption.STATIC == widthOption);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                widthOption = CallGraphOption.STATIC;
+                recreateGraph();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+
+        button = new JRadioButtonMenuItem("Name Length", CallGraphOption.NAME_LENGTH == widthOption);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                widthOption = CallGraphOption.NAME_LENGTH;
+                recreateGraph();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+
+
+        
         optionsMenu.add(subMenu);
 
         // box color submenu
         subMenu = new JMenu("Box color by...");
         group = new ButtonGroup();
-        helperAddRadioMenuItem("Static", "Box Color Static", false, group, subMenu);
-        helperAddRadioMenuItem("Exclusive Value", "Box Color Exclusive", true, group, subMenu);
-        helperAddRadioMenuItem("Inclusive Value", "Box Color Inclusive", false, group, subMenu);
-        helperAddRadioMenuItem("Number of Calls", "Box Color NumCalls", false, group, subMenu);
-        helperAddRadioMenuItem("Number of Subroutines", "Box Color NumSubr", false, group, subMenu);
-        helperAddRadioMenuItem("Inclusive Per Call Value", "Box Color InclPerCall", false, group, subMenu);
+        
+        subMenu.add(createColorMetricMenu(CallGraphOption.EXCLUSIVE, CallGraphOption.EXCLUSIVE == colorOption, group));
+        subMenu.add(createColorMetricMenu(CallGraphOption.INCLUSIVE, CallGraphOption.INCLUSIVE == colorOption, group));
+        subMenu.add(createColorMetricMenu(CallGraphOption.EXCLUSIVE_PER_CALL,
+                CallGraphOption.EXCLUSIVE_PER_CALL == colorOption, group));
+        subMenu.add(createColorMetricMenu(CallGraphOption.INCLUSIVE_PER_CALL,
+                CallGraphOption.INCLUSIVE_PER_CALL == colorOption, group));
+
+        button = new JRadioButtonMenuItem("Number of Calls", CallGraphOption.NUMCALLS == colorOption);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                colorOption = CallGraphOption.NUMCALLS;
+                recreateGraph();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+
+        button = new JRadioButtonMenuItem("Number of Child Calls", CallGraphOption.NUMSUBR == colorOption);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                colorOption = CallGraphOption.NUMSUBR;
+                recreateGraph();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+        
+        button = new JRadioButtonMenuItem("Static", CallGraphOption.STATIC == colorOption);
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                colorOption = CallGraphOption.STATIC;
+                recreateGraph();
+            }
+        });
+        group.add(button);
+        subMenu.add(button);
+
+        
+        
         optionsMenu.add(subMenu);
 
         optionsMenu.addMenuListener(this);
@@ -424,36 +575,44 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         setJMenuBar(mainMenu);
     }
 
-    private double getMaxValue(int option) {
+    private double getMaxValue(CallGraphOption option, int metric) {
         double maxValue = 1;
-        if (option == OPTION_EXCLUSIVE) {
-            maxValue = thread.getMaxExclusive(ppTrial.getSelectedMetricID());
-        } else if (option == OPTION_INCLUSIVE) {
-            maxValue = thread.getMaxInclusive(ppTrial.getSelectedMetricID());
-        } else if (option == OPTION_NUMCALLS) {
+        if (option == CallGraphOption.EXCLUSIVE) {
+            maxValue = thread.getMaxExclusive(metric);
+        } else if (option == CallGraphOption.INCLUSIVE) {
+            maxValue = thread.getMaxInclusive(metric);
+        } else if (option == CallGraphOption.NUMCALLS) {
             maxValue = thread.getMaxNumCalls();
-        } else if (option == OPTION_NUMSUBR) {
+        } else if (option == CallGraphOption.NUMSUBR) {
             maxValue = thread.getMaxNumSubr();
-        } else if (option == OPTION_INCLPERCALL) {
-            maxValue = thread.getMaxInclusivePerCall(ppTrial.getSelectedMetricID());
+        } else if (option == CallGraphOption.INCLUSIVE_PER_CALL) {
+            maxValue = thread.getMaxInclusivePerCall(metric);
+        } else if (option == CallGraphOption.EXCLUSIVE_PER_CALL) {
+            maxValue = thread.getMaxExclusivePerCall(metric);
+        } else {
+            throw new ParaProfException ("Unexpected CallGraphOption : " + option);
         }
         return maxValue;
     }
 
-    private double getValue(FunctionProfile fp, int option, double maxValue) {
+    private double getValue(FunctionProfile fp, CallGraphOption option, double maxValue, int metric) {
         double value = 1;
-        if (option == OPTION_STATIC) {
+        if (option == CallGraphOption.STATIC) {
             value = 1;
-        } else if (option == OPTION_EXCLUSIVE) {
-            value = fp.getExclusive(ppTrial.getSelectedMetricID()) / maxValue;
-        } else if (option == OPTION_INCLUSIVE) {
-            value = fp.getInclusive(ppTrial.getSelectedMetricID()) / maxValue;
-        } else if (option == OPTION_NUMCALLS) {
+        } else if (option == CallGraphOption.EXCLUSIVE) {
+            value = fp.getExclusive(metric) / maxValue;
+        } else if (option == CallGraphOption.INCLUSIVE) {
+            value = fp.getInclusive(metric) / maxValue;
+        } else if (option == CallGraphOption.NUMCALLS) {
             value = fp.getNumCalls() / maxValue;
-        } else if (option == OPTION_NUMSUBR) {
+        } else if (option == CallGraphOption.NUMSUBR) {
             value = fp.getNumSubr() / maxValue;
-        } else if (option == OPTION_INCLPERCALL) {
-            value = fp.getInclusivePerCall(ppTrial.getSelectedMetricID()) / maxValue;
+        } else if (option == CallGraphOption.INCLUSIVE_PER_CALL) {
+            value = fp.getInclusivePerCall(metric) / maxValue;
+        } else if (option == CallGraphOption.EXCLUSIVE_PER_CALL) {
+            value = fp.getExclusivePerCall(metric) / maxValue;
+        } else {
+            throw new ParaProfException ("Unexpected CallGraphOption : " + option);
         }
 
         return value;
@@ -461,11 +620,11 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     private int getWidth(FunctionProfile fp, double maxValue) {
         int width = 0;
-        if (this.widthOption == OPTION_NAME) {
+        if (this.widthOption == CallGraphOption.NAME_LENGTH) {
             FontMetrics fm = getFontMetrics(this.font);
             width = fm.stringWidth(fp.getName()) + 5;
         } else {
-            width = (int) (boxWidth * getValue(fp, this.widthOption, maxValue));
+            width = (int) (boxWidth * getValue(fp, this.widthOption, maxValue, widthMetricID));
         }
         return width;
     }
@@ -475,8 +634,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         vertexMap = new HashMap();
         backEdges = new Vector();
 
-        double maxWidthValue = getMaxValue(this.widthOption);
-        double maxColorValue = getMaxValue(this.colorOption);
+        double maxWidthValue = getMaxValue(this.widthOption, widthMetricID);
+        double maxColorValue = getMaxValue(this.colorOption, colorMetricID);
 
         for (int i = 0; i < functionProfileList.size(); i++) {
             FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
@@ -486,7 +645,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
 
                 Vertex v = new Vertex(fp, getWidth(fp, maxWidthValue));
-                v.colorRatio = (float) getValue(fp, this.colorOption, maxColorValue);
+                v.colorRatio = (float) getValue(fp, this.colorOption, maxColorValue, colorMetricID);
                 vertexMap.put(fp, v);
             }
         }
@@ -704,8 +863,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     void reassignWidths(Vector levels) {
 
-        double maxWidthValue = getMaxValue(this.widthOption);
-        double maxColorValue = getMaxValue(this.colorOption);
+        double maxWidthValue = getMaxValue(this.widthOption, widthMetricID);
+        double maxColorValue = getMaxValue(this.colorOption, colorMetricID);
 
         for (int i = 0; i < levels.size(); i++) {
             Vector level = (Vector) levels.get(i);
@@ -722,7 +881,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     if (v.width < 5)
                         v.width = 5;
 
-                    v.colorRatio = (float) getValue(fp, this.colorOption, maxColorValue);
+                    v.colorRatio = (float) getValue(fp, this.colorOption, maxColorValue, colorMetricID);
 
                     v.height = boxHeight;
                 }
@@ -1376,7 +1535,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         // Set fill color
 
-        if (this.colorOption == OPTION_STATIC) {
+        if (this.colorOption == CallGraphOption.STATIC) {
             GraphConstants.setBackground(attrib, Color.orange);
             GraphConstants.setForeground(attrib, Color.black);
         } else {
@@ -1536,8 +1695,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         Map attributeMap = new Hashtable();
 
-        font = new Font(ppTrial.getPreferences().getParaProfFont(), ppTrial.getPreferences().getFontStyle(),
-                ppTrial.getPreferences().getBarHeight());
+        font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),
+                ppTrial.getPreferencesWindow().getBarHeight());
 
         this.setFont(font);
         FontMetrics fm = getFontMetrics(font);
@@ -1577,7 +1736,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         for (int i = 0; i < graphCellVector.size(); i++) {
             GraphCell dgc = (GraphCell) graphCellVector.get(i);
 
-            if (dgc.function == ppTrial.getColorChooser().getHighlightedFunction()) { // this is the one
+            if (dgc.function == ppTrial.getHighlightedFunction()) { // this is the one
 
                 // now iterate through each function and check for callpaths that contain it, highlight those edges and vertices
                 for (int j = 0; j < functionProfileList.size(); j++) {
@@ -1643,7 +1802,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             GraphCell dgc = (GraphCell) graphCellVector.get(i);
             Map attrib = new HashMap();
 
-            if (dgc.function == ppTrial.getColorChooser().getHighlightedFunction()) {
+            if (dgc.function == ppTrial.getHighlightedFunction()) {
                 GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,
                         ppTrial.getColorChooser().getHighlightColor(),
                         ppTrial.getColorChooser().getHighlightColor()));
@@ -1651,7 +1810,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,
                         Color.blue, Color.blue));
 
-            } else if (dgc.function.isGroupMember(ppTrial.getColorChooser().getHighlightedGroup())) {
+            } else if (dgc.function.isGroupMember(ppTrial.getHighlightedGroup())) {
                 GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,
                         ppTrial.getColorChooser().getGroupHighlightColor(),
                         ppTrial.getColorChooser().getGroupHighlightColor()));
@@ -1675,6 +1834,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         } else if (tmpString.equals("colorEvent")) {
             handleColorEvent();
         } else if (tmpString.equals("dataEvent")) {
+            setupMenus();
+            this.validate();
             recreateGraph();
         }
 
@@ -1698,8 +1859,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         ParaProf.helpWindow.writeText("If you only see a single line of boxes (no edges connecting them), it probably means that your profile data does not contain call path data.  If you believe this to be incorrect please contact us with the data at tau-bugs@cs.uoregon.edu");
         ParaProf.helpWindow.writeText("");
     }
-
-   
 
     public Dimension getViewportSize() {
         return jGraphPane.getViewport().getExtentSize();
@@ -1749,8 +1908,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             // scale the x and y (we could be zoomed in or out)
             double x = evt.getX() / scale;
             double y = evt.getY() / scale;
-            
-            GraphCell gc = getGraphCellForLocation((int)x, (int)y);
+
+            GraphCell gc = getGraphCellForLocation((int) x, (int) y);
 
             if (gc != null) {
                 Function f = ((Function) gc.getFunction());
@@ -1761,7 +1920,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     return;
 
                 } else {
-                    ppTrial.getColorChooser().toggleHighlightedFunction(f);
+                    ppTrial.toggleHighlightedFunction(f);
                 }
             }
         } catch (Exception e) {
@@ -1889,53 +2048,52 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
             if (EventSrc instanceof JMenuItem) {
 
-                if (EventSrc instanceof JRadioButtonMenuItem) {
-                    JRadioButtonMenuItem jrbmi = (JRadioButtonMenuItem) EventSrc;
-
-                    if (jrbmi.getActionCommand().startsWith("Box Width")) {
-
-                        if (jrbmi.getActionCommand().equals("Box Width Static")) {
-                            this.widthOption = OPTION_STATIC;
-                        } else if (jrbmi.getActionCommand().equals("Box Width Name Length")) {
-                            this.widthOption = OPTION_NAME;
-                        } else if (jrbmi.getActionCommand().equals("Box Width Exclusive")) {
-                            this.widthOption = OPTION_EXCLUSIVE;
-                        } else if (jrbmi.getActionCommand().equals("Box Width Inclusive")) {
-                            this.widthOption = OPTION_INCLUSIVE;
-                        } else if (jrbmi.getActionCommand().equals("Box Width NumCalls")) {
-                            this.widthOption = OPTION_NUMCALLS;
-                        } else if (jrbmi.getActionCommand().equals("Box Width NumSubr")) {
-                            this.widthOption = OPTION_NUMSUBR;
-                        } else if (jrbmi.getActionCommand().equals("Box Width InclPerCall")) {
-                            this.widthOption = OPTION_INCLPERCALL;
-                        }
-                        recreateGraph();
-                    }
-
-                    if (jrbmi.getActionCommand().startsWith("Box Color")) {
-
-                        if (jrbmi.getActionCommand().equals("Box Color Static")) {
-                            this.colorOption = OPTION_STATIC;
-                        } else if (jrbmi.getActionCommand().equals("Box Color Exclusive")) {
-                            this.colorOption = OPTION_EXCLUSIVE;
-                        } else if (jrbmi.getActionCommand().equals("Box Color Inclusive")) {
-                            this.colorOption = OPTION_INCLUSIVE;
-                        } else if (jrbmi.getActionCommand().equals("Box Color NumCalls")) {
-                            this.colorOption = OPTION_NUMCALLS;
-                        } else if (jrbmi.getActionCommand().equals("Box Color NumSubr")) {
-                            this.colorOption = OPTION_NUMSUBR;
-                        } else if (jrbmi.getActionCommand().equals("Box Color InclPerCall")) {
-                            this.colorOption = OPTION_INCLPERCALL;
-                        }
-                        recreateGraph();
-                    }
-                }
+                //                if (EventSrc instanceof JRadioButtonMenuItem) {
+                //                    JRadioButtonMenuItem jrbmi = (JRadioButtonMenuItem) EventSrc;
+                //
+                //                    if (jrbmi.getActionCommand().startsWith("Box Width")) {
+                //
+                //                        if (jrbmi.getActionCommand().equals("Box Width Static")) {
+                //                            this.widthOption = CallGraphOption.STATIC;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Width Name Length")) {
+                //                            this.widthOption = OPTION_NAME;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Width Exclusive")) {
+                //                            this.widthOption = OPTION_EXCLUSIVE;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Width Inclusive")) {
+                //                            this.widthOption = OPTION_INCLUSIVE;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Width NumCalls")) {
+                //                            this.widthOption = OPTION_NUMCALLS;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Width NumSubr")) {
+                //                            this.widthOption = OPTION_NUMSUBR;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Width InclPerCall")) {
+                //                            this.widthOption = OPTION_INCLPERCALL;
+                //                        }
+                //                        recreateGraph();
+                //                    }
+                //
+                //                    if (jrbmi.getActionCommand().startsWith("Box Color")) {
+                //
+                //                        if (jrbmi.getActionCommand().equals("Box Color Static")) {
+                //                            this.colorOption = OPTION_STATIC;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Color Exclusive")) {
+                //                            this.colorOption = OPTION_EXCLUSIVE;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Color Inclusive")) {
+                //                            this.colorOption = OPTION_INCLUSIVE;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Color NumCalls")) {
+                //                            this.colorOption = OPTION_NUMCALLS;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Color NumSubr")) {
+                //                            this.colorOption = OPTION_NUMSUBR;
+                //                        } else if (jrbmi.getActionCommand().equals("Box Color InclPerCall")) {
+                //                            this.colorOption = OPTION_INCLPERCALL;
+                //                        }
+                //                        recreateGraph();
+                //                    }
+                //                }
 
                 String arg = evt.getActionCommand();
 
                 if (arg.equals("Show Function Details")) {
-                    FunctionDataWindow tmpRef = new FunctionDataWindow(ppTrial, (Function) clickedOnObject,
-                            ppTrial.getStaticMainWindow().getDataSorter());
+                    FunctionDataWindow tmpRef = new FunctionDataWindow(ppTrial, (Function) clickedOnObject);
 
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
@@ -1946,7 +2104,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     ParaProf.exitParaProf(0);
 
                 } else if (arg.equals("Preferences...")) {
-                    ppTrial.getPreferences().showPreferencesWindow();
+                    ppTrial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
                 } else if (arg.equals("Show ParaProf Manager")) {
@@ -1958,8 +2116,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 } else if (arg.equals("Show User Event Ledger")) {
                     (new LedgerWindow(ppTrial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, new DataSorter(ppTrial),
-                            2);
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, new DataSorter(
+                            ppTrial), 2);
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
@@ -1970,16 +2128,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();
                     imageOutput.saveImage((ParaProfImageInterface) this);
-                } else if (arg.equals("Static Width")) {
-                    this.widthOption = OPTION_STATIC;
-                    recreateGraph();
-                } else if (arg.equals("Width by Name Length")) {
-                    this.widthOption = OPTION_NAME;
-                    recreateGraph();
-
-                } else if (arg.equals("Width by Exclusive Value")) {
-                    this.widthOption = OPTION_EXCLUSIVE;
-                    recreateGraph();
 
                 } else if (arg.equals("Display Width Slider")) {
                     if (slidersCheckBox.isSelected())
@@ -2002,7 +2150,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     private ParaProfTrial ppTrial = null;
     private edu.uoregon.tau.dms.dss.Thread thread;
-   
+
     private boolean meanWindow = false;
 
     private JMenu optionsMenu = null;
@@ -2016,15 +2164,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private Graph graph = null;
     private JScrollPane jGraphPane = null;
 
-    private static final int OPTION_STATIC = 0;
-    private static final int OPTION_NAME = 1;
-    private static final int OPTION_EXCLUSIVE = 2;
-    private static final int OPTION_INCLUSIVE = 3;
-    private static final int OPTION_NUMCALLS = 4;
-    private static final int OPTION_NUMSUBR = 5;
-    private static final int OPTION_INCLPERCALL = 6;
-    private int widthOption = OPTION_EXCLUSIVE;
-    private int colorOption = OPTION_EXCLUSIVE;
+    private CallGraphOption widthOption = CallGraphOption.INCLUSIVE;
+    private CallGraphOption colorOption = CallGraphOption.EXCLUSIVE;
 
     private int boxWidth = 120;
 
@@ -2039,6 +2180,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private Vector backEdges;
     private Map vertexMap;
 
+    private int widthMetricID;
+    private int colorMetricID;
     private Font font;
     private int boxHeight;
     private JPopupMenu popup = new JPopupMenu();

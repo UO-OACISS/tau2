@@ -86,14 +86,14 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 
         //To make sure the bar details are set, this
         //method must be called.
-        trial.getPreferences().setBarDetails(g2D);
+        trial.getPreferencesWindow().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        barSpacing = trial.getPreferences().getBarSpacing();
-        barHeight = trial.getPreferences().getBarHeight();
+        barSpacing = trial.getPreferencesWindow().getBarSpacing();
+        barHeight = trial.getPreferencesWindow().getBarHeight();
 
         //Obtain the font and its metrics.
-        Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+        Font font = new Font(trial.getPreferencesWindow().getParaProfFont(), trial.getPreferencesWindow().getFontStyle(),
                 barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
@@ -251,7 +251,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             g2D.setColor(userEvent.getColor());
             g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
-            if (userEvent == (trial.getColorChooser().getHighlightedUserEvent())) {
+            if (userEvent == (trial.getHighlightedUserEvent())) {
                 g2D.setColor(trial.getColorChooser().getUserEventHighlightColor());
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
                 g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
@@ -260,7 +260,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
             }
         } else {
-            if (userEvent == (trial.getColorChooser().getHighlightedUserEvent()))
+            if (userEvent == (trial.getHighlightedUserEvent()))
                 g2D.setColor(trial.getColorChooser().getUserEventHighlightColor());
             else {
                 g2D.setColor(userEvent.getColor());

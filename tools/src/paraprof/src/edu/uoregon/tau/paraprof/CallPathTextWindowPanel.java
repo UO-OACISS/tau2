@@ -13,9 +13,9 @@ import java.text.*;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.15 2005/01/14 17:37:47 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.16 2005/03/08 01:11:17 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -94,11 +94,11 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
         // probably not be the same font as the rest of ParaProf. As a result, some extra work will
         // have to be done to calculate spacing.
 
-        int fontSize = trial.getPreferences().getBarHeight();
-        spacing = trial.getPreferences().getBarSpacing();
+        int fontSize = trial.getPreferencesWindow().getBarHeight();
+        spacing = trial.getPreferencesWindow().getBarSpacing();
 
         //Create font.
-        monoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
+        monoFont = new Font("Monospaced", trial.getPreferencesWindow().getFontStyle(), fontSize);
         //Compute the font metrics.
         fontMetrics = g2D.getFontMetrics(monoFont);
         maxFontAscent = fontMetrics.getMaxAscent();
@@ -155,8 +155,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             while (l3.hasNext()) {
                                 FunctionProfile callPath = (FunctionProfile) l3.next();
 
-                                d1 = d1 + callPath.getExclusive(trial.getSelectedMetricID());
-                                d2 = d2 + callPath.getInclusive(trial.getSelectedMetricID());
+                                d1 = d1 + callPath.getExclusive(trial.getDefaultMetricID());
+                                d2 = d2 + callPath.getInclusive(trial.getDefaultMetricID());
                                 d3 = d3 + callPath.getNumCalls();
                             }
                             callPathDrawObject = new CallPathDrawObject(parent.getFunction(), true, false,
@@ -183,8 +183,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             for (Iterator it3 = ppFunctionProfile.getFunctionProfile().getChildProfileCallPathIterator(
                                     child); it3.hasNext();) {
                                 FunctionProfile callPath = (FunctionProfile) it3.next();
-                                d1 = d1 + callPath.getExclusive(trial.getSelectedMetricID());
-                                d2 = d2 + callPath.getInclusive(trial.getSelectedMetricID());
+                                d1 = d1 + callPath.getExclusive(trial.getDefaultMetricID());
+                                d2 = d2 + callPath.getInclusive(trial.getDefaultMetricID());
                                 d3 = d3 + callPath.getNumCalls();
                             }
                             callPathDrawObject = new CallPathDrawObject(child.getFunction(), false, true, false);
@@ -441,7 +441,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             yCoord);
                     g2D.drawString(Double.toString(callPathDrawObject.getNumberOfCalls()), callsPos1, yCoord);
                     Function function = callPathDrawObject.getFunction();
-                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                    if (trial.getHighlightedFunction() == function) {
                         g2D.setColor(Color.red);
                         g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
                                 yCoord);
@@ -462,7 +462,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     g2D.drawString(callPathDrawObject.getNumberOfCallsFromCallPathObjects() + "/"
                             + callPathDrawObject.getNumberOfCalls(), callsPos1, yCoord);
                     Function function = callPathDrawObject.getFunction();
-                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                    if (trial.getHighlightedFunction() == function) {
                         g2D.setColor(Color.red);
                         g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
                                 yCoord);
@@ -729,7 +729,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                     g2D.drawString("--> ", base, yCoord);
 
                     Function function = callPathDrawObject.getFunction();
-                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                    if (trial.getHighlightedFunction() == function) {
                         g2D.setColor(Color.red);
                         g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]",
                                 startPosition, yCoord);
@@ -743,7 +743,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 else {
 
                     Function function = callPathDrawObject.getFunction();
-                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                    if (trial.getHighlightedFunction() == function) {
                         g2D.setColor(Color.red);
                         g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]",
                                 startPosition, yCoord);
@@ -776,9 +776,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 if (arg.equals("Show Function Details")) {
                     if (clickedOnObject instanceof CallPathDrawObject) {
                         callPathDrawObject = (CallPathDrawObject) clickedOnObject;
-                        trial.getColorChooser().setHighlightedFunction(callPathDrawObject.getFunction());
+                        trial.setHighlightedFunction(callPathDrawObject.getFunction());
                         FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial,
-                                callPathDrawObject.getFunction(), trial.getStaticMainWindow().getDataSorter());
+                                callPathDrawObject.getFunction());
                         trial.getSystemEvents().addObserver(functionDataWindow);
                         functionDataWindow.show();
                     }
@@ -791,9 +791,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             if ((callPathDrawObject.getFunction() == function)
                                     && (!callPathDrawObject.isParentChild())) {
                                 Dimension dimension = window.getViewportSize();
-                                window.setVerticalScrollBarPosition((i * (trial.getPreferences().getBarSpacing()))
+                                window.setVerticalScrollBarPosition((i * (trial.getPreferencesWindow().getBarSpacing()))
                                         - ((int) dimension.getHeight() / 2));
-                                trial.getColorChooser().setHighlightedFunction(function);
+                                trial.setHighlightedFunction(function);
                                 return;
                             }
                         }
@@ -834,7 +834,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             CallPathDrawObject callPathDrawObject = null;
 
             //Calculate which CallPathDrawObject was clicked on.
-            int index = (yCoord - 1) / (trial.getPreferences().getBarSpacing()) + 1;
+            int index = (yCoord - 1) / (trial.getPreferencesWindow().getBarSpacing()) + 1;
 
             if (index < drawObjects.size()) {
                 callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(index);
@@ -855,7 +855,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             }
                             drawObjects = null;
                         }
-                        trial.getColorChooser().toggleHighlightedFunction(callPathDrawObject.getFunction());
+                        trial.toggleHighlightedFunction(callPathDrawObject.getFunction());
                     }
                 }
             }

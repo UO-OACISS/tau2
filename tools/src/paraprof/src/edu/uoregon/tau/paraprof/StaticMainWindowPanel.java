@@ -79,11 +79,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
         functionHistogramItem.addActionListener(this);
         popup3.add(functionHistogramItem);
 
-        jMenuItem = new JMenuItem("Change Function Color");
+        jMenuItem = new JMenuItem("Assign Function Color");
         jMenuItem.addActionListener(this);
         popup3.add(jMenuItem);
 
-        jMenuItem = new JMenuItem("Reset to Generic Color");
+        jMenuItem = new JMenuItem("Reset to Default Color");
         jMenuItem.addActionListener(this);
         popup3.add(jMenuItem);
 
@@ -100,9 +100,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
             int index = 0;
 
-            if (trial.getPreferences().getBarSpacing() != 0) {
+            if (trial.getPreferencesWindow().getBarSpacing() != 0) {
                 //Calculate which PPFunctionProfile was clicked on.
-                index = (yCoord) / (trial.getPreferences().getBarSpacing());
+                index = (yCoord) / (trial.getPreferencesWindow().getBarSpacing());
             }
 
             if (index == 0) { // mean
@@ -285,14 +285,14 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
         //To make sure the bar details are set, this
         //method must be called.
-        trial.getPreferences().setBarDetails(g2D);
+        trial.getPreferencesWindow().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        barSpacing = trial.getPreferences().getBarSpacing();
-        barHeight = trial.getPreferences().getBarHeight();
+        barSpacing = trial.getPreferencesWindow().getBarSpacing();
+        barHeight = trial.getPreferencesWindow().getBarHeight();
 
         //Create font.
-        Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+        Font font = new Font(trial.getPreferencesWindow().getParaProfFont(), trial.getPreferencesWindow().getFontStyle(),
                 barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
@@ -426,7 +426,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
             int barXCoord, int yCoord, int barHeight, boolean toScreen) {
 
         DssIterator l = null;
-        Group selectedGroup = trial.getColorChooser().getHighlightedGroup();
+        Group selectedGroup = trial.getHighlightedGroup();
         boolean highlighted = false;
 
         int barXEnd = (int) ((double) barXCoord + barLength);
@@ -481,12 +481,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     g2D.setColor(ppFunctionProfile.getColor());
                     g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
-                    if ((ppFunctionProfile.getFunction()) == (trial.getColorChooser().getHighlightedFunction())) {
+                    if ((ppFunctionProfile.getFunction()) == (trial.getHighlightedFunction())) {
                         highlighted = true;
                         g2D.setColor(trial.getColorChooser().getHighlightColor());
                         g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
                         g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-                    } else if ((ppFunctionProfile.isGroupMember(trial.getColorChooser().getHighlightedGroup()))) {
+                    } else if ((ppFunctionProfile.isGroupMember(trial.getHighlightedGroup()))) {
                         highlighted = true;
                         g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
                         g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
@@ -518,16 +518,14 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
                     //Now set the color values for drawing!
                     //Get the appropriate color.
-                    if ((ppFunctionProfile.getFunction()) == (trial.getColorChooser().getHighlightedFunction()))
+                    if ((ppFunctionProfile.getFunction()) == (trial.getHighlightedFunction()))
                         g2D.setColor(trial.getColorChooser().getHighlightColor());
-                    else if ((ppFunctionProfile.isGroupMember(trial.getColorChooser().getHighlightedGroup())))
+                    else if ((ppFunctionProfile.isGroupMember(trial.getHighlightedGroup())))
                         g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
                     else
                         g2D.setColor(ppFunctionProfile.getColor());
 
                     g2D.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-                    g2D.setColor(Color.black);
-                    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 
                     //Set the draw coords.
                     if (toScreen)
@@ -601,7 +599,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
             return drawStackedBar(g2D, fmFont, text, ppThread, barXCoord, yCoord, barHeight, toScreen);
 
         Iterator l = null;
-        Group selectedGroup = trial.getColorChooser().getHighlightedGroup();
+        Group selectedGroup = trial.getHighlightedGroup();
         boolean highlighted = false;
 
         int barXEnd = (int) ((double) barXCoord + barLength);
@@ -688,12 +686,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                         g2D.setColor(ppFunctionProfile.getColor());
                         g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
-                        if ((ppFunctionProfile.getFunction()) == (trial.getColorChooser().getHighlightedFunction())) {
+                        if ((ppFunctionProfile.getFunction()) == (trial.getHighlightedFunction())) {
                             highlighted = true;
                             g2D.setColor(trial.getColorChooser().getHighlightColor());
                             g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
                             g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-                        } else if ((ppFunctionProfile.isGroupMember(trial.getColorChooser().getHighlightedGroup()))) {
+                        } else if ((ppFunctionProfile.isGroupMember(trial.getHighlightedGroup()))) {
                             highlighted = true;
                             g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
                             g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
@@ -716,9 +714,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
                         //Now set the color values for drawing!
                         //Get the appropriate color.
-                        if ((ppFunctionProfile.getFunction()) == (trial.getColorChooser().getHighlightedFunction()))
+                        if ((ppFunctionProfile.getFunction()) == (trial.getHighlightedFunction()))
                             g2D.setColor(trial.getColorChooser().getHighlightColor());
-                        else if ((ppFunctionProfile.isGroupMember(trial.getColorChooser().getHighlightedGroup())))
+                        else if ((ppFunctionProfile.isGroupMember(trial.getHighlightedGroup())))
                             g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
                         else
                             g2D.setColor(ppFunctionProfile.getColor());
@@ -866,7 +864,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                         // and set this function as highlighted.
                         //trial.getColorChooser().setHighlightedFunction(sMWFunctionProfile.getFunction());
                         FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial,
-                                ppFunctionProfile.getFunction(), window.getDataSorter());
+                                ppFunctionProfile.getFunction());
                         trial.getSystemEvents().addObserver(functionDataWindow);
                         functionDataWindow.show();
                     }
@@ -875,29 +873,24 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
                         // Bring up a histogram window for this function
                         //trial.getColorChooser().setHighlightedFunction(sMWFunctionProfile.getFunction());
-                        HistogramWindow hw = new HistogramWindow(trial, window.getDataSorter(),
-                                ppFunctionProfile.getFunction());
+                        HistogramWindow hw = new HistogramWindow(trial, ppFunctionProfile.getFunction());
                         trial.getSystemEvents().addObserver(hw);
                         hw.show();
                     }
-                } else if (arg.equals("Change Function Color")) {
+                } else if (arg.equals("Assign Function Color")) {
                     //Get the clicked on object.
                     if (clickedOnObject instanceof PPFunctionProfile) {
-                        Function f = ((PPFunctionProfile) clickedOnObject).getFunction();
-                        Color color = f.getColor();
-                        color = JColorChooser.showDialog(this, "Please select a new color", color);
-                        if (color != null) {
-                            f.setSpecificColor(color);
-                            f.setColorFlag(true);
-                            trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-                        }
+                        ParaProf.colorMap.assignColor(this, ((PPFunctionProfile) clickedOnObject).getFunction());
                     }
-                } else if (arg.equals("Reset to Generic Color")) {
+                } else if (arg.equals("Reset to Default Color")) {
                     //Get the clicked on object.
                     if (clickedOnObject instanceof PPFunctionProfile) {
-                        Function f = ((PPFunctionProfile) clickedOnObject).getFunction();
-                        f.setColorFlag(false);
-                        trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                        ParaProf.colorMap.removeColor(((PPFunctionProfile) clickedOnObject).getFunction());
+                        
+                        ParaProf.colorMap.reassignColors();
+//                        Function f = ((PPFunctionProfile) clickedOnObject).getFunction();
+//                        f.setColorFlag(false);
+//                        trial.getSystemEvents().updateRegisteredObjects("colorEvent");
                     }
                 }
             }
@@ -918,11 +911,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
             PPThread ppThread = null;
 
             // figure out which row was hit
-            int index = (yCoord) / (trial.getPreferences().getBarSpacing());
+            int index = (yCoord) / (trial.getPreferencesWindow().getBarSpacing());
 
             if (index >= list.size()) {
                 // un-highlight
-                trial.getColorChooser().setHighlightedFunction(null);
+                trial.setHighlightedFunction(null);
                 return;
             }
 
@@ -955,7 +948,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
                 if (xCoord < barXCoord) { // user clicked on N,C,T
                     ThreadDataWindow threadDataWindow = new ThreadDataWindow(trial, ppThread.getNodeID(),
-                            ppThread.getContextID(), ppThread.getThreadID(), window.getDataSorter());
+                            ppThread.getContextID(), ppThread.getThreadID());
                     trial.getSystemEvents().addObserver(threadDataWindow);
                     threadDataWindow.show();
                 } else {
@@ -964,17 +957,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     while (l.hasNext()) {
                         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l.next();
                         if (xCoord <= ppFunctionProfile.getXEnd() && xCoord >= ppFunctionProfile.getXBeg()) {
-                            trial.getColorChooser().setHighlightedFunction(ppFunctionProfile.getFunction());
+                            trial.setHighlightedFunction(ppFunctionProfile.getFunction());
                             //Now display the FunctionDataWindow for this
                             // function.
                             FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial,
-                                    ppFunctionProfile.getFunction(), window.getDataSorter());
+                                    ppFunctionProfile.getFunction());
                             trial.getSystemEvents().addObserver(functionDataWindow);
                             functionDataWindow.show();
                             return;
                         }
                     }
-                    trial.getColorChooser().setHighlightedFunction(null);
+                    trial.setHighlightedFunction(null);
                 }
             }
         } catch (Exception e) {

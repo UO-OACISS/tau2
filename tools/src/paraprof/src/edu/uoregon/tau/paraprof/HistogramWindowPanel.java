@@ -17,9 +17,9 @@ import java.text.*;
  * HistogramWindowPanel
  * This is the panel for the HistogramWindow.
  *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.9 2005/01/31 23:11:08 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.10 2005/03/08 01:11:18 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		HistogramWindow
  */
 public class HistogramWindowPanel extends JPanel implements Printable, ParaProfImageInterface {
@@ -117,7 +117,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
             ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
 
                 numThreads++;
-                double tmpValue = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), false);
+                double tmpValue = ppFunctionProfile.getValue(); 
                 if (start) {
                     minValue = tmpValue;
                     start = false;
@@ -142,7 +142,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
         // fill the bins
         for (Enumeration e1 = data.elements(); e1.hasMoreElements();) {
             ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
-                double tmpDataValue = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), false);
+                double tmpDataValue = ppFunctionProfile.getValue();
                 for (int j = 0; j < numBins; j++) {
                     if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
                         bins[j]++;
@@ -164,8 +164,8 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
 
         processData();
 
-        Font font = new Font(ppTrial.getPreferences().getParaProfFont(),
-                ppTrial.getPreferences().getFontStyle(), ppTrial.getPreferences().getFontSize());
+        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
+                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getFontSize());
         g2D.setFont(font);
         FontMetrics fontMetrics = g2D.getFontMetrics(font);
 
@@ -188,13 +188,13 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
                 float y = insets.right;
                 while (lbm.getPosition() < aci.getEndIndex()) {
                     TextLayout textLayout = lbm.nextLayout(wrappingWidth);
-                    yOffset += ppTrial.getPreferences().getBarSpacing();
+                    yOffset += ppTrial.getPreferencesWindow().getBarSpacing();
                     textLayout.draw(g2D, x, yOffset);
                     x = insets.left;
                 }
             }
             lastHeaderEndPosition = yOffset;
-            yOffset = yOffset + ppTrial.getPreferences().getBarSpacing();
+            yOffset = yOffset + ppTrial.getPreferencesWindow().getBarSpacing();
         }
 
         int maxFontAscent = fontMetrics.getMaxAscent();

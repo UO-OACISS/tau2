@@ -11,9 +11,9 @@ import edu.uoregon.tau.dms.dss.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.15 2005/01/19 02:33:25 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.16 2005/03/08 01:11:17 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -329,7 +329,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 if (arg.equals("Print")) {
                     ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
-                    trial.getPreferences().showPreferencesWindow();
+                    trial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();
                     imageOutput.saveImage((ParaProfImageInterface) panel);
@@ -520,9 +520,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         //The name selection behaves slightly differently. Thus the check for it.
         if (name) {
             if (windowType == 0)
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, order);
+                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
             else if (windowType == 1)
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, order);
+                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
             else {
                 list = new Vector();
                 for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();)
@@ -530,9 +530,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             }
         } else {
             if (windowType == 0)
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, 18 + valueType + order);
+                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
             else if (windowType == 1)
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, valueType + order);
+                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
             else {
                 list = new Vector();
                 for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();)
@@ -605,7 +605,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
-            Preferences p = trial.getPreferences();
+            PreferencesWindow p = trial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
             sp.setColumnHeaderView(jTextArea);
@@ -614,7 +614,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public String getHeaderString() {
-        return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Sorted By: "
+        return "Metric Name: " + (trial.getMetricName(trial.getDefaultMetricID())) + "\n" + "Sorted By: "
                 + UtilFncs.getValueTypeString(valueType) + "\n" + "Units: "
                 + UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric()) + "\n";
     }

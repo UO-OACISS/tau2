@@ -9,7 +9,7 @@ package edu.uoregon.tau.paraprof;
 
 import edu.uoregon.tau.dms.dss.DatabaseException;
 
-public interface ParaProfObserver{
+public interface ParaProfObserver {
 
     void update() throws DatabaseException;
     void update(Object obj) throws DatabaseException;

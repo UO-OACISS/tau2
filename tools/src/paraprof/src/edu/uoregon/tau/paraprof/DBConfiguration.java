@@ -18,13 +18,13 @@ public class DBConfiguration extends JFrame implements ActionListener {
     public DBConfiguration(ParaProfManagerWindow paraProfManager) {
         this.paraProfManager = paraProfManager;
 
-        String password = ParaProf.savedPreferences.getDatabasePassword();
+        String password = ParaProf.preferences.getDatabasePassword();
         if (password == null)
             passwordField = new JPasswordField(password, 20);
         else
             passwordField = new JPasswordField(20);
 
-        String configFile = ParaProf.savedPreferences.getDatabaseConfigurationFile();
+        String configFile = ParaProf.preferences.getDatabaseConfigurationFile();
         if (configFile == null) {
             if (ParaProf.paraProfHomeDirectory.exists())
                 configFileField = new JTextField(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg", 30);
@@ -144,10 +144,10 @@ public class DBConfiguration extends JFrame implements ActionListener {
             } else if (arg.equals("Ok")) {
                 String password = (new String(passwordField.getPassword())).trim();
                 if (password.equals(""))
-                    ParaProf.savedPreferences.setDatabasePassword(null);
+                    ParaProf.preferences.setDatabasePassword(null);
                 else
-                    ParaProf.savedPreferences.setDatabasePassword(password);
-                ParaProf.savedPreferences.setDatabaseConfigurationFile(configFileField.getText().trim());
+                    ParaProf.preferences.setDatabasePassword(password);
+                ParaProf.preferences.setDatabaseConfigurationFile(configFileField.getText().trim());
                 closeThisWindow();
             }
         } catch (Exception e) {

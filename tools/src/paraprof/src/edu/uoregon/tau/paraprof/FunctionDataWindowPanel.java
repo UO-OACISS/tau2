@@ -9,14 +9,15 @@ import java.awt.geom.*;
 import java.text.*;
 import java.awt.font.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.enums.*;
 
 /**
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.11 2005/01/31 23:11:08 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.12 2005/03/08 01:11:18 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -100,8 +101,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         }
     }
 
-  
-
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
@@ -112,26 +111,24 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
 
         //To make sure the bar details are set, this
         //method must be called.
-        ppTrial.getPreferences().setBarDetails(g2D);
+        ppTrial.getPreferencesWindow().setBarDetails(g2D);
 
         //Now safe to grab spacing and bar heights.
-        barSpacing = ppTrial.getPreferences().getBarSpacing();
-        barHeight = ppTrial.getPreferences().getBarHeight();
+        barSpacing = ppTrial.getPreferencesWindow().getBarSpacing();
+        barHeight = ppTrial.getPreferencesWindow().getBarHeight();
 
         //Obtain the font and its metrics.
-        Font font = new Font(ppTrial.getPreferences().getParaProfFont(), ppTrial.getPreferences().getFontStyle(),
-                barHeight);
+        Font font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
+                ppTrial.getPreferencesWindow().getFontStyle(), barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
         //Get the max value for this function
-        
-        
-//        double maxValue = ParaProfUtils.getMaxValue(function, window.getValueType(), window.isPercent(), ppTrial);
+
+        //        double maxValue = ParaProfUtils.getMaxValue(function, window.getValueType(), window.isPercent(), ppTrial);
         double maxValue = window.getMaxValue();
-        
-        
-        
+
+
         // too bad these next few lines are bullshit 
         // (you can't determine the max width by looking at the max value)  1.0E99 > 43.34534, but is thinner
         if (window.isPercent()) {
@@ -188,7 +185,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         }
 
         //Check for group membership.
-        boolean groupMember = function.isGroupMember(ppTrial.getColorChooser().getHighlightedGroup());
+        boolean groupMember = function.isGroupMember(ppTrial.getHighlightedGroup());
 
         //Draw the header if required.
         if (drawHeader) {
@@ -219,7 +216,9 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         // Iterate through and draw each thread's values
         for (int i = startElement; i <= endElement; i++) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
-            double value = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), window.isPercent());
+            //double value = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), window.isPercent());
+
+            double value = ppFunctionProfile.getValue();
 
             yCoord = yCoord + (barSpacing);
 
@@ -230,7 +229,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                 barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + ","
                         + (ppFunctionProfile.getContextID()) + "," + (ppFunctionProfile.getThreadID());
             }
-            
+
             drawBar(g2D, fmFont, value, maxValue, barString, barXCoord, yCoord, barHeight, groupMember);
         }
     }
@@ -251,7 +250,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             g2D.setColor(function.getColor());
             g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
-            if (function == (ppTrial.getColorChooser().getHighlightedFunction())) {
+            if (function == (ppTrial.getHighlightedFunction())) {
                 g2D.setColor(ppTrial.getColorChooser().getHighlightColor());
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
                 g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
@@ -264,9 +263,9 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
             }
         } else {
-            if (function == (ppTrial.getColorChooser().getHighlightedFunction()))
+            if (function == (ppTrial.getHighlightedFunction()))
                 g2D.setColor(ppTrial.getColorChooser().getHighlightColor());
-            else if ((function.isGroupMember(ppTrial.getColorChooser().getHighlightedGroup())))
+            else if ((function.isGroupMember(ppTrial.getHighlightedGroup())))
                 g2D.setColor(ppTrial.getColorChooser().getGroupHighlightColor());
             else {
                 g2D.setColor(function.getColor());
@@ -278,7 +277,9 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         g2D.setColor(Color.black);
         //Do not want to put a percent sign after the bar if we are not
         // exclusive or inclusive.
-        if ((window.isPercent()) && ((window.getValueType()) <= 4)) {
+
+        if (window.getDataSorter().getValueType() == ValueType.EXCLUSIVE_PERCENT
+                || window.getDataSorter().getValueType() == ValueType.INCLUSIVE_PERCENT) {
 
             //s = (UtilFncs.adjustDoublePresision(value, 4)) + "%";
             s = UtilFncs.getOutputString(0, value, 6) + "%";
@@ -395,7 +396,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             PPFunctionProfile ppFunctionProfile = null;
 
             //Calculate which PPFunctionProfile was clicked on.
-            int index = (yCoord) / (ppTrial.getPreferences().getBarSpacing());
+            int index = (yCoord) / (ppTrial.getPreferencesWindow().getBarSpacing());
 
             if (list != null && index < list.size()) {
                 ppFunctionProfile = (PPFunctionProfile) list.elementAt(index);
@@ -412,11 +413,11 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                     if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
                         ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial,
                                 ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), window.getDataSorter());
+                                ppFunctionProfile.getThreadID());
                         ppTrial.getSystemEvents().addObserver(threadDataWindow);
                         threadDataWindow.show();
                     } else {
-                        ppTrial.getColorChooser().toggleHighlightedFunction(function);
+                        ppTrial.toggleHighlightedFunction(function);
                     }
                 }
             }
@@ -443,13 +444,13 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             d = this.getSize();
         else
             d = window.getSize();
-        
+
         if (header) {
             d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);
         } else {
             d.setSize(d.getWidth(), d.getHeight());
         }
-        
+
         return d;
     }
 
@@ -484,8 +485,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
     public Dimension getPreferredSize() {
         return new Dimension(xPanelSize, yPanelSize);
     }
-
-    
 
     //Instance data.
     private ParaProfTrial ppTrial = null;

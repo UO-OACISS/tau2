@@ -15,8 +15,7 @@ import javax.swing.event.*;
 
 public class PrefSpacingPanel extends JPanel implements ChangeListener {
 
-    public PrefSpacingPanel(ParaProfTrial trial) {
-        this.trial = trial;
+    public PrefSpacingPanel() {
         setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         setPreferredSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         //Set the default tool tip for this panel.
@@ -27,21 +26,22 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        int tmpXPanelSize = 0;
+        int tmpYPanelSize = 0;
         Graphics2D g2D = (Graphics2D) g;
 
-        //To make sure the bar details are set, this
-        //method must be called.
-        trial.getPreferences().setBarDetails(g2D);
+        //To make sure the bar details are set, this method must be called.
+        ParaProf.preferencesWindow.setBarDetails(g2D);
 
         //Set local spacing and bar heights.
-        barSpacing = trial.getPreferences().getBarSpacing();
-        barHeight = trial.getPreferences().getBarHeight();
+        barSpacing = ParaProf.preferencesWindow.getBarSpacing();
+        barHeight = ParaProf.preferencesWindow.getBarHeight();
 
         //Set up the yCoord.
         yCoord = 25 + barHeight;
 
         //Create font.
-        Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+        Font font = new Font(ParaProf.preferencesWindow.getParaProfFont(), ParaProf.preferencesWindow.getFontStyle(),
                 barHeight);
         g2D.setFont(font);
         FontMetrics fmFont = g2D.getFontMetrics(font);
@@ -67,9 +67,10 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
 
             //After the above check, do the usual drawing stuff.
             for (int j = 0; j < 3; j++) {
-                tmpColor = trial.getColorChooser().getColor(j);
+                tmpColor = ParaProf.colorChooser.getColor(j);
                 g2D.setColor(tmpColor);
                 g2D.fillRect(barXCoord, (yCoord - barHeight), 40, barHeight);
+                tmpXPanelSize = Math.max(tmpXPanelSize, barXCoord + 40);
                 barXCoord = barXCoord + 30;
             }
 
@@ -77,6 +78,15 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
             g2D.setColor(Color.black);
             yCoord = yCoord + (barSpacing);
         }
+        
+        tmpYPanelSize = yCoord - barSpacing;
+        
+        if (xPanelSize != tmpXPanelSize || yPanelSize != tmpYPanelSize) {
+            xPanelSize = tmpXPanelSize;
+            yPanelSize = tmpYPanelSize;
+            this.setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+        }
+
     }
 
     public Dimension getPreferredSize() {
@@ -84,13 +94,12 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener {
     }
 
     public void stateChanged(ChangeEvent event) {
-        trial.getPreferences().updateFontSize();
+        ParaProf.preferencesWindow.updateFontSize();
         this.repaint();
     }
     //Instance data.
-    private ParaProfTrial trial = null;
 
-    int xPanelSize = 600;
+    int xPanelSize = 200;
     int yPanelSize = 200;
 
     int barXStart = -1;

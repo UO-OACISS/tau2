@@ -106,8 +106,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         return clrChooser;
     }
 
-    public Preferences getPreferences() {
-        return preferences;
+    public PreferencesWindow getPreferencesWindow() {
+        return preferencesWindow;
     }
 
     //Used in many ParaProf windows for the title of the window.
@@ -190,16 +190,16 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //####################################
     //Interface for ParaProfMetrics.
     //####################################
-    public void setSelectedMetricID(int selectedMetricID) {
+    public void setDefaultMetricID(int selectedMetricID) {
         this.selectedMetricID = selectedMetricID;
     }
 
-    public int getSelectedMetricID() {
+    public int getDefaultMetricID() {
         return selectedMetricID;
     }
 
     public boolean isTimeMetric() {
-        String metricName = this.getMetricName(this.getSelectedMetricID());
+        String metricName = this.getMetricName(this.getDefaultMetricID());
         metricName = metricName.toUpperCase();
         if (metricName.indexOf("TIME") == -1)
             return false;
@@ -213,7 +213,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         //String metricName = this.getMetricName(this.getSelectedMetricID());
         //if (metricName.indexOf("*") != -1 || metricName.indexOf("/") != -1)
         //    return true;
-        return this.getMetric(this.getSelectedMetricID()).getDerivedMetric();
+        return this.getMetric(this.getDefaultMetricID()).getDerivedMetric();
     }
 
     //Override this function.
@@ -417,7 +417,72 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         return debug;
     }
 
+    
+    
+    
+    
+    public void setHighlightedFunction(Function func) {
+        this.highlightedFunction = func;
+        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+    }
+
+    public Function getHighlightedFunction() {
+        return this.highlightedFunction;
+    }
+
+    public void toggleHighlightedFunction(Function function) {
+        if (highlightedFunction == function)
+            highlightedFunction = null;
+        else
+            highlightedFunction = function;
+        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+    }
+
+    
+    public void setHighlightedGroup(Group group) {
+        this.highlightedGroup = group;
+        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+    }
+
+    public Group getHighlightedGroup() {
+        return highlightedGroup;
+    }
+
+    public void toggleHighlightedGroup(Group group) {
+        if (highlightedGroup == group)
+            highlightedGroup = null;
+        else
+            highlightedGroup = group;
+        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+    }
+
+    
 //    private boolean uploading;
+    
+    
+    public void setHighlightedUserEvent(UserEvent userEvent) {
+        this.highlightedUserEvent = userEvent;
+        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+    }
+
+    public UserEvent getHighlightedUserEvent() {
+        return highlightedUserEvent;
+    }
+
+    public void toggleHighlightedUserEvent(UserEvent userEvent) {
+        if (highlightedUserEvent == userEvent)
+            highlightedUserEvent = null;
+        else
+            highlightedUserEvent = userEvent;
+        this.getSystemEvents().updateRegisteredObjects("colorEvent");
+    }
+
+    
+    
+    private Function highlightedFunction = null;
+    private Group highlightedGroup = null;
+    private UserEvent highlightedUserEvent = null;
+
     
     private DatabaseAPI dbAPI;
     private boolean defaultTrial = false;
@@ -430,8 +495,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
     private SystemEvents systemEvents = new SystemEvents();
     private StaticMainWindow sMW = null;
-    private ColorChooser clrChooser = new ColorChooser(this, null);
-    private Preferences preferences = new Preferences(this, ParaProf.savedPreferences);
+    private ColorChooser clrChooser = ParaProf.colorChooser;
+    private PreferencesWindow preferencesWindow = ParaProf.preferencesWindow;
 
     private String path = null;
     private String pathReverse = null;

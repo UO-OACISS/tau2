@@ -13,12 +13,13 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.enums.*;
 
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer {
 
     public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, DataSorter dataSorter,
             boolean userEventWindow) {
-        this.trial = trial;
+        this.ppTrial = trial;
         this.dataSorter = dataSorter;
         this.nodeID = nodeID;
         this.contextID = contextID;
@@ -37,8 +38,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         if (nodeID == -1)
             this.setTitle("Mean Data Statistics: " + trial.getTrialIdentifier(true));
         else {
-            if (userEventWindow)
-                valueType = 12;
             this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
                     + trial.getTrialIdentifier(true));
         }
@@ -54,9 +53,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         if (ParaProf.helpWindow.isVisible()) {
             this.help(false);
         }
-
-        //Sort the local data.
-        sortLocalData();
 
         //####################################
         //Code to generate the menus.
@@ -156,7 +152,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         group = new ButtonGroup();
 
         if (userEventWindow) {
-            button = new JRadioButtonMenuItem("Number of Userevents", true);
+            button = new JRadioButtonMenuItem("Number of Samples", true);
             button.addActionListener(this);
             group.add(button);
             subMenu.add(button);
@@ -175,6 +171,12 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             button.addActionListener(this);
             group.add(button);
             subMenu.add(button);
+
+            button = new JRadioButtonMenuItem("Standard Deviation", false);
+            button.addActionListener(this);
+            group.add(button);
+            subMenu.add(button);
+
         } else {
             button = new JRadioButtonMenuItem("Exclusive", true);
             button.addActionListener(this);
@@ -196,7 +198,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             group.add(button);
             subMenu.add(button);
 
-            button = new JRadioButtonMenuItem("Per Call Value", false);
+            button = new JRadioButtonMenuItem("Inclusive Per Call", false);
             button.addActionListener(this);
             group.add(button);
         }
@@ -295,7 +297,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //######
         panel = new StatWindowPanel(trial, nodeID, contextID, threadID, this, userEventWindow);
         jScrollpane = new JScrollPane(panel);
-        
+
         JScrollBar jScrollBar = jScrollpane.getVerticalScrollBar();
         jScrollBar.setUnitIncrement(35);
 
@@ -303,6 +305,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //######
         //End - Panel and ScrollPane definition.
         //######
+
+        //Sort the local data.
+        sortLocalData();
 
         //Now add the components to the main screen.
         gbc.fill = GridBagConstraints.BOTH;
@@ -325,7 +330,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 if (arg.equals("Print")) {
                     ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
-                    trial.getPreferences().showPreferencesWindow();
+                    ppTrial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();
                     imageOutput.saveImage((ParaProfImageInterface) panel);
@@ -336,61 +341,63 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     dispose();
                     ParaProf.exitParaProf(0);
                 } else if (arg.equals("Sort By Name")) {
-                    if (sortByName.isSelected())
-                        name = true;
-                    else
-                        name = false;
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Descending Order")) {
-                    if (descendingOrder.isSelected())
-                        order = 0;
-                    else
-                        order = 1;
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Exclusive")) {
-                    valueType = 2;
+                    dataSorter.setValueType(ValueType.EXCLUSIVE);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Inclusive")) {
-                    valueType = 4;
+                    dataSorter.setValueType(ValueType.INCLUSIVE);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Number of Calls")) {
-                    valueType = 6;
+                    dataSorter.setValueType(ValueType.NUMCALLS);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Number of Subroutines")) {
-                    valueType = 8;
+                    dataSorter.setValueType(ValueType.NUMSUBR);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
-                } else if (arg.equals("Per Call Value")) {
-                    valueType = 10;
+                } else if (arg.equals("Inclusive Per Call")) {
+                    dataSorter.setValueType(ValueType.INCLUSIVE_PER_CALL);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
-                } else if (arg.equals("Number of Userevents")) {
-                    valueType = 12;
+                } else if (arg.equals("Exclusive Per Call")) {
+                    dataSorter.setValueType(ValueType.EXCLUSIVE_PER_CALL);
+                    this.setHeader();
+                    sortLocalData();
+                    panel.repaint();
+                } else if (arg.equals("Number of Samples")) {
+                    dataSorter.setUserEventValueType(UserEventValueType.NUMSAMPLES);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Min. Value")) {
-                    valueType = 14;
+                    dataSorter.setUserEventValueType(UserEventValueType.MIN);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Max. Value")) {
-                    valueType = 16;
+                    dataSorter.setUserEventValueType(UserEventValueType.MAX);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Mean Value")) {
-                    valueType = 18;
+                    dataSorter.setUserEventValueType(UserEventValueType.MEAN);
+                    this.setHeader();
+                    sortLocalData();
+                    panel.repaint();
+                } else if (arg.equals("Standard Deviation")) {
+                    dataSorter.setUserEventValueType(UserEventValueType.STDDEV);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
@@ -413,27 +420,27 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 } else if (arg.equals("Show Path Title in Reverse")) {
                     if (nodeID == -1)
                         this.setTitle("Mean Data Window Total: "
-                                + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+                                + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
                     else
                         this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                                + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+                                + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
                 } else if (arg.equals("Show Meta Data in Panel")) {
-                    this.setHeader(); 
+                    this.setHeader();
                 } else if (arg.equals("Show ParaProf Manager")) {
                     (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0)).show();
+                    (new LedgerWindow(ppTrial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1)).show();
+                    (new LedgerWindow(ppTrial, 1)).show();
                 } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2)).show();
+                    (new LedgerWindow(ppTrial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(),
-                            2);
-                    trial.getSystemEvents().addObserver(tmpRef);
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1,
+                            this.getDataSorter(), 2);
+                    ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
-                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+                    ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                 } else if (arg.equals("About ParaProf")) {
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
                 } else if (arg.equals("Show Help Window")) {
@@ -447,17 +454,17 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     public void menuSelected(MenuEvent evt) {
         try {
-            if (trial.isTimeMetric() && !userEventWindow)
+            if (ppTrial.isTimeMetric() && !userEventWindow)
                 unitsSubMenu.setEnabled(true);
             else
                 unitsSubMenu.setEnabled(false);
 
-            if (trial.groupNamesPresent())
+            if (ppTrial.groupNamesPresent())
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
 
-            if (trial.userEventsPresent())
+            if (ppTrial.userEventsPresent())
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
@@ -483,8 +490,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             //Just need to call a repaint on the ThreadDataWindowPanel.
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
-            if (!(trial.isTimeMetric()))
+            if (!(ppTrial.isTimeMetric()))
                 units = 0;
+            dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
             sortLocalData();
             this.setHeader();
             panel.repaint();
@@ -525,28 +533,24 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     //Updates this window's data copy.
     private void sortLocalData() {
-        if (name) { // if sort by name
-            if (userEventWindow) {
-                list = dataSorter.getUserEventProfiles(nodeID, contextID, threadID, order);
-            } else {
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, order);
-            }
-        } else {
 
-            if (userEventWindow) {
-                list = dataSorter.getUserEventProfiles(nodeID, contextID, threadID, valueType + order);
-            } else {
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, valueType + order);
-            }
+        if (sortByName.isSelected()) {
+            dataSorter.setSortType(SortType.NAME);
+        } else {
+            dataSorter.setSortType(SortType.VALUE);
+        }
+
+        dataSorter.setDescendingOrder(descendingOrder.isSelected());
+
+        if (userEventWindow) {
+            list = dataSorter.getUserEventProfiles(nodeID, contextID, threadID);
+        } else {
+            list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
         }
     }
 
     public Vector getData() {
         return list;
-    }
-
-    public int getValueType() {
-        return valueType;
     }
 
     public int units() {
@@ -579,7 +583,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
-            Preferences p = trial.getPreferences();
+            PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
             jScrollpane.setColumnHeaderView(jTextArea);
@@ -589,11 +593,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     public String getHeaderString() {
         if (userEventWindow)
-            return "Sorted By: " + UtilFncs.getValueTypeString(valueType) + "\n";
+            return "Sorted By: " + dataSorter.getUserEventValueType() + "\n";
         else
-            return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Sorted By: "
-                    + UtilFncs.getValueTypeString(valueType) + "\n" + "Units: "
-                    + UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric()) + "\n";
+            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n"
+                    + "Sorted By: " + dataSorter.getValueType() + "\n" + "Units: "
+                    + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
     }
 
     //######
@@ -608,7 +612,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     void closeThisWindow() {
         try {
             setVisible(false);
-            trial.getSystemEvents().deleteObserver(this);
+            ppTrial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
             // do nothing
@@ -617,7 +621,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     //Instance data.
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter;
     private int nodeID = -1;
     private int contextID = -1;
@@ -638,10 +642,12 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     Vector list = null;
 
-    private boolean name = false; //true: sort by name,false: sort by value.
-    private int order = 0; //0: descending order,1: ascending order.
-    private int valueType = 2; //2-exclusive,4-inclusive,6-number of
+    //    private int order = 0; //0: descending order,1: ascending order.
+    //private int valueType = 2; //2-exclusive,4-inclusive,6-number of
     // calls,8-number of subroutines,10-per call
     // value.
+
+    //private ValueType valueType;
+    //private UserEventValueType userEventValueType;
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
 }

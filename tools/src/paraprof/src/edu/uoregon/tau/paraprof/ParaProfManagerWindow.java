@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.10 2005/01/21 19:21:09 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.11 2005/03/08 01:11:19 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -45,18 +45,27 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         int screenHeight = screenDimension.height;
         int screenWidth = screenDimension.width;
 
-        //Find the center position with respect to this window.
-        int xPosition = (screenWidth - windowWidth) / 2;
-        int yPosition = (screenHeight - windowHeight) / 2;
+        
+        Point savedPosition = ParaProf.preferences.getManagerWindowPosition();
 
-        //Offset a little so that we do not interfere too much with the
-        //main window which comes up in the centre of the screen.
-        if (xPosition > 50)
-            xPosition = xPosition - 50;
-        if (yPosition > 50)
-            yPosition = yPosition - 50;
+        if (savedPosition == null || (savedPosition.x + windowWidth) > screenWidth || (savedPosition.y + windowHeight > screenHeight)) {
 
-        this.setLocation(xPosition, yPosition);
+            //Find the center position with respect to this window.
+            int xPosition = (screenWidth - windowWidth) / 2;
+            int yPosition = (screenHeight - windowHeight) / 2;
+
+            //Offset a little so that we do not interfere too much with the
+            //main window which comes up in the center of the screen.
+            if (xPosition > 50)
+                xPosition = xPosition - 50;
+            if (yPosition > 50)
+                yPosition = yPosition - 50;
+
+            this.setLocation(xPosition, yPosition);
+        } else {
+            this.setLocation(savedPosition);
+        }
+        
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
         setTitle("ParaProf Manager");
 
@@ -182,6 +191,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         menuItem.addActionListener(this);
         fileMenu.add(menuItem);
 
+        menuItem = new JMenuItem("Preferences...");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
+
         menuItem = new JMenuItem("Database Configuration");
         menuItem.addActionListener(this);
         fileMenu.add(menuItem);
@@ -273,6 +286,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         if (experiment != null)
                             (new LoadTrialWindow(this, application, experiment)).show();
                     }
+                } else if (arg.equals("Preferences...")) {
+                    ParaProf.preferencesWindow.showPreferencesWindow();
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
                 } else if (arg.equals("Database Configuration")) {
@@ -362,10 +377,11 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                                 databaseAPI.deleteApplication(application.getID());
                                 databaseAPI.terminate();
                                 //Remove any loaded trials associated with this application.
-                                for (Enumeration e = loadedTrials.elements(); e.hasMoreElements();) {
+                                for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
                                     ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-                                    if (loadedTrial.getApplicationID() == application.getID() && loadedTrial.loading() == false)
-                                        loadedTrials.remove(loadedTrial);
+                                    if (loadedTrial.getApplicationID() == application.getID()
+                                            && loadedTrial.loading() == false)
+                                        loadedDBTrials.remove(loadedTrial);
                                 }
                                 treeModel.removeNodeFromParent(application.getDMTN());
                             }
@@ -383,11 +399,12 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                                 databaseAPI.deleteExperiment(experiment.getID());
                                 databaseAPI.terminate();
                                 //Remove any loaded trials associated with this application.
-                                for (Enumeration e = loadedTrials.elements(); e.hasMoreElements();) {
+                                for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
                                     ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
                                     if (loadedTrial.getApplicationID() == experiment.getApplicationID()
-                                            && loadedTrial.getExperimentID() == experiment.getID()&& loadedTrial.loading() == false)
-                                        loadedTrials.remove(loadedTrial);
+                                            && loadedTrial.getExperimentID() == experiment.getID()
+                                            && loadedTrial.loading() == false)
+                                        loadedDBTrials.remove(loadedTrial);
                                 }
                                 treeModel.removeNodeFromParent(experiment.getDMTN());
                             }
@@ -406,12 +423,13 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                                 databaseAPI.deleteTrial(trial.getID());
                                 databaseAPI.terminate();
                                 //Remove any loaded trials associated with this application.
-                                for (Enumeration e = loadedTrials.elements(); e.hasMoreElements();) {
+                                for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
                                     ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
                                     if (loadedTrial.getApplicationID() == trial.getApplicationID()
                                             && loadedTrial.getExperimentID() == trial.getID()
-                                            && loadedTrial.getID() == trial.getID()&& loadedTrial.loading() == false)
-                                        loadedTrials.remove(loadedTrial);
+                                            && loadedTrial.getID() == trial.getID()
+                                            && loadedTrial.loading() == false)
+                                        loadedDBTrials.remove(loadedTrial);
                                 }
                                 treeModel.removeNodeFromParent(trial.getDMTN());
                             }
@@ -732,7 +750,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
                     //Test to see if trial has already been loaded.
                     boolean loadedExists = false;
-                    for (Enumeration e = loadedTrials.elements(); e.hasMoreElements();) {
+                    for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
                         ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
                         //                        if (ppTrial == loadedTrial) {
                         //                            loadedExists = true;
@@ -748,11 +766,11 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     }
 
                     if (!loadedExists) {
-                        
+
                         if (ppTrial.loading()) {
                             return;
                         }
-                        
+
                         //Need to load the trial in from the db.
                         //System.out.println("Loading trial ...");
                         ppTrial.setLoading(true);
@@ -790,7 +808,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                             dataSourceThreadControl.initialize(dbDataSource);
 
                             //Add to the list of loaded trials.
-                            loadedTrials.add(ppTrial);
+                            loadedDBTrials.add(ppTrial);
 
                         }
                     }
@@ -876,8 +894,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     }
 
     public int[] getSelectedDBExperiment() {
-        if (ParaProf.savedPreferences.getDatabaseConfigurationFile() == null
-                || ParaProf.savedPreferences.getDatabasePassword() == null) {
+        if (ParaProf.preferences.getDatabaseConfigurationFile() == null
+                || ParaProf.preferences.getDatabasePassword() == null) {
             // Check to see if the user has set configuration information.
             JOptionPane.showMessageDialog(this,
                     "Please set the database configuration information (file menu).",
@@ -1059,7 +1077,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         ppTrial.setName(ppTrial.getPathReverse());
         ppTrial.setLoading(true);
         if (experiment.dBExperiment()) {
-            loadedTrials.add(ppTrial);
+            loadedDBTrials.add(ppTrial);
             ppTrial.setUpload(true); // This trial is not set to a db trial until after it has finished loading.
         } else {
             experiment.addTrial(ppTrial);
@@ -1068,14 +1086,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dataSource, ppTrial);
         lpw.show();
 
-        //                    dataSource.setDebug(UtilFncs.debug);
-        //            DataSourceThreadControl dataSourceThreadControl = new DataSourceThreadControl();
-        //            dataSourceThreadControl.setDebug(UtilFncs.debug);
-        //            dataSourceThreadControl.addObserver(trial);
-        //            dataSourceThreadControl.initialize(dataSource, true);
-
         if (experiment.dBExperiment()) // Check needs to occur on the experiment as trial 
-                                       // not yet a recognized db trial.
+            // not yet a recognized db trial.
             this.expandTrial(2, ppTrial.getApplicationID(), ppTrial.getExperimentID(), ppTrial.getID(),
                     application, experiment, ppTrial);
         else
@@ -1086,8 +1098,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private void showMetric(ParaProfMetric metric) {
         try {
             ParaProfTrial ppTrial = metric.getTrial();
-            if (ppTrial.getSelectedMetricID() != metric.getID()) {
-                ppTrial.setSelectedMetricID(metric.getID());
+            if (ppTrial.getDefaultMetricID() != metric.getID()) {
+                ppTrial.setDefaultMetricID(metric.getID());
                 ppTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
             }
             ppTrial.showMainWindow();
@@ -1111,6 +1123,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         null, trial);
             }
 
+            
+            loadedTrials.add(trial);
+            
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -1265,13 +1280,13 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
         try {
             //Check to see if the user has set configuration information.
-            if (ParaProf.savedPreferences.getDatabaseConfigurationFile() == null) {
+            if (ParaProf.preferences.getDatabaseConfigurationFile() == null) {
                 JOptionPane.showMessageDialog(this,
                         "Please set the database configuration information (file menu).",
                         "DB Configuration Error!", JOptionPane.ERROR_MESSAGE);
                 return null;
             } else {//Test to see if configurataion file exists.
-                File file = new File(ParaProf.savedPreferences.getDatabaseConfigurationFile());
+                File file = new File(ParaProf.preferences.getDatabaseConfigurationFile());
                 if (!file.exists()) {
                     JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
                             "DB Configuration Error!", JOptionPane.ERROR_MESSAGE);
@@ -1280,11 +1295,11 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             }
             //Basic checks done, try to access the db.
             DatabaseAPI databaseAPI = new DatabaseAPI();
-            if (ParaProf.savedPreferences.getDatabasePassword() == null)
-                databaseAPI.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), false);
+            if (ParaProf.preferences.getDatabasePassword() == null)
+                databaseAPI.initialize(ParaProf.preferences.getDatabaseConfigurationFile(), false);
             else
-                databaseAPI.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),
-                        ParaProf.savedPreferences.getDatabasePassword());
+                databaseAPI.initialize(ParaProf.preferences.getDatabaseConfigurationFile(),
+                        ParaProf.preferences.getDatabasePassword());
             return databaseAPI;
         } catch (Exception e) {
             //Try and determine what went wrong, and then popup the help window
@@ -1349,6 +1364,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     void closeThisWindow() {
         try {
+            ParaProf.preferences.setManagerWindowPosition(this.getLocation());
             setVisible(false);
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
@@ -1365,6 +1381,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         getContentPane().add(c, gbc);
     }
 
+    public Vector getLoadedTrials() {
+        return loadedTrials;
+    }
+    
     //Instance Data.
     private JTree tree = null;
     private DefaultTreeModel treeModel = null;
@@ -1382,6 +1402,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     private JScrollPane treeScrollPane;
 
+    private Vector loadedDBTrials = new Vector();
     private Vector loadedTrials = new Vector();
 
     //Popup menu stuff.

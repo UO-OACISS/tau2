@@ -39,6 +39,11 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         this.application = application;
         this.experiment = experiment;
 
+        if (lastDirectory == null) {
+            lastDirectory = System.getProperty("user.dir");
+            dirLocationField.setText(lastDirectory);
+        }
+        
         //Window Stuff.
         int windowWidth = 400;
         int windowHeight = 200;

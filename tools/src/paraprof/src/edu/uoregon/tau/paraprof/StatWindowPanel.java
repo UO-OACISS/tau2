@@ -135,10 +135,10 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         // have
         // to be done to calculate
         //spacing.
-        int fontSize = trial.getPreferences().getBarHeight();
-        spacing = trial.getPreferences().getBarSpacing();
+        int fontSize = trial.getPreferencesWindow().getBarHeight();
+        spacing = trial.getPreferencesWindow().getBarSpacing();
         //Create font.
-        monoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
+        monoFont = new Font("Monospaced", trial.getPreferencesWindow().getFontStyle(), fontSize);
         //Compute the font metrics.
         fmMonoFont = g2D.getFontMetrics(monoFont);
         maxFontAscent = fmMonoFont.getMaxAscent();
@@ -281,11 +281,11 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 
             int highLightColor = -1;
             if (userEventWindow) {
-                UserEvent userEvent = trial.getColorChooser().getHighlightedUserEvent();
+                UserEvent userEvent = trial.getHighlightedUserEvent();
                 if (userEvent != null)
                     highLightColor = userEvent.getID();
             } else {
-                Function function = trial.getColorChooser().getHighlightedFunction();
+                Function function = trial.getHighlightedFunction();
                 if (function != null)
                     highLightColor = function.getID();
             }
@@ -305,7 +305,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                 }
 
             } else if (!userEventWindow
-                    && (ppFunctionProfile.isGroupMember(trial.getColorChooser().getHighlightedGroup()))) {
+                    && (ppFunctionProfile.isGroupMember(trial.getHighlightedGroup()))) {
                 g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
                 (new TextLayout(tmpString, monoFont, frc)).draw(g2D, 20, yCoord);
                 //g2D.drawString(tmpString, 20, yCoord);
@@ -360,15 +360,14 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
                         FunctionDataWindow tmpRef = new FunctionDataWindow(trial,
-                                ppFunctionProfile.getFunction(), trial.getStaticMainWindow().getDataSorter());
+                                ppFunctionProfile.getFunction());
                         trial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
                     }
                 } else if (arg.equals("Show Function Histogram")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        HistogramWindow hw = new HistogramWindow(trial, window.getDataSorter(),
-                                ppFunctionProfile.getFunction());
+                        HistogramWindow hw = new HistogramWindow(trial, ppFunctionProfile.getFunction());
                         trial.getSystemEvents().addObserver(hw);
                         hw.show();
                     }
@@ -378,7 +377,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                     if (clickedOnObject instanceof PPUserEventProfile) {
                         ppUserEventProfile = (PPUserEventProfile) clickedOnObject;
                         //Bring up an expanded data window for this user event and highlight it
-                        trial.getColorChooser().setHighlightedUserEvent(ppUserEventProfile.getUserEvent());
+                        trial.setHighlightedUserEvent(ppUserEventProfile.getUserEvent());
                         UserEventWindow tmpRef = new UserEventWindow(trial, ppUserEventProfile.getUserEvent(),
                                 trial.getStaticMainWindow().getDataSorter());
                         trial.getSystemEvents().addObserver(tmpRef);
@@ -444,7 +443,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             int xCoord = evt.getX();
             int yCoord = evt.getY();
 
-            int fontSize = trial.getPreferences().getBarHeight();
+            int fontSize = trial.getPreferencesWindow().getBarHeight();
 
             //Get the number of times clicked.
             int clickCount = evt.getClickCount();
@@ -464,7 +463,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                             clickedOnObject = ppUserEventProfile;
                             popup.show(this, evt.getX(), evt.getY());
                         } else {
-                            trial.getColorChooser().toggleHighlightedUserEvent(
+                            trial.toggleHighlightedUserEvent(
                                     ppUserEventProfile.getUserEvent());
                         }
 
@@ -475,7 +474,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                             clickedOnObject = ppFunctionProfile;
                             popup.show(this, evt.getX(), evt.getY());
                         } else {
-                            trial.getColorChooser().toggleHighlightedFunction(ppFunctionProfile.getFunction());
+                            trial.toggleHighlightedFunction(ppFunctionProfile.getFunction());
                         }
 
                     }

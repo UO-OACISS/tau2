@@ -7,14 +7,16 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.enums.*;
+
 
 /**
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.8 2005/01/10 20:12:26 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.9 2005/03/08 01:11:18 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
@@ -111,12 +113,17 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         group.add(button);
         subMenu.add(button);
 
-        button = new JRadioButtonMenuItem("Number of Subroutines", false);
+        button = new JRadioButtonMenuItem("Number of Child Calls", false);
         button.addActionListener(this);
         group.add(button);
         subMenu.add(button);
 
-        button = new JRadioButtonMenuItem("Inclusive Per Call", false);
+        button = new JRadioButtonMenuItem("Inclusive per Call", false);
+        button.addActionListener(this);
+        group.add(button);
+        subMenu.add(button);
+
+        button = new JRadioButtonMenuItem("Exclusive per Call", false);
         button.addActionListener(this);
         group.add(button);
         subMenu.add(button);
@@ -177,9 +184,9 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         setJMenuBar(mainMenu);
     }
 
-    public HistogramWindow(ParaProfTrial ppTrial, DataSorter dataSorter, Function function) {
+    public HistogramWindow(ParaProfTrial ppTrial, Function function) {
         this.ppTrial = ppTrial;
-        this.dataSorter = dataSorter;
+        this.dataSorter = new DataSorter(ppTrial);
         this.function = function;
 
         setTitle("Histogram: " + ppTrial.getTrialIdentifier(true));
@@ -237,7 +244,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                 if (arg.equals("Print")) {
                     ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
-                    ppTrial.getPreferences().showPreferencesWindow();
+                    ppTrial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();
                     imageOutput.saveImage((ParaProfImageInterface) panel);
@@ -248,27 +255,32 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     dispose();
                     ParaProf.exitParaProf(0);
                 } else if (arg.equals("Exclusive")) {
-                    valueType = 2;
+                    dataSorter.setValueType(ValueType.EXCLUSIVE);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Inclusive")) {
-                    valueType = 4;
+                    dataSorter.setValueType(ValueType.INCLUSIVE);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Number of Calls")) {
-                    valueType = 6;
+                    dataSorter.setValueType(ValueType.NUMCALLS);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
-                } else if (arg.equals("Number of Subroutines")) {
-                    valueType = 8;
+                } else if (arg.equals("Number of Child Calls")) {
+                    dataSorter.setValueType(ValueType.NUMSUBR);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
-                } else if (arg.equals("Inclusive Per Call")) {
-                    valueType = 10;
+                } else if (arg.equals("Inclusive per Call")) {
+                    dataSorter.setValueType(ValueType.INCLUSIVE_PER_CALL);
+                    this.setHeader();
+                    sortLocalData();
+                    panel.repaint();
+                } else if (arg.equals("Exclusive per Call")) {
+                    dataSorter.setValueType(ValueType.EXCLUSIVE_PER_CALL);
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
@@ -408,7 +420,9 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         } else if (tmpString.equals("colorEvent")) {
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
+            dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
             sortLocalData();
+            this.setHeader();
             panel.repaint();
         } else if (tmpString.equals("subWindowCloseEvent")) {
             closeThisWindow();
@@ -428,7 +442,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     private void sortLocalData() {
-        data = dataSorter.getFunctionData(function, 0, false);
+        data = dataSorter.getFunctionData(function, false);
     }
 
     // This process is separated into two functions to provide the option of obtaining the current 
@@ -439,20 +453,20 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         jTextArea.setLineWrap(true);
         jTextArea.setWrapStyleWord(true);
         jTextArea.setEditable(false);
-        Preferences p = ppTrial.getPreferences();
+        PreferencesWindow p = ppTrial.getPreferencesWindow();
         jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
         jTextArea.append(this.getHeaderString());
         sp.setColumnHeaderView(jTextArea);
     }
 
     public String getHeaderString() {
-        if (valueType > 5)
-            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getSelectedMetricID())) + "\n" + "Name: "
-                    + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
+        if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
+            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
+                    + function.getName() + "\n" + "Value Type: " + dataSorter.getValueType()
                     + "\n";
         else
-            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getSelectedMetricID())) + "\n" + "Name: "
-                    + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
+            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
+                    + function.getName() + "\n" + "Value Type: " + dataSorter.getValueType()
                     + "\n" + "Units: "
                     + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
     }
@@ -484,16 +498,19 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         dispose();
     }
 
-    public int getValueType() {
-        return valueType;
-    }
 
     public int units() {
-        if (valueType > 5)
+
+        if (!dataSorter.isTimeMetric()) // we don't do units for non-time metrics
             return 0;
+
+        if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
+            return 0;
+
         return units;
     }
 
+    
     public void setNumBins(int numBins) {
         this.numBins =  numBins;
         panel.repaint();
@@ -518,7 +535,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     private Vector data = null;
 
-    private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
+    //private ValueType valueType = ValueType.EXCLUSIVE;
+    //private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
 
 

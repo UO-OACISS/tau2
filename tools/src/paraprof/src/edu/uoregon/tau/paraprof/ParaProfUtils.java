@@ -3,6 +3,10 @@ package edu.uoregon.tau.paraprof;
 import java.awt.print.*;
 import java.awt.*;
 import edu.uoregon.tau.dms.dss.*;
+import javax.swing.*;
+import javax.swing.event.*;
+import java.awt.event.*;
+
 
 public class ParaProfUtils {
 
@@ -11,6 +15,14 @@ public class ParaProfUtils {
         // This constructor will never be invoked
     }
 
+    public static void helperAddRadioMenuItem(String name, String command, boolean on, ButtonGroup group, JMenu menu, ActionListener act) {
+        JRadioButtonMenuItem item = new JRadioButtonMenuItem(name, on);
+        item.addActionListener(act);
+        item.setActionCommand(command);
+        group.add(item);
+        menu.add(item);
+    }
+    
     public static void print(Printable printable) {
         PrinterJob job = PrinterJob.getPrinterJob();
         PageFormat defaultFormat = job.defaultPage();

@@ -12,16 +12,18 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.28 2005/01/21 19:21:09 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.29 2005/03/08 01:11:19 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  */
 public class ParaProf implements ActionListener {
 
     private final static String VERSION = "2.1 (with TAU 2.14.1) (01/21/2005)";
 
+    
+    static ColorMap colorMap;
     
     //System wide stuff.
     static String homeDirectory = null;
@@ -30,11 +32,14 @@ public class ParaProf implements ActionListener {
     // currently loaded profile data.
     static int defaultNumberPrecision = 6;
     static boolean dbSupport = false;
-    static ParaProfLisp paraProfLisp = null;
-    static SavedPreferences savedPreferences = null;
+    //static ParaProfLisp paraProfLisp = null;
+    static Preferences preferences = null;
+    static ColorChooser colorChooser;
+
     static ParaProfManagerWindow paraProfManager = null;
     static ApplicationManager applicationManager = null;
     static HelpWindow helpWindow = null;
+    static PreferencesWindow preferencesWindow;
     static Runtime runtime = null;
     static private int numWindowsOpen = 0;
     //End - System wide stuff.
@@ -108,6 +113,9 @@ public class ParaProf implements ActionListener {
         paraProfManager.addTrial(app, experiment, sourceFiles, fileType, fixNames);
     }
  
+    
+    
+    
 
     public void startSystem() {
         try {
@@ -116,39 +124,49 @@ public class ParaProf implements ActionListener {
             // necessary. Static initializations are marked with "Static Initialization" 
             // to make them easy to find.
 
-            ParaProf.savedPreferences = new SavedPreferences();
+            ParaProf.preferences = new Preferences();
 
             //Establish the presence of a .ParaProf directory. This is located
             // by default in the user's home directory.
             ParaProf.paraProfHomeDirectory = new File(homeDirectory + "/.ParaProf");
             if (paraProfHomeDirectory.exists()) {
+     
                 //Try and load a preference file ... ParaProfPreferences.dat
                 try {
                     FileInputStream savedPreferenceFIS = new FileInputStream(
-                            ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
+                            ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf");
 
                     //If here, means that no exception was thrown, and there is a preference file present.
                     //Create ObjectInputStream and try to read it in.
                     ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
-                    ParaProf.savedPreferences = (SavedPreferences) inSavedPreferencesOIS.readObject();
-                    ParaProf.savedPreferences.setLoaded(true);
+                    ParaProf.preferences = (Preferences) inSavedPreferencesOIS.readObject();
+                    ParaProf.preferences.setLoaded(true);
+                    colorChooser = new ColorChooser(ParaProf.preferences);
                 } catch (Exception e) {
                     if (e instanceof FileNotFoundException) {
                         //System.out.println("No preference file present, using defaults!");
                     } else {
                         //Print some kind of error message, and quit the system.
-                        System.out.println("There was an error while trying to read the ParaProf preferences file.");
-                        System.out.println("Please delete this file, or replace it with a valid one!");
-                        System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
+                        System.out.println("Error while trying to read the ParaProf preferences file, using defaults");
+//                        System.out.println("Please delete this file, or replace it with a valid one!");
+//                        System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
                     }
                 }
 
+                ParaProf.colorMap = ParaProf.preferences.getColorMap();
+
+                if (ParaProf.colorMap == null) {
+                    ParaProf.colorMap = new ColorMap();
+                    ParaProf.preferences.setColorMap(ParaProf.colorMap);
+                }
+                
+                
                 //Try and find perfdmf.cfg.
                 File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                 if (perfDMFcfg.exists()) {
                     //System.out.println("Found db configuration file: "
                     //        + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
-                    ParaProf.savedPreferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath()
+                    ParaProf.preferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath()
                             + "/perfdmf.cfg");
                 } else
                     System.out.println("Did not find db configuration file ... load manually");
@@ -158,6 +176,12 @@ public class ParaProf implements ActionListener {
                 System.out.println("Done creating ParaProf home directory!");
             }
 
+            if (colorChooser == null) {
+                ParaProf.colorChooser = new ColorChooser(null);
+            }
+            
+            ParaProf.preferencesWindow = new PreferencesWindow(preferences);
+            
             loadDefaultTrial();
 
         } catch (Exception e) {
@@ -183,6 +207,37 @@ public class ParaProf implements ActionListener {
         return new String(VERSION);
     }
     
+    
+    public static void loadPreferences (File file) throws FileNotFoundException, IOException, ClassNotFoundException {
+        
+        FileInputStream savedPreferenceFIS = new FileInputStream(file);
+        
+        //If here, means that no exception was thrown, and there is a preference file present.
+        //Create ObjectInputStream and try to read it in.
+        ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
+        ParaProf.preferences = (Preferences) inSavedPreferencesOIS.readObject();
+        ParaProf.preferences.setLoaded(true);
+        colorChooser = new ColorChooser(ParaProf.preferences);
+
+        ParaProf.colorMap = ParaProf.preferences.getColorMap();
+
+        if (ParaProf.colorMap == null) {
+            ParaProf.colorMap = new ColorMap();
+            ParaProf.preferences.setColorMap(ParaProf.colorMap);
+        }
+
+        Vector trials = ParaProf.paraProfManager.getLoadedTrials();
+        for (Iterator it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+            ParaProf.colorChooser.setColors(ppTrial, -1);
+            ppTrial.getSystemEvents().updateRegisteredObjects("colorEvent");
+            ppTrial.getSystemEvents().updateRegisteredObjects("prefEvent");
+        }
+
+        
+        
+    }
+    
     // This method is reponsible for any cleanup required in ParaProf 
     // before an exit takes place.
     public static void exitParaProf(int exitValue) {
@@ -191,6 +246,39 @@ public class ParaProf implements ActionListener {
         //} catch (Exception e) {
         //   e.printStackTrace();
         //}
+        
+//        if (
+//        File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
+//
+//        try {
+//            ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
+//            this.setSavedPreferences();
+//            prefsOut.writeObject(ParaProf.savedPreferences);
+//            prefsOut.close();
+//        } catch (Exception e) {
+//            //Display an error
+//            JOptionPane.showMessageDialog(this,
+//                    "An error occured while trying to save ParaProf preferences.", "Error!",
+//                    JOptionPane.ERROR_MESSAGE);
+//        }
+        
+        
+        ParaProf.colorChooser.setSavedColors();
+        ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManager.getLocation());
+
+//        System.out.println ("saving manager position = " + preferences.getManagerWindowPosition());
+        File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf");
+
+        try {
+            ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
+            prefsOut.writeObject(ParaProf.preferences);
+            prefsOut.close();
+        } catch (Exception e) {
+            System.err.println("An error occured while trying to save ParaProf preferences.");
+            //e.printStackTrace();
+        }
+
+        
         System.exit(exitValue);
     }
 

@@ -15,10 +15,10 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.enums.*;
 
 public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
 
-    
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
@@ -59,6 +59,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         //Options menu.
         optionsMenu = new JMenu("Options");
 
+//        JMenuItem assignColors = new JMenuItem("Assign colors ", false);
+//        nameCheckBox.addActionListener(this);
+//        optionsMenu.add(nameCheckBox);
+
+        
         nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
         nameCheckBox.addActionListener(this);
         optionsMenu.add(nameCheckBox);
@@ -118,7 +123,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         menuItem.addActionListener(this);
         windowsMenu.add(menuItem);
 
-        menuItem = new JMenuItem("Show Full Call Graph");
+        menuItem = new JMenuItem("Show Mean Call Graph");
         menuItem.addActionListener(this);
         windowsMenu.add(menuItem);
 
@@ -149,11 +154,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
         setJMenuBar(mainMenu);
     }
-    
+
     public StaticMainWindow(ParaProfTrial ppTrial, boolean debug) {
         //This window needs to maintain a reference to its trial.
         this.ppTrial = ppTrial;
-        
+
         //Window Stuff.
         setTitle("ParaProf: " + ppTrial.getTrialIdentifier(true));
 
@@ -170,21 +175,26 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
             }
         });
 
-        //Grab the screen size.
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenDimension = tk.getScreenSize();
-        int screenHeight = screenDimension.height;
-        int screenWidth = screenDimension.width;
+//        // Grab the screen size.
+//        Toolkit tk = Toolkit.getDefaultToolkit();
+//        Dimension screenDimension = tk.getScreenSize();
+//        int screenHeight = screenDimension.height;
+//        int screenWidth = screenDimension.width;
+//
+//        // Set the window to come up in the center of the screen.
+//        int xPosition = (screenWidth - windowWidth) / 2;
+//        int yPosition = (screenHeight - windowHeight) / 2;
 
-        int xPosition = (screenWidth - windowWidth) / 2;
-        //Set the window to come up in the center of the screen.
-        int yPosition = (screenHeight - windowHeight) / 2;
-
-        setLocation(xPosition, yPosition);
-
-
-        setupMenus();
         
+        
+        //setLocation(xPosition, yPosition);
+
+        
+        int xPosition = ParaProf.paraProfManager.getLocation().x;
+        int yPosition = ParaProf.paraProfManager.getLocation().y;
+        setLocation(xPosition+75, yPosition+110);
+        
+        setupMenus();
 
         //Setting up the layout system for the main window.
         contentPane = getContentPane();
@@ -195,7 +205,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
         //Panel and ScrollPane definition.
         panel = new StaticMainWindowPanel(ppTrial, this);
-        sp = new JScrollPane(panel);
+        jScrollPane = new JScrollPane(panel);
+
+        JScrollBar jScrollBar = jScrollPane.getVerticalScrollBar();
+        jScrollBar.setUnitIncrement(35);
+
         this.setHeader();
 
         //Slider setup.
@@ -216,7 +230,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        addCompItem(sp, gbc, 0, 0, 1, 1);
+        addCompItem(jScrollPane, gbc, 0, 0, 1, 1);
 
         dataSorter = new DataSorter(ppTrial);
 
@@ -241,10 +255,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
                 } else if (arg.equals("Show ParaProf Manager")) {
                     (new ParaProfManagerWindow()).show();
-                } else if (arg.equals("Show 3D Window")) {
-                    //(new ThreeDeeWindow(ppTrial)).show();
+//                } else if (arg.equals("Show 3D Window")) {
+//                    (new ThreeDeeFullDataWindow(ppTrial)).show();
                 } else if (arg.equals("Preferences...")) {
-                    ppTrial.getPreferences().showPreferencesWindow();
+                    ppTrial.getPreferencesWindow().showPreferencesWindow();
                 }
                 //		
                 //		else if(arg.equals("Save to XML File")){
@@ -292,10 +306,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                     dispose();
                     ParaProf.exitParaProf(0);
                 } else if (arg.equals("Sort By Name")) {
-                    if (nameCheckBox.isSelected())
-                        name = true;
-                    else
-                        name = false;
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Normalize Bars")) {
@@ -320,23 +330,14 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                         normalizeBars = false;
                         orderByMeanCheckBox.setSelected(true);
                         orderByMeanCheckBox.setEnabled(false);
-                        orderByMean = true;
                     }
                     panel.repaint();
                 }
 
                 else if (arg.equals("Order By Mean")) {
-                    if (orderByMeanCheckBox.isSelected())
-                        orderByMean = true;
-                    else
-                        orderByMean = false;
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Descending Order")) {
-                    if (orderCheckBox.isSelected())
-                        order = 0;
-                    else
-                        order = 1;
                     sortLocalData();
                     panel.repaint();
                 } else if (arg.equals("Display Sliders")) {
@@ -355,11 +356,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                 } else if (arg.equals("Show User Event Ledger")) {
                     (new LedgerWindow(ppTrial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, this.getDataSorter(),
-                            2);
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1,
+                            this.getDataSorter(), 2);
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
-                } else if (arg.equals("Show Full Call Graph")) {
+                } else if (arg.equals("Show Mean Call Graph")) {
                     CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
@@ -424,15 +425,15 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     }
 
     public Dimension getViewportSize() {
-        return sp.getViewport().getExtentSize();
+        return jScrollPane.getViewport().getExtentSize();
     }
 
     public Rectangle getViewRect() {
-        return sp.getViewport().getViewRect();
+        return jScrollPane.getViewport().getViewRect();
     }
 
     public void setVerticalScrollBarPosition(int position) {
-        JScrollBar scrollBar = sp.getVerticalScrollBar();
+        JScrollBar scrollBar = jScrollPane.getVerticalScrollBar();
         scrollBar.setValue(position);
     }
 
@@ -449,19 +450,18 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
-            Preferences p = ppTrial.getPreferences();
+            PreferencesWindow p = ppTrial.getPreferencesWindow();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
-            sp.setColumnHeaderView(jTextArea);
+            jScrollPane.setColumnHeaderView(jTextArea);
         } else
-            sp.setColumnHeaderView(null);
+            jScrollPane.setColumnHeaderView(null);
     }
 
     public String getHeaderString() {
-        return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getSelectedMetricID())) + "\n" + "Value Type: "
+        return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Value Type: "
                 + UtilFncs.getValueTypeString(2) + "\n";
     }
-
 
     public double getSliderValue() {
         return (double) barLengthSlider.getValue();
@@ -476,7 +476,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
     private void displaySliders(boolean displaySliders) {
         if (displaySliders) {
-            contentPane.remove(sp);
+            contentPane.remove(jScrollPane);
 
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
@@ -506,19 +506,19 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1.0;
             gbc.weighty = 0.99;
-            addCompItem(sp, gbc, 0, 1, 4, 1);
+            addCompItem(jScrollPane, gbc, 0, 1, 4, 1);
         } else {
             contentPane.remove(sliderMultipleLabel);
             contentPane.remove(sliderMultiple);
             contentPane.remove(barLengthLabel);
             contentPane.remove(barLengthSlider);
-            contentPane.remove(sp);
+            contentPane.remove(jScrollPane);
 
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1;
             gbc.weighty = 1;
-            addCompItem(sp, gbc, 0, 0, 1, 1);
+            addCompItem(jScrollPane, gbc, 0, 0, 1, 1);
         }
 
         //Now call validate so that these component changes are displayed.
@@ -539,19 +539,20 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
     //Updates the sorted lists after a change of sorting method takes place.
     private void sortLocalData() {
+        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+        dataSorter.setValueType(ValueType.EXCLUSIVE);
 
-        if (name) {
-            list = dataSorter.getAllFunctionProfiles(0 + order);
+        if (nameCheckBox.isSelected()) {
+            dataSorter.setSortType(SortType.NAME);
         } else {
-
-            if (orderByMean) {
-                list = dataSorter.getAllFunctionProfiles(20 + order);
-
+            if (orderByMeanCheckBox.isSelected()) {
+                dataSorter.setSortType(SortType.MEAN_VALUE);
             } else {
-                list = dataSorter.getAllFunctionProfiles(2 + order);
+                dataSorter.setSortType(SortType.MEAN_VALUE);
             }
         }
-
+        dataSorter.setDescendingOrder(orderCheckBox.isSelected());
+        list = dataSorter.getAllFunctionProfiles();
     }
 
     public Vector getData() {
@@ -586,7 +587,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     void closeThisWindow() {
         try {
             setVisible(false);
-            
+
             // don't do this!
             //trial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
@@ -633,12 +634,12 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     private Container contentPane = null;
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;
-    private JScrollPane sp;
+    private JScrollPane jScrollPane;
 
-    private boolean name = false; //true: sort by name,false: sort by value.
-    private int order = 0; //0: descending order,1: ascending order.
+    //private boolean name = false; //true: sort by name,false: sort by value.
+    //    private int order = 0; //0: descending order,1: ascending order.
     private boolean normalizeBars = true;
-    private boolean orderByMean = true;
+    //private boolean orderByMean = true;
     private boolean stackBars = true;
 
     boolean displaySliders = false;
