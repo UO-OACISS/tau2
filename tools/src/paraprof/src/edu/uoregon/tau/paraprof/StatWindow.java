@@ -40,7 +40,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             this.debug = debug;
 
             setLocation(new java.awt.Point(0, 0));
-            setSize(new java.awt.Dimension(800, 600));
+            setSize(new java.awt.Dimension(1000, 600));
 
             if (nodeID == -1 && userEventWindow) {
                 // There is no User Event data for mean
@@ -166,7 +166,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             //End - Units submenu.
 
             //Set the value type options.
-            subMenu = new JMenu("Select Value Type");
+            subMenu = new JMenu("Sort By");
             group = new ButtonGroup();
 
             if (userEventWindow) {
@@ -526,6 +526,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             } else if (tmpString.equals("dataEvent")) {
                 if (!(trial.isTimeMetric()))
                     units = 0;
+                sortLocalData();
                 this.setHeader();
                 panel.repaint();
             } else if (tmpString.equals("subWindowCloseEvent")) {

@@ -108,32 +108,7 @@ public class PPFunctionProfile implements Comparable {
 
     
     
-    public String getStatString(int type) {
-        try {
-
-            int metric = trial.getSelectedMetricID();
-            String tmpString;
-
-            DecimalFormat dF = new DecimalFormat("##0.0");
-            tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(metric)), 7);
-
-            tmpString = tmpString + "  "
-                    + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);
-            tmpString = tmpString + "  "
-                    + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 16);
-            tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12);
-            tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12);
-            tmpString = tmpString + "  "
-                    + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(metric), 19);
-
-            //Everything should be added now except the function name.
-            return tmpString;
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "GTDE01");
-        }
-
-        return "An error occurred processing this string!";
-    }
+    
     
     
 
@@ -342,11 +317,39 @@ public class PPFunctionProfile implements Comparable {
     }
 
     
+    
+    public String getStatString(int type) {
+        try {
+
+            int metric = trial.getSelectedMetricID();
+            String tmpString;
+
+            DecimalFormat dF = new DecimalFormat("##0.0");
+            tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(metric)), 13);
+
+            tmpString = tmpString + "  "
+                    + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);
+            tmpString = tmpString + "  "
+                    + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 16);
+            tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12);
+            tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12);
+            tmpString = tmpString + "  "
+                    + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(metric), 19);
+
+            //Everything should be added now except the function name.
+            return tmpString;
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "GTDE01");
+        }
+
+        return "An error occurred processing this string!";
+    }
+    
     // Static Functions
     
     public static String getStatStringHeading(String metricType) {
         try {
-            return UtilFncs.lpad("%" + metricType, 7) + UtilFncs.lpad(metricType, 16)
+            return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad(metricType, 16)
                     + UtilFncs.lpad("Total " + metricType, 18) + UtilFncs.lpad("#Calls", 14)
                     + UtilFncs.lpad("#Subrs", 14)
                     + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
