@@ -503,12 +503,13 @@ int main(int argc, char **argv)
   return 0;
 }
 
+/* EOF tau2vtf.cpp */
 
 
 /***************************************************************************
- *  * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
- *   * $Revision: 1.1 $   $Date: 2004/08/05 22:48:44 $
- *    * VERSION_ID: $Id: tau2vtf.cpp,v 1.1 2004/08/05 22:48:44 sameer Exp $
- *     ***************************************************************************/
+ * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
+ * $Revision: 1.2 $   $Date: 2004/08/05 22:49:37 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.2 2004/08/05 22:49:37 sameer Exp $
+ ***************************************************************************/
 
 
