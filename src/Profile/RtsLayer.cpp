@@ -486,6 +486,9 @@ double RtsLayer::getUSecD (int tid) {
   return PCL_Layer::getCounters(tid);
 #else  // TAU_PCL 
 #ifdef TAU_PAPI
+  static const char *papi_env = getenv("PAPI_EVENT");
+  if (papi_env != NULL)
+    return PapiLayer::getCounters(tid);
 #ifdef TAU_PAPI_WALLCLOCKTIME
   return PapiLayer::getWallClockTime();
 #else /* TAU_PAPI_WALLCLOCKTIME */
@@ -1007,6 +1010,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.36 $   $Date: 2002/01/24 23:59:14 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.36 2002/01/24 23:59:14 sameer Exp $ 
+ * $Revision: 1.37 $   $Date: 2002/01/25 19:56:58 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.37 2002/01/25 19:56:58 sameer Exp $ 
  ***************************************************************************/
