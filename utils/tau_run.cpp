@@ -201,6 +201,9 @@ int routineConstraint(char *fname)
             (strncmp(fname, "Profiler", 8) == 0) ||
             (strncmp(fname, "FunctionInfo",12) == 0) ||
             (strncmp(fname, "RtsLayer", 8) == 0) ||
+            (strncmp(fname, "DYNINST", 7) == 0) ||
+            (strncmp(fname, "PthreadLayer", 12) == 0) ||
+            (strncmp(fname, "threaded_func", 13) == 0) ||
             (strncmp(fname, "The", 3) == 0)) 
   {
     return true;
@@ -295,8 +298,8 @@ int main(int argc, char **argv)
   BPatch_Vector<BPatch_module *> *m = appImage->getModules();
 
   BPatch_function *inFunc;
-  BPatch_function *enter = appImage->findFunction("TauRoutineEntry");
-  BPatch_function *exit = appImage->findFunction("TauRoutineExit");
+  BPatch_function *enterstub = appImage->findFunction("TauRoutineEntry");
+  BPatch_function *exitstub = appImage->findFunction("TauRoutineExit");
   BPatch_Vector<BPatch_snippet *> initArgs;
   
   char modulename[256];
@@ -344,6 +347,7 @@ int main(int argc, char **argv)
      iterate through the list of routines to select for instrumentation and
      instrument these. So, we need to iterate twice. */
 
+
   for (j=0; j < m->size(); j++) {
     sprintf(modulename, "Module %s\n", (*m)[j]->getName(fname, FUNCNAMELEN));
     BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
@@ -376,11 +380,9 @@ int main(int argc, char **argv)
           // callee_args->push_back(constName);
     
           inFunc = (*p)[i];
-          invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_entry, enter, callee_args);
-          invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_exit, exit, callee_args);
-          // clean up the expression and the args
-          
-    
+          invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_entry, enterstub, callee_args);
+          invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_exit, exitstub, callee_args);
+
           delete callee_args;
           delete constExpr;
         } // routines that are ok to instrument
