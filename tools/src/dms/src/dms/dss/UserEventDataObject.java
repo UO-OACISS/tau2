@@ -18,7 +18,7 @@ import java.util.Vector;
  * the node, context and thread that identify the location, and the data collected for this
  * location, such as sample count, maximum value, minimum value, mean value and standard deviation.  
  *
- * <P>CVS $Id: UserEventDataObject.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
+ * <P>CVS $Id: UserEventDataObject.java,v 1.3 2004/03/30 19:54:26 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -257,7 +257,7 @@ public class UserEventDataObject {
 		buf.append("inner join experiment e on e.id = t.experiment ");
 		buf.append(whereClause);
 		buf.append(" order by p.node, p.context, p.thread, p.user_event");
-		// System.out.println(buf.toString());
+		System.out.println(buf.toString());
 
 		// get the results
 		try {

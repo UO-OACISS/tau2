@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.3 2004/03/30 18:14:16 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.4 2004/03/30 19:54:26 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -370,7 +370,7 @@ public class PerfDBSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		if (userEvents != null) {
+		if (userEvents != null && userEvents.size() > 0) {
 			buf.append(" and u.id in (");
 			UserEvent userEvent;
         	for(Enumeration en = userEvents.elements(); en.hasMoreElements() ;) {
