@@ -21,6 +21,7 @@
 # include <Profile/Profiler.h>
 
 
+
 # define PCXX_EVENT_SRC 
 # include "Profile/pcxx_events.h"
 
@@ -47,8 +48,11 @@ static int  TauCurrentEvent[TAU_MAX_THREADS] = {0};
 /* -- event trace file descriptor ---------------------------- */
 static int TraceFd[TAU_MAX_THREADS] = {0};
 
+/* -- do event files need to be re-written ------------------- */
+static int FlushEvents[TAU_MAX_THREADS] = {0};
+
 /* -- initialization status flags ---------------------------- */
-static int TraceInitialized[PCXX_MAXPROCS] = {0};
+static int TraceInitialized[TAU_MAX_THREADS] = {0};
 
 #ifdef TAU_MULTIPLE_COUNTERS
 static double tracerValues[MAX_TAU_COUNTERS] = {0};
@@ -84,6 +88,12 @@ void TraceEventOnly(long int ev,long long par, int tid)
   TauCurrentEvent[tid] ++;
 }
 
+/* -- Set the flag to flush the EDF file --------------------- */
+void SetFlushEvents(int tid)
+{
+  FlushEvents[tid] = 1;
+} 
+
 /* -- write event buffer to file ----------------------------- */
 void TraceEvFlush(int tid)
 {
@@ -101,6 +111,15 @@ void TraceEvFlush(int tid)
     }
 
   }
+
+//#ifdef TRACEMONITORING
+// Do this by default. 
+  if (FlushEvents[tid])
+  { /* Dump the EDF file before writing trace data: Monitoring */
+    RtsLayer::DumpEDF(tid);
+    FlushEvents[tid]=0;
+  }
+//#endif /* TRACEMONITORING */
   
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
   DEBUGPROFMSG("Tid "<<tid<<": TraceEvFlush()"<<endl;);
