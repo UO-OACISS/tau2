@@ -686,6 +686,18 @@ case $machine in
      fi
      ;;
    
+   nec) 
+     if [ $cxx_compiler = default ]
+       then
+         cxx_compiler=c++
+     fi
+
+     if [ $c_compiler = default ]
+       then
+         c_compiler=cc             
+     fi
+     ;;
+
    apple) 
      if [ $cxx_compiler = default ]
        then
@@ -1050,9 +1062,16 @@ case $cxx_compiler in
         
       ;;
    c++)
-      echo "Default C++ compiler will be Apple c++ compiler"
-      fixmakeargs="$fixmakeargs APPLECXX"
-      tauoptions="${tauoptions}-cxx"
+	  if [ $machine = nec ]
+	  then
+        echo "Default C++ compiler will be NEC c++ compiler"
+        fixmakeargs="$fixmakeargs USE_NECCXX"
+        tauoptions="${tauoptions}-cxx"
+      else
+        echo "Default C++ compiler will be Apple c++ compiler"
+        fixmakeargs="$fixmakeargs APPLECXX"
+        tauoptions="${tauoptions}-cxx"
+      fi 
 
       ;;
 

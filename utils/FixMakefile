@@ -322,6 +322,10 @@ fi
 	echo NOTE: Using the IBM xlC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     USE_NECCXX)
+	echo NOTE: Using the NEC C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      USE_INTELCXX)
 	echo NOTE: Using the Intel ecpc C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
