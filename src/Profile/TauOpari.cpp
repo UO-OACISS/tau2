@@ -12,8 +12,16 @@
 #include "omperf_lib.h"
 #include <Profile/Profiler.h>
 
-#define OpenMP TAU_USER
+/* These two defines specify if we want region based views or construct based
+views or both */
 
+#define TAU_AGGREGATE_OPENMP_TIMINGS
+#define TAU_OPENMP_REGION_VIEW
+
+#define OpenMP TAU_USER
+#define TAU_EMBEDDED_MAPPING 1
+
+omp_lock_t tau_ompregdescr_lock; 
 
 TAU_GLOBAL_TIMER(tatomic, "atomic enter/exit", "[OpenMP]", OpenMP); 
 TAU_GLOBAL_TIMER(tbarrier, "barrier enter/exit", "[OpenMP]", OpenMP); 
@@ -28,7 +36,7 @@ TAU_GLOBAL_TIMER(tsectione, "sections enter/exit", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER(tsingleb, "single begin/end", "[OpenMP]", OpenMP); 
 TAU_GLOBAL_TIMER(tsinglee, "single enter/exit", "[OpenMP]", OpenMP); 
 TAU_GLOBAL_TIMER(tworkshare, "workshare enter/exit", "[OpenMP]", OpenMP); 
-TAU_GLOBAL_TIMER(tregion, "region begin/end", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER(tregion, "inst region begin/end", "[OpenMP]", OpenMP); 
 
 #define FSUB(name) name##_
 
@@ -171,18 +179,61 @@ void FSUB(omperf_end)(int* id) {
  * C omperf function library
  */
 
+/* TAU specific calls */
+int tau_openmp_init(void)
+{
+  omp_init_lock(&tau_ompregdescr_lock);
+  return 0;
+}
+
+static int tau_openmp_initialized = tau_openmp_init();
+
+void TauStartOpenMPRegionTimer(struct ompregdescr *r)
+{
+/* For any region, create a mapping between a region r and timer t and
+   start the timer. */
+
+  omp_set_lock(&tau_ompregdescr_lock);
+  if (r->data)
+  {
+    Profiler *p = new Profiler((FunctionInfo *) r->data, OpenMP, true, RtsLayer::myThread());
+    p->Start();
+  }
+  else
+  {
+    char rname[256], rtype[1024];
+    sprintf(rname, "%s %s", r->name, r->sub_name);
+    sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
+        r->file_name, r->begin_first_line, r->end_last_line);
+
+    FunctionInfo *f = new FunctionInfo(rname, rtype, OpenMP, "OpenMP");
+    r->data = (void *) f;
+    Profiler *p = new Profiler (f, OpenMP, true, RtsLayer::myThread());
+    p->Start();
+  }
+  omp_unset_lock(&tau_ompregdescr_lock);
+
+}
+
+/* omperf library calls */
+
 void omperf_finalize() {
   if ( ! omp_fin_called ) {
     omp_fin_called = 1;
   }
+#ifdef DEBUG_PROF
   fprintf(stderr, "  0: finalize\n");
+#endif /* DEBUG_PROF */
 }
 
 void omperf_init() {
   int i;
 
   atexit(omperf_finalize);
+
+#ifdef DEBUG_PROF
   fprintf(stderr, "  0: init\n");
+#endif /* DEBUG_PROF */
 
   for(i=0; i<OMPERF_MAX_ID; ++i) {
     if ( omp_rd_table[i] ) {
@@ -202,7 +253,15 @@ void omperf_on() {
 }
 
 void omperf_atomic_enter(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tatomic);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: enter atomic\n", omp_get_thread_num());
@@ -211,7 +270,15 @@ void omperf_atomic_enter(struct ompregdescr* r) {
 }
 
 void omperf_atomic_exit(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: exit  atomic\n", omp_get_thread_num());
@@ -220,7 +287,15 @@ void omperf_atomic_exit(struct ompregdescr* r) {
 }
 
 void omperf_barrier_enter(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tbarrier);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     if ( r->name[0] == 'b' )
@@ -233,7 +308,15 @@ void omperf_barrier_enter(struct ompregdescr* r) {
 }
 
 void omperf_barrier_exit(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     if ( r->name[0] == 'b' )
@@ -246,7 +329,15 @@ void omperf_barrier_exit(struct ompregdescr* r) {
 }
 
 void omperf_critical_begin(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tcriticalb);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: begin critical %s\n",
@@ -256,7 +347,15 @@ void omperf_critical_begin(struct ompregdescr* r) {
 }
 
 void omperf_critical_end(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+  
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: end   critical %s\n",
@@ -266,7 +365,15 @@ void omperf_critical_end(struct ompregdescr* r) {
 }
 
 void omperf_critical_enter(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tcriticale);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: enter critical %s\n",
@@ -276,7 +383,15 @@ void omperf_critical_enter(struct ompregdescr* r) {
 }
 
 void omperf_critical_exit(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: exit  critical %s\n",
@@ -286,9 +401,16 @@ void omperf_critical_exit(struct ompregdescr* r) {
 }
 
 	
-
 void omperf_for_enter(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tfor); 
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: enter for\n", omp_get_thread_num());
@@ -297,7 +419,16 @@ void omperf_for_enter(struct ompregdescr* r) {
 }
 
 void omperf_for_exit(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP(); 
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  // as in a stack. lifo
+  
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: exit  for\n", omp_get_thread_num());
@@ -306,7 +437,15 @@ void omperf_for_exit(struct ompregdescr* r) {
 }
 
 void omperf_master_begin(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tmaster);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: begin master\n", omp_get_thread_num());
@@ -315,7 +454,15 @@ void omperf_master_begin(struct ompregdescr* r) {
 }
 
 void omperf_master_end(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: end   master\n", omp_get_thread_num());
@@ -324,7 +471,15 @@ void omperf_master_end(struct ompregdescr* r) {
 }
 
 void omperf_parallel_begin(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tparallelb);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: begin parallel\n", omp_get_thread_num());
@@ -333,7 +488,15 @@ void omperf_parallel_begin(struct ompregdescr* r) {
 }
 
 void omperf_parallel_end(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: end   parallel\n", omp_get_thread_num());
@@ -342,7 +505,15 @@ void omperf_parallel_end(struct ompregdescr* r) {
 }
 
 void omperf_parallel_fork(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tparallelf);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: fork  parallel\n", omp_get_thread_num());
@@ -351,7 +522,15 @@ void omperf_parallel_fork(struct ompregdescr* r) {
 }
 
 void omperf_parallel_join(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: join  parallel\n", omp_get_thread_num());
@@ -360,7 +539,15 @@ void omperf_parallel_join(struct ompregdescr* r) {
 }
 
 void omperf_section_begin(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tsectionb);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: begin section\n", omp_get_thread_num());
@@ -369,7 +556,15 @@ void omperf_section_begin(struct ompregdescr* r) {
 }
 
 void omperf_section_end(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: end   section\n", omp_get_thread_num());
@@ -378,7 +573,15 @@ void omperf_section_end(struct ompregdescr* r) {
 }
 
 void omperf_sections_enter(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tsectione);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: enter sections\n", omp_get_thread_num());
@@ -387,7 +590,15 @@ void omperf_sections_enter(struct ompregdescr* r) {
 }
 
 void omperf_sections_exit(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+  
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: exit  sections\n", omp_get_thread_num());
@@ -396,7 +607,15 @@ void omperf_sections_exit(struct ompregdescr* r) {
 }
 
 void omperf_single_begin(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tsingleb);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: begin single\n", omp_get_thread_num());
@@ -405,7 +624,15 @@ void omperf_single_begin(struct ompregdescr* r) {
 }
 
 void omperf_single_end(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+  
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: end   single\n", omp_get_thread_num());
@@ -414,7 +641,15 @@ void omperf_single_end(struct ompregdescr* r) {
 }
 
 void omperf_single_enter(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tsinglee);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: enter single\n", omp_get_thread_num());
@@ -423,7 +658,15 @@ void omperf_single_enter(struct ompregdescr* r) {
 }
 
 void omperf_single_exit(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: exit  single\n", omp_get_thread_num());
@@ -432,7 +675,15 @@ void omperf_single_exit(struct ompregdescr* r) {
 }
 
 void omperf_workshare_enter(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tworkshare);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: enter workshare\n", omp_get_thread_num());
@@ -441,7 +692,15 @@ void omperf_workshare_enter(struct ompregdescr* r) {
 }
 
 void omperf_workshare_exit(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+  
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: exit  workshare\n", omp_get_thread_num());
@@ -450,7 +709,15 @@ void omperf_workshare_exit(struct ompregdescr* r) {
 }
 
 void omperf_begin(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tregion);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r); 
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: begin region %s\n",
@@ -460,7 +727,15 @@ void omperf_begin(struct ompregdescr* r) {
 }
 
 void omperf_end(struct ompregdescr* r) {
-  TAU_GLOBAL_TIMER_STOP();
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     fprintf(stderr, "%3d: end   region %s\n",
