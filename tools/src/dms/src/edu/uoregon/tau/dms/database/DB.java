@@ -11,9 +11,10 @@ public interface DB {
     void close();
     ResultSet executeQuery(String statement) throws SQLException;
     int executeUpdate(String statement) throws SQLException;
+    boolean execute(String statement) throws SQLException;
     String getDataItem(String query);
     public boolean isClosed();
     public String getDBType();
-	public Connection getConnection();
-	public PreparedStatement prepareStatement(String statement) throws SQLException;
+    public Connection getConnection();
+    public PreparedStatement prepareStatement(String statement) throws SQLException;
 }
