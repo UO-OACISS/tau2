@@ -100,7 +100,7 @@ public class XMLSupport{
 	    
 	    //Write out userevent name to id mapping.
 	    writeBeginObject(xwriter,21);
-	    for(Enumeration e = globalMapping.getMapping(0).elements(); e.hasMoreElements() ;){
+	    for(Enumeration e = globalMapping.getMapping(2).elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
 		if(globalMappingElement!=null)
 		    writeNameIDMap(xwriter,globalMappingElement.getMappingName(),globalMappingElement.getMappingID());
