@@ -638,6 +638,10 @@ fi
 	echo "NOTE: Using DYNINST for TAU Runtime Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     DYNINST41)
+	echo "NOTE: Using newer version DYNINST 4.1+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      JAVA)
 	echo "NOTE: Using Java Virtual Machine Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
