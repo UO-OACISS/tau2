@@ -55,8 +55,10 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    
 	    int numberOfMetrics = perfDMFSession.getNumberOfMetrics();
 	    System.out.println("Found " + numberOfMetrics + " metrics.");
-	    for(int i=0;i<numberOfMetrics;i++)
+	    for(int i=0;i<numberOfMetrics;i++) {
+		this.addMetric(perfDMFSession.getMetricName(i));
 		this.getGlobalMapping().increaseVectorStorage();
+	    }
 
 	    //Add the functions.
 	    ListIterator l = perfDMFSession.getIntervalEvents();
