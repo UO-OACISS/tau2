@@ -2,11 +2,6 @@
 
 
 
-
-
-
-
-
 CREATE TABLE application_temp (
     id                      SERIAL     NOT NULL        PRIMARY KEY,
     name                    TEXT,
@@ -97,14 +92,14 @@ CREATE TABLE interval_location_profile_temp (
     context                 INT         NOT NULL,
     thread                  INT         NOT NULL,
     metric                  INT		NOT NULL,
-    inclusive_percentage    DECIMAL,
-    inclusive               DECIMAL,
-    exclusive_percentage    DECIMAL,
-    exclusive               DECIMAL,
-    call                    DECIMAL,
-    subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL,
-    sum_exclusive_squared   DECIMAL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
     FOREIGN KEY(interval_event) REFERENCES interval_event_temp(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
     FOREIGN KEY(metric) REFERENCES metric_temp(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -115,24 +110,24 @@ CREATE TABLE atomic_location_profile_temp (
     context                 INT         NOT NULL,
     thread                  INT         NOT NULL,
     sample_count            INT,         
-    maximum_value           DECIMAL,
-    minimum_value           DECIMAL,
-    mean_value              DECIMAL,
-    standard_deviation	    DECIMAL,
+    maximum_value           DOUBLE PRECISION,
+    minimum_value           DOUBLE PRECISION,
+    mean_value              DOUBLE PRECISION,
+    standard_deviation	    DOUBLE PRECISION,
     FOREIGN KEY(atomic_event) REFERENCES atomic_event_temp(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_total_summary_temp (
     interval_event          INT         NOT NULL,
     metric                  INT		NOT NULL,
-    inclusive_percentage    DECIMAL,
-    inclusive               DECIMAL,
-    exclusive_percentage    DECIMAL,
-    exclusive               DECIMAL,
-    call                    DECIMAL,
-    subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL,
-    sum_exclusive_squared   DECIMAL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
     FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
     FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -140,14 +135,14 @@ CREATE TABLE interval_total_summary_temp (
 CREATE TABLE interval_mean_summary_temp (
     interval_event          INT         NOT NULL,
     metric                  INT		NOT NULL,
-    inclusive_percentage    DECIMAL,
-    inclusive               DECIMAL,
-    exclusive_percentage    DECIMAL,
-    exclusive               DECIMAL,
-    call                    DECIMAL,
-    subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL,
-    sum_exclusive_squared   DECIMAL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
 	FOREIGN KEY(interval_event) REFERENCES interval_event_temp(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
 	FOREIGN KEY(metric) REFERENCES metric_temp(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -330,14 +325,14 @@ CREATE TABLE interval_location_profile (
     context                 INT         NOT NULL,
     thread                  INT         NOT NULL,
     metric                  INT		NOT NULL,
-    inclusive_percentage    DECIMAL,
-    inclusive               DECIMAL,
-    exclusive_percentage    DECIMAL,
-    exclusive               DECIMAL,
-    call                    DECIMAL,
-    subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL,
-    sum_exclusive_squared   DECIMAL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
     FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
     FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -348,24 +343,24 @@ CREATE TABLE atomic_location_profile (
     context                 INT         NOT NULL,
     thread                  INT         NOT NULL,
     sample_count            INT,         
-    maximum_value           DECIMAL,
-    minimum_value           DECIMAL,
-    mean_value              DECIMAL,
-    standard_deviation	    DECIMAL,
+    maximum_value           DOUBLE PRECISION,
+    minimum_value           DOUBLE PRECISION,
+    mean_value              DOUBLE PRECISION,
+    standard_deviation	    DOUBLE PRECISION,
     FOREIGN KEY(atomic_event) REFERENCES atomic_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_total_summary (
     interval_event          INT         NOT NULL,
     metric                  INT		NOT NULL,
-    inclusive_percentage    DECIMAL,
-    inclusive               DECIMAL,
-    exclusive_percentage    DECIMAL,
-    exclusive               DECIMAL,
-    call                    DECIMAL,
-    subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL,
-    sum_exclusive_squared   DECIMAL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
     FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
     FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -373,14 +368,14 @@ CREATE TABLE interval_total_summary (
 CREATE TABLE interval_mean_summary (
     interval_event          INT         NOT NULL,
     metric                  INT		NOT NULL,
-    inclusive_percentage    DECIMAL,
-    inclusive               DECIMAL,
-    exclusive_percentage    DECIMAL,
-    exclusive               DECIMAL,
-    call                    DECIMAL,
-    subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL,
-    sum_exclusive_squared   DECIMAL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
 	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
 	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
