@@ -40,7 +40,7 @@
 #ifdef TULIPTHREADS
 #ifdef SMARTS
 #include <Mutex.h>
-using namespace NAMESPACE;
+using Smarts::Mutex;
 #else  // SMARTS
 #include <Tulip_Mutex.h>
 #endif // SMARTS
@@ -74,8 +74,8 @@ class TulipThreadLayer
 
 /***************************************************************************
  * $RCSfile: TulipThreadLayer.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/08/27 19:22:29 $
- * POOMA_VERSION_ID: $Id: TulipThreadLayer.h,v 1.2 1998/08/27 19:22:29 sameer Exp $
+ * $Revision: 1.3 $   $Date: 1998/09/17 15:22:08 $
+ * POOMA_VERSION_ID: $Id: TulipThreadLayer.h,v 1.3 1998/09/17 15:22:08 sameer Exp $
  ***************************************************************************/
 
 
