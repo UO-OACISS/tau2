@@ -35,7 +35,6 @@
 # include <stdio.h>
 # include <stdlib.h>
 
-# include <math.h>
 # include <errno.h>
 # include <string.h>
 # include <iostream.h>
@@ -45,6 +44,10 @@
 # include <fcntl.h>
 # include <map.h>
 # include <limits.h>
+# ifndef GNU
+# include <math.h>
+# endif /* GNU  fmod defined here*/
+
 #ifdef DEC_ALPHA 
 # include <float.h>
 #endif /* DEC_ALPHA */
@@ -65,7 +68,7 @@ extern int optind, opterr, optopt;
 #   define TRUE  1
 # endif
 
-# if defined(ultrix) || defined(sequent) || defined(butterfly)
+# if defined(ultrix) || defined(sequent) || defined(butterfly) || defined(GNU)
 double fmod (double x, double y)
 {
   return ( x - floor(x/y) * y );
@@ -267,7 +270,12 @@ class UserEventData {
   UserEventData& operator+= (const UserEventData& X) {
     maxvalue	= max (maxvalue, X.maxvalue);
     minvalue	= min (minvalue, X.minvalue);
-    meanvalue 	= (meanvalue*numevents + X.meanvalue * X.numevents)/(numevents+X.numevents); 
+    if (numevents+X.numevents != 0) 
+    {
+      meanvalue 	= (meanvalue*numevents + X.meanvalue * X.numevents)/(numevents+X.numevents); 
+    }
+    else 
+      meanvalue = 0;
     numevents 	+= X.numevents;
     sumsqr	+= X.sumsqr;
 
@@ -849,7 +857,9 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
     }
 
   } /* user event data was there */
-     
+  else {
+    userevents = false; /* no events defined for this file */
+  }   
   fclose(fp);
 #ifdef DEBUG
   cout << "Closing file " << filename << endl;
@@ -1277,8 +1287,14 @@ void UserEventSummaryInfo(int node, int ctx, int thr)
       for(it = userEventDB.begin(), i=0; it != userEventDB.end(); it++, i++ ) 
       {
         // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
-        stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents)
+	if ((*it).second.numevents == 0) 
+	{ 
+	  stddev = 0;
+	} else
+ 	{
+          stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents)
                  - ( (*it).second.meanvalue * (*it).second.meanvalue )));
+	}
 	printf("userevent %d,%d,%d %d \"%s\" %#.16G %#.16G %#.16G %#.16G %#.16G\n", 
 	  node, ctx, thr, i,
 	  (*it).first, 
@@ -1308,8 +1324,14 @@ void UserEventSummaryInfo(int node, int ctx, int thr)
       printf("---------------------------------------------------------------------------------------\n");
       for(it = userEventDB.begin(); it != userEventDB.end(); it++ ) {
         // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
-        stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents) 
+	if ((*it).second.numevents == 0) 
+	{ 
+	  stddev = 0;
+	} else
+ 	{
+          stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents) 
 		 - ( (*it).second.meanvalue * (*it).second.meanvalue )));
+        }
 	printf("%10.4G %10.4G %10.4G %10.4G %10.4G  %s\n",
 	  (*it).second.numevents,
 	  (*it).second.maxvalue,
@@ -2897,7 +2919,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 1998/08/11 14:06:47 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.12 1998/08/11 14:06:47 sameer Exp $                                                   
+ * $Revision: 1.13 $   $Date: 1998/09/22 01:15:01 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.13 1998/09/22 01:15:01 sameer Exp $                                                   
  ***************************************************************************/
 
