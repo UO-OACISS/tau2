@@ -1764,10 +1764,6 @@ EOF
     ret = MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
     return ret;
   }
-  int bar (MPI_Datatype type, MPI_Datatype *newtype)
-  {
-    return MPI_Type_dup(type, newtype);
-  }
 EOF
 
   cat <<EOF > mpi2iorequest.C
@@ -1789,6 +1785,36 @@ cat <<EOF > mpi2attr.C
   {
     return 0;
   }
+EOF
+
+  cat <<EOF > mpi2typeex.C
+  #include <mpi.h>
+
+  int f1( void * sendbuf, void * recvbuf, int count, MPI_Datatype datatype
+  , MPI_Op op, MPI_Comm comm)
+  {
+    return MPI_Exscan( sendbuf, recvbuf, count, datatype, op, comm) ;
+  }
+
+  int f2( MPI_Datatype type, MPI_Datatype * newtype)
+  {
+    return MPI_Type_dup( type, newtype) ;
+  }
+EOF
+
+  cat <<EOF > mpi2add.C
+  #include <mpi.h>
+
+  int f1( int * errorclass)
+  {
+    return MPI_Add_error_class( errorclass) ;
+  }
+
+  int f2( char * datarep, int incount, MPI_Datatype datatype, MPI_Aint * size)
+  {
+    return MPI_Pack_external_size( datarep, incount, datatype, size) ;
+  }
+
 EOF
 
   cat <<EOF > mpi2grequest.C
@@ -1924,7 +1950,19 @@ EOF
     fixmakeargs="$fixmakeargs MPIATTR"
   fi
 
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C mpi2hpconst.o mpi2hpconst.C mpiattr.C mpiattr.o
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2typeex.C  1> /dev/null 2>&1
+  then
+    echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
+    fixmakeargs="$fixmakeargs MPITYPEEX"
+  fi
+
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2add.C  1> /dev/null 2>&1
+  then
+    echo "MPI-2 MPI_Add_error* functions are defined..."
+    fixmakeargs="$fixmakeargs MPIADDERROR"
+  fi
+
+  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C mpi2hpconst.o mpi2hpconst.C mpi2attr.o mpi2attr.C mpi2typeex.o mpi2typeex.C mpi2add.o mpi2add.C
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi

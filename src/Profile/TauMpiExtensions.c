@@ -494,6 +494,7 @@ int mpi_type_set_attr__( MPI_Datatype type, int type_keyval, void * attribute_va
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPITYPEEX
 
 /******************************************************
 ***      MPI_Type_dup wrapper function 
@@ -559,6 +560,7 @@ int mpi_type_dup__( MPI_Datatype type, MPI_Datatype * newtype)
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+#endif /* TAU_MPI_TYPEEX */
 
 /******************************************************/
 /******************************************************/
@@ -840,6 +842,7 @@ int mpi_type_get_extent__( MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * exte
 /******************************************************/
 
 
+#ifdef TAU_MPITYPEEX
 /******************************************************
 ***      MPI_Type_create_f90_real wrapper function 
 ******************************************************/
@@ -1112,6 +1115,8 @@ int mpi_type_match_size__( int typeclass, int size, MPI_Datatype * type)
   return retvalue; 
 }
 
+#endif /* TAU_MPI_TYPEEX */
+
 /******************************************************/
 /******************************************************/
 
@@ -1184,6 +1189,7 @@ int mpi_alltoallw__( void * sendbuf, int * sendcounts, int * sdispls, MPI_Dataty
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPITYPEEX
 
 /******************************************************
 ***      MPI_Exscan wrapper function 
@@ -1250,6 +1256,7 @@ int mpi_exscan__( void * sendbuf, void * recvbuf, int count, MPI_Datatype dataty
   return retvalue; 
 }
 
+#endif /* TAU_MPI_TYPEEX */
 /******************************************************/
 /******************************************************/
 
@@ -8516,6 +8523,8 @@ int mpi_info_free__( MPI_Info * info)
 /******************************************************/
 
 
+#ifdef TAU_MPIADDERROR
+
 /******************************************************
 ***      MPI_Add_error_class wrapper function 
 ******************************************************/
@@ -8719,6 +8728,7 @@ int mpi_add_error_string__( int errorcode, char * string)
   return retvalue; 
 }
 
+#endif /* TAU_MPIADDERROR */
 /******************************************************/
 /******************************************************/
 
@@ -10184,6 +10194,7 @@ int mpi_type_create_resized__( MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exten
 /******************************************************/
 
 
+#ifdef TAU_MPITYPEEX
 /******************************************************
 ***      MPI_Type_get_true_extent wrapper function 
 ******************************************************/
@@ -10249,6 +10260,7 @@ int mpi_type_get_true_extent__( MPI_Datatype datatype, MPI_Aint * true_lb, MPI_A
   return retvalue; 
 }
 
+#endif /* TAU_MPI_TYPEEX */
 /******************************************************/
 /******************************************************/
 
@@ -10390,6 +10402,7 @@ int mpi_unpack_external__( char * datarep, void * inbuf, MPI_Aint insize, MPI_Ai
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPIADDERROR
 
 /******************************************************
 ***      MPI_Pack_external_size wrapper function 
@@ -10456,3 +10469,4 @@ int mpi_pack_external_size__( char * datarep, int incount, MPI_Datatype datatype
   return retvalue; 
 }
 
+#endif /* TAU_MPIADDERROR */
