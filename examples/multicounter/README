@@ -1,0 +1,101 @@
+We show the effect of using a strip mining optimization with the 
+matrix multiply algorithm. Although both the regular multiply 
+algorithm and the strip mining algorithm have the same number of floating
+point operations, they have dramatically different cache behaviors. 
+configure TAU with 
+% configure -MULTIPLECOUTERS
+
+By default, you will be able to use the gettimeofday function only.
+
+However, you can configure TAU with addition options as usual, thus allowing
+the selection of multiple counters.  For example:
+
+[tau2]./configure -MULTIPLECOUNTERS -LINUXTIMERS -CPUTIME -papi=/"your location of papi
+
+will allow you to use linux timers, cpu time, and all papi metrics.
+
+
+After you have configured TAU, you will then need to set environment variables
+denoting which metrics you wish to use for any given run.  You can set
+up to 25 counters (depending on your hardware).  The following example uses
+PAPI_FP_INS for papi floating point instructions, GET_TIME_OF_DAY for the
+standard gettimeofday function, CPU_TIME for cpu time, LINUX_TIMERS
+for linux timers, and PAPI_L1_DCM for L1 data cache misses.
+
+
+[tau2/examples/multicounter]$ setenv COUNTER1 PAPI_FP_INS
+[tau2/examples/multicounter]$ setenv COUNTER2 GET_TIME_OF_DAY
+[tau2/examples/multicounter]$ setenv COUNTER3 CPU_TIME
+[tau2/examples/multicounter]$ setenv COUNTER4 LINUX_TIMERS
+[tau2/examples/multicounter]$ setenv COUNTER5 PAPI_L1_DCM
+[tau2/examples/multicounter]$ ./simple
+
+You will then have four directories containing data for each of the
+selected metrics:
+
+[tau2/examples/multicounter]$ ls -la
+drwxr-xr-x    8 bertie   paraduck     4096 Mar 15 18:57 .
+drwxr-xr-x   26 bertie   paraduck     4096 Mar 15 18:42 ..
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 CPU_TIME
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:41 CVS
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 GET_TIME_OF_DAY
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 LINUX_TIMERS
+-rw-r--r--    1 bertie   paraduck     1440 Mar 15 18:50 Makefile
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 PAPI_FP_INS
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 PAPI_L1_DCM
+-rw-r--r--    1 bertie   paraduck     2214 Feb 23  2000 README
+-rwxr-xr-x    1 bertie   paraduck   131458 Mar 15 18:52 simple
+-rw-r--r--    1 bertie   paraduck     1701 Mar 15 18:21 simple.cpp
+-rw-r--r--    1 bertie   paraduck     6980 Mar 15 18:52 simple.o
+
+
+Move into those directories to see that data:
+[tau2/examples/multicounter]cd PAPI_FP_INS
+[tau2/examples/multicounter/PAPI_FP_INS]pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time   Exclusive   Inclusive       #Call      #Subrs Count/Call Name
+           counts total counts                            
+---------------------------------------------------------------------------------------
+100.0         121   8.405E+06           1           1    8405368 main() int (int, char **)
+100.0   1.662E+04   8.405E+06           1           2    8405247 multiply void (void)
+ 49.9   4.194E+06   4.194E+06           1           0    4194315 multiply-regular void (void)
+ 49.9   4.194E+06   4.194E+06           1           0    4194315 multiply-with-strip-mining-optimization void (void)
+
+
+
+[tau2/examples/multicounter]$ cd PAPI_L1_DCM/
+[tau2/examples/multicounter/PAPI_L1_DCM]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time   Exclusive   Inclusive       #Call      #Subrs Count/Call Name
+           counts total counts                            
+---------------------------------------------------------------------------------------
+100.0          98   2.648E+06           1           1    2648032 main() int (int, char **)
+100.0        6282   2.648E+06           1           2    2647934 multiply void (void)
+ 79.7   2.111E+06   2.111E+06           1           0    2110998 multiply-regular void (void)
+ 20.0   5.307E+05   5.307E+05           1           0     530654 multiply-with-strip-mining-optimization void (void)
+
+
+
+[tau2/examples/multicounter]$ cd GET_TIME_OF_DAY/
+[tau2/examples/multicounter]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0           32          520           1           1     520326 main() int (int, char **)
+ 93.8            5          487           1           2     487898 multiply void (void)
+ 52.0          270          270           1           0     270721 multiply-regular void (void)
+ 40.6          211          211           1           0     211472 multiply-with-strip-mining-optimization void (void)
+
+
+Simply resetting the counters will give you cause the system to track different
+metrics.
