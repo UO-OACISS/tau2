@@ -363,24 +363,28 @@ public class Main {
 
     /*** Store a xml document for a trial ***/
 
-    public String storeDocument(String xmlFile) {
+    public String storeDocument(String xmlFile, String trialId) {
+		if (trialId.compareTo("0") != 0) {
+			String trialIdOut = getLoad().lookupTrial("trial", trialId);
+			if (trialIdOut==null){
+		    	System.out.println("The trial " + trialId + " was not found.");
+		    	System.exit(-1);
+			}    
+		}
 
-	String trialId = null;
-	try {
-	    				    
-	    trialId = getLoad().parse(xmlFile);		
+		try {
+	    	trialId = getLoad().parse(xmlFile, trialId);		
+		} catch (Throwable ex) {
+	    	errorPrint("Error: " + ex.getMessage());
+		}
 
-	} catch (Throwable ex) {
-	    errorPrint("Error: " + ex.getMessage());
-	}
+		if (trialId != null) {
+	    	System.out.println("Loaded " + xmlFile + ", the trial id is: " + trialId);
+		} else {
+	    	errorPrint("Was unable to load document from " + xmlFile);
+		}
 
-	if (trialId != null) {
-	    System.out.println("Loaded " + xmlFile + ", the trial id is: " + trialId);
-	} else {
-	    errorPrint("Was unable to load document from " + xmlFile);
-	}
-
-	return trialId;
+		return trialId;
     }
 
     /*** Beginning of main program. ***/
@@ -428,7 +432,7 @@ public class Main {
 	    }
 	    /***** Load a trial into PerfDB *********/
 	    if (command.equalsIgnoreCase("LOADXML")) {
-		String trialid = demo.storeDocument(args[ctr++]);
+		String trialid = demo.storeDocument(args[ctr], args[ctr+1]);
 		if (trialid != null)
 			exitval = Integer.parseInt(trialid);
 		// continue;

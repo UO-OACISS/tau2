@@ -21,10 +21,15 @@ CREATE TABLE experiment (
 );
 
 
+CREATE TABLE metric (
+    id                      SERIAL          NOT NULL     PRIMARY KEY,
+    name                    TEXT            NOT NULL
+);
+
 CREATE TABLE xml_file (
     id                      SERIAL          NOT NULL     PRIMARY KEY,
-    trial                   INT,
-    metric                  VARCHAR(50),
+    trial                   INT				NOT NULL,
+    metric                  INT				NOT NULL,
     name                    TEXT            NOT NULL
 );
 
@@ -43,7 +48,6 @@ CREATE TABLE function (
     trial                   INT             NOT NULL,
     function_number         INT,
     name                    TEXT            NOT NULL,
-    metric                  VARCHAR(50),
     group_name              VARCHAR(50)
 );
 
@@ -60,6 +64,7 @@ CREATE TABLE interval_location_profile (
     node                    INT              NOT NULL,             
     context                 INT              NOT NULL,
     thread                  INT              NOT NULL,
+    metric                  INT				 NOT NULL,
     inclusive_percentage    DECIMAL,
     inclusive               DECIMAL,
     exclusive_percentage    DECIMAL,
@@ -83,7 +88,9 @@ CREATE TABLE atomic_location_profile (
 );
 
 CREATE TABLE interval_total_summary (
-    function                INT              NOT NULL   PRIMARY KEY,
+    id                		SERIAL           NOT NULL   PRIMARY KEY,
+    function                INT              NOT NULL,
+    metric                  INT				 NOT NULL,
     inclusive_percentage    DECIMAL,
     inclusive               DECIMAL,
     exclusive_percentage    DECIMAL,
@@ -94,7 +101,9 @@ CREATE TABLE interval_total_summary (
 );
 
 CREATE TABLE interval_mean_summary (
-    function                INT              NOT NULL   PRIMARY KEY,
+    id                		SERIAL           NOT NULL   PRIMARY KEY,
+    function                INT              NOT NULL,
+    metric                  INT				 NOT NULL,
     inclusive_percentage    DECIMAL,
     inclusive               DECIMAL,
     exclusive_percentage    DECIMAL,

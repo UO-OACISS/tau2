@@ -6,5 +6,9 @@ JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
 
 #store pprof.xml into Postgresql
 date
-java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadxml ${PERFDB_HOME}/data/pprof.xml
+java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadxml ${PERFDB_HOME}/data/pprof.xml 0
 date
+# java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadxml ${PERFDB_HOME}/data/pprof_2.xml 1
+# date
+# java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadxml ${PERFDB_HOME}/data/pprof_3.xml 1
+# date

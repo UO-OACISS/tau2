@@ -23,6 +23,8 @@ public class LoadHandler extends DefaultHandler {
     protected String UE_TABLE = "user_event";
     protected String ATOMIC_LOC_TABLE = "atomic_location_profile";
     protected int funIndexCounter;
+    protected int funTotalCounter;
+    protected int funMeanCounter;
     protected int ueIndexCounter;
     protected int interLocCounter;
     protected int atomicLocCounter;
@@ -39,6 +41,7 @@ public class LoadHandler extends DefaultHandler {
     protected String metricId = "";
     protected String trialId = "";
     protected String trialTime = "";
+	protected boolean newTrial = false;
 
     protected int funAmt;
     protected int ueAmt;
@@ -96,10 +99,11 @@ public class LoadHandler extends DefaultHandler {
     private BufferedWriter mwriter;
 	
 
-    public LoadHandler(DB db){	
+    public LoadHandler(DB db, String trialId){	
 	
 		super();
 		this.dbconnector = db;
+		this.trialId = trialId;
 	
 		try{
 
@@ -141,6 +145,26 @@ public class LoadHandler extends DefaultHandler {
 	    	funIndexCounter = 0;
 		else
 	    	funIndexCounter = Integer.parseInt(tempStr);
+
+		// get the current max(id) for the interval_total_summary table
+
+		buf.delete(0, buf.toString().length());
+		buf.append("select max(id) from interval_total_summary;");
+		tempStr = getDB().getDataItem(buf.toString());
+		if (tempStr == null)
+	    	funTotalCounter = 0;
+		else
+	    	funTotalCounter = Integer.parseInt(tempStr);
+
+		// get the current max(id) for the interval_mean_summary table
+
+		buf.delete(0, buf.toString().length());
+		buf.append("select max(id) from interval_mean_summary;");
+		tempStr = getDB().getDataItem(buf.toString());
+		if (tempStr == null)
+	    	funMeanCounter = 0;
+		else
+	    	funMeanCounter = Integer.parseInt(tempStr);
 
 		// get the current max(id) for the user_event table
 
@@ -211,17 +235,18 @@ public class LoadHandler extends DefaultHandler {
     }
 
     /*** Initialize the document table when begining loading a XML document.*/
+	// we will set the trial and metric ids to 0 initially, but they will be updated.
 
     public void startDocument() throws SAXException{
 		
 	StringBuffer buf = new StringBuffer();
-	buf.append("insert into");
-	buf.append(" " + XMLFILE_TABLE + " ");
-	buf.append("(name)");
+	buf.append("insert into ");
+	buf.append(XMLFILE_TABLE);
+	buf.append(" (trial, metric, name)");
 	buf.append(" values ");
 	File ff = new File(getDocumentName());
         String filename = ff.getAbsolutePath();
-	buf.append("('" + filename + "'); ");
+	buf.append("(0, 0, '" + filename + "'); ");
 	try{
 	    getDB().executeUpdate(buf.toString());
 	    buf.delete(0, buf.toString().length());
@@ -442,42 +467,80 @@ public class LoadHandler extends DefaultHandler {
 	
 	if (name.equalsIgnoreCase("ProblemSize")){
 	    	    
-	    buf.append("insert into");
-	    buf.append(" " + getTrialTable() + " ");
-	    if (probsize==""){	
-	    	buf.append("(experiment, time, node_count, contexts_per_node, threads_per_context)");
-	    	buf.append(" values ");
-	    	buf.append("(" + expid + ", '" + trialTime 
-			   + "', "  + nodenum 
-			   + ", " + contextpnode
-			   + ", " + threadpcontext + "); ");       
-	    }
-	    else {
-	    	buf.append("(experiment, time, problem_size, node_count, contexts_per_node, threads_per_context)");
-	    	buf.append(" values ");
-	    	buf.append("(" + expid + ", '" + trialTime 
-			   + "', " + probsize + ", " + nodenum 
-			   + ", " + contextpnode
-			   + ", " + threadpcontext + "); ");       
-	    }
-	   	// System.out.println(buf.toString());
-	    try{	
+		// if this is a new trial, create a new trial
+		if (trialId.compareTo("0") == 0) {
+			newTrial = true;
+	    	buf.append("insert into ");
+	    	buf.append(getTrialTable());
+	    	if (probsize==""){	
+	    		buf.append(" (experiment, time, node_count, contexts_per_node, threads_per_context)");
+	    		buf.append(" values ");
+	    		buf.append("(" + expid + ", '" + trialTime 
+			   	+ "', "  + nodenum 
+			   	+ ", " + contextpnode
+			   	+ ", " + threadpcontext + "); ");       
+	    	} else {
+	    		buf.append(" (experiment, time, problem_size, node_count, contexts_per_node, threads_per_context)");
+	    		buf.append(" values ");
+	    		buf.append("(" + expid + ", '" + trialTime 
+			   	+ "', " + probsize + ", " + nodenum 
+			   	+ ", " + contextpnode
+			   	+ ", " + threadpcontext + "); ");       
+	    	}
+	   		// System.out.println(buf.toString());
+	    	try{	
+	    		getDB().executeUpdate(buf.toString());
+	    		buf.delete(0, buf.toString().length());
+				if (getDB().getDBType().compareTo("mysql") == 0)
+		    		buf.append("select LAST_INSERT_ID();");
+				else
+	    			buf.append("select currval('trial_id_seq');");
+	    		trialId = getDB().getDataItem(buf.toString());
+	    	} catch (SQLException ex){
+                	ex.printStackTrace();
+	    	}		    
+		} else {
+	    	try{	
+				// get the functions from the database
+				newTrial = false;
+				buf.append("select id, function_number from function where trial = "+trialId+" order by function_number asc;");
+	    		ResultSet functions = getDB().executeQuery(buf.toString());	
+				String tmpId;
+				int tmpInt;
+	    		while (functions.next() != false){
+					tmpId = functions.getString(1);
+					tmpInt = functions.getInt(2);
+		    		funArray[tmpInt] = tmpId;
+				}
+				functions.close();
+	    	} catch (SQLException ex){
+                	ex.printStackTrace();
+	    	}		    
+		}
+
+		// insert the metric
+		try{
+	    	buf.delete(0, buf.toString().length());
+	    	buf.append("insert into metric (name) values (TRIM('");
+			buf.append(metricStr);
+	    	buf.append("'));");
+	   		// System.out.println(buf.toString());
 	    	getDB().executeUpdate(buf.toString());
 	    	buf.delete(0, buf.toString().length());
 			if (getDB().getDBType().compareTo("mysql") == 0)
 		    	buf.append("select LAST_INSERT_ID();");
 			else
-	    		buf.append("select currval('trial_id_seq');");
-	    	trialId = getDB().getDataItem(buf.toString());
-	    } catch (SQLException ex){
-                ex.printStackTrace();
-	    }		    
+	    		buf.append("select currval('metric_id_seq');");
+	    	metricId = getDB().getDataItem(buf.toString());
+	    } catch (SQLException ex) {
+			ex.printStackTrace();
+		}
 
 	    try{	
 			// update the xml_file table to have this trial, metric
 	   		buf.delete(0, buf.toString().length());
 			buf.append("update " + XMLFILE_TABLE + " set trial = " + trialId);
-			buf.append(", metric = TRIM('" + metricStr + "') where id = " + getDocumentId() + ";");
+			buf.append(", metric = " + metricId + " where id = " + getDocumentId() + ";");
 	   		// System.out.println(buf.toString());
 	    	getDB().executeUpdate(buf.toString());
 	    } catch (SQLException ex){
@@ -492,14 +555,14 @@ public class LoadHandler extends DefaultHandler {
 		    	funIndexCounter++;
 		    	if (fungroup.trim().length() == 0) // the function doesn't belong to any group.
 					fungroup = "NA";
-		    	String ftempStr = String.valueOf(funIndexCounter)+"\t"+getTrialId()+"\t"+funid+"\t"+funname+"\t"+metricStr+"\t"+fungroup;
+		    	String ftempStr = String.valueOf(funIndexCounter)+"\t"+getTrialId()+"\t"+funid+"\t"+funname+"\t"+fungroup;
 		    	fwriter.write(ftempStr, 0, ftempStr.length());
 		    	fwriter.newLine();
 		    	funArray[tempInt] = String.valueOf(funIndexCounter);	
 			}	
 
 			interLocCounter++;
-			String ltempStr = String.valueOf(interLocCounter)+"\t"+funArray[tempInt]+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+ inclperc + "\t" + incl + "\t" + exclperc + "\t" + excl + "\t" + callnum + "\t" + subrs + "\t" + inclpcall;
+			String ltempStr = String.valueOf(interLocCounter)+"\t"+funArray[tempInt]+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+ metricId + "\t"+ inclperc + "\t" + incl + "\t" + exclperc + "\t" + excl + "\t" + callnum + "\t" + subrs + "\t" + inclpcall;
 			ilwriter.write(ltempStr, 0, ltempStr.length());
 			ilwriter.newLine();
 	    } catch (IOException ex){
@@ -510,7 +573,8 @@ public class LoadHandler extends DefaultHandler {
 	    fungroup = "";
 	}	
 
-	if (name.equalsIgnoreCase("userevent")){
+	// don't add the user event if this is not a new trial
+	if (name.equalsIgnoreCase("userevent") && newTrial){
 	    try{		
 			int ueidInt= Integer.parseInt(ueid);
 			if (ueArray[ueidInt] == null){
@@ -535,7 +599,9 @@ public class LoadHandler extends DefaultHandler {
 
 	if (name.equalsIgnoreCase("totalfunction")) {
 	    try{
-		String ttempStr = funArray[Integer.parseInt(funid)]  
+		funTotalCounter++;
+		String ttempStr = String.valueOf(funTotalCounter) + "\t" + funArray[Integer.parseInt(funid)]  
+			+ "\t" + metricId
 		    + "\t" + inclperc  + "\t" + incl      + "\t" + exclperc
 		    + "\t" + excl      + "\t" + callnum   + "\t" + subrs 
 		    + "\t" + inclpcall;
@@ -552,7 +618,9 @@ public class LoadHandler extends DefaultHandler {
 
 	if (name.equalsIgnoreCase("meanfunction")) {
 	    try{
-		String mtempStr = funArray[Integer.parseInt(funid)]
+		funMeanCounter++;
+		String mtempStr = String.valueOf(funMeanCounter) + "\t" + funArray[Integer.parseInt(funid)]
+			+ "\t" + metricId
 		    + "\t" + inclperc  + "\t" + incl      + "\t" + exclperc
 		    + "\t" + excl      + "\t" + callnum   + "\t" + subrs 
 		    + "\t" + inclpcall;

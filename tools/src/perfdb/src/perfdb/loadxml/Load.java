@@ -35,9 +35,9 @@ public class Load {
         this.db = newValue;
     }
 
-    public LoadHandler newHandler() {
+    public LoadHandler newHandler(String trialId) {
 	
-	return new LoadHandler(getDB()); // no DB partition.
+	return new LoadHandler(getDB(), trialId); // no DB partition.
 	
     }
 
@@ -48,13 +48,13 @@ public class Load {
     /*** Parse an XML file related to a trial using a SAX parser
 	 Note: the parser in <parserClass> MUST be included in the Java CLASSPATH. ***/
 
-    public String parse(String xmlFile) {
+    public String parse(String xmlFile, String trialid) {
 	
 	try {
 	    
 	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);	    
 	    
-	    DefaultHandler handler = this.newHandler();
+	    DefaultHandler handler = this.newHandler(trialid);
 	    xmlreader.setContentHandler(handler);
 	    xmlreader.setErrorHandler(handler);
 	    try {
@@ -156,6 +156,29 @@ public class Load {
 	    ex.printStackTrace();
 	    return null;
 	}
+    }    
+
+    public String lookupTrial(String trialTable, String trialid) {
+		StringBuffer buf = new StringBuffer();
+	
+		buf.append("select distinct id from ");
+		buf.append(trialTable);
+		buf.append("  where id = " + trialid.trim() + "; ");
+
+		try {
+	    	ResultSet expId = getDB().executeQuery(buf.toString());	
+	    	if (expId.next() == false){			
+				expId.close();
+				return null;
+	    	} else {
+				String str = expId.getString(1);
+				expId.close(); 
+				return str;
+	    	}
+		} catch (Exception ex) {
+	    	ex.printStackTrace();
+	    	return null;
+		}
     }    
 
     /*** insert an experiment record into PerfDB ***/
