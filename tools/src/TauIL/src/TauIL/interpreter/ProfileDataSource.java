@@ -1,14 +1,14 @@
+/************************************************************
+ *
+ *           File : ProfileDataSource.java
+ *         Author : Tyrel Datwyler
+ *
+ *    Description : Gateway between TauIL and ParaProf for
+ *                  retrivial of profile data.
+ *
+ ************************************************************/
+
 package TauIL.interpreter;
-
-/* 
-
-import paraprof.ParaProfTrial;
-import paraprof.GlobalMapping;
-import paraprof.GlobalMappingElement;
-
-*/
-
-// import paraprof.TauOutputSession;
 
 import paraprof.GlobalMapping;
 import paraprof.GlobalMappingElement;
@@ -16,36 +16,35 @@ import paraprof.ParaProfDataSession;
 import paraprof.ParaProfObserver;
 import paraprof.TauPprofOutputSession;
 
-// import dms.dss.DataSession;
-
 import java.io.File;
 import java.util.ListIterator;
 import java.util.Vector;
 
 class ProfileDataSource extends DataSource implements ParaProfObserver {
-    //    private ParaProfTrial trial;
 
     private GlobalMapping event_mapping;
     private GlobalMappingElement event;
-
     private ParaProfDataSession data;
-
-    private boolean time_metric = true;
 
     private Vector files = new Vector();
     private File [] source_file = new File[1];
+
     private ListIterator iterator;
 
+    private boolean time_metric = true;
     private boolean loading = false;
 
+    /* Assume by default that profile data is coming from pprof.dat. */
     protected ProfileDataSource() {
 	this("pprof.dat");
     }
 
+    /* Supply file name as source of profile data. */
     protected ProfileDataSource(String fname) {
 	setFile(fname);
     }
 
+    /* Set the filename for profile data source. */
     protected void setFile(String fname) {
 	if (fname == null || fname.equals(""))
 	    source_file[0] = new File("pprof.dat");
@@ -53,25 +52,25 @@ class ProfileDataSource extends DataSource implements ParaProfObserver {
 	    source_file[0] = new File(fname);
     }
 
+    /* Load profile data into memory. */
     protected void load() {
-	//	trial = new ParaProfTrial();
 	data = new TauPprofOutputSession();
 
-	//	trial.initialize(source_file);
-	System.out.println(source_file[0]);
-	files.add(source_file);
-	
+	files.add(source_file);	
 	data.addObserver(this);
+
 	loading = true;
 	data.initialize(files);
 	
 	while(loading) { /* Got Nothing to do so spin our wheels */ }
     }
 
+    /* Called by profile reader on completion. Specified by ParaProfObserver interface. */
     public void update(Object obj){
 	this.update();
     }
 
+    /* Defined in ParaProfObserver interface. Called on completion of data load. */
     public void update(){
 	data.terminate();
 
@@ -86,12 +85,13 @@ class ProfileDataSource extends DataSource implements ParaProfObserver {
 	*/
 	
 	//	time_metric = data.isTimeMetric();
-	System.out.println("Number of mappings : " + data.getNumberOfMappings());
+
 	event_mapping = data.getGlobalMapping();
 	iterator = event_mapping.getMappingIterator(0);
 	loading = false;
     }
 
+    /* The following accessor methods should be self-explanatory. */
     protected boolean isTimeMetric() {
 	return time_metric;
     }
