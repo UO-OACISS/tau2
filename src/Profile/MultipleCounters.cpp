@@ -241,7 +241,10 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
    /* We obtain the timestamp from COUNTER1, so we only need to trigger 
       COUNTER2-N or i=1 through no. of active functions not through 0 */
    for (int i = 1; i < numberOfActiveFunctions; i++)
-     counterEvents[i] = new TauUserEvent(names[i]);
+   {
+     counterEvents[i] = new TauUserEvent(names[i], true);
+     /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/ 
+   }
 #endif /* TRACING_ON */
   }
   RtsLayer::UnLockDB(); // mutual exclusion primitive
