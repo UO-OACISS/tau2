@@ -149,6 +149,7 @@ public:
 	FunctionInfo * ThisFunction;
 #ifdef TAU_CALLPATH
 	FunctionInfo * CallPathFunction;
+	bool 	       AddInclCallPathFlag; 
 #endif // TAU_CALLPATH
 	Profiler * ParentProfiler; 
 
@@ -181,6 +182,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.43 $   $Date: 2002/08/08 22:23:17 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.43 2002/08/08 22:23:17 sameer Exp $ 
+ * $Revision: 1.44 $   $Date: 2002/08/09 18:10:28 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.44 2002/08/09 18:10:28 sameer Exp $ 
  ***************************************************************************/
