@@ -299,8 +299,9 @@ public class GlobalThreadDataElement implements Mapping{
 	    double numEvents = this.getUserEventNumberValue();
 	    double mean = this.getUserEventMeanValue();
 
-	    double stddev = java.lang.Math.sqrt(java.lang.Math.abs( sumsqr/numEvents)
-				- ( mean * mean ));
+	    double stddev = java.lang.Math.sqrt(java.lang.Math.abs( (sumsqr/numEvents)
+				- ( mean * mean )));
+
 
 	    position = 72;
 	    tmpString = new String(Double.toString(
