@@ -42,6 +42,8 @@
 #include "Profile/hitachi.h"
 #endif /* HITACHI */
 #include "Profile/Profiler.h"
+#include "tauroot.h"
+#include "tauarch.h"
 
 #ifdef CRAY_TIMERS
 #include <intrinsics.h>
@@ -1124,6 +1126,63 @@ int RtsLayer::DumpEDF(int tid)
 	return 1;
 }
 
+//////////////////////////////////////////////////////////////////////
+// MergeAndConvertTracesIfNecessary does just that!
+//////////////////////////////////////////////////////////////////////
+
+int RtsLayer::MergeAndConvertTracesIfNecessary(void)
+{ 
+  char *outfile;
+  /* Get environment variables */
+  if ((outfile = getenv("TAU_TRACEFILE")) != NULL)
+  { /* output file is defined. We need to merge the traces */
+    /* Now, who does the merge and conversion? */
+    if ((myNode() == 0) && (myThread() == 0))
+    {
+      char *outdir;
+      char *keepfiles;
+      char cmd[1024];
+      char rmcmd[256]; 
+      char cdcmd[1024];
+      char *tauroot=TAUROOT;
+      char *tauarch=TAU_ARCH;
+      /* Should we get rid of intermediate trace files? */
+      if((keepfiles = getenv("TAU_KEEP_TRACEFILES")) == NULL)
+      {
+	strcpy(rmcmd, "/bin/rm -f app12345678.trc tautrace.*.trc tau.edf events.*.edf");
+      }
+      else
+      { 
+	strcpy(rmcmd," "); /* NOOP */
+      }
+
+      /* Next, look for trace directory */
+      if ((outdir = getenv("TRACEDIR")) != NULL)
+      { /* change directory to outdir */
+        sprintf(cdcmd, "cd %s;", outdir);
+      }
+      else
+      {
+	strcpy(cdcmd, " ");
+      }
+
+      /* create the command */
+      sprintf(cmd, "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s/%s/bin/tau2vtf app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, tauroot, tauarch, outfile, rmcmd);
+#ifdef DEBUG_PROF
+      printf("The merge/convert cmd is: %s\n", cmd);
+#endif /* DEBUG_PROF */
+
+      /* and execute it */
+      system(cmd);
+    } /* on node 0, thread 0 */
+  } /* if output file is defined */
+  else 
+  { /* output file not defined, just exit normally */
+    return 0;
+  }
+  return 1;
+}
+
 #ifdef __GNUC__
 #ifndef NO_RTTI
 #include <cxxabi.h>
@@ -1150,6 +1209,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.58 $   $Date: 2004/08/13 00:46:17 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.58 2004/08/13 00:46:17 sameer Exp $ 
+ * $Revision: 1.59 $   $Date: 2004/08/21 21:57:16 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.59 2004/08/21 21:57:16 sameer Exp $ 
  ***************************************************************************/

@@ -1110,6 +1110,7 @@ int Profiler::StoreData(int tid)
 #else /* TAU_EPILOG */
 	TraceEvClose(tid);
 	RtsLayer::DumpEDF(tid);
+	RtsLayer::MergeAndConvertTracesIfNecessary();
 #endif /* TAU_EPILOG */
 #endif // TRACING_ON 
 
@@ -2046,6 +2047,7 @@ int Profiler::StoreData(int tid){
 #else /* TAU_EPILOG */
 	TraceEvClose(tid);
 	RtsLayer::DumpEDF(tid);
+	RtsLayer::MergeAndConvertTracesIfNecessary();
 #endif /* TAU_EPILOG */
 #endif // TRACING_ON
 
@@ -2644,8 +2646,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.99 $   $Date: 2004/07/28 00:50:45 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.99 2004/07/28 00:50:45 sameer Exp $ 
+ * $Revision: 1.100 $   $Date: 2004/08/21 21:57:16 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.100 2004/08/21 21:57:16 sameer Exp $ 
  ***************************************************************************/
 
 	
