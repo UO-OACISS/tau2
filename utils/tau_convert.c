@@ -400,8 +400,11 @@ static PCXX_EV *get_next_rec (struct trcdescr *tdes)
       if ( no == 0 )
       {
         /* -- no more event record: ----------------------------------------- */
+	/* when this is called by GetMatchingRecv it shouldn't close the file. */
+        /* 
         close (tdes->fd);
         tdes->fd = -1;
+	*/
         return ((PCXX_EV *) NULL);
       }
       else if ( (no % sizeof(PCXX_EV)) != 0 )
@@ -447,8 +450,11 @@ off_t last_position;
       if ( no == 0 )
       {
         /* -- no more event record: ----------------------------------------- */
+	/* when this is called by GetMatchingRecv it shouldn't close the file. */
+	/*
         close (tdes->fd);
         tdes->fd = -1;
+	*/
         return ((PCXX_EV *) NULL);
       }
       else if ( (no % sizeof(PCXX_EV)) != 0 )
