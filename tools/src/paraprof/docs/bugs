@@ -22,7 +22,7 @@ time column.  Should start it at the name column.
 
 ------
 # Date: 1nd March 2004
-# Status: (outstanding)
+# Status: (completed - 2nd March 2004 Robert Bell)
 # Reporter: Robert Bell (University of Oregon)
 Trying to click on show userevent stat option causes
 ParaProf to crash.

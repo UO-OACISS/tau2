@@ -20,3 +20,32 @@ issues if the user changes assigns different groups on a thread level to the
 same mapping. Ie, we do not show thread-level granularity for groups.
 ------
 
+------
+# Date: 2nd March 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+The StatWindow strings need an overhaul. Behaviour needs to be similar to
+those of the callpath data windows.
+------
+
+------
+# Date: 2nd March 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Need to update help windows.
+------
+
+------
+# Date: 2nd March 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Code docs needs to be in the form of javadoc.
+------
+
+------
+# Date: 2nd March 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Need to add printing and image output support to the StatWindows.
+------
+
