@@ -13,7 +13,7 @@ public class FunctionDataObject {
 	private int numSubroutines;
 	private double inclusivePerCall;
 
-	public void setFunctionID (int functionID) {
+	public void setFunctionIndexID (int functionID) {
 		this.functionID = functionID;
 	}
 
@@ -57,7 +57,7 @@ public class FunctionDataObject {
 		this.inclusivePerCall = inclusivePerCall;
 	}
 
-	public int getFunctionID () {
+	public int getFunctionIndexID () {
 		return this.functionID;
 	}
 

@@ -673,7 +673,7 @@ public class PerfDBSession extends DataSession {
 				funDO.setNodeID(resultSet.getInt(9));
 				funDO.setContextID(resultSet.getInt(10));
 				funDO.setThreadID(resultSet.getInt(11));
-				funDO.setFunctionID(resultSet.getInt(12));
+				funDO.setFunctionIndexID(resultSet.getInt(12));
 				functionData.addElement(funDO);
 	    	}
 			resultSet.close(); 

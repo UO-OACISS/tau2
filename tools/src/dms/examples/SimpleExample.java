@@ -47,15 +47,15 @@ public class SimpleExample {
 		FunctionDataObject functionDataObject;
 		Function function;
 		String name, group;
-		int functionID, trial, node, context, thread;
+		int functionIndexID, trial, node, context, thread;
 		double inclusivePercentage;
 
 		System.out.println ("Inclusive Percentages:");
 		System.out.println ("Trial, Node, Context, Thread, Name, Group, Value:");
 		while (myIterator.hasNext()) {
 			functionDataObject = (FunctionDataObject)(myIterator.next());
-			functionID = functionDataObject.getFunctionID();
-			function = session.getFunction(functionID);
+			functionIndexID = functionDataObject.getFunctionIndexID();
+			function = session.getFunction(functionIndexID);
 			name = function.getName();
 			group = function.getGroup();
 			trial = function.getTrialID();
