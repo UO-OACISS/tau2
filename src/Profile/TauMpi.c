@@ -71,6 +71,7 @@ typedef struct request_list_ {
   } \
 	rq_remove_at( head, tail, head_alloc, ptr, last );}
 
+
 #define rq_add( head, tail, rq ) { \
   if (!head) { \
     head = tail = rq; \
@@ -1466,7 +1467,9 @@ MPI_Request * request;
       newrq->tag = tag;
       newrq->otherParty = dest;
       newrq->next = 0;
+      /*
       rq_add( requests_head_0, requests_tail_0, newrq );
+      */
     }
     TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
@@ -1629,7 +1632,9 @@ MPI_Request * request;
       newrq->tag = tag;
       newrq->otherParty = dest;
       newrq->next = 0;
+      /*
       rq_add( requests_head_0, requests_tail_0, newrq );
+      */
     }
     TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
@@ -1708,7 +1713,9 @@ MPI_Request * request;
       newrq->tag = tag;
       newrq->otherParty = dest;
       newrq->next = 0;
+      /*
       rq_add( requests_head_0, requests_tail_0, newrq );
+      */
     }
     TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
@@ -1827,7 +1834,8 @@ MPI_Request * request;
       newrq->tag = tag;
       newrq->otherParty = dest;
       newrq->next = 0;
-      rq_add( requests_head_0, requests_tail_0, newrq );
+      /* rq_add( requests_head_0, requests_tail_0, newrq );
+       * */
     }
     TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
@@ -1872,7 +1880,9 @@ MPI_Request * request;
       newrq->tag = tag;
       newrq->otherParty = dest;
       newrq->next = 0;
+      /*
       rq_add( requests_head_0, requests_tail_0, newrq );
+      */
     }
     TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
@@ -1917,7 +1927,9 @@ MPI_Request * request;
       newrq->tag = tag;
       newrq->otherParty = dest;
       newrq->next = 0;
+      /*
       rq_add( requests_head_0, requests_tail_0, newrq );
+      */
     }
     TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
@@ -2086,7 +2098,9 @@ MPI_Request * request;
       newrq->tag = tag;
       newrq->otherParty = dest;
       newrq->next = 0;
+      /*
       rq_add( requests_head_0, requests_tail_0, newrq );
+      */
     }
     TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
@@ -2299,7 +2313,9 @@ MPI_Request * request;
       newrq->tag = tag;
       newrq->otherParty = dest;
       newrq->next = 0;
+      /*
       rq_add( requests_head_0, requests_tail_0, newrq );
+      */
     }
     TAU_TRACE_SENDMSG(newrq->tag, newrq->otherParty, newrq->size);
   }
