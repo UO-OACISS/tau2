@@ -893,7 +893,7 @@ void MultipleCounterLayer::papiMCL(int tid, double values[]){
 
 void MultipleCounterLayer::papiWallClockMCL(int tid, double values[]){
 static long long oldvalue = 0L;
-static double offset = 0;
+static long long offset = 0;
 long long newvalue = 0L;
 #ifdef TAU_PAPI
   newvalue = PAPI_get_real_usec();
