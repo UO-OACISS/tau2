@@ -30,7 +30,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/research/parallel/sameer/gar/research/tau2
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		   #ENDIF#
@@ -56,15 +56,17 @@ LSX = .a
 #SOL2#PROFILEOPT9              = -DNO_RTTI             #ENDIF#
 #GNU#PROFILEOPT10              = -DNO_RTTI             #ENDIF#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
+#PGI#PROFILEOPT12	       = 		       #ENDIF#
+#CRAYCC#PROFILEOPT13	       = -h instantiation=used #ENDIF#
+#SGICC#PROFILEOPT14	       = -ptused 	       #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 #TRACE#EVENTS_O		       = pcxx_events.o	       #ENDIF#
-#SGIMP#PROFILEOPT12	       = -ptused	       #ENDIF#
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 
-PROFILEOPTS = $(PROFILEOPT1) $(PROFILEOPT2) $(PROFILEOPT3) $(PROFILEOPT4) \
-              $(PROFILEOPT5) $(PROFILEOPT6) $(PROFILEOPT7) $(PROFILEOPT8) \
-	      $(PROFILEOPT9) $(PROFILEOPT10) $(PROFILEOPT11) $(TRACEOPT) \
-	      $(PROFILEOPT12) 
+PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
+              $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
+	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
+	      $(PROFILEOPT13) $(PROFILEOPT14) $(TRACEOPT)
 ##############################################
 #KAI#AR			= $(CONFIG_CXX)     #ENDIF#
 #KAI#ARFLAGS			= -o		    #ENDIF#

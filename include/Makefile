@@ -33,7 +33,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/research/parallel/mikek/tau2
+TAUROOT=/research/parallel/sameer/gar/research/tau2
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		  #ENDIF#
@@ -62,13 +62,17 @@ LSX = .a
 #SOL2#PROFILEOPT9              = -DNO_RTTI             #ENDIF#
 #GNU#PROFILEOPT10              = -DNO_RTTI             #ENDIF#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
+#PGI#PROFILEOPT12	       = 		       #ENDIF#
+#CRAYCC#PROFILEOPT13	       = -h instantiation=used #ENDIF#
+#SGICC#PROFILEOPT14	       = -ptused 	       #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 
-PROFILEOPTS = $(PROFILEOPT1) $(PROFILEOPT2) $(PROFILEOPT3) $(PROFILEOPT4) \
-              $(PROFILEOPT5) $(PROFILEOPT6) $(PROFILEOPT7) $(PROFILEOPT8) \
-	      $(PROFILEOPT9) $(PROFILEOPT10) $(PROFILEOPT11) $(TRACEOPT)
+PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
+              $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
+	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
+	      $(PROFILEOPT13) $(PROFILEOPT14) $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
@@ -76,7 +80,7 @@ TAUDEFS 	= $(PROFILEOPTS)
 
 TAUINC        	= -I$(TAUROOT)/include
 
-TAULIBS		= -L$(TAUROOT)/lib/$(CONFIG_ARCH) -lprof $(LEXTRA)
+TAULIBS		= -L$(TAUROOT)/lib/$(CONFIG_ARCH) -lprof -lm $(LEXTRA)
 
 #############################################
 # These options could be included in the application Makefile as 
