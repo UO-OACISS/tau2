@@ -54,6 +54,13 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
   else
     return r1->line < r2->line;
 }
+
+static bool itemEqual(const itemRef* r1, const itemRef* r2) {
+  return ( (r1->kind == r2->kind) &&
+	   (r1->line == r2->line) &&
+           (r1->col  == r2->col) &&
+           (r1->isTarget == r2->isTarget));
+}
  
 void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
@@ -200,6 +207,7 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     }
   }
   sort(itemvec.begin(), itemvec.end(), locCmp);
+  unique(itemvec.begin(), itemvec.end(),itemEqual);
 }
 
 void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
@@ -614,6 +622,9 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 		{ 
 		  /* if there was no return */
 		  write_from =  (*it)->col - 1;
+#ifdef DEBUG
+		  cout <<"WRITE FROM = "<<write_from<<endl;
+#endif /* DEBUG */
 		}
 
 		instrumented = true;
@@ -644,6 +655,9 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 	if (it+1 != itemvec.end())
  	{
 	  write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col : inbufLength; 
+#ifdef DEBUG
+          cout <<"CHECKING write_upto = "<<write_upto<<endl;
+#endif /* DEBUG */
 	}
 	else
 	  write_upto = inbufLength; 
