@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.4 2004/04/02 23:28:17 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.5 2004/04/06 18:00:06 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -299,33 +299,47 @@ public class Function {
 		return funs;
 	}
 
-	public int saveFunction(DB db, int newTrialID, Vector metricID) {
+	public int saveFunction(DB db, int newTrialID, Vector metricID, int saveMetricIndex) {
 		int newFunctionID = 0;
 		try {
 			PreparedStatement statement = null;
-			statement = db.prepareStatement("INSERT INTO function (trial, name, group_name) VALUES (?, ?, ?)");
-			statement.setInt(1, newTrialID);
-			statement.setString(2, name);
-			statement.setString(3, group);
-			statement.executeUpdate();
-			String tmpStr = new String();
-			if (db.getDBType().compareTo("mysql") == 0)
-				tmpStr = "select LAST_INSERT_ID();";
-			else
-				tmpStr = "select currval('function_id_seq');";
-			newFunctionID = Integer.parseInt(db.getDataItem(tmpStr));
+			if (saveMetricIndex < 0) {
+				statement = db.prepareStatement("INSERT INTO function (trial, name, group_name) VALUES (?, ?, ?)");
+				statement.setInt(1, newTrialID);
+				statement.setString(2, name);
+				statement.setString(3, group);
+				statement.executeUpdate();
+				String tmpStr = new String();
+				if (db.getDBType().compareTo("mysql") == 0)
+					tmpStr = "select LAST_INSERT_ID();";
+				else
+					tmpStr = "select currval('function_id_seq');";
+				newFunctionID = Integer.parseInt(db.getDataItem(tmpStr));
+			} else {
+				statement = db.prepareStatement("SELECT id FROM function where name = ?");
+				statement.setString(1, name);
+	    		ResultSet resultSet = statement.executeQuery();
+	    		while (resultSet.next() != false) {
+					newFunctionID = resultSet.getInt(1);
+	    		}
+				resultSet.close(); 
+			}
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the function.");
 			e.printStackTrace();
 			System.exit(0);
 		}
+
 		// save the function mean summaries
 		if (meanSummary != null) {
 			Enumeration enum = meanSummary.elements();
 			FunctionDataObject fdo;
+			int i = 0;
 			while (enum.hasMoreElements()) {
-				fdo = (FunctionDataObject)enum.nextElement();
-				fdo.saveMeanSummary(db, newFunctionID, metricID);
+				if (saveMetricIndex < 0 || saveMetricIndex == i++) {
+					fdo = (FunctionDataObject)enum.nextElement();
+					fdo.saveMeanSummary(db, newFunctionID, metricID, saveMetricIndex);
+				}
 			}
 		}
 
@@ -333,9 +347,12 @@ public class Function {
 		if (totalSummary != null) {
 			Enumeration enum = totalSummary.elements();
 			FunctionDataObject fdo;
+			int i = 0;
 			while (enum.hasMoreElements()) {
-				fdo = (FunctionDataObject)enum.nextElement();
-				fdo.saveTotalSummary(db, newFunctionID, metricID);
+				if (saveMetricIndex < 0 || saveMetricIndex == i++) {
+					fdo = (FunctionDataObject)enum.nextElement();
+					fdo.saveTotalSummary(db, newFunctionID, metricID, saveMetricIndex);
+				}
 			}
 		}
 			return newFunctionID;

@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.5 2004/04/05 16:10:43 bertie Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.6 2004/04/06 18:00:07 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -411,16 +411,16 @@ public class Trial {
 	    PreparedStatement stmt1 = null;
 	    stmt1 = db.prepareStatement("INSERT INTO metric (name, trial) VALUES (?, ?)");
 	    while (enum.hasMoreElements()) {
-		metric = (Metric)enum.nextElement();
-		stmt1.setString(1, metric.getName());
-		stmt1.setInt(2, newTrialID);
-		stmt1.executeUpdate();
-		tmpStr = new String();
-		if (db.getDBType().compareTo("mysql") == 0)
-		    tmpStr = "select LAST_INSERT_ID();";
-		else
-		    tmpStr = "select currval('metric_id_seq');";
-		metric.setID(Integer.parseInt(db.getDataItem(tmpStr)));
+			metric = (Metric)enum.nextElement();
+			stmt1.setString(1, metric.getName());
+			stmt1.setInt(2, newTrialID);
+			stmt1.executeUpdate();
+			tmpStr = new String();
+			if (db.getDBType().compareTo("mysql") == 0)
+				tmpStr = "select LAST_INSERT_ID();";
+			else
+				tmpStr = "select currval('metric_id_seq');";
+			metric.setID(Integer.parseInt(db.getDataItem(tmpStr)));
 	    }
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the trial.");
@@ -430,4 +430,32 @@ public class Trial {
 	return newTrialID;
     }
 
+	public void saveMetric(DB db, int saveMetricIndex) {
+		try {
+	    	// save the metric for this trial
+	    	Enumeration enum = getDataSession().getMetrics().elements();
+	    	Metric metric;
+	    	PreparedStatement stmt1 = null;
+			int i = 0;
+	    	stmt1 = db.prepareStatement("INSERT INTO metric (name, trial) VALUES (?, ?)");
+	    	while (enum.hasMoreElements()) {
+				metric = (Metric)enum.nextElement();
+				if (saveMetricIndex == i++) {
+					stmt1.setString(1, metric.getName());
+					stmt1.setInt(2, metric.getTrialID());
+					stmt1.executeUpdate();
+					String tmpStr = new String();
+					if (db.getDBType().compareTo("mysql") == 0)
+						tmpStr = "select LAST_INSERT_ID();";
+					else
+						tmpStr = "select currval('metric_id_seq');";
+					metric.setID(Integer.parseInt(db.getDataItem(tmpStr)));
+				}
+	    	}
+		} catch (SQLException e) {
+	    	System.out.println("An error occurred while saving the trial.");
+	    	e.printStackTrace();
+	    	System.exit(0);
+		}
+	}
 }

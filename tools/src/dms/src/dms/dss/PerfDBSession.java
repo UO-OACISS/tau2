@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.12 2004/04/05 16:54:36 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.13 2004/04/06 18:00:07 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -430,34 +430,34 @@ public class PerfDBSession extends DataSession {
 	// override the saveTrial method
 	public int saveTrial () {
 		int newTrialID = trial.saveTrial(db);
-		Hashtable newFunHash = saveFunctions(newTrialID);
-		saveFunctionData(newFunHash, metrics);
+		Hashtable newFunHash = saveFunctions(newTrialID, -1);
+		saveFunctionData(newFunHash, metrics, -1);
 		Hashtable newUEHash = saveUserEvents(newTrialID);
 		saveUserEventData(newUEHash);
 		return newTrialID;
 	}
 
 	// save the functions
-	private Hashtable saveFunctions(int newTrialID) {
+	private Hashtable saveFunctions(int newTrialID, int saveMetricIndex) {
 		Hashtable newFunHash = new Hashtable();
 		Enumeration enum = functions.elements();
 		Function function;
 		while (enum.hasMoreElements()) {
 			function = (Function)enum.nextElement();
-			int newFunctionID = function.saveFunction(db, newTrialID, metrics);
+			int newFunctionID = function.saveFunction(db, newTrialID, metrics, saveMetricIndex);
 			newFunHash.put (new Integer(function.getID()), new Integer(newFunctionID));
 		}
 		return newFunHash;
 	}
 
 	// save the function data
-	private void saveFunctionData(Hashtable newFunHash, Vector metrics) {
+	private void saveFunctionData(Hashtable newFunHash, Vector metrics, int saveMetricIndex) {
 		Enumeration enum = functionData.elements();
 		FunctionDataObject fdo;
 		while (enum.hasMoreElements()) {
 			fdo = (FunctionDataObject)enum.nextElement();
 			Integer newFunctionID = (Integer)newFunHash.get(new Integer(fdo.getFunctionIndexID()));
-			fdo.saveFunctionData(db, newFunctionID.intValue(), metrics);
+			fdo.saveFunctionData(db, newFunctionID.intValue(), metrics, saveMetricIndex);
 		}
 	}
 
@@ -502,7 +502,7 @@ public class PerfDBSession extends DataSession {
  * @return database index ID of the saved function record
  */
 	public int saveFunction(Function function, int newTrialID, Vector metrics) {
-		return function.saveFunction(db, newTrialID, metrics);
+		return function.saveFunction(db, newTrialID, metrics, -1);
 	}
 
 /**
@@ -512,7 +512,7 @@ public class PerfDBSession extends DataSession {
  * @return database index ID of the saved interval_location_profile record
  */
 	public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Vector metrics) {
-		functionData.saveFunctionData(db, newFunctionID, metrics);
+		functionData.saveFunctionData(db, newFunctionID, metrics, -1);
 		return;
 	}
 
@@ -544,7 +544,7 @@ public class PerfDBSession extends DataSession {
  * @return the database index ID of the saved trial record
  */
 
-	public int saveParaProfTrial(Trial trial, int saveMetricID) {
+	public int saveParaProfTrial(Trial trial, int saveMetricIndex) {
 		GlobalMapping mapping = trial.getDataSession().getGlobalMapping();
 	
 		//Build an array of group names.  This speeds lookup of group names.
@@ -566,7 +566,6 @@ public class PerfDBSession extends DataSession {
 		userEvents = new Vector();
 		userEventData = new Vector();
 
-		if (saveMetricID < 0) {
 		// create the functions
 		for(Enumeration e = mapping.getMapping(0).elements(); e.hasMoreElements() ;) {
 			GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
@@ -632,13 +631,6 @@ public class PerfDBSession extends DataSession {
 	    	}
 	    }
 
-		// if this is NOT a new trial...
-		} else {
-			// build the hashtable of function lookups
-			this.trial = trial;
-			getFunctions();
-		}
-
 	    StringBuffer groupsStringBuffer = new StringBuffer(10);
 	    Vector nodes = trial.getDataSession().getNCT().getNodes();
 	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
@@ -663,15 +655,7 @@ public class PerfDBSession extends DataSession {
 					fdo.setNumCalls(function.getNumberOfCalls());
 					fdo.setNumSubroutines(function.getNumberOfSubRoutines());
 					// fdo.setInclusivePerCall(function.getUserSecPerCall());
-					int start;
-					int end;
-					if (saveMetricID < 0) {
-						start = 0;
-						end = metricCount;
-					} else {
-						end = start = saveMetricID;
-					}
-					for (int i = start ; i < end ; i++) {
+					for (int i = 0 ; i < metricCount ; i++) {
 						fdo.setInclusive(i, function.getInclusiveValue(i));
 						fdo.setExclusive(i, function.getExclusiveValue(i));
 						fdo.setInclusivePercentage(i, function.getInclusivePercentValue(i));
@@ -683,7 +667,7 @@ public class PerfDBSession extends DataSession {
 			}
 
 			//Write out user event data for this thread.
-			if(userevents!=null && saveMetricID <0){
+			if(userevents!=null){
 			    for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
 				GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
 				if (userevent!=null){
@@ -705,21 +689,30 @@ public class PerfDBSession extends DataSession {
 		}    
 	    }
 
+		int newTrialID = 0;
 		// output the trial data, which also saves the functions, 
 		// function data, user events and user event data
-		int newTrialID = trial.saveTrial(db);
-		if (functions != null && functions.size() > 0) {
-			Hashtable newFunHash = saveFunctions(newTrialID);
-			saveFunctionData(newFunHash, metrics);
-		}
-		if (userEvents != null && userEvents.size() > 0) {
-			Hashtable newUEHash = saveUserEvents(newTrialID);
-			if (userEventData != null && userEventData.size() > 0) {
-				saveUserEventData(newUEHash);
+		if (saveMetricIndex < 0) {
+			newTrialID = trial.saveTrial(db);
+			if (functions != null && functions.size() > 0) {
+				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
+				saveFunctionData(newFunHash, metrics, saveMetricIndex);
+			}
+			if (userEvents != null && userEvents.size() > 0) {
+				Hashtable newUEHash = saveUserEvents(newTrialID);
+				if (userEventData != null && userEventData.size() > 0) {
+					saveUserEventData(newUEHash);
+				}
+			}
+		} else {
+			newTrialID = trial.getID();
+			trial.saveMetric(db, saveMetricIndex);
+			if (functions != null && functions.size() > 0) {
+				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
+				saveFunctionData(newFunHash, metrics, saveMetricIndex);
 			}
 		}
 		return newTrialID;
-	    
     }
 };
 

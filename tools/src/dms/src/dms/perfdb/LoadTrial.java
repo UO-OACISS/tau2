@@ -21,6 +21,8 @@ public class LoadTrial implements ParaProfObserver {
     private Application app;
     private Experiment exp;
     private int expID;
+	public int trialID = 0;
+	private ParaProfDataSession dataSession = null;
 
     /* This variable connects translator to DB in order to check whether
        the app. and exp. associated with the trial data do exist there. */
@@ -69,22 +71,19 @@ public class LoadTrial implements ParaProfObserver {
 	    return true;
     }
 
-/*
     public boolean checkForTrial(String trialid) {
-	trial = dbSession.setTrial(Integer.parseInt(trialid));
-	if (trial == null)
+	Trial tmpTrial = dbSession.setTrial(Integer.parseInt(trialid));
+	if (tmpTrial == null)
 	    return false;
 	else
 	    return true;
     }
-*/
 
     public void loadTrial(int fileType, String trialName, String problemFile) {
 	trial = null;
 
 	Vector v = null;
 	File[] inFile = new File[1];
-	ParaProfDataSession dataSession = null;
 	switch (fileType) {
 		case 0:
 			inFile[0] = new File (sourceFile);
@@ -121,12 +120,19 @@ public class LoadTrial implements ParaProfObserver {
 
     public void saveTrial() {
 	// set some things in the trial
-	int[] maxNCT = trial.getMaxNCTNumbers();
+	int[] maxNCT = dataSession.getMaxNCTNumbers();
 	trial.setNodeCount(maxNCT[0]+1);
 	trial.setNumContextsPerNode(maxNCT[1]+1);
 	trial.setNumThreadsPerContext(maxNCT[2]+1);
 	dbSession.saveParaProfTrial(trial, -1);
 	System.out.println("Done saving trial!");
+    }
+
+    public void appendToTrial() {
+	// set some things in the trial
+	trial.setID(this.trialID);
+	dbSession.saveParaProfTrial(trial, 0);
+	System.out.println("Done adding metric to trial!");
     }
 
     public String getProblemString(String problemFile) {
@@ -168,7 +174,10 @@ public class LoadTrial implements ParaProfObserver {
     }
 
     public void update (Object obj) {
-	saveTrial();
+		if (trialID == 0)
+			saveTrial();
+		else
+			appendToTrial();
     }
 
     public void update () {
@@ -266,7 +275,10 @@ public class LoadTrial implements ParaProfObserver {
 	LoadTrial trans = new LoadTrial(configFile, sourceFile);
 	trans.checkForApp(applicationID);
 	trans.checkForExp(experimentID);
-	// trans.checkForTrial(trialID);
+	if (trialID != null) {
+		trans.checkForTrial(trialID);
+		trans.trialID = Integer.parseInt(trialID);
+	}
 	trans.loadTrial(fileType, trialName, problemFile);
 	// the trial will be saved when the load is finished (update is called)
     }

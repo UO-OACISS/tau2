@@ -24,7 +24,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.4 2004/04/02 23:28:17 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.5 2004/04/06 18:00:07 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -470,27 +470,29 @@ public class FunctionDataObject extends Object {
 		return (functionData);
 	}
 
-	public void saveMeanSummary(DB db, int functionIndexID, Vector metrics) {
+	public void saveMeanSummary(DB db, int functionIndexID, Vector metrics, int saveMetricID) {
 		try {
 			// get the function details
 			Enumeration enum = metrics.elements();
 			Metric metric;
 			int i = 0;
 			while (enum.hasMoreElements()) {
-				metric = (Metric)enum.nextElement();
-				PreparedStatement statement = null;
-				statement = db.prepareStatement("INSERT INTO interval_mean_summary (function, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-				statement.setInt(1, functionIndexID);
-				statement.setInt(2, metric.getID());
-				statement.setDouble(3, getInclusivePercentage(i));
-				statement.setDouble(4, getInclusive(i));
-				statement.setDouble(5, getExclusivePercentage(i));
-				statement.setDouble(6, getExclusive(i));
-				statement.setDouble(7, getNumCalls());
-				statement.setDouble(8, getNumSubroutines());
-				statement.setDouble(9, getInclusivePerCall(i));
-				statement.executeUpdate();
-				i++;
+				if (saveMetricID < 0 || i == saveMetricID) {
+					metric = (Metric)enum.nextElement();
+					PreparedStatement statement = null;
+					statement = db.prepareStatement("INSERT INTO interval_mean_summary (function, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					statement.setInt(1, functionIndexID);
+					statement.setInt(2, metric.getID());
+					statement.setDouble(3, getInclusivePercentage(i));
+					statement.setDouble(4, getInclusive(i));
+					statement.setDouble(5, getExclusivePercentage(i));
+					statement.setDouble(6, getExclusive(i));
+					statement.setDouble(7, getNumCalls());
+					statement.setDouble(8, getNumSubroutines());
+					statement.setDouble(9, getInclusivePerCall(i));
+					statement.executeUpdate();
+					i++;
+				}
 			}
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the function mean data.");
@@ -499,27 +501,29 @@ public class FunctionDataObject extends Object {
 		}
 	}
 
-	public void saveTotalSummary(DB db, int functionIndexID, Vector metrics) {
+	public void saveTotalSummary(DB db, int functionIndexID, Vector metrics, int saveMetricID) {
 		try {
 			// get the function details
 			Enumeration enum = metrics.elements();
 			Metric metric;
 			int i = 0;
 			while (enum.hasMoreElements()) {
-				metric = (Metric)enum.nextElement();
-				PreparedStatement statement = null;
-				statement = db.prepareStatement("INSERT INTO interval_total_summary (function, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-				statement.setInt(1, functionIndexID);
-				statement.setInt(2, metric.getID());
-				statement.setDouble(3, getInclusivePercentage(i));
-				statement.setDouble(4, getInclusive(i));
-				statement.setDouble(5, getExclusivePercentage(i));
-				statement.setDouble(6, getExclusive(i));
-				statement.setDouble(7, getNumCalls());
-				statement.setDouble(8, getNumSubroutines());
-				statement.setDouble(9, getInclusivePerCall(i));
-				statement.executeUpdate();
-				i++;
+				if (saveMetricID < 0 || i == saveMetricID) {
+					metric = (Metric)enum.nextElement();
+					PreparedStatement statement = null;
+					statement = db.prepareStatement("INSERT INTO interval_total_summary (function, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					statement.setInt(1, functionIndexID);
+					statement.setInt(2, metric.getID());
+					statement.setDouble(3, getInclusivePercentage(i));
+					statement.setDouble(4, getInclusive(i));
+					statement.setDouble(5, getExclusivePercentage(i));
+					statement.setDouble(6, getExclusive(i));
+					statement.setDouble(7, getNumCalls());
+					statement.setDouble(8, getNumSubroutines());
+					statement.setDouble(9, getInclusivePerCall(i));
+					statement.executeUpdate();
+					i++;
+				}
 			}
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the function total data.");
@@ -528,30 +532,32 @@ public class FunctionDataObject extends Object {
 		}
 	}
 
-	public void saveFunctionData(DB db, int functionIndexID, Vector metrics) {
+	public void saveFunctionData(DB db, int functionIndexID, Vector metrics, int saveMetricID) {
 		try {
 			// get the function details
 			Enumeration enum = metrics.elements();
 			Metric metric;
 			int i = 0;
 			while (enum.hasMoreElements()) {
-				metric = (Metric)enum.nextElement();
-				PreparedStatement statement = null;
-				statement = db.prepareStatement("INSERT INTO interval_location_profile (function, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-				statement.setInt(1, functionIndexID);
-				statement.setInt(2, node);
-				statement.setInt(3, context);
-				statement.setInt(4, thread);
-				statement.setInt(5, metric.getID());
-				statement.setDouble(6, getInclusivePercentage(i));
-				statement.setDouble(7, getInclusive(i));
-				statement.setDouble(8, getExclusivePercentage(i));
-				statement.setDouble(9, getExclusive(i));
-				statement.setDouble(10, getNumCalls());
-				statement.setDouble(11, getNumSubroutines());
-				statement.setDouble(12, getInclusivePerCall(i));
-				statement.executeUpdate();
-				i++;
+				if (saveMetricID < 0 || i == saveMetricID) {
+					metric = (Metric)enum.nextElement();
+					PreparedStatement statement = null;
+					statement = db.prepareStatement("INSERT INTO interval_location_profile (function, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					statement.setInt(1, functionIndexID);
+					statement.setInt(2, node);
+					statement.setInt(3, context);
+					statement.setInt(4, thread);
+					statement.setInt(5, metric.getID());
+					statement.setDouble(6, getInclusivePercentage(i));
+					statement.setDouble(7, getInclusive(i));
+					statement.setDouble(8, getExclusivePercentage(i));
+					statement.setDouble(9, getExclusive(i));
+					statement.setDouble(10, getNumCalls());
+					statement.setDouble(11, getNumSubroutines());
+					statement.setDouble(12, getInclusivePerCall(i));
+					statement.executeUpdate();
+					i++;
+				}
 			}
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the function data.");

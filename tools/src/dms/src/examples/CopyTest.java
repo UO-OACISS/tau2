@@ -43,8 +43,8 @@ public class CopyTest {
 		}
 
 		// get the metrics
-		// Vector metrics = myTrial.getMetrics();
-		// session.setMetric(metrics);
+		Vector metrics = myTrial.getMetrics();
+		session.setMetrics(metrics);
 
 		// get the list of functions
 		ListIterator functions;
@@ -73,9 +73,6 @@ public class CopyTest {
 		System.out.println("Saving the trial data...");
 		session.saveTrial();
 		System.out.println(" ...done.");
-		
-
-
 
 		// disconnect and exit.
 		session.terminate();

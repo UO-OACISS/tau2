@@ -1,6 +1,6 @@
 default: dms.jar 
 
-all: dms.jar javadoc buildtest simple copytest
+all: dms.jar javadoc buildtest simple
 
 dms.jar: classes/dms/perfdb/*.class classes/dms/dss/*.class
 	jar -cvf dms.jar -C classes .
