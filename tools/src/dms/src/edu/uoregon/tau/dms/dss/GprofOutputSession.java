@@ -21,6 +21,7 @@ import javax.swing.*;
 
 import java.io.*;
 import java.util.*;
+import java.lang.reflect.Array;
 
 public class GprofOutputSession extends ParaProfDataSession{
 
@@ -43,6 +44,7 @@ public class GprofOutputSession extends ParaProfDataSession{
 	    Node node = null;
 	    Context context = null;
 	    edu.uoregon.tau.dms.dss.Thread thread = null;
+		int nodeID = -1;
 	    
 	    String inputString = null;
 	    String s1 = null;
@@ -67,9 +69,10 @@ public class GprofOutputSession extends ParaProfDataSession{
 	    v = (Vector) initializeObject;
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
 		files = (File[]) e.nextElement();
-		System.out.println("Processing data file, please wait ......");
 
-		FileInputStream fileIn = new FileInputStream(files[0]);
+		for (int fIndex = 0 ; fIndex < Array.getLength(files) ; fIndex++) {
+		System.out.println("Processing " + files[fIndex] + ", please wait ......");
+		FileInputStream fileIn = new FileInputStream(files[fIndex]);
 		InputStreamReader inReader = new InputStreamReader(fileIn);
 		BufferedReader br = new BufferedReader(inReader);
 
@@ -77,12 +80,12 @@ public class GprofOutputSession extends ParaProfDataSession{
 		this.getGlobalMapping().increaseVectorStorage();
 
 		//Since this is gprof output, there will only be one node,context, and thread.
-		node = this.getNCT().addNode(0);
+		node = this.getNCT().addNode(++nodeID);
 		context = node.addContext(0);
 		thread = context.addThread(0);
 		thread.setDebug(this.debug());
 		if(this.debug())
-		    this.outputToFile("n,c,t: " + 0 + "," + 0 + "," + 0);
+		    this.outputToFile("n,c,t: " + nodeID + "," + 0 + "," + 0);
 		thread.initializeFunctionList(this.getGlobalMapping().getNumberOfMappings(0));
 
 		//Time is the only metric tracked with gprof.
@@ -104,7 +107,9 @@ public class GprofOutputSession extends ParaProfDataSession{
 		    if(length!=0){
 			//The first time we see g, set the call path setion to be true,
 			//and the second time, set it to be false.
-			if(inputString.charAt(0)=='g'){
+			// check for "granularity: " or "ngranularity: "
+			int idx = inputString.indexOf("granularity: ");
+			if(idx==0 || idx==1){
 			    if(!callPathSection){
 				System.out.println("###### Call path section ######");
 				callPathSection = true;
@@ -133,7 +138,7 @@ public class GprofOutputSession extends ParaProfDataSession{
 				mappingID = this.getGlobalMapping().addGlobalMapping(self.s0, 0, 1);
 				gme1 = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 
-				System.out.println("SELF:"+"["+gme1.getMappingID()+ "]   " +self.s0);
+				// System.out.println("SELF:"+"["+gme1.getMappingID()+ "]   " +self.s0);
 				globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(gme1.getMappingID(), 0), false);
 				thread.addFunction(globalThreadDataElement, gme1.getMappingID());
 				globalThreadDataElement.setInclusiveValue(0,self.d1+self.d2);
@@ -149,11 +154,11 @@ public class GprofOutputSession extends ParaProfDataSession{
 				    mappingID = this.getGlobalMapping().addGlobalMapping(lineDataParent.s0, 0, 1);
 				    String s = lineDataParent.s0 + " => " + self.s0 + "  ";
 				    callPathMappingID = this.getGlobalMapping().addGlobalMapping(lineDataParent.s0 + " => " + self.s0 + "  ", 0, 1);
-				    System.out.println("call path name:"+this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).getMappingName());
+				    // System.out.println("call path name:"+this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).getMappingName());
 				    this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).setCallPathObject(true);
 
-				    System.out.println("PARENT:"+"["+mappingID+ "] "+lineDataParent.s0);
-				    System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
+				    // System.out.println("PARENT:"+"["+mappingID+ "] "+lineDataParent.s0);
+				    // System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
 
 				    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0), false);
 				    thread.addFunction(globalThreadDataElement, callPathMappingID);
@@ -172,8 +177,8 @@ public class GprofOutputSession extends ParaProfDataSession{
 				    callPathMappingID = this.getGlobalMapping().addGlobalMapping(self.s0 + " => " + lineDataChild.s0 + "  ", 0, 1);
 				    this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).setCallPathObject(true);
 
-				    System.out.println("CHILD:"+"["+mappingID+"]  "+lineDataChild.s0);
-				    System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
+				    // System.out.println("CHILD:"+"["+mappingID+"]  "+lineDataChild.s0);
+				    // System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
 
 				    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0), false);
 				    thread.addFunction(globalThreadDataElement, callPathMappingID);
@@ -183,7 +188,7 @@ public class GprofOutputSession extends ParaProfDataSession{
 
 				}
 				children.clear();
-				System.out.println(inputString);
+				// System.out.println(inputString);
 				parent=true;
 			    }
 			    else if(inputString.charAt(length-1)==']'){
@@ -195,19 +200,22 @@ public class GprofOutputSession extends ParaProfDataSession{
 				    		children.add(getCycleLineData(inputString));
 					} else {
 						if(parent)
-				    		parents.add(getParentLineData(inputString));
+				    		parents.add(getCycleLineData(inputString));
+				    		//parents.add(getParentLineData(inputString));
 						else
-				    		children.add(getChildLineData(inputString));
+				    		children.add(getCycleLineData(inputString));
+				    		//children.add(getChildLineData(inputString));
 					}
 			    }
 			}
 			else if(inputString.charAt(length-1)==']'){
-			    System.out.println(getSummaryLineData(inputString).s0);
+			    // System.out.println(getSummaryLineData(inputString).s0);
 			}
 		    }
 		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-		}
-	    }
+		} // while lines in file
+	    } // for files in File[]
+	    } // for elements in vector v
 	    thread.setThreadData(0);
 	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
 
@@ -232,6 +240,7 @@ public class GprofOutputSession extends ParaProfDataSession{
 		});
 	}
         catch(Exception e){
+		e.printStackTrace();
 	    UtilFncs.systemError(e, null, "GOS01");
 	}
     }
@@ -263,22 +272,16 @@ index  % time   self    children  called         name       index
 		String name = st.nextToken();
 		// this should be 0, left justified
 		indexStart = string.indexOf(index);
-		System.out.println("index at: " + indexStart);
 		// this should be about 7, right justified
 		percentStart = string.indexOf(percent);
-		System.out.println("percent at: " + percentStart);
 		// this should be about 13, right justified
 		selfStart = string.indexOf(percent) + percent.length() + 1;
-		System.out.println("self at: " + selfStart);
 		// this should be about 21, right justified
 		descendantsStart = string.indexOf(self) + self.length() + 1;
-		System.out.println("descendants at: " + descendantsStart);
 		// this should be about 33, left justified
 		calledStart = string.indexOf(descendants) + descendants.length() + 1;
-		System.out.println("called at: " + calledStart);
 		// this should be about 49, left justified
 		nameStart = string.indexOf(name);
-		System.out.println("name at: " + nameStart);
 		return;
 	}
 
@@ -315,14 +318,14 @@ index  % time   self    children  called         name       index
 		// function. This should be identical to the number 
 		// printed in the seconds field for this function in 
 		// the flat profile.
-	    lineData.d1 = Double.parseDouble(st.nextToken());
+	    lineData.d1 = 1000.0 * Double.parseDouble(st.nextToken());
 
 		// This is the total amount of time spent in the 
 		// subroutine calls made by this function. This should 
 		// be equal to the sum of all the self and children 
 		// entries of the children listed directly below this 
 		// function.
-	    lineData.d2 = Double.parseDouble(st.nextToken());
+	    lineData.d2 = 1000.0 * Double.parseDouble(st.nextToken());
 
 		// This is the number of times the function was called. 
 		// If the function called itself recursively, there are 
@@ -356,51 +359,7 @@ index  % time   self    children  called         name       index
 	return lineData;
     }
 
-    private LineData getParentLineData(String string){
-	LineData lineData = new LineData();
-	try{
-	    StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
-	    
-		// get the estimate of the amount of time spent in self when 
-		// it was called from parent
-	    lineData.d0 = Double.parseDouble(st1.nextToken());
-		// get the estimate of the amount of time spent in subroutines 
-		// of self when self was called from parent. The sum of the 
-		// self and children fields is an estimate of the amount of 
-		// time spent within calls to self from parent.
-	    lineData.d1 = Double.parseDouble(st1.nextToken());
-	    
-		// For cycles, there is no ratio. To check for cycles, check
-		// to see if there is a ratio.
-		String tmpStr = st1.nextToken();
-		if (tmpStr.indexOf("/") >= 0) {
-	   		StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
-			// the number of times self was called from parent 
-	    	lineData.i0 = Integer.parseInt(st2.nextToken());
-			// the total number of nonrecursive calls to self from all 
-			// its parents
-	    	lineData.i1 = Integer.parseInt(st2.nextToken());
-		} else {
-	    	lineData.i0 = Integer.parseInt(tmpStr);
-	    	lineData.i1 = Integer.parseInt(tmpStr);
-		}
-
-	    lineData.s0 = st1.nextToken(); //Name
-		while (st1.hasMoreTokens()) {
-			String tmp = st1.nextToken();
-			if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
-	    		lineData.s0 += " " + tmp; //Name
-		}
-	}
-	catch(Exception e){
-		System.out.println("***\n" + string + "\n***");
-		e.printStackTrace();
-		UtilFncs.systemError(e, null, "GOS03");
-	}
-	return lineData;
-    }
-
-    private LineData getCycleLineData(String string){
+    private LineData getParentChildLineData(String string){
 	LineData lineData = new LineData();
 	try{
 	    StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
@@ -434,9 +393,10 @@ index  % time    self  children called     name
                     0        0    3/6        b <cycle 1> [4]
                     0        0    3/6        a <cycle 1> [5]
 [6]      0.00       0        0    6      c [6]
+----------------------------------------
+                                  called/total       parents
                 0.02        0.09    2379             hypre_SMGRelax <cycle 2> [11]
 -----------------------------------------------
-----------------------------------------
 		*/
 	    
 		String tmpStr = string.substring(selfStart,descendantsStart).trim();
@@ -447,7 +407,7 @@ index  % time    self  children called     name
 
 		tmpStr = string.substring(descendantsStart,calledStart).trim();
 		if (tmpStr.length() > 0)
-	    	lineData.d1 = Double.parseDouble(tmpStr);
+	    	lineData.d1 = 1000.0 * Double.parseDouble(tmpStr);
 		else
 	    	lineData.d1 = 0.0;
 
@@ -467,7 +427,7 @@ index  % time    self  children called     name
 
 		// the rest is the name
 		int end = string.lastIndexOf("[") - 1;
-	    lineData.s0 = string.substring(40,end).trim();
+	    lineData.s0 = string.substring(nameStart,end).trim();
 	}
 	catch(Exception e){
 		System.out.println("***\n" + string + "\n***");
@@ -477,29 +437,41 @@ index  % time    self  children called     name
 	return lineData;
     }
 
-    private LineData getChildLineData(String string){
+/*
+    private LineData getParentChildLineData(String string){
 	LineData lineData = new LineData();
 	try{
 	    StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
 	    
 		// get the estimate of the amount of time spent directly 
 		// in child when it was called from self
+		// ...or...
+		// get the estimate of the amount of time spent in self when 
+		// it was called from parent
 	    lineData.d0 = Double.parseDouble(st1.nextToken());
 		// get the estimate of the amount of time spent in 
 		// subroutines of child when child was called from self. 
 		// The sum of the self and children fields is an estimate 
 		// of the total time spent in calls to child from self
-	    lineData.d1 = Double.parseDouble(st1.nextToken());
+		// ...or...
+		// get the estimate of the amount of time spent in subroutines 
+		// of self when self was called from parent. The sum of the 
+		// self and children fields is an estimate of the amount of 
+		// time spent within calls to self from parent.
+	    lineData.d1 = 1000.0 * Double.parseDouble(st1.nextToken());
 	    
 		// for cycles, there is no ratio. To check for cycles, check
 		// to see if there is a ratio.
 		String tmpStr = st1.nextToken();
 		if (tmpStr.indexOf("/") >= 0) {
+	   		StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
 			// This ratio is used to determine how much of self and 
 			// children time gets credited to parent.
-	   		StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
-			// get the number of calls to child from self
+			// ...or...
+			// the number of times self was called from parent 
 	    	lineData.i0 = Integer.parseInt(st2.nextToken());
+			// get the number of calls to child from self
+			// ...or...
 			// get the total number of nonrecursive calls to report. 
 	    	lineData.i1 = Integer.parseInt(st2.nextToken());
 		} else {
@@ -521,6 +493,7 @@ index  % time    self  children called     name
 	}
 	return lineData;
     }
+*/
 
     private LineData getSummaryLineData(String string){
 	LineData lineData = new LineData();
@@ -528,8 +501,8 @@ index  % time    self  children called     name
 	    StringTokenizer st = new StringTokenizer(string, " \t\n\r");
 	    
 	    lineData.d0 = Double.parseDouble(st.nextToken());
-	    lineData.d1 = Double.parseDouble(st.nextToken());
-	    lineData.d2 = Double.parseDouble(st.nextToken());
+	    lineData.d1 = 1000.0 * Double.parseDouble(st.nextToken());
+	    lineData.d2 = 1000.0 * Double.parseDouble(st.nextToken());
 	    if(st.countTokens()>5) {
 	    	lineData.i0 = Integer.parseInt(st.nextToken());
 	    	lineData.d3 = Double.parseDouble(st.nextToken());
