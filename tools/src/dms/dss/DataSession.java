@@ -6,7 +6,7 @@ import dms.dss.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.14 2003/08/27 17:07:37 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.15 2003/09/02 16:25:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -110,9 +110,10 @@ public abstract class DataSession {
  */
 	public void setExperiment(Experiment experiment) {
 		this.experiment = experiment;
-		if (application == null) {
+		/* don't know if we want to do this...
+		if (this.application == null && this.experiment != null) {
 			setApplication(experiment.getApplicationID());
-		}
+		} */
 	}
 
 /**
@@ -132,9 +133,10 @@ public abstract class DataSession {
  */
 	public void setTrial(Trial trial) {
 		this.trial = trial;
-		if (experiment == null) {
+		/* don't know if we want to do this
+		if (this.experiment == null && this.trial != null) {
 			setExperiment(trial.getExperimentID());
-		}
+		}*/
 	}
 
 /**

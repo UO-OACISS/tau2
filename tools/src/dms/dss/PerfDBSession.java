@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.25 2003/08/27 17:07:38 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.26 2003/09/02 16:25:31 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -270,9 +270,10 @@ public class PerfDBSession extends DataSession {
 			this.experiment = (Experiment)experiments.elementAt(0);
 		} //else exception?
 
-		if (application == null) {
+		/* don't know if we want to do this
+		if (this.application == null && this.experiment != null) {
 			setApplication(experiment.getApplicationID());
-		}
+		}*/
 		return this.experiment;
 	}
 
@@ -291,9 +292,10 @@ public class PerfDBSession extends DataSession {
 			this.trial = trial;
 		} //else exception?
 		
-		if (experiment == null) {
+		/* don't know if we want to do this
+		if (this.experiment == null && this.trial != null) {
 			setExperiment(trial.getExperimentID());
-		}
+		}*/
 		return trial;
 	}
 
