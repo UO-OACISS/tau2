@@ -137,24 +137,31 @@ void Initialize(BPatch_thread *appThread, BPatch_image *appImage,
   }//if
 
   BPatch_funcCallExpr call_Expr(*call_func, initArgs);
-  // checkCost(call_Expr);
-  // locate the entry point for main 
-  BPatch_function *main_entry = tauFindFunction(appImage, "main");
-  if (main_entry == NULL) {
-    fprintf(stderr, "tau_run: Unable to find function main\n");
-    exit(1);
-  }
-  const BPatch_Vector<BPatch_point *> *points = main_entry->findPoint(BPatch_entry);
-  const BPatch_snippet *snippet = new BPatch_funcCallExpr(*call_func, initArgs);
-  // We invoke the Init snippet before any other call in main! 
-  if((points!=NULL) && (snippet != NULL)){
-    // Insert the given snippet at the given point
-    appThread->insertSnippet(*snippet, *points, BPatch_callBefore, BPatch_firstSnippet);
-  }
-  else 
+  if (binaryRewrite)
   {
-    fprintf(stderr, "tau_run: entry points for main or snippet for TauInit are null\n");
-    exit(1);
+    // checkCost(call_Expr);
+    // locate the entry point for main 
+    BPatch_function *main_entry = tauFindFunction(appImage, "main");
+    if (main_entry == NULL) {
+      fprintf(stderr, "tau_run: Unable to find function main\n");
+      exit(1);
+    }
+    const BPatch_Vector<BPatch_point *> *points = main_entry->findPoint(BPatch_entry);
+    const BPatch_snippet *snippet = new BPatch_funcCallExpr(*call_func, initArgs);
+    // We invoke the Init snippet before any other call in main! 
+    if((points!=NULL) && (snippet != NULL)){
+      // Insert the given snippet at the given point
+      appThread->insertSnippet(*snippet, *points, BPatch_callBefore, BPatch_firstSnippet);
+    }
+    else 
+    {
+      fprintf(stderr, "tau_run: entry points for main or snippet for TauInit are null\n");
+      exit(1);
+    }
+  }
+  else
+  {
+    appThread->oneTimeCode(call_Expr);
   }
   /* Originall, we used:
     appThread->oneTimeCode(call_Expr);
