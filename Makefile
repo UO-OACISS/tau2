@@ -18,7 +18,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/research/parallel/sameer/gar/research/tau2
+TAUROOT=/users/sameer/rs/tau2
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		  #ENDIF#
@@ -46,7 +46,8 @@ BASIC = utils src/Profile examples/instrument
 EXPORTS = utils src/Profile 
 
 # Example Programs
-EXAMPLES = examples/matrix examples/instrument examples/pi
+EXAMPLES = examples/matrix examples/instrument examples/pi examples/threads \
+	   examples/cthreads
 
 # PC++ Support
 #PCXX#PCXX=lang_support/pc++#ENDIF#
