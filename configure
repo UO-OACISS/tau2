@@ -113,6 +113,7 @@ pcxxopt=-g
 useropt=
 awe=no
 pthread=no
+noex=no
 tulipthread=no
 smarts=no
 task=no
@@ -136,6 +137,10 @@ use_ansic=no
 use_sage2=no
 use_pstl=no
 use_hpnx=no
+tauarch=unknown
+tauprefix=unknown
+tauoptions=
+ductape_root_dir="."
 
 # debug:
 # echo $arguments
@@ -348,6 +353,12 @@ do
     shift
     ;; 
 
+  -noex)
+    # NO exceptions to be used while building the lib.
+    noex=yes
+    shift
+    ;;
+
   -help)
     echo "TAU Configuration Utility "
     echo "***********************************************************************"
@@ -364,8 +375,21 @@ do
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-PROFILECOUNTERS .... Use Hardware Performance Counters (default time)."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
+    echo "-noex .................. Use no exceptions while compiling the library."
     echo "-help ...................................... display this help message."
     exit
+    ;;
+
+  -arch=*)
+    tauarch=`echo $arg | sed -e 's/-arch=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -prefix=*)
+    tauprefix=`echo $arg | sed -e 's/-prefix=//' -e 's/ /_/g'`
+    echo "tauprefix =  $tauprefix "
+    fixmakeargs="$fixmakeargs tauprefix=$tauprefix"
+    shift
     ;;
 
   -*)
@@ -415,115 +439,9 @@ detectxdev=`cd utils; ./archfind -x`
 detectspec=`cd utils; ./archfind -s`
 
 
-###########################################################################
-## Prompt the user for other packages
-#echo " "
-#echo "TAU requires language and compiler support from the distributions"
-#echo "of its supported languages.  Currently, the following languages"
-#echo "are supported:"
-#echo "  * C++"
-#echo "  * pC++"
-#echo "  * HPC++ PSTL"
-#echo "  * HPC++ HPC++Lib"
-#echo "You will be prompted for the paths to language distributions that"
-#echo "you wish to use with TAU.  When entering paths, do not include a"
-#echo "trailing slash ('/')."
-#echo " "
-#
-#if [ "x${sage1dir}" = "x" ] 
-#then
-#  sage1dir=""
-#  echo "Please enter the absolute path name for the pC++ distribution,"
-#  echo "or hit return if you do not want to install support for pC++."
-#  $echo "? ${nnl}"
-#  read sage1dir
-#  if [ "x${sage1dir}" = "x" ] 
-#  then
-#    echo "TAU not using pC++."
-#    use_pcxx=no
-#  else
-#    echo "pC++ path set to: ${sage1dir}"
-#    use_pcxx=yes
-#  fi
-#else
-#  echo "pC++ path set on command line to: ${sage1dir}"
-#fi
-#echo " "
-#
-#if [ "x${sage2dir}" = "x" ] 
-#then
-#  sage2dir=""
-#  echo "HPC++ support requires the Sage++ toolkit version 2.0."
-#  echo "Please enter the absolute path name for the Sage++2 distribution,"
-#  echo "or hit return if you do not want to install support for HPC++."
-#  $echo "? ${nnl}"
-#  read sage2dir
-#  if [ "x${sage2dir}" = "x" ] 
-#  then
-#    echo "TAU not using Sage++2 or HPC++."
-#    use_hcxx=no
-#    use_sage2=no
-#  else
-#    echo "Sage++2 path set to: ${sage2dir}"
-#    use_hpcxx=yes
-#    use_sage2=yes
-#  fi
-#else
-#  echo "Sage++2 path set on command line to: ${sage2dir}"
-#fi
-#echo " "
-#
-#if [ "x${use_hpcxx}" = "xyes" ]
-#then
-#  if [ "x${hpnxdir}" = "x" ] 
-#  then
-#    echo "HPC++Lib support requires the Nexus4.0 distribution."
-#    echo "Please enter the absolute path name for the Nexus 4.0 distribution,"
-#    echo "or hit return if you do not want to install support for HPC++Lib."
-#    $echo "? ${nnl}"
-#    read hpnxdir
-#    if [ "x${hpnxdir}" = "x" ] 
-#    then
-#      echo "TAU not using Nexus or HPC++Lib."
-#      use_hpnx=no
-#    else
-#      echo "Nexus path set to: ${hpnxdir}"
-#      use_hpnx=yes
-#    fi
-#  else
-#    echo "Nexus path set on command line to: ${hpnxdir}"
-#  fi
-#fi
-#echo " "
-#
-#if [ "x${use_hpcxx}" = "xyes" ]
-#then
-#  if [ "x${pstldir}" = "x" ] 
-#  then
-#    echo "HPC++ PSTL support requires the PSTL distribution."
-#    echo "Please enter the absolute path name for the PSTL distribution,"
-#    echo "or hit return if you do not want to install support for the PSTL."
-#    $echo "? ${nnl}"
-#    read pstldir
-#    if [ "x${pstldir}" = "x" ] 
-#    then
-#      echo "TAU not using the PSTL."
-#      use_pstl=no
-#    else
-#      echo "PSTL path set to: ${hpnxdir}"
-#      use_pstl=yes
-#    fi
-#  else
-#    echo "PSTL path set on command line to: ${pstldir}"
-#  fi
-#fi
-echo " "
-echo "Done obtaining external package information."
-echo " "
-
 ###############################################################
 # if there are no arguments, GUESS at system configuration
-if [ x$1 = x ]
+if [ $tauarch = unknown ]
   then 
     echo Attempting to auto-configure system, determining architecture...
     machine=$detectarch
@@ -535,7 +453,7 @@ if [ x$1 = x ]
     fi
     echo I think this is a $machine...
   else
-    machine=$1
+    machine=$tauarch
     if [ $detectarch != unknown -a $machine != unknown ]
       then
         detectxdev=$machine
@@ -604,12 +522,12 @@ case $machine in
      fi
      ;;
   
-   sgi4k | sgi8k)
+   sgi4k | sgi8k | sgin32 | sgi64)
      if [ $cxx_compiler = default ]
        then
 	# SGI has no 64 bit C++ compiler except "CC", so if we are an
 	# R8K, we have to use "CC"
-	if [ $machine = sgi8k ]
+	if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
 	  then 
 	    cxx_compiler=CC
             c_compiler=cc
@@ -647,9 +565,12 @@ esac
 
 ######################################################################
 # For template instantiations in the library -ptused for CC compilers
-if [ $machine = sgi8k -a $cxx_compiler = CC ]
+if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
   then
-    fixmakeargs="$fixmakeargs SGICC"
+  if [ $cxx_compiler = CC ]
+    then
+      fixmakeargs="$fixmakeargs SGICC"
+  fi
 fi
 
 if [ $machine = t3e -a $cxx_compiler = CC ] 
@@ -690,19 +611,30 @@ if [ $trace = yes ]
     fixmakeargs="$fixmakeargs TRACE"
 fi
 
-if [ $machine = sgi8k -a $profilecounters = yes ]
+if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
   then
+  if [ $profilecounters = yes ]
+    then
       fixmakeargs="$fixmakeargs SGICOUNTERS"
+      tauoptions="${tauoptions}-counters"
+  fi
 fi
 
-if [ $machine = sgi8k -a $profilecounters = no -a $sgitimers = yes ]
+if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
   then
+  if [ $profilecounters = no -a $sgitimers = yes ]
+    then
       fixmakeargs="$fixmakeargs SGITIMERS"
+      tauoptions="${tauoptions}-sgitimers"
+  fi
 fi
 
-if [ $machine = sgi8k -a $cxx_compiler = g++ ]
+if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
   then
+  if [ $cxx_compiler = g++ ]
+    then
       fixmakeargs="$fixmakeargs SGIGNU"
+  fi
 fi
 
 if [ $machine = t3e -a $cxx_compiler = KCC ]
@@ -836,6 +768,24 @@ echo "$machine: stdincludes = $stdinc" >> ./build/Config.info
 echo "" >> ./build/Config.info
 
 ######################################################################
+## STATIC ANALYSIS: Ductape/Program Database Toolkit/IL Analyser
+## If cxxparse exists, modify it to contain the correct path
+ductape_root_dir=${tauroot}/ductape
+if [ -d $ductape_root_dir ]
+  then
+  if [ ! -d $ductape_root_dir/$machine ] 
+    then
+      mkdir $ductape_root_dir/$machine
+      mkdir $ductape_root_dir/$machine/bin
+      mkdir $ductape_root_dir/$machine/lib
+  fi
+  cat utils/cxxparse | 
+  sed -e 's,@DUCTAPEROOT@,'$ductape_root_dir/',' -e 's,@CXXINCLUDES@,'"$stdinc"',' -e 's,@ARCH@,'$machine/',' > $ductape_root_dir/$machine/bin/cxxparse
+  echo "Installed cxxparse in the DUCTAPE directory $ductape_root_dir"
+fi
+    
+
+######################################################################
 # test whether C++ compiler supports AT&T task library
 
 echo "#include <task.h>" > /tmp/tau$$.C
@@ -944,7 +894,7 @@ case $machine in
 	fixmakeargs="DEC_ALPHA $fixmakeargs"
 	;;
 
-     sgi4k | sgi8k)
+     sgi4k | sgi8k | sgin32 | sgi64)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs"
 	if [ $c_compiler = cc ]
@@ -960,6 +910,20 @@ case $machine in
               echo "NOTE: *** This is an SGI POWER Challenge/Origin (R8K, R10K) ***"
             fi
         fi
+        if [ $machine = sgin32 ] 
+	  then
+	    fixmakeargs="$fixmakeargs ENABLEN32BIT"
+	fi
+
+        if [ $machine = sgi64 ] 
+	  then
+	    fixmakeargs="$fixmakeargs ENABLE64BIT"
+	fi
+
+        if [ $machine = sgi32 ] 
+	  then
+	    fixmakeargs="$fixmakeargs ENABLE32BIT"
+	fi
 
 # Check for sgimp xdev enviroment
         if [ $detectxdev = sgimp ]
@@ -1067,25 +1031,24 @@ case $machine in
 echo \#define TAU_$machine > ./include/tauarch.h
 echo \#define TAU_ARCH $machine >> ./include/tauarch.h
 
-# make bin dir if it does not exist
-if [ ! -d bin ] 
-  then
-    mkdir bin
-fi
-if [ ! -d bin/$machine ] 
-  then
-    mkdir bin/$machine
-fi
+if [ $tauprefix = unknown ] 
+then 
+  fixmakeargs="$fixmakeargs tauprefix=$tauroot"
+  # make bin dir if it does not exist
+  if [ ! -d $machine ] 
+    then
+      mkdir $machine
+  fi
+  if [ ! -d $machine/bin ] 
+    then
+      mkdir $machine/bin
+  fi
 
-# make lib dir if it does not exist
-# TAUFIX - do we need this?
-if [ ! -d lib ] 
-  then
-    mkdir lib
-fi
-if [ ! -d lib/$machine ] 
-  then
-    mkdir lib/$machine
+  # make lib dir if it does not exist
+  if [ ! -d $machine/lib ] 
+    then
+      mkdir $machine/lib
+  fi
 fi
 
 # make XtraP directories
@@ -1107,18 +1070,55 @@ if [ $pthread = yes ]
   then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
     echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
+    tauoptions="${tauoptions}-pthread"
 fi
 
 if [ $tulipthread = yes ]
   then
     fixmakeargs="$fixmakeargs TULIPTHREADS tulipdir=$tulipdir"
     echo "$machine: TULIPDIR = $tulipdir" >> ./build/Config.info
+    tauoptions="${tauoptions}-tulip"
 fi
 
 if [ $smarts = yes ]
   then
     fixmakeargs="$fixmakeargs SMARTS"
+    tauoptions="${tauoptions}-smarts"
 fi
+
+if [ $trace = yes ]
+  then
+    if [ $profile = yes ] 
+      then
+        tauoptions="${tauoptions}-profile"
+    fi
+    if [ $profilestats = yes ] 
+      then
+        tauoptions="${tauoptions}-profilestats"
+    fi
+    tauoptions="${tauoptions}-trace"
+fi
+
+if [ $kai = yes ]
+  then
+    tauoptions="${tauoptions}-kcc"
+fi 
+
+if [ $noex = yes ]
+  then
+    tauoptions="${tauoptions}-noex"
+    if [ $kai = yes ]
+      then
+        fixmakeargs="$fixmakeargs KAINOEX"
+    else
+    # OTHER COMPILERS NO EXCEPTIONS... SGICC needs this 
+        fixmakeargs="$fixmakeargs SGICCNOEX"
+    fi
+fi
+    
+#### END OF TAU OPTIONS. Make changes above this line 
+fixmakeargs="$fixmakeargs tauoptions=$tauoptions"
+
 
 if [ $lwp = yes ]
   then
@@ -1263,21 +1263,52 @@ fi
 # TAU Portable profiling package just needs racy
 TAUTOOLS="taud racy"
 
+if [ $tauprefix = unknown ]
+then 
 echo " "
-echo "TAU: installing tools in ${tauroot}/bin/${machine}"
+echo "TAU: installing tools in ${tauroot}/${machine}/bin"
 for tool in $TAUTOOLS
 do
   $echo "TAU: installing ${tool}... ${nnl}"
-  rm -f ${tauroot}/bin/${machine}/$tool
+  rm -f ${tauroot}/${machine}/bin/$tool
   cat ${tauroot}/tools/tool.skel |
   sed -e 's,@TAUROOT@,'$tauroot',' -e 's,@ARCH@,'$machine',' -e 's,@TOOL@,'$tool',' \
       -e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
       -e 's,@WISHNAME@,'$wishname',' \
-      > ${tauroot}/bin/${machine}/${tool}
-  chmod a+rx ${tauroot}/bin/${machine}/${tool}
+      > ${tauroot}/${machine}/bin/${tool}
+  chmod a+rx ${tauroot}/${machine}/bin/${tool}
   echo "done"
 done
+else 
+echo " "
+echo "TAU: installing tools in ${tauprefix}/${machine}/bin"
+#Make installation directories
+if [ ! -d ${tauprefix} ]
+  then
+    echo "making directory $tauprefix "
+    mkdir ${tauprefix}
+  fi
+if [ ! -d ${tauprefix}/${machine} ]
+  then
+    echo "making directory $tauprefix/$machine lib bin"
+    mkdir ${tauprefix}/${machine}
+    mkdir ${tauprefix}/${machine}/lib
+    mkdir ${tauprefix}/${machine}/bin
+  fi
 
+for tool in $TAUTOOLS
+do
+  $echo "TAU: installing ${tool}... ${nnl}"
+  rm -f ${tauprefix}/${machine}/bin/$tool
+  cat ${tauroot}/tools/tool.skel |
+  sed -e 's,@TAUROOT@,'$tauroot',' -e 's,@ARCH@,'$machine',' -e 's,@TOOL@,'$tool',' \
+      -e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
+      -e 's,@WISHNAME@,'$wishname',' \
+      > ${tauprefix}/${machine}/bin/${tool}
+  chmod a+rx ${tauprefix}/${machine}/bin/${tool}
+  echo "done"
+done
+fi
 
 
 if [ $use_pcxx = yes ]
@@ -1425,7 +1456,12 @@ fi
 # bye bye
 echo 
 echo "Configuration complete!"
-echo "   Please add " $tauroot/bin/$machine " to your path"
+if [ $tauprefix != unknown ]
+  then 
+    echo "   Please add " $tauprefix/$machine/bin " to your path"
+  else
+    echo "   Please add " $tauroot/$machine/bin " to your path"
+fi
 echo '   Type "make install" to begin compilation'
 
 exit 0
