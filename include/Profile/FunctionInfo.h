@@ -157,8 +157,9 @@ public:
 	void SetInclTime(int tid, double incltime) { InclTime[tid] = incltime; }
 #else//TAU_MULTIPLE_COUNTERS
 	//Returns the array of exclusive counter values.
-	double * GetExclTime(int tid) { return ExclTime[tid]; }
-       	void SetExclTime(int tid, double *excltime) {
+	//double * GetExclTime(int tid) { return ExclTime[tid]; }
+       	double * GetExclTime(int tid);
+	void SetExclTime(int tid, double *excltime) {
 	  for(int i=0;i<MAX_TAU_COUNTERS;i++)
 	    ExclTime[tid][i] = excltime[i];
 	}
@@ -169,7 +170,8 @@ public:
 
 
 	//Returns the array of inclusive counter values.
-	double * GetInclTime(int tid) { return InclTime[tid]; }
+	//double * GetInclTime(int tid) { return InclTime[tid]; }
+	double * GetInclTime(int tid);
 	void SetInclTime(int tid, double *incltime) { 
 	  for(int i=0;i<MAX_TAU_COUNTERS;i++)
 	    InclTime[tid][i] = incltime[i];
@@ -271,6 +273,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
- * $Revision: 1.20 $   $Date: 2002/03/11 00:24:25 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.20 2002/03/11 00:24:25 bertie Exp $ 
+ * $Revision: 1.21 $   $Date: 2002/03/27 10:18:59 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.21 2002/03/27 10:18:59 bertie Exp $ 
  ***************************************************************************/

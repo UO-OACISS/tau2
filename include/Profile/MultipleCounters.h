@@ -35,10 +35,13 @@ class MultipleCounterLayer
 {
  public:
   static bool initializeMultiCounterLayer(void);
+  static bool * getCounterUsedList();
+  static bool getCounterUsed(int inPosition);
+  static void setCounterUsed(bool inValue, int inPosition);
   static void getCounters(int tid, double values[]);
   static char * getCounterNameAt(int position);
-  static bool getCounterUsed(int inPosition){return counterUsed[inPosition];}
-
+  static void theCounterList(const char ***inPtr, int *numOfCounters);
+  static void theCounterListInternal(const char ***inPtr, int *numOfCounters, bool **tmpPtr);
   //*********************
   //The list of counter functions, and their init. functions.
   //Please see the help files on multiple
