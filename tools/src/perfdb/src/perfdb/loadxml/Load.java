@@ -1,5 +1,7 @@
 package perfdb.loadxml;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -42,9 +44,9 @@ public class Load {
         this.db = newValue;
     }
 
-    public LoadHandler newHandler(String trialId) {
+    public LoadHandler newHandler(String trialId, String problemFile) {
 	
-	return new LoadHandler(getDB(), trialId); // no DB partition.
+	return new LoadHandler(getDB(), trialId, problemFile); // no DB partition.
 	
     }
 
@@ -59,13 +61,15 @@ public class Load {
     /*** Parse an XML file related to a trial using a SAX parser
 	 Note: the parser in <parserClass> MUST be included in the Java CLASSPATH. ***/
 
-    public String parse(String xmlFile, String trialid) {
+    public String parse(String xmlFile, String trialid, String problemFile) {
 	
 	try {
 	    
-	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);	    
+		// put the problemFile into a string
+		String problemDefinition = getProblemString(problemFile);
+	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);
 	    
-	    DefaultHandler handler = this.newHandler(trialid);
+	    DefaultHandler handler = this.newHandler(trialid, problemDefinition);
 	    xmlreader.setContentHandler(handler);
 	    xmlreader.setErrorHandler(handler);
 	    try {
@@ -259,6 +263,40 @@ public class Load {
 	}
 	return null;
     } 
+
+	public String getProblemString(String problemFile) {
+		// open the file
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader (new FileReader (problemFile));
+		} catch (Exception e) {
+			System.out.println("Problem file not found!  Exiting...");
+			System.exit(0);
+		}
+		// read the file, one line at a time, and do some string
+		// substitution to make sure that we don't blow up our
+		// SQL statement.  ' characters aren't allowed...
+		StringBuffer problemString = new StringBuffer();
+		String line;
+		while (true) {
+			try {
+				line = reader.readLine();
+			} catch (Exception e) {
+				line = null;
+			}
+			if (line == null) break;
+			problemString.append(line.replaceAll("'", "\'"));
+		}
+
+		// close the problem file
+		try {
+			reader.close();
+		} catch (Exception e) {
+		}
+
+		// return the string
+		return problemString.toString();
+	}
 }
 
 

@@ -19,7 +19,7 @@ public class Main {
 		+ "    [{-c,--command} loadschema] [{-s,--schemafile} filename] \n"
 		+ "  | [{-c,--command} loadapp] [{-x,--xmlfile} filename] \n"
 		+ "  | [{-c,--command} loadexp] [{-a,--applicationid} value] [{-x,--xmlfile} filename] \n"
-		+ "  | [{-c,--command} loadtrial] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] \n";
+		+ "  | [{-c,--command} loadtrial] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] [{-p --problemfile} filename]\n";
 
     private perfdb.ConnectionManager connector;
 
@@ -87,7 +87,7 @@ public class Main {
 
     /*** Store a xml document for a trial ***/
 
-    public String storeDocument(String xmlFile, String trialId) {
+    public String storeDocument(String xmlFile, String trialId, String problemFile) {
 		if (trialId.compareTo("0") != 0) {
 			String trialIdOut = getLoad().lookupTrial("trial", trialId);
 			if (trialIdOut==null){
@@ -97,7 +97,7 @@ public class Main {
 		}
 
 		try {
-	    	trialId = getLoad().parse(xmlFile, trialId);		
+	    	trialId = getLoad().parse(xmlFile, trialId, problemFile);		
 		} catch (Throwable ex) {
 	    	errorPrint("Error: " + ex.getMessage());
 		}
@@ -122,6 +122,7 @@ public class Main {
         CmdLineParser.Option trialidOpt = parser.addStringOption('t', "trialid");
         CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
         CmdLineParser.Option schemafileOpt = parser.addStringOption('s', "schemafile");
+        CmdLineParser.Option problemfileOpt = parser.addStringOption('p', "problemfile");
 
         try {
             parser.parse(args);
@@ -139,6 +140,7 @@ public class Main {
         String trialID = (String)parser.getOptionValue(trialidOpt);
         String applicationID = (String)parser.getOptionValue(applicationidOpt);
         String schemaFile = (String)parser.getOptionValue(schemafileOpt);
+        String problemFile = (String)parser.getOptionValue(problemfileOpt);
 
     	if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
@@ -181,7 +183,7 @@ public class Main {
     	}
     	/***** Load a trial into PerfDB *********/
 		else if (command.equalsIgnoreCase("LOADXML") || command.equalsIgnoreCase("LOADTRIAL")) {
-			String trialid = demo.storeDocument(xmlFile, trialID);
+			String trialid = demo.storeDocument(xmlFile, trialID, problemFile);
 			if (trialid != null)
 				exitval = Integer.parseInt(trialid);
     	}

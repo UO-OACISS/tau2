@@ -37,6 +37,7 @@ public class LoadHandler extends DefaultHandler {
     protected String probsize = "";
     protected String trialName = "";
     protected String userData = "";
+    protected String problemString = "";
 
     protected String currentElement = "";
     protected String documentName = "";
@@ -104,11 +105,12 @@ public class LoadHandler extends DefaultHandler {
     private BufferedWriter mwriter;
 	
 
-    public LoadHandler(DB db, String trialId){	
+    public LoadHandler(DB db, String trialId, String problemString){	
 	
 		super();
 		this.dbconnector = db;
 		this.trialId = trialId;
+		this.problemString = problemString;
 	
 		try{
 
@@ -478,30 +480,21 @@ public class LoadHandler extends DefaultHandler {
     public void endElement(String url, String name, String qname) {
         StringBuffer buf = new StringBuffer();
 	
-	if (name.equalsIgnoreCase("ProblemSize")){
+	if (name.equalsIgnoreCase("usereventamt")){
 	    	    
 		// if this is a new trial, create a new trial
 		if (trialId.compareTo("0") == 0) {
 			newTrial = true;
 	    	buf.append("insert into ");
 	    	buf.append(getTrialTable());
-	    	if (probsize==""){	
-	    		buf.append(" (experiment, name, time, node_count, contexts_per_node, threads_per_context, userdata)");
-	    		buf.append(" values ");
-	    		buf.append("(" + expid + ", '" + trialName + "', '" + trialTime 
-			   	+ "', "  + nodenum 
-			   	+ ", " + contextpnode
-			   	+ ", " + threadpcontext 
-				+ ", '" + userData + "'); ");       
-	    	} else {
-	    		buf.append(" (experiment, name, time, problem_size, node_count, contexts_per_node, threads_per_context, userdata)");
-	    		buf.append(" values ");
-	    		buf.append("(" + expid + ", '" + trialName + "', '" + trialTime 
-			   	+ "', " + probsize + ", " + nodenum 
-			   	+ ", " + contextpnode
-			   	+ ", " + threadpcontext 
-				+ ", '" + userData + "'); ");       
-	    	}
+	    	buf.append(" (experiment, name, time, node_count, contexts_per_node, threads_per_context, userdata, problem_definition)");
+	    	buf.append(" values ");
+	    	buf.append("(" + expid + ", '" + trialName + "', '" + trialTime 
+			+ "', "  + nodenum 
+			+ ", " + contextpnode
+			+ ", " + threadpcontext 
+			+ ", '" + userData
+			+ "', '" + problemString + "'); ");       
 	   		// System.out.println(buf.toString());
 	    	try{	
 	    		getDB().executeUpdate(buf.toString());

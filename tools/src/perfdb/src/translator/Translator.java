@@ -650,7 +650,7 @@ public class Translator implements Serializable{
     }// end of the method.
 
 
-    public void writeXmlFiles(String probsize, String appid, String expid){
+    public void writeXmlFiles(String appid, String expid){
 
 	GlobalNode nodeObject;
 	Vector ContextList;
@@ -682,12 +682,6 @@ public class Translator implements Serializable{
 	    File ff;
 
 	    BufferedReader ireader = new BufferedReader(new InputStreamReader(System.in));
-
-		if (probsize == null) {
-	    	System.out.println("Please tell me the problem size");
-	    	probsize = ireader.readLine().trim();
-	    	if (probsize.length()==0) probsize = "-1";
-		}
 
 		if (appid == null) {
 	    	System.out.println("Please tell me the ID of the application this trial belongs to.");
@@ -793,9 +787,6 @@ public class Translator implements Serializable{
 
 	    xwriter.write("\t<UserEventAmt>" + ueAmount + "</UserEventAmt>", 0, ("\t<UserEventAmt>" + ueAmount + "</UserEventAmt>").length());
             xwriter.newLine();
-
-	    xwriter.write("\t<ProblemSize>" + probsize + "</ProblemSize>", 0, ("\t<ProblemSize>" + probsize + "</ProblemSize>").length());
-	    xwriter.newLine();
 
 	    xwriter.write("\t<Pprof>", 0, ("\t<Pprof>").length());
 	    xwriter.newLine();
@@ -2550,14 +2541,13 @@ public class Translator implements Serializable{
 	//******************************
 
     static public void main(String[] args){
-		String USAGE = "USAGE: Translator [{-g,--configfile} configfilename] [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-p,--problemsize} problem_size] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id]";
+		String USAGE = "USAGE: Translator [{-g,--configfile} configfilename] [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id]";
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
         CmdLineParser.Option sourcefileOpt = parser.addStringOption('s', "sourcefile");
         CmdLineParser.Option destinationfileOpt = parser.addStringOption('d', "destinationfile");
-        CmdLineParser.Option problemsizeOpt = parser.addStringOption('p', "problemsize");
         CmdLineParser.Option experimentidOpt = parser.addStringOption('e', "experimentid");
         CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
 
@@ -2574,7 +2564,6 @@ public class Translator implements Serializable{
         String configFile = (String)parser.getOptionValue(configfileOpt);
         String sourceFile = (String)parser.getOptionValue(sourcefileOpt);
         String destinationFile = (String)parser.getOptionValue(destinationfileOpt);
-        String problemSize = (String)parser.getOptionValue(problemsizeOpt);
         String applicationID = (String)parser.getOptionValue(applicationidOpt);
         String experimentID = (String)parser.getOptionValue(experimentidOpt);
 
@@ -2591,7 +2580,7 @@ public class Translator implements Serializable{
 
 		Translator trans = new Translator(configFile, sourceFile, destinationFile);
 		trans.buildPprof(); 
-		trans.writeXmlFiles(problemSize, applicationID, experimentID);
+		trans.writeXmlFiles(applicationID, experimentID);
 		System.out.println("Done - Translating pprof.dat into pprof.xml!");
     }
 } 

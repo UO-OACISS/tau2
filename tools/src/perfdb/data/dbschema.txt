@@ -60,7 +60,7 @@ CREATE TABLE trial (
     name                    VARCHAR(100),
     experiment              INT             NOT NULL,
     time                    TIMESTAMP       WITHOUT TIME ZONE,
-    problem_size            INT,
+    problem_definition      TEXT,
     node_count              INT,
     contexts_per_node       INT,
     threads_per_context     INT,
