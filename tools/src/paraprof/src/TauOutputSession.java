@@ -137,283 +137,289 @@ public class TauOutputSession extends ParaProfDataSession{
 		    nodeID = nct[0];
 		    contextID = nct[1];
 		    threadID = nct[2];
-		    
-		    node = this.getNCT().getNode(nodeID);
-		    if(node==null)
-			node = this.getNCT().addNode(nodeID);
-		    context = node.getContext(contextID);
-		    if(context==null)
-			context = node.addContext(contextID);
-		    thread = context.getThread(threadID);
-		    if(thread==null){
-			thread = context.addThread(threadID);
-			thread.setDebug(this.debug());
-		    }
-		    if(this.debug())
-			System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
 
-		    //####################################
-		    //First  Line
-		    //####################################
-		    inputString = br.readLine();
-		    if(inputString == null){
-			System.out.println("Error processing file: " + files[i].getName());
-			System.out.println("Unexpected end of file!");
-			return;
+		    if(nodeID<0||contextID<0||threadID<0){
+			System.out.println("Invalid n,c,t id: " + nct[0] + "," + nct[1] + "," + nct[2] +" ... not processing this file:");
+			System.out.println(files[i].getCanonicalPath());
 		    }
-		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-		    //It's first token will be the number of function present.
-		    tokenString = genericTokenizer.nextToken();
-		    
-		    if(i==0){
-			//Set the counter name.
-			String counterName = getCounterName(inputString);
-			//Now set the counter name.
-			if(counterName == null)
-			    counterName = new String("Time");
-			System.out.println("Counter name is: " + counterName);
-			
-			metricRef.setName(counterName);
-		    }
-		    //####################################
-		    //End - First Line
-		    //####################################
-		    
-		    //####################################
-		    //Second Line
-		    //####################################
-		    inputString = br.readLine();
-		    if(inputString == null){
-			System.out.println("Error processing file: " + files[i].getName());
-			System.out.println("Unexpected end of file!");
-			return;
-		    }
-		    if(i==0){
-			//Determine if profile stats or profile calls data is present.
-			if(inputString.indexOf("SumExclSqr")!=-1)
-			    this.setProfileStatsPresent(true);
-		    }
-		    //####################################
-		    //End - Second Line
-		    //####################################
+		    else{
+			node = this.getNCT().getNode(nodeID);
+			if(node==null)
+			    node = this.getNCT().addNode(nodeID);
+			context = node.getContext(contextID);
+			if(context==null)
+			    context = node.addContext(contextID);
+			thread = context.getThread(threadID);
+			if(thread==null){
+			    thread = context.addThread(threadID);
+			    thread.setDebug(this.debug());
+			}
+			if(this.debug())
+			    System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
 
-		    //Process the appropriate number of function lines.
-		    if(this.debug()){
-			this.outputToFile("######");
-			this.outputToFile("processing functions");
-		    }
-		    numberOfLines = Integer.parseInt(tokenString);
-		    for(int j=0;j<numberOfLines;j++){
-			//On the off chance that we start supporting profiles with no functions in them
-			//(for example only userevents), don't initialize the function list until now.
-			//Just as for userevents, this will cut down on storage.
-			if(j==0&&(metric==0))
-			    thread.initializeFunctionList(this.getNumberOfMappings());
-
+			//####################################
+			//First  Line
+			//####################################
 			inputString = br.readLine();
+			if(inputString == null){
+			    System.out.println("Error processing file: " + files[i].getName());
+			    System.out.println("Unexpected end of file!");
+			    return;
+			}
+			genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+			//It's first token will be the number of function present.
+			tokenString = genericTokenizer.nextToken();
+		    
+			if(i==0){
+			    //Set the counter name.
+			    String counterName = getCounterName(inputString);
+			    //Now set the counter name.
+			    if(counterName == null)
+				counterName = new String("Time");
+			    System.out.println("Counter name is: " + counterName);
+			
+			    metricRef.setName(counterName);
+			}
+			//####################################
+			//End - First Line
+			//####################################
+		    
+			//####################################
+			//Second Line
+			//####################################
+			inputString = br.readLine();
+			if(inputString == null){
+			    System.out.println("Error processing file: " + files[i].getName());
+			    System.out.println("Unexpected end of file!");
+			    return;
+			}
+			if(i==0){
+			    //Determine if profile stats or profile calls data is present.
+			    if(inputString.indexOf("SumExclSqr")!=-1)
+				this.setProfileStatsPresent(true);
+			}
+			//####################################
+			//End - Second Line
+			//####################################
+
+			//Process the appropriate number of function lines.
+			if(this.debug()){
+			    this.outputToFile("######");
+			    this.outputToFile("processing functions");
+			}
+			numberOfLines = Integer.parseInt(tokenString);
+			for(int j=0;j<numberOfLines;j++){
+			    //On the off chance that we start supporting profiles with no functions in them
+			    //(for example only userevents), don't initialize the function list until now.
+			    //Just as for userevents, this will cut down on storage.
+			    if(j==0&&(metric==0))
+				thread.initializeFunctionList(this.getNumberOfMappings());
+
+			    inputString = br.readLine();
+			    if(inputString==null){
+				System.out.println("Error processing file: " + files[i].getName());
+				System.out.println("Unexpected end of file!");
+				return;
+			    }
+			    this.getFunctionDataLine(inputString);
+			    String groupNames = this.getGroupNames(inputString);
+			    //Calculate usec/call
+			    double usecCall = functionDataLine.d0/functionDataLine.i0;
+			    if(this.debug()){
+				this.outputToFile("function line: " + inputString);
+				this.outputToFile("Name:"+functionDataLine.s0);
+				this.outputToFile("Calls:"+functionDataLine.i0+
+						  " Subrs:"+functionDataLine.i1+
+						  " Excl:"+functionDataLine.d0+
+						  " Incl:"+functionDataLine.d1+
+						  " SumExclSqr:"+functionDataLine.d2+
+						  " ProfileCalls:"+functionDataLine.i2);
+				this.outputToFile("groupNames:"+groupNames);
+			    }
+			    if(functionDataLine.i0 !=0){
+				mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0);
+				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
+				globalMappingElement.incrementCounter();
+				globalThreadDataElement = thread.getFunction(mappingID);
+			    
+				if(globalThreadDataElement == null){
+				    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
+				    thread.addFunction(globalThreadDataElement, mappingID);
+				}
+			    
+				globalThreadDataElement.setMappingExists();
+				globalThreadDataElement.setExclusiveValue(metric, functionDataLine.d0);
+				globalThreadDataElement.setInclusiveValue(metric, functionDataLine.d1);
+				globalThreadDataElement.setNumberOfCalls(functionDataLine.i0);
+				globalThreadDataElement.setNumberOfSubRoutines(functionDataLine.i1);
+				globalThreadDataElement.setUserSecPerCall(metric, usecCall);
+			    
+				globalMappingElement.incrementTotalExclusiveValue(functionDataLine.d0);
+				globalMappingElement.incrementTotalInclusiveValue(functionDataLine.d1);
+			    
+				//Set the max values (thread max values are calculated in the Thread class).
+				if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
+				    globalMappingElement.setMaxExclusiveValue(metric, functionDataLine.d0);
+				if((globalMappingElement.getMaxInclusiveValue(metric)) < functionDataLine.d1)
+				    globalMappingElement.setMaxInclusiveValue(metric, functionDataLine.d1);
+				if(globalMappingElement.getMaxNumberOfCalls() < functionDataLine.i0)
+				    globalMappingElement.setMaxNumberOfCalls(functionDataLine.i0);
+				if(globalMappingElement.getMaxNumberOfSubRoutines() < functionDataLine.i1)
+				    globalMappingElement.setMaxNumberOfSubRoutines(functionDataLine.i1);
+				if(globalMappingElement.getMaxUserSecPerCall(metric) < usecCall)
+				    globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
+			    
+				if(!(globalMappingElement.groupsSet())){
+				    if(metric==0){ 
+					if(groupNames != null){
+					    StringTokenizer st = new StringTokenizer(groupNames, " |");
+					    while (st.hasMoreTokens()){
+						String group = st.nextToken();
+						if(group != null){
+						    //The potential new group is added here.  If the group is already present, the the addGlobalMapping
+						    //function will just return the already existing group id.  See the GlobalMapping class for more details.
+						    int groupID = this.getGlobalMapping().addGlobalMapping(group, 1);
+						    if((groupID != -1) && (this.debug())){
+							this.outputToFile("######");
+							this.outputToFile("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
+							this.outputToFile("######");
+						    }
+						    globalMappingElement.addGroup(groupID);
+						}    
+					    }    
+					}
+				    }
+				}
+
+			    }
+			
+			    if(this.debug()){
+				this.outputToFile("######");
+				this.outputToFile("processing profile calls for function: " + functionDataLine.s0);
+			    }
+			    //Process the appropriate number of profile call lines.
+			    for(int k=0;k<functionDataLine.i2;k++){
+				this.setProfileCallsPresent(true);
+				inputString = br.readLine();
+				if(this.debug())
+				    this.outputToFile("Profile Calls line: " + inputString);
+				genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+				//Arguments are evaluated left to right.
+				globalThreadDataElement.addCall(Double.parseDouble(genericTokenizer.nextToken()),
+								Double.parseDouble(genericTokenizer.nextToken()));
+			    }
+			    if(this.debug()){
+				this.outputToFile("######");
+				this.outputToFile("done processing profile calls for function: " + functionDataLine.s0);
+			    }
+			}
+			if(this.debug()){
+			    this.outputToFile("done processing functions");
+			    this.outputToFile("######");
+			}
+		    
+			if(this.debug()){
+			    this.outputToFile("######");
+			    this.outputToFile("processing aggregates");
+			}
+			//Process the appropriate number of aggregate lines.
+			inputString = br.readLine();
+			//A valid profile.*.*.* will always contain this line.
 			if(inputString==null){
 			    System.out.println("Error processing file: " + files[i].getName());
 			    System.out.println("Unexpected end of file!");
 			    return;
 			}
-			this.getFunctionDataLine(inputString);
-			String groupNames = this.getGroupNames(inputString);
-			//Calculate usec/call
-			double usecCall = functionDataLine.d0/functionDataLine.i0;
-			if(this.debug()){
-			    this.outputToFile("function line: " + inputString);
-			    this.outputToFile("Name:"+functionDataLine.s0);
-			    this.outputToFile("Calls:"+functionDataLine.i0+
-					       " Subrs:"+functionDataLine.i1+
-					       " Excl:"+functionDataLine.d0+
-					       " Incl:"+functionDataLine.d1+
-					       " SumExclSqr:"+functionDataLine.d2+
-					       " ProfileCalls:"+functionDataLine.i2);
-			    this.outputToFile("groupNames:"+groupNames);
-			}
-			if(functionDataLine.i0 !=0){
-			    mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0);
-			    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
-			    globalMappingElement.incrementCounter();
-			    globalThreadDataElement = thread.getFunction(mappingID);
-			    
-			    if(globalThreadDataElement == null){
-				globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
-				thread.addFunction(globalThreadDataElement, mappingID);
-			    }
-			    
-			    globalThreadDataElement.setMappingExists();
-			    globalThreadDataElement.setExclusiveValue(metric, functionDataLine.d0);
-			    globalThreadDataElement.setInclusiveValue(metric, functionDataLine.d1);
-			    globalThreadDataElement.setNumberOfCalls(functionDataLine.i0);
-			    globalThreadDataElement.setNumberOfSubRoutines(functionDataLine.i1);
-			    globalThreadDataElement.setUserSecPerCall(metric, usecCall);
-			    
-			    globalMappingElement.incrementTotalExclusiveValue(functionDataLine.d0);
-			    globalMappingElement.incrementTotalInclusiveValue(functionDataLine.d1);
-			    
-			    //Set the max values (thread max values are calculated in the Thread class).
-			    if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
-				globalMappingElement.setMaxExclusiveValue(metric, functionDataLine.d0);
-			    if((globalMappingElement.getMaxInclusiveValue(metric)) < functionDataLine.d1)
-				globalMappingElement.setMaxInclusiveValue(metric, functionDataLine.d1);
-			    if(globalMappingElement.getMaxNumberOfCalls() < functionDataLine.i0)
-				globalMappingElement.setMaxNumberOfCalls(functionDataLine.i0);
-			    if(globalMappingElement.getMaxNumberOfSubRoutines() < functionDataLine.i1)
-				globalMappingElement.setMaxNumberOfSubRoutines(functionDataLine.i1);
-			    if(globalMappingElement.getMaxUserSecPerCall(metric) < usecCall)
-				globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
-			    
-			    if(!(globalMappingElement.groupsSet())){
-				if(metric==0){ 
-				    if(groupNames != null){
-					StringTokenizer st = new StringTokenizer(groupNames, " |");
-					while (st.hasMoreTokens()){
-					    String group = st.nextToken();
-					    if(group != null){
-						//The potential new group is added here.  If the group is already present, the the addGlobalMapping
-						//function will just return the already existing group id.  See the GlobalMapping class for more details.
-						int groupID = this.getGlobalMapping().addGlobalMapping(group, 1);
-						if((groupID != -1) && (this.debug())){
-						    this.outputToFile("######");
-						    this.outputToFile("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
-						    this.outputToFile("######");
-						}
-						globalMappingElement.addGroup(groupID);
-					    }    
-					}    
-				    }
-				}
-			    }
-
-			}
-			
-			if(this.debug()){
-			    this.outputToFile("######");
-			    this.outputToFile("processing profile calls for function: " + functionDataLine.s0);
-			}
-			//Process the appropriate number of profile call lines.
-			for(int k=0;k<functionDataLine.i2;k++){
-			    this.setProfileCallsPresent(true);
+			genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+			//It's first token will be the number of aggregates.
+			tokenString = genericTokenizer.nextToken();
+		    
+			numberOfLines = Integer.parseInt(tokenString);
+			for(int j=0;j<numberOfLines;j++){
+			    this.setAggregatesPresent(true);
 			    inputString = br.readLine();
 			    if(this.debug())
-				this.outputToFile("Profile Calls line: " + inputString);
-			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-			    //Arguments are evaluated left to right.
-			    globalThreadDataElement.addCall(Double.parseDouble(genericTokenizer.nextToken()),
-							    Double.parseDouble(genericTokenizer.nextToken()));
+				this.outputToFile("Aggregates line: " + inputString);
 			}
 			if(this.debug()){
+			    this.outputToFile("done processing aggregates");
 			    this.outputToFile("######");
-			    this.outputToFile("done processing profile calls for function: " + functionDataLine.s0);
 			}
-		    }
-		    if(this.debug()){
-			this.outputToFile("done processing functions");
-			this.outputToFile("######");
-		    }
-		    
-		    if(this.debug()){
-			this.outputToFile("######");
-			this.outputToFile("processing aggregates");
-		    }
-		    //Process the appropriate number of aggregate lines.
-		    inputString = br.readLine();
-		    //A valid profile.*.*.* will always contain this line.
-		    if(inputString==null){
-			System.out.println("Error processing file: " + files[i].getName());
-			System.out.println("Unexpected end of file!");
-			return;
-		    }
-		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-		    //It's first token will be the number of aggregates.
-		    tokenString = genericTokenizer.nextToken();
-		    
-		    numberOfLines = Integer.parseInt(tokenString);
-		    for(int j=0;j<numberOfLines;j++){
-			this.setAggregatesPresent(true);
-			inputString = br.readLine();
-			if(this.debug())
-			    this.outputToFile("Aggregates line: " + inputString);
-		    }
-		    if(this.debug()){
-			this.outputToFile("done processing aggregates");
-			this.outputToFile("######");
-		    }
 
-		    if(metric==0){
-			//Process the appropriate number of userevent lines.
-			if(this.debug()){
-			    this.outputToFile("######");
-			    this.outputToFile("processing userevents");
-			}
-			inputString = br.readLine();
-			if(inputString==null){
-			    if(this.debug())
-				this.outputToFile("No userevent data in this file.");
-			}
-			else{
-			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-			    //It's first token will be the number of userevents
-			    tokenString = genericTokenizer.nextToken();
-			    numberOfLines = Integer.parseInt(tokenString);
-			    //Skip the heading.
-			    br.readLine();
-			    for(int j=0;j<numberOfLines;j++){
-				if(j==0){
-				    thread.initializeUsereventList(this.getNumberOfUserEvents());
-				    setUserEventsPresent(true);
-				}
-				
-				inputString = br.readLine();
-				if(inputString==null){
-				    System.out.println("Error processing file: " + files[i].getName());
-				    System.out.println("Unexpected end of file!");
-				    return;
-				}
-				this.getUserEventData(inputString);
-				if(this.debug()){
-				    this.outputToFile("userevent line: " + inputString);
-				    this.outputToFile("eventname:"+usereventDataLine.s0);
-				    this.outputToFile("numevents:"+usereventDataLine.i0+
-						       " max:"+usereventDataLine.d0+
-						       " min:"+usereventDataLine.d1+
-						       " mean:"+usereventDataLine.d2+
-						       " sumsqr:"+usereventDataLine.d3);
-				}
-				if(usereventDataLine.i0 !=0){
-				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
-				    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
-				    globalMappingElement.incrementCounter();
-				    globalThreadDataElement = thread.getUserevent(mappingID);
-				    
-				    if(globalThreadDataElement == null){
-					globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 2), true);
-					thread.addUserevent(globalThreadDataElement, mappingID);
+			if(metric==0){
+			    //Process the appropriate number of userevent lines.
+			    if(this.debug()){
+				this.outputToFile("######");
+				this.outputToFile("processing userevents");
+			    }
+			    inputString = br.readLine();
+			    if(inputString==null){
+				if(this.debug())
+				    this.outputToFile("No userevent data in this file.");
+			    }
+			    else{
+				genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+				//It's first token will be the number of userevents
+				tokenString = genericTokenizer.nextToken();
+				numberOfLines = Integer.parseInt(tokenString);
+				//Skip the heading.
+				br.readLine();
+				for(int j=0;j<numberOfLines;j++){
+				    if(j==0){
+					thread.initializeUsereventList(this.getNumberOfUserEvents());
+					setUserEventsPresent(true);
 				    }
+				
+				    inputString = br.readLine();
+				    if(inputString==null){
+					System.out.println("Error processing file: " + files[i].getName());
+					System.out.println("Unexpected end of file!");
+					return;
+				    }
+				    this.getUserEventData(inputString);
+				    if(this.debug()){
+					this.outputToFile("userevent line: " + inputString);
+					this.outputToFile("eventname:"+usereventDataLine.s0);
+					this.outputToFile("numevents:"+usereventDataLine.i0+
+							  " max:"+usereventDataLine.d0+
+							  " min:"+usereventDataLine.d1+
+							  " mean:"+usereventDataLine.d2+
+							  " sumsqr:"+usereventDataLine.d3);
+				    }
+				    if(usereventDataLine.i0 !=0){
+					mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
+					globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
+					globalMappingElement.incrementCounter();
+					globalThreadDataElement = thread.getUserevent(mappingID);
 				    
-				    globalThreadDataElement.setUserEventNumberValue(usereventDataLine.i0);
-				    globalThreadDataElement.setUserEventMaxValue(usereventDataLine.d0);
-				    globalThreadDataElement.setUserEventMinValue(usereventDataLine.d1);
-				    globalThreadDataElement.setUserEventMeanValue(usereventDataLine.d2);
+					if(globalThreadDataElement == null){
+					    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 2), true);
+					    thread.addUserevent(globalThreadDataElement, mappingID);
+					}
 				    
-				    if((globalMappingElement.getMaxUserEventNumberValue()) < usereventDataLine.i0)
-					globalMappingElement.setMaxUserEventNumberValue(usereventDataLine.i0);
-				    if((globalMappingElement.getMaxUserEventMaxValue()) < usereventDataLine.d0)
-					globalMappingElement.setMaxUserEventMaxValue(usereventDataLine.d0);
-				    if((globalMappingElement.getMaxUserEventMinValue()) < usereventDataLine.d1)
-					globalMappingElement.setMaxUserEventMinValue(usereventDataLine.d1);
-				    if((globalMappingElement.getMaxUserEventMeanValue()) < usereventDataLine.d2)
-					globalMappingElement.setMaxUserEventMeanValue(usereventDataLine.d2);
+					globalThreadDataElement.setUserEventNumberValue(usereventDataLine.i0);
+					globalThreadDataElement.setUserEventMaxValue(usereventDataLine.d0);
+					globalThreadDataElement.setUserEventMinValue(usereventDataLine.d1);
+					globalThreadDataElement.setUserEventMeanValue(usereventDataLine.d2);
+				    
+					if((globalMappingElement.getMaxUserEventNumberValue()) < usereventDataLine.i0)
+					    globalMappingElement.setMaxUserEventNumberValue(usereventDataLine.i0);
+					if((globalMappingElement.getMaxUserEventMaxValue()) < usereventDataLine.d0)
+					    globalMappingElement.setMaxUserEventMaxValue(usereventDataLine.d0);
+					if((globalMappingElement.getMaxUserEventMinValue()) < usereventDataLine.d1)
+					    globalMappingElement.setMaxUserEventMinValue(usereventDataLine.d1);
+					if((globalMappingElement.getMaxUserEventMeanValue()) < usereventDataLine.d2)
+					    globalMappingElement.setMaxUserEventMeanValue(usereventDataLine.d2);
+				    }
 				}
 			    }
+			    if(this.debug()){
+				this.outputToFile("done processing userevents");
+				this.outputToFile("######");
+			    }
 			}
-			if(this.debug()){
-			    this.outputToFile("done processing userevents");
-			    this.outputToFile("######");
-			}
+			thread.setThreadData(metric);
 		    }
-		    thread.setThreadData(metric);
 		}
 		//Done with this metric, let the global mapping compute the mean values.
 		this.getGlobalMapping().computeMeanData(0,metric);
