@@ -54,9 +54,6 @@ using a different set of options each time. Commonly used configurations are
 typically installed using the 'installtau' tool described below.
 
 % ./configure -help 
-
-TAU Configuration Utility 
-***********************************************************************
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
 -c++=<compiler>  ............................ specify the C++ compiler.
@@ -69,6 +66,7 @@ Usage: configure [OPTIONS]
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
   	                                         kai|nec|hitachi|intel]
 -useropt='<parameters>' ............... list of commandline parameters.
+-prefix=<dir> ................ Specify a target installation directory.
 -pthread .................................. Use pthread thread package.
 -sproc .................................. Use SGI sproc thread package.
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
@@ -93,12 +91,18 @@ Usage: configure [OPTIONS]
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
--muse ................................. Specify the use of MAGNET/MUSE. 
+-tag=<unique name> ........ Specify a tag to identify the installation.
+-muse ................................. Specify the use of MAGNET/MUSE.
+-muse_event ............................Specify the use of MAGNET/MUSE.
+                                w/ non-monotonically increasing values.
+-muse_multiple......................... Specify the use of MAGNET/MUSE.
+                                    w/ monotonically increasing values.
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
 -PROFILESTATS .................. Enable standard deviation calculation.
 -MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
+-COMPENSATE ........ Compensate for profiling measurement perturbation.
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
 -CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems.
 -LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time.
@@ -161,6 +165,14 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    
    Specifies the name of the Fortran90 compiler. Valid options are:
    gnu, sgi, ibm, ibm64, hp, cray, pgi, absoft, fujitsu, sun, compaq, and intel.
+
+-tag=<Unique Name>
+
+   Specifies a tag in the name of the stub Makefile and TAU makefiles to 
+   uniquely identify the installation. This is useful when more than one MPI 
+   library may be used with different versions of compilers.
+   e.g., 
+   % configure -c++=icpc -cc=icc -tag=intel71-vmi -mpiinc=/vmi2/mpich/include 
 
 -pthread
    
@@ -326,6 +338,16 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    deviation of the exclusive time/counts spent in each profiled block. This 
    option is an extension of -PROFILE, the default profiling option.
    
+-COMPENSATE 
+   
+   Specifies online compensation of performance perturbation. When this 
+   option is used, TAU computes its overhead and subtracts it from the 
+   profiles. It can be only used when profiling is chosen. This option works
+   with MULTIPLECOUNTERS as well, but while it is relevant for removing 
+   perturbation with wallclock time, it cannot accurately account for 
+   perturbation with hardware performance counts (e.g., L1 Data cache misses).
+   See TAU Publication [Europar04] for further information on this option. 
+
 -PROFILECOUNTERS
    
    Specifies use of hardware performance counters for profiling under IRIX  

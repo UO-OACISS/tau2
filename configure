@@ -116,6 +116,8 @@ pdt_cxx_compiler=default
 fixmakeargs=""
 pcxxopt=-g
 useropt=
+tag=no
+tautag=
 orig_useropt=
 mpi=no
 mpiinc=
@@ -309,6 +311,12 @@ do
   -awe=*)
       awe=yes
       awedir=`echo $arg | sed -e 's/-awe=//'`
+    shift
+    ;;
+
+  -tag=*)
+      tag=yes
+      tautag=`echo $arg | sed -e 's/-tag=//'`
     shift
     ;;
 
@@ -705,6 +713,7 @@ do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "  	                                         kai|nec|hitachi|intel]"
     echo "-useropt='<parameters>' ............... list of commandline parameters."
+    echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-pthread .................................. Use pthread thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
@@ -729,16 +738,18 @@ do
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+    echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-muse ................................. Specify the use of MAGNET/MUSE." 
     echo "-muse_event ............................Specify the use of MAGNET/MUSE."
-    echo "			          w/ non-monotonically increasing values." 
+    echo "                                w/ non-monotonically increasing values." 
     echo "-muse_multiple......................... Specify the use of MAGNET/MUSE." 
-    echo "				      w/ monotonically increasing values." 
+    echo "                                    w/ monotonically increasing values." 
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
+    echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
     echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
@@ -1054,6 +1065,11 @@ if [ $profilestats = yes ]
     fixmakeargs="$fixmakeargs PROFILESTATS"
 fi
 
+if [ $tag = yes ]
+then
+  tauoptions="${tauoptions}-${tautag}"
+fi
+  
 if [ $callpath = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLPATH"
