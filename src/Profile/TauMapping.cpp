@@ -59,6 +59,6 @@ FunctionInfo *& TheTauMapFI(TauGroup_t Pgroup )
   if ((it = TauMapGroups.find(Pgroup)) == TauMapGroups.end())
     return TauMapFI;
   else
-    return (*it).second;
+    return TauMapGroups[Pgroup];
 }
 // EOF
