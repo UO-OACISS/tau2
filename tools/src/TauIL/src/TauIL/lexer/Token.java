@@ -1,3 +1,12 @@
+/************************************************************
+ *
+ *           File : Token.java
+ *         Author : Tyrel Datwyler
+ *
+ *    Description : Generic lexical token.
+ *
+ ************************************************************/
+
 package TauIL.lexer;
 
 /**

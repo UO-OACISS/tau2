@@ -1,3 +1,12 @@
+/************************************************************
+ *
+ *           File : DoubleToken.java
+ *         Author : Tyrel Datwyler
+ *
+ *    Description : Lexical token for representing a double.
+ *
+ ************************************************************/
+
 package TauIL.lexer;
 
 /**

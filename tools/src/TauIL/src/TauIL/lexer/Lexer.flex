@@ -1,3 +1,13 @@
+
+/************************************************************
+ *
+ *           File : Lexer.flex
+ *         Author : Tyrel Datwyler
+ *
+ *    Description : The TauIL lexical analyzer.
+ *
+ ************************************************************/
+
 package TauIL.lexer;
 
 import TauIL.error.*;

@@ -1,3 +1,12 @@
+/************************************************************
+ *
+ *           File : StringToken.java
+ *         Author : Tyrel Datwyler
+ *
+ *    Description : Lexical token for representing a string.
+ *
+ ************************************************************/
+
 package TauIL.lexer;
 
 public class StringToken extends Token {
