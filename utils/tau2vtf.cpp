@@ -319,7 +319,7 @@ int main(int argc, char **argv)
 /***************************************************************************
  * -a stands for ASCII, -fa stands for FAST ASCII and -v is for verbose. 
  ***************************************************************************/
-  for (int i = 0; i < argc ; i++)
+  for (i = 0; i < argc ; i++)
   {
     switch(i) {
       case 0:
@@ -508,8 +508,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2004/08/05 22:49:37 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.2 2004/08/05 22:49:37 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2004/08/06 23:09:06 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.3 2004/08/06 23:09:06 sameer Exp $
  ***************************************************************************/
 
 
