@@ -59,7 +59,9 @@ int RtsLayer::myThread(void)
 {
 #ifdef PTHREADS
   return PthreadLayer::GetThreadId();
-#else  // if no other thread package is available
+#elif  TULIPTHREADS
+  return TulipThreadLayer::GetThreadId();
+#else  // if no other thread package is available 
   return 0;
 #endif // PTHREADS
 }
@@ -73,6 +75,8 @@ void RtsLayer::RegisterThread()
 {
 #ifdef PTHREADS
   PthreadLayer::RegisterThread();
+#elif  TULIPTHREADS
+  TulipThreadLayer::RegisterThread();
 #endif // PTHREADS
   return;
 }
@@ -85,6 +89,8 @@ void RtsLayer::LockDB(void)
 {
 #ifdef PTHREADS
   PthreadLayer::LockDB();
+#elif  TULIPTHREADS
+  TulipThreadLayer::LockDB();
 #endif // PTHREADS
   return ; // do nothing if threads are not used
 }
@@ -97,6 +103,8 @@ void RtsLayer::UnLockDB(void)
 {
 #ifdef PTHREADS
   PthreadLayer::UnLockDB();
+#elif  TULIPTHREADS
+  TulipThreadLayer::UnLockDB();
 #endif // PTHREADS
   return;
 }
@@ -105,8 +113,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/07/16 17:28:03 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.1 1998/07/16 17:28:03 sameer Exp $
+ * $Revision: 1.2 $   $Date: 1998/08/14 15:36:36 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.2 1998/08/14 15:36:36 sameer Exp $
  ***************************************************************************/
 
 
