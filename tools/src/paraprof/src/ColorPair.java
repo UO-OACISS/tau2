@@ -53,7 +53,7 @@ public class ColorPair implements Comparable
     }
     catch(Exception e)
     {
-      ParaProf.systemError(e, null, "CP01");
+      UtilFncs.systemError(e, null, "CP01");
     }
     
     return 0;

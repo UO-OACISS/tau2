@@ -393,7 +393,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	}
 	catch(Exception e)
 	    {
-		ParaProf.systemError(e, null, "GTDE01");
+		UtilFncs.systemError(e, null, "GTDE01");
 	    }
     
 	return "An error occured pocessing this string!";
@@ -476,7 +476,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    doubleList[actualLocation] = inDouble;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "GME01");
+	    UtilFncs.systemError(e, null, "GME01");
 	}
     }
   
@@ -486,7 +486,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    return doubleList[actualLocation];
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "GME02");
+	    UtilFncs.systemError(e, null, "GME02");
 	}
 	return -1;
     }

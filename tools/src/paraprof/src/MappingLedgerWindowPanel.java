@@ -33,7 +33,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MLWP01");
+	    UtilFncs.systemError(e, null, "MLWP01");
 	}
 	
     }
@@ -112,7 +112,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MLWP02");
+	    UtilFncs.systemError(e, null, "MLWP02");
 	}
     }
 
@@ -123,7 +123,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	}
 	catch(Exception e){
 	    System.out.println(e);
-	    ParaProf.systemError(e, null, "TDWP03");
+	    UtilFncs.systemError(e, null, "TDWP03");
 	}
     }     
     
@@ -257,7 +257,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MLWP03");
+	    UtilFncs.systemError(e, null, "MLWP03");
 	}
     }
   
@@ -361,7 +361,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MLWP04");
+	    UtilFncs.systemError(e, null, "MLWP04");
 	}
     }
     //######
@@ -455,7 +455,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MLWP05");
+	    UtilFncs.systemError(e, null, "MLWP05");
 	}
     }
     

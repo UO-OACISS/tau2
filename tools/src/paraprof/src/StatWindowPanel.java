@@ -28,7 +28,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SWP01");
+	    UtilFncs.systemError(e, null, "SWP01");
 	}
   
     }
@@ -65,7 +65,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SWP02");
+	    UtilFncs.systemError(e, null, "SWP02");
 	}
   
     }
@@ -77,7 +77,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	}
 	catch(Exception e){
 	    System.out.println(e);
-	    ParaProf.systemError(e, null, "SWP03");
+	    UtilFncs.systemError(e, null, "SWP03");
 	}
     }
 
@@ -151,7 +151,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		tmpString = GlobalThreadDataElement.getUserEventStatStringHeading();
 		break;
 	    default:
-		ParaProf.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
+		UtilFncs.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
 	    }
 	    
 	    int tmpInt = tmpString.length();
@@ -224,7 +224,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		    tmpString = sMWThreadDataElement.getUserEventStatString();
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
+		    UtilFncs.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
 		}
 
 		yCoord = yCoord + spacing;
@@ -263,7 +263,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TSWP03");
+	    UtilFncs.systemError(e, null, "TSWP03");
 	}
     }
     
@@ -331,7 +331,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TSWP04");
+	    UtilFncs.systemError(e, null, "TSWP04");
 	}
     }
     //######
@@ -377,7 +377,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 			    tmpString = sMWThreadDataElement.getUserEventStatString();
 			    break;
 			default:
-			    ParaProf.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
+			    UtilFncs.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
 			}
 			
 			int stringWidth = fmMonoFont.stringWidth(tmpString) + 20;
@@ -407,7 +407,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TSWP05");
+	    UtilFncs.systemError(e, null, "TSWP05");
 	}
     }
     

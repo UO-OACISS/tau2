@@ -153,7 +153,7 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "DBC02");
+	    UtilFncs.systemError(e, null, "DBC02");
 	}
     }
     //######
@@ -177,7 +177,7 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	    getContentPane().add(c, gbc);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "DBC03");
+	    UtilFncs.systemError(e, null, "DBC03");
 	}
     }
     

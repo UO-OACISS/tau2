@@ -36,7 +36,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
 	this.setNumContextsPerNode(-1);
 	this.setNumThreadsPerContext(-1);
 	this.setUserData("");
-	this.dataSession.setDebug(ParaProf.debugIsOn);
+	this.dataSession.setDebug(UtilFncs.debug);
 	this.type = type;
     }
 
@@ -58,7 +58,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
 	    this.setUserData(trial.getUserData());
 
 	    this.dataSession = new ParaProfDBSession();
-	    this.dataSession.setDebug(ParaProf.debugIsOn);
+	    this.dataSession.setDebug(UtilFncs.debug);
 	    int numberOfMetrics = trial.getMetricCount();
 	    for(int i=0;i<numberOfMetrics;i++)
 		dataSession.addMetric(trial.getMetricName(i));
@@ -70,15 +70,15 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
 	switch(type){
 	case 0:
 	    dataSession = new TauPprofOutputSession();
-	    dataSession.setDebug(ParaProf.debugIsOn);
+	    dataSession.setDebug(UtilFncs.debug);
 	    break;
 	case 1:
 	    dataSession = new TauOutputSession();
-	    dataSession.setDebug(ParaProf.debugIsOn);
+	    dataSession.setDebug(UtilFncs.debug);
 	    break;
 	case 2:
 	    dataSession = new DynaprofOutputSession();
-	    dataSession.setDebug(ParaProf.debugIsOn);
+	    dataSession.setDebug(UtilFncs.debug);
 	    break;
 	case 3:
 	    break;

@@ -27,7 +27,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    this.setTitle("Wrong constructor used!");
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SW01");
+	    UtilFncs.systemError(e, null, "SW01");
 	}
     }
     
@@ -306,7 +306,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    //####################################
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SW02");
+	    UtilFncs.systemError(e, null, "SW02");
 	}
     }
   
@@ -431,7 +431,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW03");
+	    UtilFncs.systemError(e, null, "TDW03");
 	}
     }
     //######
@@ -461,7 +461,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		((JMenuItem)windowsMenu.getItem(2)).setEnabled(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW04");
+	    UtilFncs.systemError(e, null, "TDW04");
 	}
     }
 
@@ -496,7 +496,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SW05");
+	    UtilFncs.systemError(e, null, "SW05");
 	}
     } 
     //######
@@ -535,7 +535,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    getContentPane().add(c, gbc);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SW06");
+	    UtilFncs.systemError(e, null, "SW06");
 	}
     }
     
@@ -555,7 +555,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, order);
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected window type - SW value: " + windowType);
+		    UtilFncs.systemError(null, null, "Unexpected window type - SW value: " + windowType);
 		}
 	    }
 	    else{
@@ -570,12 +570,12 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, valueType+order);
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected window type - SW value: " + windowType);
+		    UtilFncs.systemError(null, null, "Unexpected window type - SW value: " + windowType);
 		}
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW06");
+	    UtilFncs.systemError(e, null, "TDW06");
 	}
     }
 
@@ -625,7 +625,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     
     void closeThisWindow(){ 
 	try{
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("------------------------");
 		System.out.println("A stat window for: \"" + "n,c,t, " + nodeID + "," + contextID + "," + threadID + "\" is closing");
 		System.out.println("Clearing resourses for this window.");
@@ -636,7 +636,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    dispose();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SW07");
+	    UtilFncs.systemError(e, null, "SW07");
 	}
     }
     

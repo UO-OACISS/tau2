@@ -28,7 +28,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDWP01");
+	    UtilFncs.systemError(e, null, "TDWP01");
 	}
 	
     }
@@ -81,7 +81,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDWP02");
+	    UtilFncs.systemError(e, null, "TDWP02");
 	}
 	
     }
@@ -93,7 +93,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	}
 	catch(Exception e){
 	    System.out.println(e);
-	    ParaProf.systemError(e, null, "TDWP03");
+	    UtilFncs.systemError(e, null, "TDWP03");
 	}
     }     
     
@@ -178,7 +178,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    maxValue = trial.getGlobalMapping().getMaxMeanUserSecPerCall(trial.getSelectedMetricID());
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
+		    UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		}
 	    }
 	    else{
@@ -205,7 +205,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    maxValue = thread.getMaxUserSecPerCall(trial.getSelectedMetricID());
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
+		    UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		}
 	    }
 
@@ -290,7 +290,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			value = sMWThreadDataElement.getMeanUserSecPerCall();
 			break;
 		    default:
-			ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
+			UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		    }
 		}
 		else{
@@ -317,7 +317,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			value = sMWThreadDataElement.getUserSecPerCall();
 			break;
 		    default:
-			ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
+			UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		    }
 		}
 
@@ -326,7 +326,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDWP04");
+	    UtilFncs.systemError(e, null, "TDWP04");
 	}
     }
 
@@ -411,7 +411,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    barLength = baseBarLength*((int)(sliderValue*sliderMultiple));
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP06");
+	    UtilFncs.systemError(e, null, "MDWP06");
 	}
     }
   
@@ -473,7 +473,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDWP04");
+	    UtilFncs.systemError(e, null, "TDWP04");
 	}
     }
     //######
@@ -534,7 +534,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDWP05");
+	    UtilFncs.systemError(e, null, "TDWP05");
 	}
     }  
     
@@ -587,7 +587,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP07");
+	    UtilFncs.systemError(e, null, "MDWP07");
 	}
 	return resized;
     }

@@ -137,7 +137,7 @@ public class Thread implements Comparable{
 		globalThreadDataElement = (GlobalThreadDataElement) functions.elementAt(id);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "T2");
+	    UtilFncs.systemError(e, null, "T2");
 	}
 	return globalThreadDataElement;
     }
@@ -155,7 +155,7 @@ public class Thread implements Comparable{
 		globalThreadDataElement = (GlobalThreadDataElement) userevents.elementAt(id);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "T3");
+	    UtilFncs.systemError(e, null, "T3");
 	}
 	return globalThreadDataElement;
     }
@@ -369,7 +369,7 @@ public class Thread implements Comparable{
 	    doubleList[actualLocation] = inDouble;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "GT01");
+	    UtilFncs.systemError(e, null, "GT01");
 	}
     }
   
@@ -379,7 +379,7 @@ public class Thread implements Comparable{
 	    return doubleList[actualLocation];
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "GT01");
+	    UtilFncs.systemError(e, null, "GT01");
 	}
 	return -1;
     }

@@ -181,7 +181,7 @@ public class GlobalThreadDataElement{
 	}
 	catch(Exception e)
 	    {
-		ParaProf.systemError(e, null, "GTDE01");
+		UtilFncs.systemError(e, null, "GTDE01");
 	    }
     
 	return "An error occured pocessing this string!"; 
@@ -260,7 +260,7 @@ public class GlobalThreadDataElement{
 	}
 	catch(Exception e)
 	    {
-		ParaProf.systemError(e, null, "GTDE01");
+		UtilFncs.systemError(e, null, "GTDE01");
 	    }
     
 	return "An error occured pocessing this string!"; 
@@ -349,7 +349,7 @@ public class GlobalThreadDataElement{
 	}
 	catch(Exception e)
 	    {
-		ParaProf.systemError(e, null, "GTDE01");
+		UtilFncs.systemError(e, null, "GTDE01");
 	    }
     
 	return "An error occured pocessing this string!"; 
@@ -408,7 +408,7 @@ public class GlobalThreadDataElement{
 	}
 	catch(Exception e)
 	    {
-		ParaProf.systemError(e, null, "GTDE01");
+		UtilFncs.systemError(e, null, "GTDE01");
 	    }
     
 	return "An error occured pocessing this string!";
@@ -549,7 +549,7 @@ public class GlobalThreadDataElement{
 
     public void incrementStorage(){
 	if(userevent)
-	    ParaProf.systemError(null, null, "Error: Attemp to increase storage on a user event object!");
+	    UtilFncs.systemError(null, null, "Error: Attemp to increase storage on a user event object!");
 	int currentLength = doubleList.length;
 	//can use a little space here ... space for speed! :-)
 	double[] newArray = new double[currentLength+5];
@@ -569,7 +569,7 @@ public class GlobalThreadDataElement{
 	    doubleList[actualLocation] = inDouble;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "GTDE06");
+	    UtilFncs.systemError(e, null, "GTDE06");
 	}
     }
   
@@ -579,7 +579,7 @@ public class GlobalThreadDataElement{
 	    return doubleList[actualLocation];
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "GTDE06");
+	    UtilFncs.systemError(e, null, "GTDE06");
 	}
 	return -1;
     }

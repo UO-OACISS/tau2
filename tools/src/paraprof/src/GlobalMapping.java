@@ -90,7 +90,7 @@ public class GlobalMapping{
 	try{
 	    globalMappingElement = (GlobalMappingElement) mappings[mappingSelection].elementAt(mappingID);}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "GM04");}
+	    UtilFncs.systemError(e, null, "GM04");}
 	return globalMappingElement;
     }
 

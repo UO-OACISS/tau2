@@ -123,7 +123,7 @@ public class StaticMainWindowData{
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWD01");
+	    UtilFncs.systemError(e, null, "SMWD01");
 	}
 	Collections.sort(newList);
 	return newList;
@@ -195,7 +195,7 @@ public class StaticMainWindowData{
 	    list = ((Thread)trial.getNCT().getThread(nodeID,contextID,threadID)).getUsereventList();
 	    break;
 	default:
-	    ParaProf.systemError(null, null, "Unexpected list type - SMWD value: " + listType);
+	    UtilFncs.systemError(null, null, "Unexpected list type - SMWD value: " + listType);
 	}
 
 	newList = new Vector();

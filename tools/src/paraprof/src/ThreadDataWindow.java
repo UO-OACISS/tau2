@@ -37,7 +37,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    this.setTitle("Wrong constructor used!");
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW01");
+	    UtilFncs.systemError(e, null, "TDW01");
 	}
     }
     
@@ -339,7 +339,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    //####################################
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW02");
+	    UtilFncs.systemError(e, null, "TDW02");
 	}
     }
     
@@ -498,7 +498,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW03");
+	    UtilFncs.systemError(e, null, "TDW03");
 	}
     }
     //######
@@ -543,7 +543,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		((JMenuItem)windowsMenu.getItem(2)).setEnabled(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW04");
+	    UtilFncs.systemError(e, null, "TDW04");
 	}
     }
     
@@ -577,7 +577,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW05");
+	    UtilFncs.systemError(e, null, "TDW05");
 	}
     }
     //######
@@ -623,7 +623,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW06");
+	    UtilFncs.systemError(e, null, "TDW06");
 	}
     }
 
@@ -679,7 +679,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    tmpInt = barLengthSlider.getValue();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW07");
+	    UtilFncs.systemError(e, null, "TDW07");
 	}
 	
 	return tmpInt;
@@ -692,7 +692,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    return Double.parseDouble(tmpString);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "FDW08");
+	    UtilFncs.systemError(e, null, "FDW08");
 	}
 	
 	return 0;
@@ -760,7 +760,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    getContentPane().add(c, gbc);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW09");
+	    UtilFncs.systemError(e, null, "TDW09");
 	}
     }
     
@@ -770,7 +770,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
   
     void closeThisWindow(){ 
 	try{
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("------------------------");
 		System.out.println("A thread window for: \"" + "n,c,t, " + nodeID + "," + contextID + "," + threadID + "\" is closing");
 		System.out.println("Clearing resourses for that window.");
@@ -781,7 +781,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    dispose();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW10");
+	    UtilFncs.systemError(e, null, "TDW10");
 	}
     }
  

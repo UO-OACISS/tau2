@@ -27,7 +27,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    this.setTitle("Wrong constructor used!");
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "CPTW01");
+	    UtilFncs.systemError(e, null, "CPTW01");
 	}
     }
   
@@ -317,7 +317,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //####################################
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "CPTW02");
+	    UtilFncs.systemError(e, null, "CPTW02");
 	}
     }
   
@@ -444,7 +444,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW03");
+	    UtilFncs.systemError(e, null, "TDW03");
 	}
     }
     //######
@@ -480,7 +480,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		((JMenuItem)windowsMenu.getItem(1)).setEnabled(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW04");
+	    UtilFncs.systemError(e, null, "TDW04");
 	}
     }
     
@@ -513,7 +513,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW05");
+	    UtilFncs.systemError(e, null, "TDW05");
 	}
     }
     //######
@@ -562,7 +562,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW06");
+	    UtilFncs.systemError(e, null, "TDW06");
 	}
     }
 
@@ -595,7 +595,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    getContentPane().add(c, gbc);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "CPTW05");
+	    UtilFncs.systemError(e, null, "CPTW05");
 	}
     }
   
@@ -606,7 +606,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
   
     void closeThisWindow(){ 
 	try{
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("------------------------");
 		System.out.println("A total stat window for: \"" + "n,c,t, " + nodeID + "," + contextID + "," + threadID + "\" is closing");
 		System.out.println("Clearing resourses for this window.");
@@ -617,7 +617,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    dispose();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "CPTW06");
+	    UtilFncs.systemError(e, null, "CPTW06");
 	}
     }
   

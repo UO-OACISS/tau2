@@ -32,7 +32,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    this.setTitle("Wrong constructor used!");
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW01");
+	    UtilFncs.systemError(e, null, "TDW01");
 	}
     }
     
@@ -210,7 +210,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    //####################################
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW02");
+	    UtilFncs.systemError(e, null, "TDW02");
 	}
     }
     
@@ -268,7 +268,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW03");
+	    UtilFncs.systemError(e, null, "TDW03");
 	}
     }
     //######
@@ -291,7 +291,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 		((JMenuItem)windowsMenu.getItem(2)).setEnabled(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW04");
+	    UtilFncs.systemError(e, null, "TDW04");
 	}
     }
     
@@ -324,7 +324,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW05");
+	    UtilFncs.systemError(e, null, "TDW05");
 	}
     }
     //######
@@ -358,7 +358,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    list = null;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW06");
+	    UtilFncs.systemError(e, null, "TDW06");
 	}
 }
 
@@ -375,7 +375,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    getContentPane().add(c, gbc);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW09");
+	    UtilFncs.systemError(e, null, "TDW09");
 	}
     }
     
@@ -385,7 +385,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
   
     void closeThisWindow(){ 
 	try{
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("------------------------");
 		System.out.println("A thread window for: \"" + "n,c,t, " + nodeID + "," + contextID + "," + threadID + "\" is closing");
 		System.out.println("Clearing resourses for that window.");
@@ -396,7 +396,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    dispose();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW10");
+	    UtilFncs.systemError(e, null, "TDW10");
 	}
     }
  

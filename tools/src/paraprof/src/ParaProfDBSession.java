@@ -224,7 +224,7 @@ public class ParaProfDBSession extends ParaProfDataSession{
 				   
 	}
         catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD01");
+	    UtilFncs.systemError(e, null, "SSD01");
 	}
     }
     

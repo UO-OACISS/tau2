@@ -31,7 +31,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP01");
+	    UtilFncs.systemError(e, null, "MDWP01");
 	}
     }
   
@@ -61,7 +61,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    popup.add(maskMappingItem);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP02");
+	    UtilFncs.systemError(e, null, "MDWP02");
 	}
 	
     }
@@ -73,7 +73,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	}
 	catch(Exception e){
 	    System.out.println(e);
-	    ParaProf.systemError(e, null, "TDWP03");
+	    UtilFncs.systemError(e, null, "TDWP03");
 	}
     }
 
@@ -133,7 +133,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 		maxValue = gME.getMaxUserEventMeanValue();
 		break;
 	    default:
-		ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
+		UtilFncs.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
 	    }
 
 	    stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0,maxValue)); //No units required in this window.  Thus pass in 0 for type.
@@ -194,7 +194,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 		    value = tmpSMWThreadDataElement.getUserEventMeanValue();
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
+		    UtilFncs.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
 		}
 		
 		//For consistancy in drawing, the y coord is updated at the beginning of the loop.
@@ -214,7 +214,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    //######
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "UEWP03");
+	    UtilFncs.systemError(e, null, "UEWP03");
 	}
     }
 
@@ -294,7 +294,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP04");
+	    UtilFncs.systemError(e, null, "MDWP04");
 	}
     }
     
@@ -308,7 +308,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP05");
+	    UtilFncs.systemError(e, null, "MDWP05");
 	}
     }
     //######
@@ -350,7 +350,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    barLength = baseBarLength*((int)(sliderValue*sliderMultiple));
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP06");
+	    UtilFncs.systemError(e, null, "MDWP06");
 	}
     }
 
@@ -370,7 +370,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP07");
+	    UtilFncs.systemError(e, null, "MDWP07");
 	}
 	return resized;
     }

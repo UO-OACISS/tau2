@@ -217,7 +217,7 @@ public class HelpWindow extends JFrame implements ActionListener, Observer
     }
     catch(Exception e)
     {
-      ParaProf.systemError(e, null, "HW01");
+      UtilFncs.systemError(e, null, "HW01");
     }
   }
 }

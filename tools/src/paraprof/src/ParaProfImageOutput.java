@@ -73,13 +73,13 @@ public class ParaProfImageOutput{
 		System.out.println("Done saving image.");
 	    }
 	    else{
-		if(ParaProf.debugIsOn)
+		if(UtilFncs.debug)
 		    System.out.println("Did not get a file name to save image to.");
 		return;
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(null, null, "PPII02");
+	    UtilFncs.systemError(null, null, "PPII02");
 	}
     }
 }

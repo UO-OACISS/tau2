@@ -27,7 +27,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	    this.setTitle("Wrong constructor used");
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MLW01");
+	    UtilFncs.systemError(e, null, "MLW01");
 	}
     }
   
@@ -52,7 +52,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 		this.setTitle("User Event Window: " + trial.getTrialIdentifier(true));
 		break;
 	    default:
-		ParaProf.systemError(null, null, "Unexpected window type - MLW02 value: " + windowType);
+		UtilFncs.systemError(null, null, "Unexpected window type - MLW02 value: " + windowType);
 	    }
 	    
 	    //Add some window listener code
@@ -220,7 +220,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	    trial.getSystemEvents().addObserver(this);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MLW02");
+	    UtilFncs.systemError(e, null, "MLW02");
 	}
     }
 
@@ -282,7 +282,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW03");
+	    UtilFncs.systemError(e, null, "TDW03");
 	}
     }
     //######
@@ -305,7 +305,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 		((JMenuItem)windowsMenu.getItem(2)).setEnabled(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW04");
+	    UtilFncs.systemError(e, null, "TDW04");
 	}
     }
     
@@ -336,7 +336,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW05");
+	    UtilFncs.systemError(e, null, "TDW05");
 	}
     }
     //######
@@ -397,7 +397,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	    getContentPane().add(c, gbc);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MLW03");
+	    UtilFncs.systemError(e, null, "MLW03");
 	}
     }
 
@@ -407,7 +407,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
   
     void closeThisWindow(){ 
 	try{
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("------------------------");
 		System.out.println("A Mapping Ledger Window for window type: " + windowType + " is closing");
 		System.out.println("Clearing resourses for that window.");
@@ -418,7 +418,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	    dispose();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW10");
+	    UtilFncs.systemError(e, null, "TDW10");
 	}
     }
 

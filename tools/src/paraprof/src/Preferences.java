@@ -537,14 +537,14 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 			    PrintWriter out = new PrintWriter(new FileWriter(file));
 			    
 			    System.out.println("Saving color map ...");
-			    if(ParaProf.debugIsOn){
+			    if(UtilFncs.debug){
 				System.out.println("**********************");
 				System.out.println("Color values loaded were:");
 			    }
 			    for(Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements() ;){
 				ColorPair tmpCP = (ColorPair) e1.nextElement();
 				Color tmpColor = tmpCP.getMappingColor();
-				if(ParaProf.debugIsOn){
+				if(UtilFncs.debug){
 				    System.out.println("MAPPING_NAME=\"" + (tmpCP.getMappingName()) + "\"" +
 						       " RGB=\"" +
 						       tmpColor.getRed() +
@@ -557,7 +557,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 					    "," + tmpColor.getGreen() +
 					    "," + tmpColor.getBlue() + "\"");
 			    }
-			    if(ParaProf.debugIsOn){
+			    if(UtilFncs.debug){
 				System.out.println("**********************");
 			    }
 			    System.out.println("Done saving color map!");
@@ -693,7 +693,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 		nameColorVector.add(tmpCP);
 	    }
 	    
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("**********************");
 		System.out.println("Color values loaded were:");
 	    }
@@ -706,7 +706,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 		    Color tmpColor = tmpCP.getMappingColor();
 		    tmpGME.setSpecificColor(tmpColor);
 		    tmpGME.setColorFlag(true);
-		    if(ParaProf.debugIsOn){
+		    if(UtilFncs.debug){
 			System.out.println("MAPPING_NAME=\"" + (tmpCP.getMappingName()) + "\"" +
 					   " RGB=\"" +
 					   tmpColor.getRed() +
@@ -715,12 +715,12 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 		    }
 		}
 	    }
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("**********************");
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "P01");
+	    UtilFncs.systemError(e, null, "P01");
 	}
     }
     

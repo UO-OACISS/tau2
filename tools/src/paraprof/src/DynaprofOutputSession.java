@@ -397,7 +397,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 	    }
 	}
         catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD01");
+	    UtilFncs.systemError(e, null, "SSD01");
 	}
     }
     
@@ -451,7 +451,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 	    functionDataLine.d5 = Double.parseDouble(st.nextToken()); //incl.max
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD08");
+	    UtilFncs.systemError(e, null, "SSD08");
 	}
     }
 

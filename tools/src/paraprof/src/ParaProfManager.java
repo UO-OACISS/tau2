@@ -181,7 +181,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	}
 	catch(Exception e){
 	    e.printStackTrace();
-	    ParaProf.systemError(e, null, "PPM01");
+	    UtilFncs.systemError(e, null, "PPM01");
 	}
     }
 
@@ -236,7 +236,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "ELM05");
+	    UtilFncs.systemError(e, null, "ELM05");
 	}
     }
     //######
@@ -667,7 +667,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    trial.setName(trialName);
 	    
 	    FileList fl = new FileList();
-	    Vector v = fl.getFileList(null, this, type,null,ParaProf.debugIsOn);
+	    Vector v = fl.getFileList(null, this, type,null,UtilFncs.debug);
 
 	    trial.initialize(v);
 	    
@@ -689,7 +689,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	catch(Exception e){
 	    System.out.println("Error adding trial ... aborted.");
 	    System.out.println("Location - ParaProfManager.addTrial(...)");
-	    if(ParaProf.debugIsOn)
+	    if(UtilFncs.debug)
 		e.printStackTrace();
 	    return;
 	}
@@ -713,7 +713,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    trial.showMainWindow();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "jRM04");
+	    UtilFncs.systemError(e, null, "jRM04");
 	}
     }
   
@@ -729,7 +729,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     
     void closeThisWindow(){ 
 	try{
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("------------------------");
 		System.out.println("ParaProfExperiment List Manager Window is closing!");
 		System.out.println("Clearing resourses for this window.");
@@ -738,7 +738,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    dispose();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "ELM06");
+	    UtilFncs.systemError(e, null, "ELM06");
 	}
     }
 

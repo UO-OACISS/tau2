@@ -35,7 +35,7 @@ public class UtilFncs{
 	    result = dF.format(d);
 	}
 	catch(Exception e){
-		ParaProf.systemError(e, null, "UF01");
+		UtilFncs.systemError(e, null, "UF01");
 	}
 	return Double.parseDouble(result);
     }
@@ -82,7 +82,7 @@ public class UtilFncs{
 	    d = d-min*60000000.00;
 	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
 	default:
-	    ParaProf.systemError(null, null, "Unexpected string type - UF02 value: " + type);
+	    UtilFncs.systemError(null, null, "Unexpected string type - UF02 value: " + type);
 	}
 	return null;
     }
@@ -102,7 +102,7 @@ public class UtilFncs{
 	case 3:
 	    return "hour:minute:seconds";
 	default:
-	    ParaProf.systemError(null, null, "Unexpected string type - UF03 value: " + type);
+	    UtilFncs.systemError(null, null, "Unexpected string type - UF03 value: " + type);
 	}
 	return null;
     }
@@ -128,7 +128,7 @@ public class UtilFncs{
 	case 18:
 	    return "mean";
 	default:
-	    ParaProf.systemError(null, null, "Unexpected string type - UF04 value: " + type);
+	    UtilFncs.systemError(null, null, "Unexpected string type - UF04 value: " + type);
 	}
 	return null;
     }

@@ -42,7 +42,7 @@ public class ColorChooser implements WindowListener
       }
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC01");
+      UtilFncs.systemError(e, null, "CC01");
     }
   }
   
@@ -64,7 +64,7 @@ public class ColorChooser implements WindowListener
       }
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC02");
+      UtilFncs.systemError(e, null, "CC02");
     }
   }
   
@@ -78,7 +78,7 @@ public class ColorChooser implements WindowListener
       ParaProf.savedPreferences.setMiscMappingsColor(miscMappingsColor);
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC03");
+      UtilFncs.systemError(e, null, "CC03");
     }
   }
   
@@ -90,7 +90,7 @@ public class ColorChooser implements WindowListener
       tmpInt = globalColors.size();
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC04");
+      UtilFncs.systemError(e, null, "CC04");
     }
     
     return tmpInt;
@@ -104,7 +104,7 @@ public class ColorChooser implements WindowListener
       tmpInt = mappingGroupColors.size();
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC05");
+      UtilFncs.systemError(e, null, "CC05");
     }
     
     return tmpInt;
@@ -116,7 +116,7 @@ public class ColorChooser implements WindowListener
       globalColors.setElementAt(inColor, inLocation);
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC06");
+      UtilFncs.systemError(e, null, "CC06");
     }
   }
   
@@ -126,7 +126,7 @@ public class ColorChooser implements WindowListener
       mappingGroupColors.setElementAt(inColor, inLocation);
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC07");
+      UtilFncs.systemError(e, null, "CC07");
     }
   }
   
@@ -138,7 +138,7 @@ public class ColorChooser implements WindowListener
       tmpColor = (Color) globalColors.elementAt(inLocation);
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC08");
+      UtilFncs.systemError(e, null, "CC08");
     }
     
     return tmpColor;
@@ -152,7 +152,7 @@ public class ColorChooser implements WindowListener
       tmpColor = (Color) mappingGroupColors.elementAt(inLocation);
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC09");
+      UtilFncs.systemError(e, null, "CC09");
     }
     
     return tmpColor;
@@ -164,7 +164,7 @@ public class ColorChooser implements WindowListener
       globalColors.add(inColor);
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC10");
+      UtilFncs.systemError(e, null, "CC10");
     }
   }
   
@@ -174,7 +174,7 @@ public class ColorChooser implements WindowListener
       mappingGroupColors.add(inColor);
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC11");
+      UtilFncs.systemError(e, null, "CC11");
     }
   }
   
@@ -237,7 +237,7 @@ public class ColorChooser implements WindowListener
       trial.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC12");
+      UtilFncs.systemError(e, null, "CC12");
     }
   }
   
@@ -269,7 +269,7 @@ public class ColorChooser implements WindowListener
       trial.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC13");
+      UtilFncs.systemError(e, null, "CC13");
     }
   }
   
@@ -333,7 +333,7 @@ public class ColorChooser implements WindowListener
       addColor(new Color(0,102,153));
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC14");
+      UtilFncs.systemError(e, null, "CC14");
     }
   }
   
@@ -359,7 +359,7 @@ public class ColorChooser implements WindowListener
       addMappingGroupColor(new Color(255,255,102));
     }
     catch(Exception e){
-      ParaProf.systemError(e, null, "CC15");
+      UtilFncs.systemError(e, null, "CC15");
     }
   }
   
@@ -555,7 +555,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
     }
     catch(Exception e)
     {
-      ParaProf.systemError(e, null, "CCF01");
+      UtilFncs.systemError(e, null, "CCF01");
     }
   } 
   

@@ -40,7 +40,7 @@ public class Node implements Comparable{
 		contexts.insertElementAt(context, (-(pos+1)));
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N1");
+	    UtilFncs.systemError(e, null, "N1");
 	}
     }
 
@@ -63,7 +63,7 @@ public class Node implements Comparable{
 	    return context;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N2");
+	    UtilFncs.systemError(e, null, "N2");
 	}
 	return context;
     }
@@ -81,7 +81,7 @@ public class Node implements Comparable{
 		context = (Context) contexts.elementAt(pos);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N3");
+	    UtilFncs.systemError(e, null, "N3");
 	}
 	return context;
     }

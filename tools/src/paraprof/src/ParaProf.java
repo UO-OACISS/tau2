@@ -20,7 +20,6 @@ import paraprof.*;
 public class ParaProf implements ActionListener{
     //**********
     //Some system wide state variables.
-    static boolean debugIsOn = false;         //Flip this if debugging output is required.
     static String profilePathName = null;       //This contains the path to the currently loaded profile data.
     static int defaultNumberPrecision = 4;
     static boolean dbSupport = false;
@@ -98,18 +97,18 @@ public class ParaProf implements ActionListener{
 		switch(type){
 		case 0:
 		    if(filePrefix==null)
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "pprof", ParaProf.debugIsOn);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "pprof", UtilFncs.debug);
 		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, ParaProf.debugIsOn);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
 		    break;
 		case 1:
 		    if(filePrefix==null)
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "profile", ParaProf.debugIsOn);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "profile", UtilFncs.debug);
 		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, ParaProf.debugIsOn);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
 		    break;
 		case 2:
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, ParaProf.debugIsOn);
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
 		    break;
 		default:
 		    v = new Vector();
@@ -130,9 +129,9 @@ public class ParaProf implements ActionListener{
 	    }
 	    else{
 		if(filePrefix==null)
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", ParaProf.debugIsOn);
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", UtilFncs.debug);
 		else
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, ParaProf.debugIsOn);
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, UtilFncs.debug);
 		if(v.size()>0){
 		    ParaProf.trial.setPaths(fl.getPath());
 		    ParaProf.trial.initialize(v);
@@ -144,9 +143,9 @@ public class ParaProf implements ActionListener{
 		    ParaProf.trial = new ParaProfTrial(null, 1);
 		    ParaProf.trial.setName("Default Trial");
 		    if(filePrefix==null) 
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", ParaProf.debugIsOn);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", UtilFncs.debug);
 		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, ParaProf.debugIsOn);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, UtilFncs.debug);
 		    if(v.size()>0){
 			ParaProf.trial.setPaths(fl.getPath());
 			trial.initialize(v);
@@ -190,68 +189,6 @@ public class ParaProf implements ActionListener{
     public static String getInfoString(){
 	return new String("ParaProf Version 1.2 ... The Paraducks Group!");}
   
-    //Handles system errors.
-    public static void systemError(Object obj, Component component, String string){ 
-	System.out.println("####################################");
-	boolean quit = true; //Quit by default.
-	if(obj != null){
-	    if(obj instanceof Exception){
-		Exception exception = (Exception) obj;
-		if(ParaProf.debugIsOn){
-		    System.out.println(exception.toString());
-		    exception.printStackTrace();
-		    System.out.println("\n");
-		}
-		System.out.println("An error was detected: " + string);
-		System.out.println(ParaProfError.contactString);
-	    }
-	    if(obj instanceof ParaProfError){
-		ParaProfError paraProfError = (ParaProfError) obj;
-		if(ParaProf.debugIsOn){
-		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
-			JOptionPane.showMessageDialog(paraProfError.component,
-						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
-		    if(paraProfError.exp!=null){
-			System.out.println(paraProfError.exp.toString());
-			paraProfError.exp.printStackTrace();
-			System.out.println("\n");
-		    }
-		    if(paraProfError.location!=null)
-			System.out.println("Location: " + paraProfError.location);
-		    if(paraProfError.s0!=null)
-			System.out.println(paraProfError.s0);
-		    if(paraProfError.s1!=null)
-			System.out.println(paraProfError.s1);
-		    if(paraProfError.showContactString)
-			System.out.println(ParaProfError.contactString);
-		}
-		else{
-		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
-			JOptionPane.showMessageDialog(paraProfError.component,
-						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
-		    if(paraProfError.location!=null)
-			System.out.println("Location: " + paraProfError.location);
-		    if(paraProfError.s0!=null)
-			System.out.println(paraProfError.s0);
-		    if(paraProfError.s1!=null)
-			System.out.println(paraProfError.s1);
-		    if(paraProfError.showContactString)
-			System.out.println(ParaProfError.contactString);
-		}
-		quit = paraProfError.quit;
-	    }
-	    else{
-		System.out.println("An error has been detected: " + string);
-	    }
-	}
-	else{
-	    System.out.println("An error was detected at " + string);
-	}
-	System.out.println("####################################");
-	if(quit)
-	    System.exit(0);
-    }
-
     // Main entry point
     static public void main(String[] args){
 
@@ -273,7 +210,7 @@ public class ParaProf implements ActionListener{
 	while (position < args.length) {
 	    argument = args[position++];
 	    if (argument.equalsIgnoreCase("DEBUG")) {
-		debugIsOn = true;
+		UtilFncs.debug = true;
 	    }
 	}
 	//Now the rest.
@@ -297,7 +234,7 @@ public class ParaProf implements ActionListener{
 	
 	ParaProf.runtime = Runtime.getRuntime();
 	
-	if(debugIsOn){
+	if(UtilFncs.debug){
 	    //Create and start the a timer, and then add racy to it.
 	    javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);
 	    jTimer.start();

@@ -102,7 +102,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		this.getGlobalMapping().increaseVectorStorage();
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(this.firstMetric())){
-		    if(ParaProf.debugIsOn)
+		    if(UtilFncs.debug)
 			System.out.println("Increasing the storage for the new counter.");
 		
 		    for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
@@ -133,7 +133,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			}
 		    }
 	  
-		    if(ParaProf.debugIsOn)
+		    if(UtilFncs.debug)
 			System.out.println("Done increasing the storage for the new counter.");
 		}
       
@@ -220,7 +220,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 					//The group is either already present, or has just been added in the above line.  Now, using the addGroup
 					//function, update this mapping to be a member of this group.
 					this.getGlobalMapping().addGroup(mappingID, tmpInt, 0);
-					if((tmpInt != -1) && (ParaProf.debugIsOn))
+					if((tmpInt != -1) && (UtilFncs.debug))
 					    System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + functionDataLine1.s0);
 				    }    
 				}    
@@ -404,7 +404,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			}
 			break;
 		    default:
-			if(ParaProf.debugIsOn){
+			if(UtilFncs.debug){
 			    System.out.println("Skipping line: " + bSDCounter);
 			}
 			break;
@@ -417,7 +417,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		//Close the file.
 		br.close();
 	    
-		if(ParaProf.debugIsOn){
+		if(UtilFncs.debug){
 		    System.out.println("The total number of threads is: " + this.getNCT().getTotalNumberOfThreads());
 		    System.out.println("The number of mappings is: " + this.getNumberOfMappings());
 		    System.out.println("The number of user events is: " + this.getNumberOfUserEvents());
@@ -461,7 +461,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		});
 	}
         catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD01");
+	    UtilFncs.systemError(e, null, "SSD01");
 	}
     }
     
@@ -527,7 +527,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD04");}
+	    UtilFncs.systemError(e, null, "SSD04");}
 	return result;
     }
 
@@ -543,7 +543,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    functionDataLine1.d1 = Double.parseDouble(st2.nextToken()); //Percent value
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD08");
+	    UtilFncs.systemError(e, null, "SSD08");
 	}
     }
 
@@ -559,7 +559,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    functionDataLine2.d0 = Double.parseDouble(getMappingIDTokenizer.nextToken()); //User seconds per call
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD10");
+	    UtilFncs.systemError(e, null, "SSD10");
 	}
     }
 
@@ -607,7 +607,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    return null;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD12");
+	    UtilFncs.systemError(e, null, "SSD12");
 	}
 	return null;
     }
@@ -618,7 +618,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    return Integer.parseInt(st.nextToken());
   	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD16");
+	    UtilFncs.systemError(e, null, "SSD16");
 	}
 	return -1;
     }
@@ -647,7 +647,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    return tmpString; 
       	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD26");
+	    UtilFncs.systemError(e, null, "SSD26");
 	}
     
 	return null;

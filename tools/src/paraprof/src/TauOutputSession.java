@@ -450,7 +450,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		});
 	}
         catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD01");
+	    UtilFncs.systemError(e, null, "SSD01");
 	}
     }
 
@@ -493,7 +493,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    return tmpString; 
       	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD26");
+	    UtilFncs.systemError(e, null, "SSD26");
 	}
     
 	return null;
@@ -514,7 +514,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    functionDataLine.i2 = Integer.parseInt(st2.nextToken()); //ProfileCalls
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD08");
+	    UtilFncs.systemError(e, null, "SSD08");
 	}
     }
 
@@ -542,7 +542,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    return null;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD12");
+	    UtilFncs.systemError(e, null, "SSD12");
 	}
 	return null;
     }

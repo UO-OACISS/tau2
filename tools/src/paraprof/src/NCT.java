@@ -38,7 +38,7 @@ public class NCT{
 		nodes.insertElementAt(node, (-(pos+1)));
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N1");
+	    UtilFncs.systemError(e, null, "N1");
 	}
     }
 
@@ -61,7 +61,7 @@ public class NCT{
 	    return node;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N2");
+	    UtilFncs.systemError(e, null, "N2");
 	}
 	return node;
     }
@@ -82,7 +82,7 @@ public class NCT{
 		node = (Node) nodes.elementAt(pos);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N3");
+	    UtilFncs.systemError(e, null, "N3");
 	}
 	return node;
     }

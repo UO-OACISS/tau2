@@ -27,7 +27,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    this.setTitle("Wrong constructor used");
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW01");
+	    UtilFncs.systemError(e, null, "MDW01");
 	}
     }
   
@@ -342,7 +342,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    addCompItem(sp, gbc, 0, 0, 1, 1);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW02");
+	    UtilFncs.systemError(e, null, "MDW02");
 	}
     }
   
@@ -490,7 +490,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW03");
+	    UtilFncs.systemError(e, null, "TDW03");
 	}
     }
     //######
@@ -535,7 +535,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		((JMenuItem)windowsMenu.getItem(2)).setEnabled(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW04");
+	    UtilFncs.systemError(e, null, "TDW04");
 	}
     }
 
@@ -571,7 +571,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW05");
+	    UtilFncs.systemError(e, null, "MDW05");
 	}
     }
     //######
@@ -607,7 +607,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		list = sMWData.getMappingData(mappingID, 1, valueType+order);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW06");
+	    UtilFncs.systemError(e, null, "MDW06");
 	}
     }
     
@@ -659,7 +659,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    tmpInt = barLengthSlider.getValue();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW07");
+	    UtilFncs.systemError(e, null, "MDW07");
 	}
 	return tmpInt;
     }
@@ -671,7 +671,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    return Double.parseDouble(tmpString);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW08");
+	    UtilFncs.systemError(e, null, "MDW08");
 	}
 	return 0;
     }
@@ -738,7 +738,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    getContentPane().add(c, gbc);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW09");
+	    UtilFncs.systemError(e, null, "MDW09");
 	}
     }
     
@@ -748,7 +748,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
   
     void closeThisWindow(){
 	try{
-	    if(ParaProf.debugIsOn){
+	    if(UtilFncs.debug){
 		System.out.println("------------------------");
 		System.out.println("A mapping window for: \"" + mappingName + "\" is closing");
 		System.out.println("Clearing resourses for that window.");
@@ -758,7 +758,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    dispose();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW10");
+	    UtilFncs.systemError(e, null, "MDW10");
 	}
     }
       

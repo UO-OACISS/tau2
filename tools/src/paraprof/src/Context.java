@@ -49,7 +49,7 @@ public class Context implements Comparable{
 		threads.insertElementAt(thread, (-(pos+1)));
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N1");
+	    UtilFncs.systemError(e, null, "N1");
 	}
     }
 
@@ -72,7 +72,7 @@ public class Context implements Comparable{
 	    return thread;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N2");
+	    UtilFncs.systemError(e, null, "N2");
 	}
 	return thread;
     }
@@ -91,7 +91,7 @@ public class Context implements Comparable{
 		thread = (Thread) threads.elementAt(pos);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N3");
+	    UtilFncs.systemError(e, null, "N3");
 	}
 	return thread;
     }

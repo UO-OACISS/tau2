@@ -161,7 +161,7 @@ public class PPML{
 	    }
 	    break;
 	default:
-	    ParaProf.systemError(null, null, "Unexpected opertion - PPML01 value: " + op);
+	    UtilFncs.systemError(null, null, "Unexpected opertion - PPML01 value: " + op);
 	}
 	return d;
     }

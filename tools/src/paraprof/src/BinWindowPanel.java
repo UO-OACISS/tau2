@@ -37,7 +37,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	}
 	catch(Exception e)
 	    {
-		ParaProf.systemError(e, null, "SMWP01");
+		UtilFncs.systemError(e, null, "SMWP01");
 	    }
     }
   
@@ -91,7 +91,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    popup2.add(tUESWItem);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWP02");
+	    UtilFncs.systemError(e, null, "SMWP02");
 	}
     }
     //End - The constructors!!
@@ -128,7 +128,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	}
 	catch(Exception e){
 	    System.out.println(e);
-	    ParaProf.systemError(e, null, "TDWP03");
+	    UtilFncs.systemError(e, null, "TDWP03");
 	}
     }
 
@@ -457,7 +457,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 		revalidate();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWP06");
+	    UtilFncs.systemError(e, null, "SMWP06");
 	}
     }
   
@@ -474,7 +474,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMW03");
+	    UtilFncs.systemError(e, null, "SMW03");
 	}
     }
     public void popupMenuWillBecomeInvisible(PopupMenuEvent evt){}

@@ -274,7 +274,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  panel.repaint();
       }
       catch(Exception e) { 
-	  ParaProf.systemError(e, null, "SMW01");
+	  UtilFncs.systemError(e, null, "SMW01");
       }
       
   }
@@ -381,7 +381,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMW02");
+	    UtilFncs.systemError(e, null, "SMW02");
 	}
     }
     //######
@@ -413,7 +413,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		((JMenuItem)windowsMenu.getItem(2)).setEnabled(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMW03");
+	    UtilFncs.systemError(e, null, "SMW03");
 	}
 	
     }
@@ -445,7 +445,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMW04");
+	    UtilFncs.systemError(e, null, "SMW04");
 	}
     }
     //######
@@ -490,7 +490,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    tmpInt = barLengthSlider.getValue();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMW05");
+	    UtilFncs.systemError(e, null, "SMW05");
 	}
 	return tmpInt;
     }
@@ -502,7 +502,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    return Double.parseDouble(tmpString);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMW06");
+	    UtilFncs.systemError(e, null, "SMW06");
 	}
 	
 	return 0;
@@ -570,7 +570,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    contentPane.add(c, gbc);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMW07");
+	    UtilFncs.systemError(e, null, "SMW07");
 	}
     }
 
@@ -591,7 +591,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMW08");
+	    UtilFncs.systemError(e, null, "SMW08");
 	}
 	
     }
@@ -627,7 +627,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    this.setVisible(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDW10");
+	    UtilFncs.systemError(e, null, "TDW10");
 	}
     }
 

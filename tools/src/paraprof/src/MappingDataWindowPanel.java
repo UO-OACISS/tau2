@@ -31,7 +31,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP01");
+	    UtilFncs.systemError(e, null, "MDWP01");
 	}
     }
   
@@ -63,7 +63,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP02");
+	    UtilFncs.systemError(e, null, "MDWP02");
 	}
 	
     }
@@ -75,7 +75,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	}
 	catch(Exception e){
 	    System.out.println(e);
-	    ParaProf.systemError(e, null, "TDWP03");
+	    UtilFncs.systemError(e, null, "TDWP03");
 	}
     }
 
@@ -155,7 +155,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		value = gME.getMeanUserSecPerCall(trial.getSelectedMetricID());
 		break;
 	    default:
-		ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
+		UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
 	    }
 
 	    if(mDWindow.isPercent()){
@@ -245,7 +245,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		    value = tmpSMWThreadDataElement.getUserSecPerCall();
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
+		    UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
 		}
 		
 		//For consistancy in drawing, the y coord is updated at the beginning of the loop.
@@ -265,7 +265,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //######
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP03");
+	    UtilFncs.systemError(e, null, "MDWP03");
 	}
     }
 
@@ -356,7 +356,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP04");
+	    UtilFncs.systemError(e, null, "MDWP04");
 	}
     }
     //######
@@ -375,7 +375,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP05");
+	    UtilFncs.systemError(e, null, "MDWP05");
 	}
     }
     
@@ -413,7 +413,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    barLength = baseBarLength*((int)(sliderValue*sliderMultiple));
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP06");
+	    UtilFncs.systemError(e, null, "MDWP06");
 	}
     }
 
@@ -433,7 +433,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDWP07");
+	    UtilFncs.systemError(e, null, "MDWP07");
 	}
 	return resized;
     }

@@ -35,7 +35,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    this.setToolTipText("Incorrect Constructor!!!");
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWP01");
+	    UtilFncs.systemError(e, null, "SMWP01");
 	}
     }
   
@@ -90,7 +90,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    popup2.add(threadCallpathItem);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWP02");
+	    UtilFncs.systemError(e, null, "SMWP02");
 	}
     }
   
@@ -300,7 +300,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    return S;
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWP03");
+	    UtilFncs.systemError(e, null, "SMWP03");
 	}
 	return S;
     }
@@ -377,7 +377,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWP04");}
+	    UtilFncs.systemError(e, null, "SMWP04");}
     }
     
     
@@ -515,7 +515,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //**********
 	} 
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWP05");
+	    UtilFncs.systemError(e, null, "SMWP05");
 	}
     }
     public void mousePressed(MouseEvent evt){}
@@ -531,7 +531,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    renderIt((Graphics2D) g, 0);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "SMWP06");
+	    UtilFncs.systemError(e, null, "SMWP06");
 	}
     }
 
@@ -969,7 +969,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
 	catch(Exception e){
 	    e.printStackTrace();
-	    ParaProf.systemError(e, null, "SMWP07");
+	    UtilFncs.systemError(e, null, "SMWP07");
 	}
     }
 
@@ -1011,7 +1011,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	catch(Exception e)
 	    {
-		ParaProf.systemError(e, null, "SMW03");
+		UtilFncs.systemError(e, null, "SMW03");
 	    }
     }
     public void popupMenuWillBecomeInvisible(PopupMenuEvent evt){}
@@ -1041,7 +1041,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	catch(Exception e)
 	    {
-		ParaProf.systemError(e, null, "SMWP07");
+		UtilFncs.systemError(e, null, "SMWP07");
 	    }
     }
 

@@ -47,7 +47,7 @@ public class SMWThreadDataElement implements Comparable{
 	    this.globalMappingElement = (GlobalMappingElement) obj;
 	}
 	else{
-	    ParaProf.systemError(null, null, "Unexpected object type - SMWTDE value: " + obj.getClass().getName());
+	    UtilFncs.systemError(null, null, "Unexpected object type - SMWTDE value: " + obj.getClass().getName());
 	}
     }
   
@@ -287,7 +287,7 @@ public class SMWThreadDataElement implements Comparable{
 	    else
 		return this.getThreadID() - sMWThreadDataElement.getThreadID();
  	default:
-	    ParaProf.systemError(null, null, "Unexpected sort type - SMWTDE value: " + sortType);
+	    UtilFncs.systemError(null, null, "Unexpected sort type - SMWTDE value: " + sortType);
 	}
 	return 0;
     }

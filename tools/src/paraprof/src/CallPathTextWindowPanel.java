@@ -45,7 +45,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 	    this.repaint();
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "CPTWP01");
+	    UtilFncs.systemError(e, null, "CPTWP01");
 	}
     }
 
@@ -55,7 +55,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 	    renderIt((Graphics2D) g, 0);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "TDWP03");
+	    UtilFncs.systemError(e, null, "TDWP03");
 	}
     }
 
@@ -147,7 +147,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		    }
 		}
 		
-		if(ParaProf.debugIsOn){
+		if(UtilFncs.debug){
 		    yHeightNeeded = yHeightNeeded + (spacing);
 		    l1 = cPTWindow.getDataIterator();
 		    while(l1.hasNext()){
@@ -211,7 +211,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		    }
 		}
 		
-		if(ParaProf.debugIsOn){
+		if(UtilFncs.debug){
 		    g2D.drawString("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 20, yCoord);
 		    yCoord = yCoord + (spacing);
 		    l1 = cPTWindow.getDataIterator();
@@ -413,7 +413,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, this, "CPTWP02");
+	    UtilFncs.systemError(e, this, "CPTWP02");
 	}
     }
 
