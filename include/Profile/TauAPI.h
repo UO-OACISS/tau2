@@ -70,14 +70,18 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  t##fi.SetType(newname);
 #define TAU_PROFILE_TIMER_SET_GROUP(t, id) t##fi.SetProfileGroup(id); 
 
-#define TAU_GLOBAL_TIMER(timer, name, type, group) static FunctionInfo timer##fi(name, type, group, #group);
-#define TAU_GLOBAL_TIMER_START(timer) {FunctionInfo *timer##fptr = &timer##fi; \
-        int tau_tid = RtsLayer::myThread(); \
-        Profiler *timer = new Profiler(timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
+#define TAU_GLOBAL_TIMER(timer, name, type, group) FunctionInfo& timer () { \
+	static FunctionInfo timer##fi (name, type, group, #group); \
+	return timer##fi; }
+
+#define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
+	int tau_tid = RtsLayer::myThread(); \ 
+	Profiler *timer = new Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
         timer->Start(tau_tid); }
 
 #define TAU_GLOBAL_TIMER_STOP()  {int tau_threadid = RtsLayer::myThread(); \
                 Profiler::CurrentProfiler[tau_threadid]->Stop(tau_threadid);}
+
 
 /* The above macros are for use with global timers in a multi-threaded application */
 
@@ -235,7 +239,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.34 $   $Date: 2004/10/04 23:32:14 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.34 2004/10/04 23:32:14 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.35 $   $Date: 2005/01/05 01:56:19 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.35 2005/01/05 01:56:19 sameer Exp $ 
  ***************************************************************************/
