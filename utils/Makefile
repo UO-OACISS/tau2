@@ -150,8 +150,11 @@ pcxx2ar : pcxx2ar.c $(EVHEADER)
 tau_convert: 	tau_convert.c 
 		$(CXX) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRA)
 
-tau2vtf: 	tau2vtf.cpp
-		$(CXX) $(CFLAGS)  tau2vtf.cpp -o tau2vtf -lm $(LEXTRA) -L$(VTFDIR)/$(CONFIG_ARCH)/lib -I$(VTFDIR)/include -lvtf3 $(TAU_TRACE_INPUT_LIB)
+tau2vtf: 	tau2vtf.o
+		$(CXX) tau2vtf.o -o tau2vtf -lm $(LEXTRA) -L$(VTFDIR)/$(CONFIG_ARCH)/lib -lvtf3 $(TAU_TRACE_INPUT_LIB)
+
+tau2vtf.o:	tau2vtf.cpp
+		$(CXX) $(CFLAGS)  tau2vtf.cpp -c -I$(VTFDIR)/include 
 
 tau_merge: 	tau_merge.o tau_events.o
 		$(CXX) $(CFLAGS)  tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)

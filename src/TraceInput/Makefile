@@ -46,6 +46,11 @@ ARFLAGS         = rcv
 #SOL2CC#ARFLAGS                 = -o                       #ENDIF#
 ##################################################################
 
+##############################################
+#PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
+#############################################
+
+
 #USE_DECCXX#EXTRAOBJS=cxx_repository/*.o #ENDIF#
 
 
@@ -83,6 +88,7 @@ $(INSTALLDEST)/$(LIBTARGET): $(LIBTARGET)
 
 
 $(LIBTARGET):	$(OBJS)
+	$(PRELINK_PHASE)
 	$(AR) $(ARFLAGS) $(LIBTARGET) $(OBJS) $(EXTRAOBJS)
 	$(TAU_RANLIB) $(LIBTARGET)
 
@@ -97,6 +103,6 @@ clean:
 ##############################################
 #/***************************************************************************
 # * $RCSfile: Makefile,v $   $Author: sameer $
-# * $Revision: 1.5 $   $Date: 2004/11/07 01:49:23 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.5 2004/11/07 01:49:23 sameer Exp $ 
+# * $Revision: 1.6 $   $Date: 2004/11/10 22:56:35 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.6 2004/11/10 22:56:35 sameer Exp $ 
 # ***************************************************************************/
