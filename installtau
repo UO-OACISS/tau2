@@ -241,6 +241,10 @@ echo " " > wishver
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -papi=$papidir -PAPIWALLCLOCK -PAPIVIRTUAL"
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
       make clean; make install
+# Add -TRACE -papi multiplecounters to it
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE $vtfopt -papi=$papidir -MULTIPLECOUNTERS"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE  $vtfopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
+      make clean; make install
     fi
 
     if [ $opari = yes ]
