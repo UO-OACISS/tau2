@@ -28,7 +28,7 @@ c---------------------------------------------------------------------
 c---------------------------------------------------------------------
 c   tolerance level
 c---------------------------------------------------------------------
-      call TAU_PROFILE_TIMER(profiler, 'bcast_inputs');
+      call TAU_PROFILE_TIMER(profiler, 'verify');
       call TAU_PROFILE_START(profiler);
         epsilon = 1.0d-08
 

@@ -31,7 +31,7 @@ c---------------------------------------------------------------------
 
       integer IERROR
 
-      call TAU_PROFILE_TIMER(profiler, 'bcast_inputs');
+      call TAU_PROFILE_TIMER(profiler, 'ssor');
       call TAU_PROFILE_START(profiler);
 
  
