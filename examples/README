@@ -61,6 +61,14 @@ autoinstrument  - Shows the use of Program Database Toolkit (PDT) for
 		  Makefile is modified to illustrate the use of a source to 
 		  source translator (tau_instrumentor). 
 
+analyze		- Shows the use of tau_analyze, a utility that generates selective
+		  instrumentation lists for use with tau_instrumentor based on
+		  the analysis of collected program information and a user defined 
+		  instrumentation scenario. The tau_analyze utility expands on the
+		  functionality of the tau_reduce utility. TAU must be configured 
+		  with -pdt=<dir> option.
+
+
 reduce          - Shows the use of tau_reduce, a utility that can read profiles 
                   and a set of rules and determine which routines should not 
                   be instrumented (for frequently called light-weight routines).
