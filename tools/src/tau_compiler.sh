@@ -51,6 +51,7 @@ printUsage () {
 	echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
 	echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
 	echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking (default)"
+	echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking"
 	echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
 	if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 		exit
@@ -271,6 +272,9 @@ for arg in "$@"
 				#removes -l*mpi* options at the linking stage.
 				echoIfDebug "\tNo MPI Option is being passed"
 				hasMpi=$FALSE
+				;;
+			-optMpi*)
+				hasMpi=$TRUE
 				;;
 
 			-optKeepFiles*)
