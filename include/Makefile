@@ -135,6 +135,7 @@ DYNINST_PLATFORM = i386-unknown-linux2.0
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
 #PAPI#LEXTRA	       	       = -L$(PAPIDIR)/src -lpapi #ENDIF#
+#PAPIPTHREAD#LEXTRA	       	       = -L$(PAPIDIR)/src -lpapi_r #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
