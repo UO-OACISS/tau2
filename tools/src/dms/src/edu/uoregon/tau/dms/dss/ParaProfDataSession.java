@@ -599,11 +599,17 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		this.outputToFile("GlobalMappingElement: " + globalMappingElement.getMappingName() + "(Percent)");
 	    }
 	    for(int i=0;i<numberOfMetrics;i++){
-		double meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+		double meanExclusivePercentValue = 0.0;
+    	if (maxMeanInclusiveValue[i] != 0.0) {
+			meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+		}
 		globalMappingElement.setMeanExclusivePercentValue(i,meanExclusivePercentValue);
 		if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue)
 		    globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue);
-		double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+		double meanInclusivePercentValue = 0.0;
+		if (maxMeanInclusiveValue[i] != 0.0) {
+			meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+		}
 		globalMappingElement.setMeanInclusivePercentValue(i,meanInclusivePercentValue);
 		if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue)
 		    globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue);
@@ -663,7 +669,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     protected Metric addMetric(String name){
 	Metric metric = new Metric();
 	metric.setName(name);
-	metrics.add(metric);
+	addMetric(metric);
 	return metric;
     }
 

@@ -8,15 +8,24 @@ import java.sql.ResultSet;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.1 2004/05/05 17:43:35 khuck Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.2 2004/06/09 00:07:03 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
  */
-public class Metric {
+public class Metric extends Object {
 	private int metricID;
 	private int trialID;
 	private String name;
+
+	public boolean equals (Metric inMetric) {
+		return (this.name.equals(inMetric.getName())) ? true : false;
+	}
+
+	public boolean equals (Object inObject) {
+		Metric inMetric = (Metric)inObject;
+		return equals(inMetric);
+	}
 
 /**
  * Gets the unique identifier of the current metric object.

@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.3 2004/05/27 20:25:43 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.4 2004/06/09 00:07:02 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -301,10 +301,25 @@ public abstract class DataSession {
 	    }
 	}
 	
-	//Try getting the matric.
+	//Try getting the metric.
 	if(this.metrics!=null){
-	    metric.setID(this.getNumberOfMetrics());
-	    metrics.add(metric);
+		// int index = metrics.indexOf(metric);
+		// didn't work.  so do it manually.
+		int index = -1;
+		Enumeration e = metrics.elements();
+		for ( int i = 0 ; e.hasMoreElements() ; i++) {
+			Metric m = (Metric)e.nextElement();
+			if (m.equals(metric)) {
+				index = i;
+				break;
+			}
+		}
+		if (index == -1) {
+	    	metric.setID(this.getNumberOfMetrics());
+	    	metrics.add(metric);
+		} else {
+			metric.setID(((Metric)(metrics.elementAt(index))).getID());
+		}
 	    return metric.getID();
 	}
 	else

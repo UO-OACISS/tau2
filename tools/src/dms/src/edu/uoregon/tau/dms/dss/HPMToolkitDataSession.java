@@ -51,22 +51,6 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 					//End - First Line
 					//####################################
       
-	  /*
-					if (firstFile) {
-						//Set the metric name.
-						String metricName = "HPM Toolkit Counters";
-      
-						//Need to call increaseVectorStorage() on all objects that require it.
-						this.getGlobalMapping().increaseVectorStorage();
-      
-						// System.out.println("Metric name is: " + metricName);
-      
-						metric = this.getNumberOfMetrics();
-						this.addMetric(metricName);
-						firstFile = false;
-					}
-					*/
-
 					// find the end of the resource statistics
 					while((inputString = br.readLine()) != null){
 						if (inputString.trim().startsWith("#######  End of Resource Statistics")) {
@@ -97,6 +81,8 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 
 					//Close the file.
 					br.close();
+
+					this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
 	    
 					if(UtilFncs.debug){
 			    		System.out.println("The total number of threads is: " + this.getNCT().getTotalNumberOfThreads());
@@ -133,6 +119,13 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
     //####################################
 
 	private void initializeThread() {
+		// create the mapping, if necessary
+		if (header2.s1 == null)
+			mappingID = this.getGlobalMapping().addGlobalMapping(header2.s0, 0, 1);
+		else
+			mappingID = this.getGlobalMapping().addGlobalMapping(header2.s0 + " lines " +header2.s1, 0, 1);
+		globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
+
 		// make sure we start at zero for all counters
 		nodeID = (nodeID == -1) ? 0 : nodeID;
 		contextID = (contextID == -1) ? 0 : contextID;
@@ -151,6 +144,13 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 			thread.initializeFunctionList(this.getGlobalMapping().getNumberOfMappings(0));
 			thread.initializeUsereventList(this.getGlobalMapping().getNumberOfMappings(2));
 		}
+
+		globalThreadDataElement = thread.getFunction(mappingID);
+		if(globalThreadDataElement == null) {
+			globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
+			thread.addFunction(globalThreadDataElement, mappingID);
+		}
+
 		initialized = true;
 	}
 
@@ -193,6 +193,8 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 
 	private void processHeaderLine2(String string) {
 		// System.out.println("Header line 2");
+		header1.s0 = null;
+		header1.s1 = null;
 		try{
 	    	StringTokenizer st1 = new StringTokenizer(string, ",");
 
@@ -207,7 +209,7 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 			// get the next name/value pair
 			string = st1.nextToken();
 	    	st2 = new StringTokenizer(string, ":");
-			// ignore the "Label" label
+			// ignore the "lines" label
 			string = st2.nextToken();
 			// get the value
 	    	header2.s1 = st2.nextToken().trim(); // label value
@@ -266,30 +268,83 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 
 	private void processHardwareCounter(String string) {
 		if (!initialized) {
+			header2.s0 = new String("Entire Program");
+			header3.i0 = 1;
 			initializeThread();
+		} else {
+			thread.incrementStorage();
+			globalMappingElement.incrementStorage();
+			globalThreadDataElement.incrementStorage();
 		}
 		// System.out.println("Hardwoare counter");
 		try{
 	    	StringTokenizer st1 = new StringTokenizer(string, ":");
-	    	String eventName = st1.nextToken().trim(); // hardware counter name
+	    	String metricName = st1.nextToken().trim(); // hardware counter name
 			String tmpStr = st1.nextToken().trim();
 			// need to clean stuff out of the value, like % and M and whatnot
 	    	st1 = new StringTokenizer(tmpStr, " ");
 	    	double dEventValue = 0.0;
 	    	int iEventValue = 0;
 			tmpStr = st1.nextToken().trim();
-			if (tmpStr.indexOf(".") > -1)
+			boolean typeDouble = false;
+			if (tmpStr.indexOf(".") > -1) {
 	    		dEventValue = Double.parseDouble(tmpStr); // callsite index
-			else
+				typeDouble = true;
+			} else {
 	    		iEventValue = Integer.parseInt(tmpStr); // callsite index
+			}
 			if (st1.hasMoreTokens())
-				eventName += " (" + st1.nextToken() + ")";
-			// System.out.println(eventName + " = " + eventValue);
+				metricName += " (" + st1.nextToken() + ")";
+			// System.out.println(metricName + " = " + dEventValue);
+
+			metric = this.getNumberOfMetrics();
+			//Set the metric name.
+			Metric newMetric = this.addMetric(metricName);
+			if (metric < this.getNumberOfMetrics()) {
+				//Need to call increaseVectorStorage() on all objects that require it.
+				this.getGlobalMapping().increaseVectorStorage();
+			}
+			metric = newMetric.getID();
+// new code
+			if (typeDouble) {
+				globalThreadDataElement.setExclusiveValue(metric, dEventValue);
+				globalThreadDataElement.setInclusiveValue(metric, dEventValue);
+				double tmpValue = dEventValue / ((double)(header3.i0));
+				globalThreadDataElement.setUserSecPerCall(metric, tmpValue);
+            	if((globalMappingElement.getMaxExclusiveValue(metric)) < dEventValue) {
+					globalMappingElement.setMaxExclusiveValue(metric, dEventValue);
+					globalMappingElement.setMaxInclusiveValue(metric, dEventValue);
+				}
+				if(globalMappingElement.getMaxUserSecPerCall(metric) < (dEventValue / header3.i0))
+					globalMappingElement.setMaxUserSecPerCall(metric, (dEventValue / header3.i0));
+			} else {
+				globalThreadDataElement.setExclusiveValue(metric, iEventValue);
+				globalThreadDataElement.setInclusiveValue(metric, iEventValue);
+				double tmpValue = iEventValue / ((double)(header3.i0));
+				globalThreadDataElement.setUserSecPerCall(metric, tmpValue);
+            	if((globalMappingElement.getMaxExclusiveValue(metric)) < iEventValue) {
+					globalMappingElement.setMaxExclusiveValue(metric, iEventValue);
+					globalMappingElement.setMaxInclusiveValue(metric, iEventValue);
+				}
+				if(globalMappingElement.getMaxUserSecPerCall(metric) < (iEventValue / header3.i0))
+					globalMappingElement.setMaxUserSecPerCall(metric, (iEventValue / header3.i0));
+			}
+			globalThreadDataElement.setExclusivePercentValue(metric, 0);
+			globalThreadDataElement.setInclusivePercentValue(metric, 0);
+			globalThreadDataElement.setNumberOfCalls(header3.i0);
+			globalThreadDataElement.setNumberOfSubRoutines(0);
+			globalMappingElement.setMaxExclusivePercentValue(metric, 0.0);
+			globalMappingElement.setMaxInclusivePercentValue(metric, 0.0);
+			if(globalMappingElement.getMaxNumberOfCalls() < header3.i0)
+				globalMappingElement.setMaxNumberOfCalls(header3.i0);
+			globalMappingElement.setMaxNumberOfSubRoutines(0);
+
+/*
+// old code
 			// save the thing...
-			mappingID = this.getGlobalMapping().addGlobalMapping(eventName, 2, 1);
+			mappingID = this.getGlobalMapping().addGlobalMapping(metricName, 2, 1);
 			globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
 			globalThreadDataElement = thread.getUserevent(mappingID);
-
 			if(globalThreadDataElement == null) {
 				globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 2), true);
 				thread.addUserevent(globalThreadDataElement, mappingID);
@@ -307,6 +362,7 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 				globalMappingElement.setMaxUserEventMinValue(dEventValue);
    			if((globalMappingElement.getMaxUserEventMeanValue()) < dEventValue)
 				globalMappingElement.setMaxUserEventMeanValue(dEventValue);
+*/
 		} catch(Exception e) {
 	    	System.out.println("An error occured while parsing the callsite data!");
 	    	e.printStackTrace();
@@ -371,7 +427,6 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
     private LineData header3 = new LineData();
     private LineData header4 = new LineData();
     private LineData header5 = new LineData();
-	private String[] eventNames = null;
     //####################################
     //End - Instance data.
     //####################################
