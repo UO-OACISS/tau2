@@ -35,14 +35,14 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	}
     }
   
-    public MappingDataWindowPanel(Trial inTrial, int inMappingID, MappingDataWindow inMDWindow){
+    public MappingDataWindowPanel(Trial trial, int mappingID, MappingDataWindow mDWindow){
 	try{
 
-	    trial = inTrial;
-	    mDWindow = inMDWindow;
- 	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(inMappingID, 0);
+	    this.trial = trial;
+	    this.mDWindow = mDWindow;
+ 	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
  	    mappingName = gME.getMappingName();
-	    mappingID = gME.getGlobalID();
+	    this.mappingID = mappingID;
 	    barLength = baseBarLength;
 
 	    //Want the background to be white.
@@ -184,9 +184,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //***
 	    //Draw thread information for this mapping.
 	    //***
-	    serverNumber = 0;
+	    nodeNumber = 0;
 	    for(Enumeration e1 = (mDWindow.getStaticMainWindowSystemData()).elements(); e1.hasMoreElements() ;){
-		//Get the name of the server.
 		tmpSMWServer = (SMWServer) e1.nextElement();
 		contextNumber = 0;
 		tmpContextList = tmpSMWServer.getContextList();
@@ -199,52 +198,49 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		    for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;){
 			tmpSMWThread = (SMWThread) e3.nextElement();
 			tmpThreadDataElementList = tmpSMWThread.getThreadDataList();
-			
 			for(Enumeration e4 = tmpThreadDataElementList.elements(); e4.hasMoreElements() ;){
 			    tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+			    switch(mDWindow.getMetric()){
+			    case 0:
+				if(mDWindow.isPercent())
+				    value = tmpSMWThreadDataElement.getInclusivePercentValue();
+				else
+				    value = tmpSMWThreadDataElement.getInclusiveValue();
+				break;			    
+			    case 1:
+				if(mDWindow.isPercent())
+				    value = tmpSMWThreadDataElement.getExclusivePercentValue();
+				else
+				    value = tmpSMWThreadDataElement.getExclusiveValue();
+				break;
+			    case 2:
+				value = tmpSMWThreadDataElement.getNumberOfCalls();
+				break;
+			    case 3:
+				value = tmpSMWThreadDataElement.getNumberOfSubRoutines();
+				break;
+			    case 4:
+				value = tmpSMWThreadDataElement.getUserSecPerCall();
+				break;
+			    default:
+				ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
+			    }
 			    
-			    if((tmpSMWThreadDataElement.getMappingID()) == mappingID){
-				switch(mDWindow.getMetric()){
-				case 0:
-				    if(mDWindow.isPercent())
-					value = tmpSMWThreadDataElement.getInclusivePercentValue();
-				    else
-					value = tmpSMWThreadDataElement.getInclusiveValue();
-				    break;			    
-				case 1:
-				    if(mDWindow.isPercent())
-					value = tmpSMWThreadDataElement.getExclusivePercentValue();
-				    else
-					value = tmpSMWThreadDataElement.getExclusiveValue();
-				    break;
-				case 2:
-				    value = tmpSMWThreadDataElement.getNumberOfCalls();
-				    break;
-				case 3:
-				    value = tmpSMWThreadDataElement.getNumberOfSubRoutines();
-				    break;
-				case 4:
-				    value = tmpSMWThreadDataElement.getUserSecPerCall();
-				    break;
-				default:
-				    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
-				}
-				
-				//For consistancy in drawing, the y coord is updated at the beginning of the loop.
-				yCoord = yCoord + (barSpacing);
-				
-				//Now select whether to draw this thread based on clip rectangle.
-				if((yCoord >= yBeg) && (yCoord <= yEnd)){
-				    drawBar(g2D, fmFont, value, maxValue, "n,c,t " + serverNumber + "," + contextNumber + "," + threadNumber,
-					    barXCoord, yCoord, barHeight, groupMember);
-				}
+			    //For consistancy in drawing, the y coord is updated at the beginning of the loop.
+			    yCoord = yCoord + (barSpacing);
+			    
+			    //Now select whether to draw this thread based on clip rectangle.
+			    if((yCoord >= yBeg) && (yCoord <= yEnd)){
+				drawBar(g2D, fmFont, value, maxValue,
+					"n,c,t " + nodeNumber + "," + contextNumber + "," + threadNumber,
+					barXCoord, yCoord, barHeight, groupMember);
 			    }
 			}
 			threadNumber++;
 		    }		    
 		    contextNumber++;		    
 		}		
-		serverNumber++;
+		nodeNumber++;
 	    }
 	    //***
 	    //Draw thread information for this mapping.
@@ -285,7 +281,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			 int barXCoord, int yCoord, int barHeight, boolean groupMember){
 	int xLength = 0;
 	double d = 0.0;
-	double sum = 0.0;
 	String s = null;
 	int stringWidth = 0;
 	int stringStart = 0;
@@ -446,7 +441,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     private int maxXLength = 0;
     private boolean groupMember = false;
     private int aT = -1;
-    private int serverNumber = -1;
+    private int nodeNumber = -1;
     private int contextNumber = -1;
     private int threadNumber = -1;
     private Trial trial = null;

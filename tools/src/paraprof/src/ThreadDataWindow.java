@@ -31,11 +31,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	}
     }
     
-    public ThreadDataWindow(Trial inTrial,
-			    int inServerNumber,
-			    int inContextNumber,
-			    int inThreadNumber,
-			    StaticMainWindowData inSMWData){
+    public ThreadDataWindow(Trial inTrial, int nodeID, int contextID, int threadID, StaticMainWindowData inSMWData){
 	try{
 	    trial = inTrial;
 	    sMWData = inSMWData;
@@ -45,12 +41,12 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    setLocation(new java.awt.Point(300, 200));
 	    setSize(new java.awt.Dimension(700, 450));
 	    
-	    server = inServerNumber;
-	    context = inContextNumber;
-	    thread = inThreadNumber;
+	    this.nodeID = nodeID;
+	    this.contextID = contextID;
+	    this.threadID = threadID;
 	    
 	    //Now set the title.
-	    this.setTitle("n,c,t, " + server + "," + context + "," + thread + " - " + trial.getProfilePathName());
+	    this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getProfilePathName());
 	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {
@@ -299,30 +295,18 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    contentPane.setLayout(gbl);
 	    gbc = new GridBagConstraints();
 	    gbc.insets = new Insets(5, 5, 5, 5);
-	    
-	    //Create some borders.
-	    Border mainloweredbev = BorderFactory.createLoweredBevelBorder();
-	    Border mainraisedbev = BorderFactory.createRaisedBevelBorder();
-	    Border mainempty = BorderFactory.createEmptyBorder();
-	    
+	    	    
 	    //**********
 	    //Panel and ScrollPane definition.
-		//**********
-	    panel = new ThreadDataWindowPanel(trial,
-								 inServerNumber,
-								 inContextNumber,
-								 inThreadNumber, this, sMWData);
-	    
+	    //**********
+	    panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this, sMWData);
+	    sp = new JScrollPane(panel);
+	    JLabel label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) + UtilFncs.getUnitsString(units, trial.isTimeMetric()));
+            sp.setColumnHeaderView(label);
 	    //**********
 	    //End - Panel and ScrollPane definition.
 	    //**********
-	    
-	    //The scroll panes into which the list shall be placed.
-	    threadDataWindowPanelScrollPane = new JScrollPane(panel);
-	    threadDataWindowPanelScrollPane.setBorder(mainloweredbev);
-	    threadDataWindowPanelScrollPane.setPreferredSize(new Dimension(500, 450));
-	    
-	    
+	    	    
 	    //Do the slider stuff, but don't add.  By default, sliders are off.
 	    String sliderMultipleStrings[] = {"1.00", "0.75", "0.50", "0.25", "0.10"};
 	    sliderMultiple = new JComboBox(sliderMultipleStrings);
@@ -339,7 +323,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    gbc.anchor = GridBagConstraints.CENTER;
 	    gbc.weightx = 0.95;
 	    gbc.weighty = 0.98;
-	    addCompItem(threadDataWindowPanelScrollPane, gbc, 0, 0, 1, 1);
+	    addCompItem(sp, gbc, 0, 0, 1, 1);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "TDW02");
@@ -663,99 +647,99 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    if(sortByMappingID){
 		if(metric==0){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdDI");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdDI");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdAI");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdAI");
 		}
 		else if(metric==1){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdDE");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdDE");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdAE");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdAE");
 		}
 		else if(metric==2){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdDNC");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdDNC");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdANC");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdANC");
 		}
 		else if(metric==3){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdDNS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdDNS");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdANS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdANS");
 		}
 		else if(metric==4){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdDUS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdDUS");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdAUS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "FIdAUS");
 		}
 	    }
 	    else if(sortByName){
 		
 		if(metric==0){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NDI");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NDI");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NAI");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NAI");
 		}
 		else if(metric==1){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NDE");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NDE");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NAE");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NAE");
 		}
 		else if(metric==2){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NDNC");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NDNC");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NANC");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NANC");
 		}
 		else if(metric==3){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NDNS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NDNS");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NANS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NANS");
 		}
 		else if(metric==4){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NDUS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NDUS");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NAUS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "NAUS");
 		}
 	    }
 	    else if(sortByMillisecond){
 		
 		if(metric==0){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MDI");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MDI");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MAI");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MAI");
 		}
 		else if(metric==1){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MDE");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MDE");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MAE");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MAE");
 		}
 		else if(metric==2){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MDNC");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MDNC");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MANC");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MANC");
 		}
 		else if(metric==3){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MDNS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MDNS");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MANS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MANS");
 		}
 		else if(metric==4){
 		    if(descendingOrder)
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MDUS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MDUS");
 		    else
-			currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MAUS");
+			currentSMWThreadData = sMWData.getSMWThreadData(nodeID, contextID, threadID, "MAUS");
 		}
 	    }
 	}
@@ -820,7 +804,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    //removed is that scrollPane.  We then add back in with new parameters.
 	    //This might not be required as it seems to adjust well if left in, but just
 	    //to be sure.
-	    contentPane.remove(threadDataWindowPanelScrollPane);
+	    contentPane.remove(sp);
 	    
 	    gbc.fill = GridBagConstraints.NONE;
 	    gbc.anchor = GridBagConstraints.EAST;
@@ -850,20 +834,20 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    gbc.anchor = GridBagConstraints.CENTER;
 	    gbc.weightx = 0.95;
 	    gbc.weighty = 0.98;
-	    addCompItem(threadDataWindowPanelScrollPane, gbc, 0, 1, 4, 1);
+	    addCompItem(sp, gbc, 0, 1, 4, 1);
 	}
 	else{
 	    contentPane.remove(sliderMultipleLabel);
 	    contentPane.remove(sliderMultiple);
 	    contentPane.remove(barLengthLabel);
 	    contentPane.remove(barLengthSlider);
-	    contentPane.remove(threadDataWindowPanelScrollPane);
+	    contentPane.remove(sp);
 	    
 	    gbc.fill = GridBagConstraints.BOTH;
 	    gbc.anchor = GridBagConstraints.CENTER;
 	    gbc.weightx = 0.95;
 	    gbc.weighty = 0.98;
-	    addCompItem(threadDataWindowPanelScrollPane, gbc, 0, 0, 1, 1);
+	    addCompItem(sp, gbc, 0, 0, 1, 1);
 	}
     
 	//Now call validate so that these componant changes are displayed.
@@ -896,7 +880,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	try{
 	    if(ParaProf.debugIsOn){
 		System.out.println("------------------------");
-		System.out.println("A thread window for: \"" + "n,c,t, " + server + "," + context + "," + thread + "\" is closing");
+		System.out.println("A thread window for: \"" + "n,c,t, " + nodeID + "," + contextID + "," + threadID + "\" is closing");
 		System.out.println("Clearing resourses for that window.");
 	    }
 	    
@@ -955,7 +939,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;
   
-    private JScrollPane threadDataWindowPanelScrollPane;
+    private JScrollPane sp = null;;
   
     private ThreadDataWindowPanel panel = null;
     private LocalPrefWindow lPWindow = null;
@@ -963,7 +947,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     private Trial trial = null;
     private StaticMainWindowData sMWData = null;
   
-    SMWThreadDataElement tmpSMWThreadDataElement = null;
+    SMWThreadDataElement sMWThreadDataElement = null;
   
   
     //Local data.
@@ -981,9 +965,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 
     private boolean formatNumbers = true;
   
-    private int server = -1;
-    private int context = -1;
-    private int thread = -1;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
   
     //******************************
     //End - Instance data.

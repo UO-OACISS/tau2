@@ -275,22 +275,13 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    contentPane.setLayout(gbl);
 	    gbc = new GridBagConstraints();
 	    gbc.insets = new Insets(5, 5, 5, 5);
-      
-	    //Create some borders.
-	    Border mainloweredbev = BorderFactory.createLoweredBevelBorder();
-	    Border mainraisedbev = BorderFactory.createRaisedBevelBorder();
-	    Border mainempty = BorderFactory.createEmptyBorder();
 
 	    //**********
 	    //Panel and scroll bar definitions.
 	    //**********
 	    panel = new MappingDataWindowPanel(trial, inMappingID, this);
 	    sp = new JScrollPane(panel);
-	    String counterName = trial.getCounterName();
-	    String heading = null;
-	    if(counterName != null)
-		heading = "COUNTER NAME: " + counterName + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName;
-	    label = new JLabel(heading);
+	    label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName);
             sp.setColumnHeaderView(label);
 	    //**********
 	    //End - Panel and scroll bar definitions.
@@ -334,130 +325,128 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //******************************
   
     //ActionListener code.
-    public void actionPerformed(ActionEvent evt)
-    {
+    public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
-      
-	    if(EventSrc instanceof JMenuItem)
-		{
-		    String arg = evt.getActionCommand();
-        
-		    if(arg.equals("Close This Window")){
-			closeThisWindow();
-		    }
-		    else if(arg.equals("Exit ParaProf!")){
-			setVisible(false);
-			dispose();
-			System.exit(0);
-		    }
-		    else if(arg.equals("Bin Window")){
-			System.out.println("Mapping is in MDW is: " + mappingID);
-			BinWindow bW = new BinWindow(trial, sMWData, false, mappingID);
-			bW.show();
-		    }
-		    else if(arg.equals("Inclusive")){
-			if(inclusiveRadioButton.isSelected()){
-			    metric = 0;
-			    //Call repaint.
-			    panel.repaint();
+	    
+	    if(EventSrc instanceof JMenuItem){
+		String arg = evt.getActionCommand();
+		
+		if(arg.equals("Close This Window")){
+		    closeThisWindow();
+		}
+		else if(arg.equals("Exit ParaProf!")){
+		    setVisible(false);
+		    dispose();
+		    System.exit(0);
+		}
+		else if(arg.equals("Bin Window")){
+		    System.out.println("Mapping is in MDW is: " + mappingID);
+		    BinWindow bW = new BinWindow(trial, sMWData, false, mappingID);
+		    bW.show();
+		}
+		else if(arg.equals("Inclusive")){
+		    if(inclusiveRadioButton.isSelected()){
+			metric = 0;
+			//Call repaint.
+			panel.repaint();
 			}
-		    }
-		    else if(arg.equals("Exclusive")){
-			if(exclusiveRadioButton.isSelected()){
-			    metric = 1;
-			    //Call repaint.
-			    panel.repaint();
+		}
+		else if(arg.equals("Exclusive")){
+		    if(exclusiveRadioButton.isSelected()){
+			metric = 1;
+			//Call repaint.
+			panel.repaint();
 			}
-		    }
-		    else if(arg.equals("Number of Calls")){
-			if(numOfCallsRadioButton.isSelected()){
-			    metric = 2;
-			    panel.repaint();
-			}
-		    }
-		    else if(arg.equals("Number of Subroutines")){
-			if(numOfSubRoutinesRadioButton.isSelected()){
-			    metric = 3;
-			    panel.repaint();
-			}
-		    }
-		    else if(arg.equals("Per Call Value")){
-			if(userSecPerCallRadioButton.isSelected()){
-			    metric = 4;
-			    panel.repaint();
-			}
-		    }
-		    else if(arg.equals("Percent")){
-			if(percentButton.isSelected()){
-			    percent = true;
-			    //Call repaint.
-			    panel.repaint();
-			}
-		    }
-		    else if(arg.equals("Value")){
-			if(valueButton.isSelected()){
-			    percent = false;
-			    //Call repaint.
-			    panel.repaint();
-			}
-		    }
-		    else if(arg.equals("Microseconds")){
-			if(microsecondsButton.isSelected()){
-			    units = 0;
-			    //Call repaint.
-			    panel.repaint();
-			}
-		    }
-		    else if(arg.equals("Milliseconds")){
-			if(millisecondsButton.isSelected()){
-			    units = 1;
-			    //Call repaint.
-			    panel.repaint();
-			}
-		    }
-		    else if(arg.equals("Seconds")){
-			if(secondsButton.isSelected()){
-			    units = 2;
-			    //Call repaint.
-			    panel.repaint();
-			}
-		    }
-		    else if(arg.equals("Display Sliders")){
-			if(displaySlidersButton.isSelected()){ 
-			    displaySiders(true);
-			}
-			else{
-			    displaySiders(false);
-			}
-		    }
-		    else if(arg.equals("Show Function Ledger")){
-			    (trial.getGlobalMapping()).displayMappingLedger(0);}
-		    else if(arg.equals("Show Group Ledger")){
-			    (trial.getGlobalMapping()).displayMappingLedger(1);}
-		    else if(arg.equals("Show User Event Ledger")){
-			    (trial.getGlobalMapping()).displayMappingLedger(2);}
-		    else if(arg.equals("Close All Sub-Windows")){
-			    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");}
-		    else if(arg.equals("About ParaProf")){
-			JOptionPane.showMessageDialog(this, ParaProf.getInfoString());}
-		    else if(arg.equals("Show Help Window")){
-			ParaProf.helpWindow.clearText();
-			ParaProf.helpWindow.show();
-			//Since the data must have been loaded.  Tell them someting about
-			//where they are.
-			ParaProf.helpWindow.writeText("This is the mapping data window for:");
-			ParaProf.helpWindow.writeText(mappingName);
-			ParaProf.helpWindow.writeText("");
-			ParaProf.helpWindow.writeText("This window shows you this mapping's statistics across all the threads.");
-			ParaProf.helpWindow.writeText("");
-			ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-			ParaProf.helpWindow.writeText("");
-			ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-			ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-			ParaProf.helpWindow.writeText("for this mapping.");
+		}
+		else if(arg.equals("Number of Calls")){
+		    if(numOfCallsRadioButton.isSelected()){
+			metric = 2;
+			panel.repaint();
 		    }
 		}
+		else if(arg.equals("Number of Subroutines")){
+		    if(numOfSubRoutinesRadioButton.isSelected()){
+			metric = 3;
+			panel.repaint();
+		    }
+		}
+		else if(arg.equals("Per Call Value")){
+		    if(userSecPerCallRadioButton.isSelected()){
+			metric = 4;
+			panel.repaint();
+		    }
+		}
+		else if(arg.equals("Percent")){
+		    if(percentButton.isSelected()){
+			percent = true;
+			//Call repaint.
+			panel.repaint();
+		    }
+		}
+		else if(arg.equals("Value")){
+		    if(valueButton.isSelected()){
+			percent = false;
+			//Call repaint.
+			panel.repaint();
+		    }
+		}
+		else if(arg.equals("Microseconds")){
+		    if(microsecondsButton.isSelected()){
+			units = 0;
+			//Call repaint.
+			panel.repaint();
+		    }
+		}
+		else if(arg.equals("Milliseconds")){
+		    if(millisecondsButton.isSelected()){
+			units = 1;
+			//Call repaint.
+			panel.repaint();
+		    }
+		}
+		else if(arg.equals("Seconds")){
+		    if(secondsButton.isSelected()){
+			units = 2;
+			//Call repaint.
+			    panel.repaint();
+		    }
+		}
+		else if(arg.equals("Display Sliders")){
+		    if(displaySlidersButton.isSelected()){ 
+			displaySiders(true);
+		    }
+		    else{
+			displaySiders(false);
+			}
+		}
+		else if(arg.equals("Show Function Ledger")){
+		    (trial.getGlobalMapping()).displayMappingLedger(0);}
+		else if(arg.equals("Show Group Ledger")){
+		    (trial.getGlobalMapping()).displayMappingLedger(1);}
+		else if(arg.equals("Show User Event Ledger")){
+		    (trial.getGlobalMapping()).displayMappingLedger(2);}
+		else if(arg.equals("Close All Sub-Windows")){
+		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");}
+		else if(arg.equals("About ParaProf")){
+		    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());}
+		else if(arg.equals("Show Help Window")){
+		    ParaProf.helpWindow.clearText();
+		    ParaProf.helpWindow.show();
+		    //Since the data must have been loaded.  Tell them someting about
+		    //where they are.
+		    ParaProf.helpWindow.writeText("This is the mapping data window for:");
+		    ParaProf.helpWindow.writeText(mappingName);
+		    ParaProf.helpWindow.writeText("");
+		    ParaProf.helpWindow.writeText("This window shows you this mapping's statistics across all the threads.");
+		    ParaProf.helpWindow.writeText("");
+		    ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
+		    ParaProf.helpWindow.writeText("");
+		    ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
+		    ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
+		    ParaProf.helpWindow.writeText("for this mapping.");
+		}
+	    }
 	    else if(EventSrc == sliderMultiple){
 		panel.changeInMultiples();
 	    }
@@ -569,7 +558,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDW06");
 	}
-	
 	return null;
     }
     
