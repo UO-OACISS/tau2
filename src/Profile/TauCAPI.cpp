@@ -157,7 +157,41 @@ extern "C" void Tau_the_function_list(const char **functionList, int num)
 {
   TAU_GET_FUNC_NAMES(functionList, num);
 }
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_dump_function_names()
+{
+  TAU_DUMP_FUNC_NAMES();
+}
   
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_the_counter_names(const char **counterList, int num)
+{
+  TAU_GET_COUNTER_NAMES(counterList, num);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_function_values(const char **inFuncs, int numOfFuncs,
+					double **counterExclusiveValues,
+					double **counterInclusiveValues,
+					int *numOfCalls, int *numOfSubRoutines,
+					const char **counterNames, int numOfCounters)
+{
+  TAU_GET_FUNC_VALS(inFuncs,numOfFuncs,counterExclusiveValues,counterInclusiveValues,
+		    numOfCalls,numOfSubRoutines,counterNames,numOfCounters);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_dump_function_values(const char **functionList, int num)
+{
+  TAU_DUMP_FUNC_VALS(functionList,num);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_dump_function_values_incr(const char **functionList, int num)
+{
+  TAU_DUMP_FUNC_VALS_INCR(functionList,num);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_register_thread(void)
@@ -333,7 +367,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: bertie $
- * $Revision: 1.24 $   $Date: 2002/04/03 18:02:54 $
- * VERSION: $Id: TauCAPI.cpp,v 1.24 2002/04/03 18:02:54 bertie Exp $
+ * $Revision: 1.25 $   $Date: 2002/04/03 18:58:37 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.25 2002/04/03 18:58:37 bertie Exp $
  ***************************************************************************/
 
