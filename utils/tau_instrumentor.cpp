@@ -461,7 +461,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile)
 	      ostr << "\", \" \", "; // null type arg to TAU_PROFILE 
 	    }
 
-	    if (strstr((*it)->item->fullName().c_str(), "main(")) 
+	    if (strstr((*it)->item->name().c_str(), "main")) 
 	    { /* it is main() */
 	      ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
 #ifdef SPACES
@@ -531,7 +531,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i)
     ((pdbRoutine *)(i->item))->name() << "\", \"" <<
     ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
-  if (strstr(i->item->fullName().c_str(), "main("))
+  if (strstr(i->item->name().c_str(), "main"))
   { /* it is main() */
      ostr << "TAU_DEFAULT);" <<endl; // give an additional line
 #ifdef SPACES
