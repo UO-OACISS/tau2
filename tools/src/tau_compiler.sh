@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/bash 
 
 declare -i FALSE=-1
 declare -i TRUE=1
