@@ -83,16 +83,11 @@ public class ParaProf implements ActionListener{
 	    
 	    FileList fl = new FileList();
 	    Vector v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 ,ParaProf.debugIsOn);
-	    File[] files = null;
 
 	    boolean dataAdded = false;
-	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
-		files = (File[]) e.nextElement();
-		//Note: files.length should be one with this file type.
-		for(int i=0;i<files.length;i++){
-		    trial.initialize(files[i]);
-		    dataAdded = true;
-		}
+	    if(v.size()>0){
+		trial.initialize(v);
+		dataAdded = true;
 	    }
 	    
 	    if(dataAdded){
@@ -101,6 +96,7 @@ public class ParaProf implements ActionListener{
 	    }
 
 	    ParaProfManager paraProfManager = new ParaProfManager();
+	    paraProfManager.expandDefaultParaProfTrialNode();
 	}
 	catch (Exception e) {
     

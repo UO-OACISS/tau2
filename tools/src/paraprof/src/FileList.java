@@ -288,7 +288,7 @@ public class FileList{
     //For testing purposes.
     public static void main(String args[]){
 	boolean debug = false;
-	int type = 0; //Pass in a vild type by default. This type represents: "Pprof -d File".
+	int type = 0; //Pass in a valid type by default. This type represents: "Pprof -d File".
 
 	//Process command line arguments.
 	try{
