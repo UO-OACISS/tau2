@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.19 2003/08/11 07:41:44 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.20 2003/08/11 18:49:42 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -186,7 +186,7 @@ public class PerfDBSession extends DataSession {
 	public Application setApplication(int id) {
 		this.application = null;
 		this.experiment = null;
-		this.trials = null;
+		this.trial = null;
 		this.functionHash = null;
 		this.userEventHash = null;
 		// create a string to hit the database
@@ -201,7 +201,7 @@ public class PerfDBSession extends DataSession {
 	public Application setApplication(String name, String version) {
 		this.application = null;
 		this.experiment = null;
-		this.trials = null;
+		this.trial = null;
 		this.functionHash = null;
 		this.userEventHash = null;
 		// create a string to hit the database
@@ -220,7 +220,7 @@ public class PerfDBSession extends DataSession {
 	// set the Experiment for this session
 	public Experiment setExperiment(int id) {
 		this.experiment = null;
-		this.trials = null;
+		this.trial = null;
 		this.functionHash = null;
 		this.userEventHash = null;
 		// create a string to hit the database
@@ -230,13 +230,17 @@ public class PerfDBSession extends DataSession {
 		if (experiments.size() == 1) {
 			this.experiment = (Experiment)experiments.elementAt(0);
 		} //else exception?
+
+		if (application == null) {
+			setApplication(experiment.getApplicationID());
+		}
 		return this.experiment;
 	}
 
 	// set the Trial for this session
 	public Trial setTrial(int id) {
 		Trial trial = null;
-		this.trials = null;
+		this.trial = null;
 		this.functionHash = null;
 		this.userEventHash = null;
 		// create a string to hit the database
@@ -245,9 +249,12 @@ public class PerfDBSession extends DataSession {
 		Vector trials = getTrialList(whereClause);
 		if (trials.size() == 1) {
 			trial = (Trial)trials.elementAt(0);
-			this.trials = trials;
+			this.trial = trial;
 		} //else exception?
 		
+		if (experiment == null) {
+			setExperiment(trial.getExperimentID());
+		}
 		return trial;
 	}
 
@@ -267,20 +274,13 @@ public class PerfDBSession extends DataSession {
 			whereClause.append(" t.experiment = " + experiment.getID());
 			gotWhile = true;
 		}
-		if (trials != null) {
+		if (trial != null) {
 			if (gotWhile)
-				whereClause.append(" and t.id in (");
+				whereClause.append(" and");
 			else
-				whereClause.append(" where t.id in (");
-			Trial trial;
-        	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
-				trial = (Trial) en.nextElement();
-				whereClause.append(trial.getID());
-				if (en.hasMoreElements())
-					whereClause.append(", ");
-				else
-					whereClause.append(") ");
-			}
+				whereClause.append(" where");
+			whereClause.append(" t.id = " + trial.getID());
+			gotWhile = true;
 		}
 
 		return new DataSessionIterator(getFunctions(whereClause.toString()));
@@ -408,20 +408,13 @@ public class PerfDBSession extends DataSession {
 			whereClause.append(" t.experiment = " + experiment.getID());
 			gotWhile = true;
 		}
-		if (trials != null) {
+		if (trial != null) {
 			if (gotWhile)
-				whereClause.append(" and t.id in (");
+				whereClause.append(" and");
 			else
-				whereClause.append(" where t.id in (");
-			Trial trial;
-        	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
-				trial = (Trial) en.nextElement();
-				whereClause.append(trial.getID());
-				if (en.hasMoreElements())
-					whereClause.append(", ");
-				else
-					whereClause.append(") ");
-			}
+				whereClause.append(" where");
+			whereClause.append(" t.id = " + trial.getID());
+			gotWhile = true;
 		}
 
 		return new DataSessionIterator(getUserEvents(whereClause.toString()));
@@ -508,20 +501,12 @@ public class PerfDBSession extends DataSession {
 			buf2.append(" t.experiment = " + experiment.getID());
 			gotWhile = true;
 		}
-		if (trials != null) {
+		if (trial != null) {
 			if (gotWhile)
-				buf2.append(" and t.id in (");
+				buf2.append(" and");
 			else
-				buf2.append(" where t.id in (");
-			Trial trial;
-        	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
-				trial = (Trial) en.nextElement();
-				buf2.append(trial.getID());
-				if (en.hasMoreElements())
-					buf2.append(", ");
-				else
-					buf2.append(") ");
-			}
+				buf2.append(" where");
+			buf2.append(" t.id = " + trial.getID());
 			gotWhile = true;
 		}
 		try {
@@ -559,20 +544,12 @@ public class PerfDBSession extends DataSession {
 			buf.append(" t.experiment = " + experiment.getID());
 			gotWhile = true;
 		}
-		if (trials != null) {
+		if (trial != null) {
 			if (gotWhile)
-				buf.append(" and t.id in (");
+				buf.append(" and");
 			else
-				buf.append(" where t.id in (");
-			Trial trial;
-        	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
-				trial = (Trial) en.nextElement();
-				buf.append(trial.getID());
-				if (en.hasMoreElements())
-					buf.append(", ");
-				else
-					buf.append(") ");
-			}
+				buf.append(" where");
+			buf.append(" t.id = " + trial.getID());
 			gotWhile = true;
 		}
 		if (nodes != null) {
@@ -707,20 +684,12 @@ public class PerfDBSession extends DataSession {
 			buf.append(" t.experiment = " + experiment.getID());
 			gotWhile = true;
 		}
-		if (trials != null) {
+		if (trial != null) {
 			if (gotWhile)
-				buf.append(" and t.id in (");
+				buf.append(" and");
 			else
-				buf.append(" where t.id in (");
-			Trial trial;
-        	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
-				trial = (Trial) en.nextElement();
-				buf.append(trial.getID());
-				if (en.hasMoreElements())
-					buf.append(", ");
-				else
-					buf.append(") ");
-			}
+				buf.append(" where");
+			buf.append(" t.id = " + trial.getID());
 			gotWhile = true;
 		}
 		if (nodes != null) {

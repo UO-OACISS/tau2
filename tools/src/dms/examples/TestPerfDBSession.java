@@ -72,8 +72,6 @@ public class TestPerfDBSession {
 			System.out.println ("Trial ID = " + trial.getID() + ", Experiment ID = " + trial.getExperimentID() + ", appid = " + trial.getApplicationID());
 		}
 
-		// select all trials
-		session.setTrial(tmpTrials);
 		// select a trial
 		session.setTrial(trial);
 		// select a trial, another way

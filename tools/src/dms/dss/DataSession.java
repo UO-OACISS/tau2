@@ -6,14 +6,14 @@ import dms.dss.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.10 2003/08/11 07:41:41 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.11 2003/08/11 18:49:41 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
 public abstract class DataSession {
 	protected Application application = null;
 	protected Experiment experiment = null;
-	protected Vector trials = null;
+	protected Trial trial = null;
 	protected Vector nodes = null;
 	protected Vector contexts = null;
 	protected Vector threads = null;
@@ -108,6 +108,9 @@ public abstract class DataSession {
  */
 	public void setExperiment(Experiment experiment) {
 		this.experiment = experiment;
+		if (application == null) {
+			setApplication(experiment.getApplicationID());
+		}
 	}
 
 /**
@@ -126,18 +129,10 @@ public abstract class DataSession {
  * @see	Trial
  */
 	public void setTrial(Trial trial) {
-		trials = new Vector();
-		trials.addElement(trial);
-	}
-
-/**
- * Set a Vector of Trial objects for this DataSession.  The DataSession object will maintain a reference to a Vector of Trial objects.  To clear this reference, call setTrial(Trial) with a null reference.
- *
- * @param	trials Vector of Trial objects to be saved.
- * @see	Trial
- */
-	public void setTrial(Vector trials) {
-		this.trials = trials;
+		this.trial = trial;
+		if (experiment == null) {
+			setExperiment(trial.getExperimentID());
+		}
 	}
 
 /**
