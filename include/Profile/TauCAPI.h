@@ -208,8 +208,10 @@ extern TauGroup_t Tau_get_profile_group(char *group);
         Tau_trace_recvmsg(type, source, length);
 
 #else /* TRACING_ON */
-#define TAU_TRACE_SENDMSG(type, destination, length)
-#define TAU_TRACE_RECVMSG(type, source, length)
+#define TAU_TRACE_SENDMSG(type, destination, length) \
+        Tau_trace_sendmsg(type, destination, length);
+#define TAU_TRACE_RECVMSG(type, source, length) \
+        Tau_trace_recvmsg(type, source, length);
 #endif /* TRACING_ON */
 
 
@@ -217,8 +219,8 @@ extern TauGroup_t Tau_get_profile_group(char *group);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: bertie $
- * $Revision: 1.18 $   $Date: 2002/04/03 18:59:32 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.18 2002/04/03 18:59:32 bertie Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.19 $   $Date: 2002/07/11 00:04:19 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.19 2002/07/11 00:04:19 sameer Exp $
  ***************************************************************************/
 
