@@ -32,7 +32,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-F90		= $(TAU_F90) 
+F90		= $(TAU_F90) $(TAU_F90_SUFFIX)
 
 TARGET	      	= mandel
 
