@@ -2911,6 +2911,48 @@ then
     then
       echo "Using Intel ifort as the Fortran Compiler"
       fixmakeargs="$fixmakeargs INTELIFORT"
+      echo "Checking version (8.0/8.1+) of Intel compilers"
+      # Intel compilers changed from -cxxlib-icc to -cxxlib-gcc (default) in 8.1
+      cat << EOF > f1.cpp
+      #include <iostream>
+      using namespace std;
+      
+      extern "C" {
+        void foo_(int *x)
+        {
+          cout <<"x = "<<*x<<endl;
+        }
+      }
+EOF
+      
+      cat <<EOF > f2.f
+            PROGRAM FOO_MAIN
+            call foo(2)
+            END PROGRAM FOO_MAIN
+EOF
+      
+      $cxx_compiler -c f1.cpp
+      ifort -c f2.f
+      if ifort f1.o f2.o -o foo -lcprts 1>/dev/null 2>&1
+      then
+        echo "Intel v8.0 compilers used"
+      else
+        $cxx_compiler -c -cxxlib-icc f1.cpp
+        if  ifort f1.o f2.o -o foo -lcprts 1>/dev/null 2>&1
+        then
+          $cxx_compiler -c f1.cpp
+          taugcclibdir=`g++ -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+          if ifort f1.o f2.o -o foo -L$taugcclibdir -lstdc++ -lgcc_s 1>/dev/null 2>&1
+          then
+      #      echo "Confirmed  - links with gcc libs"
+            echo "Intel v8.1+ compilers used"
+            fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir INTEL81FIX" 
+          fi
+        fi
+      fi
+      /bin/rm -f f1.o f2.o f1.cpp f2.f foo
+      # Check over!
+      
     fi
   fi
 fi
