@@ -55,6 +55,6 @@ Preferences -> Colors -> Activities.
 See TAU user's Guide for further details on using racy and Vampir. 
 
 For any comments/suggestions/questions on TAU, please send mail to 
-sameer@cs.uoregon.edu
+tau-bugs@cs.uoregon.edu
 
 
