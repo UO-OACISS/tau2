@@ -50,6 +50,10 @@ BPatch *bpatch;
 
 int expectError = NO_ERROR;
 
+/* For selective instrumentation */
+extern int processInstrumentationRequests(char *fname);
+extern bool instrumentEntity(const string& function_name);
+
 //
 // Error callback routine. 
 //

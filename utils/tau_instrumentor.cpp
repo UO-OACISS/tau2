@@ -22,6 +22,10 @@
 #endif
 #include "pdbAll.h"
 
+/* For selective instrumentation */
+extern int processInstrumentationRequests(char *fname);
+extern bool instrumentEntity(const string& function_name);
+
 /* For C instrumentation */
 enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT};
 enum tau_language_t { tau_c, tau_cplusplus, tau_fortran };
@@ -78,7 +82,8 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
        rit!=routines.end(); ++rit) 
   {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
-	 ((*rit)->kind() != pdbItem::RO_EXT) ) 
+	 ((*rit)->kind() != pdbItem::RO_EXT) && 
+	 (instrumentEntity((*rit)->fullName())) ) 
     {
 #ifdef DEBUG
         cout <<"Routine "<<(*rit)->fullName() <<" body Begin line "
@@ -129,7 +134,8 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
       pdbItem::templ_t tekind = (*te)->kind();
       if (((tekind == pdbItem::TE_MEMFUNC) || 
 	  (tekind == pdbItem::TE_STATMEM) ||
-	  (tekind == pdbItem::TE_FUNC)) && ((*te)->bodyBegin().line() != 0))
+	  (tekind == pdbItem::TE_FUNC)) && ((*te)->bodyBegin().line() != 0) &&
+	  (instrumentEntity((*te)->fullName())) )
       { 
 	/* Sometimes a compiler generated routine shows up in a template.
 	   These routines (such as operator=) do not have a body position. 
@@ -175,7 +181,8 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     pdbRoutine::locvec retlocations = (*rit)->returnLocations();
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() &&
          ((*rit)->kind() != pdbItem::RO_EXT) && ((*rit)->bodyBegin().line() != 0) 
-	 && ((*rit)->bodyEnd().line() != 0))
+	 && ((*rit)->bodyEnd().line() != 0) && 
+	 (instrumentEntity((*rit)->name())) )
     {
         itemvec.push_back(new itemRef(*rit, BODY_BEGIN,
                 (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
@@ -253,7 +260,8 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     pdbRoutine::locvec retlocations = (*rit)->returnLocations();
     pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
     if ( (*rit)->location().file() == file &&  
-	 ((*rit)->firstExecStmtLocation().file()))
+	 ((*rit)->firstExecStmtLocation().file()) && 
+	 (instrumentEntity((*rit)->fullName())) )
     {
 #ifdef DEBUG
 	cout <<"Routine " << (*rit)->fullName() <<endl;
@@ -1220,6 +1228,14 @@ int main(int argc, char **argv)
           printf("Header file %s\n", header_file.c_str());
 #endif /* DEBUG */
   	}
+        if (strcmp(argv[i], "-f") == 0)
+	{
+	  ++i;
+	  processInstrumentationRequests(argv[i]);
+#ifdef DEBUG
+          printf("Using instrumentation requests file: %s\n", argv[i]); 
+#endif /* DEBUG */
+  	}
         break;
       }
 
@@ -1293,8 +1309,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.37 $   $Date: 2002/02/04 20:02:02 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.37 2002/02/04 20:02:02 sameer Exp $
+ * $Revision: 1.38 $   $Date: 2002/03/11 22:47:22 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.38 2002/03/11 22:47:22 sameer Exp $
  ***************************************************************************/
 
 
