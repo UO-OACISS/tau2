@@ -3,6 +3,8 @@
 
 #Makefile creates the ParaProf jar file.
 ##########################
+CONFIG_ARCH=default
+TAUROOT=
 
 BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
              BinWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
@@ -21,7 +23,7 @@ NEW_SOURCES=$(BASE_SOURCES) FileList.java ParaProfImageOutput.java
 
 OLD_SOURCES=$(BASE_SOURCES) ./wrapper/FileList.java ./wrapper/ParaProfImageOutput.java
 
-TOOLS_SRC=../../../../../..
+TOOLS_SRC=$(TAUROOT)/tools/src
 
 CC=javac
 CC-OLD=javac
@@ -36,11 +38,15 @@ old: ../bin/ParaProf-Old.jar
 	cp ./resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	cd classes; jar -cvf ParaProf.jar edu
 	mv ./classes/ParaProf.jar $(TOOLS_SRC)/paraprof/bin
+	rm -f (TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf.jar
+	cp $(TOOLS_SRC)/paraprof/bin/ParaProf.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 
 ../bin/ParaProf-Old.jar: $(OLD_SOURCES)
 	rm -f ./paraprof/*.class
 	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar $(OLD_SOURCES)
 	cd classes; jar -cvf ParaProf-Old.jar edu
+	rm -f (TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf-Old.jar
+	cp $(TOOLS_SRC)/paraprof/bin/ParaProf-Old.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 	mv ./classes/ParaProf-Old.jar $(TOOLS_SRC)/paraprof/bin
 
 clean:
