@@ -237,6 +237,12 @@ public class ParaProf implements ParaProfObserver, ActionListener{
   
     // Main entry point
     static public void main(String[] args){
+
+	if(System.getProperty("user.name").equals("sameer")){
+	    JOptionPane.showMessageDialog(null,"Sorry, user \"sammer\" detected. We no longer support this user!", "ParaProf Error", JOptionPane.ERROR_MESSAGE);
+	    System.exit(-1);
+	}
+
 	//Bring ParaProf into being!
 	ParaProf paraProf = new ParaProf();
 
