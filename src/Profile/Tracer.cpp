@@ -151,9 +151,12 @@ static SIGNAL_TYPE (*sighdlr[NSIG])(SIGNAL_ARG_TYPE);
 static void wrap_up(int sig)
 {
   fprintf (stderr, "signal %d on %d - flushing event buffer...\n", sig, RtsLayer::myNode());
-  TraceEvFlush (RtsLayer::myThread());
+  TAU_PROFILE_EXIT("signal");
+  /* TraceEvFlush (RtsLayer::myThread());
+   * */
   fprintf (stderr, "done.\n");
-  if ( sighdlr[sig] != SIG_IGN ) (* sighdlr)(sig);
+  /* if ( sighdlr[sig] != SIG_IGN ) (* sighdlr)(sig);
+   */
   exit (1);
 }
 
