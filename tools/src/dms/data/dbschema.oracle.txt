@@ -1,0 +1,273 @@
+
+CREATE TABLE version (
+    version		    VARCHAR2(100)     
+)
+/
+
+INSERT INTO version values('2.13.7')
+/
+
+CREATE TABLE application (
+    id                      NUMBER PRIMARY KEY,
+    name                    CLOB,
+    version		    CLOB,
+    description             CLOB, 
+    language                CLOB,
+    paradigm                CLOB,
+    usage_text              CLOB,
+    execution_options       CLOB,
+    userdata                CLOB
+)
+/
+
+CREATE SEQUENCE application_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+
+create trigger application_id_seq_trigger
+ before insert on application
+ for each row
+ begin
+ select application_id_seq.nextval into :new.id from dual;
+ end;
+/
+
+
+
+CREATE TABLE experiment (
+    id                      NUMBER PRIMARY KEY,
+    application             INT NOT NULL,
+    name                    CLOB,
+    system_name             CLOB,
+    system_machine_type     CLOB,
+    system_arch             CLOB,
+    system_os               CLOB,
+    system_memory_size      CLOB,
+    system_processor_amt    CLOB,
+    system_l1_cache_size    CLOB,
+    system_l2_cache_size    CLOB,
+    system_userdata         CLOB,
+    compiler_cpp_name       CLOB,
+    compiler_cpp_version    CLOB,
+    compiler_cc_name        CLOB,
+    compiler_cc_version     CLOB,
+    compiler_java_dirpath   CLOB,
+    compiler_java_version   CLOB,
+    compiler_userdata       CLOB,
+    configure_prefix        CLOB,
+    configure_arch          CLOB,
+    configure_cpp           CLOB,
+    configure_cc            CLOB,
+    configure_jdk           CLOB,
+    configure_profile       CLOB,
+    configure_userdata      CLOB,
+    userdata                CLOB,
+    FOREIGN KEY(application) REFERENCES application(id) 
+)
+/
+
+
+CREATE SEQUENCE experiment_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+create trigger experiment_id_seq_trigger
+ before insert on experiment
+ for each row
+ begin
+ select experiment_id_seq.nextval into :new.id from dual;
+ end;
+/
+
+
+
+CREATE TABLE trial (
+    id                      NUMBER NOT NULL PRIMARY KEY,
+    name                    CLOB,
+    experiment              INT         NOT NULL,
+    time                    TIMESTAMP,
+    problem_definition      CLOB,
+    node_count              INT,
+    contexts_per_node       INT,
+    threads_per_context     INT,
+    userdata                CLOB,
+    FOREIGN KEY(experiment) REFERENCES experiment(id)
+)
+/
+
+
+
+CREATE SEQUENCE trial_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+
+CREATE TRIGGER trial_id_seq_trigger
+ before insert on trial
+ for each row
+ begin
+ select trial_id_seq.nextval into :new.id from dual;
+ end;
+/
+
+
+
+CREATE TABLE metric (
+    id                      NUMBER      NOT NULL PRIMARY KEY,
+    name                    CLOB        NOT NULL,
+    trial                   INT 	NOT NULL,
+    FOREIGN KEY(trial) REFERENCES trial(id)
+)
+/
+
+
+CREATE SEQUENCE metric_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+
+CREATE TRIGGER metric_id_seq_trigger
+ before insert on metric
+ for each row
+ begin
+ select metric_id_seq.nextval into :new.id from dual;
+ end;
+/
+
+
+CREATE TABLE interval_event (
+    id                      NUMBER NOT NULL PRIMARY KEY,
+    trial                   INT         NOT NULL,
+    name                    CLOB        NOT NULL,
+    group_name              CLOB,
+    source_file		    CLOB,
+    line_number		    INT,
+    line_number_end	    INT,
+    FOREIGN KEY(trial) REFERENCES trial(id)
+)
+/
+
+CREATE SEQUENCE interval_event_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+
+CREATE TRIGGER interval_event_id_seq_trigger
+ before insert on interval_event
+ for each row
+ begin
+ select interval_event_id_seq.nextval into :new.id from dual;
+ end;
+/
+
+
+CREATE TABLE atomic_event (
+    id                      NUMBER      NOT NULL PRIMARY KEY,
+    trial                   INT         NOT NULL,
+    name                    CLOB        NOT NULL,
+    group_name              CLOB,
+    source_file		    CLOB,
+    line_number		    INT,
+    FOREIGN KEY(trial) REFERENCES trial(id)
+)
+/
+
+CREATE SEQUENCE atomic_event_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+CREATE TRIGGER atomic_event_id_seq_trigger
+ before insert on atomic_event
+ for each row
+ begin
+ select atomic_event_id_seq.nextval into :new.id from dual;
+ end;
+/
+
+
+CREATE TABLE interval_location_profile (
+    interval_event          INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    metric                  INT 	NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    excl		    DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    FOREIGN KEY(interval_event) REFERENCES interval_event(id),
+    FOREIGN KEY(metric) REFERENCES metric(id)
+)
+/
+
+CREATE TABLE atomic_location_profile (
+    atomic_event            INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    sample_count            INT,         
+    maximum_value           DOUBLE PRECISION,
+    minimum_value           DOUBLE PRECISION,
+    mean_value              DOUBLE PRECISION,
+    standard_deviation	    DOUBLE PRECISION,
+    FOREIGN KEY(atomic_event) REFERENCES atomic_event(id)
+)
+/
+
+CREATE TABLE interval_total_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT 	NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    excl		    DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    FOREIGN KEY(interval_event) REFERENCES interval_event(id),
+    FOREIGN KEY(metric) REFERENCES metric(id)
+)
+/
+
+CREATE TABLE interval_mean_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT 	NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    excl		    DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id),
+	FOREIGN KEY(metric) REFERENCES metric(id)
+)
+/
+
+CREATE INDEX experiment_application_index on experiment (application)/
+CREATE INDEX trial_experiment_index on trial (experiment)/
+CREATE INDEX interval_event_trial_index on interval_event (trial)/
+CREATE INDEX i_loc_i_event_metric_index on interval_location_profile (interval_event, metric)/
+CREATE INDEX i_total_i_event_metric_index on interval_total_summary (interval_event, metric)/
+CREATE INDEX i_mean_i_event_metric_index on interval_mean_summary (interval_event, metric)/
+CREATE INDEX i_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread)/
+
