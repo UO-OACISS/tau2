@@ -105,11 +105,22 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		    if ((this.getGlobalMapping().getMaxMeanNumberOfSubRoutines()) < fdo.getNumSubroutines()) {
 			this.getGlobalMapping().setMaxMeanNumberOfSubRoutines(fdo.getNumSubroutines());
 		    }
+		}
 
+		globalMappingElement.setMeanValuesSet(true);
+
+		fdo = f.getTotalSummary();
+		for(int i=0;i<numberOfMetrics;i++){
+		    globalMappingElement.setTotalExclusiveValue(i, fdo.getExclusive(i));
+		    globalMappingElement.setTotalExclusivePercentValue(i, fdo.getExclusivePercentage(i));
+		    globalMappingElement.setTotalInclusiveValue(i, fdo.getInclusive(i));
+		    globalMappingElement.setTotalInclusivePercentValue(i, fdo.getInclusivePercentage(i));
+		    globalMappingElement.setTotalUserSecPerCall(i, fdo.getInclusivePerCall(i));
+		    globalMappingElement.setTotalNumberOfCalls(fdo.getNumCalls());
+		    globalMappingElement.setTotalNumberOfSubRoutines(fdo.getNumSubroutines());
 
 
 		}
-		globalMappingElement.setMeanValuesSet(true);
 	    }
 	    
 	    //Collections.sort(localMap);
