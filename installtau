@@ -12,6 +12,8 @@ mpiinc=no
 mpilib=no
 tag=no
 tagopt=
+vtf=no
+vtfopt=
 useropt=no
 papi=no
 opari=no
@@ -121,6 +123,13 @@ do
     shift
     ;;
 
+  -vtf=*)
+    vtf=yes
+    vtfdir=`echo $arg | sed -e 's/-vtf=//'`
+    vtfopt=-vtf=$vtfdir
+    shift
+    ;;
+
   -help)
     echo "TAU Configuration Utility "
     echo "***********************************************************************"
@@ -134,6 +143,7 @@ do
     echo "-pdt=<pdtdir>  "
     echo "-pdtcompdir=<compdir>  "
     echo "-papi=<papidir>  "
+    echo "-vtf=<vtfdir>  "
     echo "-dyninst=<dyninstdir>  "
     echo "-mpiinc=<mpiincdir>  "
     echo "-mpilib=<mpilibdir>  "
@@ -221,8 +231,8 @@ echo " " > wishver
     make clean; make install
 
 # Add TRACE
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE $vtfopt"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE  $vtfopt <wishver
     make clean; make install
   
     if [ $papi = yes ]
