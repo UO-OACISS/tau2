@@ -106,10 +106,13 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     if ( (*te)->location().file() == file)
     {
       pdbItem::templ_t tekind = (*te)->kind();
-      if ((tekind == pdbItem::TE_MEMFUNC) || 
+      if (((tekind == pdbItem::TE_MEMFUNC) || 
 	  (tekind == pdbItem::TE_STATMEM) ||
-	  (tekind == pdbItem::TE_FUNC))
+	  (tekind == pdbItem::TE_FUNC)) && ((*te)->bodyBegin().line() != 0))
       { 
+	/* Sometimes a compiler generated routine shows up in a template.
+	   These routines (such as operator=) do not have a body position. 
+ 	   Instrument only if it has a valid body position.  */
   	// templates need some processing. Give it a false for isTarget arg.
 	// target helps identify if we need to put a CT(*this) in the type
 	// old: 
