@@ -2801,6 +2801,16 @@ sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$
  > ${tauroot}/tools/src/dms/src/examples/testCopy
 chmod a+rx ${tauroot}/tools/src/dms/src/examples/testCopy
 
+cat ${tauroot}/tools/src/dms/src/examples/testDelete.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/tools/src/dms/src/examples/testDelete
+chmod a+rx ${tauroot}/tools/src/dms/src/examples/testDelete
+
+cat ${tauroot}/tools/src/dms/src/examples/testSave.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/tools/src/dms/src/examples/testSave
+chmod a+rx ${tauroot}/tools/src/dms/src/examples/testSave
+
 
 
 # -- determine Tcl/Tk version
