@@ -51,9 +51,9 @@ static int TraceInitialized[PCXX_MAXPROCS] = {0};
 
 
 /* -- Use Profiling interface for time -- */
-long pcxx_GetUSecLong(void)
-{
-  return (long) RtsLayer::getUSecD();
+unsigned long pcxx_GetUSecLong(void)
+{ /* Return no. of usecs from 1 Jan 1998 instead. To avoid overflow */
+  return (unsigned long) (RtsLayer::getUSecD() - 8.83008e+14); 
 }
 
 /* -- write event to buffer only [without overflow check] ---- */
