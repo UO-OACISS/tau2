@@ -70,24 +70,207 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //Code to generate the menus.
 	    //####################################
 	    JMenuBar mainMenu = new JMenuBar();
+	    JMenu subMenu = null;
+	    JMenuItem menuItem = null;
 
+	    //######
 	    //File menu.
+	    //######
 	    JMenu fileMenu = new JMenu("File");
-	    UtilFncs.fileMenuItems(fileMenu, this);
+	    
+	    //Open menu.
+	    subMenu = new JMenu("Open ...");
+	    
+	    menuItem = new JMenuItem("ParaProf Manager");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Bin Window");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    fileMenu.add(subMenu);
+	    //End - Open menu.
+	    
+	    //Save menu.
+	    subMenu = new JMenu("Save ...");
+	    
+	    menuItem = new JMenuItem("ParaProf Preferrences");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Save Image");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    fileMenu.add(subMenu);
+	    //End - Save menu.
+	    
+	    menuItem = new JMenuItem("Edit ParaProf Preferences!");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Print");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Close This Window");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Exit ParaProf!");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
 
+	    fileMenu.addMenuListener(this);
+	    //######
+	    //End - File menu.
+	    //######
+
+	    //######
 	    //Options menu.
+	    //######
 	    optionsMenu = new JMenu("Options");
+
+	    JCheckBoxMenuItem box = null;
+	    ButtonGroup group = null;
+	    JRadioButtonMenuItem button = null;
+	    
+	    sortByName = new JCheckBoxMenuItem("Sort By Name", false);
+	    sortByName.addActionListener(this);
+	    optionsMenu.add(sortByName);
+
+	    descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
+	    descendingOrder.addActionListener(this);
+	    optionsMenu.add(descendingOrder);
+	    
+	    showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", true);
+	    showValuesAsPercent.addActionListener(this);
+	    optionsMenu.add(showValuesAsPercent);
+	    
+	    //Units submenu.
+	    unitsSubMenu = new JMenu("Select Units");
+	    group = new ButtonGroup();
+	    
+	    button = new JRadioButtonMenuItem("hr:min:sec", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    unitsSubMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Seconds", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    unitsSubMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Milliseconds", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    unitsSubMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Microseconds", true);
+	    button.addActionListener(this);
+	    group.add(button);
+	    unitsSubMenu.add(button);
+	    
+	    optionsMenu.add(unitsSubMenu);
+	    //End - Units submenu.
+
+	    //Set the value type options.
+	    subMenu = new JMenu("Select Value Type");
+	    group = new ButtonGroup();
+	    
+	    button = new JRadioButtonMenuItem("Exclusive", true);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Inclusive", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Number of Calls", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Number of Subroutines", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Per Call Value", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    
+	    optionsMenu.add(subMenu);
+	    //End - Set the value type options.
+	    
+	    box = new JCheckBoxMenuItem("Display Sliders", false);
+	    box.addActionListener(this);
+	    optionsMenu.add(box);
+	    
+	    box = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+	    box.addActionListener(this);
+	    optionsMenu.add(box);
+	    
+	    box = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+	    box.addActionListener(this);
+	    optionsMenu.add(box);
+	    
 	    optionsMenu.addMenuListener(this);
-	    UtilFncs.optionMenuItems(optionsMenu,this);
+	    //######
+	    //End - Options menu.
+	    //######
 
+	    //######
 	    //Windows menu
+	    //######
 	    windowsMenu = new JMenu("Windows");
+	    
+	    menuItem = new JMenuItem("Show Function Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show Group Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show User Event Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show Call Path Relations");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Close All Sub-Windows");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
 	    windowsMenu.addMenuListener(this);
-	    UtilFncs.windowMenuItems(windowsMenu,this);
+	    //######
+	    //End - Windows menu
+	    //######
 
+	    //######
 	    //Help menu.
+	    //######
 	    JMenu helpMenu = new JMenu("Help");
-	    UtilFncs.helpMenuItems(helpMenu, this);
+
+	    menuItem = new JMenuItem("Show Help Window");
+	    menuItem.addActionListener(this);
+	    helpMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("About ParaProf");
+	    menuItem.addActionListener(this);
+	    helpMenu.add(menuItem);
+	    
+	    helpMenu.addMenuListener(this);
+	    //######
+	    //End - Help menu.
+	    //######
 	    
 	    //Now, add all the menus to the main menu.
 	    mainMenu.add(fileMenu);
@@ -175,16 +358,16 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    dispose();
 		    System.exit(0);
 		}
-		else if(arg.equals("name")){
-		    if(((JCheckBoxMenuItem)optionsMenu.getItem(0)).isSelected())
+		else if(arg.equals("Sort By Name")){
+		    if(sortByName.isSelected())
 			name = true;
 		    else
 			name = false;
 		    sortLocalData();
 		    panel.repaint();
 		}
-		else if(arg.equals("Decending Order")){
-		    if(((JCheckBoxMenuItem)optionsMenu.getItem(1)).isSelected())
+		else if(arg.equals("Descending Order")){
+		    if(descendingOrder.isSelected())
 			order = 0;
 		    else
 			order = 1;
@@ -192,7 +375,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    panel.repaint();
 		}
 		else if(arg.equals("Show Values as Percent")){
-		    if(((JCheckBoxMenuItem)optionsMenu.getItem(2)).isSelected())
+		    if(showValuesAsPercent.isSelected())
 			percent = true;
 		    else
 			percent = false;
@@ -274,17 +457,17 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
    public void menuSelected(MenuEvent evt){
 	try{
 	    if(valueType > 4){
-		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(false);
-		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
+		showValuesAsPercent.setEnabled(false);
+		unitsSubMenu.setEnabled(false);}
 	    else if(percent){
-		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
-		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
+		showValuesAsPercent.setEnabled(true);
+		unitsSubMenu.setEnabled(false);}
 	    else if(trial.isTimeMetric()){
-		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
-		((JMenu)optionsMenu.getItem(3)).setEnabled(true);}
+		showValuesAsPercent.setEnabled(true);
+		unitsSubMenu.setEnabled(true);}
 	    else{
-		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
-		((JMenuItem)optionsMenu.getItem(3)).setEnabled(false);}
+		showValuesAsPercent.setEnabled(true);
+		unitsSubMenu.setEnabled(false);}
 	    
 	    if(trial.groupNamesPresent())
 		((JMenuItem)windowsMenu.getItem(1)).setEnabled(true);
@@ -454,6 +637,15 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     private JMenu optionsMenu = null;
     private JMenu windowsMenu = null;
+    private JMenu unitsSubMenu = null;
+    
+    private JCheckBoxMenuItem sortByName = null;
+    private JCheckBoxMenuItem descendingOrder = null;
+    private JCheckBoxMenuItem showValuesAsPercent = null;
+    private JCheckBoxMenuItem displaySliders = null;
+    private JMenuItem groupLedger = null;
+    private JMenuItem usereventLedger = null;
+    private JMenuItem callPathRelations = null;
 
     private Vector list = null;
 

@@ -201,12 +201,13 @@ public class SMWThreadDataElement implements Comparable{
       (24) mean number of calls
       (26) mean number of subroutines
       (28) mean per call value
+      (30) n,c,t.
 
       The even values represent these items sorted in decending order,
       the odd values in ascending order. Thus (0) is name decending, and
       (1) is name ascending. Set sortType to the integer value required.
     */
-  
+
     public int compareTo(Object inObject){
 	switch(sortType){
 	case 0:
@@ -214,75 +215,91 @@ public class SMWThreadDataElement implements Comparable{
 	case 1:
 	    return (this.getMappingName()).compareTo(((SMWThreadDataElement)inObject).getMappingName());
 	case 2:
-	    return compareToHelper(this.getExclusiveValue(),((SMWThreadDataElement)inObject).getExclusiveValue());
-	case 3:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getExclusiveValue(),this.getExclusiveValue());
+	case 3:
+	    return compareToHelper(this.getExclusiveValue(),((SMWThreadDataElement)inObject).getExclusiveValue());
 	case 4:
-	    return compareToHelper(this.getInclusiveValue(),((SMWThreadDataElement)inObject).getInclusiveValue());
-	case 5:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getInclusiveValue(),this.getInclusiveValue());
+	case 5:
+	    return compareToHelper(this.getInclusiveValue(),((SMWThreadDataElement)inObject).getInclusiveValue());
 	case 6:
-	    return compareToHelper(this.getNumberOfCalls(),((SMWThreadDataElement)inObject).getNumberOfCalls());
+	    return compareToHelper(((SMWThreadDataElement)inObject).getNumberOfCalls(),this.getNumberOfCalls());
 	case 7:
-	    return compareToHelper(((SMWThreadDataElement)inObject).getNumberOfCalls(),this.getNumberOfCalls());
+	    return compareToHelper(this.getNumberOfCalls(),((SMWThreadDataElement)inObject).getNumberOfCalls());
 	case 8:
-	    return compareToHelper(this.getNumberOfSubRoutines(),((SMWThreadDataElement)inObject).getNumberOfSubRoutines());
-	case 9:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getNumberOfSubRoutines(),this.getNumberOfSubRoutines());
+	case 9:
+	    return compareToHelper(this.getNumberOfSubRoutines(),((SMWThreadDataElement)inObject).getNumberOfSubRoutines());
 	case 10:
-	    return compareToHelper(this.getUserSecPerCall(),((SMWThreadDataElement)inObject).getUserSecPerCall());
-	case 11:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getUserSecPerCall(),this.getUserSecPerCall());
+	case 11:
+	    return compareToHelper(this.getUserSecPerCall(),((SMWThreadDataElement)inObject).getUserSecPerCall());
 	case 12:
-	    return compareToHelper(this.getUserEventNumberValue(),((SMWThreadDataElement)inObject).getUserEventNumberValue());
-	case 13:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getUserEventNumberValue(),this.getUserEventNumberValue());
+	case 13:
+	    return compareToHelper(this.getUserEventNumberValue(),((SMWThreadDataElement)inObject).getUserEventNumberValue());
 	case 14:
-	    return compareToHelper(this.getUserEventMinValue(),((SMWThreadDataElement)inObject).getUserEventMinValue());
-	case 15:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getUserEventMinValue(),this.getUserEventMinValue());
+	case 15:
+	    return compareToHelper(this.getUserEventMinValue(),((SMWThreadDataElement)inObject).getUserEventMinValue());
 	case 16:
-	    return compareToHelper(this.getUserEventMaxValue(),((SMWThreadDataElement)inObject).getUserEventMaxValue());
-	case 17:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getUserEventMaxValue(),this.getUserEventMaxValue());
+	case 17:
+	    return compareToHelper(this.getUserEventMaxValue(),((SMWThreadDataElement)inObject).getUserEventMaxValue());
 	case 18:
-	    return compareToHelper(this.getUserEventMeanValue(),((SMWThreadDataElement)inObject).getUserEventMeanValue());
-	case 19:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getUserEventMeanValue(),this.getUserEventMeanValue());
+	case 19:
+	    return compareToHelper(this.getUserEventMeanValue(),((SMWThreadDataElement)inObject).getUserEventMeanValue());
 	case 20:
-	    return compareToHelper(this.getMeanExclusiveValue(),((SMWThreadDataElement)inObject).getMeanExclusiveValue());
-	case 21:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanExclusiveValue(),this.getMeanExclusiveValue());
+	case 21:
+	    return compareToHelper(this.getMeanExclusiveValue(),((SMWThreadDataElement)inObject).getMeanExclusiveValue());
 	case 22:
-	    return compareToHelper(this.getMeanInclusiveValue(),((SMWThreadDataElement)inObject).getMeanInclusiveValue());
-	case 23:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanInclusiveValue(),this.getMeanInclusiveValue());
+	case 23:
+	    return compareToHelper(this.getMeanInclusiveValue(),((SMWThreadDataElement)inObject).getMeanInclusiveValue());
 	case 24:
-	    return compareToHelper(this.getMeanNumberOfCalls(),((SMWThreadDataElement)inObject).getMeanNumberOfCalls());
-	case 25:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getNumberOfCalls(),this.getNumberOfCalls());
+	case 25:
+	    return compareToHelper(this.getMeanNumberOfCalls(),((SMWThreadDataElement)inObject).getMeanNumberOfCalls());
 	case 26:
-	    return compareToHelper(this.getMeanNumberOfSubRoutines(),((SMWThreadDataElement)inObject).getMeanNumberOfSubRoutines());
-	case 27:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanNumberOfSubRoutines(),this.getMeanNumberOfSubRoutines());
+	case 27:
+	    return compareToHelper(this.getMeanNumberOfSubRoutines(),((SMWThreadDataElement)inObject).getMeanNumberOfSubRoutines());
 	case 28:
-	    return compareToHelper(this.getMeanUserSecPerCall(),((SMWThreadDataElement)inObject).getMeanUserSecPerCall());
-	case 29:
 	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanUserSecPerCall(),this.getMeanUserSecPerCall());
+	case 29:
+	    return compareToHelper(this.getMeanUserSecPerCall(),((SMWThreadDataElement)inObject).getMeanUserSecPerCall());
+	case 30:
+	    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) inObject;
+	    if(sMWThreadDataElement.getNodeID()!=this.getNodeID())
+		return sMWThreadDataElement.getNodeID() - this.getNodeID();
+	    else if(sMWThreadDataElement.getContextID()!=this.getContextID())
+		return sMWThreadDataElement.getContextID() - this.getContextID();
+	    else
+		return sMWThreadDataElement.getThreadID() - this.getThreadID();
+	case 31:
+	    sMWThreadDataElement = (SMWThreadDataElement) inObject;
+	    if(sMWThreadDataElement.getNodeID()!=this.getNodeID())
+		return this.getNodeID() - sMWThreadDataElement.getNodeID();
+	    else if(sMWThreadDataElement.getContextID()!=this.getContextID())
+		return this.getContextID() - sMWThreadDataElement.getContextID();
+	    else
+		return this.getThreadID() - sMWThreadDataElement.getThreadID();
  	default:
 	    ParaProf.systemError(null, null, "Unexpected sort type - SMWTDE value: " + sortType);
 	}
 	return 0;
     }
-
+    
     private int compareToHelper(double d1, double d2){
 	double result = d1 - d2;
 	if(result < 0.00)
-	    return 1;
+	    return -1;
 	else if(result == 0.00)
 	    return 0;
 	else
-	    return -1;
+	    return 1;
     }
  
     public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd){

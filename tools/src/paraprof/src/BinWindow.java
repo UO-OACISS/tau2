@@ -61,24 +61,115 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    
 	    //Sort the local data.
 	    sortLocalData();
-	    
+
 	    //####################################
 	    //Code to generate the menus.
 	    //####################################
 	    JMenuBar mainMenu = new JMenuBar();
+	    JMenu subMenu = null;
+	    JMenuItem menuItem = null;
 
+	    //######
 	    //File menu.
+	    //######
 	    JMenu fileMenu = new JMenu("File");
-	    UtilFncs.fileMenuItems(fileMenu, this);
+	    
+	    //Open menu.
+	    subMenu = new JMenu("Open ...");
+	    
+	    menuItem = new JMenuItem("ParaProf Manager");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Bin Window");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    fileMenu.add(subMenu);
+	    //End - Open menu.
+	    
+	    //Save menu.
+	    subMenu = new JMenu("Save ...");
+	    
+	    menuItem = new JMenuItem("ParaProf Preferrences");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Save Image");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    fileMenu.add(subMenu);
+	    //End - Save menu.
+	    
+	    menuItem = new JMenuItem("Edit ParaProf Preferences!");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Print");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Close This Window");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Exit ParaProf!");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
 
+	    fileMenu.addMenuListener(this);
+	    //######
+	    //End - File menu.
+	    //######
+
+	    //######
 	    //Windows menu
+	    //######
 	    windowsMenu = new JMenu("Windows");
+	    
+	    menuItem = new JMenuItem("Show Function Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show Group Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show User Event Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show Call Path Relations");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Close All Sub-Windows");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
 	    windowsMenu.addMenuListener(this);
-	    UtilFncs.windowMenuItems(windowsMenu,this);
+	    //######
+	    //End - Windows menu
+	    //######
 
+	    //######
 	    //Help menu.
+	    //######
 	    JMenu helpMenu = new JMenu("Help");
-	    UtilFncs.helpMenuItems(helpMenu, this);
+
+	    menuItem = new JMenuItem("Show Help Window");
+	    menuItem.addActionListener(this);
+	    helpMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("About ParaProf");
+	    menuItem.addActionListener(this);
+	    helpMenu.add(menuItem);
+	    
+	    helpMenu.addMenuListener(this);
+	    //######
+	    //End - Help menu.
+	    //######
 	    
 	    //Now, add all the menus to the main menu.
 	    mainMenu.add(fileMenu);
@@ -89,7 +180,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    //####################################
 	    //End - Code to generate the menus.
 	    //####################################
-	    
+
 	    //####################################
 	    //Create and add the components.
 	    //####################################

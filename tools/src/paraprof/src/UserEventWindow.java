@@ -82,24 +82,165 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	    //Code to generate the menus.
 	    //####################################
 	    JMenuBar mainMenu = new JMenuBar();
+	    JMenu subMenu = null;
+	    JMenuItem menuItem = null;
 
+	    //######
 	    //File menu.
+	    //######
 	    JMenu fileMenu = new JMenu("File");
-	    UtilFncs.fileMenuItems(fileMenu, this);
-      
-	    //Options menu.
-	    optionsMenu = new JMenu("Options");
-	    optionsMenu.addMenuListener(this);
-	    UtilFncs.usereventOptionMenuItems(optionsMenu,this);
- 
-	    //Windows menu
-	    windowsMenu = new JMenu("Windows");
-	    windowsMenu.addMenuListener(this);
-	    UtilFncs.windowMenuItems(windowsMenu,this);
+	    
+	    //Open menu.
+	    subMenu = new JMenu("Open ...");
+	    
+	    menuItem = new JMenuItem("ParaProf Manager");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Bin Window");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    fileMenu.add(subMenu);
+	    //End - Open menu.
+	    
+	    //Save menu.
+	    subMenu = new JMenu("Save ...");
+	    
+	    menuItem = new JMenuItem("ParaProf Preferrences");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Save Image");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	    
+	    fileMenu.add(subMenu);
+	    //End - Save menu.
+	    
+	    menuItem = new JMenuItem("Edit ParaProf Preferences!");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Print");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Close This Window");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Exit ParaProf!");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
 
+	    fileMenu.addMenuListener(this);
+	    //######
+	    //End - File menu.
+	    //######
+
+	    //######
+	    //Options menu.
+	    //######
+	    optionsMenu = new JMenu("Options");
+
+	    ButtonGroup group = null;
+	    JCheckBoxMenuItem box = null;
+	    JRadioButtonMenuItem button = null;
+	    
+	    descendingOrder = new JCheckBoxMenuItem("Decending Order", true);
+	    descendingOrder.addActionListener(this);
+	    optionsMenu.add(descendingOrder);
+	    
+	    //Set the value type options.
+	    subMenu = new JMenu("Select Value Type");
+	    group = new ButtonGroup();
+	    
+	    button = new JRadioButtonMenuItem("Number of Userevents", true);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Min. Value", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Max. Value", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    
+	    button = new JRadioButtonMenuItem("Mean Value", false);
+	    button.addActionListener(this);
+	    group.add(button);
+	    subMenu.add(button);
+	    optionsMenu.add(subMenu);
+
+	    box = new JCheckBoxMenuItem("Display Sliders", false);
+	    box.addActionListener(this);
+	    optionsMenu.add(box);
+
+	    box = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+	    box.addActionListener(this);
+	    optionsMenu.add(box);
+	    
+	    box = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+	    box.addActionListener(this);
+	    optionsMenu.add(box);
+	    
+	    optionsMenu.addMenuListener(this);
+	    //######
+	    //End - Options menu.
+	    //######
+
+	    //######
+	    //Windows menu
+	    //######
+	    windowsMenu = new JMenu("Windows");
+	    
+	    menuItem = new JMenuItem("Show Function Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show Group Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show User Event Ledger");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Show Call Path Relations");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("Close All Sub-Windows");
+	    menuItem.addActionListener(this);
+	    windowsMenu.add(menuItem);
+	    
+	    windowsMenu.addMenuListener(this);
+	    //######
+	    //End - Windows menu
+	    //######
+
+	    //######
 	    //Help menu.
+	    //######
 	    JMenu helpMenu = new JMenu("Help");
-	    UtilFncs.helpMenuItems(helpMenu, this);
+
+	    menuItem = new JMenuItem("Show Help Window");
+	    menuItem.addActionListener(this);
+	    helpMenu.add(menuItem);
+	    
+	    menuItem = new JMenuItem("About ParaProf");
+	    menuItem.addActionListener(this);
+	    helpMenu.add(menuItem);
+	    
+	    helpMenu.addMenuListener(this);
+	    //######
+	    //End - Help menu.
+	    //######
 	    
 	    //Now, add all the menus to the main menu.
 	    mainMenu.add(fileMenu);
@@ -513,6 +654,13 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 
     private JMenu optionsMenu = null;
     private JMenu windowsMenu = null;
+    private JMenu unitsSubMenu = null;
+
+    private JCheckBoxMenuItem descendingOrder = null;
+    private JCheckBoxMenuItem displaySliders = null;
+    private JMenuItem groupLedger = null;
+    private JMenuItem usereventLedger = null;
+    private JMenuItem callPathRelations = null;
 
     private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
     private JComboBox sliderMultiple;
