@@ -4,12 +4,12 @@ import dms.perfdb.*;
 import java.util.*;
 import java.sql.*;
 import java.util.Date;
-import paraprof.*;
+//import paraprof.*;
 
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.6 2004/03/31 01:33:35 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.7 2004/03/31 09:39:10 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -542,7 +542,7 @@ public class PerfDBSession extends DataSession {
  * @param paraProfTrial
  * @return the database index ID of the saved trial record
  */
-
+/*
 	public int saveParaProfTrial(ParaProfTrial paraProfTrial) {
 		GlobalMapping mapping = paraProfTrial.getGlobalMapping();
 	
@@ -590,7 +590,7 @@ public class PerfDBSession extends DataSession {
 	    	}
 	    }
 	    
-		/* 
+		
 	    //Write out userevent name to id mapping.
 	    writeBeginObject(xwriter,21);
 	    for(Enumeration e = globalMapping.getMapping(2).elements(); e.hasMoreElements() ;){
@@ -667,10 +667,9 @@ public class PerfDBSession extends DataSession {
 		}    
 	    }
 
-		*/
+		
 
 		return newTrialID;
 	    
-    }
+		}*/
 };
-

@@ -33,7 +33,7 @@ public class GlobalMapping{
 	sortedMappings[2] = new Vector();
     }
 
-    protected void increaseVectorStorage(){
+    public void increaseVectorStorage(){
 	maxMeanInclusiveValueList.add(new Double(0));
 	maxMeanExclusiveValueList.add(new Double(0));
 	maxMeanInclusivePercentValueList.add(new Double(0));

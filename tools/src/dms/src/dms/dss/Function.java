@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.1 2004/03/27 01:02:55 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.2 2004/03/31 09:39:08 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -132,10 +132,9 @@ public class Function {
 	public FunctionDataObject getMeanSummary (int metricIndex) {
 		if (this.meanSummary == null) {
 			Vector metrics = dataSession.getMetrics();
-			Vector tmpMetric = null;
-			dataSession.setMetric(tmpMetric);
+			dataSession.setMetrics(null);
 			dataSession.getFunctionDetail(this);
-			dataSession.setMetric(metrics);
+			dataSession.setMetrics(metrics);
 		}
 		return (FunctionDataObject)(this.meanSummary.elementAt(metricIndex));
 	}
@@ -181,10 +180,9 @@ public class Function {
 	public FunctionDataObject getTotalSummary (int metricIndex) {
 		if (this.totalSummary == null) {
 			Vector metrics = dataSession.getMetrics();
-			Vector tmpMetric = null;
-			dataSession.setMetric(tmpMetric);
+			dataSession.setMetrics(null);
 			dataSession.getFunctionDetail(this);
-			dataSession.setMetric(metrics);
+			dataSession.setMetrics(metrics);
 		}
 		return (FunctionDataObject)(this.totalSummary.elementAt(metricIndex));
 	}

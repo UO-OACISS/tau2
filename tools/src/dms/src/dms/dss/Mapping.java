@@ -7,7 +7,7 @@
 
 package dms.dss;
 
-interface Mapping{
+public interface Mapping{
     public void setMappingName(String mappingName);
     public String getMappingName();
   
