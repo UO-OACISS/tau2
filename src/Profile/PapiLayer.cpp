@@ -82,6 +82,18 @@ long long PapiLayer::getCounters(int tid)
 	  PAPI_CounterList[j] = -1;
 	}
 
+      if(PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT)
+      {
+        cout << "Wrong version of PAPI library" << endl;
+        return -1;
+      }
+
+      if(PAPI_thread_init(NULL,0) != PAPI_OK)
+      {
+	cout << "There was a problem with papi's thread init" << endl;
+	return -1;
+      }
+
 
       char * EnvironmentVariable = NULL;
       EnvironmentVariable = getenv("PAPI_EVENT");
@@ -151,7 +163,6 @@ long long PapiLayer::getCounters(int tid)
       ThreadList[tid]->EventSet = PAPI_NULL;
       ThreadList[tid]->CounterValues = new long long[NUMBER_OF_COUNTERS];
       
-      //cout << "New thread added to the thread list." << endl;
 
       //Adding the events and starting the counter.
       if((pthread_mutex_lock(&lock) != 0))
@@ -159,6 +170,8 @@ long long PapiLayer::getCounters(int tid)
 	   cout << "There was a problem locking or unlocking a resource" << endl;
 	   return -1;
 	 }
+
+      PAPI_create_eventset(&(ThreadList[tid]->EventSet));
 
       Result = PAPI_add_events(&(ThreadList[tid]->EventSet) ,PAPI_CounterList ,NUMBER_OF_COUNTERS);
       if(Result != PAPI_OK)
