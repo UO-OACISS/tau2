@@ -251,21 +251,23 @@ public class DBConnector implements DB {
     // CLOB         : 2005
     // REF          : 2006
 
-//     public static boolean isReadWriteType(int type) {
-// 	if (type == java.sql.Types.VARCHAR 
-// 	    || type == java.sql.Types.CLOB
-// 	    || type == java.sql.Types.INTEGER
-// 	    || type == java.sql.Types.DECIMAL
-// 	    || type == java.sql.Types.LONGVARCHAR)
-// 	    return true;
-// 	return false;
-//     }
+    //     public static boolean isReadWriteType(int type) {
+    // 	if (type == java.sql.Types.VARCHAR 
+    // 	    || type == java.sql.Types.CLOB
+    // 	    || type == java.sql.Types.INTEGER
+    // 	    || type == java.sql.Types.DECIMAL
+    // 	    || type == java.sql.Types.LONGVARCHAR)
+    // 	    return true;
+    // 	return false;
+    //     }
 
     public static boolean isReadAbleType(int type) {
 	if (type == java.sql.Types.VARCHAR 
 	    || type == java.sql.Types.CLOB
 	    || type == java.sql.Types.INTEGER
 	    || type == java.sql.Types.DECIMAL
+	    || type == java.sql.Types.DOUBLE
+	    || type == java.sql.Types.FLOAT
 	    || type == java.sql.Types.LONGVARCHAR
 	    || type == java.sql.Types.TIME
 	    || type == java.sql.Types.TIMESTAMP)
@@ -279,6 +281,8 @@ public class DBConnector implements DB {
 	    || type == java.sql.Types.CLOB
 	    || type == java.sql.Types.INTEGER
 	    || type == java.sql.Types.DECIMAL
+	    || type == java.sql.Types.DOUBLE
+	    || type == java.sql.Types.FLOAT
 	    || type == java.sql.Types.LONGVARCHAR)
 	    return true;
 	return false;
@@ -293,14 +297,130 @@ public class DBConnector implements DB {
     public static boolean isFloatingPointType(int type) {
 	if (type == java.sql.Types.DECIMAL)
 	    return true;
+	if (type == java.sql.Types.DOUBLE)
+	    return true;
+	if (type == java.sql.Types.FLOAT)
+	    return true;
 	return false;
     }
 
-//     public static boolean isReadOnlyType(int type) {
-// 	if (type == java.sql.Types.TIME 
-// 	    || type == java.sql.Types.TIMESTAMP)
-// 	    return true;
-// 	return false;
-//     }
+    //     public static boolean isReadOnlyType(int type) {
+    // 	if (type == java.sql.Types.TIME 
+    // 	    || type == java.sql.Types.TIMESTAMP)
+    // 	    return true;
+    // 	return false;
+    //     }
 
+
+
+    public int checkTable(DatabaseMetaData dbMeta, String tableName, String columns[]) throws SQLException {
+	boolean checks[] = new boolean[columns.length];
+
+	ResultSet resultSet = null;
+	if (this.getDBType().compareTo("oracle") == 0) {
+	    resultSet = dbMeta.getColumns(null, null, tableName.toUpperCase(), "%");
+	} else {
+	    resultSet = dbMeta.getColumns(null, null, tableName, "%");
+	}
+
+
+	while (resultSet.next() != false) {
+	    
+	    int ctype = resultSet.getInt("DATA_TYPE");
+	    String cname = resultSet.getString("COLUMN_NAME");
+	    String typename = resultSet.getString("TYPE_NAME");
+
+	    //System.out.println ("table: " + tableName + ", found: " + cname + ", type: " + ctype + ", typename = " + typename);
+	    
+	    if (DBConnector.isReadAbleType(ctype)) {
+		
+		for (int i=0; i<columns.length; i++) {
+		    if (columns[i].toUpperCase().compareTo(cname.toUpperCase()) == 0) {
+			checks[i] = true;
+		    }
+		}
+		
+	    }
+	}
+
+
+	for (int i=0; i<columns.length; i++) {
+	    if (!checks[i]) {
+		System.out.println ("Couldn't find column \"" + columns[i] + "\" in table \"" + tableName + "\"");
+		return -1;
+	    }
+	}
+	return 0;
+
+    }
+
+    public int checkSchema() throws SQLException {
+	
+	ResultSet resultSet = null;
+	DatabaseMetaData dbMeta = this.getMetaData();
+	
+	String appColumns[] =  {"ID", "NAME"};
+	if (checkTable(dbMeta, "application", appColumns) != 0)
+	    return -1;
+
+	String expColumns[] = {"ID", "NAME", "application"};
+	if (checkTable(dbMeta, "experiment", expColumns) != 0)
+	    return -1;
+	
+	String trialColumns[] = {"ID", "NAME", "experiment"};
+	if (checkTable(dbMeta, "trial", trialColumns) != 0)
+	    return -1;
+
+
+	String metricColumns[] = {"id", "name", "trial"};
+	if (checkTable(dbMeta, "metric", metricColumns) != 0)
+	    return -1;
+
+
+	String ieColumns[] = {"id", "name", "trial", "group_name"};
+	if (checkTable(dbMeta, "interval_event", ieColumns) != 0)
+	    return -1;
+
+	String aeColumns[] = {"id", "name", "trial", "group_name"};
+	if (checkTable(dbMeta, "atomic_event", aeColumns) != 0)
+	    return -1;
+
+
+	String ilpColumns[] = {"interval_event", "node", "context", "thread", "metric",
+			       "inclusive_percentage", "inclusive", "exclusive_percentage", 
+			       "exclusive", "call", "subroutines", "inclusive_per_call"};
+	
+	if (this.getDBType().compareTo("oracle") == 0) {
+	    ilpColumns[8] = "excl";
+	}
+
+	if (checkTable(dbMeta, "interval_location_profile", ilpColumns) != 0)
+	    return -1;
+	
+	String alpColumns[] = {"atomic_event", "node", "context", "thread", "sample_count",
+			       "maximum_value", "minimum_value", "mean_value", "standard_deviation" };
+	if (checkTable(dbMeta, "atomic_location_profile", alpColumns) != 0)
+	    return -1;
+
+
+	String itsColumns[] = {"interval_event", "metric",
+			       "inclusive_percentage", "inclusive", "exclusive_percentage", 
+			       "exclusive", "call",
+			       "subroutines", "inclusive_per_call"};
+
+	if (this.getDBType().compareTo("oracle") == 0) {
+	    itsColumns[5] = "excl";
+	}
+
+	if (checkTable(dbMeta, "interval_total_summary", itsColumns) != 0)
+	    return -1;
+
+	if (checkTable(dbMeta, "interval_mean_summary", itsColumns) != 0)
+	    return -1;
+
+
+
+	
+	return 0;
+    }
 }

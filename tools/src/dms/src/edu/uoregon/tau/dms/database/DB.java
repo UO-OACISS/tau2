@@ -21,4 +21,6 @@ public interface DB {
     public String getSchemaPrefix();
     public DatabaseMetaData getMetaData() throws SQLException;
 
+    public int checkSchema() throws SQLException;
+
 }
