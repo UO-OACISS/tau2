@@ -41,6 +41,8 @@
 // restrained to this class. 
 //////////////////////////////////////////////////////////////////////
 
+typedef std::map<std::string, TauGroup_t, std::less<string> > ProfileMap_t;
+
 class RtsLayer 
 { // Layer for Profiler to interact with the Runtime System
   public:
@@ -56,9 +58,19 @@ class RtsLayer
   
 	static int& TheContext(void);
 
+ 	static ProfileMap_t& TheProfileMap(void);
+
+ 	static TauGroup_t  getProfileGroup(char *  ProfileGroup) ;
+
  	static TauGroup_t  enableProfileGroup(TauGroup_t  ProfileGroup) ;
 
  	static TauGroup_t  disableProfileGroup(TauGroup_t  ProfileGroup) ;
+
+ 	static TauGroup_t  generateProfileGroup(void) ;
+
+ 	static TauGroup_t  enableProfileGroupName(char * ProfileGroup) ;
+
+ 	static TauGroup_t  disableProfileGroupName(char * ProfileGroup) ;
 
         static TauGroup_t  resetProfileGroup(void) ;
 
@@ -117,6 +129,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2001/01/05 22:23:58 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.10 2001/01/05 22:23:58 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 2002/01/09 22:49:22 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.11 2002/01/09 22:49:22 sameer Exp $ 
  ***************************************************************************/

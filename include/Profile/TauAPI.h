@@ -38,11 +38,13 @@
 //////////////////////////////////////////////////////////////////////
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 #define TAU_PROFILE(name, type, group) \
-	static FunctionInfo tauFI(name, type, group, #group); \
-	Profiler tauFP(&tauFI, group); 
+	static TauGroup_t tau_gr = group; \
+	static FunctionInfo tauFI(name, type, tau_gr, #group); \
+	Profiler tauFP(&tauFI, tau_gr); 
 #define TAU_PROFILE_TIMER(var, name, type, group) \
-	static FunctionInfo var##fi(name, type, group, #group); \
-	Profiler var(&var##fi, group, true); 
+	static TauGroup_t var##tau_gr = group; \
+	static FunctionInfo var##fi(name, type, var##tau_gr, #group); \
+	Profiler var(&var##fi, var##tau_gr, true); 
 
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
 // e.g., FunctionInfo loop1fi(); Profiler loop1(); 
@@ -92,6 +94,9 @@
 #define TAU_DISABLE_INSTRUMENTATION() 		RtsLayer::TheEnableInstrumentation() = false;
 #define TAU_ENABLE_GROUP(group)			RtsLayer::enableProfileGroup(group)
 #define TAU_DISABLE_GROUP(group)		RtsLayer::disableProfileGroup(group)
+#define TAU_ENABLE_GROUP_NAME(group)		RtsLayer::enableProfileGroupName(group)
+#define TAU_DISABLE_GROUP_NAME(group)		RtsLayer::disableProfileGroupName(group)
+#define TAU_GET_PROFILE_GROUP(group)		RtsLayer::getProfileGroup(group)
 
 #ifdef NO_RTTI
 /* #define CT(obj) string(#obj) */
@@ -135,6 +140,8 @@
 #define TAU_DISABLE_INSTRUMENTATION() 	
 #define TAU_ENABLE_GROUP(group)
 #define TAU_DISABLE_GROUP(group)
+#define TAU_ENABLE_GROUP_NAME(group)
+#define TAU_DISABLE_GROUP_NAME(group)
 
 #define CT(obj)
 
@@ -161,6 +168,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2001/08/28 18:42:44 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.13 2001/08/28 18:42:44 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 2002/01/09 22:49:23 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.14 2002/01/09 22:49:23 sameer Exp $ 
  ***************************************************************************/

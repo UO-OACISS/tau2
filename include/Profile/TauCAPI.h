@@ -43,14 +43,14 @@
 #define TAU_PROFILE_TIMER(var,name, type, group) static int taufirst##var = 1;\
                                  static void *var; \
                                  if (taufirst##var == 1) { \
-                                   var = tau_get_profiler(name, type, group); \
+                                   var = tau_get_profiler(name, type, group, #group); \
                                    taufirst##var = 0; }
 */
 
-#define TAU_PROFILE_TIMER(var,name, type, group) static void *var=NULL; tau_profile_c_timer(&var, name, type, group);
+#define TAU_PROFILE_TIMER(var,name, type, group) static void *var=NULL; tau_profile_c_timer(&var, name, type, group, #group);
 
 #define TAU_PROFILE_DECLARE_TIMER(var) static void *var=NULL;
-#define TAU_PROFILE_CREATE_TIMER(var,name,type,group) tau_profile_c_timer(&var, name, type, group);
+#define TAU_PROFILE_CREATE_TIMER(var,name,type,group) tau_profile_c_timer(&var, name, type, group, #group);
 
 
 #define TAU_PROFILE_START(var) 			tau_start_timer(var);
@@ -96,8 +96,12 @@
 #define TAU_DISABLE_INSTRUMENTATION()		tau_disable_instrumentation();
 #define TAU_ENABLE_GROUP(group)			tau_enable_group(group);
 #define TAU_DISABLE_GROUP(group)		tau_disable_group(group);
+#define TAU_ENABLE_GROUP_NAME(group)            tau_enable_group_name(group) 
+#define TAU_DISABLE_GROUP_NAME(group)           tau_disable_group_name(group)
+#define TAU_GET_PROFILE_GROUP(group)            tau_get_profile_group(group)
 
-extern void * tau_get_profiler(char *fname, char *type, TauGroup_t  group);
+
+extern void * tau_get_profiler(char *fname, char *type, TauGroup_t  group, char *gr_name);
 extern void tau_start_timer(void *profiler);
 extern void tau_stop_timer(void *profiler);
 extern void tau_exit(char *msg);
@@ -119,6 +123,10 @@ extern void tau_event_disable_mean(void *event);
 extern void tau_event_disable_stddev(void *event);
 extern void tau_trace_sendmsg(int type, int destination, int length);
 extern void tau_trace_recvmsg(int type, int source, int length);
+extern TauGroup_t tau_enable_group_name(char *group);
+extern TauGroup_t tau_disable_group_name(char *group);
+extern TauGroup_t tau_get_profile_group(char *group);
+
 
 
 #else /* PROFILING_ON */
@@ -155,6 +163,9 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 #define TAU_DISABLE_INSTRUMENTATION()
 #define TAU_ENABLE_GROUP(group)	
 #define TAU_DISABLE_GROUP(group)
+#define TAU_ENABLE_GROUP_NAME(group)            
+#define TAU_DISABLE_GROUP_NAME(group)          
+#define TAU_GET_PROFILE_GROUP(group) 
 
 #define CT(obj)
 
@@ -177,7 +188,7 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2001/11/27 21:22:34 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.12 2001/11/27 21:22:34 sameer Exp $
+ * $Revision: 1.13 $   $Date: 2002/01/09 22:49:23 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.13 2002/01/09 22:49:23 sameer Exp $
  ***************************************************************************/
 
