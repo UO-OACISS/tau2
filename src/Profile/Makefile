@@ -123,6 +123,7 @@ TAU_SHLIBX		= .so
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
+#USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
@@ -136,6 +137,7 @@ TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 #JAVA#TAU_JAVA_INSTALLDIR = $(INSTALLDEST)/TAU #ENDIF#
 #JAVA#TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
+#USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
 ##############################################
 TAU_DSO         = $(TAU_SHLIB)
 TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
@@ -149,7 +151,7 @@ $(TARGET):	$(OBJS)
 
 $(TAU_SHLIB): 	$(OBJS)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS) $(EXTRA_LIBS) $(LEXTRA)
+		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS) $(EXTRA_LIBS) $(LEXTRA) $(LEXTRA1)
 
 $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
@@ -261,5 +263,5 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 
 
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(OPENMP_O) $(TAU_DSO) $(EXTRAOBJS) $(TAUJAPI) *.ii *.ti ti_files/* 
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(OPENMP_O) $(TAU_DSO) $(EXTRAOBJS) $(TAUJAPI) *.ii *.ti ti_files/* cxx_repository/*
 
