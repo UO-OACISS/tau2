@@ -342,7 +342,7 @@ void defineTauGroup(ofstream& ostr, string& group_name)
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C++ program ----------------------------- */
 /* -------------------------------------------------------------------------- */
-int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
+int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string &header_file)
 {
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
@@ -368,7 +368,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   getCXXReferences(itemvec, pdb, f);
 
   // put in code to insert <Profile/Profiler.h> 
-  ostr<< "#include <Profile/Profiler.h>"<<endl;
+  ostr<< "#include <"<<header_file<<">"<<endl;
   defineTauGroup(ostr, group_name); 
   
   int inputLineNo = 0;
@@ -569,7 +569,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression)
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C++ program ----------------------------- */
 /* -------------------------------------------------------------------------- */
-int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name) 
+int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file) 
 { 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
@@ -596,7 +596,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
   // Begin Instrumentation
   // put in code to insert <Profile/Profiler.h>
-  ostr<< "#include <Profile/Profiler.h>"<<endl;
+  ostr<< "#include <"<<header_file<<">"<<endl;
   defineTauGroup(ostr, group_name); 
 
   int inputLineNo = 0;
@@ -1102,10 +1102,12 @@ int main(int argc, char **argv)
 {
   string outFileName("out.ins.C");
   string group_name("TAU_USER"); /* Default: if nothing else is defined */
+  string header_file("Profile/Profiler.h"); 
+	/* Default: if nothing else is defined */
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname] [-i headerfile]"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -1153,6 +1155,14 @@ int main(int argc, char **argv)
           printf("Group %s\n", group_name.c_str());
 #endif /* DEBUG */
   	}
+        if (strcmp(argv[i], "-i") == 0)
+	{
+	  ++i;
+	  header_file = string(argv[i]);
+#ifdef DEBUG
+          printf("Header file %s\n", header_file.c_str());
+#endif /* DEBUG */
+  	}
         break;
       }
 
@@ -1175,9 +1185,9 @@ int main(int argc, char **argv)
        cout <<"Language "<<l <<endl;
 #endif
        if (l == PDB::LA_CXX)
-         instrumentCXXFile(p, *it, outFileName, group_name);
+         instrumentCXXFile(p, *it, outFileName, group_name, header_file);
        if (l == PDB::LA_C)
-         instrumentCFile(p, *it, outFileName, group_name);
+         instrumentCFile(p, *it, outFileName, group_name, header_file);
        if (l == PDB::LA_FORTRAN)
          instrumentFFile(p, *it, outFileName, group_name);
      }
@@ -1206,8 +1216,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.32 $   $Date: 2002/01/18 02:01:44 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.32 2002/01/18 02:01:44 sameer Exp $
+ * $Revision: 1.33 $   $Date: 2002/01/18 23:14:22 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.33 2002/01/18 23:14:22 sameer Exp $
  ***************************************************************************/
 
 
