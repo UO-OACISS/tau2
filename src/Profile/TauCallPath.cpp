@@ -161,12 +161,16 @@ inline bool TauCallPathShouldBeProfiled(string *s)
 int TauCalibrateTimerOverheads(void)
 {
   TAU_PROFILE_TIMER(tnull, ".TAU null timer overhead", " ", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(tone,  ".TAU single timer overhead", " ", TAU_DEFAULT);
+  TAU_PROFILE_TIMER(tone,  ".TAU 100 null timers overhead", " ", TAU_DEFAULT);
+  int i;
 
   TAU_PROFILE_START(tone);
     /* nested */
+  for(i=0; i< 100; i++)
+  {
     TAU_PROFILE_START(tnull);
     TAU_PROFILE_STOP(tnull);
+  }
   TAU_PROFILE_STOP(tone);
   return 0;
 }
@@ -264,6 +268,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2004/01/06 01:02:59 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.10 2004/01/06 01:02:59 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 2004/01/06 01:15:13 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.11 2004/01/06 01:15:13 sameer Exp $ 
  ***************************************************************************/
