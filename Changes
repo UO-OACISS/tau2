@@ -28,6 +28,7 @@ Version 2.11 changes (from 2.9):
 16. Added support for Hitachi SR8000 [FZJ]. 
 17. Added support for browsing by profile groups in jracy [ALPS, LLNL]. 
 18. Made some modifications to Paraver trace format conversion [CEPBA]. 
+19. Added support for NEC SX-5 [HLRS]. 
 
 Version 2.10 changes (from 2.9):
 1. Better support for C instrumentation [HDF5].
