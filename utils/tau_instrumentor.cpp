@@ -303,6 +303,25 @@ bool isVoidRoutine(itemRef * i)
 	return false;
 }
 	
+/* -------------------------------------------------------------------------- */
+/* -- Prints TAU_PROFILE_INIT ----------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+void print_tau_profile_init(ostream& ostr, pdbCRoutine *main_routine)
+{
+   pdbType::argvec av = main_routine->signature()->arguments();
+   if (av.size() == 2) {
+     int arg_count = 0;
+     ostr<<"  TAU_PROFILE_INIT(";
+     for(pdbType::argvec::const_iterator argsit = av.begin();
+         argsit != av.end(); argsit++, arg_count++)
+     {
+       ostr<<(*argsit).name();
+       if (arg_count == 0) ostr<<", ";
+     }
+   ostr<<"); "<<endl;
+   }
+
+}
 
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C++ program ----------------------------- */
@@ -334,6 +353,12 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
   // put in code to insert <Profile/Profiler.h> 
   ostr<< "#include <Profile/Profiler.h>"<<endl;
+  if (strcmp(group_name.c_str(), "TAU_USER") != 0)
+  { /* Write the following lines only when -DTAU_GROUP=string is defined */
+    ostr<< "#ifndef "<<group_name<<endl;
+    ostr<< "#define "<<group_name << " tau_get_group_info(\""<<group_name.substr(10)<<"\");"<<endl;
+    ostr<< "#endif /* "<<group_name << " */ "<<endl; 
+  }
   
   int inputLineNo = 0;
   int lastInstrumentedLineNo = 0;
@@ -403,6 +428,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif 
 	      // leave some leading spaces for formatting...
 	
+	      print_tau_profile_init(ostr, (pdbCRoutine *) (*it)->item);
 	      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
 	      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
 	      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
@@ -475,6 +501,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 #endif
      // leave some leading spaces for formatting...
 
+     print_tau_profile_init(ostr, (pdbCRoutine *) (i->item));
      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
@@ -505,6 +532,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
 #endif
      // leave some leading spaces for formatting...
 
+     print_tau_profile_init(ostr, (pdbCRoutine *) (i->item));
      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
@@ -1138,8 +1166,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2002/01/08 02:17:01 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.27 2002/01/08 02:17:01 sameer Exp $
+ * $Revision: 1.28 $   $Date: 2002/01/09 04:04:25 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.28 2002/01/09 04:04:25 sameer Exp $
  ***************************************************************************/
 
 
