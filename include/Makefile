@@ -34,13 +34,14 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
-TAUROOT=/research/paraducks/apps/pdt/dev/tau2
+TAUROOT=/home/grads/sameer/tau2
 TULIPDIR=
 PCLDIR=
+PDTDIR=
 TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
-TAU_PREFIX_INSTALL_DIR=/research/paraducks/apps/pdt/dev/tau2
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
 TAU_OPTIONS=
 #######################################################################
  
