@@ -1969,7 +1969,7 @@ EOF
     fixmakeargs="$fixmakeargs MPIATTR"
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpi2typeex.c  1> /dev/null 2>&1
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2typeex.c  1> /dev/null 2>&1
   then
     echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
     fixmakeargs="$fixmakeargs MPITYPEEX"
