@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.8 2005/01/31 23:10:25 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.9 2005/02/28 21:35:41 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		TrialData
  * @see		NCT
  */
@@ -32,9 +32,6 @@ public abstract class DataSource {
 
     // just a holder for the output of getMaxNCTNumbers(), makes subsequent calls instantaneous
     private int[] maxNCT = null;
-
-    public DataSource() {
-    }
 
     abstract public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException;
 
@@ -167,6 +164,21 @@ public abstract class DataSource {
 
         }
         return maxNCT;
+    }
+
+    public int getNumThreads() {
+        int numThreads = 0;
+        for (Iterator it = this.getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                Context context = (Context) it2.next();
+                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+                    it3.next();
+                    numThreads++;
+                }
+            }
+        }
+        return numThreads;
     }
 
     /**

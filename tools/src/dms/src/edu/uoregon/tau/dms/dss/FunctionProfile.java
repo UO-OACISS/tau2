@@ -6,9 +6,9 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.7 2005/01/19 02:30:02 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.8 2005/02/28 21:35:41 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
@@ -224,4 +224,7 @@ public class FunctionProfile implements Comparable {
         return this.function.compareTo(((FunctionProfile) inObject).function);
     }
 
+    public String toString() {
+        return "A FunctionProfile for " + function.toString();
+    }
 }
