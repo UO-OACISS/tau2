@@ -240,13 +240,19 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		yCoord = yCoord + spacing;
 		
 		g2D.setColor(Color.black);
-		if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID())){
+		int highLightColor = -1;
+		if(windowType==2)
+		   highLightColor  = trial.getColorChooser().getUserEventHightlightColorID();
+		else
+		   highLightColor  = trial.getColorChooser().getHighlightColorID();
+		
+		if((sMWThreadDataElement.getMappingID()) == highLightColor){
 		    g2D.setColor(trial.getColorChooser().getHighlightColor());
 		    g2D.drawString(tmpString, 20, yCoord);
 		    g2D.setColor(sMWThreadDataElement.getColor());
 		    g2D.drawString(sMWThreadDataElement.getMappingName(), namePosition, yCoord);
 		}
-		else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
+		else if((windowType!=2)&&(sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
 		    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 		    g2D.drawString(tmpString, 20, yCoord);
 		    g2D.setColor(sMWThreadDataElement.getColor());
@@ -257,6 +263,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		    g2D.setColor(sMWThreadDataElement.getColor());
 		    g2D.drawString(sMWThreadDataElement.getMappingName(), namePosition, yCoord);
 		}
+		
 		
 		//Figure out how wide that string was for x coord reasons.
 		if(tmpXWidthCalc < 2*fmMonoFont.stringWidth(tmpString)){

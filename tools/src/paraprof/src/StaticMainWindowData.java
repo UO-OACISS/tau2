@@ -155,6 +155,8 @@ public class StaticMainWindowData{
 	GlobalThreadDataElement globalThreadDataElement = null;
 	SMWThreadDataElement sMWThreadDataElement = null;
     
+	System.out.println("listType: " + listType);
+
 	switch(listType){
 	case 1:
 	    list = ((Thread)trial.getNCT().getThread(nodeID,contextID,threadID)).getFunctionList();
@@ -170,6 +172,8 @@ public class StaticMainWindowData{
 
 	for(Enumeration e1 = list.elements(); e1.hasMoreElements() ;){
 	    globalThreadDataElement = (GlobalThreadDataElement) e1.nextElement();
+	    System.out.println("userevent: "+globalThreadDataElement.userevent);
+	    System.out.println("uename: " + globalThreadDataElement.getMappingName());
 	    if(globalThreadDataElement!=null){
 		if(globalMapping.displayMapping(globalThreadDataElement.getMappingID())){
 		    sMWThreadDataElement = new SMWThreadDataElement(trial, nodeID, contextID, threadID, globalThreadDataElement);

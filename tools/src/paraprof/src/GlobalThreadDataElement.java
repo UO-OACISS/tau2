@@ -256,6 +256,9 @@ public class GlobalThreadDataElement implements Mapping{
     }
   
     //User event interface.
+    public boolean userevent(){
+	return userevent;}
+
     public String getUserEventName(){
 	return globalMappingElement.getMappingName();}
   
@@ -297,7 +300,7 @@ public class GlobalThreadDataElement implements Mapping{
 	    char [] tmpArray;
 	    String tmpString;
       
-	    insertSpaces(statStringArray , 0, 82);
+	    insertSpaces(statStringArray , 0, 72);
       
 	    tmpArray = ("NumSamples").toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){

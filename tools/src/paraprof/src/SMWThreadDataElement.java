@@ -39,7 +39,10 @@ public class SMWThreadDataElement implements Comparable{
 	if(obj instanceof GlobalThreadDataElement){
 	    this.globalThreadDataElement = (GlobalThreadDataElement) obj;
 	    this.globalMapping = trial.getGlobalMapping();
-	    this.globalMappingElement = globalMapping.getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
+	    if(globalThreadDataElement.userevent())
+		this.globalMappingElement = globalMapping.getGlobalMappingElement(globalThreadDataElement.getMappingID(), 2);
+	    else
+		this.globalMappingElement = globalMapping.getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
 	    
 	}
 	else if(obj instanceof GlobalMappingElement){
