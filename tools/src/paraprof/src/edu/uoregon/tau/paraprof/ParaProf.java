@@ -12,15 +12,15 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.27 2005/01/10 20:12:27 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.28 2005/01/21 19:21:09 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  */
 public class ParaProf implements ActionListener {
 
-    private final static String VERSION = "2.1 (01/04/2005)";
+    private final static String VERSION = "2.1 (with TAU 2.14.1) (01/21/2005)";
 
     
     //System wide stuff.

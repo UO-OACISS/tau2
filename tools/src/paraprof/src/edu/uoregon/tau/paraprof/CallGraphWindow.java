@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.17 2005/01/19 02:33:25 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.18 2005/01/21 19:21:09 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -46,7 +46,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private static final int HORIZONTAL_SPACING = 10;
     private static final int VERTICAL_SPACING = 120;
 
-    class GraphSelectionModel extends DefaultGraphSelectionModel {
+    private static class GraphSelectionModel extends DefaultGraphSelectionModel {
 
         GraphSelectionModel(JGraph graph) {
             super(graph);
@@ -84,7 +84,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     }
 
-    final class GraphCell extends DefaultGraphCell {
+    private static class GraphCell extends DefaultGraphCell {
 
         private final Function function;
         private final Vertex vertex;
@@ -106,7 +106,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
-    private class Graph extends JGraph {
+    private static class Graph extends JGraph {
 
         public String getToolTipText(MouseEvent event) {
             double x = event.getX() / this.getScale();
@@ -138,7 +138,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     }
 
     // A simple structure to hold pairs of vertices
-    private class BackEdge {
+    private static class BackEdge {
         BackEdge(Vertex a, Vertex b) {
             this.a = a;
             this.b = b;
