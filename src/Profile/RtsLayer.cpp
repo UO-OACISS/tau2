@@ -538,8 +538,17 @@ double RtsLayer::getUSecD (int tid) {
   return TauWindowsUsecD();
 #else // TAU_WINDOWS 
   struct timeval tp;
+  static double last_timestamp = 0.0;
+  double timestamp;
   gettimeofday (&tp, 0);
-  return ( (double) tp.tv_sec * 1e6 + tp.tv_usec );
+  timestamp = (double) tp.tv_sec * 1e6 + tp.tv_usec;
+  if (timestamp < last_timestamp)
+  {
+     DEBUGPROFMSG("RtsLayer::getUSecD(): gettimeofday() goes back in time. Fixing ...."<<endl;);
+     timestamp = last_timestamp;
+  }
+  last_timestamp = timestamp;
+  return timestamp;
 #endif // TAU_WINDOWS
 #else  // TULIP_TIMERS by default.  
   return pcxx_GetUSecD();
@@ -1029,6 +1038,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.44 $   $Date: 2003/08/28 23:08:55 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.44 2003/08/28 23:08:55 sameer Exp $ 
+ * $Revision: 1.45 $   $Date: 2003/10/02 17:21:55 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.45 2003/10/02 17:21:55 sameer Exp $ 
  ***************************************************************************/
