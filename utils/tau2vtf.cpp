@@ -94,6 +94,12 @@ int EnterState(void *userData, double time,
 		  stateid, time, nodeid, tid);
   int cpuid = GlobalId(nodeid, tid);
 
+  if (cpuid >= callstack.size()) 
+  {
+    fprintf(stderr, "ERROR: tau2vtf: EnterState() cpuid %d exceeds callstack size %d\n", cpuid, callstack.size());
+    exit(1);
+  }
+	
   callstack[cpuid].push(stateid);
 
   VTF3_WriteDownto(userData, time, stateid, cpuid, VTF3_SCLNONE);
@@ -610,8 +616,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2004/10/29 00:41:14 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.7 2004/10/29 00:41:14 sameer Exp $
+ * $Revision: 1.8 $   $Date: 2005/01/05 22:46:38 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.8 2005/01/05 22:46:38 sameer Exp $
  ***************************************************************************/
 
 
