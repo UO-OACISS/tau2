@@ -503,7 +503,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 				callPathDrawObject.setExclusiveValue(d1);
 				callPathDrawObject.setInclusiveValue(d2);
 				callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
-				callPathDrawObject.setNumberOfCalls(gtde.getNumberOfCalls());
+				callPathDrawObject.setNumberOfCalls(thread.getFunction(listValue.intValue()).getNumberOfCalls());
 				drawObjectsComplete.add(callPathDrawObject);
 			    }
 			    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
