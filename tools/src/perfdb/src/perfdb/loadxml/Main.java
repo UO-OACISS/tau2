@@ -12,7 +12,7 @@ public class Main {
     private DB db = null;
     
     private static String USAGE = 
-        "Main configfilename \n  (help | loadschema <schemafile> \n        | loadtrial <pprof.xml> \n        | loadapp <App_Info.xml> \n        | loadexp <application id> <Sys_info.xml> <Config_info.xml> <Compiler_info.xml> <Instru_info.xml>)";
+        "Main configfilename \n  (help | loadschema <schemafile> \n        | loadtrial <pprof.xml> <trial id> \n        | loadapp <App_Info.xml> \n        | loadexp <application id> <Sys_info.xml> <Config_info.xml> <Compiler_info.xml> <Instru_info.xml>)";
 
     // These two flags determines whether to store an app. or exp. separately. 
     private int enable_AppPartition=0;
@@ -431,7 +431,7 @@ public class Main {
 		// continue;
 	    }
 	    /***** Load a trial into PerfDB *********/
-	    if (command.equalsIgnoreCase("LOADXML")) {
+	    if (command.equalsIgnoreCase("LOADXML") || command.equalsIgnoreCase("LOADTRIAL")) {
 		String trialid = demo.storeDocument(args[ctr], args[ctr+1]);
 		if (trialid != null)
 			exitval = Integer.parseInt(trialid);
