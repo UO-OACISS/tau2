@@ -32,6 +32,7 @@ enum tau_language_t { tau_c, tau_cplusplus, tau_fortran };
 
 /* For Pooma, add a -noinline flag */
 bool noinline_flag = false; /* instrument inlined functions by default */
+bool noinit_flag = false;   /* initialize using TAU_INIT(&argc, &argv) by default */
 bool lang_specified = false; /* implicit detection of source language using PDB file */
 bool process_this_return = false; /* for C instrumentation using a different return keyword */
 tau_language_t tau_language; /* language of the file */
@@ -347,19 +348,21 @@ bool isReturnTypeReference(itemRef * i)
 /* -------------------------------------------------------------------------- */
 void print_tau_profile_init(ostream& ostr, pdbCRoutine *main_routine)
 {
-   pdbType::argvec av = main_routine->signature()->arguments();
-   if (av.size() == 2) {
-     int arg_count = 0;
-     ostr<<"  TAU_INIT(";
-     for(pdbType::argvec::const_iterator argsit = av.begin();
+   if ( noinit_flag == false )
+   { /* Put TAU_INIT */
+     pdbType::argvec av = main_routine->signature()->arguments();
+     if (av.size() == 2) {
+       int arg_count = 0;
+       ostr<<"  TAU_INIT(";
+       for(pdbType::argvec::const_iterator argsit = av.begin();
          argsit != av.end(); argsit++, arg_count++)
-     {
-       ostr<<"&"<<(*argsit).name();
-       if (arg_count == 0) ostr<<", ";
+       {
+         ostr<<"&"<<(*argsit).name();
+         if (arg_count == 0) ostr<<", ";
+       }
+       ostr<<"); "<<endl;
      }
-   ostr<<"); "<<endl;
    }
-
 }
 /* -------------------------------------------------------------------------- */
 /* -- Define a TAU group after <Profile/Profiler.h> ------------------------- */
@@ -834,13 +837,18 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 #ifdef DEBUG 
 		cout <<"Exit" <<endl;
 #endif /* DEBUG */
-		ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
-		for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
-		  ostr<<inbuf[k]; 
-		ostr <<"; }";
-		instrumented = true; 
-		write_from = k+1;
+		if ((strncmp(&inbuf[(*it)->col-1], "abort", strlen("abort")) == 0) 
+		  ||(strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) )
+                {
+		  ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
+		  for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
+		    ostr<<inbuf[k]; 
+		  ostr <<"; }";
+		  instrumented = true; 
+		  write_from = k+1;
+                }
 		break; 
+                
 	    default:
 		cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
 		instrumented = true; 
@@ -1174,7 +1182,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>]"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -1213,6 +1221,13 @@ int main(int argc, char **argv)
           printf("Noinline flag\n");
 #endif /* DEBUG */
           noinline_flag = true;
+        }
+        if (strcmp(argv[i], "-noinit")==0)
+ 	{
+#ifdef DEBUG
+          printf("Noinit flag\n");
+#endif /* DEBUG */
+          noinit_flag = true;
         }
         if (strcmp(argv[i], "-c")==0)
  	{
@@ -1351,8 +1366,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.42 $   $Date: 2002/07/16 18:16:30 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.42 2002/07/16 18:16:30 sameer Exp $
+ * $Revision: 1.43 $   $Date: 2003/05/08 23:41:00 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.43 2003/05/08 23:41:00 sameer Exp $
  ***************************************************************************/
 
 
