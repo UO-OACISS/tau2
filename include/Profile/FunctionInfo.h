@@ -42,9 +42,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#define STORAGE(type, variable) type variable[TAU_MAX_THREADS]
+#define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
 #ifdef TAU_MULTIPLE_COUNTERS
-#define MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
+#define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
 #endif//TAU_MULTIPLE_COUNTERS
 
 class TauUserEvent; 
@@ -125,18 +125,18 @@ public:
 private:
 	// A record of the information unique to this function.
 	// Statistics about calling this function.
-	STORAGE(long, NumCalls);
-	STORAGE(long, NumSubrs);
+	TAU_STORAGE(long, NumCalls);
+	TAU_STORAGE(long, NumSubrs);
 #ifndef TAU_MULTIPLE_COUNTERS
-	STORAGE(double, ExclTime);
-	STORAGE(double, InclTime);
+	TAU_STORAGE(double, ExclTime);
+	TAU_STORAGE(double, InclTime);
 #else //TAU_MULTIPLE_COUNTERS
-	MULTSTORAGE(double, ExclTime);
-	MULTSTORAGE(double, InclTime);
+	TAU_MULTSTORAGE(double, ExclTime);
+	TAU_MULTSTORAGE(double, InclTime);
 #endif//TAU_MULTIPLE_COUNTERS
-	STORAGE(bool, AlreadyOnStack);
+	TAU_STORAGE(bool, AlreadyOnStack);
 #ifdef PROFILE_STATS
-	STORAGE(double, SumExclSqr);
+	TAU_STORAGE(double, SumExclSqr);
 #endif //PROFILE_STATS 
 
 public:
@@ -293,6 +293,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2004/07/20 23:22:45 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.27 2004/07/20 23:22:45 sameer Exp $ 
+ * $Revision: 1.28 $   $Date: 2004/11/02 20:21:00 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.28 2004/11/02 20:21:00 sameer Exp $ 
  ***************************************************************************/
