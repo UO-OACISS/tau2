@@ -822,6 +822,10 @@ fi
 	echo "NOTE: Using SGI CC with no exceptions for compiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SETNODE0)
+	echo "NOTE: Using default node no of 0 instead of -1"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      HP_FORTRAN)
 	echo "NOTE: HP Fortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

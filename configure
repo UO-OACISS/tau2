@@ -134,6 +134,7 @@ muse=no
 comm=yes
 sproc=no
 noex=no
+setnode0=no
 tulipthread=no
 smarts=no
 pcl=no
@@ -655,6 +656,14 @@ do
     shift
     ;;
 
+  -setnode0)
+    # When this option is invoked, TAU sets the default node no to 0 instead 
+    # of using -1. So, profile.0.0.0 is created even if TAU_PROFILE_SET_NODE(0)
+    # is not called in the application. Do not use with tracing
+    setnode0=yes
+    shift
+    ;;
+
   -help)
     echo "TAU Configuration Utility "
     echo "***********************************************************************"
@@ -1019,6 +1028,12 @@ if [ $callpath = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLPATH"
     tauoptions="${tauoptions}-callpath"
+fi
+
+if [ $setnode0 = yes -a $trace = no ]
+  then
+    fixmakeargs="$fixmakeargs SETNODE0"
+    tauoptions="${tauoptions}-setnode"
 fi
 
 if [ $comm = no ]
