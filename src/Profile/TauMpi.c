@@ -1324,7 +1324,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Bsend()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if (dest != MPI_PROC_NULL) {
-    PMPI_Type_size( datatype, (MPI_Aint *)&typesize );
+    PMPI_Type_size( datatype, &typesize );
     TAU_TRACE_SENDMSG(tag, dest, typesize*count); 
     /*
     prof_send( procid_0, dest, tag, typesize*count,
@@ -1365,7 +1365,7 @@ MPI_Request * request;
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( datatype, (MPI_Aint *)&typesize3 );
+      MPI_Type_size( datatype, &typesize3 );
       newrq->request = request;
       newrq->status = RQ_SEND;
       newrq->size = count * typesize3;
@@ -1514,7 +1514,7 @@ MPI_Request * request;
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( datatype, (MPI_Aint *)&typesize3 );
+      MPI_Type_size( datatype, &typesize3 );
       newrq->request = request;
       newrq->status = RQ_SEND;
       newrq->size = count * typesize3;
@@ -1588,7 +1588,7 @@ MPI_Request * request;
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( datatype, (MPI_Aint *)&typesize3 );
+      MPI_Type_size( datatype, &typesize3 );
       newrq->request = request;
       newrq->status = RQ_SEND;
       newrq->size = count * typesize3;
@@ -1680,7 +1680,7 @@ MPI_Request * request;
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( datatype, (MPI_Aint *)&typesize3 );
+      MPI_Type_size( datatype, &typesize3 );
       newrq->request = request;
       newrq->status = RQ_SEND;
       newrq->size = count * typesize3;
@@ -1720,7 +1720,7 @@ MPI_Request * request;
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( datatype, (MPI_Aint *)&typesize3 );
+      MPI_Type_size( datatype, &typesize3 );
       newrq->request = request;
       newrq->status = RQ_SEND;
       newrq->size = count * typesize3;
@@ -1760,7 +1760,7 @@ MPI_Request * request;
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( datatype, (MPI_Aint *)&typesize3 );
+      MPI_Type_size( datatype, &typesize3 );
       newrq->request = request;
       newrq->status = RQ_SEND;
       newrq->size = count * typesize3;
@@ -1877,7 +1877,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Rsend()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if (dest != MPI_PROC_NULL) {
-    PMPI_Type_size( datatype, (MPI_Aint *)&typesize );
+    PMPI_Type_size( datatype, &typesize );
     TAU_TRACE_SENDMSG(tag, dest, typesize*count); 
     /*
     prof_send( procid_0, dest, tag, typesize*count,
@@ -1918,7 +1918,7 @@ MPI_Request * request;
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( datatype, (MPI_Aint *)&typesize3 );
+      MPI_Type_size( datatype, &typesize3 );
       newrq->request = request;
       newrq->status = RQ_SEND;
       newrq->size = count * typesize3;
@@ -1947,7 +1947,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Send()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if (dest != MPI_PROC_NULL) {
-    PMPI_Type_size( datatype, (MPI_Aint *)&typesize );
+    PMPI_Type_size( datatype, &typesize );
     TAU_TRACE_SENDMSG(tag, dest, typesize*count); 
     /*
     prof_send( procid_0, dest, tag, typesize*count,
@@ -1984,7 +1984,7 @@ MPI_Status * status;
   TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if (dest != MPI_PROC_NULL) {
-    MPI_Type_size( sendtype, (MPI_Aint *)&typesize1 );
+    MPI_Type_size( sendtype, &typesize1 );
     TAU_TRACE_SENDMSG(sendtag, dest, typesize1*sendcount);
     /*         
     prof_send( procid_0, dest, sendtag,
@@ -2027,7 +2027,7 @@ MPI_Status * status;
   TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv_replace()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if (dest != MPI_PROC_NULL) {
-    PMPI_Type_size( datatype, (MPI_Aint *)&typesize2 );
+    PMPI_Type_size( datatype, &typesize2 );
     TAU_TRACE_SENDMSG(sendtag, dest, typesize2*count);
     /*         
     prof_send( procid_0, dest, sendtag,
@@ -2065,7 +2065,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Ssend()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if (dest != MPI_PROC_NULL) {
-    PMPI_Type_size( datatype, (MPI_Aint *)&typesize );
+    PMPI_Type_size( datatype, &typesize );
     TAU_TRACE_SENDMSG(tag, dest, typesize*count); 
     /*
     prof_send( procid_0, dest, tag, typesize*count,
@@ -2106,7 +2106,7 @@ MPI_Request * request;
 
   if (dest != MPI_PROC_NULL) {
     if (newrq = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( datatype, (MPI_Aint *)&typesize3 );
+      MPI_Type_size( datatype, &typesize3 );
       newrq->request = request;
       newrq->status = RQ_SEND;
       newrq->size = count * typesize3;

@@ -158,7 +158,7 @@ static int procid_{{fileno}};
   TAU_PROFILE_TIMER(tautimer, "{{fn_name}}()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if ({{dest}} != MPI_PROC_NULL) {
-    PMPI_Type_size( {{datatype}}, (MPI_Aint *)&{{typesize}} );
+    PMPI_Type_size( {{datatype}}, &{{typesize}} );
     TAU_TRACE_SENDMSG({{tag}}, {{dest}}, {{typesize}}*{{count}}); 
     /*
     prof_send( procid_{{fileno}}, {{dest}}, {{tag}}, {{typesize}}*{{count}},
@@ -191,7 +191,7 @@ static int procid_{{fileno}};
   TAU_PROFILE_TIMER(tautimer, "{{fn_name}}()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if ({{dest}} != MPI_PROC_NULL) {
-    MPI_Type_size( {{sendtype}}, (MPI_Aint *)&{{typesize}} );
+    MPI_Type_size( {{sendtype}}, &{{typesize}} );
     TAU_TRACE_SENDMSG({{sendtag}}, {{dest}}, {{typesize}}*{{sendcount}});
     /*         
     prof_send( procid_{{fileno}}, {{dest}}, {{sendtag}},
@@ -217,7 +217,7 @@ static int procid_{{fileno}};
   TAU_PROFILE_TIMER(tautimer, "{{fn_name}}()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   if ({{dest}} != MPI_PROC_NULL) {
-    PMPI_Type_size( {{datatype}}, (MPI_Aint *)&{{typesize}} );
+    PMPI_Type_size( {{datatype}}, &{{typesize}} );
     TAU_TRACE_SENDMSG({{sendtag}}, {{dest}}, {{typesize}}*{{count}});
     /*         
     prof_send( procid_{{fileno}}, {{dest}}, {{sendtag}},
@@ -244,7 +244,7 @@ static int procid_{{fileno}};
   {{callfn}}
   if ({{dest}} != MPI_PROC_NULL) {
     if ({{newrq}} = (request_list*) malloc(sizeof( request_list ))) {
-      MPI_Type_size( {{datatype}}, (MPI_Aint *)&{{typesize}} );
+      MPI_Type_size( {{datatype}}, &{{typesize}} );
       {{newrq}}->request = {{request}};
       {{newrq}}->status = RQ_SEND;
       {{newrq}}->size = {{count}} * {{typesize}};
