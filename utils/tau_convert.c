@@ -58,6 +58,7 @@ static enum format_t { alog, SDDF, pv, dump } outFormat = pv;
 static enum pvmode_t { user, pvclass, all } pvMode = user;
 static int pvCompact = FALSE;
 static int pvComm = TRUE;
+static int threads = FALSE;
 
 static int dynamictrace = FALSE;
 
@@ -95,6 +96,7 @@ static int evno;
 static int numEvent;
 static int numUsedEvent;
 
+int GetNodeId(PCXX_EV *rec);
 static void InitEvent (int numev)
 {
   int i;
@@ -399,6 +401,14 @@ static PCXX_EV *get_next_rec (struct trcdescr *tdes)
   return (tdes->erec = tdes->next++);
 }
 
+int GetNodeId(PCXX_EV *rec)
+{
+  if (threads)
+    return rec->tid;
+  else
+    return rec->nid;
+}
+
 /* -------------------------------------------------------------------------- */
 /* -- PCXX_CONVERT MAIN PROGRAM --------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -431,6 +441,8 @@ int main (int argc, char *argv[])
     outFormat = dump;
   else if ( strcmp (argv[0]+strlen(argv[0])-2, "pv") == 0 )
     outFormat = pv;
+  else if ( strcmp (argv[0]+strlen(argv[0])-6, "vampir") == 0 )
+    threads = TRUE;
 
   fileIdx = 1;
 
@@ -438,7 +450,9 @@ int main (int argc, char *argv[])
   {
     fprintf (stderr, "usage: %s [-alog | -SDDF | -dump |", argv[0]);
     fprintf (stderr, " -pv [-compact] [-user|-class|-all] [-nocomm]]");
+    fprintf (stderr, " -vampir");
     fprintf (stderr, " inputtrc edffile [outputtrc]\n");
+    fprintf (stderr, " Note: -vampir option assumes multiple threads/node\n");
     exit (1);
   }
   else if ( strcmp (argv[1], "-alog") == 0 || strcmp (argv[1], "-a") == 0 )
@@ -477,6 +491,15 @@ int main (int argc, char *argv[])
   {
     outFormat = dump;
     fileIdx = 2;
+  }
+  else if ( strcmp (argv[1], "-vampir") == 0 || strcmp (argv[1], "-v") == 0)
+  { 
+    outFormat = pv;
+    threads   = TRUE;
+    fileIdx = 2;
+#ifdef DEBUG
+    printf("Using Vampir with threads");
+#endif
   }
 
   inFile  = argv[fileIdx];
@@ -525,7 +548,7 @@ int main (int argc, char *argv[])
     else
     {
       intrc.numrec    = 1L;
-      intrc.numproc   = erec->nid;
+      intrc.numproc   = GetNodeId(erec);
       intrc.firsttime = erec->ti;
       intrc.lasttime  = erec->ti;
     }
@@ -657,7 +680,7 @@ int main (int argc, char *argv[])
       intrc.lasttime = erec->ti;
 
       /* -- check process id -------------------------------------------- */
-      if ( erec->nid > intrc.numproc ) intrc.numproc = erec->nid;
+      if ( GetNodeId(erec) > intrc.numproc ) intrc.numproc = GetNodeId(erec);
     }
   }
   while ( erec != NULL );
@@ -782,19 +805,19 @@ int main (int argc, char *argv[])
     /* -- check barrier order ----------------------------------------------- */
     if ( erec->ev == PCXX_BARRIER_ENTER )
     {
-      if ( !barrout[erec->nid] )
+      if ( !barrout[GetNodeId(erec)] )
       {
         fprintf (stderr, "%s:%d: [%d] not yet out of barrier\n",
-                 intrc.name, intrc.numrec, erec->nid);
+                 intrc.name, intrc.numrec, GetNodeId(erec));
       }
-      if ( barrin[erec->nid] )
+      if ( barrin[GetNodeId(erec)] )
       {
         fprintf (stderr, "%s:%d: [%d] already in barrier\n",
-                 intrc.name, intrc.numrec, erec->nid);
+                 intrc.name, intrc.numrec, GetNodeId(erec));
       }
       else
       {
-        barrin[erec->nid] = TRUE;
+        barrin[GetNodeId(erec)] = TRUE;
         numin++;
 
         if ( numin == numproc )
@@ -811,19 +834,19 @@ int main (int argc, char *argv[])
     }
     else if ( erec->ev == PCXX_BARRIER_EXIT )
     {
-      if ( barrin[erec->nid] )
+      if ( barrin[GetNodeId(erec)] )
       {
         fprintf (stderr, "%s:%d: [%d] not yet in barrier\n",
-                 intrc.name, intrc.numrec, erec->nid);
+                 intrc.name, intrc.numrec, GetNodeId(erec));
       }
-      if ( barrout[erec->nid] )
+      if ( barrout[GetNodeId(erec)] )
       {
         fprintf (stderr, "%s:%d: [%d] already out of barrier\n",
-                 intrc.name, intrc.numrec, erec->nid);
+                 intrc.name, intrc.numrec, GetNodeId(erec));
       }
       else
       {
-        barrout[erec->nid] = TRUE;
+        barrout[GetNodeId(erec)] = TRUE;
         numout++;
       }
     }
@@ -834,7 +857,7 @@ int main (int argc, char *argv[])
       i = GetEvent (erec->ev);
       fprintf (outfp, "%3d %3d 0 %10ld %d %10lu\n",
         i,                /* event type */
-        erec->nid,        /* process id */
+        GetNodeId(erec),        /* process id */
         erec->par,        /* integer parameter */
         intrc.overflows,  /* clock cycle */
         erec->ti);        /* timestamp */
@@ -844,10 +867,10 @@ int main (int argc, char *argv[])
       ptr = GetEventName (erec->ev, &hasParam);
       if ( hasParam )
         fprintf (outfp, "\"%s\" { %lu, %d, %d, %ld };;\n\n",
-                 ptr, erec->ti, erec->nid, erec->tid, erec->par);
+                 ptr, erec->ti, GetNodeId(erec), erec->tid, erec->par);
       else
         fprintf (outfp, "\"%s\" { %lu, %d, %d };;\n\n",
-                 ptr, erec->ti, erec->nid, erec->tid);
+                 ptr, erec->ti, GetNodeId(erec), erec->tid);
     }
     else if ( outFormat == pv )
     {
@@ -860,12 +883,12 @@ int main (int argc, char *argv[])
 	  /* In dynamic trace the format for par is 
      		31 ..... 24 23 ......16 15..............0
        	           other       type          length       
-		So, mynode is the sender and its in erec->nid 
+		So, mynode is the sender and its in GetNodeId(erec) 
 		SENDMSG <type> FROM <sender> TO <receiver> LEN <length>
 	  */
           fprintf (outfp, "%lu SENDMSG %d FROM %d TO %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
-                  ((erec->par>>16) & 0x000000FF), erec->nid+1, 
+                  ((erec->par>>16) & 0x000000FF), GetNodeId(erec)+1, 
                   ((erec->par>>24) & 0x000000FF) + 1, 
                   erec->par & 0x0000FFFF);
         }
@@ -875,56 +898,56 @@ int main (int argc, char *argv[])
 	  /* In dynamic trace the format for par is 
      		31 ..... 24 23 ......16 15..............0
        	           other       type          length       
-		So, mynode is the receiver and its in erec->nid 
+		So, mynode is the receiver and its in GetNodeId(erec) 
 		RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
 	  */
           fprintf (outfp, "%lu RECVMSG %d BY %d FROM %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
                   ((erec->par>>16) & 0x000000FF),
-                  erec->nid+1, ((erec->par>>24) & 0x000000FF) + 1,
+                  GetNodeId(erec)+1, ((erec->par>>24) & 0x000000FF) + 1,
                   erec->par & 0x0000FFFF);
         }
         else if (( ev->tag == -9 ) || ( erec->par == -1))
         { /* In dynamic tracing, 1/-1 par values are for Entry/Exit resp. */
           /* exit state */
 	  /* PARVis needs time values relative to the start of the program! */
-          stkptr[erec->nid]--;
-          if ( stkptr[erec->nid] < statestk[erec->nid] )
+          stkptr[GetNodeId(erec)]--;
+          if ( stkptr[GetNodeId(erec)] < statestk[GetNodeId(erec)] )
           {
-            fprintf (stderr, "ERROR: stack underflow on node %d\n", erec->nid);
+            fprintf (stderr, "ERROR: stack underflow on node %d\n", GetNodeId(erec));
             fprintf (stderr, "       event %s at %lu\n", ev->name, erec->ti);
             exit (1);
           }
           if ( pvCompact )
             fprintf (outfp, "%lu EXCH %d 1 1 %s %d\n",
-                    erec->ti - intrc.firsttime, erec->nid+1,
-                    stkptr[erec->nid]->state, stkptr[erec->nid]->tag);
+                    erec->ti - intrc.firsttime, GetNodeId(erec)+1,
+                    stkptr[GetNodeId(erec)]->state, stkptr[GetNodeId(erec)]->tag);
           else
             fprintf (outfp, "%lu EXCHANGE ON CPUID %d TO %s %d CLUSTER 1\n",
-                    erec->ti - intrc.firsttime, erec->nid+1,
-                    stkptr[erec->nid]->state, stkptr[erec->nid]->tag);
+                    erec->ti - intrc.firsttime, GetNodeId(erec)+1,
+                    stkptr[GetNodeId(erec)]->state, stkptr[GetNodeId(erec)]->tag);
         }
         else if (erec->par == 1)
         {
           /* enter new state */
-          stkptr[erec->nid]++;
-          if ( stkptr[erec->nid] > (statestk[erec->nid] + STACKSIZE) )
+          stkptr[GetNodeId(erec)]++;
+          if ( stkptr[GetNodeId(erec)] > (statestk[GetNodeId(erec)] + STACKSIZE) )
           {
-            fprintf (stderr, "ERROR: stack overflow on node %d\n", erec->nid);
+            fprintf (stderr, "ERROR: stack overflow on node %d\n", GetNodeId(erec));
             fprintf (stderr, "       event %s at %lu\n", ev->name, erec->ti);
             exit (1);
           }
           if ( pvCompact )
             fprintf (outfp, "%lu EXCH %d 1 1 %s %d\n",
-                    /*???erec->ti, erec->nid+1, ev->state, ev->tag);*/
-                    erec->ti - intrc.firsttime, erec->nid+1, ev->state, ev->no);
+                    /*???erec->ti, GetNodeId(erec)+1, ev->state, ev->tag);*/
+                    erec->ti - intrc.firsttime, GetNodeId(erec)+1, ev->state, ev->no);
           else
             fprintf (outfp, "%lu EXCHANGE ON CPUID %d TO %s %d CLUSTER 1\n",
-                    /*???erec->ti, erec->nid+1, ev->state, ev->tag);*/
-                    erec->ti - intrc.firsttime, erec->nid+1, ev->state, ev->no);
-          stkptr[erec->nid]->state = ev->state;
-          /*???stkptr[erec->nid]->tag = ev->tag;*/
-          stkptr[erec->nid]->tag = ev->no;
+                    /*???erec->ti, GetNodeId(erec)+1, ev->state, ev->tag);*/
+                    erec->ti - intrc.firsttime, GetNodeId(erec)+1, ev->state, ev->no);
+          stkptr[GetNodeId(erec)]->state = ev->state;
+          /*???stkptr[GetNodeId(erec)]->tag = ev->tag;*/
+          stkptr[GetNodeId(erec)]->tag = ev->no;
         }
       }
     }
@@ -933,10 +956,10 @@ int main (int argc, char *argv[])
       ptr = GetEventName (erec->ev, &hasParam);
       if ( hasParam )
         fprintf (outfp, "%5ld %30.30s %12lu %6d %6d %12ld\n",
-                 intrc.numrec, ptr, erec->ti, erec->nid, erec->tid, erec->par);
+                 intrc.numrec, ptr, erec->ti, GetNodeId(erec), erec->tid, erec->par);
       else
         fprintf (outfp, "%5ld %30.30s %12lu %6d %6d\n",
-                 intrc.numrec, ptr, erec->ti, erec->nid, erec->tid);
+                 intrc.numrec, ptr, erec->ti, GetNodeId(erec), erec->tid);
     }
 
     if ( (erec = get_next_rec (&intrc)) == NULL )
