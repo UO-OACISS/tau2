@@ -19,6 +19,8 @@
 #include <unistd.h>
 #endif
 
+#define NFUNCS 4*1024
+#define FUNCNAMELEN 1024
 #ifdef i386_unknown_nt4_0
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -183,10 +185,10 @@ int main(int argc, char **argv)
   int i,j, answer;
   int instrumented=0;
   bool loadlib=false;
-  char buf[1024], libname[1024];
+  char buf[FUNCNAMELEN], libname[FUNCNAMELEN];
   BPatch_thread *appThread;
   bpatch = new BPatch; // create a new version. 
-  char functions[1024*1024];
+  char functions[NFUNCS*FUNCNAMELEN];
 
   // parse the command line arguments 
   if ( argc < 2 )
@@ -211,6 +213,8 @@ int main(int argc, char **argv)
   bpatch->registerErrorCallback(errorFunc1);
 
   dprintf("Before createProcess\n");
+  /* Specially added to disable Dyninst 2.0 feature of debug parsing. We were
+     getting an assertion failure under Linux otherwise */
   bpatch->setDebugParsing(false);
   appThread = bpatch->createProcess(argv[1], &argv[1] , NULL);
   dprintf("After createProcess\n");
@@ -235,7 +239,7 @@ int main(int argc, char **argv)
       bool found = false;
       BPatch_Vector<BPatch_module *> *m = appImage->getModules();
       for (i = 0; i < m->size(); i++) {
-        char name[1024];
+        char name[FUNCNAMELEN];
         (*m)[i]->getName(name, sizeof(name));
         if (strcmp(name, libname) == 0) {
   	found = true;
@@ -263,34 +267,36 @@ int main(int argc, char **argv)
   
   char modulename[256];
   for (j=0; j < m->size(); j++) {
-    sprintf(modulename, "Module %s\n", (*m)[j]->getName(buf, 1024));
+    sprintf(modulename, "Module %s\n", (*m)[j]->getName(buf, FUNCNAMELEN));
     BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
     dprintf("%s", modulename);
 
 
 
-    if ((strcmp(buf, "DEFAULT_MODULE") == 0) || 
-	(strcmp(buf, "LIBRARY_MODULE") == 0) )
+    if ((strcmp(buf, "DEFAULT_MODULE") == 0) ||
+  	(strcmp(buf, "LIBRARY_MODULE") == 0))
     { // constraint 
 
       for (i=0; i < p->size(); i++) 
       {
         // For all procedures within the module, iterate  
-        memset(buf, 0x0, 1024); 
-        (*p)[i]->getName(buf, 1024);
+        memset(buf, 0x0, FUNCNAMELEN); 
+        (*p)[i]->getName(buf, FUNCNAMELEN);
         dprintf("Name %s\n", buf);
-        if ((strcmp(buf, "TauRoutineEntry") == 0) || 
-	    (strcmp(buf, "TauRoutineExit") == 0) || 
-            (strcmp(buf, "TauInitCode") == 0)) 
+        if ((strncmp(buf, "Tau", 3) == 0) || 
+            (strncmp(buf, "Profiler", 8) == 0) || 
+            (strncmp(buf, "FunctionInfo",12) == 0) ||
+            (strncmp(buf, "RtsLayer", 8) == 0) || 
+	    (strncmp(buf, "The", 3) == 0)) 
         { // The above procedures shouldn't be instrumented
-           dprintf("don't instrument entry and exit \n");
+           dprintf("don't instrument %s\n", buf);
         } /* Put the constraints above */ 
         else 
         { // routines that are ok to instrument
          
-    
           strcat(functions,"|");
           strcat(functions, buf);
+ 	  dprintf("Assigning id %d to %s\n", instrumented, buf);
           instrumented ++;
           BPatch_Vector<BPatch_snippet *> *callee_args = new BPatch_Vector<BPatch_snippet *>();
           BPatch_constExpr *constExpr = new BPatch_constExpr(instrumented);
@@ -326,12 +332,9 @@ int main(int argc, char **argv)
   while (!appThread->isTerminated())
         bpatch->waitForStatusChange();
 
-    if (appThread->isTerminated()) {
+  if (appThread->isTerminated()) {
         dprintf("End of application\n");
-    }
-
-
-
+  }
 
   return 0;
 }
