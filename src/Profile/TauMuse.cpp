@@ -302,7 +302,7 @@ int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
         int *sizeptr;
          int handlerID;
         unsigned char *byteptr;
-	int i;
+	int i,b;
 	int sockfd ;
 	
         // ===================================
@@ -395,6 +395,15 @@ int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
 #endif /* DEBUG_PROF */
 		command_length = addfilter_encode_selector(strtok(args[i]," ")
 				,cmdstr,BUFFERSIZE,send_buffer);
+#ifdef DEBUG_PROF
+        //DEBUG JEREMY
+        printf("cl: %u\n", command_length);
+        for (b=0;b<command_length;b++)
+                printf("%u ", (unsigned char)send_buffer[b]);
+        printf("\n");
+#endif //DEBUG_PROF
+
+		
 		send_and_check(sockfd,command_length,send_buffer,recv_buffer);
 #ifdef DEBUG_PROF
 		printf("!!!!!!!!!filter is added.\n");
@@ -481,6 +490,10 @@ double TauMuseQuery(void){
 	static int handlerID = package_selector(); 
 	int sockfd = TheMuseSockId(); /* read from the global */
 
+//#ifdef DEBUG_PROF
+	printf("DEBUG:TauMuseQuery : pid=%d\n",getpid());
+//#endif //DEBUG_PROF
+	
         // ====================================
         // command "query_handler <handlerID>"
         // ====================================

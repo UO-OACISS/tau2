@@ -293,6 +293,9 @@ double QueryProcessSchedulingDecode(const char *binary_command,
                         strncat(ascii_reply,ascii_reply_ext,size);
                 }
                         strncat(ascii_reply,"\n",size);
+#ifdef DEBUG
+			printf("DEBUG: %s",ascii_reply);
+#endif //DEBUG
         }
         else
         {

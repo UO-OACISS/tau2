@@ -30,6 +30,11 @@
  * From		: translator.c <modified>
  * Return Value	: the number of bytes in binary_command
  * NOTE		: To be used with process_filter filter.
+ *
+ * Protocol for binary command: 
+ * <1B CMD> <1B handlerID> <1B length of filter_name> <N Byte ascii char for filter_name> 
+ * <4B total size of arguments+flags> <4B flags> <4B for each arg>
+ * 
  *********************/
 int AddFilterProcessFilterEncode(char *ascii_command, int size, char *binary_command)
 {
@@ -113,8 +118,21 @@ int AddFilterProcessFilterEncode(char *ascii_command, int size, char *binary_com
 							*intptr++ = htonl(id);
 						if (*option_flags&0x20)
 							*intptr++ = htonl(pid);
-						return (htonl(*options_size) + binary_command[1+sizeof(int)]
-								+ 3 + 2*sizeof(int));
+						/*
+                                                What this translates too is:
+                                                1 byte for magnetd command
+                                                1 byte for handler id (this will be changed to 4 bytes in the next 
+                                                overhaul of MUSE because handler id should be an int)
+						1 byte for the length of binary_command[2]
+                                                binary_command[2] is the length of the filter_name string (minus the null 
+                                                character)
+                                                1 byte for the null character
+                                                4 bytes for the int which is the length of the arguments struct
+                                                *options_size is the actual number of bytes for the argument struct
+                                                 */
+                                                return (1+1+1+binary_command[2*sizeof(unsigned char)]+1+sizeof(int)+ntohl(*options_size));
+						//return (htonl(*options_size) + binary_command[1+sizeof(int)]+3+2*sizeof(int));
+
 					} else {
 						printf("No options specified");
 					}
