@@ -40,7 +40,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     static boolean runHasBeenOpened = false;
      //**********
     
-    private int type = -1;
+    private int type = -1; //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun 
     private boolean dump = false;
     private int dumptype = -1;
     String filePrefix = null;
@@ -238,10 +238,11 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     // Main entry point
     static public void main(String[] args){
 
+	/*
 	if(System.getProperty("user.name").equals("sameer")){
 	    JOptionPane.showMessageDialog(null,"Sorry, user \"sammer\" detected. We no longer support this user!", "ParaProf Error", JOptionPane.ERROR_MESSAGE);
 	    System.exit(-1);
-	}
+	    }*/
 
 	//Bring ParaProf into being!
 	ParaProf paraProf = new ParaProf();
