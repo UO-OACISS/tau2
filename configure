@@ -443,15 +443,20 @@ detectspec=`cd utils; ./archfind -s`
 # if there are no arguments, GUESS at system configuration
 if [ $tauarch = unknown ]
   then 
-    echo Attempting to auto-configure system, determining architecture...
-    machine=$detectarch
-    if [ $machine = unknown ]
+    if [ $1 = default ] 
       then
-        echo I could not determine the architecture of this host
-        echo You must give me a hint.
-        exit 0
-    fi
-    echo I think this is a $machine...
+	machine=$1
+      else
+        echo Attempting to auto-configure system, determining architecture...
+        machine=$detectarch
+        if [ $machine = unknown ]
+          then
+            echo I could not determine the architecture of this host
+            echo You must give me a hint.
+            exit 0
+        fi
+        echo I think this is a $machine...
+      fi
   else
     machine=$tauarch
     if [ $detectarch != unknown -a $machine != unknown ]
