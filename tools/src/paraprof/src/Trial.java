@@ -835,6 +835,15 @@ public class Trial extends Thread{
 		System.out.println("The number of mappings is: " + this.getNumberOfMappings());
 		System.out.println("The number of user events is: " + this.getNumberOfUserEvents());
 	    }
+
+	    System.out.println("Processing callpath data ...");
+	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
+		setCallPathDataPresent(true);
+	    }
+	    else{
+		System.out.println("No callpath data found.");
+	    }
+	    System.out.println("Done - Processing callpath data!");
       
 	    //Set firstRun to false.
 	    firstRun = false;
@@ -1790,6 +1799,14 @@ public class Trial extends Thread{
     public boolean userEventsPresent(){
 	return userEventsPresent;
     }
+
+    private void setCallPathDataPresent(boolean inBoolean){
+	callPathDataPresent = inBoolean;
+    }
+  
+    public boolean callPathDataPresent(){
+	return callPathDataPresent;
+    }
     //******************************
     //End - Useful functions to help the drawing windows.
     //******************************
@@ -1832,9 +1849,8 @@ public class Trial extends Thread{
     boolean groupNamesCheck = false;
     boolean groupNamesPresent = false;
     boolean userEventsPresent = false;
+    boolean callPathDataPresent = false;
     int bSDCounter;
-    private int uENamesSet = 0;
-    StringBuffer tmpBuffer = new StringBuffer();
 
     private int numberOfMappings = -1;
     private int numberOfUserEvents = -1;

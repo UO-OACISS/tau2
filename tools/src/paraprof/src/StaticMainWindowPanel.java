@@ -37,8 +37,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     private JPopupMenu popup = new JPopupMenu();
     private JPopupMenu popup2 = new JPopupMenu();
   
-    JMenuItem tUESWItem = new JMenuItem("Show Total User Event Statistics Windows");
-  
+    JMenuItem tUESWItem = null;
+    JMenuItem callpathItem = null;
+    
     //**********
   
     //**********
@@ -150,6 +151,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    tUESWItem = new JMenuItem("Show Total User Event Statistics Windows");
 	    tUESWItem.addActionListener(this);
 	    popup2.add(tUESWItem);
+
+	    callpathItem = new JMenuItem("Show Call Path Information");
+	    callpathItem.addActionListener(this);
+	    popup2.add(callpathItem);
 	}
 	catch(Exception e)
 	    {
@@ -484,6 +489,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    trial.getSystemEvents().addObserver(tmpRef);
 			    tmpRef.show();
 			}
+		    else if(arg.equals("Show Call Path Information")){
+			System.out.println("Selected callpath information");
+		    }
 		}
 	}
 	catch(Exception e)
@@ -1278,6 +1286,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		else{
 		    tUESWItem.setEnabled(false);
 		}
+
+		if(trial.callPathDataPresent())
+		    callpathItem.setEnabled(true);
+		else
+		    callpathItem.setEnabled(false);
 	    }
 	catch(Exception e)
 	    {

@@ -331,6 +331,10 @@ public class GlobalMapping implements WindowListener, Serializable
   {
     return mappings[mappingSelection];
   }
+
+  public ListIterator getMappingIterator(int mappingSelection){
+    return new DataSessionIterator(mappings[mappingSelection]);
+  }  
   
   public void updateGenericColors(int mappingSelection)
   {
