@@ -680,6 +680,11 @@ if [ $machine = sgi8k -a $profilecounters = no -a $sgitimers = yes ]
       fixmakeargs="$fixmakeargs SGITIMERS"
 fi
 
+if [ $machine = sgi8k -a $cxx_compiler = g++ ]
+  then
+      fixmakeargs="$fixmakeargs SGIGNU"
+fi
+
 if [ $debugprof = yes ]
   then
     fixmakeargs="$fixmakeargs DEBUGPROF"
