@@ -176,11 +176,10 @@ MPI_Status *status;
 char *note;
 {
   request_list *rq, *last;
-  int flag, size;
-  int myrank;
   int otherid, othertag;
 
 #ifdef DEBUG
+  int myrank;
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 #endif /* DEBUG */
 
@@ -241,10 +240,9 @@ MPI_Request request;
 char *note;
 {
   request_list *rq, *last;
-  int flag, size;
-  int myrank;
 
 #ifdef DEBUG
+  int myrank;
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 #endif /* DEBUG */
 
@@ -1514,11 +1512,6 @@ int  MPI_Cancel( request )
 MPI_Request * request;
 {
   int  returnVal;
-#ifdef TAU_TRACK_MSG
-  request_list *rq;
-#endif /* TAU_TRACK_MSG */
-
-  
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Cancel()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
@@ -1543,13 +1536,14 @@ MPI_Request * request;
 
   /* The request may have completed, may have not.  */
   /* We'll assume it didn't. */
-#ifdef TAU_TRACK_MSG
-  TauRemoveRequest(*request, "MPI_Request_free");
-#endif /* TAU_TRACK_MSG */
   
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Request_free()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
+
+#ifdef TAU_TRACK_MSG
+  TauRemoveRequest(*request, "MPI_Request_free");
+#endif /* TAU_TRACK_MSG */
   
   returnVal = PMPI_Request_free( request );
 
@@ -1756,10 +1750,9 @@ MPI_Request * request;
 #ifdef TAU_TRACK_MSG
   request_list *newrq1;
   int typesize;
-  int myrank;
 
 #ifdef DEBUG 
-  PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  int myrank;
 #endif /* DEBUG */
 
 #endif /* TAU_TRACK_MSG */
@@ -1769,6 +1762,10 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Irecv()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
   
+#ifdef DEBUG
+  PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#endif /* DEBUG */
+
   returnVal = PMPI_Irecv( buf, count, datatype, source, tag, comm, request );
 
 #ifdef DEBUG
@@ -2349,7 +2346,6 @@ int * flag;
 MPI_Status * status;
 {
   int   returnVal;
-  request_list *req;
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Test()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
@@ -2390,16 +2386,19 @@ MPI_Status * status;
 #ifdef TAU_TRACK_MSG
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
+#endif /* TAU_TRACK_MSG */
 
+
+  
+  TAU_PROFILE_TIMER(tautimer, "MPI_Testany()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_START(tautimer);
+
+#ifdef TAU_TRACK_MSG
   for (i = 0; i < count; i++)
   {
     saverequest[i] = array_of_requests[i]; 
   }
 #endif /* TAU_TRACK_MSG */
-
-  
-  TAU_PROFILE_TIMER(tautimer, "MPI_Testany()",  " ", TAU_MESSAGE); 
-  TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Testany( count, array_of_requests, index, flag, status );
 
@@ -2685,12 +2684,16 @@ MPI_Status * status;
 
 #ifdef TAU_TRACK_MSG
   MPI_Request saverequest;
-  saverequest = *request;
 #endif /* TAU_TRACK_MSG */
+
 
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Wait()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
+
+#ifdef TAU_TRACK_MSG
+  saverequest = *request;
+#endif /* TAU_TRACK_MSG */
 
   returnVal = PMPI_Wait( request, status );
 
@@ -2712,19 +2715,18 @@ MPI_Status * array_of_statuses;
 #ifdef TAU_TRACK_MSG
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
+#endif /* TAU_TRACK_MSG */
 
+  
+  TAU_PROFILE_TIMER(tautimer, "MPI_Waitall()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_START(tautimer);
+
+#ifdef TAU_TRACK_MSG
   for (i = 0; i < count; i++)
   {
     saverequest[i] = array_of_requests[i]; 
   }
 #endif /* TAU_TRACK_MSG */
-
-
-  
-/* fprintf( stderr, "MPI_Waitall call on %d\n", procid_0 ); */
-  
-  TAU_PROFILE_TIMER(tautimer, "MPI_Waitall()",  " ", TAU_MESSAGE); 
-  TAU_PROFILE_START(tautimer);
   
 
   returnVal = PMPI_Waitall( count, array_of_requests, array_of_statuses );
@@ -2749,17 +2751,20 @@ MPI_Status * status;
 #ifdef TAU_TRACK_MSG
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
+#endif /* TAU_TRACK_MSG */
 
+
+  
+  TAU_PROFILE_TIMER(tautimer, "MPI_Waitany()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_START(tautimer);
+  
+#ifdef TAU_TRACK_MSG
   for (i = 0; i < count; i++)
   {
     saverequest[i] = array_of_requests[i]; 
   }
 #endif /* TAU_TRACK_MSG */
 
-  
-  TAU_PROFILE_TIMER(tautimer, "MPI_Waitany()",  " ", TAU_MESSAGE); 
-  TAU_PROFILE_START(tautimer);
-  
   returnVal = PMPI_Waitany( count, array_of_requests, index, status );
 
 
@@ -2784,17 +2789,20 @@ MPI_Status * array_of_statuses;
 #ifdef TAU_TRACK_MSG
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
-
-  for (i = 0; i < incount; i++)
-  {
-    saverequest[i] = array_of_requests[i]; 
-  }
 #endif /* TAU_TRACK_MSG */
+
   
 
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Waitsome()",  " ", TAU_MESSAGE); 
   TAU_PROFILE_START(tautimer);
+
+#ifdef TAU_TRACK_MSG
+  for (i = 0; i < incount; i++)
+  {
+    saverequest[i] = array_of_requests[i]; 
+  }
+#endif /* TAU_TRACK_MSG */
   
   returnVal = PMPI_Waitsome( incount, array_of_requests, outcount, array_of_indices, array_of_statuses );
 
