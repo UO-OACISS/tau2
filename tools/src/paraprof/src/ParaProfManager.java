@@ -344,12 +344,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			if(array!=null){
 			    PerfDBSession perfDBSession = new PerfDBSession(); 
 			    perfDBSession.initialize(configFile, password);
-			    perfDBSession.setApplication(array[0]);
-			    perfDBSession.setExperiment(array[1]);
 			    Trial trial = new Trial();
 			    trial.setDataSession(paraProfTrial.getDataSession());
 			    trial.setName(paraProfTrial.getName());
-			    trial.setApplicationID(array[0]);
 			    trial.setExperimentID(array[1]);
 			    int[] maxNCT = paraProfTrial.getMaxNCTNumbers();
 			    trial.setNodeCount(maxNCT[0]+1);
@@ -365,15 +362,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			Metric metric = (Metric) clickedOnObject;
 			int[] array = this.getSelectedDBTrial();
 			if(array!=null){
-			    PerfDBSession perfDBSession = new PerfDBSession(); 
+			    PerfDBSession perfDBSession = new PerfDBSession();
 			    perfDBSession.initialize(configFile, password);
-			    perfDBSession.setApplication(array[0]);
-			    perfDBSession.setExperiment(array[1]);
-			    perfDBSession.setTrial(array[2]);
 			    Trial trial = new Trial();
 			    trial.setDataSession(metric.getTrial().getDataSession());
-			    trial.setApplicationID(array[0]);
-			    trial.setExperimentID(array[1]);
+			    trial.setID(array[2]);
 			    perfDBSession.saveParaProfTrial(trial, metric.getID());
 			    perfDBSession.terminate();
 
