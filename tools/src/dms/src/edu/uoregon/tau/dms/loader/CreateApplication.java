@@ -25,13 +25,13 @@ public class CreateApplication {
     /*** Parse and load an application. ***/   
 
     public int createApp(String name) {
-	int appid = 0;
+	int appid = -1;
 	Application app = new Application(0);
 	app.setName(name);
 	//app.setVersion("");
 	//app.setLanguage("");
 	session.setApplication(app);
-	//appid = session.saveApplication();
+	appid = session.saveApplication();
 	System.out.println("Created Application, ID: " + appid);
 	session.terminate();
 	return appid;

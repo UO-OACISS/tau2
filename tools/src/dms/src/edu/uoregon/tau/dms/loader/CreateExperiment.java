@@ -24,14 +24,29 @@ public class CreateExperiment {
 
     /*** Parse and load an experiment. ***/   
 
+
+    public boolean checkForApp(int appid) {
+	Application app = session.setApplication(appid);
+	if (app == null) {
+	    System.err.println("Application id " + appid + " not found,  please enter a valid application ID.");
+	    System.exit(-1);
+	    return false;
+	} else
+	    return true;
+    }
+
+
     public int createExp(String name, int appid) {
 	int expid = 0;
+
+	checkForApp(appid);
+
 	Experiment exp = new Experiment(0);
 	exp.setName(name);
 	exp.setApplicationID(appid);
 	session.setExperiment(exp);
 	expid = session.saveExperiment();
-	System.out.println("Saved experiment, new ID: " + expid);
+	System.out.println("Created Experiment, ID: " + expid);
 	session.terminate();
 	return expid;
     }
@@ -57,7 +72,8 @@ public class CreateExperiment {
         Boolean help = (Boolean)parser.getOptionValue(helpOpt);
         String configFile = (String)parser.getOptionValue(configfileOpt);
         String name = (String)parser.getOptionValue(nameOpt);
-        int appid = ((Integer)parser.getOptionValue(appidOpt)).intValue();
+	Integer app = (Integer)parser.getOptionValue(appidOpt);
+
 
     	if (help != null && help.booleanValue()) {
 	    System.err.println(APP_USAGE);
@@ -69,6 +85,13 @@ public class CreateExperiment {
 	    System.err.println(APP_USAGE);
 	    System.exit(-1);
 	}
+
+	if (app == null) {
+            System.err.println("Please enter a valid application id.");
+	    System.err.println(APP_USAGE);
+	    System.exit(-1);
+	}
+        int appid = ((Integer)parser.getOptionValue(appidOpt)).intValue();
 
 	// validate the command line options...
 	if (name == null) {
