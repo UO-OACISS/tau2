@@ -21,7 +21,7 @@ BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.jav
 
 NEW_SOURCES=$(BASE_SOURCES) ParaProfImageOutput.java
 
-OLD_SOURCES=$(BASE_SOURCES) ./wrapper/FileList.java ./wrapper/ParaProfImageOutput.java
+OLD_SOURCES=$(BASE_SOURCES) ./wrapper/ParaProfImageOutput.java
 
 TOOLS_SRC=$(TAUROOT)/tools/src
 
