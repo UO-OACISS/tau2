@@ -96,7 +96,7 @@ public void characters(char[] chars, int start, int length) {
 	else if (currentElement.equals("version")) version = tempstr;
 	else if (currentElement.equals("language")) lang = tempstr;
 	else if (currentElement.equals("paradiagm")) paradiag = tempstr;
-	else if (currentElement.equals("usage_text")) usage = tempstr;
+	else if (currentElement.equals("usage")) usage = tempstr;
 	else if (currentElement.equals("execution_options")) exeopt = tempstr;
 	
 }
