@@ -687,8 +687,8 @@ void Profiler::dumpFunctionNames()
 
   //Create temp write to file.
   filename = new char[1024];
-  sprintf(filename,"%s/temp.%d.%d",dirname, RtsLayer::myNode(),
-	  RtsLayer::myContext());
+  sprintf(filename,"%s/temp.%d.%d.%d",dirname, RtsLayer::myNode(),
+	  RtsLayer::myContext(), RtsLayer::myThread());
   if ((fp = fopen (filename, "w+")) == NULL) {
     errormsg = new char[1024];
     sprintf(errormsg,"Error: Could not create %s",filename);
@@ -705,8 +705,8 @@ void Profiler::dumpFunctionNames()
   
   //Rename from the temp filename.
   dumpfile = new char[1024];
-  sprintf(dumpfile,"%s/dump_functionnames_n,c.%d.%d",dirname, RtsLayer::myNode(),
-                RtsLayer::myContext());
+  sprintf(dumpfile,"%s/dump_functionnames_n,c.%d.%d.%d",dirname, RtsLayer::myNode(),
+	  RtsLayer::myContext(), RtsLayer::myThread());
   rename(filename, dumpfile);
 }
 
@@ -2645,9 +2645,9 @@ void Profiler::AddNumChildren(long value)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.100 $   $Date: 2004/08/21 21:57:16 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.100 2004/08/21 21:57:16 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.101 $   $Date: 2004/08/30 18:04:48 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.101 2004/08/30 18:04:48 amorris Exp $ 
  ***************************************************************************/
 
 	
