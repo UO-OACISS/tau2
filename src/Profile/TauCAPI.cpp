@@ -69,25 +69,33 @@ extern "C" void * Tau_get_profiler(char *fname, char *type, TauGroup_t group, ch
 extern "C" void Tau_start_timer(void * function_info)
 {
   FunctionInfo *f = (FunctionInfo *) function_info; 
-  Profiler *p = new Profiler(f, f->GetProfileGroup(), true);
+  TauGroup_t gr = f->GetProfileGroup();
+  if (gr & RtsLayer::TheProfileMask())
+  {
+    Profiler *p = new Profiler(f, gr, true);
 /*
 #pragma omp critical
   printf("START tid = %d, profiler= %x\n", RtsLayer::myThread(), p);
 */
 
-  p->Start();
+    p->Start();
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_stop_timer(void * f)
+extern "C" void Tau_stop_timer(void * function_info)
 {
-  Profiler *p = Profiler::CurrentProfiler[RtsLayer::myThread()];
+  FunctionInfo *f = (FunctionInfo *) function_info; 
+  if (f->GetProfileGroup() & RtsLayer::TheProfileMask())
+  {
+    Profiler *p = Profiler::CurrentProfiler[RtsLayer::myThread()];
 /*
 #pragma omp critical
   printf("STOP tid = %d, profiler= %x\n", RtsLayer::myThread(), p);
 */
-  p->Stop();
-  delete p;
+    p->Stop();
+    delete p;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -312,7 +320,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 2002/01/16 00:40:03 $
- * VERSION: $Id: TauCAPI.cpp,v 1.22 2002/01/16 00:40:03 sameer Exp $
+ * $Revision: 1.23 $   $Date: 2002/01/30 22:26:02 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.23 2002/01/30 22:26:02 sameer Exp $
  ***************************************************************************/
 
