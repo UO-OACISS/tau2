@@ -18,12 +18,14 @@ void tau_register_thread(void);
 * The following routines are called by the Fortran program and they in turn
 * invoke the corresponding C routines. 
 *****************************************************************************/
-void tau_profile_timer_(void **ptr, char *fname, char *type, unsigned int *group)
+void tau_profile_timer_(void **ptr, char *fname, int *flen, char *type, int *tlen, unsigned int *group)
 {
 #ifdef DEBUG_PROF
   printf("Inside tau_profile_timer_ fname=%s, type=%s *ptr = %x\n", 
     fname, type, *ptr);
 #endif /* DEBUG_PROF */
+  fname[*flen] = '\0';
+  type[*tlen]  = '\0';
 
   if (*ptr == 0) 
   { 
