@@ -46,7 +46,7 @@ $(TOOLS_SRC)/paraprof/bin/ParaProf.jar: $(NEW_SOURCES)
 
 ../bin/ParaProf-Old.jar: $(OLD_SOURCES)
 	rm -f ./paraprof/*.class
-	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(OLD_SOURCES)
+	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(TOOLS_SRC)/contrib/jgraph-1.3.jar $(OLD_SOURCES)
 	cd classes; jar -cvf ParaProf-Old.jar edu
 	mv ./classes/ParaProf-Old.jar $(TOOLS_SRC)/paraprof/bin
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf-Old.jar
