@@ -128,7 +128,7 @@ extern "C" void Tau_stop_timer(void * function_info);
 
 #ifdef NO_RTTI
 /* #define CT(obj) string(#obj) */
-#define CT(obj) " "
+#define CT(obj) string(" ")
 #else // RTTI is present
 //#define CT(obj) string(RtsLayer::CheckNotNull(typeid(obj).name())) 
 #define CT(obj) RtsLayer::GetRTTI(typeid(obj).name())
@@ -212,6 +212,6 @@ extern "C" void Tau_stop_timer(void * function_info);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2003/12/11 20:13:08 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.27 2003/12/11 20:13:08 sameer Exp $ 
+ * $Revision: 1.28 $   $Date: 2003/12/11 22:16:06 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.28 2003/12/11 22:16:06 sameer Exp $ 
  ***************************************************************************/
