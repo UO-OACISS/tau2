@@ -139,6 +139,7 @@ extern "C" {
 #define TAU_SET_INTERRUPT_INTERVAL(value)	Tau_set_interrupt_interval(value)
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) static void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, #group)
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, #group)
+#define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, #group)
 #define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1)
 #define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo)
 #define TAU_GLOBAL_PHASE(timer, name, type, group) void * TauGlobalPhase##timer(void) \
@@ -302,6 +303,7 @@ extern void Tau_global_stop(void);
 
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) 
+#define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) 
 #define TAU_PHASE_START(var) 
 #define TAU_PHASE_STOP(var) 
 #define TAU_GLOBAL_PHASE(timer, name, type, group) 
@@ -338,8 +340,8 @@ extern void Tau_global_stop(void);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.37 $   $Date: 2005/01/14 18:39:31 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.37 2005/01/14 18:39:31 amorris Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.38 $   $Date: 2005/01/18 23:57:39 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.38 2005/01/18 23:57:39 sameer Exp $
  ***************************************************************************/
 
