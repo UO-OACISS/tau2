@@ -9,6 +9,10 @@
 
 Change log:
 ------------
+Version 2.10 changes (from 2.9):
+1. Better support for C instrumentation [HDF5].
+2. Fixes for IBM.
+
 Version 2.9 changes (from 2.8):
 1. Better support for mixed model programming
 2. Changes for KCC and KAP/Pro.
