@@ -122,6 +122,7 @@ static struct p_func_descr {
 
 static struct p_prof_elem {
     char   *name;
+    char   *groupnames;
     int     tag;
 #ifdef USE_LONG
     long     numcalls;
@@ -178,6 +179,8 @@ static int filledDBThr, filledDBCtx = 0;     /* flag  for iterating over no,ctx,
 static char *depfile;        /* -- corresponding .dep file -- */
 static char proffile[256];   /* -- profile data file     -- */
 static char **funcnamebuf;   /* -- function name table   -- */
+static bool groupNamesUsed = FALSE;
+static char **groupnamebuf;  /* -- group membership table for functions -- */
 static int *functagbuf;      /* -- function tag table    -- */
 static int numcoll;          /* -- number of collections -- */
 static char **eventnamebuf = 0;  /* -- event name table     -- */
@@ -237,6 +240,7 @@ class FunctionData {
     double excl;
     double incl;
     double stddeviation;
+    char *groupNames;
 #ifdef USE_LONG 
   FunctionData(long nc, long ns, double ex, double in, double sigma) 
     : numcalls(nc), numsubrs(ns),  excl(ex), incl(in), stddeviation(sigma) { }
@@ -372,6 +376,7 @@ bool IsDynamicProfiling(char *filename)
   
 int InitFuncNameBuf(void)
 {
+  //This function now also sets the group information.
   int i;
   map<const char*, FunctionData, ltstr>::iterator it;
 
@@ -387,12 +392,20 @@ int InitFuncNameBuf(void)
     perror("Error: Out of Memory : malloc returns NULL ");
     exit (1);
   }
+  groupnamebuf = (char **) malloc (numfunc * sizeof(char *));
+  if (groupnamebuf == NULL) 
+  {  
+    perror("Error: Out of Memory : malloc returns NULL ");
+    exit (1);
+  }
 
   for(it=funcDB.begin(), i = 0; it!=funcDB.end(); it++, i++)
   {
     funcnamebuf[i] = strsave((*it).first);
-    functagbuf[i]  = i; /* Default - give tags that are 0 to numfunc - 1 */
+    functagbuf[i]  = i;
+    /* Default - give tags that are 0 to numfunc - 1 */
     /* This is because we don't have a dep file in dynamic profiling */
+    groupnamebuf[i] = strsave(((*it).second).groupNames);
   }
 
   return TRUE;
@@ -403,7 +416,8 @@ int InitFuncNameBuf(void)
 int FillFunctionDB(int node, int ctx, int thr, char *prefix)
 {
   char line[SIZE_OF_LINE]; // In case function name is *really* long - templ. args
-  char func[SIZE_OF_LINE]; // - do - 
+  char func[SIZE_OF_LINE]; // - do -
+  char groupNames[SIZE_OF_LINE];
   char version[64],filename[SIZE_OF_FILENAME]; // double check?
   int numberOfFunctions, i, j, k;
   char header[256], trailer[256]; // Format string 
@@ -514,6 +528,26 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
     func[j-1] = '\0'; // null terminate the string
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
+
+    //Now find the groups that this function is a member of.
+    //Note that older files might not have this, so don't
+    //crash if we do not find it.
+    int grpNm = 0;
+    for (int grpNm = j+1; line[grpNm] !='\0'; grpNm++){
+      if(line[grpNm] == '"'){
+	groupNamesUsed = TRUE;
+	//Since we know the format has the group name first,
+	//assume it.  The format is: "GROUP=group1 | group2 | ..."
+	int innerCount = 0;
+	for(grpNm = grpNm+1; line[grpNm] != '"'; grpNm++){
+	  groupNames[innerCount] = line[grpNm];
+	  innerCount++;
+	}
+	//Terminate the string properly.
+	groupNames[innerCount] = '\0';
+      }
+    }
+
     if (!profilestats) { // SumExclSqr is not there 
 #ifdef USE_LONG 
       sscanf(&line[j+1], "%ld %ld %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
@@ -564,6 +598,13 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
       // adds  a null record and creates the name key in the map
       // Note: don't delete functionName - STL needs it
 	/* PROCESS NO. OF Invocations Profiled */
+    
+    //Just added functionName, therefore it will be there.
+    //Set the group names for this function.
+    char *createdGNSpace = new char[strlen(groupNames)+1];
+    strcpy(createdGNSpace, groupNames);
+    funcDB[functionName].groupNames = createdGNSpace;
+    
     for(k = 0; k < numinvocations; k++) {
       if(fgets(line,SIZE_OF_LINE,fp) == NULL) {
 	perror("Error in fgets: Cannot read invocation data ");
@@ -737,7 +778,8 @@ int DumpFtabFile(char *prefix)
 int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
 {
   char line[SIZE_OF_LINE]; // In case function name is *really* long - templ. args
-  char func[SIZE_OF_LINE]; // - do - 
+  char func[SIZE_OF_LINE]; // - do -
+  //char groupNames[SIZE_OF_LINE];
   char version[64],filename[SIZE_OF_FILENAME]; // double check?
   int numberOfFunctions, i, j, k;
 #ifdef USE_LONG 
@@ -821,6 +863,28 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
 
+    //Now find the groups that this function is a member of.
+    //Note that older files might not have this, so don't
+    //crash if we do not find it.
+    //    int grpNm = 0;
+    //bool foundGrp = false;
+    //for (int grpNm = j+1; line[grpNm] !='\0'; grpNm++){
+    //if(line[grpNm] == '"'){
+    //foundGrp = true;
+	//Since we know the format has the group name first,
+	//assume it.  The format is: "GROUP=group1 | group2 | ..."
+    //int innerCount = 0;
+    //for(grpNm = grpNm+1; line[grpNm] != '"'; grpNm++){
+    //  groupNames[innerCount] = line[grpNm];
+    //  innerCount++;
+    //}
+	//Terminate the string properly.
+    //groupNames[innerCount] = '\0';
+    //}
+    //}
+    //if(!foundGrp)
+    //printf("No group found!\n");
+
     if (!profilestats) { // SumExclSqr is not there 
 #ifdef USE_LONG 
       sscanf(&line[j+1], "%ld %ld %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
@@ -867,6 +931,14 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
       return 0;
     }
     funcDB[func] += FunctionData(numcalls, numsubrs, excl, incl, stddev);
+
+    //Set the group names for this function.
+    //    char *createdGNSpace = new char[strlen(groupNames)+1];
+    //strcpy(createdGNSpace, groupNames);
+    //funcDB[func].groupNames = createdGNSpace;
+
+    //printf("Added group names %s\n to function %s \n", (funcDB[func].groupNames), func);
+
     /* In case a function appears twice in the same file (templated function
     the user didn't specify exactly unique type - then add the data. Defaults
     to assignment as initialization cleans it up. */ 
@@ -985,6 +1057,8 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max)
     for (i=0; i<numf; i++) {
       p_total_tbl[i].tag      		= functagbuf[i];
       p_total_tbl[i].name     		= funcnamebuf[i];
+      if(groupNamesUsed)
+	p_total_tbl[i].groupnames         = groupnamebuf[i];
       p_total_tbl[i].usec     		= 0.0;
       p_total_tbl[i].cumusec  		= 0.0;
       p_total_tbl[i].numcalls 		= 0;
@@ -1027,6 +1101,8 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max)
   for (i=0; i<numf; i++) {
     p_prof_tbl[i].tag   = p_total_tbl[i].tag;
     p_prof_tbl[i].name  = p_total_tbl[i].name;
+    if(groupNamesUsed)
+      p_prof_tbl[i].groupnames = p_total_tbl[i].groupnames;
     p_total_tbl[i].usec     += p_prof_tbl[i].usec     = p_func_list[i].usec;
     p_total_tbl[i].cumusec  += p_prof_tbl[i].cumusec  = p_func_list[i].cumusec;
     p_total_tbl[i].numcalls += p_prof_tbl[i].numcalls = p_func_list[i].numcalls;
@@ -1885,6 +1961,7 @@ static void PrintFuncTabOrig (struct p_prof_elem *tab, double total, int max)
 static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
                          int max, char *order) 
 {
+  
   int i;
   int printed_anything = 0;
 #ifdef USE_LONG 
@@ -1920,10 +1997,18 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
 	 if ( id < 0 ) printf ("%c ", -id); else printf ("%d ", id);
       */
       printf ("%d \"%s\" %s ", tab[i].tag, tab[i].name, order);
-      if ( order[0] == 'e' )
-        printf ("%.16G %4.2f\n", tab[i].usec, tab[i].usec / t * 100.0);
-      else if ( order[0] == 'i' )
-        printf ("%.16G %4.2f\n", tab[i].cumusec, tab[i].cumusec/total*100.0);
+      if(groupNamesUsed){
+	if ( order[0] == 'e' )
+	  printf ("%.16G %4.2f GROUP=\"%s\"\n", tab[i].usec, tab[i].usec / t * 100.0, tab[i].groupnames);
+	else if ( order[0] == 'i' )
+	  printf ("%.16G %4.2f GROUP=\"%s\"\n", tab[i].cumusec, tab[i].cumusec/total*100.0, tab[i].groupnames);
+	}
+      else{
+	if ( order[0] == 'e' )
+	  printf ("%.16G %4.2f\n", tab[i].usec, tab[i].usec / t * 100.0);
+	else if ( order[0] == 'i' )
+	  printf ("%.16G %4.2f\n", tab[i].cumusec, tab[i].cumusec/total*100.0);
+	}
       if ( tab[i].cumusec > 0.0 ) {
 #ifdef USE_LONG 
         printf ("%5.1f %s %s %8d %8d %10.0f ",
@@ -3170,7 +3255,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: bertie $
- * $Revision: 1.31 $   $Date: 2002/03/16 01:03:16 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.31 2002/03/16 01:03:16 bertie Exp $                                                   
+ * $Revision: 1.32 $   $Date: 2002/04/16 22:04:03 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.32 2002/04/16 22:04:03 bertie Exp $                                                   
  ***************************************************************************/
 
