@@ -1,0 +1,23 @@
+This directory contains an example of the use of the TAU JAVA API.
+
+To use this, ensure that your CLASSPATH variable contains the <tau>/<arch>/lib
+directory and your LD_LIBRARY_PATH variable contains <tau>/<arch>/lib before
+other entries (so it can pick up the right libTAU.so file).
+
+For e.g.,
+
+% configure -jdk=/usr/java
+% make clean install
+% cd examples/java/api
+% setenv CLASSPATH $CLASSPATH\:/home/grads/sameer/tau2/sgi8k/lib
+% setenv LD_LIBRARY_PATH /home/grads/sameer/tau2/sgi8k/lib/\:$LD_LIBRARY_PATH
+
+Now compile the JAVA application
+
+% javac Pi.java
+
+And run it
+% java -XrunTAU Pi 20000
+
+% pprof
+
