@@ -391,6 +391,11 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		else if(arg.equals("Show User Event Ledger")){
 		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
+		else if(arg.equals("Show Call Path Relations")){
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true, this.debug());
+		    trial.getSystemEvents().addObserver(tmpRef);
+		    tmpRef.show();
+		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 		}
@@ -491,6 +496,10 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
         ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
         ParaProf.helpWindow.writeText("for this userevent.");
+    }
+
+    public StaticMainWindowData getSMWData(){
+	return sMWData;
     }
 
     public void sortLocalData(){

@@ -491,6 +491,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		else if(arg.equals("Show User Event Ledger")){
 		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
+		else if(arg.equals("Show Call Path Relations")){
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true, this.debug());
+		    trial.getSystemEvents().addObserver(tmpRef);
+		    tmpRef.show();
+		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 		}

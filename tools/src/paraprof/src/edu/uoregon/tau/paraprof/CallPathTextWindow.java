@@ -459,6 +459,11 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		else if(arg.equals("Show User Event Ledger")){
 		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
+		else if(arg.equals("Show Call Path Relations")){
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true, this.debug());
+		    trial.getSystemEvents().addObserver(tmpRef);
+		    tmpRef.show();
+		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 		}
@@ -563,6 +568,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	ParaProf.helpWindow.writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
 	ParaProf.helpWindow.writeText("and will thus contain both parent/child relations and the data relating to those");
 	ParaProf.helpWindow.writeText("relationships.");
+    }
+
+    public StaticMainWindowData getSMWData(){
+	return sMWData;
     }
 
     //Updates this window's data copy.
