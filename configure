@@ -849,7 +849,7 @@ if [ -d $pdt_root_dir ]
   cat utils/cxxparse | 
   sed -e 's,@DUCTAPEROOT@,'$pdt_root_dir/',' -e 's,@CXXINCLUDES@,'"$stdinc"',' -e 's,@ARCH@,'$machine/',' > $pdt_root_dir/$machine/bin/cxxparse
   chmod +x $pdt_root_dir/$machine/bin/cxxparse
-  echo "Installed cxxparse in the DUCTAPE directory $pdt_root_dir"
+  echo "Installed cxxparse in the PDT directory $pdt_root_dir"
 fi
     
 
