@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.4 2004/03/30 19:54:26 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.5 2004/03/30 19:57:20 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -178,7 +178,7 @@ public class PerfDBSession extends DataSession {
 	public void getFunctionDetail(Function function) {
 		StringBuffer buf = new StringBuffer();
 		buf.append(" where id = " + function.getIndexID());
-		if (metrics != null) {
+		if (metrics != null && metrics.size() > 0) {
 			buf.append(" and metric in (");
 			Metric metric;
         	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
@@ -248,7 +248,7 @@ public class PerfDBSession extends DataSession {
 
 		// get the metric count
 		int metricCount = 0;
-		if (metrics != null) {
+		if (metrics != null && metrics.size() > 0) {
 			metricCount = metrics.size();
 		} else {
 			metricCount = trial.getMetricCount();
@@ -257,7 +257,7 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		buf.append(" where trial = " + trial.getID());
-		if (nodes != null) {
+		if (nodes != null && nodes.size() > 0) {
 			buf.append(" and node in (");
 			Integer node;
         	for(Enumeration en = nodes.elements(); en.hasMoreElements() ;) {
@@ -269,7 +269,7 @@ public class PerfDBSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		if (contexts != null) {
+		if (contexts != null && contexts.size() > 0) {
 			buf.append(" and context in (");
 			Integer context;
         	for(Enumeration en = contexts.elements(); en.hasMoreElements() ;) {
@@ -281,7 +281,7 @@ public class PerfDBSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		if (threads != null) {
+		if (threads != null && threads.size() > 0) {
 			buf.append(" and thread in (");
 			Integer thread;
         	for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
@@ -293,7 +293,7 @@ public class PerfDBSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		if (functions != null) {
+		if (functions != null && functions.size() > 0) {
 			buf.append(" and function in (");
 			Function function;
         	for(Enumeration en = functions.elements(); en.hasMoreElements() ;) {
@@ -305,7 +305,7 @@ public class PerfDBSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		if (metrics != null) {
+		if (metrics != null && metrics.size() > 0) {
 			buf.append(" and metric in (");
 			Metric metric;
         	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
@@ -334,7 +334,7 @@ public class PerfDBSession extends DataSession {
 
 		StringBuffer buf = new StringBuffer();
 		buf.append(" where t.id = " + trial.getID());
-		if (nodes != null) {
+		if (nodes != null && nodes.size() > 0) {
 			buf.append(" and p.node in (");
 			Integer node;
         	for(Enumeration en = nodes.elements(); en.hasMoreElements() ;) {
@@ -346,7 +346,7 @@ public class PerfDBSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		if (contexts != null) {
+		if (contexts != null && contexts.size() > 0) {
 			buf.append(" and p.context in (");
 			Integer context;
         	for(Enumeration en = contexts.elements(); en.hasMoreElements() ;) {
@@ -358,7 +358,7 @@ public class PerfDBSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		if (threads != null) {
+		if (threads != null && threads.size() > 0) {
 			buf.append(" and p.thread in (");
 			Integer thread;
         	for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
