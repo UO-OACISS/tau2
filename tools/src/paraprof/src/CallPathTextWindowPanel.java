@@ -219,11 +219,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		Rectangle clipRect = null;
 		
 		
-		if(instruction==1 || instruction==2){
-		    startElement = 0;
-		    endElement = ((drawObjects.size()) - 1);
-		}
-		else{
+		if(instruction==0){
 		    clipRect = g2D.getClipBounds();
 		    yBeg = (int) clipRect.getY();
 		    yEnd = (int) (yBeg + clipRect.getHeight());
@@ -242,8 +238,19 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    
 		    if(endElement > (drawObjects.size() - 1))
 			endElement = (drawObjects.size() - 1);
-		    
+
+		    lastStartElement = startElement;
+		    lastEndElement = endElement;
+
 		    yCoord = yCoord + (startElement * spacing);
+		}
+		else if(instruction==1){
+		    startElement = lastStartElement;
+		    endElement = lastEndElement; 
+		}
+		else if(instruction==2 || instruction==3){
+		    startElement = 0;
+		    endElement = ((drawObjects.size()) - 1);
 		}
 
 		g2D.setColor(Color.black);
@@ -436,12 +443,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		int endElement = 0;
 		Rectangle clipRect = null;
 		
-		
-		if(instruction==1 || instruction==2){
-		    startElement = 0;
-		    endElement = ((drawObjects.size()) - 1);
-		}
-		else{
+		if(instruction==0){
 		    clipRect = g2D.getClipBounds();
 		    yBeg = (int) clipRect.getY();
 		    yEnd = (int) (yBeg + clipRect.getHeight());
@@ -460,9 +462,21 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    
 		    if(endElement > (drawObjects.size() - 1))
 			endElement = (drawObjects.size() - 1);
-		    
+
+		    lastStartElement = startElement;
+		    lastEndElement = endElement;
+
 		    yCoord = yCoord + (startElement * spacing);
 		}
+		else if(instruction==1){
+		    startElement = lastStartElement;
+		    endElement = lastEndElement; 
+		}
+		else if(instruction==2 || instruction==3){
+		    startElement = 0;
+		    endElement = ((drawObjects.size()) - 1);
+		}
+
 		
 		/*
 		//At this point we can determine the size this panel will
@@ -739,6 +753,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     int yHeightNeeded = 0;
     int xWidthNeeded = 0;
     int length = 0;
+
+    int lastStartElement = 0;
+    int lastEndElement = 0;
 
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
