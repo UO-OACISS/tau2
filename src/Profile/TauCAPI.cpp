@@ -46,7 +46,10 @@ extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
   DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
 
   // since we're using new, we should set InitData to true in FunctionInfoInit
-  f = new FunctionInfo(fname, type, group, fname, true);
+  if (group == TAU_MESSAGE)
+    f = new FunctionInfo(fname, type, group, "MPI", true);
+  else 
+    f = new FunctionInfo(fname, type, group, fname, true);
   p = new Profiler(f, group, true);
 
   return (void *) p;
@@ -179,7 +182,7 @@ extern "C" void tau_event_disable_stddev(void *ue)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1999/06/22 22:33:13 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.7 1999/06/22 22:33:13 sameer Exp $
+ * $Revision: 1.8 $   $Date: 2000/04/05 23:22:31 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.8 2000/04/05 23:22:31 sameer Exp $
  ***************************************************************************/
 
