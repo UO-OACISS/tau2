@@ -40,7 +40,11 @@ using std::string;
 
 
 #ifndef NO_RTTI /* RTTI is present  */
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <typeinfo>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <typeinfo.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #endif /* NO_RTTI  */
 
 #ifdef POOMA_STDSTL
@@ -53,19 +57,30 @@ using std::pair;
 using std::list;
 using std::map;
 #else
+#ifdef  TAU_DOT_H_LESS_HEADERS
+#include <vector>
+#include <map>
+#include <list>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <vector.h>
 #include <map.h>
+#include <list.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
+
 #if !defined(KAI)
+#ifdef  TAU_DOT_H_LESS_HEADERS
+#include <utility>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <pair.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #else
 #include <utility.h>
 #endif /* not KAI */
-#include <list.h>
 #endif /* POOMA_STDSTL */
 
 #endif /* _PROFILE_HEADERS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileHeaders.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1998/09/22 01:03:54 $
- * POOMA_VERSION_ID: $Id: ProfileHeaders.h,v 1.3 1998/09/22 01:03:54 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 1999/06/20 17:33:25 $
+ * POOMA_VERSION_ID: $Id: ProfileHeaders.h,v 1.4 1999/06/20 17:33:25 sameer Exp $ 
  ***************************************************************************/
