@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.15 2004/04/06 22:26:44 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.16 2004/04/06 22:28:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -735,14 +735,14 @@ public class PerfDBSession extends DataSession {
 			newTrialID = trial.saveTrial(db);
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
-				// saveFunctionData(newFunHash, metrics, saveMetricIndex);
+				saveFunctionData(newFunHash, metrics, saveMetricIndex);
 			}
-			// if (userEvents != null && userEvents.size() > 0) {
-				// Hashtable newUEHash = saveUserEvents(newTrialID);
-				// if (userEventData != null && userEventData.size() > 0) {
-					// saveUserEventData(newUEHash);
-				// }
-			// }
+			if (userEvents != null && userEvents.size() > 0) {
+				Hashtable newUEHash = saveUserEvents(newTrialID);
+				if (userEventData != null && userEventData.size() > 0) {
+					saveUserEventData(newUEHash);
+				}
+			}
 			System.out.println("New Trial ID: " + newTrialID);
 		} else {
 			newTrialID = trial.getID();
