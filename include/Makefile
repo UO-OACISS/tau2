@@ -34,6 +34,7 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 TAUROOT=/users/sameer/rs/tau2
+TULIPDIR=/users/sameer/t
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		  #ENDIF#
@@ -66,17 +67,22 @@ LSX = .a
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used #ENDIF#
 #SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
 #PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS           #ENDIF#
+#TULIPTHREADS#PROFILEOPT16 = -DTULIPTHREADS           #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 #TRACE#EVENTS_O                = pcxx_events.o         #ENDIF#
 #PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o           #ENDIF#
+#TULIPTHREADS#THR_O       = TulipThreadLayer.o           #ENDIF#
+#TULIPTHREADS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/Tuliplib   #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
+#TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
 	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
-	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(TRACEOPT)
+	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(PROFILEOPT16) \
+	      $(PROFILEOPT17) $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
