@@ -1112,6 +1112,35 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  is_if_stmt = true;
                 }
 
+		/* Check to see if return is in a continuation line */
+		/* such as :
+		 *     if(  (ii/=jj  .or. kk<=0)  .and. &
+		 *           & (kcheck==0  .or. ii/=lsav+1 .or. kk>0) ) return
+		 */
+
+		if (is_if_stmt == false) 
+		{
+#ifdef DEBUG
+		  cout <<"col = "<<(*it)->col <<endl;
+#endif /* DEBUG */
+		  for(int i = ((*it)->col)-1; i > 0; i--)
+		  {
+#ifdef DEBUG
+		    cout <<"i = "<<i<<"inbuf[i] = "<<inbuf[i]<<endl;
+#endif /* DEBUG */
+	            if (inbuf[i] == ' ' || inbuf[i] == '\t') continue;
+		    if (inbuf[i] == ')' ) 
+		    { /* return is in a continuation line - has " ) return" */
+#ifdef DEBUG
+		       cout <<"inbuf[i] = "<<inbuf[i]<<endl;
+#endif /* DEBUG */
+		       is_if_stmt = true;
+		       break;
+		    }
+		  }
+		}
+		/* Here, either is_if_stmt is true or it is a plain return*/
+
 	        if (lit == it)
 		{ /* Has body begin already written the beginning of the statement? */
 		  /* No. Write it (since it is same as lit) */
@@ -1426,8 +1455,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.48 $   $Date: 2003/10/23 22:14:49 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.48 2003/10/23 22:14:49 sameer Exp $
+ * $Revision: 1.49 $   $Date: 2003/10/24 17:27:29 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.49 2003/10/24 17:27:29 sameer Exp $
  ***************************************************************************/
 
 
