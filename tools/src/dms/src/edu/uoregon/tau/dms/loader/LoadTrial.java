@@ -12,13 +12,66 @@ import java.util.Vector;
 import java.awt.Component;
 import java.io.*;
 
+
+class FileFilter implements FilenameFilter {
+    public FileFilter(String regex) {
+	this.regex = regex;
+    }
+    public boolean accept(File okplace, String patternmatch ) {
+	//System.out.println("regex = " + regex + ", file = " + patternmatch); 
+	if (patternmatch.matches(regex)) {
+	    return true;
+	} 
+
+	//	if (patternmatch.indexOf(prefix) == 0) {
+	//    return true;
+	//} 
+	return false;
+    }
+    private String regex;
+}
+
 public class LoadTrial{
 
-    public static String USAGE = "usage: perfdmf_loadtrial {-f, --filetype} file_type {-s,--sourcefile} sourcefilename\n {-e,--experimentid} experiment_id [{-t, --trialid} trial_id] [{-n,--name} trial_name]\n [{-p,--problemfile} problem_file] [{-i --fixnames}]\n Where:\n    file_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, hpm\n\n (example: perfdmf_loadtrial -f profiles -e 12 -s \"profile.*\")";
-    private File readPprof;
+    //    public static String USAGE = "usage: perfdmf_loadtrial {-f, --filetype} file_type {-e,--experimentid} experiment_id\n [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-i --fixnames}] <files>\n Where:\n    file_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, hpm\n\n (example: perfdmf_loadtrial -f profiles -e 12 profile.*)";
+    //private File readPprof;
+
+
+    public static void usage() {
+	System.err.println ("Usage: perfdmf_loadtrial -e <experiment id> -n <name> [options] <files>\n\n"+"try `perfdmf_loadtrial --help' for more information");
+    }
+
+    public static void outputHelp() {
+
+	System.err.println (
+"Usage: perfdmf_loadtrial -e <experiment id> -n <name> [options] <files>\n\n"+
+"Required Arguments:\n\n"+
+"  -e, --experimentid <number>    Specify associated experiment ID for this trial\n"+
+"  -n, --name <text>              Specify the name of the trial\n\n"+
+"Optional Arguments:\n\n"+
+"  -f, --filetype <filetype>      Specify type of performance data, options are:\n"+
+"                                   profiles (default), pprof, dynaprof, mpip,\n"+ 
+"                                   gprof, psrun, hpm\n"+
+"  -t, --trialid <number>         Specify trial ID\n"+
+"  -i, --fixnames                 Use the fixnames option for gprof\n\n"+
+"Notes:\n"+
+"  For the TAU profiles type, you can specify either a specific set of profile\n"+
+"files on the commandline, or you can specify a directory (by default the current\n"+ 
+"directory).  The specified directory will be searched for profile.*.*.* files,\n"+ 
+"or, in the case of multiple counters, directories named MULTI_* containing\n"+ 
+"profile data.\n\n"+
+"Examples:\n\n"+
+"  perfdmf_loadtrial -e 12 -n \"Batch 001\"\n"+ 
+"    This will load profile.* (or multiple counters directories MULTI_*) into\n"+ 
+"    experiment 12 and give the trial the name \"Batch 001\"\n\n"+
+"  perfdmf_loadtrial -e 12 -n \"HPM data 01\" perfhpm*\n"+
+"    This will load perfhpm* files of type HPMToolkit into experiment 12 and give\n"+
+"    the trial the name \"HPM data 01\"\n");
+    }
+
     private File writeXml;
     private String trialTime;
-    private String sourceFile;
+    private String sourceFiles[];
     private Application app;
     private Experiment exp;
     private boolean fixNames = false;
@@ -35,11 +88,11 @@ public class LoadTrial{
     Trial trial = null;
 
     //constructor
-    public LoadTrial(String configFileName, String sourcename) {
-	this.sourceFile = sourcename;
+    public LoadTrial(String configFileName, String sourceFiles[]) {
+	this.sourceFiles = sourceFiles;
 
 	// check for the existence of file
-	readPprof = new File(sourcename);
+	//readPprof = new File(sourcename);
 
 	dbSession = new PerfDMFSession();
 	dbSession.initialize(configFileName);
@@ -49,8 +102,7 @@ public class LoadTrial{
 	this.expID = Integer.parseInt(expid);
 	exp = dbSession.setExperiment(this.expID);
 	if (exp == null) {
-	    System.err.println("Please enter a valid experiment ID.");
-	    System.err.println(USAGE);
+	    System.err.println("Experiment id " + expid + " not found,  please enter a valid experiment ID.");
 	    System.exit(-1);
 	    return false;
 	} else
@@ -71,74 +123,101 @@ public class LoadTrial{
 
 	Vector v = null;
 	File[] inFile = new File[1];
-	FileList fl = null;
+	File filelist[];
 	switch (fileType) {
 	case 0:
-	    inFile[0] = new File (sourceFile);
+	    if (sourceFiles.length != 1) {
+		System.err.println ("pprof type: you must specify exactly one file");
+		System.exit(-1);
+	    }
+	    if (isDirectory(sourceFiles[0])) {
+		System.err.println ("pprof type: you must specify a file, not a directory");
+		System.exit(-1);
+	    }
+	    inFile[0] = new File (sourceFiles[0]);
 	    v = new Vector();
 	    v.add(inFile);
 	    dataSession = new TauPprofOutputSession();
 	    break;
 	case 1:
-	    fl = new FileList();
-	    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", false);
+
+	    if (sourceFiles.length < 1) {
+		v = helperFindFiles(System.getProperty("user.dir"), "\\Aprofile\\..*\\..*\\..*\\z");
+	    } else {
+		if (isDirectory(sourceFiles[0])) {
+		    
+		    if (sourceFiles.length > 1) {
+			System.err.println ("profiles type: you can only specify one directory");
+			System.exit(-1);
+		    }
+
+		    v = helperFindFiles(sourceFiles[0], "\\Aprofile\\..*\\..*\\..*\\z");
+
+
+		} else {
+
+		    v = new Vector();
+		    filelist = new File[sourceFiles.length]; 
+		    for (int i=0; i<sourceFiles.length; i++) {
+			filelist[i] = new File(sourceFiles[i]);
+		    }
+		    v.add (filelist);
+		}
+
+	    }
+
+	    
+	    //fl = new FileList();
+	    //v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", false);
+	    //v = helperFindFiles(".", "\\Aprofile\\..*\\..*\\..*\\z");
+
 	    dataSession = new TauOutputSession();
 	    break;
 	case 2:
-	    inFile[0] = new File (sourceFile);
+	    inFile[0] = new File (sourceFiles[0]);
 	    v = new Vector();
 	    v.add(inFile);
 	    dataSession = new DynaprofOutputSession();
 	    break;
 	case 3:
-	    inFile[0] = new File (sourceFile);
+	    if (sourceFiles.length != 1) {
+		System.err.println ("MpiP type: you must specify exactly one file");
+		System.exit(-1);
+	    }
+	    if (isDirectory(sourceFiles[0])) {
+		System.err.println ("MpiP type: you must specify a file, not a directory");
+		System.exit(-1);
+	    }
+	    inFile[0] = new File (sourceFiles[0]);
 	    v = new Vector();
 	    v.add(inFile);
 	    dataSession = new MpiPOutputSession();
 	    break;
 	case 4:
-	    if (fileExists()) {
-		inFile[0] = new File (sourceFile);
-		v = new Vector();
-		v.add(inFile);
-	    } else {
-		fl = new FileList();
-		String[] sourcePath = extractSourcePath();
-		if (sourcePath[0] != null)
-		    v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
-		else
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+	    v = new Vector();
+	    filelist = new File[sourceFiles.length]; 
+	    for (int i=0; i<sourceFiles.length; i++) {
+		filelist[i] = new File(sourceFiles[i]);
 	    }
+	    v.add (filelist);
 	    dataSession = new HPMToolkitDataSession();
 	    break;
 	case 5:
-	    if (fileExists()) {
-		inFile[0] = new File (sourceFile);
-		v = new Vector();
-		v.add(inFile);
-	    } else {
-		fl = new FileList();
-		String[] sourcePath = extractSourcePath();
-		if (sourcePath[0] != null)
-		    v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
-		else
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+	    v = new Vector();
+	    filelist = new File[sourceFiles.length]; 
+	    for (int i=0; i<sourceFiles.length; i++) {
+		filelist[i] = new File(sourceFiles[i]);
 	    }
+	    v.add (filelist);
 	    dataSession = new GprofOutputSession(fixNames);
 	    break;
 	case 6:
-	    if (fileExists()) {
-		inFile[0] = new File (sourceFile);
-		v = new Vector();
-		v.add(inFile);
-	    } else {
-		fl = new FileList();
-		String[] sourcePath = extractSourcePath();
-		if (sourcePath[0] != null)
-		    v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
-		else
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+	    v = new Vector();
+	    filelist = new File[sourceFiles.length]; 
+	    for (int i=0; i<sourceFiles.length; i++) {
+		filelist[i] = new File(sourceFiles[i]);
 	    }
+	    v.add (filelist);
 	    dataSession = new PSRunDataSession();
 	    break;
 	    /*
@@ -185,6 +264,8 @@ public class LoadTrial{
 // 	trial.setNumThreadsPerContext(maxNCT[2]+1);
 	trial.setName(trialName);
 	//trial.setProblemDefinition(getProblemString());
+
+	System.out.println ("TrialName: " + trialName);
 	trial.setExperimentID(expID);
 	dbSession.saveParaProfTrial(trial, -1);
 	System.out.println("Done saving trial!");
@@ -235,10 +316,15 @@ public class LoadTrial{
 	return problemString.toString();
     }
 
+    private boolean isDirectory(String name) {
+	File f = new File(name);
+	return f.isDirectory();
+    }
+
     private boolean fileExists() {
 	boolean rc = false;
 	try {
-	    FileInputStream fileIn = new FileInputStream(sourceFile);
+	    FileInputStream fileIn = new FileInputStream(sourceFiles[0]);
 	    if (fileIn != null) {
 		InputStreamReader inReader = new InputStreamReader(fileIn);
 		if (inReader != null) {
@@ -257,7 +343,7 @@ public class LoadTrial{
 
     private String[] extractSourcePath() {
 	//StringTokenizer st = new StringTokenizer(sourceFile, "/");
-	File inFile = new File(sourceFile);
+	File inFile = new File(sourceFiles[0]);
 	String[] newPath = new String[2];
 	newPath[0] = new String(inFile.getParent());
 	if (newPath[0] != null) {
@@ -271,14 +357,16 @@ public class LoadTrial{
     //******************************
 
     static public void main(String[] args){
+// 	for (int i=0; i<args.length; i++) {
+// 	    System.out.println ("args[" + i + "]: " + args[i]);
+// 	}
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
-        CmdLineParser.Option sourcefileOpt = parser.addStringOption('s', "sourcefile");
         CmdLineParser.Option experimentidOpt = parser.addStringOption('e', "experimentid");
         CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
-        CmdLineParser.Option problemOpt = parser.addStringOption('p', "problemfile");
+        //CmdLineParser.Option problemOpt = parser.addStringOption('p', "problemfile");
         CmdLineParser.Option trialOpt = parser.addStringOption('t', "trialid");
         CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
@@ -288,40 +376,48 @@ public class LoadTrial{
         }
         catch ( CmdLineParser.OptionException e ) {
             System.err.println(e.getMessage());
-	    System.err.println(LoadTrial.USAGE);
+	    LoadTrial.usage();
 	    System.exit(-1);
         }
 
         Boolean help = (Boolean)parser.getOptionValue(helpOpt);
         String configFile = (String)parser.getOptionValue(configfileOpt);
-        String sourceFile = (String)parser.getOptionValue(sourcefileOpt);
+        //String sourceFile = (String)parser.getOptionValue(sourcefileOpt);
         String experimentID = (String)parser.getOptionValue(experimentidOpt);
         String trialName = (String)parser.getOptionValue(nameOpt);
-        String problemFile = (String)parser.getOptionValue(problemOpt);
+
+        //String problemFile = (String)parser.getOptionValue(problemOpt);
         String trialID = (String)parser.getOptionValue(trialOpt);
         String fileTypeString = (String)parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean)parser.getOptionValue(fixOpt);
 
     	if (help != null && help.booleanValue()) {
-	    System.err.println(LoadTrial.USAGE);
+	    LoadTrial.outputHelp();
 	    System.exit(-1);
     	}
 
 	if (configFile == null) {
-	    System.err.println("Please enter a valid config file.");
-	    System.err.println(LoadTrial.USAGE);
+	    System.err.println("Error: Missing config file (perfdmf_loadtrial should supply it)\n");
+	    LoadTrial.usage();
 	    System.exit(-1);
-	} else if (sourceFile == null) {
-	    System.err.println("Please enter a valid source file.");
-	    System.err.println(LoadTrial.USAGE);
+	} else if (trialName == null) {
+	    System.err.println("Error: Missing trial name\n");
+	    LoadTrial.usage();
 	    System.exit(-1);
+
+// 	} else if (sourceFile == null) {
+// 	    System.err.println("Please enter a valid source file.");
+// 	    System.err.println(LoadTrial.USAGE);
+// 	    System.exit(-1);
 	} else if (experimentID == null) {
-	    System.err.println("Please enter a valid experiment ID.");
-	    System.err.println(LoadTrial.USAGE);
+	    System.err.println("Error: Missing experiment id\n");
+	    LoadTrial.usage();
 	    System.exit(-1);
 	} 
+
+	String sourceFiles[] = parser.getRemainingArgs();
 	
-	int fileType = 0;
+	int fileType = 1;
 	String filePrefix = null;
 	if (fileTypeString != null) {
 	    if (fileTypeString.equals("pprof")) {
@@ -347,8 +443,8 @@ public class LoadTrial{
 		  fileType = 0;
 		*/
 	    } else {
-		System.err.println("Please enter a valid file type.");
-	    	System.err.println(USAGE);
+		System.err.println("Error: unknown type '"+fileTypeString+"'\n");
+		LoadTrial.usage();
 	    	System.exit(-1);
 	    }
 	}
@@ -361,16 +457,44 @@ public class LoadTrial{
 	    fixNames = new Boolean(false);
 	}
 
-	LoadTrial trans = new LoadTrial(configFile, sourceFile);
+	LoadTrial trans = new LoadTrial(configFile, sourceFiles);
 	trans.checkForExp(experimentID);
 	if (trialID != null) {
 	    trans.checkForTrial(trialID);
 	    trans.trialID = Integer.parseInt(trialID);
 	}
 	trans.trialName = trialName;
-	trans.problemFile = problemFile;
+	//trans.problemFile = problemFile;
 	trans.fixNames = fixNames.booleanValue();
 	trans.loadTrial(fileType);
 	// the trial will be saved when the load is finished (update is called)
     }
+
+
+    private Vector helperFindFiles (String path, String prefix) {
+	Vector v = new Vector();
+	
+	File file = new File(path);
+	if (file.isDirectory() == false) {
+	    return v;
+	}
+	FilenameFilter prefixFilter = new FileFilter(prefix);
+	File files[] = file.listFiles(prefixFilter);
+	
+	if (files.length == 0) {
+	    // we didn't find any profile files here, now look for MULTI_ directories
+	    FilenameFilter multiFilter = new FileFilter("MULTI__.*");
+	    File multiDirs[] = file.listFiles(multiFilter);
+	    
+	    for (int i=0; i<multiDirs.length; i++) {
+		File finalFiles[] = multiDirs[i].listFiles(prefixFilter);
+		v.add(finalFiles);
+	    }
+	} else {
+	    v.add(files);
+	    return v;
+	}
+	return v;
+    }
+
 } 
