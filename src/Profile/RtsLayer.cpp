@@ -1052,7 +1052,14 @@ int RtsLayer::DumpEDF(int tid)
 
 
 	if (tid != 0) 
-	  return 1; 
+	{ 
+#ifdef DEBUG_PROF
+	  printf("DumpEDF: FlushEvents = %d\n",GetFlushEvents(tid));
+#endif /* DEBUG_PROF */
+	  if (GetFlushEvents(tid) == 0)
+	    return 1; 
+	}
+	RtsLayer::LockDB();
 	// Only thread 0 on a node should write the edf files.
 	if ((dirname = getenv("TRACEDIR")) == NULL) {
 	// Use default directory name .
@@ -1127,6 +1134,7 @@ int RtsLayer::DumpEDF(int tid)
 
   
 	fclose(fp);
+	RtsLayer::UnLockDB();
 #endif //TRACING_ON
 	return 1;
 }
@@ -1213,7 +1221,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.60 $   $Date: 2004/09/01 20:53:42 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.60 2004/09/01 20:53:42 amorris Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.61 $   $Date: 2004/09/10 00:20:24 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.61 2004/09/10 00:20:24 sameer Exp $ 
  ***************************************************************************/
