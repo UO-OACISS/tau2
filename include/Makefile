@@ -31,8 +31,8 @@
 CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
-PCXX_OPT=
-USER_OPT=
+PCXX_OPT=-g
+USER_OPT=-g
 EXTRADIR=
 TAUROOT=
 TULIPDIR=
@@ -41,6 +41,7 @@ PAPIDIR=
 PDTDIR=
 DYNINSTDIR=
 JDKDIR=
+OPARIDIR=
 TAU_OPTIONS=
 TAU_MPI_INC=
 TAU_MPI_LIB=
@@ -79,6 +80,11 @@ JDKARCH                 = linux
 # OpenMP OBJECTS
 #############################################
 #OPENMP#OPENMP_O 	= OpenMPLayer.o #ENDIF#
+
+#############################################
+# Opari OBJECTS
+#############################################
+#OPARI#OPARI_O 	= TauOpari.o #ENDIF#
 
 #############################################
 # DYNINST DEFAULT ARCH
@@ -145,7 +151,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #IBMXLC_OPENMP#PROFILEOPT27 = -qsmp=omp -D_OPENMP -DTAU_OPENMP #ENDIF#
 #GUIDE#PROFILEOPT27 = -DTAU_OPENMP #ENDIF#
 #PGIOPENMP#PROFILEOPT27 = -mp -D_OPENMP -DTAU_OPENMP -U_RWSTD_MULTI_THREAD -U_REENTRANT #ENDIF#
-
+#OPARI#PROFILEOPT28 = -I$(OPARIDIR)/lib #ENDIF#
 
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
@@ -176,7 +182,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(PROFILEOPT16) \
 	      $(PROFILEOPT17) $(PROFILEOPT18) $(PROFILEOPT19) $(PROFILEOPT20) \
 	      $(PROFILEOPT21) $(PROFILEOPT22) $(PROFILEOPT23) $(PROFILEOPT24) \
-	      $(PROFILEOPT25) $(PROFILEOPT26) $(PROFILEOPT27) $(TRACEOPT)
+	      $(PROFILEOPT25) $(PROFILEOPT26) $(PROFILEOPT27) $(PROFILEOPT28) \
+              $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
