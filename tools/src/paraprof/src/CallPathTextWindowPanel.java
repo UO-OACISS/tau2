@@ -20,18 +20,18 @@ import javax.swing.event.*;
 public class CallPathTextWindowPanel extends JPanel implements ActionListener{
     
     public CallPathTextWindowPanel(Trial inTrial,
-				   int node,
-				   int context,
-				   int thread,
+				   int nodeID,
+				   int contextID,
+				   int threadID,
 				   CallPathTextWindow inCPTWindow,
 				   boolean global){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
 	    
-	    this.node = node;
-	    this.context = context;
-	    this.thread = thread;
+	    this.nodeID = nodeID;
+	    this.contextID = contextID;
+	    this.threadID = threadID;
 	    
 	    trial = inTrial;
 	    cPTWindow = inCPTWindow;
@@ -201,11 +201,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		GlobalMappingElement gme2 = null;
 		Integer listValue = null;
 		String s = null;
-		Vector staticServerList = null;
-		GlobalServer globalServer = null;
-		GlobalContext globalContext = null;
-		GlobalThread globalThread = null;
-		Vector threadDataList = null;
+		Thread thread = null;
+		Vector functionList = null;
 		GlobalThreadDataElement gtde = null;
 		SMWThreadDataElement smwtde = null;
 		double max = 0.0;
@@ -213,14 +210,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		double d2 = 0.0;
 		int d3 = 0;
 
-		//Find the correct global thread data element.
-		staticServerList = trial.getNodes();
-		globalServer = (GlobalServer) staticServerList.elementAt(node);
-		Vector tmpRef = globalServer.getContextList();
-		globalContext = (GlobalContext) tmpRef.elementAt(context);
-		tmpRef = globalContext.getThreadList();
-		globalThread = (GlobalThread) tmpRef.elementAt(thread);
-		threadDataList = globalThread.getThreadDataList();
+		thread = (Thread) trial.getThread(nodeID,contextID,threadID); 
+		functionList = thread.getFunctionList();
 
 		//**********
 		//Set panel size.
@@ -245,7 +236,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 			    d1 = 0.0;
 			    d2 = 0.0;
 			    while(l3.hasNext()){
-				gtde = (GlobalThreadDataElement) threadDataList.elementAt((((Integer)l3.next()).intValue()));
+				gtde = (GlobalThreadDataElement) functionList.elementAt((((Integer)l3.next()).intValue()));
 				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
 				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
 			    }
@@ -263,7 +254,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 			    d1 = 0.0;
 			    d2 = 0.0;
 			    while(l3.hasNext()){
-				gtde = (GlobalThreadDataElement) threadDataList.elementAt((((Integer)l3.next()).intValue()));
+				gtde = (GlobalThreadDataElement) functionList.elementAt((((Integer)l3.next()).intValue()));
 				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
 				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
 			    }
@@ -281,7 +272,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		check = fmMonoFont.stringWidth("Exclusive");
 		if(stringWidth<check)
 		    stringWidth = check+5;
-		int numCallsWidth = (fmMonoFont.stringWidth(Integer.toString(globalThread.getMaxNumberOfCalls())))+5;
+		int numCallsWidth = (fmMonoFont.stringWidth(Integer.toString(thread.getMaxNumberOfCalls())))+5;
 		check = fmMonoFont.stringWidth("Calls/Tot.Calls");
 		if(numCallsWidth<check)
 		    numCallsWidth = check+5;
@@ -344,7 +335,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 			    s = "        parent callpath(s)";
 			    while(l3.hasNext()){
 				int tmpInt = ((Integer)l3.next()).intValue();
-				gtde = (GlobalThreadDataElement) threadDataList.elementAt(tmpInt);
+				gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
 				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
 				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
 				d3=d3+gtde.getNumberOfCalls();
@@ -353,7 +344,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 			    g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
 			    g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
 			    g.drawString(d3+"/"+smwtde.getNumberOfCalls(), callsPos1, yCoord);
-			    gtde = (GlobalThreadDataElement) threadDataList.elementAt(listValue.intValue());
+			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
 			    //g.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]"+s, namePos, yCoord);
 			    g.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
 			    yCoord = yCoord + (spacing);
@@ -375,7 +366,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 			    s = "        child callpath(s)";
 			    while(l3.hasNext()){
 				int tmpInt = ((Integer)l3.next()).intValue();
-				gtde = (GlobalThreadDataElement) threadDataList.elementAt(tmpInt);
+				gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
 				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
 				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
 				d3=d3+gtde.getNumberOfCalls();
@@ -383,7 +374,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 			    }
 			    g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
 			    g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
-			    gtde = (GlobalThreadDataElement) threadDataList.elementAt(listValue.intValue());
+			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
 			    g.drawString(d3+"/"+gtde.getNumberOfCalls(), callsPos1, yCoord);
 			    //g.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]"+s, namePos, yCoord);
 			    g.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
@@ -427,9 +418,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
     int maxFontDescent = 0;
     int spacing = 0;
   
-    int node = -1;
-    int context = -1;
-    int thread = -1;
+    int nodeID = -1;
+    int contextID = -1;
+    int threadID = -1;
     private Trial trial = null;
     CallPathTextWindow cPTWindow = null;
     boolean global = false;

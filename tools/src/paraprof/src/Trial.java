@@ -123,8 +123,59 @@ public class Trial{ //extends Thread{
     public String toString(){
 	return trialName;}
   
-     public Vector getNodes(){
+    public int getNumberOfNodes(){
+	return nodes.size();}
+
+    public Vector getNodes(){
 	return nodes;}
+
+    public Node getNode(int nodeID){
+	return (Node) nodes.elementAt(nodeID);}
+
+    //Returns the total number of contexts in this trial.
+    public int getTotalNumberOfContexts(){
+	if(totalNumberOfContexts==-1){
+	    for(Enumeration e = this.getNodes().elements(); e.hasMoreElements() ;){
+	     Node node = (Node) e.nextElement();
+	     totalNumberOfContexts+=(node.getNumberOfContexts());
+	    }
+	}
+	return totalNumberOfContexts;
+    }
+
+    //Returns the number of contexts on the specified node.
+    public int getNumberOfContexts(int nodeID){
+	return ((Node) nodes.elementAt(nodeID)).getNumberOfContexts();}
+
+    public Vector getContexts(int nodeID){
+	return (this.getNode(nodeID)).getContexts();}
+
+    public Context getContext(int nodeID, int contextID){
+	return (this.getNode(nodeID)).getContext(contextID);}
+
+    //Returns the total number of threads in this trial.
+    public int getTotalNumberOfThreads(){
+	if(totalNumberOfThreads==-1){
+	    for(Enumeration e1 = this.getNodes().elements(); e1.hasMoreElements() ;){
+		Node node = (Node) e1.nextElement();
+		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+		    Context context = (Context) e2.nextElement();
+		    totalNumberOfThreads+=(context.getNumberOfThreads());
+		}
+	    }
+	}
+	return totalNumberOfThreads;
+    }
+
+    //Returns the number of threads on the specified node,context.
+    public int getNumberOfThreads(int nodeID, int contextID){
+	return (this.getContext(nodeID,contextID)).getNumberOfThreads();}
+
+    public Vector getThreads(int nodeID, int contextID){
+	return (this.getContext(nodeID,contextID)).getThreads();}
+
+    public Thread getThread(int nodeID, int contextID, int threadID){
+	return (this.getContext(nodeID,contextID)).getThread(threadID);}
 
     //Returns an array of length 3 which contains the maximum number
     //of nodes, contexts and threads reached. This is not a total,
@@ -139,23 +190,15 @@ public class Trial{ //extends Thread{
 	    nct = new int[3];
 	    for(int i=0;i<3;i++){
 		nct[i]=0;}
-	    GlobalServer gs = null;
-	    GlobalContext gc = null;
-	    GlobalThread gt = null;
-	    Vector cv = null;
-	    Vector tv = null;
-	    
-	    nct[0] = nodes.size();
-	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
-		gs = (GlobalServer) e1.nextElement();
-		cv = gs.getContextList();
-		if(cv.size()>nct[1])
-		    nct[1]=cv.size();
-		for(Enumeration e2 = cv.elements(); e2.hasMoreElements() ;){
-		    gc = (GlobalContext) e2.nextElement();
-		    tv = gc.getThreadList();
-		    if(tv.size()>nct[2])
-			nct[2]=tv.size();
+	    nct[0] = this.getNumberOfNodes();
+	    for(Enumeration e1 = (this.getNodes()).elements(); e1.hasMoreElements() ;){
+		Node node = (Node) e1.nextElement();
+		if(node.getNumberOfContexts()>nct[1])
+		    nct[1]=node.getNumberOfContexts();
+		for(Enumeration e2 = (node.getContexts()).elements(); e2.hasMoreElements() ;){
+		    Context context = (Context) e2.nextElement();
+		    if(context.getNumberOfThreads()>nct[2])
+			nct[2]=context.getNumberOfThreads();
 		}
 	    }
 	}
@@ -163,11 +206,11 @@ public class Trial{ //extends Thread{
     }
     
 
-    //###################################
+    //####################################
     //Functions that control the obtaining and the openning
     //and closing of the static main window for
     //this trial.
-    //###################################
+    //####################################
     public StaticMainWindow getStaticMainWindow(){
 	return sMW;
     }
@@ -191,10 +234,10 @@ public class Trial{ //extends Thread{
 	    sMW.setVisible(false);
 	}
     }
-    //###################################
+    //####################################
     //Functions that control the openning and closing of the static main window for
     //this trial.
-    //###################################
+    //####################################
   
     public SystemEvents getSystemEvents(){
 	return systemEvents;
@@ -277,24 +320,21 @@ public class Trial{ //extends Thread{
 	    int mappingID = -1;
 	    double value = -1;
 	    double percentValue = -1;
-	    int node = -1;
-	    int context = -1;
-	    int thread = -1;
-      
+	          
 	    GlobalMappingElement tmpGlobalMappingElement;
+
+	    int nodeID = -1;
+	    int contextID = -1;
+	    int threadID = -1;
+	    int lastNodeID = -1;
+	    int lastContextID = -1;
+	    int lastThreadID = -1;
       
-	    GlobalServer currentGlobalServer = null;
-	    GlobalContext currentGlobalContext = null;
-	    GlobalThread currentGlobalThread = null;
+	    Node currentNode = null;
+	    Context currentContext = null;
+	    Thread currentThread = null;
 	    GlobalThreadDataElement tmpGlobalThreadDataElement = null;
-      
-	    int lastNode = -1;
-	    int lastContext = -1;
-	    int lastThread = -1;
-      
-	    int counter = 0;
-      
-      
+            
 	    //A loop counter.
 	    bSDCounter = 0;
       
@@ -352,14 +392,13 @@ public class Trial{ //extends Thread{
 	    //good place to initialize a few things.
       
 	    //Need to call addDefaultToVectors() on all objects that require it.
-	    addDefaultToVectors();
+	    this.addDefaultToVectors();
 
 	    //Only need to call addDefaultToVectors() if not the first run.
 	    if(!firstRun){
-	  
 		if(ParaProf.debugIsOn)
 		    System.out.println("Increasing the storage for the new counter.");
-	  
+		
 		for(Enumeration e1 = (globalMapping.getMapping(0)).elements(); e1.hasMoreElements() ;){
 		    GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
 		    tmpGME.incrementStorage();
@@ -370,42 +409,19 @@ public class Trial{ //extends Thread{
 		    tmpGME.incrementStorage();
 		}
 	  
-	  
-		GlobalServer tmpGlobalServer;
-		GlobalContext tmpGlobalContext;
-		GlobalThread tmpGlobalThread;
-		GlobalThreadDataElement tmpGTDElement;
-	  
-		Vector tmpContextList;
-		Vector tmpThreadList;
-		Vector tmpThreadDataList;
-
-		//Get a reference to the global data.
-		Vector tmpVector = getNodes();
-
-		for(Enumeration e3 = tmpVector.elements(); e3.hasMoreElements() ;){
-		    tmpGlobalServer = (GlobalServer) e3.nextElement();
-	      
-		    //Enter the context loop for this server.
-		    tmpContextList = tmpGlobalServer.getContextList();
-	      
-		    for(Enumeration e4 = tmpContextList.elements(); e4.hasMoreElements() ;){
-			tmpGlobalContext = (GlobalContext) e4.nextElement();
-		  
-			//Enter the thread loop for this context.
-			tmpThreadList = tmpGlobalContext.getThreadList();
-			for(Enumeration e5 = tmpThreadList.elements(); e5.hasMoreElements() ;){
-			    tmpGlobalThread = (GlobalThread) e5.nextElement();
-			    tmpGlobalThread.incrementStorage();
-		      
-			    tmpThreadDataList = tmpGlobalThread.getThreadDataList();
-			    for(Enumeration e6 = tmpThreadDataList.elements(); e6.hasMoreElements() ;){
-				tmpGTDElement = (GlobalThreadDataElement) e6.nextElement();
-			  
+		for(Enumeration e3 = this.getNodes().elements(); e3.hasMoreElements() ;){
+		    Node node = (Node) e3.nextElement();
+		    for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
+			Context context = (Context) e4.nextElement();
+			for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
+			    Thread thread = (Thread) e5.nextElement();
+			    thread.incrementStorage();
+			    for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
+				GlobalThreadDataElement ref = (GlobalThreadDataElement) e6.nextElement();
 				//Only want to add an element if this mapping existed on this thread.
 				//Check for this.
-				if(tmpGTDElement != null)
-				    tmpGTDElement.incrementStorage();
+				if(ref != null)
+				    ref.incrementStorage();
 			    }
 			}
 		    }
@@ -445,17 +461,10 @@ public class Trial{ //extends Thread{
 	    //********************	
       
 	    while((inputString = br.readLine()) != null){
-	  
-		//Allow other threads in the system a chance.
-		if((bSDCounter % 10000) == 0){
-		    Thread.yield();
-		}
-	  
 		genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
           
 		//Check to See if the String begins with a t.
 		if((inputString.charAt(0)) == 't'){
-		    counter++;
 		    mappingID = getMappingID(inputString);
 		    value = getValue(inputString);
 		    if(checkForExcInc(inputString, true, false)){
@@ -555,9 +564,9 @@ public class Trial{ //extends Thread{
 			if((tmpGlobalMappingElement.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
 			    tmpGlobalMappingElement.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 			//Get the node,context,thread.
-			node = getNCT(0,inputString, false);
-			context = getNCT(1,inputString, false);
-			thread = getNCT(2,inputString, false);
+			nodeID = getNCT(0,inputString, false);
+			contextID = getNCT(1,inputString, false);
+			threadID = getNCT(2,inputString, false);
 			
 			if(firstRun){
 			    //Now the complicated part.  Setting up the node,context,thread data.
@@ -565,25 +574,24 @@ public class Trial{ //extends Thread{
 			    //current context changes from the last, but without a corresponding change
 			    //in the thread number.  For example, if we have the sequence:
 			    //0,0,0 - 1,0,0 - 2,0,0 or 0,0,0 - 0,1,0 - 1,0,0.
-			    if(lastNode != node){
-				lastContext = -1;
-				lastThread = -1;
+			    if(lastNodeID != nodeID){
+				lastContextID = -1;
+				lastThreadID = -1;
 			    }
-			    if(lastContext != context){
-				lastThread = -1;
+			    if(lastContextID != contextID){
+				lastThreadID = -1;
 			    }
-			    if(lastThread != thread){
-				if(thread == 0){
+			    if(lastThreadID != threadID){
+				if(threadID == 0){
 				    //Create a new thread ... and set it to be the current thread.
-				    currentGlobalThread = new GlobalThread();
-				    totalNumberOfThreads++;
+				    currentThread = new Thread();
 				    //Add the correct number of global thread data elements.
-				    currentGlobalThread.initializeThreadDataList(numberOfMappings);
+				    currentThread.initializeFunctionList(numberOfMappings);
 				    //Update the thread number.
-				    lastThread = thread;
+				    lastThreadID = threadID;
 				    
 				    //Set the appropriate global thread data element.
-				    Vector tmpVector = currentGlobalThread.getThreadDataList();
+				    Vector tmpVector = currentThread.getFunctionList();
 				    GlobalThreadDataElement tmpGTDE = null;
 				    
 				    tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
@@ -591,84 +599,83 @@ public class Trial{ //extends Thread{
 				    if(tmpGTDE == null){
 					tmpGTDE = new GlobalThreadDataElement(this, false);
 					tmpGTDE.setMappingID(mappingID);
-					currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
+					currentThread.addFunction(tmpGTDE, mappingID);
 				    }
 				    tmpGTDE.setMappingExists();
 				    tmpGTDE.setExclusiveValue(currentValueLocation, value);
 				    tmpGTDE.setExclusivePercentValue(currentValueLocation, percentValue);
 				    //Now check the max values on this thread.
-				    if((currentGlobalThread.getMaxExclusiveValue(currentValueLocation)) < value)
-					currentGlobalThread.setMaxExclusiveValue(currentValueLocation, value);
-				    if((currentGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < value)
-					currentGlobalThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
+				    if((currentThread.getMaxExclusiveValue(currentValueLocation)) < value)
+					currentThread.setMaxExclusiveValue(currentValueLocation, value);
+				    if((currentThread.getMaxExclusivePercentValue(currentValueLocation)) < value)
+					currentThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 				    
 				    //Check to see if the context is zero.
-				    if(context == 0){
+				    if(contextID == 0){
 					//Create a new context ... and set it to be the current context.
-					currentGlobalContext = new GlobalContext();
+					currentContext = new Context();
 					//Add the current thread
-					currentGlobalContext.addThread(currentGlobalThread);
+					currentContext.addThread(currentThread);
 					
 					//Create a new server ... and set it to be the current server.
-					currentGlobalServer = new GlobalServer();
+					currentNode = new Node();
 					//Add the current context.
-					currentGlobalServer.addContext(currentGlobalContext);
+					currentNode.addContext(currentContext);
 					//Add the current server.
-					nodes.addElement(currentGlobalServer);
+					nodes.addElement(currentNode);
 					
 					//Update last context and last node.
-					lastContext = context;
-					lastNode = node;
+					lastContextID = contextID;
+					lastNodeID = nodeID;
 				    }
 				    else{
 					//Context number is not zero.  Create a new context ... and set it to be current.
-					currentGlobalContext = new GlobalContext();
+					currentContext = new Context();
 					//Add the current thread
-					currentGlobalContext.addThread(currentGlobalThread);
+					currentContext.addThread(currentThread);
 					
 					//Add the current context.
-					currentGlobalServer.addContext(currentGlobalContext);
+					currentNode.addContext(currentContext);
 					
 					//Update last context and last node.
-					lastContext = context;
+					lastContextID = contextID;
 				    }
 				}
 				else{
 				    //Thread number is not zero.  Create a new thread ... and set it to be the current thread.
-				    currentGlobalThread = new GlobalThread();
-				    totalNumberOfThreads++;
+				    currentThread = new Thread();
 				    //Add the correct number of global thread data elements.
-				    currentGlobalThread.initializeThreadDataList(numberOfMappings);
+				    currentThread.initializeFunctionList(numberOfMappings);
 				    //Update the thread number.
-				    lastThread = thread;
+				    lastThreadID = threadID;
 				    
 				    //Not thread changes.  Just set the appropriate global thread data element.
-				    Vector tmpVector = currentGlobalThread.getThreadDataList();
+				    Vector tmpVector = currentThread.getFunctionList();
 				    GlobalThreadDataElement tmpGTDE = null;
 				    tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
 				    				    
 				    if(tmpGTDE == null){
 					tmpGTDE = new GlobalThreadDataElement(this, false);
 					tmpGTDE.setMappingID(mappingID);
-					currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
+					currentThread.addFunction(tmpGTDE, mappingID);
 				    }
 				    
 				    tmpGTDE.setMappingExists();
 				    tmpGTDE.setExclusiveValue(currentValueLocation, value);
 				    tmpGTDE.setExclusivePercentValue(currentValueLocation, percentValue);
 				    //Now check the max values on this thread.
-				    if((currentGlobalThread.getMaxExclusiveValue(currentValueLocation)) < value)
-					currentGlobalThread.setMaxExclusiveValue(currentValueLocation, value);
-				    if((currentGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < value)
-					currentGlobalThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
+				    if((currentThread.getMaxExclusiveValue(currentValueLocation)) < value)
+					currentThread.setMaxExclusiveValue(currentValueLocation, value);
+				    if((currentThread.getMaxExclusivePercentValue(currentValueLocation)) < value)
+					currentThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 				    
 				    //Add the current thread
-				    currentGlobalContext.addThread(currentGlobalThread);
+				    currentContext.addThread(currentThread);
 				}
 			    }
 			    else{
 				//Not thread changes.  Just set the appropriate global thread data element.
-				Vector tmpVector = currentGlobalThread.getThreadDataList();
+				Vector tmpVector = currentThread.getFunctionList();
 				GlobalThreadDataElement tmpGTDE = null;
 				tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
 				
@@ -676,39 +683,28 @@ public class Trial{ //extends Thread{
 				if(tmpGTDE == null){
 				    tmpGTDE = new GlobalThreadDataElement(this, false);
 				    tmpGTDE.setMappingID(mappingID);
-				    currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
+				    currentThread.addFunction(tmpGTDE, mappingID);
 				}
 				
 				tmpGTDE.setMappingExists();
 				tmpGTDE.setExclusiveValue(currentValueLocation, value);
 				tmpGTDE.setExclusivePercentValue(currentValueLocation, percentValue);
 				//Now check the max values on this thread.
-				if((currentGlobalThread.getMaxExclusiveValue(currentValueLocation)) < value)
-				    currentGlobalThread.setMaxExclusiveValue(currentValueLocation, value);
-				if((currentGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
-				    currentGlobalThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
+				if((currentThread.getMaxExclusiveValue(currentValueLocation)) < value)
+				    currentThread.setMaxExclusiveValue(currentValueLocation, value);
+				if((currentThread.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
+				    currentThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 			    }
 			}
 			else{
-			    //Find the correct global thread data element.
-			    GlobalServer tmpGS = (GlobalServer) nodes.elementAt(node);
-			    Vector tmpGlobalContextList = tmpGS.getContextList();
-			    GlobalContext tmpGC = (GlobalContext) tmpGlobalContextList.elementAt(context);
-			    Vector tmpGlobalThreadList = tmpGC.getThreadList();
-			    GlobalThread tmpGT = (GlobalThread) tmpGlobalThreadList.elementAt(thread);
-			    Vector tmpGlobalThreadDataElementList = tmpGT.getThreadDataList();
-			    
-			    
-			    GlobalThreadDataElement tmpGTDE = (GlobalThreadDataElement) tmpGlobalThreadDataElementList.elementAt(mappingID);
-			    
+			    Thread thread = this.getThread(nodeID,contextID,threadID);
+			    GlobalThreadDataElement tmpGTDE = thread.getFunction(mappingID);
 			    tmpGTDE.setExclusiveValue(currentValueLocation, value);
 			    tmpGTDE.setExclusivePercentValue(currentValueLocation, percentValue);
-			    
-			    //Now check the max values on this thread.
-			    if((tmpGT.getMaxExclusiveValue(currentValueLocation)) < value)
-				tmpGT.setMaxExclusiveValue(currentValueLocation, value);
-			    if((tmpGT.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
-				tmpGT.setMaxExclusivePercentValue(currentValueLocation, percentValue);
+			    if((thread.getMaxExclusiveValue(currentValueLocation)) < value)
+				thread.setMaxExclusiveValue(currentValueLocation, value);
+			    if((thread.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
+				thread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 			}
 		    }
 		    else if(checkForExcInc(inputString, false, true)){
@@ -729,40 +725,22 @@ public class Trial{ //extends Thread{
 			    tmpGlobalMappingElement.setMaxInclusivePercentValue(currentValueLocation, percentValue);
 			
 			//Print out the node,context,thread.
-			node = getNCT(0,inputString, false);
-			context = getNCT(1,inputString, false);
-			thread = getNCT(2,inputString, false);
-			
-			//Find the correct global thread data element.
-			GlobalServer tmpGS = (GlobalServer) nodes.elementAt(node);
-			Vector tmpGlobalContextList = tmpGS.getContextList();
-			GlobalContext tmpGC = (GlobalContext) tmpGlobalContextList.elementAt(context);
-			Vector tmpGlobalThreadList = tmpGC.getThreadList();
-			GlobalThread tmpGT = (GlobalThread) tmpGlobalThreadList.elementAt(thread);
-			Vector tmpGlobalThreadDataElementList = tmpGT.getThreadDataList();
-			
-			GlobalThreadDataElement tmpGTDE = (GlobalThreadDataElement) tmpGlobalThreadDataElementList.elementAt(mappingID);
-			//Now set the inclusive value!
-			
-			if(tmpGTDE == null){
-			    System.out.println("Don't think I ever get here.  Check the logic to make sure.");
-			    tmpGTDE = new GlobalThreadDataElement(this, false);
-			    tmpGTDE.setMappingID(mappingID);
-			    currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
-			}
+			nodeID = getNCT(0,inputString, false);
+			contextID = getNCT(1,inputString, false);
+			threadID = getNCT(2,inputString, false);
+			Thread thread = this.getThread(nodeID,contextID,threadID);
+			GlobalThreadDataElement tmpGTDE = thread.getFunction(mappingID);
 			
 			tmpGTDE.setInclusiveValue(currentValueLocation, value);
 			tmpGTDE.setInclusivePercentValue(currentValueLocation, percentValue);
-			//Now check the max values on this thread.
-			if((tmpGT.getMaxInclusiveValue(currentValueLocation)) < value)
-			    tmpGT.setMaxInclusiveValue(currentValueLocation, value);
-			if((tmpGT.getMaxInclusivePercentValue(currentValueLocation)) < percentValue)
-			    tmpGT.setMaxInclusivePercentValue(currentValueLocation, percentValue);
-			
+			if((thread.getMaxInclusiveValue(currentValueLocation)) < value)
+			    thread.setMaxInclusiveValue(currentValueLocation, value);
+			if((thread.getMaxInclusivePercentValue(currentValueLocation)) < percentValue)
+			    thread.setMaxInclusivePercentValue(currentValueLocation, percentValue);
 			
 			//Get the number of calls and number of sub routines
 			inputString = br.readLine();
-			setNumberOfCSU(inputString, tmpGlobalMappingElement, tmpGT, tmpGTDE);
+			setNumberOfCSU(inputString, tmpGlobalMappingElement, thread, tmpGTDE);
 		    }
 		    else if(noue(inputString)){
 			//Just ignore the string if this is not the first check.
@@ -781,20 +759,10 @@ public class Trial{ //extends Thread{
 				}
 			    } 
 			    
-			    //The first line will be the user event heading ... get it.
-			    inputString = br.readLine();
-			    
-			    //Find the correct global thread data element.
-			    GlobalServer tmpGSUE = null;
-			    Vector tmpGlobalContextListUE = null;;
-			    GlobalContext tmpGCUE = null;;
-			    Vector tmpGlobalThreadListUE = null;;
-			    GlobalThread tmpGT = null;;
-			    Vector tmpGlobalThreadDataElementListUE = null;
-			    
+			    //The first line will be the user event heading ... skip it.
+			    br.readLine();
 			    //Now that we know how many user events to expect, we can grab that number of lines.
 			    for(int j=0; j<numberOfUserEvents; j++){
-
 				s1 = br.readLine();
 				s2 = br.readLine();
 				UserEventData ued = getData(s1,s2, userEventsPresent);
@@ -804,20 +772,11 @@ public class Trial{ //extends Thread{
 				    //Note that this works correctly because we process the user events in a different manner.
 				    //ALL the user events for each THREAD NODE are processed in the above for-loop.  Therefore,
 				    //the below for-loop is only run once on each THREAD NODE.
-				    
-				    //Find the correct global thread data element.
-				    tmpGSUE = (GlobalServer) nodes.elementAt(ued.node);
-				    tmpGlobalContextListUE = tmpGSUE.getContextList();
-				    tmpGCUE = (GlobalContext) tmpGlobalContextListUE.elementAt(ued.context);
-				    tmpGlobalThreadListUE = tmpGCUE.getThreadList();
-				    tmpGT = (GlobalThread) tmpGlobalThreadListUE.elementAt(ued.thread);
-				    
-				    
+
+				    Thread thread = this.getThread(nodeID,contextID,threadID);
 				    if(firstRun){
-					tmpGT.initializeUserThreadDataList(numberOfUserEvents);
+					thread.initializeUsereventList(numberOfUserEvents);
 				    }
-				    
-				    tmpGlobalThreadDataElementListUE = tmpGT.getUserThreadDataList();
 				}
 				//Only need to set the name in the global mapping once.
 				if(!(userEventsPresent())){
@@ -837,19 +796,13 @@ public class Trial{ //extends Thread{
 				    if((tmpGlobalMappingElement.getMaxUserEventMeanValue()) < ued.mean)
 					tmpGlobalMappingElement.setMaxUserEventMeanValue(ued.mean);
 				    
-				    GlobalThreadDataElement tmpGTDEUE = 
-					(GlobalThreadDataElement) tmpGlobalThreadDataElementListUE.elementAt(ued.id);
-				    //tmpGTHEUE should be null (since we have only just initialized
-				    //for this thread.
-				    tmpGTDEUE = new GlobalThreadDataElement(this, true);
-				    //Ok, now set the instance data elements.
+				    GlobalThreadDataElement tmpGTDEUE = new GlobalThreadDataElement(this, true);
 				    tmpGTDEUE.setUserEventID(ued.id);
 				    tmpGTDEUE.setUserEventNumberValue(ued.noc);
 				    tmpGTDEUE.setUserEventMinValue(ued.min);
 				    tmpGTDEUE.setUserEventMaxValue(ued.max);
 				    tmpGTDEUE.setUserEventMeanValue(ued.mean);
-
-				    tmpGT.addUserThreadDataElement(tmpGTDEUE, ued.id);
+				    (this.getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, ued.id);
 				}
 			    }
 			    //Now set the userEvents flag.
@@ -968,7 +921,7 @@ public class Trial{ //extends Thread{
 		    ued.context = Integer.parseInt(new String(result,0,resultPosition));
 		    break;
 		case 2:
-		    ued.thread = Integer.parseInt(new String(result,0,resultPosition));
+		    ued.threadID = Integer.parseInt(new String(result,0,resultPosition));
 		    break;
 		case 3:
 		    ued.id = Integer.parseInt(new String(result,0,resultPosition));
@@ -1110,7 +1063,8 @@ public class Trial{ //extends Thread{
     }
   
     private void setNumberOfCSU(String inString, GlobalMappingElement inGME,
-				GlobalThread inGT, GlobalThreadDataElement inGTDE){ //Set the number of calls/subroutines/usersec per call.
+				Thread thread, GlobalThreadDataElement inGTDE){ 
+	//Set the number of calls/subroutines/usersec per call.
 	//The number of calls will be the fourth token on its line.
 	//The number of subroutines will be the fifth token on its line.
 	//The usersec per call will be the sixth token on its line.
@@ -1128,8 +1082,8 @@ public class Trial{ //extends Thread{
 	    tmpInt = (int) tmpDouble;
 	    if((inGME.getMaxNumberOfCalls()) < tmpInt)
 		inGME.setMaxNumberOfCalls(tmpInt);
-	    if((inGT.getMaxNumberOfCalls()) < tmpInt)
-		inGT.setMaxNumberOfCalls(tmpInt);
+	    if((thread.getMaxNumberOfCalls()) < tmpInt)
+		thread.setMaxNumberOfCalls(tmpInt);
 	    inGTDE.setNumberOfCalls(tmpInt);
 	    //Set number of subroutines.
 	    tmpString = getMappingIDTokenizer.nextToken();
@@ -1137,16 +1091,16 @@ public class Trial{ //extends Thread{
 	    tmpInt = (int) tmpDouble;
 	    if((inGME.getMaxNumberOfSubRoutines()) < tmpInt)
 		inGME.setMaxNumberOfSubRoutines(tmpInt);
-	    if((inGT.getMaxNumberOfSubRoutines()) < tmpInt)
-		inGT.setMaxNumberOfSubRoutines(tmpInt);
+	    if((thread.getMaxNumberOfSubRoutines()) < tmpInt)
+		thread.setMaxNumberOfSubRoutines(tmpInt);
 	    inGTDE.setNumberOfSubRoutines(tmpInt);
 	    //Set usersec per call.
 	    tmpString = getMappingIDTokenizer.nextToken();
 	    tmpDouble = Double.parseDouble(tmpString);
 	    if((inGME.getMaxUserSecPerCall(currentValueLocation)) < tmpDouble)
 		inGME.setMaxUserSecPerCall(currentValueLocation, tmpDouble);
-	    if((inGT.getMaxUserSecPerCall(currentValueLocation)) < tmpDouble)
-		inGT.setMaxUserSecPerCall(currentValueLocation, tmpDouble);
+	    if((thread.getMaxUserSecPerCall(currentValueLocation)) < tmpDouble)
+		thread.setMaxUserSecPerCall(currentValueLocation, tmpDouble);
 	    inGTDE.setUserSecPerCall(currentValueLocation, tmpDouble);
 	}
 	catch(Exception e){
@@ -1436,37 +1390,23 @@ public class Trial{ //extends Thread{
     
 	this.addDefaultToVectors();
     
-	GlobalServer tmpGlobalServer;
-	GlobalContext tmpGlobalContext;
-	GlobalThread tmpGlobalThread;
+	Node node;
+	Context context;
+	Thread thread;
 	GlobalThreadDataElement tmpGlobalThreadDataElement;
-    
-	Vector tmpContextList;
-	Vector tmpThreadList;
-	Vector tmpThreadDataList;
-    
+     
 	//Get a reference to the global data.
 	Vector tmpVector = this.getNodes();
     
 	for(Enumeration e3 = tmpVector.elements(); e3.hasMoreElements() ;){
-	    tmpGlobalServer = (GlobalServer) e3.nextElement();
-      
-	    //Enter the context loop for this server.
-	    tmpContextList = tmpGlobalServer.getContextList();
-        
-	    for(Enumeration e4 = tmpContextList.elements(); e4.hasMoreElements() ;){
-		tmpGlobalContext = (GlobalContext) e4.nextElement();
-          
-		//Enter the thread loop for this context.
-		tmpThreadList = tmpGlobalContext.getThreadList();
-		for(Enumeration e5 = tmpThreadList.elements(); e5.hasMoreElements() ;){
-		    tmpGlobalThread = (GlobalThread) e5.nextElement();
-		    tmpGlobalThread.incrementStorage();
-          
-		    tmpThreadDataList = tmpGlobalThread.getThreadDataList();
-		    for(Enumeration e6 = tmpThreadDataList.elements(); e6.hasMoreElements() ;){
+	    node = (Node) e3.nextElement();
+ 	    for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
+		context = (Context) e4.nextElement();
+ 		for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
+		    thread = (Thread) e5.nextElement();
+		    thread.incrementStorage();
+		    for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
 			tmpGlobalThreadDataElement = (GlobalThreadDataElement) e6.nextElement();
-            
 			//Only want to add an element if this mapping existed on this thread.
 			//Check for this.
 			if(tmpGlobalThreadDataElement != null){
@@ -1489,9 +1429,9 @@ public class Trial{ //extends Thread{
                   
 				tmpDouble = tmpDouble1+tmpDouble2;
 				tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
-				if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-				    tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-				tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
+				if((thread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+				    thread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				thread.incrementTotalExclusiveValue(tmpDouble);
                     
 				//Now do the global mapping element exclusive stuff.
 				if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
@@ -1505,9 +1445,9 @@ public class Trial{ //extends Thread{
                   
 				tmpDouble = tmpDouble1+tmpDouble2;
 				tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
-				if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-				    tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-				tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
+				if((thread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+				    thread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				thread.incrementTotalInclusiveValue(tmpDouble);
                     
 				//Now do the global mapping element inclusive stuff.
 				if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
@@ -1522,9 +1462,9 @@ public class Trial{ //extends Thread{
 				if(tmpDouble1 > tmpDouble2){
 				    tmpDouble = tmpDouble1 - tmpDouble2;
 				    tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
-				    if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-					tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-				    tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
+				    if((thread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+					thread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				    thread.incrementTotalExclusiveValue(tmpDouble);
                       
 				    //Now do the global mapping element exclusive stuff.
 				    if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
@@ -1538,9 +1478,9 @@ public class Trial{ //extends Thread{
 				if(tmpDouble1 > tmpDouble2){
 				    tmpDouble = tmpDouble1 - tmpDouble2;
 				    tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
-				    if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-					tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-				    tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
+				    if((thread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+					thread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				    thread.incrementTotalInclusiveValue(tmpDouble);
                       
 				    //Now do the global mapping element inclusive stuff.
 				    if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
@@ -1555,9 +1495,9 @@ public class Trial{ //extends Thread{
                   
 				tmpDouble = tmpDouble1*tmpDouble2;
 				tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
-				if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-				    tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-				tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
+				if((thread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+				    thread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				thread.incrementTotalExclusiveValue(tmpDouble);
                     
 				//Now do the global mapping element exclusive stuff.
 				if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
@@ -1569,9 +1509,9 @@ public class Trial{ //extends Thread{
                   
 				tmpDouble = tmpDouble1*tmpDouble2;
 				tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
-				if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-				    tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-				tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
+				if((thread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+				    thread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				thread.incrementTotalInclusiveValue(tmpDouble);
                   
 				//Now do the global mapping element inclusive stuff.
 				if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
@@ -1588,9 +1528,9 @@ public class Trial{ //extends Thread{
 				    tmpDouble = tmpDouble1/tmpDouble2;
                     
 				    tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
-				    if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
-					tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
-				    tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
+				    if((thread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+					thread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
+				    thread.incrementTotalExclusiveValue(tmpDouble);
                     
 				    //Now do the global mapping element exclusive stuff.
 				    if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
@@ -1604,9 +1544,9 @@ public class Trial{ //extends Thread{
 				if(tmpDouble2 != 0){
 				    tmpDouble = tmpDouble1/tmpDouble2;
 				    tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
-				    if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
-					tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
-				    tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
+				    if((thread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+					thread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
+				    thread.incrementTotalInclusiveValue(tmpDouble);
                     
 				    //Now do the global mapping element inclusive stuff.
 				    if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
@@ -1622,11 +1562,11 @@ public class Trial{ //extends Thread{
 		    }
           
 		    //Now try setting the percent values.
-		    for(Enumeration e7 = tmpThreadDataList.elements(); e7.hasMoreElements() ;){
+		    for(Enumeration e7 = thread.getFunctionList().elements(); e7.hasMoreElements() ;){
 			tmpGlobalThreadDataElement = (GlobalThreadDataElement) e7.nextElement();
             
-			double exclusiveTotal = tmpGlobalThread.getTotalExclusiveValue();
-			double inclusiveMax = tmpGlobalThread.getMaxInclusiveValue(currentValueLocation);
+			double exclusiveTotal = thread.getTotalExclusiveValue();
+			double inclusiveMax = thread.getMaxInclusiveValue(currentValueLocation);
             
 			boolean excl = false;
 			boolean incl = false;
@@ -1650,8 +1590,8 @@ public class Trial{ //extends Thread{
 			    if(excl){
 				double result = (tmpDouble1/exclusiveTotal) * 100;
 				tmpGlobalThreadDataElement.setExclusivePercentValue(currentValueLocation, result);
-				if((tmpGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < result)
-				    tmpGlobalThread.setMaxExclusivePercentValue(currentValueLocation, result);
+				if((thread.getMaxExclusivePercentValue(currentValueLocation)) < result)
+				    thread.setMaxExclusivePercentValue(currentValueLocation, result);
                 
 				//Now do the global mapping element exclusive stuff.
 				if((tmpGlobalMappingElement.getMaxExclusivePercentValue(currentValueLocation)) < result)
@@ -1661,8 +1601,8 @@ public class Trial{ //extends Thread{
 			    if(incl){
 				double result = (tmpDouble2/inclusiveMax) * 100;
 				tmpGlobalThreadDataElement.setInclusivePercentValue(currentValueLocation, result);
-				if((tmpGlobalThread.getMaxInclusivePercentValue(currentValueLocation)) < result){
-				    tmpGlobalThread.setMaxInclusivePercentValue(currentValueLocation, result);}
+				if((thread.getMaxInclusivePercentValue(currentValueLocation)) < result){
+				    thread.setMaxInclusivePercentValue(currentValueLocation, result);}
                   
 				//Now do the global mapping element exclusive stuff.
 				if((tmpGlobalMappingElement.getMaxInclusivePercentValue(currentValueLocation)) < result)
@@ -1748,10 +1688,6 @@ public class Trial{ //extends Thread{
   
     public int getNumberOfUserEvents(){
 	return numberOfUserEvents;
-    }
-  
-    public int getTotalNumberOfThreads(){
-	return totalNumberOfThreads;
     }
   
     public void setMaxMeanInclusiveValue(int dataValueLocation, double inDouble){
@@ -1889,7 +1825,8 @@ public class Trial{ //extends Thread{
 
     private int numberOfMappings = -1;
     private int numberOfUserEvents = -1;
-    private int totalNumberOfThreads = 0;
+    private int totalNumberOfContexts = -1;
+    private int totalNumberOfThreads = -1;
     private int[] nct = null;
   
     //Max mean values.
@@ -1914,7 +1851,7 @@ public class Trial{ //extends Thread{
 class UserEventData{
     public int node = -1;
     public int context = -1;
-    public int thread = -1;
+    public int threadID = -1;
     public int id = -1;
     public String name = null;
     public int noc = -1;

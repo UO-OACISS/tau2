@@ -1,10 +1,9 @@
 /* 
-  
-GlobalThreadDataElement
-  
-Title:      ParaProf
-Author:     Robert Bell
-Description:  
+   GlobalThreadDataElement.java
+   
+   Title:      ParaProf
+   Author:     Robert Bell
+   Description: 
 */
 
 package paraprof;
@@ -13,23 +12,30 @@ import java.util.*;
 import java.io.*;
 import java.text.*;
 
-public class GlobalThreadDataElement
-{
-    //Constructor.
-    public GlobalThreadDataElement(Trial inTrial, boolean inUserElement){ 
-	trial = inTrial;
+public class GlobalThreadDataElement{
+    
+    //####################################
+    //Contructor(s).
+    //####################################
+    public GlobalThreadDataElement(Trial trial, boolean ue){
+	this.trial = trial;
 	mappingID = -1;
     
-	if(inUserElement){
-	    userElement = true;
+	if(ue){
+	    userevent = true;
 	    doubleList = new double[3];
 	}
 	else{
 	    doubleList = new double[5];
 	}
     }
+    //####################################
+    //End - Contructor(s).
+    //####################################
   
-    //Rest of the public functions.
+    //####################################
+    //Public section.
+    //####################################
     public String getMappingName(){
 	GlobalMappingElement tmpGME = (GlobalMappingElement) (trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
 	return tmpGME.getMappingName();}
@@ -525,14 +531,22 @@ public class GlobalThreadDataElement
 	}
     }
 
-    private static int insertSpaces(char[] inArray, int position, int number){
-	for(int i=0;i<number;i++){
-	    inArray[position] = '\u0020';
-	    position++;
+    public void incrementStorage(){
+	if(userevent)
+	    ParaProf.systemError(null, null, "Error: Attemp to increase storage on a user event object!");
+	int currentLength = doubleList.length;
+	//can use a little space here ... space for speed! :-)
+	double[] newArray = new double[currentLength+5];
+	
+	for(int i=0;i<currentLength;i++){
+	    newArray[i] = doubleList[i];
 	}
-	return position;
+	doubleList = newArray;
     }
-  
+
+    //####################################
+    //Private section.
+    //####################################
     private void insertDouble(int dataValueLocation, int offset, double inDouble){
 	int actualLocation = (dataValueLocation*5)+offset;
 	try{
@@ -553,37 +567,38 @@ public class GlobalThreadDataElement
 	}
 	return -1;
     }
-  
-    public void incrementStorage(){
-	if(userElement)
-	    System.out.println("We are trying to increase storage on a user event object!");
-	
-	int currentLength = doubleList.length;
-
-	//can use a little space here ... space for speed! :-)
-	double[] newArray = new double[currentLength+5];
-	    
-	for(int i=0;i<currentLength;i++){
-	    newArray[i] = doubleList[i];
-	}
-	doubleList = newArray;
-    }
     
-  
+    private static int insertSpaces(char[] inArray, int position, int number){
+	for(int i=0;i<number;i++){
+	    inArray[position] = '\u0020';
+	    position++;
+	}
+	return position;
+    }
+
+    //####################################
+    //End - Private section.
+    //####################################
+    
+    //####################################
     //Instance data.
+    //####################################
+    int mappingID;
     private Trial trial = null;
     boolean mappingExists = false;
-    int mappingID;
     private double[] doubleList;
     private int numberOfCalls = 0;
     private int numberOfSubRoutines = 0;
     int userEventNumberValue = 0;
-    boolean userElement = false;
+    boolean userevent = false;
 
     private Vector parents = null;
     private Vector children = null;
     private Vector callPathIDSParents = null;
     private Vector callPathIDSChildren = null;
+    //####################################
+    //End - Instance data.
+    //####################################
 }
 
 
