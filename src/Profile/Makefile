@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/users/sameer/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -124,6 +124,7 @@ TAU_SHLIBX		= .so
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
+#USE_IBMXLC#AR_SHFLAGS          = -G 		#ENDIF#
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
