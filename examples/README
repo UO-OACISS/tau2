@@ -1,0 +1,84 @@
+This directory contains example programs that illustrate the use of TAU
+instrumentation and measurement options.
+
+instrument 	- This contains a simple C++ example that shows how TAU's
+		  API can be used for manually instrumenting a C++ program.
+		  It highlights instrumentation for templates and user 
+		  defined events.
+
+threads		- A simple multi-threaded program that shows how the main
+	 	  function of a thread is instrumented. Performance data 
+		  is generated for each thread of execution.
+
+cthreads	- Same as threads above, but for a C program. An 
+		  instrumented C program may be compiled with a C compiler,
+		  but needs to be linked with a C++ linker.
+
+pi		- An MPI program that calculates the value of pi and e. It
+		  highlights the use of TAU's MPI wrapper library. TAU needs
+		  to be configured with -mpiinc=<dir> and -mpilib=<dir> to 
+		  use this.
+
+papi		- A matrix multiply example that shows how to use TAU statement
+		  level timers for comparing the performance of two algorithms 
+		  for matrix multiplication. When used with PAPI or PCL, this
+		  can highlight the cache behaviors of these algorithms. TAU 
+		  should be configured with -papi=<dir> or -pcl=<dir> and the 
+		  user should set PAPI_EVENT or PCL_EVENT respective environment
+		  variables, to use this.
+
+papithreads	- Same as papi, but uses threads to highlight how hardware 
+		  performance counters may be used in a multi-threaded 
+		  application. When it is used with PAPI, TAU should be 
+		  configured with -papi=<dir> -pthread
+
+autoinstrument  - Shows the use of Program Database Toolkit (PDT) for 
+		  automating the insertion of TAU macros in the source code. It
+		  requires configuring TAU with the -pdt=<dir> option. The 
+		  Makefile is modified to illustrate the use of a source to 
+		  source translator (tau_instrumentor). 
+
+fortran & f90   - Show how to instrument a simple Fortran 90 program. A C++ 
+		  linker needs to be used when linking the fortran application.
+
+NPB2.3		- The NAS Parallel Benchmark 2.3 [from NASA Ames]. It shows how
+		  to use TAU's MPI wrapper with a manually instrumented Fortran
+		  program. LU and SP are the two benchmarks. LU is instrumented
+	 	  completely, while only parts of the SP program are 
+		  instrumented to contrast the coverage of routines. In both 
+		  cases MPI level instrumentation is complete. TAU needs to be
+		  configured with -mpiinc=<dir> and -mpilib=<dir> to use this.
+
+dyninst		- An example that shows the use of DyninstAPI [U. Maryland, 
+		  U. Wisconsin] to insert TAU instrumentation. Using Dyninst, 
+		  no modifications are needed and tau_run, a runtime 
+		  instrumentor, inserts TAU calls at routine transitions in 
+		  the program. [This represents work in progress]. 
+
+dyninstthreads  - The above example with threads.
+
+java		- Shows a java program for calculating the value of pi. It 
+		  illustrates the use of the TAU JVMPI layer for instrumenting
+		  a Java program without any modifications to its source code,
+		  byte-code or the JVM. It requires a Java 2 compliant JVM and
+		  TAU needs to be configured with the -jdk=<dir> option to use
+		  this. 
+
+openmp		- Shows how to manually instrument an OpenMP program using the 
+		  TAU API. There are subdirectories for C, C++ and F90 to show
+		  the differences in instrumentation and Makefiles. TAU needs to
+		  be configured with the -openmp option to use this. 
+
+openmpi		- Illustrates TAU's support for hybrid exection models in the 
+		  form of MPI for message passing and OpenMP threads. TAU needs
+		  to be configured with -mpiinc=<dir> -mpilib=<dir> -openmp
+		  options to use this. 
+
+
+
+
+
+
+			
+
+
