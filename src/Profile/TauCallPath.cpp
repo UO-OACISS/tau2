@@ -33,6 +33,7 @@
 //#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
 #include "Profile/Profiler.h"
 #include <string.h>
+#include <stdio.h>
 
 #include <map>
 #include <string>
@@ -184,6 +185,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2002/08/09 18:09:01 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.5 2002/08/09 18:09:01 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 2002/08/20 11:18:56 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.6 2002/08/20 11:18:56 sameer Exp $ 
  ***************************************************************************/
