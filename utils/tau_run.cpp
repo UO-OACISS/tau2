@@ -513,7 +513,11 @@ int main(int argc, char **argv){
   }//for -- modules
 
 
+#ifdef __SP1__
+  BPatch_function *exitpoint = tauFindFunction(appImage, "exit");
+#else /* SP1 */
   BPatch_function *exitpoint = tauFindFunction(appImage, "_exit");
+#endif /* SP1 */
 
   if (exitpoint == NULL) {
     fprintf(stderr, "UNABLE TO FIND exit() \n");
