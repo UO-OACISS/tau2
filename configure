@@ -121,6 +121,7 @@ tautag=
 orig_useropt=
 mpi=no
 mpi2=no
+mpiio=no
 mpiinc=
 mpilib=
 mpilibrary=no
@@ -1796,6 +1797,33 @@ EOF
     return MPI_Comm_create_errhandler(a,b);
  
   }
+  int bar (MPI_File_errhandler_fn * function, MPI_Errhandler * errhandler)
+  {
+    return MPI_File_create_errhandler(function, errhandler);
+  }
+EOF
+
+  cat <<EOF > mpi2hpconst.C
+  #include <mpi.h>
+  /* HP MPI uses const char * instead of char * in the 
+     prototypes of the following routines */
+  int foo(MPI_Info Info, const char *key, const char *value)
+  { 
+    return MPI_Info_set(Info, key, value);
+  }
+  int f1(MPI_Info a, const char * b, int c, char * d, int *e) 
+  {
+    return MPI_Info_get(a,b,c,d,e);
+  }
+  int f2(MPI_Info a, const char *b)
+  {
+    return MPI_Info_delete(a,b);
+  }
+  int f3(MPI_Info a, const char * b, int * c, int * d)
+  {
+    return MPI_Info_get_valuelen(a,b,c,d);
+  }
+
 EOF
 
   if $cxx_compiler $orig_useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
@@ -1825,6 +1853,7 @@ EOF
     then 
       echo "MPI-2 MPIO_Request Interface is defined..."
       fixmakeargs="$fixmakeargs MPIOREQUEST"
+      mpiio=yes
     fi
   fi
 
@@ -1846,11 +1875,19 @@ EOF
     fi
   fi
 
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2hpconst.C  1> /dev/null 2>&1
+  then
+    if [ $mpi2 = yes ]  
+    then 
+      echo "MPI-2 MPI_Info_set takes const char * instead of char * args"
+      fixmakeargs="$fixmakeargs MPICONSTCHAR"
+    fi
+  fi
+
+  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C mpi2hpconst.o mpi2hpconst.C
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
-
 
   
 
@@ -2001,6 +2038,13 @@ then
     # both found.
     # libmpi.* not found - look for libmpich.*
     # For fortran libfmpich.* look for libpmpi
+
+    # Check for libmpio.a
+    if [ $mpiio = yes -a -r $mpilib/libmpio.a ]
+    then
+      mpilibargs="$mpilibargs -lmpio"
+      mpiflibargs="$mpiflibargs -lmpio"
+    fi
 
     # Special check for LAM MPI
     if [ -r $mpilib/liblam.a ]
