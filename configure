@@ -766,12 +766,12 @@ x)      echo="echo"     nnl="\c";;  #SysV
 esac
 
 # lth@cs.uoregon.edu: don't mess with the compiler if it is 'default'.
-# The user may define CCOM as an environment variable or let it be blank;
+# The user may define TAU_CCOM as an environment variable or let it be blank;
 # if blank, it is defaulted in archfind.
 
 if [ "$c_compiler" != "" -a "$c_compiler" != "default" ]; then
-  CCOM="$c_compiler"          # for 'archfind'
-  export CCOM
+  TAU_CCOM="$c_compiler"          # for 'archfind'
+  export TAU_CCOM
 fi
 
 
