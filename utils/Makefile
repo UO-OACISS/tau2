@@ -63,6 +63,7 @@ CWARNING	= $(WARNINGSOPT)
 #DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -lpdutil -liberty -lelf #ENDIF#
 # -lelf is for Solaris only
 
+#SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
 
 
 # Compiler specific flags

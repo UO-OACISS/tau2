@@ -41,6 +41,9 @@
 # include <iostream>
 # include <map>
 using namespace std;
+#ifdef SOL2CC
+#define qsort(a, b, c, d) std::qsort(a, (unsigned) b, (unsigned) c, d)
+#endif
 #else 
 # include <iostream.h>
 # include <map.h>
@@ -655,7 +658,7 @@ int DumpFtabFile(char *prefix)
     fclose (fp);
     return 1;
   }
-  if (errno == ENOENT) /* The file does not exist - create it! */
+  if (::errno == ENOENT) /* The file does not exist - create it! */
     fclose(fp); /* reopen in another mode */
  
   if ((fp = fopen(filename, "w+")) == NULL) {
@@ -2069,7 +2072,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
   /* -- read profile data file and set profile data tables ------------------ */
   /* ------------------------------------------------------------------------ */
   if ( (in = fopen (proffile, "r")) == NULL ) {
-    if ( errno == ENOENT && ignore)
+    if ( ::errno == ENOENT && ignore)
       return (FALSE);
     else {
       perror (proffile);
@@ -2927,7 +2930,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 1999/08/19 23:50:28 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.18 1999/08/19 23:50:28 sameer Exp $                                                   
+ * $Revision: 1.19 $   $Date: 1999/09/08 22:47:43 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.19 1999/09/08 22:47:43 sameer Exp $                                                   
  ***************************************************************************/
 
