@@ -617,6 +617,10 @@ fi
 	echo "NOTE: Using Opari OpenMP directive rewriting tool ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     KOJAKOPARI)
+	echo "NOTE: Using KOJAK's Opari implementation ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      OPARI_REGION)
 	echo "NOTE: Using Opari tool with OpenMP region information ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

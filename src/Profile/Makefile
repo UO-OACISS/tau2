@@ -306,6 +306,9 @@ OpenMPLayer.o 	: OpenMPLayer.cpp $(HDRS)
 TauOpari.o 	: TauOpari.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauKojakOpari.o : TauKojakOpari.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 TauLinuxTimers.o : TauLinuxTimers.c $(HDRS)
 	gcc -c $(@:.o=.c)
 

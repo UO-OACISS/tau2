@@ -2114,6 +2114,11 @@ fi
 
 if [ $opari = yes ]
   then
+    kojakopari=`grep POMP_Finalize $oparidir/lib/pomp_lib.h | wc -l`
+    if [ $kojakopari = 1 ] 
+    then
+      fixmakeargs="$fixmakeargs KOJAKOPARI"
+    fi
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
 fi
