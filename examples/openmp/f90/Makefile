@@ -47,7 +47,7 @@ all:		$(TARGET)
 install: 	$(TARGET)
 
 $(TARGET):	ppm.o $(TARGET).o mytimer.o
-	$(CXX) $(LDFLAGS) $(TARGET).o ppm.o mytimer.o -o $@ $(LIBS)
+	$(TAU_LINKER) $(LDFLAGS) $(TARGET).o ppm.o mytimer.o -o $@ $(LIBS)
 
 $(TARGET).o : $(TARGET).f90
 	$(F90) $(FFLAGS) -c $(TARGET).f90

@@ -72,7 +72,7 @@ install: 	$(TARGET)
 OBJS	= main.o f1.o f2.o
 
 $(TARGET):	$(OBJS) 
-	$(CXX) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
+	$(TAU_LINKER) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 # Compilation rule
 main.o : main.c

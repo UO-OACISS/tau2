@@ -44,7 +44,7 @@ all:		$(TARGET)
 install: 	$(TARGET)
 
 $(TARGET):	$(TARGET).o  
-	$(CXX) $(LDFLAGS) $(TARGET).o  -o $@ $(LIBS)
+	$(TAU_LINKER) $(LDFLAGS) $(TARGET).o  -o $@ $(LIBS)
 
 $(TARGET).o : $(TARGET).f
 	$(F90) $(FFLAGS) -c $(TARGET).f

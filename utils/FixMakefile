@@ -322,6 +322,10 @@ fi
 	echo NOTE: Using the IBM xlC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     USE_INTELCXX)
+	echo NOTE: Using the Intel ecpc C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      HITACHI)
 	echo NOTE: Using the HITACHI SR8000 MPP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -774,6 +778,10 @@ fi
 	;;
      KAI_FORTRAN)
 	echo "NOTE: KAI guidef90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     INTEL_FORTRAN)
+	echo "NOTE: Intel efc compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 

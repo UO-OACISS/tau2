@@ -35,7 +35,7 @@ LIBS            = $(TAU_MPI_FLIBS) $(TAU_LIBS) $(LEXTRA1) $(EXTRALIBS) $(TAU_FOR
 
 LDFLAGS	      	= $(USER_OPT)  $(TAU_LDFLAGS)
 
-LINKER 		= $(CXX)
+LINKER 		= $(TAU_LINKER)
 
 TARGET	      	= ring
 

@@ -34,7 +34,7 @@ include $(TAUDIR)/include/Makefile
 #---------------------------------------------------------------------------
 MPIF77 = $(TAU_F90) 
 # This links MPI fortran programs; usually the same as ${MPIF77}
-FLINK	= $(TAU_CXX)
+FLINK	= $(TAU_LINKER)
 
 #---------------------------------------------------------------------------
 # These macros are passed to the linker to help link with MPI correctly

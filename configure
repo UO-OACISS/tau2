@@ -186,11 +186,11 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc ]
       then
         c_compiler=$myarg
       else
-      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', 'xlc' and 'pgcc' "
+      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', 'xlc', 'ecc' and 'pgcc' "
 #      exit 1
     fi
     shift
@@ -198,11 +198,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC' and 'c++'"
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', and 'c++'"
 #      exit 1
     fi
     shift
@@ -221,11 +221,11 @@ do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi ] 
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel ] 
     then
       fortran_compiler=$myarg
     else
-      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', and 'hitachi' "
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi' and 'intel' "
       exit 1
     fi
     shift
@@ -630,9 +630,9 @@ echo "-----------------------------------------------------------------"
 fixmakeargs="$fixmakeargs tauroot=$tauroot"
 # Try and figure out architecture
 detectarch=unknown
-detectarch=`cd utils; ./archfind`
-detectxdev=`cd utils; ./archfind -x`
-detectspec=`cd utils; ./archfind -s`
+detectarch=`cd utils; ./archfind` 
+detectxdev=`cd utils; ./archfind -x` 
+detectspec=`cd utils; ./archfind -s` 
 
 
 ###############################################################
@@ -1055,6 +1055,14 @@ case $cxx_compiler in
       tauoptions="${tauoptions}-cxx"
 
       ;;
+
+   ecpc)
+      echo "Default C++ compiler will be Intel ecpc C++ compiler"
+      fixmakeargs="$fixmakeargs USE_INTELCXX"
+      tauoptions="${tauoptions}-ecpc"
+
+      ;;
+	
    *)
       echo "ERROR Unknown C++ compiler"
       exit 1
@@ -1136,6 +1144,10 @@ case $fortran_compiler in
       fixmakeargs="$fixmakeargs KAI_FORTRAN"
       ;;
 
+   intel)
+      echo "Default Fortran compiler will be Intel efc"
+      fixmakeargs="$fixmakeargs INTEL_FORTRAN"
+      ;;
    no)
       ;;
 

@@ -112,6 +112,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #KAI_FORTRAN#TAU_F90         = guidef90 $(ABI)    #ENDIF#
 #HP_FORTRAN#TAU_F90          = f90 	$(ABI)    #ENDIF#
 #HITACHI_FORTRAN#TAU_F90     = f90 	$(ABI)    #ENDIF#
+#INTEL_FORTRAN#TAU_F90       = efc 	$(ABI)    #ENDIF#
 
 
 ############# Profiling Options #############
@@ -151,6 +152,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SMARTS#PROFILEOPT18  = -DSMARTS   #ENDIF#
 #KAI#PROFILEOPT19  	       = -DKAI   #ENDIF#
 #USE_DECCXX#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
+#USE_INTELCXX#PROFILEOPT19     = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
 #PGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
 #ACC#PROFILEOPT19  	       = -AA +z -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 #FUJITSU#PROFILEOPT19  	       = -DFUJITSU -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
@@ -189,6 +191,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SGIMP#FWRAPPER	       = TauFMpi.o       #ENDIF#
 #SP1#FWRAPPER	       = TauFMpi.o       #ENDIF#
 #PGI_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
+#INTEL_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = -L$(PCLDIR)/lib -lpcl 	       #ENDIF#
@@ -270,6 +273,12 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) $(TAU
 
 ##############################################
 
+############# TAU Fortran ####################
+TAU_LINKER=$(TAU_CXX)
+#INTEL_FORTRAN#TAU_LINKER=$(TAU_F90) #ENDIF#
+# Intel efc compiler acts as a linker
+
+##############################################
 ############# TAU Options ####################
 TAUDEFS 	= $(PROFILEOPTS) 
 
