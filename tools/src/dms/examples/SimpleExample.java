@@ -19,10 +19,12 @@ public class SimpleExample {
 		session.open();
 
 		// select the application
-		session.setApplication("example");
+		Application myApp = session.setApplication("example", null);
+		System.out.println("Got application: " + myApp.getName() + ", version " + myApp.getVersion());
 
 		// select an experiment
-		session.setExperiment(1);
+		Experiment myExp = session.setExperiment(1);
+		System.out.println("Got experiment: " + myApp.getID());
 
 		// Get the list of trials
 		ListIterator trials;
@@ -41,10 +43,21 @@ public class SimpleExample {
 		// Get the data
 		myIterator = session.getFunctionData();
 		FunctionDataObject fundo;
+		String name;
+		int t, n, c, h;
+		double inclusivePercentage;
 
+		System.out.println ("Inclusive Percentages:");
+		System.out.println ("Trial, Node, Context, Thread, Name, Value:");
 		while (myIterator.hasNext()) {
 			fundo = (FunctionDataObject)(myIterator.next());
-			System.out.println ("inclusive percentage = " + fundo.getInclusivePercentage());
+			name = session.getFunction(fundo.getFunctionID()).getName();
+			t = session.getFunction(fundo.getFunctionID()).getTrialID();
+			n = fundo.getNodeID();
+			c = fundo.getContextID();
+			h = fundo.getThreadID();
+			inclusivePercentage = fundo.getInclusivePercentage();
+			System.out.println (t + ", " + n + ", " + c + ", " + t + ", " + name + " = " + fundo.getInclusivePercentage());
 
 		}
 

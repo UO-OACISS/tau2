@@ -17,16 +17,16 @@ public class FunctionDataObject {
 		this.functionID = functionID;
 	}
 
-	public void setNodeID (int functionID) {
-		this.functionID = functionID;
+	public void setNodeID (int nodeID) {
+		this.nodeID = nodeID;
 	}
 
-	public void setContextID (int functionID) {
-		this.functionID = functionID;
+	public void setContextID (int contextID) {
+		this.contextID = contextID;
 	}
 
-	public void setThreadID (int functionID) {
-		this.functionID = functionID;
+	public void setThreadID (int threadID) {
+		this.threadID = threadID;
 	}
 
 	public void setInclusivePercentage (double inclusivePercentage) {

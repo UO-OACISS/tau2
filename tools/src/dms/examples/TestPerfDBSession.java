@@ -41,7 +41,7 @@ public class TestPerfDBSession {
 		// select an application, another way
 		session.setApplication(app.getID());
 		// select an application, yet another way
-		session.setApplication(app.getName());
+		session.setApplication(app.getName(), null);
 
 		// Get the list of experiments
 		ListIterator experiments;

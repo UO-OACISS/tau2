@@ -12,6 +12,7 @@ public abstract class DataSession {
 	protected Vector threads = null;
 	protected Vector functions = null;
 	protected Vector functionData = null;
+	protected Hashtable functionHash = null;
 
 	public DataSession () {
 		super();
@@ -39,7 +40,7 @@ public abstract class DataSession {
 
 	abstract public Application setApplication(int id) ;
 
-	abstract public Application setApplication(String name) ;
+	abstract public Application setApplication(String name, String version) ;
 
 	// set the Experiment for this session
 	public void setExperiment(Experiment experiment) {
@@ -112,6 +113,13 @@ public abstract class DataSession {
 	
 	public void setFunction(Vector functions) {
 		this.functions = functions;
+	}
+	
+	public Function getFunction(int functionID) {
+		if (functionHash == null)
+			getFunctions();
+
+		return (Function)functionHash.get(new Integer(functionID));
 	}
 	
 	abstract public ListIterator getFunctionData();

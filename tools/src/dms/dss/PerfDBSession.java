@@ -160,17 +160,15 @@ public class PerfDBSession extends DataSession {
 		return app;
 	}
 
-	public Application setApplication(String name /*, String version = null */) {
+	public Application setApplication(String name, String version) {
 		// create a string to hit the database
 		Application app = null;
 		StringBuffer buf = new StringBuffer();
 		buf.append("select distinct appid, appname, version, description from applications");
 		buf.append(" where appname = '" + name + "'");
-		/* 
 		if (version != null) {
 			buf.append(" and version = " + version);
 		}
-		*/
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -405,6 +403,13 @@ public class PerfDBSession extends DataSession {
 
 	// returns a Vector of Functions
 	public ListIterator getFunctions() {
+		// clean out the old function name hashtable
+		if (functionHash != null) 
+			functionHash = null;
+
+		// create a new function name hashtable
+		functionHash = new Hashtable();
+
 		Vector funs = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
@@ -476,6 +481,7 @@ public class PerfDBSession extends DataSession {
 				funTS.setInclusivePerCall(resultSet.getDouble(20));
 				fun.setTotalSummary(funTS);
 				funs.addElement(fun);
+				functionHash.put(new Integer(fun.getIndexID()), fun);
 	    	}
 			resultSet.close(); 
 		}catch (Exception ex) {
@@ -546,6 +552,9 @@ public class PerfDBSession extends DataSession {
 	}
 
 	public ListIterator getFunctionData() {
+		// get the hash of function names first
+		getFunctions();
+
 		Vector functionData = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
@@ -660,6 +669,10 @@ public class PerfDBSession extends DataSession {
 				funDO.setNumCalls((int)(resultSet.getDouble(5)));
 				funDO.setNumSubroutines((int)(resultSet.getDouble(6)));
 				funDO.setInclusivePerCall(resultSet.getDouble(7));
+				funDO.setNodeID(resultSet.getInt(9));
+				funDO.setContextID(resultSet.getInt(10));
+				funDO.setThreadID(resultSet.getInt(11));
+				funDO.setFunctionID(resultSet.getInt(12));
 				functionData.addElement(funDO);
 	    	}
 			resultSet.close(); 
@@ -668,17 +681,6 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 
-		// print the data
-		/*
-		FunctionDataObject function = null;
-        for(Enumeration en = functionData.elements(); en.hasMoreElements() ;)
-		{
-			function = (FunctionDataObject) en.nextElement();
-			System.out.println ("Function Data = " + function.getInclusivePercentage() + ", " + function.getInclusive() + ", " + function.getExclusivePercentage() + ", " + function.getExclusive() + ", " + function.getNumCalls() + ", " + function.getNumSubroutines() + ", " + function.getInclusivePerCall());
-		}
-
-		*/
-		
 		//Added by Robert.  Looks like the correct place to add it. :-)
 		return new DataSessionIterator(functionData);
 
