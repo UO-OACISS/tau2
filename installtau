@@ -8,6 +8,8 @@ arch=no
 cc=no
 cxx=no
 fortran=no
+mpiopts=
+mpi=no
 mpiinc=no
 mpilib=no
 tag=no
@@ -94,6 +96,11 @@ do
     shift
     ;;
 
+  -mpi)
+    mpi=yes
+    shift
+    ;;
+
   -nocomm)
     commopt=-nocomm
     shift
@@ -162,6 +169,28 @@ do
   esac
 done
 
+# Take care of MPI options
+if [ $mpi = yes ]
+then
+  mpiopts="$mpiopts -mpi"
+fi
+
+if [ $mpiinc = yes ]
+then
+  mpiopts="$mpiopts -mpiinc=$mpiincdir"
+fi
+
+if [ $mpilib = yes ]
+then
+  mpiopts="$mpiopts -mpilib=$mpilibdir"
+fi
+
+if [ $mpilibrary = yes ]
+then
+  mpiopts="$mpiopts -mpilibrary=$mpilibraryspec"
+fi
+
+
 # Add tauprefix to tagopt
 if [ $tauprefix != unknown ]
 then
@@ -207,57 +236,57 @@ echo " " > wishver
   fi
 
 # Configure TAU
-  if [ $mpiinc = yes -a $mpilib = yes ]
+  if [ "x$mpiopts" != "x" ]
   then
 # Configure all versions with MPI
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts $commopt <wishver
     make clean; make install
     if [ "x$commopt" = "x" ]
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -nocomm"
-      ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -nocomm <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -nocomm"
+      ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -nocomm <wishver
       make clean; make install
     fi
 
 # Add callpath profiling 
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -PROFILECALLPATH"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -PROFILECALLPATH <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -PROFILECALLPATH"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -PROFILECALLPATH <wishver
     make clean; make install
   
 # Add COMPENSATE
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -COMPENSATE"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -COMPENSATE <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -COMPENSATE"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -COMPENSATE <wishver
     make clean; make install
 
 # Add TRACE
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE $vtfopt"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE  $vtfopt <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt <wishver
     make clean; make install
   
     if [ $papi = yes ]
     then
 # Add PAPI
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -papi=$papidir -PAPIWALLCLOCK -PAPIVIRTUAL"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -PAPIWALLCLOCK -PAPIVIRTUAL"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
       make clean; make install
 # Add -TRACE -papi multiplecounters to it
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE $vtfopt -papi=$papidir -MULTIPLECOUNTERS"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE  $vtfopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt -papi=$papidir -MULTIPLECOUNTERS"
+    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vtfopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
       make clean; make install
     fi
 
     if [ $opari = yes ]
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -opari=$oparidir"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -opari=$oparidir -openmp <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp <wishver
       make clean; make install
     fi 
 
     if [ $opari = yes -a $papi = yes ] 
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -opari=$oparidir -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL   <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
+      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL   <wishver
       make clean; make install
     fi 
   fi
