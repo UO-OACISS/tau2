@@ -33,6 +33,7 @@ enum tau_language_t { tau_c, tau_cplusplus, tau_fortran };
 /* For Pooma, add a -noinline flag */
 bool noinline_flag = false; /* instrument inlined functions by default */
 bool lang_specified = false; /* implicit detection of source language using PDB file */
+bool process_this_return = false; /* for C instrumentation using a different return keyword */
 tau_language_t tau_language; /* language of the file */
 
 struct itemRef {
@@ -524,6 +525,10 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
   return 0;
 }
 
+char return_nonvoid_string[256] = "return";
+char return_void_string[256] = "return";
+char use_return_void[256] = "return";
+char use_return_nonvoid[256] = "return";
 /* -------------------------------------------------------------------------- */
 /* -- BodyBegin for a routine that does return some value ------------------- */
 /* -------------------------------------------------------------------------- */
@@ -593,12 +598,13 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
 /* -------------------------------------------------------------------------- */
 /* -- Writes the return expression to the instrumented file  ---------------- */
 /* -------------------------------------------------------------------------- */
-void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it)
+void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it, char *use_string)
 {
   if (isReturnTypeReference(it))
-    ostr <<"{ TAU_PROFILE_STOP(tautimer); return "<< ret_expression <<"; }" <<endl;
+    ostr <<"{ TAU_PROFILE_STOP(tautimer); "<<use_string<<" "<< (ret_expression)<<"; }" <<endl;
   else 
-    ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); return tau_ret_val; }"<<endl;
+    ostr <<"{ tau_ret_val = " << ret_expression << "; TAU_PROFILE_STOP(tautimer); "<<
+	use_string<<" (tau_ret_val); }"<<endl;
 }
 
 
@@ -722,17 +728,36 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 #ifdef DEBUG 
 		cout <<"Return "<<endl;
 #endif /* DEBUG */
-		if (strncmp((const char *)&inbuf[((*it)->col)-1], "return", 6)==0)
+ 		process_this_return = false;
+		if (strncmp((const char *)&inbuf[((*it)->col)-1], 
+			return_void_string, strlen(return_void_string))==0)
 		{
-		/* currently, the return statement cannot be a macro. It *has* 
-		   to contain "return <...> ;" syntax. */
+		  process_this_return = true; 
+		  strcpy(use_return_void, return_void_string);
+	        }
+		if (strncmp((const char *)&inbuf[((*it)->col)-1], 
+			return_nonvoid_string, strlen(return_nonvoid_string))==0)
+		{
+		  process_this_return = true; 
+		  strcpy(use_return_nonvoid, return_nonvoid_string);
+	        }
+		if (strncmp((const char *)&inbuf[((*it)->col)-1], 
+			"return", strlen("return")) == 0)
+		{
+		  process_this_return = true;
+		  strcpy(use_return_void, "return");
+		  strcpy(use_return_nonvoid, "return");
+		}
+
+		if (process_this_return)
+		{
 		  if (isVoidRoutine(*it))
 		  {	
 #ifdef DEBUG 
 		    cout <<" Return for a void routine" <<endl;
 #endif /* DEBUG */
 		    /* instrumentation code here */
-		    ostr << "{ TAU_PROFILE_STOP(tautimer); return; }" <<endl;
+		    ostr << "{ TAU_PROFILE_STOP(tautimer); "<<use_return_void<<"; }" <<endl;
 		    for (k=((*it)->col)-1; inbuf[k] !=';'; k++)
 		     ;
 		    write_from = k+1;
@@ -743,7 +768,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 #ifdef DEBUG 
 		    cout <<"Return for a non void routine "<<endl;
 #endif /* DEBUG */
-		    for (k = (*it)->col+5; (inbuf[k] != ';') && (k<inbufLength) ; k++)
+		    for (k = (*it)->col+strlen(use_return_nonvoid)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++)
 		      ret_expression.append(&inbuf[k], 1);
 #ifdef DEBUG
 		    cout <<"k = "<<k<<" inbuf = "<<inbuf[k]<<endl;
@@ -782,7 +807,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 #ifdef DEBUG 
 		    cout <<"ret_expression = "<<ret_expression<<endl;
 #endif /* DEBUG */
-		    processReturnExpression(ostr, ret_expression, *it); 
+		    processReturnExpression(ostr, ret_expression, *it, use_return_nonvoid); 
 		    /* instrumentation code here */
 		  }
 		}
@@ -1149,7 +1174,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] "<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>]"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -1237,6 +1262,22 @@ int main(int argc, char **argv)
           printf("Using instrumentation requests file: %s\n", argv[i]); 
 #endif /* DEBUG */
   	}
+        if (strcmp(argv[i], "-rn") == 0)
+	{
+	  ++i;
+	  strcpy(return_nonvoid_string,argv[i]);
+#ifdef DEBUG
+          printf("Using non void return keyword: %s\n", return_nonvoid_string);
+#endif /* DEBUG */
+  	}
+        if (strcmp(argv[i], "-rv") == 0)
+	{
+	  ++i;
+	  strcpy(return_void_string,argv[i]);
+#ifdef DEBUG
+          printf("Using void return keyword: %s\n", return_void_string);
+#endif /* DEBUG */
+  	}
         break;
       }
 
@@ -1310,8 +1351,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.41 $   $Date: 2002/06/17 22:12:34 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.41 2002/06/17 22:12:34 sameer Exp $
+ * $Revision: 1.42 $   $Date: 2002/07/16 18:16:30 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.42 2002/07/16 18:16:30 sameer Exp $
  ***************************************************************************/
 
 
