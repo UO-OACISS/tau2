@@ -77,7 +77,7 @@ public class PPML{
 	Context context;
 	Thread thread;
      
-	for(Enumeration e1 = trial.getNodes().elements(); e1.hasMoreElements() ;){
+	for(Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
 	    node = (Node) e1.nextElement();
  	    for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		context = (Context) e2.nextElement();

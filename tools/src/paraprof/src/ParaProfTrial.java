@@ -33,7 +33,7 @@ public class ParaProfTrial extends Trial{
 	//Now grab all the data.
 	metrics = dataSession.getMetrics();
 	globalMapping = dataSession.getGlobalMapping();
-	nodes = dataSession.getNodes();
+	nct = dataSession.getNCT();
 	groupNamesPresent = dataSession.groupNamesPresent();
 	userEventsPresent = dataSession.userEventsPresent();
 	callPathDataPresent = dataSession.callPathDataPresent();
@@ -115,26 +115,14 @@ public class ParaProfTrial extends Trial{
 
     public String toString(){ 
 	return super.getName();}
+
+    public NCT getNCT(){
+	return nct;}
   
-    public int getNumberOfNodes(){
-	return nodes.size();}
-
-    public Vector getNodes(){
-	return nodes;}
-
-    public Node getNode(int nodeID){
-	return (Node) nodes.elementAt(nodeID);}
-
-    public Vector getContexts(int nodeID){
-	return (this.getNode(nodeID)).getContexts();}
-
-    public Context getContext(int nodeID, int contextID){
-	return (this.getNode(nodeID)).getContext(contextID);}
-
     //Returns the total number of threads in this trial.
     public int getTotalNumberOfThreads(){
 	if(totalNumberOfThreads==-1){
-	    for(Enumeration e1 = this.getNodes().elements(); e1.hasMoreElements() ;){
+	    for(Enumeration e1 = nct.getNodes().elements(); e1.hasMoreElements() ;){
 		Node node = (Node) e1.nextElement();
 		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		    Context context = (Context) e2.nextElement();
@@ -145,17 +133,6 @@ public class ParaProfTrial extends Trial{
 	return totalNumberOfThreads;
     }
 
-    //Returns the number of threads on the specified node,context.
-    public int getNumberOfThreads(int nodeID, int contextID){
-	return (this.getContext(nodeID,contextID)).getNumberOfThreads();}
-
-    public Vector getThreads(int nodeID, int contextID){
-	return (this.getContext(nodeID,contextID)).getThreads();}
-
-    public Thread getThread(int nodeID, int contextID, int threadID){
-	return (this.getContext(nodeID,contextID)).getThread(threadID);}
-
-    //Returns an array of length 3 which contains the maximum number
     //of nodes, contexts and threads reached. This is not a total,
     //except in the case of the number of nodes.
     //This method is useful for determining an upper bound on the
@@ -164,25 +141,24 @@ public class ParaProfTrial extends Trial{
     //Subsequent calls will return the results obtained from the first
     //call.
     public int[] getMaxNCTNumbers(){
-	if(nct==null){
-	    nct = new int[3];
+	if(maxNCT==null){
+	    maxNCT = new int[3];
 	    for(int i=0;i<3;i++){
-		nct[i]=0;}
-	    nct[0] = this.getNumberOfNodes();
-	    for(Enumeration e1 = (this.getNodes()).elements(); e1.hasMoreElements() ;){
+		maxNCT[i]=0;}
+	    maxNCT[0] = nct.getNumberOfNodes();
+	    for(Enumeration e1 = (nct.getNodes()).elements(); e1.hasMoreElements() ;){
 		Node node = (Node) e1.nextElement();
-		if(node.getNumberOfContexts()>nct[1])
-		    nct[1]=node.getNumberOfContexts();
+		if(node.getNumberOfContexts()>maxNCT[1])
+		    maxNCT[1]=node.getNumberOfContexts();
 		for(Enumeration e2 = (node.getContexts()).elements(); e2.hasMoreElements() ;){
 		    Context context = (Context) e2.nextElement();
-		    if(context.getNumberOfThreads()>nct[2])
-			nct[2]=context.getNumberOfThreads();
+		    if(context.getNumberOfThreads()>maxNCT[2])
+			maxNCT[2]=context.getNumberOfThreads();
 		}
 	    }
 	}
-	return nct;
+	return maxNCT;
     }
-    
 
     //####################################
     //Functions that control the obtaining and the openning
@@ -379,9 +355,10 @@ public class ParaProfTrial extends Trial{
 
     private int numberOfMappings = -1;
     private int numberOfUserEvents = -1;
+    private NCT nct = null;
     private int totalNumberOfContexts = -1;
     private int totalNumberOfThreads = -1;
-    private int[] nct = null;
+    private int[] maxNCT = null;
   
     //Max mean values.
     private Vector maxMeanInclusiveValueList = new Vector();

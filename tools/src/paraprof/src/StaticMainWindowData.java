@@ -31,7 +31,7 @@ public class StaticMainWindowData{
 	//Clear the sMWGeneralData list for safety.
 	sMWGeneralData.removeAllElements();
     
-	for(Enumeration e1 = trial.getNodes().elements(); e1.hasMoreElements() ;){
+	for(Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
 	    node = (Node) e1.nextElement();
 	    //Create a new sMWServer object and set the name properly.
 	    sMWServer = new SMWServer(node.getNodeID());
@@ -100,7 +100,7 @@ public class StaticMainWindowData{
 	    SMWThreadDataElement sMWThreadDataElement;
 	    SMWThreadDataElement sMWUserThreadDataElement;
  
-	    for(Enumeration e1 = trial.getNodes().elements(); e1.hasMoreElements() ;){
+	    for(Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
 		node = (Node) e1.nextElement();
 		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		    context = (Context) e2.nextElement();
@@ -189,10 +189,10 @@ public class StaticMainWindowData{
     
 	switch(listType){
 	case 1:
-	    list = ((Thread)trial.getThread(nodeID,contextID,threadID)).getFunctionList();
+	    list = ((Thread)trial.getNCT().getThread(nodeID,contextID,threadID)).getFunctionList();
 	    break;
 	case 2:
-	    list = ((Thread)trial.getThread(nodeID,contextID,threadID)).getUsereventList();
+	    list = ((Thread)trial.getNCT().getThread(nodeID,contextID,threadID)).getUsereventList();
 	    break;
 	default:
 	    ParaProf.systemError(null, null, "Unexpected list type - SMWD value: " + listType);

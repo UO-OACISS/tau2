@@ -92,7 +92,7 @@ public class CallPathUtilFuncs{
 	//this list contains null references for mappings
 	//which do not exist. Makes lookup much faster.
 	
-	thread = trial.getThread(nodeID,contextID,threadID);
+	thread = trial.getNCT().getThread(nodeID,contextID,threadID);
 	functionList = thread.getFunctionList();
 
 	//Check to make sure that we have not trimmed before.

@@ -45,22 +45,27 @@ public class Node implements Comparable{
     }
 
     //Creates a context with the specified context id and adds it to the list of contexts.
-    public void addContext(int nodeID, int contextID){
+    public Context addContext(int contextID){
+	Context context = null;
 	try{
 	    if(contextID<0){
 		System.out.println("Error - Invalid context id (id less than zero). Context not added!");
-		return;
+		return null;
 	    }
 
 	    int pos = this.getContextPosition(new Integer(contextID));
 	    if(pos>=0)
 		System.out.println("Error - Context already present. Context not added!");
-	    else
-		contexts.insertElementAt(new Context(nodeID, contextID), (-(pos+1)));
+	    else{
+		context = new Context(nodeID, contextID);
+		contexts.insertElementAt(context, (-(pos+1)));
+	    }
+	    return context;
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "N2");
 	}
+	return context;
     }
     
     public Vector getContexts(){

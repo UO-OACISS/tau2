@@ -54,22 +54,27 @@ public class Context implements Comparable{
     }
 
     //Creates a thread with the specified thread id and adds it to the list of threads.
-    public void addThread(int threadID){
+    public Thread addThread(int threadID){
+	Thread thread = null;
 	try{
 	    if(threadID<0){
 		System.out.println("Error - Invalid thread id (id less than zero). Thread not added!");
-		return;
+		return null;
 	    }
 
 	    int pos = this.getThreadPosition(new Integer(threadID));
 	    if(pos>=0)
 		System.out.println("Error - Thread already present. Thread not added!");
-	    else
-		threads.insertElementAt(new Thread(nodeID, contextID, threadID), (-(pos+1)));
+	    else{
+		thread = new Thread(nodeID, contextID, threadID);
+		threads.insertElementAt(thread, (-(pos+1)));
+	    }
+	    return thread;
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "N2");
 	}
+	return thread;
     }
     
     public Vector getThreads(){

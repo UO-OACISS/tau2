@@ -57,7 +57,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    barLength = baseBarLength;
 	    
 	    if(windowType==1)
-		thread = trial.getThread(nodeID,contextID,threadID);
+		thread = trial.getNCT().getThread(nodeID,contextID,threadID);
 
 	    //######
 	    //Add items to the popu menu.

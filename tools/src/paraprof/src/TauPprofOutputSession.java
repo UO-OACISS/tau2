@@ -228,17 +228,14 @@ public class TauPprofOutputSession extends DataSession{
 	    //######
 	    int metric = 0;
 	    GlobalMappingElement globalMappingElement = null;
+	    GlobalThreadDataElement globalThreadDataElement = null;
 
+	    Node node = null;
+	    Context context = null;
+	    Thread thread = null;
 	    int nodeID = -1;
 	    int contextID = -1;
 	    int threadID = -1;
-	    int lastNodeID = -1;
-	    int lastContextID = -1;
-	    int lastThreadID = -1;
-
-	    Node currentNode = null;
-	    Context currentContext = null;
-	    Thread currentThread = null;
 
 	    String inputString = null;
 	    String s1 = null;
@@ -331,12 +328,12 @@ public class TauPprofOutputSession extends DataSession{
 		    tmpGME.incrementStorage();
 		}
 	  
-		for(Enumeration e3 = this.getNodes().elements(); e3.hasMoreElements() ;){
-		    Node node = (Node) e3.nextElement();
+		for(Enumeration e3 = nct.getNodes().elements(); e3.hasMoreElements() ;){
+		    node = (Node) e3.nextElement();
 		    for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
-			Context context = (Context) e4.nextElement();
+			context = (Context) e4.nextElement();
 			for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
-			    Thread thread = (Thread) e5.nextElement();
+			    thread = (Thread) e5.nextElement();
 			    thread.incrementStorage();
 			    for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
 				GlobalThreadDataElement ref = (GlobalThreadDataElement) e6.nextElement();
@@ -499,146 +496,40 @@ public class TauPprofOutputSession extends DataSession{
 			globalMappingElement.setMaxExclusivePercentValue(metric, line1.percentValue);
 
 		    //Get the node,context,thread.
-		    int[] nct = this.getNCT(inputString);
-		    nodeID = nct[0];
-		    contextID = nct[1];
-		    threadID = nct[2];
-		    
-		    if(firstRead){
-			//Now the complicated part.  Setting up the node,context,thread data.
-			//These first two if statements force a change if the current node or
-			//current context changes from the last, but without a corresponding change
-			//in the thread number.  For example, if we have the sequence:
-			//0,0,0 - 1,0,0 - 2,0,0 or 0,0,0 - 0,1,0 - 1,0,0.
-			if(lastNodeID != nodeID){
-			    lastContextID = -1;
-			    lastThreadID = -1;
-			}
-			if(lastContextID != contextID){
-			    lastThreadID = -1;
-			}
-			if(lastThreadID != threadID){
-			    if(threadID == 0){
-				//Create a new thread ... and set it to be the current thread.
-				currentThread = new Thread(nodeID, contextID, threadID);
-				//Add the correct number of global thread data elements.
-				currentThread.initializeFunctionList(this.getNumberOfMappings());
-				//Update the thread number.
-				lastThreadID = threadID;
-				
-				//Set the appropriate global thread data element.
-				Vector tmpVector = currentThread.getFunctionList();
-				GlobalThreadDataElement tmpGTDE = null;
-				
-				tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
-				
-				if(tmpGTDE == null){
-				    tmpGTDE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
-				    currentThread.addFunction(tmpGTDE, mappingID);
-				}
-				tmpGTDE.setMappingExists();
-				tmpGTDE.setExclusiveValue(metric, line1.value);
-				tmpGTDE.setExclusivePercentValue(metric, line1.percentValue);
-				//Now check the max values on this thread.
-				if((currentThread.getMaxExclusiveValue(metric)) < line1.value)
-				    currentThread.setMaxExclusiveValue(metric, line1.value);
-				if((currentThread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
-				    currentThread.setMaxExclusivePercentValue(metric, line1.percentValue);
-				
-				//Check to see if the context is zero.
-				if(contextID == 0){
-				    //Create a new context ... and set it to be the current context.
-				    currentContext = new Context(nodeID, contextID);
-				    //Add the current thread
-				    currentContext.addThread(currentThread);
-				    
-				    //Create a new server ... and set it to be the current server.
-				    currentNode = new Node(nodeID);
-				    //Add the current context.
-				    currentNode.addContext(currentContext);
-				    //Add the current server.
-				    this.nodes.addElement(currentNode);
-				    
-				    //Update last context and last node.
-				    lastContextID = contextID;
-				    lastNodeID = nodeID;
-				}
-				else{
-				    //Context number is not zero.  Create a new context ... and set it to be current.
-				    currentContext = new Context(nodeID, contextID);
-				    //Add the current thread
-				    currentContext.addThread(currentThread);
-				    
-				    //Add the current context.
-				    currentNode.addContext(currentContext);
-				    
-				    //Update last context and last node.
-				    lastContextID = contextID;
-				}
-			    }
-			    else{
-				//Thread number is not zero.  Create a new thread ... and set it to be the current thread.
-				currentThread = new Thread(nodeID, contextID, threadID);
-				//Add the correct number of global thread data elements.
-				currentThread.initializeFunctionList(this.getNumberOfMappings());
-				//Update the thread number.
-				lastThreadID = threadID;
-				
-				//Not thread changes.  Just set the appropriate global thread data element.
-				Vector tmpVector = currentThread.getFunctionList();
-				GlobalThreadDataElement tmpGTDE = null;
-				tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
-				
-				if(tmpGTDE == null){
-				    tmpGTDE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
-				    currentThread.addFunction(tmpGTDE, mappingID);
-				}
-				
-				tmpGTDE.setMappingExists();
-				tmpGTDE.setExclusiveValue(metric, line1.value);
-				tmpGTDE.setExclusivePercentValue(metric, line1.percentValue);
-				//Now check the max values on this thread.
-				if((currentThread.getMaxExclusiveValue(metric)) < line1.value)
-				    currentThread.setMaxExclusiveValue(metric, line1.value);
-				if((currentThread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
-				    currentThread.setMaxExclusivePercentValue(metric, line1.percentValue);
-				
-				//Add the current thread
-				currentContext.addThread(currentThread);
-			    }
-			}
-			else{
-			    //Not thread changes.  Just set the appropriate global thread data element.
-			    Vector tmpVector = currentThread.getFunctionList();
-			    GlobalThreadDataElement tmpGTDE = null;
-			    tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
-			    
-			    
-			    if(tmpGTDE == null){
-				tmpGTDE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
-				currentThread.addFunction(tmpGTDE, mappingID);
-			    }
-			    
-			    tmpGTDE.setMappingExists();
-			    tmpGTDE.setExclusiveValue(metric, line1.value);
-			    tmpGTDE.setExclusivePercentValue(metric, line1.percentValue);
-			    //Now check the max values on this thread.
-			    if((currentThread.getMaxExclusiveValue(metric)) < line1.value)
-				currentThread.setMaxExclusiveValue(metric, line1.value);
-			    if((currentThread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
-				currentThread.setMaxExclusivePercentValue(metric, line1.percentValue);
-			}
+		    int[] array = this.getNCT(inputString);
+		    nodeID = array[0];
+		    contextID = array[1];
+		    threadID = array[2];
+
+		    node = nct.getNode(nodeID);
+		    if(node==null)
+			node = nct.addNode(nodeID);
+		    context = node.getContext(contextID);
+		    if(context==null)
+			context = node.addContext(contextID);
+		    thread = context.getThread(threadID);
+		    if(thread==null){
+			thread = context.addThread(threadID);
+			thread.initializeFunctionList(this.getNumberOfMappings());
 		    }
-		    else{
-			Thread thread = this.getThread(nodeID,contextID,threadID);
-			GlobalThreadDataElement tmpGTDE = thread.getFunction(mappingID);
-			tmpGTDE.setExclusiveValue(metric, line1.value);
-			tmpGTDE.setExclusivePercentValue(metric, line1.percentValue);
-			if((thread.getMaxExclusiveValue(metric)) < line1.value)
-			    thread.setMaxExclusiveValue(metric, line1.value);
-			if((thread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
-			    thread.setMaxExclusivePercentValue(metric, line1.percentValue);
+
+		    Vector vector = thread.getFunctionList();
+		    globalThreadDataElement = null;
+				
+		    globalThreadDataElement = (GlobalThreadDataElement) vector.elementAt(mappingID);
+				
+		    if(globalThreadDataElement == null){
+			globalThreadDataElement = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 0), false);
+			thread.addFunction(globalThreadDataElement, mappingID);
 		    }
+		    globalThreadDataElement.setMappingExists();
+		    globalThreadDataElement.setExclusiveValue(metric, line1.value);
+		    globalThreadDataElement.setExclusivePercentValue(metric, line1.percentValue);
+		    //Now check the max values on this thread.
+		    if((thread.getMaxExclusiveValue(metric)) < line1.value)
+			thread.setMaxExclusiveValue(metric, line1.value);
+		    if((thread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
+			thread.setMaxExclusivePercentValue(metric, line1.percentValue);
 		    break;
 		case 5:
 		    if((globalMappingElement.getMaxInclusiveValue(metric)) < line1.value)
@@ -647,8 +538,8 @@ public class TauPprofOutputSession extends DataSession{
 		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < line1.percentValue)
 			globalMappingElement.setMaxInclusivePercentValue(metric, line1.percentValue);
 		    
-		    Thread thread = this.getThread(nodeID,contextID,threadID);
-		    GlobalThreadDataElement globalThreadDataElement = thread.getFunction(mappingID);
+		    thread = nct.getThread(nodeID,contextID,threadID);
+		    globalThreadDataElement = thread.getFunction(mappingID);
 		    
 		    globalThreadDataElement.setInclusiveValue(metric, line1.value);
 		    globalThreadDataElement.setInclusivePercentValue(metric, line1.percentValue);
@@ -708,7 +599,7 @@ public class TauPprofOutputSession extends DataSession{
 				//the below for-loop is only run once on each THREAD NODE.
 				
 				if(firstRead){
-				    (this.getThread(nodeID,contextID,threadID)).initializeUsereventList(numberOfUserEvents);
+				    (nct.getThread(nodeID,contextID,threadID)).initializeUsereventList(numberOfUserEvents);
 				}
 			    }
 
@@ -731,7 +622,7 @@ public class TauPprofOutputSession extends DataSession{
 				tmpGTDEUE.setUserEventMinValue(ued.min);
 				tmpGTDEUE.setUserEventMaxValue(ued.max);
 				tmpGTDEUE.setUserEventMeanValue(ued.mean);
-				(this.getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, userEventID);
+				(nct.getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, userEventID);
 			    }
 			}
 			//Now set the userEvents flag.
@@ -753,7 +644,7 @@ public class TauPprofOutputSession extends DataSession{
 	    br.close();
 	    
 	    if(ParaProf.debugIsOn){
-		System.out.println("The total number of threads is: " + this.getTotalNumberOfThreads());
+		System.out.println("The total number of threads is: " + nct.getTotalNumberOfThreads());
 		System.out.println("The number of mappings is: " + this.getNumberOfMappings());
 		System.out.println("The number of user events is: " + this.getNumberOfUserEvents());
 	    }
@@ -776,60 +667,9 @@ public class TauPprofOutputSession extends DataSession{
 	    ParaProf.systemError(e, null, "SSD01");
 	}
     }
-
-    public int getNumberOfNodes(){
-	return nodes.size();}
-
-    public Vector getNodes(){
-	return nodes;}
-
-    public Node getNode(int nodeID){
-	return (Node) nodes.elementAt(nodeID);}
-
-    //Returns the total number of contexts in this trial.
-    public int getTotalNumberOfContexts(){
-	if(totalNumberOfContexts==-1){
-	    for(Enumeration e = this.getNodes().elements(); e.hasMoreElements() ;){
-	     Node node = (Node) e.nextElement();
-	     totalNumberOfContexts+=(node.getNumberOfContexts());
-	    }
-	}
-	return totalNumberOfContexts;
-    }
-
-    //Returns the number of contexts on the specified node.
-    public int getNumberOfContexts(int nodeID){
-	return ((Node) nodes.elementAt(nodeID)).getNumberOfContexts();}
-
-    public Vector getContexts(int nodeID){
-	return (this.getNode(nodeID)).getContexts();}
-
-    public Context getContext(int nodeID, int contextID){
-	return (this.getNode(nodeID)).getContext(contextID);}
-
-    //Returns the total number of threads in this trial.
-    public int getTotalNumberOfThreads(){
-	if(totalNumberOfThreads==-1){
-	    for(Enumeration e1 = this.getNodes().elements(); e1.hasMoreElements() ;){
-		Node node = (Node) e1.nextElement();
-		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
-		    Context context = (Context) e2.nextElement();
-		    totalNumberOfThreads+=(context.getNumberOfThreads());
-		}
-	    }
-	}
-	return totalNumberOfThreads;
-    }
-
-    //Returns the number of threads on the specified node,context.
-    public int getNumberOfThreads(int nodeID, int contextID){
-	return (this.getContext(nodeID,contextID)).getNumberOfThreads();}
-
-    public Vector getThreads(int nodeID, int contextID){
-	return (this.getContext(nodeID,contextID)).getThreads();}
-
-    public Thread getThread(int nodeID, int contextID, int threadID){
-	return (this.getContext(nodeID,contextID)).getThread(threadID);}
+    
+    public NCT getNCT(){
+	return nct;}
 
     public Vector getMetrics(){
 	return metrics;}
@@ -1175,7 +1015,7 @@ public class TauPprofOutputSession extends DataSession{
     private boolean callPathDataPresent = false;
 
     private GlobalMapping globalMapping = new GlobalMapping();
-    private Vector nodes = new Vector();
+    private NCT nct = new NCT();
     private Vector metrics = new Vector();
 
     private Vector maxMeanInclusiveValueList = new Vector();
