@@ -415,7 +415,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
 #endif /* APPLE_SSCANF_BUG */
       }
 #else 
-      sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
+      sscanf(&line[j+1], "%lG %lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
 #endif 
 #endif // USE_LONG 
     }//else - profilestats 
@@ -678,12 +678,12 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
       ist >> numcalls >> numsubrs >> excl >> incl >> sumexclsqr >> numinvocations; 
 #else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e, f;
-      sscanf(&line[j+1], "%d %d %d %d %d", &a, &b, &c, &d, &e, &f);
+      sscanf(&line[j+1], "%d %d %d %d %d %d", &a, &b, &c, &d, &e, &f);
       numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
       incl = (double) d; sumexclsqr = (double) e; numinvocations = (double) f;
 #endif /* APPLE_SSCANF_BUG */
 #else 
-      sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
+      sscanf(&line[j+1], "%lG %lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
 #endif 
 #endif // USE_LONG 
       // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
@@ -2637,6 +2637,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.41 $   $Date: 2003/07/18 23:43:56 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.41 2003/07/18 23:43:56 sameer Exp $                                
+ * $Revision: 1.42 $   $Date: 2004/02/27 22:29:38 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.42 2004/02/27 22:29:38 sameer Exp $                                
  ***************************************************************************/
