@@ -114,13 +114,13 @@ char *s2;
     // we allocate new strings before using with strtok. Crashes otherwise 	
     if (num_tokens == 0)
     {
-      s1 = new char [strlen (options) ];
+      s1 = new char [strlen (options) + 1];
       strcpy(s1, options);
       token=strtok(s1, "=,");
     }
     else
     {
-      s2 = new char [strlen (options) ];
+      s2 = new char [strlen (options) + 1];
       strcpy(s2, options);
       token=strtok(s2, "=,");
     }
@@ -128,7 +128,7 @@ char *s2;
 
     if (strcmp(token,"exclude")==0) {
       if (TauExcludeList == (char **) NULL) {
-        TauExcludeList = (char **) malloc(256); // 256 items max in exclude list
+        TauExcludeList = (char **) malloc(256*sizeof(char*)); // 256 items max in exclude list
 	// This ensures that if it is coming here again then the list is not blank
       }
       while(token=strtok(NULL,"=,")) 
@@ -411,8 +411,8 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 
 /***************************************************************************
- * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 2003/11/11 01:12:31 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.22 2003/11/11 01:12:31 sameer Exp $
+ * $RCSfile: TauJava.cpp,v $   $Author: amorris $
+ * $Revision: 1.23 $   $Date: 2004/12/09 19:06:19 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.23 2004/12/09 19:06:19 amorris Exp $
  ***************************************************************************/
 
