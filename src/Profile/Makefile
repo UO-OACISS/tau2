@@ -77,6 +77,8 @@ ARFLAGS	      = rcv
 ############# For KAI KCC compiler, replace AR accordingly #######
 #KAI#AR			= $(CXX) 		   	   #ENDIF#
 #KAI#ARFLAGS			= --one_per -o		 	   #ENDIF#
+#CRAYKAI#ARFLAGS        = -o		 	   	   #ENDIF#
+# Ancient 3.2b2 compiler on Cray T3E doesn't support --one_per. Remove later
 ##################################################################
 
 ############# For SGI CC compiler, replace AR accordingly #######
