@@ -10,10 +10,10 @@ extern void mytimer_(int *);
 
 #include "ppm.h"
 
+field iterations;
 int main(int argc, char *argv[]) {
   double xmin, xmax, ymin, ymax, dx, dy;
   int numpe, maxiter, ix, iy;
-  field iterations;
   TAU_PROFILE_TIMER(mt, "main()", "int (int, char **)", TAU_DEFAULT);
   TAU_PROFILE_SET_NODE(0);
   
