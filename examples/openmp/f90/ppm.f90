@@ -126,7 +126,7 @@
       end do
       write(unit=9, rec=r) buf
       close(unit=9)
-      write (unit=*, fmt="(I A)") total, " total iterations"
+!      write (unit=*, fmt="(I A)") total, " total iterations"
       end subroutine ppmwrite
 
       end module ppm
