@@ -22,13 +22,13 @@ public class DBConfiguration extends JFrame implements ActionListener{
     public DBConfiguration(ParaProfManager paraProfManager){
 	this.paraProfManager = paraProfManager;
 
-	String password = paraProfManager.getDatabasePassword();
+	String password = ParaProf.savedPreferences.getDatabasePassword();
 	if(password == null)
 	   passwordField = new JPasswordField(password, 20);
 	else
 	   passwordField = new JPasswordField(20);
 
-	String configFile = paraProfManager.getDatabaseConfigurationFile();
+	String configFile = ParaProf.savedPreferences.getDatabaseConfigurationFile();
 	if(configFile == null)
 	    configFileField = new JTextField(System.getProperty("user.dir"), 30);
 	else
@@ -148,8 +148,8 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	    else if(arg.equals("Cancel")){
 		closeThisWindow();}
 	    else if(arg.equals("Ok")){
-		paraProfManager.setDatabasePassword((new String(passwordField.getPassword())).trim());
-		paraProfManager.setDatabaseConfigurationFile(configFileField.getText().trim());
+		ParaProf.savedPreferences.setDatabasePassword((new String(passwordField.getPassword())).trim());
+		ParaProf.savedPreferences.setDatabaseConfigurationFile(configFileField.getText().trim());
 		closeThisWindow();
 	    }
 	}

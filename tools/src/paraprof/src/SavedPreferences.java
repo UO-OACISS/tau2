@@ -94,6 +94,18 @@ public class SavedPreferences implements Serializable{
     public String getSortBy(){
 	return sortBy;}
 
+    public void setDatabasePassword(String databasePassword){
+	this.databasePassword = databasePassword;}
+
+    public String getDatabasePassword(){
+	return databasePassword;}
+
+    public void setDatabaseConfigurationFile(String databaseConfigurationFile){
+	this.databaseConfigurationFile = databaseConfigurationFile;}
+
+    public String getDatabaseConfigurationFile(){
+	return databaseConfigurationFile;}
+
     //####################################
     //Instance data.
     //####################################
@@ -110,6 +122,8 @@ public class SavedPreferences implements Serializable{
     private String inclusiveOrExclusive = null;
     private String sortBy = null;
     private int fontStyle = -1;
+    private String databasePassword = null;
+    private String databaseConfigurationFile = null;
     //####################################
     //End - Instance data.
     //####################################

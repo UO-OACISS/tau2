@@ -59,7 +59,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	try{
 	    //Try and load a preference file ... ParaProfPreferences.dat
 	    try{
-		FileInputStream savedPreferenceFIS = new FileInputStream("ParaProfPreferences.dat");
+		FileInputStream savedPreferenceFIS = new FileInputStream("pref.dat");
         
 		//If here, means that no exception was thrown, and there is a preference file present.
 		//Create ObjectInputStream and try to read it in.

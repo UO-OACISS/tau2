@@ -78,19 +78,29 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    JMenu fileMenu = new JMenu("File");
 
 	    //Add a menu item.
-	    JMenuItem dbItem = new JMenuItem("Database Configuration");
-	    dbItem.addActionListener(this);
-	    fileMenu.add(dbItem);
+	    JMenuItem menuItem = new JMenuItem("Database Configuration");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
+
+	    //Save menu.
+	    JMenu subMenu = new JMenu("Save ...");
+	  
+	    menuItem = new JMenuItem("ParaProf Preferrences");
+	    menuItem.addActionListener(this);
+	    subMenu.add(menuItem);
+	  
+	    fileMenu.add(subMenu);
+	    //End - Save menu.
+
+	    //Add a menu item.
+	    menuItem = new JMenuItem("Close This Window");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
       
 	    //Add a menu item.
-	    JMenuItem closeItem = new JMenuItem("Close This Window");
-	    closeItem.addActionListener(this);
-	    fileMenu.add(closeItem);
-      
-	    //Add a menu item.
-	    JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
-	    exitItem.addActionListener(this);
-	    fileMenu.add(exitItem);
+	    menuItem = new JMenuItem("Exit ParaProf!");
+	    menuItem.addActionListener(this);
+	    fileMenu.add(menuItem);
 	    //######
 	    //End - File menu.
 	    //######
@@ -148,7 +158,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //Add items to the second popup menu.
 	    //######
 	    updateApplicationMetaDataMenuItem = new JMenuItem("Update Data in DB");
-	    jMenuItem.addActionListener(this);
+	    updateApplicationMetaDataMenuItem.addActionListener(this);
 	    popup2.add(updateApplicationMetaDataMenuItem);
 
 	    jMenuItem = new JMenuItem("Add Experiment");
@@ -162,7 +172,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //Add items to the third popup menu.
 	    //######
 	    updateExperimentMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
-	    jMenuItem.addActionListener(this);
+	    updateExperimentMetaDataMenuItem.addActionListener(this);
 	    popup3.add(updateExperimentMetaDataMenuItem);
 
 	    jMenuItem = new JMenuItem("Add Trial");
@@ -176,7 +186,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //Add items to the fourth popup menu.
 	    //######
 	    updateTrialMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
-	    jMenuItem.addActionListener(this);
+	    updateTrialMetaDataMenuItem.addActionListener(this);
 	    popup4.add(updateTrialMetaDataMenuItem);
 	    
 	    jMenuItem = new JMenuItem("Upload Trial to DB");
@@ -190,7 +200,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //Add items to the fifth popup menu.
 	    //######
 	    updateMetricMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
-	    jMenuItem.addActionListener(this);
+	    updateMetricMetaDataMenuItem.addActionListener(this);
 	    popup5.add(updateMetricMetaDataMenuItem);
 	    
 	    jMenuItem = new JMenuItem("Upload Metric to DB");
@@ -337,6 +347,37 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		else if(arg.equals("Database Configuration")){
 		    (new DBConfiguration(this)).show();}
+		else if(arg.equals("ParaProf Preferrences")){
+		    JFileChooser fileChooser = new JFileChooser();
+		    //Set the directory to the current directory.
+		    fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		    fileChooser.setSelectedFile(new File("pref.dat"));
+		    //Bring up the save file chooser.
+		    int resultValue = fileChooser.showSaveDialog(this);
+		    if(resultValue == JFileChooser.APPROVE_OPTION){
+			//Get the file.
+			File file = fileChooser.getSelectedFile();
+			//Check to make sure that something was obtained.
+			if(file != null){
+			    try{
+				ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
+				prefsOut.writeObject(ParaProf.savedPreferences);
+				prefsOut.close();
+			    }
+			    catch(Exception e){
+				//Display an error
+				JOptionPane.showMessageDialog(this, "An error occured whilst trying to save jRacy preferences.", "Error!"
+							      ,JOptionPane.ERROR_MESSAGE);
+			    }
+			}
+			else{
+			    //Display an error
+			    JOptionPane.showMessageDialog(this, "No filename was given!", "Error!"
+							  ,JOptionPane.ERROR_MESSAGE);
+			}
+		    }
+		}
 		else if(arg.equals("Show Apply Operation")){
 		    if(showApplyOperationItem.isSelected())
 			jSplitOuterPane.setDividerLocation(0.75);
@@ -361,7 +402,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		else if(arg.equals("Update Meta Data in DB")){
 		    //A few things to check here.
-		    if(configFile==null||password==null){//Check to see if the user has set configuration information.
+		    if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null||ParaProf.savedPreferences.getDatabasePassword()==null){//Check to see if the user has set configuration information.
 			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
 						      "DB Configuration Error!",
 						      JOptionPane.ERROR_MESSAGE);
@@ -381,13 +422,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			System.out.println("Update Meta Data request received from a ParaProfMetric!");
 		    }
 		}
-		else if(arg.equals("Upload Trial")){
+		else if(arg.equals("Upload Trial to DB")){
+		    System.out.println("Here!");
 		    if(clickedOnObject instanceof ParaProfTrial){
 			ParaProfTrial paraProfTrial = (ParaProfTrial) clickedOnObject;
 			int[] array = this.getSelectedDBExperiment();
 			if(array!=null){
 			    PerfDBSession perfDBSession = new PerfDBSession(); 
-			    perfDBSession.initialize(configFile, password);
+			    perfDBSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 			    Trial trial = new Trial();
 			    trial.setDataSession(paraProfTrial.getDataSession());
 			    trial.setName(paraProfTrial.getName());
@@ -401,13 +443,13 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			}
 		    }
 		}
-		else if(arg.equals("Upload Metric")){
+		else if(arg.equals("Upload Metric to DB")){
 		    if(clickedOnObject instanceof Metric){
 			Metric metric = (Metric) clickedOnObject;
 			int[] array = this.getSelectedDBTrial();
 			if(array!=null){
 			    PerfDBSession perfDBSession = new PerfDBSession();
-			    perfDBSession.initialize(configFile, password);
+			    perfDBSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 			    Trial trial = new Trial();
 			    trial.setDataSession(metric.getTrial().getDataSession());
 			    trial.setID(array[2]);
@@ -573,14 +615,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    jSplitInnerPane.setRightComponent(getPanelHelpMessage(3));
 		    jSplitInnerPane.setDividerLocation(0.5);
 		    
-		    if(configFile==null||password==null){//Check to see if the user has set configuration information.
+		    if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null||ParaProf.savedPreferences.getDatabasePassword()==null){//Check to see if the user has set configuration information.
 			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
 						      "DB Configuration Error!",
 						      JOptionPane.ERROR_MESSAGE);
 			return;
 		    }
 		    else{//Test to see if configurataion file exists.
-			File file = new File(configFile);
+			File file = new File(ParaProf.savedPreferences.getDatabaseConfigurationFile());
 			if(!file.exists()){
 			    JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
 							  "DB Configuration Error!",
@@ -595,7 +637,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
 		    }
 		    PerfDBSession perfDBSession = new PerfDBSession(); 
-		    perfDBSession.initialize(configFile, password);
+		    perfDBSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 		    ListIterator l = perfDBSession.getApplicationList();
 		    while (l.hasNext()){
 			ParaProfApplication application = new ParaProfApplication((Application)l.next());
@@ -623,7 +665,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
 		    }
 		    PerfDBSession perfDBSession = new PerfDBSession(); 
-		    perfDBSession.initialize(configFile, password);
+		    perfDBSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 		    //Set the application.
 		    perfDBSession.setApplication(application.getID());
 		    ListIterator l = perfDBSession.getExperimentList();
@@ -669,7 +711,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		//Set the application and experiment.
 		PerfDBSession perfDBSession = new PerfDBSession(); 
-		perfDBSession.initialize(configFile, password);
+		perfDBSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 		perfDBSession.setApplication(experiment.getApplicationID());
 		perfDBSession.setExperiment(experiment.getID());
 		ListIterator l = perfDBSession.getTrialList();
@@ -722,7 +764,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    //Need to load the trial in from the db.
 		    System.out.println("Loading trial ...");
 		    PerfDBSession perfDBSession = new PerfDBSession(); 
-		    perfDBSession.initialize(configFile, password);
+		    perfDBSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 		    perfDBSession.setApplication(trial.getApplicationID());
 		    perfDBSession.setExperiment(trial.getExperimentID());
 		    perfDBSession.setTrial(trial.getID());
@@ -799,7 +841,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     }
 
     public int[] getSelectedDBExperiment(){
-	if(configFile==null||password==null){//Check to see if the user has set configuration information.
+	if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null||ParaProf.savedPreferences.getDatabasePassword()==null){//Check to see if the user has set configuration information.
 	    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
 					  "DB Configuration Error!",
 					  JOptionPane.ERROR_MESSAGE);
@@ -835,7 +877,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     }
 
     public int[] getSelectedDBTrial(){
-	if(configFile==null||password==null){//Check to see if the user has set configuration information.
+	if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null||ParaProf.savedPreferences.getDatabasePassword()==null){//Check to see if the user has set configuration information.
 	    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
 					  "DB Configuration Error!",
 					  JOptionPane.ERROR_MESSAGE);
@@ -873,18 +915,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //####################################
     //End - Tree selection helpers.
     //####################################
-
-    public void setDatabasePassword(String password){
-	this.password = password;}
-
-    public String getDatabasePassword(){
-	return password;}
-
-    public void setDatabaseConfigurationFile(String configFile){
-	this.configFile = configFile;}
-
-    public String getDatabaseConfigurationFile(){
-	return configFile;}
 
     //####################################
     //Component functions.
@@ -1133,8 +1163,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     private JCheckBoxMenuItem showApplyOperationItem = null;
     private PPMLPanel pPMLPanel = new PPMLPanel(this);
 
-    private String password = null;
-    private String configFile = null;//"/home/bertie/Programming/data/perfdb.cfg";
     private Vector loadedTrials = new Vector();
 
     //######
