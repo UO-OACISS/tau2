@@ -898,6 +898,7 @@ case $machine in
      alpha)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs"
+	fixmakeargs="DEC_ALPHA $fixmakeargs"
 	;;
 
      sgi4k | sgi8k)
@@ -1173,26 +1174,27 @@ rm /tmp/tau$$
 echo "Using wish command: $wishname"
 echo " "
 
+# We don't need any tkman for RACY. 
 # -- find out where tkman is installed
-echo " "
-echo "The TAU editor requires the manual page viewer, TkMan 1.7"  
-echo "(compiled w/ tk4.0-) to be installed."
-echo " "
-tk_path=""
-if tk_path=`( which tkman ) 2>/dev/null`
-then
-  echo "Found tkman in $tk_path"
-else 
-  $echo "Please enter the absolute path/file name for the"
-  $echo "tkman executable [/usr/local/bin/tkman]:"
-  $echo "? ${nnl}"
-  read tk_path
-fi
-if [ "x$tk_path" = "x" ]
-  then
-    tk_path="/usr/local/bin/tkman"
-fi
-echo "tkman path set to: $tk_path"
+#echo " "
+#echo "The TAU editor requires the manual page viewer, TkMan 1.7"  
+#echo "(compiled w/ tk4.0-) to be installed."
+#echo " "
+tk_path="/usr/local/bin/tkman"
+#if tk_path=`( which tkman ) 2>/dev/null`
+#then
+#  echo "Found tkman in $tk_path"
+#else 
+#  $echo "Please enter the absolute path/file name for the"
+#  $echo "tkman executable [/usr/local/bin/tkman]:"
+#  $echo "? ${nnl}"
+#  read tk_path
+#fi
+#if [ "x$tk_path" = "x" ]
+#  then
+#    tk_path="/usr/local/bin/tkman"
+#fi
+#echo "tkman path set to: $tk_path"
 
 # -- set name of remote shell command
 if [ $machine = "hp9000s700" -o $machine = "hp9000s800" ]
