@@ -5,6 +5,7 @@ Description: A list of items to be attended to in ParaProf. The list includes
 and indication of status (ie, completed, outstanding, abandoned).
 
 ------
+# Report 01
 # Date: 2nd March 2004
 # Status: (outstanding)
 # Reporter: Robert Bell (University of Oregon)
@@ -12,6 +13,7 @@ Adding the header to the top of image files.
 ------
 
 ------
+# Report 0
 # Date: 2nd March 2004
 # Status: (outstanding)
 # Reporter: Robert Bell (University of Oregon).
@@ -21,6 +23,7 @@ same mapping. Ie, we do not show thread-level granularity for groups.
 ------
 
 ------
+# Report 02
 # Date: 2nd March 2004
 # Status: (outstanding)
 # Reporter: Robert Bell (University of Oregon).
@@ -29,6 +32,7 @@ those of the callpath data windows.
 ------
 
 ------
+# Report 03
 # Date: 2nd March 2004
 # Status: (outstanding)
 # Reporter: Robert Bell (University of Oregon).
@@ -36,6 +40,7 @@ Need to update help windows.
 ------
 
 ------
+# Report 04
 # Date: 2nd March 2004
 # Status: (outstanding)
 # Reporter: Robert Bell (University of Oregon).
@@ -43,9 +48,19 @@ Code docs needs to be in the form of javadoc.
 ------
 
 ------
+# Report 05
 # Date: 2nd March 2004
 # Status: (outstanding)
 # Reporter: Robert Bell (University of Oregon).
 Need to add printing and image output support to the StatWindows.
+------
+
+------
+# Report 06
+# Date: 9nd March 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Need to examine the inheritance tree for DataSession.  Does it integrate
+well with ParaProfTrial or not?
 ------
 
