@@ -90,6 +90,13 @@ Usage: configure [OPTIONS]
                            the TAU MPI Profiling and Tracing Interface.
 -mpilibrary=<library> ................ Specify a different MPI library.
             e.g., -mpilibrary=-lmpi_r                                  
+-shmem ...................... Specify use of TAU SHMEM wrapper library.
+-shmeminc=<dir> ......... Specify location of SHMEM include dir and use
+                         the TAU SHMEM Profiling and Tracing Interface.
+-shmemlib=<dir> ......... Specify location of SHMEM library dir and use
+                           the TAU MPI Profiling and Tracing Interface.
+-shmemlibrary=<library> ............ Specify a different SHMEM library.
+            e.g., -shmemlibrary=-lsmac                                 
 -nocomm  ........ Disable tracking communication events in MPI library.
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -pythoninc=<dir> ........ Specify location of Python include directory.
@@ -294,6 +301,21 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    another library. e.g., -mpilibrary=-lmpi_r  for specifying a thread-safe MPI 
    library.
 
+-shmeminc=<dir>
+
+   Specifies the directory where shmem.h resides. Specifies the use of the TAU 
+   SHMEM interface. 
+
+-shmemlib=<dir>
+
+   Specifies the directory where libsma.a resides. Specifies the use of the TAU 
+   SHMEM interface. 
+
+-shmemlibrary=<lib>
+   
+   By default, TAU uses -lsma as the shmem/pshmem library. This option allows
+   the user to specify a different shmem library. 
+
 -nocomm
    Allows the user to turn off tracking of messages (synchronous/asynchronous) in
    TAU's MPI wrapper interposition library. Entry and exit events for MPI routines 
@@ -348,6 +370,12 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    Specifies the calculation of additional statistics, such as the standard 
    deviation of the exclusive time/counts spent in each profiled block. This 
    option is an extension of -PROFILE, the default profiling option.
+
+-PROFILEMEMORY
+   
+   Specifies tracking heap memory utilitization for each instrumented function.
+   When any function entry takes place, a sample of the heap memory used is 
+   taken. This data is stored as user-defined event data in profiles/traces. 
    
 -COMPENSATE 
    
