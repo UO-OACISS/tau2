@@ -197,107 +197,27 @@ public class ConfigureTest {
 	    System.exit(0);
         }
 
+
 	try {
-	    String query = new String ("SELECT version FROM  " + db.getSchemaPrefix() + "version");
+	    String query = new String ("SELECT * FROM " + db.getSchemaPrefix() + "application");
 	    ResultSet resultSet = db.executeQuery(query);
-	    
-	    String version = "none";
+	} catch (SQLException e) {
+	    // this is our method of determining that no 'application' table exists
 
-	    while (resultSet.next() != false) {
-		version = resultSet.getString(1);
-	    }
+	    System.out.print("Tables not found.  Would you like to upload the schema? [y/n]: ");
 	    
-	    
-	    if (!version.equals("2.13.7")) {
-		// they're using a newer version
-		System.out.println("Warning: Expected database schema version 2.13.7, but found " + version);
-		System.out.println("Things may not work correctly!");
-	    }
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
- 	    resultSet.close();
-	    connector.dbclose();
-
-	} catch (Exception e) {
-	    
-	    e.printStackTrace();
-	    
-
-	    // The schema does not have the version table, it must be older than 2.13.7 (or whatever comes after 2.13.6)
-
+	    String input = "";
 	    try {
-		String query = new String ("SELECT * FROM " + db.getSchemaPrefix() + "application");
-		ResultSet resultSet = db.executeQuery(query);
-		
-		// if we got here (i.e. no exception) then the schema in the database must be the old one
+		input = reader.readLine();
+	    } catch (java.io.IOException ioe) {
+		ioe.printStackTrace();
+		System.exit(-1);
+	    }
+	    if (input.equals("y") || input.equals("Y")) {
 
-		if (jdbc_db_type.equals("postgresql")) {
-		
 
-		    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    
-		    System.out.print("Warning: Old database schema found.  It is recommended that you upgrade\nthe schema, would you like to do this now? [y/n]: ");
-		    
-		    String input = reader.readLine();
-		    if (input.equals("y") || input.equals("Y")) {
-
-			try {
-			    String upgradeSchemaFile = tau_root + "/tools/src/dms/data/conversion-2.13.7.sql";
-			    
-			    File readSchema = new File(upgradeSchemaFile);
-			    String inputString;
-			    StringBuffer buf = new StringBuffer();
-			    
-			    if (!readSchema.exists()){
-				System.out.println("Could not find " +  upgradeSchemaFile);
-				return;
-			    } else {
-				System.out.println("Found " + upgradeSchemaFile + "\nUpgrading database schema ... ");
-			    
-				try{	
-				    BufferedReader preader = new BufferedReader(new FileReader(readSchema));	
-				    
-				    while ((inputString = preader.readLine())!= null){
-					inputString = inputString.replaceAll("@DATABASE_NAME@", parser.getDBName());
-					buf.append(inputString);
-				
-					if (inputString.trim().endsWith(";")) {
-					    try {
-						connector.getDB().execute(buf.toString());
-						buf = buf.delete(0,buf.length());
-					    } catch (SQLException ex) {
-						ex.printStackTrace();
-					    }				
-					}		
-				    }
-				    
-				    System.out.println("Successfully upgraded schema");
-				    
-				} catch (Exception h) {
-				    h.printStackTrace();
-				}
-			    }
-			    
-			    //connector.genParentSchema(upgradeSchemaFile);
-			} catch (Exception g) {
-			    g.printStackTrace();
-			    return;
-			}
-		    }
-		    
-		} else {
-		    
-		    // what else can we do?!
-		    System.out.println("Warning: Old database schema found, things may not work correctly!");
-		    
-		}
-
-		resultSet.close();
-		connector.dbclose();
-		
-		
-	    } catch ( Exception f ) {
-		// no schema in the database (or at least no version/application tables)
-		// build the database
 		System.out.println("Uploading Schema: " + db_schemafile);
 		if (connector.genParentSchema(db_schemafile) == 0) {
 		    System.out.println("Successfully uploaded schema\n");
@@ -305,12 +225,21 @@ public class ConfigureTest {
 		    System.out.println("Error uploading schema\n");
 		    System.exit(-1);
 		}
-		connector.dbclose();
 	    }
-	    
-	    
-	    
 	}
+
+	try {
+	    if (db.checkSchema() != 0) {
+		System.out.println("\nIncompatible schema found.  Please contact us at tau-team@cs.uoregon.edu\nfor a conversion script.");
+		System.exit(0);
+	    }
+	} catch (SQLException e) {
+	    System.out.println("\nError trying to confirm schema:");
+	    e.printStackTrace();
+	    System.exit(0);
+	}
+
+	connector.dbclose();
 
 	System.out.println("Database connection successful.");
 	System.out.println("Configuration complete.");
