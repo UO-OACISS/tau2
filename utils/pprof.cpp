@@ -381,7 +381,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
         if (line [j] == '"') numquotes--; 
         if (j == stringlength) break;
       }
-      func[j -1 ] = '\0'; 
+      func[j -2 ] = '\0'; /* don't use the last " in the name */
 #ifdef DEBUG
       printf("idx = %d, line [idx] = %s, func = %s\n", j, &line[j], func);
 #endif /* DEBUG */
@@ -716,7 +716,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
         if (line [j] == '"') numquotes--; 
         if (j == stringlength) break;
       }
-      func[j -1 ] = '\0'; 
+      func[j -2 ] = '\0'; /* don't use the last " in the name */
 #ifdef DEBUG
       printf("idx = %d, line [idx] = %s, func = %s\n", j, &line[j], func);
 #endif /* DEBUG */
@@ -2719,6 +2719,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.43 $   $Date: 2004/10/14 22:34:41 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.43 2004/10/14 22:34:41 sameer Exp $                                
+ * $Revision: 1.44 $   $Date: 2004/10/14 22:42:14 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.44 2004/10/14 22:42:14 sameer Exp $                                
  ***************************************************************************/
