@@ -23,6 +23,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <Profile/Profiler.h>
+#ifdef __linux__
+#include <malloc.h> 
+#endif /* __linux__ */
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -64,11 +67,22 @@ void TauDisableTrackingMemory(void)
 //////////////////////////////////////////////////////////////////////
 // Get memory size (max resident set size) in KB 
 //////////////////////////////////////////////////////////////////////
-long TauGetMaxRSS(void)
+double TauGetMaxRSS(void)
 {
   struct rusage res;
   getrusage(RUSAGE_SELF, &res);
-  return res.ru_maxrss; /* max resident set size */
+  if (res.ru_maxrss == 0)
+  { /* getrusage is not working */
+#ifdef __linux__
+    struct mallinfo minfo = mallinfo();
+    /* compute the memory used */
+    double used = (double) (minfo.hblkhd + minfo.usmblks + minfo.uordblks);
+    /* This is in bytes, we need KB */
+    return used/1024.0;
+#endif /* __linux__ */
+  }
+     
+  return (double) res.ru_maxrss; /* max resident set size */
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -107,7 +121,7 @@ void TauAlarmHandler(int signum)
   if (TheIsTauTrackingMemory())
   {
     /* trigger an event with the memory used */
-    TheTauMemoryEvent().TriggerEvent((double) TauGetMaxRSS());
+    TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
   }
 
   /* Set alarm for the next interrupt */
@@ -140,8 +154,8 @@ void TauTrackMemoryUtilization(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2004/02/26 22:26:34 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.1 2004/02/26 22:26:34 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 2004/03/02 01:46:35 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.2 2004/03/02 01:46:35 sameer Exp $ 
  ***************************************************************************/
 
 	
