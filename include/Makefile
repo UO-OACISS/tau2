@@ -71,7 +71,7 @@ LSX = .a
 #PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o           #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
-#PTHREAD_AVAILABLE#LEXTRA      += -lpthread	       #ENDIF#
+#PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
@@ -84,7 +84,7 @@ TAUDEFS 	= $(PROFILEOPTS) $(USER_OPT)
 
 TAUINC        	= -I$(TAUROOT)/include
 
-TAULIBS		= -L$(TAUROOT)/lib/$(CONFIG_ARCH) -lprof $(LEXTRA)
+TAULIBS		= -L$(TAUROOT)/lib/$(CONFIG_ARCH) -lprof $(LEXTRA) $(LEXTRA1)
 
 #############################################
 # These options could be included in the application Makefile as 
