@@ -39,6 +39,9 @@ void foo(void)
 {
   TAU_PROFILE("foo", " ", TAU_DEFAULT);
 }
+
+field iterations;
+
 int main(int argc, char *argv[]) {
   double xmin, xmax, ymin, ymax;
   int maxiter;
@@ -72,7 +75,6 @@ int main(int argc, char *argv[]) {
   double dy = (ymax - ymin) / height;
 
   // --- calculate mandelbrot set
-  field iterations;
 
   mytimer_(0);
 #pragma omp parallel
