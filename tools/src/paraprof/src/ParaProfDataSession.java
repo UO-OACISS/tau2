@@ -387,12 +387,14 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	while(l.hasNext()){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
 	    double meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
-	    double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
 	    globalMappingElement.setMeanExclusivePercentValue(metric,meanExclusivePercentValue);
+	    if(globalMapping.getMaxMeanExclusivePercentValue(metric) < meanExclusivePercentValue)
+		globalMapping.setMaxMeanExclusivePercentValue(metric, meanExclusivePercentValue);
+	    double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
 	    globalMappingElement.setMeanInclusivePercentValue(metric,meanInclusivePercentValue);
+	    if(globalMapping.getMaxMeanInclusivePercentValue(metric) < meanInclusivePercentValue)
+		globalMapping.setMaxMeanInclusivePercentValue(metric, meanInclusivePercentValue);
 	    	    
-	    globalMapping.setMaxMeanExclusivePercentValue(metric, 100.00);
-	    globalMapping.setMaxMeanInclusivePercentValue(metric, 100.00);
 	    globalMappingElement.setMeanValuesSet(true);
 	}
 	if(this.debug()){
@@ -559,17 +561,18 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	    }
 	    for(int i=0;i<numberOfMetrics;i++){
 		double meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
-		double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
 		globalMappingElement.setMeanExclusivePercentValue(i,meanExclusivePercentValue);
+		if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue)
+		    globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue);
+		double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
 		globalMappingElement.setMeanInclusivePercentValue(i,meanInclusivePercentValue);
+		if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue)
+		    globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue);
 		
 		if(this.debug){
 		    this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue);
 		    this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue);
 		}
-		
-		globalMapping.setMaxMeanExclusivePercentValue(i, 100.00);
-		globalMapping.setMaxMeanInclusivePercentValue(i, 100.00);
 	    }
 	    globalMappingElement.setMeanValuesSet(true);
 	    if(this.debug){
