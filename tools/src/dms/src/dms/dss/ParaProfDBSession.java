@@ -38,7 +38,6 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    //######
 	    PerfDBSession perfDBSession = (PerfDBSession) initializeObject;
 
-	    int metric = 0;
 	    GlobalMappingElement globalMappingElement = null;
 	    GlobalThreadDataElement globalThreadDataElement = null;
 	    
@@ -94,31 +93,9 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    
 	    //Collections.sort(localMap);
 
-	    //Increase storage.
-	    for(int i=0;i<numberOfMetrics;i++){
-		if(this.debug())
-		    System.out.println("Increasing the storage for the new counter.");
-		for(Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements() ;){
-		    node = (Node) e3.nextElement();
-		    for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
-			context = (Context) e4.nextElement();
-			for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
-			    thread = (dms.dss.Thread) e5.nextElement();
-			    thread.incrementStorage();
-			    for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
-				GlobalThreadDataElement ref = (GlobalThreadDataElement) e6.nextElement();
-				//Only want to add an element if this mapping existed on this thread.
-				//Check for this.
-				if(ref != null)
-				    ref.incrementStorage();
-			    }
-			}
-		    }
-		}
-		if(this.debug())
-		    System.out.println("Done increasing the storage for the new counter.");
-	    }
-	    
+
+	    System.out.println("About to increase storage.");
+
 	    l = perfDBSession.getFunctionData();
 	    while(l.hasNext()){
 		FunctionDataObject fdo = (FunctionDataObject) l.next();
@@ -130,7 +107,7 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		    context = node.addContext(fdo.getContext());
 		thread = context.getThread(fdo.getThread());
 		if(thread==null){
-		    thread = context.addThread(fdo.getThread());
+		    thread = context.addThread(fdo.getThread(), numberOfMetrics);
 		    thread.setDebug(this.debug());
 		    thread.initializeFunctionList(this.getGlobalMapping().getNumberOfMappings(0));
 		}
@@ -161,35 +138,35 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		    globalThreadDataElement.setNumberOfSubRoutines(fdo.getNumSubroutines());
 		    
 		    //Set the max values.
-		    if((globalMappingElement.getMaxExclusiveValue(metric)) < fdo.getExclusive(i))
-			globalMappingElement.setMaxExclusiveValue(metric, fdo.getExclusive(i));
-		    if((globalMappingElement.getMaxExclusivePercentValue(metric)) < fdo.getExclusivePercentage(i))
-			globalMappingElement.setMaxExclusivePercentValue(metric, fdo.getExclusivePercentage(i));
-		    if((globalMappingElement.getMaxInclusiveValue(metric)) < fdo.getInclusive(i))
-			globalMappingElement.setMaxInclusiveValue(metric, fdo.getInclusive(i));
-		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < fdo.getInclusivePercentage(i))
-			globalMappingElement.setMaxInclusivePercentValue(metric, fdo.getInclusivePercentage(i));
+		    if((globalMappingElement.getMaxExclusiveValue(i)) < fdo.getExclusive(i))
+			globalMappingElement.setMaxExclusiveValue(i, fdo.getExclusive(i));
+		    if((globalMappingElement.getMaxExclusivePercentValue(i)) < fdo.getExclusivePercentage(i))
+			globalMappingElement.setMaxExclusivePercentValue(i, fdo.getExclusivePercentage(i));
+		    if((globalMappingElement.getMaxInclusiveValue(i)) < fdo.getInclusive(i))
+			globalMappingElement.setMaxInclusiveValue(i, fdo.getInclusive(i));
+		    if((globalMappingElement.getMaxInclusivePercentValue(i)) < fdo.getInclusivePercentage(i))
+			globalMappingElement.setMaxInclusivePercentValue(i, fdo.getInclusivePercentage(i));
 		    if(globalMappingElement.getMaxNumberOfCalls() < fdo.getNumCalls())
 			globalMappingElement.setMaxNumberOfCalls(fdo.getNumCalls());
 		    if(globalMappingElement.getMaxNumberOfSubRoutines() < fdo.getNumSubroutines())
 			globalMappingElement.setMaxNumberOfSubRoutines(fdo.getNumSubroutines());
-		    if(globalMappingElement.getMaxUserSecPerCall(metric) < fdo.getInclusivePerCall(i))
-			globalMappingElement.setMaxUserSecPerCall(metric, fdo.getInclusivePerCall(i));
+		    if(globalMappingElement.getMaxUserSecPerCall(i) < fdo.getInclusivePerCall(i))
+			globalMappingElement.setMaxUserSecPerCall(i, fdo.getInclusivePerCall(i));
 
-		    if((thread.getMaxExclusiveValue(metric)) < fdo.getExclusive(i))
-			thread.setMaxExclusiveValue(metric, fdo.getExclusive(i));
-		    if((thread.getMaxExclusivePercentValue(metric)) < fdo.getExclusivePercentage(i))
-			thread.setMaxExclusivePercentValue(metric, fdo.getExclusivePercentage(i));
-		    if((thread.getMaxInclusiveValue(metric)) < fdo.getInclusive(i))
-			thread.setMaxInclusiveValue(metric, fdo.getInclusive(i));
-		    if((thread.getMaxInclusivePercentValue(metric)) < fdo.getInclusivePercentage(i))
-			thread.setMaxInclusivePercentValue(metric, fdo.getInclusivePercentage(i));
+		    if((thread.getMaxExclusiveValue(i)) < fdo.getExclusive(i))
+			thread.setMaxExclusiveValue(i, fdo.getExclusive(i));
+		    if((thread.getMaxExclusivePercentValue(i)) < fdo.getExclusivePercentage(i))
+			thread.setMaxExclusivePercentValue(i, fdo.getExclusivePercentage(i));
+		    if((thread.getMaxInclusiveValue(i)) < fdo.getInclusive(i))
+			thread.setMaxInclusiveValue(i, fdo.getInclusive(i));
+		    if((thread.getMaxInclusivePercentValue(i)) < fdo.getInclusivePercentage(i))
+			thread.setMaxInclusivePercentValue(i, fdo.getInclusivePercentage(i));
 		    if(thread.getMaxNumberOfCalls() < fdo.getNumCalls())
 			thread.setMaxNumberOfCalls(fdo.getNumCalls());
 		    if(thread.getMaxNumberOfSubRoutines() < fdo.getNumSubroutines())
 			thread.setMaxNumberOfSubRoutines(fdo.getNumSubroutines());
-		    if(thread.getMaxUserSecPerCall(metric) < fdo.getInclusivePerCall(i))
-			thread.setMaxUserSecPerCall(metric, fdo.getInclusivePerCall(i));
+		    if(thread.getMaxUserSecPerCall(i) < fdo.getInclusivePerCall(i))
+			thread.setMaxUserSecPerCall(i, fdo.getInclusivePerCall(i));
 		}
 	    }
 
