@@ -1508,8 +1508,9 @@ int main (int argc, char *argv[])
  	}/* while */
       }
       else{
+        int parameter = erec->par;
 	/* Print Event Records for entry and exit of methods */
-	switch(erec->par){
+	switch(parameter){
 	case 1:
 	  fprintf (outfp, "2:%d:1:%d:%d:%llu:5:%d\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,erec->ev);
 	  if(prvPCF[erec->ev-1] == 0){
