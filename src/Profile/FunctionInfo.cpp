@@ -43,9 +43,10 @@ using namespace std;
 #include <stdio.h> 
 #include <fcntl.h>
 #include <time.h>
-#include <unistd.h>
 #include <stdlib.h>
 
+#if (!defined(TAU_WINDOWS))
+#include <unistd.h>
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
 #include <sys/time.h>
 #else
@@ -53,6 +54,8 @@ using namespace std;
 #include "Profile/TulipTimers.h"
 #endif //TULIP_TIMERS 
 #endif //POOMA_TFLOP
+
+#endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
 #define PCXX_EVENT_SRC
@@ -255,7 +258,7 @@ long FunctionInfo::GetFunctionId(void)
 //////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 1999/08/20 20:32:59 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.20 1999/08/20 20:32:59 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: bertie $
+ * $Revision: 1.21 $   $Date: 1999/10/27 21:16:35 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.21 1999/10/27 21:16:35 bertie Exp $ 
  ***************************************************************************/

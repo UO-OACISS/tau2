@@ -64,6 +64,8 @@ int RtsLayer::myThread(void)
 {
 #ifdef PTHREADS
   return PthreadLayer::GetThreadId();
+#elif  TAU_WINDOWS
+  return WindowsThreadLayer::GetThreadId();
 #elif  TULIPTHREADS
   return TulipThreadLayer::GetThreadId();
 #elif JAVA
@@ -86,6 +88,8 @@ void RtsLayer::RegisterThread()
 {
 #ifdef PTHREADS
   PthreadLayer::RegisterThread();
+#elif  TAU_WINDOWS
+  WindowsThreadLayer::RegisterThread();
 #elif  TULIPTHREADS
   TulipThreadLayer::RegisterThread();
 #endif // PTHREADS
@@ -100,6 +104,8 @@ void RtsLayer::LockDB(void)
 {
 #ifdef PTHREADS
   PthreadLayer::LockDB();
+#elif  TAU_WINDOWS
+  WindowsThreadLayer::LockDB();
 #elif  TULIPTHREADS
   TulipThreadLayer::LockDB();
 #endif // PTHREADS
@@ -114,6 +120,8 @@ void RtsLayer::UnLockDB(void)
 {
 #ifdef PTHREADS
   PthreadLayer::UnLockDB();
+#elif  TAU_WINDOWS
+  WindowsThreadLayer::UnLockDB();
 #elif  TULIPTHREADS
   TulipThreadLayer::UnLockDB();
 #endif // PTHREADS
@@ -123,9 +131,9 @@ void RtsLayer::UnLockDB(void)
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1999/08/20 22:58:40 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.7 1999/08/20 22:58:40 sameer Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: bertie $
+ * $Revision: 1.8 $   $Date: 1999/10/27 21:16:38 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.8 1999/10/27 21:16:38 bertie Exp $
  ***************************************************************************/
 
 

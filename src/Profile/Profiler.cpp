@@ -44,8 +44,9 @@ using namespace std;
 #include <stdio.h> 
 #include <fcntl.h>
 #include <time.h>
-#include <unistd.h>
 #include <stdlib.h>
+#if (!defined(TAU_WINDOWS))
+#include <unistd.h>
 
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
 #include <sys/time.h>
@@ -54,6 +55,8 @@ using namespace std;
 #include "Profile/TulipTimers.h"
 #endif //TULIP_TIMERS 
 #endif //POOMA_TFLOP
+
+#endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
 #define PCXX_EVENT_SRC
@@ -399,7 +402,7 @@ void Profiler::ProfileExit(const char *message, int tid)
 int Profiler::StoreData(int tid)
 {
 #ifdef PROFILING_ON 
-  	vector<FunctionInfo*>::iterator it;
+	vector<FunctionInfo*>::iterator it;
   	vector<TauUserEvent*>::iterator eit;
 	char *filename, *errormsg, *header;
 	char *dirname;
@@ -707,9 +710,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 1999/08/20 22:59:34 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.31 1999/08/20 22:59:34 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: bertie $
+ * $Revision: 1.32 $   $Date: 1999/10/27 21:16:36 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.32 1999/10/27 21:16:36 bertie Exp $ 
  ***************************************************************************/
 
 	

@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+TAUROOT=/research/paraducks/users/bertie/temptau/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -83,8 +83,8 @@ ARFLAGS	      = rcv
 ##################################################################
 
 ############# For SGI CC compiler, replace AR accordingly #######
-#SGICC#AR			= $(CXX) -ar 		   #ENDIF#
-#SGICC#ARFLAGS			= -o			   #ENDIF#
+AR			= $(CXX) -ar 		   #ENDIF##SGICC#
+ARFLAGS			= -o			   #ENDIF##SGICC#
 ##################################################################
 
 ############# For FUJITSU FCC compiler, replace AR accordingly #######

@@ -34,7 +34,10 @@
 #include <jvmpi.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauJava.h>
+#if (!defined(TAU_WINDOWS))
 #include <unistd.h>
+#endif //TAU_WINDOWS
+
 
 // Note: Don't remove any GetTid() calls as they may be used for registeration
 // of the thread.
@@ -71,10 +74,12 @@ extern "C" {
     tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_GC_START, NULL);
     tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_GC_FINISH, NULL);
 
+#if (!defined(TAU_WINDOWS))
     if ((sbrk(1024*1024*4)) == (void *) -1) {
       fprintf(stdout, "TAU>ERROR: sbrk failed\n");
       CALL(ProfilerExit)(1);
     }
+#endif //TAU_WINDOWS
 
 
 #ifdef DEBUG_PROF 

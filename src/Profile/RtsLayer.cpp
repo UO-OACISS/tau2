@@ -51,8 +51,22 @@ using namespace std;
 #include <stdio.h> 
 #include <fcntl.h>
 #include <time.h>
-#include <unistd.h>
 #include <stdlib.h>
+
+
+#ifdef TAU_WINDOWS
+//include the header for windows time functions.
+#include <Windows.h>	//Various defines needed in Winbase.h.
+#include <Winbase.h>	//For QueryPerformanceCounter/Frequency function (down to microsecond
+						//resolution depending on the platform. 
+#include <sys/timeb.h>	//For _ftime function (millisecond resolution).
+//Map strncasecmp and strcasecmp to strnicmp and stricmp.
+#define strcasecmp stricmp
+#define strncasecmp strnicmp  
+#endif //TAU_WINDOWS
+
+#if (!defined(TAU_WINDOWS))
+#include <unistd.h>
 
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
 #include <sys/time.h>
@@ -61,6 +75,8 @@ using namespace std;
 #include "Profile/TulipTimers.h"
 #endif //TULIP_TIMERS 
 #endif //POOMA_TFLOP
+
+#endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
 #define PCXX_EVENT_SRC
@@ -226,9 +242,81 @@ double RtsLayer::getUSecD (int tid) {
 
 #else 
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS)) 
+#if (defined(TAU_WINDOWS))
+  //First need to find out whether we have performance
+  //clock, and if so, the frequency.
+  static bool PerfClockCheckedBefore = false;
+  static bool PerformanceClock = false;
+  static LARGE_INTEGER Frequency;
+  LARGE_INTEGER ClockValue;
+  double FinalClockValue = 0;
+  static double Multiplier = 0;
+
+  //Intializing!
+  ClockValue.HighPart = 0;
+  ClockValue.LowPart = 0;
+  ClockValue.QuadPart = 0;
+
+  //Testing clock.  This will only be done ONCE!
+  if(!PerfClockCheckedBefore)
+  {
+	  //Intializing!
+	  Frequency.HighPart = 0;
+	  Frequency.LowPart = 0;
+	  Frequency.QuadPart = 0;
+	  
+	  PerformanceClock = QueryPerformanceFrequency(&Frequency);
+	  PerfClockCheckedBefore = true;
+	  if(PerformanceClock)
+	  {
+		  cout << "Frequency high part is: " << Frequency.HighPart << endl;
+		  cout << "Frequency low part is: " << Frequency.LowPart << endl;
+		  cout << "Frequency quad part is: " << (double) Frequency.QuadPart << endl;			
+		  //Shall be using Frequency.QuadPart and assuming a double as the main TAU
+		  //system does.
+		  
+		  //Checking for zero divide ... should not be one if the clock is working,
+		  //but need to be on the safe side!
+		  if(Frequency.QuadPart != 0)
+		  {
+			  Multiplier = (double) 1000000/Frequency.QuadPart;
+			  cout << "The value of the multiplier is: " << Multiplier << endl;
+		  }
+		  else
+		  {
+			  cout << "There was a problem with the counter ... should not have happened!!" << endl;
+			  return -1;
+		  }
+	  }
+	  else
+		  cout << "No performace clock available ... using millisecond timers." << endl;
+  }
+
+  //Getting clock value.
+  if(PerformanceClock)
+  {
+	  if(QueryPerformanceCounter(&ClockValue))
+	  {
+		  //As mentioned above, assuming double value.
+		  return Multiplier * (double) ClockValue.QuadPart;
+	  }
+	  else
+	  {
+		  cout << "There was a problem with the counter ... should not have happened!!" << endl;
+		  return -1;
+	  }
+  }
+  else
+  {
+	  struct _timeb tp;
+	  _ftime(&tp);
+	  return ( (double) tp.time * 1e6 + tp.millitm * 1e3);
+  }
+#else
   struct timeval tp;
   gettimeofday (&tp, 0);
   return ( (double) tp.tv_sec * 1e6 + tp.tv_usec );
+#endif // TAU_WINDOWS
 #else  // TULIP_TIMERS by default.  
   return pcxx_GetUSecD();
 #endif  //POOMA_TFLOP
@@ -584,7 +672,7 @@ int RtsLayer::DumpEDF(int tid)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 1999/08/20 22:58:40 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.14 1999/08/20 22:58:40 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: bertie $
+ * $Revision: 1.15 $   $Date: 1999/10/27 21:16:37 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.15 1999/10/27 21:16:37 bertie Exp $ 
  ***************************************************************************/
