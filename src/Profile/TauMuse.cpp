@@ -225,13 +225,26 @@ int package_selector(void){
 #endif
 		setenv("TAU_MUSE_HANDLER","TAU_count",1);
 		return TauMuseInit("TAU_count",1,args);
-	} else if(!strcmp("total_busy_time",package)){
+	} else if(!strcmp("busy_time",package)){
 		args[0]=(char*)malloc(100);
 		memset(args[0],0,100);
 		sprintf(args[0],"process_filter pid=%d event=258",getpid());
 		args[1]=(char*)malloc(100);
 		memset(args[1],0,100);
 		sprintf(args[1],"process_filter pid=%d event=259",getpid());
+#ifdef DEBUG_PROF
+		printf("args: %s\n",args[0]);
+		printf("args: %s\n",args[1]);
+#endif
+		setenv("TAU_MUSE_HANDLER","process_scheduling",1);
+		return TauMuseInit("process_scheduling",2,args);
+	} else if(!strcmp("idle_time",package)){
+		args[0]=(char*)malloc(100);
+		memset(args[0],0,100);
+		sprintf(args[0],"process_filter pid=0 event=258");
+		args[1]=(char*)malloc(100);
+		memset(args[1],0,100);
+		sprintf(args[1],"process_filter pid=0 event=259");
 #ifdef DEBUG_PROF
 		printf("args: %s\n",args[0]);
 		printf("args: %s\n",args[1]);

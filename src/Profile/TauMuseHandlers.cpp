@@ -23,15 +23,14 @@
 #include <string.h>
 #include <netinet/in.h>
 
+//#define DEBUG
+
 #include <endian.h>
 #include <byteswap.h>
 
-
-//#define DEBUG
-
 #if __BYTE_ORDER == __BIG_ENDIAN
 #define ntohll(x)	(x)
-#else
+#else // __BIG_ENDIAN
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define ntohll(x)	bswap_64 (x)
 #endif //__BYTE_ORDER = __LITTLE_ENDIAN
@@ -230,13 +229,16 @@ double QueryProcessSchedulingDecode(const char *binary_command,
 	struct process_scheduling_handler_return_data *cuhrd;
 	int *sizeptr;
 	unsigned char *errorptr;
-	double idleper, busyper, schedper, errorper;
-	double midle, mbusy, msched, merror, mtotal;
-	int i;
-	unsigned cpu_counter_in[NUMOFCPU], cpu_counter_out[NUMOFCPU];
-	double cpu_busy_time[NUMOFCPU];
-	double cpu_busy_time_sec[NUMOFCPU];
-	double cpu_speed;
+        double idleper, busyper, schedper, errorper;
+        double midle, mbusy[MAXNUMOFCPU], msched[MAXNUMOFCPU], merror, mtotal;
+        double cpu_busy_time_sec[MAXNUMOFCPU];
+        double cpu_sched_time_sec[MAXNUMOFCPU];
+        double total_time_sec;
+        double cpu_speed;
+        unsigned int numofcpu;
+        int i;
+        char ascii_reply_ext[1024];
+	double result=0.0;
 	char *package;
         sizeptr = (int *)binary_reply;
         errorptr = (unsigned char *) (sizeptr+1);
@@ -248,39 +250,49 @@ double QueryProcessSchedulingDecode(const char *binary_command,
         {
                 cuhrd = (struct process_scheduling_handler_return_data *) (errorptr+1);
 
-                mtotal = (double)ntohll(cuhrd->total_time);
-                midle = (double)ntohll(cuhrd->total_idle_time);
-                idleper = midle / mtotal;
-                mbusy = (double)ntohll(cuhrd->total_busy_time);
-                busyper = mbusy / mtotal;
-                msched = (double)ntohll(cuhrd->total_sched_time);
-                schedper = msched / mtotal;
-                merror = (double)ntohll(cuhrd->total_error_time);
-                errorper = merror / mtotal;
                 cpu_speed = (double)ntohll(cuhrd->cpu_speed);
+
+                mtotal = (double)ntohll(cuhrd->total_time);
+                total_time_sec = (double)(mtotal/cpu_speed);
+                numofcpu = ntohs(cuhrd->numofcpu);
 #ifdef DEBUG
-		printf("cpu_speed=%10.10f\n",cpu_speed);
-#endif //DEBUG
-                for(i=0;i<NUMOFCPU;i++){
-                        cpu_counter_in[i] = ntohs(cuhrd->cpu_counter_in[i]);
-                        cpu_counter_out[i] = ntohs(cuhrd->cpu_counter_out[i]);
-                        cpu_busy_time[i] = (double)ntohll(cuhrd->cpu_busy_time[i]);
-                        cpu_busy_time_sec[i] = cpu_busy_time[i]/cpu_speed;
+                printf("DEBUG: cpu_speed=%10.10f\n",cpu_speed);
+                printf("DEBUG: numofcpu = %u\n",numofcpu);
+                printf("DEBUG: total_time = %15.f\n",mtotal);
+                printf("DEBUG: total_time_sec = %10.10f\n",total_time_sec);
+#endif //DEBUG          
+
+                snprintf(ascii_reply, size, "total_time(sec): %10.10f\n",
+                                                 total_time_sec);
+                for(i=0;i<numofcpu && i<MAXNUMOFCPU ;i++){
+                        mbusy[i] = (double)ntohll(cuhrd->stat[i].time_busy);
+                        busyper = mbusy[i] / mtotal;
+                        cpu_busy_time_sec[i] = (double)(mbusy[i]/cpu_speed);
 #ifdef DEBUG
-                        printf("cpu_busy_time[%d]=%10.10f\n",i,cpu_busy_time[i]);
-                        printf("cpu_busy_time_sec[%d]=%10.10f\n",i,cpu_busy_time_sec[i]);
-#endif //DEBUG
+                        printf("DEBUG: mbusy[%d] = %15.f\n",i,mbusy[i]);
+                        printf("DEBUG: cpu_busy_time_sec = %10.10f\n",cpu_busy_time_sec);
+#endif //DEBUG          
+                        msched[i] = (double)ntohll(cuhrd->stat[i].time_sched);
+                        schedper = msched[i] / mtotal;
+                        cpu_sched_time_sec[i] = (double)(msched[i]/cpu_speed);
+#ifdef DEBUG
+                        printf("DEBUG: msched[%d] = %15.f\n",i,msched[i]);
+                        printf("DEBUG: cpu_sched_time_sec = %10.10f\n",cpu_sched_time_sec);
+#endif //DEBUG          
+
+                /*      //for FUTURE    
+                        merror = (double)ntohll(cuhrd->stat[i].error_time);
+                        errorper = merror / mtotal;
+                        
+                        midle = (double)ntohll(cuhrd->stat[i].idle_time);
+                        idleper = midle / mtotal;
+                */
+                        sprintf(ascii_reply_ext,"time_busy[%d](sec) : %10.10f\ntime_sched[%d](sec): %10.10f\n",
+                                                        i,cpu_busy_time_sec[i],
+                                                        i,cpu_sched_time_sec[i]);
+                        strncat(ascii_reply,ascii_reply_ext,size);
                 }
-                snprintf(ascii_reply, size, "Idle(sec) : %15.f %2.3f\nBusy(sec) : %10.10f %2.3f\nSched(sec): %10.10f %2.3f\nError(sec): %10.10f %2.3f\nTotal(sec): %10.10f %2.3f\ncpu_counter_in[0]=%15.u\ncpu_counter_out[0]=%15.u\ncpu_counter_in[1]=%15.u\ncpu_counter_out[1]=%15.u\ncpu_busy_time[0](sec)=%10.10f\ncpu_busy_time[1](sec)=%10.10f\n\n",
-                                                 midle/cpu_speed,100*idleper,
-                                                 mbusy/cpu_speed,100*busyper,
-                                                 msched/cpu_speed,100*schedper,
-                                                 merror/cpu_speed,100*errorper,
-                                                 mtotal/cpu_speed, 100*(idleper+busyper+schedper),
-                                                 cpu_counter_in[0],cpu_counter_out[0],
-                                                 cpu_counter_in[1],cpu_counter_out[1],
-                                                 cpu_busy_time_sec[0],cpu_busy_time_sec[1]
-                                                 );
+                        strncat(ascii_reply,"\n",size);
         }
         else
         {
@@ -289,12 +301,25 @@ double QueryProcessSchedulingDecode(const char *binary_command,
         }
 	package=getenv("TAU_MUSE_PACKAGE");
 	// This result varies according to the TAU_MUSE_PACKAGE
-	if(!strcmp(package,"total_busy_time")){
-		// Returning total busy time in millisec
-		return (mbusy/cpu_speed)*1000;
+	if(!strcmp(package,"busy_time")){
+		// Returning busy time msec
+		for(i=0;i<numofcpu;i++)
+			result+=(double)cpu_busy_time_sec[i];
+#ifdef DEBUG
+		printf("result(ms)=%10.10f\n",result*1000);
+#endif //DEBUG
+		return result*1000;
+	}else if(!strcmp(package,"idle_time")){
+		// Returning idle (but use busy pid=0 to measure) time in msec
+		for(i=0;i<numofcpu;i++)
+			result+=cpu_busy_time_sec[i];
+#ifdef DEBUG
+		printf("result(ms)=%10.10f\n",result*1000);
+#endif //DEBUG
+		return result*1000;
 	}else if(!strcmp(package,"total_time")){
-		// Returning total time in millisec
-		return mtotal/cpu_speed*1000;
+		// Returning total time in msec
+		return total_time_sec*1000; 
 	}
 	return 0;
 
