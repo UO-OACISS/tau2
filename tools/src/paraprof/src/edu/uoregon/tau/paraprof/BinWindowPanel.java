@@ -83,12 +83,12 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    //Add items to the second popup menu.
 	    popup2.addPopupMenuListener(this);
       
-	    JMenuItem tSWItem = new JMenuItem("Show Total Statistics Windows");
+	    JMenuItem tSWItem = new JMenuItem("Show Statistics Window");
 	    tSWItem.addActionListener(this);
 	    popup2.add(tSWItem);
       
 	    if (trial.userEventsPresent()) {
-		tUESWItem = new JMenuItem("Show Total User Event Statistics Windows");
+		tUESWItem = new JMenuItem("Show User Event Statistics Window");
 		tUESWItem.addActionListener(this);
 	    }
 

@@ -45,7 +45,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     //######
     //Command line options related.
     //######
-    public static String USAGE = "USAGE: paraprof [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-p,--filenameprefix} filenameprefix] [{-i --fixnames}] [{-d,--debug}]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, hpm, gprof, psrun, sddf (svpablo)\n";
+    public static String USAGE = "USAGE: paraprof [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-r,--filenameprefix} filenameprefix] [{-i --fixnames}] [{-d,--debug}]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, hpm, gprof, psrun, sddf (svpablo)\n";
     private static int fileType = -1; //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun 
     private static boolean dump = false;
     private static int dumptype = -1;
@@ -203,7 +203,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    //######
 	    //End - Static Initialization
 	    //######
-	    System.out.println("fileType:"+fileType );
+	    //System.out.println("fileType:"+fileType );
 	    if(fileType!=-1){
 		switch(fileType){
 		    case 0:
@@ -567,7 +567,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	CmdLineParser.Option debugOpt = parser.addBooleanOption('d', "debug");
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
         CmdLineParser.Option sourcefileOpt = parser.addStringOption('s', "sourcefile");
-	CmdLineParser.Option prefixOpt = parser.addStringOption('p', "--filenameprefix");
+	CmdLineParser.Option prefixOpt = parser.addStringOption('r', "--filenameprefix");
 	CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
 	CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
 	try {

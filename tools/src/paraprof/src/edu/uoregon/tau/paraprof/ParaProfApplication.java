@@ -11,33 +11,35 @@ package edu.uoregon.tau.paraprof;
 import java.util.*;
 import javax.swing.tree.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.dms.database.*;
+
 
 public class ParaProfApplication extends Application implements ParaProfTreeNodeUserObject{
 
-    public ParaProfApplication(){
-	super();
+    public ParaProfApplication(DB db){
+	super(db);
 	this.setID(-1);
 	this.setName("");
-	this.setVersion("");
-	this.setDescription("");
-	this.setLanguage("");
-	this.setParaDiag("");
-	this.setUsage("");
-	this.setExecutableOptions("");
-	this.setUserData("");
     }
 
-    public ParaProfApplication(Application application){
-	super();
+
+    public ParaProfApplication(){
+	super(0);
+	this.setID(-1);
+	this.setName("");
+    }
+
+    public ParaProfApplication(Application application) {
+	super(application);
+	/*
+	super(application.getFieldNames(), application.getFieldTypes());
+
+	System.out.println ("Name: " + application.getName());
+
+
 	this.setID(application.getID());
 	this.setName(application.getName());
-	this.setVersion(application.getVersion());
-	this.setDescription(application.getDescription());
-	this.setLanguage(application.getLanguage());
-	this.setParaDiag(application.getParaDiag());
-	this.setUsage(application.getUsage());
-	this.setExecutableOptions(application.getExecutableOptions());
-	this.setUserData(application.getUserData());
+	*/
     }
   
     public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode){

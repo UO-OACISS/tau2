@@ -103,6 +103,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     }  
     
     public void renderIt(Graphics2D g2D, int instruction, boolean header){
+
 	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int yCoord = 0;
@@ -308,11 +309,13 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		//######
 		//Set panel size. 
 		//######
+
 		if(this.calculatePanelSize()){
 		    for(Enumeration e = drawObjects.elements(); e.hasMoreElements() ;){
 			callPathDrawObject = (CallPathDrawObject) e.nextElement();
 			yHeightNeeded = yHeightNeeded + (spacing);
 			max = setMax(max,callPathDrawObject.getExclusiveValue(),callPathDrawObject.getInclusiveValue());
+
 			if(!callPathDrawObject.isSpacer()){
 			    length = fmMonoFont.stringWidth(callPathDrawObject.getMappingName()) + 10;
 			    if(xWidthNeeded<length)
@@ -669,11 +672,17 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		//######
 		//Set panel size. 
 		//######
+
 		if(this.calculatePanelSize()){
 		    for(Enumeration e = drawObjects.elements(); e.hasMoreElements() ;){
 			callPathDrawObject = (CallPathDrawObject) e.nextElement();
 			yHeightNeeded = yHeightNeeded + (spacing);
-			max = setMax(max,callPathDrawObject.getExclusiveValue(),callPathDrawObject.getInclusiveValue());
+
+
+			max = setMax(max, fmMonoFont.stringWidth(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getExclusiveValue(),defaultNumberPrecision)), fmMonoFont.stringWidth(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getInclusiveValue(),defaultNumberPrecision)));
+
+			//			max = setMax(max,callPathDrawObject.getExclusiveValue(),callPathDrawObject.getInclusiveValue());
+
 			if(!callPathDrawObject.isSpacer()){
 			    length = fmMonoFont.stringWidth(callPathDrawObject.getMappingName()) + 10;
 			    if(xWidthNeeded<length)
@@ -683,7 +692,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
 		    base = 20;
 		    startPosition = fmMonoFont.stringWidth("--> ") + base;
-		    stringWidth = (fmMonoFont.stringWidth(UtilFncs.getOutputString(cPTWindow.units(),max,defaultNumberPrecision)))+10;
+		    //stringWidth = (fmMonoFont.stringWidth(UtilFncs.getOutputString(cPTWindow.units(),max,defaultNumberPrecision)))+10;
+		    stringWidth = (int)max + 10;
+
 		    check = fmMonoFont.stringWidth("Exclusive");
 		    if(stringWidth<check)
 			stringWidth = check+5;

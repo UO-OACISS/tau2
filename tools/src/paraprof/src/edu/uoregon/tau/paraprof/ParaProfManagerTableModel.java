@@ -12,12 +12,18 @@
 
 package edu.uoregon.tau.paraprof;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.dms.database.*;
 
 import javax.swing.tree.*;
 import javax.swing.table.*;
 
-public class ParaProfManagerTableModel extends AbstractTableModel{
-    public ParaProfManagerTableModel(ParaProfManager paraProfManager, Object obj, DefaultTreeModel defaultTreeModel){
+
+import java.sql.SQLException;
+
+public class ParaProfManagerTableModel extends AbstractTableModel {
+
+    public ParaProfManagerTableModel(ParaProfManager paraProfManager, 
+				     Object obj, DefaultTreeModel defaultTreeModel) {
 	super();
 	
 	if(obj instanceof ParaProfApplication){
@@ -47,11 +53,11 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
     public int getRowCount(){
 	switch(type){
 	case 0:
-	    return 7;
+	    return application.getNumFields()+2; // +2 for name and id
 	case 1:
-	    return 27;
+	    return experiment.getNumFields()+3; // +2 for name, id, and applicationID
 	case 2:
-	    return 10;
+	    return trial.getNumFields()+4;
 	case 3:
 	    return 5;
 	default:
@@ -61,51 +67,39 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
   
     public String getColumnName(int c){
 	return columnNames[c];}
-  
+
+    // c is which column (either 0 meaning the name of the column, or nonzero for the actual value)
+    // r is which row
     public Object getValueAt(int r, int c){
-	switch(type){
-	case 0:
-	    if(c==0){
-		switch(r){
+	switch (type) {
+	case 0: // application metadata
+	    if (c==0) {
+		switch(r) {
 		case(0):
 		    return "Name";
 		case(1):
 		    return "Application ID";
-		case(2):
-		    return "Language";
-		case(3):
-		    return "Para_diag";
-		case(4):
-		    return "Usage";
-		case(5):
-		    return "Executable Options";
-		case(6):
-		    return "Description";
+
+
 		default:
-		    return "";
+		    return application.getFieldName(r-2);
+		    
+		    //return "";
 		}
-	    }
-	    else{
+	    } else {
 		switch(r){
 		case(0):
 		    return application.getName();
 		case(1):
 		    return new Integer(application.getID());
-		case(2):
-		    return application.getLanguage();
-		case(3):
-		    return application.getParaDiag();
-		case(4):
-		    return application.getUsage();
-		case(5):
-		    return application.getExecutableOptions();
-		case(6):
-		    return application.getDescription();
+
+
 		default:
-		    return "";
+		    return application.getField(r-2);
+		    //return "";
 		}
 	    }
-	case 1:
+	case 1: // expriment metadata
 	    if(c==0){
 		switch(r){
 		case(0):
@@ -114,59 +108,10 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    return "Application ID";
 		case(2):
 		    return "Experiment ID";
-		case(3):
-		    return "User Data";
-		case(4):
-		    return "System Name";
-		case(5):
-		    return "System Machine Type";
-		case(6):
-		    return "System Arch.";
-		case(7):
-		    return "System OS";
-		case(8):
-		    return "System Memory Size";
-		case(9):
-		    return "System Processor Amount";
-		case(10):
-		    return "System L1 Cache Size";
-		case(11):
-		    return "System L2 Cache Size";
-		case(12):
-		    return "System User Data";
-		case(13):
-		    return "Configuration Prefix";
-		case(14):
-		    return "Configuration Architecture";
-		case(15):
-		    return "Configuration CPP";
-		case(16):
-		    return "Configuration CC";
-		case(17):
-		    return "Configuration JDK";
-		case(18):
-		    return "Configuration Profile";
-		case(19):
-		    return "Configuration User Data";
-		case(20):
-		    return "Compiler CPP Name";
-		case(21):
-		    return "Compiler CPP Version";
-		case(22):
-		    return "Compiler CC Name";
-		case(23):
-		    return "Compiler CC Version";
-		case(24):
-		    return "Compiler Java Dir. Path";
-		case(25):
-		    return "Compiler Java Version";
-		case(26):
-		    return "Compiler User Data";
 		default:
-		    return "";
+		    return experiment.getFieldName(r-3);
 		}
-	    }
-	    else{
+	    } else {
 		switch(r){
 		case(0):
 		    return experiment.getName();
@@ -174,59 +119,11 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    return new Integer(experiment.getApplicationID());
 		case(2):
 		    return new Integer(experiment.getID());
-		case(3):
-		    return experiment.getUserData();
-		case(4):
-		    return experiment.getSystemName();
-		case(5):
-		    return experiment.getSystemMachineType();
-		case(6):
-		    return experiment.getSystemArch();
-		case(7):
-		    return experiment.getSystemOS();
-		case(8):
-		    return experiment.getSystemMemorySize();
-		case(9):
-		    return experiment.getSystemProcessorAmount();
-		case(10):
-		    return experiment.getSystemL1CacheSize();
-		case(11):
-		    return experiment.getSystemL2CacheSize();
-		case(12):
-		    return experiment.getSystemUserData();
-		case(13):
-		    return experiment.getConfigPrefix();
-		case(14):
-		    return experiment.getConfigArchitecture();
-		case(15):
-		    return experiment.getConfigCpp();
-		case(16):
-		    return experiment.getConfigCc();
-		case(17):
-		    return experiment.getConfigJdk();
-		case(18):
-		    return experiment.getConfigProfile();
-		case(19):
-		    return experiment.getConfigUserData();
-		case(20):
-		    return experiment.getCompilerCppName();
-		case(21):
-		    return experiment.getCompilerCppVersion();
-		case(22):
-		    return experiment.getCompilerCcName();
-		case(23):
-		    return experiment.getCompilerCcVersion();
-		case(24):
-		    return experiment.getCompilerJavaDirpath();
-		case(25):
-		    return experiment.getCompilerJavaVersion();
-		case(26):
-		    return experiment.getCompilerUserData();
 		default:
-		    return "";
+		    return experiment.getField(r-3);
 		}
 	    }
-	case 2:
+	case 2: // trial metadata
 	    if(c==0){
 		switch(r){
 		case(0):
@@ -237,23 +134,10 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    return "Experiment ID";
 		case(3):
 		    return "Trial ID";
-		case(4):
-		    return "Time";
-		case(5):
-		    return "Node Count";
-		case(6):
-		    return "Contexts Per Node";
-		case(7):
-		    return "Threads Per Context";
-		case(8):
-		    return "User Data";
-		case(9):
-		    return "Problem Definition";
 		default:
-		    return "";
+		    return trial.getFieldName(r-4);
 		}
-	    }
-	    else{
+	    } else {
 		switch(r){
 		case(0):
 		    return trial.getName();
@@ -263,25 +147,13 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    return new Integer(trial.getExperimentID());
 		case(3):
 		    return new Integer(trial.getID());
-		case(4):
-		    return trial.getTime();
-		case(5):
-		    return new Integer(trial.getNodeCount());
-		case(6):
-		    return new Integer(trial.getNumContextsPerNode());
-		case(7):
-		    return new Integer(trial.getNumThreadsPerContext());
-		case(8):
-		    return trial.getUserData();
-		case(9):
-		    return trial.getProblemDefinition();
 		default:
-		    return "";
+		    return trial.getField(r-4);
 		}
 	    }
-	    case 3:
-	    if(c==0){
-		switch(r){
+	case 3: // metric metadata
+	    if (c==0) {
+		switch(r) {
 		case(0):
 		    return "Name";
 		case(1):
@@ -295,9 +167,8 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		default:
 		    return "";
 		}
-	    }
-	    else{
-		switch(r){
+	    } else {
+		switch(r) {
 		case(0):
 		    return metric.getName();
 		case(1):
@@ -318,46 +189,59 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
     }
   
     public boolean isCellEditable(int r, int c){
-	if(c==1 && r!=1)
-	    return true;
-	else
+
+	switch (type) {
+	case 0: // Application
+	    if(c==1 && r!=1)
+		return true;
+	    else
+		return false;
+	case 1: // Experiment
+	    if(c==1 && r!=1 && r!=2)
+		return true;
+	    else
+		return false;
+
+	case 2: // Trial
+
+	    if (c != 1)
+		return false;
+
+	    if (r == 0)
+		return true;
+
+	    if (r >= 1 && r <= 3) // id, experiment, application
+		return false;
+
+	    return DBConnector.isWritableType(trial.getFieldType(r-4));
+
+	case 3: // Metric
 	    return false;
+
+	default:
+	    if(c==1 && r!=1)
+		return true;
+	    else
+		return false;
+	}
     }
   
     public void setValueAt(Object obj, int r, int c){
+
 	//Should be getting a string.
 	if(obj instanceof String){
 	    String tmpString = (String) obj;
 	    if(c==1){
 		switch(type){
-		case 0:
+		case 0: // Application
 		    switch(r){
 		    case(0):
 			application.setName(tmpString);
 			this.updateDB(application);
 			break;
-		    case(1):
-			application.setID(Integer.parseInt(tmpString));
-			this.updateDB(application);
-			break;
-		    case(2):
-			application.setLanguage(tmpString);
-			this.updateDB(application);
-			break;
-		    case(3):
-			application.setParaDiag(tmpString);
-			this.updateDB(application);
-			break;
-		    case(4):
-			application.setUsage(tmpString);
-			this.updateDB(application);
-			break;
-		    case(5):
-			application.setExecutableOptions(tmpString);
-			this.updateDB(application);
-			break;
-		    case(6):
-			application.setDescription(tmpString);
+			
+		    default:
+			application.setField(r-2,tmpString);
 			this.updateDB(application);
 			break;
 		    }
@@ -369,100 +253,8 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 			experiment.setName(tmpString);
 			this.updateDB(experiment);
 			break;
-		    case(3):
-			experiment.setUserData(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(4):
-			experiment.setSystemName(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(5):
-			experiment.setSystemMachineType(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(6):
-			experiment.setSystemArch(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(7):
-			experiment.setSystemOS(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(8):
-			experiment.setSystemMemorySize(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(9):
-			experiment.setSystemProcessorAmount(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(10):
-			experiment.setSystemL1CacheSize(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(11):
-			experiment.setSystemL2CacheSize(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(12):
-			experiment.setSystemUserData(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(13):
-			experiment.setConfigurationPrefix(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(14):
-			experiment.setConfigurationArchitecture(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(15):
-			experiment.setConfigurationCpp(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(16):
-			experiment.setConfigurationCc(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(17):
-			experiment.setConfigurationJdk(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(18):
-			experiment.setConfigurationProfile(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(19):
-			experiment.setConfigurationUserData(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(20):
-			experiment.setCompilerCppName(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(21):
-			experiment.setCompilerCppVersion(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(22):
-			experiment.setCompilerCcName(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(23):
-			experiment.setCompilerCcVersion(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(24):
-			experiment.setCompilerJavaDirpath(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(25):
-			experiment.setCompilerJavaVersion(tmpString);
-			this.updateDB(experiment);
-			break;
-		    case(26):
-			experiment.setCompilerUserData(tmpString);
+		    default:
+			experiment.setField(r-3,tmpString);
 			this.updateDB(experiment);
 			break;
 		    }
@@ -474,14 +266,9 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 			trial.setName(tmpString);
 			this.updateDB(trial);
 			break;
-		    case(8):
-			trial.setUserData(tmpString);
+		    default:
+			trial.setField(r-4,tmpString);
 			this.updateDB(trial);
-			break;
-		    case(9):
-			trial.setProblemDefinition(tmpString);
-			this.updateDB(trial);
-			break;
 		    }
 		    defaultTreeModel.nodeChanged(trial.getDMTN());
 		    break;
@@ -490,15 +277,31 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 	}
     }
 
-    private void updateDB(Object obj){
+    private void updateDB(Object obj) {
 	if(obj instanceof ParaProfApplication){
 	    ParaProfApplication application = (ParaProfApplication) obj;
-	    if(application.dBApplication()){
+	    if (application.dBApplication()) {
+
+		/*
+		try {
+		    DatabaseAPI dbAPI = paraProfManager.getDatabaseAPI();
+		    if (dbAPI != null) {
+			dbAPI.saveApplication(application);
+			dbAPI.disconnect();
+		    }
+		} catch (SQLException e) {
+		    System.err.println ("Error Saving Application:");
+		    e.printStackTrace();
+		}
+		*/
+		
+		
 		PerfDMFSession perfDMFSession = paraProfManager.getDBSession();
-		if(perfDMFSession!=null){
+		if (perfDMFSession!=null) {
 		    perfDMFSession.saveApplication(application);
 		    perfDMFSession.terminate();
 		}
+		
 	    }
 	}
 	else if(obj instanceof ParaProfExperiment){
@@ -523,7 +326,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 	}
     }
 
-    private int type = -1; //0-application table model,1-experiment table model,2-trial table model.
+    private int type = -1; //0-application table model,1-experiment table model,2-trial table model, 3-metric table model
     private ParaProfApplication application = null;
     private ParaProfExperiment experiment = null;
     private ParaProfTrial trial = null;

@@ -51,7 +51,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 	    //Add items to the first popup menu.
 	    //######
-	    JMenuItem jMenuItem = new JMenuItem("Show Mean Total Statistics Windows");
+	    JMenuItem jMenuItem = new JMenuItem("Show Mean Statistics Window");
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
       
@@ -65,11 +65,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 	    //Add items to the seccond popup menu.
 	    //######
-	    jMenuItem = new JMenuItem("Show Total Statistics Windows");
+	    jMenuItem = new JMenuItem("Show Statistics Window");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
       
-	    jMenuItem = new JMenuItem("Show Total User Event Statistics Windows");
+	    jMenuItem = new JMenuItem("Show User Event Statistics Window");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 
@@ -570,12 +570,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
-		if(arg.equals("Show Mean Total Statistics Windows")){
+		if(arg.equals("Show Mean Statistics Window")){
 		    StatWindow statWindow = new StatWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
 		    trial.getSystemEvents().addObserver(statWindow);
 		    statWindow.show();
 		}
-		else if(arg.equals("Show Mean Total User Event Statistics Windows")){
+		else if(arg.equals("Show Mean User Event Statistics Window")){
 		    if(clickedOnObject instanceof SMWThread){
 			SMWedu.uoregon.tau.dms.dss.Thread sMWedu.uoregon.tau.dms.dss.Thread = (SMWThread) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThread.getNodeID(),
@@ -600,7 +600,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			callPathTextWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Total Statistics Windows")){
+		else if(arg.equals("Show Statistics Window")){
 		    if(clickedOnObject instanceof SMWThread){
 			SMWedu.uoregon.tau.dms.dss.Thread sMWedu.uoregon.tau.dms.dss.Thread = (SMWThread) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThread.getNodeID(),
@@ -611,7 +611,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Total User Event Statistics Windows")){
+		else if(arg.equals("Show User Event Statistics Window")){
 		    if(clickedOnObject instanceof SMWThread){
 			SMWedu.uoregon.tau.dms.dss.Thread sMWedu.uoregon.tau.dms.dss.Thread = (SMWThread) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThread.getNodeID(),

@@ -20,6 +20,7 @@ import edu.uoregon.tau.dms.dss.*;
 public class UserEventWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener{
   
     public UserEventWindow(){
+
 	try{
 	    setLocation(new java.awt.Point(0, 0));
 	    setSize(new java.awt.Dimension(100, 100));
@@ -33,6 +34,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     }
   
     public UserEventWindow(ParaProfTrial trial, int mappingID, StaticMainWindowData sMWData, boolean debug){
+
 	try{
 	    this.mappingID = mappingID;
 	    this.trial = trial;

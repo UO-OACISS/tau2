@@ -42,6 +42,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     public StatWindowPanel(ParaProfTrial inParaProfTrial, int nodeID,
 			   int contextID, int threadID, StatWindow sWindow,
 			   int windowType, boolean debug){
+
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
@@ -215,11 +216,13 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		UtilFncs.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
 	    }
 	    
+
 	    //Calculate the name position.
 	    int namePosition = fmMonoFont.stringWidth(tmpString)+20; //Note that 20 is the begin draw position.
 
+
 	    //Now append "name" to the end of the string.
-	    tmpString = tmpString+"name";
+	    tmpString = tmpString+"Name";
 	    int tmpInt = tmpString.length();
 	    
 	    for(int i=0; i<tmpInt; i++){
@@ -311,6 +314,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		default:
 		    UtilFncs.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
 		}
+
 
 		yCoord = yCoord + spacing;
 		

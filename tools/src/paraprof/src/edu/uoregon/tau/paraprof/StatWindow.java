@@ -53,11 +53,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
 	    //Now set the title.
 	    if(windowType==0)
-		this.setTitle("Mean Data Window Total: " + trial.getTrialIdentifier(true));
+		this.setTitle("Mean Data Statistics: " + trial.getTrialIdentifier(true));
 	    else{
 		if(windowType==2)
 		    valueType=12;
-		this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
+		this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
 	    }
 	    
 	    //Add some window listener code

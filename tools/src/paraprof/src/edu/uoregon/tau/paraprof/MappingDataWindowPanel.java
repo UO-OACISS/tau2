@@ -58,7 +58,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //######
 	    //Add items to the first popup menu.
 	    //######
-	    JMenuItem jMenuItem = new JMenuItem("Show Mean Total Statistics Windows");
+	    JMenuItem jMenuItem = new JMenuItem("Show Mean Statistics Window");
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
       
@@ -72,12 +72,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //######
 	    //Add items to the seccond popup menu.
 	    //######
-	    jMenuItem = new JMenuItem("Show Total Statistics Windows");
+	    jMenuItem = new JMenuItem("Show Statistics Window");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
       
 	    if (trial.userEventsPresent()) {
-		jMenuItem = new JMenuItem("Show Total User Event Statistics Windows");
+		jMenuItem = new JMenuItem("Show User Event Statistics Window");
 		jMenuItem.addActionListener(this);
 		popup2.add(jMenuItem);
 	    }
@@ -460,12 +460,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
-		if(arg.equals("Show Mean Total Statistics Windows")){
+		if(arg.equals("Show Mean Statistics Window")){
 		    StatWindow statWindow = new StatWindow(trial, -1, -1, -1, mDWindow.getSMWData(), 0, this.debug());
 		    trial.getSystemEvents().addObserver(statWindow);
 		    statWindow.show();
 		}
-		else if(arg.equals("Show Mean Total User Event Statistics Windows")){
+		else if(arg.equals("Show Mean User Event Statistics Window")){
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThreadDataElement.getNodeID(),
@@ -490,7 +490,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			callPathTextWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Total Statistics Windows")){
+		else if(arg.equals("Show Statistics Window")){
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThreadDataElement.getNodeID(),
@@ -501,7 +501,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Total User Event Statistics Windows")){
+		else if(arg.equals("Show User Event Statistics Window")){
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThreadDataElement.getNodeID(),

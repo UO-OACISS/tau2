@@ -25,40 +25,22 @@ import edu.uoregon.tau.dms.dss.*;
 public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTreeNodeUserObject{
 
      public ParaProfTrial(int type){
-	super();
-	this.debug = UtilFncs.debug;
-
-	this.setID(-1);
-	this.setExperimentID(-1);
-	this.setApplicationID(-1);
-	this.setName("");
-	this.setProblemDefinition("");
-	this.setNodeCount(-1);
-	this.setNumContextsPerNode(-1);
-	this.setNumThreadsPerContext(-1);
-	this.setUserData("");
-	this.type = type;
+	 super(0);
+	 this.debug = UtilFncs.debug;
+	 
+	 this.setID(-1);
+	 this.setExperimentID(-1);
+	 this.setApplicationID(-1);
+	 this.setName("");
+// 	 this.setNodeCount(-1);
+// 	 this.setNumContextsPerNode(-1);
+// 	 this.setNumThreadsPerContext(-1);
+	 this.type = type;
      }
 
     public ParaProfTrial(Trial trial, int type){
-	super();
+	super(trial);
 	this.debug = UtilFncs.debug;
-
-	if(trial!=null){
-	    this.setID(trial.getID());
-	    this.setExperimentID(trial.getExperimentID());
-	    this.setApplicationID(trial.getApplicationID());
-	    if((trial.getName()==null)||(trial.getName().equals("")))
-		this.setName("Trial "+ this.getID());
-	    else
-		this.setName(trial.getName());
-	    this.setTime(trial.getTime());
-	    this.setProblemDefinition(trial.getProblemDefinition());
-	    this.setNodeCount(trial.getNodeCount());
-	    this.setNumContextsPerNode(trial.getNumContextsPerNode());
-	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
-	    this.setUserData(trial.getUserData());
-	}
 	this.type = type;
     }
 
@@ -295,6 +277,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //######
     public void update(Object obj){
 	try{
+
 	    DataSession dataSession = (DataSession)obj;
 	    
 	    //Data session has finished loading. Call its terminate method to
@@ -317,6 +300,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 		metric.setTrial(this);
 		metrics.add(metric);
 	    }
+
 	    //Now set the data session metrics.
 	    dataSession.setMetrics(metrics);
 	    
@@ -325,10 +309,12 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	    
             //Set this trial's loading flag to false.
 	    this.setLoading(false);
-	    
+
 	    ParaProf.paraProfManager.populateTrialMetrics(this);
+
 	}
 	catch(Exception e){
+	    e.printStackTrace();
 	}
     }
     public void update(){}
