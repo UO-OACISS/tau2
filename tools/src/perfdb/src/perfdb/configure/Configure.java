@@ -10,6 +10,7 @@ import java.sql.*;
 public class Configure {
     private DB db = null;
     // protected String dbAccessString = perfdb.ConnectionManager.getPerfdbAcct();
+	private static String Usage = "Usage: configure config_file";
 	private static String Greeting = "\nWelcome to the configuration program for PerfDBF.\nThis program will prompt you for some information necessary to ensure\nthe desired behavior for the PerfDB tools.\n";
 	private static String PDBHomePrompt = "Please enter the PerfDB home directory:";
 
@@ -42,7 +43,7 @@ public class Configure {
 	 *  for some basic information. 
 	 **/
 
-    public void Initialize() {
+    public void Initialize(String configFileNameIn) {
 		// Create a reader to parse the input
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
@@ -50,14 +51,16 @@ public class Configure {
 		System.out.println(Greeting);
 
 		try {
+				/*
 			// Prompt for home directory
 			System.out.println(PDBHomePrompt);
 			// todo - the default is pwd/..
 			String tmpString = reader.readLine();
 			if (tmpString.length() > 0) perfdb_home = tmpString;
+			*/
 
 			// Check to see if the configuration file exists
-			configFileName = perfdb_home + "/bin/perfdb.cfg";
+			configFileName = configFileNameIn;
 			File configFile = new File(configFileName);
 			if (configFile.exists()) {
 				System.out.println("Configuration file found...");
@@ -317,17 +320,15 @@ public class Configure {
 
     public static void main(java.lang.String[] args) {
 	
-	/* 
 	if (args.length == 0) {
-	    System.err.println(USAGE);
+	    System.err.println(Usage);
 	    System.exit(-1);
         }
-	*/
 
 	// Create a new Configure object, which will walk the user through
 	// the process of creating/editing a configuration file.
 	Configure config = new Configure();
-	config.Initialize();
+	config.Initialize(args[0]);
 
 	// Give the user the ability to modify any/everything
 	config.PromptForData();
