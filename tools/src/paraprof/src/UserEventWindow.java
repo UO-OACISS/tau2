@@ -75,6 +75,9 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		this.help(false);
 	    }
 
+	    //Sort the local data.
+	    sortLocalData();
+
 	    //####################################
 	    //Code to generate the menus.
 	    //####################################
@@ -90,7 +93,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	    UtilFncs.usereventOptionMenuItems(optionsMenu,this);
  
 	    //Windows menu
-	    JMenu windowsMenu = new JMenu("Windows");
+	    windowsMenu = new JMenu("Windows");
 	    windowsMenu.addMenuListener(this);
 	    UtilFncs.windowMenuItems(windowsMenu,this);
 
@@ -186,9 +189,13 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		else if(arg.equals("Edit ParaProf Preferences!")){
 		    trial.getPreferences().showPreferencesWindow();
 		}
+		else if(arg.equals("Save Image")){
+		    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+		    imageOutput.saveImage((ParaProfImageInterface) panel);
+		}
 		if(arg.equals("Close This Window")){
 		    closeThisWindow();}
-		else if(arg.equals("Exit Racy!")){
+		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
 		    System.exit(0);
@@ -340,7 +347,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 
     public void sortLocalData(){
 	try{
-	    list = sMWData.getMappingData(mappingID, 1, metric+order);
+	    list = sMWData.getMappingData(mappingID, 2, metric+order);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDW06");
@@ -494,7 +501,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     private Vector list = null;
     
     private int order = 0; //0: descending order,1: ascending order.
-    private int metric = 10; //12-number of userevents,14-min,16-max,18-mean.
+    private int metric = 12; //12-number of userevents,14-min,16-max,18-mean.
     //####################################
     //End - Instance data.
     //####################################

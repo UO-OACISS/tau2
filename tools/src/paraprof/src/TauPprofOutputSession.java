@@ -415,9 +415,6 @@ public class TauPprofOutputSession extends DataSession{
 		    lineType = 5;
 		else if(noue(inputString))
 		    lineType = 6;
-
-		System.out.println("lineType:"+ lineType);
-		System.out.println(inputString);
 	    
 		//Common things to grab
 		if((lineType!=6) && (lineType!=-1)){
@@ -500,10 +497,12 @@ public class TauPprofOutputSession extends DataSession{
 			globalMappingElement.setMaxExclusiveValue(metric, line1.value);
 		    if((globalMappingElement.getMaxExclusivePercentValue(metric)) < line1.percentValue)
 			globalMappingElement.setMaxExclusivePercentValue(metric, line1.percentValue);
+
 		    //Get the node,context,thread.
-		    nodeID = getNCT(0,inputString, false);
-		    contextID = getNCT(1,inputString, false);
-		    threadID = getNCT(2,inputString, false);
+		    int[] nct = this.getNCT(inputString);
+		    nodeID = nct[0];
+		    contextID = nct[1];
+		    threadID = nct[2];
 		    
 		    if(firstRead){
 			//Now the complicated part.  Setting up the node,context,thread data.
@@ -648,10 +647,6 @@ public class TauPprofOutputSession extends DataSession{
 		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < line1.percentValue)
 			globalMappingElement.setMaxInclusivePercentValue(metric, line1.percentValue);
 		    
-		    //Print out the node,context,thread.
-		    nodeID = getNCT(0,inputString, false);
-		    contextID = getNCT(1,inputString, false);
-		    threadID = getNCT(2,inputString, false);
 		    Thread thread = this.getThread(nodeID,contextID,threadID);
 		    GlobalThreadDataElement globalThreadDataElement = thread.getFunction(mappingID);
 		    
@@ -691,17 +686,10 @@ public class TauPprofOutputSession extends DataSession{
 		    //Just ignore the string if this is not the first check.
 		    //Assuming is that user events do not change for each counter value.
 		    if(firstRead){
-			//The first time a user event string is encountered, get the number of user events and 
-			//initialize the global mapping for mapping position 2.
 			if(!(userEventsPresent())){
 			    //Get the number of user events.
 			    numberOfUserEvents = getNumberOfUserEvents(inputString);
 			    this.setNumberOfUserEvents(numberOfUserEvents);
-			    if(ParaProf.debugIsOn){
-				System.out.println("The number of user events defined is: " + numberOfUserEvents);
-				System.out.println("Initializing mapping selection 2 (The loaction of the user event mapping) for " +
-						   numberOfUserEvents + " mappings.");
-			    }
 			} 
 			
 			//The first line will be the user event heading ... skip it.
@@ -710,7 +698,8 @@ public class TauPprofOutputSession extends DataSession{
 			for(int j=0; j<numberOfUserEvents; j++){
 			    s1 = br.readLine();
 			    s2 = br.readLine();
-			    UserEventData ued = getData(s1,s2, userEventsPresent);
+			    UserEventData ued = getUserEventData(s1);
+			    System.out.println("noc:"+ued.noc+"min:"+ued.min+"max:"+ued.max+"mean:"+ued.mean);
 			    
 			    //Initialize the user list for this thread.
 			    if(j == 0){
@@ -737,12 +726,12 @@ public class TauPprofOutputSession extends DataSession{
 				if((globalMappingElement.getMaxUserEventMeanValue()) < ued.mean)
 				    globalMappingElement.setMaxUserEventMeanValue(ued.mean);
 				
-				GlobalThreadDataElement tmpGTDEUE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(mappingID, 2), true);
+				GlobalThreadDataElement tmpGTDEUE = new GlobalThreadDataElement(globalMapping.getGlobalMappingElement(userEventID, 2), true);
 				tmpGTDEUE.setUserEventNumberValue(ued.noc);
 				tmpGTDEUE.setUserEventMinValue(ued.min);
 				tmpGTDEUE.setUserEventMaxValue(ued.max);
 				tmpGTDEUE.setUserEventMeanValue(ued.mean);
-				(this.getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, ued.id);
+				(this.getThread(nodeID,contextID,threadID)).addUserevent(tmpGTDEUE, userEventID);
 			    }
 			}
 			//Now set the userEvents flag.
@@ -751,9 +740,7 @@ public class TauPprofOutputSession extends DataSession{
 		    break;
 		default:
 		    if(ParaProf.debugIsOn){
-			System.out.println("Skipping line:");
-			System.out.println(inputString);
-			System.out.println("");
+			System.out.println("Skipping line: " + bSDCounter);
 		    }
 		    break;
 		}
@@ -928,102 +915,30 @@ public class TauPprofOutputSession extends DataSession{
 	    return false;
     }
 
-    private UserEventData getData(String s1, String s2, boolean doneNames){
-	UserEventData ued = new UserEventData();
+    private UserEventData getUserEventData(String string){
 	try{
-	    char[] tmpArray = s1.toCharArray();
-	    char[] result = new char[tmpArray.length];
-
-	    char lastCharCheck = ',';
-	    int stringPosition = 10;
+	    UserEventData ued = new UserEventData();
+	    StringTokenizer st1 = new StringTokenizer(string, "\"");
+	    st1.nextToken();
+	    ued.name = st1.nextToken();
 	    
-	    int start = 0;
-	    int end = 9;
-	    int resultPosition = 0;
+	    String stttt = st1.nextToken();
+	    StringTokenizer st2 = new StringTokenizer(stttt, " \t\n\r");
 
-	    for(int i=start;i<9;i++){
-		if(i==2)
-		    lastCharCheck = '\u0020';
-		else if(i==4){
-		    //Want to skip processing the name if we
-		    //do not need it.
-		    if(doneNames){
-			stringPosition++;
-			lastCharCheck = '"';
-			while(tmpArray[stringPosition]!=lastCharCheck){
-			    stringPosition++;
-			}
-			stringPosition++;
+	    System.out.println("new string:"+stttt+":");
 
-			//Set things to look as if we are in i=5 iteration.
-			i=5;
-			lastCharCheck = '\u0020';
-			stringPosition++;
-		    }
-		    else{
-			lastCharCheck = '"';
-			stringPosition++;
-		    }
-		}
-		else if(i==5){
-		    lastCharCheck = '\u0020';
-		    stringPosition++;
-		}
-		while(tmpArray[stringPosition]!=lastCharCheck){
-		    result[resultPosition]=tmpArray[stringPosition];
-		    stringPosition++;
-		    resultPosition++;
-		}
-		
-		switch(i){
-		case 0:
-		    ued.node = Integer.parseInt(new String(result,0,resultPosition));
-		    break;
-		case 1:
-		    ued.context = Integer.parseInt(new String(result,0,resultPosition));
-		    break;
-		case 2:
-		    ued.threadID = Integer.parseInt(new String(result,0,resultPosition));
-		    break;
-		case 3:
-		    ued.id = Integer.parseInt(new String(result,0,resultPosition));
-		    break;
-		case 4:
-		    if(!userEventsPresent)
-			ued.name = new String(result,0,resultPosition);  
-		    break;
-		case 5:
-		    ued.noc = (int) Double.parseDouble(new String(result,0,resultPosition));
-		    break;
-		case 6:
-		    ued.max = Double.parseDouble(new String(result,0,resultPosition));
-		    break;
-		case 7:
-		    ued.min = Double.parseDouble(new String(result,0,resultPosition));
-		    break;
-		case 8:
-		    ued.mean = Double.parseDouble(new String(result,0,resultPosition));
-		    break;
-		default:
-		    throw new UnexpectedStateException(String.valueOf(i));
-		}
-		resultPosition=0;
-		stringPosition++;
-	    }
-	    //One more item to pick up if userevent string.
-	    int length = tmpArray.length;
-	    while(stringPosition < length){
-		result[resultPosition]=tmpArray[stringPosition];
-		stringPosition++;
-		resultPosition++;
-	    }
-	    ued.std = Double.parseDouble(new String(result,0,resultPosition));
+	    ued.noc = (int) Double.parseDouble(st2.nextToken());
+	    ued.max = Double.parseDouble(st2.nextToken());
+	    ued.min = Double.parseDouble(st2.nextToken());
+	    ued.mean = Double.parseDouble(st2.nextToken());
+	    ued.std = Double.parseDouble(st2.nextToken());
+	    return ued;
 	}
 	catch(Exception e){
 	    System.out.println("An error occured!");
 	    e.printStackTrace();
 	}
-	return ued;
+	return null;
     }
 
     private boolean checkForExcInc(String inString, boolean exclusive, boolean checkString){
@@ -1152,49 +1067,14 @@ public class TauPprofOutputSession extends DataSession{
 	}
 	return -1;
     }
-  
-    private int getNCT(int selector, String inString, boolean UEvent){
-	//I am assuming an quick implimentation of charAt and append for this function.
-	int nCT = -1;
-	char lastCharCheck = '\u0020';
-    
-	try{
-	    char tmpChar = '\u0020';
-	    StringBuffer tmpBuffer = new StringBuffer();
-	    int stringPosition = 0;
-	    if(UEvent)
-		stringPosition = 10;
-      
-	    if(selector != 2)
-		lastCharCheck = ',';
-        
-	    for(int i=0;i<selector;i++){
-		//Skip over ','.
-		while(tmpChar!=','){
-		    tmpChar = inString.charAt(stringPosition);
-		    stringPosition++;
-		}
-		//Reset tmpChar.
-		tmpChar = '\u0020';
-		//Skip over the second ','.
-	    }
-          
-	    tmpChar = inString.charAt(stringPosition);
-	    while(tmpChar!=lastCharCheck){
-		tmpBuffer.append(tmpChar);
-		stringPosition++;
-		tmpChar = inString.charAt(stringPosition);
-	    }
-        
-	    //System.out.println("nCT string is: " + tmpBuffer.toString());
-	    //System.out.println("String length is: " + tmpBuffer.toString().length());
-	    nCT = Integer.parseInt(tmpBuffer.toString());
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD23");
-	}
-    
-	return nCT;
+
+    private int[] getNCT(String string){
+	int[] nct = new int[3];
+	StringTokenizer st = new StringTokenizer(string, " ,\t\n\r");
+	nct[0] = Integer.parseInt(st.nextToken());
+	nct[1] = Integer.parseInt(st.nextToken());
+	nct[2] = Integer.parseInt(st.nextToken());
+	return nct;
     }
   
     private String getCounterName(String inString){
@@ -1324,10 +1204,6 @@ class FunctionDataLine2{
 }
 
 class UserEventData{
-    public int node = -1;
-    public int context = -1;
-    public int threadID = -1;
-    public int id = -1;
     public String name = null;
     public int noc = -1;
     public double max = -1.0;

@@ -386,7 +386,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     //End - MouseListener
     //######
 
-     //######
+    //######
     //ParaProfImageInterface
     //######
     public Dimension getImageSize(){

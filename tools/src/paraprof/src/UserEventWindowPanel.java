@@ -22,7 +22,7 @@ import javax.swing.event.*;
 import java.awt.geom.*;
 
 
-public class UserEventWindowPanel extends JPanel implements ActionListener, MouseListener, Printable{
+public class UserEventWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
     public UserEventWindowPanel(){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -39,8 +39,8 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	try{
 
 	    this.trial = trial;
-	    this.uEwindow = uEwindow;
- 	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
+	    this.uEWindow = uEWindow;
+ 	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 2);
  	    mappingName = gME.getMappingName();
 	    this.mappingID = mappingID;
 	    barLength = baseBarLength;
@@ -65,11 +65,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	}
 	
     }
-  
+
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    drawPage((Graphics2D) g, false);
+	    renderIt((Graphics2D) g, 0);
 	}
 	catch(Exception e){
 	    System.out.println(e);
@@ -90,12 +90,12 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	drawPage(g2, true);
+	renderIt(g2, 2);
     
 	return Printable.PAGE_EXISTS;
     }
 
-    public void drawPage(Graphics2D g2D, boolean print){
+    public void renderIt(Graphics2D g2D, int instruction){
 	try{
 	    double value = 0.0;
 	    double maxValue = 0.0;
@@ -115,17 +115,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(), barHeight);
 	    g2D.setFont(font);
 	    FontMetrics fmFont = g2D.getFontMetrics(font);
-
-	    //Determine clipping information.
-	    Rectangle clipRect = g2D.getClipBounds();
-	    int yBeg = (int) clipRect.getY();
-	    int yEnd = (int) (yBeg + clipRect.getHeight());
-	    yEnd = yEnd + barSpacing;
 	    
 	    //***
 	    //Set the max values for this mapping.
 	    //***
-	    switch(uEwindow.getMetric()){
+	    switch(uEWindow.getMetric()){
 	    case 12:
 		maxValue = gME.getMaxUserEventNumberValue();
 		break;
@@ -139,10 +133,10 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 		maxValue = gME.getMaxUserEventMeanValue();
 		break;
 	    default:
-		ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEwindow.getMetric());
+		ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getMetric());
 	    }
 
-	    stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(uEwindow.units(),maxValue));
+	    stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0,maxValue)); //No units required in this window.  Thus pass in 0 for type.
 	    barXCoord = barXCoord + stringWidth;
 	    //***
 	    //End - Set the max values for this mapping.
@@ -151,9 +145,24 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    //At this point we can determine the size this panel will
 	    //require. If we need to resize, don't do any more drawing,
 	    //just call revalidate.
-	    if(resizePanel(fmFont, barXCoord)){
+	    if(resizePanel(fmFont, barXCoord) && instruction==0){
 		this.revalidate();
 		return;
+	    }
+
+	    int yBeg = 0;
+	    int yEnd = 0;
+	    Rectangle clipRect = null;
+
+	    if(instruction==1 || instruction==2){
+		yBeg = 0;
+		yEnd = yPanelSize;
+	    }
+	    else{
+		clipRect = g2D.getClipBounds();
+		yBeg = (int) clipRect.getY();
+		yEnd = (int) (yBeg + clipRect.getHeight());
+		yEnd = yEnd + barSpacing;
 	    }
 
 	    //Some points to note about drawing. When we draw, swing begins at the given y coord,
@@ -170,7 +179,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    yCoord = yCoord + (barSpacing); //Comment this
 	    if((yCoord >= yBeg) && (yCoord <= yEnd)){
 		//yCoord = yCoord + (barSpacing);//Uncomment this.
-		drawBar(g2D, fmFont, value, maxValue, "mean", barXCoord, yCoord, barHeight, groupMember);
+		drawBar(g2D, fmFont, value, maxValue, "mean", barXCoord, yCoord, barHeight, groupMember, instruction);
 	    }
 	    //else{//Uncomment this.
 	    //yCoord = yCoord + (barSpacing);//Uncomment this.
@@ -179,9 +188,9 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    //######
 	    //Draw thread information for this mapping.
 	    //######
-	    for(Enumeration e = (uEwindow.getData()).elements(); e.hasMoreElements() ;){
+	    for(Enumeration e = (uEWindow.getData()).elements(); e.hasMoreElements() ;){
 		tmpSMWThreadDataElement = (SMWThreadDataElement) e.nextElement();
-		switch(uEwindow.getMetric()){
+		switch(uEWindow.getMetric()){
 		case 12:
 			value = tmpSMWThreadDataElement.getUserEventNumberValue();
 		    break;
@@ -195,7 +204,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 		    value = tmpSMWThreadDataElement.getUserEventMeanValue();
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEwindow.getMetric());
+		    ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getMetric());
 		}
 		
 		//For consistancy in drawing, the y coord is updated at the beginning of the loop.
@@ -207,7 +216,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 			    "n,c,t " + (tmpSMWThreadDataElement.getNodeID()) +
 			    "," + (tmpSMWThreadDataElement.getContextID()) +
 			    "," + (tmpSMWThreadDataElement.getThreadID()),
-			    barXCoord, yCoord, barHeight, groupMember);
+			    barXCoord, yCoord, barHeight, groupMember, instruction);
 		}
 	    }
 	    //######
@@ -220,7 +229,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     }
 
     private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
-			 int barXCoord, int yCoord, int barHeight, boolean groupMember){
+			 int barXCoord, int yCoord, int barHeight, boolean groupMember, int instruction){
 	int xLength = 0;
 	double d = 0.0;
 	String s = null;
@@ -268,10 +277,9 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	g2D.drawString(text, (barXCoord + 5), yCoord);
     }
 
-    //******************************
-    //Event listener code!!
-    //******************************
-    //ActionListener code.
+    //######
+    //ActionListener.
+    //######
     public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
@@ -313,11 +321,32 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    ParaProf.systemError(e, null, "MDWP05");
 	}
     }
+    //######
+    //End - ActionListener.
+    //######
+    
+    //######
+    //MouseListener
+    //######
     
     public void mousePressed(MouseEvent evt) {}
     public void mouseReleased(MouseEvent evt) {}
     public void mouseEntered(MouseEvent evt) {}
     public void mouseExited(MouseEvent evt) {}
+
+    //######
+    //ParaProfImageInterface
+    //######
+    public Dimension getImageSize(){
+	return this.getPreferredSize();
+    }
+    //######
+    //End - ParaProfImageInterface
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
     
     public void changeInMultiples(){
 	computeBarLength();
@@ -326,8 +355,8 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 
     public void computeBarLength(){
 	try{
-	    double sliderValue = (double) uEwindow.getSliderValue();
-	    double sliderMultiple = uEwindow.getSliderMultiple();
+	    double sliderValue = (double) uEWindow.getSliderValue();
+	    double sliderMultiple = uEWindow.getSliderMultiple();
 	    barLength = baseBarLength*((int)(sliderValue*sliderMultiple));
 	}
 	catch(Exception e){
@@ -339,7 +368,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private boolean resizePanel(FontMetrics fmFont, int barXCoord){
 	boolean resized = false;
 	try{
-	    int newYPanelSize = ((uEwindow.getData().size())+2)*barSpacing+10;
+	    int newYPanelSize = ((uEWindow.getData().size())+2)*barSpacing+10;
 	    int[] nct = trial.getMaxNCTNumbers();
 	    String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];;
 	    int newXPanelSize = barXCoord+5+(fmFont.stringWidth(nctString))+ 25;
@@ -374,7 +403,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private int maxXLength = 0;
     private boolean groupMember = false;
     private ParaProfTrial trial = null;
-    private MappingDataWindow uEwindow = null;
+    private UserEventWindow uEWindow = null;
     private SMWThreadDataElement tmpSMWThreadDataElement = null;
     int xPanelSize = 0;
     int yPanelSize = 0;
