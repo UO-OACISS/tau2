@@ -49,7 +49,7 @@ CFLAGS           = $(TAU_INCLUDE) $(TAU_DEFS) -I.. $(JNI_INC) -I$(TRACE_INCDIR) 
 LDFLAGS          = $(USER_OPT)
 
 $(TAU_SLOG_SHLIB): $(OBJ)
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) $(TAU_SLOG_SHLIB) logformat_trace_InputLog.o trace_tau.o $(TAU_SHLIBS) $(LIBS)
+	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) $(TAU_SLOG_SHLIB) logformat_trace_InputLog.o trace_tau.o $(LIBS)
 
 trace_tau.o: trace_tau.c
 	$(CC) $(CFLAGS) -c trace_tau.c 

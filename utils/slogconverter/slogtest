@@ -377,14 +377,14 @@ int main(void)
   
 	if( *(short *) SwapTest == 1 )
 	{
-    //little endian
-		//BigEndianSystem = false;
+    /* little endian */
+		/* BigEndianSystem = false; */
 		printf("/* #undef WORDS_BIGENDIAN */\n\n");
 	}
 	else
 	{
-    //big endian
-		//BigEndianSystem = true;
+    /* big endian */
+		/* BigEndianSystem = true; */
 		printf("#define WORDS_BIGENDIAN 1\n\n");
 	}
 }
