@@ -208,7 +208,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		}
 	    }
-	    
+
 	    if(tDWindow.isPercent()){
 		stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxValue, ParaProf.defaultNumberPrecision) + "%");
 		barXCoord = barXCoord + stringWidth;

@@ -193,7 +193,7 @@ public class PPML{
 	    
 	    if(exclusiveTotal!=0){
 		double tmpDouble = ((globalMappingElement.getMeanExclusiveValue(trial.getCurValLoc()))/exclusiveTotal) * 100;
-		globalMappingElement.setMeanExclusivePercentValue(currentValueLocation, tmpDouble);
+		globalMappingElement.setMeanExclusivePercentValue(trial.getCurValLoc(), tmpDouble);
 		if((trial.getMaxMeanExclusivePercentValue(trial.getCurValLoc()) < tmpDouble))
 		    trial.setMaxMeanExclusivePercentValue(trial.getCurValLoc(), tmpDouble);
 	    }

@@ -158,29 +158,31 @@ public class Thread implements Comparable{
 	while(l.hasNext()){
 	    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
 	    
-	    d = globalThreadDataElement.getInclusiveValue(metric);
-	    if(d>maxInclusiveValue)
-		maxInclusiveValue = d;
-	    totalInclusiveValue+=d;
-	    d = globalThreadDataElement.getExclusiveValue(metric);
-	    if(d>maxExclusiveValue)
-		maxExclusiveValue = d;
-	    totalExclusiveValue+=d;
-	    d = globalThreadDataElement.getInclusivePercentValue(metric);
-	    if(d>maxInclusivePercentValue)
-		maxInclusivePercentValue = d;
-	    d = globalThreadDataElement.getExclusivePercentValue(metric);
-	    if(d>maxExclusivePercentValue)
-		maxExclusivePercentValue = d;
-	    d = globalThreadDataElement.getUserSecPerCall(metric);
-	    if(d>maxUserSecPerCall)
-		maxUserSecPerCall = d;
-	    i = globalThreadDataElement.getNumberOfCalls();
-	    if(i>maxNumberOfCalls)
-		maxNumberOfCalls = i;
-	    i = globalThreadDataElement.getNumberOfSubRoutines();
-	    if(i>maxNumberOfSubroutines)
-		maxNumberOfSubroutines = i;
+	    if(globalThreadDataElement!=null){
+		d = globalThreadDataElement.getInclusiveValue(metric);
+		if(d>maxInclusiveValue)
+		    maxInclusiveValue = d;
+		totalInclusiveValue+=d;
+		d = globalThreadDataElement.getExclusiveValue(metric);
+		if(d>maxExclusiveValue)
+		    maxExclusiveValue = d;
+		totalExclusiveValue+=d;
+		d = globalThreadDataElement.getInclusivePercentValue(metric);
+		if(d>maxInclusivePercentValue)
+		    maxInclusivePercentValue = d;
+		d = globalThreadDataElement.getExclusivePercentValue(metric);
+		if(d>maxExclusivePercentValue)
+		    maxExclusivePercentValue = d;
+		d = globalThreadDataElement.getUserSecPerCall(metric);
+		if(d>maxUserSecPerCall)
+		    maxUserSecPerCall = d;
+		i = globalThreadDataElement.getNumberOfCalls();
+		if(i>maxNumberOfCalls)
+		    maxNumberOfCalls = i;
+		i = globalThreadDataElement.getNumberOfSubRoutines();
+		if(i>maxNumberOfSubroutines)
+		    maxNumberOfSubroutines = i;
+	    }
 	}
 
 	if(ParaProf.debugIsOn){

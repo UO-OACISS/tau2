@@ -6,6 +6,15 @@
    Description:  
 */
 
+/*
+  To do: 
+  1) Add some sanity checks to make sure that multiple metrics really do belong together.
+  For example, wrap the creation of nodes, contexts, threads, global mapping elements, and
+  the like so that they do not occur after the first metric has been loaded.  This will
+  not of course ensure 100% that the data is consistent, but it will at least prevent the
+  worst cases.
+*/
+
 package paraprof;
 
 
@@ -254,100 +263,277 @@ public class TauOutputSession extends ParaProfDataSession{
 	    //######
 	    v = (Vector) obj;
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
-		files = (File[]) e.nextElement();
-		for(int i=0;i<files.length;i++){
-		    System.out.println("Processing file: " + files[i].getName());
-		    int[] nct = this.getNCT(files[i].getName());
-		    System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
 
-		    /*		    
-		    //####################################
-		    //Second  Line
-		    //####################################
-		    //This is an important line.
-		    inputString = br.readLine();
-		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-		    //It's first token will be the number of mappings present.  Get it.
-		    tokenString = genericTokenizer.nextToken();
+		//Need to call increaseVectorStorage() on all objects that require it.
+		this.increaseVectorStorage();
 		    
-		    if(!(this.firstMetric())){
-			if((this.getNumberOfMappings()) != Integer.parseInt(tokenString)){
-			    System.out.println("***********************");
-			    System.out.println("The number of mappings does not match!!!");
-			    System.out.println("");
-			    System.out.println("To add to an existing run, you must be choosing from");
-			    System.out.println("a list of multiple metrics from that same run!!!");
-			    System.out.println("***********************");
-			    
-			    return;
-			}
+		//Only need to call addDefaultToVectors() if not the first run.
+		if(!(this.firstMetric())){
+		    if(ParaProf.debugIsOn)
+			System.out.println("Increasing the storage for the new counter.");
+		    
+		    for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
+			GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
+			tmpGME.incrementStorage();
 		    }
 		    
-		    //Set the counter name.
-		    String counterName = getCounterName(inputString);
+		    for(Enumeration e2 = (this.getGlobalMapping().getMapping(2)).elements(); e2.hasMoreElements() ;){
+			GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
+			tmpGME.incrementStorage();
+		    }
 		    
-		    //Ok, we are adding a counter name.  Since nothing much has happened yet, it is a
-		    //good place to initialize a few things.
-		    
-		    //Need to call increaseVectorStorage() on all objects that require it.
-		    this.increaseVectorStorage();
-		    
-		    //Only need to call addDefaultToVectors() if not the first run.
-		    if(!(this.firstMetric())){
-			if(ParaProf.debugIsOn)
-			    System.out.println("Increasing the storage for the new counter.");
-			
-			for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
-			    GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
-			    tmpGME.incrementStorage();
-			}
-			
-			for(Enumeration e2 = (this.getGlobalMapping().getMapping(2)).elements(); e2.hasMoreElements() ;){
-			    GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
-			    tmpGME.incrementStorage();
-			}
-			
-			for(Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements() ;){
-			    node = (Node) e3.nextElement();
-			    for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
-				context = (Context) e4.nextElement();
-				for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
-				    thread = (Thread) e5.nextElement();
-				    thread.incrementStorage();
-				    for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
-					GlobalThreadDataElement ref = (GlobalThreadDataElement) e6.nextElement();
-					//Only want to add an element if this mapping existed on this thread.
-					//Check for this.
-					if(ref != null)
-					    ref.incrementStorage();
-				    }
+		    for(Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements() ;){
+			node = (Node) e3.nextElement();
+			for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
+			    context = (Context) e4.nextElement();
+			    for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
+				thread = (Thread) e5.nextElement();
+				thread.incrementStorage();
+				for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
+				    GlobalThreadDataElement ref = (GlobalThreadDataElement) e6.nextElement();
+				    //Only want to add an element if this mapping existed on this thread.
+				    //Check for this.
+				    if(ref != null)
+					ref.incrementStorage();
 				}
 			    }
 			}
-			
-			if(ParaProf.debugIsOn)
-			    System.out.println("Done increasing the storage for the new counter.");
 		    }
 		    
-		    //Now set the counter name.
-		    if(counterName == null)
-			counterName = new String("Time");
+		    if(ParaProf.debugIsOn)
+			System.out.println("Done increasing the storage for the new counter.");
+		}
+
+		Metric metricRef = this.addMetric();
+		metric = metricRef.getID();
+
+		files = (File[]) e.nextElement();
+		for(int i=0;i<files.length;i++){
+		    System.out.println("Processing file: " + files[i].getName());
+
+		    FileInputStream fileIn = new FileInputStream(files[i]);
+		    InputStreamReader inReader = new InputStreamReader(fileIn);
+		    BufferedReader br = new BufferedReader(inReader);
+
+		    int[] nct = this.getNCT(files[i].getName());
+		    nodeID = nct[0];
+		    contextID = nct[1];
+		    threadID = nct[2];
 		    
-		    System.out.println("Counter name is: " + counterName);
-		    
-		    Metric metricRef = this.addMetric();
-		    metricRef.setName(counterName);
-		    metric = metricRef.getID();
-		    System.out.println("The number of mappings in the system is: " + tokenString);
-		    
-		    bSDCounter++;
+		    node = this.getNCT().getNode(nodeID);
+		    if(node==null)
+			node = this.getNCT().addNode(nodeID);
+		    context = node.getContext(contextID);
+		    if(context==null)
+			context = node.addContext(contextID);
+		    thread = context.getThread(threadID);
+		    if(thread==null){
+			thread = context.addThread(threadID);
+			thread.initializeFunctionList(this.getNumberOfMappings());
+		    }
+		    System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
+
 		    //####################################
-		    //End - Second  Line
+		    //First  Line
 		    //####################################
-		    */
+		    inputString = br.readLine();
 
+		    if(i==0){
+			//Set the counter name.
+			String counterName = getCounterName(inputString);
+			//Now set the counter name.
+			if(counterName == null)
+			    counterName = new String("Time");
+			System.out.println("Counter name is: " + counterName);
+		    
+			metricRef.setName(counterName);
+		    }
+		    
+		    //####################################
+		    //End - First Line
+		    //####################################
+		    
+		    //####################################
+		    //Second Line
+		    //####################################
+		    //This line is not required. Check to make sure that it is there however.
+		    inputString = br.readLine();
+		    if(inputString == null)
+			return;
+		    //####################################
+		    //End - Second Line
+		    //####################################
 
+		    while(((inputString = br.readLine()) != null) && ((inputString.indexOf('"'))==0)){
+			System.out.println(inputString);
+			this.getFunctionDataLine(inputString);
+			String groupNames = this.getGroupNames(inputString);
+			//Calculate usec/call
+			double usecCall = functionDataLine.d0/functionDataLine.i0;
+			System.out.println("Name:"+functionDataLine.s0);
+			System.out.println("Calls:"+functionDataLine.i0);
+			System.out.println("Subrs:"+functionDataLine.i1);
+			System.out.println("Excl:"+functionDataLine.d0);
+			System.out.println("Incl:"+functionDataLine.d1);
+			System.out.println("ProfileCalls:"+functionDataLine.d2);
+			System.out.println("groupNames:"+groupNames);
+			if(functionDataLine.i0 !=0){
+			    mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0);
+			    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
+			    globalMappingElement.incrementCounter();
+			    globalThreadDataElement = thread.getFunction(mappingID);
+			    
+			    if(globalThreadDataElement == null){
+				globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
+				thread.addFunction(globalThreadDataElement, mappingID);
+			    }
+			    
+			    globalThreadDataElement.setMappingExists();
+			    globalThreadDataElement.setExclusiveValue(metric, functionDataLine.d0);
+			    globalThreadDataElement.setInclusiveValue(metric, functionDataLine.d1);
+			    globalThreadDataElement.setNumberOfCalls(functionDataLine.i0);
+			    globalThreadDataElement.setNumberOfSubRoutines(functionDataLine.i1);
+			    globalThreadDataElement.setUserSecPerCall(metric, usecCall);
+			    
+			    globalMappingElement.incrementTotalExclusiveValue(functionDataLine.d0);
+			    globalMappingElement.incrementTotalInclusiveValue(functionDataLine.d1);
+			    
+			    //Set the max values.
+			    if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
+				globalMappingElement.setMaxExclusiveValue(metric, functionDataLine.d0);
+			    if((thread.getMaxExclusiveValue(metric)) < functionDataLine.d0)
+				thread.setMaxExclusiveValue(metric, functionDataLine.d0);
+			    
+			    if((globalMappingElement.getMaxInclusiveValue(metric)) < functionDataLine.d1)
+				globalMappingElement.setMaxInclusiveValue(metric, functionDataLine.d1);
+			    if((thread.getMaxInclusiveValue(metric)) < functionDataLine.d1)
+				thread.setMaxInclusiveValue(metric, functionDataLine.d1);
+			    
+			    if(globalMappingElement.getMaxNumberOfCalls() < functionDataLine.i0)
+				globalMappingElement.setMaxNumberOfCalls(functionDataLine.i0);
+			    if(thread.getMaxNumberOfCalls() < functionDataLine.i0)
+				thread.setMaxNumberOfCalls(functionDataLine.i0);
+			    
+			    if(globalMappingElement.getMaxNumberOfSubRoutines() < functionDataLine.i1)
+				globalMappingElement.setMaxNumberOfSubRoutines(functionDataLine.i1);
+			    if(thread.getMaxNumberOfSubRoutines() < functionDataLine.i1)
+				thread.setMaxNumberOfSubRoutines(functionDataLine.i1);
+			    
+			    if(globalMappingElement.getMaxUserSecPerCall(metric) < usecCall)
+				globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
+			    if(thread.getMaxUserSecPerCall(metric) < usecCall)
+				thread.setMaxUserSecPerCall(metric, usecCall);
+			}
+		    }
+		    System.out.println("done processing functions");
+		    
+		    while(((inputString = br.readLine()) != null) && ((inputString.indexOf('"'))==0)){
+			System.out.println(inputString);
+		    }
+		    System.out.println("done processing aggregates");
 
+		    //If the above while loop was not terminated because inputString was null, then
+		    //userevents are present. Skip userevent heading line, then get the userevents.
+		    br.readLine();
+		    
+		    if(this.firstMetric()){
+			while(((inputString = br.readLine()) != null) && ((inputString.indexOf('"'))==0)){
+			    System.out.println(inputString);
+			    this.getUserEventData(inputString);
+			    System.out.println("eventname:"+usereventDataLine.s0);
+			    System.out.println("numevents:"+usereventDataLine.i0);
+			    System.out.println("max:"+usereventDataLine.d0);
+			    System.out.println("min:"+usereventDataLine.d1);
+			    System.out.println("mean:"+usereventDataLine.d2);
+			    System.out.println("sumsqr:"+usereventDataLine.d3);
+			}
+			System.out.println("done processing userevents");
+		    }
+		    
+		    //The thread object takes care of computing maximums and totals for a given metric.
+		    thread.setThreadSummaryData(metric);
+
+		    //######
+		    //Compute percent values.
+		    //######
+		    ListIterator l = thread.getFunctionListIterator();
+		    while(l.hasNext()){
+			globalThreadDataElement = (GlobalThreadDataElement) l.next();
+			double exclusiveTotal = thread.getTotalExclusiveValue(metric);
+			double inclusiveMax = thread.getMaxInclusiveValue(metric);
+			
+			if(globalThreadDataElement != null){
+			    globalMappingElement =
+				this.getGlobalMapping().getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
+			    
+			    double d1 = globalThreadDataElement.getExclusiveValue(metric);
+			    double d2 = globalThreadDataElement.getInclusiveValue(metric);
+			    
+			    if(exclusiveTotal!=0){
+				double result = (d1/exclusiveTotal)*100.00;
+				globalThreadDataElement.setExclusivePercentValue(metric, result);
+				//Now do the global mapping element exclusive stuff.
+				if((globalMappingElement.getMaxExclusivePercentValue(metric)) < result)
+				    globalMappingElement.setMaxExclusivePercentValue(metric, result);
+			    }
+			    
+			    if(inclusiveMax!=0){
+				double result = (d2/inclusiveMax) * 100;
+				globalThreadDataElement.setInclusivePercentValue(metric, result);
+				//Now do the global mapping element exclusive stuff.
+				if((globalMappingElement.getMaxInclusivePercentValue(metric)) < result)
+				    globalMappingElement.setMaxInclusivePercentValue(metric, result);
+			    }
+			}
+		    }
+		    //######
+		    //End - Compute percent values.
+		    //######
+		    
+		    //Call the setThreadSummaryData function again on this thread so that
+		    //it can fill in all the summary data.
+		    thread.setThreadSummaryData(metric);
+		}
+		
+		ListIterator l = this.getGlobalMapping().getMappingIterator(0);
+		double exclusiveTotal = 0.0;
+		while(l.hasNext()){
+		    globalMappingElement = (GlobalMappingElement) l.next();
+		    if((globalMappingElement.getCounter()) != 0){
+			double d = (globalMappingElement.getTotalExclusiveValue())/(globalMappingElement.getCounter());
+			//Increment the total values.
+			exclusiveTotal+=d;
+			globalMappingElement.setMeanExclusiveValue(metric, d);
+			if((this.getMaxMeanExclusiveValue(metric) < d))
+			    this.setMaxMeanExclusiveValue(metric, d);
+		
+			d = (globalMappingElement.getTotalInclusiveValue())/(globalMappingElement.getCounter());
+			globalMappingElement.setMeanInclusiveValue(metric, d);
+			if((this.getMaxMeanInclusiveValue(metric) < d))
+			    this.setMaxMeanInclusiveValue(metric, d);
+		    }
+		}
+		
+		double inclusiveMax = this.getMaxMeanInclusiveValue(metric);
+
+		l = this.getGlobalMapping().getMappingIterator(0);
+		while(l.hasNext()){
+		    globalMappingElement = (GlobalMappingElement) l.next();
+	    
+		    if(exclusiveTotal!=0){
+			double tmpDouble = ((globalMappingElement.getMeanExclusiveValue(metric))/exclusiveTotal) * 100;
+			globalMappingElement.setMeanExclusivePercentValue(metric, tmpDouble);
+			if((this.getMaxMeanExclusivePercentValue(metric) < tmpDouble))
+			    this.setMaxMeanExclusivePercentValue(metric, tmpDouble);
+		    }
+      
+		    if(inclusiveMax!=0){
+			double tmpDouble = ((globalMappingElement.getMeanInclusiveValue(metric))/inclusiveMax) * 100;
+			globalMappingElement.setMeanInclusivePercentValue(metric, tmpDouble);
+			if((this.getMaxMeanInclusivePercentValue(metric) < tmpDouble))
+			    this.setMaxMeanInclusivePercentValue(metric, tmpDouble);
+		    }
+		    globalMappingElement.setMeanValuesSet(true);
 		}
 	    }
 	}
@@ -394,6 +580,70 @@ public class TauOutputSession extends ParaProfDataSession{
 	return null;
     }
 
+    private void getFunctionDataLine(String string){
+	try{
+	    StringTokenizer st1 = new StringTokenizer(string, "\"");
+	    functionDataLine.s0 = st1.nextToken(); //Name
+	    
+	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	    functionDataLine.i0 = Integer.parseInt(st2.nextToken()); //Calls
+	    functionDataLine.i1 = Integer.parseInt(st2.nextToken()); //Subroutines
+	    functionDataLine.d0 = Double.parseDouble(st2.nextToken()); //Exclusive
+	    functionDataLine.d1 = Double.parseDouble(st2.nextToken()); //Inclusive
+	    functionDataLine.d2 = Double.parseDouble(st2.nextToken()); //ProfileCalls
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD08");
+	}
+    }
+
+    private String getGroupNames(String string){
+	try{  
+	    StringTokenizer getMappingNameTokenizer = new StringTokenizer(string, "\"");
+ 	    getMappingNameTokenizer.nextToken();
+	    String str = getMappingNameTokenizer.nextToken();
+        
+	    //Just do the group check once.
+	    if(!(this.groupCheck())){
+		//If present, "GROUP=" will be in this token.
+		int tmpInt = str.indexOf("GROUP=");
+		if(tmpInt > 0){
+		    this.setGroupNamesPresent(true);
+		}
+		this.setGroupCheck(true);
+	    }
+	    
+	    if(groupNamesPresent()){
+		 str = getMappingNameTokenizer.nextToken();
+		    return str;
+	    }
+	    //If here, this profile file does not track the group names.
+	    return null;
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD12");
+	}
+	return null;
+    }
+
+    private void getUserEventData(String string){
+	try{
+	    StringTokenizer st1 = new StringTokenizer(string, "\"");
+	    usereventDataLine.s0 = st1.nextToken();
+
+	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	    usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number of calls.
+	    usereventDataLine.d0 = Double.parseDouble(st2.nextToken()); //Max
+	    usereventDataLine.d1 = Double.parseDouble(st2.nextToken()); //Min
+	    usereventDataLine.d2 = Double.parseDouble(st2.nextToken()); //Mean
+	    usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation.
+	}
+	catch(Exception e){
+	    System.out.println("An error occured!");
+	    e.printStackTrace();
+	}
+    }
+
     //######
     //End - profile.*.*.* string processing methods.
     //######
@@ -405,7 +655,8 @@ public class TauOutputSession extends ParaProfDataSession{
     //####################################
     //Instance data.
     //####################################
-
+    private LineData functionDataLine = new LineData();
+    private LineData  usereventDataLine = new LineData();
     //####################################
     //End - Instance data.
     //####################################

@@ -6,6 +6,15 @@
    Description:  
 */
 
+/*
+  To do: 
+  1) Add some sanity checks to make sure that multiple metrics really do belong together.
+  For example, wrap the creation of nodes, contexts, threads, global mapping elements, and
+  the like so that they do not occur after the first metric has been loaded.  This will
+  not of course ensure 100% that the data is consistent, but it will at least prevent the
+  worst cases.
+*/
+
 package paraprof;
 
 
@@ -785,7 +794,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    String str = getMappingNameTokenizer.nextToken();
         
 	    //Just do the group check once.
-	    if(!(groupCheck())){
+	    if(!(this.groupCheck())){
 		//If present, "GROUP=" will be in this token.
 		int tmpInt = str.indexOf("GROUP=");
 		if(tmpInt > 0){

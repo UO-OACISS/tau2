@@ -94,8 +94,8 @@ public class ParaProf implements ActionListener{
 		 v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 ,ParaProf.debugIsOn);
 		 if(v.size()>0){
 		     trial.initialize(v);
-		     //experiment.addTrial(trial);
-		     //trial.showMainWindow();
+		     experiment.addTrial(trial);
+		     trial.showMainWindow();
 		 }
 		 else{
 		     System.out.println("No profile files found in the current directory.");
