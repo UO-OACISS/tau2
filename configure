@@ -2086,7 +2086,7 @@ then
     # For fortran libfmpich.* look for libpmpi
 
     # Check for libmpio.a
-    if [ $mpiio = yes -a -r $mpilib/libmpio.a ]
+    if [ -r $mpilib/libmpio.a ]
     then
       mpilibargs="$mpilibargs -lmpio"
       mpiflibargs="$mpiflibargs -lmpio"
