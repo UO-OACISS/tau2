@@ -1810,11 +1810,20 @@ rm -f get_stdinc.C find_stdinc.awk
 cat <<EOF > get_typeinfo1.C
 #include <typeinfo> 
 using std::type_info;
+#ifdef __GNUC__
+#include <cxxabi.h>
+using namespace std;
+#endif /* GNUC */
+
 EOF
 
 if $cxx_compiler $orig_useropt -c get_typeinfo1.C 1> /dev/null 2>&1 
 then 
   echo "C++ compiler supports Std Runtime Type Information (default)"
+  if [ $cxx_compiler = g++ -o $cxx_compiler = c++ ] 
+  then 
+    echo "Supporting GNU RTTI options"
+  fi
 else
 cat <<EOF > get_typeinfo2.C
 #include <typeinfo.h>
