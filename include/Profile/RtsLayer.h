@@ -106,7 +106,7 @@ class RtsLayer
 #ifndef TAU_MULTIPLE_COUNTERS
 	static double   getUSecD(int tid); 
 #else  //TAU_MULTIPLE_COUNTERS
-	static double   getUSecD(int tid, double *values);
+	static void     getUSecD(int tid, double *values);
 #endif //TAU_MULTIPLE_COUNTERS
 	static int 	setMyNode(int NodeId, int tid=RtsLayer::myThread());
 
@@ -138,6 +138,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: bertie $
- * $Revision: 1.15 $   $Date: 2002/03/08 21:41:40 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.15 2002/03/08 21:41:40 bertie Exp $ 
+ * $Revision: 1.16 $   $Date: 2002/03/10 23:53:36 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.16 2002/03/10 23:53:36 bertie Exp $ 
  ***************************************************************************/

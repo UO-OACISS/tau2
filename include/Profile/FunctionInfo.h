@@ -42,10 +42,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef TAU_MULTIPLE_COUNTERS
 #define STORAGE(type, variable) type variable[TAU_MAX_THREADS]
-#else //TAU_MULTIPLE_COUNTERS
-#define STORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
+#ifdef TAU_MULTIPLE_COUNTERS
+#define MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
 #endif//TAU_MULTIPLE_COUNTERS
 
 class FunctionInfo
@@ -122,8 +121,8 @@ private:
 	// Statistics about calling this function.
 	STORAGE(long, NumCalls);
 	STORAGE(long, NumSubrs);
-	STORAGE(double, ExclTime);
-	STORAGE(double, InclTime);
+	MULTSTORAGE(double, ExclTime);
+	MULTSTORAGE(double, InclTime);
 	STORAGE(bool, AlreadyOnStack);
 #ifdef PROFILE_STATS
 	STORAGE(double, SumExclSqr);
@@ -158,12 +157,22 @@ public:
 	  for(int i=0;i<MAX_TAU_COUNTERS;i++)
 	    ExclTime[tid][i] = excltime[i];
 	}
+	void SetExclTimeZero(int tid) {
+          for(int i=0;i<MAX_TAU_COUNTERS;i++)
+            InclTime[tid][i] = 0;
+        }
+
+
 	//Returns the array of inclusive counter values.
 	double * GetInclTime(int tid) { return InclTime[tid]; }
-	void SetInclTime(int tid, double incltime) { 
+	void SetInclTime(int tid, double *incltime) { 
 	  for(int i=0;i<MAX_TAU_COUNTERS;i++)
 	    InclTime[tid][i] = incltime[i];
 	}
+	void SetInclTimeZero(int tid) {
+          for(int i=0;i<MAX_TAU_COUNTERS;i++)
+            InclTime[tid][i] = 0;
+        }
 #endif//TAU_MULTIPLE_COUNTERS
 
 	TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
@@ -257,6 +266,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
- * $Revision: 1.18 $   $Date: 2002/03/08 20:36:04 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.18 2002/03/08 20:36:04 bertie Exp $ 
+ * $Revision: 1.19 $   $Date: 2002/03/10 23:51:31 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.19 2002/03/10 23:51:31 bertie Exp $ 
  ***************************************************************************/

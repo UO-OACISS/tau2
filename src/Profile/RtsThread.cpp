@@ -130,7 +130,15 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
   // previous values in the TheFunctionDB()
 
   // Get the current time
+#ifndef TAU_MULTIPLE_COUNTERS
      double CurrentTimeOrCounts = getUSecD(myThread());
+#else //TAU_MULTIPLE_COUNTERS
+     double CurrentTimeOrCounts[MAX_TAU_COUNTERS];
+     for(int i=0;i<MAX_TAU_COUNTERS;i++){
+       CurrentTimeOrCounts[i]=0;
+     }
+     getUSecD(myThread(), CurrentTimeOrCounts);
+#endif//TAU_MULTIPLE_COUNTERS
      for (int tid = 0; tid < TAU_MAX_THREADS; tid++)
      { // For each thread of execution 
 #ifdef PROFILING_ON
@@ -139,8 +147,13 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 	 // Clear all values 
 	 (*it)->SetCalls(tid, 0);
 	 (*it)->SetSubrs(tid, 0);
+#ifndef TAU_MULTIPLE_COUNTERS
 	 (*it)->SetExclTime(tid, 0);
 	 (*it)->SetInclTime(tid, 0);
+#else //TAU_MULTIPLE_COUNTERS
+         (*it)->SetExclTimeZero(tid);
+         (*it)->SetInclTimeZero(tid);
+#endif//TAU_MULTIPLE_COUNTERS
 #ifdef PROFILE_STATS
 	 (*it)->SetSumExclSqr(tid, 0);
 #endif // PROFILE_STATS 
@@ -160,7 +173,13 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 	 { // Increment the number of called functions in its parent
 	   current->ParentProfiler->ThisFunction->IncrNumSubrs(tid);
 	 }
+#ifndef TAU_MULTIPLE_COUNTERS
 	 current->StartTime = CurrentTimeOrCounts;
+#else //TAU_MULTIPLE_COUNTERS
+	 for(int j=0;j<MAX_TAU_COUNTERS;j++){
+	     current->StartTime[j] = CurrentTimeOrCounts[j];
+	 }
+#endif//TAU_MULTIPLE_COUNTERS
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	 current->ExclTimeThisCall = 0;
 #endif   //  PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
@@ -228,9 +247,9 @@ void RtsLayer::UnLockDB(void)
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2001/06/20 20:31:51 $
- * VERSION: $Id: RtsThread.cpp,v 1.16 2001/06/20 20:31:51 sameer Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: bertie $
+ * $Revision: 1.17 $   $Date: 2002/03/10 23:58:17 $
+ * VERSION: $Id: RtsThread.cpp,v 1.17 2002/03/10 23:58:17 bertie Exp $
  ***************************************************************************/
 
 

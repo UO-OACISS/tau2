@@ -481,7 +481,7 @@ double TauWindowsUsecD(void)
 ///////////////////////////////////////////////////////////////////////////
 
 #ifdef TAU_MULTIPLE_COUNTERS
-RtsLayer::getUSecD (int tid, double *values){
+void RtsLayer::getUSecD (int tid, double *values){
   MultipleCounterLayer::getCounters(tid, values);
 }
 #else //TAU_MULTIPLE_COUNTERS
@@ -1015,6 +1015,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: bertie $
- * $Revision: 1.38 $   $Date: 2002/03/08 21:42:13 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.38 2002/03/08 21:42:13 bertie Exp $ 
+ * $Revision: 1.39 $   $Date: 2002/03/10 23:57:38 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.39 2002/03/10 23:57:38 bertie Exp $ 
  ***************************************************************************/

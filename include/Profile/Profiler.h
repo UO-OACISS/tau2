@@ -36,6 +36,10 @@
 
 #include <Profile/ProfileGroups.h>
 
+#ifdef TAU_MULTIPLE_COUNTERS
+#define MAX_TAU_COUNTERS 25
+#endif//TAU_MULTIPLE_COUNTERS
+
 #if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC))
 #define TAU_MAX_THREADS 128
 #else
@@ -144,6 +148,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.35 $   $Date: 2002/03/08 21:06:11 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.35 2002/03/08 21:06:11 bertie Exp $ 
+ * $Revision: 1.36 $   $Date: 2002/03/10 23:50:43 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.36 2002/03/10 23:50:43 bertie Exp $ 
  ***************************************************************************/

@@ -138,7 +138,17 @@ void Profiler::Start(int tid)
 	}
 	
 	// Initialization is over, now record the time it started
+#ifndef TAU_MULTIPLE_COUNTERS 
 	StartTime =  RtsLayer::getUSecD(tid) ;
+#else //TAU_MULTIPLE_COUNTERS
+	//Initialize the array to zero, as some of the elements will
+	//not be set by counting functions.
+	for(int i=0;i<MAX_TAU_COUNTERS;i++){
+	  StartTime[i]=0;
+	}
+	//Now get the start times.
+	RtsLayer::getUSecD(tid, StartTime);	  
+#endif//TAU_MULTIPLE_COUNTERS
 	DEBUGPROFMSG("Start Time = "<< StartTime<<endl;);
 #endif // PROFILING_ON
   	
@@ -198,13 +208,20 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
 //////////////////////////////////////////////////////////////////////
 
 Profiler::Profiler( const Profiler& X)
-: StartTime(X.StartTime),
-  ThisFunction(X.ThisFunction),
+: ThisFunction(X.ThisFunction),
   ParentProfiler(X.ParentProfiler),
   MyProfileGroup_(X.MyProfileGroup_),
   StartStopUsed_(X.StartStopUsed_)
 {
-	DEBUGPROFMSG("Profiler::Profiler(const Profiler& X)"<<endl;);
+#ifndef TAU_MULTIPLE_COUNTERS	
+  StartTime = X.StartTime;
+#else //TAU_MULTIPLE_COUNTERS
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    StartTime[i] = X.StartTime[i];
+  }
+#endif//TAU_MULTIPLE_COUNTERS
+
+  DEBUGPROFMSG("Profiler::Profiler(const Profiler& X)"<<endl;);
 
 	CurrentProfiler[RtsLayer::myThread()] = this;
 
@@ -217,7 +234,14 @@ Profiler::Profiler( const Profiler& X)
 
 Profiler& Profiler::operator= (const Profiler& X)
 {
-  	StartTime = X.StartTime;
+#ifndef TAU_MULTIPLE_COUNTERS	
+  StartTime = X.StartTime;
+#else //TAU_MULTIPLE_COUNTERS
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    StartTime[i] = X.StartTime[i];
+  }
+#endif//TAU_MULTIPLE_COUNTERS
+
 	ThisFunction = X.ThisFunction;
 	ParentProfiler = X.ParentProfiler; 
 	MyProfileGroup_ = X.MyProfileGroup_;
@@ -248,7 +272,27 @@ void Profiler::Stop(int tid)
 #endif //TRACING_ON
 
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
+#ifndef TAU_MULTIPLE_COUNTERS
 	double TotalTime = RtsLayer::getUSecD(tid) - StartTime;
+#else //TAU_MULTIPLE_COUNTERS
+	double CurrentTime[MAX_TAU_COUNTERS];
+	for(int j=0;j<MAX_TAU_COUNTERS;j++){
+	  CurrentTime[j]=0;
+	}
+	//Get the current counter values.
+	RtsLayer::getUSecD(tid, CurrentTime);
+
+	double TotalTime[MAX_TAU_COUNTERS];
+	for(int i=0;i<MAX_TAU_COUNTERS;i++){
+	  TotalTime[i]=0;
+	}
+
+	for(int k=0;k<MAX_TAU_COUNTERS;k++){
+	  TotalTime[k] = CurrentTime[k] - StartTime[k];
+	}
+	
+#endif//TAU_MULTIPLE_COUNTERS
+
 
         DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
   	  << RtsLayer::myContext() << "," << tid 
@@ -429,6 +473,7 @@ void Profiler::ProfileExit(const char *message, int tid)
 
 //////////////////////////////////////////////////////////////////////
 
+#ifndef TAU_MULTIPLE_COUNTERS
 int Profiler::StoreData(int tid)
 {
 #ifdef PROFILING_ON 
@@ -880,6 +925,12 @@ void Profiler::PurgeData(int tid)
 }
 //////////////////////////////////////////////////////////////////////
 
+#else //TAU_MULTIPLE_COUNTERS
+int Profiler::StoreData(int tid){return 0;}
+int Profiler::DumpData(int tid){return 0;}
+void Profiler::PurgeData(int tid){}
+#endif//TAU_MULTIPLE_COUNTERS
+
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 int Profiler::ExcludeTimeThisCall(double t)
 {
@@ -1019,9 +1070,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.55 $   $Date: 2002/02/07 19:26:26 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.55 2002/02/07 19:26:26 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: bertie $
+ * $Revision: 1.56 $   $Date: 2002/03/10 23:57:02 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.56 2002/03/10 23:57:02 bertie Exp $ 
  ***************************************************************************/
 
 	
