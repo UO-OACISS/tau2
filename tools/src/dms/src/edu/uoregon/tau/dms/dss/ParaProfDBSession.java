@@ -72,8 +72,13 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(id, 0);
 		IntervalLocationProfile fdo = f.getMeanSummary();
 
-		int groupID = this.getGlobalMapping().addGlobalMapping(f.getGroup(), 1, 1);
-		globalMappingElement.addGroup(groupID);
+		if (f.getGroup() != null) {
+		    int groupID = this.getGlobalMapping().addGlobalMapping(f.getGroup(), 1, 1);
+		    globalMappingElement.addGroup(groupID);
+		    globalMappingElement.setGroupsSet(true);
+		    this.setGroupNamesPresent(true);
+		}
+
 
 		for(int i=0;i<numberOfMetrics;i++){
 		    globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusive(i));
@@ -133,7 +138,7 @@ public class ParaProfDBSession extends ParaProfDataSession {
 	    System.out.println("About to increase storage.");
 
 	    l = perfDMFSession.getIntervalEventData();
-	    while(l.hasNext()){
+	    while(l.hasNext()) {
 		IntervalLocationProfile fdo = (IntervalLocationProfile) l.next();
 		node = this.getNCT().getNode(fdo.getNode());
 		if (node==null)
@@ -146,6 +151,7 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		    thread = context.addThread(fdo.getThread(), numberOfMetrics);
 		    thread.setDebug(this.debug());
 		    thread.initializeFunctionList(this.getGlobalMapping().getNumberOfMappings(0));
+		    
 		}
 		
 		//Get GlobalMappingElement and GlobalThreadDataElement.
@@ -205,15 +211,68 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		}
 	    }
 
-	    while(l.hasNext()){
+
+	    l = perfDMFSession.getAtomicEvents();
+	    while (l.hasNext()) {
 		AtomicEvent ue = (AtomicEvent) l.next();
-		System.out.println(ue.getName());
-		this.getGlobalMapping().addGlobalMapping(ue.getName(), 2, 1);
+		this.getGlobalMapping().addGlobalMapping(ue.getName(), 2, 1);  // 2, 1?  What the hell are these numbers?
+				
 	    }
 
+
 	    l = perfDMFSession.getAtomicEventData();
-	    while(l.hasNext()){
-		l.next();
+	    while (l.hasNext()) {
+		AtomicLocationProfile alp = (AtomicLocationProfile) l.next();
+		//this.getGlobalMapping().addGlobalMapping(ue.getName(), 2, 1);
+
+
+		// do we need to do this?  
+		node = this.getNCT().getNode(alp.getNode());
+		if (node==null)
+		    node = this.getNCT().addNode(alp.getNode());
+		context = node.getContext(alp.getContext());
+		if (context==null)
+		    context = node.addContext(alp.getContext());
+		thread = context.getThread(alp.getThread());
+		if (thread==null) {
+		    thread = context.addThread(alp.getThread(), numberOfMetrics);
+		    //thread.setDebug(this.debug());
+		    //thread.initializeFunctionList(this.getGlobalMapping().getNumberOfMappings(0));
+		}
+
+		
+		//		System.out.println ("number of mappings = "this.getGlobalMapping().getNumberOfMappings(2)
+
+		if (thread.getUsereventList() == null) {
+		    thread.initializeUsereventList(this.getGlobalMapping().getNumberOfMappings(2));
+		    setUserEventsPresent(true);
+		}
+
+
+
+		mappingID = this.getGlobalMapping().getMappingID(perfDMFSession.getAtomicEvent(alp.getAtomicEventID()).getName(),2);
+		globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
+
+		globalThreadDataElement = thread.getUserevent(mappingID);
+				    
+		if (globalThreadDataElement == null) {
+		    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 2), true);
+		    thread.addUserevent(globalThreadDataElement, mappingID);
+		}
+		
+		globalThreadDataElement.setUserEventNumberValue(alp.getSampleCount());
+		globalThreadDataElement.setUserEventMaxValue(alp.getMaximumValue());
+		globalThreadDataElement.setUserEventMinValue(alp.getMinimumValue());
+		globalThreadDataElement.setUserEventMeanValue(alp.getMeanValue());
+		
+		if ((globalMappingElement.getMaxUserEventNumberValue()) < alp.getSampleCount())
+		    globalMappingElement.setMaxUserEventNumberValue(alp.getSampleCount());
+		if ((globalMappingElement.getMaxUserEventMaxValue()) < alp.getMaximumValue())
+		    globalMappingElement.setMaxUserEventMaxValue(alp.getMaximumValue());
+		if ((globalMappingElement.getMaxUserEventMinValue()) < alp.getMinimumValue())
+		    globalMappingElement.setMaxUserEventMinValue(alp.getMinimumValue());
+		if ((globalMappingElement.getMaxUserEventMeanValue()) < alp.getMeanValue())
+		    globalMappingElement.setMaxUserEventMeanValue(alp.getMeanValue());
 	    }
 
 	    time = (System.currentTimeMillis()) - time;
@@ -230,9 +289,9 @@ public class ParaProfDBSession extends ParaProfDataSession {
 			ParaProfDBSession.this.notifyObservers();
 		    }
 		});
-				   
 	}
-        catch(Exception e){
+        catch (Exception e) {
+	    e.printStackTrace();
 	    UtilFncs.systemError(e, null, "SSD01");
 	}
     }
