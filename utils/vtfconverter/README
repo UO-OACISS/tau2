@@ -1,0 +1,93 @@
+*****************************************************************************
+**			vtf2profile format conversion program.	         
+*****************************************************************************
+**  Authors : Ryan K. Harris, directed by Holger Brunst
+*****************************************************************************
+
+vtf2profile:
+*********
+
+vtf2profile is a program distributed as part of the Tuning and Analysis
+Utilities(TAU) package. It's function is to convert both obsolete and
+recent Vampir Trace File formats to TAU profile format which can be
+read by Paraprof(profile visualization tool).
+*****************************************************************************
+
+vtf2profile accepts the following command line options:
+****************************************************
+'-h' --display this help text.
+
+'-c' --execute looping interface(explained below).
+
+'-f' --used as -f<Vampir Trace File name> where filename is the     
+       name of the file to be converted.
+	   
+'-p' --used as -p<path> where 'path' is the relative  
+       path to the directory where profiles are to     
+       be stored.                                     
+	   
+'-i' --used as -i<from to> where 'from' and 'to' are integer values,
+	   defining the desired profiling interval.
+       (currently accepts time in microseconds only).
+*****************************************************************************
+
+Example usage(1):
+
+	`vtf2profile -f fork.pv -p ./PROFILES/ -i 0 1000000`
+	
+	--where 'vtf2profile' is the executable name,
+		'fork.pv' is Vampir formatted trace file(file extensions may differ),
+		'./PROFILES/' is the desired location for generated profiles,
+		'0 1000000' is the time interval of interest.
+
+Example usage(2):
+
+	`vtf2profile -f fork.pv -p ./PROFILES/`
+	
+	--when no interval is specified, the entire trace file is converted.
+
+Example usage(3):
+
+	`vtf2profile -f fork.pv`
+	
+	--when no profile directory is specified, generated profiles are placed
+		in the directory of the executable.
+*****************************************************************************
+
+Looping Interface('-c' option):
+*******************************
+
+This option executes a looping interface which provides the user
+with the ability to rapidly convert multiple Vampir Trace Files
+in succession.
+
+It accepts the following options:
+*********************************
+
+'R' --read a file.
+    This will prompt user with:                     
+	'type file name: '                           
+	At the prompt, type the complete name of       
+	any single VTF you would like the converter     
+	to translate into TAU Profile format.            
+	
+'S' --set the destination path for profiles.        
+	This will prompt user with:                      
+	'type path: '                                
+	At the prompt, type the relative path of the    
+	directory where the converter should place the   
+	generated profiles.                             
+	
+'P' --view current destination path.                   
+    Displays the path that the converter will use as 
+	it is currently set.      
+	"
+'I' --set a time interval (t1 - t2). Only events      
+	occurring within this interval will be profiled.
+	User will be prompted by:                   
+	'set intervalStart:'                     
+	then,                                   
+	'set intervalEnd:'   
+   
+'Q' --quit.                                        
+*****************************************************************************
