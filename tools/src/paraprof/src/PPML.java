@@ -77,16 +77,11 @@ public class PPML{
 	ListIterator l = trialOpA.getGlobalMapping().getMappingIterator(0);
 	while(l.hasNext()){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    globalMappingElement.incrementStorage();
-	    globalMappingElement.setTotalExclusiveValue(0);
-	    globalMappingElement.setTotalInclusiveValue(0);
-	    globalMappingElement.setCounter(0);
-	}
+	    globalMappingElement.incrementStorage();}
 	l = trialOpA.getGlobalMapping().getMappingIterator(2);
 	while(l.hasNext()){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    globalMappingElement.incrementStorage();
-	}
+	    globalMappingElement.incrementStorage();}
 
 	trialOpA.getGlobalMapping().increaseVectorStorage();
     
@@ -115,7 +110,6 @@ public class PPML{
 			if(globalThreadDataElement != null){
 			    GlobalMappingElement globalMappingElement =
 				trialOpA.getGlobalMapping().getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
-			    globalMappingElement.incrementCounter();
 			    globalThreadDataElement.incrementStorage();
               
 			    double d1=0.0;
@@ -130,7 +124,6 @@ public class PPML{
 			    //Now do the global mapping element exclusive stuff.
 			    if((globalMappingElement.getMaxExclusiveValue(metric)) < result)
 				globalMappingElement.setMaxExclusiveValue(metric, result);
-			    globalMappingElement.incrementTotalExclusiveValue(result);
                   
 			    d1 = globalThreadDataElement.getInclusiveValue(opA);
 			    d2 = globalThreadDataElement.getInclusiveValue(opB);
@@ -140,7 +133,6 @@ public class PPML{
 			    //Now do the global mapping element inclusive stuff.
 			    if((globalMappingElement.getMaxInclusiveValue(metric)) < result)
 				globalMappingElement.setMaxInclusiveValue(metric, result);
-			    globalMappingElement.incrementTotalInclusiveValue(result);
 			}
 		    }
 		    thread.setThreadData(metric);

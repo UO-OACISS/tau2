@@ -373,7 +373,6 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 				if(usereventDataLine.i0 != 0){
 				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2, 1);
 				    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
-				    globalMappingElement.incrementCounter();
 				    globalThreadDataElement = thread.getUserevent(mappingID);
 
 				    if(globalThreadDataElement == null){

@@ -145,7 +145,6 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		
 		mappingID = this.getGlobalMapping().getMappingID(perfDBSession.getFunction(fdo.getFunctionIndexID()).getName(),0);
 		globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
-		globalMappingElement.incrementCounter();
 		globalThreadDataElement = thread.getFunction(mappingID);
 		if(globalThreadDataElement == null){
 		    globalThreadDataElement = 

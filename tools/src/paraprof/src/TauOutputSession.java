@@ -276,7 +276,6 @@ public class TauOutputSession extends ParaProfDataSession{
 			    if(functionDataLine.i0 !=0){
 				mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0, 1);
 				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
-				globalMappingElement.incrementCounter();
 				globalThreadDataElement = thread.getFunction(mappingID);
 			    
 				if(globalThreadDataElement == null){
@@ -289,9 +288,6 @@ public class TauOutputSession extends ParaProfDataSession{
 				globalThreadDataElement.setNumberOfCalls(functionDataLine.i0);
 				globalThreadDataElement.setNumberOfSubRoutines(functionDataLine.i1);
 				globalThreadDataElement.setUserSecPerCall(metric, usecCall);
-			    
-				globalMappingElement.incrementTotalExclusiveValue(functionDataLine.d0);
-				globalMappingElement.incrementTotalInclusiveValue(functionDataLine.d1);
 			    
 				//Set the max values (thread max values are calculated in the Thread class).
 				if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
@@ -429,7 +425,6 @@ public class TauOutputSession extends ParaProfDataSession{
 				    if(usereventDataLine.i0 !=0){
 					mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2, 1);
 					globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
-					globalMappingElement.incrementCounter();
 					globalThreadDataElement = thread.getUserevent(mappingID);
 				    
 					if(globalThreadDataElement == null){

@@ -203,7 +203,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 			    for(int j=this.getNumberOfMetrics();j>0;j--)
 				globalMappingElement.incrementStorage();
-			    globalMappingElement.incrementCounter();
 			    globalThreadDataElement = thread.getFunction(mappingID);
 			    
 			    if(globalThreadDataElement == null){
@@ -218,9 +217,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			    globalThreadDataElement.setNumberOfCalls(functionDataLine.i1);
 			    globalThreadDataElement.setNumberOfSubRoutines(functionDataLine.i0);
 			    globalThreadDataElement.setUserSecPerCall(metric, usecCall);
-			    
-			    globalMappingElement.incrementTotalExclusiveValue(functionDataLine.d0);
-			    globalMappingElement.incrementTotalInclusiveValue(functionDataLine.d3);
 			    
 			    //Set the max values.
 			    if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
@@ -266,7 +262,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 				for(int k=this.getNumberOfMetrics();k>0;k--)
 				    globalMappingElement.incrementStorage();
-				globalMappingElement.incrementCounter();
 				globalThreadDataElement = thread.getFunction(mappingID);
 				
 				if(globalThreadDataElement == null){
@@ -289,9 +284,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				}
 				globalThreadDataElement.setUserSecPerCall(metric, d2/i1);
 
-				globalMappingElement.incrementTotalExclusiveValue(d2);
-				globalMappingElement.incrementTotalInclusiveValue(d2);
-				
 				//Set the max values.
 				if((globalMappingElement.getMaxExclusiveValue(metric)) < d2)
 				    globalMappingElement.setMaxExclusiveValue(metric, d2);
@@ -318,7 +310,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 				for(int k=this.getNumberOfMetrics();k>0;k--)
 				    globalMappingElement.incrementStorage();
-				globalMappingElement.incrementCounter();
 				globalThreadDataElement = thread.getFunction(mappingID);
 				
 				if(globalThreadDataElement == null){
@@ -333,9 +324,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				globalThreadDataElement.setNumberOfCalls(functionChildDataLine.i2);
 				globalThreadDataElement.setUserSecPerCall(metric, functionChildDataLine.d3/functionChildDataLine.i2);
 
-				globalMappingElement.incrementTotalExclusiveValue(functionChildDataLine.d3);
-				globalMappingElement.incrementTotalInclusiveValue(functionChildDataLine.d3);
-				
 				//Set the max values.
 				if((globalMappingElement.getMaxExclusiveValue(metric)) < functionChildDataLine.d3)
 				    globalMappingElement.setMaxExclusiveValue(metric, functionChildDataLine.d3);

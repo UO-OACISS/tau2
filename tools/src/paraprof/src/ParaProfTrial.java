@@ -26,6 +26,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
      public ParaProfTrial(int type){
 	super();
+	this.debug = UtilFncs.debug;
+
 	this.setID(-1);
 	this.setExperimentID(-1);
 	this.setApplicationID(-1);
@@ -38,10 +40,12 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	this.setUserData("");
 	this.dataSession.setDebug(UtilFncs.debug);
 	this.type = type;
-    }
+     }
 
     public ParaProfTrial(Trial trial, int type){
 	super();
+	this.debug = UtilFncs.debug;
+
 	if(trial!=null){
 	    this.setID(trial.getID());
 	    this.setExperimentID(trial.getExperimentID());
@@ -56,12 +60,9 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	    this.setNumContextsPerNode(trial.getNumContextsPerNode());
 	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
 	    this.setUserData(trial.getUserData());
-
 	    this.dataSession = new ParaProfDBSession();
 	    this.dataSession.setDebug(UtilFncs.debug);
-	    int numberOfMetrics = trial.getMetricCount();
-	    for(int i=0;i<numberOfMetrics;i++)
-		dataSession.addMetric(trial.getMetricName(i));
+	    this.dataSession.setMetrics(trial.getMetrics());
 	}
 	this.type = type;
     }
@@ -358,13 +359,26 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	observers.remove(observer);}
 
     public void notifyObservers(){
+	if(this.debug()){
+	    System.out.println("######");
+	    System.out.println("ParaProfTrial.notifyObservers()");
+	    System.out.println("Listening classes ...");
+	    for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
+		System.out.println(e.nextElement().getClass());
+	    System.out.println("######");
+	}
 	for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
 	    ((ParaProfObserver) e.nextElement()).update(this);
     }
     //######
     //End - Methods that manage the ParaProfObservers.
     //######
-  
+
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -389,6 +403,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     private Vector metrics = new Vector();
 
     private Vector observers = new Vector();
+
+    private boolean debug = false;
     //####################################
     //Instance data.
     //####################################

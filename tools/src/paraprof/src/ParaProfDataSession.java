@@ -222,8 +222,59 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     public ListIterator getUserEventData(){
 	return null;}
 
-    public void getFunctionDetail(Function function){};
+    /**
+     * Gets the interval record detail for this function.
+     *
+     * @param function
+     */
+    public void getFunctionDetail(Function function){}
+    
+    /**
+     * Saves the trial.
+     *
+     * @return database index ID of the saved trial
+     */
+    public int saveTrial(){return -1;}
+    
+    /**
+     * Saves the Trial.
+     *
+     * @param function
+     * @return ID of the saved trial
+     */
+    public int saveTrial(Trial trial){return -1;}
+    
+    /**
+     * Saves the Function.
+     *
+     * @param function
+     * @return ID of the saved function
+     */
+    public int saveFunction(Function function, int newTrialID, Vector metrics){return -1;}
+    
+    /**
+     * Saves the FunctionDataObject.
+     *
+     * @param functionData
+     */
+    public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Vector metrics){}
+    
+    /**
+     * Saves the UserEvent object.
+     *
+     * @param userEvent
+     * @return ID of the saved user event
+     */
+    public int saveUserEvent(UserEvent userEvent, int newTrialID){return -1;}
 
+    
+    /**
+     * Saves the userEventData object.
+     *
+     * @param userEventData
+     */
+    public void saveUserEventData(UserEventDataObject userEventData, int newUserEventID){}
+    
     public GlobalMapping getGlobalMapping(){
 	return globalMapping;}
 
@@ -599,6 +650,14 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	observers.remove(observer);}
 
     public void notifyObservers(){
+	if(this.debug()){
+	    System.out.println("######");
+	    System.out.println("ParaProfDataSession.notifyObservers()");
+	    System.out.println("Listening classes ...");
+	    for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
+		System.out.println(e.nextElement().getClass());
+	    System.out.println("######");
+	}
 	for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
 	    ((ParaProfObserver) e.nextElement()).update(this);
     }

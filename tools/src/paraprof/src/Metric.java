@@ -9,8 +9,9 @@
 package paraprof;
 
 import javax.swing.tree.*;
+import dms.dss.*;
 
-public class Metric implements ParaProfTreeNodeUserObject{
+public class Metric extends dms.dss.Metric implements ParaProfTreeNodeUserObject{
     public Metric(){}
     
     public void setTrial(ParaProfTrial trial){
@@ -43,15 +44,6 @@ public class Metric implements ParaProfTreeNodeUserObject{
     public boolean getDerivedMetric(){
 	return derivedMetric;}
     
-    public void setName(String name){
-	this.name = name;}
-    
-    public String getName(){
-	return name;}
-    
-    public void setID(int id){
-	this.id = id;}
-
     public int getApplicationID(){
 	return trial.getApplicationID();}
 
@@ -61,9 +53,6 @@ public class Metric implements ParaProfTreeNodeUserObject{
     public int getTrialID(){
 	return trial.getID();}
     
-    public int getID(){
-	return id;}
-    
     public String getIDString(){
 	if(trial!=null)
 	    return trial.getIDString() + ":" + this.getID() + " - " + this.getName();
@@ -72,7 +61,7 @@ public class Metric implements ParaProfTreeNodeUserObject{
     }
     
     public String toString(){
-	return this.getName();}
+	return super.getName();}
 
     //####################################
     //Interface code.
@@ -96,6 +85,4 @@ public class Metric implements ParaProfTreeNodeUserObject{
     private TreePath treePath = null;
     private boolean dBMetric = false;
     private boolean derivedMetric = false;
-    private String name = null;
-    private int id = -1;
 }
