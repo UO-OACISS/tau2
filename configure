@@ -1056,6 +1056,11 @@ if [ $machine = apple ]
     then
       fixmakeargs="$fixmakeargs APPLECXX"
   fi
+  if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ]
+    then
+      fixmakeargs="$fixmakeargs IBMXLFAPPLE"
+      extradir=`which xlf90 | sed s/xlf90/../`
+  fi
 fi
 
 if [ $machine = t3e -a $cxx_compiler = KCC ]

@@ -285,6 +285,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #KAI#TAU_IBM64_FORTRANLIBS      =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 --backend -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
 #IBM64_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM64_FORTRANLIBS) #ENDIF#
 
+#IBMXLFAPPLE#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib -lxlf90 -lxlfmath -lxl      #ENDIF#
+
 #CRAY_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #CRAY_X1_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902 -lpgftnrtl #ENDIF#
@@ -326,6 +328,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #USE_IBMXLC#TAU_CXXLIBS         = -lC            #ENDIF#
 #USE_DECCXX#TAU_CXXLIBS         = -lcxxstd -lcxx #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS        = -lcprts -lPEPCF90 #ENDIF#
+#APPLECXX#TAU_CXXLIBS 		= -lstdc++ #ENDIF#
 
 # EXTERNAL PACKAGES: EPILOG
 #EPILOG#TAU_LINKER_OPT3 	=  -L$(EPILOGDIR)/lib -L$(EPILOGDIR)/src -lelg $(TAU_HITACHI_EXTRA) #ENDIF#
