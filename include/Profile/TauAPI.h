@@ -355,6 +355,11 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_TRACK_MUSE_EVENTS()		
 #define TAU_SET_INTERRUPT_INTERVAL(value)
 
+#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group)
+#define TAU_PHASE_START(timer)
+#define TAU_PHASE_CREATE_STATIC(var, name, type, group)
+#define TAU_PHASE_STOP(timer)
+
 #define CT(obj)
 
 #endif /* PROFILING_ON */
@@ -379,7 +384,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.46 $   $Date: 2005/01/12 19:00:20 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.46 2005/01/12 19:00:20 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.47 $   $Date: 2005/01/14 18:19:38 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.47 2005/01/14 18:19:38 amorris Exp $ 
  ***************************************************************************/
