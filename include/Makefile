@@ -113,6 +113,7 @@ DYNINST_PLATFORM = i386-unknown-linux2.0
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 #TRACE#EVENTS_O                = Tracer.o              #ENDIF#
 #PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o        #ENDIF#
+#JAVA#THR_O       	       = JavaThreadLayer.o     #ENDIF#
 #TULIPTHREADS#THR_O       = TulipThreadLayer.o         #ENDIF#
 #TULIPTHREADS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/Tuliplib   #ENDIF#
 #SMARTS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/lib -I$(TULIPDIR)/machine-specific/$(HOSTTYPE)  #ENDIF#
@@ -127,6 +128,9 @@ DYNINST_PLATFORM = i386-unknown-linux2.0
 #PAPIPTHREAD#PROFILEOPT22	       = -DPAPI_MUTEX_LOCK #ENDIF#
 #JAVA#PROFILEOPT23	       = -DJAVA 		#ENDIF#
 #MONITOR#PROFILEOPT24	       = -DMONITORING_ON 	#ENDIF#
+#JAVA#PROFILEOPT25 = -I$(JDKDIR)/include -I$(JDKDIR)/include/$(JDKARCH) #ENDIF#
+#MPI#PROFILEOPT26 = -DTAU_MPI #ENDIF#
+
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
@@ -149,7 +153,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(PROFILEOPT16) \
 	      $(PROFILEOPT17) $(PROFILEOPT18) $(PROFILEOPT19) $(PROFILEOPT20) \
 	      $(PROFILEOPT21) $(PROFILEOPT22) $(PROFILEOPT23) $(PROFILEOPT24) \
-	      $(TRACEOPT)
+	      $(PROFILEOPT25) $(PROFILEOPT26) $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
