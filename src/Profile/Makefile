@@ -35,7 +35,6 @@ CC  = $(TAU_CC)
 
 
 CEXTRA =  
-#JAVA#CEXTRA =  -I$(JDKDIR)/include -I$(JDKDIR)/include/$(JDKARCH) #ENDIF#
 
 ##############################################
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
