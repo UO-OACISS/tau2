@@ -19,39 +19,39 @@ public class DBConnector implements DB {
 
     private Statement statement;
     private Connection conn = null;
-	private ParseConfig parseConfig = null;
+    private ParseConfig parseConfig = null;
 
     private String dbaddress;
     // it looks like "jdbc:postgresql://zeta:5432/perfdmf;" in PostgreSQL.
-	private String dbUser;
-	private String dbPassword;
+    private String dbUser;
+    private String dbPassword;
 
     private String driverName;
     // it should be "org.postgresql.Driver" in PostgreSQL.
 
     public DBConnector(ParseConfig parser) throws SQLException {
-		super();
-		parseConfig = parser;
-		setJDBC(parser);
-		register();
+	super();
+	parseConfig = parser;
+	setJDBC(parser);
+	register();
     }
 
     public DBConnector(String user, String password, ParseConfig parser) throws SQLException {
-		super();
-		parseConfig = parser;
-		setJDBC(parser);
-		register();
-		connect(user, password);
+	super();
+	parseConfig = parser;
+	setJDBC(parser);
+	register();
+	connect(user, password);
     }
 
-    public void setJDBC(ParseConfig parser){
-		driverName = parser.getJDBCDriver();
-		if (parser.getDBType().equals("db2")) {
-			dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
-		} else {
-			dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
+    public void setJDBC(ParseConfig parser) {
+	driverName = parser.getJDBCDriver();
+	if (parser.getDBType().equals("db2")) {
+	    dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
+	} else {
+	    dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
 	    	+ ":" + parser.getDBPort() + "/" + parser.getDBName();
-		}
+	}
     }
 
     public void close() {
@@ -67,19 +67,20 @@ public class DBConnector implements DB {
     }
 
     public boolean connect(String user, String password) throws SQLException {
-		String cs = "";
-		try {
-	    	if (conn != null) {
-				return true;
-	    	}
-	    	cs = getConnectString();
-	    	conn = DriverManager.getConnection(cs, user, password);
-	    	return true;
-		} catch (SQLException ex) {
-			System.err.println("Cannot connect to server.");
-			System.err.println("Connection String: " + cs);
-	    	throw ex;
-		}
+	String cs = "";
+	try {
+	    if (conn != null) {
+		return true;
+	    }
+	    cs = getConnectString();
+	    conn = DriverManager.getConnection(cs, user, password);
+	    return true;
+	} catch (SQLException ex) {
+	    System.err.println("Cannot connect to server.");
+	    System.err.println("Connection String: " + cs);
+	    System.err.println("Exception Message: " + ex.getMessage());
+	    throw ex;
+	}
     }
 
     /*** Execute a SQL statement that returns a single ResultSet object. ***/
@@ -109,7 +110,7 @@ public class DBConnector implements DB {
     }
 
     /*** Execute a SQL statement that does not return
-     the number of rows modified, 0 if no result returned.***/
+	 the number of rows modified, 0 if no result returned.***/
 
     public int executeUpdate(String sql) throws SQLException {
 	try {
@@ -189,7 +190,7 @@ public class DBConnector implements DB {
 	return new String(this.parseConfig.getDBType());
     }
 
-	public PreparedStatement prepareStatement(String statement) throws SQLException {
-		return getConnection().prepareStatement(statement);
-	}
+    public PreparedStatement prepareStatement(String statement) throws SQLException {
+	return getConnection().prepareStatement(statement);
+    }
 }
