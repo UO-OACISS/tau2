@@ -71,7 +71,7 @@ int foo(void)
     {
        perror("Read returns value less than size.");
     }
-    TAU_GLOBAL_PHASE_STOP();
+    TAU_GLOBAL_PHASE_STOP(ph);
     return bytes;
   }
    
@@ -83,7 +83,7 @@ int foo(void)
     {
        perror("Write returns value less than size.");
     }
-    TAU_GLOBAL_PHASE_STOP();
+    TAU_GLOBAL_PHASE_STOP(ph);
     return bytes;
   }
 
@@ -97,12 +97,12 @@ int foo(void)
    {
      TAU_GLOBAL_PHASE_START(ph);
      /* do work */
-     TAU_GLOBAL_PHASE_STOP();
+     TAU_GLOBAL_PHASE_STOP(ph);
    }
 
 8. TAU_GLOBAL_PHASE_START(phasevar);
    Starts a global phase as illustrated above.
-9. TAU_GLOBAL_PHASE_STOP();
+9. TAU_GLOBAL_PHASE_STOP(phasevar);
    Stops a global phase. 
 
 
