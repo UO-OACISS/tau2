@@ -540,38 +540,8 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public String getHeaderString(){
-	String valueTypeString = null;
-	switch(valueType){
-	case 12:
-	    valueTypeString = "number of userevents";
-	    break;
-	case 13:
-	    valueTypeString = "number of userevents";
-	    break;
-	case 14:
-	    valueTypeString = "minimum number of userevents";
-	    break;
-	case 15:
-	    valueTypeString = "minimum number of userevents";
-	    break;
-	case 16:
-	    valueTypeString = "maximum number of userevents";
-	    break;
-	case 17:
-	    valueTypeString = "maximum number of userevents";
-	    break;
-	case 18:
-	    valueTypeString = "mean number of userevents";
-	    break;
-	case 19:
-	    valueTypeString = "mean number of userevents";
-	    break;
-	default:
-	    valueTypeString = "Error - Unrecognized value type!";
-	    break;
-	}
-	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
-	    "Value Type: "+valueTypeString+"\n";
+	return "Name: " + mappingName+"\n" +
+	    "Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n";
     }
     //######
     //End - Panel header.
