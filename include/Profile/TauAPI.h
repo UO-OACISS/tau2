@@ -199,6 +199,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_ENABLE_TRACKING_MEMORY()
 #define TAU_DISABLE_TRACKING_MEMORY()
 #define TAU_TRACK_MEMORY()
+#define TAU_TRACK_MEMORY_HERE()
 #define TAU_ENABLE_TRACKING_MUSE_EVENTS()	
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()
 #define TAU_TRACK_MUSE_EVENTS()		
@@ -229,6 +230,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.32 $   $Date: 2004/06/10 18:08:30 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.32 2004/06/10 18:08:30 sameer Exp $ 
+ * $Revision: 1.33 $   $Date: 2004/08/17 21:08:45 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.33 2004/08/17 21:08:45 sameer Exp $ 
  ***************************************************************************/
