@@ -4,11 +4,22 @@
 echo '#!/bin/sh'
 echo
 
+echo 'if [ $# = 0 ]'
+echo "then"
+echo '  echo "tau2slog2 converts a TAU formatted trace file to the SLOG2 format for Jumpshot trace visualizer"'
+echo '  echo "Usage: tau2slog2 <tau_tracefile> <edf_file> -o <slog_tracefile>"'
+echo '  echo "For e.g., "'
+echo '  echo "% tau2slog2 app.trc tau.edf -o app.slog2"'
+echo "  exit 1"
+echo "fi"
+
 echo JVM=$1/bin/java
 echo JVMFLAGS=
 echo 
 echo '# Set PATH to the shared library of the TRACE-API implementation'
 echo TRACE_LIBDIR=$2/$4/lib
+
+echo 'export LD_LIBRARY_PATH=$TRACE_LIBDIR:$LD_LIBRARY_PATH'
 
 echo '# Set PATH to the jar needed by the program'
 echo GUI_LIBDIR=$3/lib
@@ -38,5 +49,6 @@ echo 'if [ -z "`echo $JVMFLAGS | grep '\''\-Xmx'\''`" ] ; then'
 echo '    JVMFLAGS="-Xmx64m $JVMFLAGS"'
 echo 'fi'
 echo 
-echo '${JVM} -Djava.library.path=${TRACE_LIBDIR} ${JVMFLAGS} -jar ${MAIN_LIB} "$@"'
+echo '${JVM} -Djava.library.path=${TRACE_LIBDIR} ${JVMFLAGS} -jar ${MAIN_LIB} "$1:$2" "$3" "$4"'
+
 
