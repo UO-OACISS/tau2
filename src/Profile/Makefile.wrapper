@@ -23,7 +23,7 @@ CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)
 
 RM		= /bin/rm -f
 
-AR		= ar
+AR		= $(TAU_AR)
 
 ARFLAGS		= rcv
 

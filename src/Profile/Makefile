@@ -84,7 +84,7 @@ PRINT	      = pr
 SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp \
 		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp TauHooks.cpp
 
-AR	      = ar
+AR	      = $(TAU_AR)
 
 ARFLAGS	      = rcv 
 ############# For KAI KCC compiler, replace AR accordingly #######
@@ -335,5 +335,5 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 
 
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(OPENMP_O) $(TAU_DSO) $(EXTRAOBJS) $(TAUJAPI) $(FWRAPPER) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.so
+		$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX)
 
