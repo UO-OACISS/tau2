@@ -114,18 +114,11 @@ unsigned int RtsLayer::resetProfileGroup(void) {
 }
 
 /////////////////////////////////////////////////////////////////////////
-int RtsLayer::setMyNode(int NodeId) {
+int RtsLayer::setMyNode(int NodeId, int tid) {
   TheNode() = NodeId;
 // At this stage, we should create the trace file because we know the node id
 #ifdef TRACING_ON
-  char *dirname, tracefilename[1024];
-  if ((dirname = getenv("TRACEDIR")) == NULL) {
-  // Use default directory name .
-    dirname  = new char[8];
-    strcpy (dirname,".");
-  }
-  sprintf(tracefilename, "%s/tau.####.trc",dirname); 
-  pcxx_EvInit(tracefilename);
+  TraceEvInit(tid);
 #endif // TRACING_ON
   return TheNode();
 }
@@ -217,10 +210,10 @@ double RtsLayer::GetEventCounter()
 
 ///////////////////////////////////////////////////////////////////////////
 
-double RtsLayer::getUSecD () {
+double RtsLayer::getUSecD (int tid) {
 
 #ifdef TAU_PCL
-  return PCL_Layer::getCounters(RtsLayer::myThread());
+  return PCL_Layer::getCounters(tid);
 #else  // TAU_PCL 
 #ifdef SGI_HW_COUNTERS
   return RtsLayer::GetEventCounter();
@@ -592,6 +585,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 1999/08/19 22:26:55 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.13 1999/08/19 22:26:55 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 1999/08/20 22:58:40 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.14 1999/08/20 22:58:40 sameer Exp $ 
  ***************************************************************************/

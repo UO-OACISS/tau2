@@ -131,7 +131,7 @@ void Profiler::Start(int tid)
 	}
 	
 	// Initialization is over, now record the time it started
-	StartTime =  RtsLayer::getUSecD() ;
+	StartTime =  RtsLayer::getUSecD(tid) ;
 #endif // PROFILING_ON
   	
 	ParentProfiler = CurrentProfiler[tid] ;
@@ -231,7 +231,7 @@ void Profiler::Stop(int tid)
 #endif //TRACING_ON
 
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
-	double TotalTime = RtsLayer::getUSecD() - StartTime;
+	double TotalTime = RtsLayer::getUSecD(tid) - StartTime;
 
         DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
   	  << RtsLayer::myContext() << "," << tid 
@@ -414,7 +414,7 @@ int Profiler::StoreData(int tid)
 	DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
 
 #ifdef TRACING_ON
-	pcxx_EvClose();
+	TraceEvClose(tid);
 	RtsLayer::DumpEDF(tid);
 #endif // TRACING_ON 
 
@@ -602,7 +602,7 @@ void Profiler::CallStackTrace(int tid)
                                  //   has been called
  
   // get wallclock time
-  now = RtsLayer::getUSecD();  
+  now = RtsLayer::getUSecD(tid);  
 
   DEBUGPROFMSG("CallStackTrace started at " << now << endl;);
 
@@ -708,8 +708,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 1999/08/20 20:33:00 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.29 1999/08/20 20:33:00 sameer Exp $ 
+ * $Revision: 1.30 $   $Date: 1999/08/20 22:58:40 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.30 1999/08/20 22:58:40 sameer Exp $ 
  ***************************************************************************/
 
 	

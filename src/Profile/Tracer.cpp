@@ -51,9 +51,9 @@ static int TraceInitialized[PCXX_MAXPROCS] = {0};
 
 
 /* -- Use Profiling interface for time -- */
-unsigned long long pcxx_GetUSecLong(void)
+unsigned long long pcxx_GetUSecLong(int tid)
 { 
-  return (unsigned long long) RtsLayer::getUSecD(); 
+  return (unsigned long long) RtsLayer::getUSecD(tid); 
 }
 
 /* -- write event to buffer only [without overflow check] ---- */
@@ -62,7 +62,7 @@ static void TraceEventOnly(long int ev,long long par, int tid)
 {
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
   pcxx_ev_ptr->ev   = ev;
-  pcxx_ev_ptr->ti   = pcxx_GetUSecLong();
+  pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
   pcxx_ev_ptr->par  = par;
   pcxx_ev_ptr->nid  = RtsLayer::myNode();
   pcxx_ev_ptr->tid  = tid;
@@ -160,7 +160,7 @@ void TraceEvInit(int tid)
     strcpy (dirname,".");
     }
     sprintf(tracefilename, "%s/tautrace.%d.%d.%d.trc",dirname, 
-      RtsLayer::myNode(), RtsLayer::myContext(), RtsLayer::myThread());
+      RtsLayer::myNode(), RtsLayer::myContext(), tid);
 
     init_wrap_up ();
 
@@ -214,7 +214,7 @@ void TraceEvent(long int ev, long long par, int tid)
     {
 	/* we need to ensure that INIT is the first event */
       pcxx_ev_ptr->ev = PCXX_EV_INIT; 
-      pcxx_ev_ptr->ti   = pcxx_GetUSecLong();
+      pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
       pcxx_ev_ptr->par  = pcxx_ev_class; /* init event */ 
       /* probably the nodeid is not set yet */
       pcxx_ev_ptr->nid  = RtsLayer::myNode();
@@ -226,7 +226,7 @@ void TraceEvent(long int ev, long long par, int tid)
   } 
         
   pcxx_ev_ptr->ev   = ev;
-  pcxx_ev_ptr->ti   = pcxx_GetUSecLong();
+  pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
   pcxx_ev_ptr->par  = par;
   pcxx_ev_ptr->nid  = RtsLayer::myNode();
   pcxx_ev_ptr->tid  = tid ;

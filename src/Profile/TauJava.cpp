@@ -136,16 +136,23 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 #ifdef DEBUG_PROF
     fprintf(stdout, "TAU> Class Load : %s\n", event->u.class_load.class_name);
 #endif /* DEBUG_PROF */
-  static int j = TAU_PROFILE_SET_NODE(0);
   int tid = GetTid(event);
+  static int j = TAU_MAPPING_PROFILE_SET_NODE(0, tid);
   
   for (i = 0; i < event->u.class_load.num_methods; i++)
   {
     /* Create FunctionInfo objects for each of these methods */
 
+
+#ifdef TRACING_ON
+    sprintf(funcname, "%s  %s", event->u.class_load.class_name, 
+	event->u.class_load.methods[i].method_name); 
+#else
     sprintf(funcname, "%s  %s %s", event->u.class_load.class_name, 
 	event->u.class_load.methods[i].method_name, 
 	event->u.class_load.methods[i].method_signature); 
+#endif /* signature is too much for tau_convert to handle */
+
     sprintf(groupname, "%s", event->u.class_load.class_name); 
 
     TAU_MAPPING_CREATE(funcname, " ",
