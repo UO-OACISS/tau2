@@ -74,7 +74,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    renderIt((Graphics2D) g, 0);
+	    renderIt((Graphics2D) g, 0, false);
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "TDWP03");
@@ -94,12 +94,12 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	renderIt(g2, 2);
+	renderIt(g2, 2, false);
     
 	return Printable.PAGE_EXISTS;
     }  
     
-    public void renderIt(Graphics2D g2D, int instruction){
+    public void renderIt(Graphics2D g2D, int instruction, boolean header){
 	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int yCoord = 0;
@@ -252,7 +252,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    
 		    if(endElement > (drawObjects.size() - 1))
 			endElement = (drawObjects.size() - 1);
-		    yCoord = yCoord + (startElement * spacing);
+		    
+		    if(instruction==0)
+			yCoord = yCoord + (startElement * spacing);
 		}
 		else if(instruction==2 || instruction==3){
 		    startElement = 0;
@@ -260,6 +262,23 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		}
 
 		g2D.setColor(Color.black);
+		//######
+		//Draw the header if required.
+		//######
+		if(header){
+		    yCoord = yCoord + (spacing);
+		    String headerString = cPTWindow.getHeaderString();
+		    //Need to split the string up into its separate lines.
+		    StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+		    while(st.hasMoreTokens()){
+			g2D.drawString(st.nextToken(), 15, yCoord);
+			yCoord = yCoord + (spacing);
+		    }
+		    lastHeaderEndPosition = yCoord;
+		}
+		//######
+		//End - Draw the header if required.
+		//######
 		for(int i = startElement; i <= endElement; i++){
 		    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
 		    if(i==1){
@@ -409,7 +428,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    base = 20;
 		    startPosition = fmMonoFont.stringWidth("--> ") + base;
 		    stringWidth = (fmMonoFont.stringWidth(UtilFncs.getOutputString(cPTWindow.units(),max,defaultNumberPrecision)))+10;
-		    System.out.println("String: " + UtilFncs.getOutputString(cPTWindow.units(),max,defaultNumberPrecision));
 		    check = fmMonoFont.stringWidth("Exclusive");
 		    if(stringWidth<check)
 			stringWidth = check+5;
@@ -484,7 +502,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    
 		    if(endElement > (drawObjects.size() - 1))
 			endElement = (drawObjects.size() - 1);
-		    yCoord = yCoord + (startElement * spacing);
+		    
+		    if(instruction==0)
+			yCoord = yCoord + (startElement * spacing);
 		}
 		else if(instruction==2 || instruction==3){
 		    startElement = 0;
@@ -503,6 +523,23 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		*/
 		
 		g2D.setColor(Color.black);
+		//######
+		//Draw the header if required.
+		//######
+		if(header){
+		    yCoord = yCoord + (spacing);
+		    String headerString = cPTWindow.getHeaderString();
+		    //Need to split the string up into its separate lines.
+		    StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+		    while(st.hasMoreTokens()){
+			g2D.drawString(st.nextToken(), 15, yCoord);
+			yCoord = yCoord + (spacing);
+		    }
+		    lastHeaderEndPosition = yCoord;
+		}
+		//######
+		//End - Draw the header if required.
+		//######
 		for(int i = startElement; i <= endElement; i++){
 		    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
 		    if(i==1){
@@ -601,8 +638,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 			    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
 			    if((callPathDrawObject.getMappingID()==mappingID)&&(!callPathDrawObject.isParentChild())){
 				Dimension dimension = cPTWindow.getViewportSize();
-				System.out.println("Found Function at index: " + i);
-				System.out.println("Width: " + dimension.getWidth() + "," + "Height: " + dimension.getHeight());
 				cPTWindow.setVerticalScrollBarPosition((i*(trial.getPreferences().getBarSpacing()))-((int)dimension.getHeight()/2));
 				trial.getColorChooser().setHighlightColorID(mappingID);
 				return;
@@ -700,11 +735,14 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     //######
     //ParaProfImageInterface
     //######
-    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+    public Dimension getImageSize(boolean fullScreen, boolean header){
+	Dimension d = null;
 	if(fullScreen)
-	    return this.getPreferredSize();
+	    d = this.getPreferredSize();
 	else
-	    return cPTWindow.getSize();
+	    d = cPTWindow.getSize();
+	d.setSize(d.getWidth(),d.getHeight()+lastHeaderEndPosition);
+	return d;
     }
     //######
     //End - ParaProfImageInterface
@@ -774,6 +812,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
+
+    private int lastHeaderEndPosition = 0;
 
     private boolean debug = false; //Off by default.
     //####################################

@@ -108,7 +108,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    renderIt((Graphics2D) g, 0);
+	    renderIt((Graphics2D) g, 0, false);
 	}
 	catch(Exception e){
 	    System.out.println(e);
@@ -129,12 +129,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	renderIt(g2, 2);
+	renderIt(g2, 2, false);
     
 	return Printable.PAGE_EXISTS;
     }
 
-    public void renderIt(Graphics2D g2D, int instruction){
+    public void renderIt(Graphics2D g2D, int instruction, boolean header){
 	try{
 	    if(this.debug()){
 		System.out.println("####################################");
@@ -275,7 +275,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		if(endElement > (list.size() - 1))
 		    endElement = (list.size() - 1);
 		
-		yCoord = yCoord + (startElement * barSpacing);
+		if(instruction==0)
+		    yCoord = yCoord + (startElement * barSpacing);
 	    }
 	    else if(instruction==2 || instruction==3){
 		startElement = 0;
@@ -284,6 +285,25 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 
 	    //Check for group membership.
 	    groupMember = gME.isGroupMember(trial.getColorChooser().getGroupHighlightColorID());
+
+	    //######
+	    //Draw the header if required.
+	    //######
+	    if(header){
+		yCoord = yCoord + (barSpacing);
+		String headerString = mDWindow.getHeaderString();
+		//Need to split the string up into its separate lines.
+		StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+		while(st.hasMoreTokens()){
+		    g2D.drawString(st.nextToken(), 15, yCoord);
+		    yCoord = yCoord + (barSpacing);
+		}
+		lastHeaderEndPosition = yCoord;
+	    }
+	    //######
+	    //End - Draw the header if required.
+	    //######
+
 
 	    yCoord = yCoord + (barSpacing); //Still need to update the yCoord even if the mean bar is not drawn.
 	    if(startElement==0)
@@ -596,11 +616,14 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     //######
     //ParaProfImageInterface
     //######
-    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+    public Dimension getImageSize(boolean fullScreen, boolean header){
+	Dimension d = null;
 	if(fullScreen)
-	    return this.getPreferredSize();
+	    d = this.getPreferredSize();
 	else
-	    return mDWindow.getSize();
+	    d = mDWindow.getSize();
+	d.setSize(d.getWidth(),d.getHeight()+lastHeaderEndPosition);
+	return d;
     }
     //######
     //End - ParaProfImageInterface
@@ -680,6 +703,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     private JPopupMenu popup2 = new JPopupMenu();
     private JPopupMenu popup3 = new JPopupMenu();
     private Object clickedOnObject = null;
+
+    private int lastHeaderEndPosition = 0;
     
     private boolean debug = false; //Off by default.
     //####################################

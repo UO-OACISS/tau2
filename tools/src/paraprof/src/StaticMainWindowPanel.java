@@ -309,7 +309,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    renderIt((Graphics2D) g, 0);
+	    renderIt((Graphics2D) g, 0, false);
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "SMWP06");
@@ -329,12 +329,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	renderIt(g2, 2);
+	renderIt(g2, 2, false);
     
 	return Printable.PAGE_EXISTS;
     }
   
-    public void renderIt(Graphics2D g2D, int instruction){
+    public void renderIt(Graphics2D g2D, int instruction, boolean header){
 	try{
 	    list = sMWindow.getData();
 	    
@@ -428,6 +428,24 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	    //######
 	    //End - Set clipping.
+	    //######
+
+	    //######
+	    //Draw the header if required.
+	    //######
+	    if(header){
+		yCoord = yCoord + (barSpacing);
+		String headerString = sMWindow.getHeaderString();
+		//Need to split the string up into its separate lines.
+		StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+		while(st.hasMoreTokens()){
+		    g2D.drawString(st.nextToken(), 15, yCoord);
+		    yCoord = yCoord + (barSpacing);
+		}
+		lastHeaderEndPosition = yCoord;
+	    }
+	    //######
+	    //End - Draw the header if required.
 	    //######
 
 	    //######
@@ -974,11 +992,14 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     //######
     //ParaProfImageInterface
     //######
-    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+    public Dimension getImageSize(boolean fullScreen, boolean header){
+	Dimension d = null;
 	if(fullScreen)
-	    return this.getPreferredSize();
+	    d = this.getPreferredSize();
 	else
-	    return sMWindow.getSize();
+	    d = sMWindow.getSize();
+	d.setSize(d.getWidth(),d.getHeight()+lastHeaderEndPosition);
+	return d;
     }
     //######
     //End - ParaProfImageInterface
@@ -1113,6 +1134,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     //######
     //End - Some misc stuff for the paintComponent function.
     //######
+
+    private int lastHeaderEndPosition = 0;
 
     private boolean debug = false; //Off by default.
     //####################################

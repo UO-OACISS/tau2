@@ -91,7 +91,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    renderIt((Graphics2D) g, 0);
+	    renderIt((Graphics2D) g, 0, false);
 	}
 	catch(Exception e){
 	    System.out.println(e);
@@ -112,12 +112,12 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	renderIt(g2, 2);
+	renderIt(g2, 2, false);
     
 	return Printable.PAGE_EXISTS;
     }
   
-    public void renderIt(Graphics2D g2D, int instruction){
+    public void renderIt(Graphics2D g2D, int instruction, boolean header){
   	try{ 
 	    list = tDWindow.getData();
 
@@ -264,7 +264,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		if(endElement > (list.size() - 1))
 		    endElement = (list.size() - 1);
 		
-		yCoord = yCoord + (startElement * barSpacing);
+		if(instruction==0)
+		    yCoord = yCoord + (startElement * barSpacing);
 	    }
 	    else if(instruction==2 || instruction==3){
 		startElement = 0;
@@ -280,6 +281,23 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		return;
 	    }
 
+	    //######
+	    //Draw the header if required.
+	    //######
+	    if(header){
+		yCoord = yCoord + (barSpacing);
+		String headerString = tDWindow.getHeaderString();
+		//Need to split the string up into its separate lines.
+		StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+		while(st.hasMoreTokens()){
+		    g2D.drawString(st.nextToken(), 15, yCoord);
+		    yCoord = yCoord + (barSpacing);
+		}
+		lastHeaderEndPosition = yCoord;
+	    }
+	    //######
+	    //End - Draw the header if required.
+	    //######
 	    for(int i = startElement; i <= endElement; i++){   
 		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
 		if(windowType==0){
@@ -545,11 +563,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     //######
     //ParaProfImageInterface
     //######
-    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+    public Dimension getImageSize(boolean fullScreen, boolean header){
+	Dimension d = null;
 	if(fullScreen)
-	    return this.getPreferredSize();
+	    d = this.getPreferredSize();
 	else
-	    return tDWindow.getSize();
+	    d = tDWindow.getSize();
+	d.setSize(d.getWidth(),d.getHeight()+lastHeaderEndPosition);
+	return d;
     }
     //######
     //End - ParaProfImageInterface
@@ -626,6 +647,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
   
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
+
+    private int lastHeaderEndPosition = 0;
 
     private boolean debug = false; //Off by default.
     //####################################

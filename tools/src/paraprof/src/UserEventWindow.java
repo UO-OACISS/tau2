@@ -507,6 +507,17 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     public int getValueType(){
 	return valueType;}
 
+    public Dimension getViewportSize(){
+	return sp.getViewport().getExtentSize();}
+
+    public Rectangle getViewRect(){
+	return sp.getViewport().getViewRect();}
+
+    public void setVerticalScrollBarPosition(int position){
+	JScrollBar scrollBar = sp.getVerticalScrollBar();
+	scrollBar.setValue(position);
+    }
+
     //######
     //Panel header.
     //######

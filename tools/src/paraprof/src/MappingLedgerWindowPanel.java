@@ -120,7 +120,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    renderIt((Graphics2D) g, 0);
+	    renderIt((Graphics2D) g, 0, false);
 	}
 	catch(Exception e){
 	    System.out.println(e);
@@ -141,12 +141,12 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	renderIt(g2, 2);
+	renderIt(g2, 2, false);
     
 	return Printable.PAGE_EXISTS;
     }
     
-    public void renderIt(Graphics2D g2D, int instruction){
+    public void renderIt(Graphics2D g2D, int instruction, boolean header){
   	try{
 	    list = mLWindow.getData();
 

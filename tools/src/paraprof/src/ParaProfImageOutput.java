@@ -84,9 +84,9 @@ public class ParaProfImageOutput{
 		    
 		    //Draw to this graphics object.
 		    if(paraProfImageOptionsPanel.isFullScreen())
-			ref.renderIt(g2D, 2);
+			ref.renderIt(g2D, 2, paraProfImageOptionsPanel.isPrependHeader());
 		    else
-			ref.renderIt(g2D, 1);
+			ref.renderIt(g2D, 1, paraProfImageOptionsPanel.isPrependHeader());
 		    
 		    //Now write the image to file.
 		    ImageWriter writer = null;

@@ -70,7 +70,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    renderIt((Graphics2D) g, 0);
+	    renderIt((Graphics2D) g, 0, false);
 	}
 	catch(Exception e){
 	    System.out.println(e);
@@ -91,18 +91,33 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	renderIt(g2, 2);
+	renderIt(g2, 2, false);
     
 	return Printable.PAGE_EXISTS;
     }
 
-    public void renderIt(Graphics2D g2D, int instruction){
+    public void renderIt(Graphics2D g2D, int instruction, boolean header){
 	try{
+	    if(this.debug()){
+		System.out.println("####################################");
+		System.out.println("UserEventWindowPanel.renderIt(...)");
+		System.out.println("####################################");
+	    }
+
+	    list = uEWindow.getData();
+
+	    //######
+	    //Some declarations.
+	    //######
 	    double value = 0.0;
 	    double maxValue = 0.0;
 	    int stringWidth = 0;
 	    int yCoord = 0;
 	    int barXCoord = barLength + textOffset;
+	    SMWThreadDataElement sMWThreadDataElement = null;
+	    //######
+	    //Some declarations.
+	    //######
 	    
 	    //To make sure the bar details are set, this
 	    //method must be called.
@@ -136,7 +151,9 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    default:
 		UtilFncs.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
 	    }
-
+	    if(this.debug())
+		System.out.println("Max value: " + maxValue);
+	    
 	    stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0,maxValue,ParaProf.defaultNumberPrecision)); //No units required in this window.  Thus pass in 0 for type.
 	    barXCoord = barXCoord + stringWidth;
 	    //***
@@ -153,62 +170,102 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 
 	    int yBeg = 0;
 	    int yEnd = 0;
+	    int startElement = 0;
+	    int endElement = 0;
 	    Rectangle clipRect = null;
+	    Rectangle viewRect = null;
 
-	    if(instruction==1 || instruction==2){
-		yBeg = 0;
-		yEnd = yPanelSize;
+	    if(instruction==0||instruction==1){
+		if(instruction==0){
+		    clipRect = g2D.getClipBounds();
+		    yBeg = (int) clipRect.getY();
+		    yEnd = (int) (yBeg + clipRect.getHeight());
+		    /*
+		      System.out.println("Clipping Rectangle: xBeg,xEnd: "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+
+		      " yBeg,yEnd: "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
+		    */
+		}
+		else{
+		    viewRect = uEWindow.getViewRect();
+		    yBeg = (int) viewRect.getY();
+		    yEnd = (int) (yBeg + viewRect.getHeight());
+		    /*
+		      System.out.println("Viewing Rectangle: xBeg,xEnd: "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+
+					   " yBeg,yEnd: "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
+		    */
+		}
+		startElement = ((yBeg - yCoord) / barSpacing) - 1;
+		endElement  = ((yEnd - yCoord) / barSpacing) + 1;
+		
+		if(startElement < 0)
+		    startElement = 0;
+		
+		if(endElement < 0)
+		    endElement = 0;
+		
+		if(startElement > (list.size() - 1))
+		    startElement = (list.size() - 1);
+		
+		if(endElement > (list.size() - 1))
+		    endElement = (list.size() - 1);
+		
+		if(instruction==0)
+		    yCoord = yCoord + (startElement * barSpacing);
 	    }
-	    else{
-		clipRect = g2D.getClipBounds();
-		yBeg = (int) clipRect.getY();
-		yEnd = (int) (yBeg + clipRect.getHeight());
-		yEnd = yEnd + barSpacing;
+	    else if(instruction==2 || instruction==3){
+		startElement = 0;
+		endElement = ((list.size()) - 1);
 	    }
 
-	    //Some points to note about drawing. When we draw, swing begins at the given y coord,
-	    //and draws down towards the bottom of the panel. Given that we use clipping to determine
-	    //what to draw, we have to be careful to draw everytime our clipping coords intersect
-	    //the object. Otherwise, we run the risk of either not drawing when we need to, or 
-	    //clipping out sections that we would like to be redrawn. It is no good just increasing
-	    //what is being drawn to something larger than the clip rectangle, because that 
-	    //will just be clipped down to the clipping rectangle size.
-	    //As an example, change the marked sections below, and observe the effects
-	    //when scrolling down ~20 pixels, and the gradually scrolling back up.
+	    //######
+	    //Draw the header if required.
+	    //######
+	    if(header){
+		yCoord = yCoord + (barSpacing);
+		String headerString = uEWindow.getHeaderString();
+		//Need to split the string up into its separate lines.
+		StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+		while(st.hasMoreTokens()){
+		    g2D.drawString(st.nextToken(), 15, yCoord);
+		    yCoord = yCoord + (barSpacing);
+		}
+		lastHeaderEndPosition = yCoord;
+	    }
+	    //######
+	    //End - Draw the header if required.
+	    //######
 
 	    //######
 	    //Draw thread information for this mapping.
 	    //######
-	    for(Enumeration e = (uEWindow.getData()).elements(); e.hasMoreElements() ;){
-		tmpSMWThreadDataElement = (SMWThreadDataElement) e.nextElement();
+	    for(int i = startElement; i <= endElement; i++){
+		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
 		switch(uEWindow.getValueType()){
 		case 12:
-			value = tmpSMWThreadDataElement.getUserEventNumberValue();
+		    value = sMWThreadDataElement.getUserEventNumberValue();
 		    break;
 		case 14:
-			value = tmpSMWThreadDataElement.getUserEventMinValue();
+		    value = sMWThreadDataElement.getUserEventMinValue();
 		    break;
 		case 16:
-		    value = tmpSMWThreadDataElement.getUserEventMaxValue();
+		    value = sMWThreadDataElement.getUserEventMaxValue();
 		    break;
 		case 18:
-		    value = tmpSMWThreadDataElement.getUserEventMeanValue();
+		    value = sMWThreadDataElement.getUserEventMeanValue();
 		    break;
 		default:
 		    UtilFncs.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
 		}
+		if(this.debug())
+		    System.out.println("Value: " + value);
 		
 		//For consistancy in drawing, the y coord is updated at the beginning of the loop.
 		yCoord = yCoord + (barSpacing);
-		
-		//Now select whether to draw this thread based on clip rectangle.
-		if((yCoord >= yBeg) && (yCoord <= yEnd)){
-		    drawBar(g2D, fmFont, value, maxValue,
-			    "n,c,t " + (tmpSMWThreadDataElement.getNodeID()) +
-			    "," + (tmpSMWThreadDataElement.getContextID()) +
-			    "," + (tmpSMWThreadDataElement.getThreadID()),
-			    barXCoord, yCoord, barHeight, groupMember, instruction);
-		}
+		drawBar(g2D, fmFont, value, maxValue,
+			"n,c,t " + (sMWThreadDataElement.getNodeID()) +
+			"," + (sMWThreadDataElement.getContextID()) +
+			"," + (sMWThreadDataElement.getThreadID()),
+			barXCoord, yCoord, barHeight, groupMember, instruction);
 	    }
 	    //######
 	    //End - Draw thread information for this mapping.
@@ -328,11 +385,14 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     //######
     //ParaProfImageInterface
     //######
-    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+    public Dimension getImageSize(boolean fullScreen, boolean header){
+	Dimension d = null;
 	if(fullScreen)
-	    return this.getPreferredSize();
+	    d = this.getPreferredSize();
 	else
-	    return uEWindow.getSize();
+	    d = uEWindow.getSize();
+	d.setSize(d.getWidth(),d.getHeight()+lastHeaderEndPosition);
+	return d;
     }
     //######
     //End - ParaProfImageInterface
@@ -403,11 +463,13 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private boolean groupMember = false;
     private ParaProfTrial trial = null;
     private UserEventWindow uEWindow = null;
-    private SMWThreadDataElement tmpSMWThreadDataElement = null;
+    private Vector list = null;
     int xPanelSize = 0;
     int yPanelSize = 0;
   
     private JPopupMenu popup = new JPopupMenu();
+
+    private int lastHeaderEndPosition = 0;
 
     private boolean debug = false; //Off by default.
     //####################################

@@ -1,3 +1,4 @@
+
 /* 
    
 StatWindowPanel.java
@@ -19,7 +20,7 @@ import javax.swing.event.*;
 import java.awt.geom.*;
 import java.awt.print.*;
 
-public class StatWindowPanel extends JPanel implements ActionListener, MouseListener, Printable{   
+public class StatWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
     public StatWindowPanel(){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -76,7 +77,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    drawPage((Graphics2D) g, false);
+	    renderIt((Graphics2D) g, 0, false);
 	}
 	catch(Exception e){
 	    System.out.println(e);
@@ -102,7 +103,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	return Printable.PAGE_EXISTS;
     }  
 
-    public void drawPage(Graphics2D g2D, boolean print){
+    public void renderIt(Graphics2D g2D, int instruction, boolean header){ //Got to here!!!!!
 	try{
 	    SMWThreadDataElement sMWThreadDataElement = null;
 	    Color tmpColor;
