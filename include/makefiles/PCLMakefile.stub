@@ -72,7 +72,7 @@ endif
 ifeq ($(SYSTEM),Linux)
 TARGET_SYSTEM	= PENTIUM_LINUX
 CPU_NAME	= i386
-LOADLIBS	= -L$(PCLDIR)/bin/$(CPU_NAME) -lpcl -lpperf
+LOADLIBS	= -L$(PCLDIR)/bin/$(CPU_NAME) -lpcl
 endif
 
 
