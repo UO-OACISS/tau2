@@ -729,6 +729,13 @@ case $machine in
          cxx_compiler=c++
      fi
 
+     # To fix the  make install  clash with INSTALL file in file systems 
+     # that are case insensitive. Move INSTALL file to INSTALL.txt 
+     if [ -f INSTALL ]
+       then
+	mv INSTALL INSTALL.txt
+     fi
+
      if [ $c_compiler = default ]
        then
          c_compiler=cc             
@@ -954,6 +961,14 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
   if [ $cxx_compiler = g++ ]
     then
       fixmakeargs="$fixmakeargs SGIGNU"
+  fi
+fi
+
+if [ $machine = apple ]
+  then
+  if [ $cxx_compiler = g++ ]
+    then
+      fixmakeargs="$fixmakeargs APPLECXX"
   fi
 fi
 
