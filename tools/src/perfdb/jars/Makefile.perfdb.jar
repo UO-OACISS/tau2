@@ -1,0 +1,15 @@
+JAR_CONTENT = \
+	perfdb \
+	perfdb/configure \
+	perfdb/loadxml \
+	perfdb/util  \
+	perfdb/util/rdb \
+	perfdb/util/io  \
+	perfdb/analysisutil \
+	perfdb/dbmanager \
+
+#MANIFEST = manifest.txt
+
+include $(PERFDB_HOME)/Makefile
+
+

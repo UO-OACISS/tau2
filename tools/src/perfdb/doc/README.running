@@ -1,0 +1,69 @@
+1.a) createdb perfdb
+1.b) loadschema
+
+Only do this once.  It creates the tables.
+
+First, make sure that the /etc/postgres/postgresql.conf file allows TCP/IP connections.  Make sure that /etc/postgres/pg_hba.conf allows the user from the host you are specifying.  Make sure all that is configured correctly.  That will allow everything else to work.
+
+If you want to start fresh, run psql with the following commands: 
+	drop database expdb;
+	create database expdb;
+
+1) loadapp
+
+This will create an application record in your database.  I had to change a column name to "Para_diag".
+
+You can specify whether you want this application in its own table, or in the general application table.  I am not sure why.  Select "No" for now (it is the default).
+
+This command will output an application ID.
+
+2) loadexp
+
+This will create an experimet record in your database, relevant to an application record.  It will need to know some things: 
+
+	Whether or not the experiment needs its own table.
+		Say "No" (default).
+	The name of the application.
+		Enter "example".
+	The version of the application for this experiment.
+		Enter "1.0".
+	System information file.  Not sure what this is yet.
+		Enter "s.xml".
+	Configuration information file.  Not sure what this is yet.
+		Enter "s.xml".
+	Compiler information file.  Not sure what this is yet.
+		Enter "s.xml".
+	Instrumentation information file.  Not sure what this is yet.
+		Enter "s.xml".
+
+This command will output an experiment ID.
+
+3) translate
+
+This will convert your TAU data to XML, and allow you to import it.
+
+It will ask for:
+	Problem size:
+		relevant to the trial.  Some dummy value like "250" is good.
+	Application ID:
+		Enter the ID of the application.
+	Experiment ID:
+		Enter the ID of the experiment.
+
+4) loadtrial
+
+This will load the XML data into the database, relevant to an application/experiment combo.
+
+The first time I ran it, I got an array out of bounds exception:
+khuck@huckpad:~/research/PerfDB/bin$ !$
+loadtrial
+TRIALS
+insert into Trials (expid, time, metric, problemsize, nodenum, contextpnode, threadpcontext, xmlfileid) values (1, 'Thu Apr 10 01:09:39 PDT 2003', 'time', 250,
+1, 1, 2, 1);
+java.lang.ArrayIndexOutOfBoundsException
+        at org.apache.xerces.framework.XMLParser.parse(XMLParser.java:965)
+        at com.perfdb.loadxml.Load.parse(Load.java:60)
+        at com.perfdb.loadxml.Main.storeDocument(Main.java:365)
+        at com.perfdb.loadxml.Main.main(Main.java:418)
+Was unable to load document from ../bin/pprof.xml
+

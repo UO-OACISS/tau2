@@ -1,13 +1,12 @@
-PERFDB_HOME = /Users/lili/PerfDB
-
 PACKAGES = \
-	com.translator  \
-	com.perfdb.util.io \
-	com.perfdb.util.dbinterface \
-	com.perfdb \
-	com.perfdb.loadxml \
-	com.perfdb.analysisutil \
-	com.perfdb.dbmanager \
+	translator  \
+	perfdb.util.io \
+	perfdb.util.dbinterface \
+	perfdb \
+	perfdb.loadxml \
+	perfdb.analysisutil \
+	perfdb.dbmanager \
+	perfdb.configure \
 
 JARS = \
 	perfdb.jar  \
