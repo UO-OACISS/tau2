@@ -1755,7 +1755,7 @@ EOF
     mpi_include=-I$mpiinc
   fi
      
-  cat <<EOF > mpi2.C
+  cat <<EOF > mpi2.c
   #include <mpi.h>
 
   int foo(MPI_Win win)
@@ -1766,7 +1766,7 @@ EOF
   }
 EOF
 
-  cat <<EOF > mpi2iorequest.C
+  cat <<EOF > mpi2iorequest.c
   #include <mpi.h>
 
   int foo (MPI_File fh, void *buf, int count,
@@ -1777,7 +1777,7 @@ EOF
   }
 EOF
 
-cat <<EOF > mpi2attr.C
+cat <<EOF > mpi2attr.c
   #include <mpi.h>
 
   int foo(MPI_Win_copy_attr_function *f1, MPI_Type_copy_attr_function *f2, 
@@ -1787,7 +1787,7 @@ cat <<EOF > mpi2attr.C
   }
 EOF
 
-  cat <<EOF > mpi2typeex.C
+  cat <<EOF > mpi2typeex.c
   #include <mpi.h>
 
   int f1( void * sendbuf, void * recvbuf, int count, MPI_Datatype datatype
@@ -1802,7 +1802,7 @@ EOF
   }
 EOF
 
-  cat <<EOF > mpi2add.C
+  cat <<EOF > mpi2add.c
   #include <mpi.h>
 
   int f1( int * errorclass)
@@ -1817,7 +1817,7 @@ EOF
 
 EOF
 
-  cat <<EOF > mpi2grequest.C
+  cat <<EOF > mpi2grequest.c
   #include <mpi.h>
 
   int foo(MPI_Grequest_query_function *grequest_query_fn,
@@ -1838,7 +1838,7 @@ EOF
   }
 
 EOF
-  cat <<EOF > mpi2datarep.C
+  cat <<EOF > mpi2datarep.c
   #include <mpi.h>
 
   int foo( char * datarep, MPI_Datarep_conversion_function * read_conversion_fn, MPI_Datarep_conversion_function * write_conversion_fn, MPI_Datarep_extent_function * dtype_file_extent_fn, void * extra_state)
@@ -1849,7 +1849,7 @@ EOF
 
 EOF
 
-  cat <<EOF > mpi2errhandler.C
+  cat <<EOF > mpi2errhandler.c
   #include <mpi.h>
 
   int foo (MPI_Comm_errhandler_fn *a, MPI_Errhandler *b)
@@ -1863,7 +1863,7 @@ EOF
   }
 EOF
 
-  cat <<EOF > mpi2hpconst.C
+  cat <<EOF > mpi2hpconst.c
   #include <mpi.h>
   /* HP MPI uses const char * instead of char * in the 
      prototypes of the following routines */
@@ -1886,7 +1886,7 @@ EOF
 
 EOF
 
-cat << EOF > mpistatus.C
+cat << EOF > mpistatus.c
 
   #include <mpi.h>
   #include <memory.h>
@@ -1903,19 +1903,19 @@ EOF
     orig_useropt="$orig_useropt -64"
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi_thread_test.c  1> /dev/null 2>&1
   then
     echo "Thread-safe MPI interface is defined... "
     fixmakeargs="$fixmakeargs MPI_THREADED"
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2.c  1> /dev/null 2>&1
   then
     echo "MPI-2 Interface is defined..."
     fixmakeargs="$fixmakeargs MPI2"
     mpi2=yes
   fi
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2grequest.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2grequest.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1924,7 +1924,7 @@ EOF
     fi
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2iorequest.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2iorequest.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1934,7 +1934,7 @@ EOF
     fi
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2datarep.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2datarep.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1943,7 +1943,7 @@ EOF
     fi
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2errhandler.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2errhandler.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1952,7 +1952,7 @@ EOF
     fi
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2hpconst.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2hpconst.c  1> /dev/null 2>&1
   then
     if [ $mpi2 = yes ]  
     then 
@@ -1961,25 +1961,25 @@ EOF
     fi
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2attr.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2attr.c  1> /dev/null 2>&1
   then
     echo "MPI-2 MPI*attr_functions are defined..."
     fixmakeargs="$fixmakeargs MPIATTR"
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2typeex.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2typeex.c  1> /dev/null 2>&1
   then
     echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
     fixmakeargs="$fixmakeargs MPITYPEEX"
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi2add.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpi2add.c  1> /dev/null 2>&1
   then
     echo "MPI-2 MPI_Add_error* functions are defined..."
     fixmakeargs="$fixmakeargs MPIADDERROR"
   fi
 
-  if $cxx_compiler $orig_useropt $mpi_include -c mpistatus.C  1> /dev/null 2>&1
+  if $c_compiler $orig_useropt $mpi_include -c mpistatus.c  1> /dev/null 2>&1
   then
     echo "MPI_Status f2c/c2f found..."
   else
@@ -1987,7 +1987,7 @@ EOF
     fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
   fi
 
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C mpi2hpconst.o mpi2hpconst.C mpi2attr.o mpi2attr.C mpi2typeex.o mpi2typeex.C mpi2add.o mpi2add.C mpistatus.C mpistatus.o
+  /bin/rm -rf mpi_thread_test.c mpi_thread_test.o mpi2.c mpi2.o mpi2iorequest.o mpi2iorequest.c mpi2grequest.o mpi2grequest.c mpi2datarep.c mpi2datarep.o mpi2errhandler.o mpi2errhandler.c mpi2hpconst.o mpi2hpconst.c mpi2attr.o mpi2attr.c mpi2typeex.o mpi2typeex.c mpi2add.o mpi2add.c mpistatus.o mpistatus.c
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
