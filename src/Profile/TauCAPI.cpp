@@ -36,10 +36,6 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef TAU_MPI
-#include <mpi.h>
-#endif /* TAU_MPI */
-
 ///////////////////////////////////////////////////////////////////////////
 // Wrappers for corresponding C++ functions follow
 
@@ -271,31 +267,27 @@ extern "C" TauGroup_t Tau_disable_all_groups(void)
   return TAU_DISABLE_ALL_GROUPS();
 }
 
+/* TAU's totalnodes implementation follows */
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int totalnodes(void)
+extern "C" int tau_totalnodes(int set_or_get, int value)
 {
-#ifdef TAU_MPI
-  static int nodes = -1;
-  if (nodes == -1)
+  static int nodes = 1;
+  if (set_or_get == 1) /* SET (in is 1) , GET (out is 0) */
   {
-    PMPI_Comm_size(MPI_COMM_WORLD, &nodes);
+    nodes = value;
   }
   return nodes;
-#else  /* TAU_MPI */
-  return 1; 
-#endif /* TAU_MPI */
 }
 
 #ifdef TAU_MPI
 TAU_REGISTER_EVENT(sendevent,"Message size sent to all nodes");
 TauUserEvent **u;
-extern "C" int totalnodes(void);
 int register_events(void)
 {
   char str[256];
   int i;
-  u = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*totalnodes());
-  for (i =0; i < totalnodes(); i++)
+  u = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*tau_totalnodes(0,0));
+  for (i =0; i < tau_totalnodes(0,0); i++)
   {
     sprintf(str, "Message size sent to node %d", i);
     u[i] = (TauUserEvent *) new TauUserEvent((const char *)str);
@@ -417,7 +409,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2002/11/05 02:11:44 $
- * VERSION: $Id: TauCAPI.cpp,v 1.27 2002/11/05 02:11:44 sameer Exp $
+ * $Revision: 1.28 $   $Date: 2002/11/05 03:12:15 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.28 2002/11/05 03:12:15 sameer Exp $
  ***************************************************************************/
 

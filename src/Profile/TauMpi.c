@@ -158,7 +158,7 @@ static int procid_0;
 
   
 
-extern int totalnodes(void);
+extern int tau_totalnodes(int set_or_get, int value);
 
 
 void ProcessWaitTest_0 ( request, status, note )
@@ -202,7 +202,7 @@ char *note;
     } else {
       if (PMPI_Get_count( status, MPI_BYTE, &size ) == MPI_SUCCESS)
       {
-        if ((status->MPI_SOURCE < totalnodes()) && 
+        if ((status->MPI_SOURCE < tau_totalnodes(0,0)) && 
 	    (status->MPI_SOURCE >= 0) &&
 	    (size != MPI_UNDEFINED) &&
 	    (size >= 0))
@@ -1240,6 +1240,7 @@ int * argc;
 char *** argv;
 {
   int  returnVal;
+  int  size;
 
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
@@ -1251,6 +1252,10 @@ char *** argv;
 
   PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
   TAU_PROFILE_SET_NODE(procid_0 ); 
+
+  PMPI_Comm_size( MPI_COMM_WORLD, &size );
+  tau_totalnodes(1, size); /* Set the totalnodes */
+
   requests_head_0 = requests_tail_0 = 0;
 
   return returnVal;
@@ -1265,6 +1270,7 @@ int required;
 int *provided;
 {
   int  returnVal;
+  int  size;
 
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
@@ -1276,6 +1282,10 @@ int *provided;
 
   PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
   TAU_PROFILE_SET_NODE(procid_0 );
+
+  PMPI_Comm_size( MPI_COMM_WORLD, &size );
+  tau_totalnodes(1, size); /* Set the totalnodes */
+
   requests_head_0 = requests_tail_0 = 0;
 
   return returnVal;
@@ -2929,3 +2939,5 @@ int * top_type;
 
   return returnVal;
 }
+
+
