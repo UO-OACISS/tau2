@@ -15,6 +15,7 @@
 # include <stdlib.h>
 # include <string.h>
 # include <sys/types.h>
+# include <sys/time.h>
 # include <fcntl.h>
 # include <signal.h>
 # include <unistd.h>
@@ -76,7 +77,13 @@ unsigned long long pcxx_GetUSecLong(int tid)
   //is active or not).
   return (unsigned long long) tracerValues[0];
 #else //TAU_MULTIPLE_COUNTERS
+#if  (!(defined (TAU_LINUX_TIMERS) || defined (TAU_WINDOWS) || defined (SGI_TIMERS) || defined (CRAY_TIMERS) || defined (TULIP_TIMERS) ))
+  struct timeval tp;
+  gettimeofday (&tp, 0);
+  return ( (unsigned long long) tp.tv_sec * 1000000L + tp.tv_usec );
+#else /* TIMERS... */
   return (unsigned long long) RtsLayer::getUSecD(tid);
+#endif /* TIMERS ... */
 #endif // TAU_MULTIPLE_COUNTERS
 }
 
