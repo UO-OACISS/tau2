@@ -368,19 +368,10 @@ void Profiler::Stop(int tid)
         }
 #endif /* TAU_COMPENSATE */
 #else //TAU_MULTIPLE_COUNTERS
-	double CurrentTime[MAX_TAU_COUNTERS];
-	for(int j=0;j<MAX_TAU_COUNTERS;j++){
-	  CurrentTime[j]=0;
-	}
 	//Get the current counter values.
 	RtsLayer::getUSecD(tid, CurrentTime);
 
 #ifdef PROFILING_ON
-	double TotalTime[MAX_TAU_COUNTERS];
-	for(int i=0;i<MAX_TAU_COUNTERS;i++){
-	  TotalTime[i]=0;
-	}
-
 	for(int k=0;k<MAX_TAU_COUNTERS;k++){
 	  TotalTime[k] = CurrentTime[k] - StartTime[k];
 	}
@@ -2607,9 +2598,9 @@ void Profiler::AddNumChildren(long value)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.89 $   $Date: 2004/01/15 23:44:33 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.89 2004/01/15 23:44:33 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: bertie $
+ * $Revision: 1.90 $   $Date: 2004/01/28 21:49:53 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.90 2004/01/28 21:49:53 bertie Exp $ 
  ***************************************************************************/
 
 	

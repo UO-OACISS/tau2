@@ -150,6 +150,8 @@ public:
 	double StartTime;
 #else //TAU_MULTIPLE_COUNTERS
 	double StartTime[MAX_TAU_COUNTERS];
+	double CurrentTime[MAX_TAU_COUNTERS];
+	double TotalTime[MAX_TAU_COUNTERS];
 #endif//TAU_MULTIPLE_COUNTERS
 	FunctionInfo * ThisFunction;
 #ifdef TAU_CALLPATH
@@ -194,7 +196,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.48 $   $Date: 2004/01/09 01:14:07 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.48 2004/01/09 01:14:07 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: bertie $
+ * $Revision: 1.49 $   $Date: 2004/01/28 21:54:49 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.49 2004/01/28 21:54:49 bertie Exp $ 
  ***************************************************************************/
