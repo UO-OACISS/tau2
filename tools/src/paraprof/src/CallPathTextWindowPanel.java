@@ -129,60 +129,157 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		ListIterator l2 = null;
 		ListIterator l3 = null;
 		GlobalMapping gm = trial.getGlobalMapping();
-		GlobalMappingElement gme1 = null;
-		GlobalMappingElement gme2 = null;
+		GlobalMappingElement gme = null;
+		CallPathDrawObject callPathDrawObject = null;
 		Integer listValue = null;
 		String s = null;
-		
-		
-		
-		
-		yCoord = yCoord + (spacing);
-		g2D.setColor(Color.black);
-		l1 = cPTWindow.getDataIterator();
-		while(l1.hasNext()){
-		    gme1 = (GlobalMappingElement) l1.next();
-		    //Don't draw callpath mapping objects.
-		    if(!(gme1.isCallPathObject())){
-			l2 = gme1.getParentsIterator();
-			while(l2.hasNext()){
-			    listValue = (Integer)l2.next();
-			    gme2 = gm.getGlobalMappingElement(listValue.intValue(),0);
-			    l3 = gme1.getCallPathIDParents(listValue.intValue());
-			    s = "        parent callpath(s)";
-			    while(l3.hasNext()){
-				s=s+":["+(((Integer)l3.next()).toString())+"]";
-			    }
-			    g2D.drawString("    "+gme2.getMappingName()+"["+gme2.getGlobalID()+"]"+s, 20, yCoord);
-			    yCoord = yCoord + (spacing);
-			}
-			g2D.drawString("--> "+gme1.getMappingName()+"["+gme1.getGlobalID()+"]", 20, yCoord);
-			yCoord = yCoord + (spacing);
-			l2 = gme1.getChildrenIterator();
-			while(l2.hasNext()){
-			    listValue = (Integer)l2.next();
-			    gme2 = gm.getGlobalMappingElement(listValue.intValue(),0);
-			    l3 = gme1.getCallPathIDChildren(listValue.intValue());
-			    s = "        child callpath(s)";
-			    while(l3.hasNext()){
-				s=s+":["+(((Integer)l3.next()).toString())+"]";
-			    }
-			    g2D.drawString("    "+gme2.getMappingName()+"["+gme2.getGlobalID()+"]"+s, 20, yCoord);
-			    yCoord = yCoord + (spacing);
-			}
-			
-			yCoord = yCoord + (spacing);
-			yCoord = yCoord + (spacing);
-		    }
-		}
-		
-		if(this.debug){
-		    g2D.drawString("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 20, yCoord);
-		    yCoord = yCoord + (spacing);
+				
+		//######
+		//Populate drawObjects vector.
+		//This should only happen once.
+		//######
+		if(drawObjects==null){
+		    drawObjects = new Vector();
+		    //Add five spacer objects representing the column headings.
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+
 		    l1 = cPTWindow.getDataIterator();
 		    while(l1.hasNext()){
-			gme1 = (GlobalMappingElement) l1.next();
-			g2D.drawString("["+gme1.getGlobalID()+"] - "+gme1.getMappingName(), 20, yCoord);
+			gme = (GlobalMappingElement) l1.next();
+			//Don't draw callpath mapping objects.
+			if(!(gme.isCallPathObject())){
+			    l2 = gme.getParentsIterator();
+			    while(l2.hasNext()){
+				listValue = (Integer)l2.next();
+				callPathDrawObject = new CallPathDrawObject(gm.getGlobalMappingElement(listValue.intValue(),0), true, false);
+				drawObjects.add(callPathDrawObject);
+			    }
+			    callPathDrawObject = new CallPathDrawObject(gme, false, false);
+			    drawObjects.add(callPathDrawObject);
+			    l2 = gme.getChildrenIterator();
+			    while(l2.hasNext()){
+				listValue = (Integer)l2.next();
+				callPathDrawObject = new CallPathDrawObject(gm.getGlobalMappingElement(listValue.intValue(),0), true, false);
+				drawObjects.add(callPathDrawObject);
+			    }
+			    drawObjects.add(new CallPathDrawObject(null, false, true));
+			    drawObjects.add(new CallPathDrawObject(null, false, true));
+			}
+		    }
+		}
+		//######
+		//End - Populate drawObjects vector.
+		//######
+
+		//######
+		//Set panel size. 
+		//######
+		if(this.calculatePanelSize()){
+		    for(Enumeration e = drawObjects.elements(); e.hasMoreElements() ;){
+			callPathDrawObject = (CallPathDrawObject) e.nextElement();
+			yHeightNeeded = yHeightNeeded + (spacing);
+			if(!callPathDrawObject.isSpacer()){
+			    length = fmMonoFont.stringWidth(callPathDrawObject.getMappingName()) + 10;
+			    if(xWidthNeeded<length)
+				xWidthNeeded = length;
+			}
+		    }
+
+		    base = 20;
+		    startPosition = fmMonoFont.stringWidth("--> ") + base;
+		    
+		    xWidthNeeded = xWidthNeeded+20;
+		    
+		    boolean sizeChange = false;
+		    //Resize the panel if needed.
+		    if(xWidthNeeded > xPanelSize){
+			xPanelSize = xWidthNeeded+10;
+			sizeChange = true;
+		    }
+		    if(yHeightNeeded > yPanelSize){
+			yPanelSize = yHeightNeeded+10;
+			sizeChange = true;
+		    }
+		    if(sizeChange && instruction==0)
+			revalidate();
+		    this.setCalculatePanelSize(false);
+		}
+		//######
+		//End - Set panel size. 
+		//######
+
+
+		int yBeg = 0;
+		int yEnd = 0;
+		int startElement = 0;
+		int endElement = 0;
+		Rectangle clipRect = null;
+		
+		
+		if(instruction==1 || instruction==2){
+		    startElement = 0;
+		    endElement = ((drawObjects.size()) - 1);
+		}
+		else{
+		    clipRect = g2D.getClipBounds();
+		    yBeg = (int) clipRect.getY();
+		    yEnd = (int) (yBeg + clipRect.getHeight());
+		    
+		    startElement = ((yBeg - yCoord) / spacing) - 1;
+		    endElement  = ((yEnd - yCoord) / spacing) + 1;
+		    
+		    if(startElement < 0)
+			startElement = 0;
+		    
+		    if(endElement < 0)
+			endElement = 0;
+		    
+		    if(startElement > (drawObjects.size() - 1))
+			startElement = (drawObjects.size() - 1);
+		    
+		    if(endElement > (drawObjects.size() - 1))
+			endElement = (drawObjects.size() - 1);
+		    
+		    yCoord = yCoord + (startElement * spacing);
+		}
+
+		g2D.setColor(Color.black);
+		for(int i = startElement; i <= endElement; i++){
+		    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
+		    if(i==1){
+			g2D.drawString("Name[id]", startPosition, yCoord);
+			yCoord = yCoord + spacing;
+		    }
+		    else if(i==2){
+			g2D.drawString("--------------------------------------------------------------------------------", startPosition, yCoord);
+			yCoord = yCoord + spacing;
+		    }
+		    else if(!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()){
+			g2D.drawString("--> ",base, yCoord);
+			int mappingID = callPathDrawObject.getMappingID();
+			if(trial.getColorChooser().getHighlightColorID() == mappingID){
+			    g2D.setColor(Color.red);
+			    g2D.drawString(callPathDrawObject.getMappingName()+"["+mappingID+"]", startPosition, yCoord);
+			    g2D.setColor(Color.black);
+			}
+			else
+			    g2D.drawString(callPathDrawObject.getMappingName()+"["+mappingID+"]", startPosition, yCoord);
+			yCoord = yCoord + (spacing);
+		    }
+		    else if(callPathDrawObject.isSpacer())
+			yCoord = yCoord + spacing;
+		    else{
+			int mappingID = callPathDrawObject.getMappingID();
+			if(trial.getColorChooser().getHighlightColorID() == mappingID){
+			    g2D.setColor(Color.red);
+			    g2D.drawString(callPathDrawObject.getMappingName()+"["+callPathDrawObject.getMappingID()+"]", startPosition, yCoord);
+			    g2D.setColor(Color.black);
+			}
+			else
+			   g2D.drawString(callPathDrawObject.getMappingName()+"["+callPathDrawObject.getMappingID()+"]", startPosition, yCoord); 
 			yCoord = yCoord + (spacing);
 		    }
 		}
@@ -264,7 +361,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 				    d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
 				    d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
 				    d3=d3+gtde.getNumberOfCalls();
-				    s=s+":["+tmpInt+"]";
 				}
 				callPathDrawObject = new CallPathDrawObject(thread.getFunction(listValue.intValue()), true, false);
 				callPathDrawObject.setExclusiveValue(d1);
@@ -328,7 +424,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    }
 		    if(sizeChange && instruction==0)
 			revalidate();
-
 		    this.setCalculatePanelSize(false);
 		}
 		//######
@@ -395,8 +490,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 			yCoord = yCoord + spacing;
 		    }
 		    else if(!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()){
-			g2D.drawString("--> "+ (UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getExclusiveValue(),
-									 ParaProf.defaultNumberPrecision)), base, yCoord);
+			g2D.drawString("--> ", base, yCoord);
+			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getExclusiveValue(),
+									 ParaProf.defaultNumberPrecision), excPos, yCoord);
 			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getInclusiveValue(),
 								ParaProf.defaultNumberPrecision),incPos, yCoord);
 			g2D.drawString(Integer.toString(callPathDrawObject.getNumberOfCalls()), callsPos1, yCoord);

@@ -60,7 +60,7 @@ public class GlobalMapping{
 	    mappingID = mappings[mappingSelection].size();
 	    GlobalMappingElement globalMappingElement = new GlobalMappingElement(capacity);
 	    globalMappingElement.setMappingName(mappingName);
-	    globalMappingElement.setGlobalID(mappingID);
+	    globalMappingElement.setMappingID(mappingID);
 
 	    mappings[mappingSelection].addElement(globalMappingElement);
 

@@ -333,7 +333,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	    double userSecPerCallValueTotal = 0;
 	    int count = 0;
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    int id = globalMappingElement.getGlobalID();
+	    int id = globalMappingElement.getMappingID();
 	    for(Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
 		Node node = (Node) e1.nextElement();
 		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
@@ -450,7 +450,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	    int count = 0;
 	    int userSecPerCallCount = 0;
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    int id = globalMappingElement.getGlobalID();
+	    int id = globalMappingElement.getMappingID();
 	    if(this.debug){
 		this.outputToFile("######");
 		this.outputToFile("GlobalMappingElement: " + globalMappingElement.getMappingName());

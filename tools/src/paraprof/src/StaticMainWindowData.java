@@ -133,7 +133,7 @@ public class StaticMainWindowData{
 	for(Enumeration e = list.elements(); e.hasMoreElements() ;){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
 	    if(globalMappingElement.getMeanValuesSet()){
-		if(globalMapping.displayMapping(globalMappingElement.getGlobalID())){
+		if(globalMapping.displayMapping(globalMappingElement.getMappingID())){
 		    sMWThreadDataElement = new SMWThreadDataElement(trial, -1, -1, -1, globalMappingElement);
 		    sMWThreadDataElement.setSortType(sortType);
 		    newList.addElement(sMWThreadDataElement);

@@ -58,8 +58,8 @@ public class CallPathUtilFuncs{
 		    //Update parent/child relationships.
 		    gme2 = gm.getGlobalMappingElement(parent,0); 
 		    gme3 = gm.getGlobalMappingElement(child,0);
-		    gme2.addChild(gme3.getGlobalID(),gme1.getGlobalID());
-		    gme3.addParent(gme2.getGlobalID(),gme1.getGlobalID());
+		    gme2.addChild(gme3.getMappingID(),gme1.getMappingID());
+		    gme3.addParent(gme2.getMappingID(),gme1.getMappingID());
 		}
 	    }
 	}
@@ -91,8 +91,8 @@ public class CallPathUtilFuncs{
 	    l1 = gm.getMappingIterator(0);
 	    while(l1.hasNext()){
 		gme = (GlobalMappingElement) l1.next();
-		if((gme.getGlobalID())<(functionList.size())){ 
-		    gtde = (GlobalThreadDataElement) functionList.elementAt(gme.getGlobalID());
+		if((gme.getMappingID())<(functionList.size())){ 
+		    gtde = (GlobalThreadDataElement) functionList.elementAt(gme.getMappingID());
 		    if((!(gme.isCallPathObject())) && (gtde!=null)){
 			l2 = gme.getParentsIterator();
 			while(l2.hasNext()){
@@ -147,7 +147,7 @@ public class CallPathUtilFuncs{
 	    System.out.println("gme:");
 	    if(gme!=null){
 		System.out.println("name:" + gme.getMappingName());
-		System.out.println("id:" + gme.getGlobalID());
+		System.out.println("id:" + gme.getMappingID());
 	    }
 	    else
 		System.out.println("gme is null");

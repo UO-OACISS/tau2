@@ -16,7 +16,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.text.*;
 
-public class GlobalMappingElement implements Serializable, Comparable{
+public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     //Constructors.
     //######
@@ -32,11 +32,11 @@ public class GlobalMappingElement implements Serializable, Comparable{
     public String getMappingName(){
 	return mappingName;}
   
-    public void setGlobalID(int globalID){
-	this.globalID = globalID;}
+    public void setMappingID(int mappingID){
+	this.mappingID = mappingID;}
   
-    public int getGlobalID(){
-	return globalID;}
+    public int getMappingID(){
+	return mappingID;}
 
     //######
     //Storage control.
@@ -576,7 +576,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
     //Instance data.
     //####################################
     private String mappingName = null;
-    private int globalID = -1;     //Global ID for this mapping.
+    private int mappingID = -1;
   
     private int[] groups = null;
     private int numberOfGroups = 0;

@@ -12,26 +12,28 @@
 
 package paraprof;
 
-public class CallPathDrawObject{
+public class CallPathDrawObject implements Mapping{
 
-    public CallPathDrawObject(GlobalThreadDataElement globalThreadDataElement, boolean parentChild, boolean spacer){
-	this.globalThreadDataElement = globalThreadDataElement;
+    public CallPathDrawObject(Mapping mapping, boolean parentChild, boolean spacer){
+	this.mapping = mapping;
 	this.parentChild = parentChild;
 	this.spacer = spacer;
     }
-
-    public int getMappingID(){
-	if(globalThreadDataElement==null)
-	    return -1;
-	else
-	    return globalThreadDataElement.getMappingID();
-    }
-
+    
+    public void setMappingName(String mappingName){}
     public String getMappingName(){
-	if(globalThreadDataElement==null)
+	if(mapping==null)
 	    return "Spacer - name not set";
 	else
-	    return globalThreadDataElement.getMappingName();
+	    return mapping.getMappingName();
+    }
+
+    public void setMappingID(int mappingID){}
+    public int getMappingID(){
+	if(mapping==null)
+	    return -1;
+	else
+	    return mapping.getMappingID();
     }
 
     public void setExclusiveValue(double exclusiveValue){
@@ -66,7 +68,7 @@ public class CallPathDrawObject{
     //####################################
     //Instance Data.
     //####################################
-    GlobalThreadDataElement globalThreadDataElement = null;
+    Mapping mapping = null;
     boolean parentChild = false;
     boolean spacer = false;
 

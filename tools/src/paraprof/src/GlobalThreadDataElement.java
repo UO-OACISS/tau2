@@ -12,7 +12,7 @@ import java.util.*;
 import java.io.*;
 import java.text.*;
 
-public class GlobalThreadDataElement{
+public class GlobalThreadDataElement implements Mapping{
     
     //####################################
     //Contructor(s).
@@ -50,12 +50,16 @@ public class GlobalThreadDataElement{
     public GlobalMappingElement getGlobalMappingElement(){
 	return globalMappingElement;}
 
-    public int getMappingID(){
-	return globalMappingElement.getGlobalID();}
-
     public String getMappingName(){
 	return globalMappingElement.getMappingName();}
+
+    public void setMappingName(String mappingName){} //Don't set Name.
   
+    public void setMappingID(int mappingID){} //Don't set ID.
+
+    public int getMappingID(){
+	return globalMappingElement.getMappingID();}
+
     public void setMappingExists(){
 	mappingExists = true;}
   
@@ -263,7 +267,7 @@ public class GlobalThreadDataElement{
 	return globalMappingElement.getMappingName();}
   
     public int getUserEventID(){
-	return globalMappingElement.getGlobalID();}
+	return globalMappingElement.getMappingID();}
   
     public void setUserEventNumberValue(int inInt){
 	userEventNumberValue = inInt;

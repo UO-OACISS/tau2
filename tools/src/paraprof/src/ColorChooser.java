@@ -281,7 +281,7 @@ public class ColorChooser implements WindowListener{
 	    int numberOfColors = this.getNumberOfColors();
 	    for(Enumeration e = globalMapping.getMapping(0).elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
-		globalMappingElement.setColor(this.getColor((globalMappingElement.getGlobalID()) % numberOfColors));
+		globalMappingElement.setColor(this.getColor((globalMappingElement.getMappingID()) % numberOfColors));
 	    }
 	}
 	
@@ -289,7 +289,7 @@ public class ColorChooser implements WindowListener{
 	    int numberOfColors = this.getNumberOfMappingGroupColors();
 	    for(Enumeration e = globalMapping.getMapping(1).elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
-		globalMappingElement.setColor(this.getGroupColor((globalMappingElement.getGlobalID()) % numberOfColors));
+		globalMappingElement.setColor(this.getGroupColor((globalMappingElement.getMappingID()) % numberOfColors));
 	    }
 	}
 
@@ -297,7 +297,7 @@ public class ColorChooser implements WindowListener{
 	    int numberOfColors = this.getNumberOfColors();
 	    for(Enumeration e = globalMapping.getMapping(2).elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
-		globalMappingElement.setColor(this.getColor((globalMappingElement.getGlobalID()) % numberOfColors));
+		globalMappingElement.setColor(this.getColor((globalMappingElement.getMappingID()) % numberOfColors));
 	    }
 	}
     }

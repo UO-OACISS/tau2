@@ -189,7 +189,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		    g2D.fillRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 		    
 		    if(windowType == 2){
-			if((globalMappingElement.getGlobalID()) == (trial.getColorChooser().getUserEventHightlightColorID())){
+			if((globalMappingElement.getMappingID()) == (trial.getColorChooser().getUserEventHightlightColorID())){
 			    g2D.setColor(trial.getColorChooser().getUserEventHightlightColor());
 			    g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 			    g2D.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
@@ -200,7 +200,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			}
 		    }
 		    else if(windowType == 1){
-			if((globalMappingElement.getGlobalID()) == (trial.getColorChooser().getGroupHighlightColorID())){
+			if((globalMappingElement.getMappingID()) == (trial.getColorChooser().getGroupHighlightColorID())){
 			    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 			    g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 			    g2D.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
@@ -211,7 +211,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			}
 		    }
 		    else{
-			if((globalMappingElement.getGlobalID()) == (trial.getColorChooser().getHighlightColorID())){
+			if((globalMappingElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID())){
 			    g2D.setColor(trial.getColorChooser().getHighlightColor());
 			    g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 			    g2D.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
@@ -279,8 +279,8 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		    if(clickedOnObject instanceof GlobalMappingElement){
 			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-			trial.getColorChooser().setHighlightColorID(globalMapppingElement.getGlobalID());
-			MappingDataWindow tmpRef = new MappingDataWindow(trial, globalMapppingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData(), this.debug());
+			trial.getColorChooser().setHighlightColorID(globalMapppingElement.getMappingID());
+			MappingDataWindow tmpRef = new MappingDataWindow(trial, globalMapppingElement.getMappingID(), trial.getStaticMainWindow().getSMWData(), this.debug());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
@@ -289,8 +289,8 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		    if(clickedOnObject instanceof GlobalMappingElement){
 			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-			trial.getColorChooser().setUserEventHighlightColorID(globalMapppingElement.getGlobalID());
-			UserEventWindow tmpRef = new UserEventWindow(trial, globalMapppingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData(), this.debug());
+			trial.getColorChooser().setUserEventHighlightColorID(globalMapppingElement.getMappingID());
+			UserEventWindow tmpRef = new UserEventWindow(trial, globalMapppingElement.getMappingID(), trial.getStaticMainWindow().getSMWData(), this.debug());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
@@ -319,7 +319,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		    if(clickedOnObject instanceof GlobalMappingElement){
 			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			GlobalMapping globalMapping = trial.getGlobalMapping();
-			globalMapping.setSelectedGroupID(globalMapppingElement.getGlobalID());
+			globalMapping.setSelectedGroupID(globalMapppingElement.getMappingID());
 			globalMapping.setGroupFilter(1);
 			trial.getSystemEvents().updateRegisteredObjects("dataEvent");
 		    }
@@ -328,7 +328,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		    if(clickedOnObject instanceof GlobalMappingElement){
 			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			GlobalMapping globalMapping = trial.getGlobalMapping();
-			globalMapping.setSelectedGroupID(globalMapppingElement.getGlobalID());
+			globalMapping.setSelectedGroupID(globalMapppingElement.getMappingID());
 			globalMapping.setGroupFilter(2);
 			trial.getSystemEvents().updateRegisteredObjects("dataEvent");
 		    }
@@ -386,11 +386,11 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 				//Want to set the clicked on mapping to the current highlight color or, if the one
 				//clicked on is already the current highlighted one, set it back to normal.
 				if((trial.getColorChooser().getUserEventHightlightColorID()) == -1){
-				    trial.getColorChooser().setUserEventHighlightColorID(globalMappingElement.getGlobalID());
+				    trial.getColorChooser().setUserEventHighlightColorID(globalMappingElement.getMappingID());
 				}
 				else{
-				    if(!((trial.getColorChooser().getUserEventHightlightColorID()) == (globalMappingElement.getGlobalID())))
-					trial.getColorChooser().setUserEventHighlightColorID(globalMappingElement.getGlobalID());
+				    if(!((trial.getColorChooser().getUserEventHightlightColorID()) == (globalMappingElement.getMappingID())))
+					trial.getColorChooser().setUserEventHighlightColorID(globalMappingElement.getMappingID());
 				    else
 					trial.getColorChooser().setUserEventHighlightColorID(-1);
 				}
@@ -399,24 +399,24 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 				//Want to set the clicked on mapping to the current highlight color or, if the one
 				//clicked on is already the current highlighted one, set it back to normal.
 				if((trial.getColorChooser().getGroupHighlightColorID()) == -1)
-				    trial.getColorChooser().setGroupHighlightColorID(globalMappingElement.getGlobalID());
+				    trial.getColorChooser().setGroupHighlightColorID(globalMappingElement.getMappingID());
 				else{
-				    if((trial.getColorChooser().getGroupHighlightColorID()) == (globalMappingElement.getGlobalID()))
+				    if((trial.getColorChooser().getGroupHighlightColorID()) == (globalMappingElement.getMappingID()))
 					trial.getColorChooser().setGroupHighlightColorID(-1);
 				    else
-					trial.getColorChooser().setGroupHighlightColorID(globalMappingElement.getGlobalID());
+					trial.getColorChooser().setGroupHighlightColorID(globalMappingElement.getMappingID());
 				}
 			    }
 			    else{
 				//Want to set the clicked on mapping to the current highlight color or, if the one
 				//clicked on is already the current highlighted one, set it back to normal.
 				if((trial.getColorChooser().getHighlightColorID()) == -1)
-				    trial.getColorChooser().setHighlightColorID(globalMappingElement.getGlobalID());
+				    trial.getColorChooser().setHighlightColorID(globalMappingElement.getMappingID());
 				else{
-				    if((trial.getColorChooser().getHighlightColorID()) == (globalMappingElement.getGlobalID()))
+				    if((trial.getColorChooser().getHighlightColorID()) == (globalMappingElement.getMappingID()))
 					trial.getColorChooser().setHighlightColorID(-1);
 				    else
-					trial.getColorChooser().setHighlightColorID(globalMappingElement.getGlobalID());
+					trial.getColorChooser().setHighlightColorID(globalMappingElement.getMappingID());
 				}
 			    }
 			}
