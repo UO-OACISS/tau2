@@ -37,6 +37,7 @@ Version 2.11 changes (from 2.9):
 25. Added support for alternative returns in PDT based C instrumentation [PETSc, ANL].
 26. Added a new tool - tau_reduce for reducing instrumentation overhead.  
 27. Added support for callpath profiling.
+28. Fixed pprof to support exclusive percentage in callpath profiling.
 
 
 Version 2.10 changes (from 2.9):
