@@ -20,6 +20,7 @@ import javax.swing.event.*;
 import javax.swing.tree.*;
 import javax.swing.table.*;
 import dms.dss.*;
+import java.net.*;
 
 public class ParaProfManager extends JFrame implements ActionListener{
     public ParaProfManager(){
@@ -105,15 +106,15 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    //Create the root node.
 	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("Applications");
       
-	    DefaultMutableTreeNode standard = new DefaultMutableTreeNode(new PlaceHolder("Standard Applications", 0));
+	    DefaultMutableTreeNode standard = new DefaultMutableTreeNode(new PlaceHolder("Standard Applications", 0, 0));
 	    //Populate this node.
 	    this.populateStandardApplications(standard);
 	    root.add(standard);
       
-	    DefaultMutableTreeNode runtime = new DefaultMutableTreeNode(new PlaceHolder("Runtime Applications", 0));
+	    DefaultMutableTreeNode runtime = new DefaultMutableTreeNode(new PlaceHolder("Runtime Applications", 0, 1));
 	    root.add(runtime);
       
-	    dbApps = new DefaultMutableTreeNode(new PlaceHolder("DB Applications", 0));
+	    dbApps = new DefaultMutableTreeNode(new PlaceHolder("DB Applications", 0, 2));
 	    root.add(dbApps);
       
 	    treeModel = new DefaultTreeModel(root);
@@ -155,16 +156,11 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    (getContentPane()).add(outerPane, "Center");
       
 
-	    //Add listeners to buttons.
+	    //Add listener to connectDisconnect button.  Since this button's text
+	    //is updated, must 
 	    connectDisconnect.addActionListener(new ActionListener(){
 		    public void actionPerformed(ActionEvent evt){
                         connectDisconnect();}});
-	    refreshApplications.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){
-                        refreshApplications();}});
-	    refreshExperiments.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){
-                        refreshExperiments();}});
       
 	    //Show before setting sliders.
 	    //Components have to be realized on the screen before
@@ -190,6 +186,8 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
 	Object userObject = selectedNode.getUserObject();
+	if(!(userObject instanceof PlaceHolder))
+	    tree.expandPath(path);
 	if(selectedNode.isRoot()){
 	    //We are at the root node.  Display some helpful information.
 	    innerPane.setRightComponent(getPanelHelpMessage(1));
@@ -197,41 +195,79 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	}
 	else if(userObject instanceof PlaceHolder){
 	    PlaceHolder ph = (PlaceHolder) userObject; 
-	    String name = ph.getName();
 	    if(parentNode != null){
-		switch(ph.getType()){
+		switch(ph.getApplicationExperimentTrial()){
 		case 0:
-		    if(name.equals("Standard Applications")){
+		    switch(ph.getStandardRuntimeDB()){
+		    case 0:
 			outerPane.setRightComponent(getApplicationPanel(0));
 			innerPane.setRightComponent(getPanelHelpMessage(2));
 			outerPane.setDividerLocation(0.8);
 			innerPane.setDividerLocation(0.5);
-			tree.expandPath(path);
-		    }
-		    else if(name.equals("Runtime Applications")){
+			break;
+		    case 1:
 			outerPane.setRightComponent(getApplicationPanel(1));
 			innerPane.setRightComponent(getPanelHelpMessage(3));
 			outerPane.setDividerLocation(0.8);
 			innerPane.setDividerLocation(0.5);
-		    }
-		    else{
+			break;
+		    case 2:
 			outerPane.setRightComponent(getApplicationPanel(2));
 			innerPane.setRightComponent(getPanelHelpMessage(4));
 			outerPane.setDividerLocation(0.67);
 			innerPane.setDividerLocation(0.5);
+			break;
+		    default:
+			break;
 		    }
 		    break;
 		case 1:
-		    outerPane.setRightComponent(getExperimentPanel());
-		    innerPane.setRightComponent(getPanelHelpMessage(5));
-		    outerPane.setDividerLocation(0.8);
-		    innerPane.setDividerLocation(0.5);
+		    switch(ph.getStandardRuntimeDB()){
+		    case 0:
+			outerPane.setRightComponent(getExperimentPanel(0));
+			innerPane.setRightComponent(getPanelHelpMessage(5));
+			outerPane.setDividerLocation(0.8);
+			innerPane.setDividerLocation(0.5);
+			break;
+		    case 1:
+			outerPane.setRightComponent(getExperimentPanel(1));
+			innerPane.setRightComponent(getPanelHelpMessage(5));
+			outerPane.setDividerLocation(0.8);
+			innerPane.setDividerLocation(0.5);
+			break;
+		    case 2:
+			outerPane.setRightComponent(getExperimentPanel(2));
+			innerPane.setRightComponent(getPanelHelpMessage(5));
+			outerPane.setDividerLocation(0.8);
+			innerPane.setDividerLocation(0.5);
+			break;
+		    default:
+			break;
+		    }
 		    break;
 		case 2:
-		    outerPane.setRightComponent(getTrialPanel());
-		    innerPane.setRightComponent(getPanelHelpMessage(6));
-		    outerPane.setDividerLocation(0.8);
-		    innerPane.setDividerLocation(0.5);
+		    switch(ph.getStandardRuntimeDB()){
+		    case 0:
+			outerPane.setRightComponent(getTrialPanel(0));
+			innerPane.setRightComponent(getPanelHelpMessage(6));
+			outerPane.setDividerLocation(0.8);
+			innerPane.setDividerLocation(0.5);
+			break;
+		    case 1:
+			outerPane.setRightComponent(getTrialPanel(1));
+			innerPane.setRightComponent(getPanelHelpMessage(6));
+			outerPane.setDividerLocation(0.8);
+			innerPane.setDividerLocation(0.5);
+			break;
+		    case 2:
+			outerPane.setRightComponent(getTrialPanel(2));
+			innerPane.setRightComponent(getPanelHelpMessage(6));
+			outerPane.setDividerLocation(0.8);
+			innerPane.setDividerLocation(0.5);
+			break;
+		    default:
+			break;
+		    }
 		    break;
 		default:
 		    break;
@@ -251,8 +287,6 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    innerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfTrial){
-	    //Would like this node expanded.  Makes more sense.
-	    tree.expandPath(path);
 	    String tmpString = userObject.toString();
 	    //Here the actual clicked on node is an instance of ParaProfTrial (unlike the above
 	    //check on ParaProfTrial where it was the parent node).
@@ -366,7 +400,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    break;
 	case 6:
 	    jTextArea.append("ParaProf Manager\n\n");
-	    jTextArea.append("Click the add trial button below to add an trial.\n");
+	    jTextArea.append("Click the add trial button below to add a trial.\n");
 	    break;
 	case 7:
 	    jTextArea.append("ParaProf Manager\n\n");
@@ -406,6 +440,11 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	panelAdd(jPanel, jButton, gbc, 0, 0, 2, 1);
 
 	if(type == 2){
+	    jButton = new JButton("Refresh Applications");
+	    jButton.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){
+                        refreshApplications();}});
+	    
 	    gbc.fill = GridBagConstraints.NONE;
 	    gbc.anchor = GridBagConstraints.WEST;
 	    gbc.weightx = 0;
@@ -452,13 +491,13 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    gbc.anchor = GridBagConstraints.EAST;
 	    gbc.weightx = 0;
 	    gbc.weighty = 0;
-	    panelAdd(jPanel, refreshApplications, gbc, 2, 4, 2, 1);
+	    panelAdd(jPanel, jButton, gbc, 2, 4, 2, 1);
 	}
 	
 	return jPanel;
     }
-  
-    private Component getExperimentPanel(){
+ 
+    private Component getExperimentPanel(int type){
 	JPanel jPanel = new JPanel();
 	JButton jButton = new JButton("Add Experiment");
 	jButton.addActionListener(new ActionListener(){
@@ -472,15 +511,29 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	gbc.insets = new Insets(5, 5, 5, 5);
     
 	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.WEST;
+	gbc.anchor = GridBagConstraints.CENTER;
 	gbc.weightx = 0;
 	gbc.weighty = 0;
-	panelAdd(jPanel, jButton, gbc, 0, 0, 2, 1);
+	panelAdd(jPanel, jButton, gbc, 0, 0, 1, 1);
+
+	if(type == 2){
+	    jButton = new JButton("Refresh Experiments");
+	    jButton.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){
+                        refreshExperiments();}});
+
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.EAST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, jButton, gbc, 1, 0, 1, 1);
+	}
 	
 	return jPanel;
     }
 
-    private Component getTrialPanel(){
+    private Component getTrialPanel(int type){
 	JPanel jPanel = new JPanel();
 
 	JButton jButton = new JButton("Add Trail");
@@ -501,22 +554,36 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	gbc.insets = new Insets(5, 5, 5, 5);
 
 	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.WEST;
-	gbc.weightx = 100;
-	gbc.weighty = 0;
-	panelAdd(jPanel, jButton, gbc, 0, 0, 2, 1);
-	
-	gbc.fill = GridBagConstraints.BOTH;
 	gbc.anchor = GridBagConstraints.CENTER;
 	gbc.weightx = 0;
 	gbc.weighty = 0;
-	panelAdd(jPanel, jLabel, gbc, 0, 1, 1, 1);
+	panelAdd(jPanel, jButton, gbc, 0, 0, 1, 1);
+	
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(jPanel, jLabel, gbc, 1, 0, 1, 1);
 
 	gbc.fill = GridBagConstraints.NONE;
 	gbc.anchor = GridBagConstraints.WEST;
-	gbc.weightx = 100;
+	gbc.weightx = 0;
 	gbc.weighty = 0;
-	panelAdd(jPanel, trialType, gbc, 1, 1, 1, 1);
+	panelAdd(jPanel, trialType, gbc, 2, 0, 1, 1);
+
+	if(type == 2){
+	    jButton = new JButton("Refresh Trials");
+	    jButton.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){
+                        refreshTrials();}});
+
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.CENTER;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, jButton, gbc, 1, 1, 1, 1);
+	}
 
 	return jPanel;
     }
@@ -578,7 +645,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    System.out.println("trial type: " + type);
 
 	    //Create the trial.
-	    trial = new ParaProfTrial(type);
+	    trial = new ParaProfTrial(null, type);
 	    trial.setName(trialName);
 	    
 	    FileList fl = new FileList();
@@ -609,7 +676,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    return;
 	}
     }
-  
+
     public void connectDisconnect(){
 	try{
 	    //Try making a connection to the database.
@@ -635,19 +702,27 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    ParaProf.systemError(e, null, "ELM03");
 	}
     }
-  
+
     public void refreshApplications(){  
 	  try{
+	      DefaultMutableTreeNode applicationNode = null;
+	      DefaultMutableTreeNode experimentsPlaceHolder = null;
+
 	      //Clear node.
 	      for(int i=dbApps.getChildCount(); i>0; i--){
 		  treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
 	      }
  	      ListIterator l = perfDBSession.getApplicationList();
 	      while (l.hasNext()){
-		  ParaProfApplication paraProfApplication = new ParaProfApplication((Application)l.next());
-		  paraProfApplication.setDBParaProfApplication(true);
-		  //Now add the application to the node.
-		  treeModel.insertNodeInto(new DefaultMutableTreeNode(paraProfApplication), dbApps, dbApps.getChildCount());
+		  ParaProfApplication application = new ParaProfApplication((Application)l.next());
+		  applicationNode = new DefaultMutableTreeNode(application);
+		  application.setDBApplication(true);
+		  application.setDMTN(applicationNode);
+		  //Create and add the experiment place holder.
+		  experimentsPlaceHolder = new DefaultMutableTreeNode(new PlaceHolder("Experiments", 1, 2));
+		  applicationNode.add(experimentsPlaceHolder);
+		  //Now insert the application into the node into the tree.
+		  treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
 	      }
 	      return;
 	  }
@@ -655,29 +730,64 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	      ParaProf.systemError(e, null, "ELM03");
 	  }
     }
-  
+
     public void refreshExperiments(){
 	try{
+	    DefaultMutableTreeNode experimentNode = null;
+	    DefaultMutableTreeNode trialsPlaceHolder = null;
+
 	    TreePath path = tree.getSelectionPath();
-	    if(path == null)
-		return;
 	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-	    Object userObject = selectedNode.getUserObject();
+	    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+	    for(int i=selectedNode.getChildCount(); i>0; i--){
+		treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+	    }
+
+	    ParaProfApplication application = (ParaProfApplication) parentNode.getUserObject();
 	    
-	    if(userObject instanceof ParaProfApplication){
-		//Clear the node before adding anything else.
-		for(int i=selectedNode.getChildCount(); i>0; i--){
-		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
-		}
-		
-		int applicationID = ((ParaProfApplication) userObject).getID();
-		perfDBSession.setApplication(applicationID);
-		ListIterator l = perfDBSession.getExperimentList();
-		while (l.hasNext()){
-		    ParaProfExperiment paraProfExperiment = new ParaProfExperiment((Experiment)l.next());
-		    paraProfExperiment.setApplication((ParaProfApplication) userObject);
-		    treeModel.insertNodeInto(new DefaultMutableTreeNode(paraProfExperiment), dbApps, dbApps.getChildCount());
-		}
+	    perfDBSession.setApplication(application.getID());
+	    ListIterator l = perfDBSession.getExperimentList();
+	    while (l.hasNext()){
+		ParaProfExperiment experiment = new ParaProfExperiment((Experiment)l.next());
+		experiment.setApplication(application);
+		experimentNode = new DefaultMutableTreeNode(experiment);
+		experiment.setDMTN(experimentNode);
+		//Create and add the trials place holder.
+		trialsPlaceHolder = new DefaultMutableTreeNode(new PlaceHolder("Trials", 2, 2));
+		experimentNode.add(trialsPlaceHolder);
+		//Now insert the experimentinto the node into the tree.
+		treeModel.insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
+	    }
+	    return;
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "ELM03");
+	}
+    }
+
+    public void refreshTrials(){
+	try{
+	    DefaultMutableTreeNode trialNode = null;
+
+	    TreePath path = tree.getSelectionPath();
+	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+	    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+	    for(int i=selectedNode.getChildCount(); i>0; i--){
+		treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+	    }
+
+	    ParaProfExperiment experiment = (ParaProfExperiment) parentNode.getUserObject();
+	    ParaProfApplication application = experiment.getApplication();
+	    
+	    perfDBSession.setApplication(application.getID());
+	    perfDBSession.setExperiment(experiment.getID());
+	    ListIterator l = perfDBSession.getTrialList();
+	    while (l.hasNext()){
+		ParaProfTrial trial = new ParaProfTrial((Trial)l.next(), 4);
+		trial.setExperiment(experiment);
+		trialNode = new DefaultMutableTreeNode(trial);
+		trial.setDMTN(trialNode);
+		treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 	    }
 	    return;
 	}
@@ -767,14 +877,14 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    applicationNode = new DefaultMutableTreeNode(application);
 	    application.setDMTN(applicationNode);
       
-	    experimentsPlaceHolder = new DefaultMutableTreeNode(new PlaceHolder("Experiments", 1));
+	    experimentsPlaceHolder = new DefaultMutableTreeNode(new PlaceHolder("Experiments", 1, 0));
 	    for(Enumeration e2 = (application.getExperiments()).elements(); e2.hasMoreElements() ;){  
 		ParaProfExperiment exp = (ParaProfExperiment) e2.nextElement();
 		experimentNode = new DefaultMutableTreeNode(exp);
 		exp.setDMTN(experimentNode);
         
 		//Populate the trials for this experiemnt.
-		trialsPlaceHolder = new DefaultMutableTreeNode(new PlaceHolder("Trials", 2));
+		trialsPlaceHolder = new DefaultMutableTreeNode(new PlaceHolder("Trials", 2, 0));
 		for(Enumeration e3 = (exp.getTrials()).elements(); e3.hasMoreElements() ;){
 		    ParaProfTrial trial = (ParaProfTrial) e3.nextElement();
 		    trialNode = new DefaultMutableTreeNode(trial);
@@ -821,22 +931,29 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	Object userObject = selectedNode.getUserObject();
     
 	if(userObject instanceof PlaceHolder){
+	    ParaProfApplication application = null;
+	    DefaultMutableTreeNode treeNode = null;
 	    PlaceHolder pl = (PlaceHolder) userObject;
 	    String name = pl.getName();
-	    if(pl.getType() == 0){
-		if(name.equals("Standard Applications")){
-		    ParaProfApplication application = ParaProf.applicationManager.addApplication();
-		    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(application);
+	    //Just for sanity, check that we got an application place holder.
+	    if(pl.getApplicationExperimentTrial()==0){
+		switch(pl.getStandardRuntimeDB()){
+		case 0:
+		    application = ParaProf.applicationManager.addApplication();
+		    treeNode = new DefaultMutableTreeNode(application);
 		    application.setDMTN(treeNode);
 		    treeModel.insertNodeInto(treeNode, selectedNode, selectedNode.getChildCount());
-		}
-		else if(name.equals("Runtime Applications")){
-		    ParaProfApplication application = ParaProf.applicationManager.addApplication();
-		    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(application);
+		    break;
+		case 1:
+		    application = ParaProf.applicationManager.addApplication();
+		    treeNode = new DefaultMutableTreeNode(application);
 		    application.setDMTN(treeNode);
 		    treeModel.insertNodeInto(treeNode, selectedNode, selectedNode.getChildCount());
-		}
-		else{
+		    break;
+		case 2:
+		    break;
+		default:
+		    break;
 		}
 	    }
 	}
@@ -970,9 +1087,8 @@ public class ParaProfManager extends JFrame implements ActionListener{
     DefaultMutableTreeNode defaultParaProfTrialNode = null;
 
     private PerfDBSession perfDBSession = null;
+    //Must keep a reference as button's text is updated.
     private JButton connectDisconnect = new JButton("Connect to Database");
-    private JButton refreshApplications = new JButton("Refresh Applications");
-    private JButton refreshExperiments = new JButton("Refresh Experiments");
     private JTextField configFileField = new JTextField(System.getProperty("user.dir"), 30);
     private JTextField usernameField = new JTextField("username", 20);
     private JPasswordField passwordField = new JPasswordField("password",20);
@@ -1004,15 +1120,19 @@ class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer{
 	Object userObject = node.getUserObject();
 	if(userObject instanceof PlaceHolder){
 	    PlaceHolder ph = (PlaceHolder) userObject; 
-	    switch(ph.getType()){
+	    URL url = null;
+	    switch(ph.getApplicationExperimentTrial()){
 	    case 0:
-		this.setIcon(new ImageIcon("red-ball.gif"));
+		url = ParaProfTreeCellRenderer.class.getResource("red-ball.gif");
+		this.setIcon(new ImageIcon(url));
 		break;
 	    case 1:
-		this.setIcon(new ImageIcon("blue-ball.gif"));
+		url = ParaProfTreeCellRenderer.class.getResource("blue-ball.gif");
+		this.setIcon(new ImageIcon(url));
 		break;
 	    case 2:
-		this.setIcon(new ImageIcon("green-ball.gif"));
+		url = ParaProfTreeCellRenderer.class.getResource("green-ball.gif");
+		this.setIcon(new ImageIcon(url));
 		break;
 	    default:
 		break;
@@ -1032,20 +1152,25 @@ class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer{
 //one does not check the parent node (which is a pain).
 //######
 class PlaceHolder{
-    public PlaceHolder(String name, int type){
+    public PlaceHolder(String name, int applicationExperimentTrial, int standardRuntimeDB){
 	this.name = name;
-	this.type = type;
+	this.applicationExperimentTrial = applicationExperimentTrial;
+	this.standardRuntimeDB = standardRuntimeDB;
     }
   
     public String getName(){
 	return name;}
 
-    public int getType(){
-	return type;}
+    public int getApplicationExperimentTrial(){
+	return applicationExperimentTrial;}
 
+    public int getStandardRuntimeDB(){
+	return standardRuntimeDB;}
+    
     public String toString(){
 	return name;}
   
     String name = "Name Not Set";
-    int type = -1; //0-Application,1-Experiment,2-Trial.
+    int applicationExperimentTrial = -1; //0-Application,1-Experiment,2-Trial.
+    int standardRuntimeDB = -1; //0-Standard,1-Runtime,2-DB.
 }

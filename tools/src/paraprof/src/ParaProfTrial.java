@@ -23,8 +23,36 @@ import javax.swing.tree.*;
 import dms.dss.*;
 
 public class ParaProfTrial extends Trial{
-    public ParaProfTrial(int type){
+    public ParaProfTrial(Trial trial, int type){
 	super();
+	if(trial!=null){
+	    this.setID(trial.getID());
+	    this.setExperimentID(trial.getExperimentID());
+	    this.setApplicationID(trial.getApplicationID());
+	    if((trial.getName()==null)||(trial.getName().equals("")))
+		this.setName("Trial "+ this.getID());
+	    else
+		this.setName(trial.getName());
+	    this.setTime(trial.getTime());
+	    this.setProblemDefinition(trial.getProblemDefinition());
+	    this.setNodeCount(trial.getNodeCount());
+	    this.setNumContextsPerNode(trial.getNumContextsPerNode());
+	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
+	    this.setUserData(trial.getUserData());
+	    int numOfMetrics = trial.getMetricCount();
+	    metrics = new Vector();
+	    if(numOfMetrics==0){
+		Metric metric = this.addMetric();
+		    metric.setName("Default Metric");
+	    }
+	    else{
+		for(int i=0;i<numOfMetrics;i++){
+		    String name = trial.getMetric(i);
+		    Metric metric = this.addMetric();
+		    metric.setName(name);
+		}
+	    }
+	}
 	this.type = type;
     }
 
@@ -43,6 +71,8 @@ public class ParaProfTrial extends Trial{
 	    dataSession.setDebug(ParaProf.debugIsOn);
 	    break;
 	case 3:
+	    break;
+	case 4:
 	    break;
 	default:
 	    break;
@@ -76,6 +106,12 @@ public class ParaProfTrial extends Trial{
   
     public DefaultMutableTreeNode getDMTN(){
 	return defaultMutableTreeNode;}
+
+    public void setDBTrial(boolean dBTrial){
+	this.dBTrial = dBTrial;}
+  
+    public boolean dBTrial(){
+	return dBTrial;}
   
     public String getIDString(){
 	if(experiment!=null)
@@ -287,6 +323,7 @@ public class ParaProfTrial extends Trial{
     ParaProfDataSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private boolean dBTrial = false;
     private Vector metrics = null;
   
     private SystemEvents systemEvents = new SystemEvents();

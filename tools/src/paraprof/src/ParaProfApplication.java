@@ -35,11 +35,11 @@ public class ParaProfApplication extends Application{
     public DefaultMutableTreeNode getDMTN(){
 	return defaultMutableTreeNode;}
   
-    public void setDBParaProfApplication(boolean dbParaProfApplication){
-	this.dbParaProfApplication = dbParaProfApplication;}
+    public void setDBApplication(boolean dBApplication){
+	this.dBApplication = dBApplication;}
   
-    public boolean isDBParaProfApplication(){
-	return dbParaProfApplication;}
+    public boolean dBApplication(){
+	return dBApplication;}
   
     public Vector getExperiments(){
 	return experiments;}
@@ -75,7 +75,7 @@ public class ParaProfApplication extends Application{
     //Instance data.
     //####################################
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
-    private boolean dbParaProfApplication = false;
+    private boolean dBApplication = false;
     private Vector experiments = new Vector();
     //####################################
     //End - Instance data.

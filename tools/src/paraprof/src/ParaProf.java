@@ -83,12 +83,12 @@ public class ParaProf implements ActionListener{
 	    ParaProfExperiment experiment = app.addExperiment();
 	    experiment.setName("Default Exp");
 
-	    ParaProfTrial trial = new ParaProfTrial(0);
+	    ParaProfTrial trial = new ParaProfTrial(null, 0);
 	    trial.setName("Default Trial");
 	    FileList fl = new FileList();
 	    Vector v = null;
 	    if(type!=-1){
-		trial = new ParaProfTrial(type);
+		trial = new ParaProfTrial(null, type);
 		trial.setName("Default Trial");
 		switch(type){
 		case 0:
@@ -134,7 +134,7 @@ public class ParaProf implements ActionListener{
 		}
 		else{
 		    //Try finding profile.*.*.* files.
-		    trial = new ParaProfTrial(1);
+		    trial = new ParaProfTrial(null, 1);
 		    trial.setName("Default Trial");
 		    if(filePrefix==null) 
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", ParaProf.debugIsOn);
