@@ -24,7 +24,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/users/sameer/tau2
+TAUROOT=/home/ftg1/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -85,6 +85,11 @@ ARFLAGS	      = rcv
 ############# For SGI CC compiler, replace AR accordingly #######
 #SGICC#AR			= $(CXX) -ar 		   #ENDIF#
 #SGICC#ARFLAGS			= -o			   #ENDIF#
+##################################################################
+
+############# For FUJITSU FCC compiler, replace AR accordingly #######
+#FUJITSU#AR			= $(CXX) --ar 		   #ENDIF#
+#FUJITSU#ARFLAGS	        = -o			   #ENDIF#
 ##################################################################
 
 RM 	      = /bin/rm -f

@@ -35,6 +35,9 @@
 #ifdef TAU_AIX
 #include "Profile/aix.h" 
 #endif /* TAU_AIX */
+#ifdef FUJITSU
+#include "Profile/fujitsu.h"
+#endif /* FUJITSU */
 #include "Profile/Profiler.h"
 
 
@@ -585,6 +588,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 1999/06/22 22:33:12 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.10 1999/06/22 22:33:12 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 1999/06/23 19:35:56 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.11 1999/06/23 19:35:56 sameer Exp $ 
  ***************************************************************************/
