@@ -52,23 +52,27 @@
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
+
 #ifdef PROFILE_CALLSTACK
 #define TAU_PROFILE_CALLSTACK()    Profiler::CallStackTrace();
 #else
 #define TAU_PROFILE_CALLSTACK() 
 #endif /* PROFILE_CALLSTACK */
 
+// UserEvents
+#define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
+#define TAU_EVENT(event, data) 		 	(event).TriggerEvent(data);
+#define TAU_EVENT_DISABLE_MIN(event) 		(event).SetDisableMin(true);
+#define TAU_EVENT_DISABLE_MAX(event) 		(event).SetDisableMax(true);
+#define TAU_EVENT_DISABLE_MEAN(event) 		(event).SetDisableMean(true);
+#define TAU_EVENT_DISABLE_STDDEV(event) 	(event).SetDisableStdDev(true);
+#define TAU_STORE_ALL_EVENTS 			TauUserEvent::StoreData();
+
 #ifdef NO_RTTI
 #define CT(obj) string(#obj)
 #else // RTTI is present
 #define CT(obj) string(RtsLayer::CheckNotNull(typeid(obj).name())) 
 #endif //NO_RTTI
-
-// Use DEBUGPROFMSG macro as in 
-// DEBUGPROF("Node" << RtsLayer::myNode() << " Message " << endl;);
-// We're deliberately not using *PoomaInfo::Debug because some profiling
-// debug messages come from the destructor of Profiler in main and by then
-// PoomaInfo object may have been destroyed.
 
 #else /* PROFILING_ON */
 /* In the absence of profiling, define the functions as null */
@@ -85,6 +89,15 @@
 #define TAU_PROFILE_INIT(argc, argv)
 #define TAU_PROFILE_SET_NODE(node)
 #define TAU_PROFILE_CALLSTACK()    
+
+#define TAU_REGISTER_EVENT(event, name)
+#define TAU_EVENT(event, data)
+#define TAU_EVENT_DISABLE_MIN(event)
+#define TAU_EVENT_DISABLE_MAX(event)
+#define TAU_EVENT_DISABLE_MEAN(event)
+#define TAU_EVENT_DISABLE_STDDEV(event)
+#define TAU_STORE_ALL_EVENTS
+
 #define CT(obj)
 
 #endif /* PROFILING_ON */
@@ -110,6 +123,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:18:43 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.1 1998/04/24 00:18:43 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/05/14 22:07:57 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.2 1998/05/14 22:07:57 sameer Exp $ 
  ***************************************************************************/

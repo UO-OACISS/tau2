@@ -52,9 +52,8 @@ class TauUserEvent {
     TAU_EVENT_DATATYPE GetMax(void);
     TAU_EVENT_DATATYPE GetMean(void);
     double  GetSumSqr(void);
-    double  GetStdDev(void);
     long    GetNumEvents(void);
-    const char *  GetEventName(void);
+    const char *  GetEventName (void) const;
     bool GetDisableMin(void);
     bool GetDisableMax(void);
     bool GetDisableMean(void);
@@ -68,7 +67,7 @@ class TauUserEvent {
 
 
 vector<TauUserEvent*>& TheEventDB(int threadid = RtsLayer::myThread()); 
-    
+/*    
 #ifdef PROFILING_ON
 #define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
 #define TAU_EVENT(event, data) 		 	(event).TriggerEvent(data);
@@ -88,8 +87,10 @@ vector<TauUserEvent*>& TheEventDB(int threadid = RtsLayer::myThread());
 #define TAU_STORE_ALL_EVENTS
 
 #endif // PROFILING_ON 
+*/
+
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:18:04 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.1 1998/04/24 00:18:04 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/05/14 22:07:59 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.2 1998/05/14 22:07:59 sameer Exp $ 
  ***************************************************************************/

@@ -43,6 +43,7 @@
 
 #include <Profile/FunctionInfo.h>
 			  
+#include <Profile/UserEvent.h>
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -104,6 +105,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 1998/04/24 00:21:33 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.11 1998/04/24 00:21:33 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 1998/05/14 22:08:03 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.12 1998/05/14 22:08:03 sameer Exp $ 
  ***************************************************************************/
