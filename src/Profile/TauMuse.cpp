@@ -39,8 +39,8 @@
 #define HOST_IP 		"127.0.0.1"		
 #define BUFFERSIZE 		8192
 #define MAX_ARGLEN 		255
-#define MAX_REPLY_LENGTH 	1024 
-#define DEBUG_PROF 		1 
+#define MAX_REPLY_LENGTH 	1024 		 
+//#define DEBUG_PROF 		 
 
 /**************************************
 * Description	: PACKET PROTOCOL for communicating with
@@ -56,12 +56,12 @@ The sizes for all parameters are:
 The commands are defined as follows:
 HELP:                   <command=0> <ASCII string> <size=0> <NULL>
 CREATE:                 <command=1> <ASCII string> <size> <options>
-QUERY_MAPPER:   <command=2> <ASCII string> <size> <options>
-QUERY_HANDLER:  <command=3> <handler id> <size=0>
+QUERY_MAPPER:   	<command=2> <ASCII string> <size> <options>
+QUERY_HANDLER:  	<command=3> <handler id> <size=0>
 DESTROY:                <command=4> <handler id> <size=0>
 START:                  <command=5> <handler id> <size=0>
 STOP:                   <command=6> <handler id> <size=0>
-RESETFILTERS:   <command=7> <handler id> <size=0>
+RESETFILTERS:   	<command=7> <handler id> <size=0>
 ADDFILTER:              <command=8> <handler id> <ASCII string> <size> <options>
 GET:                    <command=9> <size> <options (1st byte matters)>
 QUIT:                   <command=10> <size=0>
@@ -139,6 +139,7 @@ int send_and_check(int sockfd,int command_length,char *send_buffer,char *recv_bu
         return(0);
 
 }
+
 /* Get the name of the MUSE handler */
 char * get_muse_handler_name(void)
 {
@@ -150,16 +151,17 @@ char * get_muse_handler_name(void)
 	else
 	  return handler;
 }
-/* Get the name of the MUSE handler */
-char * get_muse_matrix(void)
+
+/* Get the name of TAU_MUSE predefine package */
+char * get_muse_package(void)
 {
-	char *matrix = getenv("TAU_MUSE_MATRIX");
-	if (matrix == (char *) NULL)
+	char *package = getenv("TAU_MUSE_PACKAGE");
+	if (package == (char *) NULL)
 	{  /* the user has not specified any handler name */
 	  return "TAU_count";
 	}
 	else
-	  return matrix;
+	  return package;
 }
 
 /* TheMuseSockId() is a global variable now */
@@ -178,7 +180,7 @@ int& TheMuseHandlerId(void)
 
 // This function choose the appropriate create_encoder for the handler.
 int create_encode_selector(char *handler_name,char *ascii_command,int size, char *binary_command){
-	if(!strcmp("Tau_count",handler_name)){
+	if(!strcmp("TAU_count",handler_name)){
 		return CreateTauCountEncode(ascii_command,size,binary_command);
 	}else if(!strcmp("process_scheduling",handler_name)){
 		return CreateProcessSchedulingEncode(ascii_command,size,binary_command);
@@ -187,11 +189,11 @@ int create_encode_selector(char *handler_name,char *ascii_command,int size, char
 	}
 }
 
-// This function choose the appropriate create_encoder for the handler.
+// This function choose the appropriate query_decoder for the handler.
 double query_decode_selector(char *handler_name,
 			const char *binary_command, const char *binary_reply,
 			int size, char *ascii_reply){
-	if(!strcmp("Tau_count",handler_name)){
+	if(!strcmp("TAU_count",handler_name)){
 		return QueryTauCountDecode(binary_command,binary_reply,size,ascii_reply);
 	}else if(!strcmp("process_scheduling",handler_name)){
 		return QueryProcessSchedulingDecode(binary_command,binary_reply,size,ascii_reply);
@@ -209,17 +211,75 @@ int addfilter_encode_selector(char *filter_name,char *ascii_command,int size, ch
 	}
 }
 
+// This is the predefined TAU_MUSE package.
+int package_selector(void){
+	char *args[MAX_FILTER_ARGS];
+	char *package=get_muse_package();
+	
+	if(!strcmp("count",package)){
+		args[0]=(char*)malloc(100);
+		memset(args[0],0,100);
+		sprintf(args[0],"process_filter pid=%d",getpid());
+#ifdef DEBUG_PROF
+		printf("args: %s\n",args[0]);
+#endif
+		setenv("TAU_MUSE_HANDLER","TAU_count",1);
+		return TauMuseInit("TAU_count",1,args);
+	} else if(!strcmp("total_busy_time",package)){
+		args[0]=(char*)malloc(100);
+		memset(args[0],0,100);
+		sprintf(args[0],"process_filter pid=%d event=258",getpid());
+		args[1]=(char*)malloc(100);
+		memset(args[1],0,100);
+		sprintf(args[1],"process_filter pid=%d event=259",getpid());
+#ifdef DEBUG_PROF
+		printf("args: %s\n",args[0]);
+		printf("args: %s\n",args[1]);
+#endif
+		setenv("TAU_MUSE_HANDLER","process_scheduling",1);
+		return TauMuseInit("process_scheduling",2,args);
+	} else if(!strcmp("total_time",package)){
+		args[0]=(char*)malloc(100);
+		memset(args[0],0,100);
+		sprintf(args[0],"process_filter pid=%d event=258",getpid());
+		args[1]=(char*)malloc(100);
+		memset(args[1],0,100);
+		sprintf(args[1],"process_filter pid=%d event=259",getpid());
+#ifdef DEBUG_PROF
+		printf("args: %s\n",args[0]);
+		printf("args: %s\n",args[1]);
+#endif
+		setenv("TAU_MUSE_HANDLER","process_scheduling",1);
+		return TauMuseInit("process_scheduling",2,args);
+	}else{
+		//BY Default
+		args[0]=(char*)malloc(100);
+		memset(args[0],0,100);
+		sprintf(args[0],"process_filter pid=%d",getpid());
+#ifdef DEBUG_PROF
+		printf("args: %s\n",args[0]);
+#endif
+		setenv("TAU_MUSE_HANDLER","TAU_count",1);
+		return TauMuseInit("TAU_count",1,args);
+	}
+	return 0;
+}
 
+//=================================================================================
+// TAU-MUSE API IMPLEMENTATION
+// -TauMuseInit		:Send command "create","addfilter","start" to magnetd
+// -TauMuseQuery	:Send command "query"
+// -TauMuseDestroy 	:Send command "stop","destroy","quit"
+//================================================================================
 
 /*********************
  * Description	: Initialize socket connecting to MUSE sever
  * 		  - connect
  * 		  - send command create <handler_hane> <args>
  * 		  - send command start <handlerID>
+ * NOTE		: This function is called by TauMuseQuery	
  *********************/
 int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
-  /* creates a socket, connects to the server, creates a MUSE session, adds 
-     a filter and starts the session */
         struct sockaddr_in host_addr;
         char send_buffer[BUFFERSIZE];
         char recv_buffer[BUFFERSIZE];
@@ -252,10 +312,10 @@ int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
 	/* Assign sockfd to the global variable TheMuseSockId() */
 	TheMuseSockId() = sockfd; 
 
-        // connect to 
 #ifdef DEBUG_PROF
         printf("TauMuse.cpp: Connecting to magnetd using AF_INET.\n");
 #endif /* DEBUG_PROF */
+        // connect to magnetd
         if(connect(sockfd,(struct sockaddr *) &host_addr,
                         sizeof(host_addr)) == -1){
                 perror("connect");
@@ -284,19 +344,14 @@ int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
                 return(1);
         }
 
-
-
         // ====================================
         // command "create <handler_name>"
         // ====================================
-        // create command in binary
         sprintf(cmdstr,"create %s",handler_name);
 #ifdef DEBUG_PROF
         printf("cmdstr = %s\n",cmdstr);
 #endif /* DEBUG_PROF */
-        // Encoder is specific for each handler
         command_length = create_encode_selector(handler_name,cmdstr,BUFFERSIZE,send_buffer);
-
         send_and_check(sockfd,command_length,send_buffer,recv_buffer);
 #ifdef DEBUG_PROF
         printf("!!!!!!!!!handler is created\n");
@@ -308,30 +363,25 @@ int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
         // HACKY!!!... Endian stuff
         byteptr = (unsigned char *)recv_buffer+5;
         handlerID = (int) *byteptr;
-
-	/* Assign it to the global variable */
-        TheMuseHandlerId() = (int) *byteptr;
 #ifdef DEBUG_PROF
         printf("handlerID is %d\n",handlerID);
 #endif /* DEBUG_PROF */
+
+	/* Assign it to the global variable */
+        TheMuseHandlerId() = (int) *byteptr;
 	//-------------------------------------------
 	
-
-	// Many filter can be add to the handler here.
-	// Just do the loop to add multiple filters.	
-	for(i=0;i<filter_argc;i++)
-	{	
-		// =====================================
-		// command "addfilter <handlerID> <filter_name> <args>"
-		// =====================================
-		sprintf(cmdstr,"addfilter %d %s",
-			handlerID,args[i]);
+	// =====================================
+	// command "addfilter <handlerID> <filter_name> <args>"
+	// =====================================
+	// Loop to add multiple filters.	
+	for(i=0;i<filter_argc;i++) {	
+		sprintf(cmdstr,"addfilter %d %s", handlerID,args[i]);
 #ifdef DEBUG_PROF
 		printf("cmdstr = %s\n",cmdstr);
 #endif /* DEBUG_PROF */
-		
-		// Encoder is specific for addfilter command 
-		command_length = addfilter_encode_selector(strtok(args[i]," "),cmdstr,BUFFERSIZE,send_buffer);
+		command_length = addfilter_encode_selector(strtok(args[i]," ")
+				,cmdstr,BUFFERSIZE,send_buffer);
 		send_and_check(sockfd,command_length,send_buffer,recv_buffer);
 #ifdef DEBUG_PROF
 		printf("!!!!!!!!!filter is added.\n");
@@ -399,46 +449,12 @@ void TauMuseDestroy(void){
         memset(send_buffer,0,BUFFERSIZE);
         send_buffer[0] = 10;
         send_and_check(sockfd,1+sizeof(int),send_buffer,recv_buffer);
-
-}
-
-// This is the predefined TAU_MUSE matrix package.
-int matrix_selector(void){
-	char *args[MAX_FILTER_ARGS];
-	char *matrix=get_muse_matrix();
-	
-	if(!strcmp("Tau_count",matrix)){
-		args[0]=(char*)malloc(100);
-		memset(args[0],0,100);
-		sprintf(args[0],"process_filter pid=%d",getpid());
-#ifdef DEBUG_PROF
-		printf("args: %s\n",args[0]);
-#endif
-		setenv("TAU_MUSE_HANDLER","Tau_count",1);
-		return TauMuseInit("Tau_count",1,args);
-
-	}
-	else if(!strcmp("process_scheduling",matrix)){
-		args[0]=(char*)malloc(100);
-		memset(args[0],0,100);
-		sprintf(args[0],"process_filter pid=%d event=258",getpid());
-		args[1]=(char*)malloc(100);
-		memset(args[1],0,100);
-		sprintf(args[1],"process_filter pid=%d event=259",getpid());
-#ifdef DEBUG_PROF
-		printf("args: %s\n",args[0]);
-		printf("args: %s\n",args[1]);
-#endif
-		setenv("TAU_MUSE_HANDLER","process_scheduling",1);
-		return TauMuseInit("process_scheduling",2,args);
-	}
-	return 0;
 }
 
 /*********************
  * Description	: Query_handler from MUSE sever
  * 		  - send command query_handler
- * NOTE: Return double for now.
+ * NOTE		: Return double for now.
  *********************/
 double TauMuseQuery(void){
         char send_buffer[BUFFERSIZE];
@@ -446,11 +462,11 @@ double TauMuseQuery(void){
         char result_buffer[MAX_REPLY_LENGTH];
         unsigned char *byteptr;
 	double result;
-	int sockfd = TheMuseSockId(); /* read from the global */
 	
 	// This will get the value from environment variable
 	// to initilize the appropriate handler and filter arguments.
-	static int handlerID = matrix_selector(); 
+	static int handlerID = package_selector(); 
+	int sockfd = TheMuseSockId(); /* read from the global */
 
         // ====================================
         // command "query_handler <handlerID>"

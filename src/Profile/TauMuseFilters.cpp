@@ -25,11 +25,12 @@
 
 
 /*********************
- * Description	: Encode binary code for command create 
+ * Description	: Encode binary code for command addfilter 
  * 		  which wil be sent to Muse server
  * From		: translator.c <modified>
+ * Return Value	: the number of bytes in binary_command
+ * NOTE		: To be used with process_filter filter.
  *********************/
-/*returns the number of bytes in binary_command*/
 int AddFilterProcessFilterEncode(char *ascii_command, int size, char *binary_command)
 {
 	char *arg, *val, temp[MAX_ARGLEN];
@@ -76,8 +77,7 @@ int AddFilterProcessFilterEncode(char *ascii_command, int size, char *binary_com
 							if(strcasecmp(arg, "event")==0) {
 								*option_flags = *option_flags|0x80;
 								event = strtoul(val, NULL, 10);
-							}
-							else { 
+							} else { 
 								if (strcasecmp(arg, "id")==0) {
 									*option_flags = *option_flags|0x40;
 									id = strtoul(val, NULL, 10);
@@ -92,7 +92,6 @@ int AddFilterProcessFilterEncode(char *ascii_command, int size, char *binary_com
 									}
 								}
 							}
-							
 							*options_size += sizeof(int);
 							
 							arg = strtok(NULL, "=");

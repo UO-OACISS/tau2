@@ -26,6 +26,9 @@
 #include <endian.h>
 #include <byteswap.h>
 
+
+//#define DEBUG
+
 #if __BYTE_ORDER == __BIG_ENDIAN
 #define ntohll(x)	(x)
 #else
@@ -38,6 +41,7 @@
  * Description	: Encode binary code for command create 
  * 		  which wil be sent to Muse server
  * From		: translator.c <modified>
+ * NOTE		: To be used with TAU_count handler
  *********************/
 int CreateTauCountEncode(char *ascii_command, int size, char *binary_command)
 {
@@ -68,10 +72,13 @@ int CreateTauCountEncode(char *ascii_command, int size, char *binary_command)
                                 arg = strtok(NULL, " ");
                                 if (arg) {
                                         chid = (struct count_handler_input_data *)
-                                                        &binary_command[binary_command[1] + 3 + sizeof(*args_size_ptr)];
+						&binary_command[binary_command[1] + 
+						3 + sizeof(*args_size_ptr)];
                                         chid->fname_size = htonl(strlen(arg));
                                         strncpy(&binary_command[binary_command[1]
-                                                        +sizeof(*args_size_ptr)+sizeof(*chid)+3], arg, ntohl(chid->fname_size)+1);
+                                                        +sizeof(*args_size_ptr)+
+							sizeof(*chid)+3], arg, 
+							ntohl(chid->fname_size)+1);
                                         arg = strtok(NULL, " ");
                                         if (arg)
                                                 chid->fsize = htonl(atoi(arg));
@@ -79,13 +86,14 @@ int CreateTauCountEncode(char *ascii_command, int size, char *binary_command)
                                                 chid->fsize = 0;
                                 } else {
                                         chid = (struct count_handler_input_data *)
-                                                        &binary_command[binary_command[1] + 3 + sizeof(*args_size_ptr)];
+						&binary_command[binary_command[1] + 
+						3 + sizeof(*args_size_ptr)];
                                         chid->fname_size = 0;
                                         chid->fsize = 0;
                                 }
                                 *args_size_ptr = htonl(sizeof(*chid) + ntohl(chid->fname_size));
-                                return (3 + binary_command[1] + sizeof(*args_size_ptr) + ntohl(*args_size_ptr));
-
+                                return (3 + binary_command[1] + sizeof(*args_size_ptr) 
+						+ ntohl(*args_size_ptr));
                         }
                 }//CREATE
                 else {
@@ -105,10 +113,10 @@ int CreateTauCountEncode(char *ascii_command, int size, char *binary_command)
  * Description	: Decode binary code received from 
  * 		  MUSE server responding to command query_handler
  * From		: translator.c <modified>
+ * NOTE		: To be used with TAU_count handler
  *********************/
 int QueryTauCountDecode(const char *binary_command,
-                const char *binary_reply,
-                        int size, char *ascii_reply){
+                const char *binary_reply, int size, char *ascii_reply){
 
         struct count_handler_return_data *chrd;
         int *sizeptr;
@@ -136,7 +144,12 @@ int QueryTauCountDecode(const char *binary_command,
 	return(ntohl(chrd->count));
 }
 
-
+/*********************
+ * Description	: Encode binary code for command create 
+ * 		  which wil be sent to Muse server
+ * From		: translator.c <modified>
+ * NOTE		: To be used with process_scheduling handler
+ *********************/
 int CreateProcessSchedulingEncode(char *ascii_command, int size, char *binary_command)
 {
 	char *arg, temp[MAX_ARGLEN];
@@ -189,7 +202,13 @@ int CreateProcessSchedulingEncode(char *ascii_command, int size, char *binary_co
 		}
 }
 
-int QueryProcessSchedulingDecode(const char *binary_command,
+/*********************
+ * Description	: Decode binary code received from 
+ * 		  MUSE server responding to command query_handler
+ * From		: translator.c <modified>
+ * NOTE		: To be used with process_scheduling handler
+ *********************/
+double QueryProcessSchedulingDecode(const char *binary_command,
                 const char *binary_reply,
                         int size, char *ascii_reply){
 
@@ -202,47 +221,70 @@ int QueryProcessSchedulingDecode(const char *binary_command,
 	int i;
 	unsigned cpu_counter_in[NUMOFCPU], cpu_counter_out[NUMOFCPU];
 	double cpu_busy_time[NUMOFCPU];
-	
-	sizeptr = (int *)binary_reply;
-	errorptr = (unsigned char *) (sizeptr+1);
+	double cpu_busy_time_sec[NUMOFCPU];
+	double cpu_speed;
+	char *package;
+        sizeptr = (int *)binary_reply;
+        errorptr = (unsigned char *) (sizeptr+1);
 
-	/* error code testing is done by translator.c, but it could be passed in here
-	   for specific error codes.
-	   */
-	if(binary_command[0]==3)
-	{
-		cuhrd = (struct process_scheduling_handler_return_data *) (errorptr+1);
+        /* error code testing is done by translator.c, but it could be passed in here
+           for specific error codes.
+           */
+        if(binary_command[0]==3)
+        {
+                cuhrd = (struct process_scheduling_handler_return_data *) (errorptr+1);
 
-		mtotal = (double)ntohll(cuhrd->total_time);
-		midle = (double)ntohll(cuhrd->total_idle_time);
-		idleper = midle / mtotal;
-		mbusy = (double)ntohll(cuhrd->total_busy_time);
-		busyper = mbusy / mtotal;
-		msched = (double)ntohll(cuhrd->total_sched_time);
-		schedper = msched / mtotal;
-		merror = (double)ntohll(cuhrd->total_error_time);
-		errorper = merror / mtotal;
-		for(i=0;i<NUMOFCPU;i++){
-			cpu_counter_in[i] = ntohs(cuhrd->cpu_counter_in[i]);
-			cpu_counter_out[i] = ntohs(cuhrd->cpu_counter_out[i]);
-			cpu_busy_time[i] = (double)ntohll(cuhrd->cpu_busy_time[i]);
-		}
-		snprintf(ascii_reply, size, "Idle : %15.f %2.3f\nBusy : %15.f %2.3f\nSched: %15.f %2.3f\nError: %15.f %2.3f\nTotal: %15.f %2.3f\ncpu_counter_in[0]=%15.u\ncpu_counter_out[0]=%15.u\ncpu_counter_in[1]=%15.u\ncpu_counter_out[1]=%15.u\ncpu_busy_time[0]=%15.f\ncpu_busy_time[1]=%15.f\n\n",
-						 midle,100*idleper,
-						 mbusy,100*busyper,
-						 msched,100*schedper,
-						 merror,100*errorper,
-						 mtotal, 100*(idleper+busyper+schedper),
-						 cpu_counter_in[0],cpu_counter_out[0], 
-						 cpu_counter_in[1],cpu_counter_out[1], 
-						 cpu_busy_time[0],cpu_busy_time[1]
-						 );
-	}
-	else
-	{
-		printf("cpu_usage translator doesn't understand that command yet\n");
-		return 0;
+                mtotal = (double)ntohll(cuhrd->total_time);
+                midle = (double)ntohll(cuhrd->total_idle_time);
+                idleper = midle / mtotal;
+                mbusy = (double)ntohll(cuhrd->total_busy_time);
+                busyper = mbusy / mtotal;
+                msched = (double)ntohll(cuhrd->total_sched_time);
+                schedper = msched / mtotal;
+                merror = (double)ntohll(cuhrd->total_error_time);
+                errorper = merror / mtotal;
+                cpu_speed = (double)ntohll(cuhrd->cpu_speed);
+#ifdef DEBUG
+		printf("cpu_speed=%10.10f\n",cpu_speed);
+#endif //DEBUG
+                for(i=0;i<NUMOFCPU;i++){
+                        cpu_counter_in[i] = ntohs(cuhrd->cpu_counter_in[i]);
+                        cpu_counter_out[i] = ntohs(cuhrd->cpu_counter_out[i]);
+                        cpu_busy_time[i] = (double)ntohll(cuhrd->cpu_busy_time[i]);
+                        cpu_busy_time_sec[i] = cpu_busy_time[i]/cpu_speed;
+#ifdef DEBUG
+                        printf("cpu_busy_time[%d]=%10.10f\n",i,cpu_busy_time[i]);
+                        printf("cpu_busy_time_sec[%d]=%10.10f\n",i,cpu_busy_time_sec[i]);
+#endif //DEBUG
+                }
+                snprintf(ascii_reply, size, "Idle(sec) : %15.f %2.3f\nBusy(sec) : %10.10f %2.3f\nSched(sec): %10.10f %2.3f\nError(sec): %10.10f %2.3f\nTotal(sec): %10.10f %2.3f\ncpu_counter_in[0]=%15.u\ncpu_counter_out[0]=%15.u\ncpu_counter_in[1]=%15.u\ncpu_counter_out[1]=%15.u\ncpu_busy_time[0](sec)=%10.10f\ncpu_busy_time[1](sec)=%10.10f\n\n",
+                                                 midle/cpu_speed,100*idleper,
+                                                 mbusy/cpu_speed,100*busyper,
+                                                 msched/cpu_speed,100*schedper,
+                                                 merror/cpu_speed,100*errorper,
+                                                 mtotal/cpu_speed, 100*(idleper+busyper+schedper),
+                                                 cpu_counter_in[0],cpu_counter_out[0],
+                                                 cpu_counter_in[1],cpu_counter_out[1],
+                                                 cpu_busy_time_sec[0],cpu_busy_time_sec[1]
+                                                 );
+        }
+        else
+        {
+                printf("cpu_usage translator doesn't understand that command yet\n");
+                return 0;
+        }
+	package=getenv("TAU_MUSE_PACKAGE");
+	// This result varies according to the TAU_MUSE_PACKAGE
+	if(!strcmp(package,"total_busy_time")){
+		// Returning total busy time in millisec
+		return (mbusy/cpu_speed)*1000;
+	}else if(!strcmp(package,"total_time")){
+		// Returning total time in millisec
+		return mtotal/cpu_speed*1000;
 	}
 	return 0;
+
+
+	
 }
 /* EOF */
