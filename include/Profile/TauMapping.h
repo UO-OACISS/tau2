@@ -31,15 +31,13 @@
 #define _TAU_MAPPING_H_
 
 #if (PROFILING_ON || TRACING_ON)
-Profiler * TauProfG;
-Profiler *& TheTauMapProf();
-FunctionInfo *TauFIG;
 // For Mapping, global variables used between layers
+FunctionInfo *& TheTauMapFI();
 #define TAU_MAPPING(stmt)   \
   { \
     static FunctionInfo TauFIG(#stmt, " " , TAU_USER, "TAU_USER"); \
-    TauProfG = new Profiler (&TauFIG, TAU_USER, true); \
-    TheTauMapProf() = TauProfG; \
+    Profiler *TauProfG = new Profiler (&TauFIG, TAU_USER, true); \
+    TheTauMapFI() = &TauFIG; \
     int tid = RtsLayer::myThread(); \
     if (tid == 0) \
       cout <<"Thr "<< tid <<" Stmt: "<<#stmt <<" CurrProf " \
