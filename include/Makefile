@@ -247,8 +247,8 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 
 ##############################################
 # PDT OPTIONS
-PDTARCHDIR = $(CONFIG_ARCH) 
-#PDTARCH#PDTARCHDIR = $(CONFIG_ARCH)/$(PDTCOMPDIR)#ENDIF#
+PDTARCHDIR=$(CONFIG_ARCH)
+#PDTARCH#PDTARCHDIR=$(CONFIG_ARCH)/$(PDTCOMPDIR)#ENDIF#
 
 
 ##############################################
