@@ -175,11 +175,12 @@ long long PapiLayer::getCounters(int tid)
 
 
 /////////////////////////////////////////////////
-int PapiLayer::PapiLayerInit(void)
+int PapiLayer::PapiLayerInit(bool lock)
 { 
   static bool flag = true;
 
-  RtsLayer::LockDB();
+  if(lock)
+    RtsLayer::LockDB();
   if (flag)
   {
     flag = false; 
@@ -196,7 +197,8 @@ int PapiLayer::PapiLayerInit(void)
     }
      
   }
-  RtsLayer::UnLockDB();
+  if(lock)
+    RtsLayer::UnLockDB();
   return 0;
 }
 
@@ -205,7 +207,7 @@ void PapiLayer::multiCounterPapiInit(void)
   //This function has the possibility if being called
   //one or more times by MultipleCounter routines.
   //Only want to do the init. once however.
-  static int initFlag = PapiLayerInit();
+  static int initFlag = PapiLayerInit(false);
 }
 
 /////////////////////////////////////////////////
