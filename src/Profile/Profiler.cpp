@@ -1,4 +1,11 @@
-/******************************************************************************                      TAU Portable Profiling Package                     ****                      http://www.acl.lanl.gov/tau                        *********************************************************************************    Copyright 1997                                                       ****    Department of Computer and Information Science, University of Oregon ****    Advanced Computing Laboratory, Los Alamos National Laboratory        ******************************************************************************/
+/****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.acl.lanl.gov/tau		           **
+*****************************************************************************
+**    Copyright 1997  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+****************************************************************************/
 /***************************************************************************
 **	File 		: Profiler.cpp					  **
 **	Description 	: TAU Profiling Package				  **
@@ -857,9 +864,9 @@ bool RtsLayer::isCtorDtor(const char *name)
 //////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: klindlan $
- * $Revision: 1.1.1.1 $   $Date: 1997/11/26 20:04:30 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.1.1.1 1997/11/26 20:04:30 klindlan Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.2 $   $Date: 1997/11/28 22:04:48 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.2 1997/11/28 22:04:48 sameer Exp $ 
  ***************************************************************************/
 
 	
