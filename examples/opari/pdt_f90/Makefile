@@ -21,11 +21,11 @@ CC		= $(TAU_CC)
 
 PDTCPARSE       = $(PDTDIR)/$(PDTARCHDIR)/bin/cparse
 
-PDTF90PARSE     = $(PDTDIR)/$(PDTARCHDIR)/bin/f90parse
+PDTF90PARSE     = $(PDTDIR)/$(PDTARCHDIR)/bin/f95parse
 
 TAUINSTR        = $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
-OPARI_TOOL	= $(OPARIDIR)/tool/opari
+OPARI_TOOL	= $(TAU_OPARI_TOOL)
 
 CFLAGS 		= $(TAU_INCLUDE) $(TAU_DEFS)  
 

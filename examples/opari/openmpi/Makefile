@@ -49,7 +49,7 @@ $(TARGET).mod.o : $(TARGET).mod.c
 
 $(TARGET).mod.c : $(TARGET).c
 	$(RM) opari.rc
-	$(OPARIDIR)/tool/opari -table opari.tab.c $(TARGET).c
+	$(TAU_OPARI_TOOL) -table opari.tab.c $(TARGET).c
 
 opari.tab.o: opari.tab.c $(TARGET).mod.c
 	$(CC) $(CFLAGS) -c opari.tab.c
