@@ -123,20 +123,32 @@ The following  command-line options are available to configure:
    configure determines the architecture. For SGI, the user can specify either 
    of sgi32, sgin32 or sgi64 for 32, n32 or 64 bit compilation modes 
    respectively. The files are installed in the <architecture>/bin and 
-   <architecture>/lib directories.
+   <architecture>/lib directories. 
+
+IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the 
+   AIX Power4 and Linux Power4 32 bit compilation modes respectively. These architectures 
+   are automatically detected by TAU and 32 bit compilation is the default compilation mode. 
+   However, if you wish to specify a 64 bit compilation mode, please use 
+   -arch=ibm64 for AIX 64 bit, or -arch=ibm64linux for 64 bit Linux Power4 platform. 
+   For IBM Linux Power4, we use -c++=g++ for GNU g++ 32 bits and -c++=powerpc64-linux-g++ 
+   and -cc=powerpc64-linux-gcc for GNU g++ 64 bits. The compilers are installed in 
+   /usr/bin/g++ for 32 bits and /opt/cross/bin/powerpc64-linux-g++ for 64 bit g++ 
+   respectively. Under IBM Linux Power4, we use xlf90 as the default Fortran compiler with 
+   g++/gcc and xlC/xlc.
+
    
 -c++=<C++ compiler>
    
    Specifies the name of the C++ compiler. Supported  C++ compilers include  
-   KCC (from KAI/Intel), CC,  g++ (from GNU), FCC (from Fujitsu), xlC(from IBM),
-   guidec++ (from KAI/Intel), aCC (from HP), c++ (from Apple), and pgCC 
+   KCC (from KAI/Intel), CC,  g++ and power64-linux-g++ (from GNU), FCC (from Fujitsu), 
+   xlC(from IBM), guidec++ (from KAI/Intel), aCC (from HP), c++ (from Apple), and pgCC 
    (from PGI). 
    
 -cc=<C Compiler>
    
    Specifies the name of the C compiler. Supported C compilers include cc, 
-   gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu), xlc (from IBM), and 
-   KCC (from KAI/Intel).
+   gcc and powerpc64-linux-gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu), 
+   xlc (from IBM), and KCC (from KAI/Intel).
 
 -pdt_c++=<C++ Compiler> 
    Specifies a different C++ compiler for PDT (tau_instrumentor). This is 

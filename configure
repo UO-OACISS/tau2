@@ -201,7 +201,7 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc ]
       then
         c_compiler=$myarg
       else
@@ -219,7 +219,7 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ ]
       then
         cxx_compiler=$myarg
       else
@@ -1152,9 +1152,9 @@ then
   fi
 fi
 
-if [ $machine = ibm64 ]
+if [ $machine = ibm64 -o $machine = ibm64linux ]
 then
-  if [ $cxx_compiler = g++ ]
+  if [ $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ ]
   then
     if [ $fortran_compiler = no ] 
     then
@@ -1206,7 +1206,7 @@ case $cxx_compiler in
       fixmakeargs="$fixmakeargs USE_CFRONT"
       ;;
 
-   g++)
+   *g++)
       echo "Default C++ compiler will be " \
          `gcc -v 2>&1 | tail -1 | sed 's/gcc/g++/g'`
       # No fixmakeargs needed because it is the default
@@ -1242,7 +1242,7 @@ case $cxx_compiler in
       if [ $fortran_compiler = no ] 
       then
         extradir=`which xlf90 | sed s/xlf90/../`
-	if [ "$machine" = "ibm64" ]
+	if [ "$machine" = "ibm64" -o "$machine" = "ibm64linux" ]
         then
           fixmakeargs="$fixmakeargs IBM64_FORTRAN"
 	else
@@ -1788,7 +1788,7 @@ fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt 
 ######################################################################
 # discover the paths for standard system include directories
 
-if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ ] 
 then
 cat << EOF > get_stdinc.C
 #include <stddef.h>
@@ -1835,7 +1835,7 @@ EOF
 if $cxx_compiler $orig_useropt -c get_typeinfo1.C 1> /dev/null 2>&1 
 then 
   echo "C++ compiler supports Std Runtime Type Information (default)"
-  if [ $cxx_compiler = g++ -o $cxx_compiler = c++ ] 
+  if [ $cxx_compiler = g++ -o $cxx_compiler = c++ -o $cxx_compiler = powerpc64-linux-g++ ] 
   then 
     echo "Supporting GNU RTTI options"
   fi
@@ -1933,10 +1933,10 @@ fi
 
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = egcs ]   
+if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ ]   
   then
     fixmakeargs="$fixmakeargs GNU"
-    if [ $machine = ibm64 -o $machine = rs6000 ]
+    if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = ibm64linux ]
     then
       tauoptions="${tauoptions}-gnu"
     fi
@@ -2020,6 +2020,14 @@ case $machine in
 	if [ $papi = yes ]
  	  then
 	    fixmakeargs="$fixmakeargs IBM64PAPI"
+	fi
+	;;
+     ibm64linux)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine $fixmakeargs PPC64 IBM64LINUX"
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs IBM64PAPILINUX"
 	fi
 	;;
      rs6000)

@@ -62,6 +62,8 @@ TAU_PREFIX_INSTALL_DIR=
 #######################################################################
 #IBM64#IBM_XLC_ABI	     = -q64 		  #ENDIF#
 #IBM64#IBM_GNU_ABI	     = -maix64 		  #ENDIF#
+#IBM64LINUX#IBM_XLC_ABI	     = -q64 		  #ENDIF#
+#IBM64LINUX#IBM_GNU_ABI	     =  		  #ENDIF#
 #USE_IBMXLC#IBM_ABI    	     = $(IBM_XLC_ABI) 	  #ENDIF#
 #GNU#IBM_ABI	     	     = $(IBM_GNU_ABI) 	  #ENDIF#
 #SP1# ABI		     = $(IBM_ABI)	  #ENDIF#
@@ -267,6 +269,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -L/usr/pmapi/lib -lpmapi#ENDIF#
 #IBM64PAPI#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a -L/usr/lpp/pmtoolkit/lib  -L/usr/pmapi/lib -lpmapi #ENDIF#
+#IBM64PAPILINUX#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a #ENDIF#
 #SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi64 #ENDIF#
 
 #PAPI#TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
@@ -410,6 +413,7 @@ TAU_RANLIB = echo "Built"
 TAU_AR                 = ar             #ENDIF#
 #IBM64#TAU_AR          = ar -X64        #ENDIF#
 #PPC64#TAU_AR          = ar 		#ENDIF#
+#IBM64LINUX#TAU_AR     = ar             #ENDIF#
 
 
 ##############################################
