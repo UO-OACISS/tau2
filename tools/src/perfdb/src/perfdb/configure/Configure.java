@@ -377,10 +377,8 @@ public class Configure {
         } catch ( Exception e ) {
 		// build the database
 			System.out.println(configFileName);
-			perfdb.loadxml.Main demo = new perfdb.loadxml.Main(configFileName);
-			demo.getConnector().connect();
-			demo.getConnector().genParentSchema(db_schemafile);
-			demo.getConnector().dbclose();
+			connector.genParentSchema(db_schemafile);
+			connector.dbclose();
 			System.out.println("Congratulations!  PerfDB is configured and the database has been built.");
 			System.out.println("You may begin loading applications.");
         }
