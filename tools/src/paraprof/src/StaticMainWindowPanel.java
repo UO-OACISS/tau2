@@ -482,7 +482,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 			    g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 			}
-			else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getHighlightColorID()))){
+			else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
 			    highlighted = true;
 			    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 			    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
