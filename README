@@ -66,20 +66,6 @@ the application using the graphical interface.  In addition, TAU can
 generate event traces that can be displayed with the Vampir trace
 visualization tool.
 
-TAU Code Analysis Package
-*************************
-The TAU static analysis tools are based on a C++ code analysis system built
-using a combination of Edision Design Group's C++ front end, edgcpfe,
-which produces an intermediate language (IL) representation, an IL
-converter tool, taucpdisp, which generates a more
-descriptive C++ program database (PDB), and a C++ library, ductape,
-for processing and merging PDB files, among other
-interesting things.  With these tools, TAU will provide tools that support
-sophisticated views of program structure, incorporating the latest C++
-language features such as templates, namespaces, and exceptions.
-Currently, the code analysis systems have been used to analyze C++ source to
-automatically generate TAU profiling instrumentation.
-
 TAU is being developed jointly by the University of Oregon, Los Alamos
 National Laboratory, and Research Centre Jülich, ZAM, Germany.  It can be
 found at:
