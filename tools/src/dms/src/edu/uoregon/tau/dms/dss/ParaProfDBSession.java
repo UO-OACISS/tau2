@@ -21,15 +21,15 @@ import javax.swing.*;
 import java.io.*;
 import java.util.*;
 
-public class ParaProfDBSession extends ParaProfDataSession{
+public class ParaProfDBSession extends ParaProfDataSession {
 
-    public ParaProfDBSession(){
+    public ParaProfDBSession() {
 	super();
 	this.setMetrics(new Vector());
     }
 
-    public void run(){
-	try{
+    public void run() {
+	try {
 	    //######
 	    //Frequently used items.
 	    //######
@@ -63,31 +63,53 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    //Add the functions.
 	    ListIterator l = perfDMFSession.getIntervalEvents();
 	    while(l.hasNext()){
-		    IntervalEvent f = (IntervalEvent) l.next();
-		    int id = this.getGlobalMapping().addGlobalMapping(f.getName(), 0, numberOfMetrics);
+		IntervalEvent f = (IntervalEvent) l.next();
+		int id = this.getGlobalMapping().addGlobalMapping(f.getName(), 0, numberOfMetrics);
 		    
-		    //Add element to the localMap for more efficient lookup later in the function.
-		    //localMap.add(new FunIndexFunIDPair(f.getIndexID(), id));
+		//Add element to the localMap for more efficient lookup later in the function.
+		//localMap.add(new FunIndexFunIDPair(f.getIndexID(), id));
 		    
-		    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(id, 0);
-			IntervalLocationProfile fdo = f.getMeanSummary();
-		    for(int i=0;i<numberOfMetrics;i++){
-			globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusive(i));
-			globalMappingElement.setMeanExclusivePercentValue(i, fdo.getExclusivePercentage(i));
-			globalMappingElement.setMeanInclusiveValue(i, fdo.getInclusive(i));
-			globalMappingElement.setMeanInclusivePercentValue(i, fdo.getInclusivePercentage(i));
+		globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(id, 0);
+		IntervalLocationProfile fdo = f.getMeanSummary();
+		for(int i=0;i<numberOfMetrics;i++){
+		    globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusive(i));
+		    globalMappingElement.setMeanExclusivePercentValue(i, fdo.getExclusivePercentage(i));
+		    globalMappingElement.setMeanInclusiveValue(i, fdo.getInclusive(i));
+		    globalMappingElement.setMeanInclusivePercentValue(i, fdo.getInclusivePercentage(i));
+		    globalMappingElement.setMeanUserSecPerCall(i, fdo.getInclusivePerCall(i));
+		    globalMappingElement.setMeanNumberOfCalls(fdo.getNumCalls());
+		    globalMappingElement.setMeanNumberOfSubRoutines(fdo.getNumSubroutines());
 
-			if((this.getGlobalMapping().getMaxMeanExclusiveValue(i)) < fdo.getExclusive(i)){
-			    this.getGlobalMapping().setMaxMeanExclusiveValue(i, fdo.getExclusive(i));}
-			if((this.getGlobalMapping().getMaxMeanExclusivePercentValue(i)) < fdo.getExclusivePercentage(i)){
-			    this.getGlobalMapping().setMaxMeanExclusivePercentValue(i, fdo.getExclusivePercentage(i));}
 
-			if((this.getGlobalMapping().getMaxMeanInclusiveValue(i)) < fdo.getInclusive(i)){
-			    this.getGlobalMapping().setMaxMeanInclusiveValue(i, fdo.getInclusive(i));}
-			if((this.getGlobalMapping().getMaxMeanInclusivePercentValue(i)) < fdo.getInclusivePercentage(i)){
-			    this.getGlobalMapping().setMaxMeanInclusivePercentValue(i, fdo.getInclusivePercentage(i));}
+		    if ((this.getGlobalMapping().getMaxMeanExclusiveValue(i)) < fdo.getExclusive(i)) {
+			this.getGlobalMapping().setMaxMeanExclusiveValue(i, fdo.getExclusive(i));
 		    }
-		    globalMappingElement.setMeanValuesSet(true);
+		    if ((this.getGlobalMapping().getMaxMeanExclusivePercentValue(i)) < fdo.getExclusivePercentage(i)) {
+			this.getGlobalMapping().setMaxMeanExclusivePercentValue(i, fdo.getExclusivePercentage(i));
+		    }
+		    if ((this.getGlobalMapping().getMaxMeanInclusiveValue(i)) < fdo.getInclusive(i)) {
+			this.getGlobalMapping().setMaxMeanInclusiveValue(i, fdo.getInclusive(i));
+		    }
+		    if ((this.getGlobalMapping().getMaxMeanInclusivePercentValue(i)) < fdo.getInclusivePercentage(i)) {
+			this.getGlobalMapping().setMaxMeanInclusivePercentValue(i, fdo.getInclusivePercentage(i));
+		    }
+
+		    if ((this.getGlobalMapping().getMaxMeanUserSecPerCall(i)) < fdo.getInclusivePerCall(i)) {
+			this.getGlobalMapping().setMaxMeanUserSecPerCall(i, fdo.getInclusivePerCall(i));
+		    }
+
+		    if ((this.getGlobalMapping().getMaxMeanNumberOfCalls()) < fdo.getNumCalls()) {
+			this.getGlobalMapping().setMaxMeanNumberOfCalls(fdo.getNumCalls());
+		    }
+
+		    if ((this.getGlobalMapping().getMaxMeanNumberOfSubRoutines()) < fdo.getNumSubroutines()) {
+			this.getGlobalMapping().setMaxMeanNumberOfSubRoutines(fdo.getNumSubroutines());
+		    }
+
+
+
+		}
+		globalMappingElement.setMeanValuesSet(true);
 	    }
 	    
 	    //Collections.sort(localMap);
@@ -99,13 +121,13 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    while(l.hasNext()){
 		IntervalLocationProfile fdo = (IntervalLocationProfile) l.next();
 		node = this.getNCT().getNode(fdo.getNode());
-		if(node==null)
+		if (node==null)
 		    node = this.getNCT().addNode(fdo.getNode());
 		context = node.getContext(fdo.getContext());
-		if(context==null)
+		if (context==null)
 		    context = node.addContext(fdo.getContext());
 		thread = context.getThread(fdo.getThread());
-		if(thread==null){
+		if (thread==null) {
 		    thread = context.addThread(fdo.getThread(), numberOfMetrics);
 		    thread.setDebug(this.debug());
 		    thread.initializeFunctionList(this.getGlobalMapping().getNumberOfMappings(0));
@@ -132,7 +154,6 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		    globalThreadDataElement.setExclusivePercentValue(i, fdo.getExclusivePercentage(i));
 		    globalThreadDataElement.setInclusivePercentValue(i, fdo.getInclusivePercentage(i));
 		    globalThreadDataElement.setUserSecPerCall(i, fdo.getInclusivePerCall(i));
-		
 		    globalThreadDataElement.setNumberOfCalls(fdo.getNumCalls());
 		    globalThreadDataElement.setNumberOfSubRoutines(fdo.getNumSubroutines());
 		    
@@ -212,14 +233,14 @@ public class ParaProfDBSession extends ParaProfDataSession{
 }
 
 /*class FunIndexFunIDPair implements Comparable{
-    public FunIndexFunIDPair(int functionIndex, int paraProfId){
-	this.functionIndex = functionIndex;
-	this.paraProfId = paraProfId;
-    }
+  public FunIndexFunIDPair(int functionIndex, int paraProfId){
+  this.functionIndex = functionIndex;
+  this.paraProfId = paraProfId;
+  }
 
-    public int compareTo(Object obj){
-	return functionIndex - ((FunIndexFunIDPair)obj).functionIndex;}
+  public int compareTo(Object obj){
+  return functionIndex - ((FunIndexFunIDPair)obj).functionIndex;}
 
-    public int functionIndex;
-    public int paraProfId;
-    }*/
+  public int functionIndex;
+  public int paraProfId;
+  }*/
