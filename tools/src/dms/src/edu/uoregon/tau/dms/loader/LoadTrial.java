@@ -14,20 +14,20 @@ import java.io.*;
 
 public class LoadTrial{
 
-	public static String USAGE = "USAGE: perfdmf_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file] [{-i --fixnames}]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n";
+    public static String USAGE = "usage: perfdmf_loadtrial {-f, --filetype} file_type {-s,--sourcefile} sourcefilename\n {-e,--experimentid} experiment_id [{-t, --trialid} trial_id] [{-n,--name} trial_name]\n [{-p,--problemfile} problem_file] [{-i --fixnames}]\n Where:\n    file_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n\n (example: perfdmf_loadtrial -f profiles -e 12 -s \"profile.*\")";
     private File readPprof;
     private File writeXml;
     private String trialTime;
     private String sourceFile;
     private Application app;
     private Experiment exp;
-	private boolean fixNames = false;
+    private boolean fixNames = false;
     private int expID = 0;
-	public int trialID = 0;
-	private int fileType = 0;
-	private ParaProfDataSession dataSession = null;
-	public String trialName = new String();
-	public String problemFile = new String();
+    public int trialID = 0;
+    private int fileType = 0;
+    private ParaProfDataSession dataSession = null;
+    public String trialName = new String();
+    public String problemFile = new String();
 
     /* This variable connects translator to DB in order to check whether
        the app. and exp. associated with the trial data do exist there. */
@@ -49,7 +49,7 @@ public class LoadTrial{
 	this.expID = Integer.parseInt(expid);
 	exp = dbSession.setExperiment(this.expID);
 	if (exp == null) {
-		System.err.println("Please enter a valid experiment ID.");
+	    System.err.println("Please enter a valid experiment ID.");
 	    System.err.println(USAGE);
 	    System.exit(-1);
 	    return false;
@@ -73,93 +73,93 @@ public class LoadTrial{
 	File[] inFile = new File[1];
 	FileList fl = null;
 	switch (fileType) {
-		case 0:
-			inFile[0] = new File (sourceFile);
-			v = new Vector();
-			v.add(inFile);
-			dataSession = new TauPprofOutputSession();
-			break;
-		case 1:
-			fl = new FileList();
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", false);
-			dataSession = new TauOutputSession();
-			break;
-		case 2:
-			inFile[0] = new File (sourceFile);
-			v = new Vector();
-			v.add(inFile);
-			dataSession = new DynaprofOutputSession();
-			break;
-		case 3:
-			inFile[0] = new File (sourceFile);
-			v = new Vector();
-			v.add(inFile);
-			dataSession = new MpiPOutputSession();
-			break;
-		case 4:
-			if (fileExists()) {
-				inFile[0] = new File (sourceFile);
-				v = new Vector();
-				v.add(inFile);
-			} else {
-				fl = new FileList();
-				String[] sourcePath = extractSourcePath();
-				if (sourcePath[0] != null)
-					v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
-				else
-					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
-			}
-			dataSession = new HPMToolkitDataSession();
-			break;
-		case 5:
-			if (fileExists()) {
-				inFile[0] = new File (sourceFile);
-				v = new Vector();
-				v.add(inFile);
-			} else {
-				fl = new FileList();
-				String[] sourcePath = extractSourcePath();
-				if (sourcePath[0] != null)
-					v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
-				else
-					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
-			}
-			dataSession = new GprofOutputSession(fixNames);
-			break;
-		case 6:
-			if (fileExists()) {
-				inFile[0] = new File (sourceFile);
-				v = new Vector();
-				v.add(inFile);
-			} else {
-				fl = new FileList();
-				String[] sourcePath = extractSourcePath();
-				if (sourcePath[0] != null)
-					v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
-				else
-					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
-			}
-			dataSession = new PSRunDataSession();
-			break;
-			/*
-		case 101:
-			if (fileExists()) {
-				inFile[0] = new File (sourceFile);
-				v = new Vector();
-				v.add(inFile);
-			} else {
-				fl = new FileList();
-				String[] sourcePath = extractSourcePath();
-				if (sourcePath[0] != null)
-					v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
-				else
-					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
-			}
-			dataSession = new SPPMOutputDataSession();
-			break;
-			*/
-		default:
-			break;
+	case 0:
+	    inFile[0] = new File (sourceFile);
+	    v = new Vector();
+	    v.add(inFile);
+	    dataSession = new TauPprofOutputSession();
+	    break;
+	case 1:
+	    fl = new FileList();
+	    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", false);
+	    dataSession = new TauOutputSession();
+	    break;
+	case 2:
+	    inFile[0] = new File (sourceFile);
+	    v = new Vector();
+	    v.add(inFile);
+	    dataSession = new DynaprofOutputSession();
+	    break;
+	case 3:
+	    inFile[0] = new File (sourceFile);
+	    v = new Vector();
+	    v.add(inFile);
+	    dataSession = new MpiPOutputSession();
+	    break;
+	case 4:
+	    if (fileExists()) {
+		inFile[0] = new File (sourceFile);
+		v = new Vector();
+		v.add(inFile);
+	    } else {
+		fl = new FileList();
+		String[] sourcePath = extractSourcePath();
+		if (sourcePath[0] != null)
+		    v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
+		else
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+	    }
+	    dataSession = new HPMToolkitDataSession();
+	    break;
+	case 5:
+	    if (fileExists()) {
+		inFile[0] = new File (sourceFile);
+		v = new Vector();
+		v.add(inFile);
+	    } else {
+		fl = new FileList();
+		String[] sourcePath = extractSourcePath();
+		if (sourcePath[0] != null)
+		    v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
+		else
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+	    }
+	    dataSession = new GprofOutputSession(fixNames);
+	    break;
+	case 6:
+	    if (fileExists()) {
+		inFile[0] = new File (sourceFile);
+		v = new Vector();
+		v.add(inFile);
+	    } else {
+		fl = new FileList();
+		String[] sourcePath = extractSourcePath();
+		if (sourcePath[0] != null)
+		    v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
+		else
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+	    }
+	    dataSession = new PSRunDataSession();
+	    break;
+	    /*
+	      case 101:
+	      if (fileExists()) {
+	      inFile[0] = new File (sourceFile);
+	      v = new Vector();
+	      v.add(inFile);
+	      } else {
+	      fl = new FileList();
+	      String[] sourcePath = extractSourcePath();
+	      if (sourcePath[0] != null)
+	      v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
+	      else
+	      v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+	      }
+	      dataSession = new SPPMOutputDataSession();
+	      break;
+	    */
+	default:
+	    break;
 	}
 
 	trial = new Trial();
@@ -235,36 +235,36 @@ public class LoadTrial{
 	return problemString.toString();
     }
 
-	private boolean fileExists() {
-		boolean rc = false;
-		try {
-			FileInputStream fileIn = new FileInputStream(sourceFile);
-			if (fileIn != null) {
-				InputStreamReader inReader = new InputStreamReader(fileIn);
-				if (inReader != null) {
-					BufferedReader br = new BufferedReader(inReader);
-					if (br != null) {
-						rc = true;
-						br.close();
-					}
-				}
-			}
-		} catch (IOException e) {
-			// do nothing but return false
+    private boolean fileExists() {
+	boolean rc = false;
+	try {
+	    FileInputStream fileIn = new FileInputStream(sourceFile);
+	    if (fileIn != null) {
+		InputStreamReader inReader = new InputStreamReader(fileIn);
+		if (inReader != null) {
+		    BufferedReader br = new BufferedReader(inReader);
+		    if (br != null) {
+			rc = true;
+			br.close();
+		    }
 		}
-		return rc;
+	    }
+	} catch (IOException e) {
+	    // do nothing but return false
 	}
+	return rc;
+    }
 
-	private String[] extractSourcePath() {
-		//StringTokenizer st = new StringTokenizer(sourceFile, "/");
-		File inFile = new File(sourceFile);
-		String[] newPath = new String[2];
-		newPath[0] = new String(inFile.getParent());
-		if (newPath[0] != null) {
-			newPath[1] = new String(inFile.getName());
-		}
-		return newPath;
+    private String[] extractSourcePath() {
+	//StringTokenizer st = new StringTokenizer(sourceFile, "/");
+	File inFile = new File(sourceFile);
+	String[] newPath = new String[2];
+	newPath[0] = new String(inFile.getParent());
+	if (newPath[0] != null) {
+	    newPath[1] = new String(inFile.getName());
 	}
+	return newPath;
+    }
 
     //******************************
     //End - Helper functions for buildStatic data.
@@ -308,15 +308,15 @@ public class LoadTrial{
     	}
 
 	if (configFile == null) {
-		System.err.println("Please enter a valid config file.");
+	    System.err.println("Please enter a valid config file.");
 	    System.err.println(LoadTrial.USAGE);
 	    System.exit(-1);
 	} else if (sourceFile == null) {
-		System.err.println("Please enter a valid source file.");
+	    System.err.println("Please enter a valid source file.");
 	    System.err.println(LoadTrial.USAGE);
 	    System.exit(-1);
 	} else if (experimentID == null) {
-		System.err.println("Please enter a valid experiment ID.");
+	    System.err.println("Please enter a valid experiment ID.");
 	    System.err.println(LoadTrial.USAGE);
 	    System.exit(-1);
 	} 
@@ -324,33 +324,33 @@ public class LoadTrial{
 	int fileType = 0;
 	String filePrefix = null;
 	if (fileTypeString != null) {
-		if (fileTypeString.equals("pprof")) {
-			fileType = 0;
-		} else if (fileTypeString.equals("profiles")) {
-			fileType = 1;
-		} else if (fileTypeString.equals("dynaprof")) {
-			fileType = 2;
-		} else if (fileTypeString.equals("mpip")) {
-			fileType = 3;
-		} else if (fileTypeString.equals("hpm")) {
-			fileType = 4;
-		} else if (fileTypeString.equals("gprof")) {
-			fileType = 5;
-		} else if (fileTypeString.equals("psrun")) {
-			fileType = 6;
-/*
-		} else if (fileTypeString.equals("sppm")) {
-			fileType = 101;
-		} else if (fileTypeString.equals("xprof")) {
-			fileType = 0;
-		} else if (fileTypeString.equals("sddf")) {
-			fileType = 0;
-*/
-		} else {
-			System.err.println("Please enter a valid file type.");
+	    if (fileTypeString.equals("pprof")) {
+		fileType = 0;
+	    } else if (fileTypeString.equals("profiles")) {
+		fileType = 1;
+	    } else if (fileTypeString.equals("dynaprof")) {
+		fileType = 2;
+	    } else if (fileTypeString.equals("mpip")) {
+		fileType = 3;
+	    } else if (fileTypeString.equals("hpm")) {
+		fileType = 4;
+	    } else if (fileTypeString.equals("gprof")) {
+		fileType = 5;
+	    } else if (fileTypeString.equals("psrun")) {
+		fileType = 6;
+		/*
+		  } else if (fileTypeString.equals("sppm")) {
+		  fileType = 101;
+		  } else if (fileTypeString.equals("xprof")) {
+		  fileType = 0;
+		  } else if (fileTypeString.equals("sddf")) {
+		  fileType = 0;
+		*/
+	    } else {
+		System.err.println("Please enter a valid file type.");
 	    	System.err.println(USAGE);
 	    	System.exit(-1);
-		}
+	    }
 	}
 
 	if (trialName == null) {
@@ -364,8 +364,8 @@ public class LoadTrial{
 	LoadTrial trans = new LoadTrial(configFile, sourceFile);
 	trans.checkForExp(experimentID);
 	if (trialID != null) {
-		trans.checkForTrial(trialID);
-		trans.trialID = Integer.parseInt(trialID);
+	    trans.checkForTrial(trialID);
+	    trans.trialID = Integer.parseInt(trialID);
 	}
 	trans.trialName = trialName;
 	trans.problemFile = problemFile;

@@ -13,17 +13,17 @@ public class LoadSchema {
     private DB db = null;
     
     private static String SCHEMA_USAGE = 
-        "USAGE: perfdmf_loadschema [{-h,--help}] [{-s,--schemafile} filename]\n";
+        "usage: perfdmf_loadschema [{-h,--help}] {-s,--schemafile} filename\n";
 
     private ConnectionManager connector;
 
     public LoadSchema(String configFileName) {
-		super();
-		connector = new ConnectionManager(configFileName);
+	super();
+	connector = new ConnectionManager(configFileName);
     }
 
     public ConnectionManager getConnector(){
-		return connector;
+	return connector;
     }
 
     /*** Beginning of main program. ***/
@@ -39,8 +39,8 @@ public class LoadSchema {
         }
         catch ( CmdLineParser.OptionException e ) {
             System.err.println(e.getMessage());
-	    	System.err.println(SCHEMA_USAGE);
-	    	System.exit(-1);
+	    System.err.println(SCHEMA_USAGE);
+	    System.exit(-1);
         }
 
         Boolean help = (Boolean)parser.getOptionValue(helpOpt);
@@ -48,38 +48,38 @@ public class LoadSchema {
         String schemaFile = (String)parser.getOptionValue(schemafileOpt);
 
     	if (help != null && help.booleanValue()) {
-	    	System.err.println(SCHEMA_USAGE);
-	    	System.exit(-1);
+	    System.err.println(SCHEMA_USAGE);
+	    System.exit(-1);
     	}
 
-		if (configFile == null) {
+	if (configFile == null) {
             System.err.println("Please enter a valid config file.");
-	    	System.err.println(SCHEMA_USAGE);
-	    	System.exit(-1);
-		}
+	    System.err.println(SCHEMA_USAGE);
+	    System.exit(-1);
+	}
 
-		// validate the command line options...
-		if (schemaFile == null) {
-           	System.err.println("Please enter a valid schema file.");
-    		System.err.println(SCHEMA_USAGE);
-    		System.exit(-1);
-		}
+	// validate the command line options...
+	if (schemaFile == null) {
+	    System.err.println("Please enter a valid schema file.");
+	    System.err.println(SCHEMA_USAGE);
+	    System.exit(-1);
+	}
 
-		// create a new LoadSchema object, pass in the configuration file name
-		LoadSchema loadSchema = new LoadSchema(configFile);
-		try {
-			loadSchema.getConnector().connect();
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
+	// create a new LoadSchema object, pass in the configuration file name
+	LoadSchema loadSchema = new LoadSchema(configFile);
+	try {
+	    loadSchema.getConnector().connect();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	    System.exit(0);
+	}
 
-		int exitval = 0;
+	int exitval = 0;
 	
-/*** Load database schema to establish PerfDMF, invoke at most one time. ****/
-		loadSchema.getConnector().genParentSchema(schemaFile);
-		loadSchema.getConnector().dbclose();
-		System.exit(exitval);
+	/*** Load database schema to establish PerfDMF, invoke at most one time. ****/
+	loadSchema.getConnector().genParentSchema(schemaFile);
+	loadSchema.getConnector().dbclose();
+	System.exit(exitval);
     }
 }
 
