@@ -127,6 +127,10 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_ENABLE_ALL_GROUPS()			RtsLayer::enableAllGroups()
 #define TAU_DISABLE_ALL_GROUPS()		RtsLayer::disableAllGroups()
 #define TAU_GET_PROFILE_GROUP(group)		RtsLayer::getProfileGroup(group)
+#define TAU_ENABLE_TRACKING_MEMORY()		TauEnableTrackingMemory()
+#define TAU_DISABLE_TRACKING_MEMORY()		TauDisableTrackingMemory()
+#define TAU_TRACK_MEMORY()			TauTrackMemoryUtilization()
+#define TAU_SET_INTERRUPT_INTERVAL(value)	TauSetInterruptInterval(value)
 
 #ifdef NO_RTTI
 /* #define CT(obj) string(#obj) */
@@ -188,6 +192,10 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_DISABLE_GROUP_NAME(group)
 #define TAU_ENABLE_ALL_GROUPS()			
 #define TAU_DISABLE_ALL_GROUPS()	
+#define TAU_ENABLE_TRACKING_MEMORY()
+#define TAU_DISABLE_TRACKING_MEMORY()
+#define TAU_TRACK_MEMORY()
+#define TAU_SET_INTERRUPT_INTERVAL(value)
 
 #define CT(obj)
 
@@ -214,6 +222,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 2004/01/27 23:15:42 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.29 2004/01/27 23:15:42 sameer Exp $ 
+ * $Revision: 1.30 $   $Date: 2004/02/26 22:28:35 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.30 2004/02/26 22:28:35 sameer Exp $ 
  ***************************************************************************/

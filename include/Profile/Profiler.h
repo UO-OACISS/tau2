@@ -62,7 +62,6 @@
 
 #include <Profile/RtsLayer.h>
 
-
 #include <Profile/FunctionInfo.h>
 			  
 #include <Profile/UserEvent.h>
@@ -78,6 +77,8 @@
 #include <Profile/TauMuse.h>
 
 #include <Profile/TauCompensate.h>
+
+#include <Profile/TauHandler.h>
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -196,7 +197,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.49 $   $Date: 2004/01/28 21:54:49 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.49 2004/01/28 21:54:49 bertie Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.50 $   $Date: 2004/02/26 22:28:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.50 2004/02/26 22:28:35 sameer Exp $ 
  ***************************************************************************/
