@@ -23,12 +23,19 @@
 using namespace std;
 
 #define INBUF_SIZE 2048
-#define BEGIN_EXCLUDE_TOKEN "BEGIN_EXCLUDE_LIST"
-#define END_EXCLUDE_TOKEN   "END_EXCLUDE_LIST"
-#define BEGIN_INCLUDE_TOKEN "BEGIN_INCLUDE_LIST"
-#define END_INCLUDE_TOKEN   "END_INCLUDE_LIST"
+#define BEGIN_EXCLUDE_TOKEN      "BEGIN_EXCLUDE_LIST"
+#define END_EXCLUDE_TOKEN        "END_EXCLUDE_LIST"
+#define BEGIN_INCLUDE_TOKEN      "BEGIN_INCLUDE_LIST"
+#define END_INCLUDE_TOKEN        "END_INCLUDE_LIST"
+#define BEGIN_FILE_INCLUDE_TOKEN "BEGIN_FILE_INCLUDE_LIST"
+#define END_FILE_INCLUDE_TOKEN   "END_FILE_INCLUDE_LIST"
+#define BEGIN_FILE_EXCLUDE_TOKEN "BEGIN_FILE_EXCLUDE_LIST"
+#define END_FILE_EXCLUDE_TOKEN   "END_FILE_EXCLUDE_LIST"
+
 list<string> excludelist;
 list<string> includelist;
+list<string> fileincludelist;
+list<string> fileexcludelist;
 
 /* -------------------------------------------------------------------------- */
 /* -- Read the instrumentation requests file. ------------------------------- */
@@ -44,6 +51,9 @@ int processInstrumentationRequests(char *fname)
     cout << "ERROR: Cannot open file" << fname<<endl;
     return 0; 
   }
+#ifdef DEBUG
+  printf("Inside processInstrumentationRequests\n");
+#endif /* DEBUG */
   while (input.getline(inbuf, INBUF_SIZE) || input.gcount()) {  
     if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
     if (strcmp(inbuf,BEGIN_EXCLUDE_TOKEN) == 0) 
@@ -64,6 +74,29 @@ int processInstrumentationRequests(char *fname)
 	  break; /* Found the end of exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
         includelist.push_back(string(inbuf)); 
+      }
+    }
+    if (strcmp(inbuf,BEGIN_FILE_INCLUDE_TOKEN) == 0) 
+    {
+      while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
+      {
+	if (strcmp(inbuf, END_FILE_INCLUDE_TOKEN) == 0)
+	  break; /* Found the end of file include list. */  
+        if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
+        fileincludelist.push_back(string(inbuf)); 
+#ifdef DEBUG
+	printf("Parsing inst. file: adding %s to file include list\n", inbuf);
+#endif /* DEBUG */
+      }
+    }
+    if (strcmp(inbuf,BEGIN_FILE_EXCLUDE_TOKEN) == 0) 
+    {
+      while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
+      {
+	if (strcmp(inbuf, END_FILE_EXCLUDE_TOKEN) == 0)
+	  break; /* Found the end of file exclude list. */  
+        if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
+        fileexcludelist.push_back(string(inbuf)); 
       }
     }
     /* next token */
@@ -94,6 +127,31 @@ void printIncludeList(void)
     cout <<"Include Item: "<<*it<<endl;
 
 }
+
+/* -------------------------------------------------------------------------- */
+/* -- print the contents of the file include list --------------------------- */
+/* -------------------------------------------------------------------------- */
+
+void printFileIncludeList(void)
+{
+  for (list<string>::iterator it = fileincludelist.begin(); 
+	it != fileincludelist.end(); it++)
+    cout <<"File Include Item: "<<*it<<endl;
+
+}
+
+/* -------------------------------------------------------------------------- */
+/* -- print the contents of the file exclude list --------------------------- */
+/* -------------------------------------------------------------------------- */
+
+void printFileExcludeList(void)
+{
+  for (list<string>::iterator it = fileexcludelist.begin(); 
+	it != fileexcludelist.end(); it++)
+    cout <<"File Include Item: "<<*it<<endl;
+
+}
+
 
 /* -------------------------------------------------------------------------- */
 /* -- report a match or a mismatch between two strings ---------------------- */
@@ -176,9 +234,120 @@ bool instrumentEntity(const string& function_name)
  
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- Compares the file name and the wildcard. Returns 0 or 1   ------------- */
+/* -------------------------------------------------------------------------- */
+bool wildcardCompare(char *wild, char *string) 
+{
+  char *cp, *mp;
+
+  /* check if it is not a ? */
+  while ((*string) && (*wild != '*')) {
+    if ((*wild != *string) && (*wild != '?')) {
+      return false;
+    }
+    wild++;
+    string++;
+  }
+		
+  /* next check for '*' */
+  while (*string) {
+    if (*wild == '*') {
+      if (!*++wild) {
+        return true;
+      }
+      mp = wild;
+      cp = string+1;
+    } 
+    else 
+      if ((*wild == *string) || (*wild == '?')) {
+	/* '?' matched if the character did not */
+        wild++;
+        string++;
+      } else {
+        wild = mp;
+        string = cp++;
+      }
+    
+   } /* string is not null */
+  
+   while (*wild == '*') {
+     wild++;
+   }
+   /* is there anything left in wild? */
+   if (*wild)  /* wild is not null, a mismatch */
+     return false; 
+   else  /* wild is null and the string is also matched */
+     return true; 
+}
+
+/* -------------------------------------------------------------------------- */
+/* -- should the file be processed? Returns true or false ------------------- */
+/* -------------------------------------------------------------------------- */
+bool processFileForInstrumentation(const string& file_name)
+{
+
+  if (!fileexcludelist.empty())
+  { /* if exclude list has entries */
+    for (list<string>::iterator it = fileexcludelist.begin();
+        it != fileexcludelist.end(); it++)
+    { /* iterate through the entries and see if the names match */
+      if (wildcardCompare((*it).c_str(), file_name.c_str())) 
+      {
+        /* names match! This routine should not be instrumented */
+#ifdef DEBUG
+	cout <<"Don't instrument: "<<file_name<<" it is in file exclude list"<<endl;
+#endif /* DEBUG */
+        return false;
+      }
+    }
+  }  
+
+  /* There is no entry in the exclude list that matches file_name. */ 
+  if (fileincludelist.empty())
+  {
+#ifdef DEBUG
+    printFileIncludeList();
+    cout <<"Instrumenting ... "<< file_name
+	 << " FILE INCLUDE list is empty" <<endl;
+#endif /* DEBUG */
+    /* There are no entries in the include list */
+    return true; /* instrument the given routine */
+  }
+  else
+  {
+    /* wait! The file include list is not empty. We must see if the given name
+       appears in the list of routines that should be instrumented 
+       For this, we need to iterate through the include list.  */
+    for (list<string>::iterator it = fileincludelist.begin();
+        it != fileincludelist.end(); it++)
+    { /* iterate through the entries and see if the names match */
+      if (wildcardCompare((*it).c_str(), file_name.c_str())) 
+      {
+        /* names match! This routine should be instrumented */
+#ifdef DEBUG
+	cout <<"Instrument "<< file_name<<" wildcardCompare is true "<<endl;
+#endif /* DEBUG */
+        return true;
+      }
+      else 
+      {
+#ifdef DEBUG
+	cout <<"Iterate over file include_list: "
+	     << file_name<<" wildcardCompare is false "<<endl;
+#endif /* DEBUG */
+      }
+    }
+    /* the name doesn't match any routine name in the include list. 
+       Do not instrument it. */
+    return false;
+  }
+ 
+}
+
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2002/03/11 22:47:23 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.1 2002/03/11 22:47:23 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2003/07/14 21:41:30 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.2 2003/07/14 21:41:30 sameer Exp $
  ***************************************************************************/

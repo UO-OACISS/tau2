@@ -25,6 +25,7 @@
 /* For selective instrumentation */
 extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const string& function_name);
+extern bool processFileForInstrumentation(const string& file_name);
 
 /* For C instrumentation */
 enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT};
@@ -1306,8 +1307,10 @@ int main(int argc, char **argv)
   for (PDB::filevec::const_iterator it=p.getFileVec().begin();
        it!=p.getFileVec().end(); ++it) 
   {
-     if ((*it)->name() == string(filename)) 
-     {
+     bool instrumentThisFile = false;
+     if (((*it)->name() == string(filename)) && 
+         (instrumentThisFile = processFileForInstrumentation(filename)))
+     { /* should we instrument this file? Yes */
        PDB::lang_t l = p.language();
 
 #ifdef DEBUG
@@ -1340,6 +1343,18 @@ int main(int argc, char **argv)
          if (l == PDB::LA_FORTRAN)
            instrumentFFile(p, *it, outFileName, group_name);
        }
+     } /* don't instrument this file. Should we copy in to out? */
+     else
+     { 
+       if (((*it)->name() == string(filename)) &&
+         (instrumentThisFile == false))
+       { /* we should copy the file to outFile */
+         ifstream ifs(filename);
+         ofstream ofs(outFileName.c_str());
+         /* copy ifs to ofs */
+         if (ifs.is_open() && ofs.is_open())
+           ofs << ifs.rdbuf(); /* COPY */ 
+       }
      }
   }
 
@@ -1366,8 +1381,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.43 $   $Date: 2003/05/08 23:41:00 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.43 2003/05/08 23:41:00 sameer Exp $
+ * $Revision: 1.44 $   $Date: 2003/07/14 21:41:29 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.44 2003/07/14 21:41:29 sameer Exp $
  ***************************************************************************/
 
 
