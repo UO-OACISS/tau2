@@ -11,9 +11,9 @@ BASE_SOURCES=ApplicationManager.java GlobalMappingElement.java PPMLPanel.java Pa
              CallPathTextWindowPanel.java LineData.java ParaProfDataSession.java Preferences.java TauPprofOutputSession.java \
              CallPathUtilFuncs.java MappingDataWindow.java ParaProfError.java SMWContext.java Thread.java \
              ColorChooser.java MappingDataWindowPanel.java ParaProfExperiment.java SMWServer.java ThreadDataWindow.java \
-             ColorPair.java MappingLedgerWindow.java ParaProfImageInterface.java SMWThread.java ThreadDataWindowPanel.java \
-             Context.java MappingLedgerWindowPanel.java SMWThreadDataElement.java UserEventWindow.java \
-             DBConfiguration.java Metric.java ParaProfIterator.java SavedPreferences.java UserEventWindowPanel.java \
+             ColorPair.java MappingLedgerWindow.java ParaProfImageInterface.java ParaProfImageOptionsWindow.java \
+             SMWThread.java ThreadDataWindowPanel.java Context.java MappingLedgerWindowPanel.java SMWThreadDataElement.java \
+             UserEventWindow.java DBConfiguration.java Metric.java ParaProfIterator.java SavedPreferences.java UserEventWindowPanel.java \
              DynaprofOutputSession.java NCT.java ParaProfManager.java StatWindow.java UtilFncs.java \
              Node.java ParaProfManagerTableModel.java StatWindowPanel.java \
              GlobalMapping.java PPML.java ParaProfObserver.java StaticMainWindow.java ParaProfTreeNodeUserObject.java
