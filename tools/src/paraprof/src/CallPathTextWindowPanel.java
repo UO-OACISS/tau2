@@ -267,8 +267,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 			    d2 = 0.0;
 			    while(l3.hasNext()){
 				gtde = (GlobalThreadDataElement) functionList.elementAt((((Integer)l3.next()).intValue()));
-				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
-				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
+				d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
+				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
 			    }
 			    max = setMax(max,d1,d2);
 			}
@@ -285,8 +285,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 			    d2 = 0.0;
 			    while(l3.hasNext()){
 				gtde = (GlobalThreadDataElement) functionList.elementAt((((Integer)l3.next()).intValue()));
-				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
-				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
+				d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
+				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
 			    }
 			    max = setMax(max,d1,d2);
 			    yHeightNeeded = yHeightNeeded + (spacing);
@@ -365,8 +365,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 			    while(l3.hasNext()){
 				int tmpInt = ((Integer)l3.next()).intValue();
 				gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
-				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
-				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
+				d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
+				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
 				d3=d3+gtde.getNumberOfCalls();
 			    }
 			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
@@ -393,8 +393,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 			    while(l3.hasNext()){
 				int tmpInt = ((Integer)l3.next()).intValue();
 				gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
-				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
-				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
+				d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
+				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
 				d3=d3+gtde.getNumberOfCalls();
 				s=s+":["+tmpInt+"]";
 			    }

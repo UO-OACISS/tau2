@@ -39,11 +39,13 @@ public class ParaProfTrial extends Trial{
 	    this.setNumContextsPerNode(trial.getNumContextsPerNode());
 	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
 	    this.setUserData(trial.getUserData());
+	    this.dataSession = new ParaProfDBSession();
+	    this.dataSession.setDebug(ParaProf.debugIsOn);
 	    int numberOfMetrics = trial.getMetricCount();
-	    metrics = new Vector();
 	    for(int i=0;i<numberOfMetrics;i++){
-		Metric metric = this.addMetric();
+		Metric metric = dataSession.addMetric();
 		metric.setName(trial.getMetric(i));
+		metric.setTrial(this);
 	    }
 	}
 	this.type = type;
@@ -65,42 +67,12 @@ public class ParaProfTrial extends Trial{
 	    break;
 	case 3:
 	    break;
-	case 4:
-	    dataSession = new ParaProfDBSession();
-	    dataSession.setDebug(ParaProf.debugIsOn);
-	    break;
 	default:
 	    break;
 	}
 	
-	if(type==4){
-	    //Need to pass in the metrics present for database sources.
-	    //Not easy to obtain this information from a PerfDBSession.
-	    Vector v = new Vector();
-	    v.add(obj);
-	    v.add(metrics);
-	    dataSession.initialize(v);
-	}
-	else
-	    dataSession.initialize(obj);
-
-	//Now grab all the data.
-	metrics = dataSession.getMetrics();
-	globalMapping = dataSession.getGlobalMapping();
-	nct = dataSession.getNCT();
-	groupNamesPresent = dataSession.groupNamesPresent();
-	userEventsPresent = dataSession.userEventsPresent();
-	callPathDataPresent = dataSession.callPathDataPresent();
-
-	numberOfMappings = dataSession.getNumberOfMappings();
-	numberOfUserEvents = dataSession.getNumberOfUserEvents();
-	
-	globalMapping.setColors(clrChooser, -1);
-
-	for(int i=(metrics.size())-1;i>=0;i--){
-	    ((Metric) metrics.elementAt(i)).setTrial(this);
-	}
-
+	dataSession.initialize(obj);
+	dataSession.getGlobalMapping().setColors(clrChooser, -1);
     }
 
     public void setExperiment(ParaProfExperiment experiment){
@@ -127,15 +99,7 @@ public class ParaProfTrial extends Trial{
 	else
 	    return  ":" + (super.getID());
     }
-  
-    public Metric addMetric(){
-	Metric metric = new Metric();
-	metric.setTrial(this);
-	metric.setID((metrics.size()));
-	metrics.add(metric);
-	return metric;
-    }
-  
+
     public ColorChooser getColorChooser(){
 	return clrChooser;}
   
@@ -168,66 +132,8 @@ public class ParaProfTrial extends Trial{
     public String getPathReverse(){
 	return pathReverse;}
 
-    public Vector getMetrics(){
-	return metrics;}
-  
-    public int getMetricPosition(String string){
-	int counter = 0;
-	for(Enumeration e = metrics.elements(); e.hasMoreElements() ;){
-	    Metric metric = (Metric) e.nextElement();
-	    if((metric.getName()).equals(string))
-		return counter;
-	    counter++;
-	}
-	return -1;
-    }
-
     public String toString(){ 
 	return super.getName();}
-
-    public NCT getNCT(){
-	return nct;}
-  
-    //Returns the total number of threads in this trial.
-    public int getTotalNumberOfThreads(){
-	if(totalNumberOfThreads==-1){
-	    for(Enumeration e1 = nct.getNodes().elements(); e1.hasMoreElements() ;){
-		Node node = (Node) e1.nextElement();
-		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
-		    Context context = (Context) e2.nextElement();
-		    totalNumberOfThreads+=(context.getNumberOfThreads());
-		}
-	    }
-	}
-	return totalNumberOfThreads;
-    }
-
-    //of nodes, contexts and threads reached. This is not a total,
-    //except in the case of the number of nodes.
-    //This method is useful for determining an upper bound on the
-    //string sizes being displayed in ParaProf's different windows.
-    //Computation will only occur during the first call to this method.
-    //Subsequent calls will return the results obtained from the first
-    //call.
-    public int[] getMaxNCTNumbers(){
-	if(maxNCT==null){
-	    maxNCT = new int[3];
-	    for(int i=0;i<3;i++){
-		maxNCT[i]=0;}
-	    maxNCT[0] = nct.getNumberOfNodes();
-	    for(Enumeration e1 = (nct.getNodes()).elements(); e1.hasMoreElements() ;){
-		Node node = (Node) e1.nextElement();
-		if(node.getNumberOfContexts()>maxNCT[1])
-		    maxNCT[1]=node.getNumberOfContexts();
-		for(Enumeration e2 = (node.getContexts()).elements(); e2.hasMoreElements() ;){
-		    Context context = (Context) e2.nextElement();
-		    if(context.getNumberOfThreads()>maxNCT[2])
-			maxNCT[2]=context.getNumberOfThreads();
-		}
-	    }
-	}
-	return maxNCT;
-    }
 
     //####################################
     //Functions that control the obtaining and the opening
@@ -258,29 +164,22 @@ public class ParaProfTrial extends Trial{
     }
     
     //####################################
-    //Functions that control the opening and closing of the static main window for
+    //End - Functions that control the opening
+    //and closing of the static main window for
     //this trial.
     //####################################
-  
+    
     public SystemEvents getSystemEvents(){
 	return systemEvents;}
   
-    public void setCurValLoc(int inValueLocation){
-	currentValueLocation = inValueLocation;}
+    public void setSelectedMetricID(int selectedMetricID){
+	this.selectedMetricID = selectedMetricID;}
+    
+    public int getSelectedMetricID(){
+	return selectedMetricID;}
   
-    public int getCurValLoc(){
-	return currentValueLocation;}
-  
-    GlobalMapping getGlobalMapping(){
-	return globalMapping;}
-  
-    public String getCounterName(){
-	Metric metric = (Metric) metrics.elementAt(currentValueLocation);
-	return metric.getName();
-    }
-
     public boolean isTimeMetric(){
-	String trialName = this.getCounterName();
+	String trialName = this.getMetricName(this.getSelectedMetricID());
 	trialName = trialName.toUpperCase();
 	if(trialName.indexOf("TIME") == -1)
 	    return false;
@@ -289,43 +188,57 @@ public class ParaProfTrial extends Trial{
     }
   
     //####################################
-    //Useful functions to help the drawing windows.
-    //
-    //For the most part, these functions just return data
-    //items that are easier to calculate whilst building the global
-    //lists
+    //Pass-though methods to the data session for this instance.
     //####################################
-    private void setNumberOfMappings(int numberOfMappings){
-	this.numberOfMappings = numberOfMappings;}
+    GlobalMapping getGlobalMapping(){
+	return dataSession.getGlobalMapping();}
 
     public int getNumberOfMappings(){
-	return numberOfMappings;}
-
-    private void setNumberOfUserEvents(int numberOfUserEvents){
-	this.numberOfUserEvents = numberOfUserEvents;}
+	return dataSession.getNumberOfMappings();}
 
     public int getNumberOfUserEvents(){
-	return numberOfUserEvents;}
+	return dataSession.getNumberOfUserEvents();}
 
-    private void setGroupNamesPresent(boolean groupNamesPresent){
-	this.groupNamesPresent = groupNamesPresent;}
-    
     public boolean groupNamesPresent(){
-	return groupNamesPresent;}
-  
-    private void setUserEventsPresent(boolean userEventsPresent){
-	this.userEventsPresent = userEventsPresent;}
+	return dataSession.groupNamesPresent();}
   
     public boolean userEventsPresent(){
-	return userEventsPresent;}
+	return dataSession.userEventsPresent();}
 
-    private void setCallPathDataPresent(boolean callPathDataPresent){
-	this.callPathDataPresent = callPathDataPresent;}
-  
     public boolean callPathDataPresent(){
-	return callPathDataPresent;}
+	return dataSession.callPathDataPresent();}
+
+    public int getTotalNumberOfThreads(){
+	return dataSession.getTotalNumberOfThreads();}
+
+    public Vector getMetrics(){
+	return dataSession.getMetrics();}
+
+    public int getNumberOfMetrics(){
+	return dataSession.getNumberOfMetrics();}
+
+    public int getMetricID(String string){
+	return dataSession.getMetricID(string);}
+
+    public String getMetricName(int metricID){
+	return dataSession.getMetricName(metricID);}
+
+    public Metric addMetric(){
+	return dataSession.addMetric();}
+
+    public NCT getNCT(){
+	return dataSession.getNCT();}
+
+    public int[] getMaxNCTNumbers(){
+	return dataSession.getMaxNCTNumbers();}
+
+    public void setMeanData(int mappingSelection, int metricID){
+	dataSession.setMeanData(mappingSelection, metricID);}
+    
+    public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics){
+	dataSession.setMeanData(mappingSelection, numberOfMetrics);}
     //####################################
-    //End - Useful functions to help the drawing windows.
+    //end - Pass-though methods to the data session for this instance.
     //####################################
   
     //####################################
@@ -336,8 +249,7 @@ public class ParaProfTrial extends Trial{
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     private boolean dBTrial = false;
-    private Vector metrics = null;
-  
+     
     private SystemEvents systemEvents = new SystemEvents();
     private StaticMainWindow sMW = null;
     private ColorChooser clrChooser = new ColorChooser(this, null);
@@ -345,20 +257,10 @@ public class ParaProfTrial extends Trial{
   
     private String path = null;
     private String pathReverse = null;
-    private int currentValueLocation = 0;
-  
+    private int selectedMetricID = 0;
+
     private GlobalMapping globalMapping;
     private Vector nodes = new Vector();
-    boolean groupNamesPresent = false;
-    boolean userEventsPresent = false;
-    boolean callPathDataPresent = false;
-
-    private int numberOfMappings = -1;
-    private int numberOfUserEvents = -1;
-    private NCT nct = null;
-    private int totalNumberOfContexts = -1;
-    private int totalNumberOfThreads = -1;
-    private int[] maxNCT = null;
     //####################################
     //Instance data.
     //####################################

@@ -99,8 +99,8 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		//####################################
 		//This is an important line.
 		inputString = br.readLine();
-		//Set the counter name.
-		String counterName = getCounterName(inputString);
+		//Set the metric name.
+		String metricName = getMetricName(inputString);
       
 		//Need to call increaseVectorStorage() on all objects that require it.
 		this.getGlobalMapping().increaseVectorStorage();
@@ -141,14 +141,14 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			System.out.println("Done increasing the storage for the new counter.");
 		}
       
-		//Now set the counter name.
-		if(counterName == null)
-		    counterName = new String("Time");
+		//Now set the metric name.
+		if(metricName == null)
+		    metricName = new String("Time");
 
-		System.out.println("Counter name is: " + counterName);
+		System.out.println("Metric name is: " + metricName);
       
 		Metric metricRef = this.addMetric();
-		metricRef.setName(counterName);
+		metricRef.setName(metricName);
 		metric = metricRef.getID();
 
 		bSDCounter++;
@@ -445,6 +445,14 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		System.out.println("Done processing data file!");
 		System.out.println("Time to process file (in milliseconds): " + time);
 	    }
+	    System.out.println("Processing callpath data ...");
+	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
+		setCallPathDataPresent(true);
+		CallPathUtilFuncs.buildRelations(getGlobalMapping());
+	    }
+	    else
+		System.out.println("No callpath data found.");
+	    System.out.println("Done - Processing callpath data!");
 	}
         catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD01");
@@ -618,7 +626,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	return nct;
     }
   
-    private String getCounterName(String inString){
+    private String getMetricName(String inString){
 	try{
 	    String tmpString = null;
 	    int tmpInt = inString.indexOf("_MULTI_");

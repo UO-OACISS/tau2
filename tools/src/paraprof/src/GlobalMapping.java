@@ -144,7 +144,7 @@ public class GlobalMapping{
     //######
 
     //######
-    //Functions setting max and total values.
+    //Functions setting mean and total values.
     //######
     public void setMeanExclusiveValueAt(int dataValueLocation, double value, int mappingID, int mappingSelection){
 	GlobalMappingElement globalMappingElement = this.getGlobalMappingElement(mappingID, mappingSelection);
@@ -167,56 +167,6 @@ public class GlobalMapping{
     }
     //######
     //End - Functions setting max and total values.
-    //######
-    
-    //######
-    //Function to compute mean values.
-    //######
-    public void computeMeanData(int mappingSelection, int metric){
-	ListIterator l = this.getMappingIterator(mappingSelection);
-	double exclusiveTotal = 0.0;
-	GlobalMappingElement globalMappingElement = null;
-	while(l.hasNext()){
-	    globalMappingElement = (GlobalMappingElement) l.next();
-	    if((globalMappingElement.getCounter()) != 0){
-		double d = (globalMappingElement.getTotalExclusiveValue())/(globalMappingElement.getCounter());
-		//Increment the total values.
-		exclusiveTotal+=d;
-		globalMappingElement.setMeanExclusiveValue(metric, d);
-		if((this.getMaxMeanExclusiveValue(metric) < d))
-		    this.setMaxMeanExclusiveValue(metric, d);
-					
-		d = (globalMappingElement.getTotalInclusiveValue())/(globalMappingElement.getCounter());
-		globalMappingElement.setMeanInclusiveValue(metric, d);
-		if((this.getMaxMeanInclusiveValue(metric) < d))
-		    this.setMaxMeanInclusiveValue(metric, d);
-	    }
-	}
-				
-	double inclusiveMax = this.getMaxMeanInclusiveValue(metric);
-				
-	l = this.getMappingIterator(mappingSelection);
-	while(l.hasNext()){
-	    globalMappingElement = (GlobalMappingElement) l.next();
-				    
-	    if(exclusiveTotal!=0){
-		double tmpDouble = ((globalMappingElement.getMeanExclusiveValue(metric))/exclusiveTotal) * 100;
-		globalMappingElement.setMeanExclusivePercentValue(metric, tmpDouble);
-		if((this.getMaxMeanExclusivePercentValue(metric) < tmpDouble))
-		    this.setMaxMeanExclusivePercentValue(metric, tmpDouble);
-	    }
-				    
-	    if(inclusiveMax!=0){
-		double tmpDouble = ((globalMappingElement.getMeanInclusiveValue(metric))/inclusiveMax) * 100;
-		globalMappingElement.setMeanInclusivePercentValue(metric, tmpDouble);
-		if((this.getMaxMeanInclusivePercentValue(metric) < tmpDouble))
-		    this.setMaxMeanInclusivePercentValue(metric, tmpDouble);
-	    }
-	    globalMappingElement.setMeanValuesSet(true);
-	}
-    }
-    //######
-    //End - Function to compute mean values.
     //######
 
     //######

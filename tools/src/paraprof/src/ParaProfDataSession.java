@@ -1,4 +1,5 @@
 
+
 /* 
    ParaProfDataSession.java
    
@@ -211,14 +212,33 @@ public abstract class ParaProfDataSession  extends DataSession{
 
     public void getFunctionDetail(Function function){};
 
-    public NCT getNCT(){
-	return nct;}
-
     public Vector getMetrics(){
 	return metrics;}
 
     public int getNumberOfMetrics(){
 	return metrics.size();}
+
+    public int getMetricID(String string){
+	for(Enumeration e = metrics.elements(); e.hasMoreElements() ;){
+	    Metric metric = (Metric) e.nextElement();
+	    if((metric.getName()).equals(string))
+		return metric.getID();
+	}
+	return -1;
+    }
+
+    public Metric getMetric(int metricID){
+	return (Metric) metrics.elementAt(metricID);}
+
+    public String getMetricName(int metricID){
+	return this.getMetric(metricID).getName();}
+
+    public Metric addMetric(){
+	Metric newMetric = new Metric();
+	newMetric.setID((metrics.size()));
+	metrics.add(newMetric);
+	return newMetric;
+    }
 
     public GlobalMapping getGlobalMapping(){
 	return globalMapping;}
@@ -260,20 +280,172 @@ public abstract class ParaProfDataSession  extends DataSession{
     
     public boolean debug(){
 	return debug;}
+
+    public NCT getNCT(){
+	return nct;}
+
+    //Returns the total number of threads in this trial.
+    public int getTotalNumberOfThreads(){
+	if(totalNumberOfThreads==-1){
+	    for(Enumeration e1 = nct.getNodes().elements(); e1.hasMoreElements() ;){
+		Node node = (Node) e1.nextElement();
+		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+		    Context context = (Context) e2.nextElement();
+		    totalNumberOfThreads+=(context.getNumberOfThreads());
+		}
+	    }
+	}
+	return totalNumberOfThreads;
+    }
+
+    //Gets the maximum id reached for all nodes, context, and threads.
+    //This takes into account that id values might not be contiguous (ie, we do not
+    //simply get the maximum number seen.  For example, there might be only one profile
+    //in the system for n,c,t of 0,1,234.  We do not want to just return [1,1,1] representing
+    //the number of items, but the actual id values which are the largest (ie, return [0,1,234]).
+    public int[] getMaxNCTNumbers(){
+	if(maxNCT==null){
+	    maxNCT = new int[3];
+	    for(int i=0;i<3;i++){
+		maxNCT[i]=0;}
+	    for(Enumeration e1 = (nct.getNodes()).elements(); e1.hasMoreElements() ;){
+		Node node = (Node) e1.nextElement();
+		if(node.getNodeID()>maxNCT[0])
+		    maxNCT[0]=node.getNodeID();
+		for(Enumeration e2 = (node.getContexts()).elements(); e2.hasMoreElements() ;){
+		    Context context = (Context) e2.nextElement();
+		    if(context.getContextID()>maxNCT[1])
+			maxNCT[1]=context.getContextID();
+		    for(Enumeration e3 = (context.getThreads()).elements(); e3.hasMoreElements() ;){
+			Thread thread = (Thread) e3.nextElement();
+			if(thread.getThreadID()>maxNCT[2])
+			    maxNCT[2]=thread.getThreadID();
+		    }
+		}
+	    }
+	    
+	}
+	return maxNCT;
+    }
     
+    public void setMeanData(int mappingSelection, int metric){
+	//Cycle through the list of global mapping elements.  For each one, sum up
+	//the exclusive and the inclusive times respectively, and each total by the
+	//number of times we encountered that mapping.
+	GlobalMapping globalMapping = this.getGlobalMapping();
+	ListIterator l = globalMapping.getMappingIterator(mappingSelection);
+	while(l.hasNext()){
+	    double exclusiveTotal = 0.0;
+	    double inclusiveTotal = 0.0;
+	    int count = 0;
+	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
+	    int id = globalMappingElement.getGlobalID();
+	    for(Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
+		Node node = (Node) e1.nextElement();
+		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+		    Context context = (Context) e2.nextElement();
+		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
+			Thread thread = (Thread) e3.nextElement();
+			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(id);
+			if(globalThreadDataElement != null){
+			    exclusiveTotal = exclusiveTotal + globalThreadDataElement.getExclusiveValue(metric);
+			    inclusiveTotal+=globalThreadDataElement.getInclusiveValue(metric);
+			}
+			count++;
+		    }
+		}
+	    }
+	    if(count!=0){
+		double meanExlusiveValue = exclusiveTotal/count;
+		double meanInlusiveValue = inclusiveTotal/count;
+		
+		globalMappingElement.setMeanExclusiveValue(metric, meanExlusiveValue);
+		if(globalMapping.getMaxMeanExclusiveValue(metric) < meanExlusiveValue)
+		    globalMapping.setMaxMeanExclusiveValue(metric, meanExlusiveValue);
+		
+		globalMappingElement.setMeanInclusiveValue(metric, meanInlusiveValue);
+		if(globalMapping.getMaxMeanInclusiveValue(metric) < meanInlusiveValue)
+		    globalMapping.setMaxMeanInclusiveValue(metric, meanInlusiveValue);
+
+		globalMappingElement.setMeanValuesSet(true);
+	    }
+	}
+    }
+
+    public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics){
+	//Cycle through the list of global mapping elements.  For each one, sum up
+	//the exclusive and the inclusive times respectively, and each total by the
+	//number of times we encountered that mapping.
+	GlobalMapping globalMapping = this.getGlobalMapping();
+	ListIterator l = globalMapping.getMappingIterator(mappingSelection);
+
+	//Allocate outside loop, and reset to zero at each iteration.
+	//Working on the assumption that this is slightly quicker than
+	//re-allocating in each loop iteration. 
+	double[] exclusiveTotal = new double[numberOfMetrics];
+	double[] inclusiveTotal = new double[numberOfMetrics];
+	double[] meanExlusiveValue = new double[numberOfMetrics];
+	double[] meanInclusiveValue = new double[numberOfMetrics];
+
+	while(l.hasNext()){
+	    for(int i=0;i<numberOfMetrics;i++){
+		exclusiveTotal[i] = 0;
+		inclusiveTotal[i] = 0;
+		meanExlusiveValue[i] = 0;
+		meanInclusiveValue[i] = 0;
+	    }
+	    int count = 0;
+	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
+	    int id = globalMappingElement.getGlobalID();
+	    for(Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
+		Node node = (Node) e1.nextElement();
+		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+		    Context context = (Context) e2.nextElement();
+		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
+			Thread thread = (Thread) e3.nextElement();
+			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(id);
+			if(globalThreadDataElement != null){
+			    for(int i=0;i<numberOfMetrics;i++){
+				exclusiveTotal[i]+=globalThreadDataElement.getExclusiveValue(i);
+				inclusiveTotal[i]+=globalThreadDataElement.getInclusiveValue(i);
+			    }
+			}
+			count++;
+		    }
+		}
+	    }
+	    if(count!=0){
+		for(int i=0;i<numberOfMetrics;i++){
+		    meanExlusiveValue[i] = exclusiveTotal[i]/count;
+		    meanInclusiveValue[i] = inclusiveTotal[i]/count;
+		    
+		    globalMappingElement.setMeanExclusiveValue(i, meanExlusiveValue[i]);
+		    if(globalMapping.getMaxMeanExclusiveValue(i) < meanExlusiveValue[i])
+			globalMapping.setMaxMeanExclusiveValue(i, meanExlusiveValue[i]);
+		    
+		    globalMappingElement.setMeanInclusiveValue(i, meanInclusiveValue[i]);
+		    if(globalMapping.getMaxMeanInclusiveValue(i) < meanInclusiveValue[i])
+			globalMapping.setMaxMeanInclusiveValue(i, meanInclusiveValue[i]);
+		}
+		globalMappingElement.setMeanValuesSet(true);
+	    }
+	}
+    }
+    //######
+    //End - Set mean values functions.
+    //######
+
     //####################################
     //End - Public Section.
     //####################################
-    
+
     //####################################
     //Protected Section.
     //####################################
-    protected Metric addMetric(){
-	Metric newMetric = new Metric();
-	newMetric.setID((metrics.size()));
-	metrics.add(newMetric);
-	return newMetric;
-    }
+
+    //######
+    //Set mean values functions.
+    //######
 
     protected void setMetrics(Vector metrics){
 	this.metrics = metrics;}
@@ -335,6 +507,7 @@ public abstract class ParaProfDataSession  extends DataSession{
 
     private GlobalMapping globalMapping = new GlobalMapping();
     private NCT nct = new NCT();
+    private int[] maxNCT = null;
     private Vector metrics = new Vector();
 
     private boolean debug = false;

@@ -61,7 +61,7 @@ public class PPML{
 	Metric newMetric = trial.addMetric();
 	newMetric.setName(tmpString3);
 	int metric = newMetric.getID();
-	trial.setCurValLoc(metric);
+	trial.setSelectedMetricID(metric);
 
 	ListIterator l = trial.getGlobalMapping().getMappingIterator(0);
 	while(l.hasNext()){
@@ -137,7 +137,7 @@ public class PPML{
 	    }
 	}
 	//Done with this metric, let the global mapping compute the mean values.
-	trial.getGlobalMapping().computeMeanData(0,metric);
+	trial.setMeanData(0,metric);
 	return newMetric;
     }
 

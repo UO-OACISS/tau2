@@ -440,7 +440,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     public String getHeaderString(){
-	return "Metric Name: " + (trial.getCounterName())+"\n" +
+	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
 	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n";
     }
     //######

@@ -227,7 +227,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    
 	    //**********
 	    //Draw the counter name if required.
-	    counterName = trial.getCounterName();
+	    counterName = trial.getMetricName(trial.getSelectedMetricID());
 	    if(counterName != null){
 		g2D.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 		
@@ -264,7 +264,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    if(normalBin){
 		for(int i=0;i<tmpVector.size();i++){
 		    GlobalMappingElement tmpGME = (GlobalMappingElement) tmpVector.elementAt(i);
-		    double tmpDouble = tmpGME.getTotalExclusiveValue(trial.getCurValLoc());
+		    double tmpDouble = tmpGME.getTotalExclusiveValue(trial.getSelectedMetricID());
 		    if(tmpDouble > maxValue)
 			maxValue = tmpDouble;
 		}
@@ -317,7 +317,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 		//This max is not working.
 		//System.out.println("Mapping ID is: " + mappingID);
 		//GlobalMappingElement tmpGME = (GlobalMappingElement) tmpVector.elementAt(0);
-		//maxValue = tmpGME.getMaxExclusiveValue(trial.getCurValLoc());
+		//maxValue = tmpGME.getMaxExclusiveValue(trial.getSelectedMetricID());
 	    }
 	    
 	    
@@ -415,7 +415,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    else{
 		for(int i=0;i<tmpVector.size();i++){    
 		    GlobalMappingElement tmpGME = (GlobalMappingElement) tmpVector.elementAt(i);
-		    double tmpDouble = tmpGME.getTotalExclusiveValue(trial.getCurValLoc());
+		    double tmpDouble = tmpGME.getTotalExclusiveValue(trial.getSelectedMetricID());
 		    for(int j=10;j>0;j--){
 			if(tmpDouble <= (maxValue/j)){
 			    intArray[10-j]++;

@@ -104,16 +104,16 @@ public class SMWThreadDataElement implements Comparable{
 	return globalThreadDataElement.getCallPathIDChildren(id);}
   
     public double getInclusiveValue(){
-	return globalThreadDataElement.getInclusiveValue(trial.getCurValLoc());}
+	return globalThreadDataElement.getInclusiveValue(trial.getSelectedMetricID());}
   
     public double getExclusiveValue(){
-	return globalThreadDataElement.getExclusiveValue(trial.getCurValLoc());}
+	return globalThreadDataElement.getExclusiveValue(trial.getSelectedMetricID());}
   
     public double getInclusivePercentValue(){
-	return globalThreadDataElement.getInclusivePercentValue(trial.getCurValLoc());}
+	return globalThreadDataElement.getInclusivePercentValue(trial.getSelectedMetricID());}
   
     public double getExclusivePercentValue(){
-	return globalThreadDataElement.getExclusivePercentValue(trial.getCurValLoc());}
+	return globalThreadDataElement.getExclusivePercentValue(trial.getSelectedMetricID());}
   
     public int getNumberOfCalls(){
 	return globalThreadDataElement.getNumberOfCalls();}
@@ -122,10 +122,10 @@ public class SMWThreadDataElement implements Comparable{
 	return globalThreadDataElement.getNumberOfSubRoutines();}
   
     public double getUserSecPerCall(){
-	return globalThreadDataElement.getUserSecPerCall(trial.getCurValLoc());}
+	return globalThreadDataElement.getUserSecPerCall(trial.getSelectedMetricID());}
   
     public String getTStatString(int type){
-	return globalThreadDataElement.getTStatString(type, trial.getCurValLoc());}
+	return globalThreadDataElement.getTStatString(type, trial.getSelectedMetricID());}
     //####################################
     //End - Function interface.
     //####################################
@@ -158,16 +158,16 @@ public class SMWThreadDataElement implements Comparable{
 	return globalMappingElement.getMeanValuesSet();}
   
     public double getMeanExclusiveValue(){
-	return globalMappingElement.getMeanExclusiveValue(trial.getCurValLoc());}
+	return globalMappingElement.getMeanExclusiveValue(trial.getSelectedMetricID());}
   
     public double getMeanExclusivePercentValue(){
-	return globalMappingElement.getMeanExclusivePercentValue(trial.getCurValLoc());}
+	return globalMappingElement.getMeanExclusivePercentValue(trial.getSelectedMetricID());}
   
     public double getMeanInclusiveValue(){
-	return globalMappingElement.getMeanInclusiveValue(trial.getCurValLoc());}
+	return globalMappingElement.getMeanInclusiveValue(trial.getSelectedMetricID());}
     
     public double getMeanInclusivePercentValue(){
-	return globalMappingElement.getMeanInclusivePercentValue(trial.getCurValLoc());}
+	return globalMappingElement.getMeanInclusivePercentValue(trial.getSelectedMetricID());}
   
     public double getMeanNumberOfCalls(){
 	return globalMappingElement.getMeanNumberOfCalls();}
@@ -176,10 +176,10 @@ public class SMWThreadDataElement implements Comparable{
 	return globalMappingElement.getMeanNumberOfSubRoutines();}
   
     public double getMeanUserSecPerCall(){
-	return globalMappingElement.getMeanUserSecPerCall(trial.getCurValLoc());}
+	return globalMappingElement.getMeanUserSecPerCall(trial.getSelectedMetricID());}
 
     public String getMeanTotalStatString(int type){
-	return globalMappingElement.getMeanTotalStatString(type, trial.getCurValLoc());}
+	return globalMappingElement.getMeanTotalStatString(type, trial.getSelectedMetricID());}
     //####################################
     //End - Mean interface.
     //####################################

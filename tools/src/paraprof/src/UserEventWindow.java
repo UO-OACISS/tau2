@@ -386,7 +386,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public String getHeaderString(){
-	return "Metric Name: " + (trial.getCounterName())+"\n" +
+	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
 	    "Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n";
     }
     //######

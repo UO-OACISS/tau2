@@ -625,8 +625,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 	    //Calculating the starting positions of drawing.
 	    //######
-	    String tmpString2 = new String("n,c,t 99,99,99");
-	    int stringWidth = fmFont.stringWidth(tmpString2);
+	    int[] maxNCT = trial.getMaxNCTNumbers();
+	    int stringWidth = fmFont.stringWidth("n,c,t "+maxNCT[0]+","+maxNCT[1]+","+maxNCT[2]);
 	    barXStart = stringWidth + 15;
 	    int tmpXWidthCalc = barXStart + defaultBarLength;
 	    int barXCoord = barXStart;

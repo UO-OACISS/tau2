@@ -610,7 +610,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
   
     private void showMetric(ParaProfTrial trial, Metric metric){
 	try{
-	    trial.setCurValLoc(metric.getID());
+	    trial.setSelectedMetricID(metric.getID());
 	    trial.getSystemEvents().updateRegisteredObjects("dataEvent");
 	    trial.showMainWindow();
 	}

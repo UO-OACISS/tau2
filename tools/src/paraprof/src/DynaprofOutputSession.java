@@ -182,7 +182,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			    if(metric >= 0){
 				//Compute derived data for this metric.
 				thread.setThreadData(metric);
-				this.getGlobalMapping().computeMeanData(0,metric);
 				metric++;
 			    }
 			    else
@@ -371,8 +370,10 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			}
 		    }
 		    thread.setThreadData(metric);
-		    this.getGlobalMapping().computeMeanData(0,metric);
 		}
+
+		//Generate mean data for this trial.
+		this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
 
 		System.out.println("Processing callpath data ...");
 		if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
@@ -412,27 +413,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 	else
 	    nct[2] = 0;
 	return nct;
-    }
-  
-    private String getCounterName(String inString){
-	try{
-	    String tmpString = null;
-	    int tmpInt = inString.indexOf("_MULTI_");
-      
-	    if(tmpInt > 0){
-		//We are reading data from a multiple counter run.
-		//Grab the counter name.
-		tmpString = inString.substring(tmpInt+7);
-		return tmpString;
-	    }
-      	    //We are not reading data from a multiple counter run.
-	    return tmpString; 
-      	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD26");
-	}
-    
-	return null;
     }
 
     private void getFunctionDataLine(String string){

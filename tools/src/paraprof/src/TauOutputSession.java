@@ -84,7 +84,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(metric==0)){
 		    if(this.debug())
-			System.out.println("Increasing the storage for the new counter.");
+			System.out.println("Increasing the storage for the new metric.");
 		    
 		    for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
 			GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
@@ -115,7 +115,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		    }
 		    
 		    if(this.debug())
-			System.out.println("Done increasing the storage for the new counter.");
+			System.out.println("Done increasing the storage for the new metric.");
 		}
 
 		files = (File[]) e.nextElement();
@@ -171,14 +171,14 @@ public class TauOutputSession extends ParaProfDataSession{
 			tokenString = genericTokenizer.nextToken();
 		    
 			if(metricRef.getName()==null){
-			    //Set the counter name.
-			    String counterName = getCounterName(inputString);
-			    //Now set the counter name.
-			    if(counterName == null)
-				counterName = new String("Time");
-			    System.out.println("Counter name is: " + counterName);
+			    //Set the metric name.
+			    String metricName = getMetricName(inputString);
+			    //Now set the metric name.
+			    if(metricName == null)
+				metricName = new String("Time");
+			    System.out.println("Metric name is: " + metricName);
 			
-			    metricRef.setName(counterName);
+			    metricRef.setName(metricName);
 			}
 			//####################################
 			//End - First Line
@@ -421,13 +421,22 @@ public class TauOutputSession extends ParaProfDataSession{
 			thread.setThreadData(metric);
 		    }
 		}
-		//Done with this metric, let the global mapping compute the mean values.
-		this.getGlobalMapping().computeMeanData(0,metric);
-		
 		time = (System.currentTimeMillis()) - time;
 		System.out.println("Done processing data!");
 		System.out.println("Time to process (in milliseconds): " + time);
 	    }
+	    //Generate mean data for this trial.
+	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
+
+	    System.out.println("Processing callpath data ...");
+	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
+		setCallPathDataPresent(true);
+		CallPathUtilFuncs.buildRelations(getGlobalMapping());
+	    }
+	    else
+		System.out.println("No callpath data found.");
+	    System.out.println("Done - Processing callpath data!");
+
 	}
         catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD01");
@@ -451,7 +460,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	return nct;
     }
   
-    private String getCounterName(String inString){
+    private String getMetricName(String inString){
 	try{
 	    String tmpString = null;
 	    int tmpInt = inString.indexOf("_MULTI_");

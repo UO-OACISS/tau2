@@ -43,11 +43,7 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    //######
 	    //Frequently used items.
 	    //######
-	    
-	    //obj should be a PerfDBSession set to the correct application, experiment, and trial.
-	    Vector v = (Vector) obj;
-	    PerfDBSession perfDBSession = (PerfDBSession) v.elementAt(0);
-	    this.setMetrics((Vector) v.elementAt(1));
+	    PerfDBSession perfDBSession = (PerfDBSession) obj;
 
 	    int metric = 0;
 	    GlobalMappingElement globalMappingElement = null;

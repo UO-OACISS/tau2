@@ -480,7 +480,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     }
 
     public String getHeaderString(){
-	return "Metric Name: " + (trial.getCounterName())+"\n" +
+	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
 	    "Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n"+
 	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n";
     }

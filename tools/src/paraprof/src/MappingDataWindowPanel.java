@@ -124,22 +124,22 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    switch(mDWindow.getValueType()){
 	    case 2:
 		if(mDWindow.isPercent()){
-		    maxValue = gME.getMaxExclusivePercentValue(trial.getCurValLoc());
-		    value = gME.getMeanExclusivePercentValue(trial.getCurValLoc());
+		    maxValue = gME.getMaxExclusivePercentValue(trial.getSelectedMetricID());
+		    value = gME.getMeanExclusivePercentValue(trial.getSelectedMetricID());
 		}
 		else{
-		    maxValue = gME.getMaxExclusiveValue(trial.getCurValLoc());
-		    value = gME.getMeanExclusiveValue(trial.getCurValLoc());
+		    maxValue = gME.getMaxExclusiveValue(trial.getSelectedMetricID());
+		    value = gME.getMeanExclusiveValue(trial.getSelectedMetricID());
 		}
 		break;
 	    case 4:
 		if(mDWindow.isPercent()){
-		    maxValue = gME.getMaxInclusivePercentValue(trial.getCurValLoc());
-		    value = gME.getMeanInclusivePercentValue(trial.getCurValLoc());
+		    maxValue = gME.getMaxInclusivePercentValue(trial.getSelectedMetricID());
+		    value = gME.getMeanInclusivePercentValue(trial.getSelectedMetricID());
 		}
 		else{
-		    maxValue = gME.getMaxInclusiveValue(trial.getCurValLoc());
-		    value = gME.getMeanInclusiveValue(trial.getCurValLoc());
+		    maxValue = gME.getMaxInclusiveValue(trial.getSelectedMetricID());
+		    value = gME.getMeanInclusiveValue(trial.getSelectedMetricID());
 		}
 		break;	
 	    case 6:
@@ -151,8 +151,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		value = gME.getMeanNumberOfSubRoutines();
 		break;
 	    case 10:
-		maxValue = gME.getMaxUserSecPerCall(trial.getCurValLoc());
-		value = gME.getMeanUserSecPerCall(trial.getCurValLoc());
+		maxValue = gME.getMaxUserSecPerCall(trial.getSelectedMetricID());
+		value = gME.getMeanUserSecPerCall(trial.getSelectedMetricID());
 		break;
 	    default:
 		ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
