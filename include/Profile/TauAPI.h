@@ -145,6 +145,7 @@ extern "C" void Tau_stop_timer(void * function_info);
 #define TAU_PROFILE_STMT(stmt) 
 #define TAU_PROFILE_EXIT(msg)
 #define TAU_PROFILE_INIT(argc, argv)
+#define TAU_INIT(argc, argv) 
 #define TAU_PROFILE_SET_NODE(node)
 #define TAU_PROFILE_SET_CONTEXT(context)
 #define TAU_PROFILE_SET_GROUP_NAME(newname)
@@ -208,6 +209,6 @@ extern "C" void Tau_stop_timer(void * function_info);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2002/11/08 02:25:06 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.23 2002/11/08 02:25:06 sameer Exp $ 
+ * $Revision: 1.24 $   $Date: 2003/05/08 17:48:06 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.24 2003/05/08 17:48:06 sameer Exp $ 
  ***************************************************************************/
