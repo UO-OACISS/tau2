@@ -1123,7 +1123,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #ifdef DEBUG
 		  cout <<"col = "<<(*it)->col <<endl;
 #endif /* DEBUG */
-		  for(int c = ((*it)->col)-1; c > 0; c--)
+		  for(int c = ((*it)->col)-2; c > 0; c--)
 		  {
 #ifdef DEBUG
 		    cout <<"c = "<<c<<"inbuf[c] = "<<inbuf[c]<<endl;
@@ -1135,6 +1135,11 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		       cout <<"inbuf[c] = "<<inbuf[c]<<endl;
 #endif /* DEBUG */
 		       is_if_stmt = true;
+		       break;
+		    }
+		    else
+		    {
+		       is_if_stmt = false;
 		       break;
 		    }
 		  }
@@ -1455,8 +1460,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.50 $   $Date: 2003/10/24 17:34:07 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.50 2003/10/24 17:34:07 sameer Exp $
+ * $Revision: 1.51 $   $Date: 2003/10/24 22:27:52 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.51 2003/10/24 22:27:52 sameer Exp $
  ***************************************************************************/
 
 
