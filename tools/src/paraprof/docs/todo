@@ -135,3 +135,10 @@ Link in support for Ptolemy II to allow us to provide better graphing support.
 http://ptolemy.eecs.berkeley.edu/ptolemyII/index.htm
 ------
 
+------
+# Report 15
+# Date: 12th July 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Add second mouse button support for users with only one mouse button (apple).
+------
