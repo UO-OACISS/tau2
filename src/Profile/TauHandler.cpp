@@ -25,10 +25,20 @@
 #include <Profile/Profiler.h>
 
 /* Which platforms support mallinfo? */
-#if (defined (__linux__) || defined (_AIX) || defined(sgi) || defined(sun))
+#ifndef TAU_HASMALLINFO
+#if (defined (__linux__) || defined (_AIX) || defined(sgi) || \
+     defined(sun) || defined (__alpha))
 #define TAU_HASMALLINFO 1 
-#include <malloc.h> 
 #endif /* platforms */
+#endif 
+/* TAU_HASMALLINFO: if your platform is not listed here and you know that
+   it supports mallinfo system call, please configure with 
+   -useropt=-DTAU_HASMALLINFO */
+     
+
+#ifdef TAU_HASMALLINFO
+#include <malloc.h>
+#endif /* TAU_HASMALLINFO */
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -264,8 +274,8 @@ void TauTrackMuseEvents(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2004/06/10 19:06:10 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.6 2004/06/10 19:06:10 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 2004/06/10 20:02:32 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.7 2004/06/10 20:02:32 sameer Exp $ 
  ***************************************************************************/
 
 	
