@@ -1,6 +1,6 @@
 alter table metric add column trial int;
 update metric set trial = (select xml_file.trial from xml_file where xml_file.metric = metric.id);
-drop table xml_file;
+drop table xml_file CASCADE;
 alter table metric alter column trial set NOT NULL;
 
 alter table application drop column experiment_table_name;
@@ -22,13 +22,31 @@ drop INDEX function_trial_index;
 drop INDEX trial_experiment_index;
 drop INDEX experiment_application_index;
 
-alter table function rename to interval_event;
+CREATE TABLE interval_event (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    trial                   INT             NOT NULL,
+    name                    TEXT            NOT NULL,
+    group_name              VARCHAR(50),
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+); 
+insert into interval_event (select id, trial, name, group_name from function);
+select setval('interval_event_id_seq', (nextval('function_id_seq') - 1));
 alter table interval_location_profile rename column function to interval_event;
 alter table interval_total_summary rename column function to interval_event;
 alter table interval_mean_summary rename column function to interval_event;
+drop table function CASCADE;
 
-alter table user_event rename to atomic_event;
+CREATE TABLE atomic_event (
+    id                      SERIAL           NOT NULL    PRIMARY KEY,
+    trial                   INT              NOT NULL,
+    name                    TEXT             NOT NULL,
+    group_name              VARCHAR(50),    
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);  
+insert into atomic_event (select id, trial, name, group_name from user_event);
+select setval('atomic_event_id_seq', (nextval('user_event_id_seq') - 1));
 alter table atomic_location_profile rename column user_event to atomic_event;
+drop table user_event CASCADE;
 
 alter table experiment add FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION;
 alter table trial add FOREIGN KEY(experiment) REFERENCES experiment(id) ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -46,4 +64,4 @@ CREATE INDEX interval_total_interval_event_metric_index on interval_total_summar
 CREATE INDEX interval_mean_interval_event_metric_index on interval_mean_summary (interval_event, metric);
 CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread);
 
-vacuum verbose analyze;
+vacuum analyze;
