@@ -47,18 +47,20 @@ various system-dependent variables used during compilation, and creates the
 Makefile(s) (one in each subdirectory of the source directory).
 
 % ./configure -help 
+
 TAU Configuration Utility 
 ***********************************************************************
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
 -c++=<compiler>  ............................ specify the C++ compiler.
-       options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++].
+  options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc].
 -cc=<compiler> ................................ specify the C compiler.
-                                  options [cc|gcc|KCC|pgcc|guidec|xlc].
+                              options [cc|gcc|KCC|pgcc|guidec|xlc|ecc].
 -pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
-           options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++].
+ options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
 -fortran=<compiler> ..................... specify the Fortran compiler.
- options [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|kai].
+   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
+                                                   kai|nec|hitachi|intel]
 -useropt='<parameters>' ............... list of commandline parameters.
 -pthread .................................. Use pthread thread package.
 -sproc .................................. Use SGI sproc thread package.
@@ -78,6 +80,8 @@ Usage: configure [OPTIONS]
                            the TAU MPI Profiling and Tracing Interface.
 -mpilib=<dir> ............. Specify location of MPI library dir and use
                            the TAU MPI Profiling and Tracing Interface.
+-mpilibrary=<library> ................ Specify a different MPI library.
+            e.g., -mpilibrary=-lmpi_r                                  
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
@@ -229,10 +233,18 @@ The following  command-line options are available to configure:
    Specifies the directory where mpi library files reside. This option should 
    be used in conjunction with the -mpiinc=<dir> option to generate the TAU 
    MPI wrapper library. 
+
+-mpilibrary=<lib>
+   
+   Specifies the use of a different MPI library. By default, TAU uses
+   -lmpi or -lmpich as the MPI library. This option allows the user to specify
+   another library. e.g., -mpilibrary=-lmpi_r  for specifying a thread-safe MPI 
+   library.
    
 -epilog=<dir>
    
-   Specifies the directory where the EPILOG tracing package [FZJ] is installed.   This option should be used in conjunction with the -TRACE option to generate
+   Specifies the directory where the EPILOG tracing package [FZJ] is installed.
+   This option should be used in conjunction with the -TRACE option to generate
    binary EPILOG traces (instead of binary TAU traces). EPILOG traces can then
    be used with other tools such as EXPERT. EPILOG comes with its own 
    implementation of the MPI wrapper library and the POMP library used with 
@@ -265,7 +277,8 @@ The following  command-line options are available to configure:
    time, wallclock time, etc.) Configure with other options such as -papi=<dir>,
    -pcl=<dir>, -LINUXTIMERS, -SGITIMERS, -CPUTIME, -PAPIVIRTUAL, etc. See 
    examples/multicounters/README file for detailed instructions on setting the
-   environment variables for this option. 
+   environment variables for this option. Currently, -MULTIPLECOUNTERS should 
+   not be used with the -TRACE option.
    
 -SGITIMERS
    
@@ -412,6 +425,10 @@ The following  command-line options are available to configure:
    does *not* require -jdk=<dir> option to be specified (which is used for 
    configuring TAU for analyzing Java applications). The 'java' jvm program 
    should be in the user's path.
+   NOTE: If jracy does not work properly, please rebuild jRacy.jar file by
+   % cd tau-xxx/tools/src/jRacy
+   % make clean; make
+   Before you do this, please ensure that javac (1.2+) is in your path. 
 
 5. TAU System Requirements :
    -------------------------
@@ -435,6 +452,7 @@ II) Platforms :
 		iii)	PGI pgCC, pgcc, pgf90 compiler suite,
 	        iv) 	Fujitsu C++/f90 compiler suite,
 		v)      KAI KAP/Pro compiler suite.
+		vi)     Intel C++/C/F90 compiler suite.
 	c) Sun Solaris2 with g++, KCC. 
 	d) HP PA-RISC systems running HP-UX with g++, and aCC. 
 	e) Cray T3E with Cray C++ compiler, and KAI KCC.
@@ -443,9 +461,10 @@ II) Platforms :
 	i) Microsoft Windows. Tested with MS Visual C++ v6.0.
 	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
 	k) PowerPC Linux with g++.
-	l) IA-64 Linux with g++ and SGI Pro64 compilers.
+	l) IA-64 Linux with g++, SGI Pro64 and Intel C++/C/F90 compilers.
 	m) Apple OS X (Darwin) with c++.
 	n) Hitachi SR8000 with KCC, g++, Hitachi cc and f90 compilers. 
+        o) NEC SX-5 system with NEC c++, cc, and f90 compilers
 	   
 
    TAU may work with minor modifications on other platforms.

@@ -120,6 +120,7 @@ orig_useropt=
 mpi=no
 mpiinc=
 mpilib=
+mpilibrary=no
 extradir=
 awe=no
 pthread=no
@@ -389,6 +390,11 @@ do
     shift
     ;;
 
+  -mpilibrary=*)
+    mpilibrary=`echo $arg | sed -e 's/-mpilibrary=//' -e 's/ /#/g'`
+    shift
+    ;;
+
   -opt=*)
     pcxxopt=`echo $arg | sed -e 's/-opt=//' -e 's/ /_/g'`
     useropt="$pcxxopt"
@@ -531,13 +537,14 @@ do
     echo "Usage: configure [OPTIONS]"
     echo "  where [OPTIONS] are:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
-    echo "       options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++]."
+    echo "  options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc]."
     echo "-cc=<compiler> ................................ specify the C compiler."
-    echo "                                  options [cc|gcc|KCC|pgcc|guidec|xlc]."
+    echo "                              options [cc|gcc|KCC|pgcc|guidec|xlc|ecc]."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
-    echo "           options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++]."
+    echo " options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
-    echo " options [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|kai]."
+    echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
+    echo "  	                                           kai|nec|hitachi|intel]"
     echo "-useropt='<parameters>' ............... list of commandline parameters."
     echo "-pthread .................................. Use pthread thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
@@ -557,6 +564,8 @@ do
     echo "                           the TAU MPI Profiling and Tracing Interface."
     echo "-mpilib=<dir> ............. Specify location of MPI library dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
+    echo "-mpilibrary=<library> ................ Specify a different MPI library."
+    echo "            e.g., -mpilibrary=-lmpi_r                                  "
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
@@ -1351,31 +1360,39 @@ then
     if [ -r $mpilib/libmpi.* ]
     then
       #echo "libmpi.* found!!"
+      if [ $mpilibrary = no ]
+      then 
+	mpilibrary=-lmpi
+      fi
       if [ -r $mpilib/libpmpi.* ] 
       then 
         #echo "libpmpi.* found "
-        mpilibargs="$mpilibargs -lpmpi -lmpi"
-        mpiflibargs="$mpiflibargs -lpmpi -lmpi"
+        mpilibargs="$mpilibargs -lpmpi $mpilibrary"
+        mpiflibargs="$mpiflibargs -lpmpi $mpilibrary"
       else
         #echo "libpmpi.* not found -lmpi probably contains PMPI routines"
-        mpilibargs="$mpilibargs -lmpi" 
-        mpiflibargs="$mpiflibargs -lmpi" 
+        mpilibargs="$mpilibargs $mpilibrary" 
+        mpiflibargs="$mpiflibargs $mpilibrary" 
       fi
     else
       #echo "libmpi.* not found!! Checking for mpich.*..."
       if [ -r $mpilib/libmpich.* ]
       then 
         #echo "MPICH found "
+        if [ $mpilibrary = no ]
+        then 
+  	  mpilibrary=-lmpich
+        fi
       
         if [ -r $mpilib/libpmpich.* ] 
         then 
           #echo "pmpich found"
-          mpilibargs="$mpilibargs -lpmpich -lmpich"
-          mpiflibargs="$mpiflibargs -lpmpich -lmpich"
+          mpilibargs="$mpilibargs -lpmpich $mpilibrary"
+          mpiflibargs="$mpiflibargs -lpmpich $mpilibrary"
         else
           #echo "pmpich not found"
-          mpilibargs="$mpilibargs -lmpich"
-          mpiflibargs="$mpiflibargs -lmpich"
+          mpilibargs="$mpilibargs $mpilibrary"
+          mpiflibargs="$mpiflibargs $mpilibrary"
         fi
       fi
     fi
