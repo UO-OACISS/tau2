@@ -2026,7 +2026,7 @@ then
   sgio32) 
 	mpilib=/usr/lib
 	;;
-  t3e)  
+  t3e|crayx1|craysv1)  
 	mpilib=/opt/ctl/mpt/mpt/lib/
 	;;
   alpha)  
