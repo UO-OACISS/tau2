@@ -476,6 +476,15 @@ ARCHksr1
 #   endif
 # endif
 
+
+# ifndef _havehosttype
+#   if defined (__CYGWIN__)
+#    define _havehosttype_
+ARCHcygwin
+#   endif
+# endif
+
+
 # ifndef _havehosttype_
 #  define _havehosttype_
     /* Default to something reasonable */
