@@ -366,26 +366,31 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		}
 		else if(arg.equals("Exclusive")){
 		    valueType = 2;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Inclusive")){
 		    valueType = 4;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
 		    valueType = 6;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
 		    valueType = 8;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
 		    valueType = 10;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
@@ -453,9 +458,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //######
     public void menuSelected(MenuEvent evt){
 	try{
-	    if(valueType > 4)
-		unitsSubMenu.setEnabled(false);
-	    else if(trial.isTimeMetric())
+	    if(trial.isTimeMetric())
 		unitsSubMenu.setEnabled(true);
 	    else
 		unitsSubMenu.setEnabled(false);
@@ -623,6 +626,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     public String getHeaderString(){
 	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
+	    "Sorted By: "+UtilFncs.getValueTypeString(valueType)+"\n"+
 	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())+"\n";
     }
     //######

@@ -399,10 +399,13 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		    panel.repaint();
 		}
 		else if(arg.equals("Show Values as Percent")){
-		    if(showValuesAsPercent.isSelected())
+		    if(showValuesAsPercent.isSelected()){
 			percent = true;
+			units = 0;
+		    }
 		    else
 			percent = false;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
@@ -420,18 +423,21 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		else if(arg.equals("Number of Calls")){
 		    valueType = 6;
+		    units = 0;
 		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
 		    valueType = 8;
+		    units = 0;
 		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
 		    valueType = 10;
+		    units = 0;
 		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
@@ -623,6 +629,17 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     public int units(){
 	return units;}
 
+    public Dimension getViewportSize(){
+	return sp.getViewport().getExtentSize();}
+
+    public Rectangle getViewRect(){
+	return sp.getViewport().getViewRect();}
+
+    public void setVerticalScrollBarPosition(int position){
+	JScrollBar scrollBar = sp.getVerticalScrollBar();
+	scrollBar.setValue(position);
+    }
+
     //######
     //Panel header.
     //######
@@ -644,10 +661,15 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     }
 
     public String getHeaderString(){
-	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
-	    "Name: " + mappingName+"\n" +
-	    "Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n"+
-	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())+"\n";
+	if((valueType>5)||percent)
+	    return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
+		"Name: " + mappingName+"\n" +
+		"Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n";
+	else
+	    return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
+		"Name: " + mappingName+"\n" +
+		"Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n"+
+		"Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())+"\n";
     }
     //######
     //End - Panel header.

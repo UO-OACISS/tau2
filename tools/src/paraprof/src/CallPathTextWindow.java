@@ -383,48 +383,57 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		}
 		else if(arg.equals("Exclusive")){
 		    valueType = 2;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Inclusive")){
 		    valueType = 4;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
 		    valueType = 6;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
 		    valueType = 8;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
 		    valueType = 10;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.resetDrawObecjts();
 		    panel.repaint();
 		}
 		else if(arg.equals("Microseconds")){
 		    units = 0;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Milliseconds")){
 		    units = 1;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Seconds")){
 		    units = 2;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("hr:min:sec")){
 		    units = 3;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Show Path Title in Reverse")){
@@ -469,9 +478,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //######
    public void menuSelected(MenuEvent evt){
 	try{
-	    if(valueType > 4)
-		unitsSubMenu.setEnabled(false);
-	    else if(trial.isTimeMetric())
+	    if(trial.isTimeMetric())
 		unitsSubMenu.setEnabled(true);
 	    else
 		unitsSubMenu.setEnabled(false);
@@ -592,6 +599,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     public Dimension getViewportSize(){
 	return sp.getViewport().getExtentSize();}
 
+    public Rectangle getViewRect(){
+	return sp.getViewport().getViewRect();}
+
     public void setVerticalScrollBarPosition(int position){
 	JScrollBar scrollBar = sp.getVerticalScrollBar();
 	scrollBar.setValue(position);
@@ -638,6 +648,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     public String getHeaderString(){
 	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
+	    "Sorted By: "+UtilFncs.getValueTypeString(valueType)+"\n"+
 	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())+"\n";
     }
     //######

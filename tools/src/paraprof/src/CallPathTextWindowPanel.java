@@ -217,13 +217,27 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		int startElement = 0;
 		int endElement = 0;
 		Rectangle clipRect = null;
+		Rectangle viewRect = null;
 		
-		
-		if(instruction==0){
-		    clipRect = g2D.getClipBounds();
-		    yBeg = (int) clipRect.getY();
-		    yEnd = (int) (yBeg + clipRect.getHeight());
-		    
+		if(instruction==0||instruction==1){
+		    if(instruction==0){
+			clipRect = g2D.getClipBounds();
+			yBeg = (int) clipRect.getY();
+			yEnd = (int) (yBeg + clipRect.getHeight());
+			/*
+			System.out.println("Clipping Rectangle: xBeg,xEnd: "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+
+					   " yBeg,yEnd: "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
+			*/
+		    }
+		    else{
+			viewRect = cPTWindow.getViewRect();
+			yBeg = (int) viewRect.getY();
+			yEnd = (int) (yBeg + viewRect.getHeight());
+			/*
+			System.out.println("Viewing Rectangle: xBeg,xEnd: "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+
+					   " yBeg,yEnd: "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
+			*/
+		    }
 		    startElement = ((yBeg - yCoord) / spacing) - 1;
 		    endElement  = ((yEnd - yCoord) / spacing) + 1;
 		    
@@ -238,15 +252,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    
 		    if(endElement > (drawObjects.size() - 1))
 			endElement = (drawObjects.size() - 1);
-
-		    lastStartElement = startElement;
-		    lastEndElement = endElement;
-
 		    yCoord = yCoord + (startElement * spacing);
-		}
-		else if(instruction==1){
-		    startElement = lastStartElement;
-		    endElement = lastEndElement; 
 		}
 		else if(instruction==2 || instruction==3){
 		    startElement = 0;
@@ -442,11 +448,27 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		int startElement = 0;
 		int endElement = 0;
 		Rectangle clipRect = null;
+		Rectangle viewRect = null;
 		
-		if(instruction==0){
-		    clipRect = g2D.getClipBounds();
-		    yBeg = (int) clipRect.getY();
-		    yEnd = (int) (yBeg + clipRect.getHeight());
+		if(instruction==0||instruction==1){
+		    if(instruction==0){
+			clipRect = g2D.getClipBounds();
+			yBeg = (int) clipRect.getY();
+			yEnd = (int) (yBeg + clipRect.getHeight());
+			/*
+			System.out.println("Clipping Rectangle: xBeg,xEnd: "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+
+					   " yBeg,yEnd: "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
+			*/
+		    }
+		    else{
+			viewRect = cPTWindow.getViewRect();
+			yBeg = (int) viewRect.getY();
+			yEnd = (int) (yBeg + viewRect.getHeight());
+			/*
+			System.out.println("Viewing Rectangle: xBeg,xEnd: "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+
+					   " yBeg,yEnd: "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
+			*/
+		    }
 		    
 		    startElement = ((yBeg - yCoord) / spacing) - 1;
 		    endElement  = ((yEnd - yCoord) / spacing) + 1;
@@ -462,21 +484,12 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    
 		    if(endElement > (drawObjects.size() - 1))
 			endElement = (drawObjects.size() - 1);
-
-		    lastStartElement = startElement;
-		    lastEndElement = endElement;
-
 		    yCoord = yCoord + (startElement * spacing);
-		}
-		else if(instruction==1){
-		    startElement = lastStartElement;
-		    endElement = lastEndElement; 
 		}
 		else if(instruction==2 || instruction==3){
 		    startElement = 0;
 		    endElement = ((drawObjects.size()) - 1);
 		}
-
 		
 		/*
 		//At this point we can determine the size this panel will
@@ -758,9 +771,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     int yHeightNeeded = 0;
     int xWidthNeeded = 0;
     int length = 0;
-
-    int lastStartElement = 0;
-    int lastEndElement = 0;
 
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;

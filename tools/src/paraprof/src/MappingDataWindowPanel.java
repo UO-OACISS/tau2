@@ -164,9 +164,9 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
 	    }
 	    if(this.debug()){
-		    System.out.println("Max value: " + maxValue);
-		    System.out.println("Mean value: " + value);
-		}
+		System.out.println("Max value: " + maxValue);
+		System.out.println("Mean value: " + value);
+	    }
 
 	    if(mDWindow.isPercent()){
 		stringWidth = fmFont.stringWidth(UtilFncs.adjustDoublePresision(maxValue, ParaProf.defaultNumberPrecision) + "%");

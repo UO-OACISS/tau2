@@ -228,16 +228,27 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    int startElement = 0;
 	    int endElement = 0;
 	    Rectangle clipRect = null;
+	    Rectangle viewRect = null;
 	    
-	    if(instruction==1 || instruction==2){
-		startElement = 0;
-		endElement = ((list.size()) - 1);
-	    }
-	    else{
-		clipRect = g2D.getClipBounds();
-		yBeg = (int) clipRect.getY();
-		yEnd = (int) (yBeg + clipRect.getHeight());
-
+	    if(instruction==0||instruction==1){
+		if(instruction==0){
+		    clipRect = g2D.getClipBounds();
+		    yBeg = (int) clipRect.getY();
+		    yEnd = (int) (yBeg + clipRect.getHeight());
+		    /*
+		      System.out.println("Clipping Rectangle: xBeg,xEnd: "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+
+		      " yBeg,yEnd: "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
+		    */
+		}
+		else{
+		    viewRect = tDWindow.getViewRect();
+		    yBeg = (int) viewRect.getY();
+		    yEnd = (int) (yBeg + viewRect.getHeight());
+		    /*
+		      System.out.println("Viewing Rectangle: xBeg,xEnd: "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+
+					   " yBeg,yEnd: "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
+		    */
+		}
 		startElement = ((yBeg - yCoord) / barSpacing) - 1;
 		endElement  = ((yEnd - yCoord) / barSpacing) + 1;
 		
@@ -254,6 +265,10 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    endElement = (list.size() - 1);
 		
 		yCoord = yCoord + (startElement * barSpacing);
+	    }
+	    else if(instruction==2 || instruction==3){
+		startElement = 0;
+		endElement = ((list.size()) - 1);
 	    }
 
 	    //At this point we can determine the size this panel will
@@ -487,50 +502,37 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     //######
     public void mouseClicked(MouseEvent evt){
 	try{
-	    SMWThreadDataElement sMWThreadDataElement = null;
 	    //Get the location of the mouse.
 	    int xCoord = evt.getX();
 	    int yCoord = evt.getY();
 	    
 	    //Get the number of times clicked.
 	    int clickCount = evt.getClickCount();
-	    for(Enumeration e1 = list.elements(); e1.hasMoreElements() ;){
-		sMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-		
-		if(yCoord <= (sMWThreadDataElement.getYEnd())){
-		    if((yCoord >= (sMWThreadDataElement.getYBeg())) && (xCoord >= (sMWThreadDataElement.getXBeg()))
-		       && (xCoord <= (sMWThreadDataElement.getXEnd()))){
-			if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-			    //Set the clickedSMWMeanDataElement.
-			    clickedOnObject = sMWThreadDataElement;
-			    popup.show(this, evt.getX(), evt.getY());
-			    
-			    //Return from this function.
-			    return;
-			}
-			else{
-			    //Want to set the clicked on mapping to the current highlight color or, if the one
-			    //clicked on is already the current highlighted one, set it back to normal.
-			    if((trial.getColorChooser().getHighlightColorID()) == -1){
-				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-			    }
-			    else{
-				if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
-				    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-				else
-				    trial.getColorChooser().setHighlightColorID(-1);
-			    }
-			}
-			//Nothing more to do ... return.
-			return;
+
+	    SMWThreadDataElement sMWThreadDataElement = null;
+
+	    //Calculate which SMWThreadDataElement was clicked on.
+	    int index = (yCoord)/(trial.getPreferences().getBarSpacing());
+
+	    if(index<list.size()){
+		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(index);
+		if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+		    //Set the clickedSMWMeanDataElement.
+		    clickedOnObject = sMWThreadDataElement;
+		    popup.show(this, evt.getX(), evt.getY());
+		    return;
+		}
+		else{
+		    //Want to set the clicked on mapping to the current highlight color or, if the one
+		    //clicked on is already the current highlighted one, set it back to normal.
+		    if((trial.getColorChooser().getHighlightColorID()) == -1){
+			trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 		    }
 		    else{
-			//If we get here, it means that we are outside the mapping draw area.  That is, we
-			//are either to the left or right of the draw area, or just above it.
-			//It is better to return here as we do not want the system to cycle through the
-			//rest of the objects, which would be pointless as we know that it will not be
-			//one of the others.  Significantly improves performance.
-			return;
+			if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
+			    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
+			else
+			    trial.getColorChooser().setHighlightColorID(-1);
 		    }
 		}
 	    }
