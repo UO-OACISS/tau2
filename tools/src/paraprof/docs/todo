@@ -143,3 +143,14 @@ http://ptolemy.eecs.berkeley.edu/ptolemyII/index.htm
 # Reporter: Robert Bell (University of Oregon).
 Add second mouse button support for users with only one mouse button (apple).
 ------
+
+------
+# Report 16
+# Date: 4th August 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon).
+The user sees three buttons open, select and cancel (when loading a trial). By navigating to the
+correct directory, one needs to click on select and then it works. It just 
+felt clunky. I thought double clicking on the name of a directory and
+navigating to it and clicking "OK/Select" (with a second Cancel button) might be easier.
+------
