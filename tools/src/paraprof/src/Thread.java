@@ -212,7 +212,6 @@ public class Thread implements Comparable{
 		    maxNumberOfSubroutines = i;
 	    }
 	}
-
 	if(this.debug()){
 	    System.out.println("------");
 	    System.out.println("T-D01");
@@ -242,7 +241,14 @@ public class Thread implements Comparable{
 	    if(globalThreadDataElement!=null){
 		GlobalMappingElement globalMappingElement = globalThreadDataElement.getGlobalMappingElement();
 
+		//Note: Assumtion is made that the max inclusive value is the value required to calculate
+		//percentage (ie, divide by). Thus, we are assuming that the sum of the exclusive
+		//values is equal to the max inclusive value. This is a reasonable assuption. This also gets
+		//us out of sticky situations when call path data is present (this skews attempts to calculate
+		//the total exclusive value unless checks are made to ensure that we do not include call path
+		//objects).
 		double inclusiveMax = this.getMaxInclusiveValue(metric);
+
 		double d1 = globalThreadDataElement.getExclusiveValue(metric);
 		double d2 = globalThreadDataElement.getInclusiveValue(metric);
 		
