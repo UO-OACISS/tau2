@@ -17,7 +17,7 @@ import java.util.Vector;
  * A atomic event has particular information, including the name of the atomic event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: AtomicEvent.java,v 1.3 2004/05/27 17:24:34 khuck Exp $</P>
+ * <P>CVS $Id: AtomicEvent.java,v 1.4 2004/05/27 20:25:42 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -35,6 +35,13 @@ public class AtomicEvent {
 	private int trialID;
 	private int experimentID;
 	private int applicationID;
+	private AtomicLocationProfile meanSummary = null;
+	private AtomicLocationProfile totalSummary = null;
+	private DataSession dataSession = null;
+
+	public AtomicEvent (DataSession dataSession) {
+		this.dataSession = dataSession;
+	}
 
 /**
  * Gets the unique identifier of this atomic event object.
@@ -88,6 +95,38 @@ public class AtomicEvent {
  */
 	public int getApplicationID () {
 		return this.applicationID;
+	}
+
+/**
+ * Gets mean summary data for the AtomicEvent object.
+ * The mean data is averaged across all locations, defined as any combination
+ * of node/context/thread.
+ *
+ * @return	the AtomicLocationProfile containing the mean data for this AtomicEvent.
+ * @see		Trial
+ * @see		AtomicLocationProfile
+ * @see		DataSession#getAtomicEvents
+ */
+	public AtomicLocationProfile getMeanSummary () {
+		if (this.meanSummary == null)
+			dataSession.getAtomicEventDetail(this);
+		return (this.meanSummary);
+	}
+
+/**
+ * Gets total summary data for the AtomicEvent object.
+ * The total data is summed across all locations, defined as any combination
+ * of node/context/thread.
+ *
+ * @return	the AtomicLocationProfile containing the total data for this AtomicEvent.
+ * @see		Trial
+ * @see		AtomicLocationProfile
+ * @see		DataSession#getAtomicEvents
+ */
+	public AtomicLocationProfile getTotalSummary () {
+		if (this.totalSummary == null)
+			dataSession.getAtomicEventDetail(this);
+		return (this.totalSummary);
 	}
 
 /**
@@ -156,8 +195,30 @@ public class AtomicEvent {
 		this.applicationID = id;
 	}
 
+/**
+ * Adds a AtomicLocationProfile to the AtomicEvent as a mean summary.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	meanSummary the mean summary object for the AtomicEvent.
+ */
+	public void setMeanSummary (AtomicLocationProfile meanSummary) {
+		this.meanSummary = meanSummary;
+	}
+
+/**
+ * Adds a AtomicLocationProfile to the AtomicEvent as a total summary.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	totalSummary the total summary object for the AtomicEvent.
+ */
+	public void setTotalSummary (AtomicLocationProfile totalSummary) {
+		this.totalSummary = totalSummary;
+	}
+
 	// returns a Vector of AtomicEvents
-	public static Vector getAtomicEvents(DB db, String whereClause) {
+	public static Vector getAtomicEvents(DataSession dataSession, DB db, String whereClause) {
 		Vector atomicEvents = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
@@ -174,7 +235,7 @@ public class AtomicEvent {
 	    	ResultSet resultSet = db.executeQuery(buf.toString());	
 			AtomicEvent tmpAtomicEvent = null;
 	    	while (resultSet.next() != false) {
-				AtomicEvent ue = new AtomicEvent();
+				AtomicEvent ue = new AtomicEvent(dataSession);
 				ue.setID(resultSet.getInt(1));
 				ue.setTrialID(resultSet.getInt(2));
 				ue.setName(resultSet.getString(3));

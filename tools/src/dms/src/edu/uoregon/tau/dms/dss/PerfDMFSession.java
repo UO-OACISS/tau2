@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.5 2004/05/27 17:24:35 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.6 2004/05/27 20:25:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -209,6 +209,13 @@ public class PerfDMFSession extends DataSession {
 		IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
 	}
 
+	// gets the mean & total data for a atomicEvent
+	public void getAtomicEventDetail(AtomicEvent atomicEvent) {
+		StringBuffer buf = new StringBuffer();
+		buf.append(" where e.id = " + atomicEvent.getID());
+		AtomicLocationProfile.getAtomicEventDetail(db, atomicEvent, buf.toString());
+	}
+
 	// returns a ListIterator of AtomicEvents
 	public ListIterator getAtomicEvents() {
 		String whereClause = new String();
@@ -219,7 +226,7 @@ public class PerfDMFSession extends DataSession {
 		} else if (application != null) {
 			whereClause = " where e.application = " + application.getID();
 		}
-		atomicEvents = AtomicEvent.getAtomicEvents(db, whereClause);
+		atomicEvents = AtomicEvent.getAtomicEvents(this, db, whereClause);
 		if (atomicEventHash == null)
 			atomicEventHash = new Hashtable();
 		AtomicEvent ue;
@@ -450,7 +457,7 @@ public class PerfDMFSession extends DataSession {
 			// create a string to hit the database
 			String whereClause;
 			whereClause = " where u.id = " + id;
-			Vector atomicEvents = AtomicEvent.getAtomicEvents(db, whereClause);
+			Vector atomicEvents = AtomicEvent.getAtomicEvents(this, db, whereClause);
 			if (atomicEvents.size() == 1) {
 				atomicEvent = (AtomicEvent)atomicEvents.elementAt(0);
 			} //else exception?
@@ -709,7 +716,7 @@ public class PerfDMFSession extends DataSession {
 				System.out.print(".");
 				System.out.print("\rGetting the user events: " + ++ucount + " user events found...");
 				// create a user event
-				AtomicEvent atomicEvent = new AtomicEvent();
+				AtomicEvent atomicEvent = new AtomicEvent(this);
 				atomicEvent.setName(element.getMappingName());
 				atomicEvent.setID(element.getMappingID());
 				// build the group name

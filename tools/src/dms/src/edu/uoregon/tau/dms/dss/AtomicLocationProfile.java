@@ -18,7 +18,7 @@ import java.util.Vector;
  * the node, context and thread that identify the location, and the data collected for this
  * location, such as sample count, maximum value, minimum value, mean value and standard deviation.  
  *
- * <P>CVS $Id: AtomicLocationProfile.java,v 1.2 2004/05/27 17:24:34 khuck Exp $</P>
+ * <P>CVS $Id: AtomicLocationProfile.java,v 1.3 2004/05/27 20:25:42 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -260,43 +260,47 @@ public class AtomicLocationProfile {
 		return atomicEventData;
 	}
 
-	public static Vector getMeanSummary(DB db, String whereClause) {
-		Vector atomicEventData = new Vector();
+	public static void getAtomicEventDetail(DB db, AtomicEvent atomicEvent, String whereClause) {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select p.atomic_event, p.node, ");
-		buf.append("p.context, p.thread, avg(p.sample_count), ");
+		buf.append("select p.atomic_event, avg(p.sample_count), ");
 		buf.append("avg(p.maximum_value), avg(p.minimum_value), avg(p.mean_value), ");
-		buf.append("avg(p.standard_deviation), e.trial ");
+		buf.append("avg(p.standard_deviation), ");
+		buf.append("sum(p.sample_count), ");
+		buf.append("sum(p.maximum_value), sum(p.minimum_value), sum(p.mean_value), ");
+		buf.append("sum(p.standard_deviation) ");
 		buf.append("from atomic_location_profile p ");
 		buf.append("inner join atomic_event e on e.id = p.atomic_event ");
 		buf.append(whereClause);
-		buf.append(" group by p.atomic_event, p.node, p.context, p.thread");
-		buf.append(" order by p.node, p.context, p.thread, p.atomic_event");
+		buf.append(" group by p.atomic_event");
+		buf.append(" order by p.atomic_event");
 		// System.out.println(buf.toString());
 
 		// get the results
 		try {
 	    	ResultSet resultSet = db.executeQuery(buf.toString());	
+			AtomicLocationProfile eMS = new AtomicLocationProfile();
+			AtomicLocationProfile eTS = new AtomicLocationProfile();
 	    	while (resultSet.next() != false) {
-				AtomicLocationProfile ueDO = new AtomicLocationProfile();
-				ueDO.setAtomicEventID(resultSet.getInt(1));
-				ueDO.setNode(resultSet.getInt(2));
-				ueDO.setContext(resultSet.getInt(3));
-				ueDO.setThread(resultSet.getInt(4));
-				ueDO.setSampleCount(resultSet.getInt(5));
-				ueDO.setMaximumValue(resultSet.getDouble(6));
-				ueDO.setMinimumValue(resultSet.getDouble(7));
-				ueDO.setMeanValue(resultSet.getDouble(8));
-				ueDO.setStandardDeviation(resultSet.getDouble(9));
-				atomicEventData.addElement(ueDO);
+				eMS.setAtomicEventID(resultSet.getInt(1));
+				eTS.setAtomicEventID(resultSet.getInt(1));
+				eMS.setSampleCount((int)(resultSet.getDouble(2)));
+				eMS.setMaximumValue(resultSet.getDouble(3));
+				eMS.setMinimumValue(resultSet.getDouble(4));
+				eMS.setMeanValue(resultSet.getDouble(5));
+				eMS.setStandardDeviation(resultSet.getDouble(6));
+				eTS.setSampleCount((int)(resultSet.getDouble(7)));
+				eTS.setMaximumValue(resultSet.getDouble(8));
+				eTS.setMinimumValue(resultSet.getDouble(9));
+				eTS.setMeanValue(resultSet.getDouble(10));
+				eTS.setStandardDeviation(resultSet.getDouble(11));
 	    	}
 			resultSet.close(); 
+			atomicEvent.setMeanSummary(eMS);
+			atomicEvent.setTotalSummary(eTS);
 		}catch (Exception ex) {
 	    	ex.printStackTrace();
-	    	return null;
 		}
-		return atomicEventData;
 	}
 
 	public void saveAtomicEventData(DB db, int atomicEventID) {

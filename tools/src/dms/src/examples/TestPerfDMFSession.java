@@ -109,6 +109,15 @@ public class TestPerfDMFSession {
 		{
 			userEvent = (AtomicEvent) userEvents.next();
 			System.out.println ("AtomicEvent Name = " + userEvent.getName());
+			AtomicLocationProfile means = userEvent.getMeanSummary();
+			AtomicLocationProfile totals = userEvent.getTotalSummary();
+			if (means.getMeanValue() != 0.0) {
+				System.out.print ("AtomicEvent Mean Value: Average = " + means.getMeanValue());
+				System.out.println (", Total = " + totals.getMeanValue());
+			} else {
+				System.out.print ("AtomicEvent Sample Count: Average = " + means.getSampleCount());
+				System.out.println (", Total = " + totals.getSampleCount());
+			}
 		}
 
 		// select a userEvent

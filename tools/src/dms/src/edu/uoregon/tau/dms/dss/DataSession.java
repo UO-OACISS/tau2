@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.2 2004/05/05 23:16:28 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.3 2004/05/27 20:25:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -571,6 +571,13 @@ public abstract class DataSession {
  * @param intervalEvent
  */
 	abstract public void getIntervalEventDetail(IntervalEvent intervalEvent) ;
+
+/**
+ * Gets the atomic record detail for this atomicEvent.
+ *
+ * @param atomicEvent
+ */
+	abstract public void getAtomicEventDetail(AtomicEvent atomicEvent) ;
 
 /**
  * Saves the trial.

@@ -51,6 +51,7 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 					//End - First Line
 					//####################################
       
+	  /*
 					if (firstFile) {
 						//Set the metric name.
 						String metricName = "HPM Toolkit Counters";
@@ -64,6 +65,7 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 						this.addMetric(metricName);
 						firstFile = false;
 					}
+					*/
 
 					// find the end of the resource statistics
 					while((inputString = br.readLine()) != null){

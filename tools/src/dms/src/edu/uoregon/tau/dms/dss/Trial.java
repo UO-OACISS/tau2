@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.3 2004/05/27 17:24:35 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.4 2004/05/27 20:25:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -163,7 +163,10 @@ public class Trial {
      * @return	metric count for this trial.
      */
     public int getMetricCount() {
-	return this.metric.size();
+		if (this.metric == null)
+			return 0;
+		else
+			return this.metric.size();
     }
 
     /**

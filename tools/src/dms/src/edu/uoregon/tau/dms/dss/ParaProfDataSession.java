@@ -233,6 +233,13 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     public void getIntervalEventDetail(IntervalEvent intervalEvent){}
     
     /**
+     * Gets the atomic record detail for this atomicEvent.
+     *
+     * @param atomicEvent
+     */
+    public void getAtomicEventDetail(AtomicEvent atomicEvent){}
+    
+    /**
      * Saves the trial.
      *
      * @return database index ID of the saved trial
