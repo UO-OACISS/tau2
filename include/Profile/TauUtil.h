@@ -24,12 +24,23 @@
    MPI macros. Need to optimize the implementation. Use static array instead
    of malloc */
    
+
+#if (defined(sgi) || defined(TAU_MPI_NEEDS_STATUS))
+#define TAU_DECL_LOCAL(mtype, l) MPI_Fint * l
+#define TAU_ALLOC_LOCAL(mtype, l, size) 
+#define TAU_DECL_ALLOC_LOCAL(mtype, l, size) MPI_Fint * l
+#define TAU_ASSIGN_VALUES(dest, src, size, func) dest = src 
+#define TAU_ASSIGN_STATUS(dest, src, size, func) dest = src
+#define TAU_FREE_LOCAL(l) 
+#else
 #define TAU_DECL_LOCAL(mtype, l) mtype *l
 #define TAU_ALLOC_LOCAL(mtype, l, size) l = (mtype *) malloc(sizeof(mtype) * size)
 #define TAU_DECL_ALLOC_LOCAL(mtype, l, size) TAU_DECL_LOCAL(mtype, l) = TAU_ALLOC_LOCAL(mtype, l, size) 
 #define TAU_ASSIGN_VALUES(dest, src, size, func) { int i; for (i = 0; i < size; i++) dest[i] = func(src[i]); }
 #define TAU_ASSIGN_STATUS(dest, src, size, func) { int i; for (i = 0; i < size; i++) func(&src[i], &dest[i]); }
 #define TAU_FREE_LOCAL(l) free(l)
+#endif /* sgi || TAU_MPI_NEEDS_STATUS */
+
 
 /******************************************************/
 #if (defined(sgi) || defined(TAU_MPI_NEEDS_STATUS))
