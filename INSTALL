@@ -58,7 +58,7 @@ Usage: configure [OPTIONS]
 -pthread .................................. Use pthread thread package.
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
 -smarts .................. Use SMARTS API for threads (use with above).
--openmp	........................................... Use OpenMP threads.
+-openmp ........................................... Use OpenMP threads.
 -pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
 -papi=<dir> ............... Specify location of PAPI (Performance API).
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
@@ -74,8 +74,11 @@ Usage: configure [OPTIONS]
 -PROFILECOUNTERS .... Use Hardware Performance Counters (default time).
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
 -CPUTIME .......... Use usertime+system time instead of wallclock time.
+-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi.
+-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation.
 -noex .................. Use no exceptions while compiling the library.
 -help ...................................... display this help message.
+
 ***********************************************************************
 
 The following  command-line options are available to configure:
@@ -207,6 +210,16 @@ The following  command-line options are available to configure:
    time spent in the routines.  This currently works only on LINUX systems 
    for multi-threaded programs and on all systems for single-threaded programs. 
    
+-PAPIWALLCLOCK
+   Uses PAPI (must specify -papi=<dir> also) to access high resolution CPU 
+   timers for wallclock time. The default case uses gettimeofday() which 
+   has a higher overhead than this. 
+
+-PAPIVIRTUAL
+   Uses PAPI (must specify -papi=<dir> also) to access process virtual time.
+   This represents the user time for measurements. 
+
+
 -TRACE
    
    Generates event-trace logs, rather than summary profiles. Traces show when 

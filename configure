@@ -140,6 +140,8 @@ trace=no
 debugprof=no
 sgitimers=no
 cputime=no
+papiwallclock=no
+papivirtual=no
 use_pcxx=no
 use_hpcxx=no
 use_ansic=no
@@ -417,6 +419,16 @@ do
     shift
     ;;
 
+  -PAPIWALLCLOCK)
+    papiwallclock=yes
+    shift
+    ;;
+
+  -PAPIVIRTUAL)
+    papivirtual=yes
+    shift
+    ;;
+
   -INTELTFLOP)
     inteltflop=yes
     shift
@@ -439,6 +451,7 @@ do
     echo "-pthread .................................. Use pthread thread package."
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
+    echo "-openmp ........................................... Use OpenMP threads."
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
@@ -454,6 +467,8 @@ do
     echo "-PROFILECOUNTERS .... Use Hardware Performance Counters (default time)."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
     echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
+    echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
+    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-help ...................................... display this help message."
     exit
@@ -724,6 +739,16 @@ fi
 if [ $cputime = yes ]
   then
     fixmakeargs="$fixmakeargs CPUTIME"
+fi
+
+if [ $papiwallclock = yes ]
+  then
+    fixmakeargs="$fixmakeargs PAPIWALLCLOCK"
+fi
+
+if [ $papivirtual = yes ]
+  then
+    fixmakeargs="$fixmakeargs PAPIVIRTUAL"
 fi
 
 if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
