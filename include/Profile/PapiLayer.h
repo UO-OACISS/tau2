@@ -30,6 +30,8 @@ class PapiLayer
   public:
   //Default getCounters.
   static long long getCounters(int tid);
+  static long long getWallClockTime(void);
+  static long long getVirtualTime(void);
 };
 
 #endif /* TAU_PAPI */
