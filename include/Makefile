@@ -16,10 +16,10 @@
 # options. Makefiles of other applications and libraries (not included 
 # in this distribution) should include this Makefile.
 # It defines the following variables that should be added to CFLAGS
-# TAUINC  	-  Include path for tau headers
-# TAUDEFS	-  Defines that are needed for tracing and profiling only.
+# TAU_INCLUDE  	-  Include path for tau headers
+# TAU_DEFS      -  Defines that are needed for tracing and profiling only.
 # And for linking add to LIBS 
-# TAULIBS	-  TAU Tracing and Profiling library libprof.a 
+# TAU_LIBS	-  TAU Tracing and Profiling library libprof.a 
 # 
 # When the user needs to turn off tracing and profiling and run the 
 # application without any runtime overhead of instrumentation, simply
@@ -28,17 +28,20 @@
 #######################################################################
 
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
-CONFIG_CC=gcc
-CONFIG_CXX=g++
+CONFIG_ARCH=sgi8k
+CONFIG_CC=cc
+CONFIG_CXX=CC
 PCXX_OPT=-g
-USER_OPT=-g
-TAUROOT=/users/sameer/rs/tau2
+USER_OPT=
+TAUROOT=/home/grads/sameer/tau2
 TULIPDIR=/users/sameer/s
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
+TAU_OPTIONS=
 #######################################################################
  
-#MIPSR8K##ABI 	     = -64		  #ENDIF#
-#MIPSR8K#ISA          = -mips4             #ENDIF#
+#ENABLE64BIT#ABI 	     = -64		  #ENDIF#
+#ENABLEN32BIT#ABI 	     = -n32		  #ENDIF#
+#ENABLE32BIT#ABI 	     = -32		  #ENDIF#
 
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
@@ -52,7 +55,7 @@ LSX = .a
 
 
 ############# Profiling Options #############
-#PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
+PROFILEOPT1           = -DPROFILING_ON        #ENDIF##PROFILE#
 #SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS          #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS     #ENDIF#
 #PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS       #ENDIF#
@@ -65,7 +68,7 @@ LSX = .a
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI#PROFILEOPT12	       = 		       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used   #ENDIF#
-#SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
+#PROFILEOPT14	       = -ptused 	       #ENDIF##SGICC#
 #PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS           #ENDIF#
 #TULIPTHREADS#PROFILEOPT16 = -DTULIPTHREADS            #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
@@ -76,6 +79,8 @@ LSX = .a
 #SMARTS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/lib   #ENDIF#
 #SMARTS#PROFILEOPT18  = -DSMARTS   #ENDIF#
 #KAI#PROFILEOPT19  	       = -DKAI   #ENDIF#
+#KAINOEX#PROFILEOPT20  	       = --no_exceptions   #ENDIF#
+#SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
@@ -87,7 +92,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
 	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
 	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(PROFILEOPT16) \
-	      $(PROFILEOPT17) $(PROFILEOPT18) $(PROFILEOPT19) $(TRACEOPT)
+	      $(PROFILEOPT17) $(PROFILEOPT18) $(PROFILEOPT19) $(PROFILEOPT20) \
+	      $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
@@ -95,8 +101,15 @@ TAUDEFS 	= $(PROFILEOPTS) $(USER_OPT)
 
 TAUINC        	= -I$(TAUROOT)/include
 
-TAULIBS		= -L$(TAUROOT)/lib/$(CONFIG_ARCH) -lprof $(LEXTRA) $(LEXTRA1)
+TAULIBS		= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA) 
 
+### ACL S/W requirement
+TAU_DEFS	= $(TAUDEFS)
+
+TAU_INCLUDE 	= -I$(TAUROOT)/include
+
+TAU_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA)
+## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 # These options could be included in the application Makefile as 
 #CFLAGS        	= $(USER_OPT) $(TAUDEFS) $(TAUINC)
