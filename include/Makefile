@@ -36,7 +36,7 @@ USER_OPT=-g
 TAUROOT=/home/grads/sameer/tau2
 TULIPDIR=/users/sameer/s
 TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
-TAU_OPTIONS=
+TAU_OPTIONS=-sgitimers-pthread-kcc
 #######################################################################
  
 #ENABLE64BIT#ABI 	     = -64		  #ENDIF#
