@@ -72,15 +72,28 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 			} else if (inputString.trim().startsWith("Count:")) {
 			    processHeaderLine3(inputString);
 			} else if (inputString.trim().startsWith("Wall Clock Time:")) {
-			    processHeaderLine4(inputString, 0);
+			    processHardwareCounter(inputString);
 			} else if (inputString.trim().startsWith("Average duration:")) {
+				// because I can't figure out how to get the metrics allocated
+				// correctly, just toss this value out.  I don't have this metric
+				// for every measurement, so the metric indexing gets all hosed up.
+				// - kevin, Nov 15, 2004
+			    // processHardwareCounter(inputString);
 			    processHeaderLine4(inputString, 1);
 			} else if (inputString.trim().startsWith("Standard deviation:")) {
+				// because I can't figure out how to get the metrics allocated
+				// correctly, just toss this value out.  I don't have this metric
+				// for every measurement, so the metric indexing gets all hosed up.
+			    // processHardwareCounter(inputString);
 			    processHeaderLine4(inputString, 2);
 			} else if (inputString.trim().startsWith("Exclusive duration:")) {
+				// because I can't figure out how to get the metrics allocated
+				// correctly, just toss this value out.  I don't have this metric
+				// for every measurement, so the metric indexing gets all hosed up.
+			    // processHardwareCounter(inputString);
 			    processHeaderLine4(inputString, 3);
 			} else if (inputString.trim().startsWith("Total time in user mode:")) {
-			    processHeaderLine5(inputString);
+			    processHardwareCounter(inputString);
 			} else {
 			    processHardwareCounter(inputString);
 			} 
