@@ -1981,7 +1981,7 @@ EOF
     fixmakeargs="$fixmakeargs MPIADDERROR"
   fi
 
-  if $c_compiler $orig_useropt $mpi_include -c mpistatus.c  1> /dev/null 2>&1
+  if $cxx_compiler $orig_useropt $mpi_include -c mpistatus.c  1> /dev/null 2>&1
   then
     echo "MPI_Status f2c/c2f found..."
   else
