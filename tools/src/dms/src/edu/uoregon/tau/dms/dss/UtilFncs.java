@@ -119,11 +119,11 @@ public class UtilFncs{
 	case 12:
 	    return "number of userevents";
 	case 14:
-	    return "min";
+	    return "minimum number of userevents";
 	case 16:
-	    return "max";
+	    return "maximum number of userevents";
 	case 18:
-	    return "mean";
+	    return "mean number of userevents";
 	default:
 	    UtilFncs.systemError(null, null, "Unexpected string type - UF04 value: " + type);
 	}
