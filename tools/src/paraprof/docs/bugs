@@ -5,6 +5,7 @@ Description: A list of bugs to be attended to in ParaProf. The list includes
 and indication of status (ie, completed, outstanding, abandoned).
 
 ------
+# Report 01
 # Date: 27th Feburary 2004
 # Status: (completed - 2nd March 2004 Robert Bell)
 # Reporter: Sameer Shende (University of Oregon)
@@ -13,6 +14,7 @@ when I clicked on the last event in the event ledger and selected
 ------
 
 ------
+# Report 02
 # Date: 27th Feburary 2004
 # Status: (completed - 2nd March 2004 Robert Bell)
 # Reporter: Sameer Shende (University of Oregon)
@@ -21,6 +23,7 @@ time column.  Should start it at the name column.
 ------
 
 ------
+# Report 03
 # Date: 1nd March 2004
 # Status: (completed - 2nd March 2004 Robert Bell)
 # Reporter: Robert Bell (University of Oregon)
@@ -29,6 +32,7 @@ ParaProf to crash.
 ------
 
 ------
+# Report 04
 # Date: 2nd March 2004
 # Status: (completed - 3nd March 2004 Robert Bell)
 # Reporter: Robert Bell (University of Oregon)
@@ -36,6 +40,7 @@ Stat window not responding to save image requests.
 ------
 
 ------
+# Report 05
 # Date: 3nd March 2004
 # Status: (completed - 3nd March 2004 Robert Bell)
 # Reporter: Robert Bell (University of Oregon)
@@ -43,9 +48,34 @@ Crash whilst trying to save png format.
 ------
 
 ------
+# Report 06
 # Date: 3nd March 2004
 # Status: (completed - 3nd March 2004 Robert Bell)
 # Reporter: Robert Bell (University of Oregon)
 Stat window not responding to mouse clicks when displaying userevent data.
+------
+
+------
+# Report 07
+# Date: 4nd March 2004
+# Status: (completed - 4nd March 2004 Robert Bell)
+# Reporter: Sameer Shende (University of Oregon)
+Double reporting of parent and child functions in come callpath sources.
+
+# File(s): BUGPATH/bugs/bug07/*
+------
+
+------
+# Report 08
+# Report 
+# Date: 9nd March 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon)
+Crashing with the following error outputs:
+Invalid n,c,t id: -1,0,0 ... not processing this file:
+/Users/sameer/rs/taudata/sage/auto/call/nowtime/512pc/profile.-1.0.0
+An error was detected: SMW01
+
+# File(s): BUGPATH/bugs/bug08/*
 ------
 
