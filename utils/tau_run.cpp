@@ -401,7 +401,9 @@ int main(int argc, char **argv){
   BPatch_Vector<BPatch_module *> *m = appImage->getModules();
 
   // Load the TAU library that has entry and exit routines.
-  if (loadlib == true){
+  // Do not load the TAU library if we're rewriting the binary. Use LD_PRELOAD
+  // instead. The library may be loaded at a different location. 
+  if ((loadlib == true) && (binaryRewrite == 0)) {
     //try and load the library
     if (appThread->loadLibrary(libname, true) == true){  
       //now, check to see if the library is listed as a module in the
