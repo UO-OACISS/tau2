@@ -170,6 +170,7 @@ multiplecounters=no
 profilestats=no
 profilememory=no
 callpath=no
+phase=no
 profilecalls=no
 profilecallstack=no
 trace=no
@@ -674,6 +675,11 @@ do
     shift
     ;;
 
+  -PROFILEPHASE)
+    phase=yes
+    shift
+    ;;
+
   -PROFILECALLPATH)
     profile=yes
     callpath=yes
@@ -826,6 +832,7 @@ do
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
+    echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
@@ -1171,6 +1178,12 @@ if [ $callpath = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLPATH"
     tauoptions="${tauoptions}-callpath"
+fi
+
+if [ $phase = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILECALLPATH PROFILEPHASE"
+    tauoptions="${tauoptions}-phase"
 fi
 
 if [ $setnode0 = yes -a $trace = no ]
