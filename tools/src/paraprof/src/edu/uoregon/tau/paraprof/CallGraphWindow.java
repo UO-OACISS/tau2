@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.15 2005/01/12 18:56:51 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.16 2005/01/15 02:18:44 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -112,8 +112,11 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     class Graph extends JGraph {
 
         public String getToolTipText(MouseEvent event) {
-
-            GraphCell gc = callGraphWindow.getGraphCellForLocation(event.getX(), event.getY());
+            
+            double x = event.getX() / this.getScale();
+            double y = event.getY() / this.getScale();
+            
+            GraphCell gc = callGraphWindow.getGraphCellForLocation((int)x,(int)y);
 
             if (gc != null) {
                 return gc.getToolTipString();
@@ -145,7 +148,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             this.b = b;
         }
 
-        public Vertex a, b;
+        private Vertex a, b;
     }
 
     // Warning: this class violates OO principles, I'm using it as a struct.
@@ -161,19 +164,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
             if (function != null && width < 5)
                 this.width = 5;
-
-            //            if (function != null) {
-            //          //width = (int)((double)200 * (function.getMeanExclusiveValue(0) / maxmean));
-            //                width = 120;
-            //
-            //                if (width < 5) {
-            //                    width = 5;
-            //                }
-            //                height = HEIGHT;
-            //            } else {
-            //                width = 1;
-            //                height = 5;
-            //            }
         }
 
         public int compareTo(Object compare) {
@@ -184,39 +174,40 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             return 0;
         }
 
-        public Vector children = new Vector();
-        public Vector parents = new Vector();
-        public Function function;
-        public FunctionProfile functionProfile;
-        public boolean visited;
-
-        public int getPriority(boolean down) {
+        private int getPriority(boolean down) {
             if (down)
                 return downPriority;
             else
                 return upPriority;
         }
 
-        public int downPriority;
-        public int upPriority;
+        private Vector children = new Vector();
+        private Vector parents = new Vector();
+        private Function function;
+        private FunctionProfile functionProfile;
+        private boolean visited;
 
-        public int level = -1; // which level this vertex resides on
-        public int levelIndex; // the index within the level
-        public double baryCenter;
 
-        public double gridBaryCenter;
+        private int downPriority;
+        private int upPriority;
 
-        public GraphCell graphCell;
-        public int position = -1;
-        public int width;
-        public int height;
-        public float color;
+        private int level = -1; // which level this vertex resides on
+        private int levelIndex; // the index within the level
+        private double baryCenter;
 
-        public int xBeg, yBeg, xEnd, yEnd;
+        private double gridBaryCenter;
 
-        public boolean pathHighlight = false;
+        private GraphCell graphCell;
+        private int position = -1;
+        private int width;
+        private int height;
+        private float colorRatio;
 
-        public Vector pathEdges = new Vector();
+        private int xBeg, yBeg, xEnd, yEnd;
+
+        private boolean pathHighlight = false;
+
+        private Vector pathEdges = new Vector();
 
     }
 
@@ -509,7 +500,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
 
                 Vertex v = new Vertex(fp, getWidth(fp, maxWidthValue));
-                v.color = (float) getValue(fp, this.colorOption, maxColorValue);
+                v.colorRatio = (float) getValue(fp, this.colorOption, maxColorValue);
                 vertexMap.put(fp, v);
             }
         }
@@ -745,7 +736,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     if (v.width < 5)
                         v.width = 5;
 
-                    v.color = (float) getValue(fp, this.colorOption, maxColorValue);
+                    v.colorRatio = (float) getValue(fp, this.colorOption, maxColorValue);
 
                     v.height = boxHeight;
                 }
@@ -771,7 +762,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 if (v.function != null) {
                     //                    System.out.println("level " + i + ", column " + j + ": " + v.function.getName());
                     dgc = createGraphCell(v, v.position - (v.width / 2), MARGIN + i * VERTICAL_SPACING,
-                            v.height, v.width, v.color, attributes);
+                            v.height, v.width, v.colorRatio, attributes);
 
                     v.graphCell = dgc;
                     cellVector.add(dgc);
