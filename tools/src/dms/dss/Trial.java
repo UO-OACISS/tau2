@@ -5,7 +5,6 @@ public class Trial {
 	private int experimentID;
 	private int applicationID;
 	private String time;
-	private String metric;
 	private int problemSize;
 	private int numNodes;
 	private int contextPNode;
@@ -26,10 +25,6 @@ public class Trial {
 
 	public void setTime (String id) {
 		this.time = id;
-	}
-
-	public void setMetric (String id) {
-		this.metric = id;
 	}
 
 	public void setProblemSize (int id) {
@@ -66,10 +61,6 @@ public class Trial {
 
 	public String getTime () {
 		return this.time;
-	}
-
-	public String getMetric () {
-		return this.metric;
 	}
 
 	public int getProblemSize () {

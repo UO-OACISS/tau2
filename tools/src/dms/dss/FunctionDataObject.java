@@ -9,6 +9,7 @@ public class FunctionDataObject extends DataObject{
 	private int numCalls;
 	private int numSubroutines;
 	private double inclusivePerCall;
+	private String metric;
 
 	public void setFunctionIndexID (int functionID) {
 		this.functionID = functionID;
@@ -42,6 +43,10 @@ public class FunctionDataObject extends DataObject{
 		this.inclusivePerCall = inclusivePerCall;
 	}
 
+	public void setMetric (String metric) {
+		this.metric = metric;
+	}
+
 	public int getFunctionIndexID () {
 		return this.functionID;
 	}
@@ -72,6 +77,10 @@ public class FunctionDataObject extends DataObject{
 
 	public double getInclusivePerCall () {
 		return this.inclusivePerCall;
+	}
+
+	public String getMetric () {
+		return this.metric;
 	}
 }
 

@@ -33,10 +33,8 @@ public class SimpleExample {
 
 		while (trials.hasNext()) {
 			myTrial = (Trial)trials.next();
-			if (myTrial.getMetric().compareTo("time") == 0 ){
-				session.setTrial(myTrial);
-				break;
-			}
+			session.setTrial(myTrial);
+			break;
 		}
 
 		ListIterator myIterator;

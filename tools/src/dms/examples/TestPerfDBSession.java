@@ -75,10 +75,12 @@ public class TestPerfDBSession {
 		ListIterator trials;
 		trials = session.getTrialList();
 		Trial trial = null;
+		Vector tmpTrials = new Vector();
 
         while(trials.hasNext())
 		{
 			trial = (Trial) trials.next();
+			tmpTrials.addElement(trial);
 			System.out.println ("Trial ID = " + trial.getID() + ", Experiment ID = " + trial.getExperimentID() + ", appid = " + trial.getApplicationID());
 
 			// select a trial
@@ -86,7 +88,7 @@ public class TestPerfDBSession {
 			// select a trial, another way
 			session.setTrial(trial.getID());
 		}
-		// session.setTrial(trials);
+		session.setTrial(tmpTrials);
 
 		// Get the number of nodes
 		numNodes = session.getNumberOfNodes();

@@ -24,10 +24,6 @@ public class UserEventDataObject extends DataObject{
 	this.min = min;
     }
 
-    public void setMin (double min) {
-	this.min = min;
-    }
-
     public void setMean (double mean) {
 	this.mean = mean;
     }
@@ -41,7 +37,7 @@ public class UserEventDataObject extends DataObject{
     }
 
     public double getNumOfSamples () {
-	return this.NumOfSamples;
+	return this.numOfSamples;
     }
 
     public double getMax () {

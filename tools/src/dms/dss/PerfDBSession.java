@@ -94,7 +94,7 @@ public class PerfDBSession extends DataSession {
 		Vector trials = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.metric, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from Trials t inner join Experiments e on t.expid = e.expid ");
+		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from Trials t inner join Experiments e on t.expid = e.expid ");
 		if (application != null) {
 			buf.append("where e.appid = " + application.getID());
 			if (experiment != null) {
@@ -116,12 +116,11 @@ public class PerfDBSession extends DataSession {
 				trial.setExperimentID(resultSet.getInt(2));
 				trial.setApplicationID(resultSet.getInt(3));
 				trial.setTime(resultSet.getString(4));
-				trial.setMetric(resultSet.getString(5));
-				trial.setProblemSize(resultSet.getInt(6));
-				trial.setNumNodes(resultSet.getInt(7));
-				trial.setNumContextsPerNode(resultSet.getInt(8));
-				trial.setNumThreadsPerContext(resultSet.getInt(9));
-				trial.setXMLFileID(resultSet.getInt(10));
+				trial.setProblemSize(resultSet.getInt(5));
+				trial.setNumNodes(resultSet.getInt(6));
+				trial.setNumContextsPerNode(resultSet.getInt(7));
+				trial.setNumThreadsPerContext(resultSet.getInt(8));
+				trial.setXMLFileID(resultSet.getInt(9));
 				trials.addElement(trial);
 	    	}
 			resultSet.close(); 
@@ -225,7 +224,7 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		Trial trial = null;
-		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.metric, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from Trials t inner join Experiments e on t.expid = e.expid");
+		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from Trials t inner join Experiments e on t.expid = e.expid");
 		if (application != null) {
 			buf.append(" where e.appid = " + application.getID());
 			if (experiment != null) {
@@ -250,12 +249,11 @@ public class PerfDBSession extends DataSession {
 				trial.setExperimentID(resultSet.getInt(2));
 				trial.setApplicationID(resultSet.getInt(3));
 				trial.setTime(resultSet.getString(4));
-				trial.setMetric(resultSet.getString(5));
-				trial.setProblemSize(resultSet.getInt(6));
-				trial.setNumNodes(resultSet.getInt(7));
-				trial.setNumContextsPerNode(resultSet.getInt(8));
-				trial.setNumThreadsPerContext(resultSet.getInt(9));
-				trial.setXMLFileID(resultSet.getInt(10));
+				trial.setProblemSize(resultSet.getInt(5));
+				trial.setNumNodes(resultSet.getInt(6));
+				trial.setNumContextsPerNode(resultSet.getInt(7));
+				trial.setNumThreadsPerContext(resultSet.getInt(8));
+				trial.setXMLFileID(resultSet.getInt(9));
 	    	}
 			resultSet.close(); 
 		}catch (Exception ex) {
@@ -564,10 +562,11 @@ public class PerfDBSession extends DataSession {
 		StringBuffer buf = new StringBuffer();
 		buf.append("select distinct p.inclperc, p.incl, p.exclperc, p.excl, ");
 		buf.append("p.call, p.subrs, p.inclpcall, ");
-		buf.append("t.trialid, l.nodeid, l.contextid, l.threadid, l.funindexid ");
+		buf.append("t.trialid, l.nodeid, l.contextid, l.threadid, l.funindexid, m.metricName ");
 		buf.append("from Pprof p ");
 		buf.append("inner join LocationIndex l on p.locid = l.locid ");
 		buf.append("inner join FunIndex f on f.funindexid = l.funindexid ");
+		buf.append("inner join Metrics m on m.metricID = l.metricID ");
 		buf.append("inner join Trials t on f.trialid = t.trialid ");
 		buf.append("inner join Experiments e on e.expid = t.expid ");
 		boolean gotWhile = false;
@@ -662,6 +661,7 @@ public class PerfDBSession extends DataSession {
 				funDO.setContextID(resultSet.getInt(10));
 				funDO.setThreadID(resultSet.getInt(11));
 				funDO.setFunctionIndexID(resultSet.getInt(12));
+				funDO.setMetric(resultSet.getString(13));
 				functionData.addElement(funDO);
 	    	}
 			resultSet.close(); 
