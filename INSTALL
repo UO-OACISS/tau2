@@ -7,8 +7,8 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
 
-Installation Procedure: (ver 2.1)
----------------------------------
+Installation Procedure: 
+-----------------------
 In this directory invoke
 % ./configure
 % make install
