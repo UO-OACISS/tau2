@@ -43,6 +43,7 @@
 #define dprintf if (0) printf
 #endif
 
+//#define ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP 1
 
 
 int TheFlag[TAU_MAX_THREADS] ;
@@ -56,7 +57,7 @@ int& TheFlag(void)
 }
 */
 
-
+vector<FunctionInfo *> TauDynFI; /* global FI vector */
 // Initialization procedure. Should be called before invoking 
 // other TAU routines.
 void TauInitCode(char *arg)
@@ -69,8 +70,21 @@ void TauInitCode(char *arg)
   while (name != (char *)NULL)
   { 
     functionId ++; 
+#ifdef ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP
     dprintf("Extracted : %s :id = %d\n", name, functionId);
     TAU_MAPPING_CREATE(name, " ", functionId, "TAU_DEFAULT", tid);
+#else
+    dprintf("Extracted : %s :id = %d\n", name, functionId-1);
+    /* Create a new FunctionInfo object with the given name and add it to 
+       the global vector of FI pointers */
+    FunctionInfo *taufi = new 
+	FunctionInfo(name, " " , TAU_DEFAULT, "TAU_DEAULT", true, tid); 
+    if (taufi == (FunctionInfo *) NULL) {
+      printf("ERROR: new returns NULL in TauInitCode\n"); exit(1); 
+    }
+    TauDynFI.push_back(taufi); 
+#endif
+    
     name = strtok(NULL, "|");
   }
   dprintf("Inside TauInitCode Initializations to be done here!\n");
@@ -85,11 +99,16 @@ void TauRoutineEntry(int id )
   int tid = 0;
   MONITOR_ENTER(tid);
   TAU_MAPPING_OBJECT(TauMethodName);
+#ifdef ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP
   TAU_MAPPING_LINK(TauMethodName, id);
+#else
+  id--; /* to account for offset. Start from 0..n-1 instead of 1..n */
+  TauMethodName = TauDynFI[id];
+#endif /* retrieve it from the vector */
   
   TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
   TAU_MAPPING_PROFILE_START(TauTimer, tid);
-  //dprintf("Entry into %s: id = %d\n", name, id);
+  dprintf("Entry into %s: id = %d\n", TauMethodName->GetName(), id);
   MONITOR_EXIT(tid);
 }
 
@@ -99,7 +118,7 @@ void TauRoutineExit(int id)
   int tid = 0;
   MONITOR_ENTER(tid);
   TAU_MAPPING_PROFILE_STOP(tid);
-  //dprintf("Exit from %s: id = %d\n", name, id);
+  dprintf("Exit from id = %d\n", id-1);
   MONITOR_EXIT(tid);
 }
 
