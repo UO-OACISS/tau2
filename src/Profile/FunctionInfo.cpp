@@ -181,7 +181,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	// a lock in RtsLayer that can be locked while the push_back
 	// and size operations are done (this should be atomic). 
 	// Function Id is the index into the DB vector
-	FunctionId = TheFunctionDB().size();
+	/* OLD:
+	 * FunctionId = TheFunctionDB().size();
+	 */
+	FunctionId = RtsLayer::GenerateUniqueId();
 	SetFlushEvents(tid);
 #endif /* TAU_EPILOG */
 #endif //TRACING_ON
@@ -311,6 +314,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.33 $   $Date: 2004/07/20 23:24:26 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.33 2004/07/20 23:24:26 sameer Exp $ 
+ * $Revision: 1.34 $   $Date: 2004/07/26 23:57:29 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.34 2004/07/26 23:57:29 sameer Exp $ 
  ***************************************************************************/
