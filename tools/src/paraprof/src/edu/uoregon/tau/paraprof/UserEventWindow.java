@@ -18,18 +18,7 @@ import edu.uoregon.tau.dms.dss.*;
 public class UserEventWindow extends JFrame implements ActionListener, MenuListener, Observer,
         ChangeListener {
 
-    public UserEventWindow() {
-
-        try {
-            setLocation(new java.awt.Point(0, 0));
-            setSize(new java.awt.Dimension(100, 100));
-
-            //Set the title indicating that there was a problem.
-            this.setTitle("Wrong constructor used");
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "UEW01");
-        }
-    }
+    
 
     public UserEventWindow(ParaProfTrial trial, UserEvent userEvent, DataSorter dataSorter,
             boolean debug) {
@@ -314,13 +303,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                 String arg = evt.getActionCommand();
 
                 if (arg.equals("Print")) {
-                    PrinterJob job = PrinterJob.getPrinterJob();
-                    PageFormat defaultFormat = job.defaultPage();
-                    PageFormat selectedFormat = job.pageDialog(defaultFormat);
-                    job.setPrintable(panel, selectedFormat);
-                    if (job.printDialog()) {
-                        job.print();
-                    }
+                    UtilFncs.print(panel);
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {

@@ -305,15 +305,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                 String arg = evt.getActionCommand();
 
                 if (arg.equals("Print")) {
-                    PrinterJob job = PrinterJob.getPrinterJob();
-                    PageFormat defaultFormat = job.defaultPage();
-                    PageFormat selectedFormat = job.pageDialog(defaultFormat);
-                    job.setPrintable(panel, selectedFormat);
-                    if (job.getPrintService() != null) {
-                        if (job.printDialog()) {
-                            job.print();
-                        }
-                    }
+                    UtilFncs.print(panel);
 
                 } else if (arg.equals("Show ParaProf Manager")) {
                     ParaProfManager jRM = new ParaProfManager();

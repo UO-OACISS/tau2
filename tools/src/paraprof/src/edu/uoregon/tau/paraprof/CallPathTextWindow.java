@@ -16,17 +16,7 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class CallPathTextWindow extends JFrame implements ActionListener, MenuListener, Observer {
 
-    public CallPathTextWindow() {
-        try {
-            setLocation(new java.awt.Point(0, 0));
-            setSize(new java.awt.Dimension(800, 600));
-
-            //Set the title indicating that there was a problem.
-            this.setTitle("Wrong constructor used!");
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CPTW01");
-        }
-    }
+  
 
     public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
             DataSorter dataSorter, int windowType, boolean debug) {
@@ -331,13 +321,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Print")) {
-                    PrinterJob job = PrinterJob.getPrinterJob();
-                    PageFormat defaultFormat = job.defaultPage();
-                    PageFormat selectedFormat = job.pageDialog(defaultFormat);
-                    job.setPrintable(panel, selectedFormat);
-                    if (job.printDialog()) {
-                        job.print();
-                    }
+                    UtilFncs.print(panel);
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {

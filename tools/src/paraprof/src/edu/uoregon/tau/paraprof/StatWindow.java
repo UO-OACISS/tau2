@@ -16,17 +16,7 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer {
 
-    public StatWindow() {
-        try {
-            setLocation(new java.awt.Point(0, 0));
-            setSize(new java.awt.Dimension(800, 600));
-
-            //Set the title indicating that there was a problem.
-            this.setTitle("Wrong constructor used!");
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW01");
-        }
-    }
+   
 
     public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
             DataSorter dataSorter, boolean userEventWindow, boolean debug) {
@@ -344,13 +334,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Print")) {
-                    PrinterJob job = PrinterJob.getPrinterJob();
-                    PageFormat defaultFormat = job.defaultPage();
-                    PageFormat selectedFormat = job.pageDialog(defaultFormat);
-                    job.setPrintable(panel, selectedFormat);
-                    if (job.printDialog()) {
-                        job.print();
-                    }
+                    UtilFncs.print(panel);
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {

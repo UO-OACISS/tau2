@@ -2,11 +2,11 @@
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.21 2004/12/21 20:52:58 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.22 2004/12/24 00:25:08 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  */
 
 package edu.uoregon.tau.paraprof;
@@ -239,6 +239,8 @@ public class ParaProf implements ActionListener {
         System.exit(exitValue);
     }
 
+    
+    
     // Main entry point
     static public void main(String[] args) {
 

@@ -1064,10 +1064,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
                     treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                 }
                 ListIterator l = ppTrial.getMetricList();
-                System.out.println ("looking for Metrics");
                 while (l.hasNext()) {
                     ParaProfMetric metric = (ParaProfMetric) l.next();
-                    System.out.println ("found metric: " + metric.getName());
                     DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric, false);
 
                     metric.setDMTN(metricNode);

@@ -1,14 +1,11 @@
-/*
- * 
- * HistogramWindowPanel.java
- * 
- * Title: ParaProf 
- * Author: Robert Bell 
- * Description:
- */
-
-/*
- * To do: 1) Fix this panel. It does not work at the moment!
+/**
+ * HistogramWindowPanel
+ * This is the panel for the HistogramWindow.
+ *  
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.3 2004/12/24 00:25:08 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.3 $
+ * @see		HistogramWindow
  */
 
 package edu.uoregon.tau.paraprof;
@@ -23,8 +20,8 @@ import java.awt.geom.*;
 //import javax.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class HistogramWindowPanel extends JPanel implements ActionListener, MouseListener,
-        PopupMenuListener, Printable, ParaProfImageInterface {
+public class HistogramWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener,
+        Printable, ParaProfImageInterface {
 
     public HistogramWindowPanel() {
         try {
@@ -35,8 +32,7 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
         }
     }
 
-    public HistogramWindowPanel(ParaProfTrial trial, HistogramWindow bWindow, boolean normalBin,
-            Function function, boolean debug) {
+    public HistogramWindowPanel(ParaProfTrial trial, HistogramWindow bWindow, Function function) {
         try {
             //Set the default tool tip for this panel.
             this.setToolTipText("ParaProf bar graph draw window!");
@@ -44,9 +40,7 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
 
             this.trial = trial;
             this.bWindow = bWindow;
-            this.normalBin = normalBin;
             this.function = function;
-            this.debug = debug;
 
             //Add this object as a mouse listener.
             addMouseListener(this);
@@ -92,23 +86,13 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
         }
     }
 
-    //End - The constructors!!
-    //**********
-
     public String getToolTipText(MouseEvent evt) {
         return null;
     }
 
-    //******************************
-    //Event listener code!!
-    //******************************
-
-    //ActionListener code.
     public void actionPerformed(ActionEvent evt) {
     }
 
-    //**********
-    //Mouse listeners for this panel.
     public void mouseClicked(MouseEvent evt) {
     }
 
@@ -124,9 +108,6 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
     public void mouseExited(MouseEvent evt) {
     }
 
-    //End - Mouse listeners for this panel.
-    //**********
-
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
@@ -141,7 +122,7 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
         if (page >= 1) {
             return NO_SUCH_PAGE;
         }
-        
+
         double pageWidth = pageFormat.getImageableWidth();
         double pageHeight = pageFormat.getImageableHeight();
         int cols = (int) (xPanelSize / pageWidth) + 1;
@@ -149,7 +130,7 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
         double xScale = pageWidth / xPanelSize;
         double yScale = pageHeight / yPanelSize;
         double scale = Math.min(xScale, yScale);
-        
+
         double tx = 0.0;
         double ty = 0.0;
         if (xScale > scale) {
@@ -160,8 +141,7 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
 
         Graphics2D g2 = (Graphics2D) g;
 
-        g2.translate((int) pageFormat.getImageableX(),
-                (int) pageFormat.getImageableY());
+        g2.translate((int) pageFormat.getImageableX(), (int) pageFormat.getImageableY());
         g2.translate(tx, ty);
         g2.scale(scale, scale);
 
@@ -170,9 +150,56 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
         return Printable.PAGE_EXISTS;
     }
 
-    
     public Dimension getImageSize(boolean fullScreen, boolean header) {
         return this.getSize();
+    }
+
+    private double getMaxValue(Function function) {
+        double maxValue = 0;
+        switch (bWindow.getValueType()) {
+        case 2:
+            maxValue = function.getMaxExclusive(trial.getSelectedMetricID());
+            break;
+        case 4:
+            maxValue = function.getMaxInclusive(trial.getSelectedMetricID());
+            break;
+        case 6:
+            maxValue = function.getMaxNumCalls();
+            break;
+        case 8:
+            maxValue = function.getMaxNumSubr();
+            break;
+        case 10:
+            maxValue = function.getMaxInclusivePerCall(trial.getSelectedMetricID());
+            break;
+        default:
+            UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + bWindow.getValueType());
+        }
+        return maxValue;
+    }
+
+    private double getValue(PPFunctionProfile ppFunctionProfile) {
+        double value = 0;
+        switch (bWindow.getValueType()) {
+        case 2:
+            value = ppFunctionProfile.getExclusiveValue();
+            break;
+        case 4:
+            value = ppFunctionProfile.getInclusiveValue();
+            break;
+        case 6:
+            value = ppFunctionProfile.getNumberOfCalls();
+            break;
+        case 8:
+            value = ppFunctionProfile.getNumberOfSubRoutines();
+            break;
+        case 10:
+            value = ppFunctionProfile.getInclusivePerCall();
+            break;
+        default:
+            UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + bWindow.getValueType());
+        }
+        return value;
     }
 
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
@@ -237,27 +264,12 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
             //End - Calculating the starting positions of drawing.
             //**********
 
-
-            //**********
-            //Draw the counter name if required.
-            counterName = trial.getMetricName(trial.getSelectedMetricID());
-            if (counterName != null) {
-                g2D.drawString("COUNTER NAME: " + counterName, 5, yCoord);
-
-                String name = function.getName();
-                g2D.drawString(name, 360, yCoord);
-
-                yCoord = yCoord + (barSpacing);
-            }
-            //End - Draw the counter name if required.
-            //**********
-
             Rectangle clipRect = g2D.getClipBounds();
 
             int yBeg = (int) clipRect.getY();
             int yEnd = (int) (yBeg + clipRect.getHeight());
             //Because tooltip redraw can louse things up. Add an extra one to draw.
-        
+
             yEnd = yEnd + barSpacing;
 
             yCoord = yCoord + (barSpacing);
@@ -272,35 +284,24 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
             double maxValue = 0;
             double minValue = 0;
             boolean start = true;
-            if (normalBin) {
-                for (Iterator it = td.getFunctions(); it.hasNext();) {
-                    Function f = (Function) it.next();
-                    double tmpDouble = f.getTotalExclusive(trial.getSelectedMetricID());
-                    if (tmpDouble > maxValue)
-                        maxValue = tmpDouble;
-                }
-            } else {
+            PPFunctionProfile ppFunctionProfile = null;
 
-                PPFunctionProfile ppFunctionProfile = null;
+            for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
 
-                for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
+                ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
 
-                    ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
-
-                    if (ppFunctionProfile.getFunction() == function) {
-                        double tmpDataValue = ppFunctionProfile.getExclusiveValue();
-                        if (start) {
-                            minValue = tmpDataValue;
-                            start = false;
-                        }
-                        if (tmpDataValue > maxValue)
-                            maxValue = tmpDataValue;
-                        if (tmpDataValue < minValue)
-                            minValue = tmpDataValue;
+                if (ppFunctionProfile.getFunction() == function) {
+                    double tmpDataValue = getValue(ppFunctionProfile);
+                    if (start) {
+                        minValue = tmpDataValue;
+                        start = false;
                     }
+                    if (tmpDataValue > maxValue)
+                        maxValue = tmpDataValue;
+                    if (tmpDataValue < minValue)
+                        minValue = tmpDataValue;
                 }
             }
-
 
             double increment = maxValue / 10;
 
@@ -313,31 +314,13 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
                 g2D.drawLine(35 + i * 55, 430, 35 + i * 55, 435);
             }
 
-            AffineTransform currentTransform = g2D.getTransform();
+            
+            
+            
+            g2D.drawString("Min Value = " + UtilFncs.getOutputString(bWindow.units(), minValue, 6), 35, 450);
+            g2D.drawString("Max Value = " + UtilFncs.getOutputString(bWindow.units(), maxValue, 6), 552, 450);
 
-            AffineTransform test = new AffineTransform();
-            test.translate(30, 495);
-            test.rotate(Math.toRadians(90));
-            g2D.setTransform(test);
-
-            AffineTransform first = new AffineTransform();
-            first.translate(27.5, 0);
-            test.preConcatenate(first);
-            g2D.setTransform(test);
-
-            AffineTransform concat = new AffineTransform();
-            concat.translate(55, 0);
-
-            //for(int i=1; i<10; i++){
-            //double rightBound = i*increment;
-            //g2D.drawString(i + "/10th MV", 0, 0);
-            //test.preConcatenate(concat);
-            //g2D.setTransform(test);
-            //}
-
-            g2D.setTransform(currentTransform);
-            g2D.drawString("Min Value = " + minValue, 35, 450);
-            g2D.drawString("Max Value = " + maxValue, 552, 450);
+            xPanelSize = 552 + fmFont.stringWidth("Max Value = " + maxValue);
 
             int[] intArray = new int[10];
 
@@ -351,35 +334,19 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
 
             double binWidth = (maxValue - minValue) / numBins;
 
-            if (!normalBin) {
-                PPFunctionProfile ppFunctionProfile = null;
-                for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
-                    ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
-                    if (ppFunctionProfile.getFunction() == function) {
-                        double tmpDataValue = ppFunctionProfile.getExclusiveValue();
-                        for (int j = 0; j < 10; j++) {
-                            if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
-                                intArray[j]++;
-                                count++;
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else {
-                for (Iterator it = td.getFunctions(); it.hasNext();) {
-                    Function f = (Function) it.next();
-                    double tmpDouble = f.getTotalExclusive(trial.getSelectedMetricID());
-                    for (int j = 10; j > 0; j--) {
-                        if (tmpDouble <= (maxValue / j)) {
-                            intArray[10 - j]++;
+            for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
+                ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
+                if (ppFunctionProfile.getFunction() == function) {
+                    double tmpDataValue = getValue(ppFunctionProfile);
+                    for (int j = 0; j < 10; j++) {
+                        if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
+                            intArray[j]++;
                             count++;
                             break;
                         }
                     }
                 }
             }
-
 
             g2D.setColor(Color.red);
 
@@ -396,11 +363,12 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
 
             boolean sizeChange = false;
             //Resize the panel if needed.
-            if (tmpXWidthCalc > 600) {
-                xPanelSize = tmpXWidthCalc + 1;
-                sizeChange = true;
-            }
+            //if (tmpXWidthCalc > 600) {
+            //    xPanelSize = tmpXWidthCalc + 1;
+            //    sizeChange = true;
+            // }
 
+            // hmm
             yCoord = 450;
             if (yCoord > 300) {
                 yPanelSize = yCoord + 1;
@@ -412,10 +380,8 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
         } catch (Exception e) {
             UtilFncs.systemError(e, null, "SMWP06");
         }
-    } //******************************
+    }
 
-    //PopupMenuListener code.
-    //******************************
     public void popupMenuWillBecomeVisible(PopupMenuEvent evt) {
         try {
             if (trial.userEventsPresent()) {
@@ -434,20 +400,8 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
     public void popupMenuCanceled(PopupMenuEvent evt) {
     }
 
-    //******************************
-    //End - PopupMenuListener code.
-    //******************************
-
     public Dimension getPreferredSize() {
         return new Dimension(xPanelSize + 10, (yPanelSize + 10));
-    }
-
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    public boolean debug() {
-        return debug;
     }
 
     //####################################
@@ -455,7 +409,6 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
     //####################################
     private ParaProfTrial trial = null;
     HistogramWindow bWindow = null;
-    boolean normalBin = true;
     int xPanelSize = 600;
     int yPanelSize = 400;
 
@@ -506,8 +459,4 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
     //End - Some misc stuff for the paintComponent function.
     //**********
 
-    private boolean debug = false; //Off by default.
-    //####################################
-    //End - Instance data.
-    //####################################
 }

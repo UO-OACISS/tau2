@@ -31,6 +31,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.Point2D;
 import java.awt.print.*;
 
+
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
 
@@ -38,13 +39,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private static final int HORIZONTAL_SPACING = 10;
     private static final int VERTICAL_SPACING = 120;
 
+    class GraphSelectionModel extends DefaultGraphSelectionModel {
 
-    class ThisGraphSelectionModel extends DefaultGraphSelectionModel {
-
-        ThisGraphSelectionModel(JGraph graph) {
+        GraphSelectionModel(JGraph graph) {
             super(graph);
         }
 
+        
+        // this getSelectables has been subclassed from DefaultGraphSelectionModel 
+        // so that edges never get selected
         /**
          * Returns the cells that are currently selectable.
          * The array is ordered so that the top-most cell
@@ -103,50 +106,33 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     class Graph extends JGraph {
 
         public String getToolTipText(MouseEvent event) {
-            
+
             GraphCell gc = callGraphWindow.getGraphCellForLocation(event.getX(), event.getY());
-            
+
             if (gc != null) {
                 return gc.getToolTipString();
             }
-            
+
             return null;
-            
-//            Object cell = getFirstCellForLocation(event.getX(), event.getY());
-//
-//            Object origCell = cell;
-//            
-//            if (cell instanceof Edge) 
-//                cell = getNextCellForLocation(cell, event.getX(), event.getY());
-//            while (cell instanceof Edge && cell != origCell) {
-//                System.out.println ("getToolTipText: testing!");
-//                cell = getNextCellForLocation(cell, event.getX(), event.getY());
-//            }
-//            
-//            if (cell instanceof GraphCell) {
-//                System.out.println ("getToolTipText: End!");
-//                return ((GraphCell) cell).getToolTipString();
-//            }
-//            System.out.println ("getToolTipText: End!");
-//
-//            return null;
         }
 
+        // override the JGraph getPreferredSize to add 10 pixels
         public Dimension getPreferredSize() {
             Dimension inner = super.getPreferredSize();
-            inner.setSize(inner.width+10,inner.height+10);
+            inner.setSize(inner.width + 10, inner.height + 10);
             return inner;
         }
-        
+
         public Graph(GraphModel gm, CallGraphWindow cgw) {
             super(gm);
             this.callGraphWindow = cgw;
-            this.setSelectionModel(new ThisGraphSelectionModel(this));
+            this.setSelectionModel(new GraphSelectionModel(this));
         }
 
         private CallGraphWindow callGraphWindow;
     }
 
+    // A simple structure to hold pairs of vertices
     class BackEdge {
         BackEdge(Vertex a, Vertex b) {
             this.a = a;
@@ -156,6 +142,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public Vertex a, b;
     }
 
+    // Warning: this class violates OO principles, I'm using it as a struct.
     class Vertex implements Comparable {
         Vertex(FunctionProfile fp, int width) {
             if (fp != null) {
@@ -208,9 +195,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public int downPriority;
         public int upPriority;
 
-        // ACK!  Rename these!!
-        public int level = -1;
-        public int levelIndex;
+        public int level = -1; // which level this vertex resides on
+        public int levelIndex; // the index within the level
         public double baryCenter;
 
         public double gridBaryCenter;
@@ -220,17 +206,17 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public int width;
         public int height;
         public float color;
-        
+
         public int xBeg, yBeg, xEnd, yEnd;
-        
+
         public boolean pathHighlight = false;
 
         public Vector pathEdges = new Vector();
 
     }
+    
 
-    public CallGraphWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
-            DataSorter dataSorter) {
+    public CallGraphWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, DataSorter dataSorter) {
         try {
             this.trial = trial;
             this.nodeID = nodeID;
@@ -253,20 +239,18 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
             functionProfileList = thread.getFunctionList();
 
+            // create the right-click popup
             JMenuItem jMenuItem = null;
             jMenuItem = new JMenuItem("Show Function Details");
             jMenuItem.addActionListener(this);
             popup.add(jMenuItem);
 
-            //setLocation(new java.awt.Point(0, 0));
-            //setSize(new java.awt.Dimension(800, 800));
-
             //Now set the title.
             if (meanWindow)
                 this.setTitle("Full Call Graph (all threads) - " + trial.getTrialIdentifier(true));
             else
-                this.setTitle("Call Graph " + "n,c,t, " + nodeID + "," + contextID + "," + threadID
-                        + " - " + trial.getTrialIdentifier(true));
+                this.setTitle("Call Graph " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
+                        + trial.getTrialIdentifier(true));
 
             //Add some window listener code
             addWindowListener(new java.awt.event.WindowAdapter() {
@@ -293,29 +277,29 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             GridBagLayout gbl = new GridBagLayout();
             this.getContentPane().setLayout(gbl);
 
-            //          //Obtain the font and its metrics.
-            font = new Font(trial.getPreferences().getParaProfFont(),
-                    trial.getPreferences().getFontStyle(), trial.getPreferences().getBarHeight());
-            //
+            // obtain the font and its metrics
+            font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+                    trial.getPreferences().getBarHeight());
             FontMetrics fm = getFontMetrics(font);
 
-            
+            // set the box height to the font height + 5
+            boxHeight = fm.getHeight() + 5;
+
+            // Create the colorbar
             ColorBar cb = new ColorBar();
 
             GridBagConstraints gbc = new GridBagConstraints();
-            
+
             gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.anchor = GridBagConstraints.NORTH;
             gbc.weightx = 1.0;
             gbc.weighty = 0.0;
             addCompItem(cb, gbc, 0, 0, 2, 1);
-            //addCompItem(new JButton("bob"), gbc, 0, 0, 2, 1);
 
-            
-            boxHeight = fm.getHeight() + 5;
-
+            // create the graph
             createGraph();
 
+            // sizing, get the preferred size of the graph and cut it down if necessary
             Dimension prefSize = jGraphPane.getPreferredSize();
 
             prefSize.width += 25;
@@ -337,8 +321,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
-    private void helperAddRadioMenuItem(String name, String command, boolean on, ButtonGroup group,
-            JMenu menu) {
+    private void helperAddRadioMenuItem(String name, String command, boolean on, ButtonGroup group, JMenu menu) {
         JRadioButtonMenuItem item = new JRadioButtonMenuItem(name, on);
         item.addActionListener(this);
         item.setActionCommand(command);
@@ -352,25 +335,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        //######
-        //File menu.
-        //######
         JMenu fileMenu = new JMenu("File");
 
-        //Save menu.
         subMenu = new JMenu("Save ...");
-
-        /*
-         * menuItem = new JMenuItem("ParaProf Preferences");
-         * menuItem.addActionListener(this); subMenu.add(menuItem);
-         */
 
         menuItem = new JMenuItem("Save Image");
         menuItem.addActionListener(this);
         subMenu.add(menuItem);
 
         fileMenu.add(subMenu);
-        //End - Save menu.
 
         menuItem = new JMenuItem("Preferences...");
         menuItem.addActionListener(this);
@@ -389,13 +362,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         fileMenu.add(menuItem);
 
         fileMenu.addMenuListener(this);
-        //######
-        //End - File menu.
-        //######
 
-        //######
-        //Options menu.
-        //######
+        // options menu 
         optionsMenu = new JMenu("Options");
 
         JCheckBoxMenuItem box = null;
@@ -415,8 +383,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         helperAddRadioMenuItem("Inclusive Value", "Box Width Inclusive", false, group, subMenu);
         helperAddRadioMenuItem("Number of Calls", "Box Width NumCalls", false, group, subMenu);
         helperAddRadioMenuItem("Number of Subroutines", "Box Width NumSubr", false, group, subMenu);
-        helperAddRadioMenuItem("Inclusive Per Call Value", "Box Width InclPerCall", false, group,
-                subMenu);
+        helperAddRadioMenuItem("Inclusive Per Call Value", "Box Width InclPerCall", false, group, subMenu);
         optionsMenu.add(subMenu);
 
         // box color submenu
@@ -427,11 +394,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         helperAddRadioMenuItem("Inclusive Value", "Box Color Inclusive", false, group, subMenu);
         helperAddRadioMenuItem("Number of Calls", "Box Color NumCalls", false, group, subMenu);
         helperAddRadioMenuItem("Number of Subroutines", "Box Color NumSubr", false, group, subMenu);
-        helperAddRadioMenuItem("Inclusive Per Call Value", "Box Color InclPerCall", false, group,
-                subMenu);
+        helperAddRadioMenuItem("Inclusive Per Call Value", "Box Color InclPerCall", false, group, subMenu);
         optionsMenu.add(subMenu);
-
-        //End - Set the value type options.
 
         optionsMenu.addMenuListener(this);
 
@@ -474,125 +438,126 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         helpMenu.addMenuListener(this);
 
-        //Now, add all the menus to the main menu.
+        // now add all the menus to the main menu
         mainMenu.add(fileMenu);
         mainMenu.add(optionsMenu);
         mainMenu.add(windowsMenu);
         mainMenu.add(helpMenu);
 
         setJMenuBar(mainMenu);
-
     }
 
     private double getMaxValue(int option) {
         double maxValue = 1;
-        if (option == WIDTH_EXCLUSIVE) {
+        if (option == OPTION_EXCLUSIVE) {
             maxValue = thread.getMaxExclusive(trial.getSelectedMetricID());
-        } else if (option == WIDTH_INCLUSIVE) {
+        } else if (option == OPTION_INCLUSIVE) {
             maxValue = thread.getMaxInclusive(trial.getSelectedMetricID());
-        } else if (option == WIDTH_NUMCALLS) {
+        } else if (option == OPTION_NUMCALLS) {
             maxValue = thread.getMaxNumCalls();
-        } else if (option == WIDTH_NUMSUBR) {
+        } else if (option == OPTION_NUMSUBR) {
             maxValue = thread.getMaxNumSubr();
-        } else if (option == WIDTH_INCLPERCALL) {
+        } else if (option == OPTION_INCLPERCALL) {
             maxValue = thread.getMaxInclusivePerCall(trial.getSelectedMetricID());
         }
         return maxValue;
     }
-    
+
     private double getValue(FunctionProfile fp, int option, double maxValue) {
         double value = 1;
-        if (option == WIDTH_STATIC) {
+        if (option == OPTION_STATIC) {
             value = 1;
-        } else if (option == WIDTH_EXCLUSIVE) {
+        } else if (option == OPTION_EXCLUSIVE) {
             value = fp.getExclusive(trial.getSelectedMetricID()) / maxValue;
-        } else if (option == WIDTH_INCLUSIVE) {
+        } else if (option == OPTION_INCLUSIVE) {
             value = fp.getInclusive(trial.getSelectedMetricID()) / maxValue;
-        } else if (option == WIDTH_NUMCALLS) {
+        } else if (option == OPTION_NUMCALLS) {
             value = fp.getNumCalls() / maxValue;
-        } else if (option == WIDTH_NUMSUBR) {
+        } else if (option == OPTION_NUMSUBR) {
             value = fp.getNumSubr() / maxValue;
-        } else if (option == WIDTH_INCLPERCALL) {
+        } else if (option == OPTION_INCLPERCALL) {
             value = fp.getInclusivePerCall(trial.getSelectedMetricID()) / maxValue;
         }
 
         return value;
     }
-    
+
+    private int getWidth(FunctionProfile fp, double maxValue) {
+        int width = 0;
+        if (this.widthOption == OPTION_NAME) {
+            FontMetrics fm = getFontMetrics(this.font);
+            width = fm.stringWidth(fp.getName()) + 5;
+        } else {
+            width = (int) (boxWidth * getValue(fp, this.widthOption, maxValue));
+        }
+        return width;
+    }
+
     private void createGraph() {
 
         vertexMap = new HashMap();
-
         backEdges = new Vector();
 
-        double maxValue = getMaxValue(this.widthOption);
+        double maxWidthValue = getMaxValue(this.widthOption);
         double maxColorValue = getMaxValue(this.colorOption);
-        
-        for (int i = 0; i < functionProfileList.size(); i++) {
-            //Function f = ((PPFunctionProfile) functionProfileList.elementAt(i)).getFunction();
 
+        for (int i = 0; i < functionProfileList.size(); i++) {
             FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
-            if (fp == null)
+            if (fp == null) // skip it if this thread didn't call this function
                 continue;
 
-            if (!fp.isCallPathObject()) {
+            if (!fp.isCallPathObject()) { // skip callpath functions (we only want the actual functions)
 
-                int width = 0;
-                if (this.widthOption == WIDTH_NAME) {
-                    FontMetrics fm = getFontMetrics(this.font);
-                    width = fm.stringWidth(fp.getName()) + 5;
-                } else {
-                    width = (int)(boxWidth * getValue(fp,this.widthOption, maxValue));
-                }
-                Vertex v = new Vertex(fp, width);
-
-                v.color = (float) getValue(fp,this.colorOption, maxColorValue);
-
+                Vertex v = new Vertex(fp, getWidth(fp, maxWidthValue));
+                v.color = (float) getValue(fp, this.colorOption, maxColorValue);
                 vertexMap.put(fp, v);
             }
         }
 
+        // now we follow the call paths and eliminate back edges
         Stack toVisit = new Stack();
         Stack currentPath = new Stack();
 
         for (int i = 0; i < functionProfileList.size(); i++) {
             FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
-            if (fp == null)
+            if (fp == null) // skip it if this thread didn't call this function
                 continue;
 
-            if (!fp.isCallPathObject()) {
+            if (!fp.isCallPathObject()) { // skip callpath functions (we only want the actual functions)
 
+                // get the vertex for this FunctionProfile 
                 Vertex root = (Vertex) vertexMap.get(fp);
 
                 if (!root.visited) {
 
                     currentPath.add(fp);
-                    toVisit.add(null);
+                    toVisit.add(null); // null in the toVisit stack marks the end of a set of children (they must get pushed into the stack prior to the children)
+
+                    // add all the children to the toVisit list
                     for (Iterator it = fp.getChildProfiles(); it.hasNext();) {
-                        FunctionProfile childFunction = (FunctionProfile) it.next();
-                        toVisit.add(childFunction);
-
-                        //Vertex child = (Vertex) vertexMap.get(childFunction);
-
-                        //child.visited = true;
+                        FunctionProfile childFp = (FunctionProfile) it.next();
+                        toVisit.add(childFp);
                     }
 
                     while (!toVisit.empty()) {
-                        FunctionProfile childFunction = (FunctionProfile) toVisit.pop();
+                        FunctionProfile childFp = (FunctionProfile) toVisit.pop();
 
-                        if (childFunction == null) { // this marks the end of a set of children, so pop the current path
+                        if (childFp == null) {
+                            // this marks the end of a set of children, so pop the current path
+                            // and move on to the next one in toVisit
                             currentPath.pop();
                             continue;
                         }
 
-                        Vertex child = (Vertex) vertexMap.get(childFunction);
-                        FunctionProfile parentFunction = (FunctionProfile) currentPath.peek();
+                        Vertex child = (Vertex) vertexMap.get(childFp);
+                        FunctionProfile parentFp = (FunctionProfile) currentPath.peek();
 
-                        Vertex parent = (Vertex) vertexMap.get(parentFunction);
+                        Vertex parent = (Vertex) vertexMap.get(parentFp);
 
+                        // run through the currentPath and see if childFp is in it, if so, this is a backedge
                         boolean back = false;
                         for (Iterator it = currentPath.iterator(); it.hasNext();) {
-                            if ((FunctionProfile) it.next() == childFunction) {
+                            if ((FunctionProfile) it.next() == childFp) {
                                 back = true;
                                 break;
                             }
@@ -610,7 +575,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                             if (!found)
                                 parent.children.add(child);
 
-
                             found = false;
                             for (int j = 0; j < child.parents.size(); j++) {
                                 if (child.parents.get(j) == parent)
@@ -623,10 +587,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
                                 child.visited = true;
 
-                                currentPath.add(childFunction);
+                                currentPath.add(childFp);
 
                                 toVisit.add(null);
-                                for (Iterator it = childFunction.getChildProfiles(); it.hasNext();) {
+                                for (Iterator it = childFp.getChildProfiles(); it.hasNext();) {
                                     FunctionProfile grandChildFunction = (FunctionProfile) it.next();
 
                                     Vertex grandChild = (Vertex) vertexMap.get(grandChildFunction);
@@ -643,10 +607,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         // now we should have a DAG, now find the roots
 
-        //        System.out.println("Finding Roots");
+        //System.out.println("Finding Roots");
         Vector roots = findRoots(vertexMap);
 
-        //      System.out.println("Assigning Levels");
+        //System.out.println("Assigning Levels");
 
         for (int i = 0; i < functionProfileList.size(); i++) {
             FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
@@ -664,7 +628,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         }
 
-        //        System.out.println("Inserting Dummies");
+        //System.out.println("Inserting Dummies");
 
         for (int i = 0; i < functionProfileList.size(); i++) {
             FunctionProfile fp = (FunctionProfile) functionProfileList.elementAt(i);
@@ -695,7 +659,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
         levels = new Vector();
 
-        //      System.out.println("Filling Levels");
+        //System.out.println("Filling Levels");
 
         for (int i = 0; i < roots.size(); i++) {
             Vertex root = (Vertex) roots.elementAt(i);
@@ -735,8 +699,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         jGraphPane = new JScrollPane(graph);
 
-        //        this.getContentPane().add(jGraphPane);
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.SOUTH;
@@ -745,14 +707,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         addCompItem(jGraphPane, gbc, 0, 1, GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
 
     }
-
-    //    void recreateGraph() {
-    //        this.getContentPane().remove(jGraphPane);
-    //        //        this.setVisible(false);
-    //        createGraph();
-    //        this.setVisible(true);
-    //
-    //    }
 
     void recreateGraph() {
 
@@ -775,7 +729,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         double maxWidthValue = getMaxValue(this.widthOption);
         double maxColorValue = getMaxValue(this.colorOption);
-        
+
         for (int i = 0; i < levels.size(); i++) {
             Vector level = (Vector) levels.get(i);
 
@@ -784,18 +738,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
                 if (v.function != null) {
                     FunctionProfile fp = v.functionProfile;
-                    if (this.widthOption == WIDTH_NAME) {
-                        FontMetrics fm = getFontMetrics(this.font);
-                        v.width = fm.stringWidth(fp.getName()) + 5;
-                    } else {
-                        v.width = (int)(boxWidth * getValue(fp,this.widthOption, maxWidthValue));
-                    }
-                    
-                    v.color = (float) getValue(fp,this.colorOption, maxColorValue);
-                        
+
+                    v.width = getWidth(fp, maxWidthValue);
+
+                    // we have to do this check here since we're treating it like a struct
                     if (v.width < 5)
                         v.width = 5;
-                    
+
+                    v.color = (float) getValue(fp, this.colorOption, maxColorValue);
+
                     v.height = boxHeight;
                 }
             }
@@ -804,7 +755,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     void createCustomGraph(Vector levels, Vector backEdges) {
 
-        // Create Nested Map (from Cells to Attributes)
         Map attributes = new HashMap();
 
         graphCellVector = new Vector();
@@ -820,8 +770,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
                 if (v.function != null) {
                     //                    System.out.println("level " + i + ", column " + j + ": " + v.function.getName());
-                    dgc = createGraphCell(v, v.position - (v.width / 2),
-                            MARGIN + i * VERTICAL_SPACING, v.height, v.width, v.color, attributes);
+                    dgc = createGraphCell(v, v.position - (v.width / 2), MARGIN + i * VERTICAL_SPACING,
+                            v.height, v.width, v.color, attributes);
 
                     v.graphCell = dgc;
                     cellVector.add(dgc);
@@ -851,56 +801,57 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                         Vertex child = (Vertex) it.next();
 
                         if (child.function != null) {
+                            // simply connect the GraphCells
                             GraphCell dgcChild = child.graphCell;
 
                             DefaultEdge e = createEdge(dgcParent, dgcChild, attributes, cs, null);
                             cellVector.add(e);
                             edgeVector.add(e);
                         } else {
-
+                            // follow the chain of vertices whose functions are null to find the real
+                            // child vertex.  All of these inbetween vertices are "dummy nodes"
                             ArrayList points = new ArrayList();
-                            int l = 1;
+                            int l = 1;  // how many levels down this dummy node is
 
-                            points.add(new Point(3000, 3000));
+                            points.add(new Point(3000, 3000)); // this point's position doesn't matter because of the connect call
 
                             while (child.function == null) {
-                                points.add(new Point(child.position, MARGIN
-                                        + ((i + l) * VERTICAL_SPACING) + (boxHeight / 2)));
+                                points.add(new Point(child.position, MARGIN + ((i + l) * VERTICAL_SPACING)
+                                        + (boxHeight / 2)));
                                 // find the end of the dummy chain
-                                child = (Vertex) child.children.get(0); // there must be exactly one child
+                                child = (Vertex) child.children.get(0); // there can only be exactly one child
                                 l++;
                             }
 
-                            points.add(new Point(3000, 3000));
+                            points.add(new Point(3000, 3000)); // this point's position doesn't matter because of the connect call
 
-                            DefaultEdge e = createEdge(dgcParent, child.graphCell, attributes, cs,
-                                    points);
+                            DefaultEdge e = createEdge(dgcParent, child.graphCell, attributes, cs, points);
                             cellVector.add(e);
                             edgeVector.add(e);
-
                         }
                     }
                 }
             }
         }
 
+        // Now create the back edges
         for (int i = 0; i < backEdges.size(); i++) {
-            BackEdge be = (BackEdge) backEdges.get(i);
+            BackEdge backEdge = (BackEdge) backEdges.get(i);
 
             ArrayList points = new ArrayList();
 
             // this point's position doesn't matter because of the connect call
             points.add(new Point(3000, 3000));
 
-            points.add(new Point(be.a.position + be.a.width / 2 + 50, (be.a.level)
+            points.add(new Point(backEdge.a.position + backEdge.a.width / 2 + 50, (backEdge.a.level)
                     * VERTICAL_SPACING + MARGIN + (boxHeight / 2)));
 
-            points.add(new Point(be.b.position + 25, (be.b.level) * VERTICAL_SPACING - 25 + MARGIN));
+            points.add(new Point(backEdge.b.position + 25, (backEdge.b.level) * VERTICAL_SPACING - 25 + MARGIN));
 
             // this point's position doesn't matter because of the connect call
             points.add(new Point(3000, 3000));
 
-            DefaultEdge edge = createEdge(be.a.graphCell, be.b.graphCell, attributes, cs, points);
+            DefaultEdge edge = createEdge(backEdge.a.graphCell, backEdge.b.graphCell, attributes, cs, points);
             cellVector.add(edge);
             edgeVector.add(edge);
 
@@ -910,41 +861,34 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         model.insert(cells, attributes, cs, null, null);
 
+        // now make sure everything is visible (this fixes big edges that go off the top of the screen
+        moveDownToVisible(cellVector, edgeVector);
+    }
+
+    private void moveDownToVisible(Vector cellVector, Vector edgeVector) {
+        // find the minimum y value of any edge point and shift everything down by that much
         int minY = 0;
 
         for (int i = 0; i < edgeVector.size(); i++) {
-
             CellView cv = graph.getGraphLayoutCache().getMapping(edgeVector.get(i), false);
-
             Rectangle2D rc = cv.getBounds();
             if (rc.getY() < minY) {
                 minY = (int) rc.getY();
             }
-            //System.out.println ("x,y = " + rc.getX() + ", " + rc.getY());
         }
 
         if (minY != 0) {
-
-            minY -= 5;
+            minY -= 5; // shift by a minimum of 5
             Map attributeMap = new HashMap();
 
             for (int i = 0; i < cellVector.size(); i++) {
-
                 DefaultGraphCell dgc = (DefaultGraphCell) cellVector.get(i);
-
-                //translate (dgc.getAttributes(),0,minY);
-
                 Map attrib = dgc.getAttributes();
                 translate(attrib, 0, -minY);
-
                 attributeMap.put(dgc, attrib);
-
             }
-
             graph.getGraphLayoutCache().edit(attributeMap, null, null, null);
-
         }
-
     }
 
     public static void translate(Map map, double dx, double dy) {
@@ -1133,8 +1077,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             ((Vertex) level.get(0)).position = 0;
             for (int j = 1; j < level.size(); j++) {
                 Vertex v = (Vertex) level.get(j);
-                v.position = lastPosition + HORIZONTAL_SPACING
-                        + (((Vertex) level.get(j - 1)).width + v.width) / 2;
+                v.position = lastPosition + HORIZONTAL_SPACING + (((Vertex) level.get(j - 1)).width + v.width)
+                        / 2;
                 lastPosition = v.position;
 
                 v.downPriority = v.children.size();
@@ -1294,8 +1238,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             return amountMoved;
         }
 
-        int positionNeighborNeedsToBeAt = (v.position - amount) - (v.width / 2)
-                - HORIZONTAL_SPACING - (u.width / 2);
+        int positionNeighborNeedsToBeAt = (v.position - amount) - (v.width / 2) - HORIZONTAL_SPACING
+                - (u.width / 2);
 
         // we can move him, so ask to move '' and add whatever he can (he could be blocked by higher priority)
 
@@ -1330,15 +1274,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             }
 
             if (wantedPosition > v.position) {
-                int amountMoved = moveRight(level, i, wantedPosition - v.position, down,
-                        v.getPriority(down));
+                int amountMoved = moveRight(level, i, wantedPosition - v.position, down, v.getPriority(down));
                 for (int j = i - 1; j >= 0 && finalPass; j--) {
                     moveRight(level, j, amountMoved, down, v.getPriority(down));
                 }
 
             } else {
-                int amountMoved = moveLeft(level, i, v.position - wantedPosition, down,
-                        v.getPriority(down));
+                int amountMoved = moveLeft(level, i, v.position - wantedPosition, down, v.getPriority(down));
                 for (int j = i + 1; j < level.size() && finalPass; j++) {
                     moveLeft(level, j, amountMoved, down, v.getPriority(down));
                 }
@@ -1433,9 +1375,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         return roots;
     }
 
-    
-  
-    
     public GraphCell createGraphCell(Vertex v, int x, int y, int height, int width, float color, Map attributes) {
         // Create Hello Vertex
         GraphCell vertex = new GraphCell(v);
@@ -1458,15 +1397,14 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         // Set black border
         GraphConstants.setBorderColor(attrib, Color.black);
 
-        
         // Set fill color
-        
-        if (this.colorOption == COLOR_STATIC) {
+
+        if (this.colorOption == OPTION_STATIC) {
             GraphConstants.setBackground(attrib, Color.orange);
         } else {
             GraphConstants.setBackground(attrib, ColorBar.getColor(color));
         }
-        
+
         GraphConstants.setOpaque(attrib, true);
         GraphConstants.setEditable(attrib, false);
         GraphConstants.setFont(attrib, font);
@@ -1485,8 +1423,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         return vertex;
     }
 
-    public DefaultEdge createEdge(DefaultGraphCell v1, DefaultGraphCell v2, Map attributes,
-            ConnectionSet cs, ArrayList points) {
+    public DefaultEdge createEdge(DefaultGraphCell v1, DefaultGraphCell v2, Map attributes, ConnectionSet cs,
+            ArrayList points) {
 
         // Create Edge
         DefaultEdge edge = new DefaultEdge();
@@ -1603,8 +1541,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     Port sourcePort = (Port) edge.getSource();
                     Object sourceVertex = model.getParent(sourcePort);
 
-                    CellView sourceVertexView = graph.getGraphLayoutCache().getMapping(
-                            sourceVertex, false);
+                    CellView sourceVertexView = graph.getGraphLayoutCache().getMapping(sourceVertex, false);
 
                     GraphCell target = (GraphCell) sourceVertexView.getCell();
                     if (target.getVertex() == parent) {
@@ -1621,8 +1558,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         Map attributeMap = new Hashtable();
 
-        font = new Font(trial.getPreferences().getParaProfFont(),
-                trial.getPreferences().getFontStyle(), trial.getPreferences().getBarHeight());
+        font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+                trial.getPreferences().getBarHeight());
 
         this.setFont(font);
         FontMetrics fm = getFontMetrics(font);
@@ -1630,34 +1567,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         boxHeight = fm.getHeight() + 5;
 
         recreateGraph();
-//        
-//        for (int i = 0; i < graphCellVector.size(); i++) {
-//            GraphCell dgc = (GraphCell) graphCellVector.get(i);
-//
-//            Map attrib = dgc.getAttributes();
-//
-//            GraphConstants.setFont(attrib, font);
-//
-//            Rectangle2D bounds = GraphConstants.getBounds(attrib);
-//
-//            //            rec.setH..height = trial.getPreferences().getBarHeight();
-//
-//            bounds.setFrame(bounds.getX(), bounds.getY(), bounds.getWidth(), boxHeight);
-//
-//            GraphConstants.setBounds(attrib, bounds);
-//            attributeMap.put(dgc, attrib);
-//        }
-//
-//        graph.getGraphLayoutCache().edit(attributeMap, null, null, null);
     }
 
     public void handleColorEvent() {
-
-//        System.out.println ("--handleColorEvent: Start");
         Map attributeMap = new Hashtable();
 
-        // color all edges black
-        // and reset pathHighlight to false
+        // color all edges black and reset pathHighlight to false
         for (int i = 0; i < graphCellVector.size(); i++) {
             GraphCell dgc = (GraphCell) graphCellVector.get(i);
             Vertex v = dgc.getVertex();
@@ -1730,7 +1645,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                                 GraphConstants.setLineColor(attrib, Color.blue);
 
                                 if (e == null) {
-  //                                  System.out.println("uh oh");
+                                    //System.out.println("uh oh");
                                 } else {
                                     attributeMap.put(e, attrib);
                                 }
@@ -1751,16 +1666,16 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             Map attrib = new HashMap();
 
             if (dgc.function == trial.getColorChooser().getHighlightedFunction()) {
-                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(
-                        BevelBorder.RAISED, trial.getColorChooser().getHighlightColor(),
+                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,
+                        trial.getColorChooser().getHighlightColor(),
                         trial.getColorChooser().getHighlightColor()));
             } else if (dgc.getVertex().pathHighlight) {
-                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(
-                        BevelBorder.RAISED, Color.blue, Color.blue));
+                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,
+                        Color.blue, Color.blue));
 
             } else if (dgc.function.isGroupMember(trial.getColorChooser().getHighlightedGroup())) {
-                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(
-                        BevelBorder.RAISED, trial.getColorChooser().getGroupHighlightColor(),
+                GraphConstants.setBorder(attrib, BorderFactory.createBevelBorder(BevelBorder.RAISED,
+                        trial.getColorChooser().getGroupHighlightColor(),
                         trial.getColorChooser().getGroupHighlightColor()));
             } else {
                 GraphConstants.setBorder(attrib, BorderFactory.createRaisedBevelBorder());
@@ -1770,8 +1685,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
 
         graph.getGraphLayoutCache().edit(attributeMap, null, null, null);
-
-    //    System.out.println ("--handleColorEvent: End");
     }
 
     public void update(Observable o, Object arg) {
@@ -1789,12 +1702,23 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     }
 
+    
     private void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
         if (display)
             ParaProf.helpWindow.show();
-        ParaProf.helpWindow.writeText("Call Graph window.");
+        ParaProf.helpWindow.writeText("This is the Call Graph Window");
+        ParaProf.helpWindow.writeText("");
+        ParaProf.helpWindow.writeText("This window shows you a graph of call paths present in the profile data.");
+        ParaProf.helpWindow.writeText("");
+        ParaProf.helpWindow.writeText("Click on a box to highlight paths that go through that function.");
+        ParaProf.helpWindow.writeText("");
+        ParaProf.helpWindow.writeText("Right-click on a box to access the Function Data Window for that function.");
+        ParaProf.helpWindow.writeText("");
+        ParaProf.helpWindow.writeText("Experiment with the \"Box Width by...\" and \"Box Color by...\" menus (under Options) to display different types of data.");
+        ParaProf.helpWindow.writeText("");
+        ParaProf.helpWindow.writeText("If you only see a single line of boxes (no edges connecting them), it probably means that your profile data does not contain call path data.  If you believe this to be incorrect please contact us with the data at tau-bugs@cs.uoregon.edu");
         ParaProf.helpWindow.writeText("");
     }
 
@@ -1835,26 +1759,25 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         dispose();
     }
 
-    
     public GraphCell getGraphCellForLocation(int x, int y) {
-        for (int i=0; i < graphCellVector.size(); i++) {
+        for (int i = 0; i < graphCellVector.size(); i++) {
             GraphCell gc = (GraphCell) graphCellVector.get(i);
-            
+
             Map attrib = gc.getAttributes();
             Rectangle2D bounds = GraphConstants.getBounds(attrib);
 
-            if (bounds.contains(x,y))
+            if (bounds.contains(x, y))
                 return gc;
         }
         return null;
     }
-    
+
     public void mouseClicked(MouseEvent evt) {
         // Get Cell under Mousepointer
         int x = evt.getX(), y = evt.getY();
-        
+
         GraphCell gc = getGraphCellForLocation(evt.getX(), evt.getY());
-        
+
         if (gc != null) {
             Function f = ((Function) gc.getFunction());
 
@@ -1866,58 +1789,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             } else {
                 trial.getColorChooser().toggleHighlightedFunction(f);
             }
-
         }
-        
-        
-//        
-//        Object cell = this.graph.getFirstCellForLocation(x, y);
-//        Object origCell = cell;
-//        // Print Cell Label
-//        if (cell != null) {
-//
-//            
-//            if (cell instanceof Edge) 
-//                cell = this.graph.getNextCellForLocation(cell, x, y);
-//            while (cell instanceof Edge && cell != origCell) {
-//                cell = this.graph.getNextCellForLocation(cell, x, y);
-//            }
-//
-//            if (cell instanceof GraphCell) {
-//                GraphCell gc = (GraphCell) cell;
-//
-//                if (gc != null) {
-//                    Function f = ((Function) gc.getFunction());
-//
-//                    if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-//                        clickedOnObject = f;
-//                        popup.show(this, evt.getX(), evt.getY());
-//                        return;
-//
-//                    } else {
-//                        trial.getColorChooser().toggleHighlightedFunction(f);
-//                    }
-//                    //FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial, f,
-//                    //        this.dataSorter, false);
-//                    //trial.getSystemEvents().addObserver(functionDataWindow);
-//                    //functionDataWindow.show();
-//                }
-//            } else {
-//                //System.out.println("Not a GraphCell");
-//
-//            }
-//        } else {
-//
-////            System.out.println("Didn't click on anything");
-//        }
-
     }
 
+    // listener for the boxWidthSlider
     public void stateChanged(ChangeEvent event) {
-
         boxWidth = boxWidthSlider.getValue();
         recreateGraph();
-
     }
 
     public void mousePressed(MouseEvent evt) {
@@ -1933,7 +1811,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void keyTyped(KeyEvent evt) {
-
+        // zoom in and out on +/-
         if (evt.getKeyChar() == '+') {
             scale = scale + 0.10;
             if (scale > 5.0)
@@ -1964,11 +1842,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             return this.getSize();
     }
 
-    
-  
-    
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        if (fullWindow) { // "fullscreen"
+        if (fullWindow) {
             graph.paintAll(g2D);
         } else {
             graph.paint(g2D);
@@ -1996,8 +1871,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             } else {
                 ty = 0.5 * (yScale - scale) * graph.getHeight();
             }
-            ((Graphics2D) g).translate((int) pageFormat.getImageableX(),
-                    (int) pageFormat.getImageableY());
+            ((Graphics2D) g).translate((int) pageFormat.getImageableX(), (int) pageFormat.getImageableY());
             ((Graphics2D) g).translate(tx, ty);
             ((Graphics2D) g).scale(scale, scale);
 
@@ -2048,43 +1922,42 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             if (EventSrc instanceof JRadioButtonMenuItem) {
                 JRadioButtonMenuItem jrbmi = (JRadioButtonMenuItem) EventSrc;
 
-                System.out.println ("Action: " + jrbmi.getActionCommand());
+                System.out.println("Action: " + jrbmi.getActionCommand());
 
                 if (jrbmi.getActionCommand().startsWith("Box Width")) {
 
                     if (jrbmi.getActionCommand().equals("Box Width Static")) {
-                        this.widthOption = WIDTH_STATIC;
+                        this.widthOption = OPTION_STATIC;
                     } else if (jrbmi.getActionCommand().equals("Box Width Name Length")) {
-                        this.widthOption = WIDTH_NAME;
+                        this.widthOption = OPTION_NAME;
                     } else if (jrbmi.getActionCommand().equals("Box Width Exclusive")) {
-                        this.widthOption = WIDTH_EXCLUSIVE;
+                        this.widthOption = OPTION_EXCLUSIVE;
                     } else if (jrbmi.getActionCommand().equals("Box Width Inclusive")) {
-                        this.widthOption = WIDTH_INCLUSIVE;
+                        this.widthOption = OPTION_INCLUSIVE;
                     } else if (jrbmi.getActionCommand().equals("Box Width NumCalls")) {
-                        this.widthOption = WIDTH_NUMCALLS;
+                        this.widthOption = OPTION_NUMCALLS;
                     } else if (jrbmi.getActionCommand().equals("Box Width NumSubr")) {
-                        this.widthOption = WIDTH_NUMSUBR;
+                        this.widthOption = OPTION_NUMSUBR;
                     } else if (jrbmi.getActionCommand().equals("Box Width InclPerCall")) {
-                        this.widthOption = WIDTH_INCLPERCALL;
+                        this.widthOption = OPTION_INCLPERCALL;
                     }
                     recreateGraph();
                 }
 
-            
                 if (jrbmi.getActionCommand().startsWith("Box Color")) {
 
                     if (jrbmi.getActionCommand().equals("Box Color Static")) {
-                        this.colorOption = COLOR_STATIC;
+                        this.colorOption = OPTION_STATIC;
                     } else if (jrbmi.getActionCommand().equals("Box Color Exclusive")) {
-                        this.colorOption = COLOR_EXCLUSIVE;
+                        this.colorOption = OPTION_EXCLUSIVE;
                     } else if (jrbmi.getActionCommand().equals("Box Color Inclusive")) {
-                        this.colorOption = COLOR_INCLUSIVE;
+                        this.colorOption = OPTION_INCLUSIVE;
                     } else if (jrbmi.getActionCommand().equals("Box Color NumCalls")) {
-                        this.colorOption = COLOR_NUMCALLS;
+                        this.colorOption = OPTION_NUMCALLS;
                     } else if (jrbmi.getActionCommand().equals("Box Color NumSubr")) {
-                        this.colorOption = COLOR_NUMSUBR;
+                        this.colorOption = OPTION_NUMSUBR;
                     } else if (jrbmi.getActionCommand().equals("Box Color InclPerCall")) {
-                        this.colorOption = COLOR_INCLPERCALL;
+                        this.colorOption = OPTION_INCLPERCALL;
                     }
                     recreateGraph();
                 }
@@ -2093,9 +1966,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             String arg = evt.getActionCommand();
 
             if (arg.equals("Show Function Details")) {
-                FunctionDataWindow tmpRef = new FunctionDataWindow(trial,
-                        (Function) clickedOnObject, trial.getStaticMainWindow().getDataSorter(),
-                        false);
+                FunctionDataWindow tmpRef = new FunctionDataWindow(trial, (Function) clickedOnObject,
+                        trial.getStaticMainWindow().getDataSorter(), false);
+
                 trial.getSystemEvents().addObserver(tmpRef);
                 tmpRef.show();
 
@@ -2115,38 +1988,27 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             } else if (arg.equals("Show User Event Ledger")) {
                 (new LedgerWindow(trial, 2, false)).show();
             } else if (arg.equals("Show Call Path Relations")) {
-                CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1,
-                        this.getDataSorter(), 2, false);
+                CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(), 2,
+                        false);
                 trial.getSystemEvents().addObserver(tmpRef);
                 tmpRef.show();
             } else if (arg.equals("Close All Sub-Windows")) {
                 trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 
             } else if (arg.equals("Print")) {
-                PrinterJob job = PrinterJob.getPrinterJob();
-                PageFormat defaultFormat = job.defaultPage();
-                PageFormat selectedFormat = job.pageDialog(defaultFormat);
-                job.setPrintable(this, selectedFormat);
-                if (job.getPrintService() != null) {
-                    if (job.printDialog()) {
-                        try {
-                            job.print();
-                        } catch (PrinterException e) {
-                        }
-                    }
-                }
+                UtilFncs.print(this);
             } else if (arg.equals("Save Image")) {
                 ParaProfImageOutput imageOutput = new ParaProfImageOutput();
                 imageOutput.saveImage((ParaProfImageInterface) this);
             } else if (arg.equals("Static Width")) {
-                this.widthOption = WIDTH_STATIC;
+                this.widthOption = OPTION_STATIC;
                 recreateGraph();
             } else if (arg.equals("Width by Name Length")) {
-                this.widthOption = WIDTH_NAME;
+                this.widthOption = OPTION_NAME;
                 recreateGraph();
 
             } else if (arg.equals("Width by Exclusive Value")) {
-                this.widthOption = WIDTH_EXCLUSIVE;
+                this.widthOption = OPTION_EXCLUSIVE;
                 recreateGraph();
 
             } else if (arg.equals("Display Width Slider")) {
@@ -2154,7 +2016,14 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     displaySliders(true);
                 else
                     displaySliders(false);
+            } else if (arg.equals("Close All Sub-Windows")) {
+                trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+            } else if (arg.equals("About ParaProf")) {
+                JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
+            } else if (arg.equals("Show Help Window")) {
+                this.help(true);
             }
+
         }
 
     }
@@ -2181,33 +2050,24 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private Graph graph = null;
     private JScrollPane jGraphPane = null;
 
-    private static final int WIDTH_STATIC = 0;
-    private static final int WIDTH_NAME = 1;
-    private static final int WIDTH_EXCLUSIVE = 2;
-    private static final int WIDTH_INCLUSIVE = 3;
-    private static final int WIDTH_NUMCALLS = 4;
-    private static final int WIDTH_NUMSUBR = 5;
-    private static final int WIDTH_INCLPERCALL = 6;
-    private int widthOption = WIDTH_EXCLUSIVE;
+    private static final int OPTION_STATIC = 0;
+    private static final int OPTION_NAME = 1;
+    private static final int OPTION_EXCLUSIVE = 2;
+    private static final int OPTION_INCLUSIVE = 3;
+    private static final int OPTION_NUMCALLS = 4;
+    private static final int OPTION_NUMSUBR = 5;
+    private static final int OPTION_INCLPERCALL = 6;
+    private int widthOption = OPTION_EXCLUSIVE;
+    private int colorOption = OPTION_EXCLUSIVE;
 
-    
-    private static final int COLOR_STATIC = 0;
-    private static final int COLOR_EXCLUSIVE = 2;
-    private static final int COLOR_INCLUSIVE = 3;
-    private static final int COLOR_NUMCALLS = 4;
-    private static final int COLOR_NUMSUBR = 5;
-    private static final int COLOR_INCLPERCALL = 6;
-    private int colorOption = COLOR_EXCLUSIVE;
-
-    
-    Vector functionProfileList;
 
     private edu.uoregon.tau.dms.dss.Thread thread;
     private int boxWidth = 120;
 
     private JLabel boxWidthLabel = new JLabel("Box width");
     private JSlider boxWidthSlider = new JSlider(0, 500, boxWidth);
-
+    
+    Vector functionProfileList;
     DefaultGraphModel model;
     Vector graphCellVector;
     Object[] cells;
@@ -2218,7 +2078,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     Font font;
     public static int boxHeight;
     private JPopupMenu popup = new JPopupMenu();
-    Object clickedOnObject = null;
+    Object clickedOnObject = null; // stores the function that was right-clicked on
     double scale = 1.0;
 
 }

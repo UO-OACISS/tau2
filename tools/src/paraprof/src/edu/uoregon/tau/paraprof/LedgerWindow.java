@@ -2,9 +2,9 @@
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.2 2004/12/21 20:52:57 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.3 2004/12/24 00:25:08 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -25,17 +25,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
     public static final int GROUP_LEDGER = 1;
     public static final int USEREVENT_LEDGER = 2;
 
-    public LedgerWindow() {
-        try {
-            setLocation(new java.awt.Point(300, 200));
-            setSize(new java.awt.Dimension(350, 450));
 
-            //Set the title indicating that there was a problem.
-            this.setTitle("Wrong constructor used");
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MLW01");
-        }
-    }
 
     public void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
@@ -234,13 +224,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Print")) {
-                    PrinterJob job = PrinterJob.getPrinterJob();
-                    PageFormat defaultFormat = job.defaultPage();
-                    PageFormat selectedFormat = job.pageDialog(defaultFormat);
-                    job.setPrintable(panel, selectedFormat);
-                    if (job.printDialog()) {
-                        job.print();
-                    }
+                    UtilFncs.print(panel);
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {

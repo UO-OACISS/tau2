@@ -29,17 +29,7 @@ import edu.uoregon.tau.dms.dss.*;
 public class ThreadDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
         ChangeListener {
 
-    public ThreadDataWindow() {
-        try {
-            setLocation(new java.awt.Point(300, 200));
-            setSize(new java.awt.Dimension(700, 450));
-
-            //Set the title indicating that there was a problem.
-            this.setTitle("Wrong constructor used!");
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW01");
-        }
-    }
+    
 
     public ThreadDataWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
             DataSorter dataSorter, boolean debug) {
@@ -377,15 +367,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Print")) {
-                    PrinterJob job = PrinterJob.getPrinterJob();
-                    PageFormat defaultFormat = job.defaultPage();
-                    PageFormat selectedFormat = job.pageDialog(defaultFormat);
-                    job.setPrintable(panel, selectedFormat);
-                    if (job.printDialog()) {
-                        job.print();
-                    }
-                }
-                if (arg.equals("Show ParaProf Manager")) {
+                    UtilFncs.print(panel);
+                } else if (arg.equals("Show ParaProf Manager")) {
                     ParaProfManager jRM = new ParaProfManager();
                     jRM.show();
                 } else if (arg.equals("Preferences...")) {

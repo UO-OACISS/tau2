@@ -1,11 +1,11 @@
-/*
- * 
- * FunctionDataWindowPanel.java
- * 
- * Title: ParaProf Author: Robert Bell Description:
- * 
- * Things to do:
+/**
+ * FunctionDataWindowPanel
+ * This is the panel for the FunctionDataWindow.
  *  
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.3 2004/12/24 00:25:08 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.3 $
+ * @see		FunctionDataWindow
  */
 
 package edu.uoregon.tau.paraprof;
@@ -20,8 +20,8 @@ import java.text.*;
 import java.awt.font.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener,
-        Printable, ParaProfImageInterface {
+public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
+        ParaProfImageInterface {
     public FunctionDataWindowPanel() {
         try {
             setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -33,8 +33,8 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         }
     }
 
-    public FunctionDataWindowPanel(ParaProfTrial trial, Function function,
-            FunctionDataWindow mDWindow, boolean debug) {
+    public FunctionDataWindowPanel(ParaProfTrial trial, Function function, FunctionDataWindow mDWindow,
+            boolean debug) {
         try {
 
             this.trial = trial;
@@ -122,7 +122,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         if (page >= 1) {
             return NO_SUCH_PAGE;
         }
-        
+
         double pageWidth = pageFormat.getImageableWidth();
         double pageHeight = pageFormat.getImageableHeight();
         int cols = (int) (xPanelSize / pageWidth) + 1;
@@ -130,7 +130,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         double xScale = pageWidth / xPanelSize;
         double yScale = pageHeight / yPanelSize;
         double scale = Math.min(xScale, yScale);
-        
+
         double tx = 0.0;
         double ty = 0.0;
         if (xScale > scale) {
@@ -141,8 +141,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
 
         Graphics2D g2 = (Graphics2D) g;
 
-        g2.translate((int) pageFormat.getImageableX(),
-                (int) pageFormat.getImageableY());
+        g2.translate((int) pageFormat.getImageableX(), (int) pageFormat.getImageableY());
         g2.translate(tx, ty);
         g2.scale(scale, scale);
 
@@ -152,23 +151,77 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
 
     }
 
+    private double getValue(PPFunctionProfile ppFunctionProfile) {
+        double value = 0;
+        switch (mDWindow.getValueType()) {
+        case 2:
+            if (mDWindow.isPercent())
+                value = ppFunctionProfile.getExclusivePercentValue();
+            else
+                value = ppFunctionProfile.getExclusiveValue();
+            break;
+        case 4:
+            if (mDWindow.isPercent())
+                value = ppFunctionProfile.getInclusivePercentValue();
+            else
+                value = ppFunctionProfile.getInclusiveValue();
+            break;
+        case 6:
+            value = ppFunctionProfile.getNumberOfCalls();
+            break;
+        case 8:
+            value = ppFunctionProfile.getNumberOfSubRoutines();
+            break;
+        case 10:
+            value = ppFunctionProfile.getInclusivePerCall();
+            break;
+        default:
+            UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
+        }
+        return value;
+    }
+    
+    private double getMaxValue(Function function) {
+        double maxValue = 0;
+        switch (mDWindow.getValueType()) {
+        case 2:
+            if (mDWindow.isPercent()) {
+                maxValue = function.getMaxExclusivePercent(trial.getSelectedMetricID());
+            } else {
+                maxValue = function.getMaxExclusive(trial.getSelectedMetricID());
+            }
+            break;
+        case 4:
+            if (mDWindow.isPercent()) {
+                maxValue = function.getMaxInclusivePercent(trial.getSelectedMetricID());
+            } else {
+                maxValue = function.getMaxInclusive(trial.getSelectedMetricID());
+            }
+            break;
+        case 6:
+            maxValue = function.getMaxNumCalls();
+            break;
+        case 8:
+            maxValue = function.getMaxNumSubr();
+            break;
+        case 10:
+            maxValue = function.getMaxInclusivePerCall(trial.getSelectedMetricID());
+            break;
+        default:
+            UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
+        }
+        return maxValue;
+    }
+   
+
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         try {
 
             list = mDWindow.getData();
 
-            //######
-            //Some declarations.
-            //######
-            double value = 0.0;
-            double maxValue = 0.0;
             int stringWidth = 0;
             int yCoord = 0;
             barXCoord = barLength + textOffset;
-            PPFunctionProfile ppFunctionProfile = null;
-            //######
-            //Some declarations.
-            //######
 
             //To make sure the bar details are set, this
             //method must be called.
@@ -184,53 +237,22 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             g2D.setFont(font);
             FontMetrics fmFont = g2D.getFontMetrics(font);
 
-            //***
-            //Set the max and mean values for this function.
-            //***
-            switch (mDWindow.getValueType()) {
-            case 2:
-                if (mDWindow.isPercent()) {
-                    maxValue = function.getMaxExclusivePercent(trial.getSelectedMetricID());
-                } else {
-                    maxValue = function.getMaxExclusive(trial.getSelectedMetricID());
-                }
-                break;
-            case 4:
-                if (mDWindow.isPercent()) {
-                    maxValue = function.getMaxInclusivePercent(trial.getSelectedMetricID());
-                } else {
-                    maxValue = function.getMaxInclusive(trial.getSelectedMetricID());
-                }
-                break;
-            case 6:
-                maxValue = function.getMaxNumCalls();
-                break;
-            case 8:
-                maxValue = function.getMaxNumSubr();
-                break;
-            case 10:
-                maxValue = function.getMaxInclusivePerCall(trial.getSelectedMetricID());
-                break;
-            default:
-                UtilFncs.systemError(null, null, "Unexpected type - MDWP value: "
-                        + mDWindow.getValueType());
-            }
+            //Get the max value for this function
+            double maxValue = getMaxValue(function);
 
+            // too bad these next few lines are bullshit 
+            // (you can't determine the max width by looking at the max value)  1.0E99 > 43.34534, but is thinner
             if (mDWindow.isPercent()) {
                 stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue, 6) + "%");
                 barXCoord = barXCoord + stringWidth;
             } else {
-                stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(mDWindow.units(),
-                        maxValue, ParaProf.defaultNumberPrecision));
+                stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(mDWindow.units(), maxValue,
+                        ParaProf.defaultNumberPrecision));
                 barXCoord = barXCoord + stringWidth;
             }
-            //***
-            //End - Set the max and mean values for this mapping.
-            //***
 
-            //At this point we can determine the size this panel will
-            //require. If we need to resize, don't do any more drawing,
-            //just call revalidate.
+            // At this point we can determine the size this panel will require. 
+            // If we need to resize, don't do any more drawing, just call revalidate.
             if (resizePanel(fmFont, barXCoord) && toScreen) {
                 this.revalidate();
                 return;
@@ -240,16 +262,14 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             int yEnd = 0;
             int startElement = 0;
             int endElement = 0;
-            Rectangle clipRect = null;
-            Rectangle viewRect = null;
 
             if (!fullWindow) {
                 if (toScreen) {
-                    clipRect = g2D.getClipBounds();
+                    Rectangle clipRect = g2D.getClipBounds();
                     yBeg = (int) clipRect.getY();
                     yEnd = (int) (yBeg + clipRect.getHeight());
                 } else {
-                    viewRect = mDWindow.getViewRect();
+                    Rectangle viewRect = mDWindow.getViewRect();
                     yBeg = (int) viewRect.getY();
                     yEnd = (int) (yBeg + viewRect.getHeight());
                 }
@@ -278,9 +298,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             //Check for group membership.
             boolean groupMember = function.isGroupMember(trial.getColorChooser().getHighlightedGroup());
 
-            //######
             //Draw the header if required.
-            //######
             if (drawHeader) {
                 FontRenderContext frc = g2D.getFontRenderContext();
                 Insets insets = this.getInsets();
@@ -305,41 +323,11 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                 }
                 lastHeaderEndPosition = yCoord;
             }
-            //######
-            //End - Draw the header if required.
-            //######
 
-            //######
-            //Draw thread information for this mapping.
-            //######
+            // Iterate through and draw each thread's values
             for (int i = startElement; i <= endElement; i++) {
-                ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
-                switch (mDWindow.getValueType()) {
-                case 2:
-                    if (mDWindow.isPercent())
-                        value = ppFunctionProfile.getExclusivePercentValue();
-                    else
-                        value = ppFunctionProfile.getExclusiveValue();
-                    break;
-                case 4:
-                    if (mDWindow.isPercent())
-                        value = ppFunctionProfile.getInclusivePercentValue();
-                    else
-                        value = ppFunctionProfile.getInclusiveValue();
-                    break;
-                case 6:
-                    value = ppFunctionProfile.getNumberOfCalls();
-                    break;
-                case 8:
-                    value = ppFunctionProfile.getNumberOfSubRoutines();
-                    break;
-                case 10:
-                    value = ppFunctionProfile.getInclusivePerCall();
-                    break;
-                default:
-                    UtilFncs.systemError(null, null, "Unexpected type - MDWP value: "
-                            + mDWindow.getValueType());
-                }
+                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.elementAt(i);
+                double value = getValue(ppFunctionProfile);
 
                 yCoord = yCoord + (barSpacing);
 
@@ -348,12 +336,10 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                     barString = "mean";
                 } else {
                     barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + ","
-                            + (ppFunctionProfile.getContextID()) + ","
-                            + (ppFunctionProfile.getThreadID());
+                            + (ppFunctionProfile.getContextID()) + "," + (ppFunctionProfile.getThreadID());
                 }
 
-                drawBar(g2D, fmFont, value, maxValue, barString, barXCoord, yCoord, barHeight,
-                        groupMember);
+                drawBar(g2D, fmFont, value, maxValue, barString, barXCoord, yCoord, barHeight, groupMember);
             }
             //######
             //End - Draw thread information for this mapping.
@@ -363,8 +349,8 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         }
     }
 
-    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue,
-            String text, int barXCoord, int yCoord, int barHeight, boolean groupMember) {
+    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
+            int barXCoord, int yCoord, int barHeight, boolean groupMember) {
         int xLength = 0;
         double d = 0.0;
         String s = null;
@@ -377,19 +363,16 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
 
         if ((xLength > 2) && (barHeight > 2)) {
             g2D.setColor(function.getColor());
-            g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1,
-                    barHeight - 1);
+            g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
             if (function == (trial.getColorChooser().getHighlightedFunction())) {
                 g2D.setColor(trial.getColorChooser().getHighlightColor());
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-                g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2,
-                        barHeight - 2);
+                g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
             } else if (groupMember) {
                 g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-                g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2,
-                        barHeight - 2);
+                g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
             } else {
                 g2D.setColor(Color.black);
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
@@ -438,31 +421,28 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Show Mean Statistics Window")) {
-                    StatWindow statWindow = new StatWindow(trial, -1, -1, -1,
-                            mDWindow.getDataSorter(), false, this.debug());
+                    StatWindow statWindow = new StatWindow(trial, -1, -1, -1, mDWindow.getDataSorter(), false,
+                            this.debug());
                     trial.getSystemEvents().addObserver(statWindow);
                     statWindow.show();
                 } else if (arg.equals("Show Mean User Event Statistics Window")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        StatWindow statWindow = new StatWindow(trial,
-                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(), true,
-                                this.debug());
+                        StatWindow statWindow = new StatWindow(trial, ppFunctionProfile.getNodeID(),
+                                ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(),
+                                mDWindow.getDataSorter(), true, this.debug());
                         trial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
                 } else if (arg.equals("Show Mean Call Path Thread Relations")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        CallPathUtilFuncs.trimCallPathData(trial.getTrialData(),
-                                trial.getNCT().getThread(ppFunctionProfile.getNodeID(),
-                                        ppFunctionProfile.getContextID(),
-                                        ppFunctionProfile.getThreadID()));
+                        CallPathUtilFuncs.trimCallPathData(trial.getTrialData(), trial.getNCT().getThread(
+                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
+                                ppFunctionProfile.getThreadID()));
                         CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial,
                                 ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(), 1,
-                                this.debug());
+                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(), 1, this.debug());
                         trial.getSystemEvents().addObserver(callPathTextWindow);
                         callPathTextWindow.show();
                     }
@@ -472,56 +452,48 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                     CallGraphWindow tmpRef = new CallGraphWindow(trial, -1, -1, -1, mDWindow.getDataSorter());
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
-    
 
                 } else if (arg.equals("Show Statistics Window")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        StatWindow statWindow = new StatWindow(trial,
-                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(), false,
-                                this.debug());
+                        StatWindow statWindow = new StatWindow(trial, ppFunctionProfile.getNodeID(),
+                                ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(),
+                                mDWindow.getDataSorter(), false, this.debug());
                         trial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
                 } else if (arg.equals("Show User Event Statistics Window")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        StatWindow statWindow = new StatWindow(trial,
-                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(), true,
-                                this.debug());
+                        StatWindow statWindow = new StatWindow(trial, ppFunctionProfile.getNodeID(),
+                                ppFunctionProfile.getContextID(), ppFunctionProfile.getThreadID(),
+                                mDWindow.getDataSorter(), true, this.debug());
                         trial.getSystemEvents().addObserver(statWindow);
                         statWindow.show();
                     }
                 } else if (arg.equals("Show Call Path Thread Relations")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        CallPathUtilFuncs.trimCallPathData(trial.getTrialData(),
-                                trial.getNCT().getThread(ppFunctionProfile.getNodeID(),
-                                        ppFunctionProfile.getContextID(),
-                                        ppFunctionProfile.getThreadID()));
+                        CallPathUtilFuncs.trimCallPathData(trial.getTrialData(), trial.getNCT().getThread(
+                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
+                                ppFunctionProfile.getThreadID()));
                         CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial,
                                 ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(), 1,
-                                this.debug());
+                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(), 1, this.debug());
                         trial.getSystemEvents().addObserver(callPathTextWindow);
                         callPathTextWindow.show();
                     }
 
-                
                 } else if (arg.equals("Show Thread Call Graph")) {
                     PPThread ppThread = (PPThread) clickedOnObject;
-                    CallPathUtilFuncs.trimCallPathData(trial.getTrialData(),
-                            trial.getNCT().getThread(ppThread.getNodeID(),
-                                    ppThread.getContextID(), ppThread.getThreadID()));
+                    CallPathUtilFuncs.trimCallPathData(trial.getTrialData(), trial.getNCT().getThread(
+                            ppThread.getNodeID(), ppThread.getContextID(), ppThread.getThreadID()));
 
-                    CallGraphWindow tmpRef = new CallGraphWindow(trial, ppThread.getNodeID(), ppThread.getContextID(),
-                            ppThread.getThreadID(), mDWindow.getDataSorter());
+                    CallGraphWindow tmpRef = new CallGraphWindow(trial, ppThread.getNodeID(),
+                            ppThread.getContextID(), ppThread.getThreadID(), mDWindow.getDataSorter());
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
 
-                
                 } else if (arg.equals("Change Function Color")) {
                     Color tmpCol = function.getColor();
 
@@ -580,8 +552,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                         // during the last render.
                         ThreadDataWindow threadDataWindow = new ThreadDataWindow(trial,
                                 ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(),
-                                this.debug());
+                                ppFunctionProfile.getThreadID(), mDWindow.getDataSorter(), this.debug());
                         trial.getSystemEvents().addObserver(threadDataWindow);
                         threadDataWindow.show();
                     } else {
@@ -654,7 +625,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             int newYPanelSize = ((mDWindow.getData().size()) + 6) * barSpacing + 10;
             int[] nct = trial.getMaxNCTNumbers();
             String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];
-            
+
             int newXPanelSize = barXCoord + 5 + (fmFont.stringWidth(nctString)) + 25;
             if ((newYPanelSize != yPanelSize) || (newXPanelSize != xPanelSize)) {
                 yPanelSize = newYPanelSize;
