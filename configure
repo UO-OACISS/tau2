@@ -1314,7 +1314,6 @@ if [ $machine = t3e -a $cxx_compiler = KCC ]
     if [ $fortran_compiler = no ] 
     then 
       fixmakeargs="$fixmakeargs CRAY_FORTRAN"
-    # KAI is the only compiler that allows mixed f90/C++ programs on Cray T3E
       fortran_compiler=yes
     fi
 fi
@@ -2703,6 +2702,11 @@ case $machine in
      t3e)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine T3E CRAY-ALLOCA $fixmakeargs"
+	if [ $fortran_compiler = no ]  
+	then
+	  fixmakeargs="$fixmakeargs CRAY_FORTRAN"
+          fortran_compiler=yes
+        fi
         ;;
 
      ksr1)
