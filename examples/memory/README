@@ -1,0 +1,24 @@
+TAU provides an API for tracking memory utilization.
+We use getrusage to obtain the value of the maximum resident
+set size in KB and use TAU's user defined atomic events to 
+track the maximum/minimum/mean/std.dev. of memory used. 
+The API consists of four calls:
+
+TAU_TRACK_MEMORY()
+
+starts tracking the memory and interrupts the program every 
+10 seconds. To change this default value, use:
+TAU_SET_INTERRUPT_INTERVAL(seconds)
+
+It is possible to enable and disable the memory tracking operations
+at runtime. To do this, use:
+TAU_DISABLE_TRACKING_MEMORY()
+and
+TAU_ENABLE_TRACKING_MEMORY() 
+calls.
+The use of these calls is illustrated in the example.
+
+NOTE: getrusage does not provide this memory information on all platforms.
+We've tested it on Cray X1, IBM AIX, SGI IRIX and it works properly. However,
+Linux and Mac OS X do not support this feature and getrusage returns zero.
+

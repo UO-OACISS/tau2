@@ -62,7 +62,18 @@ int main(int argc, char **argv)
 {
   TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
   TAU_PROFILE_SET_NODE(0);
+
+  /* This one call tracks heap memory utilization. It uses
+  getrusage to compute the max resident set size in KB */
   TAU_TRACK_MEMORY();
+
+  /* By default the above call uses 10 seconds as the interrupt
+     interval. To change this to say 4 secs, use : */
+  TAU_SET_INTERRUPT_INTERVAL(4); 
+  /* this call is optional */
+
+  /* To disable tracking memory use TAU_DISABLE_TRACKING_MEMORY() and
+     to re-enable tracking it,  use TAU_ENABLE_TRACKING_MEMORY() */
 
   multiply();
   return 0;
