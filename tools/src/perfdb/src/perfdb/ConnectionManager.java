@@ -18,18 +18,24 @@ public class ConnectionManager {
     // database schema file name. default one should be "~/PerfDB/db/dbschema.txt".
     private String dbschema;
 
+	private ParseConfig parser = null;
+
     private DB db = null;
 	
-    public ConnectionManager() {
+    public ConnectionManager(String configFileName) {
 	super();
-	ParseConfig parser = new ParseConfig();
+	parser = new ParseConfig(configFileName);
 	perfdbAcct = "user=" + parser.getDBUserName() + ";password=" + parser.getDBPasswd();	
 	dbschema = parser.getDBSchema();
     }
 
+	public ParseConfig getParseConfig () {
+			return parser;
+	}
+
     public void connect() {
         try {
-	    setDB(new DBConnector(new JDBCAcct(perfdbAcct)));
+	    setDB(new DBConnector(new JDBCAcct(perfdbAcct), parser));
         } catch (java.sql.SQLException ex) {
 	    ex.printStackTrace();
         }

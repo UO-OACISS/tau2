@@ -22,22 +22,21 @@ public class DBConnector implements DB {
     private String driverName;
     // it should be "org.postgresql.Driver" in PostgreSQL.
 
-    public DBConnector() throws SQLException {
+    public DBConnector(ParseConfig parser) throws SQLException {
 	super();
-	setJDBC();
+	setJDBC(parser);
 	register();
     }
 
-    public DBConnector(DBAcct acct) throws SQLException {
+    public DBConnector(DBAcct acct, ParseConfig parser) throws SQLException {
 	super();
-	setJDBC();
+	setJDBC(parser);
 	setAcct(acct);
 	register();
 	connect();
     }
 
-    public void setJDBC(){
-	ParseConfig parser = new ParseConfig();
+    public void setJDBC(ParseConfig parser){
 
 	dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
 	    + ":" + parser.getDBPort() + "/" + parser.getDBName() + ";";

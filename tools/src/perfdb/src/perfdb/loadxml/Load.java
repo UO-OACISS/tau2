@@ -16,14 +16,14 @@ public class Load {
     private DB db = null;
     private String parserClass;
 
-    public Load() {
+    public Load(String parserClassIn) {
 	super();
-	parserClass = (new perfdb.ConnectionManager()).getParserClass();
+	parserClass = new String(parserClassIn);
     }
 
-    public Load(DB db) {
+    public Load(DB db, String parserClassIn) {
 	super();
-	parserClass = (new perfdb.ConnectionManager()).getParserClass();
+	parserClass = new String(parserClassIn);
 	setDB(db);
     }	
 

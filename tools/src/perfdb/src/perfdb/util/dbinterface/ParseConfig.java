@@ -5,8 +5,6 @@ import java.io.*;
 /* This class is intended to read in config.txt file and parse the parameters. */
 
 public class ParseConfig {
-    private String configLoc = "perfdb.cfg";
-
     private String perfdbHome;
     private String jdbcJarFile;
     private String jdbcDriver;
@@ -19,7 +17,7 @@ public class ParseConfig {
     private String dbSchema;
     private String xmlSAXParser;
 
-    public ParseConfig(){
+    public ParseConfig(String configLoc){
 		
 	String inputString;
 	String name;

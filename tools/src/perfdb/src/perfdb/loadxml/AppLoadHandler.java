@@ -140,7 +140,7 @@ public void endElement(String url, String name, String qname) {
 	    	buf.append(" values ");
 	    	buf.append("('" + appname + "', '" + version + "', '" 
 		       + desc + "', '" + lang + "', '" + paradiag + "', '" + usage + "', '" + exeopt + "'); ");       
-	    	System.out.println(buf.toString());
+	    	// System.out.println(buf.toString());
 	    	try {
 		    getDB().executeUpdate(buf.toString());
 		    buf.delete(0, buf.toString().length());

@@ -32,7 +32,7 @@ public class Translator implements Serializable{
     private boolean isUserEventHeadingSet;
 
     //constructor
-    public Translator(String sourcename, String targetname){
+    public Translator(String sourcename, String targetname, String configFileName){
 
 	readPprof = new File(sourcename);
 
@@ -73,7 +73,7 @@ public class Translator implements Serializable{
 	maxContext = 0;
 	maxThread = 0;
 
-	connector = new perfdb.ConnectionManager();
+	connector = new perfdb.ConnectionManager(configFileName);
 	connector.connect();
     }
 
@@ -2363,13 +2363,13 @@ public class Translator implements Serializable{
 	//******************************
 
     static public void main(String[] args){
-	String USAGE = "USAGE: Translator sourcefilename destinationname";
+	String USAGE = "USAGE: Translator configfilename sourcefilename destinationname";
 	if (args.length == 0) {
                 System.err.println(USAGE);
                 System.exit(-1);
         }
 
-	Translator trans = new Translator(args[0], args[1]);
+	Translator trans = new Translator(args[0], args[1], args[2]);
 	trans.buildPprof(); 
 	trans.writeXmlFiles();
 	System.out.println("Done - Translating pprof.dat into pprof.xml!");

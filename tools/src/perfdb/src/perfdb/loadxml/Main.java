@@ -12,7 +12,7 @@ public class Main {
     private DB db = null;
     
     private static String USAGE = 
-        "Main (help | loadschema <schemafile> | loadxml <pprof.xml> | loadapp <App_Info.xml> | loadexp [<Exp_Info.xml>])";
+        "Main configfilename \n  (help | loadschema <schemafile> \n        | loadtrial <pprof.xml> \n        | loadapp <App_Info.xml> \n        | loadexp <application id> <Sys_info.xml> <Config_info.xml> <Compiler_info.xml> <Instru_info.xml>)";
 
     // These two flags determines whether to store an app. or exp. separately. 
     private int enable_AppPartition=0;
@@ -20,9 +20,9 @@ public class Main {
 
     private perfdb.ConnectionManager connector;
 
-    public Main() {
+    public Main(String configFileName) {
 	super();
-	connector = new perfdb.ConnectionManager();
+	connector = new perfdb.ConnectionManager(configFileName);
     }
 
     public perfdb.ConnectionManager getConnector(){
@@ -32,9 +32,9 @@ public class Main {
     public Load getLoad() {
 	if (load == null) {
 	    if (connector.getDB() == null) {
-		load = new Load();
+		load = new Load(connector.getParserClass());
 	    } else {
-		load = new Load(connector.getDB());
+		load = new Load(connector.getDB(), connector.getParserClass());
 	    }
 	}
 	return load;
@@ -146,11 +146,10 @@ public class Main {
 
     /* Load environemnt information associated with an experiment*/
  
-    public void storeExp() {
+    public void storeExp(String appid, String sysinfo, String configinfo, String compilerinfo, String instruinfo ) {
 	BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String appname;
 	String version;
-	String appid;
 	String expid;
 	String parInfo;
 	File ff;
@@ -173,8 +172,8 @@ public class Main {
 
 		// I decided to prompt the user for the Appid, 
 		// rather than the name & version
-	    System.out.println("please input the id of the application associated with the experiment:");
-	    appid = reader.readLine();
+	    // System.out.println("please input the id of the application associated with the experiment:");
+	    // appid = reader.readLine();
 	   
 		/* 
 	    System.out.println("please input the name of application associated with the experiment:");
@@ -190,8 +189,8 @@ public class Main {
 		appid = appid.trim();
 		
 		String hostname = InetAddress.getLocalHost().getHostName();
-		System.out.println("please input system information file");
-		String sysinfo = reader.readLine();
+		// System.out.println("please input system information file");
+		// String sysinfo = reader.readLine();
 		ff = new File(sysinfo.trim());
 		if (!ff.exists()) {
 		    System.out.println("Warning: the System file doesn't exist!");
@@ -199,8 +198,8 @@ public class Main {
 		}
 		sysinfo = hostname + ":" + ff.getAbsolutePath();
 
-		System.out.println("please input configuration information file");
-		String configinfo = reader.readLine();
+		// System.out.println("please input configuration information file");
+		// String configinfo = reader.readLine();
 		ff = new File(configinfo.trim());
 		if (!ff.exists()) { 
 		    System.out.println("Warning: the configuration file doesn't exist!");
@@ -208,8 +207,8 @@ public class Main {
 		}       
 		configinfo = hostname + ":" + ff.getAbsolutePath();
 
-		System.out.println("please input compiler information file");
-		String compilerinfo = reader.readLine();
+		// System.out.println("please input compiler information file");
+		// String compilerinfo = reader.readLine();
 		ff = new File(compilerinfo.trim());
 		if (!ff.exists()) {
 		    System.out.println("Warning: the compiler file doesn't exist!");
@@ -217,8 +216,8 @@ public class Main {
 		}
 		compilerinfo = hostname + ":" + ff.getAbsolutePath();
 
-		System.out.println("please input instrumentation information file");
-		String instruinfo = reader.readLine();
+		// System.out.println("please input instrumentation information file");
+		// String instruinfo = reader.readLine();
 		ff = new File(instruinfo.trim());
 		if (!ff.exists()) {
 		    System.out.println("Warning: the instrumentation file doesn't exist!");
@@ -394,7 +393,8 @@ public class Main {
 	int ctr = 0;
 	String command;	
 	
-	Main demo = new Main();
+	// create a new Main object, pass in the configuration file name
+	Main demo = new Main(args[ctr++]);
 	demo.getConnector().connect();
 
 	
@@ -416,7 +416,7 @@ public class Main {
 	    }
 	    /***** Load experiment into PerfDB ********/
 	    if (command.equalsIgnoreCase("LOADEXP")) {
-		demo.storeExp();
+		demo.storeExp(args[ctr], args[ctr+1], args[ctr+2], args[ctr+3], args[ctr+4]);
 		continue;
 	    }
 	    /***** Load a trial into PerfDB *********/
