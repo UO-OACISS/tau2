@@ -130,6 +130,28 @@ void tau_report_thread_statistics_(void)
 {
 }
 
+/* dynamic and static timers and phases */
+void tau_phase_create_static_(void **ptr, char *infname, int slen)
+{
+}
+
+void tau_phase_create_dynamic_(void **ptr, char *infname, int slen)
+{
+}
+
+void tau_profile_timer_dynamic_(void **ptr, char *infname, int slen)
+{ 
+}
+
+void tau_phase_start_(void **profiler)
+{
+}
+
+void tau_phase_stop_(void **profiler)
+{
+}
+
+
 /* Cray F90 specific extensions */
 #ifdef CRAYKAI
 void _main();
@@ -183,6 +205,27 @@ void TAU_REPORT_STATISTICS(void)
 }
 
 void TAU_REPORT_THREAD_STATISTICS(void)
+{
+}
+
+/* dynamic and static timers and phases */
+void TAU_PHASE_CREATE_STATIC(void **ptr, char *infname, int slen)
+{
+}
+
+void TAU_PHASE_CREATE_DYNAMIC(void **ptr, char *infname, int slen)
+{
+}
+
+void TAU_PROFILE_TIMER_DYNAMIC(void **ptr, char *infname, int slen)
+{ 
+}
+
+void TAU_PHASE_START(void **profiler)
+{
+}
+
+void TAU_PHASE_STOP(void **profiler)
 {
 }
 #endif /* CRAYKAI */
@@ -290,6 +333,27 @@ void tau_event_disable_stddev(void *ue)
 {
 } 
 ///////////////////////////////////////////////////////////////////////////
+/* dynamic and static timers and phases */
+void tau_phase_create_static(void **ptr, char *infname, int slen)
+{
+}
+
+void tau_phase_create_dynamic(void **ptr, char *infname, int slen)
+{
+}
+
+void tau_profile_timer_dynamic(void **ptr, char *infname, int slen)
+{ 
+}
+
+void tau_phase_start(void **profiler)
+{
+}
+
+void tau_phase_stop(void **profiler)
+{
+}
+///////////////////////////////////////////////////////////////////////////
 
 void tau_profile_timer__(void **ptr, char *fname, int *flen, char *type, int *tlen, unsigned int *group)
 {
@@ -324,6 +388,26 @@ void tau_register_thread__(void)
 {
 }
 
+/* dynamic and static timers and phases */
+void tau_phase_create_static__(void **ptr, char *infname, int slen)
+{
+}
+
+void tau_phase_create_dynamic__(void **ptr, char *infname, int slen)
+{
+}
+
+void tau_profile_timer_dynamic__(void **ptr, char *infname, int slen)
+{ 
+}
+
+void tau_phase_start__(void **profiler)
+{
+}
+
+void tau_phase_stop__(void **profiler)
+{
+}
 ///////////////////////////////////////////////////////////////////////////
 // Memory, MAGNET/MUSE event stubs
 ///////////////////////////////////////////////////////////////////////////
@@ -468,6 +552,6 @@ void TAU_SET_INTERRUPT_INTERVAL(int value)
 
 /***************************************************************************
  * $RCSfile: TauDisable.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2004/06/11 21:46:32 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.4 2004/06/11 21:46:32 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 2005/01/20 01:59:23 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.5 2005/01/20 01:59:23 sameer Exp $ 
  ***************************************************************************/
