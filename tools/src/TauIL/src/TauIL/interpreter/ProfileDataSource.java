@@ -10,26 +10,27 @@
 
 package TauIL.interpreter;
 
-import edu.uoregon.tau.dms.dss.GlobalMapping;
-import edu.uoregon.tau.dms.dss.GlobalMappingElement;
-import edu.uoregon.tau.dms.dss.ParaProfDataSession;
-import edu.uoregon.tau.dms.dss.ParaProfObserver;
-import edu.uoregon.tau.dms.dss.TauPprofOutputSession;
+import edu.uoregon.tau.dms.dss.Function;
+import edu.uoregon.tau.dms.dss.FunctionProfile;
+import edu.uoregon.tau.dms.dss.Node;
+import edu.uoregon.tau.dms.dss.Context;
+import edu.uoregon.tau.dms.dss.Thread;
+import edu.uoregon.tau.dms.dss.TauPprofDataSource;
+import edu.uoregon.tau.dms.dss.DataSource;
 
 import java.io.File;
-import java.util.ListIterator;
+import java.util.Iterator;
 import java.util.Vector;
 
-class ProfileDataSource extends DataSource implements ParaProfObserver {
+class ProfileDataSource extends TauIL.interpreter.DataSource  {
 
-    private GlobalMapping event_mapping;
-    private GlobalMappingElement event;
-    private ParaProfDataSession data;
+    private Function event;
+    private edu.uoregon.tau.dms.dss.DataSource data;
 
     private Vector files = new Vector();
     private File [] source_file = new File[1];
 
-    private ListIterator iterator;
+    private Iterator iterator;
 
     private boolean time_metric = true;
     private boolean loading = false;
@@ -54,41 +55,17 @@ class ProfileDataSource extends DataSource implements ParaProfObserver {
 
     /* Load profile data into memory. */
     protected void load() {
-	data = new TauPprofOutputSession();
-
 	files.add(source_file);	
-	data.addObserver(this);
 
-	loading = true;
-	data.initialize(files);
-	
-	while(loading) { /* Got Nothing to do so spin our wheels */ }
-    }
+	data = new TauPprofDataSource(files);
 
-    /* Called by profile reader on completion. Specified by ParaProfObserver interface. */
-    public void update(Object obj){
-	this.update();
-    }
-
-    /* Defined in ParaProfObserver interface. Called on completion of data load. */
-    public void update(){
-	data.terminate();
-
-	/*	
-	//Set the metrics.
-	int numberOfMetrics = dataSession.getNumberOfMetrics();
-	for(int i=0;i<numberOfMetrics;i++){
-	    Metric metric = this.addMetric();
-	    metric.setName(dataSession.getMetricName(i));
-	    metric.setTrial(this);
+	try {
+	    data.load();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	    System.exit(-1);
 	}
-	*/
-	
-	//	time_metric = data.isTimeMetric();
-
-	event_mapping = data.getGlobalMapping();
-	iterator = event_mapping.getMappingIterator(0);
-	loading = false;
+	iterator = data.getFunctions();
     }
 
     /* The following accessor methods should be self-explanatory. */
@@ -101,27 +78,60 @@ class ProfileDataSource extends DataSource implements ParaProfObserver {
     }
 
     protected void next() {
-	event = (GlobalMappingElement) iterator.next();
+	event = (Function) iterator.next();
     }
 
     protected void reset() {
-	iterator = event_mapping.getMappingIterator(0);
+	iterator = data.getFunctions();
     }
 
     protected String getEventName() {
-	return event.getMappingName();
+	return event.getName();
     }
 
     protected double getNumCalls() {
-	return event.getMaxNumberOfCalls();
+
+	double maxValue = 0;
+	for (Iterator it = data.getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                Context context = (Context) it2.next();
+                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+		    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+                    FunctionProfile functionProfile = thread.getFunctionProfile(event);
+                    if (functionProfile != null) {
+			maxValue = Math.max(maxValue, functionProfile.getNumCalls());
+                    }
+                }
+            }
+        }
+
+
+	return maxValue;
     }
 
     protected double getNumSubRS() {
-	return event.getMaxNumberOfSubRoutines();
+	double maxValue = 0;
+	for (Iterator it = data.getNodes(); it.hasNext();) {
+            Node node = (Node) it.next();
+            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
+                Context context = (Context) it2.next();
+                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+		    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
+                    FunctionProfile functionProfile = thread.getFunctionProfile(event);
+                    if (functionProfile != null) {
+			maxValue = Math.max(maxValue, functionProfile.getNumSubr());
+                    }
+                }
+            }
+        }
+
+
+	return maxValue;
     }
 
     protected double getPercent() {
-	return event.getMeanInclusivePercentValue(0);
+	return event.getMeanInclusivePercent(0);
     }
 
     protected double getUsec() {
@@ -133,7 +143,7 @@ class ProfileDataSource extends DataSource implements ParaProfObserver {
     }
 
     protected double getExclusiveValue() {
-	return event.getTotalExclusiveValue(0);
+	return event.getTotalExclusive(0);
     }
 
     protected double getCumUsec() {
@@ -145,7 +155,7 @@ class ProfileDataSource extends DataSource implements ParaProfObserver {
     }
 
     protected double getInclusiveValue() {
-	return event.getTotalInclusiveValue(0);
+	return event.getTotalInclusive(0);
     }
 
     protected double getStdDev() {
@@ -161,6 +171,6 @@ class ProfileDataSource extends DataSource implements ParaProfObserver {
     }
 
     protected double getPerCall() {
-	return event.getMeanUserSecPerCall(0);
+	return event.getMeanInclusivePerCall(0);
     }
 }
