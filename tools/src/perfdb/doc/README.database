@@ -1,0 +1,8 @@
+Questions about PostgreSQL:
+1) Are Views efficient?  They aren't in MS SQL.  Are they stored procedures or just shortcuts to queries?
+
+2) Transactions are supported.  Are they used?
+
+3) Triggers, constraints and rules are supported.
+
+4) Are there stored procedures?
