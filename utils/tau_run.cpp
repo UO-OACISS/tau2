@@ -199,7 +199,7 @@ int routineConstraint(char *fname)
 { // fname is the function name
   if ((strncmp(fname, "Tau", 3) == 0) ||
             (strncmp(fname, "Profiler", 8) == 0) ||
-            (strncmp(fname, "FunctionInfo",12) == 0) ||
+            (strstr(fname, "FunctionInfo") != 0) ||
             (strncmp(fname, "RtsLayer", 8) == 0) ||
             (strncmp(fname, "DYNINST", 7) == 0) ||
             (strncmp(fname, "PthreadLayer", 12) == 0) ||
