@@ -18,6 +18,5 @@ cc34567 Cubes program
           END DO 
         END DO 
       END DO 
-      call TAU_PROFILE_EXIT("End...")
-cc        call TAU_PROFILE_STOP(profiler)
+      call TAU_PROFILE_STOP(profiler)
       END PROGRAM SUM_OF_CUBES
