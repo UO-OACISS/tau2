@@ -516,6 +516,7 @@ int * rank;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_rank( comm, rank );
+  TAU_PROFILE_SET_NODE(*rank);
 
   TAU_PROFILE_STOP(tautimer);
 
