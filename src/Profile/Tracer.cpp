@@ -50,11 +50,26 @@ static int TraceFd[TAU_MAX_THREADS] = {0};
 /* -- initialization status flags ---------------------------- */
 static int TraceInitialized[PCXX_MAXPROCS] = {0};
 
+#ifdef TAU_MULTIPLE_COUNTERS
+static double tracerValues[MAX_TAU_COUNTERS] = {0};
+#endif // TAU_MULTIPLE_COUNTERS
+
 
 /* -- Use Profiling interface for time -- */
 unsigned long long pcxx_GetUSecLong(int tid)
 { 
-  return (unsigned long long) RtsLayer::getUSecD(tid); 
+#ifdef TAU_MULTIPLE_COUNTERS
+  //In the presence of multiple counters, the system always
+  //assumes that counter1 contains the tracing metric.
+  //Thus, if you want gettimeofday, make sure that you
+  //define counter1 to be GETTIMEOFDAY.
+  RtsLayer::getUSecD(tid, tracerValues);
+  //Just return values[0] as that is the position of counter1 (whether it
+  //is active or not).
+  return (unsigned long long) tracerValues[0];
+#else //TAU_MULTIPLE_COUNTERS
+  return (unsigned long long) RtsLayer::getUSecD(tid);
+#endif // TAU_MULTIPLE_COUNTERS
 }
 
 /* -- write event to buffer only [without overflow check] ---- */
