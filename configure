@@ -1886,6 +1886,11 @@ EOF
 
 EOF
 
+  if [ $machine = sgi64 -a $cxx_compiler = CC ]
+  then
+    orig_useropt="$orig_useropt -64"
+  fi
+
   if $cxx_compiler $orig_useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
   then
     echo "Thread-safe MPI interface is defined... "
