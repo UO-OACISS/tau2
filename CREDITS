@@ -54,7 +54,8 @@ John Reynders
 Scott Haney
 James Crotinger
 Timothy Williams
-
+NAS Parallel Benchmarks Group for allowing us to use their code as an example
+of TAU instrumentation with Fortran and MPI (http://www.nas.nasa.gov/NAS/NPB/).
 The TAU project was directed by Allen Malony at the University of Orgeon.
 
 
