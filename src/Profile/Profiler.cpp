@@ -462,7 +462,7 @@ int Profiler::StoreData(int tid)
 	}
 	header = new char[256];
 
-#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL))
+#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) || defined (TAU_PAPI))
 	sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
 #else  // SGI_TIMERS, TULIP_TIMERS 
 	sprintf(header,"%d templated_functions\n", numFunc);
@@ -713,9 +713,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.34 $   $Date: 2000/02/08 21:55:55 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.34 2000/02/08 21:55:55 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: bertie $
+ * $Revision: 1.35 $   $Date: 2000/02/22 22:57:25 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.35 2000/02/22 22:57:25 bertie Exp $ 
  ***************************************************************************/
 
 	

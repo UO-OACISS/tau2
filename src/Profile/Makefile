@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/root/Install/papi/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -59,7 +59,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
 		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h      \
 	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
-		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h
+		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
+		$(INCDIR)/PapiLayer.h
 
 LDFLAGS	      = $(PCXX_OPT)
 
@@ -67,7 +68,7 @@ MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
-		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(TAU_JAVA_O)
+		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O) $(TAU_JAVA_O)
 
 PRINT	      = pr
 
@@ -218,6 +219,9 @@ TauJava.o :	TauJava.cpp
 	$(CXX) $(CXXFLAGS) -c TauJava.cpp
 
 PclLayer.o 	: PclLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+PapiLayer.o 	: PapiLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauDisable.o 	: TauDisable.cpp $(HDRS)

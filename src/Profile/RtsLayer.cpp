@@ -231,6 +231,9 @@ double RtsLayer::getUSecD (int tid) {
 #ifdef TAU_PCL
   return PCL_Layer::getCounters(tid);
 #else  // TAU_PCL 
+#ifdef TAU_PAPI
+  return PapiLayer::getCounters(tid);
+#else  // TAU_PAPI
 #ifdef SGI_HW_COUNTERS
   return RtsLayer::GetEventCounter();
 #else  //SGI_HW_COUNTERS
@@ -323,6 +326,7 @@ double RtsLayer::getUSecD (int tid) {
 #endif 	//SGI_TIMERS
 
 #endif  // SGI_HW_COUNTERS
+#endif // TAU_PAPI
 #endif  // TAU_PCL
         }
 
@@ -673,6 +677,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: bertie $
- * $Revision: 1.15 $   $Date: 1999/10/27 21:16:37 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.15 1999/10/27 21:16:37 bertie Exp $ 
+ * $Revision: 1.16 $   $Date: 2000/02/22 22:58:25 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.16 2000/02/22 22:58:25 bertie Exp $ 
  ***************************************************************************/
