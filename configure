@@ -802,9 +802,14 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
   fi
 fi
 
-if [ $machine = t3e -a $cxx_compiler = KCC -a $fortran_compiler = no ]
+if [ $machine = t3e -a $cxx_compiler = KCC ]
   then
+    fixmakeargs="$fixmakeargs CRAYKAI"
+    if [ $fortran_compiler = no ] 
+    then 
       fixmakeargs="$fixmakeargs CRAY_FORTRAN"
+    # KAI is the only compiler that allows mixed f90/C++ programs on Cray T3E
+    fi
 fi
 
 if [ $debugprof = yes ]
