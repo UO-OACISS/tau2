@@ -143,6 +143,7 @@ int mpi_type_get_contents__( MPI_Datatype datatype, int max_integers, int max_ad
   return retvalue; 
 }
 
+#ifdef TAU_MPIATTRFUNCTION 
 /******************************************************/
 /******************************************************/
 
@@ -211,6 +212,8 @@ int mpi_type_create_keyval__( MPI_Type_copy_attr_function * type_copy_attr_fn, M
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+
+#endif /* TAU_MPIATTRFUNCTION  */
 
 /******************************************************/
 /******************************************************/
@@ -1461,6 +1464,7 @@ int mpi_comm_set_errhandler__( MPI_Comm comm, MPI_Errhandler errhandler)
 #endif /* TAU_MPIERRHANDLER */
 
 
+#ifdef TAU_MPIATTRFUNCTION 
 /******************************************************
 ***      MPI_Comm_create_keyval wrapper function 
 ******************************************************/
@@ -1526,6 +1530,7 @@ int mpi_comm_create_keyval__( MPI_Comm_copy_attr_function * comm_copy_attr_fn, M
   return retvalue; 
 }
 
+#endif /* TAU_MPIATTRFUNCTION  */
 /******************************************************/
 /******************************************************/
 
@@ -2978,6 +2983,7 @@ int mpi_win_set_attr__( MPI_Win win, int win_keyval, void * attribute_val)
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPIATTRFUNCTION 
 
 /******************************************************
 ***      MPI_Win_create_keyval wrapper function 
@@ -3043,6 +3049,8 @@ int mpi_win_create_keyval__( MPI_Win_copy_attr_function * win_copy_attr_fn, MPI_
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+
+#endif /* TAU_MPIATTRFUNCTION  */
 
 /******************************************************/
 /******************************************************/

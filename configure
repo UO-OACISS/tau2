@@ -1777,6 +1777,16 @@ EOF
   }
 EOF
 
+cat <<EOF > mpi2attr.C
+  #include <mpi.h>
+
+  int foo(MPI_Win_copy_attr_function *f1, MPI_Type_copy_attr_function *f2, 
+        MPI_Comm_copy_attr_function *f3)
+  {
+    return 0;
+  }
+EOF
+
   cat <<EOF > mpi2grequest.C
   #include <mpi.h>
 
@@ -1904,7 +1914,13 @@ EOF
     fi
   fi
 
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C mpi2hpconst.o mpi2hpconst.C
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2attr.C  1> /dev/null 2>&1
+  then
+    echo "MPI-2 MPI*attr_functions are defined..."
+    fixmakeargs="$fixmakeargs MPIATTR"
+  fi
+
+  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C mpi2hpconst.o mpi2hpconst.C mpiattr.C mpiattr.o
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
