@@ -273,7 +273,7 @@ fi
 	;;
      SGIMP)
 	echo "NOTE: *** SGI Symmetric Multiprocessing Environment found. ***"
-        numproc=`/bin/hinv | /usr/bsd/head -1 | /bin/cut -d" " -f1 `
+        numproc=`/bin/hinv | /bin/grep -v "PU" | /usr/bsd/head -1 | /bin/cut -d" " -f1 `
 	echo NOTE: "*** There are $numproc processors in this system ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
