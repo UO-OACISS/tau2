@@ -79,7 +79,12 @@ void TraceEvFlush(int tid)
   if (TraceFd[tid] == 0)
   {
     printf("Error: TraceEvFlush(%d): Fd is -1. Trace file not initialized \n", tid);
-    TraceEvInit(tid);
+    if (RtsLayer::myNode() == -1)
+    {
+      fprintf (stderr, "ERROR in configuration. Trace file not initialized. If this is an MPI application, please ensure that TAU MPI wrapper library is linked. If not, please ensure that TAU_PROFILE_SET_NODE(id); is called in the program (0 for sequential).\n");
+      exit(1);
+    }
+
   }
   
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
