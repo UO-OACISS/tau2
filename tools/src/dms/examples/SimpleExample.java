@@ -43,6 +43,9 @@ public class SimpleExample {
 		session.setContext(0);
 		session.setThread(0);
 		session.setMetric("time");
+		session.setFunction(37);
+		Function nullFun = null;
+		session.setFunction(nullFun);
 		session.setFunction(39);
 
 		ListIterator myIterator;
