@@ -62,8 +62,8 @@ CWARNING	= $(WARNINGSOPT)
 #PDT#INSTR 		= tau_instrumentor #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
 #DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h #ENDIF#
-#DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -lpdutil -liberty -lelf #ENDIF#
-#SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -lpdutil -ldwarf -lelf#ENDIF#
+#DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -liberty -lelf #ENDIF#
+#SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -ldwarf -lelf#ENDIF#
 # -lelf is for Solaris only
 
 #SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
