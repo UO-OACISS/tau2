@@ -467,14 +467,21 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	//re-allocating in each loop iteration. 
 	double[] exclusiveTotal = new double[numberOfMetrics];
 	double[] inclusiveTotal = new double[numberOfMetrics];
+	double[] exclusivePercentTotal = new double[numberOfMetrics];
+	double[] inclusivePercentTotal = new double[numberOfMetrics];
 	int numberOfCallsTotal = 0;
 	int numberOfSubroutinesTotal = 0;
 	double[] userSecPerCallValueTotal = new double[numberOfMetrics];
 	
 	double[] meanExclusiveValue = new double[numberOfMetrics];
 	double[] meanInclusiveValue = new double[numberOfMetrics];
+	double[] meanExclusivePercentValue = new double[numberOfMetrics];
+	double[] meanInclusivePercentValue = new double[numberOfMetrics];
 	double[] meanUserSecPerCallValue = new double[numberOfMetrics];
 	double[] maxMeanInclusiveValue = new double[numberOfMetrics];
+
+	//double[] exclusivePercentTotal = new double[globalMapping.getNumberOfMappings(0)];
+	//double[] inclusivePercentTotal = new double[globalMapping.getNumberOfMappings(0)];
 
 	while(l.hasNext()){
 	    //Reset values for this itertion.
@@ -483,6 +490,8 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	    for(int i=0;i<numberOfMetrics;i++){
 		exclusiveTotal[i] = 0;
 		inclusiveTotal[i] = 0;
+		exclusivePercentTotal[i] = 0;
+		inclusivePercentTotal[i] = 0;
 		userSecPerCallValueTotal[i] = 0;
 		meanExclusiveValue[i] = 0;
 		meanInclusiveValue[i] = 0;
@@ -513,6 +522,8 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 			    for(int i=0;i<numberOfMetrics;i++){
 				exclusiveTotal[i]+=globalThreadDataElement.getExclusiveValue(i);
 				inclusiveTotal[i]+=globalThreadDataElement.getInclusiveValue(i);
+				exclusivePercentTotal[i]+=globalThreadDataElement.getExclusivePercentValue(i);
+				inclusivePercentTotal[i]+=globalThreadDataElement.getInclusivePercentValue(i);
 				if(i==0){
 				    numberOfCallsTotal+=globalThreadDataElement.getNumberOfCalls();
 				    numberOfSubroutinesTotal+=globalThreadDataElement.getNumberOfSubRoutines();
@@ -521,6 +532,8 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 				if(this.debug){
 				    this.outputToFile("exclusiveTotal["+i+"]: "+exclusiveTotal[i]);
 				    this.outputToFile("inclusiveTotal["+i+"]: "+inclusiveTotal[i]);
+				    this.outputToFile("exclusivePercentTotal["+i+"]: "+exclusivePercentTotal[i]);
+				    this.outputToFile("inclusivePercentTotal["+i+"]: "+inclusivePercentTotal[i]);
 				    this.outputToFile("userSecPerCallValueTotal["+i+"]: "+userSecPerCallValueTotal[i]);
 				}
 			    }
@@ -537,18 +550,18 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		this.outputToFile("userSecPerCallCount: "+userSecPerCallCount);
 	    }
 
-		// set the totals for all but percentages - need to do those later...
-		globalMappingElement.setTotalNumberOfCalls(numberOfCallsTotal);
-		globalMappingElement.setTotalNumberOfSubRoutines(numberOfSubroutinesTotal);
-		for(int i=0;i<numberOfMetrics;i++){
-		    globalMappingElement.setTotalExclusiveValue(i, exclusiveTotal[i]);
-		    globalMappingElement.setTotalInclusiveValue(i, inclusiveTotal[i]);
-			globalMappingElement.setTotalUserSecPerCall(i, userSecPerCallValueTotal[i]);
-			// take advantage of this loop to accomplish this aggregation
-			exclusiveTotalTotal[i] += exclusiveTotal[i];
-			inclusiveTotalTotal[i] += inclusiveTotal[i];
-		}
-		
+	    // set the totals for all but percentages - need to do those later...
+	    globalMappingElement.setTotalNumberOfCalls(numberOfCallsTotal);
+	    globalMappingElement.setTotalNumberOfSubRoutines(numberOfSubroutinesTotal);
+	    for(int i=0;i<numberOfMetrics;i++){
+		globalMappingElement.setTotalExclusiveValue(i, exclusiveTotal[i]);
+		globalMappingElement.setTotalInclusiveValue(i, inclusiveTotal[i]);
+		globalMappingElement.setTotalUserSecPerCall(i, userSecPerCallValueTotal[i]);
+		// take advantage of this loop to accomplish this aggregation
+		exclusiveTotalTotal[i] += exclusiveTotal[i];
+		inclusiveTotalTotal[i] += inclusiveTotal[i];
+	    }
+	    
 	    if(count!=0){
 		//Since we only need to do the numberOfCalls and numberOfSubroutines for
 		//the first metric, do it first (outside the loop).
@@ -566,10 +579,14 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		for(int i=0;i<numberOfMetrics;i++){
 		    meanExclusiveValue[i] = exclusiveTotal[i]/count;
 		    meanInclusiveValue[i] = inclusiveTotal[i]/count;
+		    meanExclusivePercentValue[i] = exclusivePercentTotal[i]/count;
+		    meanInclusivePercentValue[i] = inclusivePercentTotal[i]/count;
 		    
 		    if(this.debug){
 			this.outputToFile("meanExclusiveValue["+i+"]: "+meanExclusiveValue[i]);
 			this.outputToFile("meanInclusiveValue["+i+"]: "+meanInclusiveValue[i]);
+			this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue[i]);
+			this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue[i]);
 		    }
 		    
 		    globalMappingElement.setMeanExclusiveValue(i, meanExclusiveValue[i]);
@@ -579,6 +596,14 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		    globalMappingElement.setMeanInclusiveValue(i, meanInclusiveValue[i]);
 		    if(globalMapping.getMaxMeanInclusiveValue(i) < meanInclusiveValue[i])
 			globalMapping.setMaxMeanInclusiveValue(i, meanInclusiveValue[i]);
+
+		    globalMappingElement.setMeanExclusivePercentValue(i, meanExclusivePercentValue[i]);
+		    if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue[i])
+			globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue[i]);
+		    
+		    globalMappingElement.setMeanInclusivePercentValue(i, meanInclusivePercentValue[i]);
+		    if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue[i])
+			globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue[i]);
 		}
 
 		if(userSecPerCallCount!=0){
@@ -599,11 +624,16 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		    this.outputToFile("meanNumberOfSubroutines: "+meanNumberOfSubroutines);
 		}
 	    }
+
+	    globalMappingElement.setMeanValuesSet(true);
+
 	    if(this.debug){
 		this.outputToFile("Done - GlobalMappingElement: " + globalMappingElement.getMappingName());
 		this.outputToFile("######");
 	    }
 	}
+
+	/*
 
 	//Now set the percent values.
 	for(int i=0;i<numberOfMetrics;i++){
@@ -657,6 +687,8 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		this.outputToFile("######");
 	    }
 	}
+	*/
+	
 	if(this.debug()){
 	    this.outputToFile("Done - Setting mean data :: public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics)");
 	    this.outputToFile("####################################");
