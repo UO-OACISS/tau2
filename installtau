@@ -226,7 +226,7 @@ echo " " > wishver
   fi 
 
 # Just Pthread
-  echo "Configuring with $fortrancompiler $useropts $ccompiler $archopt $pdtopt -opari=$oparidir -pthread "
+  echo "Configuring with $fortrancompiler $useropts $ccompiler $archopt $pdtopt -pthread "
   ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -pthread <wishver
   make clean install
   
