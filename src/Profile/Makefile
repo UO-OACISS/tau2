@@ -59,7 +59,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h      \
 	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
-		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h
+		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
+		$(INCDIR)/OpenMPLayer.h
 
 LDFLAGS	      = $(PCXX_OPT)
 
@@ -67,7 +68,8 @@ MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
-		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O) $(TAU_JAVA_O)
+		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O) \
+		$(TAU_JAVA_O) $(OPENMP_O)
 
 PRINT	      = pr
 
@@ -229,10 +231,13 @@ PapiLayer.o 	: PapiLayer.cpp $(HDRS)
 TauDisable.o 	: TauDisable.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+OpenMP.o 	: OpenMP.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
 
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(TAU_DSO) $(EXTRAOBJS) *.ii *.ti ti_files/* 
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(OPENMP_O) $(TAU_DSO) $(EXTRAOBJS) *.ii *.ti ti_files/* 
 
