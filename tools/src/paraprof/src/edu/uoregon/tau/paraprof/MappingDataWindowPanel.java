@@ -294,15 +294,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		String headerString = mDWindow.getHeaderString();
 		//Need to split the string up into its separate lines.
 		StringTokenizer st = new StringTokenizer(headerString, "'\n'");
-		/*while(st.hasMoreTokens()){
-		    stringWidth = fmFont.stringWidth(s);
-		    String headerLine = st.nextToken();
-		    //Check for "Name: ".
-		    int location = s.lastIndexOf("Name: ");
-		    if(location>0){
-		      int
-		      }*/
-		    g2D.drawString(headerLine, 15, yCoord);
+		while(st.hasMoreTokens()){
+		    g2D.drawString(st.nextToken(), 15, yCoord);
 		    yCoord = yCoord + (barSpacing);
 		}
 		lastHeaderEndPosition = yCoord;
