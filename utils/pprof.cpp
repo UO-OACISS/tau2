@@ -27,6 +27,7 @@
  * Version 2.6  Added support for HPC+++ (n,c,t) , aggregates
  * Version 2.7  Added support for Dynamic profiling 
  * Version 2.8  Added no. of subroutines data 
+ * Version 2.9  Added no. of subrs and stddev to dump mode
  */
 
 # include <stdio.h>
@@ -227,6 +228,7 @@ bool IsDynamicProfiling(char *filename)
   FILE *fp;
   char error_msg[SIZE_OF_FILENAME], version[64];
   int numberOfFunctions;
+
  
   if ((fp = fopen(filename, "r")) == NULL) {
     sprintf(error_msg,"Error: Could not open %s",filename);
@@ -259,6 +261,7 @@ int InitFuncNameBuf(void)
   int i;
   map<const char*, FunctionData, ltstr>::iterator it;
 
+
   funcnamebuf = (char **) malloc (numfunc * sizeof(char *));
   if (funcnamebuf == NULL) 
   {  
@@ -278,7 +281,6 @@ int InitFuncNameBuf(void)
     functagbuf[i]  = i; /* Default - give tags that are 0 to numfunc - 1 */
     /* This is because we don't have a dep file in dynamic profiling */
   }
-
   return TRUE;
 }
   
@@ -306,8 +308,8 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
   map<const char*, FunctionData, ltstr>::iterator it;
 
 
-  
   sprintf(filename,"%s.%d.%d.%d",prefix, node, ctx, thr);
+
 
 #ifdef DEBUG
   printf("Inside FillFunctionDB : Filename %s\n",filename);
@@ -339,6 +341,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
     printf("Incorrect version in file %s : %s", filename, version);
     return 0;
   }
+  
 
   // New Data format contains a string like 
   // "# Name Calls Subrs Excl Incl SumExclSqr ProfileCalls"
@@ -1451,6 +1454,7 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
   double t = 0.0;
   double o_usec = 0.0;
   double o_cumusec = 0.0;
+  double o_stddeviation = 0.0;
   char buf1[20], buf2[20];
 
   for (i=0; i<numfunc; i++) {
@@ -1460,6 +1464,7 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
       o_numsubrs += tab[i].numsubrs;
       o_usec     += tab[i].usec;
       o_cumusec  += tab[i].cumusec;
+      o_stddeviation += tab[i].stddeviation;
     }
   }
 
@@ -1468,9 +1473,9 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
   for (i=0; i<numfunc && i<max; i++) {
     if ( tab[i].numcalls) {
       printf("%s ",id_str);
-/* old 
-      if ( id < 0 ) printf ("%c ", -id); else printf ("%d ", id);
-*/
+        /* old 
+           if ( id < 0 ) printf ("%c ", -id); else printf ("%d ", id);
+        */
       printf ("%d \"%s\" %s ", tab[i].tag, tab[i].name, order);
       if ( order[0] == 'e' )
         printf ("%.16G %4.2f\n", tab[i].usec, tab[i].usec / t * 100.0);
@@ -1478,13 +1483,16 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
         printf ("%.16G %4.2f\n", tab[i].cumusec, tab[i].cumusec/total*100.0);
       if ( tab[i].cumusec > 0.0 ) {
 #ifdef USE_LONG 
-        printf ("%5.1f %s %s %8d %10.0f %s\n",
+        printf ("%5.1f %s %s %8d %8d %10.0f ",
 #else // DEFAULT double 
-        printf ("%5.1f %s %s %8G %10.0f %s\n",
+        printf ("%5.1f %s %s %8G %8G %10.0f ",
 #endif // USE_LONG
           tab[i].cumusec / total * 100.0,
           ToTimeStr (tab[i].usec, buf1), ToTimeStr (tab[i].cumusec, buf2),
-          tab[i].numcalls, tab[i].cumusec / tab[i].numcalls, tab[i].name);
+          tab[i].numcalls, tab[i].numsubrs, 
+          tab[i].cumusec / tab[i].numcalls);
+	  if(profilestats) printf("%10.4G ", tab[i].stddeviation);
+          printf("%s\n", tab[i].name);
       }
       else {
 #ifdef USE_LONG
@@ -1511,13 +1519,15 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
       printf ("%.16G %4.2f\n", o_cumusec, o_cumusec / total * 100.0);
     if ( o_cumusec > 0.0 ) {
 #ifdef USE_LONG
-      printf ("%5.1f %s %s %8d %10.0f -others-\n",
+      printf ("%5.1f %s %s %8d %8d %10.0f ",
 #else // DEFAULT double 
-      printf ("%5.1f %s %s %8G %10.0f -others-\n",
+      printf ("%5.1f %s %s %8G %8G %10.0f ",
 #endif // USE_LONG 
         o_cumusec / total * 100.0,
         ToTimeStr (o_usec, buf1), ToTimeStr (o_cumusec, buf2),
-        o_numcalls, o_cumusec / o_numcalls);
+        o_numcalls, o_numsubrs, o_cumusec / o_numcalls);
+        if(profilestats) printf("%10.4G ", o_stddeviation);
+	printf("-other-\n");
     }
     else {
 #ifdef USE_LONG
@@ -2318,10 +2328,12 @@ int main (int argc, char *argv[])
   extern char *optarg;
   extern int optind;
 
+
   dir = getenv("PROFILEDIR");
   if(dir != NULL) {
     file = strsave(strcat(strcat(dir,"/"),file));
   } 
+
 
   /* -- parse command line arguments ---------------------------------------- */
   errflag = FALSE;
@@ -2409,8 +2421,6 @@ int main (int argc, char *argv[])
   } 
 
   if (IsDynamicProfiling(proffile)) { /* we don't need to read .ftab files */
-
-
     if ( optind == argc) {  
     /* files not specified by specific node nos list  on cmdline */
       for(argno = 0; FillFunctionDBInNode(argno, 0, 0, file); argno++) ;
@@ -2425,16 +2435,36 @@ int main (int argc, char *argv[])
     InitFuncNameBuf();
     /* funcnamebuf and functagbuf are initialized here */
 
-    if (list)  {
+    if (list)  {  cout << "  if(list) \n";
       DumpFunctionNamesInDB();  /* for debugging purposes */
       exit(0); 
     } 
     else if (dump) { /* NOTE : Using TEMPLATED_FUNCTIONS as sig to RACY */
      // DumpFtabFile(file);
     /* used by racy - but here there's no depfile - for compatibility only */
-      printf ("default.dep\n%d templated_functions\n", numfunc);
-    }
+      // printf ("default.dep\n%d templated_functions\n", numfunc);
+      if(profilestats) 
+	{
+	  if(hwcounters) {
+	    printf ("default.dep\n%d templated_functions_hw_counters -stddev\n", numfunc);
+	    printf ("\%%time       counts total counts    #call   #subrs count/call     stddev name\n");
+	  } else{
+	    printf ("default.dep\n%d templated_functions -stddev\n", numfunc);
+	    printf ("\%%time         msec   total msec    #call   #subrs  usec/call     stddev name\n");
+	  }
+	} else //not profilestats
+	  { 
+	    if(hwcounters) {
+	      printf ("default.dep\n%d templated_functions_hw_counters\n", numfunc);
+	      printf ("\%%time       counts total counts    #call   #subrs count/call ame\n");
+	    } else {
+	      printf ("default.dep\n%d templated_functions\n", numfunc);
+	      printf ("\%%time         msec   total msec    #call   #subrs  usec/call name\n");
+	    }
+	  }//end if profilestats
 
+    }//if(dump) 
+    
     /* Process the files for data - second pass */
     /* iterate over nodes, contexts and threads */
     if ( optind == argc ) {
@@ -2463,7 +2493,8 @@ int main (int argc, char *argv[])
       }
       exit (0); /* exit after printing list */
     } else if ( dump ) {
-      printf ("%s\n%d functions\n", depfile, numfunc);
+         printf ("%s\n%d functions\n", depfile, numfunc);
+	 printf ("\%%time         msec   total msec    #call   #subrs  usec/call name\n");
     }
   }
 
@@ -2514,8 +2545,8 @@ int main (int argc, char *argv[])
   exit (0);
 }
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: klindlan $
- * $Revision: 1.1.1.1 $   $Date: 1997/11/26 20:04:40 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.1.1.1 1997/11/26 20:04:40 klindlan Exp $                                                   
+ * $RCSfile: pprof.cpp,v $   $Author: ariyal $
+ * $Revision: 1.2 $   $Date: 1998/03/04 00:25:57 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.2 1998/03/04 00:25:57 ariyal Exp $                                                   
  ***************************************************************************/
 
