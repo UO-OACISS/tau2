@@ -33,9 +33,9 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+TAUROOT=/home/users/sameer/tau2
 TULIPDIR=/users/sameer/s
-TAU_PREFIX_INSTALL_DIR=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
 TAU_OPTIONS=
 #######################################################################
  
@@ -63,8 +63,10 @@ LSX = .a
 #DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF          #ENDIF#
 #STDCXXLIB#PROFILEOPT7         = -DTAU_STDCXXLIB       #ENDIF#
 #INTELTFLOP#PROFILEOPT8        = -DPOOMA_TFLOP         #ENDIF#
-#SOL2CC#PROFILEOPT9            = -DNO_RTTI             #ENDIF#
-#GNU#PROFILEOPT10              = -DNO_RTTI             #ENDIF#
+#NORTTI#PROFILEOPT9            = -DNO_RTTI             #ENDIF#
+#RTTI#PROFILEOPT9              = -DRTTI             #ENDIF#
+#GNU#PROFILEOPT9           = -DNO_RTTI             #ENDIF#
+#GNU#PROFILEOPT10              =             #ENDIF#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI#PROFILEOPT12	       = 		       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used   #ENDIF#
@@ -93,7 +95,7 @@ LSX = .a
 #CRAYKAI#TAU_FORTRANLIBS	       =        #ENDIF#
 #PGI#TAU_FORTRANLIBS	       = $(PGI)/linux86/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902        #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
-#PGI#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
+#PGI1.7#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
