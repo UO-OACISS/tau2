@@ -162,13 +162,11 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 {
       DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
-      if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
-        Name = name;
-  	Type = type;
+      Name = name;
+      Type = type;
 
-	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
-      }
+      FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -177,13 +175,10 @@ FunctionInfo::FunctionInfo(const char *name, string& type,
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid)
 {
-      if (ProfileGroup & RtsLayer::TheProfileMask()) {
+      Name = name;
+      Type = type;
 
-        Name = name;
-  	Type = type;
-
-	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
-      }
+      FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -192,13 +187,10 @@ FunctionInfo::FunctionInfo(string& name, const char * type,
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid)
 {
-      if (ProfileGroup & RtsLayer::TheProfileMask()) {
+      Name = name;
+      Type = type;
 
-        Name = name;
-  	Type = type;
-
-	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
-      }
+      FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -207,12 +199,11 @@ FunctionInfo::FunctionInfo(string& name, string& type,
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid)
 {
-      if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
-        Name = name;
-  	Type = type;
-	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
-      }
+      Name = name;
+      Type = type;
+ 
+      FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -258,7 +249,7 @@ long FunctionInfo::GetFunctionId(void)
 //////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: bertie $
- * $Revision: 1.21 $   $Date: 1999/10/27 21:16:35 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.21 1999/10/27 21:16:35 bertie Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
+ * $Revision: 1.22 $   $Date: 2001/01/05 22:22:38 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.22 2001/01/05 22:22:38 sameer Exp $ 
  ***************************************************************************/

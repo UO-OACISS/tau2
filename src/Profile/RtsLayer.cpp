@@ -142,6 +142,17 @@ unsigned int RtsLayer::enableProfileGroup(unsigned int ProfileGroup) {
 
 /////////////////////////////////////////////////////////////////////////
 
+unsigned int RtsLayer::disableProfileGroup(unsigned int ProfileGroup) {
+  if (TheProfileMask() & ProfileGroup) { // if it is already set 
+    TheProfileMask() ^= ProfileGroup; // Delete it from the mask
+    DEBUGPROFMSG("disableProfileGroup " << ProfileGroup <<" Mask = " 
+	<< TheProfileMask() << endl;);
+  } // if it is not in the mask, disableProfileGroup does nothing 
+  return TheProfileMask();
+}
+
+/////////////////////////////////////////////////////////////////////////
+
 unsigned int RtsLayer::resetProfileGroup(void) {
   TheProfileMask() = 0;
   return TheProfileMask();
@@ -526,18 +537,119 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 	case 'V' : // ACLVIZ Group
 	  RtsLayer::enableProfileGroup(TAU_VIZ);
 	  break;
+ 	case '0' :
+	  RtsLayer::enableProfileGroup(TAU_GROUP_0);
+	  break;
 	case '1' : // User1
-	  RtsLayer::enableProfileGroup(TAU_USER1);
-	  break; 
+	  switch (str[1])
+	  {
+	    case '0':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_10);
+	      break; 
+	    case '1':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_11);
+	      break; 
+	    case '2':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_12);
+	      break; 
+	    case '3':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_13);
+	      break; 
+	    case '4':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_14);
+	      break; 
+	    case '5':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_15);
+	      break; 
+	    case '6':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_16);
+	      break; 
+	    case '7':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_17);
+	      break; 
+	    case '8':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_18);
+	      break; 
+	    case '9':
+	      RtsLayer::enableProfileGroup(TAU_GROUP_19);
+	      break; 
+	    default :
+	      RtsLayer::enableProfileGroup(TAU_GROUP_1);
+	      break; 
+	  }
+	  break;
+	 
 	case '2' : // User2
-	  RtsLayer::enableProfileGroup(TAU_USER2);
+          switch (str[1])
+          {
+            case '0':
+              RtsLayer::enableProfileGroup(TAU_GROUP_20);
+              break;
+            case '1':
+              RtsLayer::enableProfileGroup(TAU_GROUP_21);
+              break;
+            case '2':
+              RtsLayer::enableProfileGroup(TAU_GROUP_22);
+              break;
+            case '3':
+              RtsLayer::enableProfileGroup(TAU_GROUP_23);
+              break;
+            case '4':
+              RtsLayer::enableProfileGroup(TAU_GROUP_24);
+              break;
+            case '5':
+              RtsLayer::enableProfileGroup(TAU_GROUP_25);
+              break;
+            case '6':
+              RtsLayer::enableProfileGroup(TAU_GROUP_26);
+              break; 
+            case '7':
+              RtsLayer::enableProfileGroup(TAU_GROUP_27);
+              break;
+            case '8':
+              RtsLayer::enableProfileGroup(TAU_GROUP_28);
+              break;
+            case '9':
+              RtsLayer::enableProfileGroup(TAU_GROUP_29);
+              break;
+            default :
+              RtsLayer::enableProfileGroup(TAU_GROUP_2);
+              break;
+	  }
 	  break;
 	case '3' : // User3
-	  RtsLayer::enableProfileGroup(TAU_USER3);
-	  break; 
-	case '4' : // User4
-	  RtsLayer::enableProfileGroup(TAU_USER4);
+          switch (str[1])
+          {
+            case '0':
+              RtsLayer::enableProfileGroup(TAU_GROUP_30);
+              break;
+            case '1':
+              RtsLayer::enableProfileGroup(TAU_GROUP_31);
+              break;
+            default :
+              RtsLayer::enableProfileGroup(TAU_GROUP_3);
+              break;
+	  }
 	  break;
+	case '4' : // User4
+	  RtsLayer::enableProfileGroup(TAU_GROUP_4);
+	  break;
+	case '5' : 
+	  RtsLayer::enableProfileGroup(TAU_GROUP_5);
+	  break;
+	case '6' : 
+	  RtsLayer::enableProfileGroup(TAU_GROUP_6);
+	  break;
+	case '7' : 
+	  RtsLayer::enableProfileGroup(TAU_GROUP_7);
+	  break;
+	case '8' : 
+	  RtsLayer::enableProfileGroup(TAU_GROUP_8);
+	  break;
+	case '9' : 
+	  RtsLayer::enableProfileGroup(TAU_GROUP_9);
+	  break;
+
 	default  :
 	  cout << prog << " : Invalid Profile Group " << str << endl;
 	  break; 
@@ -755,6 +867,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2000/12/01 19:27:21 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.24 2000/12/01 19:27:21 sameer Exp $ 
+ * $Revision: 1.25 $   $Date: 2001/01/05 22:22:39 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.25 2001/01/05 22:22:39 sameer Exp $ 
  ***************************************************************************/

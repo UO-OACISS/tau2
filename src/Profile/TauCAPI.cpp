@@ -146,6 +146,18 @@ extern "C" void tau_disable_instrumentation(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_enable_group(TauGroup_t group)
+{
+  TAU_ENABLE_GROUP(group);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_disable_group(TauGroup_t group)
+{
+  TAU_DISABLE_GROUP(group);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void tau_trace_sendmsg(int type, int destination, int length)
 {
   TAU_TRACE_SENDMSG(type, destination, length);
@@ -245,7 +257,7 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2000/10/12 19:07:55 $
- * VERSION: $Id: TauCAPI.cpp,v 1.15 2000/10/12 19:07:55 sameer Exp $
+ * $Revision: 1.16 $   $Date: 2001/01/05 22:22:39 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.16 2001/01/05 22:22:39 sameer Exp $
  ***************************************************************************/
 
