@@ -37,7 +37,8 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 	}
 	
 	
-	public TotalStatWindowPanel(int inServerNumber,
+	public TotalStatWindowPanel(ExperimentRun inExpRun,
+								int inServerNumber,
 								int inContextNumber,
 								int inThreadNumber,
 								TotalStatWindow inTSWindow)
@@ -50,6 +51,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			contextNumber = inContextNumber;
 			threadNumber = inThreadNumber;
 
+			expRun = inExpRun;
 			tSWindow = inTSWindow;
 			
 			//Add this object as a mouse listener.
@@ -95,8 +97,8 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			//In this window, a Monospaced font has to be used.  This will probably not be the same
 			//font as the rest of jRacy.  As a result, some extra work will have to be done to calculate
 			//spacing.
-			int fontSize = jRacy.jRacyPreferences.getBarHeight();
-			spacing = jRacy.jRacyPreferences.getBarSpacing();
+			int fontSize = expRun.getPreferences().getBarHeight();
+			spacing = expRun.getPreferences().getBarSpacing();
 			
 			int tmpXWidthCalc = 0;
 			
@@ -105,7 +107,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			
 			
 			//Create font.
-			MonoFont = new Font("Monospaced", jRacy.jRacyPreferences.getFontStyle(), fontSize);
+			MonoFont = new Font("Monospaced", expRun.getPreferences().getFontStyle(), fontSize);
 			//Compute the font metrics.
 			fmMonoFont = g.getFontMetrics(MonoFont);
 			maxFontAscent = fmMonoFont.getMaxAscent();
@@ -139,7 +141,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			
 			//**********
 			//Draw the counter name if required.
-			String counterName = jRacy.staticSystemData.getCounterName();
+			String counterName = expRun.getCounterName();
 			if(counterName != null){
 				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 				yCoord = yCoord + (spacing);
@@ -152,7 +154,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 		    if ((clipRect != null))
 		    {
 		    	//Draw the heading!
-				tmpString = jRacy.staticSystemData.getHeading();
+				tmpString = expRun.getHeading();
 				int tmpInt = tmpString.length();
 				
 				for(int i=0; i<tmpInt; i++)
@@ -208,32 +210,40 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 		    		tmpSMWThreadDataElement = (SMWThreadDataElement) tmpThreadDataElementList.elementAt(i);
 					tmpString = tmpSMWThreadDataElement.getTStatString();
 					
-					yCoord = yCoord + spacing;
-					
-		    		g.setColor(Color.black);
+					if(tmpString.equals("")){
+						tmpString = "Sorry, but this is not supported for derived values yet!";
+						yCoord = yCoord + spacing;
+						g.setColor(Color.black);
+						g.drawString(tmpString, 20, yCoord);
+					}
+					else{
+						yCoord = yCoord + spacing;
 						
-					AttributedString as = new AttributedString(tmpString);
-					as.addAttribute(TextAttribute.FONT, MonoFont);
-					
-					if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-						as.addAttribute(TextAttribute.FOREGROUND, 
-							(jRacy.clrChooser.getHighlightColor()),
-							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-					else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-						as.addAttribute(TextAttribute.FOREGROUND, 
-							(jRacy.clrChooser.getGroupHighlightColor()),
-							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-					else
-						as.addAttribute(TextAttribute.FOREGROUND, 
-							(tmpSMWThreadDataElement.getMappingColor()),
-							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-					
-					g.drawString(as.getIterator(), 20, yCoord);
-					
-					//Figure out how wide that string was for x coord reasons.
-					if(tmpXWidthCalc < (20 + fmMonoFont.stringWidth(tmpString) + 5))
-					{
-						tmpXWidthCalc = (20 + fmMonoFont.stringWidth(tmpString) + 15);
+			    		g.setColor(Color.black);
+							
+						AttributedString as = new AttributedString(tmpString);
+						as.addAttribute(TextAttribute.FONT, MonoFont);
+						
+						if((tmpSMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+							as.addAttribute(TextAttribute.FOREGROUND, 
+								(expRun.getColorChooser().getHighlightColor()),
+								expRun.getPositionOfName(), tmpString.length());
+						else if((tmpSMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+							as.addAttribute(TextAttribute.FOREGROUND, 
+								(expRun.getColorChooser().getGroupHighlightColor()),
+								expRun.getPositionOfName(), tmpString.length());
+						else
+							as.addAttribute(TextAttribute.FOREGROUND, 
+								(tmpSMWThreadDataElement.getMappingColor()),
+								expRun.getPositionOfName(), tmpString.length());
+						
+						g.drawString(as.getIterator(), 20, yCoord);
+						
+						//Figure out how wide that string was for x coord reasons.
+						if(tmpXWidthCalc < (20 + fmMonoFont.stringWidth(tmpString) + 5))
+						{
+							tmpXWidthCalc = (20 + fmMonoFont.stringWidth(tmpString) + 15);
+						}
 					}
 				}
 		    		
@@ -250,7 +260,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			else
 			{
 				//Draw the heading!
-				tmpString = jRacy.staticSystemData.getHeading();
+				tmpString = expRun.getHeading();
 				int tmpInt = tmpString.length();
 				
 				for(int i=0; i<tmpInt; i++)
@@ -287,18 +297,18 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 						AttributedString as = new AttributedString(tmpString);
 						as.addAttribute(TextAttribute.FONT, MonoFont);
 						
-						if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+						if((tmpSMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
 							as.addAttribute(TextAttribute.FOREGROUND, 
-								(jRacy.clrChooser.getHighlightColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-						else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								(expRun.getColorChooser().getHighlightColor()),
+								expRun.getPositionOfName(), tmpString.length());
+						else if((tmpSMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 							as.addAttribute(TextAttribute.FOREGROUND, 
-								(jRacy.clrChooser.getGroupHighlightColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
+								(expRun.getColorChooser().getGroupHighlightColor()),
+								expRun.getPositionOfName(), tmpString.length());
 						else
 							as.addAttribute(TextAttribute.FOREGROUND, 
 								(tmpSMWThreadDataElement.getMappingColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
+								expRun.getPositionOfName(), tmpString.length());
 						
 						g.drawString(as.getIterator(), 20, yCoord);
 						
@@ -350,9 +360,9 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 					{
 						tmpSMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
-						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWThreadDataElement.getMappingID(), jRacy.staticMainWindow.getSMWData());
-						jRacy.systemEvents.addObserver(tmpRef);
+						expRun.getColorChooser().setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(expRun, tmpSMWThreadDataElement.getMappingID(), expRun.getStaticMainWindow().getSMWData());
+						expRun.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -364,7 +374,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 					if(clickedOnObject instanceof SMWThreadDataElement)
 						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					Color tmpCol = tmpGME.getMappingColor();
@@ -376,7 +386,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 						tmpGME.setSpecificColor(tmpCol);
 						tmpGME.setColorFlag(true);
 						
-						jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+						expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
 					}
 				}
 				
@@ -389,11 +399,11 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 					if(clickedOnObject instanceof SMWThreadDataElement)
 						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					tmpGME.setColorFlag(false);
-					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 			}
 		}
@@ -413,7 +423,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			int xCoord = evt.getX();
 			int yCoord = evt.getY();
 			
-			int fontSize = jRacy.jRacyPreferences.getBarHeight();
+			int fontSize = expRun.getPreferences().getBarHeight();
 			
 			//Get the number of times clicked.
 			int clickCount = evt.getClickCount();
@@ -448,16 +458,16 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 							{
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((jRacy.clrChooser.getHighlightColorMappingID()) == -1)
+								if((expRun.getColorChooser().getHighlightColorMappingID()) == -1)
 								{
-									jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
+									expRun.getColorChooser().setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
 								}
 								else
 								{
-									if(!((jRacy.clrChooser.getHighlightColorMappingID()) == (tmpSMWThreadDataElement.getMappingID())))
-										jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
+									if(!((expRun.getColorChooser().getHighlightColorMappingID()) == (tmpSMWThreadDataElement.getMappingID())))
+										expRun.getColorChooser().setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
 									else
-										jRacy.clrChooser.setHighlightColorMappingID(-1);
+										expRun.getColorChooser().setHighlightColorMappingID(-1);
 								}
 							}
 						}
@@ -498,6 +508,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 	int serverNumber;
 	int	contextNumber;
 	int	threadNumber;
+	private ExperimentRun expRun = null;
  	TotalStatWindow tSWindow;
  	Vector tmpThreadDataElementList;
  	SMWThreadDataElement tmpSMWThreadDataElement;

@@ -33,17 +33,17 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 		}
 	}
 	
-	public MeanTotalStatWindow(StaticMainWindowData inSMWData)
+	public MeanTotalStatWindow(ExperimentRun inExpRun, StaticMainWindowData inSMWData)
 	{
 		try{
+			expRun = inExpRun;
+			sMWData = inSMWData;
+			
 			setLocation(new java.awt.Point(0, 0));
 			setSize(new java.awt.Dimension(800, 600));
 			
 			//Now set the title.
-			this.setTitle("Mean Total Stat Window: " + jRacy.profilePathName);
-			
-			
-			sMWData = inSMWData;
+			this.setTitle("Mean Total Stat Window: " + expRun.getProfilePathName());
 			
 			//Add some window listener code
 				addWindowListener(new java.awt.event.WindowAdapter() {
@@ -154,15 +154,18 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 			exclusiveRadioButton.addActionListener(this);
 			numOfCallsRadioButton.addActionListener(this);
 			numOfSubRoutinesRadioButton.addActionListener(this);
+			userSecPerCallRadioButton.addActionListener(this);
 			
 			metricGroup.add(inclusiveRadioButton);
 			metricGroup.add(exclusiveRadioButton);
 			metricGroup.add(numOfCallsRadioButton);
 			metricGroup.add(numOfSubRoutinesRadioButton);
+			metricGroup.add(userSecPerCallRadioButton);
 			metricMenu.add(inclusiveRadioButton);
 			metricMenu.add(exclusiveRadioButton);
 			metricMenu.add(numOfCallsRadioButton);
 			metricMenu.add(numOfSubRoutinesRadioButton);
+			metricMenu.add(userSecPerCallRadioButton);
 			optionsMenu.add(metricMenu);
 			//End Submenu.
 					
@@ -256,7 +259,7 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			meanTotalStatWindowPanelRef = new MeanTotalStatWindowPanel(this);
+			meanTotalStatWindowPanelRef = new MeanTotalStatWindowPanel(expRun, this);
 			
 			//The scroll panes into which the list shall be placed.
 			JScrollPane totalStatWindowPanelScrollPane = new JScrollPane(meanTotalStatWindowPanelRef);
@@ -305,7 +308,7 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 				}
 				else if(arg.equals("Adjust Racy Colors"))
 				{
-					jRacy.clrChooser.showColorChooser();	//The ColorChooser class maintains all the state.
+					expRun.getColorChooser().showColorChooser();	//The ColorChooser class maintains all the state.
 				}
 				else if(arg.equals("function ID"))
 				{
@@ -392,28 +395,37 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 						meanTotalStatWindowPanelRef.repaint();
 					}
 				}
+				else if(arg.equals("Per Call Value"))
+				{
+					if(userSecPerCallRadioButton.isSelected())
+					{
+						metric = "Per Call Value";
+						//Call repaint.
+						meanTotalStatWindowPanelRef.repaint();
+					}
+				}
 				else if(arg.equals("Show Function Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+					(expRun.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+					(expRun.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
+					(expRun.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -452,12 +464,12 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 	{
 		try
 		{
-			if(jRacy.staticSystemData.groupNamesPresent())
+			if(expRun.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(jRacy.staticSystemData.userEventsPresent())
+			if(expRun.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
@@ -533,115 +545,6 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 	//Note:  This is only meant to be called by the TotalStatWindowPanel.
 	public Vector getStaticMainWindowSystemData()
 	{
-		/*try{
-			if(sortByMappingID)
-			{
-				if(descendingOrder)
-				{
-					if(!(lastSorting.equals("FIdDE")))
-					{
-						lastList = sMWData.getSMWMeanData("FIdDE");
-						lastSorting = "FIdDE";
-						return lastList;
-					}
-					else
-						return lastList;
-				}
-				else
-				{
-					if(!(lastSorting.equals("FIdAE")))
-					{
-						lastList = sMWData.getSMWMeanData("FIdAE");
-						lastSorting = "FIdAE";
-						return lastList;
-					}
-					else
-						return lastList;
-				}
-			}
-			else if(sortByName)
-			{
-				if(descendingOrder)
-				{
-					if(!(lastSorting.equals("NDE")))
-					{
-						lastList = sMWData.getSMWMeanData("NDE");
-						lastSorting = "NDE";
-						return lastList;
-					}
-					else
-						return lastList;
-				}
-				else
-				{
-					if(!(lastSorting.equals("NAE")))
-					{
-						lastList = sMWData.getSMWMeanData("NAE");
-						lastSorting = "NAE";
-						return lastList;
-					}
-					else
-						return lastList;
-				}
-			}
-			else if(sortByMillisecond)
-			{
-				if(inclusive)
-				{
-					
-					if(descendingOrder)
-					{
-						if(!(lastSorting.equals("MDI")))
-						{
-							lastList = sMWData.getSMWMeanData("MDI");
-							lastSorting = "MDI";
-							return lastList;
-						}
-						else
-							return lastList;
-					}
-					else
-					{
-						if(!(lastSorting.equals("MAI")))
-						{
-							lastList = sMWData.getSMWMeanData("MAI");
-							lastSorting = "MAI";
-							return lastList;
-						}
-						else
-							return lastList;
-					}
-				}
-				else
-				{
-					if(descendingOrder)
-					{
-						if(!(lastSorting.equals("MDE")))
-						{
-							lastList = sMWData.getSMWMeanData("MDE");
-							lastSorting = "MDE";
-							return lastList;
-						}
-						else
-							return lastList;
-					}
-					else
-					{
-						if(!(lastSorting.equals("MAE")))
-						{
-							lastList = sMWData.getSMWMeanData("MAE");
-							lastSorting = "MAE";
-							return lastList;
-						}
-						else
-							return lastList;
-					}
-				}
-			}
-		
-			//Should not get here.  Return null ... will force and exception.
-			return null;
-		}*/
 		try
 		{
 			if(sortByMappingID)
@@ -673,6 +576,13 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 						return sMWData.getSMWMeanData("FIdDNS");
 					else
 						return sMWData.getSMWMeanData("FIdANS");
+				}
+				else if(metric.equals("Per Call Value"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWMeanData("FIdDUS");
+					else
+						return sMWData.getSMWMeanData("FIdAUS");
 				}
 			}
 			else if(sortByName)
@@ -706,6 +616,13 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 					else
 						return sMWData.getSMWMeanData("NANS");
 				}
+				else if(metric.equals("Per Call Value"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWMeanData("NDUS");
+					else
+						return sMWData.getSMWMeanData("NAUS");
+				}
 			}
 			else if(sortByMillisecond)
 			{
@@ -738,6 +655,13 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 					else
 						return sMWData.getSMWMeanData("MANS");
 				}
+				else if(metric.equals("Per Call Value"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWMeanData("MDUS");
+					else
+						return sMWData.getSMWMeanData("MAUS");
+				}
 			}
 		}
 		catch(Exception e)
@@ -767,7 +691,7 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 			}
 			
 			setVisible(false);
-			jRacy.systemEvents.deleteObserver(this);
+			expRun.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
@@ -779,8 +703,9 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 	//******************************
 	//Instance data.
 	//******************************
+	private ExperimentRun expRun = null;
  	private MeanTotalStatWindowPanel meanTotalStatWindowPanelRef;
- 	private StaticMainWindowData sMWData = new StaticMainWindowData();
+ 	private StaticMainWindowData sMWData = null;
  	
  	private JMenuItem mappingGroupLedgerItem;
 	private JMenuItem userEventLedgerItem;
@@ -800,6 +725,7 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 	private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
 	private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
 	private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
+	private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
 	
 	private String metric = "Exclusive";
 	

@@ -33,22 +33,24 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 	}
 	
-	public MeanDataWindow(StaticMainWindowData inSMWData)
+	public MeanDataWindow(ExperimentRun inExpRun, StaticMainWindowData inSMWData)
 	{
 		try{
+			
+			expRun = inExpRun;
+			sMWData = inSMWData;
+			
 			setLocation(new java.awt.Point(300, 200));
 			setSize(new java.awt.Dimension(700, 450));
-			
-			sMWData = inSMWData;
 			
 			currentSMWMeanData = null;
 			
 			inclusive = false;
-	 		percent = true;
+	 		percent = false;
 	 		unitsString = "milliseconds";
 			
 			//Now set the title.
-			this.setTitle("Mean Data Window: " + jRacy.profilePathName);
+			this.setTitle("Mean Data Window: " + expRun.getProfilePathName());
 			
 			//Add some window listener code
 				addWindowListener(new java.awt.event.WindowAdapter() {
@@ -110,51 +112,34 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			JMenu optionsMenu = new JMenu("Options");
 			optionsMenu.addMenuListener(this);
 			
-			//Add a submenu.
+			//***********
+			//Submenu.
 			JMenu sortMenu = new JMenu("Sort by ...");
+			
 			sortGroup = new ButtonGroup();
-			
-			mappingIDButton = new JRadioButtonMenuItem("function ID", false);
-			//Add a listener for this radio button.
-			mappingIDButton.addActionListener(this);
-			
-			nameButton = new JRadioButtonMenuItem("name", false);
-			//Add a listener for this radio button.
+			//Add listeners
 			nameButton.addActionListener(this);
-			
-			millisecondButton = new JRadioButtonMenuItem("millisecond", true);
-			//Add a listener for this radio button.
 			millisecondButton.addActionListener(this);
-			
-			sortGroup.add(mappingIDButton);
 			sortGroup.add(nameButton);
 			sortGroup.add(millisecondButton);
-			
-			sortMenu.add(mappingIDButton);
 			sortMenu.add(nameButton);
 			sortMenu.add(millisecondButton);
-			optionsMenu.add(sortMenu);
-			//End Submenu.
 			
-			//Add a submenu.
-			JMenu sortOrderMenu = new JMenu("Sort Order");
+			
 			sortOrderGroup = new ButtonGroup();
-			
-			ascendingButton = new JRadioButtonMenuItem("Ascending", false);
-			//Add a listener for this radio button.
+			//Add listeners
 			ascendingButton.addActionListener(this);
-			
-			descendingButton = new JRadioButtonMenuItem("Descending", true);
-			//Add a listener for this radio button.
 			descendingButton.addActionListener(this);
-			
 			sortOrderGroup.add(ascendingButton);
 			sortOrderGroup.add(descendingButton);
+			sortMenu.add(ascendingButton);
+			sortMenu.add(descendingButton);
 			
-			sortOrderMenu.add(ascendingButton);
-			sortOrderMenu.add(descendingButton);
-			optionsMenu.add(sortOrderMenu);
-			//End Submenu.
+			sortMenu.insertSeparator(2);
+			
+			optionsMenu.add(sortMenu);
+			//End - Submenu.
+			//***********
 			
 			//Add a submenu.
 			JMenu metricMenu = new JMenu("Select Metric");
@@ -165,15 +150,18 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			exclusiveRadioButton.addActionListener(this);
 			numOfCallsRadioButton.addActionListener(this);
 			numOfSubRoutinesRadioButton.addActionListener(this);
+			userSecPerCallRadioButton.addActionListener(this);
 			
 			metricGroup.add(inclusiveRadioButton);
 			metricGroup.add(exclusiveRadioButton);
 			metricGroup.add(numOfCallsRadioButton);
 			metricGroup.add(numOfSubRoutinesRadioButton);
+			metricGroup.add(userSecPerCallRadioButton);
 			metricMenu.add(inclusiveRadioButton);
 			metricMenu.add(exclusiveRadioButton);
 			metricMenu.add(numOfCallsRadioButton);
 			metricMenu.add(numOfSubRoutinesRadioButton);
+			metricMenu.add(userSecPerCallRadioButton);
 			optionsMenu.add(metricMenu);
 			//End Submenu.
 			
@@ -181,11 +169,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			valuePercentMenu = new JMenu("Select Value or Percent");
 			valuePercentGroup = new ButtonGroup();
 			
-			percentButton = new JRadioButtonMenuItem("Percent", true);
+			percentButton = new JRadioButtonMenuItem("Percent", false);
 			//Add a listener for this radio button.
 			percentButton.addActionListener(this);
 			
-			valueButton = new JRadioButtonMenuItem("Value", false);
+			valueButton = new JRadioButtonMenuItem("Value", true);
 			//Add a listener for this radio button.
 			valueButton.addActionListener(this);
 			
@@ -312,7 +300,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			meanDataWindowPanelRef = new MeanDataWindowPanel(this, sMWData);
+			meanDataWindowPanelRef = new MeanDataWindowPanel(expRun, this, sMWData);
 			
 			//**********
 			//End - Panel and ScrollPane definition.
@@ -373,18 +361,6 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 					dispose();
 					System.exit(0);
 				}
-				else if(arg.equals("function ID"))
-				{
-					if(mappingIDButton.isSelected())
-					{
-						sortByMappingID = true;
-						sortByName = false;
-						sortByMillisecond = false;
-						sortLocalData();
-						//Call repaint.
-						meanDataWindowPanelRef.repaint();
-					}
-				}
 				else if(arg.equals("name"))
 				{
 					if(nameButton.isSelected())
@@ -397,7 +373,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 						meanDataWindowPanelRef.repaint();
 					}
 				}
-				else if(arg.equals("millisecond"))	//Note the difference in case from the millisecond option below.
+				else if(arg.equals("Selected Metric"))	//Note the difference in case from the millisecond option below.
 				{
 					if(millisecondButton.isSelected())
 					{
@@ -471,6 +447,17 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 						meanDataWindowPanelRef.repaint();
 					}
 				}
+				else if(arg.equals("Per Call Value"))
+				{
+					if(userSecPerCallRadioButton.isSelected())
+					{
+						metric = "Per Call Value";
+						//Sort the local data.
+						sortLocalData();
+						//Call repaint.
+						meanDataWindowPanelRef.repaint();
+					}
+				}
 				else if(arg.equals("Percent"))
 				{
 					if(percentButton.isSelected())
@@ -532,24 +519,24 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+					(expRun.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+					(expRun.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
+					(expRun.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -603,19 +590,19 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	{
 		try
 		{
-			if(jRacy.staticSystemData.groupNamesPresent())
+			if(expRun.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(jRacy.staticSystemData.userEventsPresent())
+			if(expRun.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
 				
 				
 			
-			if((metric.equals("Number of Calls")) || (metric.equals("Number of Subroutines"))){
+			if((metric.equals("Number of Calls")) || (metric.equals("Number of Subroutines")) || (metric.equals("Per Call Value"))){
 				valuePercentMenu.setEnabled(false);
 				unitsMenu.setEnabled(false);}
 			else if(percent){
@@ -709,6 +696,13 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 					else
 						currentSMWMeanData = sMWData.getSMWMeanData("FIdANS");
 				}
+				else if(metric.equals("Per Call Value"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdDUS");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdAUS");
+				}
 			}
 			else if(sortByName)
 			{
@@ -740,6 +734,13 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 						currentSMWMeanData = sMWData.getSMWMeanData("NDNS");
 					else
 						currentSMWMeanData = sMWData.getSMWMeanData("NANS");
+				}
+				else if(metric.equals("Per Call Value"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("NDUS");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("NAUS");
 				}
 			}
 			else if(sortByMillisecond)
@@ -773,70 +774,12 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 					else
 						currentSMWMeanData = sMWData.getSMWMeanData("MANS");
 				}
-			}
-		}
-		catch(Exception e)
-		{
-			jRacy.systemError(null, "MDW06");
-		}
-	}
-	
-	/*
-	//Updates the sorted lists after a change of sorting method takes place.
-	private void sortLocalData()
-	{
-		try
-		{
-			if(sortByMappingID)
-			{
-				if(inclusive)
+				else if(metric.equals("Per Call Value"))
 				{
 					if(descendingOrder)
-						currentSMWMeanData = sMWData.getSMWMeanData("FIdDI");
+						currentSMWMeanData = sMWData.getSMWMeanData("MDUS");
 					else
-						currentSMWMeanData = sMWData.getSMWMeanData("FIdAI");
-				}
-				else
-				{
-					if(descendingOrder)
-						currentSMWMeanData = sMWData.getSMWMeanData("FIdDE");
-					else
-						currentSMWMeanData = sMWData.getSMWMeanData("FIdAE");
-				}
-			}
-			else if(sortByName)
-			{
-				
-				if(inclusive)
-				{
-					if(descendingOrder)
-						currentSMWMeanData = sMWData.getSMWMeanData("NDI");
-					else
-						currentSMWMeanData = sMWData.getSMWMeanData("NAI");
-				}
-				else
-				{
-					if(descendingOrder)
-						currentSMWMeanData = sMWData.getSMWMeanData("NDE");
-					else
-						currentSMWMeanData = sMWData.getSMWMeanData("NAE");
-				}
-			}
-			else if(sortByMillisecond)
-			{
-				if(inclusive)
-				{
-					if(descendingOrder)
-						currentSMWMeanData = sMWData.getSMWMeanData("MDI");
-					else
-						currentSMWMeanData = sMWData.getSMWMeanData("MAI");
-				}
-				else
-				{
-					if(descendingOrder)
-						currentSMWMeanData = sMWData.getSMWMeanData("MDE");
-					else
-						currentSMWMeanData = sMWData.getSMWMeanData("MAE");
+						currentSMWMeanData = sMWData.getSMWMeanData("MAUS");
 				}
 			}
 		}
@@ -845,7 +788,6 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			jRacy.systemError(null, "MDW06");
 		}
 	}
-	*/
 	
 	//This function passes the correct data list to its panel when asked for.
 	//Note:  This is only meant to be called by the MeanDataWindowPanel.
@@ -1000,7 +942,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			}
 			
 			setVisible(false);
-			jRacy.systemEvents.deleteObserver(this);
+			expRun.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
@@ -1023,17 +965,17 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	private ButtonGroup valuePercentGroup;
 	private ButtonGroup unitsGroup;
 	
-	private JRadioButtonMenuItem ascendingButton;
-	private JRadioButtonMenuItem descendingButton;
+	private JRadioButtonMenuItem ascendingButton =  new JRadioButtonMenuItem("Ascending", false);
+	private JRadioButtonMenuItem descendingButton = new JRadioButtonMenuItem("Descending", true);
 	
-	private JRadioButtonMenuItem mappingIDButton;
-	private JRadioButtonMenuItem nameButton;
-	private JRadioButtonMenuItem millisecondButton;
+	private JRadioButtonMenuItem nameButton = new JRadioButtonMenuItem("name", false);
+	private JRadioButtonMenuItem millisecondButton =  new JRadioButtonMenuItem("Selected Metric", true);
 	
 	private JRadioButtonMenuItem inclusiveRadioButton =  new JRadioButtonMenuItem("Inclusive", false);
 	private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
 	private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
 	private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
+	private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
 	
 	private JRadioButtonMenuItem valueButton;
 	private JRadioButtonMenuItem percentButton;
@@ -1060,7 +1002,8 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	
  	private MeanDataWindowPanel meanDataWindowPanelRef;
  	
- 	private StaticMainWindowData sMWData;
+ 	private ExperimentRun expRun = null;
+ 	private StaticMainWindowData sMWData = null;
  	
  	//Local data.
  	Vector currentSMWMeanData = null;

@@ -19,213 +19,168 @@ import javax.swing.event.*;
 public class GlobalThreadDataElement implements Serializable 
 {
 	//Constructor.
-	public GlobalThreadDataElement()
-	{	
-		
-		globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
-		
-		inclusiveValue = 0;
-		exclusiveValue = 0;
-		inclusiveMicroValue = 0;
-		exclusiveMicroValue = 0;
-		inclusivePercentValue = 0;
-		exclusivePercentValue = 0;
-		
+	public GlobalThreadDataElement(ExperimentRun inExpRun, boolean userElement){	
+		expRun = inExpRun;
+		globalMappingReference = expRun.getGlobalMapping();
 		mappingID = -1;
 		
-		tStatString = null;
+		if(!userElement)
+			this.addDefaultToVectors();
+		else
+			this.addDefaultToVectorsUE();
+	}
+	
+	public void addDefaultToVectors(){
+		inclusiveValueList.add(new Double(0));
+		exclusiveValueList.add(new Double(0));
+		inclusivePercentValueList.add(new Double(0));
+		exclusivePercentValueList.add(new Double(0));
+		userSecPerCallList.add(new Double(0));
 		
-		userEventName = null;
-		userEventNumberValue = 0;
-		userEventMinValue = 0;
-		userEventMaxValue = 0;
-		userEventMeanValue = 0;
-		userEventStatString = null;
+		tStatStringList.add(new String(""));
+		
+		userEventNumberValueList.add(new Integer(0));
+		userEventMinValueList.add(new Double(0));
+		userEventMaxValueList.add(new Double(0));
+		userEventMeanValueList.add(new Double(0));
+		userEventStatStringList.add(new String(""));
+	}
+	
+	public void addDefaultToVectorsUE(){
+		userEventNumberValueList.add(new Integer(0));
+		userEventMinValueList.add(new Double(0));
+		userEventMaxValueList.add(new Double(0));
+		userEventMeanValueList.add(new Double(0));
+		userEventStatStringList.add(new String(""));
 	}
 	
 	//Rest of the public functions.
-	public String getMappingName()
-	{
+	public String getMappingName(){
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		return tmpGME.getMappingName();}
+	
+	public void setMappingID(int inMappingID){
+		mappingID = inMappingID;}
+	
+	public void setMappingExists(){
+		mappingExists = true;}
+	
+	public boolean getMappingExists(){
+		return mappingExists;}
+	
+	public int getMappingID(){
+		return mappingID;}
+	
+	public void setInclusiveValue(int dataValueLocation, double inInclusiveValue){
+		Double tmpDouble = new Double(inInclusiveValue);
+		inclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getInclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) inclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setExclusiveValue(int dataValueLocation, double inExclusiveValue){
+		Double tmpDouble = new Double(inExclusiveValue);
+		exclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getExclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) exclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setInclusivePercentValue(int dataValueLocation, double inInclusivePercentValue){
 		
-		return tmpGME.getMappingName();
-	}
+		Double tmpDouble = new Double(inInclusivePercentValue);
+		inclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public void setMappingID(int inMappingID)
-	{
-		mappingID = inMappingID;
-	}
+	public double getInclusivePercentValue(int dataValueLocation){
+		Double tmpDouble = (Double) inclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setMappingExists()
-	{
-		mappingExists = true;
-	}
-	
-	public boolean getMappingExists()
-	{
-		return mappingExists;
-	}
-	
-	public int getMappingID()
-	{
-		return mappingID;
-	}
-	
-	public void setInclusiveValue(double inInclusiveValue)
-	{
-		inclusiveValue = inInclusiveValue;
-	}
-	
-	public double getInclusiveValue()
-	{
-		return inclusiveValue;
-	}
-	
-	public void setExclusiveValue(double inExclusiveValue)
-	{
-		exclusiveValue = inExclusiveValue;
-	}
-	
-	public double getExclusiveValue()
-	{
-		return exclusiveValue;
-	}
-	
-	public void setInclusiveMicroValue(double inInclusiveMicroValue)
-	{
-		inclusiveMicroValue = inInclusiveMicroValue;
-	}
-	
-	public double getInclusiveMicroValue()
-	{
-		return inclusiveMicroValue;
-	}
-	
-	public void setExclusiveMicroValue(double inExclusiveMicroValue)
-	{
-		exclusiveMicroValue = inExclusiveMicroValue;
-	}
-	
-	public double getExclusiveMicroValue()
-	{
-		return exclusiveMicroValue;
-	}
-	
-	public void setInclusivePercentValue(double inInclusivePercentValue)
-	{
-		inclusivePercentValue = inInclusivePercentValue;
-	}
-	
-	public double getInclusivePercentValue()
-	{
-		return inclusivePercentValue;
-	}
-	
-	public void setExclusivePercentValue(double inExclusivePercentValue)
-	{
-		exclusivePercentValue = inExclusivePercentValue;
-	}
-	
-	public double getExclusivePercentValue()
-	{
-		return exclusivePercentValue;
-	}
+	public void setExclusivePercentValue(int dataValueLocation, double inExclusivePercentValue){
+		Double tmpDouble = new Double(inExclusivePercentValue);
+		exclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public double getExclusivePercentValue(int dataValueLocation){
+		Double tmpDouble = (Double) exclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
 	public void setNumberOfCalls(int inInt){
-		numberOfCalls = inInt;
-	}
+		numberOfCalls = inInt;}
 	
 	public int getNumberOfCalls(){
-		return numberOfCalls;
-	}
+		return numberOfCalls;}
 	
 	public void setNumberOfSubRoutines(int inInt){
-		numberOfSubRoutines = inInt;
-	}
+		numberOfSubRoutines = inInt;}
 	
 	public int getNumberOfSubRoutines(){
-		return numberOfSubRoutines;
-	}
+		return numberOfSubRoutines;}
 	
-	public void setTStatString(String inString)
-	{
-		tStatString = inString;
-	}
+	public void setUserSecPerCall(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		userSecPerCallList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public String getTStatString()
-	{
-		return tStatString;
-	}
+	public double getUserSecPerCall(int dataValueLocation){
+		Double tmpDouble = (Double) userSecPerCallList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setTStatString(int dataValueLocation, String inString){
+		tStatStringList.setElementAt(inString, dataValueLocation);}
+	
+	public String getTStatString(int dataValueLocation){
+		return (String) tStatStringList.elementAt(dataValueLocation);}
 	
 	//User event interface.
-	public String getUserEventName()
-	{
+	public String getUserEventName(){
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
-		
-		return tmpGME.getMappingName();
-	}
+		return tmpGME.getMappingName();}
 	
-	public void setUserEventID(int inUserEventID)
-	{
-		userEventID = inUserEventID;
-	}
+	public void setUserEventID(int inUserEventID){
+		userEventID = inUserEventID;}
 	
-	public int getUserEventID()
-	{
-		return userEventID;
-	}
+	public int getUserEventID(){
+		return userEventID;}
 	
-	public void setUserEventNumberValue(int inUserEventNumberValue)
-	{
-		userEventNumberValue = inUserEventNumberValue;
-	}
+	public void setUserEventNumberValue(int dataValueLocation, int inUserEventNumberValue){
+		Integer tmpInt = new Integer(inUserEventNumberValue);
+		userEventNumberValueList.setElementAt(tmpInt, dataValueLocation);}
 	
-	public int getUserEventNumberValue()
-	{
-		return userEventNumberValue;
-	}
+	public int getUserEventNumberValue(int dataValueLocation){
+		Integer tmpInt = (Integer) userEventNumberValueList.elementAt(dataValueLocation);
+		return tmpInt.intValue();}
 	
-	public void setUserEventMinValue(double inUserEventMinValue)
-	{
-		userEventMinValue = inUserEventMinValue;
-	}
+	public void setUserEventMinValue(int dataValueLocation, double inUserEventMinValue){
+		Double tmpDouble = new Double(inUserEventMinValue);
+		userEventMinValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getUserEventMinValue()
-	{
-		return userEventMinValue;
-	}
+	public double getUserEventMinValue(int dataValueLocation){
+		Double tmpDouble = (Double) userEventMinValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setUserEventMaxValue(double inUserEventMaxValue)
-	{
-		userEventMaxValue = inUserEventMaxValue;
-	}
+	public void setUserEventMaxValue(int dataValueLocation, double inUserEventMaxValue){
+		Double tmpDouble = new Double(inUserEventMaxValue);
+		userEventMaxValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getUserEventMaxValue()
-	{
-		return userEventMaxValue;
-	}
+	public double getUserEventMaxValue(int dataValueLocation){
+		Double tmpDouble = (Double) userEventMaxValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setUserEventMeanValue(double inUserEventMeanValue)
-	{
-		userEventMeanValue = inUserEventMeanValue;
-	}
+	public void setUserEventMeanValue(int dataValueLocation, double inUserEventMeanValue){
+		Double tmpDouble = new Double(inUserEventMeanValue);
+		userEventMeanValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getUserEventMeanValue()
-	{
-		return userEventMeanValue;
-	}
+	public double getUserEventMeanValue(int dataValueLocation){
+		Double tmpDouble = (Double) userEventMeanValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setUserEventStatString(String inString)
-	{
-		userEventStatString = inString;
-	}
+	public void setUserEventStatString(int dataValueLocation, String inString){
+		userEventStatStringList.setElementAt(inString, dataValueLocation);}
 	
-	public String getUserEventStatString()
-	{
-		return userEventStatString;
-	}
+	public String getUserEventStatString(int dataValueLocation){
+		return (String) userEventStatStringList.elementAt(dataValueLocation);}
 
 	//Instance data.
+	
+	private ExperimentRun expRun = null;
 	
 	//Global Mapping reference.
 	GlobalMapping globalMappingReference;
@@ -240,27 +195,26 @@ public class GlobalThreadDataElement implements Serializable
 	int mappingID;
 	
 	//Named data values.
-	private double inclusiveValue;
-	private double exclusiveValue;
-	private double inclusivePercentValue;
-	private double exclusivePercentValue;
-	private double inclusiveMicroValue;
-	private double exclusiveMicroValue;
-	int numberOfCalls = 0;
-	int numberOfSubRoutines = 0;
+	private Vector inclusiveValueList = new Vector();
+	private Vector exclusiveValueList = new Vector();
+	private Vector inclusivePercentValueList = new Vector();
+	private Vector exclusivePercentValueList = new Vector();
+	private int numberOfCalls = 0;
+	private int numberOfSubRoutines = 0;
+	private Vector userSecPerCallList = new Vector();
 	
 	//The total statics string.
-	String tStatString;
+	private Vector tStatStringList = new Vector();
 	
 	
 	//User event section.
 	private String userEventName;
 	private int userEventID;
-	private int userEventNumberValue;
-	private double userEventMinValue;
-	private double userEventMaxValue;
-	private double userEventMeanValue;
-	String userEventStatString;
+	private Vector userEventNumberValueList = new Vector();
+	private Vector userEventMinValueList = new Vector();
+	private Vector userEventMaxValueList = new Vector();
+	private Vector userEventMeanValueList = new Vector();
+	private Vector userEventStatStringList = new Vector();
 }
 
 

@@ -38,7 +38,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	}
 	
 	
-	public UserEventWindowPanel(int inMappingID, UserEventWindow inUEWindow)
+	public UserEventWindowPanel(ExperimentRun inExpRun, int inMappingID, UserEventWindow inUEWindow)
 	{
 		try{
 			setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -48,11 +48,13 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 			addMouseListener(this);
 			
 			
+			expRun = inExpRun;
+			
 			mappingID = inMappingID;
 			
 			
 			//Grab the appropriate global mapping element.
-			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			GlobalMapping tmpGM = expRun.getGlobalMapping();
 			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(mappingID, 2);
 			
 			mappingName = tmpGME.getMappingName();
@@ -85,11 +87,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 			super.paintComponent(g);
 			
 			//Do the standard font and spacing stuff.
-			if(!(jRacy.jRacyPreferences.areBarDetailsSet()))
+			if(!(expRun.getPreferences().areBarDetailsSet()))
 			{
 				
 				//Create font.
-				Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), 12);
+				Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), 12);
 				g.setFont(font);
 				FontMetrics fmFont = g.getFontMetrics(font);
 				
@@ -101,17 +103,17 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 				
 				int tmpInt = maxFontAscent + maxFontDescent;
 				
-				jRacy.jRacyPreferences.setBarDetails(maxFontAscent, (tmpInt + 5));
+				expRun.getPreferences().setBarDetails(maxFontAscent, (tmpInt + 5));
 				
-				jRacy.jRacyPreferences.setSliders(maxFontAscent, (tmpInt + 5));
+				expRun.getPreferences().setSliders(maxFontAscent, (tmpInt + 5));
 			}
 			
 			//Set local spacing and bar heights.
-			barSpacing = jRacy.jRacyPreferences.getBarSpacing();
-			barHeight = jRacy.jRacyPreferences.getBarHeight();
+			barSpacing = expRun.getPreferences().getBarSpacing();
+			barHeight = expRun.getPreferences().getBarHeight();
 			
 			//Create font.
-			Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), barHeight);
+			Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), barHeight);
 			g.setFont(font);
 			FontMetrics fmFont = g.getFontMetrics(font);
 
@@ -138,20 +140,20 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 			yCoord = 0;
 			
 			//Grab the appropriate global mapping element.
-			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			GlobalMapping tmpGM = expRun.getGlobalMapping();
 			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(mappingID, 2);
 			
 			//Set the max values for this mapping.
-			maxUserEventNumberValue = tmpGME.getMaxUserEventNumberValue();
-			maxUserEventMinValue = tmpGME.getMaxUserEventMinValue();
-			maxUserEventMaxValue = tmpGME.getMaxUserEventMaxValue();
-			maxUserEventMeanValue = tmpGME.getMaxUserEventMeanValue();
+			maxUserEventNumberValue = tmpGME.getMaxUserEventNumberValue(expRun.getCurRunValLoc());
+			maxUserEventMinValue = tmpGME.getMaxUserEventMinValue(expRun.getCurRunValLoc());
+			maxUserEventMaxValue = tmpGME.getMaxUserEventMaxValue(expRun.getCurRunValLoc());
+			maxUserEventMeanValue = tmpGME.getMaxUserEventMeanValue(expRun.getCurRunValLoc());
 			
 			yCoord = yCoord + (barSpacing);
 			
 			//**********
 			//Draw the counter name if required.
-			counterName = jRacy.staticSystemData.getCounterName();
+			counterName = expRun.getCounterName();
 			if(counterName != null){
 				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 				yCoord = yCoord + (barSpacing);
@@ -274,9 +276,9 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 								{
 									g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 									
-									if(mappingID == (jRacy.clrChooser.getUEHCMappingID()))
+									if(mappingID == (expRun.getColorChooser().getUEHCMappingID()))
 									{
-										g.setColor(jRacy.clrChooser.getUEHC());
+										g.setColor(expRun.getColorChooser().getUEHC());
 										g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 										g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 									}
@@ -288,8 +290,8 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 								}
 								else
 								{
-									if(mappingID == (jRacy.clrChooser.getUEHCMappingID()))
-										g.setColor(jRacy.clrChooser.getUEHC());
+									if(mappingID == (expRun.getColorChooser().getUEHCMappingID()))
+										g.setColor(expRun.getColorChooser().getUEHC());
 									else
 									{
 										tmpColor = tmpSMWThreadDataElement.getMappingColor();
@@ -375,7 +377,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 				String arg = evt.getActionCommand();
 				if(arg.equals("Change User Event Color"))
 				{	
-					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
 					
 					Color tmpCol = tmpGME.getMappingColor();
@@ -387,17 +389,17 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 						tmpGME.setSpecificColor(tmpCol);
 						tmpGME.setColorFlag(true);
 						
-						jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+						expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
 					}
 				}
 				
 				else if(arg.equals("Reset to Generic Color"))
 				{	
-					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
 					
 					tmpGME.setColorFlag(false);
-					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 			}
 		
@@ -487,6 +489,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	
 	private UserEventWindow uEWindow = null;
  	
+ 	private ExperimentRun expRun = null;
  	private StaticMainWindowData sMWData = null;
  	
  	private SMWServer tmpSMWServer = null;

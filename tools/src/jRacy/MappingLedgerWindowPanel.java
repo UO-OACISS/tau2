@@ -41,12 +41,13 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	
 	}
 	
-	public MappingLedgerWindowPanel(Vector inNameIDMapping,  int inMappingSelection)
+	public MappingLedgerWindowPanel(ExperimentRun inExpRun, Vector inNameIDMapping,  int inMappingSelection)
 	{
 		try{
 			setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 			setBackground(Color.white);
 			
+			expRun = inExpRun;
 			NameIDMapping = inNameIDMapping;
 			mappingSelection = inMappingSelection;
 			
@@ -123,7 +124,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			super.paintComponent(g);
 			
 			//Set the numberOfColors variable.
-			numberOfColors = jRacy.clrChooser.getNumberOfColors();
+			numberOfColors = expRun.getColorChooser().getNumberOfColors();
 			
 			//Cycle through the id mapping list.
 			GlobalMappingElement globalMappingElement = null;
@@ -149,11 +150,11 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			xCoord = 5;
 			
 			//Do the standard font and spacing stuff.
-			if(!(jRacy.jRacyPreferences.areBarDetailsSet()))
+			if(!(expRun.getPreferences().areBarDetailsSet()))
 			{
 				
 				//Create font.
-				Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), 12);
+				Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), 12);
 				g.setFont(font);
 				FontMetrics fmFont = g.getFontMetrics(font);
 				
@@ -162,17 +163,17 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 				//Compute the font metrics.
 				int maxFontAscent = fmFont.getAscent();
 				
-				jRacy.jRacyPreferences.setBarDetails(maxFontAscent, maxFontAscent);
+				expRun.getPreferences().setBarDetails(maxFontAscent, maxFontAscent);
 				
-				jRacy.jRacyPreferences.setSliders(maxFontAscent, maxFontAscent);
+				expRun.getPreferences().setSliders(maxFontAscent, maxFontAscent);
 			}
 			
 			//Set local spacing and bar heights.
-			barSpacing = jRacy.jRacyPreferences.getBarSpacing();
-			barHeight = jRacy.jRacyPreferences.getBarHeight();
+			barSpacing = expRun.getPreferences().getBarSpacing();
+			barHeight = expRun.getPreferences().getBarHeight();
 			
 			//Create font.
-			Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), barHeight);
+			Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), barHeight);
 			g.setFont(font);
 			FontMetrics fmFont = g.getFontMetrics(font);
 		
@@ -180,7 +181,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			
 			//**********
 			//Draw the counter name if required.
-			counterName = jRacy.staticSystemData.getCounterName();
+			counterName = expRun.getCounterName();
 			if(counterName != null){
 				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 				yCoord = yCoord + (barSpacing);
@@ -208,9 +209,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						
 						if(mappingSelection == 2)
 						{
-							if((globalMappingElement.getGlobalID()) == (jRacy.clrChooser.getUEHCMappingID()))
+							if((globalMappingElement.getGlobalID()) == (expRun.getColorChooser().getUEHCMappingID()))
 							{
-								g.setColor(jRacy.clrChooser.getUEHC());
+								g.setColor(expRun.getColorChooser().getUEHC());
 								g.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 								g.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
 							}
@@ -222,9 +223,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						}
 						else if(mappingSelection == 1)
 						{
-							if((globalMappingElement.getGlobalID()) == (jRacy.clrChooser.getGHCMID()))
+							if((globalMappingElement.getGlobalID()) == (expRun.getColorChooser().getGHCMID()))
 							{
-								g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+								g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 								g.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 								g.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
 							}
@@ -236,9 +237,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						}
 						else
 						{
-							if((globalMappingElement.getGlobalID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+							if((globalMappingElement.getGlobalID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
 							{
-								g.setColor(jRacy.clrChooser.getHighlightColor());
+								g.setColor(expRun.getColorChooser().getHighlightColor());
 								g.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 								g.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
 							}
@@ -314,9 +315,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					{
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						jRacy.clrChooser.setHighlightColorMappingID(tmpGlobalMappingElement.getGlobalID());
-						MappingDataWindow tmpRef = new MappingDataWindow(tmpGlobalMappingElement.getGlobalID(), jRacy.staticMainWindow.getSMWData());
-						jRacy.systemEvents.addObserver(tmpRef);
+						expRun.getColorChooser().setHighlightColorMappingID(tmpGlobalMappingElement.getGlobalID());
+						MappingDataWindow tmpRef = new MappingDataWindow(expRun, tmpGlobalMappingElement.getGlobalID(), expRun.getStaticMainWindow().getSMWData());
+						expRun.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -327,9 +328,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					{
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						jRacy.clrChooser.setUEHCMappingID(tmpGlobalMappingElement.getGlobalID());
-						UserEventWindow tmpRef = new UserEventWindow(tmpGlobalMappingElement.getGlobalID(), jRacy.staticMainWindow.getSMWData());
-						jRacy.systemEvents.addObserver(tmpRef);
+						expRun.getColorChooser().setUEHCMappingID(tmpGlobalMappingElement.getGlobalID());
+						UserEventWindow tmpRef = new UserEventWindow(expRun, tmpGlobalMappingElement.getGlobalID(), expRun.getStaticMainWindow().getSMWData());
+						expRun.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -347,7 +348,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						tmpGlobalMappingElement.setSpecificColor(tmpCol);
 						tmpGlobalMappingElement.setColorFlag(true);
 						
-						jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+						expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
 					}
 				}
 				else if(arg.equals("Reset to Generic Color"))
@@ -358,7 +359,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					
 					tmpGlobalMappingElement.setColorFlag(false);
 					
-					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 				else if(arg.equals("Show This Group Only"))
 				{	
@@ -366,12 +367,12 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					if(clickedOnObject instanceof GlobalMappingElement)
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 					
-					GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping tmpGM = expRun.getGlobalMapping();
 					tmpGM.setIsSelectedGroupOn(true);
 					tmpGM.setIsAllExceptGroupOn(false);
 					tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
 					
-					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("dataEvent");
 				}
 				else if(arg.equals("Show All Groups Except This One"))
 				{	
@@ -379,12 +380,12 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					if(clickedOnObject instanceof GlobalMappingElement)
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 					
-					GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping tmpGM = expRun.getGlobalMapping();
 					tmpGM.setIsSelectedGroupOn(true);
 					tmpGM.setIsAllExceptGroupOn(true);
 					tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
 					
-					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("dataEvent");
 				}
 				else if(arg.equals("Show All Groups"))
 				{	
@@ -392,12 +393,12 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					if(clickedOnObject instanceof GlobalMappingElement)
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 					
-					GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping tmpGM = expRun.getGlobalMapping();
 					tmpGM.setIsSelectedGroupOn(false);
 					tmpGM.setIsAllExceptGroupOn(false);
 					tmpGM.setSelectedGroupID(-1);
 					
-					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("dataEvent");
 				}
 			}
 		}
@@ -446,16 +447,16 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 								
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((jRacy.clrChooser.getUEHCMappingID()) == -1)
+								if((expRun.getColorChooser().getUEHCMappingID()) == -1)
 								{
-									jRacy.clrChooser.setUEHCMappingID(globalMappingElement.getGlobalID());
+									expRun.getColorChooser().setUEHCMappingID(globalMappingElement.getGlobalID());
 								}
 								else
 								{
-									if(!((jRacy.clrChooser.getUEHCMappingID()) == (globalMappingElement.getGlobalID())))
-										jRacy.clrChooser.setUEHCMappingID(globalMappingElement.getGlobalID());
+									if(!((expRun.getColorChooser().getUEHCMappingID()) == (globalMappingElement.getGlobalID())))
+										expRun.getColorChooser().setUEHCMappingID(globalMappingElement.getGlobalID());
 									else
-										jRacy.clrChooser.setUEHCMappingID(-1);
+										expRun.getColorChooser().setUEHCMappingID(-1);
 								}
 							}
 							else if(mappingSelection == 1)
@@ -463,32 +464,32 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 								
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((jRacy.clrChooser.getGHCMID()) == -1)
+								if((expRun.getColorChooser().getGHCMID()) == -1)
 								{
-									jRacy.clrChooser.setGroupHighlightColorMappingID(globalMappingElement.getGlobalID());
+									expRun.getColorChooser().setGroupHighlightColorMappingID(globalMappingElement.getGlobalID());
 								}
 								else
 								{
-									if(!((jRacy.clrChooser.getGHCMID()) == (globalMappingElement.getGlobalID())))
-										jRacy.clrChooser.setGroupHighlightColorMappingID(globalMappingElement.getGlobalID());
+									if(!((expRun.getColorChooser().getGHCMID()) == (globalMappingElement.getGlobalID())))
+										expRun.getColorChooser().setGroupHighlightColorMappingID(globalMappingElement.getGlobalID());
 									else
-										jRacy.clrChooser.setGroupHighlightColorMappingID(-1);
+										expRun.getColorChooser().setGroupHighlightColorMappingID(-1);
 								}
 							}
 							else
 							{
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((jRacy.clrChooser.getHighlightColorMappingID()) == -1)
+								if((expRun.getColorChooser().getHighlightColorMappingID()) == -1)
 								{
-									jRacy.clrChooser.setHighlightColorMappingID(globalMappingElement.getGlobalID());
+									expRun.getColorChooser().setHighlightColorMappingID(globalMappingElement.getGlobalID());
 								}
 								else
 								{
-									if(!((jRacy.clrChooser.getHighlightColorMappingID()) == (globalMappingElement.getGlobalID())))
-										jRacy.clrChooser.setHighlightColorMappingID(globalMappingElement.getGlobalID());
+									if(!((expRun.getColorChooser().getHighlightColorMappingID()) == (globalMappingElement.getGlobalID())))
+										expRun.getColorChooser().setHighlightColorMappingID(globalMappingElement.getGlobalID());
 									else
-										jRacy.clrChooser.setHighlightColorMappingID(-1);
+										expRun.getColorChooser().setHighlightColorMappingID(-1);
 								}
 							}
 						}
@@ -529,6 +530,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	//******************************
 	//Instance data.
 	//******************************
+	ExperimentRun expRun = null;
 	Vector NameIDMapping;
 	int mappingSelection = -1;
 	int numberOfColors = 0;

@@ -28,18 +28,15 @@ public class jRacy implements ActionListener
 	
 	//**********
 	//Start or define all the persistant objects.
-	static SystemEvents systemEvents = new SystemEvents();
 	static SavedPreferences savedPreferences = new SavedPreferences();
-	static Preferences jRacyPreferences = null;
-	static StaticSystemData staticSystemData = null;
-	static ColorChooser clrChooser;
+	static ExperimentManager experimentManager = new ExperimentManager();
 	static HelpWindow helpWindow = new HelpWindow();
-	static StaticMainWindow staticMainWindow = null;
 	//End start of persistant objects.
 	
 	//Useful in the system.
 	private static String USAGE = "jRacy/jRacy (help | debug)";
 	static Runtime runtime;
+	static boolean runHasBeenOpened = false;
 	//**********
 
 	public jRacy() 
@@ -55,7 +52,7 @@ public class jRacy implements ActionListener
 			//End uncomment!
 			
 			//Add some observers.
-			jRacy.systemEvents.addObserver(helpWindow);
+			//jRacy.systemEvents.addObserver(helpWindow);
 			
 			//Try and load the Racy preference file ... racyPreferences.dat
 			try
@@ -67,10 +64,10 @@ public class jRacy implements ActionListener
 				ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
 				jRacy.savedPreferences = (SavedPreferences) inSavedPreferencesOIS.readObject();
 				
-				jRacy.clrChooser = new ColorChooser(savedPreferences);
-				jRacy.jRacyPreferences = new Preferences(savedPreferences);
+				//jRacy.clrChooser = new ColorChooser(savedPreferences);
+				//jRacy.jRacyPreferences = new Preferences(savedPreferences);
 				
-				jRacy.systemEvents.addObserver(jRacyPreferences);
+				//jRacy.systemEvents.addObserver(jRacyPreferences);
 			}
 			catch(Exception e)
 			{
@@ -78,9 +75,9 @@ public class jRacy implements ActionListener
 				{
 					//There was no preference file found, therefore, just create a default preference object.
 					System.out.println("No preference file present, using defaults!");
-					jRacy.clrChooser = new ColorChooser(null);
-					jRacy.jRacyPreferences = new Preferences(null);
-					jRacy.systemEvents.addObserver(jRacyPreferences);
+					//jRacy.clrChooser = new ColorChooser(null);
+					//jRacy.jRacyPreferences = new Preferences(null);
+					//jRacy.systemEvents.addObserver(jRacyPreferences);
 				}
 				else
 				{
@@ -91,10 +88,118 @@ public class jRacy implements ActionListener
 				}
 			}
 			
+			//Ok, now try to add the default experiment.
+			
+			//Check to see if a "pprof.dat" file exists.  If it does, load it.
+			File testForPprofDat = new File("pprof.dat");
+			
+			if(testForPprofDat.exists())
+			{
+				System.out.println("Found pprof.dat ... loading");
+				
+				//setTitle("jRacy: " + jRacy.profilePathName);
+				
+				//Create a default experiment.
+				Experiment exp = new Experiment("default");
+				experimentManager.addExperiment(exp);
+				
+				//Add the experiment run for this pprof.dat file to the experiment.
+				ExperimentRun expRun = null;
+				String tmpString1 = null;
+				String tmpString2 = null;
+				String tmpString3 = null;
+				
+				tmpString1 = testForPprofDat.getCanonicalPath();
+				tmpString2 = jRacy.experimentManager.getPathReverse(tmpString1);
+				tmpString3 = "defaultRun" + " : " + tmpString2;
+																	  
+				expRun = new ExperimentRun();
+						
+				expRun.setProfilePathName(tmpString1);
+				expRun.setProfilePathName(tmpString2);
+				expRun.setRunName(tmpString3);
+				
+				exp.addExperimentRun(expRun);
+				expRun.buildStaticData(true, testForPprofDat);
+				
+				expRun.showStaticMainWindow();
+			}
+			else
+			{
+				boolean foundSomething = false;
+				
+				File file = new File(".");
+				Experiment exp = null;
+				ExperimentRun expRun = null;
+			
+				String filePath = file.getCanonicalPath();
+				File [] list = file.listFiles();
+				for(int i = 0; i < list.length; i++)
+				{
+					File tmpFile = (File) list[i];
+					if(tmpFile != null){
+						String tmpString = tmpFile.getName();
+						
+						if(tmpString.indexOf("MULTI__") != -1){
+							String newString = filePath + "/" + tmpString + "/pprof.dat";
+							File testFile = new File(newString);
+							
+							if(testFile.exists()){
+								if(!foundSomething){
+									System.out.println("Found pprof.dat ... loading");
+									
+									//setTitle("jRacy: " + jRacy.profilePathName);
+									
+									//Create a default experiment.
+									exp = new Experiment("default");
+									experimentManager.addExperiment(exp);
+									
+									//Add the experiment run for this pprof.dat file to the experiment.
+									String tmpString1 = null;
+									String tmpString2 = null;
+									String tmpString3 = null;
+									
+									tmpString1 = filePath;
+									tmpString2 = jRacy.experimentManager.getPathReverse(tmpString1);
+									tmpString3 = "defaultRun" + " : " + tmpString2;
+																						  
+									expRun = new ExperimentRun();
+											
+									expRun.setProfilePathName(tmpString1);
+									expRun.setProfilePathName(tmpString2);
+									expRun.setRunName(tmpString3);
+									
+									exp.addExperimentRun(expRun);
+									expRun.buildStaticData(true, testFile);
+									
+									System.out.println("Found: " + newString);
+									
+									foundSomething = true;
+									
+									//expRun.showStaticMainWindow();
+								}
+								else{
+									expRun.buildStaticData(false, testFile);
+								}	
+							}
+						}
+					}			
+				}
+				
+				if(!foundSomething)
+					System.out.println("Did not find pprof.dat!");
+				else
+					expRun.showStaticMainWindow();
+				
+				
+				jRacy.experimentManager.displayExperimentListManager();
+			}
+			
+			
 			//Bring up the main window.
-			staticMainWindow = new StaticMainWindow();
-			jRacy.systemEvents.addObserver(staticMainWindow);
-			staticMainWindow.setVisible(true);
+			//staticMainWindow = new StaticMainWindow();
+			//jRacy.systemEvents.addObserver(staticMainWindow);
+			//staticMainWindow.setVisible(true);
 			/*
 			//Now show the welcome window.	
 			RacyWelcomeWindow test = new RacyWelcomeWindow();
@@ -157,6 +262,31 @@ public class jRacy implements ActionListener
                 System.err.println(USAGE);
 		System.exit(-1);
         }*/
+
+
+		/*try{
+			File file = new File(".");
+			
+			String filePath = file.getCanonicalPath();
+			File [] list = file.listFiles();
+			for(int i = 0; i < list.length; i++)
+			{
+				File tmpFile = (File) list[i];
+				if(tmpFile != null){
+					String tmpString = tmpFile.getName();
+					
+					if(tmpString.indexOf("MULTI__") != -1){
+						System.out.println(filePath + "/" + tmpString);
+					}
+				}
+								
+			}
+		}
+		catch(Exception e){
+			System.out.println(e);
+		}*/
+
+
 
 		int numberOfArguments = 0;
 		String argument;

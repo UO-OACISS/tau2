@@ -33,12 +33,13 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 	}
 	
-	public UserEventWindow(int inMappingID, StaticMainWindowData inSMWData)
+	public UserEventWindow(ExperimentRun inExpRun, int inMappingID, StaticMainWindowData inSMWData)
 	{
 		try{
 			setLocation(new java.awt.Point(300, 200));
 			setSize(new java.awt.Dimension(550, 550));
 			
+			expRun = inExpRun;
 			mappingID = inMappingID;
 			sMWData = inSMWData;
 			
@@ -46,13 +47,13 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	 		
 	 		
 	 		//Grab the appropriate global mapping element.
-			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			GlobalMapping tmpGM = expRun.getGlobalMapping();
 			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(inMappingID, 2);
 			
 			mappingName = tmpGME.getMappingName();
 			
 			//Now set the title.
-			this.setTitle("User Event Window: " + jRacy.profilePathName);
+			this.setTitle("User Event Window: " + expRun.getProfilePathName());
 			
 			//Add some window listener code
 			addWindowListener(new java.awt.event.WindowAdapter() {
@@ -232,7 +233,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			userEventWinPanelRef = new UserEventWindowPanel(inMappingID, this);
+			userEventWinPanelRef = new UserEventWindowPanel(expRun, inMappingID, this);
 			//The scroll panes into which the list shall be placed.
 			userEventWinPanelScrollPane = new JScrollPane(userEventWinPanelRef);
 			userEventWinPanelScrollPane.setBorder(mainloweredbev);
@@ -346,24 +347,24 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+					(expRun.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+					(expRun.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
+					(expRun.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -421,12 +422,12 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	{
 		try
 		{
-			if(jRacy.staticSystemData.groupNamesPresent())
+			if(expRun.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(jRacy.staticSystemData.userEventsPresent())
+			if(expRun.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
@@ -633,7 +634,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 				System.out.println("Clearing resourses for that window.");
 			}
 			setVisible(false);
-			jRacy.systemEvents.deleteObserver(this);
+			expRun.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
@@ -673,6 +674,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	
 	private JScrollPane userEventWinPanelScrollPane;
  	
+ 	private ExperimentRun expRun = null;
  	StaticMainWindowData sMWData = null;
  	
  	Vector sMWGeneralData = null;

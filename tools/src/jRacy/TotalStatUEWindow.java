@@ -33,17 +33,22 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, MenuLis
 		}
 	}
 	
-	public TotalStatUEWindow(int inServerNumber,
+	public TotalStatUEWindow(ExperimentRun inExpRun,
+							int inServerNumber,
 						   int inContextNumber,
 						   int inThreadNumber,
 						   StaticMainWindowData inSMWData)
 	{
 		try{
+			
+			expRun = inExpRun;
+			sMWData = inSMWData;
+			
 			setLocation(new java.awt.Point(0, 0));
 			setSize(new java.awt.Dimension(800, 600));
 			
 			//Now set the title.
-			this.setTitle("Total " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber + " - " + jRacy.profilePathName);
+			this.setTitle("Total " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber + " - " + expRun.getProfilePathName());
 			
 			server = inServerNumber;
 			context = inContextNumber;
@@ -57,10 +62,6 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, MenuLis
 		 	MAE = null;
 		 	MDI = null;
 		 	MAI = null;
-		 	
-			
-			sMWData = inSMWData;
-			
 			
 			
 			//Add some window listener code
@@ -272,7 +273,7 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, MenuLis
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			totalStatUEWindowPanelRef = new TotalStatUEWindowPanel(inServerNumber,
+			totalStatUEWindowPanelRef = new TotalStatUEWindowPanel(expRun, inServerNumber,
 															   inContextNumber,
 															   inThreadNumber, this);
 			
@@ -325,7 +326,7 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, MenuLis
 				}
 				else if(arg.equals("Adjust Racy Colors"))
 				{
-					jRacy.clrChooser.showColorChooser();	//The ColorChooser class maintains all the state.
+					expRun.getColorChooser().showColorChooser();	//The ColorChooser class maintains all the state.
 				}
 				else if(arg.equals("function ID"))
 				{
@@ -398,24 +399,24 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, MenuLis
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+					(expRun.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+					(expRun.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
+					(expRun.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -454,12 +455,12 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, MenuLis
 	{
 		try
 		{
-			if(jRacy.staticSystemData.groupNamesPresent())
+			if(expRun.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(jRacy.staticSystemData.userEventsPresent())
+			if(expRun.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
@@ -597,7 +598,7 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, MenuLis
 			}
 			
 			setVisible(false);
-			jRacy.systemEvents.deleteObserver(this);
+			expRun.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
@@ -609,8 +610,9 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, MenuLis
 	//******************************
 	//Instance data.
 	//******************************
+	private ExperimentRun expRun = null;
  	private TotalStatUEWindowPanel totalStatUEWindowPanelRef;
- 	private StaticMainWindowData sMWData = new StaticMainWindowData();
+ 	private StaticMainWindowData sMWData = new StaticMainWindowData(expRun);
  	
  	private JMenuItem mappingGroupLedgerItem;
 	private JMenuItem userEventLedgerItem;

@@ -19,10 +19,12 @@ import javax.swing.event.*;
 public class SMWThreadDataElement implements Comparable
 {
 	//Constructor.
-	public SMWThreadDataElement(GlobalThreadDataElement inGTDEReference)
+	public SMWThreadDataElement(ExperimentRun inExpRun, GlobalThreadDataElement inGTDEReference)
 	{	
+		expRun = inExpRun;
+		
 		gTDEReference = inGTDEReference;
-		globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+		globalMappingReference = expRun.getGlobalMapping();
 		
 		value = 0;
 		
@@ -91,32 +93,22 @@ public class SMWThreadDataElement implements Comparable
 	
 	public double getInclusiveValue()
 	{
-		return gTDEReference.getInclusiveValue();
+		return gTDEReference.getInclusiveValue(expRun.getCurRunValLoc());
 	}
 	
 	public double getExclusiveValue()
 	{
-		return gTDEReference.getExclusiveValue();
-	}
-	
-	public double getInclusiveMicroValue()
-	{
-		return gTDEReference.getInclusiveMicroValue();
-	}
-	
-	public double getExclusiveMicroValue()
-	{
-		return gTDEReference.getExclusiveMicroValue();
+		return gTDEReference.getExclusiveValue(expRun.getCurRunValLoc());
 	}
 	
 	public double getInclusivePercentValue()
 	{
-		return gTDEReference.getInclusivePercentValue();
+		return gTDEReference.getInclusivePercentValue(expRun.getCurRunValLoc());
 	}
 	
 	public double getExclusivePercentValue()
 	{
-		return gTDEReference.getExclusivePercentValue();
+		return gTDEReference.getExclusivePercentValue(expRun.getCurRunValLoc());
 	}
 	
 	public int getNumberOfCalls(){
@@ -127,9 +119,13 @@ public class SMWThreadDataElement implements Comparable
 		return gTDEReference.getNumberOfSubRoutines();
 	}
 	
+	public double getUserSecPerCall(){
+		return gTDEReference.getUserSecPerCall(expRun.getCurRunValLoc());
+	}
+	
 	public String getTStatString()
 	{
-		return gTDEReference.getTStatString();
+		return gTDEReference.getTStatString(expRun.getCurRunValLoc());
 	}
 	
 	//User event interface.
@@ -153,27 +149,27 @@ public class SMWThreadDataElement implements Comparable
 	
 	public int getUserEventNumberValue()
 	{
-		return gTDEReference.getUserEventNumberValue();
+		return gTDEReference.getUserEventNumberValue(expRun.getCurRunValLoc());
 	}
 	
 	public double getUserEventMinValue()
 	{
-		return gTDEReference.getUserEventMinValue();
+		return gTDEReference.getUserEventMinValue(expRun.getCurRunValLoc());
 	}
 	
 	public double getUserEventMaxValue()
 	{
-		return gTDEReference.getUserEventMaxValue();
+		return gTDEReference.getUserEventMaxValue(expRun.getCurRunValLoc());
 	}
 	
 	public double getUserEventMeanValue()
 	{
-		return gTDEReference.getUserEventMeanValue();
+		return gTDEReference.getUserEventMeanValue(expRun.getCurRunValLoc());
 	}
 	
 	public String getUserEventStatString()
 	{
-		return gTDEReference.getUserEventStatString();
+		return gTDEReference.getUserEventStatString(expRun.getCurRunValLoc());
 	}
 
 	/*
@@ -434,6 +430,8 @@ public class SMWThreadDataElement implements Comparable
 	}
 
 	//Instance data.
+	
+	private ExperimentRun expRun = null;
 
 	//Global Thread Data Element Reference.
 	GlobalThreadDataElement gTDEReference;

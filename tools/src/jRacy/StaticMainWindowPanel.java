@@ -26,6 +26,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	//******************************
 	//Instance data.
 	//******************************
+	private ExperimentRun expRun = null;
 	StaticMainWindow sMWindow = null;
 	
 	int xPanelSize = 600;
@@ -103,7 +104,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		}
 	}
 	
-	public StaticMainWindowPanel(StaticMainWindow inSMW)
+	public StaticMainWindowPanel(ExperimentRun inExpRun, StaticMainWindow inSMW)
 	{
 		try{
 			//Set the default tool tip for this panel.
@@ -114,6 +115,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			addMouseListener(this);
 			
 			//Set instance variables.
+			expRun = inExpRun;
 			sMWindow = inSMW;
 			barXStart = 100;
 			
@@ -448,18 +450,18 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					{
 						tmpSMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
-						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
-						jRacy.systemEvents.addObserver(tmpRef);
+						expRun.getColorChooser().setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(expRun, tmpSMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
+						expRun.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 					else
 					{
 						tmpSMWMeanDataElement = (SMWMeanDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
-						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWMeanDataElement.getMappingID(), (sMWindow.getSMWData()));
-						jRacy.systemEvents.addObserver(tmpRef);
+						expRun.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(expRun, tmpSMWMeanDataElement.getMappingID(), (sMWindow.getSMWData()));
+						expRun.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -473,7 +475,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					else
 						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					Color tmpCol = tmpGME.getMappingColor();
@@ -485,7 +487,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						tmpGME.setSpecificColor(tmpCol);
 						tmpGME.setColorFlag(true);
 						
-						jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+						expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
 					}
 				}
 				
@@ -500,11 +502,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					else
 						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
+					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					tmpGME.setColorFlag(false);
-					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 				else if(arg.equals("Highlight this Function"))
 				{		
@@ -516,24 +518,24 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					else
 						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
-					jRacy.clrChooser.setHighlightColorMappingID(mappingID);
+					expRun.getColorChooser().setHighlightColorMappingID(mappingID);
 				}
-				else if(arg.equals("Un-Highlight this Mapping"))
+				else if(arg.equals("Un-Highlight this Function"))
 				{		
-					jRacy.clrChooser.setHighlightColorMappingID(-1);
+					expRun.getColorChooser().setHighlightColorMappingID(-1);
 				}
 				else if(arg.equals("Show Total Statistics Windows"))
 				{
-					TotalStatWindow tmpRef = new TotalStatWindow(serverNumber, contextNumber,
+					TotalStatWindow tmpRef = new TotalStatWindow(expRun, serverNumber, contextNumber,
 																 threadNumber, sMWindow.getSMWData());
-					jRacy.systemEvents.addObserver(tmpRef);
+					expRun.getSystemEvents().addObserver(tmpRef);
 					tmpRef.show();
 				}
 				else if(arg.equals("Show Total User Event Statistics Windows"))
 				{
-					TotalStatUEWindow tmpRef = new TotalStatUEWindow(serverNumber, contextNumber,
+					TotalStatUEWindow tmpRef = new TotalStatUEWindow(expRun, serverNumber, contextNumber,
 																 threadNumber, sMWindow.getSMWData());
-					jRacy.systemEvents.addObserver(tmpRef);
+					expRun.getSystemEvents().addObserver(tmpRef);
 					tmpRef.show();
 				}
 			}
@@ -589,17 +591,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							//Bring up the thread data window for this thread object!
 							if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0)
 							{
-								MeanDataWindow tmpRef = new MeanDataWindow(sMWindow.getSMWData());
-								jRacy.systemEvents.addObserver(tmpRef);
+								MeanDataWindow tmpRef = new MeanDataWindow(expRun, sMWindow.getSMWData());
+								expRun.getSystemEvents().addObserver(tmpRef);
 								tmpRef.show();
 							}
 							else
 							{
 								//Bring up the total stat window here!
 								//System.out.println("Will bring up the total stat window for the mean.");
-								MeanTotalStatWindow tmpRef = new MeanTotalStatWindow(sMWindow.getSMWData());
+								MeanTotalStatWindow tmpRef = new MeanTotalStatWindow(expRun, sMWindow.getSMWData());
 								
-								jRacy.systemEvents.addObserver(tmpRef);
+								expRun.getSystemEvents().addObserver(tmpRef);
 								tmpRef.show();
 							}
 							//Return from this function.
@@ -619,9 +621,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							else
 							{
 								
-								jRacy.clrChooser.setHighlightColorMappingID(sMWMeanDataElement.getMappingID());
-								MappingDataWindow tmpRef = new MappingDataWindow(sMWMeanDataElement.getMappingID(), (sMWindow.getSMWData()));
-								jRacy.systemEvents.addObserver(tmpRef);
+								expRun.getColorChooser().setHighlightColorMappingID(sMWMeanDataElement.getMappingID());
+								MappingDataWindow tmpRef = new MappingDataWindow(expRun, sMWMeanDataElement.getMappingID(), (sMWindow.getSMWData()));
+								expRun.getSystemEvents().addObserver(tmpRef);
 								tmpRef.show();
 							}
 							
@@ -673,11 +675,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 													//Bring up the thread data window for this thread object!
 													if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0)
 													{
-														ThreadDataWindow tmpRef = new ThreadDataWindow(serverCounter, contextCounter,
+														ThreadDataWindow tmpRef = new ThreadDataWindow(expRun, serverCounter, contextCounter,
 																								   threadCounter, sMWindow.getSMWData());
 																								   
 																								   
-														jRacy.systemEvents.addObserver(tmpRef);
+														expRun.getSystemEvents().addObserver(tmpRef);
 														tmpRef.show();
 													}
 													else
@@ -690,7 +692,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 														
 														/*TotalStatWindow tmpRef = new TotalStatWindow(serverCounter, contextCounter,
 																								   threadCounter, sMWindow.getSMWData());
-														jRacy.systemEvents.addObserver(tmpRef);
+														expRun.getSystemEvents().addObserver(tmpRef);
 														tmpRef.show();*/
 													}
 											}
@@ -715,9 +717,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 													}
 													else
 													{
-														jRacy.clrChooser.setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
-														MappingDataWindow tmpRef = new MappingDataWindow(sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
-														jRacy.systemEvents.addObserver(tmpRef);
+														expRun.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+														MappingDataWindow tmpRef = new MappingDataWindow(expRun, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
+														expRun.getSystemEvents().addObserver(tmpRef);
 														tmpRef.show();
 													}
 													
@@ -774,10 +776,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			super.paintComponent(g);
 			
 			//Set the numberOfColors variable.
-			numberOfColors = jRacy.clrChooser.getNumberOfColors();
+			numberOfColors = expRun.getColorChooser().getNumberOfColors();
 			
 			//Check to see if selected groups only are being displayed.
-			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			GlobalMapping tmpGM = expRun.getGlobalMapping();
 			
 			boolean isSelectedGroupOn = false;
 			int selectedGroupID = 0;
@@ -804,11 +806,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				
 				//**********
 				//Do the standard font and spacing stuff.
-				if(!(jRacy.jRacyPreferences.areBarDetailsSet()))
+				if(!(expRun.getPreferences().areBarDetailsSet()))
 				{
 					
 					//Create font.
-					Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), 12);
+					Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), 12);
 					g.setFont(font);
 					FontMetrics fmFont = g.getFontMetrics(font);
 					
@@ -820,19 +822,19 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					
 					int tmpInt = maxFontAscent + maxFontDescent;
 					
-					jRacy.jRacyPreferences.setBarDetails(maxFontAscent, (tmpInt + 5));
+					expRun.getPreferences().setBarDetails(maxFontAscent, (tmpInt + 5));
 					
-					jRacy.jRacyPreferences.setSliders(maxFontAscent, (tmpInt + 5));
+					expRun.getPreferences().setSliders(maxFontAscent, (tmpInt + 5));
 				}
 				//End - Do the standard font and spacing stuff.
 				//**********
 				
 				//Set local spacing and bar heights.
-				int barSpacing = jRacy.jRacyPreferences.getBarSpacing();
-				int barHeight = jRacy.jRacyPreferences.getBarHeight();
+				int barSpacing = expRun.getPreferences().getBarSpacing();
+				int barHeight = expRun.getPreferences().getBarHeight();
 				
 				//Create font.
-				Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), barHeight);
+				Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), barHeight);
 				g.setFont(font);
 				FontMetrics fmFont = g.getFontMetrics(font);
 				
@@ -850,7 +852,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				
 				//**********
 				//Draw the counter name if required.
-				counterName = jRacy.staticSystemData.getCounterName();
+				counterName = expRun.getCounterName();
 				if(counterName != null){
 					g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 					yCoord = yCoord + (barSpacing);
@@ -902,17 +904,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 								g.setColor(tmpColor);
 								g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((sMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+								if((sMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
 								{	
 									highlighted = true;
-									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.setColor(expRun.getColorChooser().getHighlightColor());
 									g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
-								else if((sMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								else if((sMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 								{
 									highlighted = true;
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 									g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -946,11 +948,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 								//Now set the color values for drawing!
 								//Get the appropriate color.
 								
-								if((sMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-								else if((sMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								if((sMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+									g.setColor(expRun.getColorChooser().getHighlightColor());
+								else if((sMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 								{
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 								}
 								else
 								{
@@ -993,7 +995,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				//misc. mapping colour.
 				if(barXCoord < (defaultBarLength + barXStart))
 				{
-					g.setColor(jRacy.clrChooser.getMiscMappingsColor());
+					g.setColor(expRun.getColorChooser().getMiscMappingsColor());
 					g.fillRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
 					g.setColor(Color.black);
 					g.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
@@ -1094,17 +1096,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 												g.setColor(tmpColor);
 												g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 												
-												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												if((sMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
 												{	
 													highlighted = true;
-													g.setColor(jRacy.clrChooser.getHighlightColor());
+													g.setColor(expRun.getColorChooser().getHighlightColor());
 													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 												}
-												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												else if((sMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 												{
 													highlighted = true;
-													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 												}
@@ -1137,11 +1139,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 											{
 												//Now set the color values for drawing!
 												//Get the appropriate color.
-												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-													g.setColor(jRacy.clrChooser.getHighlightColor());
-												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												if((sMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+													g.setColor(expRun.getColorChooser().getHighlightColor());
+												else if((sMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 												{
-													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 												}
 												else
 												{
@@ -1204,17 +1206,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 												g.setColor(tmpColor);
 												g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 												
-												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												if((sMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
 												{	
 													highlighted = true;
-													g.setColor(jRacy.clrChooser.getHighlightColor());
+													g.setColor(expRun.getColorChooser().getHighlightColor());
 													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 												}
-												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												else if((sMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 												{
 													highlighted = true;
-													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 												}
@@ -1247,11 +1249,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 											{
 												//Now set the color values for drawing!
 												//Get the appropriate color.
-												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-													g.setColor(jRacy.clrChooser.getHighlightColor());
-												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												if((sMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+													g.setColor(expRun.getColorChooser().getHighlightColor());
+												else if((sMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 												{
-													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 												}
 												else
 												{
@@ -1297,7 +1299,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							//misc. mapping colour.
 							if(barXCoord < (defaultBarLength + barXStart))
 							{
-								g.setColor(jRacy.clrChooser.getMiscMappingsColor());
+								g.setColor(expRun.getColorChooser().getMiscMappingsColor());
 								g.fillRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
 								g.setColor(Color.black);
 								g.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
@@ -1378,10 +1380,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		try
 		{
 			//Set the numberOfColors variable.
-			numberOfColors = jRacy.clrChooser.getNumberOfColors();
+			numberOfColors = expRun.getColorChooser().getNumberOfColors();
 			
 			//Check to see if selected groups only are being displayed.
-			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			GlobalMapping tmpGM = expRun.getGlobalMapping();
 			
 			boolean isSelectedGroupOn = false;
 			int selectedGroupID = 0;
@@ -1408,11 +1410,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				
 				//**********
 				//Do the standard font and spacing stuff.
-				if(!(jRacy.jRacyPreferences.areBarDetailsSet()))
+				if(!(expRun.getPreferences().areBarDetailsSet()))
 				{
 					
 					//Create font.
-					Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), 12);
+					Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), 12);
 					g.setFont(font);
 					FontMetrics fmFont = g.getFontMetrics(font);
 					
@@ -1424,19 +1426,19 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					
 					int tmpInt = maxFontAscent + maxFontDescent;
 					
-					jRacy.jRacyPreferences.setBarDetails(maxFontAscent, (tmpInt + 5));
+					expRun.getPreferences().setBarDetails(maxFontAscent, (tmpInt + 5));
 					
-					jRacy.jRacyPreferences.setSliders(maxFontAscent, (tmpInt + 5));
+					expRun.getPreferences().setSliders(maxFontAscent, (tmpInt + 5));
 				}
 				//End - Do the standard font and spacing stuff.
 				//**********
 				
 				//Set local spacing and bar heights.
-				int barSpacing = jRacy.jRacyPreferences.getBarSpacing();
-				int barHeight = jRacy.jRacyPreferences.getBarHeight();
+				int barSpacing = expRun.getPreferences().getBarSpacing();
+				int barHeight = expRun.getPreferences().getBarHeight();
 				
 				//Create font.
-				Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), barHeight);
+				Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), barHeight);
 				g.setFont(font);
 				FontMetrics fmFont = g.getFontMetrics(font);
 				
@@ -1454,7 +1456,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				
 				//**********
 				//Draw the counter name if required.
-				counterName = jRacy.staticSystemData.getCounterName();
+				counterName = expRun.getCounterName();
 				if(counterName != null){
 					g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 					yCoord = yCoord + (barSpacing);
@@ -1506,17 +1508,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 								g.setColor(tmpColor);
 								g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((sMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+								if((sMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
 								{	
 									highlighted = true;
-									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.setColor(expRun.getColorChooser().getHighlightColor());
 									g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
-								else if((sMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								else if((sMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 								{
 									highlighted = true;
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 									g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -1550,11 +1552,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 								//Now set the color values for drawing!
 								//Get the appropriate color.
 								
-								if((sMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-								else if((sMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								if((sMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+									g.setColor(expRun.getColorChooser().getHighlightColor());
+								else if((sMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 								{
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 								}
 								else
 								{
@@ -1597,7 +1599,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				//misc. mapping colour.
 				if(barXCoord < (defaultBarLength + barXStart))
 				{
-					g.setColor(jRacy.clrChooser.getMiscMappingsColor());
+					g.setColor(expRun.getColorChooser().getMiscMappingsColor());
 					g.fillRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
 					g.setColor(Color.black);
 					g.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
@@ -1698,17 +1700,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 												g.setColor(tmpColor);
 												g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 												
-												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												if((sMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
 												{	
 													highlighted = true;
-													g.setColor(jRacy.clrChooser.getHighlightColor());
+													g.setColor(expRun.getColorChooser().getHighlightColor());
 													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 												}
-												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												else if((sMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 												{
 													highlighted = true;
-													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 												}
@@ -1741,11 +1743,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 											{
 												//Now set the color values for drawing!
 												//Get the appropriate color.
-												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-													g.setColor(jRacy.clrChooser.getHighlightColor());
-												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												if((sMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+													g.setColor(expRun.getColorChooser().getHighlightColor());
+												else if((sMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 												{
-													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 												}
 												else
 												{
@@ -1808,17 +1810,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 												g.setColor(tmpColor);
 												g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 												
-												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												if((sMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
 												{	
 													highlighted = true;
-													g.setColor(jRacy.clrChooser.getHighlightColor());
+													g.setColor(expRun.getColorChooser().getHighlightColor());
 													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 												}
-												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												else if((sMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 												{
 													highlighted = true;
-													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 												}
@@ -1851,11 +1853,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 											{
 												//Now set the color values for drawing!
 												//Get the appropriate color.
-												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-													g.setColor(jRacy.clrChooser.getHighlightColor());
-												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												if((sMWThreadDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+													g.setColor(expRun.getColorChooser().getHighlightColor());
+												else if((sMWThreadDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
 												{
-													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.setColor(expRun.getColorChooser().getGroupHighlightColor());
 												}
 												else
 												{
@@ -1902,7 +1904,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							//misc. mapping colour.
 							if(barXCoord < (defaultBarLength + barXStart))
 							{
-								g.setColor(jRacy.clrChooser.getMiscMappingsColor());
+								g.setColor(expRun.getColorChooser().getMiscMappingsColor());
 								g.fillRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
 								g.setColor(Color.black);
 								g.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
@@ -1966,7 +1968,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	public void popupMenuWillBecomeVisible(PopupMenuEvent evt){
 		try
 		{
-			if(jRacy.staticSystemData.userEventsPresent()){
+			if(expRun.userEventsPresent()){
 				tUESWItem.setEnabled(true);
 			}
 			else{

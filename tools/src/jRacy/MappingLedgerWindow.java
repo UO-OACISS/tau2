@@ -35,28 +35,30 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 	}
 	
 	
-	public MappingLedgerWindow(Vector inNameIDMapping, int inMappingSelection)
+	public MappingLedgerWindow(ExperimentRun inExpRun, Vector inNameIDMapping, int inMappingSelection)
 	{
 		try{
+			
+			expRun = inExpRun;
+			mappingSelection = inMappingSelection;
+			
 			setLocation(new java.awt.Point(300, 200));
 			setSize(new java.awt.Dimension(350, 450));
 			
-			mappingSelection = inMappingSelection;
-			
 			//Now set the title.
 			if(mappingSelection == 0)
-				this.setTitle("Function Ledger Window: " + jRacy.profilePathName);
+				this.setTitle("Function Ledger Window: " + expRun.getProfilePathName());
 			else if(mappingSelection == 1)
-				this.setTitle("Group Ledger Window: " + jRacy.profilePathName);
+				this.setTitle("Group Ledger Window: " + expRun.getProfilePathName());
 			else
-				this.setTitle("User Event Window: " + jRacy.profilePathName);
+				this.setTitle("User Event Window: " + expRun.getProfilePathName());
 			
 			//Set the help window text if required.
 			if(jRacy.helpWindow.isVisible())
 			{
 				jRacy.helpWindow.clearText();
 				
-				if(!((jRacy.staticMainWindow.getSMWData()).isDataLoaded()))
+				if(!((expRun.getStaticMainWindow().getSMWData()).isDataLoaded()))
 					{
 						if(mappingSelection == 0){
 							jRacy.helpWindow.writeText("This is the function ledger window.");
@@ -122,7 +124,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 				{
 					public void windowClosing(WindowEvent evt)
 					{
-						(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(mappingSelection);
+						(expRun.getGlobalMapping()).closeMappingLedger(mappingSelection);
 					}
 				}
 				);
@@ -242,7 +244,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			mappingLedgerWinPanelRef = new MappingLedgerWindowPanel(inNameIDMapping, mappingSelection);
+			mappingLedgerWinPanelRef = new MappingLedgerWindowPanel(expRun, inNameIDMapping, mappingSelection);
 			//The scroll panes into which the list shall be placed.
 			JScrollPane mappingLedgerWinPanelScrollPane = new JScrollPane(mappingLedgerWinPanelRef);
 			mappingLedgerWinPanelScrollPane.setBorder(mainloweredbev);
@@ -297,7 +299,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 				
 				if(arg.equals("Edit jRacy Preferences"))
 				{
-					jRacy.jRacyPreferences.showPreferencesWindow();
+					expRun.getPreferences().showPreferencesWindow();
 				}
 				else if(arg.equals("Exit jRacy!"))
 				{
@@ -307,20 +309,20 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 				}	
 				else if(arg.equals("Close Function Ledger Window"))
 				{
-					(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(mappingSelection);
+					(expRun.getGlobalMapping()).closeMappingLedger(mappingSelection);
 				}
 				else if(arg.equals("Close Group Ledger Window"))
 				{
-					(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(mappingSelection);
+					(expRun.getGlobalMapping()).closeMappingLedger(mappingSelection);
 				}
 				else if(arg.equals("Close User Event Window"))
 				{
-					(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(mappingSelection);
+					(expRun.getGlobalMapping()).closeMappingLedger(mappingSelection);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -328,12 +330,12 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 				}
 				else if(arg.equals("Show Help Window"))
 				{
-					//Show the racy help window.
+					//Show the jRacy help window.
 					jRacy.helpWindow.clearText();
 					jRacy.helpWindow.show();
 					//See if any system data has been loaded.  Give a helpful hint
 					//if it has not.
-					if(!((jRacy.staticMainWindow.getSMWData()).isDataLoaded()))
+					if(!((expRun.getStaticMainWindow().getSMWData()).isDataLoaded()))
 					{
 						if(mappingSelection == 0){
 							jRacy.helpWindow.writeText("This is the function ledger window.");
@@ -416,7 +418,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 			}
 			else if(tmpString.equals("subWindowCloseEvent"))
 			{
-				jRacy.staticSystemData.getGlobalMapping().closeMappingLedger(mappingSelection);
+				expRun.getGlobalMapping().closeMappingLedger(mappingSelection);
 			}
 		}
 		catch(Exception e)
@@ -433,6 +435,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
  	
  	int mappingSelection = -1;
  	
+ 	private ExperimentRun expRun = null;
  	MappingLedgerWindowPanel mappingLedgerWinPanelRef;
 
 }

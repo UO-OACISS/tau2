@@ -18,6 +18,8 @@ import java.lang.*;
 public class StaticMainWindowData
 {
 
+	private ExperimentRun expRun = null;
+	
 	//A variable to check to make sure that the user has loaded system data.
 	boolean dataLoaded = false;
 	 		
@@ -29,8 +31,9 @@ public class StaticMainWindowData
 	
 	private String currentlySortedAsMeanTotalStatWindow;
 	
-	public StaticMainWindowData()
+	public StaticMainWindowData(ExperimentRun inExpRun)
 	{
+		expRun = inExpRun;
 	}
 	
 	//Setting and getting the loaded system data boolean.
@@ -92,9 +95,8 @@ public class StaticMainWindowData
 		Vector tmpThreadList;
 		Vector tmpThreadDataList;
 		
-		
 		//Get a reference to the global data.
-		Vector tmpVector = jRacy.staticSystemData.getStaticServerList();
+		Vector tmpVector = expRun.getStaticServerList();
 		
 		//Clear the sMWGeneralData list for safety.
 		sMWGeneralData.removeAllElements();
@@ -142,7 +144,7 @@ public class StaticMainWindowData
 						if(tmpGlobalThreadDataElement != null)
 						{
 							//Create a new thread data object.
-							tmpSMWThreadDataElement = new SMWThreadDataElement(tmpGlobalThreadDataElement);
+							tmpSMWThreadDataElement = new SMWThreadDataElement(expRun, tmpGlobalThreadDataElement);
 							
 							tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getMappingID());
 							
@@ -161,7 +163,7 @@ public class StaticMainWindowData
 	private void buildSMWMeanList()
 	{
 		//First, grab the global mapping element list.
-		GlobalMapping tmpGlobalMapping = jRacy.staticSystemData.getGlobalMapping();
+		GlobalMapping tmpGlobalMapping = expRun.getGlobalMapping();
 		
 		Vector tmpVector = tmpGlobalMapping.getMapping(0);
 		
@@ -176,10 +178,10 @@ public class StaticMainWindowData
 			if(tmpGME.getMeanValuesSet())
 			{
 				//Create a new mean data element.
-				SMWMeanDataElement tmpSMWMeanDataElement = new SMWMeanDataElement();
+				SMWMeanDataElement tmpSMWMeanDataElement = new SMWMeanDataElement(expRun);
 
 				tmpSMWMeanDataElement.setMappingID(tmpGME.getGlobalID());
-				tmpSMWMeanDataElement.setValue(tmpGME.getMeanExclusiveValue());
+				tmpSMWMeanDataElement.setValue(tmpGME.getMeanExclusiveValue(expRun.getCurRunValLoc()));
 				tmpSMWMeanDataElement.setSortByValue();
 				tmpSMWMeanDataElement.setSortByReverse(true);
 				
@@ -228,7 +230,7 @@ public class StaticMainWindowData
 		
 		
 		//Get a reference to the global data.
-		tmpVector = jRacy.staticSystemData.getStaticServerList();
+		tmpVector = expRun.getStaticServerList();
 		
 		for(Enumeration e1 = tmpVector.elements(); e1.hasMoreElements() ;)
 		{
@@ -271,7 +273,7 @@ public class StaticMainWindowData
 					if(tmpGlobalThreadDataElement != null)
 					{
 						//Create a new thread data object.
-						tmpSMWThreadDataElement = new SMWThreadDataElement(tmpGlobalThreadDataElement);
+						tmpSMWThreadDataElement = new SMWThreadDataElement(expRun, tmpGlobalThreadDataElement);
 						
 						tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getMappingID());
 						
@@ -309,7 +311,7 @@ public class StaticMainWindowData
 		
 		
 		//Get a reference to the global data.
-		tmpVector = jRacy.staticSystemData.getStaticServerList();
+		tmpVector = expRun.getStaticServerList();
 		
 		for(Enumeration e1 = tmpVector.elements(); e1.hasMoreElements() ;)
 		{
@@ -352,7 +354,7 @@ public class StaticMainWindowData
 					if(tmpGlobalThreadDataElement != null)
 					{
 						//Create a new thread data object.
-						tmpSMWThreadDataElement = new SMWThreadDataElement(tmpGlobalThreadDataElement);
+						tmpSMWThreadDataElement = new SMWThreadDataElement(expRun, tmpGlobalThreadDataElement);
 						
 						tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getUserEventID());
 						
@@ -373,7 +375,7 @@ public class StaticMainWindowData
 		int metric = 0;
 		boolean isExclusive = true;
 		//Check to see if selected groups only are being displayed.
-		GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+		GlobalMapping tmpGM = expRun.getGlobalMapping();
 		
 		boolean isSelectedGroupOn = false;
 		int selectedGroupID = 0;
@@ -441,43 +443,61 @@ public class StaticMainWindowData
 		else if(inString.equals("FIdDNS")){
 			sortSetting = 1;
 			metric = 4;}
+		else if(inString.equals("FIdDUS")){
+			sortSetting = 1;
+			metric = 5;}
 		else if(inString.equals("FIdANC")){
 			sortSetting = 2;
 			metric = 3;}
 		else if(inString.equals("FIdANS")){
 			sortSetting = 2;
 			metric = 4;}
+		else if(inString.equals("FIdAUS")){
+			sortSetting = 2;
+			metric = 5;}
 		else if(inString.equals("NDNC")){
 			sortSetting = 3;
 			metric = 3;}
 		else if(inString.equals("NDNS")){
 			sortSetting = 3;
 			metric = 4;}
+		else if(inString.equals("NDUS")){
+			sortSetting = 3;
+			metric = 5;}
 		else if(inString.equals("NANC")){
 			sortSetting = 4;
 			metric = 3;}
 		else if(inString.equals("NANS")){
 			sortSetting = 4;
 			metric = 4;}
+		else if(inString.equals("NAUS")){
+			sortSetting = 4;
+			metric = 5;}
 		else if(inString.equals("MDNC")){
 			sortSetting = 5;
 			metric = 3;}
 		else if((inString.equals("MDNS"))){
 			sortSetting = 5;
 			metric = 4;}
+		else if((inString.equals("MDUS"))){
+			sortSetting = 5;
+			metric = 5;}
 		else if((inString.equals("MANC"))){
 			sortSetting = 6;
 			metric = 3;}
-		else{
+		else if((inString.equals("MANS"))){
 			sortSetting = 6;
 			metric = 4;}
+		else{
+			sortSetting = 6;
+			metric = 5;}
 		
 		if(!isSelectedGroupOn){
 				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
 				{
 					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
 					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(expRun, tmpSMWThreadDataElement.getGTDE());
 					
 					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 					
@@ -494,6 +514,9 @@ public class StaticMainWindowData
 						case(4):
 							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getNumberOfSubRoutines());
 							break;
+						case(5):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getUserSecPerCall());
+							break;
 						default:
 							tmpSMWThreadDataElementCopy.setValue(0);
 							break;
@@ -508,7 +531,7 @@ public class StaticMainWindowData
 					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
 					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
 						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(expRun, tmpSMWThreadDataElement.getGTDE());
 					
 						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 						switch(metric){
@@ -523,6 +546,9 @@ public class StaticMainWindowData
 							break;
 						case(4):
 							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getNumberOfSubRoutines());
+							break;
+						case(5):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getUserSecPerCall());
 							break;
 						default:
 							tmpSMWThreadDataElementCopy.setValue(0);
@@ -541,7 +567,7 @@ public class StaticMainWindowData
 	public Vector getSMWUEThreadData(int inServer, int inContext, int inThread)
 	{
 		//First, obtain the appropriate server.
-		Vector tmpVector = jRacy.staticSystemData.getStaticServerList();
+		Vector tmpVector = expRun.getStaticServerList();
 		
 		//Find the correct global thread data element.
 		GlobalServer tmpGSUE = null;
@@ -572,7 +598,7 @@ public class StaticMainWindowData
 			if(tmpGlobalThreadDataElement != null)
 			{
 				//Create a new thread data object.
-				tmpSMWThreadDataElement = new SMWThreadDataElement(tmpGlobalThreadDataElement);
+				tmpSMWThreadDataElement = new SMWThreadDataElement(expRun, tmpGlobalThreadDataElement);
 				tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getUserEventID());
 				//Add to the thread data object.
 				returnVector.add(tmpSMWThreadDataElement);
@@ -682,7 +708,7 @@ public class StaticMainWindowData
 		int metric = 0;
 		
 		//Check to see if selected groups only are being displayed.
-		GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+		GlobalMapping tmpGM = expRun.getGlobalMapping();
 		
 		boolean isSelectedGroupOn = false;
 		int selectedGroupID = 0;
@@ -742,43 +768,61 @@ public class StaticMainWindowData
 		else if(inString.equals("FIdDNS")){
 			sortSetting = 1;
 			metric = 4;}
+		else if(inString.equals("FIdDUS")){
+			sortSetting = 1;
+			metric = 5;}
 		else if(inString.equals("FIdANC")){
 			sortSetting = 2;
 			metric = 3;}
 		else if(inString.equals("FIdANS")){
 			sortSetting = 2;
 			metric = 4;}
+		else if(inString.equals("FIdAUS")){
+			sortSetting = 2;
+			metric = 5;}
 		else if(inString.equals("NDNC")){
 			sortSetting = 3;
 			metric = 3;}
 		else if(inString.equals("NDNS")){
 			sortSetting = 3;
 			metric = 4;}
+		else if(inString.equals("NDUS")){
+			sortSetting = 3;
+			metric = 5;}
 		else if(inString.equals("NANC")){
 			sortSetting = 4;
 			metric = 3;}
 		else if(inString.equals("NANS")){
 			sortSetting = 4;
 			metric = 4;}
+		else if(inString.equals("NAUS")){
+			sortSetting = 4;
+			metric = 5;}
 		else if(inString.equals("MDNC")){
 			sortSetting = 5;
 			metric = 3;}
 		else if((inString.equals("MDNS"))){
 			sortSetting = 5;
 			metric = 4;}
+		else if((inString.equals("MDUS"))){
+			sortSetting = 5;
+			metric = 5;}
 		else if((inString.equals("MANC"))){
 			sortSetting = 6;
 			metric = 3;}
-		else{
+		else if((inString.equals("MANS"))){
 			sortSetting = 6;
 			metric = 4;}
+		else{
+			sortSetting = 6;
+			metric = 5;}
 			
 		if(!isSelectedGroupOn){
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement(expRun);
 				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
 				//Set the sorting method.
 				switch(metric){
@@ -793,6 +837,9 @@ public class StaticMainWindowData
 						break;
 					case(4):
 						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanNumberOfSubRoutines());
+						break;
+					case(5):
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanUserSecPerCall());
 						break;
 					default:
 						tmpSMWMeanDataElementCopy.setValue(0);
@@ -809,7 +856,7 @@ public class StaticMainWindowData
 			{
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement(expRun);
 				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
 				//Set the sorting method.
 				switch(metric){
@@ -824,6 +871,9 @@ public class StaticMainWindowData
 						break;
 					case(4):
 						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanNumberOfSubRoutines());
+						break;
+					case(5):
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanUserSecPerCall());
 						break;
 					default:
 						tmpSMWMeanDataElementCopy.setValue(0);

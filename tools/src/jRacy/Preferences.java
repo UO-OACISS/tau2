@@ -23,6 +23,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 	//******************************
 	//Instance data.
 	//******************************
+	private ExperimentRun expRun = null;
 		
 	//References for some of the components for this frame.
 	private PrefColorPanel pCPanel;
@@ -69,8 +70,10 @@ public class Preferences extends JFrame implements ActionListener, Observer
 	//******************************
 	//End - Instance data.
 	//******************************
-	public Preferences(SavedPreferences inSavedPreferences)
+	public Preferences(ExperimentRun inExpRun, SavedPreferences inSavedPreferences)
 	{	
+		
+		expRun = inExpRun;
 		
 		
 		if(inSavedPreferences != null)
@@ -152,8 +155,8 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		fontComboBox.addActionListener(this);
 		
 		//Now initialize the panels.
-		pCPanel = new PrefColorPanel();
-		pSPanel = new PrefSpacingPanel();
+		pCPanel = new PrefColorPanel(expRun);
+		pSPanel = new PrefSpacingPanel(expRun);
 		
 		//Window Stuff.
 		setTitle("jRacy Preferences: No Data Loaded");
@@ -510,7 +513,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 			
 			if(arg.equals("Edit Color Map"))
 			{
-				jRacy.clrChooser.showColorChooser();
+				expRun.getColorChooser().showColorChooser();
 			}
 			else if(arg.equals("Load Color Map"))
 			{
@@ -532,7 +535,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 					{	
 						System.out.println("Loading color map ...");
 						loadColorMap(file);
-						jRacy.systemEvents.updateRegisteredObjects("prefEvent");
+						expRun.getSystemEvents().updateRegisteredObjects("prefEvent");
 						System.out.println("Done loading color map ...");
 					}
 					else
@@ -566,7 +569,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 						{
 							//Just output the data for the moment to have a look at it.
 							Vector nameColorVector = new Vector();
-							GlobalMapping tmpGlobalMapping = jRacy.staticSystemData.getGlobalMapping();
+							GlobalMapping tmpGlobalMapping = expRun.getGlobalMapping();
 							
 							int numOfMappings = tmpGlobalMapping.getNumberOfMappings(0);
 							
@@ -639,7 +642,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 			else if(arg.equals("Apply and Close Window"))
 			{
 				setVisible(false);
-				jRacy.systemEvents.updateRegisteredObjects("prefEvent");
+				expRun.getSystemEvents().updateRegisteredObjects("prefEvent");
 			}
 		}
 		else if(EventSrc instanceof JRadioButton)
@@ -722,7 +725,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 			int green = 0;
 			int blue = 0;
 			
-			GlobalMapping tmpGlobalMapping = jRacy.staticSystemData.getGlobalMapping(); 
+			GlobalMapping tmpGlobalMapping = expRun.getGlobalMapping(); 
 			
 			
 			//Read in the file line by line!

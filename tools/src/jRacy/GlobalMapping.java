@@ -31,8 +31,10 @@ import javax.swing.event.*;
 public class GlobalMapping implements WindowListener, Serializable 
 {
 	//Constructors.
-	public GlobalMapping()
+	public GlobalMapping(ExperimentRun inExpRun)
 	{
+		expRun = inExpRun;
+		
 		mappings = new Vector[3];
 		numberOfMappings = new int[3];
 		mappingLedgerWindows = new MappingLedgerWindow[3];
@@ -53,13 +55,13 @@ public class GlobalMapping implements WindowListener, Serializable
 		if(tmpInt == -1){
 			//Just adds to the end of the list.  Its position becomes
 			//the value of its mapping ID.
-			GlobalMappingElement tmpGME = new GlobalMappingElement();
+			GlobalMappingElement tmpGME = new GlobalMappingElement(expRun);
 			tmpGME.setMappingName(inMappingName);
 			tmpGME.setGlobalID(numberOfMappings[mappingSelection]);
 			if((mappingSelection == 0) || (mappingSelection == 2))
-				tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(numberOfMappings[mappingSelection] % (jRacy.clrChooser.getNumberOfColors())));
+				tmpGME.setGenericColor(expRun.getColorChooser().getColorInLocation(numberOfMappings[mappingSelection] % (expRun.getColorChooser().getNumberOfColors())));
 			else
-				tmpGME.setGenericColor(jRacy.clrChooser.getMappingGroupColorInLocation(numberOfMappings[mappingSelection] % (jRacy.clrChooser.getNumberOfMappingGroupColors())));
+				tmpGME.setGenericColor(expRun.getColorChooser().getMappingGroupColorInLocation(numberOfMappings[mappingSelection] % (expRun.getColorChooser().getNumberOfMappingGroupColors())));
 			mappings[mappingSelection].addElement(tmpGME);
 			
 			//Update the number of global mappings present for the selection.  (Example ... first time
@@ -137,7 +139,7 @@ public class GlobalMapping implements WindowListener, Serializable
 			return false;
 	}
 	
-	public boolean setMeanExclusiveValueAt(double inMeanExclusiveValue, int inPosition, int mappingSelection)
+	public boolean setMeanExclusiveValueAt(int dataValueLocation, double inMeanExclusiveValue, int inPosition, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
 		//mappings present (minus one of course for vector numbering).
@@ -151,13 +153,13 @@ public class GlobalMapping implements WindowListener, Serializable
 		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the mean value.
-		tmpGME.setMeanExclusiveValue(inMeanExclusiveValue);
+		tmpGME.setMeanExclusiveValue(dataValueLocation, inMeanExclusiveValue);
 		
 		//Successful ... return true.
 		return true;
 	}
 	
-	public boolean setMeanInclusiveValueAt(double inMeanInclusiveValue, int inPosition, int mappingSelection)
+	public boolean setMeanInclusiveValueAt(int dataValueLocation, double inMeanInclusiveValue, int inPosition, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
 		//mappings present (minus one of course for vector numbering).
@@ -171,13 +173,13 @@ public class GlobalMapping implements WindowListener, Serializable
 		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the mean value.
-		tmpGME.setMeanInclusiveValue(inMeanInclusiveValue);
+		tmpGME.setMeanInclusiveValue(dataValueLocation, inMeanInclusiveValue);
 		
 		//Successful ... return true.
 		return true;
 	}
 	
-	public boolean setTotalExclusiveValueAt(double inTotalExclusiveValue, int inPosition, int mappingSelection)
+	public boolean setTotalExclusiveValueAt(int dataValueLocation, double inTotalExclusiveValue, int inPosition, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
 		//mappings present (minus one of course for vector numbering).
@@ -191,13 +193,13 @@ public class GlobalMapping implements WindowListener, Serializable
 		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the mean value.
-		tmpGME.setTotalExclusiveValue(inTotalExclusiveValue);
+		tmpGME.setTotalExclusiveValue(dataValueLocation, inTotalExclusiveValue);
 		
 		//Successful ... return true.
 		return true;
 	}
 	
-	public boolean setTotalInclusiveValueAt(double inTotalInclusiveValue, int inPosition, int mappingSelection)
+	public boolean setTotalInclusiveValueAt(int dataValueLocation, double inTotalInclusiveValue, int inPosition, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
 		//mappings present (minus one of course for vector numbering).
@@ -211,7 +213,7 @@ public class GlobalMapping implements WindowListener, Serializable
 		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the mean value.
-		tmpGME.setTotalInclusiveValue(inTotalInclusiveValue);
+		tmpGME.setTotalInclusiveValue(dataValueLocation, inTotalInclusiveValue);
 		
 		//Successful ... return true.
 		return true;
@@ -313,23 +315,23 @@ public class GlobalMapping implements WindowListener, Serializable
 	public void updateGenericColors(int mappingSelection)
 	{
 		if(mappingSelection == 0){
-			int tmpInt = jRacy.clrChooser.getNumberOfColors();
+			int tmpInt = expRun.getColorChooser().getNumberOfColors();
 			for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
 			{
 				
 				GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
 				int mappingID = tmpGME.getGlobalID();
-				tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(mappingID % tmpInt));
+				tmpGME.setGenericColor(expRun.getColorChooser().getColorInLocation(mappingID % tmpInt));
 			}
 		}
 		else{
-			int tmpInt = jRacy.clrChooser.getNumberOfMappingGroupColors();
+			int tmpInt = expRun.getColorChooser().getNumberOfMappingGroupColors();
 			for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
 			{
 				
 				GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
 				int mappingID = tmpGME.getGlobalID();
-				tmpGME.setGenericColor(jRacy.clrChooser.getMappingGroupColorInLocation(mappingID % tmpInt));
+				tmpGME.setGenericColor(expRun.getColorChooser().getMappingGroupColorInLocation(mappingID % tmpInt));
 			}
 		}		
 	}
@@ -363,11 +365,11 @@ public class GlobalMapping implements WindowListener, Serializable
 		if(mappingLedgerWindows[mappingSelection] == null)
 		{
 			
-			mappingLedgerWindows[mappingSelection] = new MappingLedgerWindow(mappings[mappingSelection], mappingSelection);
+			mappingLedgerWindows[mappingSelection] = new MappingLedgerWindow(expRun, mappings[mappingSelection], mappingSelection);
 			//Add the main window as a listener as it needs
 			//to know when this window closes.
 			mappingLedgerWindows[mappingSelection].addWindowListener(this);
-			jRacy.systemEvents.addObserver(mappingLedgerWindows[mappingSelection]);
+			expRun.getSystemEvents().addObserver(mappingLedgerWindows[mappingSelection]);
 			mappingLedgerWindows[mappingSelection].show();
 		}
 		else
@@ -385,7 +387,7 @@ public class GlobalMapping implements WindowListener, Serializable
 		
 		if(mappingLedgerWindows[mappingSelection] != null)
 		{
-			jRacy.systemEvents.deleteObserver(mappingLedgerWindows[mappingSelection]);
+			expRun.getSystemEvents().deleteObserver(mappingLedgerWindows[mappingSelection]);
 			mappingLedgerWindows[mappingSelection].setVisible(false);
 			mappingLedgerWindows[mappingSelection].dispose();
 			mappingLedgerWindows[mappingSelection] = null;
@@ -426,6 +428,8 @@ public class GlobalMapping implements WindowListener, Serializable
 	
 	
 	//Instance element.
+	private ExperimentRun expRun = null;
+	
 	Vector[] mappings;
 	int[] numberOfMappings;
 	MappingLedgerWindow[] mappingLedgerWindows;

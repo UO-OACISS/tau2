@@ -24,6 +24,8 @@ public class PrefColorPanel extends JPanel implements ChangeListener
 	//Instance data.
 	//******************************
 	
+	private ExperimentRun expRun = null;
+	
 	int xPanelSize = 600;
 	int yPanelSize = 200;
 	
@@ -36,8 +38,11 @@ public class PrefColorPanel extends JPanel implements ChangeListener
 	
 	Color tmpColor;
 	
-	public PrefColorPanel()
+	public PrefColorPanel(ExperimentRun inExpRun)
 	{
+		
+		expRun = inExpRun; 
+		
 		setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 		setPreferredSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 		
@@ -54,11 +59,11 @@ public class PrefColorPanel extends JPanel implements ChangeListener
 		super.paintComponent(g);
 		
 		//Do the standard font and spacing stuff.
-		if(!(jRacy.jRacyPreferences.areBarDetailsSet()))
+		if(!(expRun.getPreferences().areBarDetailsSet()))
 		{
 			
 			//Create font.
-			Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), Font.PLAIN, 12);
+			Font font = new Font(expRun.getPreferences().getJRacyFont(), Font.PLAIN, 12);
 			g.setFont(font);
 			FontMetrics fmFont = g.getFontMetrics(font);
 			
@@ -67,20 +72,20 @@ public class PrefColorPanel extends JPanel implements ChangeListener
 			//Compute the font metrics.
 			int maxFontAscent = fmFont.getAscent();
 			
-			jRacy.jRacyPreferences.setBarDetails(maxFontAscent, maxFontAscent);
+			expRun.getPreferences().setBarDetails(maxFontAscent, maxFontAscent);
 			
-			jRacy.jRacyPreferences.setSliders(maxFontAscent, maxFontAscent);
+			expRun.getPreferences().setSliders(maxFontAscent, maxFontAscent);
 		}
 		
 		//Set local spacing and bar heights.
-		barSpacing = jRacy.jRacyPreferences.getBarSpacing();
-		barHeight = jRacy.jRacyPreferences.getBarHeight();
+		barSpacing = expRun.getPreferences().getBarSpacing();
+		barHeight = expRun.getPreferences().getBarHeight();
 		
 		//Set up the yCoord.
 		yCoord = 25 + barHeight;
 		
 		//Create font.
-		Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), Font.PLAIN, barHeight);
+		Font font = new Font(expRun.getPreferences().getJRacyFont(), Font.PLAIN, barHeight);
 		g.setFont(font);
 		FontMetrics fmFont = g.getFontMetrics(font);
 		
@@ -97,9 +102,9 @@ public class PrefColorPanel extends JPanel implements ChangeListener
 		g.drawString(s1, (barXStart - stringWidth - 5), yCoord);
 		
 		//After the above check, do the usual drawing stuff.
-		for(int j=0; j<(jRacy.clrChooser.getNumberOfColors()); j++)
+		for(int j=0; j<(expRun.getColorChooser().getNumberOfColors()); j++)
 		{
-			tmpColor = jRacy.clrChooser.getColorInLocation(j);
+			tmpColor = expRun.getColorChooser().getColorInLocation(j);
 			g.setColor(tmpColor);
 			g.fillRect(barXCoord, (yCoord - barHeight), 40, barHeight);
 			barXCoord = barXCoord + 30;
@@ -114,14 +119,14 @@ public class PrefColorPanel extends JPanel implements ChangeListener
 		g.drawString("Highlight colour:", tmpInt, yCoord);
 		stringWidth = fmFont.stringWidth("Highlight colour:");
 		tmpInt = tmpInt + 5 + stringWidth;
-		g.setColor(jRacy.clrChooser.getHighlightColor());
+		g.setColor(expRun.getColorChooser().getHighlightColor());
 		g.fillRect(tmpInt, (yCoord - barHeight), 100, barHeight);
 		g.setColor(Color.black);
 		stringWidth = fmFont.stringWidth("Misc. colour:");
 		tmpInt = tmpInt + 30 + 100;
 		g.drawString("Misc. colour:", tmpInt, yCoord);
 		tmpInt = tmpInt + 5 + stringWidth;
-		g.setColor(jRacy.clrChooser.getMiscMappingsColor());
+		g.setColor(expRun.getColorChooser().getMiscMappingsColor());
 		g.fillRect(tmpInt, (yCoord - barHeight), 100, barHeight);
 		
 		

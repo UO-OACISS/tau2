@@ -35,24 +35,27 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 	}
 	
-	public ThreadDataWindow(int inServerNumber,
+	public ThreadDataWindow(ExperimentRun inExpRun,
+							int inServerNumber,
 							int inContextNumber,
 							int inThreadNumber,
 							StaticMainWindowData inSMWData)
 	{
 		try
 		{
+			
+			expRun = inExpRun;
+			sMWData = inSMWData;
+			
 			setLocation(new java.awt.Point(300, 200));
 			setSize(new java.awt.Dimension(700, 450));
-			
-			sMWData = inSMWData;
 			
 			server = inServerNumber;
 			context = inContextNumber;
 			thread = inThreadNumber;
 			
 			//Now set the title.
-			this.setTitle("n,c,t, " + server + "," + context + "," + thread + " - " + jRacy.profilePathName);
+			this.setTitle("n,c,t, " + server + "," + context + "," + thread + " - " + expRun.getProfilePathName());
 			
 			//Add some window listener code
 			addWindowListener(new java.awt.event.WindowAdapter() {
@@ -121,39 +124,29 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			//***********
 			//Submenu.
 			JMenu sortMenu = new JMenu("Sort by ...");
-			sortGroup = new ButtonGroup();
 			
+			sortGroup = new ButtonGroup();
 			//Add listeners
-			mappingIDButton.addActionListener(this);
 			nameButton.addActionListener(this);
 			millisecondButton.addActionListener(this);
-			
-			sortGroup.add(mappingIDButton);
 			sortGroup.add(nameButton);
 			sortGroup.add(millisecondButton);
-			
-			sortMenu.add(mappingIDButton);
 			sortMenu.add(nameButton);
 			sortMenu.add(millisecondButton);
-			optionsMenu.add(sortMenu);
-			//End - Submenu.
-			//***********
 			
-			//***********
-			//Submenu.
-			JMenu sortOrderMenu = new JMenu("Sort Order");
+			
 			sortOrderGroup = new ButtonGroup();
-			
 			//Add listeners
 			ascendingButton.addActionListener(this);
 			descendingButton.addActionListener(this);
-			
 			sortOrderGroup.add(ascendingButton);
 			sortOrderGroup.add(descendingButton);
+			sortMenu.add(ascendingButton);
+			sortMenu.add(descendingButton);
 			
-			sortOrderMenu.add(ascendingButton);
-			sortOrderMenu.add(descendingButton);
-			optionsMenu.add(sortOrderMenu);
+			sortMenu.insertSeparator(2);
+			
+			optionsMenu.add(sortMenu);
 			//End - Submenu.
 			//***********
 			
@@ -166,15 +159,18 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			exclusiveRadioButton.addActionListener(this);
 			numOfCallsRadioButton.addActionListener(this);
 			numOfSubRoutinesRadioButton.addActionListener(this);
+			userSecPerCallRadioButton.addActionListener(this);
 			
 			metricGroup.add(inclusiveRadioButton);
 			metricGroup.add(exclusiveRadioButton);
 			metricGroup.add(numOfCallsRadioButton);
 			metricGroup.add(numOfSubRoutinesRadioButton);
+			metricGroup.add(userSecPerCallRadioButton);
 			metricMenu.add(inclusiveRadioButton);
 			metricMenu.add(exclusiveRadioButton);
 			metricMenu.add(numOfCallsRadioButton);
 			metricMenu.add(numOfSubRoutinesRadioButton);
+			metricMenu.add(userSecPerCallRadioButton);
 			optionsMenu.add(metricMenu);
 			//End Submenu.
 			
@@ -308,7 +304,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			threadDataWindowPanelRef = new ThreadDataWindowPanel(inServerNumber,
+			threadDataWindowPanelRef = new ThreadDataWindowPanel(expRun,
+																 inServerNumber,
 																 inContextNumber,
 																 inThreadNumber, this, sMWData);
 			
@@ -384,19 +381,6 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 					dispose();
 					System.exit(0);
 				}
-				else if(arg.equals("function ID"))
-				{
-					if(mappingIDButton.isSelected())
-					{
-						sortByMappingID = true;
-						sortByName = false;
-						sortByMillisecond = false;
-						//Sort the local data.
-						sortLocalData();
-						//Call repaint.
-						threadDataWindowPanelRef.repaint();
-					}
-				}
 				else if(arg.equals("name"))
 				{
 					if(nameButton.isSelected())
@@ -410,7 +394,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 						threadDataWindowPanelRef.repaint();
 					}
 				}
-				else if(arg.equals("millisecond"))	//Note the difference in case from the millisecond option below.
+				else if(arg.equals("Selected Metric"))	//Note the difference in case from the millisecond option below.
 				{
 					if(millisecondButton.isSelected())
 					{
@@ -489,6 +473,17 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 						threadDataWindowPanelRef.repaint();
 					}
 				}
+				else if(arg.equals("Per Call Value"))
+				{
+					if(userSecPerCallRadioButton.isSelected())
+					{
+						metric = "Per Call Value";
+						//Sort the local data.
+						sortLocalData();
+						//Call repaint.
+						threadDataWindowPanelRef.repaint();
+					}
+				}
 				else if(arg.equals("Percent"))
 				{
 					if(percentButton.isSelected())
@@ -549,24 +544,24 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+					(expRun.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+					(expRun.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
+					(expRun.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -625,19 +620,19 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	{
 		try
 		{
-			if(jRacy.staticSystemData.groupNamesPresent())
+			if(expRun.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(jRacy.staticSystemData.userEventsPresent())
+			if(expRun.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
 				
 				
 			
-			if((metric.equals("Number of Calls")) || (metric.equals("Number of Subroutines"))){
+			if((metric.equals("Number of Calls")) || (metric.equals("Number of Subroutines")) || (metric.equals("Per Call Value"))){
 				valuePercentMenu.setEnabled(false);
 				unitsMenu.setEnabled(false);}
 			else if(percent){
@@ -733,6 +728,13 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 					else
 						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdANS");
 				}
+				else if(metric.equals("Per Call Value"))
+				{
+					if(descendingOrder)
+						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdDUS");
+					else
+						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "FIdAUS");
+				}
 			}
 			else if(sortByName)
 			{
@@ -765,6 +767,13 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 					else
 						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NANS");
 				}
+				else if(metric.equals("Per Call Value"))
+				{
+					if(descendingOrder)
+						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NDUS");
+					else
+						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "NAUS");
+				}
 			}
 			else if(sortByMillisecond)
 			{
@@ -796,6 +805,14 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MDNS");
 					else
 						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MANS");
+				}
+				else if(metric.equals("Per Call Value"))
+				{
+					System.out.println("Here1");
+					if(descendingOrder)
+						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MDUS");
+					else
+						currentSMWThreadData = sMWData.getSMWThreadData(server, context, thread, "MAUS");
 				}
 			}
 		}
@@ -961,7 +978,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			}
 			
 			setVisible(false);
-			jRacy.systemEvents.deleteObserver(this);
+			expRun.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
@@ -987,17 +1004,17 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	private JRadioButtonMenuItem ascendingButton =  new JRadioButtonMenuItem("Ascending", false);
 	private JRadioButtonMenuItem descendingButton = new JRadioButtonMenuItem("Descending", true);
 	
-	private JRadioButtonMenuItem mappingIDButton = new JRadioButtonMenuItem("function ID", false);
 	private JRadioButtonMenuItem nameButton = new JRadioButtonMenuItem("name", false);
-	private JRadioButtonMenuItem millisecondButton =  new JRadioButtonMenuItem("millisecond", true);
+	private JRadioButtonMenuItem millisecondButton =  new JRadioButtonMenuItem("Selected Metric", true);
 	
 	private JRadioButtonMenuItem inclusiveRadioButton =  new JRadioButtonMenuItem("Inclusive", false);
 	private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
 	private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
 	private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
+	private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
 	
-	private JRadioButtonMenuItem valueButton = new JRadioButtonMenuItem("Value", false);
-	private JRadioButtonMenuItem percentButton = new JRadioButtonMenuItem("Percent", true);
+	private JRadioButtonMenuItem valueButton = new JRadioButtonMenuItem("Value", true);
+	private JRadioButtonMenuItem percentButton = new JRadioButtonMenuItem("Percent", false);
 	
 	private JRadioButtonMenuItem secondsButton = new JRadioButtonMenuItem("Seconds", false);
 	private JRadioButtonMenuItem millisecondsButton = new JRadioButtonMenuItem("Milliseconds", false);
@@ -1019,6 +1036,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	
  	private ThreadDataWindowPanel threadDataWindowPanelRef = null;
  	
+ 	private ExperimentRun expRun = null;
  	private StaticMainWindowData sMWData = null;
  	
  	SMWThreadDataElement tmpSMWThreadDataElement = null;
@@ -1034,7 +1052,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	private boolean descendingOrder = true;
  	
  	private String metric = "Exclusive";
- 	private boolean percent = true;
+ 	private boolean percent = false;
  	private String unitsString = "milliseconds";
  	
  	private int server = -1;

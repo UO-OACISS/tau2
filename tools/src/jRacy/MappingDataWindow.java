@@ -33,28 +33,32 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 	}
 	
-	public MappingDataWindow(int inMappingID, StaticMainWindowData inSMWData)
+	public MappingDataWindow(ExperimentRun inExpRun, int inMappingID, StaticMainWindowData inSMWData)
 	{
 		try{
+			
+			
+			mappingID = inMappingID;
+			expRun = inExpRun;
+			sMWData = inSMWData;
+			
+			
 			setLocation(new java.awt.Point(300, 200));
 			setSize(new java.awt.Dimension(550, 550));
 			
-			mappingID = inMappingID;
-			sMWData = inSMWData;
-			
 			inclusive = false;
-	 		percent = true;
+	 		percent = false;
 	 		unitsString = "milliseconds";
 	 		
 	 		
 	 		//Grab the appropriate global mapping element.
-			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			GlobalMapping tmpGM = expRun.getGlobalMapping();
 			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(inMappingID, 0);
 			
 			mappingName = tmpGME.getMappingName();
 			
 			//Now set the title.
-			this.setTitle("Function Data Window: " + jRacy.profilePathName);
+			this.setTitle("Function Data Window: " + expRun.getProfilePathName());
 			
 			//Add some window listener code
 			addWindowListener(new java.awt.event.WindowAdapter() {
@@ -113,30 +117,38 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			optionsMenu.addMenuListener(this);
 			
 			//Add a submenu.
-			JMenu inclusiveExclusiveMenu = new JMenu("Select Inclusive or Exclusive");
-			inclusiveExclusiveGroup = new ButtonGroup();
-			inclusiveRadioButton = new JRadioButtonMenuItem("Inclusive", false);
-			//Add a listener for this radio button.
+			JMenu metricMenu = new JMenu("Select Metric");
+			metricGroup = new ButtonGroup();
+			
+			//Add listeners
 			inclusiveRadioButton.addActionListener(this);
-			exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
-			//Add a listener for this radio button.
 			exclusiveRadioButton.addActionListener(this);
-			inclusiveExclusiveGroup.add(inclusiveRadioButton);
-			inclusiveExclusiveGroup.add(exclusiveRadioButton);
-			inclusiveExclusiveMenu.add(inclusiveRadioButton);
-			inclusiveExclusiveMenu.add(exclusiveRadioButton);
-			optionsMenu.add(inclusiveExclusiveMenu);
+			numOfCallsRadioButton.addActionListener(this);
+			numOfSubRoutinesRadioButton.addActionListener(this);
+			userSecPerCallRadioButton.addActionListener(this);
+			
+			metricGroup.add(inclusiveRadioButton);
+			metricGroup.add(exclusiveRadioButton);
+			metricGroup.add(numOfCallsRadioButton);
+			metricGroup.add(numOfSubRoutinesRadioButton);
+			metricGroup.add(userSecPerCallRadioButton);
+			metricMenu.add(inclusiveRadioButton);
+			metricMenu.add(exclusiveRadioButton);
+			metricMenu.add(numOfCallsRadioButton);
+			metricMenu.add(numOfSubRoutinesRadioButton);
+			metricMenu.add(userSecPerCallRadioButton);
+			optionsMenu.add(metricMenu);
 			//End Submenu.
 			
 			//Add a submenu.
-			JMenu valuePercentMenu = new JMenu("Select Value or Percent");
+			valuePercentMenu = new JMenu("Select Value or Percent");
 			valuePercentGroup = new ButtonGroup();
 			
-			percentButton = new JRadioButtonMenuItem("Percent", true);
+			percentButton = new JRadioButtonMenuItem("Percent", false);
 			//Add a listener for this radio button.
 			percentButton.addActionListener(this);
 			
-			valueButton = new JRadioButtonMenuItem("Value", false);
+			valueButton = new JRadioButtonMenuItem("Value", true);
 			//Add a listener for this radio button.
 			valueButton.addActionListener(this);
 			
@@ -264,7 +276,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			mappingDataWinPanelRef = new MappingDataWindowPanel(inMappingID, this);
+			mappingDataWinPanelRef = new MappingDataWindowPanel(expRun, inMappingID, this);
 			//The scroll panes into which the list shall be placed.
 			mappingDataWinPanelScrollPane = new JScrollPane(mappingDataWinPanelRef);
 			mappingDataWinPanelScrollPane.setBorder(mainloweredbev);
@@ -331,7 +343,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 				{
 					if(inclusiveRadioButton.isSelected())
 					{
-						inclusive = true;
+						metric = "Inclusive";
 						//Call repaint.
 						mappingDataWinPanelRef.repaint();
 					}
@@ -340,8 +352,32 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 				{
 					if(exclusiveRadioButton.isSelected())
 					{
-						inclusive = false;
+						metric = "Exclusive";
 						//Call repaint.
+						mappingDataWinPanelRef.repaint();
+					}
+				}
+				else if(arg.equals("Number of Calls"))
+				{
+					if(numOfCallsRadioButton.isSelected())
+					{
+						metric = "Number of Calls";
+						mappingDataWinPanelRef.repaint();
+					}
+				}
+				else if(arg.equals("Number of Subroutines"))
+				{
+					if(numOfSubRoutinesRadioButton.isSelected())
+					{
+						metric = "Number of Subroutines";
+						mappingDataWinPanelRef.repaint();
+					}
+				}
+				else if(arg.equals("Per Call Value"))
+				{
+					if(userSecPerCallRadioButton.isSelected())
+					{
+						metric = "Per Call Value";
 						mappingDataWinPanelRef.repaint();
 					}
 				}
@@ -405,24 +441,24 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+					(expRun.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+					(expRun.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
+					(expRun.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
+					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -480,26 +516,32 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	{
 		try
 		{
-			if(percent)
-				unitsMenu.setEnabled(false);
-			else
-				unitsMenu.setEnabled(true);
-				
-			if(jRacy.staticSystemData.groupNamesPresent())
+			if(expRun.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(jRacy.staticSystemData.userEventsPresent())
+			if(expRun.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
+				
+				
+			
+			if((metric.equals("Number of Calls")) || (metric.equals("Number of Subroutines")) || (metric.equals("Per Call Value"))){
+				valuePercentMenu.setEnabled(false);
+				unitsMenu.setEnabled(false);}
+			else if(percent){
+				valuePercentMenu.setEnabled(true);
+				unitsMenu.setEnabled(false);}
+			else{
+				valuePercentMenu.setEnabled(true);
+				unitsMenu.setEnabled(true);}
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW04");
+			jRacy.systemError(null, "TDW04");
 		}
-		
 	}
 	
 	public void menuDeselected(MenuEvent evt)
@@ -566,6 +608,10 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		
 		return null;
+	}
+	
+	public String getMetric(){
+		return metric;
 	}
 		
 	public boolean isInclusive()
@@ -706,7 +752,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 				System.out.println("Clearing resourses for that window.");
 			}
 			setVisible(false);
-			jRacy.systemEvents.deleteObserver(this);
+			expRun.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
@@ -722,15 +768,22 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	private String mappingName = null;
 	
 	private JMenu unitsMenu;
+	JMenu valuePercentMenu;
 	private JMenuItem mappingGroupLedgerItem;
 	private JMenuItem userEventLedgerItem;
 	
 	private ButtonGroup inclusiveExclusiveGroup = null;
 	private ButtonGroup valuePercentGroup = null;
 	private ButtonGroup unitsGroup = null;
+	private ButtonGroup metricGroup = null;
 	
-	private JRadioButtonMenuItem inclusiveRadioButton = null;
-	private JRadioButtonMenuItem exclusiveRadioButton = null;
+	private JRadioButtonMenuItem metricButton =  new JRadioButtonMenuItem("Selected Metric", true);
+	
+	private JRadioButtonMenuItem inclusiveRadioButton =  new JRadioButtonMenuItem("Inclusive", false);
+	private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
+	private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
+	private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
+	private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
 	
 	private JRadioButtonMenuItem valueButton = null;
 	private JRadioButtonMenuItem percentButton = null;
@@ -755,11 +808,14 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	
  	//private ThreadDataWindowPanel threadDataWindowPanelRef = null;
  	
+ 	private ExperimentRun expRun = null;
  	StaticMainWindowData sMWData = null;
  	
  	Vector sMWGeneralData = null;
  	 	
  	MappingDataWindowPanel mappingDataWinPanelRef = null;
+ 	
+ 	private String metric = "Exclusive";
  	
  	boolean inclusive = false;
  	boolean percent = false;

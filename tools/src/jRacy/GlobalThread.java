@@ -18,9 +18,20 @@ public class GlobalThread implements Serializable
 	{
 		threadDataList = new Vector();
 		userThreadDataList = new Vector();
+		
+		this.addDefaultToVectors();
 	}
 	
 	//Rest of the public functions.
+	
+	public void addDefaultToVectors(){
+		maxInclusiveValueList.add(new Double(0));
+		maxExclusiveValueList.add(new Double(0));
+		maxInclusivePercentValueList.add(new Double(0));
+		maxExclusivePercentValueList.add(new Double(0));
+		maxUserSecPerCallList.add(new Double(0));
+	}
+	
 	
 	//The following function adds a thread data element to
 	//the threadDataList
@@ -51,72 +62,69 @@ public class GlobalThread implements Serializable
 		return userThreadDataList;
 	}
 	
-	public void setMaxInclusiveValue(double inDouble)
-	{
-		maxInclusiveValue = inDouble;
-	}
+	public void setMaxInclusiveValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		maxInclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getMaxInclusiveValue()
-	{
-		return maxInclusiveValue;
-	}
+	public double getMaxInclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxInclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setMaxExclusiveValue(double inDouble)
-	{
-		maxExclusiveValue = inDouble;
-	}
+	public void setMaxExclusiveValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		maxExclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getMaxExclusiveValue()
-	{
-		return maxExclusiveValue;
-	}
+	public double getMaxExclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxExclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setMaxInclusivePercentValue(double inDouble)
-	{
-		maxInclusivePercentValue = inDouble;
-	}
+	public void setMaxInclusivePercentValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		maxInclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getMaxInclusivePercentValue()
-	{
-		return maxInclusivePercentValue;
-	}
+	public double getMaxInclusivePercentValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxInclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setMaxExclusivePercentValue(double inDouble)
-	{
-		maxExclusivePercentValue = inDouble;
-	}
+	public void setMaxExclusivePercentValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		maxExclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getMaxExclusivePercentValue()
-	{
-		return maxExclusivePercentValue;
-	}
+	public double getMaxExclusivePercentValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxExclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
 	public void setMaxNumberOfCalls(int inInt){
-		maxNumberOfCalls = inInt;
-	}
+		maxNumberOfCalls = inInt;}
 	
 	public int getMaxNumberOfCalls(){
-		return maxNumberOfCalls;
-	}
+		return maxNumberOfCalls;}
 	
 	public void setMaxNumberOfSubRoutines(int inInt){
-		maxNumberOfSubRoutines = inInt;
-	}
+		maxNumberOfSubRoutines = inInt;}
 	
 	public int getMaxNumberOfSubRoutines(){
-		return maxNumberOfSubRoutines;
-	}
+		return maxNumberOfSubRoutines;}
 	
+	public void setMaxUserSecPerCall(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		maxUserSecPerCallList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getMaxUserSecPerCall(int dataValueLocation){
+		Double tmpDouble = (Double) maxUserSecPerCallList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+		
+		
 	//Instance data.
 	Vector threadDataList;
 	Vector userThreadDataList;
-	
-	//Max values on this thread.
-	double maxInclusiveValue = 0;
-	double maxExclusiveValue = 0;
-	double maxInclusivePercentValue = 0;
-	double maxExclusivePercentValue = 0;
-	int maxNumberOfCalls = 0;
-	int maxNumberOfSubRoutines = 0;
-	
+
+	//Max mean values.
+	private Vector maxInclusiveValueList = new Vector();
+	private Vector maxExclusiveValueList = new Vector();
+	private Vector maxInclusivePercentValueList = new Vector();
+	private Vector maxExclusivePercentValueList = new Vector();
+	private int maxNumberOfCalls = 0;
+	private int maxNumberOfSubRoutines = 0;
+	private Vector maxUserSecPerCallList = new Vector();
 }

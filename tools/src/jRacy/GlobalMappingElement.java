@@ -18,8 +18,10 @@ import javax.swing.event.*;
 public class GlobalMappingElement implements Serializable 
 {
 	//Constructors.
-	public GlobalMappingElement()
+	public GlobalMappingElement(ExperimentRun inExpRun)
 	{
+		expRun = inExpRun;
+		
 		mappingName = null;
 		globalID = -1;
 		groups = new int[10];
@@ -28,18 +30,35 @@ public class GlobalMappingElement implements Serializable
 		genericMappingColor = null;
 		specificMappingColor = null;
 		
-		meanExclusiveValue = 0.0;
-		totalExclusiveValue = 0.0;
-		meanExclusivePercentValue = 0.0;
-		totalExclusivePercentValue = 0.0;
+		this.addDefaultToVectors();
+	}
+	
+	public void addDefaultToVectors(){
+		maxInclusiveValueList.add(new Double(0));
+		maxExclusiveValueList.add(new Double(0));
+		maxInclusivePercentValueList.add(new Double(0));
+		maxExclusivePercentValueList.add(new Double(0));
+		maxUserSecPerCallList.add(new Double(0));
 		
-		meanInclusiveValue = 0.0;
-		totalInclusiveValue = 0.0;
-		meanInclusivePercentValue = 0.0;
-		totalInclusivePercentValue = 0.0;
+		maxUserEventNumberValueList.add(new Integer(0));
+		maxUserEventMinValueList.add(new Double(0));
+		maxUserEventMaxValueList.add(new Double(0));
+		maxUserEventMeanValueList.add(new Double(0));
 		
-		meanTotalStatString = null;
-		totalTotalStatString = null;
+		meanInclusiveValueList.add(new Double(0));
+		meanExclusiveValueList.add(new Double(0));
+		meanInclusivePercentValueList.add(new Double(0));
+		meanExclusivePercentValueList.add(new Double(0));
+		meanUserSecPerCallList.add(new Double(0));
+	
+	
+		totalInclusiveValueList.add(new Double(0));
+		totalExclusiveValueList.add(new Double(0));
+		totalInclusivePercentValueList.add(new Double(0));
+		totalExclusivePercentValueList.add(new Double(0));
+		
+		meanTotalStatStringList.add(new String(""));
+		totalTotalStatStringList.add(new String(""));
 	}
 	
 	public void setMappingName(String inMappingName)
@@ -78,7 +97,7 @@ public class GlobalMappingElement implements Serializable
 	
 	public boolean isGroupMember(int inGroupID)
 	{
-		GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+		GlobalMapping tmpGM = expRun.getGlobalMapping();
 		
 		boolean tmpBool = tmpGM.getIsAllExceptGroupOn();
 		boolean tmpBoolResult = false;
@@ -130,106 +149,201 @@ public class GlobalMappingElement implements Serializable
 		return genericMappingColor;
 	}
 	
-	//Exclusive part.	
-	public void setMeanExclusiveValue(double inMeanExclusiveValue)
-	{
-		meanExclusiveValue = inMeanExclusiveValue;
-	}
+	public void setMaxInclusiveValue(int dataValueLocation, double inInclusiveValue){
+		Double tmpDouble = new Double(inInclusiveValue);
+		maxInclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getMeanExclusiveValue()
-	{
-		return meanExclusiveValue;
-	}
+	public double getMaxInclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxInclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setMeanExclusivePercentValue(double inMeanExclusivePercentValue)
-	{
-		meanExclusivePercentValue = inMeanExclusivePercentValue;
-	}
+	public void setMaxExclusiveValue(int dataValueLocation, double inExclusiveValue){
+		Double tmpDouble = new Double(inExclusiveValue);
+		maxExclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getMeanExclusivePercentValue()
-	{
-		return meanExclusivePercentValue;
-	}
+	public double getMaxExclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxExclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setTotalExclusiveValue(double inTotalExclusiveValue)
-	{
-		totalExclusiveValue = inTotalExclusiveValue;
-	}
+	public void setMaxInclusivePercentValue(int dataValueLocation, double inInclusivePercentValue){
+		
+		Double tmpDouble = new Double(inInclusivePercentValue);
+		maxInclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getTotalExclusiveValue()
-	{
-		return totalExclusiveValue;
-	}
+	public double getMaxInclusivePercentValue(int dataValueLocation){
 	
-	public void setTotalExclusivePercentValue(double inTotalExclusivePercentValue)
-	{
-		totalExclusivePercentValue = inTotalExclusivePercentValue;
-	}
+		Double tmpDouble = (Double) maxInclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public double getTotalExclusivePercentValue(double inTotalExclusivePercentValue)
-	{
-		return totalExclusivePercentValue;
-	}
+	public void setMaxExclusivePercentValue(int dataValueLocation, double inExclusivePercentValue){
+	
+		Double tmpDouble = new Double(inExclusivePercentValue);
+		maxExclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getMaxExclusivePercentValue(int dataValueLocation){
+		
+		Double tmpDouble = (Double) maxExclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setMaxNumberOfCalls(int inInt){
+		maxNumberOfCalls = inInt;}
+	
+	public int getMaxNumberOfCalls(){
+		return maxNumberOfCalls;}
+	
+	public void setMaxNumberOfSubRoutines(int inInt){
+		maxNumberOfSubRoutines = inInt;}
+	
+	public int getMaxNumberOfSubRoutines(){
+		return maxNumberOfSubRoutines;}
+	
+	public void setMaxUserSecPerCall(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		maxUserSecPerCallList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getMaxUserSecPerCall(int dataValueLocation){
+		Double tmpDouble = (Double) maxUserSecPerCallList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+		
+	//User event section.
+	public void setMaxUserEventNumberValue(int dataValueLocation, int inUserEventNumberValue){
+		Integer tmpInt = new Integer(inUserEventNumberValue);
+		maxUserEventNumberValueList.setElementAt(tmpInt, dataValueLocation);}
+	
+	public int getMaxUserEventNumberValue(int dataValueLocation){
+		Integer tmpInt = (Integer) maxUserEventNumberValueList.elementAt(dataValueLocation);
+		return tmpInt.intValue();}
+	
+	public void setMaxUserEventMinValue(int dataValueLocation, double inUserEventMinValue){
+		
+		Double tmpDouble = new Double(inUserEventMinValue);
+		maxUserEventMinValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getMaxUserEventMinValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxUserEventMinValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setMaxUserEventMaxValue(int dataValueLocation, double inUserEventMaxValue){
+		Double tmpDouble = new Double(inUserEventMaxValue);
+		maxUserEventMaxValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getMaxUserEventMaxValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxUserEventMaxValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setMaxUserEventMeanValue(int dataValueLocation, double inUserEventMeanValue){
+		Double tmpDouble = new Double(inUserEventMeanValue);
+		maxUserEventMeanValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getMaxUserEventMeanValue(int dataValueLocation){
+		Double tmpDouble = (Double) maxUserEventMeanValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
 	
-	//Inclusive part.
 	
-	public void setMeanInclusiveValue(double inMeanInclusiveValue)
-	{
-		meanInclusiveValue = inMeanInclusiveValue;
-	}
+	//Mean section.
+	public void setMeanInclusiveValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		meanInclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getMeanInclusiveValue()
-	{
-		return meanInclusiveValue;
-	}
+	public double getMeanInclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) meanInclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setMeanInclusivePercentValue(double inMeanInclusivePercentValue)
-	{
-		meanInclusivePercentValue = inMeanInclusivePercentValue;
-	}
+	public void setMeanExclusiveValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		meanExclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getMeanInclusivePercentValue()
-	{
-		return meanInclusivePercentValue;
-	}
+	public double getMeanExclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) meanExclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setMeanInclusivePercentValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		meanInclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getMeanInclusivePercentValue(int dataValueLocation){
+		Double tmpDouble = (Double) meanInclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setMeanExclusivePercentValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		meanExclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getMeanExclusivePercentValue(int dataValueLocation){
+		Double tmpDouble = (Double) meanExclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
 	public void setMeanNumberOfCalls(double inDouble){
-		meanNumberOfCalls = inDouble;
-	}
+		meanNumberOfCalls = inDouble;}
 	
 	public double getMeanNumberOfCalls(){
-		return meanNumberOfCalls;
-	}
+		return meanNumberOfCalls;}
 	
 	public void setMeanNumberOfSubRoutines(double inDouble){
-		meanNumberOfSubRoutines = inDouble;
-	}
+		meanNumberOfSubRoutines = inDouble;}
 	
-	public double getMeanNumberOfSubRoutines(){
-		return meanNumberOfSubRoutines;
-	}
+	public double getMeanNumberOfSubRoutines(int dataValueLocation){
+		return meanNumberOfSubRoutines;}
 	
-	public void setTotalInclusiveValue(double inTotalInclusiveValue)
-	{
-		totalInclusiveValue = inTotalInclusiveValue;
-	}
+	public void setMeanUserSecPerCall(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		meanUserSecPerCallList.setElementAt(tmpDouble, dataValueLocation);}
 	
-	public double getTotalInclusiveValue()
-	{
-		return totalInclusiveValue;
-	}
+	public double getMeanUserSecPerCall(int dataValueLocation){
+		Double tmpDouble = (Double) meanUserSecPerCallList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
-	public void setTotalInclusivePercentValue(double inTotalInclusivePercentValue)
-	{
-		totalInclusivePercentValue = inTotalInclusivePercentValue;
-	}
 	
-	public double getTotalInclusivePercentValue()
-	{
-		return totalInclusivePercentValue;
-	}
 	
+	public void setTotalInclusiveValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		totalInclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getTotalInclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) totalInclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setTotalExclusiveValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		totalExclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getTotalExclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) totalExclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setTotalInclusivePercentValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		totalInclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getTotalInclusivePercentValue(int dataValueLocation){
+		Double tmpDouble = (Double) totalInclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setTotalExclusivePercentValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		totalExclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
+	
+	public double getTotalExclusivePercentValue(int dataValueLocation){
+		Double tmpDouble = (Double) totalExclusivePercentValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	
+	
+	//Stat Strings.
+	public void setMeanTotalStatString(int dataValueLocation, String inString){
+		meanTotalStatStringList.setElementAt(inString, dataValueLocation);}
+	
+	public String getMeanTotalStatString(int dataValueLocation){
+		return (String) meanTotalStatStringList.elementAt(dataValueLocation);}
+		
+	public void setTotalTotalStatString(int dataValueLocation, String inString){
+		totalTotalStatStringList.setElementAt(inString, dataValueLocation);}
+	
+	public String getTotalTotalStatString(int dataValueLocation){
+		return (String) totalTotalStatStringList.elementAt(dataValueLocation);}
+	
+
 	public void setMeanValuesSet(boolean inBoolean)
 	{
 		meanValuesSet = inBoolean;
@@ -239,7 +353,6 @@ public class GlobalMappingElement implements Serializable
 	{
 		return meanValuesSet;
 	}
-	
 	
 	public void setDrawCoords(int inXBeg, int inXEnd, int inYBeg, int inYEnd)
 	{
@@ -269,148 +382,39 @@ public class GlobalMappingElement implements Serializable
 		return yEndPosition;
 	}
 	
-	
-	public void setMaxInclusiveValue(double inMaxInclusiveValue)
-	{
-		maxInclusiveValue = inMaxInclusiveValue;
-	}
-	
-	public double getMaxInclusiveValue()
-	{
-		return maxInclusiveValue;
-	}
-	
-	public void setMaxExclusiveValue(double inMaxExclusiveValue)
-	{
-		maxExclusiveValue = inMaxExclusiveValue;
-	}
-	
-	public double getMaxExclusiveValue()
-	{
-		return maxExclusiveValue;
-	}
-	
-	
-	public void setMaxInclusiveMicroValue(double inMaxInclusiveMicroValue)
-	{
-		maxInclusiveMicroValue = inMaxInclusiveMicroValue;
-	}
-	
-	public double getMaxInclusiveMicroValue()
-	{
-		return maxInclusiveMicroValue;
-	}
-	
-	public void setMaxExclusiveMicroValue(double inMaxExclusiveMicroValue)
-	{
-		maxExclusiveMicroValue = inMaxExclusiveMicroValue;
-	}
-	
-	public double getMaxExclusiveMicroValue()
-	{
-		return maxExclusiveMicroValue;
-	}
-	
-	public void setMaxInclusivePercentValue(double inMaxInclusivePercentValue)
-	{
-		maxInclusivePercentValue = inMaxInclusivePercentValue;
-	}
-	
-	public double getMaxInclusivePercentValue()
-	{
-		return maxInclusivePercentValue;
-	}
-	
-	public void setMaxExclusivePercentValue(double inMaxExclusivePercentValue)
-	{
-		maxExclusivePercentValue = inMaxExclusivePercentValue;
-	}
-	
-	public double getMaxExclusivePercentValue()
-	{
-		return maxExclusivePercentValue;
-	}
-	
-	public void setMaxNumberOfCalls(int inInt){
-		maxNumberOfCalls = inInt;
-	}
-	
-	public int getMaxNumberOfCalls(){
-		return maxNumberOfCalls;
-	}
-	
-	public void setMaxNumberOfSubRoutines(int inInt){
-		maxNumberOfSubRoutines = inInt;
-	}
-	
-	public int getMaxNumberOfSubRoutines(){
-		return maxNumberOfSubRoutines;
-	}
-	
-	public void setMaxUserEventNumberValue(int inInt)
-	{
-		maxUserEventNumberValue = inInt;
-	}
-	
-	public int getMaxUserEventNumberValue()
-	{
-		return maxUserEventNumberValue;
-	}
-	
-	public void setMaxUserEventMinValue(double inDouble)
-	{
-		maxUserEventMinValue = inDouble;
-	}
-	
-	public double getMaxUserEventMinValue()
-	{
-		return maxUserEventMinValue;
-	}
-	
-	public void setMaxUserEventMaxValue(double inDouble)
-	{
-		maxUserEventMaxValue = inDouble;
-	}
-	
-	public double getMaxUserEventMaxValue()
-	{
-		return maxUserEventMaxValue;
-	}
-	
-	public void setMaxUserEventMeanValue(double inDouble)
-	{
-		maxUserEventMeanValue = inDouble;
-	}
-	
-	public double getMaxUserEventMeanValue()
-	{
-		return maxUserEventMeanValue;
-	}
+	//Functions used to calculate the mean values for derived values (such as flops)
+	public void setTotalExclusiveValue(double inDouble){
+		totalExclusiveValue = inDouble;}
+		
+	public void incrementTotalExclusiveValue(double inDouble){
+		totalExclusiveValue = totalExclusiveValue + inDouble;}
+		
+	public double getTotalExclusiveValue(){
+		return totalExclusiveValue;}
+		
+	public void setTotalInclusiveValue(double inDouble){
+		totalInclusiveValue = inDouble;}
+		
+	public void incrementTotalInclusiveValue(double inDouble){
+		totalInclusiveValue = totalInclusiveValue + inDouble;}
+		
+	public double getTotalInclusiveValue(){
+		return totalInclusiveValue;}
+		
+	public void setCounter(int inInt){
+		counter = inInt;}
+		
+	public void incrementCounter(){
+		counter++;}
+		
+	public int getCounter(){
+		return counter;}
 	
 	
-	//Total stat strings.
 	
-	public void setMeanTotalStatString(String inMeanTotalStatString)
-	{
-		meanTotalStatString = inMeanTotalStatString;
-	}
-	
-	public String getMeanTotalStatString()
-	{
-		return meanTotalStatString;
-	}
-	
-	public void setTotalTotalStatString(String inTotalTotalStatString)
-	{
-		totalTotalStatString = inTotalTotalStatString;
-	}
-	
-	public String getTotalTotalStatString()
-	{
-		return totalTotalStatString;
-	}
-
 	//Instance elmements.
+	
+	private ExperimentRun expRun = null;
 	
 	//Global Mapping reference.
 	String mappingName;
@@ -424,31 +428,35 @@ public class GlobalMappingElement implements Serializable
 	Color genericMappingColor;
 	Color specificMappingColor;
 	
-	double maxInclusiveValue = 0;
-	double maxExclusiveValue = 0;
-	double maxInclusiveMicroValue = 0;
-	double maxExclusiveMicroValue = 0;
-	double maxInclusivePercentValue = 0;
-	double maxExclusivePercentValue = 0;
-	int maxNumberOfCalls = 0;
-	int maxNumberOfSubRoutines = 0;
+	private Vector maxInclusiveValueList = new Vector();
+	private Vector maxExclusiveValueList = new Vector();
+	private Vector maxInclusivePercentValueList = new Vector();
+	private Vector maxExclusivePercentValueList = new Vector();
+	private int maxNumberOfCalls = 0;
+	private int maxNumberOfSubRoutines = 0;
+	private Vector maxUserSecPerCallList = new Vector();
 	
-	int maxUserEventNumberValue = 0;
-	double maxUserEventMinValue = 0;
-	double maxUserEventMaxValue = 0;
-	double maxUserEventMeanValue = 0;
+	private Vector maxUserEventNumberValueList = new Vector();
+	private Vector maxUserEventMinValueList = new Vector();
+	private Vector maxUserEventMaxValueList = new Vector();
+	private Vector maxUserEventMeanValueList = new Vector();
 	
-	double meanExclusiveValue;
-	double totalExclusiveValue;
-	double meanExclusivePercentValue;
-	double totalExclusivePercentValue;
-	double meanNumberOfCalls = 0;
-	double meanNumberOfSubRoutines = 0;
+	private Vector meanInclusiveValueList = new Vector();
+	private Vector meanExclusiveValueList = new Vector();
+	private Vector meanInclusivePercentValueList = new Vector();
+	private Vector meanExclusivePercentValueList = new Vector();
+	private double meanNumberOfCalls = 0;
+	private double meanNumberOfSubRoutines = 0;
+	private Vector meanUserSecPerCallList = new Vector();
 	
-	double meanInclusiveValue;
-	double totalInclusiveValue;
-	double meanInclusivePercentValue;
-	double totalInclusivePercentValue;
+	
+	private Vector totalInclusiveValueList = new Vector();
+	private Vector totalExclusiveValueList = new Vector();
+	private Vector totalInclusivePercentValueList = new Vector();
+	private Vector totalExclusivePercentValueList = new Vector();
+	
+	private Vector meanTotalStatStringList = new Vector();
+	private Vector totalTotalStatStringList = new Vector();
 	
 	//Drawing coordinates for this Global mapping element.
 	int xBeginPosition;
@@ -458,6 +466,8 @@ public class GlobalMappingElement implements Serializable
 	
 	boolean meanValuesSet = false;
 	
-	String meanTotalStatString;
-	String totalTotalStatString;
+	//Instance values used to calculate the mean values for derived values (such as flops)
+	int counter = 0;
+	double totalExclusiveValue = 0;
+	double totalInclusiveValue = 0;
 }
