@@ -24,7 +24,7 @@
 |            templated classes.  Communication between processors is 
 |            performed with the MPI library.  
 |
-*/  
+--------------------------------------------------------------------*/  
 
 
 #include <iostream.h>
