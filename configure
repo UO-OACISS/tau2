@@ -1868,19 +1868,19 @@ EOF
      prototypes of the following routines */
   int foo(MPI_Info Info, const char *key, const char *value)
   { 
-    return MPI_Info_set(Info, key, value);
+    return PMPI_Info_set(Info, key, value);
   }
   int f1(MPI_Info a, const char * b, int c, char * d, int *e) 
   {
-    return MPI_Info_get(a,b,c,d,e);
+    return PMPI_Info_get(a,b,c,d,e);
   }
   int f2(MPI_Info a, const char *b)
   {
-    return MPI_Info_delete(a,b);
+    return PMPI_Info_delete(a,b);
   }
-  int f3(MPI_Info a, const char * b, int * c, int * d)
-  {
-    return MPI_Info_get_valuelen(a,b,c,d);
+  int MPI_Info_get_valuelen(MPI_Info a, const char * b, int * c, int * d)
+  { /* above decl triggers an error on T3E */
+    return PMPI_Info_get_valuelen(a,b,c,d);
   }
 
 EOF
