@@ -312,8 +312,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			textLayout.draw(g2D, x, yCoord);
 			x = insets.left;
 		    }
-		    //g2D.drawString(st.nextToken(), 15, yCoord);
-		    //yCoord = yCoord + (barSpacing);
 		}
 		lastHeaderEndPosition = yCoord;
 	    }
@@ -635,10 +633,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     public Dimension getImageSize(boolean fullScreen, boolean header){
 	Dimension d = null;
 	if(fullScreen)
-	    d = this.getPreferredSize();
+	    d = this.getSize();
 	else
 	    d = mDWindow.getSize();
 	d.setSize(d.getWidth(),d.getHeight()+lastHeaderEndPosition);
+	System.out.println("getImageSize x,y: " + d.getWidth() + "," + d.getHeight()); 
 	return d;
     }
     //######
