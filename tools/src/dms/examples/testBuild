@@ -5,4 +5,4 @@ XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
 JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
 DMS_JAR=dms.jar
 
-java -cp ./examples:${DMS_JAR}:${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} TestPerfDBSession
+java -cp ./examples:${DMS_JAR}:${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} TestPerfDBSession ../perfdb/bin/perfdb.cfg

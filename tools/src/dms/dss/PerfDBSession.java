@@ -13,11 +13,11 @@ public class PerfDBSession extends DataSession {
     private DB db = null;
     private perfdb.ConnectionManager connector;
 
-	public PerfDBSession () {
+	public PerfDBSession (String configFileName) {
 		super();
 		// initialize the connection to the database,
 		// using the configuration settings.
-		connector = new perfdb.ConnectionManager();
+		connector = new perfdb.ConnectionManager(configFileName);
 	}
 
 	public void open () {

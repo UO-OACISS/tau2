@@ -14,7 +14,7 @@ public class TestPerfDBSession {
 
     public static void main(java.lang.String[] args) {
 		// Create a PerfDBSession object
-		dms.dss.DataSession session = new PerfDBSession();
+		DataSession session = new PerfDBSession(args[0]);
 		session.open();
 		System.out.println ("API loaded...");
 
