@@ -79,7 +79,7 @@ int RtsLayer::myThread(void)
 #elif JAVA
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
-#elif _OPENMP
+#elif TAU_OPENMP
   return OpenMPLayer::GetThreadId();
 #else  // if no other thread package is available 
   return 0;
@@ -99,7 +99,7 @@ void RtsLayer::RegisterThread()
   WindowsThreadLayer::RegisterThread();
 #elif  TULIPTHREADS
   TulipThreadLayer::RegisterThread();
-#elif _OPENMP
+#elif TAU_OPENMP
   OpenMPLayer::RegisterThread();
 #endif // PTHREADS
 // Note: Java thread registration is done at the VM layer in TauJava.cpp
@@ -191,7 +191,7 @@ void RtsLayer::LockDB(void)
   TulipThreadLayer::LockDB();
 #elif  JAVA
   JavaThreadLayer::LockDB();
-#elif _OPENMP
+#elif TAU_OPENMP
   OpenMPLayer::LockDB();
 #endif // PTHREADS
   return ; // do nothing if threads are not used
@@ -211,7 +211,7 @@ void RtsLayer::UnLockDB(void)
   TulipThreadLayer::UnLockDB();
 #elif JAVA
   JavaThreadLayer::UnLockDB();
-#elif _OPENMP
+#elif TAU_OPENMP
   OpenMPLayer::UnLockDB();
 #endif // PTHREADS
   return;
@@ -221,8 +221,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2000/10/12 19:33:56 $
- * VERSION: $Id: RtsThread.cpp,v 1.14 2000/10/12 19:33:56 sameer Exp $
+ * $Revision: 1.15 $   $Date: 2001/03/08 23:55:51 $
+ * VERSION: $Id: RtsThread.cpp,v 1.15 2001/03/08 23:55:51 sameer Exp $
  ***************************************************************************/
 
 
