@@ -1,6 +1,5 @@
 cc34567 Cubes program
       PROGRAM SUM_OF_CUBES 
-      include 'Profile/TauFAPI.h'
        integer profiler(2)
 	save profiler
       INTEGER :: H, T, U 
