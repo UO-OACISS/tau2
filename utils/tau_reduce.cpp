@@ -170,12 +170,13 @@ void fillTable(){
   double sd;
   double unitspercall;
   string name;
+  int i;
 
   //now we are at the total data.  Our first run will fill in most of the data
   //for each element.  we need to determine if the line being read in is
   //inclusive or exclusive, if there are hw counters or timing data, and if
   //there is standard deviation data.
-  for(int i=0; i<number_of_functions; i++){
+  for(i=0; i<number_of_functions; i++){
     //there are two line for each element.  here we process the first line.
     //first determine whether or not it is inclusive or exclusive and if it uses group names
     if(strstr(line, "excl")!=NULL)
@@ -676,6 +677,7 @@ int main (int argc, char *argv[]){
   outputfilename="select";     //default
   int df = 0;                  //have we entered a dump file?
   int p=0;                     //is the print flag set?
+  int i,j;
 #ifdef TAU_WINDOWS
   int optind = 0;
 #else
@@ -843,7 +845,7 @@ int main (int argc, char *argv[]){
   select();
 
   //cleanup
-  for(int i=0;i<number_of_functions;i++){
+  for(i=0;i<number_of_functions;i++){
     delete elemArray[i];
   }//for
   delete [] elemArray;
@@ -851,7 +853,7 @@ int main (int argc, char *argv[]){
     delete countExcluded[i];
   }//for
   delete [] countExcluded;
-  for(int j=0;j<number_excluded;j++){
+  for(j=0;j<number_excluded;j++){
     delete excludedFunctions[j];
   }//for
   delete [] excludedFunctions;
@@ -860,8 +862,8 @@ int main (int argc, char *argv[]){
 }//main
 
 /***************************************************************************
- * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
- * $Revision: 1.1 $   $Date: 2002/07/25 20:40:15 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.1 2002/07/25 20:40:15 ntrebon Exp $
+ * $RCSfile: tau_reduce.cpp,v $   $Author: sameer $
+ * $Revision: 1.2 $   $Date: 2002/07/25 20:57:13 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.2 2002/07/25 20:57:13 sameer Exp $
  ***************************************************************************/
 
