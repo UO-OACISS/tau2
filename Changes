@@ -9,12 +9,10 @@
 
 Change log:
 ------------
-Version 2.3a changes (from 2.X):
+Version 2.3 changes (from 2.2):
 1. Added pthread support.
 2. Added C-API support with the same lib/API.
-
-Version 2.X changes (from 2.2):
-1. Introduced User Events
+3. Introduced User Events
 
 Version 2.2 changes (from 2.1):
 1. Added callstack profile viewing tool
