@@ -303,7 +303,7 @@ bool processFileForInstrumentation(const string& file_name)
     for (list<string>::iterator it = fileexcludelist.begin();
         it != fileexcludelist.end(); it++)
     { /* iterate through the entries and see if the names match */
-      if (wildcardCompare((*it).c_str(), file_name.c_str())) 
+      if (wildcardCompare((char *)((*it).c_str()), (char *) (file_name.c_str()))) 
       {
         /* names match! This routine should not be instrumented */
 #ifdef DEBUG
@@ -332,7 +332,7 @@ bool processFileForInstrumentation(const string& file_name)
     for (list<string>::iterator it = fileincludelist.begin();
         it != fileincludelist.end(); it++)
     { /* iterate through the entries and see if the names match */
-      if (wildcardCompare((*it).c_str(), file_name.c_str())) 
+      if (wildcardCompare((char *)((*it).c_str()), (char *)(file_name.c_str()))) 
       {
         /* names match! This routine should be instrumented */
 #ifdef DEBUG
@@ -358,6 +358,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2003/07/14 21:58:49 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.3 2003/07/14 21:58:49 sameer Exp $
+ * $Revision: 1.4 $   $Date: 2003/07/15 18:04:53 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.4 2003/07/15 18:04:53 sameer Exp $
  ***************************************************************************/
