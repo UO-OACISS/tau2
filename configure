@@ -609,6 +609,10 @@ do
   default)
     echo "Fixing Makefiles"
     ;;	
+  '')
+    #echo "NULL switch!"
+    # Required for HP/Compaq Tru64 machines.
+    ;;
   *)
     echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
     exit 1
@@ -2054,6 +2058,10 @@ then
   if [ $openmp = yes ]
   then
     fixmakeargs="$fixmakeargs COMPAQCXX_OPENMP"
+  fi
+  if [ $pthread = yes ]
+  then
+    fixmakeargs="$fixmakeargs COMPAQCXX_PTHREAD"
   fi
 fi
    
