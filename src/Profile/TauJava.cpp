@@ -82,6 +82,7 @@ extern "C" {
 #endif //TAU_WINDOWS
 
     TauJavaLayer::Init(options);
+    TauJavaLayer::Init("exclude=TAU/Profile");
 
 #ifdef DEBUG_PROF 
     fprintf(stdout, "TAU> .... ok \n\n");
@@ -94,8 +95,12 @@ static char **TauExcludeList=NULL;
 static int TauExcludeListSize = 0;
 void TauJavaLayer::Init(char *options){
 char *token;
-int num_tokens = 0;
+static int num_tokens = 0; /* This can be called more than once! TauJAPI */
 int token_len;
+
+#ifdef DEBUG_PROF
+  printf("Inside TauJavaLayer::Init options = %s\n",options);
+#endif // DEBUG_PROF
 
   if(strlen(options))
   {
@@ -106,7 +111,10 @@ int token_len;
     token=strtok(options, "=,");
 
     if (strcmp(token,"exclude")==0) {
-      TauExcludeList = (char **) malloc(256); // 256 items max in exclude list
+      if (TauExcludeList == (char **) NULL) {
+        TauExcludeList = (char **) malloc(256); // 256 items max in exclude list
+	// This ensures that if it is coming here again then the list is not blank
+      }
       while(token=strtok(NULL,"=,")) 
       {
 #ifdef DEBUG_PROF
@@ -120,6 +128,12 @@ int token_len;
       TauExcludeListSize = num_tokens;
     }
 
+#ifdef DEBUG_PROF
+    for(int i = 0; i < TauExcludeListSize; i++)
+    {
+      printf("ExcludeList[%d] = %s\n", i, TauExcludeList[i]);
+    }
+#endif // DEBUG_PROF
     
   }
 }
@@ -344,7 +358,7 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2000/11/28 21:40:17 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.18 2000/11/28 21:40:17 sameer Exp $
+ * $Revision: 1.19 $   $Date: 2000/12/02 19:51:48 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.19 2000/12/02 19:51:48 sameer Exp $
  ***************************************************************************/
 

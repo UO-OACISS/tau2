@@ -71,7 +71,9 @@ JDKARCH                 = linux
 #############################################
 # JAVA OBJECTS
 #############################################
-#JAVA#TAU_JAVA_O 	= TauJava.o  #ENDIF#
+#JAVA#TAU_JAVA_O 	= TauJava.o TauJAPI.o  #ENDIF#
+#JAVA#TAUJAPI 	= Profile.class        #ENDIF#
+
 
 #############################################
 # OpenMP OBJECTS

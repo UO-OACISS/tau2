@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/users/sameer/tau2
+TAUROOT=/home/grads/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -63,7 +63,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
 		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
-		$(INCDIR)/OpenMPLayer.h
+		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h
 
 LDFLAGS	      = $(PCXX_OPT)
 
@@ -132,11 +132,13 @@ TAU_SHLIB	= libTAU$(TAUOPTIONS)$(TAU_SHLIBX)
 ##############################################
 #JAVA#TAU_DSO   		= $(TAU_SHLIB)  #ENDIF#
 #DYNINST#TAU_DSO   		= $(TAU_SHLIB)  #ENDIF#
-#JAVA# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
+#JAVA#TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
+#JAVA#TAU_JAVA_INSTALLDIR = $(INSTALLDEST)/TAU #ENDIF#
+#JAVA#TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 ##############################################
 
-all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO)
+all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) 
 
 $(TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
@@ -154,29 +156,38 @@ libTauMpi$(TAU_OPTIONS)$(LSX):
 
 $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
+		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 		$(INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_OPTIONS)
 
 $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
 		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
+		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 
 $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
+		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 		
 $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX): libTauMpi$(TAU_OPTIONS)$(LSX)
 		$(MAKE) -f Makefile.wrapper install
 
-install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL)
+$(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
+		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
+		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
+                   else mkdir $(TAU_JAVA_INSTALLDIR) ;fi
+		$(INSTALL) $? $(TAU_JAVA_INSTALLDIR)
+		
+install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1)
 
 # Rules
+Profile.class	: Profile.java
+	$(JDKDIR)/bin/javac Profile.java 
+
 Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -216,6 +227,9 @@ TauCAPI.o   : TauCAPI.cpp $(HDRS)
 TauFAPI.o   : TauFAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauJAPI.o   : TauJAPI.cpp $(HDRS) 
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 TauMapping.o   : TauMapping.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -242,5 +256,5 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 
 
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(OPENMP_O) $(TAU_DSO) $(EXTRAOBJS) *.ii *.ti ti_files/* 
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(OPENMP_O) $(TAU_DSO) $(EXTRAOBJS) $(TAUJAPI) *.ii *.ti ti_files/* 
 
