@@ -36,6 +36,7 @@ Version 2.11 changes (from 2.9):
 24. Added support for low overhead, high resolution timers under IA-64 Linux [NCSA].
 25. Added support for alternative returns in PDT based C instrumentation [PETSc, ANL].
 26. Added a new tool - tau_reduce for reducing instrumentation overhead.  
+27. Added support for callpath profiling.
 
 
 Version 2.10 changes (from 2.9):
