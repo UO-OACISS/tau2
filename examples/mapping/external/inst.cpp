@@ -6,6 +6,7 @@ embedded) for each invocation of the routine. */
 #include <Profile/Profiler.h>
 #include <iostream.h>
 #include <unistd.h>
+#include <stdio.h>
 
 class MyClass
 {
