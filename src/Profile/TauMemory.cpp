@@ -106,7 +106,9 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
   { /* found it */
     (*it).second->TriggerEvent(size);
   }
+#ifdef DEBUGPROF
   printf("C++: Tau_malloc: %s:%d:%d\n", file, line, size);
+#endif /* DEBUGPROF */
 
   /* Add the size to the map */
   TauVoidPointer ptr = malloc(size);
@@ -153,7 +155,9 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
   { /* found it */
     (*it).second->TriggerEvent(sz);
   }
+#ifdef DEBUGPROF
   printf("C++: Tau_free: %s:%d\n", file, line);  
+#endif /* DEBUGPROF */
   free(p);
 }
 
@@ -162,8 +166,10 @@ void Tau_free(const char *file, int line, TauVoidPointer p)
 //////////////////////////////////////////////////////////////////////
 extern "C" void *Tau_malloc_C( const char *file, int line, size_t size)
 {
+#ifdef DEBUGPROF
   printf("C: Tau_malloc: %s:%d:%d\n", file, line, size);
-  return (void *) malloc(size);
+#endif /* DEBUGPROF */
+  return (void *) Tau_malloc(file, line, size);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -171,12 +177,14 @@ extern "C" void *Tau_malloc_C( const char *file, int line, size_t size)
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_free_C(const char *file, int line, void *p)
 {
+#ifdef DEBUGPROF
   printf("C: Tau_free: %s:%d\n", file, line);
-  free(p);
+#endif /* DEBUGPROF */
+  Tau_free(file, line, p);
 }
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2004/02/27 02:30:27 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.1 2004/02/27 02:30:27 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 2004/02/27 02:32:52 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.2 2004/02/27 02:32:52 sameer Exp $ 
  ***************************************************************************/
