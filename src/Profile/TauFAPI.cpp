@@ -71,7 +71,7 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
   
 #ifdef DEBUG_PROF
   printf("Inside tau_profile_timer_ fname=%s\n", fname);
-#endif /* DEBUG_PROF */emacs
+#endif /* DEBUG_PROF */
   
   if (*ptr == 0) 
   {
@@ -561,7 +561,7 @@ void tau_report_thread_statistics__(void)
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: bertie $
- * $Revision: 1.15 $   $Date: 2001/02/14 21:55:16 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.15 2001/02/14 21:55:16 bertie Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.16 $   $Date: 2001/02/14 21:58:40 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.16 2001/02/14 21:58:40 sameer Exp $ 
  ***************************************************************************/
