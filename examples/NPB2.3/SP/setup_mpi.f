@@ -20,6 +20,7 @@ c---------------------------------------------------------------------
       
       call mpi_comm_size(MPI_COMM_WORLD, total_nodes, error)
       call mpi_comm_rank(MPI_COMM_WORLD, node, error)
+      call TAU_PROFILE_SET_NODE(node)
 
       if (.not. convertdouble) then
          dp_type = MPI_DOUBLE_PRECISION
