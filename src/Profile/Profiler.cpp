@@ -33,9 +33,17 @@
 //#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
 #include "Profile/Profiler.h"
 
-#ifndef TAU_WINDOWS
+#ifdef TAU_WINDOWS
+  typedef __int64 x_int64;
+  typedef unsigned __int64 x_uint64;
+#else
+  typedef long long x_int64;
+  typedef unsigned long long x_uint64;
+#endif
+
+//#ifndef TAU_WINDOWS
 extern "C" void Tau_shutdown(void);
-#endif //TAU_WINDOWS
+//#endif //TAU_WINDOWS
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -161,7 +169,7 @@ char * TauGetCounterString(void)
 
 void Profiler::Start(int tid)
 { 
-      unsigned long long TimeStamp = 0L;
+      x_uint64 TimeStamp = 0L;
       DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
@@ -178,7 +186,7 @@ void Profiler::Start(int tid)
 	// Initialization is over, now record the time it started
 #ifndef TAU_MULTIPLE_COUNTERS 
 	StartTime =  RtsLayer::getUSecD(tid) ;
-	TimeStamp += (unsigned long long) StartTime;
+	TimeStamp += (x_uint64) StartTime;
 #else //TAU_MULTIPLE_COUNTERS
 	//Initialize the array to zero, as some of the elements will
 	//not be set by counting functions.
@@ -341,7 +349,7 @@ Profiler& Profiler::operator= (const Profiler& X)
 
 void Profiler::Stop(int tid)
 {
-      unsigned long long TimeStamp = 0L; 
+      x_uint64 TimeStamp = 0L; 
       if (CurrentProfiler[tid] == NULL) return;
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
@@ -365,7 +373,7 @@ void Profiler::Stop(int tid)
 #ifndef TAU_MULTIPLE_COUNTERS
 	double CurrentTime = RtsLayer::getUSecD(tid);
 	double TotalTime = CurrentTime - StartTime;
-	TimeStamp += (unsigned long long) CurrentTime; 
+	TimeStamp += (x_uint64) CurrentTime; 
 
 
 #if (defined(TAU_COMPENSATE ) && defined(PROFILING_ON))
@@ -2646,8 +2654,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.102 $   $Date: 2004/08/30 18:06:46 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.102 2004/08/30 18:06:46 amorris Exp $ 
+ * $Revision: 1.103 $   $Date: 2004/09/01 18:52:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.103 2004/09/01 18:52:35 amorris Exp $ 
  ***************************************************************************/
 
 	

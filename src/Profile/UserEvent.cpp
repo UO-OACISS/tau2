@@ -42,6 +42,15 @@
 #include "Profile/Profiler.h"
 
 
+#ifdef TAU_WINDOWS
+  typedef __int64 x_int64;
+  typedef unsigned __int64 x_uint64;
+#else
+  typedef long long x_int64;
+  typedef unsigned long long x_uint64;
+#endif
+
+
 #include <stdio.h>
 #include <fcntl.h>
 
@@ -215,9 +224,9 @@ void TauUserEvent::SetMonotonicallyIncreasing(bool value)
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid)
 { 
 #ifdef TRACING_ON
-  TraceEvent(GetEventId(), (unsigned long long) 0, tid, 0, 0); 
-  TraceEvent(GetEventId(), (unsigned long long) data, tid, 0, 0); 
-  TraceEvent(GetEventId(), (unsigned long long) 0, tid, 0, 0); 
+  TraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
+  TraceEvent(GetEventId(), (x_uint64) data, tid, 0, 0); 
+  TraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
 #endif /* TRACING_ON */
 
@@ -463,7 +472,7 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 }
 
 /***************************************************************************
- * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2004/08/13 00:47:17 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.13 2004/08/13 00:47:17 sameer Exp $ 
+ * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
+ * $Revision: 1.14 $   $Date: 2004/09/01 18:52:36 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.14 2004/09/01 18:52:36 amorris Exp $ 
  ***************************************************************************/

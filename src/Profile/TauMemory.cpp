@@ -122,7 +122,12 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 
   /* Add the size to the map */
   TauVoidPointer ptr = malloc(size);
+
+#ifdef TAU_WINDOWS
+  char *p1 = (char*) (void*)ptr;
+#else
   char *p1 = ptr;
+#endif
   TheTauPointerSizeMap()[(long)p1] = size; 
   return ptr;
 }
@@ -132,7 +137,11 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 //////////////////////////////////////////////////////////////////////
 size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 {
+#ifdef TAU_WINDOWS
+  char *p1 = (char*) (void*)p;
+#else
   char *p1 = p;
+#endif
   map<TAU_POINTER_SIZE_MAP_TYPE >::iterator it = TheTauPointerSizeMap().find((long)p1);
   if (it == TheTauPointerSizeMap().end())
     return 0; // don't know the size 
@@ -194,7 +203,7 @@ extern "C" void Tau_free_C(const char *file, int line, void *p)
 }
 
 /***************************************************************************
- * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2004/03/17 02:14:35 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.6 2004/03/17 02:14:35 sameer Exp $ 
+ * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
+ * $Revision: 1.7 $   $Date: 2004/09/01 18:52:35 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.7 2004/09/01 18:52:35 amorris Exp $ 
  ***************************************************************************/

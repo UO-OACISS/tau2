@@ -17,7 +17,17 @@
 # include <sys/types.h>
 # include <fcntl.h>
 # include <signal.h>
-# include <unistd.h>
+
+#ifdef TAU_WINDOWS
+  #include <io.h>
+  typedef __int64 x_int64;
+  typedef unsigned __int64 x_uint64;
+#else
+  #include <unistd.h>
+  #define O_BINARY 0
+  typedef long long x_int64;
+  typedef unsigned long long x_uint64;
+#endif
 # include <time.h>
 # include <Profile/Profiler.h>
 
@@ -62,7 +72,7 @@ static double tracerValues[MAX_TAU_COUNTERS] = {0};
 
 
 /* -- Use Profiling interface for time -- */
-unsigned long long pcxx_GetUSecLong(int tid)
+x_uint64 pcxx_GetUSecLong(int tid)
 { 
   // If you're modifying the behavior of this routine, note that in 
   // Profiler::Start and Stop, we obtain the timestamp for tracing explicitly. 
@@ -78,12 +88,12 @@ unsigned long long pcxx_GetUSecLong(int tid)
   //is active or not).
   return (unsigned long long) tracerValues[0];
 #else //TAU_MULTIPLE_COUNTERS
-  return (unsigned long long) RtsLayer::getUSecD(tid);
+  return (x_uint64) RtsLayer::getUSecD(tid);
 #endif // TAU_MULTIPLE_COUNTERS
 }
 
 /* -- write event to buffer only [without overflow check] ---- */
-void TraceEventOnly(long int ev,long long par, int tid)
+void TraceEventOnly(long int ev, x_int64 par, int tid)
 {
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
   pcxx_ev_ptr->ev   = ev;
@@ -214,7 +224,7 @@ int TraceEvInit(int tid)
 
     init_wrap_up ();
 
-    if ((TraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND, 0600)) < 0)
+    if ((TraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY, 0600)) < 0)
     {
       fprintf (stderr, "TraceEvInit[open]: ");
       perror (tracefilename);
@@ -282,7 +292,7 @@ void TraceUnInitialize(int tid)
 }
 
 /* -- write event to buffer ---------------------------------- */
-void TraceEvent(long int ev, long long par, int tid, unsigned long long ts, int use_ts)
+void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts)
 {
   int i;
   int records_created = TraceEvInit(tid);
@@ -347,7 +357,7 @@ void TraceEvent(long int ev, long long par, int tid, unsigned long long ts, int 
   if ( TauCurrentEvent[tid] >= TAU_MAX_RECORDS - 1 ) TraceEvFlush(tid); 
 }
 
-void pcxx_Event(long int ev, long long par)
+void pcxx_Event(long int ev, x_int64 par)
 {
   TraceEvent(ev, par, RtsLayer::myThread());
 }

@@ -15,6 +15,14 @@
 # ifndef __PCXX_EVENTS__H__
 # define __PCXX_EVENTS__H__
 
+#ifdef TAU_WINDOWS
+  typedef __int64 x_int64;
+  typedef unsigned __int64 x_uint64;
+#else
+  typedef long long x_int64;
+  typedef unsigned long long x_uint64;
+#endif
+
 #   include "pcxx_ansi.h"
 
 #   if !defined(__ksr__) || defined(UNIPROC) || defined(__PCXX__) || defined(_MASTER_SLAVE_)
@@ -90,9 +98,9 @@ extern int aa_poll_count; /* For Ariadne - defined in tulip/mpi/src/KernelCom.c 
           long int           ev;    /* -- event id        -- */
           short unsigned int nid;   /* -- node id         -- */
           short unsigned int tid;   /* -- thread id       -- */
-          long long           par;   /* -- event parameter -- */
+          x_int64            par;   /* -- event parameter -- */
 /**** CHANGED long int to long long for 8 bytes. *******/
-          unsigned long long  ti;    /* -- time [us]?      -- */
+          x_uint64           ti;    /* -- time [us]?      -- */
 /**** CHANGED unsigned long int to unsigned long long for 8 bytes. *******/
         } PCXX_EV;
 
@@ -111,7 +119,7 @@ extern int aa_poll_count; /* For Ariadne - defined in tulip/mpi/src/KernelCom.c 
              if (pcxx_ev_class&(c)) pcxx_LongEvent(e,l,p)
 #     ifdef __cplusplus
         void pcxx_EvInit (char *n);
-        void pcxx_Event (long int e, long long p);
+        void pcxx_Event (long int e, x_int64 p);
         void pcxx_LongEvent (long int e, int l, char *p);
         void pcxx_EvClose ();
         void pcxx_EvFlush ();
@@ -119,9 +127,9 @@ extern int aa_poll_count; /* For Ariadne - defined in tulip/mpi/src/KernelCom.c 
 	int TraceEvInit(int tid);
 	void TraceUnInitialize(int tid);
  	void TraceReinitialize(int oldid, int newid, int tid);
-        void TraceEventOnly(long int ev,long long par, int tid);
+        void TraceEventOnly(long int ev, x_int64 par, int tid);
         void TraceEvFlush(int tid);
- 	void TraceEvent(long int ev, long long par, int tid, unsigned long long ts = 0L, int use_ts = 0);
+ 	void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts = 0L, int use_ts = 0);
 	void TraceEvClose(int tid);
 	void SetFlushEvents(int tid);
 

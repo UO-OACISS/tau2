@@ -46,15 +46,17 @@ using namespace std;
 #include <stdlib.h>
 
 #if (!defined(TAU_WINDOWS))
-#include <unistd.h>
-#if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
-#include <sys/time.h>
-#else
-#ifdef TULIP_TIMERS 
-#include "Profile/TulipTimers.h"
-#endif //TULIP_TIMERS 
-#endif //POOMA_TFLOP
+ #include <unistd.h>
+ #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
+  #include <sys/time.h>
+ #else
+  #ifdef TULIP_TIMERS 
+   #include "Profile/TulipTimers.h"
+  #endif //TULIP_TIMERS 
+ #endif //POOMA_TFLOP
 
+#else
+  #include <vector>
 #endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
@@ -313,7 +315,7 @@ long FunctionInfo::GetFunctionId(void)
 //////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.34 $   $Date: 2004/07/26 23:57:29 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.34 2004/07/26 23:57:29 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
+ * $Revision: 1.35 $   $Date: 2004/09/01 18:52:35 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.35 2004/09/01 18:52:35 amorris Exp $ 
  ***************************************************************************/

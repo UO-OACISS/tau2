@@ -18,10 +18,13 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+#ifndef TAU_WINDOWS
 #include <unistd.h>
-#include <signal.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
+
+#include <signal.h>
 #include <Profile/Profiler.h>
 
 /* Which platforms support mallinfo? */
@@ -120,10 +123,14 @@ double TauGetMaxRSS(void)
   return used/1024.0;
 #endif /* TAU_HASMALLINFO */
 
+#ifndef TAU_WINDOWS
   /* if not, use getrusage */
   struct rusage res;
   getrusage(RUSAGE_SELF, &res);
   return (double) res.ru_maxrss; /* max resident set size */
+#else
+  return 0;
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -204,8 +211,9 @@ void TauAlarmHandler(int signum)
 #endif /* TAU_MUSE_EVENT */
 
   /* Set alarm for the next interrupt */
+#ifndef TAU_WINDOWS
   alarm(TheTauInterruptInterval());
-   
+#endif   
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -213,6 +221,7 @@ void TauAlarmHandler(int signum)
 //////////////////////////////////////////////////////////////////////
 void TauTrackMemoryUtilization(void)
 {
+#ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
 
   // we're tracking memory
@@ -230,6 +239,7 @@ void TauTrackMemoryUtilization(void)
   
   /* activate alarm */
   alarm(TheTauInterruptInterval());
+#endif
 }
 //////////////////////////////////////////////////////////////////////
 // Track Memory events at this location in the source code
@@ -253,6 +263,7 @@ void TauTrackMemoryHere(void)
 //////////////////////////////////////////////////////////////////////
 void TauTrackMuseEvents(void)
 {
+#ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
 
   // we're tracking memory
@@ -270,12 +281,13 @@ void TauTrackMuseEvents(void)
   
   /* activate alarm */
   alarm(TheTauInterruptInterval());
+#endif
 }
   
 /***************************************************************************
- * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2004/06/10 20:02:32 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.7 2004/06/10 20:02:32 sameer Exp $ 
+ * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
+ * $Revision: 1.8 $   $Date: 2004/09/01 18:52:35 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.8 2004/09/01 18:52:35 amorris Exp $ 
  ***************************************************************************/
 
 	

@@ -37,7 +37,7 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
   }
 
   /* Open the trace file */
-  if ( (tFile->Fid = open (filename, O_RDONLY)) < 0 )
+  if ( (tFile->Fid = open (filename, O_RDONLY | O_BINARY)) < 0 )
   {
     perror (filename);
     return NULL;
@@ -45,7 +45,7 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
 
   /* Open the EDF (event description file) to read the <name, id> event 
    * tables*/
-  if ((fp = fopen (EDF, "r")) == NULL)
+  if ((fp = fopen (EDF, "rb")) == NULL)
   {
     printf("EDF file = %s\n", EDF);
     perror("ERROR: opening edf file");
@@ -458,7 +458,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
   dynamictrace = FALSE;
  
   /* first, open the edf file */
-  if ((edf = fopen (tFile->EdfFile, "r")) == NULL )
+  if ((edf = fopen (tFile->EdfFile, "rb")) == NULL )
   {
     printf("ERROR: opening edf file %s\n", tFile->EdfFile);
     perror (tFile->EdfFile);
@@ -576,7 +576,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
   return TRUE;
 }
 /***************************************************************************
- * $RCSfile: TAU_tf.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2004/08/13 00:48:16 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.4 2004/08/13 00:48:16 sameer Exp $ 
+ * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
+ * $Revision: 1.5 $   $Date: 2004/09/01 18:53:28 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.5 2004/09/01 18:53:28 amorris Exp $ 
  ***************************************************************************/

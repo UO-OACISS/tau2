@@ -57,8 +57,6 @@ int WindowsThreadLayer::tauThreadCount = 0;
 ////////////////////////////////////////////////////////////////////////
 int WindowsThreadLayer::RegisterThread(void)
 {
-  static int initflag = WindowsThreadLayer::InitializeThreadData();
-  // if its in here the first time, setup mutexes etc.
 
   int *threadId = new int;
 
@@ -100,6 +98,10 @@ int WindowsThreadLayer::RegisterThread(void)
 ////////////////////////////////////////////////////////////////////////
 int WindowsThreadLayer::GetThreadId(void) 
 {
+
+  static int initflag = WindowsThreadLayer::InitializeThreadData();
+  // if its in here the first time, setup mutexes etc.
+
   int *id; 
 
   id = (int *) TlsGetValue(tauWindowsthreadId);

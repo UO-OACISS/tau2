@@ -34,6 +34,12 @@
 #include <string.h>
 #include <Profile/Profiler.h>
 
+#ifdef TAU_WINDOWS
+//#include <vector>
+//#include <string>
+using namespace std;
+#endif
+
 //#define DEBUG_PROF
 //int debugPrint = 0;
 // control debug printf statements
@@ -246,7 +252,7 @@ void TauMPIInitStub(int *rank)
 
 // EOF TauHooks.cpp
 /***************************************************************************
- * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 2004/06/17 21:40:30 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.20 2004/06/17 21:40:30 sameer Exp $ 
+ * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
+ * $Revision: 1.21 $   $Date: 2004/09/01 18:52:35 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.21 2004/09/01 18:52:35 amorris Exp $ 
  ***************************************************************************/

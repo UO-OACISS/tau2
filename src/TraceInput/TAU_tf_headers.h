@@ -19,7 +19,12 @@
 
 #include <stdio.h>
 #include <fcntl.h>
-#include <unistd.h>
+#ifdef _MSC_VER
+ #include <io.h>
+#else
+ #define O_BINARY 0
+ #include <unistd.h>
+#endif
 #include <stdlib.h> 
 #include <string.h>
    
@@ -38,7 +43,7 @@ using namespace std;
 #endif /* _TAU_TF_HEADERS_H_ */
 
 /********************************************************************************
- * $RCSfile: TAU_tf_headers.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2003/11/13 00:09:31 $
- * TAU_VERSION_ID: $Id: TAU_tf_headers.h,v 1.1 2003/11/13 00:09:31 sameer Exp $ 
+ * $RCSfile: TAU_tf_headers.h,v $   $Author: amorris $
+ * $Revision: 1.2 $   $Date: 2004/09/01 18:53:28 $
+ * TAU_VERSION_ID: $Id: TAU_tf_headers.h,v 1.2 2004/09/01 18:53:28 amorris Exp $ 
  *******************************************************************************/
