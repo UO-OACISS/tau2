@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a Context.  It contains a set of Threads, a nodeID and an contextID.
  *  
- * <P>CVS $Id: Context.java,v 1.3 2005/01/06 22:46:56 amorris Exp $</P>
+ * <P>CVS $Id: Context.java,v 1.4 2005/01/19 02:30:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		Node
  * @see		Thread
  */
@@ -106,9 +106,6 @@ public class Context implements Comparable {
      * Compares this Context to another Context or Integer.
      */
     public int compareTo(Object obj) {
-        if (obj instanceof Integer)
-            return contextID - ((Integer) obj).intValue();
-        else
-            return contextID - ((Context) obj).getContextID();
+        return contextID - ((Context) obj).getContextID();
     }
 }

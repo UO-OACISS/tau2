@@ -6,9 +6,9 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.6 2005/01/10 20:09:08 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.7 2005/01/19 02:30:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
@@ -128,14 +128,7 @@ public class FunctionProfile implements Comparable {
         doubleList = newArray;
     }
 
-    //Call path section.
-
-   
-
-  
- 
-
-    // new callpath stuff
+    // call path section
     public void addChildProfile(FunctionProfile child, FunctionProfile callpath) {
         // example:
         // fullpath = a => b => c => d

@@ -11,10 +11,7 @@
 
 package edu.uoregon.tau.dms.dss;
 
-public class LineData{
-    //####################################
-    //Instance Data.
-    //####################################
+final class LineData{
     public String s0 = null;
     public String s1 = null;
     public String s2 = null;
@@ -33,7 +30,4 @@ public class LineData{
     public int i3 = 0;
     public int i4 = 0;
     public int i5 = 0;
-    //####################################
-    //End - Instance Data.
-    //####################################
 }

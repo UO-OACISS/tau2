@@ -6,6 +6,14 @@ import java.io.*;
 
 public class Group implements Serializable, Comparable {
 
+    private String name;
+    private int id;
+    
+    private boolean colorFlag = false;
+    private Color color = null;
+    private Color specificColor = null;
+    
+
     public Group(String name, int id) {
         this.name = name;
         this.id = id;
@@ -20,14 +28,9 @@ public class Group implements Serializable, Comparable {
     }
 
     public int compareTo(Object inObject) {
-        return name.compareTo((String) inObject);
+        return name.compareTo(((Group) inObject).getName());
     }
 
-
-    
-    //######
-    //Begin - Color section.
-    //######
     public void setColor(Color color) {
         this.color = color;
     }
@@ -50,16 +53,4 @@ public class Group implements Serializable, Comparable {
     public void setSpecificColor(Color specificColor) {
         this.specificColor = specificColor;
     }
-
-    //######
-    //End - Color section.
-    //######
-
-    //Color Settings.
-    private boolean colorFlag = false;
-    private Color color = null;
-    private Color specificColor = null;
-    
-    String name;
-    int id;
 }

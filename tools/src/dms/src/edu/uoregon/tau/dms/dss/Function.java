@@ -9,9 +9,9 @@ import java.text.*;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.4 2005/01/10 20:09:08 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.5 2005/01/19 02:30:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		FunctionProfile
  */
 public class Function implements Serializable, Comparable {
@@ -22,9 +22,7 @@ public class Function implements Serializable, Comparable {
     private int id = -1;
     private Vector groups = null;
     private boolean callPathFunction = false;
-    private double maxNumCalls = 0;
-    private double maxNumSubr = 0;
-
+ 
     // we hold on to the mean and total profiles for pass-through functions
     private FunctionProfile meanProfile;
     private FunctionProfile totalProfile;
@@ -191,9 +189,10 @@ public class Function implements Serializable, Comparable {
         return totalProfile;
     }
 
-    public int compareTo(Object inObject) {
-        Integer thisInt = new Integer(this.id);
-        return thisInt.compareTo(new Integer(((Function) inObject).getID()));
+    public int compareTo(Object o) {
+        return this.id - ((Function)o).getID();
+        //Integer thisInt = new Integer(this.id);
+        //return thisInt.compareTo(new Integer(((Function) inObject).getID()));
         //return name.compareTo(((Function)inObject).getName());
     }
 

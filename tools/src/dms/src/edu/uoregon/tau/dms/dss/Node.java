@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a Node.  It contains a set of Contexts and an ID.
  *  
- * <P>CVS $Id: Node.java,v 1.4 2005/01/10 20:09:08 amorris Exp $</P>
+ * <P>CVS $Id: Node.java,v 1.5 2005/01/19 02:30:02 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		DataSource
  * @see		Context
  */
@@ -81,9 +81,6 @@ public class Node implements Comparable {
      * Compares this Node to another Node or Integer.
      */
     public int compareTo(Object obj) {
-        if (obj instanceof Integer)
-            return nodeID - ((Integer) obj).intValue();
-        else
-            return nodeID - ((Node) obj).getNodeID();
+        return nodeID - ((Node) obj).getNodeID();
     }
 }

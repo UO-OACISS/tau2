@@ -8,11 +8,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.13 2005/01/06 23:17:28 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.14 2005/01/19 02:30:02 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class DatabaseAPI {
 
@@ -864,6 +864,7 @@ public class DatabaseAPI {
             if (saveMetricIndex < 0) {
                 //     System.out.println("\nSaving the trial...");
                 newTrialID = trial.saveTrial(db);
+                trial.setID(newTrialID);
                 Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 
                 if (intervalEvents != null && intervalEvents.size() > 0) {
