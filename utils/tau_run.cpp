@@ -34,7 +34,7 @@ using namespace std;
 #include "BPatch_snippet.h"
 //#include "test_util.h"
 
-int debugPrint = 0;
+int debugPrint = 1;
 
 template class BPatch_Vector<BPatch_variableExpr*>;
 void checkCost(BPatch_snippet snippet);
@@ -380,8 +380,11 @@ int main(int argc, char **argv)
           // callee_args->push_back(constName);
     
           inFunc = (*p)[i];
+          dprintf("Instrumenting-> %s Entry\n", fname);	  
           invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_entry, enterstub, callee_args);
+          dprintf("Instrumenting-> %s Exit...", fname);	  
           invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_exit, exitstub, callee_args);
+	  dprintf("Done\n");
 
           delete callee_args;
           delete constExpr;
