@@ -1,0 +1,51 @@
+Using TAU with Dyninst 2.0.
+---------------------------
+Part I) Configuring and installing Dyninst 2.0 
+
+% tar xzvf  srcDist2.0beta.tar.gz
+(Agree to Dyninst licensing terms)
+% cd <dir>/dyninstAPI-2.0-beta
+
+Add to .cshrc file: 
+
+setenv DYNINST_ROOT <dyninst-dir>/dyninstAPI-2.0-beta/
+setenv PLATFORM    i386-unknown-linux2.0
+setenv DYNINSTAPI_RT_LIB $DYNINST_ROOT/lib/$PLATFORM/libdyninstAPI_RT.so.1
+setenv LD_LIBRARY_PATH <tau-root>/i386_linux/lib\:$DYNINST_ROOT/lib/$PLATFORM
+
+% source ~/.cshrc
+
+Compiling Dyninst
+
+% cd $DYNINST_ROOT/core/util/$PLATFORM
+% make ; make install
+% cd $DYNINST_ROOT/core/dyninstAPI/$PLATFORM
+% make ; make install
+% cd $DYNINST_ROOT/core/dyninstAPI_RT/$PLATFORM
+% make ; make install
+% cd $DYNINST_ROOT/core/dyninstAPI/tests/$PLATFORM
+% make 
+% ./test1
+% ./test2
+% ./test3
+
+if it passes all tests then :
+
+Part 2: Configuring TAU with Dyninst
+------------------------------------
+
+% tar zxvf tau-2.x.tar.gz
+% cd <tau-root>
+% configure -dyninst=$DYNINST_ROOT
+% make install
+% set path=(<tau-root>/i386_linux/bin $path)
+% cd examples/dyninst
+% make
+% tau_run klargest
+% pprof
+
+It is important to note that we need to add TauHooks.o -ltau -ldl to the 
+link command line for an application to work with Dyninst currently. This
+limitation may be eased in the future releases. 
+
+
