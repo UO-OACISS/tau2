@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.20 2004/04/09 19:42:50 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.21 2004/04/09 22:12:56 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -458,9 +458,10 @@ public class PerfDBSession extends DataSession {
 			int newMetricID = 0;
 			if (saveMetricIndex < 0 || saveMetricIndex == i) {
 				newMetricID = metric.saveMetric(db, newTrialID);
-				newMetHash.put(new Integer(i), new Integer(newMetricID));
-				System.out.print("\rSaving the metrics: " + ++i + " records saved...");
+				System.out.print("\rSaving the metrics: " + (i+1) + " records saved...");
 			}
+			newMetHash.put(new Integer(i), new Integer(newMetricID));
+			i++;
 	    }
 		System.out.print("\n");
 		return newMetHash;
@@ -753,8 +754,6 @@ public class PerfDBSession extends DataSession {
 		// function data, user events and user event data
 		if (saveMetricIndex < 0) {
 			System.out.println("\nSaving the trial...");
-
-			// save the old metric ID so that we can restore it...
 			newTrialID = trial.saveTrial(db);
 			Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 
@@ -773,7 +772,6 @@ public class PerfDBSession extends DataSession {
 		} else {
 			newTrialID = trial.getID();
 			System.out.println("\nSaving the metric...");
-
 			Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, newMetHash, saveMetricIndex);

@@ -25,7 +25,7 @@ import java.util.Hashtable;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.8 2004/04/09 19:42:49 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.9 2004/04/09 22:12:56 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -492,9 +492,8 @@ public class FunctionDataObject extends Object {
 					statement.setDouble(8, getNumSubroutines());
 					statement.setDouble(9, getInclusivePerCall(i));
 					statement.executeUpdate();
-					i++;
-					newMetricID = (Integer)newMetHash.get(new Integer(i));
 				}
+				newMetricID = (Integer)newMetHash.get(new Integer(++i));
 			}
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the function mean data.");
@@ -522,9 +521,8 @@ public class FunctionDataObject extends Object {
 					statement.setDouble(8, getNumSubroutines());
 					statement.setDouble(9, getInclusivePerCall(i));
 					statement.executeUpdate();
-					i++;
-					newMetricID = (Integer)newMetHash.get(new Integer(i));
 				}
+				newMetricID = (Integer)newMetHash.get(new Integer(++i));
 			}
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the function total data.");
@@ -555,9 +553,8 @@ public class FunctionDataObject extends Object {
 					statement.setDouble(11, getNumSubroutines());
 					statement.setDouble(12, getInclusivePerCall(i));
 					statement.executeUpdate();
-					i++;
-					newMetricID = (Integer)newMetHash.get(new Integer(i));
 				}
+				newMetricID = (Integer)newMetHash.get(new Integer(++i));
 			}
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the function data.");
