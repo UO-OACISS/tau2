@@ -258,6 +258,26 @@ int parse_edf_file(int node)
   return 1;
 }  
 
+extern "C" const char *get_event_name(int gid)
+{
+  map<const char*, EventDescr *, ltstr>::iterator it;
+  for (it = eventNameMap.begin(); it != eventNameMap.end(); it++)
+  {
+#ifdef DEBUG
+    printf("get_event_name: Examining %s id %d: Looking for %d\n", 
+		    (*it).first, (*it).second->gid, gid);
+#endif
+    if ((*it).second->gid == gid)
+    {
+#ifdef DEBUG
+      printf("get_event_name: Returning  %s\n", (*it).first);
+#endif
+      return (*it).first;
+    }
+  }
+  return NULL;
+}
+
 int store_merged_edffile(char *filename)
 {
   FILE *fp;
@@ -288,12 +308,41 @@ int store_merged_edffile(char *filename)
 #endif /* DEBUG */
   }  
   
+#ifdef DEBUG
+  printf("Closing file %s\n", filename);
+#endif /* DEBUG */
+  fflush(fp);
+  fclose(fp);
   return 1;
 }
 
 int GID(int node, long local)
 {
-  return nodeEventTable[node][local];
+  map<long, int, less<long> >::iterator it;
+  if ((it = nodeEventTable[node].find(local)) != nodeEventTable[node].end())
+  { /* found it 
+     printf("local %d global %d: ", local, (*it).second);
+     */
+     return (*it).second; 
+  }
+  else
+  { /* couldn't locate it, must re-read the event table again and try it */
+#ifdef DEBUG
+    printf("GID: closing event file on node %d and re-reading it.", node);
+    printf("Looking for id %d\n",local);
+#endif /* DEBUG */
+    fclose(edfFiles[node]);
+
+    open_edf_file("events", node);
+    parse_edf_file(node);
+    store_merged_edffile("tau.edf"); /* update the merged edf file */
+    return nodeEventTable[node][local];
+  }
+  /* OLD 
+  int ret =  nodeEventTable[node][local];
+  printf("local = %d, global = %d \n",local,  ret);
+  return ret;
+  */
 }
   
 #ifdef OLDMAIN

@@ -68,6 +68,7 @@ extern "C" {
   int open_edf_file(char *prefix, int nodeid);
   int parse_edf_file(int node);
   int store_merged_edffile(char *filename);
+  const char *get_event_name(int gid);
   int GID(int node, long localEventId); 
 #if!(defined(TAU_XLC) || defined (TAU_NEC)) 
 } 
@@ -91,6 +92,9 @@ static struct trcdescr
   PCXX_EV  *last;      /* -- last event record in buffer               -- */
 } *trcdes;
 
+int outfd; /* output trace file */
+static void output_flush(int fd);
+
 /* -------------------------------------------------------------------------- */
 /* -- input buffer handling                                                -- */
 /* -------------------------------------------------------------------------- */
@@ -98,6 +102,7 @@ static struct trcdescr
 static PCXX_EV *get_next_rec(struct trcdescr *tdes)
 {
   long no;
+  const char *last_event_name;
 
   if ( (tdes->last == NULL) || (tdes->next > tdes->last) )
   {
@@ -107,11 +112,77 @@ static PCXX_EV *get_next_rec(struct trcdescr *tdes)
     {
       if ( no == 0 )
       {
+		
+#ifdef DEBUG
+	printf("Received EOF on trace \n");	
+#endif /* DEBUG */
         /* -- no more event record: ----------------------------------------- */
+	if (tdes->last != NULL)
+	{
+#ifdef DEBUG
+	  printf("Last rec not null\n");	
+#endif /* DEBUG */
+	  last_event_name = get_event_name(tdes->last->ev);
+	  if (last_event_name != NULL)
+	  { /* the last event in the trace file is WALL_CLOCK. Is it EOF? */
+#ifdef DEBUG
+	    printf("Last_event_name = %s\n", last_event_name);
+#endif /* DEBUG */
+            if (strcmp(last_event_name, "\"WALL_CLOCK\"")==0)
+	    { /* It is the end. Close the trace file */
+#ifdef DEBUG
+	      printf("last_event_name = %s\n", last_event_name);
+#endif /* DEBUG */
+	      close(tdes->fd);
+	      tdes->fd = -1;
+              return ( (PCXX_EV *) NULL);
+	    }
+	    else
+	    {
+#ifdef DEBUG
+	      printf("Blocking...");
+#endif /* DEBUG */
+	      store_merged_edffile("tau.edf");
+	      output_flush(outfd);
+	      /* Block waiting for the trace to get some more records in it */
+	      while ((no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV))) == 0)
+	      {
+#ifdef DEBUG
+		printf("WAITING... no = %d, node filename = %s \n", no, tdes->name);
+#endif /* DEBUG */
+		sleep(1);
+	      }
+	      /* got the trace data! */
+#ifdef DEBUG
+	      printf("Read %d bytes\n", no);
+#endif /* DEBUG */
+	      if ((no < 0) || (no % sizeof(PCXX_EV) != 0))
+	      {
+		close(tdes->fd);
+		tdes->fd = -1;
+		return ((PCXX_EV *)NULL);
+	      }
+	      else
+	      {
+#ifdef DEBUG
+	        printf("Got trace data!\n");
+#endif /* DEBUG */
+                /* -- we got some event records ------------------------- */
+    		tdes->next = tdes->buffer;
+    		tdes->last = tdes->buffer + (no / sizeof(PCXX_EV)) - 1;
+  		return (tdes->erec = tdes->next++);
+	      }
+	    }
+	
+	  } 
+	} /* valid last event */
+#ifdef DEBUG
+	printf("Last rec null, closing ...\n");	
+#endif /* DEBUG */
         close (tdes->fd);
         tdes->fd = -1;
         return ( (PCXX_EV *) NULL);
-      }
+      } /* possible EOF */
       else if ( (no % sizeof(PCXX_EV)) != 0 )
       {
         /* -- read error: --------------------------------------------------- */
@@ -206,7 +277,7 @@ extern int   optind;
 
 int main(int argc, char *argv[])
 {
-  int i, active, numtrc, source, outfd, errflag, first;
+  int i, active, numtrc, source, errflag, first;
   int adjust, min_over, reassembly;
   unsigned long min_time, first_time;
   long numrec;
