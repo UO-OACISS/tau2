@@ -217,6 +217,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
 		    imageOutput.saveImage((ParaProfImageInterface) panel);
 		}
+		else if(arg.equals("Close This Window")){
+		    closeThisWindow();
+		}
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
@@ -511,9 +514,15 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     
     //Close the window when the close box is clicked
     void thisWindowClosing(java.awt.event.WindowEvent e){
-	setVisible(false);
-	dispose();
-	System.exit(0);
+	closeThisWindow();}
+
+    void closeThisWindow(){ 
+	try{
+	    this.setVisible(false);
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "TDW10");
+	}
     }
 
     //####################################

@@ -8,12 +8,14 @@
 */
 
 package paraprof;
+
 import java.util.*;
 import java.lang.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import paraprof.*;
 
 public class ParaProf implements ActionListener{
     //**********
@@ -86,7 +88,6 @@ public class ParaProf implements ActionListener{
 	    FileList fl = new FileList();
 	    Vector v = null;
 	    if(type!=-1){
-		//Try finding dynaprof files.
 		trial = new ParaProfTrial(type);
 		trial.setName("Default Trial");
 		switch(type){

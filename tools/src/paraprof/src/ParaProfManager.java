@@ -105,15 +105,15 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    //Create the root node.
 	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("Applications");
       
-	    DefaultMutableTreeNode standard = new DefaultMutableTreeNode(new ParaProfApplicationType("Standard Applications"));
+	    DefaultMutableTreeNode standard = new DefaultMutableTreeNode(new PlaceHolder("Standard Applications", 0));
 	    //Populate this node.
 	    this.populateStandardApplications(standard);
 	    root.add(standard);
       
-	    DefaultMutableTreeNode runtime = new DefaultMutableTreeNode(new ParaProfApplicationType("Runtime Applications"));
+	    DefaultMutableTreeNode runtime = new DefaultMutableTreeNode(new PlaceHolder("Runtime Applications", 0));
 	    root.add(runtime);
       
-	    dbApps = new DefaultMutableTreeNode(new ParaProfApplicationType("DB Applications"));
+	    dbApps = new DefaultMutableTreeNode(new PlaceHolder("DB Applications", 0));
 	    root.add(dbApps);
       
 	    treeModel = new DefaultTreeModel(root);
@@ -121,7 +121,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    tree = new JTree(treeModel);
 	    tree.setRootVisible(false);
 	    tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-	    JRacyTreeCellRenderer renderer = new JRacyTreeCellRenderer();
+	    ParaProfTreeCellRenderer renderer = new ParaProfTreeCellRenderer();
 	    tree.setCellRenderer(renderer);
       
 	    //Add tree listeners.
@@ -148,12 +148,10 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    //Set up the split panes.
 	    innerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, getPanelHelpMessage(0));
 	    innerPane.setContinuousLayout(true);
-	    innerPane.setOneTouchExpandable(true);
-
+	    
 	    outerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, innerPane, new JPanel());
 	    outerPane.setContinuousLayout(true);
-	    outerPane.setOneTouchExpandable(true);
-      
+	          
 	    (getContentPane()).add(outerPane, "Center");
       
 
@@ -173,7 +171,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    //the sliders can be set.
 	    this.show();
 	    innerPane.setDividerLocation(0.5);
-	    outerPane.setDividerLocation(0.667);
+	    outerPane.setDividerLocation(1.0);
     
 	}
 	catch(Exception e){
@@ -197,44 +195,59 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    innerPane.setRightComponent(getPanelHelpMessage(1));
 	    outerPane.setDividerLocation(0.5);
 	}
-	else if(userObject instanceof ParaProfApplicationType){
-	    String tmpString = userObject.toString();
+	else if(userObject instanceof PlaceHolder){
+	    PlaceHolder ph = (PlaceHolder) userObject; 
+	    String name = ph.getName();
 	    if(parentNode != null){
-		if(tmpString.equals("Standard Applications")){
-		    outerPane.setRightComponent(getApplicationPanel(0));
-		    innerPane.setRightComponent(getPanelHelpMessage(2));
+		switch(ph.getType()){
+		case 0:
+		    if(name.equals("Standard Applications")){
+			outerPane.setRightComponent(getApplicationPanel(0));
+			innerPane.setRightComponent(getPanelHelpMessage(2));
+			outerPane.setDividerLocation(0.8);
+			innerPane.setDividerLocation(0.5);
+			tree.expandPath(path);
+		    }
+		    else if(name.equals("Runtime Applications")){
+			outerPane.setRightComponent(getApplicationPanel(1));
+			innerPane.setRightComponent(getPanelHelpMessage(3));
+			outerPane.setDividerLocation(0.8);
+			innerPane.setDividerLocation(0.5);
+		    }
+		    else{
+			outerPane.setRightComponent(getApplicationPanel(2));
+			innerPane.setRightComponent(getPanelHelpMessage(4));
+			outerPane.setDividerLocation(0.67);
+			innerPane.setDividerLocation(0.5);
+		    }
+		    break;
+		case 1:
+		    outerPane.setRightComponent(getExperimentPanel());
+		    innerPane.setRightComponent(getPanelHelpMessage(5));
+		    outerPane.setDividerLocation(0.8);
 		    innerPane.setDividerLocation(0.5);
-		    outerPane.setDividerLocation(0.667);
-		    tree.expandPath(path);
-		}
-		else if(tmpString.equals("Runtime Applications")){
-		    outerPane.setRightComponent(getApplicationPanel(1));
-		    innerPane.setRightComponent(getPanelHelpMessage(3));
+		    break;
+		case 2:
+		    outerPane.setRightComponent(getTrialPanel());
+		    innerPane.setRightComponent(getPanelHelpMessage(6));
+		    outerPane.setDividerLocation(0.8);
 		    innerPane.setDividerLocation(0.5);
-		    outerPane.setDividerLocation(0.667);
-		}
-		else{
-		    outerPane.setRightComponent(getApplicationPanel(2));
-		    innerPane.setRightComponent(getPanelHelpMessage(4));
-		    innerPane.setDividerLocation(0.5);
-		    outerPane.setDividerLocation(0.667);
+		    break;
+		default:
+		    break;
 		}
 	    }
 	}
-	else if((parentNode.getUserObject()) instanceof ParaProfApplication){
-	    innerPane.setRightComponent(getPanelHelpMessage(5));
-	    innerPane.setDividerLocation(0.5);
-	}
-	else if((parentNode.getUserObject()) instanceof ParaProfExperiment){
-	    innerPane.setRightComponent(getPanelHelpMessage(6));
-	    outerPane.setDividerLocation(0.5);
-	}
 	else if(userObject instanceof ParaProfApplication){
+	    outerPane.setRightComponent(new JPanel());
 	    innerPane.setRightComponent(getApplicationTable((ParaProfApplication) userObject));
+	    outerPane.setDividerLocation(1.0);
 	    innerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfExperiment){
-	    innerPane.setRightComponent(getPanelHelpMessage(6));
+	    outerPane.setRightComponent(new JPanel());
+	    innerPane.setRightComponent(getPanelHelpMessage(8));
+	    outerPane.setDividerLocation(1.0);
 	    innerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfTrial){
@@ -243,7 +256,9 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    String tmpString = userObject.toString();
 	    //Here the actual clicked on node is an instance of ParaProfTrial (unlike the above
 	    //check on ParaProfTrial where it was the parent node).
+	    outerPane.setRightComponent(new JPanel());
 	    innerPane.setRightComponent(getPanelHelpMessage(8));
+	    outerPane.setDividerLocation(1.0);
 	    innerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof Metric){
@@ -369,7 +384,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     }
 
     private Component getApplicationTable(ParaProfApplication application){
-	return (new JScrollPane(new JTable(new ParaProfTableModel(application))));}
+	return (new JScrollPane(new JTable(new ParaProfManagerTableModel(application, treeModel))));}
     
     private Component getApplicationPanel(int type){
 	JPanel jPanel = new JPanel();
@@ -444,18 +459,28 @@ public class ParaProfManager extends JFrame implements ActionListener{
     }
   
     private Component getExperimentPanel(){
-	JButton tmpJButton = null;
-	JPanel tmpJPanel = new JPanel();
-	tmpJButton = new JButton("Add Experiment");
-	tmpJButton.addActionListener(new ActionListener(){
-                public void actionPerformed(ActionEvent evt){
-		    addExperiment();}
-	    });
-	tmpJPanel.add(tmpJButton);
-	return tmpJPanel;
+	JPanel jPanel = new JPanel();
+	JButton jButton = new JButton("Add Experiment");
+	jButton.addActionListener(new ActionListener(){
+		public void actionPerformed(ActionEvent evt){
+		    addExperiment();}});
+    
+	//Now add the components to the panel.
+	GridBagLayout gbl = new GridBagLayout();
+	jPanel.setLayout(gbl);
+	GridBagConstraints gbc = new GridBagConstraints();
+	gbc.insets = new Insets(5, 5, 5, 5);
+    
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.WEST;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(jPanel, jButton, gbc, 0, 0, 2, 1);
+	
+	return jPanel;
     }
-  
-    private Component getTrial(){
+
+    private Component getTrialPanel(){
 	JPanel jPanel = new JPanel();
 
 	JButton jButton = new JButton("Add Trail");
@@ -712,13 +737,11 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	}
     }
   
-    void showMetric(ParaProfTrial inParaProfTrial, Metric inMetric){
+    void showMetric(ParaProfTrial trial, Metric metric){
 	try{
-	    //Update the operation text fields.  Makes it easier for the user.
-	    opB.setText(opA.getText().trim());
-	    opA.setText(inMetric.toString());
-	    inParaProfTrial.setCurValLoc(inMetric.getID());
-	    inParaProfTrial.getSystemEvents().updateRegisteredObjects("dataEvent");
+	    trial.setCurValLoc(metric.getID());
+	    trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+	    trial.showMainWindow();
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "jRM04");
@@ -728,9 +751,9 @@ public class ParaProfManager extends JFrame implements ActionListener{
     void populateStandardApplications(DefaultMutableTreeNode inNode){
     
 	DefaultMutableTreeNode applicationNode = null;
-	DefaultMutableTreeNode placeHolderParaProfExperiments = null;
+	DefaultMutableTreeNode experimentsPlaceHolder = null;
 	DefaultMutableTreeNode experimentNode = null;
-	DefaultMutableTreeNode placeHolderParaProfTrials = null;
+	DefaultMutableTreeNode trialsPlaceHolder = null;
 	DefaultMutableTreeNode trialNode = null;
 	DefaultMutableTreeNode metricNode = null;
     
@@ -744,14 +767,14 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    applicationNode = new DefaultMutableTreeNode(application);
 	    application.setDMTN(applicationNode);
       
-	    placeHolderParaProfExperiments = new DefaultMutableTreeNode("ParaProfExperiments");
+	    experimentsPlaceHolder = new DefaultMutableTreeNode(new PlaceHolder("Experiments", 1));
 	    for(Enumeration e2 = (application.getExperiments()).elements(); e2.hasMoreElements() ;){  
 		ParaProfExperiment exp = (ParaProfExperiment) e2.nextElement();
 		experimentNode = new DefaultMutableTreeNode(exp);
 		exp.setDMTN(experimentNode);
         
 		//Populate the trials for this experiemnt.
-		placeHolderParaProfTrials = new DefaultMutableTreeNode("ParaProfTrials");
+		trialsPlaceHolder = new DefaultMutableTreeNode(new PlaceHolder("Trials", 2));
 		for(Enumeration e3 = (exp.getTrials()).elements(); e3.hasMoreElements() ;){
 		    ParaProfTrial trial = (ParaProfTrial) e3.nextElement();
 		    trialNode = new DefaultMutableTreeNode(trial);
@@ -766,16 +789,16 @@ public class ParaProfManager extends JFrame implements ActionListener{
 			trialNode.add(metricNode);
 			cnt4++;
 		    }
-		    placeHolderParaProfTrials.add(trialNode);
+		    trialsPlaceHolder.add(trialNode);
 		    if(cnt3 == 0)
 			defaultParaProfTrialNode = trialNode;
 		    cnt3++;
 		}
-		experimentNode.add(placeHolderParaProfTrials);
-		placeHolderParaProfExperiments.add(experimentNode);
+		experimentNode.add(trialsPlaceHolder);
+		experimentsPlaceHolder.add(experimentNode);
 		cnt2++;
 	    }
-	    applicationNode.add(placeHolderParaProfExperiments);
+	    applicationNode.add(experimentsPlaceHolder);
 	    inNode.add(applicationNode);
 	    cnt1++;
 	}
@@ -790,35 +813,33 @@ public class ParaProfManager extends JFrame implements ActionListener{
     //******************************
     //Manage the applications.
     //******************************
-    public void addApplicationButton()
-    {
-	JOptionPane.showMessageDialog(this, "Only the default application allowed in this release!", "Warning!"
-                                      ,JOptionPane.ERROR_MESSAGE);
-	return;
+    public void addApplicationButton(){
+	TreePath path = tree.getSelectionPath();
+	if(path == null)
+	    return;
+	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+	Object userObject = selectedNode.getUserObject();
     
-	/*
-	  TreePath path = tree.getSelectionPath();
-	  if(path == null)
-	  return;
-	  DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-	  DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
-	  Object userObject = selectedNode.getUserObject();
-    
-	  //Ok, now check to make sure that the parent node is the root.
-	  if(parentNode != null){
-	  //Not null, therfore, can continue.
-	  if(parentNode.isRoot()){
-	  String tmpString = userObject.toString();
-	  if(tmpString.equals("Standard ParaProfApplications")){
-          treeModel.insertNodeInto(new DefaultMutableTreeNode(ParaProf.applicationManager.addParaProfApplication()),
-	  selectedNode, selectedNode.getChildCount());
-	  }
-	  else if(tmpString.equals("Runtime ParaProfApplications")){
-	  }
-	  else{
-	  }
-	  }
-	  }*/
+	if(userObject instanceof PlaceHolder){
+	    PlaceHolder pl = (PlaceHolder) userObject;
+	    String name = pl.getName();
+	    if(pl.getType() == 0){
+		if(name.equals("Standard Applications")){
+		    ParaProfApplication application = ParaProf.applicationManager.addApplication();
+		    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(application);
+		    application.setDMTN(treeNode);
+		    treeModel.insertNodeInto(treeNode, selectedNode, selectedNode.getChildCount());
+		}
+		else if(name.equals("Runtime Applications")){
+		    ParaProfApplication application = ParaProf.applicationManager.addApplication();
+		    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(application);
+		    application.setDMTN(treeNode);
+		    treeModel.insertNodeInto(treeNode, selectedNode, selectedNode.getChildCount());
+		}
+		else{
+		}
+	    }
+	}
     }
   
     public void updateParaProfApplicationButton(){
@@ -970,7 +991,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     //####################################
 }
 
-class JRacyTreeCellRenderer extends DefaultTreeCellRenderer{
+class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer{
     public Component getTreeCellRendererComponent(JTree tree,
 						  Object value,
 						  boolean selected,
@@ -981,152 +1002,50 @@ class JRacyTreeCellRenderer extends DefaultTreeCellRenderer{
 	super.getTreeCellRendererComponent(tree,value,selected,expanded,leaf,row,hasFocus);
 	DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
 	Object userObject = node.getUserObject();
-	if(userObject instanceof ParaProfApplicationType){
-	    this.setIcon(new ImageIcon("red-ball.gif"));
-	}
-	else if(userObject instanceof String){
-	    String userObjectString = userObject.toString();
-	    if(userObjectString.equals("ParaProfExperiments")){
+	if(userObject instanceof PlaceHolder){
+	    PlaceHolder ph = (PlaceHolder) userObject; 
+	    switch(ph.getType()){
+	    case 0:
+		this.setIcon(new ImageIcon("red-ball.gif"));
+		break;
+	    case 1:
 		this.setIcon(new ImageIcon("blue-ball.gif"));
-	    }
-	    else if(userObjectString.equals("ParaProfTrials")){
-		this.setIcon(new ImageIcon("yellow-ball.gif"));
+		break;
+	    case 2:
+		this.setIcon(new ImageIcon("green-ball.gif"));
+		break;
+	    default:
+		break;
 	    }
 	}
 	else if(userObject instanceof Metric){
 	    this.setIcon(new ImageIcon("green-ball.gif"));
 	}
-    
 	return this;
     }
 }
 
-class ParaProfTableModel extends AbstractTableModel{
-    public ParaProfTableModel(Application application){
-	super();
-	this.application = application;
+//######
+//Acts as a simple place holder for applications, experiments, and trials.
+//Chose to make it a class to make it easier to determine the click location
+//in the tree.  Checking on strings runs the risk of name conflicts if
+//one does not check the parent node (which is a pain).
+//######
+class PlaceHolder{
+    public PlaceHolder(String name, int type){
+	this.name = name;
+	this.type = type;
     }
   
-    public int getColumnCount(){
-	return 2;}
-  
-    public int getRowCount(){
-	return 7;}
-  
-    public String getColumnName(int c){
-	return columnNames[c];}
-  
-    public Object getValueAt(int r, int c){
-	Object returnObject = null;
-	if(c==0){
-	    switch(r){
-	    case(0):
-		returnObject = "Name";
-		break;
-	    case(1):
-		returnObject = "ID";
-		break;
-	    case(2):
-		returnObject = "Language";
-		break;
-	    case(3):
-		returnObject = "Para_diag";
-		break;
-	    case(4):
-		returnObject = "Usage";
-		break;
-	    case(5):
-		returnObject = "Executable Options";
-		break;
-	    case(6):
-		returnObject = "Description";
-		break;
-	    }
-	}
-	else{
-	    switch(r){
-	    case(0):
-		returnObject = application.getName();
-		break;
-	    case(1):
-		returnObject = new Integer(application.getID());
-		break;
-	    case(2):
-		returnObject = application.getLanguage();
-		break;
-	    case(3):
-		returnObject = application.getParaDiag();
-		break;
-	    case(4):
-		returnObject = application.getUsage();
-		break;
-	    case(5):
-		returnObject = application.getExecutableOptions();
-		break;
-	    case(6):
-		returnObject = application.getDescription();
-		break;
-	    }
-	}
-    
-	return returnObject; 
-          
-    }
-  
-    public boolean isCellEditable(int r, int c){
-	if(c==1 && r!=1)
-	    return true;
-	else
-	    return false;
-    }
-  
-    public void setValueAt(Object obj, int r, int c){
-	//Should be getting a string I think.
-	if(obj instanceof String){
-	    String tmpString = (String) obj;
-	    if(c==1){
-		switch(r){
-		case(0):
-		    application.setName(tmpString);
-		    break;
-		case(1):
-		    application.setID(Integer.parseInt(tmpString));
-		    break;
-		case(2):
-		    application.setLanguage(tmpString);
-		    break;
-		case(3):
-		    application.setParaDiag(tmpString);
-		    break;
-		case(4):
-		    application.setUsage(tmpString);
-		    break;
-		case(5):
-		    application.setExecutableOptions(tmpString);
-		    break;
-		case(6):
-		    application.setDescription(tmpString);
-		    break;
-		}
-	    }
-	}
-    }
-  
-    private Application application = null;
-    String[] columnNames = {
-	"Field", "Value"
-    };
-  
-}
+    public String getName(){
+	return name;}
 
-class ParaProfApplicationType{
-    public ParaProfApplicationType(){}
-  
-    public ParaProfApplicationType(String inString){
-	name = inString;}
-  
+    public int getType(){
+	return type;}
+
     public String toString(){
 	return name;}
   
     String name = "Name Not Set";
+    int type = -1; //0-Application,1-Experiment,2-Trial.
 }
