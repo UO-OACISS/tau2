@@ -94,7 +94,16 @@ int RtsLayer::myThread(void)
 // thread that is spawned off
 //////////////////////////////////////////////////////////////////////
 void RtsLayer::RegisterThread()
-{
+{ /* Check the size of threads */
+  LockEnv();
+  static int numthreads = 1;
+  numthreads ++;
+  if (numthreads >= TAU_MAX_THREADS)
+  {
+    fprintf(stderr, "TAU: RtsLayer: Max thread limit (%d) exceeded. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", numthreads);
+  }
+  UnLockEnv();
+
 #ifdef PTHREADS
   PthreadLayer::RegisterThread();
 #elif TAU_SPROC
@@ -291,8 +300,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2005/01/05 01:59:17 $
- * VERSION: $Id: RtsThread.cpp,v 1.18 2005/01/05 01:59:17 sameer Exp $
+ * $Revision: 1.19 $   $Date: 2005/01/08 01:01:23 $
+ * VERSION: $Id: RtsThread.cpp,v 1.19 2005/01/08 01:01:23 sameer Exp $
  ***************************************************************************/
 
 
