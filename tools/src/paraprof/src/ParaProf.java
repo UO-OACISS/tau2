@@ -109,6 +109,12 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		case 2:
 		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
 		    break;
+		case 5:
+		    if(filePrefix==null)
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "gprof", UtilFncs.debug);
+		    else
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
+		    break;
 		default:
 		    v = new Vector();
 		    System.out.println("Unrecognized file type.");
@@ -291,6 +297,8 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    paraProf.type = 1;
 		else if(argument.equalsIgnoreCase("dynaprof"))
 		    paraProf.type = 2;
+		else if(argument.equalsIgnoreCase("gprof"))
+		    paraProf.type = 5;
 		else{
 		    System.out.println("Unrecognized file type: " + argument);
 		    System.exit(0);

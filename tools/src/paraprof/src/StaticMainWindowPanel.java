@@ -83,7 +83,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 	    //Add items to the third popup menu.
 	    //######
-	    //Add items to the first popup menu.
 	    JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
 	    mappingDetailsItem.addActionListener(this);
 	    popup3.add(mappingDetailsItem);

@@ -28,7 +28,7 @@ public class FileList{
 	Vector result = new Vector();
 
 	//Check to see if type is valid.
-	if(type>3){
+	if(type>5){
 	    System.out.println("Unexpected Type -  " + type + ":");
 	    System.out.println("Location - ParaProfManager.getFileList(...) 0");
 	    return new Vector();
@@ -109,7 +109,7 @@ public class FileList{
 			}
 		    }
 
-		    if(type==0 || type==1){
+		    if(type==0 || type==1 || type == 5){
 			//First try and find a .dat file in the selected directory.
 			files = this.helperGetFileList(selection[0], type, filePrefix, debug);
 			if(files.length > 0)
@@ -212,7 +212,7 @@ public class FileList{
 		    System.out.println("####################################");
 		}
 
-		if(type==0){
+		if(type==0 || type==5){
 		    file = new File(directoryPath + fileSeparator + filePrefix + ".dat");
 		    if(file.exists()){
 			files = new File[1];

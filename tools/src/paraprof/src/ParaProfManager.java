@@ -133,6 +133,44 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //####################################
 	    //End - Code to generate the menus.
 	    //####################################
+
+	    //######
+	    //Add items to the first popup menu.
+	    //######
+	    JMenuItem jMenuItem = new JMenuItem("Update Meta Data");
+	    jMenuItem.addActionListener(this);
+	    popup1.add(jMenuItem);
+	    //######
+	    //End - Add items to the first popup menu.
+	    //######
+
+	    //######
+	    //Add items to the seccond popup menu.
+	    //######
+	    jMenuItem = new JMenuItem("Update Meta Data");
+	    jMenuItem.addActionListener(this);
+	    popup2.add(jMenuItem);
+      
+	    jMenuItem = new JMenuItem("Upload Trial");
+	    jMenuItem.addActionListener(this);
+	    popup2.add(jMenuItem);
+	    //######
+	    //End - Add items to the second popup menu.
+	    //######
+
+	    //######
+	    //Add items to the third popup menu.
+	    //######
+	    jMenuItem = new JMenuItem("Update Meta Data");
+	    jMenuItem.addActionListener(this);
+	    popup3.add(jMenuItem);
+	    
+	    jMenuItem = new JMenuItem("Upload Metric");
+	    jMenuItem.addActionListener(this);
+	    popup3.add(jMenuItem);
+	    //######
+	    //End - Add items to the third popup menu.
+	    //######
    
 	    //####################################
 	    //Create the tree.
@@ -153,6 +191,40 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 	    ParaProfTreeCellRenderer renderer = new ParaProfTreeCellRenderer();
 	    tree.setCellRenderer(renderer);
+
+	    //######
+	    //Add a mouse listener for this tree.
+	    MouseListener ml = new MouseAdapter() {
+		    public void mousePressed(MouseEvent evt) {
+			int selRow = tree.getRowForLocation(evt.getX(), evt.getY());
+			TreePath path = tree.getPathForLocation(evt.getX(), evt.getY());
+			if(selRow != -1) {
+			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+				Object userObject = selectedNode.getUserObject();
+				if(userObject instanceof ParaProfApplication){
+				    clickedOnObject = userObject;
+				    popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
+				}
+				else if(userObject instanceof ParaProfExperiment){
+				    clickedOnObject = userObject;
+				    popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
+				}
+				else if(userObject instanceof ParaProfTrial){
+				    clickedOnObject = userObject;
+				    popup2.show(ParaProfManager.this, evt.getX(), evt.getY());
+				}
+				else if(userObject instanceof Metric){
+				    clickedOnObject = userObject;
+				    popup3.show(ParaProfManager.this, evt.getX(), evt.getY());
+				}
+			    }
+			}
+		    }
+		};
+	    tree.addMouseListener(ml);
+	    //######
       
 	    //######
 	    //Add tree listeners.
@@ -202,47 +274,71 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	try{
 	    Object EventSrc = evt.getSource();
 	    if(EventSrc instanceof JMenuItem){
-		    String arg = evt.getActionCommand();
-		    if(arg.equals("Exit ParaProf!")){
+		String arg = evt.getActionCommand();
+		if(arg.equals("Exit ParaProf!")){
+		    setVisible(false);
+		    dispose();
+		    System.exit(0);
+		} 
+		else if(arg.equals("Close This Window")){
+		    if(!(ParaProf.runHasBeenOpened)){
 			setVisible(false);
 			dispose();
+			System.out.println("Quiting ParaProf!");
 			System.exit(0);
-		    } 
-		    else if(arg.equals("Close This Window")){
-			if(!(ParaProf.runHasBeenOpened)){
-			    setVisible(false);
-			    dispose();
-			    System.out.println("Quiting ParaProf!");
-			    System.exit(0);
-			}
-			else{
-			    dispose();
-			}
 		    }
-		    else if(arg.equals("Database Configuration")){
-			(new DBConfiguration(this)).show();}
-		    else if(arg.equals("Show Apply Operation")){
-			if(showApplyOperationItem.isSelected())
-			    jSplitOuterPane.setDividerLocation(0.75);
-			else
-			    jSplitOuterPane.setDividerLocation(1.00);
+		    else{
+			dispose();
 		    }
-		    else if(arg.equals("About ParaProf")){
-			JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
+		}
+		else if(arg.equals("Database Configuration")){
+		    (new DBConfiguration(this)).show();}
+		else if(arg.equals("Show Apply Operation")){
+		    if(showApplyOperationItem.isSelected())
+			jSplitOuterPane.setDividerLocation(0.75);
+		    else
+			jSplitOuterPane.setDividerLocation(1.00);
+		}
+		else if(arg.equals("About ParaProf")){
+		    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
+		}
+		else if(arg.equals("Show Help Window")){
+		    //Show the ParaProf help window.
+		    ParaProf.helpWindow.clearText();
+		    ParaProf.helpWindow.show();
+		    
+		    ParaProf.helpWindow.writeText("This is the experiment manager window.");
+		    ParaProf.helpWindow.writeText("");
+		    ParaProf.helpWindow.writeText("You can create an experiment, and then add separate runs,.");
+		    ParaProf.helpWindow.writeText("which may contain one or more metrics (gettimeofday, cache misses, etc.");
+		    ParaProf.helpWindow.writeText("You can also derive new metrics in this window.");
+		    ParaProf.helpWindow.writeText("");
+		    ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
+		}
+		else if(arg.equals("Update Meta Data")){
+		    if(clickedOnObject instanceof ParaProfApplication){
+			System.out.println("Update Meta Data request received from a ParaProfApplication!");
 		    }
-		    else if(arg.equals("Show Help Window")){
-			//Show the ParaProf help window.
-			ParaProf.helpWindow.clearText();
-			ParaProf.helpWindow.show();
-			
-			ParaProf.helpWindow.writeText("This is the experiment manager window.");
-			ParaProf.helpWindow.writeText("");
-			ParaProf.helpWindow.writeText("You can create an experiment, and then add separate runs,.");
-			ParaProf.helpWindow.writeText("which may contain one or more metrics (gettimeofday, cache misses, etc.");
-			ParaProf.helpWindow.writeText("You can also derive new metrics in this window.");
-			ParaProf.helpWindow.writeText("");
-			ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
+		    else if(clickedOnObject instanceof ParaProfExperiment){
+			System.out.println("Update Meta Data request received from a ParaProfExperiment!");
 		    }
+		    else if(clickedOnObject instanceof ParaProfTrial){
+			System.out.println("Update Meta Data request received from a ParaProfTrial!");
+		    }
+		    else if(clickedOnObject instanceof Metric){
+			System.out.println("Update Meta Data request received from a ParaProfMetric!");
+		    }
+		}
+		else if(arg.equals("Upload Trial")){
+		    if(clickedOnObject instanceof Metric){
+			System.out.println("Upload Trial request received from a ParaProfTrial!");
+		    }
+		}
+		else if(arg.equals("Upload Metric")){
+		    if(clickedOnObject instanceof Metric){
+			System.out.println("Upload Metric request received from a ParaProfMetric!");
+		    }
+		}
 	    }
 	}
 	catch(Exception e){
@@ -880,6 +976,17 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     private String password = null;
     private String configFile = null;//"/home/bertie/Programming/data/perfdb.cfg";
     private Vector loadedTrials = new Vector();
+
+    //######
+    //Popup menu stuff.
+    //######
+    private JPopupMenu popup1 = new JPopupMenu();
+    private JPopupMenu popup2 = new JPopupMenu();
+    private JPopupMenu popup3 = new JPopupMenu();
+    private Object clickedOnObject = null;
+    //######
+    //End - Popup menu stuff.
+    //######
     //####################################
     //End - Instance Data.
     //####################################
