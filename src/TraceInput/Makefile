@@ -49,7 +49,7 @@ ARFLAGS         = rcv
 #USE_DECCXX#EXTRAOBJS=cxx_repository/*.o #ENDIF#
 
 
-RM		= /bin/rm -f
+RM		= /bin/rm -rf
 
 INSTALLDEST     = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
@@ -93,10 +93,10 @@ TAU_Cwrapper.o : TAU_Cwrapper.cpp $(HDRS)
 	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 clean: 	
-	$(RM) $(OBJS) $(LIBTARGET)  $(EXTRAOBJS)
+	$(RM) $(OBJS) $(LIBTARGET) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 ##############################################
 #/***************************************************************************
 # * $RCSfile: Makefile,v $   $Author: sameer $
-# * $Revision: 1.4 $   $Date: 2004/10/29 00:37:03 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.4 2004/10/29 00:37:03 sameer Exp $ 
+# * $Revision: 1.5 $   $Date: 2004/11/07 01:49:23 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.5 2004/11/07 01:49:23 sameer Exp $ 
 # ***************************************************************************/
