@@ -57,12 +57,17 @@ dyninst		- An example that shows the use of DyninstAPI [U. Maryland,
 
 dyninstthreads  - The above example with threads.
 
-java		- Shows a java program for calculating the value of pi. It 
+java/pi		- Shows a java program for calculating the value of pi. It 
 		  illustrates the use of the TAU JVMPI layer for instrumenting
 		  a Java program without any modifications to its source code,
 		  byte-code or the JVM. It requires a Java 2 compliant JVM and
 		  TAU needs to be configured with the -jdk=<dir> option to use
 		  this. 
+
+java/api	- The same Pi program as above that illustrates the use of the 
+                  TAU Java API for source level instrumentation. See the README
+                  file in that directory for details on how to compile and run
+                  the application.
 
 openmp		- Shows how to manually instrument an OpenMP program using the 
 		  TAU API. There are subdirectories for C, C++ and F90 to show
