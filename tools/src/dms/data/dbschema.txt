@@ -1,0 +1,212 @@
+CREATE TABLE application (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    name                    VARCHAR(100)    NOT NULL,
+    version                 VARCHAR(100)    DEFAULT '1.0',
+    description             TEXT, 
+    language                VARCHAR(100)    NOT NULL,    
+    paradigm                VARCHAR(100),
+    usage_text              TEXT,
+    execution_options       TEXT,
+    userdata                TEXT
+);
+
+CREATE TABLE experiment (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    application             INT             NOT NULL,
+    name                    VARCHAR(100),
+	system_name             VARCHAR(100),
+	system_machine_type     VARCHAR(100),
+	system_arch             VARCHAR(100),
+	system_os               VARCHAR(100),
+	system_memory_size      VARCHAR(100),
+	system_processor_amt    VARCHAR(100),
+	system_l1_cache_size    VARCHAR(100),
+	system_l2_cache_size    VARCHAR(100),
+    system_userdata         TEXT,
+	compiler_cpp_name       VARCHAR(100),
+	compiler_cpp_version    VARCHAR(100),
+	compiler_cc_name        VARCHAR(100),
+	compiler_cc_version     VARCHAR(100),
+	compiler_java_dirpath   VARCHAR(100),
+	compiler_java_version   VARCHAR(100),
+    compiler_userdata       TEXT,
+	configure_prefix        VARCHAR(100),
+	configure_arch          VARCHAR(100),
+	configure_cpp           VARCHAR(100),
+	configure_cc            VARCHAR(100),
+	configure_jdk           VARCHAR(100),
+	configure_profile       VARCHAR(3),
+    configure_userdata      TEXT,
+    userdata                TEXT
+);
+
+CREATE TABLE trial (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    name                    VARCHAR(100),
+    experiment              INT             NOT NULL,
+    time                    TIMESTAMP       WITHOUT TIME ZONE,
+    problem_definition      TEXT,
+    node_count              INT,
+    contexts_per_node       INT,
+    threads_per_context     INT,
+    userdata                TEXT
+);
+
+CREATE TABLE metric (
+    id                      SERIAL          NOT NULL     PRIMARY KEY,
+    name                    TEXT            NOT NULL,
+    trial                   INT				NOT NULL
+);
+
+CREATE TABLE function (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    trial                   INT             NOT NULL,
+    function_number         INT				NOT NULL,
+    name                    TEXT            NOT NULL,
+    group_name              VARCHAR(50)
+);
+
+CREATE TABLE user_event (
+    id                      SERIAL           NOT NULL    PRIMARY KEY,
+    trial                   INT              NOT NULL,
+    name                    TEXT             NOT NULL,
+    group_name              VARCHAR(50)
+);
+
+CREATE TABLE interval_location_profile (
+    id                      SERIAL           NOT NULL    PRIMARY KEY,
+    function                INT              NOT NULL,
+    node                    INT              NOT NULL,             
+    context                 INT              NOT NULL,
+    thread                  INT              NOT NULL,
+    metric                  INT				 NOT NULL,
+    inclusive_percentage    DECIMAL,
+    inclusive               DECIMAL,
+    exclusive_percentage    DECIMAL,
+    exclusive               DECIMAL,
+    call                    DECIMAL,
+    subroutines             DECIMAL,
+    inclusive_per_call      DECIMAL
+);
+
+CREATE TABLE atomic_location_profile (
+    id                      SERIAL           NOT NULL    PRIMARY KEY,
+    user_event              INT              NOT NULL,
+    node                    INT              NOT NULL,             
+    context                 INT              NOT NULL,
+    thread                  INT              NOT NULL,
+    sample_count            INT    ,         
+    maximum_value           DECIMAL,
+    minimum_value           DECIMAL,
+    mean_value              DECIMAL,
+    standard_deviation      DECIMAL
+);
+
+CREATE TABLE interval_total_summary (
+    id                		SERIAL           NOT NULL   PRIMARY KEY,
+    function                INT              NOT NULL,
+    metric                  INT				 NOT NULL,
+    inclusive_percentage    DECIMAL,
+    inclusive               DECIMAL,
+    exclusive_percentage    DECIMAL,
+    exclusive               DECIMAL,
+    call                    DECIMAL,
+    subroutines             DECIMAL,
+    inclusive_per_call      DECIMAL
+);
+
+CREATE TABLE interval_mean_summary (
+    id                		SERIAL           NOT NULL   PRIMARY KEY,
+    function                INT              NOT NULL,
+    metric                  INT				 NOT NULL,
+    inclusive_percentage    DECIMAL,
+    inclusive               DECIMAL,
+    exclusive_percentage    DECIMAL,
+    exclusive               DECIMAL,
+    call                    DECIMAL,
+    subroutines             DECIMAL,
+    inclusive_per_call      DECIMAL
+);
+
+CREATE INDEX experiment_application_index on experiment (application);
+CREATE INDEX trial_experiment_index on trial (experiment);
+CREATE INDEX function_trial_index on function (trial);
+CREATE INDEX interval_loc_function_metric_index on interval_location_profile (function, metric);
+CREATE INDEX interval_total_function_metric_index on interval_total_summary (function, metric);
+CREATE INDEX interval_mean_function_metric_index on interval_mean_summary (function, metric);
+CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (function, metric, node, context, thread);
+
+CREATE VIEW function_trial_view 
+	( id, function_number, name, group_name, trial, experiment )
+	AS SELECT 
+	f.id, f.function_number, f.name, f.group_name, f.trial, t.experiment
+	FROM function f INNER JOIN trial t ON f.trial = t.id;
+
+CREATE VIEW function_trial_experiment_view 
+	( id, function_number, name, group_name, trial, experiment, application )
+	AS SELECT 
+	f.id, f.function_number, f.name, f.group_name, f.trial, f.experiment, e.application
+	FROM function_trial_view f INNER JOIN experiment e ON f.experiment = e.id;
+
+CREATE VIEW function_detail1
+	( id, trial, metric, inclusive_percentage, inclusive, 
+	exclusive_percentage, exclusive, call, subroutines, 
+	inclusive_per_call )
+	AS SELECT
+	f.id, f.trial, ms.metric, ms.inclusive_percentage, ms.inclusive, 
+	ms.exclusive_percentage, ms.exclusive, ms.call, ms.subroutines, 
+	ms.inclusive_per_call
+	FROM function f inner join interval_mean_summary ms 
+	ON f.id = ms.function;
+	
+CREATE VIEW function_detail
+	( id, trial, metric, mean_inclusive_percentage, mean_inclusive, 
+	mean_exclusive_percentage, mean_exclusive, mean_call, mean_subroutines, 
+	mean_inclusive_per_call, total_inclusive_percentage, total_inclusive, 
+	total_exclusive_percentage, total_exclusive, total_call, 
+	total_subroutines, total_inclusive_per_call )
+	AS SELECT
+	f.id, f.trial, f.metric, f.inclusive_percentage, f.inclusive, 
+	f.exclusive_percentage, f.exclusive, f.call, f.subroutines, 
+	f.inclusive_per_call, ts.inclusive_percentage, ts.inclusive, 
+	ts.exclusive_percentage, ts.exclusive, ts.call, ts.subroutines, 
+	ts.inclusive_per_call
+	FROM function_detail1 f inner join interval_total_summary ts 
+	ON f.id = ts.function and f.metric = ts.metric;
+	
+CREATE VIEW function_interval1
+	( trial, function, metric, node, context, thread, inclusive_percentage, 
+	inclusive, exclusive_percentage, exclusive, call, 
+	subroutines, inclusive_per_call )
+	AS SELECT
+	f.trial, f.id, p.metric, p.node, p.context, p.thread,
+	p.inclusive_percentage, p.inclusive, 
+	p.exclusive_percentage, p.exclusive, p.call, p.subroutines, 
+	p.inclusive_per_call
+	FROM function f inner join interval_location_profile p
+	ON f.id = p.function;
+	
+CREATE VIEW function_interval2
+	( experiment, trial, function, metric, node, context, thread, 
+	inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, 
+	subroutines, inclusive_per_call )
+	AS SELECT
+	t.experiment, p.trial, p.function, p.metric, p.node, p.context, p.thread,
+	p.inclusive_percentage, p.inclusive, 
+	p.exclusive_percentage, p.exclusive, p.call, p.subroutines, 
+	p.inclusive_per_call
+	FROM function_interval1 p inner join trial t
+	ON p.trial = t.id;
+	
+CREATE VIEW function_interval
+	( application, experiment, trial, function, metric, node, context, thread, 
+	inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, 
+	subroutines, inclusive_per_call )
+	AS SELECT
+	e.application, p.experiment, p.trial, p.function, p.metric, p.node, 
+	p.context, p.thread, p.inclusive_percentage, p.inclusive, 
+	p.exclusive_percentage, p.exclusive, p.call, p.subroutines, 
+	p.inclusive_per_call
+	FROM function_interval2 p inner join experiment e
+	ON p.experiment = e.id;
+

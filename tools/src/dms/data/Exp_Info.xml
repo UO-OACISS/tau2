@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<Experiment>
+	<name>Test</name>
+	<userData>Custom Experiment Data</userData>
+
+	<System>
+		<name>pyros@cs.uoregon.edu</name>
+		<machine-type>SGI_Power_Challenge</machine-type>
+		<arch>sgi32</arch>
+		<OS>IRIX6.5.4</OS>	
+		<hw-spec>
+			<memory-size> </memory-size>
+			<processor-amt>8pes</processor-amt>
+			<cache-size>
+				<L1></L1>
+				<L2></L2>
+			</cache-size>
+		</hw-spec>
+		<userData>Custom System Data</userData>
+	</System>
+
+	<Compiler>
+		<cpp>
+			<name>CC</name>
+			<version>7.3.1.2</version>
+		</cpp>
+		<cc>
+			<name>cc</name>
+			<version>7.3.1.2 </version>
+		</cc>
+		<Java>
+			<dirpath>/local/apps/Java/jdk-1.3beta</dirpath>
+			<version>jdk-1.3beta</version>
+		</Java>
+		<userData>Custom Compiler Data</userData>
+	</Compiler>
+
+	<configure>
+		<prefix>&lt;arch&lt;/bin, &lt;arch&lt;/lib</prefix>
+		<arch>sgi8k</arch>
+		<cpp>CC</cpp>
+		<cc>cc</cc>
+		<jdk>/local/apps/Java/jdk-1.3beta</jdk>
+		<PROFILE>Yes</PROFILE>
+		<userData>Custom Configure Data</userData>
+	</configure>
+
+</Experiment>
+
