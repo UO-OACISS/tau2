@@ -372,7 +372,7 @@ inline double TauGetMHzRatings(void)
   {
     rating = atof(buf);
   }
-  fclose(f);
+  pclose(f);
 #ifdef DEBUG_PROF
   printf("Rating = %g Mhz\n", rating);
 #endif /* DEBUG_PROF */
@@ -1006,6 +1006,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.34 $   $Date: 2002/01/24 23:30:19 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.34 2002/01/24 23:30:19 sameer Exp $ 
+ * $Revision: 1.35 $   $Date: 2002/01/24 23:44:53 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.35 2002/01/24 23:44:53 sameer Exp $ 
  ***************************************************************************/
