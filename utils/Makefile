@@ -17,7 +17,8 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=/research/paraducks/apps/pdt/dev/tau2
+PDTDIR=/research/paraducks/apps/pdt/dev/pdtoolkit
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
@@ -53,6 +54,9 @@ WARNINGSOPT	= -w
 #PGI#CEXTRA = -DPGI -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 #FUJITSU#CEXTRA = -DFUJITSU -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 CWARNING	= $(WARNINGSOPT)
+#PDT#PDTOPTS 	= -I$(PDTDIR)/include -L$(PDTDIR)/$(CONFIG_ARCH)/lib -lpdb #ENDIF#
+#PDT#INSTR 		= tau_instrumentor #ENDIF#
+
 
 
 # Compiler specific flags
@@ -65,6 +69,7 @@ INCLUDEPATH = $(SAGE1DIR)/lib/include
 SAGE1LIBS = $(SAGE1DIR)/lib/$(CONFIG_ARCH)
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
+#PDT#INSTALLINSTR 	= $(INSTALLDEST)/tau_instrumentor #ENDIF#
 
 CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC)
 
@@ -87,7 +92,7 @@ SRCS	      = pcxx_merge.c \
 		pcxx_convert.c
 
 EXECUTABLES =	pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
-		$(RUNTIME4) $(RUNTIME5)
+		$(RUNTIME4) $(RUNTIME5) $(INSTR)
 
 all:		$(EXECUTABLES)
 
@@ -115,6 +120,9 @@ tau_merge.o: 	tau_merge.c
 
 tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
+
+tau_instrumentor: 	tau_instrumentor.cpp   
+		$(CXX) $(CFLAGS) tau_instrumentor.cpp -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
 ar2pcxx : ar2pcxx.c 
 		$(LINKER) ar2pcxx.c -o $@
@@ -146,6 +154,11 @@ $(INSTALLDEST)/tau_convert: tau_convert
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 
+$(INSTALLDEST)/tau_instrumentor: tau_instrumentor
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(INSTALL) $? $(INSTALLDEST)
 #$(INSTALLDEST)/$(RUNTIME1): $(RUNTIME1)
 #		@echo Installing $? in $(INSTALLDEST)
 #		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -180,7 +193,7 @@ $(INSTALLDEST)/tau_convert: tau_convert
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR)
 
 program:        $(PROGRAM)
 

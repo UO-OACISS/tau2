@@ -92,6 +92,11 @@ fi
 	echo "s,^PCLDIR=.*$,PCLDIR=$pcldir,g" >> $sedout
 	;;
 
+     pdtdir=*)
+        pdtdir=`echo $1 | sed -e 's/^pdtdir=//'`
+	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
+	;;
+
      tulipdir=*)
         tulipdir=`echo $1 | sed -e 's/^tulipdir=//'`
 	echo "s,^TULIPDIR=.*$,TULIPDIR=$tulipdir,g" >> $sedout
@@ -407,6 +412,10 @@ fi
 	;;
      PCL)
 	echo "NOTE: Using PCL interface for Hardware Performance Counters ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PDT)
+	echo "NOTE: Using PDT for TAU Source Code Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PCLPTHREAD)
