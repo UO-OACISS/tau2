@@ -1741,7 +1741,16 @@ then
   mpi=yes
   fixmakeargs="$fixmakeargs MPI"
   tauoptions="${tauoptions}-mpi"
-  cat <<EOF > mpi_thread_test.C
+
+  mpicompiler=$cxx_compiler
+  msuf=C
+
+  if [ $machine = t3e ]
+  then
+    mpicompiler=$c_compiler
+    msuf=c
+  fi
+  cat <<EOF > mpi_thread_test.$msuf
   #include <mpi.h>
 
   int main(int argc, char **argv)
@@ -1757,7 +1766,7 @@ EOF
     mpi_include=-I$mpiinc
   fi
      
-  cat <<EOF > mpi2.c
+  cat <<EOF > mpi2.$msuf
   #include <mpi.h>
 
   int foo(MPI_Win win)
@@ -1768,7 +1777,7 @@ EOF
   }
 EOF
 
-  cat <<EOF > mpi2iorequest.c
+  cat <<EOF > mpi2iorequest.$msuf
   #include <mpi.h>
 
   int foo (MPI_File fh, void *buf, int count,
@@ -1779,7 +1788,7 @@ EOF
   }
 EOF
 
-cat <<EOF > mpi2attr.c
+cat <<EOF > mpi2attr.$msuf
   #include <mpi.h>
 
   int foo(MPI_Win_copy_attr_function *f1, MPI_Type_copy_attr_function *f2, 
@@ -1789,7 +1798,7 @@ cat <<EOF > mpi2attr.c
   }
 EOF
 
-  cat <<EOF > mpi2typeex.c
+  cat <<EOF > mpi2typeex.$msuf
   #include <mpi.h>
 
   int f1( void * sendbuf, void * recvbuf, int count, MPI_Datatype datatype
@@ -1804,7 +1813,7 @@ EOF
   }
 EOF
 
-  cat <<EOF > mpi2add.c
+  cat <<EOF > mpi2add.$msuf
   #include <mpi.h>
 
   int f1( int * errorclass)
@@ -1819,7 +1828,7 @@ EOF
 
 EOF
 
-  cat <<EOF > mpi2grequest.c
+  cat <<EOF > mpi2grequest.$msuf
   #include <mpi.h>
 
   int foo(MPI_Grequest_query_function *grequest_query_fn,
@@ -1840,7 +1849,7 @@ EOF
   }
 
 EOF
-  cat <<EOF > mpi2datarep.c
+  cat <<EOF > mpi2datarep.$msuf
   #include <mpi.h>
 
   int foo( char * datarep, MPI_Datarep_conversion_function * read_conversion_fn, MPI_Datarep_conversion_function * write_conversion_fn, MPI_Datarep_extent_function * dtype_file_extent_fn, void * extra_state)
@@ -1851,7 +1860,7 @@ EOF
 
 EOF
 
-  cat <<EOF > mpi2errhandler.c
+  cat <<EOF > mpi2errhandler.$msuf
   #include <mpi.h>
 
   int foo (MPI_Comm_errhandler_fn *a, MPI_Errhandler *b)
@@ -1865,7 +1874,7 @@ EOF
   }
 EOF
 
-  cat <<EOF > mpi2hpconst.c
+  cat <<EOF > mpi2hpconst.$msuf
   #include <mpi.h>
   /* HP MPI uses const char * instead of char * in the 
      prototypes of the following routines */
@@ -1888,7 +1897,7 @@ EOF
 
 EOF
 
-cat << EOF > mpistatus.c
+cat << EOF > mpistatus.$msuf
 
   #include <mpi.h>
   #include <memory.h>
@@ -1899,14 +1908,6 @@ cat << EOF > mpistatus.c
   }
 EOF
   
-  mpicompiler=$cxx_compiler
-  msuf=C
-
-  if [ $machine = t3e ]
-  then
-    mpicompiler=$c_compiler
-    msuf=c
-  fi
 
   if [ $machine = sgi64 -a $cxx_compiler = CC ]
   then
