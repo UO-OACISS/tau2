@@ -47,6 +47,8 @@ using namespace std;
 void TraceCallStack(int tid, Profiler *current);
 #endif // TRACING_ON
 
+#include <stdio.h>
+
 
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
@@ -300,8 +302,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2005/01/08 01:01:23 $
- * VERSION: $Id: RtsThread.cpp,v 1.19 2005/01/08 01:01:23 sameer Exp $
+ * $Revision: 1.20 $   $Date: 2005/02/18 21:02:33 $
+ * VERSION: $Id: RtsThread.cpp,v 1.20 2005/02/18 21:02:33 sameer Exp $
  ***************************************************************************/
 
 
