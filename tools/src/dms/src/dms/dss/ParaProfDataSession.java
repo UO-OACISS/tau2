@@ -649,10 +649,12 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     //####################################
     //Protected Section.
     //####################################
-    protected void addMetric(String metricName){
-	Metric newMetric = new Metric();
-	newMetric.setName(metricName);
-	metrics.add(newMetric);}
+    protected Metric addMetric(String name){
+	Metric metric = new Metric();
+	metric.setName(name);
+	metrics.add(metric);
+	return metric;
+    }
 
     protected void setProfileStatsPresent(boolean profileStatsPresent){
 	this.profileStatsPresent = profileStatsPresent;}
