@@ -580,7 +580,7 @@ bool MultipleCounterLayer::pclMCLInit(int functionPosition){
       }
       //cout << "Inserting pclMCL in position: " << functionPosition << endl;
       MultipleCounterLayer::functionArray[functionPosition] = pclMCL;
-      papiVirtualMCL_FP = functionPosition;
+      //papiVirtualMCL_FP = functionPosition;
 
       return true;
     }
