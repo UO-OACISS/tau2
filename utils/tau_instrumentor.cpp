@@ -413,6 +413,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 #ifdef DEBUG
   cout << "Processing " << file << " ..." << endl;
 #endif 
+  memset(inbuf, INBUF_SIZE, 0); // reset to zero
 
 
   // initialize reference vector
@@ -528,6 +529,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name,
 	
       } // else      
 
+      memset(inbuf, INBUF_SIZE, 0); // reset to zero
     } // while loop
 
   } // For loop
@@ -650,6 +652,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 #endif
 
 
+  memset(inbuf, INBUF_SIZE, 0); // reset to zero
   // initialize reference vector
   vector<itemRef *> itemvec;
   getCReferences(itemvec, pdb, f);
@@ -895,6 +898,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
           } /* for it/lit */
         lit=it; 
       } /* else line no*/
+      memset(inbuf, INBUF_SIZE, 0); // reset to zero
     } /* while */
   } /* while lit != end */
   // For loop is over now flush out the remaining lines to the output file
@@ -943,6 +947,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   cout << "Processing " << file << " in instrumentFFile..." << endl;
 #endif
 
+  memset(inbuf, INBUF_SIZE, 0); // reset to zero
   // initialize reference vector
   vector<itemRef *> itemvec;
   getFReferences(itemvec, pdb, f);
@@ -1158,6 +1163,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
         } /* for it/lit */
         lit = it;		
       } /* reached line */
+      memset(inbuf, INBUF_SIZE, 0); // reset to zero
     } /* while */
   } /* while lit!= end */
   // For loop is over now flush out the remaining lines to the output file
@@ -1420,8 +1426,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.47 $   $Date: 2003/10/23 20:11:33 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.47 2003/10/23 20:11:33 sameer Exp $
+ * $Revision: 1.48 $   $Date: 2003/10/23 22:14:49 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.48 2003/10/23 22:14:49 sameer Exp $
  ***************************************************************************/
 
 
