@@ -253,7 +253,7 @@ public class TauPprofDataSource extends DataSource {
 
                     totalProfile.setNumCalls(functionDataLine2.d0);
                     totalProfile.setNumSubr(functionDataLine2.d1);
-                    totalProfile.setInclusivePerCall(metric, functionDataLine2.d2);
+                    //totalProfile.setInclusivePerCall(metric, functionDataLine2.d2);
 
                     
                     break;
@@ -279,7 +279,7 @@ public class TauPprofDataSource extends DataSource {
                     //Set the values.
                     meanProfile.setNumCalls(functionDataLine2.d0);
                     meanProfile.setNumSubr(functionDataLine2.d1);
-                    meanProfile.setInclusivePerCall(metric, functionDataLine2.d2);
+                    //meanProfile.setInclusivePerCall(metric, functionDataLine2.d2);
 
 
                     break;
@@ -341,7 +341,7 @@ public class TauPprofDataSource extends DataSource {
                     //Set the values.
                     functionProfile.setNumCalls(functionDataLine2.d0);
                     functionProfile.setNumSubr(functionDataLine2.d1);
-                    functionProfile.setInclusivePerCall(metric, functionDataLine2.d2);
+                    //functionProfile.setInclusivePerCall(metric, functionDataLine2.d2);
 
 //                    //Set the max values.
 //                    if (thread.getMaxNumCalls() < functionDataLine2.d0)

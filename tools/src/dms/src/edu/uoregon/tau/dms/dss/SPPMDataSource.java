@@ -290,7 +290,7 @@ public class SPPMDataSource extends DataSource {
 //            function.setMaxInclusive(metric, value);
 //        }
 
-        functionProfile.setInclusivePerCall(metric, value);
+        //functionProfile.setInclusivePerCall(metric, value);
 //        if (function.getMaxInclusivePerCall(metric) < value)
 //            function.setMaxInclusivePerCall(metric, value);
 

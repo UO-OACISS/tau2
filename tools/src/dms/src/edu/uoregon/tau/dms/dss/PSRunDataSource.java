@@ -142,7 +142,7 @@ public class PSRunDataSource extends DataSource {
 
         functionProfile.setExclusive(metric, eventValue);
         functionProfile.setInclusive(metric, eventValue);
-        functionProfile.setInclusivePerCall(metric, eventValue);
+        //functionProfile.setInclusivePerCall(metric, eventValue);
         functionProfile.setNumCalls(1);
         functionProfile.setNumSubr(0);
     }

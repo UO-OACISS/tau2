@@ -84,7 +84,7 @@ public class DBDataSource extends DataSource {
                 meanProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
                 meanProfile.setInclusive(i, ilp.getInclusive(i));
                 meanProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
-                meanProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
+                //meanProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
                 meanProfile.setNumCalls(ilp.getNumCalls());
                 meanProfile.setNumSubr(ilp.getNumSubroutines());
 
@@ -97,7 +97,7 @@ public class DBDataSource extends DataSource {
                 totalProfile.setExclusivePercent(i, ilp.getExclusivePercentage(i));
                 totalProfile.setInclusive(i, ilp.getInclusive(i));
                 totalProfile.setInclusivePercent(i, ilp.getInclusivePercentage(i));
-                totalProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
+                //totalProfile.setInclusivePerCall(i, ilp.getInclusivePerCall(i));
                 totalProfile.setNumCalls(ilp.getNumCalls());
                 totalProfile.setNumSubr(ilp.getNumSubroutines());
             }
@@ -133,7 +133,7 @@ public class DBDataSource extends DataSource {
                 functionProfile.setInclusive(i, fdo.getInclusive(i));
                 functionProfile.setExclusivePercent(i, fdo.getExclusivePercentage(i));
                 functionProfile.setInclusivePercent(i, fdo.getInclusivePercentage(i));
-                functionProfile.setInclusivePerCall(i, fdo.getInclusivePerCall(i));
+                //functionProfile.setInclusivePerCall(i, fdo.getInclusivePerCall(i));
                 functionProfile.setNumCalls(fdo.getNumCalls());
                 functionProfile.setNumSubr(fdo.getNumSubroutines());
             }

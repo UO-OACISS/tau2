@@ -153,7 +153,7 @@ public class DynaprofDataSource extends DataSource {
                     functionProfile.setInclusive(metric, functionDataLine.d3);
                     functionProfile.setNumCalls(functionDataLine.i1);
                     functionProfile.setNumSubr(functionDataLine.i2);
-                    functionProfile.setInclusivePerCall(metric, inclusivePerCall);
+                    //functionProfile.setInclusivePerCall(metric, inclusivePerCall);
 
                     //Set the max values.
 //                    if ((function.getMaxExclusive(metric)) < functionDataLine.d0)
@@ -205,8 +205,8 @@ public class DynaprofDataSource extends DataSource {
                                 numCalls = functionProfile.getNumCalls() + functionChildDataLine.i2;
                                 functionProfile.setNumCalls(numCalls);
                             }
-                            functionProfile.setInclusivePerCall(metric, functionProfile.getInclusive(metric)
-                                    / numCalls);
+                            //functionProfile.setInclusivePerCall(metric, functionProfile.getInclusive(metric)
+                            //        / numCalls);
 
                             //Set the max values.
 //                            if ((function.getMaxExclusive(metric)) < inclusive)

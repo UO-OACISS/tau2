@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.14 2005/01/19 02:30:02 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.15 2005/03/08 00:55:54 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -26,7 +26,7 @@ public class Thread implements Comparable {
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;
-        doubleList = new double[numMetrics * Thread.arrayIncrementSize];
+        doubleList = new double[numMetrics * METRIC_SIZE];
         this.numMetrics = numMetrics;
     }
 
@@ -48,7 +48,7 @@ public class Thread implements Comparable {
 
     public void incrementStorage() {
         int currentLength = doubleList.length;
-        double[] newArray = new double[currentLength + Thread.arrayIncrementSize];
+        double[] newArray = new double[currentLength + METRIC_SIZE];
 
         for (int i = 0; i < currentLength; i++) {
             newArray[i] = doubleList[i];
@@ -143,6 +143,14 @@ public class Thread implements Comparable {
         return this.getDouble(metric, 4);
     }
 
+    private void setMaxExclusivePerCall(int metric, double inDouble) {
+        this.insertDouble(metric, 5, inDouble);
+    }
+
+    public double getMaxExclusivePerCall(int metric) {
+        return this.getDouble(metric, 5);
+    }
+
     private void setMaxNumCalls(double inDouble) {
         maxNumCalls = inDouble;
     }
@@ -195,12 +203,12 @@ public class Thread implements Comparable {
     }
 
     private void insertDouble(int metric, int offset, double inDouble) {
-        int actualLocation = (metric * 5) + offset;
+        int actualLocation = (metric * METRIC_SIZE) + offset;
         doubleList[actualLocation] = inDouble;
     }
 
     private double getDouble(int metric, int offset) {
-        int actualLocation = (metric * 5) + offset;
+        int actualLocation = (metric * METRIC_SIZE) + offset;
         return doubleList[actualLocation];
     }
 
@@ -210,6 +218,7 @@ public class Thread implements Comparable {
             double maxInclusive = 0.0;
             double maxExclusive = 0.0;
             double maxInclusivePerCall = 0.0;
+            double maxExclusivePerCall = 0.0;
             double maxNumCalls = 0;
             double maxNumSubr = 0;
 
@@ -219,6 +228,7 @@ public class Thread implements Comparable {
                     maxInclusive = Math.max(maxInclusive, fp.getInclusive(metric));
                     maxExclusive = Math.max(maxExclusive, fp.getExclusive(metric));
                     maxInclusivePerCall = Math.max(maxInclusivePerCall, fp.getInclusivePerCall(metric));
+                    maxExclusivePerCall = Math.max(maxExclusivePerCall, fp.getExclusivePerCall(metric));
                     maxNumCalls = Math.max(maxNumCalls, fp.getNumCalls());
                     maxNumSubr = Math.max(maxNumSubr, fp.getNumSubr());
                 }
@@ -227,6 +237,7 @@ public class Thread implements Comparable {
             this.setMaxInclusive(metric, maxInclusive);
             this.setMaxExclusive(metric, maxExclusive);
             this.setMaxInclusivePerCall(metric, maxInclusivePerCall);
+            this.setMaxExclusivePerCall(metric, maxExclusivePerCall);
             this.setMaxNumCalls(maxNumCalls);
             this.setMaxNumSubr(maxNumSubr);
 
@@ -279,5 +290,5 @@ public class Thread implements Comparable {
     private boolean trimmed = false;
     private boolean relationsBuilt = false;
     private int numMetrics = 0;
-    private static final int arrayIncrementSize = 5;
+    private static final int METRIC_SIZE = 6;
 }

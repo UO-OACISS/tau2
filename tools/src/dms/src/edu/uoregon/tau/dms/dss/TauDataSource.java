@@ -207,8 +207,8 @@ public class TauDataSource extends DataSource {
                                 functionProfile.setNumCalls(functionProfile.getNumCalls() + functionDataLine.i0);
                                 functionProfile.setNumSubr(functionProfile.getNumSubr() + functionDataLine.i1);
                             }
-                            functionProfile.setInclusivePerCall(metric,
-                                    functionProfile.getInclusivePerCall(metric) + inclusivePerCall);
+                            //functionProfile.setInclusivePerCall(metric,
+                            //        functionProfile.getInclusivePerCall(metric) + inclusivePerCall);
 
 
                             if (metric == 0 && groupNames != null) {

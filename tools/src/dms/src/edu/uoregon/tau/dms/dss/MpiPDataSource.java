@@ -242,7 +242,7 @@ public class MpiPDataSource extends DataSource {
                             functionProfile.setInclusivePercent(metric, callsiteData.d3);
                             functionProfile.setNumCalls(callsiteData.i2);
                             functionProfile.setNumSubr(0);
-                            functionProfile.setInclusivePerCall(metric, callsiteData.d1);
+                            //functionProfile.setInclusivePerCall(metric, callsiteData.d1);
 
 //                            //Now check the max values on this thread.
 //                            if (thread.getMaxNumCalls() < callsiteData.i2)
@@ -312,7 +312,7 @@ public class MpiPDataSource extends DataSource {
                             functionProfile.setExclusivePercent(metric, exclusivePercent);
                             functionProfile.setNumCalls(1);
                             functionProfile.setNumSubr(numSubroutines);
-                            functionProfile.setInclusivePerCall(metric, inclusive);
+                            //functionProfile.setInclusivePerCall(metric, inclusive);
 
 //                            thread.setMaxInclusive(metric, inclusive);
 //                            thread.setMaxInclusivePercent(metric, 100);

@@ -349,13 +349,13 @@ public class HPMToolkitDataSource extends DataSource {
             // System.out.println("\t" + metricName + " " + metric);
             functionProfile.setExclusive(metric, dEventValue);
             functionProfile.setInclusive(metric, dEventValue);
-            double tmpValue = dEventValue / ((double) (header3.i0));
-            functionProfile.setInclusivePerCall(metric, tmpValue);
+            //double tmpValue = dEventValue / ((double) (header3.i0));
+            //functionProfile.setInclusivePerCall(metric, tmpValue);
         } else {
             functionProfile.setExclusive(metric, iEventValue);
             functionProfile.setInclusive(metric, iEventValue);
-            double tmpValue = iEventValue / ((double) (header3.i0));
-            functionProfile.setInclusivePerCall(metric, tmpValue);
+            //double tmpValue = iEventValue / ((double) (header3.i0));
+            //functionProfile.setInclusivePerCall(metric, tmpValue);
         }
         functionProfile.setExclusivePercent(metric, 0);
         functionProfile.setInclusivePercent(metric, 0);
@@ -426,8 +426,8 @@ public class HPMToolkitDataSource extends DataSource {
             functionProfile.setExclusive(metric, dEventValue);
         }
 
-        double tmpValue = dEventValue / ((double) (header3.i0));
-        functionProfile.setInclusivePerCall(metric, tmpValue);
+        //double tmpValue = dEventValue / ((double) (header3.i0));
+        //functionProfile.setInclusivePerCall(metric, tmpValue);
 
 //        if (inclusive) {
 //            if ((function.getMaxInclusive(metric)) < dEventValue) {

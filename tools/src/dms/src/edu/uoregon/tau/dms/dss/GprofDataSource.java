@@ -120,7 +120,7 @@ public class GprofDataSource extends DataSource {
                                 }
 
                                 functionProfile.setNumSubr(numSubr);
-                                functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.i0);
+                                //functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.i0);
 
                                 for (int i = 0; i < parents.size(); i++) {
                                     LineData lineDataParent = (LineData) parents.elementAt(i);
@@ -137,8 +137,8 @@ public class GprofDataSource extends DataSource {
                                     functionProfile.setExclusive(0, lineDataParent.d0);
                                     functionProfile.setNumCalls(lineDataParent.i0);
 
-                                    functionProfile.setInclusivePerCall(0,
-                                            (lineDataParent.d0 + lineDataParent.d1) / lineDataParent.i0);
+                                  //  functionProfile.setInclusivePerCall(0,
+                                   //         (lineDataParent.d0 + lineDataParent.d1) / lineDataParent.i0);
 
                                 }
                                 parents.clear();
@@ -157,8 +157,8 @@ public class GprofDataSource extends DataSource {
                                     functionProfile.setInclusive(0, lineDataChild.d0 + lineDataChild.d1);
                                     functionProfile.setExclusive(0, lineDataChild.d0);
                                     functionProfile.setNumCalls(lineDataChild.i0);
-                                    functionProfile.setInclusivePerCall(0,
-                                            (lineDataChild.d0 + lineDataChild.d1) / lineDataChild.i0);
+                                    //functionProfile.setInclusivePerCall(0,
+                                    //        (lineDataChild.d0 + lineDataChild.d1) / lineDataChild.i0);
                                 }
                                 children.clear();
                                 parent = true;

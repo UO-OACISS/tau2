@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.9 2005/02/28 21:35:41 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.10 2005/03/08 00:55:53 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		TrialData
  * @see		NCT
  */
@@ -432,15 +432,15 @@ public abstract class DataSource {
 
                 totalProfile.setExclusive(i, exclSum[i]);
                 totalProfile.setInclusive(i, inclSum[i]);
-                if (totalProfile.getNumCalls() != 0)
-                    totalProfile.setInclusivePerCall(i, inclSum[i] / totalProfile.getNumCalls());
+//                if (totalProfile.getNumCalls() != 0)
+//                    totalProfile.setInclusivePerCall(i, inclSum[i] / totalProfile.getNumCalls());
 
                 // mean data computed as above in comments
                 meanProfile.setExclusive(i, exclSum[i] / numThreads);
                 meanProfile.setInclusive(i, inclSum[i] / numThreads);
 
-                if (meanProfile.getNumCalls() != 0)
-                    meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
+//                if (meanProfile.getNumCalls() != 0)
+//                    meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
 
                 if (topLevelInclSum[i] != 0) {
                     totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);

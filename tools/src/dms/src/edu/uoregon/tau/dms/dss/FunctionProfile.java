@@ -6,14 +6,14 @@ import java.text.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.8 2005/02/28 21:35:41 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.9 2005/03/08 00:55:53 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		Function
  */
 public class FunctionProfile implements Comparable {
 
-    private static final int METRIC_SIZE = 5;
+    private static final int METRIC_SIZE = 4;
 
     private Function function;
     private double[] doubleList;
@@ -96,12 +96,17 @@ public class FunctionProfile implements Comparable {
         return numSubr;
     }
 
-    public void setInclusivePerCall(int metric, double value) {
-        this.insertDouble(metric, 4, value);
-    }
+//    public void setInclusivePerCall(int metric, double value) {
+//        this.insertDouble(metric, 4, value);
+//    }
 
     public double getInclusivePerCall(int metric) {
-        return this.getDouble(metric, 4);
+        return this.getInclusive(metric) / this.getNumCalls();
+//        return this.getDouble(metric, 4);
+    }
+
+    public double getExclusivePerCall(int metric) {
+        return this.getExclusive(metric) / this.getNumCalls();
     }
 
     // unused profile calls
