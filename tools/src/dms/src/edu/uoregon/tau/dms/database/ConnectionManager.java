@@ -6,6 +6,7 @@
    Description:
 
    Things to do:
+   1) Clean up password handling.
 */
 
 package edu.uoregon.tau.dms.database;
@@ -23,8 +24,7 @@ public class ConnectionManager{
     //####################################
     public ConnectionManager(String configFileName){
 	parser = new ParseConfig(configFileName);
-	String password = getPassword();
-	initialize(password);
+	initialize(this.getPassword());
     }
 	
     public ConnectionManager(String configFileName, String password) {
@@ -34,8 +34,7 @@ public class ConnectionManager{
     
     public ConnectionManager(String configFileName, boolean prompt){
 	parser = new ParseConfig(configFileName);
-	String password = getPassword(prompt);
-	initialize(password);
+	initialize(this.getPassword(prompt));
     }
     //####################################
     //End - Contructor(s).
