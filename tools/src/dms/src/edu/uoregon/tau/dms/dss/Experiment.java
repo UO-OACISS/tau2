@@ -14,7 +14,7 @@ import java.util.Vector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.2 2004/07/21 15:54:20 khuck Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.3 2004/07/22 18:58:25 sameer Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -671,9 +671,9 @@ public class Experiment {
 		try {
 			PreparedStatement statement = null;
 			if (itExists) {
-				statement = db.prepareStatement("UPDATE EXPERIMENT SET application = ?, name = ?, system_name = ?, system_machine_type = ?, system_arch = ?, system_os = ?, system_memory_size = ?, system_processor_amt = ?, system_l1_cache_size = ?, system_l2_cache_size = ?, system_userdata = ?, compiler_cpp_name = ?, compiler_cpp_version = ?, compiler_cc_name = ?, compiler_cc_version = ?, compiler_java_dirpath = ?, compiler_java_version = ?, compiler_userdata = ?, configure_prefix = ?, configure_arch = ?, configure_cpp = ?, configure_cc = ?, configure_jdk = ?, configure_profile = ?, configure_userdata = ?, userdata = ? WHERE id = ?");
+				statement = db.prepareStatement("UPDATE experiment SET application = ?, name = ?, system_name = ?, system_machine_type = ?, system_arch = ?, system_os = ?, system_memory_size = ?, system_processor_amt = ?, system_l1_cache_size = ?, system_l2_cache_size = ?, system_userdata = ?, compiler_cpp_name = ?, compiler_cpp_version = ?, compiler_cc_name = ?, compiler_cc_version = ?, compiler_java_dirpath = ?, compiler_java_version = ?, compiler_userdata = ?, configure_prefix = ?, configure_arch = ?, configure_cpp = ?, configure_cc = ?, configure_jdk = ?, configure_profile = ?, configure_userdata = ?, userdata = ? WHERE id = ?");
 			} else {
-				statement = db.prepareStatement("INSERT INTO EXPERIMENT (application, name, system_name, system_machine_type, system_arch, system_os, system_memory_size, system_processor_amt, system_l1_cache_size, system_l2_cache_size, system_userdata, compiler_cpp_name, compiler_cpp_version, compiler_cc_name, compiler_cc_version, compiler_java_dirpath, compiler_java_version, compiler_userdata, configure_prefix, configure_arch, configure_cpp, configure_cc, configure_jdk, configure_profile, configure_userdata, userdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				statement = db.prepareStatement("INSERT INTO experiment (application, name, system_name, system_machine_type, system_arch, system_os, system_memory_size, system_processor_amt, system_l1_cache_size, system_l2_cache_size, system_userdata, compiler_cpp_name, compiler_cpp_version, compiler_cc_name, compiler_cc_version, compiler_java_dirpath, compiler_java_version, compiler_userdata, configure_prefix, configure_arch, configure_cpp, configure_cc, configure_jdk, configure_profile, configure_userdata, userdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			}
 			statement.setInt(1, applicationID);
 			statement.setString(2, name);
