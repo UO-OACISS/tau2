@@ -2813,7 +2813,7 @@ int main (int argc, char *argv[])
     InitFuncNameBuf();
     /* funcnamebuf and functagbuf are initialized here */
 
-    if (list)  {  cout << " if(list) \n";
+    if (list)  { 
       DumpFunctionNamesInDB();  /* for debugging purposes */
       exit(0); 
     } 
@@ -2927,7 +2927,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 1999/06/30 01:52:34 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.16 1999/06/30 01:52:34 sameer Exp $                                                   
+ * $Revision: 1.17 $   $Date: 1999/07/22 23:30:26 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.17 1999/07/22 23:30:26 sameer Exp $                                                   
  ***************************************************************************/
 
