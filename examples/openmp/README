@@ -1,0 +1,51 @@
+This directory contains examples of OpenMP programs written in C and C++. To 
+illustrate the use of TAU, we provide a Mandelbrot program (written by 
+Bernd Mohr, FZJ, Germany) in the subdirectories. To use it:
+% make
+% setenv OMP_NUM_THREADS <no. of threads desired>
+% mandel
+It will pick up default arguments and run the program. 
+% pprof; racy 
+
+The implementation of Mandelbrot is described below (by Bernd in German) :)
+
+Berechnung der Mandelbrotmenge ("Apfelmännchen")
+================================================
+
+Schreiben Sie ein Programm zur Berechnung der Mandelbrotmenge. Diese
+ergibt sich aus der Berechnung der Anzahl von Iterationen die nötig sind
+damit die komplexe Rekursionsformel
+
+   complex z, c
+
+   c = cmplx(x,y)
+   z_0 = (0,0)
+   z_n+1 = z_n * z_n + c
+
+das Abbruchkriterium
+
+   norm(z) >= 16
+
+erfüllt bzw. eine maximale Iterationsanzahl erreicht (wählen Sie hier
+ein Vielfaches von 64), und zwar für jeden Punkt der komplexen Ebene gegeben
+durch (xmin + ymin i) und (xmax + ymax i). Führen Sie Berechnung für eine
+geeigneten Auflösung (z.B. 800x800) aus. Zur Erzeugung des Bildes können
+Sie die in der Datei "ppm.f" vorgegebene Funktion "ppmwrite" benutzen,
+welche ein Bild im PPM-Format erzeugt. Dieses kann z.B. mit dem
+Kommando "xv" betrachet werden.
+
+  subroutine ppmwrite(fname, iterations, maxiter)
+  character(len=*) fname    ! Dateiname
+  integer iterations(:,:)   ! Anzahl Iterationen für jeden Pixel
+  integer maxiter           ! Maximale Iterationsanzahl
+
+Beschleunigen Sie die Berechnung der Mandelbrotmenge durch
+Parallelisierung und bestimmen Sie den erreichten Speedup.
+
+Hinweis: einige interessante Gebiete:
+
+      -1.5 - 1.0i         0.5 + 1.0i
+      -0.59 - 0.58i      -0.54 - 0.53i
+      -0.59 + 0.47i      -0.56 + 0.5i
+
+
