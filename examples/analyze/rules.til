@@ -1,0 +1,28 @@
+// If the ouput file name isn't defined then define it.
+
+#ifndef $SELECT_FILE
+#define SELECT_FILE "select.out"
+#endif
+
+// Perform analytical instrumentation using profile data and
+// write the output to file for use by tau_instrumentor.
+
+instrument with profile as $SELECT_FILE
+
+	// Selectively exclude events based on the following conditions.
+	
+	conditions
+	{:
+		usec > 1000 & numcalls > 400000 & usec/call < 30 & percent > 25
+
+		// The following will end up selecting the same events as the previous
+		// line.
+
+		TAU_USER : usec > 1000 & numcalls > 400000 & usec/call < 30 & percent > 25
+
+		// The following line will cause extremly light-weight events that are
+		// executed more than a million times from the instrumentation.
+		
+		numcalls > 1E6 & usecs/call < 2
+	:}
+end
