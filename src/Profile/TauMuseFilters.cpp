@@ -241,8 +241,7 @@ int AddFilterSocketFilterEncode(char *ascii_command, int size, char *binary_comm
                                                                                 }
                                                                                 else
                                                                                 {
-                                                                                        printf("Unknown option:
-\"%s\"\n", arg);
+                                                                                        printf("Unknown option: \"%s\"\n", arg);
                                                                                         return 0;
                                                                                 }
                                                                         }
