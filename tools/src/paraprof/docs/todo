@@ -65,7 +65,7 @@ well with ParaProfTrial or not?
 ------
 
 ------
-# Report 06
+# Report 07
 # Date: 19 March 2004
 # Status: (outstanding)
 # Reporter: Sameer Shende (University of Oregon).
@@ -73,5 +73,15 @@ When ParaProf reads raw data output from tau, if it encounters duplicate names t
 treat it as additional data, and add to the name data rather then overwrite as is
 currently the case.  The most likely source of this is runtime template typing
 issues with certain c++ compilers.  This functionality will then mirror pprof.
+------
+
+------
+# Report 08
+# Date: 31 March 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon).
+Figure out -prefix option to configure:
+%configure -prefix=/tmp -arch=none
+So /tmp/bin/paraprof should work.
 ------
 
