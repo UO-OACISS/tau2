@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.7 2005/01/12 18:56:19 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.8 2005/01/31 23:10:25 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		TrialData
  * @see		NCT
  */
@@ -201,7 +201,6 @@ public abstract class DataSource {
      *            Name of metric to be added
      */
     public Metric addMetric(String metricName) {
-        //System.out.println ("Adding Metric: " + metricName);
         if (metrics != null) {
             for (Iterator it = metrics.iterator(); it.hasNext();) {
                 Metric metric = (Metric) it.next();

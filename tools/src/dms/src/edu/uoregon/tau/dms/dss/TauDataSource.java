@@ -19,6 +19,12 @@ import java.util.*;
 
 public class TauDataSource extends DataSource {
 
+    private volatile boolean abort = false;
+    private volatile int totalFiles = 0;
+    private volatile int filesRead = 0;
+    private LineData functionDataLine = new LineData();
+    private LineData usereventDataLine = new LineData();
+
     public TauDataSource(Object initializeObject) {
         super();
         this.initializeObject = initializeObject;
@@ -31,9 +37,6 @@ public class TauDataSource extends DataSource {
         return;
     }
 
-    private boolean abort = false;
-    int totalFiles = 0;
-    int filesRead = 0;
 
     public int getProgress() {
         if (totalFiles != 0)
@@ -532,7 +535,4 @@ public class TauDataSource extends DataSource {
     }
     
     
-    //Instance data.
-    private LineData functionDataLine = new LineData();
-    private LineData usereventDataLine = new LineData();
 }

@@ -12,6 +12,12 @@ import java.util.*;
 
 public class TauPprofDataSource extends DataSource {
 
+    private volatile boolean abort = false;
+    private volatile long totalBytes = 0;
+    private volatile long bytesRead = 0;
+    private LineData functionDataLine1 = new LineData();
+    private LineData functionDataLine2 = new LineData();
+    private LineData usereventDataLine = new LineData();
 
     public TauPprofDataSource(Object initializeObject) {
         super();
@@ -26,10 +32,6 @@ public class TauPprofDataSource extends DataSource {
         return;
     }
 
-    private boolean abort = false;
-
-    long totalBytes = 0;
-    long bytesRead = 0;
 
     public int getProgress() {
         if (totalBytes != 0)
@@ -738,8 +740,4 @@ public class TauPprofDataSource extends DataSource {
         return groupCheck;
     }
     
-    //Instance data.
-    private LineData functionDataLine1 = new LineData();
-    private LineData functionDataLine2 = new LineData();
-    private LineData usereventDataLine = new LineData();
 }

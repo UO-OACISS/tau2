@@ -16,7 +16,7 @@ import java.io.IOException;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.10 2005/01/10 20:09:08 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.11 2005/01/31 23:10:25 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -42,6 +42,15 @@ public class Experiment implements Serializable {
     public Experiment(DB db) throws DatabaseException {
         Experiment.getMetaData(db);
         this.fields = new String[Experiment.fieldNames.length];
+    }
+
+    // shallow copy constructor (sort of)
+    public Experiment(Experiment exp) {
+        this.name = exp.getName();
+        this.applicationID = exp.getApplicationID();
+        this.experimentID = exp.getID();
+
+        this.fields = exp.fields;
     }
 
     private static void getMetaData(DB db) throws DatabaseException {
@@ -101,14 +110,6 @@ public class Experiment implements Serializable {
     }
 
    
-    // shallow copy constructor (sort of)
-    public Experiment(Experiment exp) {
-        this.name = exp.getName();
-        this.applicationID = exp.getApplicationID();
-        this.experimentID = exp.getID();
-
-        this.fields = exp.fields;
-    }
 
     public int getNumFields() {
         return fields.length;

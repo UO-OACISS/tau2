@@ -19,7 +19,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.12 2005/01/10 20:09:07 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.13 2005/01/31 23:10:25 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -40,6 +40,18 @@ public class Application implements Serializable {
         fields = new String[numFields];
     }
 
+    public Application(DB db) {
+        Application.getMetaData(db);
+        this.fields = new String[Application.fieldNames.length];
+    }
+
+    // shallow copy constructor (sort of)
+    public Application(Application app) {
+        this.name = app.getName();
+        this.applicationID = app.getID();
+        this.fields = app.fields;
+    }
+    
     public static void getMetaData(DB db) {
         // see if we've already have them
         if (Application.fieldNames != null)
@@ -93,17 +105,7 @@ public class Application implements Serializable {
         }
     }
 
-    public Application(DB db) {
-        Application.getMetaData(db);
-        this.fields = new String[Application.fieldNames.length];
-    }
-
-    // shallow copy constructor (sort of)
-    public Application(Application app) {
-        this.name = app.getName();
-        this.applicationID = app.getID();
-        this.fields = app.fields;
-    }
+   
 
     public int getNumFields() {
         return fields.length;
