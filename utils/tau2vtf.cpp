@@ -22,6 +22,7 @@
 #include <stack>
 using namespace std;
 int debugPrint = 0;
+bool multiThreaded = false;
 #define dprintf if (debugPrint) printf
 
 /* The choice of the following numbers is arbitrary */
@@ -31,6 +32,9 @@ int debugPrint = 0;
 
 /* implementation of callback routines */
 map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
+map< int,int, less<int > > numthreads; 
+/* numthreads[k] is no. of threads in rank k */
+
 int EndOfTrace = 0;  /* false */
 
 /* Define limits of sample data (user defined events) */
@@ -50,17 +54,30 @@ struct {
 
 /* Global data */
 int sampgroupid = 0;
-int groupid = 0;
 int sampclassid = 0; 
 stack <unsigned int> *callstack;
+int *offset = 0; 
 
 
+/* FIX GlobalID so it takes into account numthreads */
 /* utilities */
 int GlobalId(int localnodeid, int localthreadid)
 {
-  /* for multithreaded programs, modify this routine */
-  return localnodeid; 
-  /* ignore localthreadid for now */
+  if (multiThreaded)
+  {
+    if (offset == (int *) NULL)
+    {
+      printf("Error: offset vector is NULL in GlobalId()\n");
+      return localnodeid;
+    }
+    
+    /* for multithreaded programs, modify this routine */
+    return offset[localnodeid]+localthreadid;  /* for single node program */
+  }
+  else
+  { 
+    return localnodeid;
+  }
 }
 
 /* implementation of callback routines */
@@ -122,6 +139,8 @@ const char *threadName )
   dprintf("DefThread nid %d tid %d, thread name %s\n", 
 		  nodeToken, threadToken, threadName);
   EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = 0; /* initialize it */
+  numthreads[nodeToken] = numthreads[nodeToken] + 1; 
+  if (threadToken > 0) multiThreaded = true; 
   return 0;
 }
 
@@ -347,6 +366,14 @@ int main(int argc, char **argv)
   {
     printf("Usage: %s <TAU trace> <edf file> <out file> [-a|-fa] [-nomessage]  [-v]\n", 
 		    argv[0]);
+    printf(" -a         : ASCII VTF3 file format\n");
+    printf(" -fa        : FAST ASCII VTF3 file format\n");
+    printf(" -nomessage : Suppress printing of message information in the trace\n");
+    printf(" -v         : Verbose\n");
+    printf(" Default trace format of <out file> is VTF3 binary\n");
+
+    printf(" e.g.,\n");
+    printf(" %s merged.trc tau.edf app.vpt.gz\n", argv[0]);
     exit(1);
   }
   
@@ -459,6 +486,42 @@ int main(int argc, char **argv)
    * we'll need to modify the way we describe the cpus/threads */
   VTF3_WriteDefsyscpunums(fcb, 1, &totalnidtids);
 
+  /* Then write out the thread names if it is multi-threaded */
+  if (multiThreaded)
+  { /* create the thread ids */
+    unsigned int groupid = 0x1 << 31; /* Valid vampir group id nos */
+    int tid = 0; 
+    int nodes = numthreads.size(); /* total no. of nodes */ 
+    int *threadnumarray = new int[nodes]; 
+    offset = new int[nodes+1];
+    offset[0] = 0; /* no offset for node 0 */
+    for (i=0; i < nodes; i++)
+    { /* one for each node */
+      threadnumarray[i] = numthreads[i]; 
+      offset[i+1] = offset[i] + numthreads[i]; 
+    }
+    unsigned int *cpuidarray = new unsigned int[totalnidtids]; /* max */
+    /* next, we write the cpu name and a group name for node/threads */
+    for (i=0; i < nodes; i++)
+    { 
+      char name[32];
+      for (tid = 0; tid < threadnumarray[i]; tid++)
+      {
+        sprintf(name, "node %d, thread %d", i, tid);
+        int cpuid = GlobalId(i,tid);
+        cpuidarray[tid] = cpuid;
+        VTF3_WriteDefcpuname(fcb, cpuid, name);
+      }
+      sprintf(name, "Node %d", i);
+      groupid ++; /* let flat group for samples take the first one */
+      /* Define a group: threadnumarray[i] represents no. of threads in node */
+      VTF3_WriteDefcpugrp(fcb, groupid, threadnumarray[i], 
+		(const unsigned int *) cpuidarray, name);
+    }
+    delete[] cpuidarray;
+  }
+
+
   unsigned int *idarray = new unsigned int[totalnidtids];
   for (i = 0; i < totalnidtids; i++)
   { /* assign i to each entry */
@@ -542,8 +605,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2004/08/13 16:32:46 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.4 2004/08/13 16:32:46 sameer Exp $
+ * $Revision: 1.5 $   $Date: 2004/08/19 21:29:53 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.5 2004/08/19 21:29:53 sameer Exp $
  ***************************************************************************/
 
 
