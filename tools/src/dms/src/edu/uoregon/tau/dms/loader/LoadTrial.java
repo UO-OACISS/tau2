@@ -14,7 +14,7 @@ import java.io.*;
 
 public class LoadTrial{
 
-    public static String USAGE = "usage: perfdmf_loadtrial {-f, --filetype} file_type {-s,--sourcefile} sourcefilename\n {-e,--experimentid} experiment_id [{-t, --trialid} trial_id] [{-n,--name} trial_name]\n [{-p,--problemfile} problem_file] [{-i --fixnames}]\n Where:\n    file_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n\n (example: perfdmf_loadtrial -f profiles -e 12 -s \"profile.*\")";
+    public static String USAGE = "usage: perfdmf_loadtrial {-f, --filetype} file_type {-s,--sourcefile} sourcefilename\n {-e,--experimentid} experiment_id [{-t, --trialid} trial_id] [{-n,--name} trial_name]\n [{-p,--problemfile} problem_file] [{-i --fixnames}]\n Where:\n    file_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, hpm\n\n (example: perfdmf_loadtrial -f profiles -e 12 -s \"profile.*\")";
     private File readPprof;
     private File writeXml;
     private String trialTime;
