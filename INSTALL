@@ -218,7 +218,9 @@ The following  command-line options are available to configure:
    MPI  (with the TAU MPI Wrapper library) and Fortran 90. To use this, TAU
    must be configured using the -mpiinc=<dir>  and -mpilib=<dir> options. The
    default Fortran 90 compiler used is f90. This may be changed by the user in
-   the makefile.
+   the makefile. LU is completely instrumented and uses the instrumented MPI
+   library whereas SP has minimal instrumentation in the top level routine
+   and relies on the instrumented MPI wrapper library. 
  
 4. Racy.
 
