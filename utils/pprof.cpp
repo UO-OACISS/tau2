@@ -85,7 +85,7 @@ extern int optind, opterr, optopt;
 #include <Profile/fujitsu.h>
 #endif /* FUJITSU */
 
-#ifndef DBL_MIN
+#ifndef DBL_MULTIN
 #include <float.h>
 #endif 
 
@@ -340,19 +340,28 @@ bool IsDynamicProfiling(char *filename)
     printf("Error: fscanf returns EOF file %s", filename);
     return false;
   }
-  fclose(fp); // thats all we wanted to read 
+  fclose(fp); // thats all we wanted to read
 
-  if (strcmp(version,"templated_functions") == 0) { // correct version
-    hwcounters = false; // Timing data is in the profile files  
-    return true;
+  if (strcmp(version,"templated_functions") == 0  || (strstr(version,"MULTI") != NULL)) { // correct version
+    if(strstr(version,"MULTI") != NULL){
+      multipleCounters = true;
+      counterName = version;
+      if(strstr(version,"TIME") != NULL){
+	hwcounters = false;
+      }
+      else{
+	hwcounters = true;
+      }
+      return true;
+    }
+    else{
+      hwcounters = false; // Timing data is in the profile files  
+      return true;
+    }
   }
   else  { 
-    if ((strcmp(version,"templated_functions_hw_counters") == 0) || (strstr(version,"MULTI") != NULL)) {
+    if ((strcmp(version,"templated_functions_hw_counters") == 0)) {
       hwcounters  = true; // Counters - do not use time string formatting
-      if((strstr(version,"MULTI") != NULL)){
-	multipleCounters = true;
-        counterName = version;
-      }
       return true; // It is dynamic profiling
     }
     else // Neither  - static profiling 
@@ -3055,7 +3064,7 @@ int main (int argc, char *argv[])
 	  }
 	} else //not profilestats
 	  { 
-	    if(hwcounters) {
+	    if(hwcounters){
 	      if(multipleCounters){
 		printf ("default.dep\n%d %s\n", numfunc, counterName);
 		printf ("%%time       counts total counts       #call      #subrs count/call name\n");
@@ -3064,10 +3073,17 @@ int main (int argc, char *argv[])
 		printf ("default.dep\n%d templated_functions_hw_counters\n", numfunc);
                 printf ("%%time       counts total counts       #call      #subrs count/call name\n");
 	      }
-	    } else {
-	      printf ("default.dep\n%d templated_functions\n", numfunc);
-	      printf ("%%time         msec   total msec       #call      #subrs  usec/call name\n");
 	    }
+	    else{
+	      if(multipleCounters){
+		printf ("default.dep\n%d %s\n", numfunc, counterName);
+		printf ("%%time       counts total counts       #call      #subrs count/call name\n");
+	      }
+	      else{
+		printf ("default.dep\n%d templated_functions\n", numfunc);
+		printf ("%%time         msec   total msec       #call      #subrs  usec/call name\n");
+	      }
+	    } 
 	  }//end if profilestats
 
     }//if(dump) 
@@ -3154,7 +3170,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: bertie $
- * $Revision: 1.30 $   $Date: 2002/03/14 09:49:07 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.30 2002/03/14 09:49:07 bertie Exp $                                                   
+ * $Revision: 1.31 $   $Date: 2002/03/16 01:03:16 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.31 2002/03/16 01:03:16 bertie Exp $                                                   
  ***************************************************************************/
 
