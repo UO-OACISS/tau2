@@ -22,19 +22,31 @@ public class ConnectionManager {
 	private ParseConfig parser = null;
 
     private DB db = null;
+
+    public ConnectionManager(String configFileName){
+	super();
+	parser = new ParseConfig(configFileName);
+	String password = getPassword();
+	initialize(password);
+	//System.out.println("\r\n");
+    }
 	
     public ConnectionManager(String configFileName, String password) {
-		super();
-		parser = new ParseConfig(configFileName);
-		initialize(password);
+	super();
+	parser = new ParseConfig(configFileName);
+	initialize(password);
+    }
+    
+    public ConnectionManager(String configFileName, boolean prompt){
+	super();
+	parser = new ParseConfig(configFileName);
+	if(prompt){
+	    String password = getPassword();
+	    initialize(password);
 	}
-
-    public ConnectionManager(String configFileName) {
-		super();
-		parser = new ParseConfig(configFileName);
-		String password = getPassword();
-		initialize(password);
-		//System.out.println("\r\n");
+	else
+	    initialize("");
+	//System.out.println("\r\n");
     }
 
     public void initialize(String password) {
