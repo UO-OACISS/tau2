@@ -77,10 +77,20 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(id, 0);
 		    for(int i=0;i<numberOfMetrics;i++){
 			FunctionDataObject fdo = f.getMeanSummary();
-			globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusivePercentage());
+			globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusive());
 			globalMappingElement.setMeanExclusivePercentValue(i, fdo.getExclusivePercentage());
-			globalMappingElement.setMeanInclusiveValue(i, fdo.getInclusivePercentage());
+			globalMappingElement.setMeanInclusiveValue(i, fdo.getInclusive());
 			globalMappingElement.setMeanInclusivePercentValue(i, fdo.getInclusivePercentage());
+
+			if((this.getGlobalMapping().getMaxMeanExclusiveValue(i)) < fdo.getExclusive()){
+			    this.getGlobalMapping().setMaxMeanExclusiveValue(i, fdo.getExclusive());}
+			if((this.getGlobalMapping().getMaxMeanExclusivePercentValue(i)) < fdo.getExclusivePercentage()){
+			    this.getGlobalMapping().setMaxMeanExclusivePercentValue(i, fdo.getExclusivePercentage());}
+
+			if((this.getGlobalMapping().getMaxMeanInclusiveValue(i)) < fdo.getInclusive()){
+			    this.getGlobalMapping().setMaxMeanInclusiveValue(i, fdo.getInclusive());}
+			if((this.getGlobalMapping().getMaxMeanInclusivePercentValue(i)) < fdo.getInclusivePercentage()){
+			    this.getGlobalMapping().setMaxMeanInclusivePercentValue(i, fdo.getInclusivePercentage());}
 		    }
 		    globalMappingElement.setMeanValuesSet(true);
 	    }
