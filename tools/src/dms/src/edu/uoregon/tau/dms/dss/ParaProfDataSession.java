@@ -355,111 +355,121 @@ public abstract class ParaProfDataSession  extends DataSession{
 
         
     public void setMeanData(int mappingSelection, int metric){
+	// see comments in setMeandataAllMetrics for the computation
+
 	if(this.debug()){
 	    this.outputToFile("####################################");
 	    this.outputToFile("Setting mean data :: public void setMeanData(int mappingSelection, int metric)");
 	}
-	
-	//Cycle through the list of global mapping elements.  For each one, sum up
-	//the exclusive and the inclusive times respectively, and each total by the
-	//number of times we encountered that mapping.
-	GlobalMapping globalMapping = this.getGlobalMapping();
-	ListIterator l = globalMapping.getMappingIterator(mappingSelection);
-	while(l.hasNext()){
-	    double exclusiveTotal = 0.0;
-	    double inclusiveTotal = 0.0;
-	    int numberOfCallsTotal = 0;
-	    int numberOfSubroutinesTotal = 0;
-	    double userSecPerCallValueTotal = 0;
-	    int count = 0;
-	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    int id = globalMappingElement.getMappingID();
-	    for(Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
+
+
+	double exclSum = 0;
+	double inclSum = 0;
+	double maxInclSum = 0;
+	int callSum = 0;
+	int subrSum = 0;
+
+
+	GlobalMapping allFunctions = this.getGlobalMapping();
+	ListIterator l = allFunctions.getMappingIterator(mappingSelection);
+
+
+	while (l.hasNext()) { // for each function
+	    GlobalMappingElement function = (GlobalMappingElement) l.next();
+
+	    callSum = 0;
+	    subrSum = 0;
+	    exclSum = 0;
+	    inclSum = 0;
+
+	    int functionId = function.getMappingID();
+
+	    // this must be stored somewhere else, but I'm going to compute it since I don't know where
+	    int numThreads = 0;
+
+	    for (Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements() ;) {
 		Node node = (Node) e1.nextElement();
-		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+		for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;) {
 		    Context context = (Context) e2.nextElement();
-		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
+		    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;) {
 			edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
-			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(id);
-			if(globalThreadDataElement != null){
-			    exclusiveTotal+=globalThreadDataElement.getExclusiveValue(metric);
-			    inclusiveTotal+=globalThreadDataElement.getInclusiveValue(metric);
-			    numberOfCallsTotal+=globalThreadDataElement.getNumberOfCalls();
-			    numberOfSubroutinesTotal+=globalThreadDataElement.getNumberOfSubRoutines();
-			    userSecPerCallValueTotal+=globalThreadDataElement.getUserSecPerCall(metric);
+			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(functionId);
+
+			if (globalThreadDataElement != null) { // if this function was called for this nct
+
+			    exclSum += globalThreadDataElement.getExclusiveValue(metric);
+			    inclSum += globalThreadDataElement.getInclusiveValue(metric);
+				
+			    callSum+=globalThreadDataElement.getNumberOfCalls();
+			    subrSum+=globalThreadDataElement.getNumberOfSubRoutines();
 			}
-			count++;
+			numThreads++;
 		    }
 		}
 	    }
-	    if(count!=0){
-		double meanExlusiveValue = exclusiveTotal/count;
-		double meanInclusiveValue = inclusiveTotal/count;
-		double meanNumberOfCalls = (double)numberOfCallsTotal/count;
-		double meanNumberOfSubroutines = (double)numberOfSubroutinesTotal/count;
-		double meanUserSecPerCallValue = userSecPerCallValueTotal/count;
-		
-		globalMappingElement.setMeanExclusiveValue(metric, meanExlusiveValue);
-		if(globalMapping.getMaxMeanExclusiveValue(metric) < meanExlusiveValue)
-		    globalMapping.setMaxMeanExclusiveValue(metric, meanExlusiveValue);
-		
-		globalMappingElement.setMeanInclusiveValue(metric, meanInclusiveValue);
-		if(globalMapping.getMaxMeanInclusiveValue(metric) < meanInclusiveValue)
-		    globalMapping.setMaxMeanInclusiveValue(metric, meanInclusiveValue);
 
-		globalMappingElement.setMeanNumberOfCalls(meanNumberOfCalls);
-		if(globalMapping.getMaxMeanNumberOfCalls() < meanNumberOfCalls)
-		    globalMapping.setMaxMeanNumberOfCalls(meanNumberOfCalls);
+	    // set the totals for all but percentages - need to do those later...
+	    function.setTotalNumberOfCalls(callSum);
+	    function.setTotalNumberOfSubRoutines(subrSum);
 
-		globalMappingElement.setMeanNumberOfSubRoutines(meanNumberOfSubroutines);
-		if(globalMapping.getMaxMeanNumberOfSubRoutines() < meanNumberOfSubroutines)
-		    globalMapping.setMaxMeanNumberOfSubRoutines(meanNumberOfSubroutines);
+	    // mean is just the total / numThreads
+	    function.setMeanNumberOfCalls((double)callSum / numThreads);
+	    function.setMeanNumberOfSubRoutines((double)subrSum / numThreads);
 
-		globalMappingElement.setMeanUserSecPerCall(metric, meanUserSecPerCallValue);
-		if(globalMapping.getMaxMeanUserSecPerCall(metric) < meanUserSecPerCallValue)
-		    globalMapping.setMaxMeanUserSecPerCall(metric, meanUserSecPerCallValue);
+	    function.setTotalExclusiveValue(metric, exclSum);
+	    function.setTotalInclusiveValue(metric, inclSum);
+	    function.setTotalUserSecPerCall(metric, inclSum / callSum);
+	    
+	    // mean data computed as above in comments
+	    function.setMeanExclusiveValue(metric, exclSum / numThreads);
+	    function.setMeanInclusiveValue(metric, inclSum / numThreads);
+	    function.setMeanUserSecPerCall(metric, inclSum / callSum);
+
+	    if (inclSum > maxInclSum) {
+		maxInclSum = inclSum;
 	    }
+
+
+	    // now set the max values for mean
+	    if (function.getMeanNumberOfSubRoutines() > allFunctions.getMaxMeanNumberOfSubRoutines())
+		allFunctions.setMaxMeanNumberOfSubRoutines(function.getMeanNumberOfSubRoutines());
+
+	    if (function.getMeanNumberOfCalls() > allFunctions.getMaxMeanNumberOfCalls())
+		allFunctions.setMaxMeanNumberOfCalls(function.getMeanNumberOfCalls());
+	    
+	    if (function.getMeanExclusiveValue(metric) > allFunctions.getMaxMeanExclusiveValue(metric))
+		allFunctions.setMaxMeanExclusiveValue(metric, function.getMeanExclusiveValue(metric));
+	    
+	    if (function.getMeanInclusiveValue(metric) > allFunctions.getMaxMeanInclusiveValue(metric))
+		allFunctions.setMaxMeanInclusiveValue(metric, function.getMeanInclusiveValue(metric));
 	}
 
 
-
-	// the total inclusive value (sum of "top level" function over all threads) : 
-	// used to generate percentages by comparing against this value
-	double threadTotalInclusiveValue;
-
-	// Sum up the max inclusive value (top level "timer") for each thread to get the total
-	// program time.  We use this to make comparisons against when computing mean percentages
-	threadTotalInclusiveValue = 0;
-	for (Enumeration e = this.getNCT().getThreads().elements(); e.hasMoreElements() ;) {
-	    threadTotalInclusiveValue += ((Thread) e.nextElement()).getMaxInclusiveValue(metric);
-	}
-
-	//Now set the percent values.
-	l = globalMapping.getMappingIterator(mappingSelection);
-	double maxMeanInclusiveValue = globalMapping.getMaxMeanInclusiveValue(metric);
+	// now compute percentages since we now have max(all incls for total)
+	// for each function
+	l = allFunctions.getMappingIterator(mappingSelection);
 	while (l.hasNext()) {
-	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    double meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
-	    globalMappingElement.setMeanExclusivePercentValue(metric,meanExclusivePercentValue);
-	    if(globalMapping.getMaxMeanExclusivePercentValue(metric) < meanExclusivePercentValue)
-		globalMapping.setMaxMeanExclusivePercentValue(metric, meanExclusivePercentValue);
-	    double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
 	    
+	    GlobalMappingElement function = (GlobalMappingElement) l.next();
 	    
-	    globalMappingElement.setMeanInclusivePercentValue(metric,meanInclusivePercentValue);
-	    if(globalMapping.getMaxMeanInclusivePercentValue(metric) < meanInclusivePercentValue)
-		globalMapping.setMaxMeanInclusivePercentValue(metric, meanInclusivePercentValue);
-
-
-	    
-	    if (threadTotalInclusiveValue != 0) {
-		globalMappingElement.setMeanInclusivePercentValue(metric,(globalMappingElement.getTotalInclusiveValue(metric) / threadTotalInclusiveValue)*100.0);
-		globalMappingElement.setTotalInclusivePercentValue(metric,(globalMappingElement.getTotalInclusiveValue(metric) / threadTotalInclusiveValue)*100.0);
+	    if (maxInclSum != 0) {
+		function.setTotalInclusivePercentValue(metric, function.getTotalInclusiveValue(metric) / maxInclSum * 100);
+		function.setTotalExclusivePercentValue(metric, function.getTotalExclusiveValue(metric) / maxInclSum * 100);
+		
+		// mean is exactly the same
+		function.setMeanInclusivePercentValue(metric, function.getTotalInclusiveValue(metric) / maxInclSum * 100);
+		function.setMeanExclusivePercentValue(metric, function.getTotalExclusiveValue(metric) / maxInclSum * 100);
 	    }
 	    
-	    	    
-	    globalMappingElement.setMeanValuesSet(true);
+	    
+	    // set max mean stuff
+	    if (function.getMeanExclusivePercentValue(metric) > allFunctions.getMaxMeanExclusivePercentValue(metric))
+		allFunctions.setMaxMeanExclusivePercentValue(metric, function.getMeanExclusivePercentValue(metric));
+	    if (function.getMeanInclusivePercentValue(metric) > allFunctions.getMaxMeanInclusivePercentValue(metric))
+		allFunctions.setMaxMeanInclusivePercentValue(metric, function.getMeanInclusivePercentValue(metric));
+	    function.setMeanValuesSet(true);
 	}
+	
 	if(this.debug()){
 	    this.outputToFile("Done - Setting mean data :: public void setMeanData(int mappingSelection, int metric)");
 	    this.outputToFile("####################################");
@@ -468,314 +478,166 @@ public abstract class ParaProfDataSession  extends DataSession{
     
 
     public void setMeanDataAllMetrics(int mappingSelection){
-	if(this.debug()){
-	    this.outputToFile("####################################");
-	    this.outputToFile("Setting mean data :: public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics)");
-	}
+
+	// Given, excl, incl, call, subr for each thread, for each function
+
+	// for a node:
+
+	// inclpercent = incl / (max(all incls for this thread)) * 100
+	// exclpercent = excl / (max(all incls for this thread)) * 100
+	// inclpercall = incl / call
+
+	// for the total:
+
+	//   for each function:
+	//     incl = sum(all threads, incl)
+	//     excl = sum(all threads, excl)
+	//     call = sum(all threads, call)
+	//     subr = sum(all threads, subr)
+    
+	//     inclpercent = incl / (max(all incls for total)) * 100
+	//     exclpercent = excl / (max(all incls for total)) * 100
+	//     inclpercall = incl / call
+
+	// for the mean:
+	//   for each function:
+	//     incl = total(incl) / numThreads
+	//     excl = total(excl) / numThreads
+	//     call = total(call) / numThreads
+	//     subr = total(subr) / numThreads
+
+	//     inclpercent = total(inclpercent)
+	//     exclpercent = total(exclpercent)
+	//     inclpercall = total(inclpercall) 
+
 
 	int numberOfMetrics = this.getNumberOfMetrics();
-	
-	//Cycle through the list of global mapping elements.  For each one, sum up
-	//the exclusive and the inclusive times respectively, and each total by the
-	//number of times we encountered that mapping.
-	GlobalMapping globalMapping = this.getGlobalMapping();
-	ListIterator l = globalMapping.getMappingIterator(mappingSelection);
 
-	// need these to keep track of the total totals (?)
-	double[] exclusiveTotalTotal = new double[numberOfMetrics];
-	double[] inclusiveTotalTotal = new double[numberOfMetrics];
+	double[] exclSum = new double[numberOfMetrics];
+	double[] inclSum = new double[numberOfMetrics];
+	double[] maxInclSum = new double[numberOfMetrics];
+	int callSum = 0;
+	int subrSum = 0;
+
 	for (int i=0;i<numberOfMetrics;i++) {
-	    exclusiveTotalTotal[i] = 0;
-	    inclusiveTotalTotal[i] = 0;
-	}
-
-	//Allocate outside loop, and reset to zero at each iteration.
-	//Working on the assumption that this is slightly quicker than
-	//re-allocating in each loop iteration. 
-	double[] exclusiveTotal = new double[numberOfMetrics];
-	double[] inclusiveTotal = new double[numberOfMetrics];
-	//	double[] exclusivePercentTotal = new double[numberOfMetrics];
-	//	double[] inclusivePercentTotal = new double[numberOfMetrics];
-	int numberOfCallsTotal = 0;
-	int numberOfSubroutinesTotal = 0;
-	double[] userSecPerCallValueTotal = new double[numberOfMetrics];
-	
-	double[] meanExclusiveValue = new double[numberOfMetrics];
-	double[] meanInclusiveValue = new double[numberOfMetrics];
-	//	double[] meanExclusivePercentValue = new double[numberOfMetrics];
-	//	double[] meanInclusivePercentValue = new double[numberOfMetrics];
-	double[] meanUserSecPerCallValue = new double[numberOfMetrics];
-	double[] maxMeanInclusiveValue = new double[numberOfMetrics];
-
-	//double[] exclusivePercentTotal = new double[globalMapping.getNumberOfMappings(0)];
-	//double[] inclusivePercentTotal = new double[globalMapping.getNumberOfMappings(0)];
-
-
-
-
-	// the total inclusive value (sum of "top level" function over all threads) : 
-	// used to generate percentages by comparing against this value
-	double[] threadTotalInclusiveValue = new double[numberOfMetrics];
-
-	// Sum up the max inclusive value (top level "timer") for each thread to get the total
-	// program time.  We use this to make comparisons against when computing mean percentages
-	for (int i=0;i<numberOfMetrics;i++) {
-	    threadTotalInclusiveValue[i] = 0;
-	    
-	    for (Enumeration e = this.getNCT().getThreads().elements(); e.hasMoreElements() ;) {
-		threadTotalInclusiveValue[i] += ((Thread) e.nextElement()).getMaxInclusiveValue(i);
-	    }
+	    maxInclSum[i] = 0;
 	}
 
 
-	while (l.hasNext()) {
+	GlobalMapping allFunctions = this.getGlobalMapping();
+	ListIterator l = allFunctions.getMappingIterator(mappingSelection);
 
-	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
 
-	    //Reset values for this itertion.
-	    numberOfCallsTotal = 0;
-	    numberOfSubroutinesTotal = 0;
+	while (l.hasNext()) { // for each function
+	    GlobalMappingElement function = (GlobalMappingElement) l.next();
+
+	    callSum = 0;
+	    subrSum = 0;
 	    for (int i=0;i<numberOfMetrics;i++) {
-		exclusiveTotal[i] = 0;
-		inclusiveTotal[i] = 0;
-		//exclusivePercentTotal[i] = 0;
-		//inclusivePercentTotal[i] = 0;
-		userSecPerCallValueTotal[i] = 0;
-		meanExclusiveValue[i] = 0;
-		meanInclusiveValue[i] = 0;
-		meanUserSecPerCallValue[i] = 0;
-		
+		exclSum[i] = 0;
+		inclSum[i] = 0;
 	    }
 
-	    //Two separtate counters are used here.  Mean values are calculated in a manner which is in line
-	    //with pprof's calculations of mean.  These are as follows:
-	    //With the exception of usec/call, mean values are calculated based on division by the total number
-	    //of threads in the system (whether or not the function was called. For usec/call, pprof
-	    //seems to be calculating based only on the number of threads on which at least one call to the 
-	    //function was made.
-	    int count = 0;
-	    int userSecPerCallCount = 0;
-	    int id = globalMappingElement.getMappingID();
-	    if (this.debug) {
-		this.outputToFile("######");
-		this.outputToFile("GlobalMappingElement: " + globalMappingElement.getMappingName());
-	    }
+	    
+
+	    int functionId = function.getMappingID();
+
+	    // this must be stored somewhere else, but I'm going to compute it since I don't know where
+	    int numThreads = 0;
+
 	    for (Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements() ;) {
 		Node node = (Node) e1.nextElement();
 		for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;) {
 		    Context context = (Context) e2.nextElement();
 		    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;) {
 			edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
-			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(id);
-			if (globalThreadDataElement != null) {
+			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(functionId);
+
+			if (globalThreadDataElement != null) { // if this function was called for this nct
 
 			    for (int i=0;i<numberOfMetrics;i++) {
-				exclusiveTotal[i]+=globalThreadDataElement.getExclusiveValue(i);
-				inclusiveTotal[i]+=globalThreadDataElement.getInclusiveValue(i);
-				//exclusivePercentTotal[i]+=globalThreadDataElement.getExclusivePercentValue(i);
-				//inclusivePercentTotal[i]+=globalThreadDataElement.getInclusivePercentValue(i);
+
+				exclSum[i]+=globalThreadDataElement.getExclusiveValue(i);
+				inclSum[i]+=globalThreadDataElement.getInclusiveValue(i);
 				
 				// the same for every metric
-				if (i==0) {
-				    numberOfCallsTotal+=globalThreadDataElement.getNumberOfCalls();
-				    numberOfSubroutinesTotal+=globalThreadDataElement.getNumberOfSubRoutines();
+				if (i == 0) {
+				    callSum+=globalThreadDataElement.getNumberOfCalls();
+				    subrSum+=globalThreadDataElement.getNumberOfSubRoutines();
 				}
-				userSecPerCallValueTotal[i]+=globalThreadDataElement.getUserSecPerCall(i);
-				if(this.debug){
-				    this.outputToFile("exclusiveTotal["+i+"]: "+exclusiveTotal[i]);
-				    this.outputToFile("inclusiveTotal["+i+"]: "+inclusiveTotal[i]);
-				    //this.outputToFile("exclusivePercentTotal["+i+"]: "+exclusivePercentTotal[i]);
-				    //this.outputToFile("inclusivePercentTotal["+i+"]: "+inclusivePercentTotal[i]);
-				    this.outputToFile("userSecPerCallValueTotal["+i+"]: "+userSecPerCallValueTotal[i]);
-				}
-
-
 			    }
-			    userSecPerCallCount++;
 			}
-			count++;
+			numThreads++;
 		    }
 		}
-	    }
-	    if(this.debug){
-		this.outputToFile("numberOfCallsTotal: "+numberOfCallsTotal);
-		this.outputToFile("numberOfSubroutinesTotal: "+numberOfSubroutinesTotal);
-		this.outputToFile("count: "+count);
-		this.outputToFile("userSecPerCallCount: "+userSecPerCallCount);
 	    }
 
 	    // set the totals for all but percentages - need to do those later...
-	    globalMappingElement.setTotalNumberOfCalls(numberOfCallsTotal);
-	    globalMappingElement.setTotalNumberOfSubRoutines(numberOfSubroutinesTotal);
-	    for(int i=0;i<numberOfMetrics;i++){
-		globalMappingElement.setTotalExclusiveValue(i, exclusiveTotal[i]);
-		globalMappingElement.setTotalInclusiveValue(i, inclusiveTotal[i]);
-		globalMappingElement.setTotalUserSecPerCall(i, userSecPerCallValueTotal[i]);
-		// take advantage of this loop to accomplish this aggregation
-		exclusiveTotalTotal[i] += exclusiveTotal[i];
-		inclusiveTotalTotal[i] += inclusiveTotal[i];
-	    }
-	    
-	    if (count!=0) {
-		//Since we only need to do the numberOfCalls and numberOfSubroutines for
-		//the first metric, do it first (outside the loop).
-		double meanNumberOfCalls = (double)numberOfCallsTotal/count;
-		double meanNumberOfSubroutines = (double)numberOfSubroutinesTotal/count;
-		
-		globalMappingElement.setMeanNumberOfCalls(meanNumberOfCalls);
-		if(globalMapping.getMaxMeanNumberOfCalls() < meanNumberOfCalls)
-		    globalMapping.setMaxMeanNumberOfCalls(meanNumberOfCalls);
+	    function.setTotalNumberOfCalls(callSum);
+	    function.setTotalNumberOfSubRoutines(subrSum);
 
-		globalMappingElement.setMeanNumberOfSubRoutines(meanNumberOfSubroutines);
-		if(globalMapping.getMaxMeanNumberOfSubRoutines() < meanNumberOfSubroutines)
-		    globalMapping.setMaxMeanNumberOfSubRoutines(meanNumberOfSubroutines);
-		
-		for(int i=0;i<numberOfMetrics;i++){
-		    meanExclusiveValue[i] = exclusiveTotal[i]/count;
-		    meanInclusiveValue[i] = inclusiveTotal[i]/count;
-		    //meanExclusivePercentValue[i] = exclusivePercentTotal[i]/count;
-		    //meanInclusivePercentValue[i] = inclusivePercentTotal[i]/count;
-		    
-		    if(this.debug){
-			this.outputToFile("meanExclusiveValue["+i+"]: "+meanExclusiveValue[i]);
-			this.outputToFile("meanInclusiveValue["+i+"]: "+meanInclusiveValue[i]);
-			//this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue[i]);
-			//this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue[i]);
-		    }
-		    
-		    globalMappingElement.setMeanExclusiveValue(i, meanExclusiveValue[i]);
-		    if(globalMapping.getMaxMeanExclusiveValue(i) < meanExclusiveValue[i])
-			globalMapping.setMaxMeanExclusiveValue(i, meanExclusiveValue[i]);
-		    
-		    globalMappingElement.setMeanInclusiveValue(i, meanInclusiveValue[i]);
-		    if(globalMapping.getMaxMeanInclusiveValue(i) < meanInclusiveValue[i])
-			globalMapping.setMaxMeanInclusiveValue(i, meanInclusiveValue[i]);
-
-		    //globalMappingElement.setMeanExclusivePercentValue(i, meanExclusivePercentValue[i]);
-		    //if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue[i])
-		    //globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue[i]);
-		    
-		    //System.out.println ("ALAN:setting meanInclusivePercentValue = " + meanInclusivePercentValue[i]);
-
-		    //globalMappingElement.setMeanInclusivePercentValue(i, meanInclusivePercentValue[i]);
-		    //if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue[i])
-		    //	globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue[i]);
-		}
-
-		if(userSecPerCallCount!=0){
-		    for(int i=0;i<numberOfMetrics;i++){
-			meanUserSecPerCallValue[i] = userSecPerCallValueTotal[i]/userSecPerCallCount;
-			
-			if(this.debug){
-			    this.outputToFile("meanUserSecPerCallValue["+i+"]: "+meanUserSecPerCallValue[i]);
-			}
-			
-			globalMappingElement.setMeanUserSecPerCall(i, meanUserSecPerCallValue[i]);
-			if(globalMapping.getMaxMeanUserSecPerCall(i) < meanUserSecPerCallValue[i])
-			    globalMapping.setMaxMeanUserSecPerCall(i, meanUserSecPerCallValue[i]);
-		    }
-		}
-		if(this.debug){
-		    this.outputToFile("meanNumberOfCalls: "+meanNumberOfCalls);
-		    this.outputToFile("meanNumberOfSubroutines: "+meanNumberOfSubroutines);
-		}
-	    }
-
-	    globalMappingElement.setMeanValuesSet(true);
-
-	    if(this.debug){
-		this.outputToFile("Done - GlobalMappingElement: " + globalMappingElement.getMappingName());
-		this.outputToFile("######");
-	    }
-	}
-
-
-////////////////////////////  UNCOMMENTED ///////////////////////
-
-	//Now set the percent values.
-	for (int i=0;i<numberOfMetrics;i++) {
-	    maxMeanInclusiveValue[i] = globalMapping.getMaxMeanInclusiveValue(i);
-	    if (this.debug) {
-		this.outputToFile("maxMeanInclusiveValue["+i+"]: " + maxMeanInclusiveValue[i]);
-	    }
-	}
-
-	// for each function
-	l = globalMapping.getMappingIterator(mappingSelection);
-	while (l.hasNext()) {
-
-	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-
-	    if (this.debug) {
-		this.outputToFile("######");
-		this.outputToFile("GlobalMappingElement: " + globalMappingElement.getMappingName() + "(Percent)");
-	    }
+	    // mean is just the total / numThreads
+	    function.setMeanNumberOfCalls((double)callSum / numThreads);
+	    function.setMeanNumberOfSubRoutines((double)subrSum / numThreads);
 
 	    for (int i=0;i<numberOfMetrics;i++) {
-		double meanExclusivePercentValue = 0.0;
-		if (maxMeanInclusiveValue[i] != 0.0) {
-		    meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+		function.setTotalExclusiveValue(i, exclSum[i]);
+		function.setTotalInclusiveValue(i, inclSum[i]);
+		function.setTotalUserSecPerCall(i, inclSum[i] / callSum);
+
+		// mean data computed as above in comments
+		function.setMeanExclusiveValue(i, exclSum[i] / numThreads);
+		function.setMeanInclusiveValue(i, inclSum[i] / numThreads);
+		function.setMeanUserSecPerCall(i, inclSum[i] / callSum);
+
+		if (inclSum[i] > maxInclSum[i]) {
+		    maxInclSum[i] = inclSum[i];
 		}
-		globalMappingElement.setMeanExclusivePercentValue(i,meanExclusivePercentValue);
-		if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue)
-		    globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue);
-		double meanInclusivePercentValue = 0.0;
-		if (maxMeanInclusiveValue[i] != 0.0) {
-		    meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
-		}
-		globalMappingElement.setMeanInclusivePercentValue(i,meanInclusivePercentValue);
-		if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue)
-		    globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue);
-			
-		if(this.debug){
-		    this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue);
-		    this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue);
-		}
-
-
-
-		if (globalMappingElement.getMeanNumberOfCalls() != 0) {
-		    globalMappingElement.setMeanUserSecPerCall(i, globalMappingElement.getMeanInclusiveValue(i) / globalMappingElement.getMeanNumberOfCalls());
-		}
-
-		if (exclusiveTotalTotal[i] != 0.0)
-		    globalMappingElement.setTotalExclusivePercentValue(i,(globalMappingElement.getTotalExclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
-		else
-		    globalMappingElement.setTotalExclusivePercentValue(i,0.0);
-
-
-		// Set the Mean Inclusive Percent
-
-
-		if (threadTotalInclusiveValue[i] != 0) {
-		    globalMappingElement.setMeanInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / threadTotalInclusiveValue[i])*100.0);
-		    globalMappingElement.setTotalInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / threadTotalInclusiveValue[i])*100.0);
-		}
-
-
-
-		/*
-		if (exclusiveTotalTotal[i] != 0.0) {
-		    globalMappingElement.setTotalInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
-		    globalMappingElement.setTotalInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
-		    //   globalMappingElement.setMeanInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
-
-
-		} else {
-		    globalMappingElement.setTotalInclusivePercentValue(i,0.0);
-		}
-		*/
 	    }
-	    globalMappingElement.setMeanValuesSet(true);
-	    if(this.debug){
-		this.outputToFile("Done - GlobalMappingElement: " + globalMappingElement.getMappingName() + "(Percent)");
-		this.outputToFile("######");
+
+
+	    // now set the max values for mean
+	    if (function.getMeanNumberOfSubRoutines() > allFunctions.getMaxMeanNumberOfSubRoutines())
+		allFunctions.setMaxMeanNumberOfSubRoutines(function.getMeanNumberOfSubRoutines());
+
+	    if (function.getMeanNumberOfCalls() > allFunctions.getMaxMeanNumberOfCalls())
+		allFunctions.setMaxMeanNumberOfCalls(function.getMeanNumberOfCalls());
+	    
+	    for (int i=0;i<numberOfMetrics;i++) {
+		if (function.getMeanExclusiveValue(i) > allFunctions.getMaxMeanExclusiveValue(i))
+		    allFunctions.setMaxMeanExclusiveValue(i,function.getMeanExclusiveValue(i));
+		
+		if (function.getMeanInclusiveValue(i) > allFunctions.getMaxMeanInclusiveValue(i))
+		    allFunctions.setMaxMeanInclusiveValue(i,function.getMeanInclusiveValue(i));
 	    }
 	}
-	
-	if(this.debug()){
-	    this.outputToFile("Done - Setting mean data :: public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics)");
-	    this.outputToFile("####################################");
+
+
+	// now compute percentages since we now have max(all incls for total)
+	// for each function
+	l = allFunctions.getMappingIterator(mappingSelection);
+	while (l.hasNext()) {
+	    
+	    GlobalMappingElement function = (GlobalMappingElement) l.next();
+	    
+	    for (int i=0;i<numberOfMetrics;i++) {
+		if (maxInclSum[i] != 0) {
+		    function.setTotalInclusivePercentValue(i, function.getTotalInclusiveValue(i) / maxInclSum[i] * 100);
+		    function.setTotalExclusivePercentValue(i, function.getTotalExclusiveValue(i) / maxInclSum[i] * 100);
+
+		    // mean is exactly the same
+		    function.setMeanInclusivePercentValue(i, function.getTotalInclusiveValue(i) / maxInclSum[i] * 100);
+		    function.setMeanExclusivePercentValue(i, function.getTotalExclusiveValue(i) / maxInclSum[i] * 100);
+		}
+
+
+		// set max mean stuff
+		if (function.getMeanExclusivePercentValue(i) > allFunctions.getMaxMeanExclusivePercentValue(i))
+		    allFunctions.setMaxMeanExclusivePercentValue(i, function.getMeanExclusivePercentValue(i));
+		if (function.getMeanInclusivePercentValue(i) > allFunctions.getMaxMeanInclusivePercentValue(i))
+		    allFunctions.setMaxMeanInclusivePercentValue(i, function.getMeanInclusivePercentValue(i));
+	    }
+	    function.setMeanValuesSet(true);
 	}
     }
     //######
