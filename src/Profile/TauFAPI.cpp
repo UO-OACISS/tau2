@@ -825,7 +825,7 @@ void tau_event(int **ptr, double *data)
 //#endif /* TAU_XLC || TAU_AIX || HP_FORTRAN */
 
 
-#ifdef TAU_GNU
+#if (defined (TAU_GNU) || defined (TAU_PATHSCALE))
 
 void tau_profile_timer__(void **ptr, char *fname, int flen)
 {
@@ -1045,11 +1045,11 @@ void tau_set_interrupt_interval__(int* value)
 } 
 
 
-#endif /* TAU_GNU */
+#endif /* TAU_GNU || TAU_PATHSCALE */
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.34 $   $Date: 2004/10/20 17:31:39 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.34 2004/10/20 17:31:39 sameer Exp $ 
+ * $Revision: 1.35 $   $Date: 2004/11/18 18:30:08 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.35 2004/11/18 18:30:08 sameer Exp $ 
  ***************************************************************************/
