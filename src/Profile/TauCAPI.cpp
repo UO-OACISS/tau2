@@ -58,7 +58,12 @@ extern "C" void * Tau_get_profiler(char *fname, char *type, TauGroup_t group, ch
 
   // since we're using new, we should set InitData to true in FunctionInfoInit
   if (group == TAU_MESSAGE)
-    f = new FunctionInfo(fname, type, group, "MPI", true);
+  {
+    if (gr_name && strcmp(gr_name, "TAU_MESSAGE") == 0)
+      f = new FunctionInfo(fname, type, group, "MPI", true);
+    else 
+      f = new FunctionInfo(fname, type, group, gr_name, true);
+  }
   else 
     f = new FunctionInfo(fname, type, group, gr_name, true);
 //  p = new Profiler(f, group, true);
@@ -500,7 +505,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.38 $   $Date: 2003/12/06 00:18:17 $
- * VERSION: $Id: TauCAPI.cpp,v 1.38 2003/12/06 00:18:17 sameer Exp $
+ * $Revision: 1.39 $   $Date: 2003/12/18 20:56:52 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.39 2003/12/18 20:56:52 sameer Exp $
  ***************************************************************************/
 
