@@ -27,6 +27,13 @@ extern "C" void mytimer_(int *);
    typedef TComplex<double> dcomplex;
 #endif
 
+#ifdef _OPENMP
+extern "C" {
+#  include <omp.h>
+}
+#endif
+
+
 #include "ppmwrite.h"
 
 field iterations;
