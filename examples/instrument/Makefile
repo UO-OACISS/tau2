@@ -12,12 +12,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=solaris2
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/nfs/research/parallel/sameer/gar/research/tau2
+TAUROOT=/research/parallel/sameer/gar/research/tau2
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		  #ENDIF#
@@ -35,7 +35,7 @@ LSX = .a
 
 
 ############# Profiling Options #############
-PROFILEOPT1           = -DPROFILING_ON    #ENDIF##PROFILE#
+#PROFILE#PROFILEOPT1           = -DPROFILING_ON    #ENDIF#
 #SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS      #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS #ENDIF#
 #PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS   #ENDIF#
@@ -43,9 +43,9 @@ PROFILEOPT1           = -DPROFILING_ON    #ENDIF##PROFILE#
 #DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF      #ENDIF#
 #KAI#PROFILEOPT7               = -DTAU_STDCXXLIB   #ENDIF#
 #INTELTFLOP#PROFILEOPT8        = -DPOOMA_TFLOP     #ENDIF#
-PROFILEOPT9              = -DNO_RTTI         #ENDIF##SOL2#
-PROFILEOPT10          = -DNO_RTTI         #ENDIF##GNU#
-TRACEOPT		       = -DTRACING_ON	   #ENDIF##TRACE#
+#SOL2#PROFILEOPT9              = -DNO_RTTI         #ENDIF#
+#GNU#PROFILEOPT10          = -DNO_RTTI         #ENDIF#
+#TRACE#TRACEOPT		       = -DTRACING_ON	   #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	   #ENDIF#
 
