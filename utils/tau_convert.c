@@ -77,7 +77,7 @@ static enum pvmode_t { user, pvclass, all } pvMode = user;
 static int pvCompact = FALSE;
 static int pvComm = TRUE;
 static int threads = FALSE;
-
+static int pvLongSymbolBugFix = FALSE; /* if symbol name > 200 prepend id */
 static int dynamictrace = FALSE;
 
 static char *barrin, *barrout;  /* -- for barrier checking -- */
@@ -193,7 +193,19 @@ static void AddEventDynamic (int id, char *name, char *p, char *state, int tag)
   newev->tag  = tag;
   newev->no   = evno++;
   newev->used = FALSE;
-  newev->name = (char *) malloc (strlen(name) + 1); strcpy (newev->name, name);
+  newev->name = (char *) malloc (strlen(name) + 10); 
+  /* add 10 not 1, so if we need to add an id to the name, there is space */
+
+  if (pvLongSymbolBugFix) /* For a long name, prepend its id to its name */ 
+  {
+    if (strlen(name) > 200) 
+      sprintf(newev->name, "\"%d-%s", newev->no, &name[1]);
+    else 
+      strcpy (newev->name, name);
+  }
+  else
+    strcpy (newev->name, name);
+
   if ( *p && outFormat != pv )
   {
     newev->param = (char *) malloc (strlen(p) + 5);
@@ -665,7 +677,7 @@ int main (int argc, char *argv[])
   int hasParam;
   int fileIdx;
   int numproc = 0;
-  char name[80], state[80], param[80], linebuf[LINEMAX];
+  char name[LINEMAX], state[80], param[80], linebuf[LINEMAX];
   char traceflag[32];
   char *inFile, *edfFile, *outFile, *ptr;
   EVDESCR *ev;
@@ -689,7 +701,7 @@ int main (int argc, char *argv[])
   if ( argc < 3 )
   {
     fprintf (stderr, "usage: %s [-alog | -SDDF | -dump |", argv[0]);
-    fprintf (stderr, " -pv | -vampir [-compact] [-user|-class|-all] [-nocomm]]");
+    fprintf (stderr, " -pv | -vampir [-longsymbolbugfix] [-compact] [-user|-class|-all] [-nocomm]]");
     fprintf (stderr, " inputtrc edffile [outputtrc]\n");
     fprintf (stderr, " Note: -vampir option assumes multiple threads/node\n");
     exit (1);
@@ -710,7 +722,9 @@ int main (int argc, char *argv[])
     i = 2;
     while ( argv[i][0] == '-' )
     {
-      if ( strcmp (argv[i], "-compact") == 0 )
+      if ( strcmp (argv[i], "-longsymbolbugfix") == 0 )
+        pvLongSymbolBugFix = TRUE;
+      else if ( strcmp (argv[i], "-compact") == 0 )
         pvCompact = TRUE;
       else if ( strcmp (argv[i], "-user") == 0 )
         pvMode = user;
@@ -741,7 +755,9 @@ int main (int argc, char *argv[])
     i = 2;
     while ( argv[i][0] == '-' )
     {
-      if ( strcmp (argv[i], "-compact") == 0 )
+      if ( strcmp (argv[i], "-longsymbolbugfix") == 0 )
+        pvLongSymbolBugFix = TRUE;
+      else if ( strcmp (argv[i], "-compact") == 0 )
         pvCompact = TRUE;
       else if ( strcmp (argv[i], "-user") == 0 )
         pvMode = user;
@@ -757,6 +773,12 @@ int main (int argc, char *argv[])
     }
     fileIdx = i;
   }
+
+#ifdef DEBUG
+  if (pvLongSymbolBugFix)
+    printf("LONG_SYMBOL_BUG_FIX is in effect ! \n");
+#endif /* DEBUG */
+ 
 
   inFile  = argv[fileIdx];
   edfFile = argv[fileIdx+1];
@@ -920,6 +942,10 @@ int main (int argc, char *argv[])
   }
   fclose (inev);
 
+#ifdef DEBUG
+  printf("After closing edf file ... \n");
+#endif /* DEBUG */
+
   /* ------------------------------------------------------------------------ */
   /* -- skip through trace file to determine trace parameters --------------- */
   /* ------------------------------------------------------------------------ */
@@ -966,6 +992,11 @@ int main (int argc, char *argv[])
     }
   }
   while ( erec != NULL );
+
+ 
+#ifdef DEBUG
+  printf("After parsing the trace file...\n");
+#endif /* DEBUG */
 
   if (threads)
   { /* We've gone through the whole trace, now make the offset vector */
