@@ -194,6 +194,8 @@ static char lbuf[256];        /* -- temporary line buffer for reads -- */
 static char sbuf[128];        /* -- temporary string buffer -- */
 static int  hpcxx_flag = FALSE;
 static int  hwcounters = false;
+static bool multipleCounters = false;
+static char * counterName = NULL;
 static int  userevents = false;
 static int  profilestats = false; /* for SumExclSqr */
 static int  files_processed = 0; /* -- used for printing summary -- */
@@ -346,8 +348,12 @@ bool IsDynamicProfiling(char *filename)
   }
   else  { 
     if ((strcmp(version,"templated_functions_hw_counters") == 0) || (strstr(version,"MULTI") != NULL)) {
-      hwcounters  = true; // Counters - do not use time string formatting   
-      return true; // It is dynamic profiling 	
+      hwcounters  = true; // Counters - do not use time string formatting
+      if((strstr(version,"MULTI") != NULL)){
+	multipleCounters = true;
+        counterName = version;
+      }
+      return true; // It is dynamic profiling
     }
     else // Neither  - static profiling 
       return false;
@@ -3050,8 +3056,14 @@ int main (int argc, char *argv[])
 	} else //not profilestats
 	  { 
 	    if(hwcounters) {
-	      printf ("default.dep\n%d templated_functions_hw_counters\n", numfunc);
-	      printf ("%%time       counts total counts       #call      #subrs count/call name\n");
+	      if(multipleCounters){
+		printf ("default.dep\n%d %s\n", numfunc, counterName);
+		printf ("%%time       counts total counts       #call      #subrs count/call name\n");
+	      }
+	      else{
+		printf ("default.dep\n%d templated_functions_hw_counters\n", numfunc);
+                printf ("%%time       counts total counts       #call      #subrs count/call name\n");
+	      }
 	    } else {
 	      printf ("default.dep\n%d templated_functions\n", numfunc);
 	      printf ("%%time         msec   total msec       #call      #subrs  usec/call name\n");
@@ -3142,7 +3154,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: bertie $
- * $Revision: 1.29 $   $Date: 2002/03/11 09:59:08 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.29 2002/03/11 09:59:08 bertie Exp $                                                   
+ * $Revision: 1.30 $   $Date: 2002/03/14 09:49:07 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.30 2002/03/14 09:49:07 bertie Exp $                                                   
  ***************************************************************************/
 
