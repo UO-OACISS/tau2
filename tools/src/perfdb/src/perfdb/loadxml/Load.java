@@ -49,7 +49,11 @@ public class Load {
     }
 
     public AppLoadHandler newAppHandler() {
-	return new AppLoadHandler(getDB());
+		return new AppLoadHandler(getDB());
+    }
+
+    public ExpLoadHandler newExpHandler(String application) {
+		return new ExpLoadHandler(getDB(), application);
     }
 
     /*** Parse an XML file related to a trial using a SAX parser
@@ -97,6 +101,34 @@ public class Load {
 		File file = new File(appFile);
 		xmlreader.parse(new InputSource(new FileInputStream(file)));
 		return ((AppLoadHandler) handler).getAppId();	
+	    } catch (SAXException saxe) {
+		saxe.printStackTrace();
+	    } catch (IOException ioe) {
+		ioe.printStackTrace();
+	    }
+	} catch (SAXException ex) {
+	    ex.printStackTrace();
+	} catch (NullPointerException ex) {
+	    ex.printStackTrace();
+	}
+	return null;
+    }       
+
+    /*** Parse a xml file related to an experiment. ***/
+
+    public String parseExp(String expFile, String application) {
+	
+	try {
+	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);
+	    
+	    DefaultHandler handler = this.newExpHandler(application);
+	    xmlreader.setContentHandler(handler);
+	    xmlreader.setErrorHandler(handler);
+	    
+	    try {
+		File file = new File(expFile);
+		xmlreader.parse(new InputSource(new FileInputStream(file)));
+		return ((ExpLoadHandler) handler).getExpId();	
 	    } catch (SAXException saxe) {
 		saxe.printStackTrace();
 	    } catch (IOException ioe) {

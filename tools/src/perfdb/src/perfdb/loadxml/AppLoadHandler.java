@@ -24,6 +24,7 @@ public class AppLoadHandler extends DefaultHandler {
     protected String paradiag = "";
     protected String usage = "";
     protected String exeopt = "";
+    protected String userdata = "";
 
 	protected String currentElement = "";
 	private DB dbconnector;
@@ -69,6 +70,8 @@ public void startElement(String url, String name, String qname, Attributes attrL
 		currentElement = "usage";
 	} else if( name.equalsIgnoreCase("exe_opt") ) {
 		currentElement = "execution_options";
+	} else if( name.equalsIgnoreCase("userdata") ) {
+		currentElement = "userdata";
 	}       
 }
 
@@ -100,6 +103,7 @@ public void characters(char[] chars, int start, int length) {
 	else if (currentElement.equals("paradiagm")) paradiag = tempstr;
 	else if (currentElement.equals("usage")) usage = tempstr;
 	else if (currentElement.equals("execution_options")) exeopt = tempstr;
+	else if (currentElement.equals("userdata")) userdata = tempstr;
 	
 }
 
@@ -117,10 +121,10 @@ public void endElement(String url, String name, String qname) {
 	    	buf = new StringBuffer();
 	    	buf.append("insert into");
 	    	buf.append(" " + APP_TABLE + " ");
-	    	buf.append("(name, version, description, language, paradigm, usage_text, execution_options)");
+	    	buf.append("(name, version, description, language, paradigm, usage_text, execution_options, userdata)");
 	    	buf.append(" values ");
 	    	buf.append("('" + this.name + "', '" + version + "', '" 
-		       + desc + "', '" + lang + "', '" + paradiag + "', '" + usage + "', '" + exeopt + "'); ");       
+		       + desc + "', '" + lang + "', '" + paradiag + "', '" + usage + "', '" + exeopt + "', '" + userdata + "'); ");       
 	    	// System.out.println(buf.toString());
 	    	try {
 		    getDB().executeUpdate(buf.toString());

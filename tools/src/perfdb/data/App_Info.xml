@@ -7,4 +7,5 @@
     <para_diag>para</para_diag>
     <usage>usage</usage>
     <exe_opt>exe opt</exe_opt>
+    <userdata>this is some custom data</userdata>
 </application>
