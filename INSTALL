@@ -92,6 +92,7 @@ Usage: configure [OPTIONS]
 -PROFILESTATS .................. Enable standard deviation calculation.
 -MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
+-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems.
 -LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time.
 -CPUTIME .......... Use usertime+system time instead of wallclock time.
 -PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi.
@@ -314,16 +315,27 @@ The following  command-line options are available to configure:
    
    Allows TAU to track more than one quantity (multiple hardware counters, CPU
    time, wallclock time, etc.) Configure with other options such as -papi=<dir>,
-   -pcl=<dir>, -LINUXTIMERS, -SGITIMERS, -CPUTIME, -PAPIVIRTUAL, etc. See 
-   examples/multicounters/README file for detailed instructions on setting the
-   environment variables for this option. If -MULTIPLECOUNTERS is used with the
-   -TRACE option, tracing employs the COUNTER1 variable for wallclock time. 
+   -pcl=<dir>, -LINUXTIMERS, -SGITIMERS, -CRAYTIMERS, -CPUTIME, -PAPIVIRTUAL, 
+   etc. See examples/multicounters/README file for detailed instructions on 
+   setting the environment variables for this option. If -MULTIPLECOUNTERS is 
+   used with the -TRACE option, tracing employs the COUNTER1 variable for 
+   wallclock time. 
    
 -SGITIMERS
    
    Specifies use of the free running nanosecond resolution on-chip timer on 
    the MIPS R10000. This timer has a lower overhead than the default timer on 
    SGI, and is recommended for SGIs. 
+
+-CRAYTIMERS
+   
+   Specifies use of the free running nanosecond resolution on-chip timer on 
+   the CRAY X1 cpu (accessed by the rtc() syscall). This timer has a 
+   significantly lower overhead than the default timer on the X1, and is 
+   recommended for profiling. Since this timer is not synchronized across 
+   different cpus, this option should not be used with the -TRACE option for
+   tracing a multi-cpu application, where a globally synchronized realtime 
+   clock is required. 
 
 -LINUXTIMERS
    Specifies the use of the free running nanosecond resolution time stamp 
