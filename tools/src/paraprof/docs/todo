@@ -64,3 +64,14 @@ Need to examine the inheritance tree for DataSession.  Does it integrate
 well with ParaProfTrial or not?
 ------
 
+------
+# Report 06
+# Date: 19 March 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon).
+When ParaProf reads raw data output from tau, if it encounters duplicate names then
+treat it as additional data, and add to the name data rather then overwrite as is
+currently the case.  The most likely source of this is runtime template typing
+issues with certain c++ compilers.  This functionality will then mirror pprof.
+------
+
