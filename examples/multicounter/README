@@ -17,11 +17,16 @@ will allow you to use linux timers, cpu time, and all papi metrics.
 
 After you have configured TAU, you will then need to set environment variables
 denoting which metrics you wish to use for any given run.  You can set
-up to 25 counters (depending on your hardware).  The following example uses
-PAPI_FP_INS for papi floating point instructions, GET_TIME_OF_DAY for the
+up to 25 counters (depending on your hardware).
+For papi native events under multiple counters only, prefix the name 
+by: PAPI_NATIVE_.  Thus, if your native event were called 
+"something-native", specify it in the environment by setting COUNTERx 
+to be "PAPI_NATIVE_something-native".
+As an example of papi native events: setenv COUNTER1 PAPI_NATIVE_packed_DP_uop_all
+
+The following example uses PAPI_FP_INS for papi floating point instructions, GET_TIME_OF_DAY for the
 standard gettimeofday function, CPU_TIME for cpu time, LINUX_TIMERS
 for linux timers, and PAPI_L1_DCM for L1 data cache misses (See note below).
-
 
 [tau2/examples/multicounter]$ setenv COUNTER1 PAPI_FP_INS
 [tau2/examples/multicounter]$ setenv COUNTER2 GET_TIME_OF_DAY
