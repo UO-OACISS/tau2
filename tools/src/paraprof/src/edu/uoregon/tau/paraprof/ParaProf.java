@@ -533,14 +533,6 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     // Main entry point
     static public void main(String[] args){
 
-	//######
-	//Static Initialization
-	//######
-	UtilFncs.objectDebug = new Debug();
-	//######
-	//End - Static Initialization
-	//######
-	
 	//Make sure we drop a line before beginning any output.
 	System.out.println("");
 
@@ -603,6 +595,14 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    ParaProf.fixNames = fixNames.booleanValue();
 
 	if(debug!=null){
+	    //######
+	    //Static Initialization
+	    //######
+	    UtilFncs.objectDebug = new Debug();
+	    //######
+	    //End - Static Initialization
+	    //######
+	    
 	    UtilFncs.debug = debug.booleanValue();
 	    UtilFncs.objectDebug.debug = debug.booleanValue();
 	}
