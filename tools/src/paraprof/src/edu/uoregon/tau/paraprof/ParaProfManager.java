@@ -395,17 +395,44 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
 		}
 		else if(arg.equals("Show Help Window")){
-		    //Show the ParaProf help window.
-		    ParaProf.helpWindow.clearText();
 		    ParaProf.helpWindow.show();
+		    //Clear the window first.
+		    ParaProf.helpWindow.clearText();
+		    ParaProf.helpWindow.writeText("This is ParaProf's manager window!");
+		    ParaProf.helpWindow.writeText("");
+		    ParaProf.helpWindow.writeText("This window allows you to manage all of ParaProf's data sources," +
+						  " including loading data from local files, or from a database." +
+						  " We also support the generation of derived metrics. Please see the" +
+						  " items below for more help.");
+		    ParaProf.helpWindow.writeText("");
+		    ParaProf.helpWindow.writeText("------------------");
+		    ParaProf.helpWindow.writeText("");
 		    
-		    ParaProf.helpWindow.writeText("This is the experiment manager window.");
+		    ParaProf.helpWindow.writeText("1) Navigation:" +
+						  " The window is split into two halves, the left side gives a tree representation" +
+						  " of all data. The right side gives information about items clicked on in the left" +
+						  " half. You can also update information in the right half by double clicking in" +
+						  " the fields, and entering new data.  This automatically updates the left half." +
+						  " Right-clicking on the tree nodes in the left half displays popup menus which" +
+						  " allow you to add/delete applications, experiments, or trials.");
 		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("You can create an experiment, and then add separate runs,.");
-		    ParaProf.helpWindow.writeText("which may contain one or more metrics (gettimeofday, cache misses, etc.");
-		    ParaProf.helpWindow.writeText("You can also derive new metrics in this window.");
+		    ParaProf.helpWindow.writeText("2) DB Configuration:" +
+						  " By default, ParaProf looks in the .ParaProf home directory in your home" +
+						  " directory for the database configuration file.  If that file is found, then" +
+						  " you are done, and can just expand the DB Applications node.  If there was a" +
+						  " problem finding the file, you can enter the location of the file by selecting" +
+						  " File -> Database Configuration.  You can also override the configuration file" +
+						  " password in the same manner.");
 		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
+		    ParaProf.helpWindow.writeText("3) Deriving new metrics:" +
+						  " By selecting Options -> Show Apply Operation, you will display the apply" +
+						  " operations window.  Clicking on the metrics of a trial will update the" +
+						  " arguments to the selected operation.  Currently, you can only derive metrics" +
+						  " from metric in the same trial (thus for example creating floating point" +
+						  " operations per second), and you cannot enter the arguments manually.");
+		    ParaProf.helpWindow.writeText("");
+		    ParaProf.helpWindow.writeText("------------------");
+		    ParaProf.helpWindow.writeText("");
 		}
 		else if(arg.equals("Delete")){
 		    if(clickedOnObject instanceof ParaProfApplication){
@@ -1426,30 +1453,77 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     }
 
     public PerfDMFSession getDBSession(){
-	//Check to see if the user has set configuration information.
-	if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null){
-	    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
-					  "DB Configuration Error!",
-					  JOptionPane.ERROR_MESSAGE);
-	    return null;
-	}
-	else{//Test to see if configurataion file exists.
-	    File file = new File(ParaProf.savedPreferences.getDatabaseConfigurationFile());
-	    if(!file.exists()){
-		JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
+	try{
+	    //Check to see if the user has set configuration information.
+	    if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null){
+		JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
 					      "DB Configuration Error!",
 					      JOptionPane.ERROR_MESSAGE);
 		return null;
 	    }
+	    else{//Test to see if configurataion file exists.
+		File file = new File(ParaProf.savedPreferences.getDatabaseConfigurationFile());
+		if(!file.exists()){
+		    JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
+						  "DB Configuration Error!",
+						  JOptionPane.ERROR_MESSAGE);
+		    return null;
+		}
+	    }
+	    //Basic checks done, try to access the db.
+	    PerfDMFSession perfDMFSession = new PerfDMFSession();
+	    if(ParaProf.savedPreferences.getDatabasePassword()==null)
+		perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),false,false);
+	    else
+		perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),
+					  ParaProf.savedPreferences.getDatabasePassword(),false);
+	    return perfDMFSession;
 	}
-	//Basic checks done, try to access the db.
-	PerfDMFSession perfDMFSession = new PerfDMFSession();
-	if(ParaProf.savedPreferences.getDatabasePassword()==null)
-	    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),false);
-	else
-	    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),
-				      ParaProf.savedPreferences.getDatabasePassword());
-	return perfDMFSession;
+	catch(Exception e){
+	    //Try and determine what went wrong, and then popup the help window giving the user some idea
+	    //what to do.
+	    ParaProf.helpWindow.show();
+	    //Clear the window first.
+	    ParaProf.helpWindow.clearText();
+	    ParaProf.helpWindow.writeText("There was an error connecting to the database!");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("Please see the help items below to try and resolve this issue." +
+					      " If none of those work, send an email to tau-bugs@cs.uoregon.edu" +
+					      " including as complete a description of the problem as possible.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("------------------");
+	    ParaProf.helpWindow.writeText("");
+
+	    ParaProf.helpWindow.writeText("1) JDBC driver issue:" +
+					  " The JDBC driver is required in your classpath. If you ran ParaProf using" +
+					  " the shell script provided in tau (paraprof), then the default." +
+					  " loaction used is $LOCATION_OF_TAU_ROOT/$ARCH/lib.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText(" If you ran ParaProf manually, make sure that the location of" +
+					  " the JDBC driver is in your classpath (you can set this in your." +
+					  " environment, or as a commmand line option to java. As an example, PostgreSQL" +
+					  " uses postgresql.jar as its JDBC driver name.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("2) Network connection issue:" +
+					  " Check your ability to connect to the database. You might be connecting to the" +
+					  " incorrect port (PostgreSQL uses port 5432 by default). Also make sure that" +
+					  " if there exists a firewall on you network (or local machine), it is not" +
+					  " blocking you connection. Also check your database logs to ensure that you have" +
+					  " permission to connect to the server.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("3) Password issue:" +
+					  " Make sure that your password is set correctly. If it is not in the perfdmf" +
+					  " configuration file, you can enter it manually by selecting" +
+					  "  File -> Database Configuration in the ParaProfManager window.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("------------------");
+	    ParaProf.helpWindow.writeText("");
+
+	    //Collapse the dBApps node ... makes more sense to the user.
+	    tree.collapsePath(new TreePath(dbApps));
+
+	    return null;
+	}
     }
     
     //Respond correctly when this window is closed.
