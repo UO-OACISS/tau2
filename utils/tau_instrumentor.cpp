@@ -169,9 +169,26 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	}
 	else 
 	{ 
-	  // it is a member function add the CT macro
-          itemvec.push_back(new itemRef(*te, false, 
-	    (*te)->bodyBegin().line(), (*te)->bodyBegin().col()));
+#ifdef DEBUG
+	  cout <<"Before adding false to the member function, we must verify that it is not static"<<endl;
+#endif /* DEBUG */
+	  const pdbCRoutine *tr = (*te)->funcProtoInst();
+	  if (((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_MEMFUNC))
+	      && ((tr) && (tr->isStatic())))
+
+	  { /* check to see if there's a prototype instantiation entry */
+	    /* it is indeed a static member function of a class template */
+	    /* DO NOT add CT(*this) to the static member function */
+	    
+            itemvec.push_back(new itemRef(*te, true, 
+	      (*te)->bodyBegin().line(), (*te)->bodyBegin().col()));
+	  }
+	  else
+	  {
+	    // it is a member function add the CT macro
+            itemvec.push_back(new itemRef(*te, false, 
+	      (*te)->bodyBegin().line(), (*te)->bodyBegin().col()));
+	  }
 	}
       }
       else 
@@ -1491,8 +1508,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.57 $   $Date: 2004/04/28 18:42:21 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.57 2004/04/28 18:42:21 sameer Exp $
+ * $Revision: 1.58 $   $Date: 2004/05/12 20:48:38 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.58 2004/05/12 20:48:38 sameer Exp $
  ***************************************************************************/
 
 
