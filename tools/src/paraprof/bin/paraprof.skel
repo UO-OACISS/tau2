@@ -4,6 +4,8 @@ MACHINE=@ARCH@
 OLDJDK=@OLDJDK@
 
 LIBDIR=${TAUROOT}/${MACHINE}/lib
+CONFIG_FILE=~/.ParaProf/perfdmf.cfg
+
 
 # If paraprof is invoked with the -p option, read and/or generate pprof.dat
 if [ "x$1" = "x-p" ]
