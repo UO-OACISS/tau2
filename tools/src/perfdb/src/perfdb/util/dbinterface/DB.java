@@ -12,4 +12,5 @@ public interface DB {
     int executeUpdate(String statement) throws SQLException;
     String getDataItem(String query);
     public boolean isClosed();
+    public String getDBType();
 }

@@ -28,6 +28,7 @@ public class Configure {
 	private String db_schemafile = "dbschema.txt";
 	private String xml_parser = "xerces.jar";
 	private ParseConfig parser;
+	private boolean configFileFound = false;
 
 	private String configFileName;
 
@@ -59,6 +60,7 @@ public class Configure {
 				System.out.println("Configuration file found...");
 				// Parse the configuration file
 				ParseConfigFile();
+				configFileFound = true;
 			} else {
 				System.out.println("Configuration file NOT found...");
 				// If it doesn't exist, explain that the program looks for the 
@@ -109,14 +111,15 @@ public class Configure {
 			if (tmpString.length() > 0) perfdb_home = tmpString;
 
 			// Prompt for JDBC jar file
-			if (jdbc_db_jarfile.compareTo("postgresql.jar") == 0)
-				System.out.print("Please enter the JDBC jar file.\n(" + perfdb_home + "/jars/" + jdbc_db_jarfile + "):");
-			else
+			if (configFileFound)
 				System.out.print("Please enter the JDBC jar file.\n(" + jdbc_db_jarfile + "):");
+			else
+				System.out.print("Please enter the JDBC jar file.\n(" + perfdb_home + "/jars/" + jdbc_db_jarfile + "):");
 
 			tmpString = reader.readLine();
 			if (tmpString.length() > 0) jdbc_db_jarfile = tmpString;
-			else jdbc_db_jarfile = perfdb_home + "/jars/" + jdbc_db_jarfile;
+			else if (!configFileFound) 
+				jdbc_db_jarfile = perfdb_home + "/jars/" + jdbc_db_jarfile;
 
 			// Prompt for JDBC driver name
 			System.out.print("Please enter the JDBC Driver name.\n(" + jdbc_db_driver + "):");
@@ -164,22 +167,24 @@ public class Configure {
 			}
 
 			// Prompt for database schema file
-			if (db_schemafile.compareTo("dbschema.txt") == 0)
-				System.out.print("Please enter the PerfDBF schema file.\n(" + perfdb_home + "/data/" + db_schemafile + "):");
-			else
+			if (configFileFound)
 				System.out.print("Please enter the PerfDBF schema file.\n(" + db_schemafile + "):");
+			else
+				System.out.print("Please enter the PerfDBF schema file.\n(" + perfdb_home + "/data/" + db_schemafile + "):");
 			tmpString = reader.readLine();
 			if (tmpString.length() > 0) db_schemafile = tmpString;
-			else db_schemafile = perfdb_home + "/data/" + db_schemafile;
+			else if (!configFileFound)
+				db_schemafile = perfdb_home + "/data/" + db_schemafile;
 
 			// Prompt for XML Parser jar file
-			if (xml_parser.compareTo("xerces.jar") == 0)
-				System.out.print("Please enter the XML Parser jar file.\n(" + perfdb_home + "/jars/" + xml_parser + "):");
-			else
+			if (configFileFound)
 				System.out.print("Please enter the XML Parser jar file.\n(" + xml_parser + "):");
+			else
+				System.out.print("Please enter the XML Parser jar file.\n(" + perfdb_home + "/jars/" + xml_parser + "):");
 			tmpString = reader.readLine();
 			if (tmpString.length() > 0) xml_parser = tmpString;
-			else xml_parser = perfdb_home + "/jars/" + xml_parser;
+			else if (!configFileFound)
+				xml_parser = perfdb_home + "/jars/" + xml_parser;
 		}
 		catch (IOException e) {
 			// todo - get info from the exception

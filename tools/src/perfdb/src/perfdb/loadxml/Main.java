@@ -98,11 +98,11 @@ public class Main {
 
 		StringBuffer buf = new StringBuffer();
 		
-		ExpPartitionManager expTable = new ExpPartitionManager("APPLICATIONS");
+		ExpPartitionManager expTable = new ExpPartitionManager("Applications");
 		String tableName0 = "EXP_FOR_APP"+appid;
 		buf.append(expTable.tableCreation(tableName0));
 
-		buf.append("update applications set exp_table_name = '"+tableName0+"' where appid = "+appid+";");
+		buf.append("update Applications set exp_table_name = '"+tableName0+"' where appid = "+appid+";");
 		buf.append("ALTER TABLE ONLY "+tableName0+" ALTER trial_table_name SET DEFAULT 'TRIAL_FOR_APP" + appid+"'; ");
 		
 		TrialPartitionManager trialTable = new TrialPartitionManager(tableName0);
@@ -227,7 +227,7 @@ public class Main {
 
 		// Obtain enough experiment information, begin loading. First check whether the experiment has been loaded.
 
-		String expTableName = "EXPERIMENTS";
+		String expTableName = "Experiments";
 		expid = getLoad().lookupExp(expTableName, appid, sysinfo, configinfo, compilerinfo, instruinfo);
 				
 		if (expid!=null){ // i.e., the expriment has been loaded. Quit loading.
@@ -242,7 +242,7 @@ public class Main {
 		String nextLevelTable = null;
 		String tableName0;
 
-		buf.append("select exp_table_name from applications where appid = "+appid+";");
+		buf.append("select exp_table_name from Applications where appid = "+appid+";");
 		
 		expTableName = getLoad().getDB().getDataItem(buf.toString());	
 

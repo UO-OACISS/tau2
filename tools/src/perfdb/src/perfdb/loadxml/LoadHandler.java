@@ -20,10 +20,10 @@ public class LoadHandler extends DefaultHandler {
 
     protected String XMLFILE_TABLE = "XMLfiles";
 
-    protected String FUN_TABLE = "Funindex";
+    protected String FUN_TABLE = "FunIndex";
     protected int funIndexCounter;
 
-    protected String LOC_TABLE = "Locationindex";
+    protected String LOC_TABLE = "LocationIndex";
     protected int locCounter;
 
     protected String TOTAL_TABLE = "Totalsummary";
@@ -134,7 +134,7 @@ public class LoadHandler extends DefaultHandler {
 
 	StringBuffer buf = new StringBuffer();
 	
-	buf.append("select max(funindexid) from funindex;");
+	buf.append("select max(funindexid) from FunIndex;");
 	
 	String tempStr = getDB().getDataItem(buf.toString());
 
@@ -145,7 +145,7 @@ public class LoadHandler extends DefaultHandler {
 
 	buf.delete(0, buf.toString().length());
 
-	buf.append("select max(locid) from locationindex;");
+	buf.append("select max(locid) from LocationIndex;");
 
 	tempStr = getDB().getDataItem(buf.toString());
 
@@ -246,7 +246,10 @@ public class LoadHandler extends DefaultHandler {
 	try{
 	    getDB().executeUpdate(buf.toString());
 	    buf.delete(0, buf.toString().length());
-	    buf.append("select currval('xmlfiles_xmlfileid_seq');");
+		if (getDB().getDBType().compareTo("mysql") == 0)
+		   	buf.append("select LAST_INSERT_ID();");
+		else
+	    	buf.append("select currval('xmlfiles_xmlfileid_seq');");
 	    documentId = getDB().getDataItem(buf.toString());
 	} catch (SQLException ex) {
 	    ex.printStackTrace();
@@ -550,7 +553,10 @@ public class LoadHandler extends DefaultHandler {
 	    try{	
 	    	getDB().executeUpdate(buf.toString());
 	    	buf.delete(0, buf.toString().length());
-	    	buf.append("select currval('trials_trialid_seq');");
+			if (getDB().getDBType().compareTo("mysql") == 0)
+		    	buf.append("select LAST_INSERT_ID();");
+			else
+	    		buf.append("select currval('trials_trialid_seq');");
 	    	trialId = getDB().getDataItem(buf.toString());
 	    } catch (SQLException ex){
                 ex.printStackTrace();
@@ -682,10 +688,17 @@ public class LoadHandler extends DefaultHandler {
 		ex.printStackTrace();
 	    }
 
-	    buf.append("copy ");
-	    buf.append(getFunTable());
-	    buf.append(" from ");
-	    buf.append("'" + funTempFile.getAbsolutePath() + "';");
+		if (getDB().getDBType().compareTo("mysql") == 0) {
+	    	buf.append("load data infile '");
+	    	buf.append(funTempFile.getAbsolutePath());
+	    	buf.append("' into table ");
+	    	buf.append(getFunTable() + ";");
+		} else {
+	    	buf.append("copy ");
+	    	buf.append(getFunTable());
+	    	buf.append(" from ");
+	    	buf.append("'" + funTempFile.getAbsolutePath() + "';");
+		}
 
 	    System.out.println(buf.toString());
 
@@ -698,10 +711,17 @@ public class LoadHandler extends DefaultHandler {
 
 	    buf.delete(0, buf.toString().length());
 	    	
-	    buf.append("copy ");
-	    buf.append(getLocTable());
-	    buf.append(" from ");
-	    buf.append("'" + locTempFile.getAbsolutePath() + "';");
+		if (getDB().getDBType().compareTo("mysql") == 0) {
+	    	buf.append("load data infile '");
+	    	buf.append(locTempFile.getAbsolutePath());
+	    	buf.append("' into table ");
+	    	buf.append(getLocTable() + ";");
+		} else {
+	    	buf.append("copy ");
+	    	buf.append(getLocTable());
+	    	buf.append(" from ");
+	    	buf.append("'" + locTempFile.getAbsolutePath() + "';");
+		}
 
 	    System.out.println(buf.toString());
 
@@ -714,10 +734,17 @@ public class LoadHandler extends DefaultHandler {
 
 	    buf.delete(0, buf.toString().length());
 
-	    buf.append("copy ");
-	    buf.append(getPprofTable());
-	    buf.append(" from ");
-	    buf.append("'" + pprofTempFile.getAbsolutePath() + "';");
+		if (getDB().getDBType().compareTo("mysql") == 0) {
+	    	buf.append("load data infile '");
+	    	buf.append(pprofTempFile.getAbsolutePath());
+	    	buf.append("' into table ");
+	    	buf.append(getPprofTable() + ";");
+		} else {
+	    	buf.append("copy ");
+	    	buf.append(getPprofTable());
+	    	buf.append(" from ");
+	    	buf.append("'" + pprofTempFile.getAbsolutePath() + "';");
+		}
 
 	    System.out.println(buf.toString());
 
@@ -732,10 +759,17 @@ public class LoadHandler extends DefaultHandler {
 
 		buf.delete(0, buf.toString().length());
 
-		buf.append("copy ");
-		buf.append(getUETable());
-		buf.append(" from ");
-		buf.append("'" + ueTempFile.getAbsolutePath() + "';");
+		if (getDB().getDBType().compareTo("mysql") == 0) {
+	    	buf.append("load data infile '");
+	    	buf.append(ueTempFile.getAbsolutePath());
+	    	buf.append("' into table ");
+	    	buf.append(getUETable() + ";");
+		} else {
+			buf.append("copy ");
+			buf.append(getUETable());
+			buf.append(" from ");
+			buf.append("'" + ueTempFile.getAbsolutePath() + "';");
+		}
 
 		System.out.println(buf.toString());
 
@@ -749,10 +783,17 @@ public class LoadHandler extends DefaultHandler {
 
 	    buf.delete(0, buf.toString().length());
 
-	    buf.append("copy ");
-	    buf.append(getTotalTable());
-	    buf.append(" from ");
-	    buf.append("'" + totalTempFile.getAbsolutePath() + "';");
+		if (getDB().getDBType().compareTo("mysql") == 0) {
+	    	buf.append("load data infile '");
+	    	buf.append(totalTempFile.getAbsolutePath());
+	    	buf.append("' into table ");
+	    	buf.append(getTotalTable() + ";");
+		} else {
+	    	buf.append("copy ");
+	    	buf.append(getTotalTable());
+	    	buf.append(" from ");
+	    	buf.append("'" + totalTempFile.getAbsolutePath() + "';");
+		}
 
 	    System.out.println(buf.toString());
 
@@ -765,10 +806,17 @@ public class LoadHandler extends DefaultHandler {
 
 	    buf.delete(0, buf.toString().length());
 
-	    buf.append("copy ");
-	    buf.append(getMeanTable());
-	    buf.append(" from ");
-	    buf.append("'" + meanTempFile.getAbsolutePath() + "';");
+		if (getDB().getDBType().compareTo("mysql") == 0) {
+	    	buf.append("load data infile '");
+	    	buf.append(meanTempFile.getAbsolutePath());
+	    	buf.append("' into table ");
+	    	buf.append(getMeanTable() + ";");
+		} else {
+	    	buf.append("copy ");
+	    	buf.append(getMeanTable());
+	    	buf.append(" from ");
+	    	buf.append("'" + meanTempFile.getAbsolutePath() + "';");
+		}
 
 	    System.out.println(buf.toString());
 
@@ -791,7 +839,7 @@ public class LoadHandler extends DefaultHandler {
 
     public void setParFlag(String expid){
 	StringBuffer buf = new StringBuffer();
-	buf.append("select trial_table_name from experiments where expid = "+expid+";");
+	buf.append("select trial_table_name from Experiments where expid = "+expid+";");
 	String tableName = getDB().getDataItem(buf.toString()).toUpperCase();
 	//System.out.println(tableName);
 	if (tableName.indexOf("_APP")>0)

@@ -108,7 +108,7 @@ public class Load {
     public String lookupApp(String name, String version){
 	StringBuffer buf = new StringBuffer();
 	buf.append("select distinct appid from ");
-	buf.append("applications ");
+	buf.append("Applications ");
 	if (version.trim().length()==0) {
 	    buf.append("  where AppName='" + name.trim() + "'; ");
 	}
@@ -166,7 +166,8 @@ public class Load {
 
 	try {
 	    buf.append("insert into ");
-	    buf.append(exptable);
+	    // buf.append(exptable);
+	    buf.append("Experiments ");
 	    if (defValue==null)
 		buf.append(" (appid, sysinfo, configinfo, instruinfo, compilerinfo)");
 	    else buf.append(" (appid, sysinfo, configinfo, instruinfo, compilerinfo, trial_table_name)");
@@ -182,7 +183,10 @@ public class Load {
 	    
 	    getDB().executeUpdate(buf.toString());	    
 	    buf.delete(0, buf.toString().length());
-	    buf.append("select currval('experiments_expid_seq');");
+		if (getDB().getDBType().compareTo("mysql") == 0)
+	    	buf.append("select LAST_INSERT_ID();");
+		else
+	    	buf.append("select currval('experiments_expid_seq');");
 	    expid = getDB().getDataItem(buf.toString());
 	    System.out.println("The ID for the experiment is: "+ expid);	
 	    return expid;

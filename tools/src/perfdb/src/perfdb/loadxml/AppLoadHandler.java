@@ -136,7 +136,7 @@ public void endElement(String url, String name, String qname) {
 	    	buf = new StringBuffer();
 	    	buf.append("insert into");
 	    	buf.append(" " + APP_TABLE + " ");
-	    	buf.append("(AppName, Version, Description, Language, Paradigm, Usage, Exe_opt)");
+	    	buf.append("(AppName, Version, Description, Language, Paradigm, UsageText, Exe_opt)");
 	    	buf.append(" values ");
 	    	buf.append("('" + appname + "', '" + version + "', '" 
 		       + desc + "', '" + lang + "', '" + paradiag + "', '" + usage + "', '" + exeopt + "'); ");       
@@ -144,7 +144,10 @@ public void endElement(String url, String name, String qname) {
 	    	try {
 		    getDB().executeUpdate(buf.toString());
 		    buf.delete(0, buf.toString().length());
-		    buf.append("select currval('applications_appid_seq');");
+			if (getDB().getDBType().compareTo("mysql") == 0)
+		    	buf.append("select LAST_INSERT_ID();");
+			else
+		    	buf.append("select currval('applications_appid_seq');");
 		    appid = getDB().getDataItem(buf.toString()); 
 		    System.out.println("The ID for the application is: "+ appid);
 		} catch (SQLException ex) {

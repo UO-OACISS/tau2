@@ -7,19 +7,19 @@
 perfdb_home:/home/khuck/research/cvs/tau2/tools/src/perfdb
 
 # Database JDBC jar file (with path to location)
-jdbc_db_jarfile:/home/khuck/research/cvs/tau2/tools/src/perfdb/jars/postgresql.jar
+jdbc_db_jarfile:/home/khuck/research/cvs/tau2/tools/src/perfdb/jars/mysql.jar
 
 # Database JDBC driver name
-jdbc_db_driver:org.postgresql.Driver
+jdbc_db_driver:com.mysql.jdbc.Driver
 
 # Database type
-jdbc_db_type:postgresql
+jdbc_db_type:mysql
 
 # Database host name
-db_hostname:localhost
+db_hostname:huckpad
 
 # Database port number
-db_portnum:5432
+db_portnum:3306
 
 # Database name
 db_dbname:perfdb

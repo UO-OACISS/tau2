@@ -25,7 +25,10 @@ public class ConnectionManager {
     public ConnectionManager(String configFileName) {
 	super();
 	parser = new ParseConfig(configFileName);
-	perfdbAcct = "user=" + parser.getDBUserName() + ";password=" + parser.getDBPasswd();	
+	if (parser.getDBType().compareTo("mysql") == 0)
+		perfdbAcct = "user=" + parser.getDBUserName() + "&password=" + parser.getDBPasswd();	
+	else
+		perfdbAcct = "user=" + parser.getDBUserName() + ";password=" + parser.getDBPasswd();	
 	dbschema = parser.getDBSchema();
     }
 

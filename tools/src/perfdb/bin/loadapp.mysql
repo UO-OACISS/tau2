@@ -1,0 +1,7 @@
+#!/bin/sh
+
+PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
+XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
+JDBC_JAR=${PERFDB_HOME}/jars/mysql.jar
+
+java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg.mysql loadapp ${PERFDB_HOME}/data/App_Info.xml

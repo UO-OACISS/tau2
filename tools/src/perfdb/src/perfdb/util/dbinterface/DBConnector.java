@@ -15,6 +15,7 @@ public class DBConnector implements DB {
     private Statement statement;
     private DBAcct acct = null;
     private Connection conn = null;
+	private ParseConfig parseConfig = null;
 
     private String dbaddress;
     // it looks like "jdbc:postgresql://zeta:5432/perfdb;" in PostgreSQL.
@@ -23,22 +24,28 @@ public class DBConnector implements DB {
     // it should be "org.postgresql.Driver" in PostgreSQL.
 
     public DBConnector(ParseConfig parser) throws SQLException {
-	super();
-	setJDBC(parser);
-	register();
+		super();
+		parseConfig = parser;
+		setJDBC(parser);
+		register();
     }
 
     public DBConnector(DBAcct acct, ParseConfig parser) throws SQLException {
-	super();
-	setJDBC(parser);
-	setAcct(acct);
-	register();
-	connect();
+		super();
+		parseConfig = parser;
+		setJDBC(parser);
+		setAcct(acct);
+		register();
+		connect();
     }
 
     public void setJDBC(ParseConfig parser){
 
-	dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
+	if (parser.getDBType().compareTo("mysql") == 0)
+		dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
+	    + ":" + parser.getDBPort() + "/" + parser.getDBName() + "?";
+	else
+		dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
 	    + ":" + parser.getDBPort() + "/" + parser.getDBName() + ";";
 	//System.out.println(dbaddress);
 
@@ -67,6 +74,7 @@ public class DBConnector implements DB {
 	    conn = DriverManager.getConnection(getConnectString());
 	    return true;
 	} catch (SQLException ex) {
+		System.err.println("Cannot connect to server.");
 	    ex.printStackTrace();
 	    return false;
 	}
@@ -182,7 +190,8 @@ public class DBConnector implements DB {
     //registers the driver
     public void register() {
 	try {
-	    Class.forName(driverName);
+	    // Class.forName(driverName);
+	    Class.forName(driverName).newInstance();
 	} catch (Exception ex) {
 	    ex.printStackTrace();
 	}
@@ -198,5 +207,9 @@ public class DBConnector implements DB {
 
     public void setDBAddress(String newValue) {
 	this.dbaddress = newValue;
+    }
+
+    public String getDBType() {
+	return new String(this.parseConfig.getDBType());
     }
 }
