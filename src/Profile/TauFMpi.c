@@ -100,21 +100,21 @@ int *ierr;
 }
 
 void   mpi_barrier_( comm , ierr)
-MPI_Comm *comm;
-int *ierr;
+MPI_Fint *comm;
+MPI_Fint *ierr;
 {
-  *ierr = MPI_Barrier( *comm );
+  *ierr = MPI_Barrier( MPI_Comm_f2c(*comm) );
 }
 
 void   mpi_bcast_( buffer, count, datatype, root, comm , ierr)
 void * buffer;
-int *count;
-MPI_Datatype *datatype;
-int *root;
-MPI_Comm *comm;
-int *ierr;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *root;
+MPI_Fint *comm;
+MPI_Fint *ierr;
 {
-  *ierr = MPI_Bcast( buffer, *count, *datatype, *root, *comm );
+  *ierr = MPI_Bcast( buffer, *count, MPI_Type_f2c(*datatype), *root, MPI_Comm_f2c(*comm) );
 
 }
 
@@ -306,7 +306,15 @@ MPI_Comm *comm;
 int * rank;
 int *ierr;
 {
-  *ierr = MPI_Comm_rank( *comm, rank );
+  *ierr = MPI_Comm_rank( MPI_Comm_f2c(*comm), rank );
+}
+
+void   mpi_comm_rank__( comm, rank, ierr )
+MPI_Comm *comm;
+int * rank;
+int *ierr;
+{
+  *ierr = MPI_Comm_rank( MPI_Comm_f2c(*comm), rank );
 }
 
 void   mpi_comm_remote_group_( comm, group, ierr )
@@ -326,11 +334,11 @@ int *ierr;
 }
 
 void   mpi_comm_size_( comm, size , ierr)
-MPI_Comm *comm;
+MPI_Fint *comm;
 int * size;
 int *ierr;
 {
-  *ierr = MPI_Comm_size( *comm, size );
+  *ierr = MPI_Comm_size( MPI_Comm_f2c(*comm), size );
 }
 
 void   mpi_comm_split_( comm, color, key, comm_out, ierr )
@@ -573,6 +581,11 @@ int *ierr;
 }
 
 void  mpi_init_( )
+{
+  MPI_Init( 0, (char ***)0);
+}
+
+void  mpi_init__( )
 {
   MPI_Init( 0, (char ***)0);
 }
@@ -832,14 +845,17 @@ int *ierr;
 void  mpi_recv_( buf, count, datatype, source, tag, comm, status, ierr )
 void * buf;
 int *count;
-MPI_Datatype *datatype;
+MPI_Fint *datatype;
 int *source;
 int *tag;
-MPI_Comm *comm;
-MPI_Status * status;
+MPI_Fint *comm;
+MPI_Fint * status;
 int *ierr;
 {
-  *ierr = MPI_Recv( buf, *count, *datatype, *source, *tag, *comm, status );
+  MPI_Status s;
+  *ierr = MPI_Recv( buf, *count, MPI_Type_f2c(*datatype), *source, *tag, MPI_Comm_f2c(*comm), &s );
+  MPI_Status_c2f(&s, status);
+
 }
 
 void  mpi_rsend_( buf, count, datatype, dest, tag, comm, ierr )
@@ -870,13 +886,13 @@ int *ierr;
 void  mpi_send_( buf, count, datatype, dest, tag, comm, ierr )
 void * buf;
 int *count;
-MPI_Datatype *datatype;
+MPI_Fint *datatype;
 int *dest;
 int *tag;
-MPI_Comm *comm;
+MPI_Fint *comm;
 int *ierr;
 {
-  *ierr = MPI_Send( buf, *count, *datatype, *dest, *tag, *comm );
+  *ierr = MPI_Send( buf, *count, MPI_Type_f2c(*datatype), *dest, *tag, MPI_Comm_f2c(*comm ));
 }
 
 void  mpi_sendrecv_( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status, ierr )
@@ -1603,7 +1619,7 @@ MPI_Comm *comm;
 int * rank;
 int *ierr;
 {
-  *ierr = MPI_Comm_rank( *comm, rank );
+  *ierr = MPI_Comm_rank( MPI_Comm_f2c(*comm), rank );
 }
 
 void   mpi_comm_remote_group( comm, group, ierr )
