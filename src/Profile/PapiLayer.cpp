@@ -74,10 +74,18 @@ long long PapiLayer::getCounters(int tid)
 
 #ifndef PAPI_VERSION
 /* PAPI 2 support goes here */
+#ifdef __alpha
+    if (false)
+#else
     if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0) != PAPI_OK)
+#endif /* alpha PAPI thread problem */
 #elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
 /* PAPI 3 support goes here */
+#ifdef __alpha
+    if (false)
+#else
     if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread)) != PAPI_OK)
+#endif /* alpha PAPI thread problem */
 #else
 /* PAPI future support goes here */
 #error "Compiling against a not yet released PAPI version"
@@ -210,10 +218,18 @@ int PapiLayer::PapiLayerInit(bool lock)
  
 #ifndef PAPI_VERSION
 /* PAPI 2 support goes here */
+#ifdef __alpha
+    if (false)
+#else
     if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0) != PAPI_OK)
+#endif /* alpha PAPI thread problem */
 #elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
 /* PAPI 3 support goes here */
+#ifdef __alpha
+    if (false)
+#else
     if(PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread)) != PAPI_OK)
+#endif /* alpha PAPI thread problem */
 #else
 /* PAPI future support goes here */
 #error "Compiling against a not yet released PAPI version"
