@@ -15,8 +15,9 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import java.beans.*;
 
-public class  ParaProfImageOptionsPanel extends JPanel{ 
+public class  ParaProfImageOptionsPanel extends JPanel implements PropertyChangeListener{ 
     public ParaProfImageOptionsPanel(Component component){
 	try{
 	    this.component = component;
@@ -80,6 +81,35 @@ public class  ParaProfImageOptionsPanel extends JPanel{
 
     public float getImageQuality(){
 	return Float.valueOf((String) imageQuality.getSelectedItem()).floatValue();}
+    
+    public boolean imageQualityEnabled(){
+	return imageQualityEnabled;}
+    //####################################
+    //Interface code.
+    //####################################
+    public void propertyChange(PropertyChangeEvent evt){
+	if(evt.getPropertyName().equals(JFileChooser.FILE_FILTER_CHANGED_PROPERTY)){
+	    Object obj = evt.getSource();
+	    if(obj instanceof JFileChooser){
+		JFileChooser fileChooser = (JFileChooser) obj;
+		javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
+		if(fileFilter instanceof ParaProfImageFormatFileFilter){
+		    String extension = ((ParaProfImageFormatFileFilter)fileFilter).getExtension();
+		    if(extension.equals(ParaProfImageFormatFileFilter.PNG)){
+		       imageQuality.setEnabled(false);
+		       imageQualityEnabled = false;
+		    }
+		    else{
+			imageQuality.setEnabled(true);
+			imageQualityEnabled = true;
+		    }
+		}
+	    }
+	}
+    }
+    //####################################
+    //End - Interface code.
+    //####################################
 
     //####################################
     //Private Section.
@@ -105,12 +135,14 @@ public class  ParaProfImageOptionsPanel extends JPanel{
     //####################################
     //Instance data.
     //####################################
-    Component component = null;
-    JCheckBox fullScreen = new JCheckBox("Full Screen");
-    JCheckBox prependHeader = new JCheckBox("Prepend Header");
-    JLabel imageQualityLabel = new JLabel("Image Quality");
-    String imageQualityStrings[] = {"1.0", "0.75", "0.5", "0.25"};
-    JComboBox imageQuality = new JComboBox(imageQualityStrings);
+    private Component component = null;
+    private JCheckBox fullScreen = new JCheckBox("Full Screen");
+    private JCheckBox prependHeader = new JCheckBox("Prepend Header");
+    private JLabel imageQualityLabel = new JLabel("Image Quality");
+    private String imageQualityStrings[] = {"1.0", "0.75", "0.5", "0.25", "0.15", "0.1"};
+    private JComboBox imageQuality = new JComboBox(imageQualityStrings);
+
+    private boolean imageQualityEnabled = true;
     //####################################
     //End - Instance data.
     //#################################### 

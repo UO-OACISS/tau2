@@ -39,12 +39,13 @@ public class ParaProfImageOutput{
 	    javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
 	    for(int i=0;i<fileFilters.length;i++)
 		fileChooser.removeChoosableFileFilter(fileFilters[i]);
-	    fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter("png"));
-	    fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter("jpg"));
+	    fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.PNG));
+	    fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter(ParaProfImageFormatFileFilter.JPG));
 	    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 	    ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel((Component) ref);
 	    fileChooser.setAccessory(paraProfImageOptionsPanel);
+	    fileChooser.addPropertyChangeListener(paraProfImageOptionsPanel);
 	    int resultValue = fileChooser.showSaveDialog((Component)ref);
 	    if(resultValue == JFileChooser.APPROVE_OPTION){
 		System.out.println("Saving image ...");
@@ -100,12 +101,15 @@ public class ParaProfImageOutput{
 		    
 		    
 		    //Try setting quality.
-		    ImageWriteParam iwp = writer.getDefaultWriteParam();
-		    iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-		    iwp.setCompressionQuality(paraProfImageOptionsPanel.getImageQuality());
-		    System.out.println("Qulity is: " + iwp.getCompressionQuality());
-		    
-		    writer.write(null, iioImage, iwp);
+		    if(paraProfImageOptionsPanel.imageQualityEnabled()){
+			ImageWriteParam iwp = writer.getDefaultWriteParam();
+			iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			iwp.setCompressionQuality(paraProfImageOptionsPanel.getImageQuality());
+			System.out.println("Qulity is: " + iwp.getCompressionQuality());
+			writer.write(null, iioImage, iwp);
+		    }
+		    else
+			writer.write(iioImage);
 		    
 		    System.out.println("Done saving image.");
 		}

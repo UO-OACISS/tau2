@@ -59,7 +59,10 @@ public class ParaProfImageFormatFileFilter extends javax.swing.filechooser.FileF
     //####################################
     //Instance Data.
     //####################################
-    String extension = null;
+    private String extension = null;
+
+    static String JPG = "jpg";
+    static String PNG = "png";
     //####################################
     //End - Instance Data.
     //####################################
