@@ -203,6 +203,9 @@ void Profiler::Start(int tid)
 	TraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
 	// 1 is for entry in second parameter and for use TimeStamp in last
 	DEBUGPROFMSG("Start TimeStamp for Tracing = "<<TimeStamp<<endl;);
+#ifdef TAU_MULTIPLE_COUNTERS 
+	MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
+#endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_EPILOG */
 #endif /* TRACING_ON */
 
@@ -413,6 +416,9 @@ void Profiler::Stop(int tid)
 	// -1 is for exit, 1 is for use TimeStamp in the last argument
 	DEBUGPROFMSG("Stop TimeStamp for Tracing = "<<TimeStamp<<endl;);
 #endif /* TAU_EPILOG */
+#ifdef TAU_MULTIPLE_COUNTERS 
+	MultipleCounterLayer::triggerCounterEvents(TimeStamp, CurrentTime, tid);
+#endif /* TAU_MULTIPLE_COUNTERS */
 #endif //TRACING_ON
 
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
@@ -2422,7 +2428,7 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
     }
   }
 #elif TRACING_ON
-  TraceEvFlush();
+  TraceEvFlush(tid);
 #endif //PROFILING_ON
   return 1;
 }
@@ -2638,8 +2644,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.98 $   $Date: 2004/07/20 23:24:26 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.98 2004/07/20 23:24:26 sameer Exp $ 
+ * $Revision: 1.99 $   $Date: 2004/07/28 00:50:45 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.99 2004/07/28 00:50:45 sameer Exp $ 
  ***************************************************************************/
 
 	

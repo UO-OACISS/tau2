@@ -28,9 +28,19 @@ using namespace std;
 #include <sys/param.h>
 #endif // CRAY_TIMERS
 
+#ifdef TRACING_ON
+#ifdef TAU_EPILOG
+#include "elg_trc.h"
+#else /* TAU_EPILOG */
+#define PCXX_EVENT_SRC
+#include "Profile/pcxx_events.h"
+#endif /* TAU_EPILOG */
+#endif // TRACING_ON
+
 #ifdef TAU_MPI
 extern "C" TauUserEvent sendevent;
 #endif /* TAU_MPI */
+
 
 //Initialize static members.
 char MultipleCounterLayer::environment[25][10] = {
@@ -95,6 +105,10 @@ bool MultipleCounterLayer::threadInit[TAU_MAX_THREADS];
 PCL_CNT_TYPE MultipleCounterLayer::CounterList[MAX_TAU_COUNTERS];
 PCL_FP_CNT_TYPE MultipleCounterLayer::FpCounterList[MAX_TAU_COUNTERS];
 #endif//TAU_PCL
+
+#ifdef TRACING_ON
+TauUserEvent **MultipleCounterLayer::counterEvents; 
+#endif /* TRACING_ON */
 
 firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   linuxTimerMCLInit,
@@ -222,6 +236,13 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     //but it is nice to give a warning.
     if(numberOfActiveFunctions == 0)
       cout << "Warning: No multi counter fncts active ... are the env variables COUNTER<1-N> set?" << endl;
+#ifdef TRACING_ON
+   counterEvents = new TauUserEvent * [numberOfActiveFunctions] ; 
+   /* We obtain the timestamp from COUNTER1, so we only need to trigger 
+      COUNTER2-N or i=1 through no. of active functions not through 0 */
+   for (int i = 1; i < numberOfActiveFunctions; i++)
+     counterEvents[i] = new TauUserEvent(names[i]);
+#endif /* TRACING_ON */
   }
   RtsLayer::UnLockDB(); // mutual exclusion primitive
    
@@ -863,6 +884,22 @@ void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){
     (double) getLinuxHighResolutionTscCounterMCL()/TauGetMHzMCL();
 #endif //TAU_LINUX_TIMERS
 }
+
+#if ( defined(TAU_MULTIPLE_COUNTERS) && defined(TRACING_ON))
+/////////////////////////////////////////////////
+// Trigger user defined events associated with each counter 
+/////////////////////////////////////////////////
+void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, double *values, int tid)
+{
+  int i;
+  for (i = 1; i < numberOfActiveFunctions; i++)
+  { /* for each event */
+    TraceEvent(counterEvents[i]->GetEventId(), values[i], tid, timestamp, 1);
+    // 1 in the last parameter is for use timestamp 
+  }
+
+}
+#endif /* TAU_MULTIPLE_COUNTERS && TRACING_ON */
 
 /////////////////////////////////////////////////
 //
