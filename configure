@@ -1677,6 +1677,13 @@ if [ $papi = yes ]
   then
     fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
     tauoptions="${tauoptions}-papi"
+    p=$papidir/lib
+    if [ -f $p/libpapi.so -o -f $p/libpapi.a -o -f $p/libpapi64.so -o -f $p/libpapi64.a ]
+    then
+	fixmakeargs="$fixmakeargs papisubdir=lib"
+    else
+	fixmakeargs="$fixmakeargs papisubdir=src"
+    fi
 fi
 
 if [ $pdt = yes ]
