@@ -278,11 +278,11 @@ int main(int argc, char **argv)
   {
     if (appThread->loadLibrary(libname) == true)
     {  
+      char name[FUNCNAMELEN];
       dprintf("DSO loaded properly\n");
       bool found = false;
       BPatch_Vector<BPatch_module *> *m = appImage->getModules();
       for (i = 0; i < m->size(); i++) {
-        char name[FUNCNAMELEN];
         (*m)[i]->getName(name, sizeof(name));
         if (strcmp(name, libname) == 0) {
   	found = true;
@@ -291,6 +291,10 @@ int main(int argc, char **argv)
       }
       if (found) {
   	dprintf("%s loaded properly\n", libname);
+      }
+      else {
+	printf("Error in loading library %s\n", libname);
+ 	exit(1);
       }
     }
     else
