@@ -41,7 +41,7 @@ $(TARGET):	$(TARGET).o
 	$(CXX) $(LDFLAGS) $(TARGET).o -o $@ $(LIBS)
 
 $(TARGET).o : $(TARGET).c
-	$(CXX) $(CFLAGS) -c $(TARGET).c
+	$(CC)  $(CFLAGS) -c $(TARGET).c
 
 clean: 	
 	$(RM) $(TARGET).o $(TARGET)
