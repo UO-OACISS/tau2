@@ -67,7 +67,7 @@ fi
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 500m (500MB).
 if [ "$OLDJDK" = "yes" ]
 then
-java -Xmx500m -cp ${TAUROOT}/${MACHINE}/bin/ParaProf-Old.jar:${TAUROOT}/tools/src/dms/dms.jar:${TAUROOT}/tools/src/contrib/jatha.jar:${TAUROOT}/tools/src/contrib/xerces.jar:${TAUROOT}/tools/src/contrib/postgresql.jar:${TAUROOT}/tools/src/contrib/jargs.jar paraprof/ParaProf ${PPROFOPT}
+java -Xmx500m -cp ${TAUROOT}/${MACHINE}/bin/ParaProf-Old.jar:${TAUROOT}/tools/src/dms/dms.jar:${TAUROOT}/tools/src/contrib/jatha.jar:${TAUROOT}/tools/src/contrib/xerces.jar:${TAUROOT}/tools/src/contrib/postgresql.jar:${TAUROOT}/tools/src/contrib/jargs.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT}
 else
-java -Xmx500m -cp ${TAUROOT}/${MACHINE}/bin/ParaProf.jar:${TAUROOT}/tools/src/dms/dms.jar:${TAUROOT}/tools/src/contrib/jatha.jar:${TAUROOT}/tools/src/contrib/xerces.jar:${TAUROOT}/tools/src/contrib/postgresql.jar:${TAUROOT}/tools/src/contrib/jargs.jar paraprof/ParaProf ${PPROFOPT}
+java -Xmx500m -cp ${TAUROOT}/${MACHINE}/bin/ParaProf.jar:${TAUROOT}/tools/src/dms/dms.jar:${TAUROOT}/tools/src/contrib/jatha.jar:${TAUROOT}/tools/src/contrib/xerces.jar:${TAUROOT}/tools/src/contrib/postgresql.jar:${TAUROOT}/tools/src/contrib/jargs.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT}
 fi
