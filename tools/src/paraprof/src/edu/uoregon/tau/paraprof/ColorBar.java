@@ -13,9 +13,9 @@ import java.awt.Color;
  * It also contains the static functions for getting a color given a value 0..1
  *  
  * 
- * <P>CVS $Id: ColorBar.java,v 1.3 2005/01/11 01:40:34 amorris Exp $</P>
+ * <P>CVS $Id: ColorBar.java,v 1.4 2005/01/12 01:36:26 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see CallGraphWindow
  */
 public class ColorBar extends JComponent {
@@ -98,22 +98,12 @@ public class ColorBar extends JComponent {
 
   
     public static Color getContrast(Color color) {
-     
         float r = ((float)color.getRed() / 255);
         float g = ((float)color.getGreen() / 255);
         float b = ((float)color.getBlue() / 255);
         
         double luminance = 0.25*r + 0.625*g + 0.125*b;
 
-//        double luminance = 0.25*r + 0.725*g + 0.125*b;
-
-        if (b != 1) {
-        System.out.println ("--------");
-        System.out.println ("r = " + r);
-        System.out.println ("g = " + g);
-        System.out.println ("b = " + b);
-        System.out.println ("lum = " + luminance);
-        }
         if (luminance > 0.5) {
             return Color.black;
         } else {

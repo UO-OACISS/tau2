@@ -20,7 +20,7 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTreeNodeUserObject {
 
-    public ParaProfTrial(int type) {
+    public ParaProfTrial() {
         super(0);
         this.debug = UtilFncs.debug;
 
@@ -31,13 +31,11 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         // 	 this.setNodeCount(-1);
         // 	 this.setNumContextsPerNode(-1);
         // 	 this.setNumThreadsPerContext(-1);
-        this.type = type;
     }
 
-    public ParaProfTrial(Trial trial, int type) {
+    public ParaProfTrial(Trial trial) {
         super(trial);
         this.debug = UtilFncs.debug;
-        this.type = type;
     }
 
     public void setExperiment(ParaProfExperiment experiment) {
@@ -398,9 +396,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
             //Now safe to set this to be a dbTrial.
             this.setDBTrial(true);
         } else {
-
             ParaProf.paraProfManager.populateTrialMetrics(this);
-
         }
 
     }
@@ -419,7 +415,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //####################################
     //Instance data.
     //####################################
-    int type = -1;
     boolean defaultTrial = false;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;

@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.6 2005/01/10 20:12:27 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.7 2005/01/12 01:36:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -140,7 +140,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         //####################################
         jSplitInnerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, getPanelHelpMessage(0));
         jSplitInnerPane.setContinuousLayout(true);
-
+        jSplitInnerPane.setResizeWeight(0.5);
+                
         //         (getContentPane()).add(jSplitOuterPane, "Center");
 
         this.getContentPane().add(jSplitInnerPane, "Center");
@@ -163,20 +164,19 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         //Components have to be realized on the screen before
         //the dividers can be set.
 
-        jSplitInnerPane.setDividerLocation(0.5);
 
         this.show();
-
+        //setVisible(true);
+        
         jSplitInnerPane.setDividerLocation(0.5);
 
-        //            jSplitOuterPane.setDividerLocation(1.0);
-        //####################################
-        //End - Set up the split pane, and add to content pane.
-        //####################################
+        
 
         ParaProf.incrementNumWindows();
     }
 
+    
+    
     void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
@@ -710,7 +710,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         databaseAPI.setExperiment(experiment.getID());
                         ListIterator l = databaseAPI.getTrialList();
                         while (l.hasNext()) {
-                            ParaProfTrial trial = new ParaProfTrial((Trial) l.next(), 4);
+                            ParaProfTrial trial = new ParaProfTrial((Trial) l.next());
                             trial.setDBTrial(true);
                             trial.setExperiment(experiment);
                             DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
@@ -1044,7 +1044,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             return;
         }
 
-        ppTrial = new ParaProfTrial(fileType);
+        ppTrial = new ParaProfTrial();
 
         ppTrial.setExperiment(experiment);
         ppTrial.setApplicationID(experiment.getApplicationID());
