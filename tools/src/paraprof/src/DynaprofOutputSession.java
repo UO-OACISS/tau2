@@ -43,7 +43,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 	    //######
 	    //Frequently used items.
 	    //######
-	    int metric = 0;
+	    int metric = -1;
 	    GlobalMappingElement globalMappingElement = null;
 	    GlobalThreadDataElement globalThreadDataElement = null;
 	    
@@ -176,21 +176,17 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			boolean totalLine = (inputString.indexOf("TOTAL")==0);
 
 			//The start of a new metric is indicated by the presence of TOTAL.
-			//if(inputString.indexOf("TOTAL")==0){
+			//However, is this is the first metric, we do not need to compute
+			//derived data, as nothing has been read yet.
 			if(totalLine){
-			    if(!(this.firstMetric())){
-				//The thread object takes care of computing maximums and totals for a given metric, as
-				//well as the percent.  Must do the order correctly to get the correct results.
-				thread.setThreadSummaryData(metric);
-				thread.setPercentData(metric);
-				//Call the setThreadSummaryData function again on this thread so that
-				//it can fill in all the summary data.
-				thread.setThreadSummaryData(metric);
+			    if(metric >= 0){
+				//Compute derived data for this metric.
+				thread.setThreadData(metric);
 				this.getGlobalMapping().computeMeanData(0,metric);
 				metric++;
 			    }
 			    else
-				this.setFirstMetric(false);
+				metric++;
 			}
 
 			//Calculate usec/call
@@ -259,20 +255,21 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			    if(thread.getMaxUserSecPerCall(metric) < usecCall)
 				thread.setMaxUserSecPerCall(metric, usecCall);
 			}
+			//Enter the child for loop.
 			for(int j=0;j<functionDataLine.i0;j++){
 			    inputString = br.readLine();
 			    System.out.println("function child line: " + inputString);
 			    this.getFunctionChildDataLine(inputString);
 			    if(this.debug()){
 				System.out.println("function child line: " + inputString);
-				System.out.println("name:"+functionDataLine.s0);
-				System.out.println("incl.total:"+functionDataLine.d3);
-				System.out.println("incl.calls:"+functionDataLine.i2);
-				System.out.println("incl.min:"+functionDataLine.d4);
-				System.out.println("incl.max:"+functionDataLine.d5);
+				System.out.println("name:"+functionChildDataLine.s0);
+				System.out.println("incl.total:"+functionChildDataLine.d3);
+				System.out.println("incl.calls:"+functionChildDataLine.i2);
+				System.out.println("incl.min:"+functionChildDataLine.d4);
+				System.out.println("incl.max:"+functionChildDataLine.d5);
 			    }
 			    if(functionDataLine.i1 !=0){
-				mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0+" > child", 0);
+				mappingID = this.getGlobalMapping().addGlobalMapping(functionChildDataLine.s0+" > child", 0);
 				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 				for(int k=this.getNumberOfMetrics();k>0;k--)
 				    globalMappingElement.incrementStorage();
@@ -289,21 +286,103 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				globalThreadDataElement.setMappingExists();
 				//Since this is the child thread, increment the values.
 				double d1 = globalThreadDataElement.getInclusiveValue(metric);
-				double d2 = d1 + functionDataLine.d3;
+				double d2 = d1 + functionChildDataLine.d3;
 				globalThreadDataElement.setExclusiveValue(metric, d2);
 				globalThreadDataElement.setInclusiveValue(metric, d2);
 				
 				int i1 = globalThreadDataElement.getNumberOfCalls();
-				if(this.firstMetric()){
-				    i1 = globalThreadDataElement.getNumberOfCalls();
-				    globalThreadDataElement.setNumberOfCalls(i1+functionDataLine.i2);
+				if(metric==0){
+				    i1 = globalThreadDataElement.getNumberOfCalls()+functionChildDataLine.i2;
+				    globalThreadDataElement.setNumberOfCalls(i1);
 				}
-				i1 = globalThreadDataElement.getNumberOfCalls();
 				globalThreadDataElement.setUserSecPerCall(metric, d2/i1);
+
+				globalMappingElement.incrementTotalExclusiveValue(d2);
+				globalMappingElement.incrementTotalInclusiveValue(d2);
+				
+				//Set the max values.
+				if((globalMappingElement.getMaxExclusiveValue(metric)) < d2)
+				    globalMappingElement.setMaxExclusiveValue(metric, d2);
+				if((thread.getMaxExclusiveValue(metric)) < d2)
+				    thread.setMaxExclusiveValue(metric, d2);
+				
+				if((globalMappingElement.getMaxInclusiveValue(metric)) < d2)
+				    globalMappingElement.setMaxInclusiveValue(metric, d2);
+				if((thread.getMaxInclusiveValue(metric)) < d2)
+				    thread.setMaxInclusiveValue(metric, d2);
+				
+				if(globalMappingElement.getMaxNumberOfCalls() < i1)
+				    globalMappingElement.setMaxNumberOfCalls(i1);
+				if(thread.getMaxNumberOfCalls() < i1)
+				    thread.setMaxNumberOfCalls(i1);
+				
+				if(globalMappingElement.getMaxUserSecPerCall(metric) < usecCall)
+				    globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
+				if(thread.getMaxUserSecPerCall(metric) < usecCall)
+				    thread.setMaxUserSecPerCall(metric, usecCall);
+
+				//Add as a call path from the parent above.
+				mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0+" => "+functionChildDataLine.s0+" > child  ", 0);
+				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
+				for(int k=this.getNumberOfMetrics();k>0;k--)
+				    globalMappingElement.incrementStorage();
+				globalMappingElement.incrementCounter();
+				globalThreadDataElement = thread.getFunction(mappingID);
+				
+				if(globalThreadDataElement == null){
+				    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
+				    for(int k=this.getNumberOfMetrics();k>0;k--)
+					globalThreadDataElement.incrementStorage();
+				    thread.addFunction(globalThreadDataElement, mappingID);
+				}
+				
+				globalThreadDataElement.setMappingExists();
+
+				globalThreadDataElement.setExclusiveValue(metric, functionChildDataLine.d3);
+				globalThreadDataElement.setInclusiveValue(metric, functionChildDataLine.d3);
+				globalThreadDataElement.setNumberOfCalls(functionChildDataLine.i2);
+				globalThreadDataElement.setUserSecPerCall(metric, functionChildDataLine.d3/functionChildDataLine.i2);
+
+				globalMappingElement.incrementTotalExclusiveValue(functionChildDataLine.d3);
+				globalMappingElement.incrementTotalInclusiveValue(functionChildDataLine.d3);
+				
+				//Set the max values.
+				if((globalMappingElement.getMaxExclusiveValue(metric)) < functionChildDataLine.d3)
+				    globalMappingElement.setMaxExclusiveValue(metric, functionChildDataLine.d3);
+				if((thread.getMaxExclusiveValue(metric)) < functionChildDataLine.d3)
+				    thread.setMaxExclusiveValue(metric, functionChildDataLine.d3);
+				
+				if((globalMappingElement.getMaxInclusiveValue(metric)) < functionChildDataLine.d3)
+				    globalMappingElement.setMaxInclusiveValue(metric, functionChildDataLine.d3);
+				if((thread.getMaxInclusiveValue(metric)) < functionChildDataLine.d3)
+				    thread.setMaxInclusiveValue(metric, functionChildDataLine.d3);
+				
+				if(globalMappingElement.getMaxNumberOfCalls() < functionChildDataLine.i2)
+				    globalMappingElement.setMaxNumberOfCalls(functionChildDataLine.i2);
+				if(thread.getMaxNumberOfCalls() < functionChildDataLine.i2)
+				    thread.setMaxNumberOfCalls(functionChildDataLine.i2);
+				
+				if(globalMappingElement.getMaxUserSecPerCall(metric) < usecCall)
+				    globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
+				if(thread.getMaxUserSecPerCall(metric) < usecCall)
+				    thread.setMaxUserSecPerCall(metric, usecCall);
+				
 			    }
 			}
 		    }
+		    thread.setThreadData(metric);
+		    this.getGlobalMapping().computeMeanData(0,metric);
 		}
+
+		System.out.println("Processing callpath data ...");
+		if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
+		    setCallPathDataPresent(true);
+		    CallPathUtilFuncs.buildRelations(getGlobalMapping());
+		}
+		else{
+		    System.out.println("No callpath data found.");
+		}
+		System.out.println("Done - Processing callpath data!");
 		
 		time = (System.currentTimeMillis()) - time;
 		System.out.println("Done processing data!");
@@ -320,7 +399,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
     //####################################
 
     //######
-    //profile.*.*.* string processing methods.
+    //Dynaprof string processing methods.
     //######
      private int[] getNCT(String string){
 	int[] nct = new int[3];
@@ -378,11 +457,11 @@ public class DynaprofOutputSession extends ParaProfDataSession{
     private void getFunctionChildDataLine(String string){
 	try{
 	    StringTokenizer st = new StringTokenizer(string, ",\t\n\r");
-	    functionDataLine.s0 = st.nextToken(); //name
-	    functionDataLine.d3 = Double.parseDouble(st.nextToken()); //incl.total
-	    functionDataLine.i2 = Integer.parseInt(st.nextToken()); //incl.calls
-	    functionDataLine.d4 = Double.parseDouble(st.nextToken()); //incl.min
-	    functionDataLine.d5 = Double.parseDouble(st.nextToken()); //incl.max
+	    functionChildDataLine.s0 = st.nextToken(); //name
+	    functionChildDataLine.d3 = Double.parseDouble(st.nextToken()); //incl.total
+	    functionChildDataLine.i2 = Integer.parseInt(st.nextToken()); //incl.calls
+	    functionChildDataLine.d4 = Double.parseDouble(st.nextToken()); //incl.min
+	    functionChildDataLine.d5 = Double.parseDouble(st.nextToken()); //incl.max
 	}
 	catch(Exception e){
 	    System.out.println("An error occured!");
@@ -395,9 +474,9 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 
     private boolean headerProcessed(){
 	return headerProcessed;}
-
+    
     //######
-    //End - profile.*.*.* string processing methods.
+    //End - Dynaprof string processing methods.
     //######
 
     //####################################
@@ -408,6 +487,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
     //Instance data.
     //####################################
     private LineData functionDataLine = new LineData();
+    private LineData functionChildDataLine = new LineData();
      private boolean headerProcessed = false;
     //####################################
     //End - Instance data.

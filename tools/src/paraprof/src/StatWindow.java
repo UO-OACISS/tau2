@@ -173,7 +173,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		    dispose();
 		    System.exit(0);
 		}
-		else if(arg.equals("name")){
+		else if(arg.equals("Sort By Name")){
 		    if(((JCheckBoxMenuItem)optionsMenu.getItem(0)).isSelected())
 			name = true;
 		    else

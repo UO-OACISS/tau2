@@ -199,7 +199,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		    dispose();
 		    System.exit(0);
 		}
-		else if(arg.equals("name")){
+		else if(arg.equals("Sort By Name")){
 		    if(((JCheckBoxMenuItem)optionsMenu.getItem(0)).isSelected())
 			name = true;
 		    else

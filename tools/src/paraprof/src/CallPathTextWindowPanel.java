@@ -362,20 +362,17 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 			    d1 = 0.0;
 			    d2 = 0.0;
 			    d3 = 0;
-			    s = "        parent callpath(s)";
 			    while(l3.hasNext()){
 				int tmpInt = ((Integer)l3.next()).intValue();
 				gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
 				d1=d1+gtde.getExclusiveValue(trial.getCurValLoc());
 				d2=d2+gtde.getInclusiveValue(trial.getCurValLoc());
 				d3=d3+gtde.getNumberOfCalls();
-				s=s+":["+tmpInt+"]";
 			    }
 			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
 			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
 			    g2D.drawString(d3+"/"+smwtde.getNumberOfCalls(), callsPos1, yCoord);
 			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
-			    //g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]"+s, namePos, yCoord);
 			    g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
 			    yCoord = yCoord + (spacing);
 			}
@@ -393,7 +390,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 			    d1 = 0.0;
 			    d2 = 0.0;
 			    d3 = 0;
-			    s = "        child callpath(s)";
 			    while(l3.hasNext()){
 				int tmpInt = ((Integer)l3.next()).intValue();
 				gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
@@ -406,7 +402,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
 			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
 			    g2D.drawString(d3+"/"+gtde.getNumberOfCalls(), callsPos1, yCoord);
-			    //g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]"+s, namePos, yCoord);
 			    g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
 			    yCoord = yCoord + (spacing);
 			}

@@ -166,7 +166,14 @@ public class Thread implements Comparable{
     public ListIterator getUsereventListIterator(){
 	return new ParaProfIterator(userevents);}
 
-    public void setThreadSummaryData(int metric){
+    
+    public void setThreadData(int metric){
+	this.setThreadDataHelper(metric);
+	this.setPercentData(metric);
+	this.setThreadDataHelper(metric);
+    }
+
+    private void setThreadDataHelper(int metric){
 	double maxInclusiveValue = 0.0;
 	double maxExclusiveValue = 0.0;
 	double maxInclusivePercentValue = 0.0;
@@ -237,7 +244,7 @@ public class Thread implements Comparable{
 	this.setTotalExclusiveValue(metric, totalExclusiveValue);
     }
 
-    public void setPercentData(int metric){
+    private void setPercentData(int metric){
 	ListIterator l = this.getFunctionListIterator();
 	while(l.hasNext()){
 	    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();

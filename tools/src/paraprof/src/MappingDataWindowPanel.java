@@ -276,7 +276,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	String s = null;
 	int stringWidth = 0;
 	int stringStart = 0;
-	System.out.println("Here1");
 	d = (value / maxValue);
 	xLength = (int) (d * barLength);
 	if(xLength == 0)
@@ -311,7 +310,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    }
 	    g2D.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
 	}
-	System.out.println("Here2");
 	
 	//Draw the value next to the bar.
 	g2D.setColor(Color.black);
@@ -320,15 +318,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
 	else
 	    s = UtilFncs.getOutputString(mDWindow.units(),value);
-	System.out.println("Here3");
 	stringWidth = fmFont.stringWidth(s);
 	//Now draw the percent value to the left of the bar.
 	stringStart = barXCoord - xLength - stringWidth - 5;
-	System.out.println("stringStart:"+stringStart);
 	g2D.drawString(s, stringStart, yCoord);
-	System.out.println("Here4");
 	g2D.drawString(text, (barXCoord + 5), yCoord);
-	System.out.println("Here5");
     }
 
     //####################################

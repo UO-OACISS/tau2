@@ -54,9 +54,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    setSize(new java.awt.Dimension(700, 450));
 	    //Now set the title.
 	    if(windowType==0)
-		this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getProfilePathName());
-	    else
 		this.setTitle("Mean Data Window: " + trial.getProfilePathName());
+	    else
+		this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getProfilePathName());
 	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {
@@ -201,7 +201,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		    dispose();
 		    System.exit(0);
 		}
-		else if(arg.equals("name")){
+		else if(arg.equals("Sort By Name")){
 		    if(((JCheckBoxMenuItem)optionsMenu.getItem(0)).isSelected())
 			name = true;
 		    else

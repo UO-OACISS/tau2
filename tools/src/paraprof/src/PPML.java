@@ -118,14 +118,7 @@ public class PPML{
 			    globalMappingElement.incrementTotalInclusiveValue(result);
 			}
 		    }
-
-		    //The thread object takes care of computing maximums and totals for a given metric, as
-		    //well as the percent.  Must do the order correctly to get the correct results.
-		    thread.setThreadSummaryData(metric);
-		    thread.setPercentData(metric);
-		    //Call the setThreadSummaryData function again on this thread so that
-		    //it can fill in all the summary data.
-		    thread.setThreadSummaryData(metric);
+		    thread.setThreadData(metric);
 		}
 	    }
 	}
