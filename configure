@@ -130,6 +130,7 @@ fujitsu=no
 stdcxxlib=no
 inteltflop=no
 profile=no
+monitor=no
 profilecounters=no
 profilestats=no
 profilecalls=no
@@ -378,6 +379,11 @@ do
 
   -TRACE)
     trace=yes
+    shift
+    ;;
+
+  -MONITOR)
+    monitor=yes
     shift
     ;;
 
@@ -668,6 +674,11 @@ fi
 if [ $trace = yes ]
   then
     fixmakeargs="$fixmakeargs TRACE"
+fi
+
+if [ $monitor = yes ]
+  then
+    fixmakeargs="$fixmakeargs MONITOR"
 fi
 
 if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 

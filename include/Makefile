@@ -34,7 +34,7 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
-TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+TAUROOT=/home/grads/sameer/tau2
 TULIPDIR=
 PCLDIR=
 PDTDIR=
@@ -43,7 +43,7 @@ JDKDIR=
 TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
-TAU_PREFIX_INSTALL_DIR=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
 TAU_OPTIONS=
 #######################################################################
  
@@ -121,6 +121,7 @@ DYNINST_PLATFORM = i386-unknown-linux2.0
 #SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -D_XOPEN_SOURCE -DTAU_AIX #ENDIF#
 #PCLPTHREAD#PROFILEOPT22	       = -DPCL_MUTEX_LOCK #ENDIF#
 #JAVA#PROFILEOPT23	       = -DJAVA 		#ENDIF#
+#MONITOR#PROFILEOPT24	       = -DMONITORING_ON 	#ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
@@ -141,7 +142,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
 	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(PROFILEOPT16) \
 	      $(PROFILEOPT17) $(PROFILEOPT18) $(PROFILEOPT19) $(PROFILEOPT20) \
-	      $(PROFILEOPT21) $(PROFILEOPT22) $(PROFILEOPT23) $(TRACEOPT)
+	      $(PROFILEOPT21) $(PROFILEOPT22) $(PROFILEOPT23) $(PROFILEOPT24) \
+	      $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
