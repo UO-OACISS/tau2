@@ -12,6 +12,6 @@ ParaProf:
 	cd src/edu/uoregon/tau/paraprof/; make
 
 clean:
-	cd src; make clean
+	cd src/edu/uoregon/tau/paraprof/; make clean
 	rm -f ./bin/ParaProf.jar
 
