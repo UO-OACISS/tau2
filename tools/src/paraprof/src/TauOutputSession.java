@@ -510,7 +510,7 @@ public class TauOutputSession extends ParaProfDataSession{
     //######
     //profile.*.*.* string processing methods.
     //######
-     private int[] getNCT(String string){
+    private int[] getNCT(String string){
 	int[] nct = new int[3];
 	StringTokenizer st = new StringTokenizer(string, ".\t\n\r");
 	st.nextToken();
