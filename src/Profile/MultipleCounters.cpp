@@ -179,8 +179,6 @@ bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition)
   return false;
 }
 
-bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){return false;}
-
 bool MultipleCounterLayer::papiMCLInit(int functionPosition){
 #ifdef TAU_PAPI
   //This function uses the papi layer counters.
@@ -319,6 +317,8 @@ bool MultipleCounterLayer::pclMCLInit(int functionPosition){
 #endif//TAU_PCL
 }
 
+bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){return false;}
+
 void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
 
   //cout << endl;
@@ -330,9 +330,6 @@ void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
   values[gettimeofdayMCL_CP[0]] = ( (double) tp.tv_sec * 1e6 + tp.tv_usec );
 
 }
-
-void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){}
-
 
 void MultipleCounterLayer::papiMCL(int tid, double values[]){
 #ifdef TAU_PAPI
@@ -424,6 +421,8 @@ void MultipleCounterLayer::pclMCL(int tid, double values[]){
 #ifdef  TAU_PCL
 #endif//TAU_PCL
 }
+
+void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){}
 
 /////////////////////////////////////////////////
 //
