@@ -2,19 +2,20 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1998, 1999					   	   **
+**    Copyright 1997-99					   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.6                           *
- *                        Developer Release 2                      *
+ *                           Version 2.7                           *
+ *                        Developer Release BETA                   *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
  *    For release notes, see README.                               *
+ *    For JAVA instructions, see README.JAVA                       *
  *    For licensing information, see LICENSE.                      *
  *    For a tutorial on using TAU, open html/index.html in your    *
  *        web browser.                                             *
@@ -54,6 +55,7 @@ Usage: configure [OPTIONS]
 -smarts .................. Use SMARTS API for threads (use with above).
 -pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
+-jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+).
 -mpiinc=<dir> ............. Specify location of MPI include dir and use
                            the TAU MPI Profiling and Tracing Interface.
 -mpilib=<dir> ............. Specify location of MPI library dir and use
@@ -131,6 +133,10 @@ The following  command-line options are available to configure:
    PCL Documentation (pcl.h) for other event names.
    [ Ref : http://www.fz-juelich.de/zam/PCL ]
    
+-jdk=<directory>
+   Specifies the location of the Java 2 development kit (jdk1.2+). See
+   README.JAVA on instructions on using TAU with Java 2 applications. 
+
 -mpiinc=<dir>
    
    Specifies the directory  where mpi header files reside (such as mpi.h and 
@@ -224,7 +230,11 @@ The following  command-line options are available to configure:
    set path=($path /usr/local/packages/tau/sgi64/bin)
 
 3. Instrumentation.
-   For  TAU instrumentation, macros must be added  to the source code to 
+   JAVA requires no special instrumentation. To use TAU with JAVA, the 
+   LD_LIBRARY_PATH environment variable must have the TAU <arch>/lib directory
+   in its path. See README.JAVA on instructions regarding its usage.
+   For other languages such as C++, C, and Fortran 90, TAU instrumentation in 
+   the form of macros or routines must be added  to the source code to 
    identify routine transitions. It can be done automatically using the C++ 
    instrumentor - tau_instrumentor,  based on the Program Database Toolkit, or 
    manually using the instrumentation API (Application Programmers Interface). 
@@ -311,8 +321,7 @@ III) Software Requirements :
 
    c) xrdb
    The configure script ensures that the display is ok using xrdb.
-  
-   
+
     
 6. Modifying user's Makefile for Tracing/Profiling.
 
@@ -338,7 +347,7 @@ III) Software Requirements :
     
     2. Configure TAU
     ****************
-    % cd /usr/local/packages/tau-2.6
+    % cd /usr/local/packages/tau-2.7
     [FOR SGI]
     % ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS -pdt=/usr/local/packages/pdtoolkit-1.0
     [FOR LINUX PCs]
@@ -349,15 +358,15 @@ III) Software Requirements :
     *******************
     % cd /usr/local/packages/smarts-1.0
     [FOR SGI]
-    % configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.6 --enable-64bit --enable-profile
+    % configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.7 --enable-64bit --enable-profile
     [FOR LINUX PCs]
-    % configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.6 --enable-profile
+    % configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.7 --enable-profile
     % make
     % make install
     
     4. Configure Pooma II 
     *********************
-    % setenv TAUDIR     /usr/local/packages/tau-2.6
+    % setenv TAUDIR     /usr/local/packages/tau-2.7
     % setenv PDTDIR	    /usr/local/packages/pdtoolkit-1.0
     % setenv SMARTSDIR  /usr/local/packages/smarts-1.0
     [FOR SGI]
