@@ -35,7 +35,7 @@
 */
 
 extern "C" {
-void * tau_get_profiler(char *, char *, unsigned int);
+void * tau_get_profiler(char *, char *, TauGroup_t);
 void tau_start_timer(void *);
 void tau_stop_timer(void *);
 void tau_exit(char *);
@@ -182,6 +182,6 @@ void TAU_PROFILE_SET_CONTEXT(int *context)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1999/04/22 23:14:39 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.4 1999/04/22 23:14:39 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 1999/05/04 22:33:10 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.5 1999/05/04 22:33:10 sameer Exp $ 
  ***************************************************************************/

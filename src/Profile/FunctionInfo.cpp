@@ -91,7 +91,7 @@ int& TheSafeToDumpData()
 //////////////////////////////////////////////////////////////////////
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
 //////////////////////////////////////////////////////////////////////
-void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup, 
+void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, 
 	const char *ProfileGroupName)
 {
 #ifdef TRACING_ON
@@ -110,11 +110,11 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 // data corruption. Inspite of the lock, while one thread is being 
 // initialized, other thread may have started executing and setting 
 // these values? 
-     	  NumCalls[i] = 0;
-	  SetAlreadyOnStack(false, i);
-     	  NumSubrs[i] = 0;
-     	  ExclTime[i] = 0;
-     	  InclTime[i] = 0;
+     	//  NumCalls[i] = 0;
+	//  SetAlreadyOnStack(false, i);
+     	//  NumSubrs[i] = 0;
+     	//  ExclTime[i] = 0;
+     	//  InclTime[i] = 0;
  	}
 
 #ifdef PROFILE_STATS
@@ -150,7 +150,7 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 }
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
-	unsigned int ProfileGroup , const char *ProfileGroupName)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName)
 {
 
       DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << MyProfileGroup_ 
@@ -167,7 +167,7 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const char *name, string& type, 
-	unsigned int ProfileGroup , const char *ProfileGroupName)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -181,7 +181,7 @@ FunctionInfo::FunctionInfo(const char *name, string& type,
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(string& name, const char * type, 
-	unsigned int ProfileGroup , const char *ProfileGroupName)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -195,7 +195,7 @@ FunctionInfo::FunctionInfo(string& name, const char * type,
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(string& name, string& type, 
-	unsigned int ProfileGroup , const char *ProfileGroupName)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -249,6 +249,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 1999/04/24 20:58:45 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.14 1999/04/24 20:58:45 sameer Exp $ 
+ * $Revision: 1.15 $   $Date: 1999/05/04 22:33:08 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.15 1999/05/04 22:33:08 sameer Exp $ 
  ***************************************************************************/

@@ -38,10 +38,10 @@
 // the FunctionInfo * pointer that contains the id of the function 
 // being mapped. The key is currently in the form of a profile group.
 //////////////////////////////////////////////////////////////////////
-FunctionInfo *& TheTauMapFI(unsigned int Pgroup )
+FunctionInfo *& TheTauMapFI(TauGroup_t Pgroup )
 { 
   //static FunctionInfo *TauMapFI = (FunctionInfo *) NULL;
-  static map<unsigned int, FunctionInfo *> TauMapGroups;
+  static map<TauGroup_t, FunctionInfo *> TauMapGroups;
 
   return TauMapGroups[Pgroup];
 }

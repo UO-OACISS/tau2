@@ -33,7 +33,7 @@
 // Wrappers for corresponding C++ functions follow
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void * tau_get_profiler(char *fname, char *type, unsigned int group)
+extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
 {
   FunctionInfo *f;
   Profiler *p;
@@ -160,7 +160,7 @@ extern "C" void tau_event_disable_stddev(void *ue)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1999/04/06 22:52:04 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.3 1999/04/06 22:52:04 sameer Exp $
+ * $Revision: 1.4 $   $Date: 1999/05/04 22:33:09 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.4 1999/05/04 22:33:09 sameer Exp $
  ***************************************************************************/
 

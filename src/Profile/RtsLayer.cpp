@@ -71,7 +71,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////
-unsigned int& RtsLayer::TheProfileMask(void)
+TauGroup_t& RtsLayer::TheProfileMask(void)
 { // to avoid initialization problems of non-local static variables
   static unsigned int ProfileMask = TAU_DEFAULT;
 
@@ -585,6 +585,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1999/03/17 23:23:50 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.7 1999/03/17 23:23:50 sameer Exp $ 
+ * $Revision: 1.8 $   $Date: 1999/05/04 22:33:09 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.8 1999/05/04 22:33:09 sameer Exp $ 
  ***************************************************************************/

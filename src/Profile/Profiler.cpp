@@ -70,7 +70,7 @@ using namespace std;
 // vector<FunctionInfo*> FunctionInfo::FunctionDB[TAU_MAX_THREADS] ;
 Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
 // The rest of CurrentProfiler entries are initialized to null automatically
-//unsigned int RtsLayer::ProfileMask = TAU_DEFAULT;
+//TauGroup_t RtsLayer::ProfileMask = TAU_DEFAULT;
 
 // Default value of Node.
 //int RtsLayer::Node = -1;
@@ -161,7 +161,7 @@ void Profiler::Start(void)
 
 //////////////////////////////////////////////////////////////////////
 
-Profiler::Profiler( FunctionInfo * function, unsigned int ProfileGroup, bool StartStop)
+Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup, bool StartStop)
 {
 
       StartStopUsed_ = StartStop; // will need it later in ~Profiler
@@ -705,8 +705,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 1999/04/28 22:28:43 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.21 1999/04/28 22:28:43 sameer Exp $ 
+ * $Revision: 1.22 $   $Date: 1999/05/04 22:33:08 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.22 1999/05/04 22:33:08 sameer Exp $ 
  ***************************************************************************/
 
 	
