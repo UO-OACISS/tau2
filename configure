@@ -969,7 +969,8 @@ case $fortran_compiler in
 
    absoft)
       echo "Default Fortran compiler will be Absoft f90"
-      fixmakeargs="$fixmakeargs IBM64_FORTRAN"
+      extradir="`which f90 | sed s/f90/../`"
+      fixmakeargs="$fixmakeargs ABSOFT_FORTRAN"
       ;;
 
    fujitsu)
