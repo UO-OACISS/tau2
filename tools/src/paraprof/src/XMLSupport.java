@@ -25,7 +25,7 @@ public class XMLSupport{
 	GlobalMapping globalMapping = paraProfTrial.getGlobalMapping();
 	
 	//Build an array of group names.  This speeds lookup of group names.
-	Vector groups = paraProfTrial.getGlobalMapping().getMapping(2);
+	Vector groups = globalMapping.getMapping(2);
 	String[] groupNames = new String[groups.size()];
 	int position = 0;
 	for(Enumeration e = groups.elements(); e.hasMoreElements() ;){
@@ -109,26 +109,26 @@ public class XMLSupport{
 			    GlobalThreadDataElement function = (GlobalThreadDataElement) e4.nextElement();
 			    if (function!=null){
 				writeBeginObject(xwriter,16);
-				writeFunName(xwriter,function.getMappingName());
+				writeFunctionName(xwriter,function.getMappingName());
 				writeInt(xwriter,11,function.getMappingID());
 				//Build group string.
 				groupsStringBuffer.delete(0,groupsStringBuffer.length());
 				int[] groupIDs = function.getGroups();
 				for(int i=0;i<groupIDs.length;i++){
-				    groupsStringBuffer=+groupNames[groupIDs[i]];}
+				    groupsStringBuffer.append(groupNames[groupIDs[i]]);}
 				writeString(xwriter,14,groupsStringBuffer.toString());
-				writeDouble(xwriter,0,function.getInclusivePercentValue());
-				writeDouble(xwriter,1,function.getInclusiveValue());
-				writeDouble(xwriter,2,function.getExclusivePercentValue());
-				writeDouble(xwriter,3,function.getExclusiveValue());
+				writeDouble(xwriter,0,function.getInclusivePercentValue(metricID));
+				writeDouble(xwriter,1,function.getInclusiveValue(metricID));
+				writeDouble(xwriter,2,function.getExclusivePercentValue(metricID));
+				writeDouble(xwriter,3,function.getExclusiveValue(metricID));
 				writeDouble(xwriter,5,function.getNumberOfCalls());
-				writeDouble(xwriter,6,function.getNummberSubroutines());
-				writeDouble(xwriter,4,function.getUserSecPerCall());
+				writeDouble(xwriter,6,function.getNumberOfSubRoutines());
+				writeDouble(xwriter,4,function.getUserSecPerCall(metricID));
 				writeEndObject(xwriter,16);
 			    }
 			}
 			//Write out user event data for this thread.
-			for(Enumeration e4 = UserThreadDataList.elements(); e4.hasMoreElements() ;){
+			for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
 			    GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
 			    if (userevent!=null){
 				writeBeginObject(xwriter,17);
@@ -138,7 +138,8 @@ public class XMLSupport{
 				writeDouble(xwriter,7,userevent.getUserEventMaxValue());
 				writeDouble(xwriter,8,userevent.getUserEventMinValue());
 				writeDouble(xwriter,9,userevent.getUserEventMeanValue());
-				writeDouble(xwriter,10,userevent.getUserEventStdDevValue());
+				//writeDouble(xwriter,10,userevent.getUserEventStdDevValue());@@@Commented out due to lack of ParaProf data support. Should probably add methods which
+				//generate this data. @@@
 				writeBeginObject(xwriter,17);
 			    }
 			}			
@@ -150,65 +151,74 @@ public class XMLSupport{
 	    xwriter.newLine();
 	    xwriter.newLine();
 	    
+	    /* @@@ Commented out as is questionable functionality.  Add back in for legacy support.
 	    xwriter.write("\t<totalfunsummary>", 0, ("\t<totalfunsummary>").length());
 	    xwriter.newLine();
-	    
+	    */
+
+	    /* @@@Commented out due to lack of ParaProf data support. Should probably add methods which
+	       generate this data. @@@
 	    //Write out total information.
-	    globalMappingElementList = globalMapping.getMapping(0);
-	    for(Enumeration e = globalMappingElementList.elements(); e.hasMoreElements() ;){
+	    for(Enumeration e = globalMapping.getMapping(0).elements(); e.hasMoreElements() ;){
 		globalMappingElement = (GlobalMappingElement) e.nextElement();
 		if (globalMappingElement!=null){
 		    writeBeginObject(xwriter,18);
-		    writeFunName(xwriter,globalMappingElement.getFunctionName());
-		    writeInt(xwriter,11,globalMappingElement.getGlobalID());
+		    writeFunctionName(xwriter,globalMappingElement.getMappingName());
+		    writeInt(xwriter,11,globalMappingElement.getMappingID());
 		    //Build group string.
 		    groupsStringBuffer.delete(0,groupsStringBuffer.length());
 		    int[] groupIDs = globalMappingElement.getGroups();
 		    for(int i=0;i<groupIDs.length;i++){
 			groupsStringBuffer=+groupNames[groupIDs[i]];}
 		    writeString(xwriter,14,groupsStringBuffer.toString());
-		    writeDouble(xwriter,0,globalMappingElement.getTotalInclusivePercentValue());
-		    writeDouble(xwriter,1,globalMappingElement.getTotalInclusiveValue());
-		    writeDouble(xwriter,2,globalMappingElement.getTotalExclusivePercentValue());
-		    writeDouble(xwriter,3,globalMappingElement.getTotalExclusiveValue());
-		    writeDouble(xwriter,5,globalMappingElement.getTotalCall());
-		    writeDouble(xwriter,6,globalMappingElement.getTotalSubrs());
+		    writeDouble(xwriter,0,globalMappingElement.getTotalInclusivePercentValue(metricID));
+		    writeDouble(xwriter,1,globalMappingElement.getTotalInclusiveValue(metricID));
+		    writeDouble(xwriter,2,globalMappingElement.getTotalExclusivePercentValue(metricID));
+		    writeDouble(xwriter,3,globalMappingElement.getTotalExclusiveValue(metricID));
+		    writeDouble(xwriter,5,globalMappingElement.getTotalNumberOfCalls());
+		    writeDouble(xwriter,6,globalMappingElement.getTotalNummberOfSubroutines());
 		    writeDouble(xwriter,4,globalMappingElement.getTotalInclPCall());
 		    writeEndObject(xwriter,18);
 		}
 	    }
+	    */
+	    
+	    /* @@@ Commented out as is questionable functionality.  Add back in for legacy support.
 	    xwriter.write("\t</totalfunsummary>", 0, ("\t</totalfunsummary>").length());
 	    xwriter.newLine();
 	    xwriter.newLine();
+	    */
 
+	    /* @@@ Commented out as is questionable functionality.  Add back in for legacy support.
 	    xwriter.write("\t<meanfunsummary>", 0, ("\t<meanfunsummary>").length());
 	    xwriter.newLine();
 	    
 	    //Write out mean information.
-	    for(Enumeration e = globalMappingElementList.elements(); e.hasMoreElements() ;){
-		globalMappingElement = (GlobalMappingElement) e.nextElement();
+	    for(Enumeration e = globalMapping.getMapping(0).elements(); e.hasMoreElements() ;){
+		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
 		if (globalMappingElement!=null){
 		    writeBeginObject(xwriter,19);
-		    writeFunName(xwriter,globalMappingElement.getFunctionName());
-		    writeInt(xwriter,11,globalMappingElement.getGlobalID());
+		    writeFunctionName(xwriter,globalMappingElement.getMappingName());
+		    writeInt(xwriter,11,globalMappingElement.getMappingID());
 		    //Build group string.
 		    groupsStringBuffer.delete(0,groupsStringBuffer.length());
 		    int[] groupIDs = globalMappingElement.getGroups();
 		    for(int i=0;i<groupIDs.length;i++){
-			groupsStringBuffer=+groupNames[groupIDs[i]];}
+			groupsStringBuffer.append(groupNames[groupIDs[i]]);}
 		    writeString(xwriter,14,groupsStringBuffer.toString());
-		    writeDouble(xwriter,0,globalMappingElement.getMeanInclusivePercentValue());
-		    writeDouble(xwriter,1,globalMappingElement.getMeanInclusiveValue());
-		    writeDouble(xwriter,2,globalMappingElement.getMeanExclusivePercentValue());
-		    writeDouble(xwriter,3,globalMappingElement.getMeanExclusiveValue());
-		    writeDouble(xwriter,5,globalMappingElement.getMeanCall());
-		    writeDouble(xwriter,6,globalMappingElement.getMeanSubrs());
-		    writeDouble(xwriter,4,globalMappingElement.getMeanInclPCall());
+		    writeDouble(xwriter,0,globalMappingElement.getMeanInclusivePercentValue(metricID));
+		    writeDouble(xwriter,1,globalMappingElement.getMeanInclusiveValue(metricID));
+		    writeDouble(xwriter,2,globalMappingElement.getMeanExclusivePercentValue(metricID));
+		    writeDouble(xwriter,3,globalMappingElement.getMeanExclusiveValue(metricID));
+		    writeDouble(xwriter,5,globalMappingElement.getMeanNumberOfCalls());
+		    writeDouble(xwriter,6,globalMappingElement.getMeanNumberOfSubRoutines());
+		    writeDouble(xwriter,4,globalMappingElement.getMeanUserSecPerCall(metricID));
 		}
 	    }
 	    
 	    xwriter.write("\t</meanfunsummary>", 0, ("\t</meanfunsummary>").length());
-	    xwriter.newLine();	   
+	    xwriter.newLine();
+	    */
 	    
 	    xwriter.write("    </Onetrial>", 0, ("    </Onetrial>").length());
 	    xwriter.newLine();
@@ -216,8 +226,7 @@ public class XMLSupport{
 	    xwriter.write("</Trials>", 0, ("</Trials>").length());
 	    xwriter.newLine();
 	    xwriter.close();
-	    
-	    connector.dbclose();    	    		
+
 	    }catch(Exception e){	    
 		e.printStackTrace();
 	    }
@@ -292,7 +301,7 @@ public class XMLSupport{
        	}
     }
 
-    public void writeFunName(BufferedWriter writer, String funname){
+    public void writeFunctionName(BufferedWriter writer, String funname){
 	try{
 	    String tmpString;
 	    funname = replace(funname, "&", "&amp;");
@@ -303,7 +312,7 @@ public class XMLSupport{
 	    writer.newLine();
 	}
 	catch(Exception e){
-	    xmlWriteError.location = "writeFunName(BufferedWriter writer, String funname)";
+	    xmlWriteError.location = "writeFunctionName(BufferedWriter writer, String funname)";
 	    UtilFncs.systemError(xmlWriteError, null, null);
        	}
 
