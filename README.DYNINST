@@ -43,3 +43,26 @@ Part 2: Configuring TAU with Dyninst
 % make
 % tau_run klargest
 % pprof
+
+If you're using DyninstAPI with an MPI application (works under Linux with 
+MPICH), you need to follow these steps:
+
+1) normally you'd invoke an mpi application using :
+% mpirun -np <np> a.out <args>
+2) With TAU and DyninstAPI, you'll need to invoke it as:
+% mpirun -np <np> tau.shell <args>
+
+where tau.shell is a shell script that you write as follows:
+#!/bin/tcsh
+<tauroot>/<arch>/bin/taurun -XrunTAUsh[-options] <full path to exec>/a.out $*
+
+Note, by default taurun doesn't need the specification of the TAU library to
+use (in the second -XrunTAUsh[-options] argument) but you can specify it when
+more than one version of TAU is configured. For e.g.,
+
+% mpirun -np 4 tau.papiwallclock.sh <args>
+% cat tau.papiwallclock.sh 
+#!/bin/tcsh
+/home/users/sameer/tau2/i386_linux/bin/tau_run -XrunTAUsh-papiwallclock-papi /home/users/sameer/tau2/examples/mpi-ek/ek $*
+
+
