@@ -1172,6 +1172,11 @@ if [ $machine = apple ]
       extradir=`which xlf90 | sed s/xlf90/../`
       fortran_compiler=yes
   fi
+  # xlc++ doesn't like include/Memory. Move this directory
+  if [ -d include/Memory ] 
+  then
+    mv include/Memory include/MemoryWrapper	
+  fi
 fi
 
 if [ $machine = ppc64 ]
@@ -1275,11 +1280,6 @@ case $cxx_compiler in
       if [ "$machine" = "apple" ] 
       then
         fixmakeargs="$fixmakeargs IBMXLCAPPLE"
-        # xlc++ doesn't like include/Memory. Move this directory
-	if [ -d include/Memory ] 
-	then
-          mv include/Memory include/MemoryWrapper	
-   	fi
 	if [ $fortran_compiler = no ] 
         then
           fixmakeargs="$fixmakeargs IBMXLFAPPLE"
