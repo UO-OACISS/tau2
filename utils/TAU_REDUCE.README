@@ -9,7 +9,7 @@ specify the name of the pprof dump file in the current directory that the
 this application will use.  This is done with the -f filename flag.  If 
 no rule file is specified, then a single default rule will be applied to 
 the file.  This rule is numcalls > 1000000 & usecs/call < 2, which will 
-exclude all methods that are called at least 1,000,000 times and average 
+exclude all routines that are called at least 1,000,000 times and average 
 less then two microseconds per call.  If a rule file is specified, then 
 this rule is not applied. If no output file is specified, then the results 
 will be printed out to the screen.
@@ -17,32 +17,32 @@ will be printed out to the screen.
 OPTIONS:
 tau_reduce has the following options available at the command line:
     -f <filename> : specify *F*ilename of pprof dump file (default: temp.out)
-    -p : *P*rint out all methods with their attributes (for debugging)
+    -p : *P*rint out all routines with their attributes (for debugging)
     -o <filename> : specify filename for select file *O*utput (default: print 
                     to screen)
     -r <filename> : specify filename for *R*ule file
-    -v : *V*erbose mode (for each rule, print out rule and all methods 
+    -v : *V*erbose mode (for each rule, print out rule and all routines 
 	 that it excludes)
 
 RULES:
 Users can specify a set of rules for tau_reduce to apply.  The rules should
 be specified in a separate file, one rule per line, and the file name should
 be specifed with the appropriate option on the command line.  The grammar 
-for a rule is: FIELD OPERATOR NUMBER.  A FIELD is any of the method attributes 
+for a rule is: FIELD OPERATOR NUMBER.  A FIELD is any of the routine attributes 
 listed in the following table:
 
 --------------------------------------------------------------------
 |ATTRIBUTE NAME| 	MEANING                                    |
 --------------------------------------------------------------------
-| numcalls     | Number of times this method is called             |
+| numcalls     | Number of times this routine is called            |
 --------------------------------------------------------------------
-| numsubrs     | Number of subroutines that this method contains   |
+| numsubrs     | Number of subroutines that this routine contains  |
 --------------------------------------------------------------------
 | percent      | Percent of total implementation time              |
 --------------------------------------------------------------------
-| usec         | Exclusive method running time, in microseconds    |
+| usec         | Exclusive routine running time, in microseconds   |
 --------------------------------------------------------------------
-| cumusec      | Inclusive method running time, in microseconds    |
+| cumusec      | Inclusive routine running time, in microseconds   |
 --------------------------------------------------------------------
 | count	       | Exclusive hardware count                          |
 --------------------------------------------------------------------
@@ -73,14 +73,14 @@ rule usec < 1000 OR numcalls = 1 is the same as the two simple rules
 "usec < 1000"  and  "numcalls = 1").
 
 EXAMPLES:
-#exclude all methods that have less than 1000 microseconds
+#exclude all routines that have less than 1000 microseconds
 usec < 1000     
 
-#exclude all methods that have less than 1000 microseconds and are 
+#exclude all routines that have less than 1000 microseconds and are 
 #called only once.
 usec < 1000 & numcalls = 1   
 			     
-#exclude all methods that have less than 1000 usecs per call OR have a percent
+#exclude all routines that have less than 1000 usecs per call OR have a percent
 #less than 5
 usecs/call < 1000
 percent < 5
