@@ -610,7 +610,7 @@ extern "C" void Tau_set_interrupt_interval(int value)
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_global_phase_stop(void)
+extern "C" void Tau_global_stop(void)
 {
   TAU_GLOBAL_TIMER_STOP();
 } 
@@ -618,7 +618,7 @@ extern "C" void Tau_global_phase_stop(void)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.47 $   $Date: 2005/01/12 02:28:49 $
- * VERSION: $Id: TauCAPI.cpp,v 1.47 2005/01/12 02:28:49 sameer Exp $
+ * $Revision: 1.48 $   $Date: 2005/01/12 19:01:01 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.48 2005/01/12 19:01:01 sameer Exp $
  ***************************************************************************/
 
