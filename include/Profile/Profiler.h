@@ -108,6 +108,9 @@ public:
 	static void theFunctionList(const char ***inPtr, int *numOfFunctions,
 				    bool addName = false, const char * inString = NULL);
 	static void dumpFunctionNames();
+#ifndef TAU_MULTIPLE_COUNTERS
+	static void theCounterList(const char ***inPtr, int *numOfCounters);
+#endif //TAU_MULTIPLE_COUNTERS
 
 	static void getFunctionValues(const char **inFuncs,
 				      int numOfFuncs,
@@ -115,7 +118,7 @@ public:
 				      double ***counterInclusiveValues,
 				      int **numOfCalls,
 				      int **numOfSubRoutines,
-				      char ***counterNames,
+				      const char ***counterNames,
 				      int *numOfCounters,
 				      int tid = RtsLayer::myThread());
 
@@ -162,6 +165,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.40 $   $Date: 2002/03/27 23:45:18 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.40 2002/03/27 23:45:18 bertie Exp $ 
+ * $Revision: 1.41 $   $Date: 2002/03/28 01:13:25 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.41 2002/03/28 01:13:25 bertie Exp $ 
  ***************************************************************************/

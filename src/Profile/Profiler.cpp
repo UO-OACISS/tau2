@@ -473,7 +473,7 @@ void Profiler::ProfileExit(const char *message, int tid)
 
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::theFunctionList(const char ***inPtr, int *numOfFunctions, bool addName = false, const char * inString = NULL)
+void Profiler::theFunctionList(const char ***inPtr, int *numOfFunctions, bool addName, const char * inString)
 {
   //static const char *const functionList[START_SIZE];
   static int numberOfFunctions = 0;
@@ -547,7 +547,14 @@ void Profiler::dumpFunctionNames()
 }
 
 #ifndef TAU_MULTIPLE_COUNTERS
-static void theCounterList(const char ***inPtr, int *numOfCounters){}
+void Profiler::theCounterList(const char ***inPtr, int *numOfCounters)
+{
+  *inPtr = ( char const **) malloc( sizeof(char *) * 1);
+  char *tmpChar = "default counter";
+  (*inPtr)[0] = tmpChar; //Need the () in (*inPtr)[j] or the dereferrencing is
+  //screwed up!
+  *numOfCounters = 1;
+}
 
 void Profiler::getFunctionValues(const char **inFuncs,
 				 int numOfFuncs,
@@ -555,9 +562,119 @@ void Profiler::getFunctionValues(const char **inFuncs,
 				 double ***counterInclusiveValues,
 				 int **numOfCalls,
 				 int **numOfSubRoutines,
-				 char ***counterNames,
+				 const char ***counterNames,
 				 int *numOfCounters,
-				 int tid){}
+				 int tid)
+{
+  TAU_PROFILE("TAU_GET_FUNCTION_VALUES()", " ", TAU_IO);
+
+#ifdef PROFILING_ON
+  vector<FunctionInfo*>::iterator it;
+  
+  bool functionCheck = false;
+  int currentFuncPos = -1;
+  const char *tmpFunctionName = NULL;
+
+  int tmpNumberOfCounters;
+  const char ** tmpCounterList;
+
+  Profiler::theCounterList(&tmpCounterList,
+			   &tmpNumberOfCounters);
+
+  *numOfCounters = tmpNumberOfCounters;
+  *counterNames = tmpCounterList;
+
+  //Allocate memory for the lists.
+  *counterExclusiveValues = ( double **) malloc( sizeof(double *) * numOfFuncs);
+  *counterInclusiveValues = ( double **) malloc( sizeof(double *) * numOfFuncs);
+  for(int memAlloc=0;memAlloc<numOfFuncs;memAlloc++){
+    (*counterExclusiveValues)[memAlloc] = ( double *) malloc( sizeof(double) * 1);
+    (*counterInclusiveValues)[memAlloc] = ( double *) malloc( sizeof(double) * 1);
+  }
+  *numOfCalls = (int *) malloc(sizeof(int) * numOfFuncs);
+  *numOfSubRoutines = (int *) malloc(sizeof(int) * numOfFuncs);
+
+  double tmpDoubleExcl;
+  double tmpDoubleIncl;
+
+  double currenttime = 0;
+  double prevtime = 0;
+  double total = 0;
+
+  currenttime = RtsLayer::getUSecD(tid);
+
+  RtsLayer::LockDB();
+  
+  for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
+    //Check to see that it is one of the requested functions.
+    functionCheck = false;
+    currentFuncPos = -1;
+    tmpFunctionName = (*it)->GetName();
+    for(int fc=0;fc<numOfFuncs;fc++){
+      if(strcmp(inFuncs[fc], tmpFunctionName) == 0){
+	functionCheck = true;
+	currentFuncPos = fc;
+	break;
+      }
+    }
+
+    if(functionCheck){
+      if ((*it)->GetAlreadyOnStack(tid)){
+	/* it is on the callstack. We need to do some processing. */
+	/* Calculate excltime, incltime */
+	Profiler *current;
+	/* Traverse the Callstack */
+	current = CurrentProfiler[tid];
+	
+	if (current == 0){ /* current is null */
+	  DEBUGPROFMSG("Current is NULL when it should be on the stack! TID = " << tid << endl;);
+	}
+	else{ /* current is not null */
+	  tmpDoubleExcl = (*it)->GetExclTime(tid);
+	  tmpDoubleIncl = (*it)->GetInclTime(tid);
+	  
+	  //Initialize what gets added for
+	  //reducing from the parent profile
+	  prevtime = 0;
+	  total = 0;
+	  
+	  while (current != 0){
+	    /* Traverse the stack */ 
+	    if ((*it) == current->ThisFunction){ /* Match! */
+	      DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
+			   <<endl;);
+	      total = currenttime - current->StartTime;
+	      tmpDoubleExcl += total - prevtime;
+	      /* prevtime is the inclusive time of the subroutine that should
+		 be subtracted from the current exclusive time */ 
+	      /* If there is no instance of this function higher on the 	
+		 callstack, we should add the total to the inclusive time */
+	    }
+	    prevtime = currenttime - current->StartTime;  
+	    
+	    /* to calculate exclusive time */
+	    current = current->ParentProfiler; 
+	  } /* We've reached the top! */
+	  tmpDoubleIncl += total;//add this to the inclusive time
+	  //prevtime and incltime are calculated
+	} /* Current is not null */
+      } /* On call stack */
+      else{ /* it is not on the callstack. */
+	tmpDoubleExcl = (*it)->GetExclTime(tid);
+	tmpDoubleIncl = (*it)->GetInclTime(tid);
+      }// Not on the Callstack
+
+      //Copy the data.
+      (*numOfCalls)[currentFuncPos] = (*it)->GetCalls(tid);
+      (*numOfSubRoutines)[currentFuncPos] = (*it)->GetSubrs(tid);
+      
+      (*counterInclusiveValues)[currentFuncPos][0] = tmpDoubleIncl;
+      (*counterExclusiveValues)[currentFuncPos][0] = tmpDoubleExcl;
+    }
+  }
+  RtsLayer::UnLockDB();
+#endif //PROFILING_ON
+}
 
 int Profiler::StoreData(int tid)
 {
@@ -1049,7 +1166,7 @@ void Profiler::getFunctionValues(const char **inFuncs,
 				 double ***counterInclusiveValues,
 				 int **numOfCalls,
 				 int **numOfSubRoutines,
-				 char ***counterNames,
+				 const char ***counterNames,
 				 int *numOfCounters,
 				 int tid)
 {
@@ -1071,6 +1188,9 @@ void Profiler::getFunctionValues(const char **inFuncs,
   MultipleCounterLayer::theCounterListInternal(&tmpCounterList,
 					       &tmpNumberOfCounters,
 					       &tmpCounterUsedList);
+
+  *numOfCounters = tmpNumberOfCounters;
+  *counterNames = tmpCounterList;
 
   //Allocate memory for the lists.
   *counterExclusiveValues = ( double **) malloc( sizeof(double *) * numOfFuncs);
@@ -1755,8 +1875,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.67 $   $Date: 2002/03/27 23:42:12 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.67 2002/03/27 23:42:12 bertie Exp $ 
+ * $Revision: 1.68 $   $Date: 2002/03/28 01:12:19 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.68 2002/03/28 01:12:19 bertie Exp $ 
  ***************************************************************************/
 
 	
