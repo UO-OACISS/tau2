@@ -18,7 +18,7 @@ import paraprof.UtilFncs;
 import dms.dss.*;
 import java.awt.Component;
 
-public class Translator implements Serializable {
+public class Translator implements ParaProfObserver {
 
     private File readPprof;
     private File writeXml;
@@ -88,14 +88,6 @@ public class Translator implements Serializable {
     }
 
 	public void loadTrial(String trialName, String problemFile) {
-		/*
-	    FileList fl = new FileList();
-	    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", false);
-		if (v.size() == 0) {
-	    	v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "profile", false);
-		}
-		*/
-
 	    trial = null;
 	    Vector v = new Vector();;
 		File[] inFile = new File[1];
@@ -103,11 +95,14 @@ public class Translator implements Serializable {
 		v.add(inFile);
 
 	    trial = new ParaProfTrial(null, 0);
+		trial.addObserver(this);
 	    trial.setName(trialName);
 	    trial.setDefaultTrial(true);
 	    trial.setPaths(System.getProperty("user.dir"));
 	    trial.setLoading(true);
 	    trial.initialize(v);
+
+		// register self as a listener to the Trial...
 
 		// finish setting up the trial
 		trial.setProblemDefinition(getProblemString(problemFile));
@@ -130,6 +125,7 @@ public class Translator implements Serializable {
 		trial.setNumContextsPerNode(maxNCT[1]+1);
 		trial.setNumThreadsPerContext(maxNCT[2]+1);
 		dbSession.saveParaProfTrial(session, trial);
+		System.out.println("Done saving trial!");
 	}
 
 	public String getProblemString(String problemFile) {
@@ -170,12 +166,21 @@ public class Translator implements Serializable {
 		return problemString.toString();
 	}
 
+	public void update (Object obj) {
+		saveTrial();
+	}
+
+	public void update () {
+		saveTrial();
+	}
+
 	//******************************
 	//End - Helper functions for buildStatic data.
 	//******************************
 
     static public void main(String[] args){
-		String USAGE = "USAGE: perfdb_translate [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]";
+		// String USAGE = "USAGE: perfdb_translate [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]";
+		String USAGE = "USAGE: perfdb_loadtrial [{-s,--sourcefile} sourcefilename] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]";
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
@@ -239,11 +244,7 @@ public class Translator implements Serializable {
 		trans.checkForApp(applicationID);
 		trans.checkForExp(experimentID);
 		trans.loadTrial(trialName, problemFile);
-		try{java.lang.Thread.sleep(2000);}
-		catch(Exception e) {}
-		trans.saveTrial();
+		// trans.saveTrial();
 		// trans.writeTrial();
-		System.out.println("Done saving trial!");
-		System.exit(0);
     }
 } 
