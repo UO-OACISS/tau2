@@ -533,7 +533,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
     //Note that older files might not have this, so don't
     //crash if we do not find it.
     int grpNm = 0;
-    for (int grpNm = j+1; line[grpNm] !='\0'; grpNm++){
+    for (grpNm = j+1; line[grpNm] !='\0'; grpNm++){
       if(line[grpNm] == '"'){
 	groupNamesUsed = TRUE;
 	//Since we know the format has the group name first,
@@ -3255,7 +3255,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: bertie $
- * $Revision: 1.32 $   $Date: 2002/04/16 22:04:03 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.32 2002/04/16 22:04:03 bertie Exp $                                                   
+ * $Revision: 1.33 $   $Date: 2002/05/03 14:00:26 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.33 2002/05/03 14:00:26 bertie Exp $                                                   
  ***************************************************************************/
 
