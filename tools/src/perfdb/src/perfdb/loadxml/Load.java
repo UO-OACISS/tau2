@@ -45,9 +45,11 @@ public class Load {
     }
 
     public LoadHandler newHandler(String trialId, String problemFile) {
-	
-	return new LoadHandler(getDB(), trialId, problemFile); // no DB partition.
-	
+		return new LoadHandler(getDB(), trialId, problemFile); 
+    }
+
+    public LoadHandler2 newHandler2(String trialId, String problemFile) {
+		return new LoadHandler2(getDB(), trialId, problemFile); 
     }
 
     public AppLoadHandler newAppHandler() {
@@ -61,7 +63,7 @@ public class Load {
     /*** Parse an XML file related to a trial using a SAX parser
 	 Note: the parser in <parserClass> MUST be included in the Java CLASSPATH. ***/
 
-    public String parse(String xmlFile, String trialid, String problemFile) {
+    public String parse(String xmlFile, String trialid, String problemFile, boolean bulkLoad) {
 	
 	try {
 	    
@@ -69,18 +71,28 @@ public class Load {
 		String problemDefinition = getProblemString(problemFile);
 	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);
 	    
-	    DefaultHandler handler = this.newHandler(trialid, problemDefinition);
+	    DefaultHandler handler;
+		if (bulkLoad)
+	    	handler = this.newHandler(trialid, problemDefinition);
+		else
+	    	handler = this.newHandler2(trialid, problemDefinition);
 	    xmlreader.setContentHandler(handler);
 	    xmlreader.setErrorHandler(handler);
 	    try {
-		((LoadHandler) handler).setDocumentName(xmlFile);
-		File file = new File(xmlFile);
-		xmlreader.parse(new InputSource(new FileInputStream(file)));			
-		return ((LoadHandler) handler).getTrialId();
+			if (bulkLoad)
+				((LoadHandler) handler).setDocumentName(xmlFile);
+			else
+				((LoadHandler2) handler).setDocumentName(xmlFile);
+			File file = new File(xmlFile);
+			xmlreader.parse(new InputSource(new FileInputStream(file)));
+			if (bulkLoad)
+				return ((LoadHandler) handler).getTrialId();
+			else
+				return ((LoadHandler) handler).getTrialId();
 	    } catch (SAXException saxe) {
-		saxe.printStackTrace();
+			saxe.printStackTrace();
 	    } catch (IOException ioe) {
-		ioe.printStackTrace();
+			ioe.printStackTrace();
 	    }
 	} catch (SAXException ex) {
 	    ex.printStackTrace();

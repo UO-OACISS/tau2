@@ -19,7 +19,7 @@ public class Main {
 		+ "    [{-c,--command} loadschema] [{-s,--schemafile} filename] \n"
 		+ "  | [{-c,--command} loadapp] [{-x,--xmlfile} filename] \n"
 		+ "  | [{-c,--command} loadexp] [{-a,--applicationid} value] [{-x,--xmlfile} filename] \n"
-		+ "  | [{-c,--command} loadtrial] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] [{-p --problemfile} filename]\n";
+		+ "  | [{-c,--command} loadtrial] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] [{-p --problemfile} filename] [{-b --bulk}]\n";
 
     private static String APP_USAGE = 
         "USAGE: perfdb_loadapp [{-h,--help}] [{-x,--xmlfile} filename] \n";
@@ -31,7 +31,7 @@ public class Main {
         "USAGE: Main [{-h,--help}] [{-a,--applicationid} value] [{-x,--xmlfile} filename]\n";
 
     private static String TRIAL_USAGE = 
-        "USAGE: perfdb_loadtrial [{-h,--help}] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] [{-p --problemfile} filename]\n";
+        "USAGE: perfdb_loadtrial [{-h,--help}] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] [{-p --problemfile} filename] [{-b --bulk}]\n";
 
     private perfdb.ConnectionManager connector;
 
@@ -99,7 +99,7 @@ public class Main {
 
     /*** Store a xml document for a trial ***/
 
-    public String storeDocument(String xmlFile, String trialId, String problemFile) {
+    public String storeDocument(String xmlFile, String trialId, String problemFile, boolean bulk) {
 		if (trialId.compareTo("0") != 0) {
 			String trialIdOut = getLoad().lookupTrial("trial", trialId);
 			if (trialIdOut==null){
@@ -109,7 +109,7 @@ public class Main {
 		}
 
 		try {
-	    	trialId = getLoad().parse(xmlFile, trialId, problemFile);		
+	    	trialId = getLoad().parse(xmlFile, trialId, problemFile, bulk);
 		} catch (Throwable ex) {
 	    	errorPrint("Error: " + ex.getMessage());
 		}
@@ -135,6 +135,7 @@ public class Main {
         CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
         CmdLineParser.Option schemafileOpt = parser.addStringOption('s', "schemafile");
         CmdLineParser.Option problemfileOpt = parser.addStringOption('p', "problemfile");
+        CmdLineParser.Option bulkOpt = parser.addBooleanOption('b', "bulk");
 
         try {
             parser.parse(args);
@@ -153,6 +154,7 @@ public class Main {
         String applicationID = (String)parser.getOptionValue(applicationidOpt);
         String schemaFile = (String)parser.getOptionValue(schemafileOpt);
         String problemFile = (String)parser.getOptionValue(problemfileOpt);
+        Boolean bulk = (Boolean)parser.getOptionValue(bulkOpt);
 
     	if (help != null && help.booleanValue()) {
 			if (command == null) {
@@ -206,11 +208,6 @@ public class Main {
 	    		System.exit(-1);
 			}
     	} else if (command.equalsIgnoreCase("LOADXML") || command.equalsIgnoreCase("LOADTRIAL")) {
-			/*if (trialID == null && problemFile == null) {
-            	System.err.println("Please enter a valid problem definition XML file, or a valid trial ID.");
-	    		System.err.println(TRIAL_USAGE);
-	    		System.exit(-1);
-			} if (trialID == null && problemFile != null) { */
 			if (trialID == null) {
 				trialID = new String("0");
 			}
@@ -245,7 +242,7 @@ public class Main {
     	}
     	/***** Load a trial into PerfDB *********/
 		else if (command.equalsIgnoreCase("LOADXML") || command.equalsIgnoreCase("LOADTRIAL")) {
-			String trialid = demo.storeDocument(xmlFile, trialID, problemFile);
+			String trialid = demo.storeDocument(xmlFile, trialID, problemFile, (bulk != null && bulk.booleanValue()));
 			if (trialid != null)
 				exitval = Integer.parseInt(trialid);
     	}
