@@ -770,12 +770,16 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
      		for (int space = 0; space < (*it)->col-1 ; space++) 
 		  ostr << inbuf[space]; 
 		ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
-		if (isProgram) 
+/* DON'T CALL TAU_PROFILE_SET_NODE here. 
+   Call it in TAU_PROFILE_INIT if MPI is not used */ 		
+		/* 
+	        if (isProgram) 
 		{
      		  for (int space = 0; space < (*it)->col-1 ; space++) 
 		    ostr << inbuf[space]; 
 		  ostr <<"call TAU_PROFILE_SET_NODE(0)"<<endl;
 		}
+		*/
 		/* spaces */
      		for (int space = 0; space < (*it)->col-1 ; space++) 
 		  ostr << inbuf[space]; 
