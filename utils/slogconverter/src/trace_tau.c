@@ -143,6 +143,9 @@ struct event_stack *arrowTop=NULL;
 /*/The current color to apply to an event or state*/
 int curcolor=0;
 
+/*the largest index seen so far*/
+int maxidx = 0;
+
 /*/Contains one element for each node, with each element holding the number of threads at that node*/
 int *countthreads = NULL;
 
@@ -424,9 +427,12 @@ const char *threadName )
 	if(threadToken > maxthrd)
 		maxthrd = threadToken;
 		/*/If we have any threads this is a threaded program*/
+    
+
   if (threadToken > 0) multiThreaded = 1; 
   
   rows++;/*/Redundant with numthreaeds?!*/
+
   
   return 0;
 }
@@ -494,7 +500,8 @@ dprintf("TestUDef1\n");
   {
 
     dodifferentiation = 1; 
-	}
+  }
+  /* non monotonically increasing record ids are kept in a list for identification later*/
 	else 
 	{
 		int *temp;
@@ -520,7 +527,7 @@ dprintf("TestUDef1\n");
     /*/char           *info_A;  *info_B;*/
     legend = malloc((strlen(name)+1));
 
-	memcpy(legend,  name, strlen(name)+1);
+      memcpy(legend,  name, strlen(name)+1);
     legend_len  = strlen( legend );
     /*/newline     = (char *) (((TRACE_file)userData)->line + line_pos);*/
 
@@ -721,6 +728,8 @@ dprintf("TestUDef1\n");
   thispeak = 1;
  /* for non monotonically increasing data (not yet implemented) */
 
+  if(userEventToken > maxidx)
+	maxidx = userEventToken;
 
   return 0;
 }
@@ -1112,6 +1121,9 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
   currentkind = (int)TRACE_CATEGORY;
   thispeak = 1;
  
+  if(maxidx < stateToken)
+    maxidx = stateToken;
+
   return 0;
 }
 
@@ -1279,7 +1291,7 @@ char *name = "message";
 	int i;
     for(i = 0; i < ((TRACE_file)userData)->num_types; i++ ) 
 	{
-        if ( ((TRACE_file)userData)->types[ i ]->hdr->index == messageTag ) 
+        if ( ((TRACE_file)userData)->types[ i ]->hdr->index == messageTag+maxidx ) 
 		{
 			found = 1;
             break;
@@ -1292,7 +1304,7 @@ char *name = "message";
 	}
 		
 	
-    type_idx = messageTag;
+    type_idx = messageTag+maxidx;
     legend=malloc(strlen(name)+1);
 
 
@@ -1341,7 +1353,7 @@ char *name = "message";
 	return 0;
 
 }
-
+struct event_stack *arrowBase = NULL;
 /***************************************************************************
  * Description: SendMessage is called when a message is sent by a process.
  * 		This is a callback routine which must be registered by the 
@@ -1361,7 +1373,7 @@ int SendMessage( void *userData, double time,
 	
     temp=
   (struct event_stack *)malloc(sizeof(struct event_stack));
-    temp->sid=messageTag;
+    temp->sid=messageTag+maxidx;
 	temp->tid = sourceThreadToken;
 	temp->nid = sourceNodeToken;
 	
@@ -1385,6 +1397,9 @@ int SendMessage( void *userData, double time,
 		arrowTop->last=temp;
 	}
 	
+	if(arrowBase == NULL)
+	  arrowBase = temp;
+
 	arrowTop=temp; 
 	((TRACE_file)userData)->arrow_count++;
   thispeak = 0;
@@ -1405,7 +1420,7 @@ int RecvMessage( void *userData, double time,
 		unsigned int messageTag )
 {
 	
-	struct event_stack *temp = arrowTop;
+	struct event_stack *temp = arrowBase;
 	int found = 0;
 		DRAW_Category  *type;
     DRAW_Primitive *prime;
@@ -1431,7 +1446,7 @@ dprintf("%d arrows!\n", ((TRACE_file)userData)->arrow_count);
 		
 		if((sourceNodeToken == temp->nid) && (sourceThreadToken == temp->tid) &&
 		(destinationNodeToken == temp->dnid) && (destinationThreadToken == temp->dtid) &&
-		(messageTag == temp->sid))
+		(messageTag+maxidx == temp->sid) && (messageSize == temp->size))
 		{
 			found = 1;
 			
@@ -1443,13 +1458,19 @@ dprintf("%d arrows!\n", ((TRACE_file)userData)->arrow_count);
 				
 			if(temp->last == NULL)
 				arrowTop = temp->next;
-				
+			if(temp->next == NULL)
+			  {
+			    if(temp->last != NULL)
+			      temp->last->next = NULL;
+
+			    arrowBase = temp->last;
+			  }
 			
 			((TRACE_file)userData)->arrow_count--;
 		}
 		else
 		{
-			temp = temp->next;
+			temp = temp->last;
 		}
 		
 	}
@@ -1503,6 +1524,7 @@ dprintf("%d arrows!\n", ((TRACE_file)userData)->arrow_count);
 	free(temp);
   
   currentkind = (int)TRACE_PRIMITIVE_DRAWABLE;
+  dprintf("Current: %d\n",currentkind);
 
 thispeak = 1;
   return 0;
