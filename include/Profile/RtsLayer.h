@@ -44,10 +44,13 @@
 class RtsLayer 
 { // Layer for Profiler to interact with the Runtime System
   public:
- 	static unsigned int ProfileMask;
- 	static int Node;
+ 	
  	RtsLayer () { }  // defaults
 	~RtsLayer () { } 
+
+	static unsigned int& TheProfileMask(void);
+	
+	static int& TheNode(void);
 
  	static unsigned int enableProfileGroup(unsigned int ProfileGroup) ;
 
@@ -84,7 +87,7 @@ class RtsLayer
 	static int 	DumpEDF(void); 
 
   	// Return the number of the 'current' node.
-	static int myNode()  { return Node;}
+	static int myNode()  { return TheNode();}
 
 	// Return the number of the 'current' context.
 	static int myContext() { return 0; }
@@ -98,6 +101,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:20:25 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.1 1998/04/24 00:20:25 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/04/26 07:32:42 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.2 1998/04/26 07:32:42 sameer Exp $ 
  ***************************************************************************/
