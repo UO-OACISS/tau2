@@ -125,7 +125,7 @@ fi
 
      vtfdir=*)
         vtfdir=`echo $1 | sed -e 's/^vtfdir=//'`
-	echo "s,^vtfdir=.*$,vtfdir=$vtfdir,g" >> $sedout
+	echo "s,^VTFDIR=.*$,VTFDIR=$vtfdir,g" >> $sedout
 	;;
 
      pdtcompdir=*)
