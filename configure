@@ -140,6 +140,7 @@ inteltflop=no
 profile=no
 monitor=no
 profilecounters=no
+multiplecounters=no
 profilestats=no
 profilecalls=no
 profilecallstack=no
@@ -413,6 +414,11 @@ do
   -PROFILECOUNTERS)
     profile=yes
     profilecounters=yes
+    shift
+    ;;
+
+  -MULTIPLECOUNTERS)
+    multiplecounters=yes
     shift
     ;;
 
@@ -814,6 +820,12 @@ if [ $papiwallclock = yes ]
   then
     fixmakeargs="$fixmakeargs PAPIWALLCLOCK"
     tauoptions="${tauoptions}-papiwallclock"
+fi
+
+if [ $multiplecounters = yes ]
+  then
+    fixmakeargs="$fixmakeargs MULTIPLECOUNTERS"
+    tauoptions="${tauoptions}-multiplecounters"
 fi
 
 if [ $papivirtual = yes ]

@@ -73,7 +73,7 @@ MAKEFILE      = Makefile
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O) \
-		$(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O)
+		$(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) $(MULT_O)
 
 PRINT	      = pr
 
@@ -262,6 +262,9 @@ PclLayer.o 	: PclLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 PapiLayer.o 	: PapiLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+MultipleCounters.o : MultipleCounters.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauDisable.o 	: TauDisable.cpp $(HDRS)
