@@ -154,9 +154,9 @@ extern "C" void Tau_purge(void)
   TAU_DB_PURGE();
 }
 
-extern "C" void Tau_the_function_list(const char **functionList, int num)
+extern "C" void Tau_the_function_list(const char ***functionList, int *num)
 {
-  TAU_GET_FUNC_NAMES(functionList, num);
+  TAU_GET_FUNC_NAMES(*functionList, *num);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -173,13 +173,13 @@ extern "C" void Tau_the_counter_names(const char **counterList, int num)
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_function_values(const char **inFuncs, int numOfFuncs,
-					double **counterExclusiveValues,
-					double **counterInclusiveValues,
-					int *numOfCalls, int *numOfSubRoutines,
-					const char **counterNames, int numOfCounters)
+					double ***counterExclusiveValues,
+					double ***counterInclusiveValues,
+					int **numOfCalls, int **numOfSubRoutines,
+					const char ***counterNames, int *numOfCounters)
 {
-  TAU_GET_FUNC_VALS(inFuncs,numOfFuncs,counterExclusiveValues,counterInclusiveValues,
-		    numOfCalls,numOfSubRoutines,counterNames,numOfCounters);
+  TAU_GET_FUNC_VALS(inFuncs,numOfFuncs,*counterExclusiveValues,*counterInclusiveValues,
+		    *numOfCalls,*numOfSubRoutines,*counterNames,*numOfCounters);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -415,8 +415,8 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.30 $   $Date: 2002/11/12 19:35:45 $
- * VERSION: $Id: TauCAPI.cpp,v 1.30 2002/11/12 19:35:45 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: bertie $
+ * $Revision: 1.31 $   $Date: 2002/11/28 00:53:00 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.31 2002/11/28 00:53:00 bertie Exp $
  ***************************************************************************/
 
