@@ -30,6 +30,7 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+//#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
 #include "Profile/Profiler.h"
 
 
@@ -60,7 +61,6 @@ using namespace std;
 #endif // TRACING_ON 
 
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
-//#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
 
 //////////////////////////////////////////////////////////////////////
 //Initialize static data
@@ -131,7 +131,7 @@ void Profiler::Start(void)
 #endif // PROFILING_ON
   	ParentProfiler = CurrentProfiler[tid] ;
 
-	DEBUGPROFMSG("nct  "<< RtsLayer::myNode() << "," 
+	DEBUGPROFMSG("nct "<< RtsLayer::myNode() << "," 
 	  << RtsLayer::myContext() << ","  << tid 
 	  << " Profiler::Start (tid)  : Name : " 
 	  << ThisFunction->GetName() <<" Type : " << ThisFunction->GetType() 
@@ -349,7 +349,7 @@ int Profiler::StoreData(int tid)
 {
 #ifdef PROFILING_ON 
   	vector<FunctionInfo*>::iterator it;
-	char filename[1024], errormsg[1024];
+	char *filename, *errormsg, *header;
 	char *dirname;
 	FILE* fp;
  	int numFunc, numEvents;
@@ -366,16 +366,19 @@ int Profiler::StoreData(int tid)
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
+	RtsLayer::LockDB();
 	if ((dirname = getenv("PROFILEDIR")) == NULL) {
 	// Use default directory name .
 	   dirname  = new char[8];
 	   strcpy (dirname,".");
 	}
 	 
+	filename = new char[1024];
 	sprintf(filename,"%s/profile.%d.%d.%d",dirname, RtsLayer::myNode(),
 		RtsLayer::myContext(), RtsLayer::myThread());
 	DEBUGPROFMSG("Creating " << filename << endl;);
 	if ((fp = fopen (filename, "w+")) == NULL) {
+	 	errormsg = new char[1024];
 		sprintf(errormsg,"Error: Could not create %s",filename);
 		perror(errormsg);
 		return 0;
@@ -399,21 +402,29 @@ int Profiler::StoreData(int tid)
 	    numFunc++;
 	  }
 	}
+	header = new char[256];
 
 #ifdef SGI_HW_COUNTERS
-	fprintf(fp,"%d templated_functions_hw_counters\n", numFunc);
+	sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
 #else  // SGI_TIMERS, TULIP_TIMERS 
-	fprintf(fp,"%d templated_functions\n", numFunc);
+	sprintf(header,"%d templated_functions\n", numFunc);
 #endif // SGI_HW_COUNTERS 
 
 	// Send out the format string
-	fprintf(fp,"# Name Calls Subrs Excl Incl ");
+	strcat(header,"# Name Calls Subrs Excl Incl ");
 #ifdef PROFILE_STATS
-	fprintf(fp,"SumExclSqr ");
+	strcat(header,"SumExclSqr ");
 #endif //PROFILE_STATS
-	fprintf(fp,"ProfileCalls\n");
-	
-	
+	strcat(header,"ProfileCalls\n");
+	int sz = strlen(header);
+	int ret = fprintf(fp, "%s",header);	
+	ret = fflush(fp);
+	/*
+	if (ret != sz) {
+	  cout <<"ret not equal to strlen "<<endl;
+ 	}
+        cout <<"Header: "<<RtsLayer::myThread() << " : bytes " <<ret <<":"<<header ;
+	*/
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
           if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) { 
@@ -460,6 +471,7 @@ int Profiler::StoreData(int tid)
 	  } // ProfileGroup test 
 	} // for loop. End of FunctionInfo data
 	fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
+	RtsLayer::UnLockDB();
 	// Change this when aggregate profiling in introduced in Pooma 
 
 	// Print UserEvent Data if any
@@ -638,8 +650,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 1998/08/14 15:35:43 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.14 1998/08/14 15:35:43 sameer Exp $ 
+ * $Revision: 1.15 $   $Date: 1998/08/27 19:26:14 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.15 1998/08/27 19:26:14 sameer Exp $ 
  ***************************************************************************/
 
 	
