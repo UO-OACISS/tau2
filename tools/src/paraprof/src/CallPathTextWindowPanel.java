@@ -351,7 +351,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
 		g2D.drawString("Name[id]", namePos, yCoord);
 		yCoord = yCoord + (spacing);
-		g2D.drawString("--------------------------------------------------------------------------------", incPos, yCoord);
+		g2D.drawString("--------------------------------------------------------------------------------", excPos, yCoord);
 		yCoord = yCoord + (spacing);
 		l1 = cPTWindow.getDataIterator();
 		while(l1.hasNext()){
