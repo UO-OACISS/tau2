@@ -219,6 +219,11 @@ do
       ptdir=`echo $arg | sed -e 's/-pthread=//'`
     shift
     ;;
+ 
+  -pthread)
+      pthread=yes
+    shift
+    ;;
 
   -pcxxopt=*)
     pcxxopt=`echo $arg | sed -e 's/-pcxxopt=//' -e 's/ /_/g'`

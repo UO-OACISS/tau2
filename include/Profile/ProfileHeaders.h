@@ -47,11 +47,14 @@ using std::string;
 #include <vector>
 #include <utility>
 #include <list>
+#include <map>
 using std::vector;
 using std::pair;
 using std::list;
+using std::map;
 #else
 #include <vector.h>
+#include <map.h>
 #if ((!defined(POOMA_KAI)) && (!defined(TAU_STDCXXLIB)))
 #include <pair.h>
 #else
@@ -63,6 +66,6 @@ using std::list;
 #endif /* _PROFILE_HEADERS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileHeaders.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:16:32 $
- * POOMA_VERSION_ID: $Id: ProfileHeaders.h,v 1.1 1998/04/24 00:16:32 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/07/10 20:11:29 $
+ * POOMA_VERSION_ID: $Id: ProfileHeaders.h,v 1.2 1998/07/10 20:11:29 sameer Exp $ 
  ***************************************************************************/

@@ -791,7 +791,6 @@ inline const charT*
 basic_string<charT>::data () const _THROW_NONE
 {
     if (length()) {
-        reference->ptr[length()] = '\0';
         return reference->ptr;
     }
     else

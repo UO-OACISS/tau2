@@ -38,8 +38,10 @@
 
 #include <Profile/ProfileHeaders.h>
 
+#include <Profile/PthreadLayer.h>
 
 #include <Profile/RtsLayer.h>
+
 
 #include <Profile/FunctionInfo.h>
 			  
@@ -63,14 +65,14 @@ public:
 	Profiler(FunctionInfo * fi, unsigned int ProfileGroup = TAU_DEFAULT, 
 	  bool StartStop = false);
 
-	void Start();
+	void Start(void);
 	Profiler(const Profiler& X);
 	Profiler& operator= (const Profiler& X);
 	// Clean up data from this invocation.
-	void Stop();
+	void Stop(void);
 	~Profiler();
   	static void ProfileExit(const char *message=0);
-	int StoreData(void); 
+	int StoreData(int tid); 
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
@@ -105,6 +107,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 1998/05/14 22:08:03 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.12 1998/05/14 22:08:03 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 1998/07/10 20:11:31 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.13 1998/07/10 20:11:31 sameer Exp $ 
  ***************************************************************************/

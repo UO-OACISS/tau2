@@ -42,6 +42,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#define STORAGE(type, variable) map<int, type> variable 
+#define NOTHREADSTORAGE(type, variable) type variable[1]
+
+
 class FunctionInfo
 {
 public:
@@ -68,15 +72,15 @@ public:
         
 
 	// Tell it about a function call finishing.
-	inline void ExcludeTime(double t);
-	// Removing void IncludeTime(double t);
+	inline void ExcludeTime(double t, int tid);
+	// Removing void IncludeTime(double t, int tid);
  	// and replacing with 
-        inline void AddInclTime(double t);
-	inline void AddExclTime(double t);
-	inline void IncrNumCalls(void);
-        inline void IncrNumSubrs(void);
-	inline bool GetAlreadyOnStack(void);
-	inline void SetAlreadyOnStack(bool value);  
+        inline void AddInclTime(double t, int tid);
+	inline void AddExclTime(double t, int tid);
+	inline void IncrNumCalls(int tid);
+        inline void IncrNumSubrs(int tid);
+	inline bool GetAlreadyOnStack(int tid);
+	inline void SetAlreadyOnStack(bool value, int tid);  
 
 	// A container of all of these.
 	// The ctor registers with this.
@@ -104,14 +108,26 @@ private:
 
 	// A record of the information unique to this function.
 	// Statistics about calling this function.
-	long NumCalls;
-	long NumSubrs;
-	double ExclTime;
-	double InclTime;
-	bool AlreadyOnStack; 
+#ifdef PTHREADS
+	STORAGE(long, NumCalls);
+	STORAGE(long, NumSubrs);
+	STORAGE(double, ExclTime);
+	STORAGE(double, InclTime);
+	STORAGE(bool, AlreadyOnStack);
 #ifdef PROFILE_STATS
-	double SumExclSqr;
-#endif // PROFILE_STATS
+	STORAGE(double, SumExclSqr);
+#endif //PROFILE_STATS 
+#else 
+	NOTHREADSTORAGE(long, NumCalls);
+	NOTHREADSTORAGE(long, NumSubrs);
+	NOTHREADSTORAGE(double, ExclTime);
+	NOTHREADSTORAGE(double, InclTime);
+	NOTHREADSTORAGE(bool, AlreadyOnStack);
+#ifdef PROFILE_STATS
+	NOTHREADSTORAGE(double, SumExclSqr);
+#endif //PROFILE_STATS 
+#endif // PTHREADS
+	// Expands macro as map<int, long> NumCalls; etc. 
 
 public:
 	string Name;
@@ -123,71 +139,74 @@ public:
 	const char* GetType() const { return Type.c_str(); }
 	const char* GetPrimaryGroup() const { return GroupName.c_str(); }
 	long GetFunctionId() const { return FunctionId; }
-	long GetCalls() const { return NumCalls; }
-	long GetSubrs() const { return NumSubrs; }
-	double GetExclTime() const { return ExclTime; }
-	double GetInclTime() const { return InclTime; }
+	long GetCalls(int tid) { return NumCalls[tid]; }
+	long GetSubrs(int tid) { return NumSubrs[tid]; }
+	double GetExclTime(int tid) { return ExclTime[tid]; }
+	double GetInclTime(int tid) { return InclTime[tid]; }
 	unsigned int GetProfileGroup() const {return MyProfileGroup_; }
 #ifdef PROFILE_STATS 
-	double GetSumExclSqr() const { return SumExclSqr; }
-	void AddSumExclSqr(double ExclSqr) { SumExclSqr += ExclSqr; }
+	double GetSumExclSqr(int tid) { return SumExclSqr[tid]; }
+	void AddSumExclSqr(double ExclSqr, int tid) 
+	  { SumExclSqr[tid] += ExclSqr; }
 #endif // PROFILE_STATS 
 
 private:
 	unsigned int MyProfileGroup_;
 };
 
+// Global variables
 vector<FunctionInfo*>& TheFunctionDB(int threadid=RtsLayer::myThread()); 
+int& TheSafeToDumpData(void);
 
 //
 // For efficiency, make the timing updates inline.
 //
 inline void 
-FunctionInfo::ExcludeTime(double t)
+FunctionInfo::ExcludeTime(double t, int tid)
 { // called by a function to decrease its parent functions time
-	ExclTime -= t; // exclude from it the time spent in child function
+	ExclTime[tid] -= t; // exclude from it the time spent in child function
 }
 	
 
 inline void 
-FunctionInfo::AddInclTime(double t)
+FunctionInfo::AddInclTime(double t, int tid)
 {
-  	InclTime += t; // Add Inclusive time
+  	InclTime[tid] += t; // Add Inclusive time
 }
 
 inline void
-FunctionInfo::AddExclTime(double t)
+FunctionInfo::AddExclTime(double t, int tid)
 {
- 	ExclTime += t; // Add Total Time to Exclusive time (-ve)
+ 	ExclTime[tid] += t; // Add Total Time to Exclusive time (-ve)
 }
 
 inline void
-FunctionInfo::IncrNumCalls(void)
+FunctionInfo::IncrNumCalls(int tid)
 {
-	NumCalls++; // Increment number of calls
+	NumCalls[tid] ++; // Increment number of calls
 } 
 
 
 inline void
-FunctionInfo::IncrNumSubrs(void)
+FunctionInfo::IncrNumSubrs(int tid)
 {
-  NumSubrs++;  // increment # of subroutines
+  	NumSubrs[tid] ++;  // increment # of subroutines
 }
 
 inline void
-FunctionInfo::SetAlreadyOnStack(bool value)
+FunctionInfo::SetAlreadyOnStack(bool value, int tid)
 {
-	AlreadyOnStack = value;
+	AlreadyOnStack[tid] = value;
 }
 
 inline bool
-FunctionInfo::GetAlreadyOnStack(void)
+FunctionInfo::GetAlreadyOnStack(int tid)
 {
-	return AlreadyOnStack;
+	return AlreadyOnStack[tid];
 }
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:23:34 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.1 1998/04/24 00:23:34 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/07/10 20:11:27 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.2 1998/07/10 20:11:27 sameer Exp $ 
  ***************************************************************************/

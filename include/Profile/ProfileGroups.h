@@ -48,8 +48,8 @@
 #define TAU_COMMUNICATION 	0x00004000   /* A++ Commm     'c' */
 #define TAU_DESCRIPTOR_OVERHEAD 0x00008000   /* A++ Descriptor Overhead   'de' */
 #define TAU_BLITZ		0x00010000   /* Blitz++       'b' */
+#define TAU_HPCXX		0x00020000   /* HPC++ 	      'h' */
 /*
-SPACE for 			0x00020000
 SPACE for 			0x00040000
 SPACE for 			0x00080000
 */
@@ -70,6 +70,6 @@ SPACE for 			0x00080000
 #endif /* _PROFILE_GROUPS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileGroups.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:14:50 $
- * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.1 1998/04/24 00:14:50 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/07/10 20:11:30 $
+ * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.2 1998/07/10 20:11:30 sameer Exp $ 
  ***************************************************************************/

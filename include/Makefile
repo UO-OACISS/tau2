@@ -33,7 +33,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/research/parallel/sameer/gar/research/tau2
+TAUROOT=/users/sameer/rs/tau2
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		  #ENDIF#
@@ -64,15 +64,17 @@ LSX = .a
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI#PROFILEOPT12	       = 		       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiation=used #ENDIF#
-#SGICC#PROFILEOPT14	       = -ptused 	       #ENDIF#
+#SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
+#PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS           #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
+#PTHREAD_AVAILABLE#LEXTRA      += -lpthread	       #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
 	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
-	      $(PROFILEOPT13) $(PROFILEOPT14) $(TRACEOPT)
+	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################

@@ -51,6 +51,8 @@ class RtsLayer
 	static unsigned int& TheProfileMask(void);
 	
 	static int& TheNode(void);
+  
+	static int& TheContext(void);
 
  	static unsigned int enableProfileGroup(unsigned int ProfileGroup) ;
 
@@ -83,6 +85,8 @@ class RtsLayer
 
 	static int 	setMyNode(int NodeId);
 
+	static int 	setMyContext(int ContextId);
+
 	// For tracing 
 	static int 	DumpEDF(void); 
 
@@ -90,17 +94,51 @@ class RtsLayer
 	static int myNode()  { return TheNode();}
 
 	// Return the number of the 'current' context.
-	static int myContext() { return 0; }
+	static int myContext() { return TheContext(); }
 
 	// Return the number of the 'current' thread. 0..TAU_MAX_THREADS-1
 	inline
-	static int myThread() { return 0; }
+	static int myThread() 
+	{ 
+#ifdef PTHREADS
+	  return PthreadLayer::GetThreadId();
+#else  // if no other thread package is available
+	return 0; 
+#endif // PTHREADS 
+        }
+	inline
+	static void RegisterThread()
+	{
+#ifdef PTHREADS
+	  PthreadLayer::RegisterThread();
+#endif // PTHREADS
+	  return;
+	} 
+
+	// This ensure that the FunctionDB (global) is locked while updating
+ 	inline 
+	static void LockDB(void)
+	{
+#ifdef PTHREADS
+	  PthreadLayer::LockDB(); 
+#endif // PTHREADS
+	  return ; // do nothing if threads are not used
+ 	}
+	
+	inline
+	static void UnLockDB(void)
+	{
+#ifdef PTHREADS
+	  PthreadLayer::UnLockDB();
+#endif // PTHREADS
+	  return; 
+	}
 
 }; 
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/04/26 07:32:42 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.2 1998/04/26 07:32:42 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 1998/07/10 20:11:33 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.3 1998/07/10 20:11:33 sameer Exp $ 
  ***************************************************************************/
