@@ -8,7 +8,7 @@ package dms.dss;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.6 2003/08/27 17:07:38 khuck Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.7 2003/10/13 17:45:35 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -20,6 +20,7 @@ package dms.dss;
 public class Experiment {
 	private int experimentID;
 	private int applicationID;
+        private String name;
 	private String systemInfo;
 	private String configurationInfo;
 	private String instrumentationInfo;
@@ -42,6 +43,15 @@ public class Experiment {
  */
 	public int getApplicationID() {
 		return applicationID;
+	}
+
+/**
+ * Gets the name of the current experiment object.
+ *
+ * @return	the name of the experiment
+ */
+	public String getName() {
+		return name;
 	}
 	
 /**
@@ -110,6 +120,17 @@ public class Experiment {
  */
 	public void setApplicationID (int applicationID) {
 		this.applicationID = applicationID;
+	}
+
+/**
+ * Sets the name of the current experiment object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	name the experiment name
+ */
+	public void setName(String name) {
+		this.name = name;
 	}
 
 /**
