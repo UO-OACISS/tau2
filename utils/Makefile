@@ -13,15 +13,17 @@
  
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=sgi8k
-CONFIG_CC=cc
-CONFIG_CXX=CC
+CONFIG_CC=gcc
+CONFIG_CXX=KCC
 PCXX_OPT=-g
-USER_OPT=-64
+USER_OPT=-g
 #######################################################################
  
+#MIPSR8K#ISA          = -mips4		   #ENDIF#
+
 ############# Standard Defines ##############
-CC = $(CONFIG_CC)
-CXX = $(CONFIG_CXX)
+CC = $(CONFIG_CC) $(ABI) $(ISA)
+CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 INSTALL = /bin/cp
 SHELL = /bin/sh
 LSX = .a
@@ -65,14 +67,14 @@ LDFLAGS	      = $(PCXX_OPT)
 
 MAKEFILE      = Makefile
 
-OBJS	      = pprof.o 
+OBJS	      = pprof.o  tau_events.o tau_merge.o
 
 PRINT	      = pr
 
 SRCS	      = pcxx_merge.c \
 		pcxx_convert.c
 
-EXECUTABLES =	pprof $(RUNTIME1) $(RUNTIME2) $(RUNTIME3) \
+EXECUTABLES =	pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
 		$(RUNTIME4) $(RUNTIME5)
 
 all:		$(EXECUTABLES)
@@ -90,6 +92,18 @@ pcxx2ar : pcxx2ar.c $(EVHEADER)
 		   -I$(SAGE1DIR)/tulip/include \
 		   pcxx2ar.c -o pcxx2ar
 
+tau_convert: 	tau_convert.c 
+		$(CXX) $(CFLAGS) -w tau_convert.c -o tau_convert -lm $(LEXTRA)
+
+tau_merge: 	tau_merge.o tau_events.o
+		$(CXX) $(CFLAGS) -w tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
+
+tau_merge.o: 	tau_merge.c
+		$(CXX) $(CFLAGS) -w -c tau_merge.c
+
+tau_events.o: 	tau_events.cpp
+		$(CXX) $(CFLAGS) -w -c tau_events.cpp
+
 ar2pcxx : ar2pcxx.c 
 		$(LINKER) ar2pcxx.c -o $@
 
@@ -103,6 +117,18 @@ index:
 		ctags -wx $(HDRS) $(SRCS)
 
 $(INSTALLDEST)/pprof: pprof
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(INSTALL) $? $(INSTALLDEST)
+
+$(INSTALLDEST)/tau_merge: tau_merge
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(INSTALL) $? $(INSTALLDEST)
+
+$(INSTALLDEST)/tau_convert: tau_convert
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
@@ -142,7 +168,7 @@ $(INSTALLDEST)/$(RUNTIME5): $(RUNTIME5)
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLPCXX)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX)
 
 program:        $(PROGRAM)
 
