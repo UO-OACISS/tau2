@@ -84,6 +84,8 @@ extern "C" void Tau_stop_timer(void * function_info);
 
 #define TAU_DB_DUMP() Profiler::DumpData();
 #define TAU_DB_PURGE() Profiler::PurgeData();
+#define TAU_GET_FUNC_NAMES(functionList, num) Profiler::theFunctionList(&functionList, &num);
+#define TAU_DUMP_FUNC_NAMES() Profiler::dumpFunctionNames();
 
 // UserEvents
 #define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
@@ -134,6 +136,8 @@ extern "C" void Tau_stop_timer(void * function_info);
 #define TAU_PROFILE_CALLSTACK()    
 #define TAU_DB_DUMP()
 #define TAU_DB_PURGE()
+#define TAU_GET_FUNC_NAMES(functionList, num)
+#define TAU_DUMP_FUNC_NAMES()
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
@@ -178,7 +182,7 @@ extern "C" void Tau_stop_timer(void * function_info);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 2002/01/30 22:27:46 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.17 2002/01/30 22:27:46 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: bertie $
+ * $Revision: 1.18 $   $Date: 2002/03/22 19:23:18 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.18 2002/03/22 19:23:18 bertie Exp $ 
  ***************************************************************************/

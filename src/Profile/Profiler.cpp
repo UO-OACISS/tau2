@@ -473,6 +473,80 @@ void Profiler::ProfileExit(const char *message, int tid)
 
 //////////////////////////////////////////////////////////////////////
 
+void Profiler::theFunctionList(const char ***inPtr, int *numOfFunctions, bool addName = false, const char * inString = NULL)
+{
+  //static const char *const functionList[START_SIZE];
+  static int numberOfFunctions = 0;
+  static int sizeOfArray = 2;
+  static const char **functionList = ( char const **) malloc( sizeof(char *) * 2);
+
+  if(addName){
+    //Note that the add only occurs when a thread is initializing a FunctionInfo
+    //object.  As such, we already have a lock in progress.
+    if(numberOfFunctions == sizeOfArray){
+      //Increase the size of the array.
+      sizeOfArray *= 2;
+      functionList = (const char **) realloc(functionList, sizeof(char *) * sizeOfArray);
+    }
+
+    functionList[numberOfFunctions] = inString;
+    numberOfFunctions++;
+  }
+  else{
+    //We do not want to pass back internal pointers.
+    *inPtr = ( char const **) malloc( sizeof(char *) * numberOfFunctions);
+
+    for(int i=0;i<numberOfFunctions;i++)
+      (*inPtr)[i] = functionList[i]; //Need the () in (*inPtr)[i] or the dereferrencing is
+    //screwed up!
+
+    *numOfFunctions = numberOfFunctions;
+  }
+}
+
+void Profiler::dumpFunctionNames()
+{
+  char *filename, *dumpfile, *errormsg;
+  char *dirname;
+  FILE* fp;
+
+  int numOfFunctions;
+  const char ** functionList;
+
+  Profiler::theFunctionList(&functionList, &numOfFunctions);
+
+  if ((dirname = getenv("PROFILEDIR")) == NULL) {
+    // Use default directory name .
+    dirname  = new char[8];
+    strcpy (dirname,".");
+  }
+
+  //Create temp write to file.
+  filename = new char[1024];
+  sprintf(filename,"%s/temp.%d.%d",dirname, RtsLayer::myNode(),
+	  RtsLayer::myContext());
+  if ((fp = fopen (filename, "w+")) == NULL) {
+    errormsg = new char[1024];
+    sprintf(errormsg,"Error: Could not create %s",filename);
+    perror(errormsg);
+    return;
+  }
+
+  //Write data, and close.
+  fprintf(fp, "number of functions %d\n", numOfFunctions);
+  for(int i =0;i<numOfFunctions;i++){
+    fprintf(fp, "%s\n", functionList[i]);
+  }
+  fclose(fp);
+
+  
+  //Rename from the temp filename.
+  sprintf(dumpfile,"%s/dump_filenames_n,c-.%d.%d",dirname, RtsLayer::myNode(),
+                RtsLayer::myContext());
+  rename(filename, dumpfile);
+}
+
+
 #ifndef TAU_MULTIPLE_COUNTERS
 int Profiler::StoreData(int tid)
 {
@@ -1476,9 +1550,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.64 $   $Date: 2002/03/16 02:16:25 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.64 2002/03/16 02:16:25 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: bertie $
+ * $Revision: 1.65 $   $Date: 2002/03/22 19:20:52 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.65 2002/03/22 19:20:52 bertie Exp $ 
  ***************************************************************************/
 
 	
