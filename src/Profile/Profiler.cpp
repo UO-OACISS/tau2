@@ -307,18 +307,19 @@ Profiler::Profiler( const Profiler& X)
   StartTime = X.StartTime;
 #else //TAU_MULTIPLE_COUNTERS
 
-#ifdef TAU_PROFILEPHASE
-      SetPhase(X.GetPhase()); 
-#endif /* TAU_PROFILEPHASE */ 
-
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
     StartTime[i] = X.StartTime[i];
   }
 #endif//TAU_MULTIPLE_COUNTERS
 
-  DEBUGPROFMSG("Profiler::Profiler(const Profiler& X)"<<endl;);
+#ifdef TAU_PROFILEPHASE
+  PhaseFlag = X.PhaseFlag;
+#endif /* TAU_PROFILEPHASE */ 
 
-	CurrentProfiler[RtsLayer::myThread()] = this;
+
+  DEBUGPROFMSG("Profiler::Profiler(const Profiler& X)"<<endl;);
+  
+  CurrentProfiler[RtsLayer::myThread()] = this;
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall = X.ExclTimeThisCall;
@@ -2736,9 +2737,9 @@ void Profiler::SetPhase(bool flag)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.106 $   $Date: 2005/01/11 00:45:40 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.106 2005/01/11 00:45:40 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.107 $   $Date: 2005/01/13 02:32:34 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.107 2005/01/13 02:32:34 amorris Exp $ 
  ***************************************************************************/
 
 	
