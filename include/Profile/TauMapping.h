@@ -65,24 +65,29 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 /*
 This error should be reported when FuncInfoVar is NULL
 	  //printf("ERROR: TAU_MAPPING_LINK map returns NULL FunctionInfo *\n"); \
+There's no error when FunctionInfo * is NULL. A region may not be active.
 */
+/* OLD --> did a return. Instead Profiler should check for Null. */
+/*
 #define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); \
 	if (FuncInfoVar == (FunctionInfo *)NULL) { \
  	  return; \
         } 
+*/
+#define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); 
 
 /* TAU_MAPPING_PROFILE profiles the entire routine by creating a profiler objeca
    and this behaves pretty much like TAU_PROFILE macro, except this gives in the
    FunctionInfo object pointer instead of name and type strings. 
 */
-#define TAU_MAPPING_PROFILE(FuncInfoVar) Profiler FuncInfoVar##Prof(FuncInfoVar, FuncInfoVar->GetProfileGroup(), false);
+#define TAU_MAPPING_PROFILE(FuncInfoVar) Profiler FuncInfoVar##Prof(FuncInfoVar, FuncInfoVar != (FunctionInfo *) 0 ? FuncInfoVar->GetProfileGroup() : TAU_DEFAULT, false);
 
 /* TAU_MAPPING_PROFILE_TIMER acts like TAU_PROFILE_TIMER by creating a profiler
    object that can be subsequently used with TAU_PROFILE_START and 
    TAU_PROFILE_STOP
 */
 #define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid) Profiler *Timer; \
-   Timer = new Profiler(FuncInfoVar, FuncInfoVar->GetProfileGroup(), true, tid); \
+   Timer = new Profiler(FuncInfoVar,  FuncInfoVar != (FunctionInfo *) 0 ? FuncInfoVar->GetProfileGroup() : TAU_DEFAULT, true, tid); \
    if (Timer == (Profiler *) NULL) {\
      printf("ERROR: TAU_MAPPING_PROFILE_TIMER: new returns NULL Profiler *\n");\
    }
