@@ -12,7 +12,6 @@
  * Revision Jan 1998 Author Sameer Shende, (sameer@cs.uoregon.edu)
  */
 
-//# include <Profile/aix.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <sys/types.h>
