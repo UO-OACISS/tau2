@@ -306,7 +306,13 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 	    tmpStr = st1.nextToken().trim();
 	    boolean typeDouble = false;
 	    //		if (tmpStr.indexOf(".") > -1) {
-	    dEventValue = Double.parseDouble(tmpStr); // callsite index
+	    
+	    try {
+		dEventValue = Double.parseDouble(tmpStr); // callsite index
+	    } catch (NumberFormatException e) {
+		dEventValue = 0;
+	    }
+
 	    typeDouble = true;
 	    //		} else {
 	    //		iEventValue = Integer.parseInt(tmpStr); // callsite index
