@@ -81,10 +81,13 @@ fork		- Illustrates how to register a forked process with TAU. TAU
 		  place. 
 
 
-
-
-
-
-			
+mapping		- Illustrates two examples in the embedded and external 
+                  subdirecto ries. These correspond to profiling at the object 
+                  level, where the time spent in a method is displayed for a 
+                  specific object. There are two ways to achieve this using an 
+                  embedded association, that requires an extension of the class 
+                  definition with a TAU pointer and a second scheme of external                   hash-table lookup that relies on looking at the object 
+                  address at each method invocation. Both these examples 
+                  illustrate the use of the TAU Mapping API.
 
 
