@@ -1,0 +1,40 @@
+This directory contains an illustration of the TAU mapping API and how we can 
+use it to relate the performance data on a per-object basis. In this simple
+demonstration, there is a class (Myclass) with a method (Run()) that we wish
+to track for different instances of the class. There are objects x, y, z that 
+are created and an object a (which is a special object that we wish to track). 
+The macros can be placed in two ways. In the first case, the mappings are 
+"embedded", or the class definition is extended by embedded the TAU timer in it.
+In the second case, an "external" association is used, in which case, there's 
+no need for any extensions to the class definition. In both cases, we profile
+the method as well (so we can see the aggregate time spent in both cases). 
+For the sake of simplicity, the Run method uses a "sleep(2)" delay. So, we can
+see the contribution (inclusive time) of "MyClass::Run() for object a" to be 
+2 secs as shown below:
+
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.213        6,021           1           3    6021741 main() int (int, char **)
+100.0        6,021        6,021           3           0    2007173 MyClass::Run()  void (void)
+ 33.2        0.009        2,001           1           1    2001652 MyClass::Run() for object a  
+
+
+For external association, we use the object address as a key for mapping data. Here, we show the performance data for the MyClass::Run() method for two different
+objects "a" and "x". 
+
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0         0.22        6,028           1           3    6028623 main() int (int, char **)
+100.0        6,028        6,028           3           0    2009463 MyClass::Run()  void (void)
+ 33.3        0.004        2,009           1           1    2009990 MyClass::Run() for object x  
+ 33.3        0.009        2,008           1           1    2008423 MyClass::Run() for object a  
+
