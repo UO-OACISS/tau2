@@ -1,0 +1,115 @@
+/****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.acl.lanl.gov/tau		           **
+*****************************************************************************
+**    Copyright 1997  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+****************************************************************************/
+/***************************************************************************
+**	File 		: Profiler.h					  **
+**	Description 	: TAU Profiling Package API			  **
+**	Author		: Sameer Shende					  **
+**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
+**	Flags		: Compile with				          **
+**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
+**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
+**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
+**			  -DPROFILE_CALLS  for trace of each invocation   **
+**			  -DSGI_TIMERS  for SGI fast nanosecs timer	  **
+**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
+**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
+**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
+**			  -DPOOMA_KAI for KCC compiler 			  **
+**			  -DDEBUG_PROF  for internal debugging messages   **
+**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	Documentation	: See http://www.acl.lanl.gov/tau	          **
+***************************************************************************/
+
+#ifndef _TAU_API_H_
+#define _TAU_API_H_
+
+#if (defined(PROFILING_ON) || defined(TRACING_ON) )
+
+//////////////////////////////////////////////////////////////////////
+// TAU PROFILING API MACROS. 
+// To ensure that Profiling does not add any runtime overhead when it 
+// is turned off, these macros expand to null.
+//////////////////////////////////////////////////////////////////////
+#define TAU_TYPE_STRING(profileString, str) static string profileString(str);
+#define TAU_PROFILE(name, type, group) \
+	static FunctionInfo tauFI(name, type, group, #group); \
+	Profiler tauFP(&tauFI, group); 
+#define TAU_PROFILE_TIMER(var, name, type, group) \
+	static FunctionInfo var##fi(name, type, group, #group); \
+	Profiler var(&var##fi, group, true); 
+
+// Construct a Profiler obj and a FunctionInfo obj with an extended name
+// e.g., FunctionInfo loop1fi(); Profiler loop1(); 
+#define TAU_PROFILE_START(var) var.Start();
+#define TAU_PROFILE_STOP(var)  var.Stop();
+#define TAU_PROFILE_STMT(stmt) stmt;
+#define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
+#define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
+#define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
+#ifdef PROFILE_CALLSTACK
+#define TAU_PROFILE_CALLSTACK()    Profiler::CallStackTrace();
+#else
+#define TAU_PROFILE_CALLSTACK() 
+#endif /* PROFILE_CALLSTACK */
+
+#ifdef NO_RTTI
+#define CT(obj) string(#obj)
+#else // RTTI is present
+#define CT(obj) string(RtsLayer::CheckNotNull(typeid(obj).name())) 
+#endif //NO_RTTI
+
+// Use DEBUGPROFMSG macro as in 
+// DEBUGPROF("Node" << RtsLayer::myNode() << " Message " << endl;);
+// We're deliberately not using *PoomaInfo::Debug because some profiling
+// debug messages come from the destructor of Profiler in main and by then
+// PoomaInfo object may have been destroyed.
+
+#else /* PROFILING_ON */
+/* In the absence of profiling, define the functions as null */
+#define TYPE_STRING(profileString, str)
+#define PROFILED_BLOCK(name, type) 
+
+#define TAU_TYPE_STRING(profileString, str) 
+#define TAU_PROFILE(name, type, group) 
+#define TAU_PROFILE_TIMER(var, name, type, group)
+#define TAU_PROFILE_START(var)
+#define TAU_PROFILE_STOP(var)
+#define TAU_PROFILE_STMT(stmt) 
+#define TAU_PROFILE_EXIT(msg)
+#define TAU_PROFILE_INIT(argc, argv)
+#define TAU_PROFILE_SET_NODE(node)
+#define TAU_PROFILE_CALLSTACK()    
+#define CT(obj)
+
+#endif /* PROFILING_ON */
+
+#ifdef TRACING_ON
+#define TAU_TRACE_SENDMSG(type, destination, length) \
+	RtsLayer::TraceSendMsg(type, destination, length); 
+#define TAU_TRACE_RECVMSG(type, source, length) \
+	RtsLayer::TraceRecvMsg(type, source, length); 
+
+#else /* TRACING_ON */
+#define TAU_TRACE_SENDMSG(type, destination, length) 
+#define TAU_TRACE_RECVMSG(type, source, length)
+#endif /* TRACING_ON */
+
+
+#ifdef DEBUG_PROF
+#define DEBUGPROFMSG(msg) { cout<< msg; }
+#else
+#define DEBUGPROFMSG(msg) 
+#endif // DEBUG_PROF
+
+#endif /* _TAU_API_H_ */
+/***************************************************************************
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.1 $   $Date: 1998/04/24 00:18:43 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.1 1998/04/24 00:18:43 sameer Exp $ 
+ ***************************************************************************/
