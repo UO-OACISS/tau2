@@ -121,6 +121,8 @@ mpi=no
 mpiinc=
 mpilib=
 mpilibrary=no
+additional_mpiincs=
+additional_mpilibs=
 pythoninc=
 python=no
 extradir=
@@ -179,6 +181,7 @@ dyninst=no
 java=no
 openmp=no
 ibmxlc=no
+ibmxlc_r=no
 fortran_compiler=no
 
 # debug:
@@ -196,31 +199,50 @@ do
       then
         c_compiler=$myarg
       else
-      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', 'xlc', 'ecc', 'icc' and 'pgcc' "
-#      exit 1
+        testxlc=`echo $myarg | sed -e 's/xlc//'`
+        if [ "y$testxlc" = "y$myarg" ]
+        then
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc' and 'pgcc' "
+#       exit 1
+        else
+          c_compiler=$myarg
+        fi
     fi
     shift
     ;;
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc' and 'c++'"
-#      exit 1
+        testxlc=`echo $myarg | sed -e 's/xlC//'`
+	if [ "y$testxlc" = "y$myarg" ]
+        then
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc' and 'c++'"
+#       exit 1
+        else
+          cxx_compiler=$myarg
+        fi
     fi
     shift
     ;;
 
   -pdt_c++=*)
     myarg=`echo $arg | sed 's/-pdt_c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ ]
       then
         pdt_cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC' and 'c++'"
+        testxlc=`echo $myarg | sed -e 's/xlC//'`
+        if [ "y$testxlc" = "y$myarg" ]
+        then
+          echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC' and 'c++'"
+#       exit 1
+        else
+          pdt_cxx_compiler=$myarg
+        fi
     fi
     shift
     ;;
@@ -1041,13 +1063,21 @@ case $cxx_compiler in
       fi
       ;;
 
-   xlC)
+   *xlC*)
       echo "Default C++ compiler will be IBMs xlC C++ compiler"
       fixmakeargs="$fixmakeargs USE_IBMXLC"
       ibmxlc=yes
       if [ $fortran_compiler = no ] 
       then
         fixmakeargs="$fixmakeargs IBM_FORTRAN"
+      fi
+      threadtest=`echo $cxx_compiler | sed -e 's/_r//'`
+      if [ "y$threadtest" = "y$cxxcompiler" ]
+      then
+	echo "Not using the threaded version of IBM compiler"
+      else
+	ibmxlc_r=yes
+	echo "Using threaded version of the IBM compiler"
       fi
       ;;
 
@@ -1308,6 +1338,10 @@ then
   case $machine in 
   rs6000)
 	mpiinc=/usr/lpp/ppe.poe/include
+        if [ $ibmxlc_r = yes ] 
+        then
+          additional_mpiincs='-I/usr/lpp/ssp/css/include'
+        fi
         ;;
   linux) 
 	mpiinc=/usr/local/packages/mpich/include
@@ -1326,7 +1360,7 @@ then
   if [ -d $mpiinc ]
   then
     #echo "Include dir found. adding -I$mpiinc to INC"
-    mpiincargs="$mpiincargs -I$mpiinc"
+    mpiincargs="$mpiincargs -I$mpiinc $additional_mpiincs"
     mpiincargs=`echo $mpiincargs | sed  -e 's/ /#/g'`
     fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs"
   fi
@@ -1337,6 +1371,10 @@ then
   case $machine in 
   rs6000) 
 	mpilib=/usr/lpp/ppe.poe/lib
+        if [ $ibmxlc_r = yes ] 
+        then
+          additional_mpilibs='-L/usr/lpp/ppe.poe/lib/threads -L/usr/lpp/ppe.poe/lib/ip -L/usr/lpp/ssp/css/lib -lvtd_r -llapi_r'
+        fi
 	;;
   linux) 
 	mpilib=/usr/local/packages/mpich
@@ -1415,6 +1453,13 @@ then
 	  mpilibrary='-lmpi -lmpi++'
 	# SGI MPT
 	fi
+
+        # See if threaded MPI should be used on AIX
+        if [ $ibmxlc_r = yes -a -r $mpilib/libmpi_r.a ]
+        then 
+          mpilibrary="-lmpi_r $additional_mpilibs"
+	 # echo "mpilibrary=$mpilibrary"
+        fi
       fi
       if [ -r $mpilib/libpmpi.a -o -r $mpilib/libpmpi.so ] 
       then 

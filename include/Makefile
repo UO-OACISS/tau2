@@ -287,6 +287,20 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #EPILOGOMPI#TAU_MPI_WRAPPER_LIB= #ENDIF#
 
 ##############################################
+# Flags to build a shared object: TAU_SHFLAGS
+#GNU#AR_SHFLAGS                 = -shared       #ENDIF#
+#PGI#AR_SHFLAGS                 = -shared       #ENDIF#
+#SGICC#AR_SHFLAGS               = -shared       #ENDIF#
+#APPLECXX#AR_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
+#SOL2#AR_SHFLAGS                = -G            #ENDIF#
+#USE_IBMXLC#AR_SHFLAGS          = -G                #ENDIF#
+#USE_DECCXX#AR_SHFLAGS          = -shared               #ENDIF#
+#USE_INTELCXX#AR_SHFLAGS        = -shared               #ENDIF#
+#ACC#AR_SHFLAGS                 = -b            #ENDIF#
+TAU_SHFLAGS = $(AR_SHFLAGS) -o
+
+
+##############################################
 # PDT OPTIONS
 PDTARCHDIR=$(CONFIG_ARCH)
 #PDTARCH#PDTARCHDIR=$(CONFIG_ARCH)/$(PDTCOMPDIR)#ENDIF#
@@ -339,7 +353,7 @@ TAU_LIBS	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TA
 
 TAU_SHLIBS	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTAUsh$(TAU_OPTIONS) $(TAU_LINKER_OPTS) 
 
-#USE_IBMXLC#TAU_SHLIBS	= $(TAUHELPER) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/libTAUsh$(TAU_OPTIONS).so $(TAU_LINKER_OPTS) #ENDIF#
+#USE_IBMXLC#TAU_SHLIBS	= -brtl $(TAUHELPER) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/libTAUsh$(TAU_OPTIONS).so $(TAU_LINKER_OPTS) -bexpall #ENDIF#
 
 TAU_DISABLE	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauDisable
 
