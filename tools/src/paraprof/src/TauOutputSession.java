@@ -55,6 +55,13 @@ public class TauOutputSession extends ParaProfDataSession{
 	    //Frequently used items.
 	    //######
 	    int metric = 0;
+	    
+	    //A flag is needed to test whether we have processed the metric name rather than just
+	    //checking whether this is the first file set.  This is because we might skip that first
+	    //file (for example if the name were profile.-1.0.0) and thus skip setting the metric name. 
+	    //Reference bug08.
+	    boolean metricNameProcessed = false;
+	    
 	    GlobalMappingElement globalMappingElement = null;
 	    GlobalThreadDataElement globalThreadDataElement = null;
 	    
@@ -89,9 +96,10 @@ public class TauOutputSession extends ParaProfDataSession{
 		    this.outputToFile("Processing data, please wait ......");
 		//Need to call increaseVectorStorage() on all objects that require it.
 		this.getGlobalMapping().increaseVectorStorage();
-		    
-		metric = this.getNumberOfMetrics();
 
+		//Reset metricNameProcessed flag.
+		metricNameProcessed = false;
+		    
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(metric==0)){
 		    if(this.debug())
@@ -189,12 +197,17 @@ public class TauOutputSession extends ParaProfDataSession{
 			//It's first token will be the number of function present.
 			tokenString = genericTokenizer.nextToken();
 		    
-			if(i==0){
+			if(metricNameProcessed == false){
 			    //Set the metric name.
 			    String metricName = getMetricName(inputString);
 			    if(metricName == null)
 				metricName = new String("Time");
 			    this.addMetric(metricName);
+			    metricNameProcessed = true;
+			    if(this.debug()){
+				System.out.println("metric name: "+metricName);
+				this.outputToFile("metric name: "+metricName);
+			    }
 			}
 			//####################################
 			//End - First Line

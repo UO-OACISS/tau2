@@ -91,7 +91,6 @@ public class CallPathUtilFuncs{
 	    l1 = gm.getMappingIterator(0);
 	    while(l1.hasNext()){
 		gme = (GlobalMappingElement) l1.next();
-		System.out.println("#### beginfunc #### mapping name: "+ gme.getMappingName());
 		if((gme.getMappingID())<(functionList.size())){ 
 		    gtde = (GlobalThreadDataElement) functionList.elementAt(gme.getMappingID());
 		    if((!(gme.isCallPathObject())) && (gtde!=null)){
@@ -105,15 +104,8 @@ public class CallPathUtilFuncs{
 			    //this rigthfully parent belongs. 
 			    while(l3.hasNext()){
 				int pathID = ((Integer)l3.next()).intValue();
-				if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null)){
-				    //Since the callpath is present the parent must be present on this thread.
-				    //The following is therefore safe.
-				    System.out.println("Testing for parent id: " + listValue.intValue() + " callpath id: " + pathID);
-				    gtde.addParent(listValue.intValue(),pathID);
-				    //int location = gtde.addParent(listValue.intValue());
-				    //Now add the callpath itself.
-				    //gtde.addParentCallPathID(location, pathID);
-				}
+				if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null))
+				    gtde.addParent(listValue.intValue(),pathID); //Since the callpath is present, parent is, so this is safe.
 			    }
 			}
 			l2 = gme.getChildrenIterator();
@@ -126,20 +118,12 @@ public class CallPathUtilFuncs{
 			    //this rigthfully child belongs.
 			    while(l3.hasNext()){
 				int pathID = ((Integer)l3.next()).intValue();
-				if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null)){
-				    //Since the callpath is present the child must be present on this thread.
-				    //The following is therefore safe.
-				    System.out.println("Testing for child id: " + listValue.intValue() + " callpath id: " + pathID);
-				    gtde.addChild(listValue.intValue(), pathID);
-				    //int location = gtde.addChild(listValue.intValue());
-				    //Now add the callpath itself.
-				    //gtde.addChildCallPathID(location, pathID);
-				}
+				if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null))
+				    gtde.addChild(listValue.intValue(), pathID); //Since the callpath is present, child is, so this is safe.
 			    }
 			}
 		    }
 		}
-		System.out.println("#### endfunc ####");
 	    }
 	    
 	    //Set this thread to indicate that it has been trimmed.
