@@ -142,37 +142,6 @@ public class TestPerfDMFSession {
 		// Get the data
 		session.getAtomicEventData();
 
-		// test out the analysis!
-		trial = session.setTrial(1);
-		Vector metrics = session.getMetrics();
-		Metric metric = (Metric)(metrics.elementAt(0));
-		Distance distance = new Distance((PerfDMFSession)session, trial, metric);
-		double[][] matrix = distance.getEuclidianDistance();
-		System.out.print(distance.toString());
-		/*
-		System.out.println("Euclidian distance:");
-		for (int i = 0 ; i < distance.getThreadCount(); i++ ) {
-			System.out.print("thread " + i + ": ");
-			for (int j = 0 ; j < distance.getEventCount(); j++ ) {
-				if (j > 0) System.out.print(", ");
-				System.out.print(matrix[i][j]);
-			}
-			System.out.println("");
-		}
-		*/
-		matrix = distance.getManhattanDistance();
-		System.out.print(distance.toString());
-		/*
-		System.out.println("Manhattan distance:");
-		for (int i = 0 ; i < distance.getThreadCount(); i++ ) {
-			System.out.print("thread " + i + ": ");
-			for (int j = 0 ; j < distance.getEventCount(); j++ ) {
-				if (j > 0) System.out.print(", ");
-				System.out.print(matrix[i][j]);
-			}
-			System.out.println("");
-		}
-		*/
 		// disconnect and exit.
 		session.terminate();
 		System.out.println ("Exiting.");
