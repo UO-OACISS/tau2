@@ -26,6 +26,10 @@ if ( ${?CCOM} == "0" ) then
   set CCOM=cc
 endif
 
+if ( `uname -s ` == "Darwin" ) then
+  set CCOM=c++
+endif
+
 if ( `uname -s ` == "HI-UX/MPP" ) then 
   set ARCH=`$CCOM -msg=e -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
 else
