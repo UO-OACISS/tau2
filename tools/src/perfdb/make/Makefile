@@ -11,7 +11,6 @@ JAR_DIR          = $(PERFDB_HOME)/jars
 SOURCE_DIR       = $(PERFDB_HOME)/src
 DESTINATION      = $(PERFDB_HOME)/classes
 
-JAVA_BIN         = $(JAVA_HOME)/bin
 
 #***************************************************************************
 #
@@ -96,7 +95,7 @@ default : buildall
 # .java -> .class
 
 $(PACKAGE_DIR)/%.class : $(SOURCE_DIR)/$(PACKAGE_LOC)/%.java
-	$(JAVA_BIN)/$(JAVAC) $(JAVAC_OPTIONS) $< 
+	$(JAVAC) $(JAVAC_OPTIONS) $< 
 
 %.class : $(SOURCE_DIR)/$(PACKAGE_LOC)/%.java
 	$(MAKE) -k $(PACKAGE_DIR)/$@
@@ -141,7 +140,7 @@ buildall : $(PLIST_BUILD)
 # Build a jar file. $* strips the last phony .JAR extension.
 %.JAR :
 	$(DELETE) $(JAR_DIR)/$*
-	$(JAVA_BIN)/$(JAR) $(JAR_OPTIONS) \
+	$(JAR) $(JAR_OPTIONS) \
 		$(JAR_DIR)/$* $(JAR_CONTENT_CMD)
 
 
