@@ -52,6 +52,7 @@ public class ParseConfig {
 	    }
 	} catch(Exception e){
 		e.printStackTrace();
+		System.exit(0);
 	}
     }
 
