@@ -118,12 +118,16 @@
 #define TAU_ALLTOALL_DATA(data) Tau_alltoall_data(data) 
 #define TAU_SCATTER_DATA(data)  Tau_scatter_data(data) 
 #define TAU_GATHER_DATA(data)  	Tau_gather_data(data)
+#define TAU_ALLREDUCE_DATA(data)  	Tau_allreduce_data(data)
+#define TAU_ALLGATHER_DATA(data)  	Tau_allgather_data(data)
 
 extern void Tau_bcast_data(int data);
 extern void Tau_reduce_data(int data);
 extern void Tau_alltoall_data(int data);
 extern void Tau_scatter_data(int data);
 extern void Tau_gather_data(int data);
+extern void Tau_allreduce_data(int data);
+extern void Tau_allgather_data(int data);
 
 extern void * Tau_get_profiler(char *fname, char *type, TauGroup_t  group, char *gr_name);
 extern void Tau_start_timer(void *profiler);
@@ -217,9 +221,11 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 #define TAU_GET_PROFILE_GROUP(group) 
 #define TAU_BCAST_DATA(data)  	
 #define TAU_REDUCE_DATA(data)  
+#define TAU_ALLREDUCE_DATA(data)  
 #define TAU_ALLTOALL_DATA(data)
 #define TAU_SCATTER_DATA(data)
 #define TAU_GATHER_DATA(data)
+#define TAU_ALLGATHER_DATA(data)
 
 #define CT(obj)
 
@@ -244,7 +250,7 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2003/11/12 04:28:35 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.25 2003/11/12 04:28:35 sameer Exp $
+ * $Revision: 1.26 $   $Date: 2003/11/14 01:37:07 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.26 2003/11/14 01:37:07 sameer Exp $
  ***************************************************************************/
 

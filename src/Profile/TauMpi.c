@@ -311,7 +311,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
   MPI_Type_size( recvtype, &typesize );
-  TAU_GATHER_DATA(typesize*recvcount);
+  TAU_ALLGATHER_DATA(typesize*recvcount);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -336,7 +336,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Allgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm );
   MPI_Type_size( recvtype, &typesize );
-  TAU_GATHER_DATA(typesize*(*recvcounts));
+  TAU_ALLGATHER_DATA(typesize*(*recvcounts));
   
 
   TAU_PROFILE_STOP(tautimer); 
@@ -360,7 +360,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Allreduce( sendbuf, recvbuf, count, datatype, op, comm );
   MPI_Type_size( datatype, &typesize );
-  TAU_REDUCE_DATA(typesize*count);
+  TAU_ALLREDUCE_DATA(typesize*count);
 
   TAU_PROFILE_STOP(tautimer); 
 

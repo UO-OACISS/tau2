@@ -289,10 +289,12 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 TAU_REGISTER_EVENT(sendevent,"Message size sent to all nodes");
 TAU_REGISTER_EVENT(recvevent,"Message size received from all nodes");
 TAU_REGISTER_EVENT(bcastevent,"Message size for broadcast");
-TAU_REGISTER_EVENT(reduceevent,"Message size for reductions");
+TAU_REGISTER_EVENT(reduceevent,"Message size for reduce");
+TAU_REGISTER_EVENT(allreduceevent,"Message size for all-reduce");
 TAU_REGISTER_EVENT(alltoallevent,"Message size for all-to-all");
 TAU_REGISTER_EVENT(scatterevent,"Message size for scatter");
 TAU_REGISTER_EVENT(gatherevent,"Message size for gather");
+TAU_REGISTER_EVENT(allgatherevent,"Message size for all-gather");
 
 TauUserEvent**& TheMsgVolEvent()
 {
@@ -359,6 +361,16 @@ extern "C" void Tau_scatter_data(int data)
 }
 
 extern "C" void Tau_gather_data(int data)
+{
+  TAU_EVENT(gatherevent, data);
+}
+
+extern "C" void Tau_allgather_data(int data)
+{
+  TAU_EVENT(allgatherevent, data);
+}
+
+extern "C" void Tau_allreduce_data(int data)
 {
   TAU_EVENT(gatherevent, data);
 }
@@ -471,7 +483,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.35 $   $Date: 2003/11/12 04:29:53 $
- * VERSION: $Id: TauCAPI.cpp,v 1.35 2003/11/12 04:29:53 sameer Exp $
+ * $Revision: 1.36 $   $Date: 2003/11/14 01:36:20 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.36 2003/11/14 01:36:20 sameer Exp $
  ***************************************************************************/
 
