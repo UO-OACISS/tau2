@@ -8,7 +8,7 @@ import java.sql.*;
  * This is the top level class for the Database implementation of the API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.7 2004/12/22 01:03:37 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.8 2004/12/22 17:37:48 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -732,14 +732,16 @@ public class DatabaseAPI {
                 // build the group name
                 Vector groups = f.getGroups();
                 StringBuffer buf = new StringBuffer();
-                for (int i = 0; i < groups.size(); i++) {
-                    if (i > 0)
-                        buf.append("|");
-                    buf.append(((Group) groups.get(i)).getName());
-                }
+                if (groups != null) {
+                    for (int i = 0; i < groups.size(); i++) {
+                        if (i > 0)
+                            buf.append("|");
+                        buf.append(((Group) groups.get(i)).getName());
+                    }
 
-                if (f.getGroups().size() > 0) {
-                    intervalEvent.setGroup(buf.toString());
+                    if (groups.size() > 0) {
+                        intervalEvent.setGroup(buf.toString());
+                    }
                 }
 
                 // put the intervalEvent in the vector
