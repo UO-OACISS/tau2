@@ -75,7 +75,6 @@ if [ ! -r ${JDBC_JAR} ]; then
     echo ""
     echo "$JDBC_JAR not found."
     echo ""
-    exit
 fi
 
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 500m (500MB).
