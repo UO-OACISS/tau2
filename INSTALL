@@ -6,6 +6,24 @@
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
+/*******************************************************************
+ *                                                                 *
+ *        Tuning and Analysis Utilities Installation Procedure	   *
+ *                           Version 2.5                           *
+ *                        Developer Release 1                      *
+ *                                                                 *
+ *******************************************************************
+ *    For installation help, see INSTALL.                          *
+ *    For release notes, see README.                               *
+ *    For licensing information, see LICENSE.                      *
+ *    For a tutorial on using TAU, open html/index.html in your    *
+ *        web browser.                                             *
+ *    For more information, including updates and new releases,    *
+ *        see http://www.acl.lanl.gov/tau                          *
+ *    For help, reporting bugs, and making suggestions, please     *
+ *        send e-mail to tau-bugs@cs.uoregon.edu                   *
+ *******************************************************************/
+
 
 FOR POOMA/SMARTS Users:
 -----------------------
