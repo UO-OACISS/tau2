@@ -34,6 +34,7 @@
 #include "Profile/Profiler.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <map>
 #include <string>
@@ -44,6 +45,25 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+int TauGetCallPathDepth(void)
+{
+  char *depth; 
+  int value;
+  if ((depth = getenv("TAU_CALLPATH_DEPTH")) != NULL)
+  {
+    value = atoi(depth);
+    if (value > 1) 
+    {
+      return value;
+    }
+    else 
+    {
+      return 2; /* default value */
+    }
+  }
+  else 
+    return 2;
+}
 
 //////////////////////////////////////////////////////////////////////
 // Global variables (wrapped in routines for static initialization)
@@ -69,12 +89,20 @@ string * TauFormulateComparisonString(Profiler *p)
 {
   char str1[32];
   char str2[32];
-  
-  sprintf(str1, "%lx", p->ThisFunction);
-  sprintf(str2, "%lx", p->ParentProfiler->ThisFunction);
-  string *s = new string( str1 + string(" ") + str2);
- 
-  return s;
+  string *comparison = new string; 
+  int depth = TauGetCallPathDepth();
+
+  Profiler *current = p;
+  while (current != NULL && depth != 0)
+  {
+    sprintf(str1, "%lx", current->ThisFunction);
+    *comparison = *comparison + string(" ") + string(str1); 
+    depth --;
+    current = current->ParentProfiler;
+  }
+    
+  DEBUGPROFMSG("Returning comparison = "<<*comparison<<endl;);
+  return comparison;  
    
 }
 
@@ -82,18 +110,34 @@ string * TauFormulateComparisonString(Profiler *p)
 string * TauFormulateNameString(Profiler *p)
 {
   DEBUGPROFMSG("Inside TauFormulateNameString()"<<endl;);
-  string *s = new  string( string(p->ParentProfiler->ThisFunction->GetName()) + 
-		string (" ") + string(p->ParentProfiler->ThisFunction->GetType()) +
-		string (" => ") + string(p->ThisFunction->GetName()) +
-		string (" ") + string(p->ThisFunction->GetType()) );
-  return s;
+  int depth = TauGetCallPathDepth();
+  Profiler *current = p;
+  string delimiter(" => ");
+  string *name = new string("");
+
+  while (current != NULL && depth != 0)
+  {
+    if (current != p)
+      *name =  current->ThisFunction->GetName() + string(" ") +
+	       current->ThisFunction->GetType() + delimiter + *name;
+    else
+      *name =  current->ThisFunction->GetName() + string (" ") + 
+	       current->ThisFunction->GetType();
+    current = current->ParentProfiler;
+    depth --; 
+  }
+  DEBUGPROFMSG("TauFormulateNameString:Name: "<<*name <<endl;);
+  return name;
 }
+
+
 
 //////////////////////////////////////////////////////////////////////
 inline bool TauCallPathShouldBeProfiled(string *s)
 { 
   return true; // for now profile all callpaths
 }
+
 
 
 //////////////////////////////////////////////////////////////////////
@@ -146,7 +190,7 @@ void Profiler::CallPathStart(int tid)
         AddInclCallPathFlag = false;
       }
 
-    } 
+    } // should this path be profiled ?
   }
   else
     CallPathFunction = 0; 
@@ -187,6 +231,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2003/04/17 05:13:07 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.7 2003/04/17 05:13:07 sameer Exp $ 
+ * $Revision: 1.8 $   $Date: 2003/05/13 23:30:59 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.8 2003/05/13 23:30:59 sameer Exp $ 
  ***************************************************************************/
