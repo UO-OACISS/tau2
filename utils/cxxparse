@@ -7,14 +7,34 @@ CXXINCLUDES= @CXXINCLUDES@
 #EDGOPT="--instantiate used --no_il_lowering --restrict --exceptions"
 EDGOPT="--instantiate none --no_il_lowering --restrict --exceptions --late_tiebreaker"
 
+if [ $HOSTTYPE = iris4d ]
+  then
 # machine options for SGI-64
-MACHOPT="-DMIPSEB -D_MIPSEB -D_PIC -D__DSO__ \
+  MACHOPT="-DMIPSEB -D_MIPSEB -D_PIC -D__DSO__ \
      -D_LANGUAGE_C_PLUS_PLUS=1 -D__EXTENSIONS__ -D_MODERN_C \
      -D_SGI_SOURCE -D_LONGLONG -D_SVR4_SOURCE -Dmips -Dunix \
      -Dsgi -Dhost_mips -D__sgi -D__host_mips \
      -D_SYSTYPE_SVR4 -D__unix -D_COMPILER_VERSION=721 \
      -D__mips=4 -D_MIPS_ISA=4 -D_ABI64=3 -D_MIPS_SIM=_ABI64 \
      -D_MIPS_FPSET=32 -D_MIPS_SZINT=32 -D_MIPS_SZLONG=64 -D_MIPS_SZPTR=64"
+  EXTRAOPT="-D__noinline=\"\" -D__restrict=\"\"  -w"
+else
+  if [ $HOSTTYPE = i386-linux ]
+    then
+# machine options for KCC on linux
+  MACHOPT="--strict \
+        --typename \
+        --implicit_typename \
+        -D__noinline="" \
+        -D_XOPEN_SOURCE \
+        -D__STDC__ -D__CPLUSPLUS -D__KCC \
+        -D_EXCEPTIONS -D__inline__=inline -D__signed__=signed \
+        -Dunix -D__unix -D__unix__ \
+        -Dlinux -D__linux -D__linux__ \
+        -Di386 -D__i386 -D__i386__"
+
+  fi
+fi
 
 # compiler options for SGI CC
 #COMPOPT="-I/opt/MIPSpro/MIPSpro_7.2.1/usr/include/CC \
@@ -22,7 +42,7 @@ MACHOPT="-DMIPSEB -D_MIPSEB -D_PIC -D__DSO__ \
 #     -I/usr/include/CC -I/usr/include"
 
 # compiler options for KCC
-COMPOPT="$CXXINCLUDES -D__noinline=\"\" -D__restrict=\"\"  -w"
+COMPOPT="$CXXINCLUDES $EXTRAOPT"
 
 ILF=/usr/tmp/$$.il
 case $1 in
