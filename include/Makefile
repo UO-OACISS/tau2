@@ -93,7 +93,7 @@ JDKARCH                 = linux
 DYNINST_PLATFORM 	= $(PLATFORM) 
 
 
-#PCL#include $(TAUROOT)/include/makefiles/PCLMakefile.stub	  #ENDIF#
+#PCL#include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/PCLMakefile.stub	  #ENDIF#
 
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77      $(ABI)    #ENDIF#
@@ -179,7 +179,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/src/libpapi.a -L/usr/lpp/pmtoolkit/lib -lpmapi#ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
-#SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
+#SMARTS##include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
 #GNU_FORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
 #SGI_FORTRAN#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
@@ -211,7 +211,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 ############# TAU Options ####################
 TAUDEFS 	= $(PROFILEOPTS) 
 
-TAUINC        	= -I$(TAUROOT)/include
+TAUINC        	= -I$(TAU_PREFIX_INSTALL_DIR)/include
 
 TAULIBS		= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA) 
 
@@ -222,7 +222,7 @@ TAUMPIFLIBS	= $(TAU_MPI_FLIB)
 ### ACL S/W requirement
 TAU_DEFS	= $(TAUDEFS)
 
-TAU_INCLUDE 	= -I$(TAUROOT)/include
+TAU_INCLUDE 	= -I$(TAU_PREFIX_INSTALL_DIR)/include
 
 TAU_LIBS	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA)
 
@@ -240,8 +240,9 @@ TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 ## IBM SPECIFIC CHANGES TO TAU_MPI_LIBS
-#SP1#TAU_MPI_LIBS    = $(TAU_MPI_LIB)  -binitfini:poe_remote_main -L$(TAU_MPILIB_DIR)/ip  -lvtd #ENDIF#
-#SP1#TAU_MPI_FLIBS   = $(TAU_MPI_FLIB) -binitfini:poe_remote_main -L$(TAU_MPILIB_DIR)/ip  -lvtd #ENDIF#
+#SP1#TAU_LDFLAGS  = -binitfini:poe_remote_main #ENDIF#
+#SP1#TAU_MPI_LIBS    = $(TAU_MPI_LIB)  -L$(TAU_MPILIB_DIR)/ip  -lvtd #ENDIF#
+#SP1#TAU_MPI_FLIBS   = $(TAU_MPI_FLIB) -L$(TAU_MPILIB_DIR)/ip  -lvtd #ENDIF#
 
 #SP1#TAUMPILIBS      = $(TAU_MPI_LIBS) 	#ENDIF#
 #SP1#TAUMPIFLIBS     = $(TAU_MPI_FLIBS)	#ENDIF#
