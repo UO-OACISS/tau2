@@ -520,6 +520,9 @@ int RtsLayer::DumpEDF(void)
 	int  numEvents, numExtra;
 
 
+	if (RtsLayer::myThread() != 0) 
+	  return 1; 
+	// Only thread 0 on a node should write the edf files.
 	if ((dirname = getenv("TRACEDIR")) == NULL) {
 	// Use default directory name .
 	   dirname  = new char[8];
@@ -579,6 +582,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 1998/08/14 15:39:48 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.5 1998/08/14 15:39:48 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 1998/09/26 15:41:49 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.6 1998/09/26 15:41:49 sameer Exp $ 
  ***************************************************************************/
