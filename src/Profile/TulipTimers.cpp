@@ -20,8 +20,13 @@
 /* Last overhauled Jun 1994             */
 
 #define PCXX_EVENT_SRC
+#ifdef TAU_AIX
+#include "Profile/aix.h"
+#endif /* TAU_AIX */
 #include "Profile/TulipTimers.h"
+#ifdef TAU_AIX
 #include <sys/resource.h>
+#endif /* TAU_AIX */
 
 #include <sys/types.h>
 
