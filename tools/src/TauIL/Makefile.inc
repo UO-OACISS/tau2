@@ -1,4 +1,4 @@
-TAU_HOME	= $(HOME)/cvs/tau2
+TAU_HOME	= ../../..
 
 TAUIL_HOME	= $(TAU_HOME)/tools/src/TauIL
 
