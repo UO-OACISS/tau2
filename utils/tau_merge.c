@@ -63,10 +63,11 @@ int getdtablesize(void);
 
 int dynamic = TRUE ; /* by default events.<node>.edf files exist */
 int dontblock = FALSE; /* by default, block waiting for records, online merge*/
+char *mergededffile = NULL; /* default merged EDF file name */
 #if !(defined(TAU_XLC) || defined (TAU_NEC))
 extern "C" {
 #endif /* TAU_XLC || TAU_NEC */
-  int open_edf_file(char *prefix, int nodeid);
+  int open_edf_file(char *prefix, int nodeid, int prefix_is_filename);
   int parse_edf_file(int node);
   int store_merged_edffile(char *filename);
   const char *get_event_name(int gid);
@@ -143,7 +144,7 @@ static PCXX_EV *get_next_rec(struct trcdescr *tdes)
 #ifdef DEBUG
 	      printf("Blocking...");
 #endif /* DEBUG */
-	      store_merged_edffile("tau.edf");
+	      store_merged_edffile(mergededffile);
 	      output_flush(outfd);
 	      /* Block waiting for the trace to get some more records in it */
 	      while ((no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV))) == 0)
@@ -279,7 +280,8 @@ extern int   optind;
 int main(int argc, char *argv[])
 {
   int i, active, numtrc, source, errflag, first;
-  int adjust, min_over, reassembly;
+  int adjust, min_over, reassembly, edfspecified, numedfprocessed;
+  int startedfindex;
   unsigned long min_time, first_time;
   long numrec;
   char *trcfile;
@@ -298,9 +300,12 @@ int main(int argc, char *argv[])
   dontblock  = FALSE; /* by default, block */
   adjust     = FALSE;
   reassembly = TRUE;
+  edfspecified = FALSE; /* by default edf files are not specified on cmdline */
+  numedfprocessed = 0 ; /* only used with -e events.*.edf files are specified */
   first_time = 0L;
+  mergededffile = strdup("tau.edf"); /* initialize it */
 
-  while ( (i = getopt (argc, argv, "arn")) != EOF )
+  while ( (i = getopt (argc, argv, "arne:m:")) != EOF )
   {
     switch ( i )
     {
@@ -312,15 +317,51 @@ int main(int argc, char *argv[])
                 reassembly = FALSE;
                 break;
 
-      default : /* -- ERROR -- */
-                errflag = TRUE;
+      case 'e': /* -- EDF files specified on the commandline -- */
+                edfspecified = TRUE;
+		numedfprocessed = 0;
+		for (i = optind-1; i < argc; i++)
+		{
+		  if(strstr(argv[i], ".edf") != 0)
+		  {
+#ifdef DEBUG
+		    printf("Processing Event file %s for node %d\n", argv[i],
+				    numedfprocessed);
+#endif /* DEBUG */
+	            open_edf_file(argv[i], numedfprocessed, TRUE);
+		    numedfprocessed++; 
+		  }
+		  else 
+		    break; /* come out of the loop! */
+		}
+		optind += numedfprocessed - 1; 
+#ifdef DEBUG
+		printf("numedfprocessed = %d, optind = %d, argc = %d, argv[optind] = %s\n",
+				numedfprocessed, optind, argc, argv[optind]);
+#endif /* DEBUG */
                 break;
+
+      case 'm': /* -- name of the merged edf file (instead of tau.edf) */
+		mergededffile = strdup(argv[optind-1]);
+#ifdef DEBUG
+		printf("merged edf file = %s\n", mergededffile);
+#endif /* DEBUG */
+		break;
+
       case 'n': /* -- do not block for records at end of trace -- */
 		dontblock = TRUE; 
 		break;
+
+      default : /* -- ERROR -- */
+                errflag = TRUE;
+                break;
+
     }
   }
 
+#ifdef DEBUG
+  printf("optind = %d, argc = %d\n", optind, argc);
+#endif /* DEBUG */
   /* -- check whether enough file descriptors available: -------------------- */
   /* -- max-file-descriptors - 4 (stdin, stdout, stderr, output trace) ------ */
   active = argc - optind - 1;
@@ -360,12 +401,14 @@ int main(int argc, char *argv[])
         active--;
       }
 
+      /* We can't do this check because the event is EV_INIT, but its ev id
+       * is different from original creation time after merging */
       /* -- check first event record ---------------------------------------- */
-      else if ( (erec->ev != PCXX_EV_INIT) && (erec->ev != PCXX_EV_INITM) )
+      /* else if ( (erec->ev != PCXX_EV_INIT) && (erec->ev != PCXX_EV_INITM) )
       {
         fprintf (stderr, "%s: no valid event trace\n", trcdes[numtrc].name);
         exit (1);
-      }
+      } */
       else
       {
         if ( erec->nid > PCXX_MAXPROCS )
@@ -390,8 +433,15 @@ int main(int argc, char *argv[])
 	if(dynamic)
 	{
 	/* parse edf file for this trace */
-	  open_edf_file("events", trcdes[numtrc].nid);
-	  parse_edf_file(trcdes[numtrc].nid);
+	  if (edfspecified == TRUE)
+	  { /* use edf file names */
+	    /* TRUE in the last argument means use the prefix as filename */
+	  }
+	  else 
+	  { /* use default "events.*.edf" file names */
+	    open_edf_file("events", numtrc, FALSE);
+	  }
+	  parse_edf_file(numtrc);
 	}
         numtrc++;
       }
@@ -400,7 +450,7 @@ int main(int argc, char *argv[])
   if (dynamic)
   {
     /* all edf files have been parsed now - store the final edf merged file */
-    store_merged_edffile("tau.edf");
+    store_merged_edffile(mergededffile);
   }
 
   if ( (numtrc < 1) || errflag )
@@ -656,7 +706,9 @@ int main(int argc, char *argv[])
     printf("Before conv event %ld ", trcdes[source].erec->ev);
 #endif /* DEBUG */
 
-    trcdes[source].erec->ev = GID(trcdes[source].nid, trcdes[source].erec->ev);
+    /* OLD : trcdes[source].erec->ev = GID(trcdes[source].nid, trcdes[source].erec->ev);
+     */
+    trcdes[source].erec->ev = GID(source, trcdes[source].erec->ev);
 
 #ifdef DEBUG
     printf("Output: node %d event %d\n", source, trcdes[source].erec->ev);
@@ -692,7 +744,9 @@ int main(int argc, char *argv[])
         {
           /* -- continuation event: output immediately ---------------------- */
 	  /* -- dynamic traces, correct event id to global event id --------- */
-	  erec->ev = GID(trcdes[source].nid, erec->ev);
+	  /* OLD: erec->ev = GID(trcdes[source].nid, erec->ev);
+	   * */
+	  erec->ev = GID(source, erec->ev);
           if ( reassembly )
           {
             output (outfd, ((char *) erec) + sizeof(short unsigned int),

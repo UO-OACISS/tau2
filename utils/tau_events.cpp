@@ -57,10 +57,12 @@ FILE * edfFiles[MAX_OPEN_FILES]; /* array of descriptors */
 
 int  dynamictrace = FALSE;
 
+extern char *mergededffile; /* name of merged edf file */
+
 #ifndef TAU_NEC
 extern "C" {
 #endif /*TAU_NEC compiles tau_merge.c as a C++ file */
-  int open_edf_file(char *prefix, int nodeid);
+  int open_edf_file(char *prefix, int nodeid, int prefix_is_filename);
   int parse_edf_file(int node);
   int store_merged_edffile(char *filename);
   int GID(int node, long localEventId);
@@ -121,7 +123,7 @@ map<long, int, less<long> > nodeEventTable[MAX_OPEN_FILES];
 /* e.g., nodeEventTable[0] gives event map for node 0, emap[60000] 
 gives global id say 105 of event 60000 */
 
-int open_edf_file(char *prefix, int nodeid)
+int open_edf_file(char *prefix, int nodeid, int prefix_is_filename)
 {
   char filename[FILENAME_SIZE];
 
@@ -131,7 +133,15 @@ int open_edf_file(char *prefix, int nodeid)
     exit(1);
   }
 
-  sprintf(filename, "%s.%d.edf", prefix,nodeid);
+  if (prefix_is_filename)
+  { /* Use prefix as the file name. Don't add any numbers to it. */
+    strcpy(filename, prefix);
+  }
+  else 
+  { /* default mode of operation, use prefix and node id */
+    sprintf(filename, "%s.%d.edf", prefix,nodeid);
+  }
+
   if ( (edfFiles[nodeid] = fopen (filename, "r")) == NULL )
   {
     perror (filename);
@@ -151,6 +161,9 @@ int parse_edf_file(int node)
   EventDescr inputev;
   map<const char*, EventDescr *, ltstr>::iterator iter;
   
+#ifdef DEBUG
+  printf("parse edf file: node = %d\n", node);
+#endif /* DEBUG */
   fgets (linebuf, LINEMAX, edfFiles[node]);
   sscanf (linebuf, "%d %s", &numevents, traceflag);
 
@@ -333,9 +346,9 @@ int GID(int node, long local)
 #endif /* DEBUG */
     fclose(edfFiles[node]);
 
-    open_edf_file("events", node);
+    open_edf_file("events", node, FALSE);
     parse_edf_file(node);
-    store_merged_edffile("tau.edf"); /* update the merged edf file */
+    store_merged_edffile(mergededffile); /* update the merged edf file */
     return nodeEventTable[node][local];
   }
   /* OLD 
@@ -357,7 +370,7 @@ int main(int argc, char **argv)
 
   for(i=0; i <numtraces; i++)
   {
-    open_edf_file(edfFilePrefix, i);
+    open_edf_file(edfFilePrefix, i, FALSE);
     parse_edf_file(i);
   }
 
