@@ -79,3 +79,13 @@ An error was detected: SMW01
 # File(s): BUGPATH/bugs/bug08/*
 ------
 
+------
+# Report 09
+# Report 
+# Date: 9nd March 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon)
+When saving an image to the full screen, image looses a bit at the bottom.
+
+# File(s): BUGPATH/bugs/bug09/*
+------
