@@ -136,34 +136,15 @@ public class StaticMainWindowData{
 	GlobalMapping globalMapping = trial.getGlobalMapping();
 	Vector list = null;
 	Vector newList = null;
-	boolean isSelectedGroupOn = false;
-	int selectedGroupID = 0;
 	SMWThreadDataElement sMWThreadDataElement = null;
 
 	list = globalMapping.getMapping(0);
 	newList = new Vector();
 
-	if(globalMapping.getIsSelectedGroupOn()){
-	    isSelectedGroupOn = true;
-	    selectedGroupID = globalMapping.getSelectedGroupID();
-	}
-
-	if(isSelectedGroupOn){
-	    for(Enumeration e = list.elements(); e.hasMoreElements() ;){
-		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
-		if(globalMappingElement.getMeanValuesSet()){
-		    if(globalMappingElement.isGroupMember(selectedGroupID)){
-			sMWThreadDataElement = new SMWThreadDataElement(trial, -1, -1, -1, globalMappingElement);
-			sMWThreadDataElement.setSortType(sortType);
-			newList.addElement(sMWThreadDataElement);
-		    }
-		}
-	    }
-	}
-	else{
-	    for(Enumeration e = list.elements(); e.hasMoreElements() ;){
-		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
-		if(globalMappingElement.getMeanValuesSet()){
+	for(Enumeration e = list.elements(); e.hasMoreElements() ;){
+	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
+	    if(globalMappingElement.getMeanValuesSet()){
+		if(globalMapping.displayGroup(globalThreadDataElement.getMappingID())){
 		    sMWThreadDataElement = new SMWThreadDataElement(trial, -1, -1, -1, globalMappingElement);
 		    sMWThreadDataElement.setSortType(sortType);
 		    newList.addElement(sMWThreadDataElement);
@@ -182,8 +163,6 @@ public class StaticMainWindowData{
 	GlobalMapping globalMapping = trial.getGlobalMapping();
 	Vector list = null;
 	Vector newList = null;
-	boolean isSelectedGroupOn = false;
-	int selectedGroupID = 0;
 	GlobalThreadDataElement globalThreadDataElement = null;
 	SMWThreadDataElement sMWThreadDataElement = null;
     
@@ -200,34 +179,16 @@ public class StaticMainWindowData{
 
 	newList = new Vector();
 
-	if(globalMapping.getIsSelectedGroupOn()){
-	    isSelectedGroupOn = true;
-	    selectedGroupID = globalMapping.getSelectedGroupID();
-	}
-
-	if(isSelectedGroupOn){
-	    for(Enumeration e1 = list.elements(); e1.hasMoreElements() ;){
-		globalThreadDataElement = (GlobalThreadDataElement) e1.nextElement();
-		if(globalThreadDataElement!=null){
-		    if(globalThreadDataElement.isGroupMember(selectedGroupID)){
-			sMWThreadDataElement = new SMWThreadDataElement(trial, nodeID, contextID, threadID, globalThreadDataElement);
-			sMWThreadDataElement.setSortType(sortType);
-			newList.addElement(sMWThreadDataElement);
-		    }
-		}
-	    }
-	}
-	else{
-	    for(Enumeration e2 = list.elements(); e2.hasMoreElements() ;){
-		globalThreadDataElement = (GlobalThreadDataElement) e2.nextElement();
-		if(globalThreadDataElement!=null){
+	for(Enumeration e1 = list.elements(); e1.hasMoreElements() ;){
+	    globalThreadDataElement = (GlobalThreadDataElement) e1.nextElement();
+	    if(globalThreadDataElement!=null){
+		if(globalMapping.displayGroup(globalThreadDataElement.getMappingID())){
 		    sMWThreadDataElement = new SMWThreadDataElement(trial, nodeID, contextID, threadID, globalThreadDataElement);
 		    sMWThreadDataElement.setSortType(sortType);
 		    newList.addElement(sMWThreadDataElement);
 		}
 	    }
 	}
-	
 	Collections.sort(newList);
 	return newList;
     }

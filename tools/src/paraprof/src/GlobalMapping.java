@@ -122,23 +122,40 @@ public class GlobalMapping{
 	    return false;
     }
 
-    public void setIsSelectedGroupOn(boolean inBool){
-	isSelectedGroupOn = inBool;}
-  
-    public boolean getIsSelectedGroupOn(){
-	return isSelectedGroupOn;}
-  
-    public void setIsAllExceptGroupOn(boolean inBool){
-	isAllExceptGroupOn = inBool;}
-  
-    public boolean getIsAllExceptGroupOn(){
-	return isAllExceptGroupOn;}
-  
-    public void setSelectedGroupID(int inInt){
-	selectedGroupID = inInt;}
+    public boolean displayGroup(int mappingID){
+	switch(groupFilter){
+	case 0:
+	    //No specific group selection is required.
+	    return true;
+	case 1:
+	    //Show this group only.
+	    if(this.isGroupMember(mappingID, this.getSelectedGroupID()))
+		return true;
+	    else
+		return false;
+	case 2:
+	    //Show all groups except this one.
+	    if(this.isGroupMember(mappingID, this.getSelectedGroupID()))
+		return false;
+	    else
+		return true;
+	default:
+	    //Default case behaves as case 0.
+	    return true;
+	}
+    }
+
+    public void setSelectedGroupID(int selectedGroupID){
+	this.selectedGroupID = selectedGroupID;}
   
     public int getSelectedGroupID(){
 	return selectedGroupID;}
+
+    public void setGroupFilter(int groupFilter){
+	this.groupFilter = groupFilter;}
+
+    public int getGroupFilter(){
+	return groupFilter;}
     //######
     //End - Group functions
     //######
@@ -266,9 +283,8 @@ public class GlobalMapping{
     private double maxMeanNumberOfSubRoutines = 0;
     private Vector maxMeanUserSecPerCallList = new Vector();
     
-    private boolean isSelectedGroupOn = false;
-    private boolean isAllExceptGroupOn = false;
     private int selectedGroupID = -1;
+    private int groupFilter = 0;
     //####################################
     //End - Instance data.
     //#################################### 

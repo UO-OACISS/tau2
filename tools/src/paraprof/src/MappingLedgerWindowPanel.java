@@ -272,91 +272,76 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	try{
 	    Object EventSrc = evt.getSource();
 	    
-	    GlobalMappingElement tmpGlobalMappingElement = null;
+	    GlobalMappingElement globalMapppingElement = null;
 	    
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
 		if(arg.equals("Show Function Details")){
-		    
 		    if(clickedOnObject instanceof GlobalMappingElement){
-			tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
+			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-			trial.getColorChooser().setHighlightColorID(tmpGlobalMappingElement.getGlobalID());
-			MappingDataWindow tmpRef = new MappingDataWindow(trial, tmpGlobalMappingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData());
+			trial.getColorChooser().setHighlightColorID(globalMapppingElement.getGlobalID());
+			MappingDataWindow tmpRef = new MappingDataWindow(trial, globalMapppingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
 		}
 		else if(arg.equals("Show User Event Details")){
-		    
 		    if(clickedOnObject instanceof GlobalMappingElement){
-			tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
+			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-			trial.getColorChooser().setUserEventHighlightColorID(tmpGlobalMappingElement.getGlobalID());
-			UserEventWindow tmpRef = new UserEventWindow(trial, tmpGlobalMappingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData());
+			trial.getColorChooser().setUserEventHighlightColorID(globalMapppingElement.getGlobalID());
+			UserEventWindow tmpRef = new UserEventWindow(trial, globalMapppingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
 		}
 		else if((arg.equals("Change Function Color")) || (arg.equals("Change User Event Color"))){ 
-		    if(clickedOnObject instanceof GlobalMappingElement)
-			tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
-		    
-		    Color tmpCol = tmpGlobalMappingElement.getColor();
-		    
-		    JColorChooser tmpJColorChooser = new JColorChooser();
-		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
-		    if(tmpCol != null){
-			tmpGlobalMappingElement.setSpecificColor(tmpCol);
-			tmpGlobalMappingElement.setColorFlag(true);
-			
-			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    if(clickedOnObject instanceof GlobalMappingElement){
+			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
+			Color color = globalMapppingElement.getColor();
+			JColorChooser tmpJColorChooser = new JColorChooser();
+			color = tmpJColorChooser.showDialog(this, "Please select a new color", color);
+			if(color != null){
+			    globalMapppingElement.setSpecificColor(color);
+			    globalMapppingElement.setColorFlag(true);
+			    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+			}
 		    }
 		}
 		else if(arg.equals("Reset to Generic Color")){ 
-		    
-		    if(clickedOnObject instanceof GlobalMappingElement)
-			tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
-		    
-		    tmpGlobalMappingElement.setColorFlag(false);
-		    
-		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    if(clickedOnObject instanceof GlobalMappingElement){
+			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
+			globalMapppingElement.setColorFlag(false);
+			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    }
 		}
 		else if(arg.equals("Show This Group Only")){ 
-		    
-		    if(clickedOnObject instanceof GlobalMappingElement)
-			tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
-		    
-		    GlobalMapping tmpGM = trial.getGlobalMapping();
-		    tmpGM.setIsSelectedGroupOn(true);
-		    tmpGM.setIsAllExceptGroupOn(false);
-		    tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
-		    
-		    trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+		    if(clickedOnObject instanceof GlobalMappingElement){
+			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
+			GlobalMapping globalMapping = trial.getGlobalMapping();
+			globalMapping.setSelectedGroupID(globalMapppingElement.getGlobalID());
+			globalMapping.setGroupFilter(1);
+			trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+		    }
 		}
 		else if(arg.equals("Show All Groups Except This One")){ 
-		    
-		    if(clickedOnObject instanceof GlobalMappingElement)
-			tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
-		    
-		    GlobalMapping tmpGM = trial.getGlobalMapping();
-		    tmpGM.setIsSelectedGroupOn(true);
-		    tmpGM.setIsAllExceptGroupOn(true);
-		    tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
-		    
-		    trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+		    if(clickedOnObject instanceof GlobalMappingElement){
+			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
+			GlobalMapping globalMapping = trial.getGlobalMapping();
+			globalMapping.setSelectedGroupID(globalMapppingElement.getGlobalID());
+			globalMapping.setGroupFilter(2);
+			trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+		    }
 		}
 		else if(arg.equals("Show All Groups")){ 
-		    
-		    if(clickedOnObject instanceof GlobalMappingElement)
-			tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
-		    
-		    GlobalMapping tmpGM = trial.getGlobalMapping();
-		    tmpGM.setIsSelectedGroupOn(false);
-		    tmpGM.setIsAllExceptGroupOn(false);
-		    tmpGM.setSelectedGroupID(-1);
-		    
-		    trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+		    if(clickedOnObject instanceof GlobalMappingElement){
+			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
+			GlobalMapping globalMapping = trial.getGlobalMapping();
+			globalMapping.setSelectedGroupID(-1);
+			globalMapping.setGroupFilter(0);
+			trial.getSystemEvents().updateRegisteredObjects("dataEvent");
+		    }
 		}
 	    }
 	}
