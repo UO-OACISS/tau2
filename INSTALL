@@ -7,8 +7,8 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
 
-Installation Procedure:
------------------------
+Installation Procedure: (ver 2.1)
+---------------------------------
 In this directory invoke
 % ./configure
 % make install
@@ -36,13 +36,14 @@ II) Platforms :
 	c) Sun Solaris2. Tested with g++.
 	d) HP PA-RISC. Tested with g++. 
 	e) Intel Teraflop Machine. Tested with PGI C++ cross compilers.
+	f) Cray T3E. Tested with Cray C++ compiler.
    Other platforms will be supported and it may work with other systems
    with minor modifications.
 	
 
 III) Software Requirements :
    a) Tcl/Tk
-   TAU's GUI racy needs Tcl 7.4/Tk 4.0 or better.
+   TAU's GUI racy needs Tcl 7.4/Tk 4.0 or better. The default is 8.0. 
    Tcl/Tk can be downloaded from http://www.sunlabs.com 
    
    b) xauth
