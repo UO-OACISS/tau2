@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <Experiment>
-	<name>Test</name>
+	<name>test experiment</name>
 	<userData>Custom Experiment Data</userData>
 
 	<System>

@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.16 2004/04/06 22:28:43 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.17 2004/04/06 23:02:12 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -747,11 +747,16 @@ public class PerfDBSession extends DataSession {
 		} else {
 			newTrialID = trial.getID();
 			System.out.println("\nSaving the metric...");
+			// save the old metric ID so that we can restore it...
+			Metric tmp = (Metric)trial.getDataSession().getMetric(saveMetricIndex);
+			int oldID = tmp.getID();
 			trial.saveMetric(db, saveMetricIndex);
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
 				saveFunctionData(newFunHash, metrics, saveMetricIndex);
 			}
+			// set the metric ID back to what paraprof wants...
+			tmp.setID(oldID);
 			System.out.println("Modified Trial ID: " + newTrialID);
 		}
 
