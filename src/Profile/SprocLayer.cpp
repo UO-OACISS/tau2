@@ -161,18 +161,23 @@ int SprocLayer::GetThreadId(void)
 ////////////////////////////////////////////////////////////////////////
 int SprocLayer::InitializeThreadData(void)
 {
-  // Initialize the mutex
-  tauArena = usinit("/dev/zero");
-  if (!tauArena)
-    perror("TAU ERROR: SprocLayer.cpp InitializeThreadData(): Arena /dev/zero not initialized!");
+  static int flag = 0;
 
-  tauDBMutex = usnewsema(tauArena, 1);
-  tauEnvMutex = usnewsema(tauArena, 1);
-  tauThreadCountMutex = usnewsema(tauArena, 1);
-
-
-  DEBUGPROFMSG("SprocLayer::Initialize() done! " <<endl;);
-
+  if (flag == 0)
+  {
+    flag = 1;
+    // Initialize the mutex
+    tauArena = usinit("/dev/zero");
+    if (!tauArena)
+      perror("TAU ERROR: SprocLayer.cpp InitializeThreadData(): Arena /dev/zero not initialized!");
+    
+    tauDBMutex = usnewsema(tauArena, 1);
+    tauEnvMutex = usnewsema(tauArena, 1);
+    tauThreadCountMutex = usnewsema(tauArena, 1);
+    
+    
+    DEBUGPROFMSG("SprocLayer::Initialize() done! " <<endl;);
+  }
   return 1;
 }
 
@@ -194,7 +199,7 @@ int SprocLayer::InitializeDBMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int SprocLayer::LockDB(void)
 {
-  static int initflag=InitializeDBMutexData();
+  static int initflag=InitializeThreadData();
   if (uspsema(tauDBMutex) == -1)
     perror("TAU ERROR: SprocLayer.cpp: SprocLayer::LockDB uspsema"); 
 
@@ -230,7 +235,7 @@ int SprocLayer::InitializeEnvMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int SprocLayer::LockEnv(void)
 {
-  static int initflag=InitializeEnvMutexData();
+  static int initflag=InitializeThreadData();
   if (uspsema(tauEnvMutex) == -1)
     perror("TAU ERROR: SprocLayer.cpp: SprocLayer::LockEnv uspsema"); 
 
@@ -250,9 +255,9 @@ int SprocLayer::UnLockEnv(void)
 
 
 /***************************************************************************
- * $RCSfile: SprocLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2005/01/05 02:21:07 $
- * POOMA_VERSION_ID: $Id: SprocLayer.cpp,v 1.3 2005/01/05 02:21:07 sameer Exp $
+ * $RCSfile: SprocLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.4 $   $Date: 2005/01/12 02:27:55 $
+ * POOMA_VERSION_ID: $Id: SprocLayer.cpp,v 1.4 2005/01/12 02:27:55 amorris Exp $
  ***************************************************************************/
 
 
