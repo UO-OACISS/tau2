@@ -279,11 +279,11 @@ public class TauOutputSession extends ParaProfDataSession{
 				    thread.addFunction(globalThreadDataElement, mappingID);
 				}
 			    
-				globalThreadDataElement.setExclusiveValue(metric, functionDataLine.d0);
-				globalThreadDataElement.setInclusiveValue(metric, functionDataLine.d1);
-				globalThreadDataElement.setNumberOfCalls(functionDataLine.i0);
-				globalThreadDataElement.setNumberOfSubRoutines(functionDataLine.i1);
-				globalThreadDataElement.setUserSecPerCall(metric, usecCall);
+				globalThreadDataElement.setExclusiveValue(metric, globalThreadDataElement.getExclusiveValue(metric)+functionDataLine.d0);
+				globalThreadDataElement.setInclusiveValue(metric, globalThreadDataElement.getInclusiveValue(metric)+functionDataLine.d1);
+				globalThreadDataElement.setNumberOfCalls(globalThreadDataElement.getNumberOfCalls()+functionDataLine.i0);
+				globalThreadDataElement.setNumberOfSubRoutines(globalThreadDataElement.getNumberOfSubRoutines()+functionDataLine.i1);
+				globalThreadDataElement.setUserSecPerCall(metric, globalThreadDataElement.getUserSecPerCall(metric)+usecCall);
 			    
 				//Set the max values (thread max values are calculated in the edu.uoregon.tau.dms.dss.Thread class).
 				if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
