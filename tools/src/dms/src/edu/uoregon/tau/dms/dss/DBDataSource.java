@@ -114,7 +114,7 @@ public class DBDataSource extends DataSource {
                 }
 
                 
-                meanData.setThreadDataAllMetrics();
+//                meanData.setThreadDataAllMetrics();
 
 
                 ilp = ie.getTotalSummary();
@@ -185,37 +185,37 @@ public class DBDataSource extends DataSource {
                     functionProfile.setNumSubr(fdo.getNumSubroutines());
 
                     //Set the max values.
-                    if ((function.getMaxExclusive(i)) < fdo.getExclusive(i))
-                        function.setMaxExclusive(i, fdo.getExclusive(i));
-                    if ((function.getMaxExclusivePercent(i)) < fdo.getExclusivePercentage(i))
-                        function.setMaxExclusivePercent(i,
-                                fdo.getExclusivePercentage(i));
-                    if ((function.getMaxInclusive(i)) < fdo.getInclusive(i))
-                        function.setMaxInclusive(i, fdo.getInclusive(i));
-                    if ((function.getMaxInclusivePercent(i)) < fdo.getInclusivePercentage(i))
-                        function.setMaxInclusivePercent(i,
-                                fdo.getInclusivePercentage(i));
-                    if (function.getMaxNumCalls() < fdo.getNumCalls())
-                        function.setMaxNumCalls(fdo.getNumCalls());
-                    if (function.getMaxNumSubr() < fdo.getNumSubroutines())
-                        function.setMaxNumSubr(fdo.getNumSubroutines());
-                    if (function.getMaxInclusivePerCall(i) < fdo.getInclusivePerCall(i))
-                        function.setMaxInclusivePerCall(i, fdo.getInclusivePerCall(i));
+//                    if ((function.getMaxExclusive(i)) < fdo.getExclusive(i))
+//                        function.setMaxExclusive(i, fdo.getExclusive(i));
+//                    if ((function.getMaxExclusivePercent(i)) < fdo.getExclusivePercentage(i))
+//                        function.setMaxExclusivePercent(i,
+//                                fdo.getExclusivePercentage(i));
+//                    if ((function.getMaxInclusive(i)) < fdo.getInclusive(i))
+//                        function.setMaxInclusive(i, fdo.getInclusive(i));
+//                    if ((function.getMaxInclusivePercent(i)) < fdo.getInclusivePercentage(i))
+//                        function.setMaxInclusivePercent(i,
+//                                fdo.getInclusivePercentage(i));
+//                    if (function.getMaxNumCalls() < fdo.getNumCalls())
+//                        function.setMaxNumCalls(fdo.getNumCalls());
+//                    if (function.getMaxNumSubr() < fdo.getNumSubroutines())
+//                        function.setMaxNumSubr(fdo.getNumSubroutines());
+//                    if (function.getMaxInclusivePerCall(i) < fdo.getInclusivePerCall(i))
+//                        function.setMaxInclusivePerCall(i, fdo.getInclusivePerCall(i));
 
-                    if ((thread.getMaxExclusive(i)) < fdo.getExclusive(i))
-                        thread.setMaxExclusive(i, fdo.getExclusive(i));
-                    if ((thread.getMaxExclusivePercent(i)) < fdo.getExclusivePercentage(i))
-                        thread.setMaxExclusivePercent(i, fdo.getExclusivePercentage(i));
-                    if ((thread.getMaxInclusive(i)) < fdo.getInclusive(i))
-                        thread.setMaxInclusive(i, fdo.getInclusive(i));
-                    if ((thread.getMaxInclusivePercent(i)) < fdo.getInclusivePercentage(i))
-                        thread.setMaxInclusivePercent(i, fdo.getInclusivePercentage(i));
-                    if (thread.getMaxNumCalls() < fdo.getNumCalls())
-                        thread.setMaxNumCalls(fdo.getNumCalls());
-                    if (thread.getMaxNumSubr() < fdo.getNumSubroutines())
-                        thread.setMaxNumSubr(fdo.getNumSubroutines());
-                    if (thread.getMaxInclusivePerCall(i) < fdo.getInclusivePerCall(i))
-                        thread.setMaxInclusivePerCall(i, fdo.getInclusivePerCall(i));
+//                    if ((thread.getMaxExclusive(i)) < fdo.getExclusive(i))
+//                        thread.setMaxExclusive(i, fdo.getExclusive(i));
+//                    if ((thread.getMaxExclusivePercent(i)) < fdo.getExclusivePercentage(i))
+//                        thread.setMaxExclusivePercent(i, fdo.getExclusivePercentage(i));
+//                    if ((thread.getMaxInclusive(i)) < fdo.getInclusive(i))
+//                        thread.setMaxInclusive(i, fdo.getInclusive(i));
+//                    if ((thread.getMaxInclusivePercent(i)) < fdo.getInclusivePercentage(i))
+//                        thread.setMaxInclusivePercent(i, fdo.getInclusivePercentage(i));
+//                    if (thread.getMaxNumCalls() < fdo.getNumCalls())
+//                        thread.setMaxNumCalls(fdo.getNumCalls());
+//                    if (thread.getMaxNumSubr() < fdo.getNumSubroutines())
+//                        thread.setMaxNumSubr(fdo.getNumSubroutines());
+//                    if (thread.getMaxInclusivePerCall(i) < fdo.getInclusivePerCall(i))
+//                        thread.setMaxInclusivePerCall(i, fdo.getInclusivePerCall(i));
                 }
             }
 
@@ -267,9 +267,6 @@ public class DBDataSource extends DataSource {
             //System.out.println("Processing callpath data ...");
             if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
                 setCallPathDataPresent(true);
-                if (CallPathUtilFuncs.buildRelations(this) != 0) {
-                    setCallPathDataPresent(false);
-                }
             }
 
             time = (System.currentTimeMillis()) - time;

@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.10 2005/01/06 22:46:57 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.11 2005/01/10 20:09:08 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -56,7 +56,6 @@ public class Thread implements Comparable {
         doubleList = newArray;
         this.numMetrics++;
     }
-
 
     public void addFunctionProfile(FunctionProfile fp) {
         int id = fp.getFunction().getID();
@@ -104,7 +103,7 @@ public class Thread implements Comparable {
         return new DssIterator(userEventProfiles);
     }
 
-    public void setMaxInclusive(int metric, double inDouble) {
+    private void setMaxInclusive(int metric, double inDouble) {
         this.insertDouble(metric, 0, inDouble);
     }
 
@@ -112,7 +111,7 @@ public class Thread implements Comparable {
         return this.getDouble(metric, 0);
     }
 
-    public void setMaxExclusive(int metric, double inDouble) {
+    private void setMaxExclusive(int metric, double inDouble) {
         this.insertDouble(metric, 1, inDouble);
     }
 
@@ -120,7 +119,7 @@ public class Thread implements Comparable {
         return this.getDouble(metric, 1);
     }
 
-    public void setMaxInclusivePercent(int metric, double inDouble) {
+    private void setMaxInclusivePercent(int metric, double inDouble) {
         this.insertDouble(metric, 2, inDouble);
     }
 
@@ -128,7 +127,7 @@ public class Thread implements Comparable {
         return this.getDouble(metric, 2);
     }
 
-    public void setMaxExclusivePercent(int metric, double inDouble) {
+    private void setMaxExclusivePercent(int metric, double inDouble) {
         this.insertDouble(metric, 3, inDouble);
     }
 
@@ -136,7 +135,7 @@ public class Thread implements Comparable {
         return this.getDouble(metric, 3);
     }
 
-    public void setMaxInclusivePerCall(int metric, double inDouble) {
+    private void setMaxInclusivePerCall(int metric, double inDouble) {
         this.insertDouble(metric, 4, inDouble);
     }
 
@@ -144,7 +143,7 @@ public class Thread implements Comparable {
         return this.getDouble(metric, 4);
     }
 
-    public void setMaxNumCalls(double inDouble) {
+    private void setMaxNumCalls(double inDouble) {
         maxNumCalls = inDouble;
     }
 
@@ -152,7 +151,7 @@ public class Thread implements Comparable {
         return maxNumCalls;
     }
 
-    public void setMaxNumSubr(double inDouble) {
+    private void setMaxNumSubr(double inDouble) {
         maxNumSubr = inDouble;
     }
 
@@ -190,7 +189,6 @@ public class Thread implements Comparable {
                 + this.getThreadID();
     }
 
-    
     public void setThreadData(int metric) {
         setThreadValues(metric, metric);
     }
@@ -198,8 +196,7 @@ public class Thread implements Comparable {
     public void setThreadDataAllMetrics() {
         setThreadValues(0, this.getNumMetrics() - 1);
     }
-    
-    
+
     private void insertDouble(int metric, int offset, double inDouble) {
         int actualLocation = (metric * 5) + offset;
         doubleList[actualLocation] = inDouble;
@@ -209,7 +206,6 @@ public class Thread implements Comparable {
         int actualLocation = (metric * 5) + offset;
         return doubleList[actualLocation];
     }
-
 
     private void setThreadValues(int startMetric, int endMetric) {
         for (int metric = startMetric; metric <= endMetric; metric++) {
@@ -235,7 +231,6 @@ public class Thread implements Comparable {
             this.setMaxInclusivePerCall(metric, maxInclusivePerCall);
             this.setMaxNumCalls(maxNumCalls);
             this.setMaxNumSubr(maxNumSubr);
-            
 
             double maxInclusivePercent = 0.0;
             double maxExclusivePercent = 0.0;
@@ -243,13 +238,13 @@ public class Thread implements Comparable {
             for (Iterator it = this.getFunctionProfileIterator(); it.hasNext();) {
                 FunctionProfile fp = (FunctionProfile) it.next();
                 if (fp != null) {
-                    
+
                     // Note: Assumption is made that the max inclusive value is the value required to calculate
                     // percentage (ie, divide by). Thus, we are assuming that the sum of the exclusive
                     // values is equal to the max inclusive value. This is a reasonable assuption. This also gets
                     // us out of sticky situations when call path data is present (this skews attempts to calculate
                     // the total exclusive value unless checks are made to ensure that we do not include call path objects).
-                    
+
                     Function function = fp.getFunction();
                     if (this.getNodeID() == -1) { // mean
                         fp.setExclusivePercent(metric, function.getTotalExclusivePercent(metric));
@@ -262,11 +257,11 @@ public class Thread implements Comparable {
                             double inclusivePercent = (fp.getInclusive(metric) / inclusiveMax) * 100;
                             fp.setExclusivePercent(metric, exclusivePercent);
                             fp.setInclusivePercent(metric, inclusivePercent);
-                            function.setMaxExclusivePercent(metric, Math.max(function.getMaxExclusivePercent(metric), exclusivePercent));
-                            function.setMaxInclusivePercent(metric, Math.max(function.getMaxInclusivePercent(metric), inclusivePercent));
+                            //function.setMaxExclusivePercent(metric, Math.max(function.getMaxExclusivePercent(metric), exclusivePercent));
+                            //function.setMaxInclusivePercent(metric, Math.max(function.getMaxInclusivePercent(metric), inclusivePercent));
                         }
                     }
-                    
+
                     maxExclusivePercent = Math.max(maxExclusivePercent, fp.getExclusivePercent(metric));
                     maxInclusivePercent = Math.max(maxInclusivePercent, fp.getInclusivePercent(metric));
                 }
@@ -276,7 +271,6 @@ public class Thread implements Comparable {
             this.setMaxExclusivePercent(metric, maxExclusivePercent);
         }
     }
-
 
     private int nodeID = -1;
     private int contextID = -1;

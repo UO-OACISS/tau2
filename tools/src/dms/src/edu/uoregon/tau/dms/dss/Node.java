@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a Node.  It contains a set of Contexts and an ID.
  *  
- * <P>CVS $Id: Node.java,v 1.3 2005/01/06 22:46:56 amorris Exp $</P>
+ * <P>CVS $Id: Node.java,v 1.4 2005/01/10 20:09:08 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		DataSource
  * @see		Context
  */
@@ -19,7 +19,7 @@ public class Node implements Comparable {
     /**
      * Creates a Node with the given ID.  This constructor is not public because Nodes should 
      * only be created by DataSource.addNode(...)
-     * @param nodeID		ID of this Node
+     * @param 	nodeID		ID of this Node
      */
     Node(int nodeID) {
         this.nodeID = nodeID;

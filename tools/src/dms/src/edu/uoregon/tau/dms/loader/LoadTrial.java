@@ -166,10 +166,11 @@ public class LoadTrial {
             dataSource = new TauDataSource(v);
             break;
         case 2:
-            inFile[0] = new File(sourceFiles[0]);
-            v = new Vector();
-            v.add(inFile);
-            dataSource = new DynaprofDataSource(v);
+            filelist = new File[sourceFiles.length];
+            for (int i = 0; i < sourceFiles.length; i++) {
+                filelist[i] = new File(sourceFiles[i]);
+            }
+            dataSource = new DynaprofDataSource(filelist);
             break;
         case 3:
             if (sourceFiles.length != 1) {

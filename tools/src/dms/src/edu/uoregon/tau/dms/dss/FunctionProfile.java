@@ -3,7 +3,33 @@ package edu.uoregon.tau.dms.dss;
 import java.util.*;
 import java.text.*;
 
+/**
+ * This class represents a single function profile on a single thread.
+ *
+ * <P>CVS $Id: FunctionProfile.java,v 1.6 2005/01/10 20:09:08 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.6 $
+ * @see		Function
+ */
 public class FunctionProfile implements Comparable {
+
+    private static final int METRIC_SIZE = 5;
+
+    private Function function;
+    private double[] doubleList;
+    private double numCalls;
+    private double numSubr;
+
+    // unused profile calls
+    //private Vector calls;
+
+
+    private Set childProfiles;
+    private Set parentProfiles;
+    private Map childProfileCallPathSets;
+    private Map parentProfileCallPathSets;
+
+    
 
     public FunctionProfile(Function function) {
         this(function, 1);
@@ -103,65 +129,57 @@ public class FunctionProfile implements Comparable {
     }
 
     //Call path section.
-    public void addParent(Function parent, Function callPath) {
+
+   
+
+  
+ 
+
+    // new callpath stuff
+    public void addChildProfile(FunctionProfile child, FunctionProfile callpath) {
         // example:
         // fullpath = a => b => c => d
         // child = d
         // we are c
 
-        if (parents == null)
-            parents = new TreeSet();
-
-        parents.add(parent);
-
-        if (parentCallPathSets == null)
-            parentCallPathSets = new TreeMap();
-
-        // we maintain a set of callpaths for each parent, retrieve the set for this parent
-        Set callPathSet = (Set) parentCallPathSets.get(parent);
-
-        if (callPathSet == null) {
-            callPathSet = new TreeSet();
-            parentCallPathSets.put(parent, callPathSet);
-        }
-
-        callPathSet.add(callPath);
-    }
-
-    public Iterator getParents() {
-        if (parents != null)
-            return parents.iterator();
-        return new DssIterator();
-    }
-
-    public Iterator getChildren() {
-        if (children != null)
-            return children.iterator();
-        return new DssIterator();
-    }
-
-    public Iterator getParentCallPathIterator(Function parent) {
-        if (parentCallPathSets == null)
-            return new DssIterator();
-        return ((Set) parentCallPathSets.get(parent)).iterator();
-    }
-
-    public Iterator getChildCallPathIterator(Function child) {
-        if (childCallPathSets == null)
-            return new DssIterator();
-        return ((Set) childCallPathSets.get(child)).iterator();
-    }
-
-    public void addChild(FunctionProfile child) {
         if (childProfiles == null)
             childProfiles = new TreeSet();
         childProfiles.add(child);
+        
+
+
+        if (childProfileCallPathSets == null)
+            childProfileCallPathSets = new TreeMap();
+
+        // we maintain a set of callpaths for each child, retrieve the set for this child
+        Set callPathSet = (Set) childProfileCallPathSets.get(child);
+
+        if (callPathSet == null) {
+            callPathSet = new TreeSet();
+            childProfileCallPathSets.put(child, callPathSet);
+        }
+
+        callPathSet.add(callpath);
     }
 
-    public void addParent(FunctionProfile parent) {
+    public void addParentProfile(FunctionProfile parent, FunctionProfile callpath) {
         if (parentProfiles == null)
             parentProfiles = new TreeSet();
         parentProfiles.add(parent);
+        
+        
+        if (parentProfileCallPathSets == null)
+            parentProfileCallPathSets = new TreeMap();
+
+        // we maintain a set of callpaths for each child, retrieve the set for this child
+        Set callPathSet = (Set) parentProfileCallPathSets.get(parent);
+
+        if (callPathSet == null) {
+            callPathSet = new TreeSet();
+            parentProfileCallPathSets.put(parent, callPathSet);
+        }
+
+        callPathSet.add(callpath);
     }
 
     public Iterator getChildProfiles() {
@@ -176,38 +194,29 @@ public class FunctionProfile implements Comparable {
         return new DssIterator();
     }
 
-    public void addChild(Function child, Function callPath) {
-        // example:
-        // fullpath = a => b => c => d
-        // child = d
-        // we are c
 
-        if (children == null)
-            children = new TreeSet();
-
-        children.add(child);
-
-        if (childCallPathSets == null)
-            childCallPathSets = new TreeMap();
-
-        // we maintain a set of callpaths for each child, retrieve the set for this child
-        Set callPathSet = (Set) childCallPathSets.get(child);
-
-        if (callPathSet == null) {
-            callPathSet = new TreeSet();
-            childCallPathSets.put(child, callPathSet);
-        }
-
-        callPathSet.add(callPath);
+    public Iterator getParentProfileCallPathIterator(FunctionProfile parent) {
+        if (parentProfileCallPathSets == null)
+            return new DssIterator();
+        return ((Set) parentProfileCallPathSets.get(parent)).iterator();
     }
 
-    public boolean isCallPathObject() {
+    public Iterator getChildProfileCallPathIterator(FunctionProfile child) {
+        if (childProfileCallPathSets == null)
+            return new DssIterator();
+        return ((Set) childProfileCallPathSets.get(child)).iterator();
+    }
+    
+    /**
+     * Passthrough to the actual function's isCallPathFunction
+     * 
+     * @return		whether or not this function is a callpath (contains '=>')
+     */
+    public boolean isCallPathFunction() {
         return function.isCallPathFunction();
     }
 
-    //End - Call path section.
 
-    //Private section.
     private void insertDouble(int metric, int offset, double inDouble) {
         int actualLocation = (metric * METRIC_SIZE) + offset;
         doubleList[actualLocation] = inDouble;
@@ -222,22 +231,4 @@ public class FunctionProfile implements Comparable {
         return this.function.compareTo(((FunctionProfile) inObject).function);
     }
 
-    private Function function;
-    private double[] doubleList;
-    private double numCalls;
-    private double numSubr;
-
-    // unused profile calls
-    //private Vector calls;
-
-    private Set children;
-    private Set parents;
-
-    private Set childProfiles;
-    private Set parentProfiles;
-
-    private Map childCallPathSets;
-    private Map parentCallPathSets;
-
-    private static final int METRIC_SIZE = 5;
 }

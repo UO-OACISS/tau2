@@ -18,11 +18,11 @@ public class UserEvent implements Serializable, Comparable {
         return id;
     }
 
-    public void setMaxUserEventNumberValue(int maxUserEventNumberValue) {
+    public void setMaxUserEventNumberValue(double maxUserEventNumberValue) {
         this.maxUserEventNumberValue = maxUserEventNumberValue;
     }
 
-    public int getMaxUserEventNumberValue() {
+    public double getMaxUserEventNumberValue() {
         return maxUserEventNumberValue;
     }
 
@@ -102,7 +102,7 @@ public class UserEvent implements Serializable, Comparable {
     private Color specificColor;
     private boolean colorFlag = false;
     
-    private int maxUserEventNumberValue = 0;
+    private double maxUserEventNumberValue = 0;
     private double maxUserEventMinValue = 0;
     private double maxUserEventMaxValue = 0;
     private double maxUserEventMeanValue = 0;

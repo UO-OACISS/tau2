@@ -84,9 +84,9 @@ public class HPMToolkitDataSource extends DataSource {
                             // instrumented functionProfiles.
                             // copy inclusive over to exclusive
                             functionProfile.setExclusive(timeMetric, functionProfile.getInclusive(timeMetric));
-                            if (functionProfile.getExclusive(timeMetric) > function.getMaxExclusive(timeMetric)) {
-                                function.setMaxExclusive(timeMetric, functionProfile.getExclusive(timeMetric));
-                            }
+//                            if (functionProfile.getExclusive(timeMetric) > function.getMaxExclusive(timeMetric)) {
+//                                function.setMaxExclusive(timeMetric, functionProfile.getExclusive(timeMetric));
+//                            }
                         }
                         first = false;
                         exclusiveSet = false;
@@ -138,10 +138,10 @@ public class HPMToolkitDataSource extends DataSource {
                     // call any instrumented functionProfiles.
                     // copy inclusive over to exclusive
                     functionProfile.setExclusive(timeMetric, functionProfile.getInclusive(timeMetric));
-                    if (functionProfile.getExclusive(timeMetric) > function.getMaxExclusive(timeMetric)) {
-                        function.setMaxExclusive(timeMetric, functionProfile.getExclusive(timeMetric));
-
-                    }
+//                    if (functionProfile.getExclusive(timeMetric) > function.getMaxExclusive(timeMetric)) {
+//                        function.setMaxExclusive(timeMetric, functionProfile.getExclusive(timeMetric));
+//
+//                    }
                 }
 
                 //Close the file.
@@ -314,7 +314,6 @@ public class HPMToolkitDataSource extends DataSource {
             initializeThread();
         } else {
             // thread.incrementStorage();
-            function.incrementStorage();
             functionProfile.incrementStorage();
         }
         // System.out.println("Hardwoare counter");
@@ -353,9 +352,6 @@ public class HPMToolkitDataSource extends DataSource {
         while (thread.getNumMetrics() < newMetricCount) {
             thread.incrementStorage();
         }
-        while (function.getStorageSize() < newMetricCount) {
-            function.incrementStorage();
-        }
         while (functionProfile.getStorageSize() < newMetricCount) {
             functionProfile.incrementStorage();
         }
@@ -366,33 +362,16 @@ public class HPMToolkitDataSource extends DataSource {
             functionProfile.setInclusive(metric, dEventValue);
             double tmpValue = dEventValue / ((double) (header3.i0));
             functionProfile.setInclusivePerCall(metric, tmpValue);
-            if ((function.getMaxExclusive(metric)) < dEventValue) {
-                function.setMaxExclusive(metric, dEventValue);
-                function.setMaxInclusive(metric, dEventValue);
-            }
-            if (function.getMaxInclusivePerCall(metric) < (dEventValue / header3.i0))
-                function.setMaxInclusivePerCall(metric, (dEventValue / header3.i0));
         } else {
             functionProfile.setExclusive(metric, iEventValue);
             functionProfile.setInclusive(metric, iEventValue);
             double tmpValue = iEventValue / ((double) (header3.i0));
             functionProfile.setInclusivePerCall(metric, tmpValue);
-            if ((function.getMaxExclusive(metric)) < iEventValue) {
-                function.setMaxExclusive(metric, iEventValue);
-                function.setMaxInclusive(metric, iEventValue);
-            }
-            if (function.getMaxInclusivePerCall(metric) < (iEventValue / header3.i0))
-                function.setMaxInclusivePerCall(metric, (iEventValue / header3.i0));
         }
         functionProfile.setExclusivePercent(metric, 0);
         functionProfile.setInclusivePercent(metric, 0);
         functionProfile.setNumCalls(header3.i0);
         functionProfile.setNumSubr(0);
-        function.setMaxExclusivePercent(metric, 0.0);
-        function.setMaxInclusivePercent(metric, 0.0);
-        if (function.getMaxNumCalls() < header3.i0)
-            function.setMaxNumCalls(header3.i0);
-        function.setMaxNumSubr(0);
 
     }
 
@@ -409,7 +388,6 @@ public class HPMToolkitDataSource extends DataSource {
             initializeThread();
         } else {
             // thread.incrementStorage();
-            function.incrementStorage();
             functionProfile.incrementStorage();
         }
         StringTokenizer st1 = new StringTokenizer(string, ":");
@@ -445,9 +423,6 @@ public class HPMToolkitDataSource extends DataSource {
         while (thread.getNumMetrics() < newMetricCount) {
             thread.incrementStorage();
         }
-        while (function.getStorageSize() < newMetricCount) {
-            function.incrementStorage();
-        }
         while (functionProfile.getStorageSize() < newMetricCount) {
             functionProfile.incrementStorage();
         }
@@ -465,28 +440,23 @@ public class HPMToolkitDataSource extends DataSource {
         double tmpValue = dEventValue / ((double) (header3.i0));
         functionProfile.setInclusivePerCall(metric, tmpValue);
 
-        if (inclusive) {
-            if ((function.getMaxInclusive(metric)) < dEventValue) {
-                function.setMaxInclusive(metric, dEventValue);
-            }
-        } else {
-            if ((function.getMaxExclusive(metric)) < dEventValue) {
-                function.setMaxExclusive(metric, dEventValue);
-            }
-        }
+//        if (inclusive) {
+//            if ((function.getMaxInclusive(metric)) < dEventValue) {
+//                function.setMaxInclusive(metric, dEventValue);
+//            }
+//        } else {
+//            if ((function.getMaxExclusive(metric)) < dEventValue) {
+//                function.setMaxExclusive(metric, dEventValue);
+//            }
+//        }
 
-        if (function.getMaxInclusivePerCall(metric) < (dEventValue / header3.i0))
-            function.setMaxInclusivePerCall(metric, (dEventValue / header3.i0));
+//        if (function.getMaxInclusivePerCall(metric) < (dEventValue / header3.i0))
+//            function.setMaxInclusivePerCall(metric, (dEventValue / header3.i0));
 
         functionProfile.setExclusivePercent(metric, 0);
         functionProfile.setInclusivePercent(metric, 0);
         functionProfile.setNumCalls(header3.i0);
         functionProfile.setNumSubr(0);
-        function.setMaxExclusivePercent(metric, 0.0);
-        function.setMaxInclusivePercent(metric, 0.0);
-        if (function.getMaxNumCalls() < header3.i0)
-            function.setMaxNumCalls(header3.i0);
-        function.setMaxNumSubr(0);
 
     }
 

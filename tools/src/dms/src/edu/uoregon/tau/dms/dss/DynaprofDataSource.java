@@ -156,20 +156,20 @@ public class DynaprofDataSource extends DataSource {
                     functionProfile.setInclusivePerCall(metric, inclusivePerCall);
 
                     //Set the max values.
-                    if ((function.getMaxExclusive(metric)) < functionDataLine.d0)
-                        function.setMaxExclusive(metric, functionDataLine.d0);
-
-                    if ((function.getMaxInclusive(metric)) < functionDataLine.d3)
-                        function.setMaxInclusive(metric, functionDataLine.d3);
-
-                    if (function.getMaxNumCalls() < functionDataLine.i1)
-                        function.setMaxNumCalls(functionDataLine.i1);
-
-                    if (function.getMaxNumSubr() < functionDataLine.i0)
-                        function.setMaxNumSubr(functionDataLine.i0);
-
-                    if (function.getMaxInclusivePerCall(metric) < inclusivePerCall)
-                        function.setMaxInclusivePerCall(metric, inclusivePerCall);
+//                    if ((function.getMaxExclusive(metric)) < functionDataLine.d0)
+//                        function.setMaxExclusive(metric, functionDataLine.d0);
+//
+//                    if ((function.getMaxInclusive(metric)) < functionDataLine.d3)
+//                        function.setMaxInclusive(metric, functionDataLine.d3);
+//
+//                    if (function.getMaxNumCalls() < functionDataLine.i1)
+//                        function.setMaxNumCalls(functionDataLine.i1);
+//
+//                    if (function.getMaxNumSubr() < functionDataLine.i0)
+//                        function.setMaxNumSubr(functionDataLine.i0);
+//
+//                    if (function.getMaxInclusivePerCall(metric) < inclusivePerCall)
+//                        function.setMaxInclusivePerCall(metric, inclusivePerCall);
                 }
                 //Enter the child for loop.
                 for (int j = 0; j < functionDataLine.i0; j++) {
@@ -209,14 +209,14 @@ public class DynaprofDataSource extends DataSource {
                                     / numCalls);
 
                             //Set the max values.
-                            if ((function.getMaxExclusive(metric)) < inclusive)
-                                function.setMaxExclusive(metric, inclusive);
-                            if ((function.getMaxInclusive(metric)) < inclusive)
-                                function.setMaxInclusive(metric, inclusive);
-                            if (function.getMaxNumCalls() < numCalls)
-                                function.setMaxNumCalls(numCalls);
-                            if (function.getMaxInclusivePerCall(metric) < inclusivePerCall)
-                                function.setMaxInclusivePerCall(metric, inclusivePerCall);
+//                            if ((function.getMaxExclusive(metric)) < inclusive)
+//                                function.setMaxExclusive(metric, inclusive);
+//                            if ((function.getMaxInclusive(metric)) < inclusive)
+//                                function.setMaxInclusive(metric, inclusive);
+//                            if (function.getMaxNumCalls() < numCalls)
+//                                function.setMaxNumCalls(numCalls);
+//                            if (function.getMaxInclusivePerCall(metric) < inclusivePerCall)
+//                                function.setMaxInclusivePerCall(metric, inclusivePerCall);
 
                         }
                     }
@@ -228,7 +228,6 @@ public class DynaprofDataSource extends DataSource {
 
         if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
             setCallPathDataPresent(true);
-            CallPathUtilFuncs.buildRelations(this);
         }
 
         time = (System.currentTimeMillis()) - time;

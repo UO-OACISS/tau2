@@ -256,17 +256,12 @@ public class SPPMDataSource extends DataSource {
                     saveFunctionData("cpu", cpuTime[index.intValue()], inclusiveEqualsExclusive);
                     // increment the storage to allow for second metric
                     thread.incrementStorage();
-                    function.incrementStorage();
                     functionProfile.incrementStorage();
                     // save the second metric
                     saveFunctionData("wall", wallTime[index.intValue()], inclusiveEqualsExclusive);
                     // save the data common to all metrics
                     functionProfile.setNumCalls(calls[index.intValue()]);
-                    if (function.getMaxNumCalls() < calls[index.intValue()])
-                        function.setMaxNumCalls(calls[index.intValue()]);
                     functionProfile.setNumSubr(subroutines[index.intValue()]);
-                    if (function.getMaxNumSubr() < subroutines[index.intValue()])
-                        function.setMaxNumSubr(subroutines[index.intValue()]);
                 }
             }
         } catch (Exception e) {
@@ -283,21 +278,21 @@ public class SPPMDataSource extends DataSource {
 
         if (inclusiveEqualsExclusive) {
             functionProfile.setExclusive(metric, value);
-            if ((function.getMaxExclusive(metric)) < value) {
-                function.setMaxExclusive(metric, value);
-            }
+//            if ((function.getMaxExclusive(metric)) < value) {
+//                function.setMaxExclusive(metric, value);
+//            }
         } else {
             functionProfile.setExclusive(metric, 0.0);
         }
 
         functionProfile.setInclusive(metric, value);
-        if ((function.getMaxInclusive(metric)) < value) {
-            function.setMaxInclusive(metric, value);
-        }
+//        if ((function.getMaxInclusive(metric)) < value) {
+//            function.setMaxInclusive(metric, value);
+//        }
 
         functionProfile.setInclusivePerCall(metric, value);
-        if (function.getMaxInclusivePerCall(metric) < value)
-            function.setMaxInclusivePerCall(metric, value);
+//        if (function.getMaxInclusivePerCall(metric) < value)
+//            function.setMaxInclusivePerCall(metric, value);
 
         //functionProfile.setExclusivePercentValue(metric, 0);
         //functionProfile.setInclusivePercentValue(metric, 0);

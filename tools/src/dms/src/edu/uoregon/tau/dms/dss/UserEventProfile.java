@@ -1,7 +1,3 @@
-/*
- * Name: FunctionProfile.java Author: Robert Bell Description:
- */
-
 package edu.uoregon.tau.dms.dss;
 
 import java.util.*;

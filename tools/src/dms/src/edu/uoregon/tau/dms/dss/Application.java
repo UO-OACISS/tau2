@@ -19,12 +19,12 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.11 2004/12/29 00:00:43 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.12 2005/01/10 20:09:07 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
- * @see		DataSession#getApplicationList
- * @see		DataSession#setApplication
+ * @see		DatabaseAPI#getApplicationList
+ * @see		DatabaseAPI#setApplication
  * @see		Experiment
  */
 public class Application implements Serializable {

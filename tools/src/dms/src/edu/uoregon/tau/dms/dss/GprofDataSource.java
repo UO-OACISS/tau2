@@ -190,7 +190,6 @@ public class GprofDataSource extends DataSource {
 
         if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
             setCallPathDataPresent(true);
-            CallPathUtilFuncs.buildRelations(this);
         }
 
         time = (System.currentTimeMillis()) - time;

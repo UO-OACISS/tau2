@@ -208,19 +208,19 @@ public class MpiPDataSource extends DataSource {
                         function = this.addFunction(eventNames[callsiteData.i0], 1);
 
                         if (callsiteData.i1 >= 0) {
-                            if ((function.getMaxExclusive(metric)) < callsiteData.d5) {
-                                function.setMaxExclusive(metric, callsiteData.d5);
-                                function.setMaxInclusive(metric, callsiteData.d5);
-                            }
-                            if ((function.getMaxExclusivePercent(metric)) < callsiteData.d3) {
-                                function.setMaxExclusivePercent(metric, callsiteData.d3);
-                                function.setMaxInclusivePercent(metric, callsiteData.d3);
-                            }
-                            if (function.getMaxNumCalls() < callsiteData.i2)
-                                function.setMaxNumCalls(callsiteData.i2);
-                            function.setMaxNumSubr(0);
-                            if (function.getMaxInclusivePerCall(metric) < (callsiteData.d1))
-                                function.setMaxInclusivePerCall(metric, (callsiteData.d1));
+//                            if ((function.getMaxExclusive(metric)) < callsiteData.d5) {
+//                                function.setMaxExclusive(metric, callsiteData.d5);
+//                                function.setMaxInclusive(metric, callsiteData.d5);
+//                            }
+//                            if ((function.getMaxExclusivePercent(metric)) < callsiteData.d3) {
+//                                function.setMaxExclusivePercent(metric, callsiteData.d3);
+//                                function.setMaxInclusivePercent(metric, callsiteData.d3);
+//                            }
+//                            if (function.getMaxNumCalls() < callsiteData.i2)
+//                                function.setMaxNumCalls(callsiteData.i2);
+//                            function.setMaxNumSubr(0);
+//                            if (function.getMaxInclusivePerCall(metric) < (callsiteData.d1))
+//                                function.setMaxInclusivePerCall(metric, (callsiteData.d1));
                             // get the node data
                             nodeID = callsiteData.i1;
                             contextID = 0;
@@ -244,20 +244,20 @@ public class MpiPDataSource extends DataSource {
                             functionProfile.setNumSubr(0);
                             functionProfile.setInclusivePerCall(metric, callsiteData.d1);
 
-                            //Now check the max values on this thread.
-                            if (thread.getMaxNumCalls() < callsiteData.i2)
-                                thread.setMaxNumCalls(callsiteData.i2);
-                            thread.setMaxNumSubr(0);
-                            if (thread.getMaxInclusivePerCall(metric) < callsiteData.d1)
-                                thread.setMaxInclusivePerCall(metric, callsiteData.d1);
-                            if ((thread.getMaxExclusive(metric)) < callsiteData.d5) {
-                                thread.setMaxExclusive(metric, callsiteData.d5);
-                                thread.setMaxInclusive(metric, callsiteData.d5);
-                            }
-                            if ((thread.getMaxExclusivePercent(metric)) < callsiteData.d4) {
-                                thread.setMaxExclusivePercent(metric, callsiteData.d4);
-                                thread.setMaxInclusivePercent(metric, callsiteData.d4);
-                            }
+//                            //Now check the max values on this thread.
+//                            if (thread.getMaxNumCalls() < callsiteData.i2)
+//                                thread.setMaxNumCalls(callsiteData.i2);
+//                            thread.setMaxNumSubr(0);
+//                            if (thread.getMaxInclusivePerCall(metric) < callsiteData.d1)
+//                                thread.setMaxInclusivePerCall(metric, callsiteData.d1);
+//                            if ((thread.getMaxExclusive(metric)) < callsiteData.d5) {
+//                                thread.setMaxExclusive(metric, callsiteData.d5);
+//                                thread.setMaxInclusive(metric, callsiteData.d5);
+//                            }
+//                            if ((thread.getMaxExclusivePercent(metric)) < callsiteData.d4) {
+//                                thread.setMaxExclusivePercent(metric, callsiteData.d4);
+//                                thread.setMaxInclusivePercent(metric, callsiteData.d4);
+//                            }
                         } else {
                             // save the total data
                             i = i - 1;
@@ -297,19 +297,9 @@ public class MpiPDataSource extends DataSource {
                                 }
                             }
 
-                            // set max values for the function
-                            if (exclusive > function.getMaxExclusive(metric)) {
-                                function.setMaxExclusive(metric, exclusive);
-                            }
 
                             double exclusivePercent = exclusive / inclusive;
 
-                            if (exclusivePercent > function.getMaxExclusivePercent(metric)) {
-                                function.setMaxExclusivePercent(metric, exclusivePercent);
-                            }
-
-                            function.setMaxInclusive(metric, inclusive);
-                            function.setMaxInclusivePercent(metric, inclusive);
 
                             functionProfile = new FunctionProfile(function);
 
@@ -324,23 +314,23 @@ public class MpiPDataSource extends DataSource {
                             functionProfile.setNumSubr(numSubroutines);
                             functionProfile.setInclusivePerCall(metric, inclusive);
 
-                            thread.setMaxInclusive(metric, inclusive);
-                            thread.setMaxInclusivePercent(metric, 100);
-
-                            //Now check the max values on this thread.
-                            if (thread.getMaxNumCalls() < 1)
-                                thread.setMaxNumCalls(1);
-                            thread.setMaxNumSubr(numSubroutines);
-
-                            thread.setMaxInclusivePerCall(metric, inclusive);
-
-                            if ((thread.getMaxExclusive(metric)) < exclusive) {
-                                thread.setMaxExclusive(metric, exclusive);
-                            }
-                            if ((thread.getMaxExclusivePercent(metric)) < exclusivePercent) {
-                                thread.setMaxExclusivePercent(metric, exclusivePercent);
-                                thread.setMaxInclusivePercent(metric, exclusivePercent);
-                            }
+//                            thread.setMaxInclusive(metric, inclusive);
+//                            thread.setMaxInclusivePercent(metric, 100);
+//
+//                            //Now check the max values on this thread.
+//                            if (thread.getMaxNumCalls() < 1)
+//                                thread.setMaxNumCalls(1);
+//                            thread.setMaxNumSubr(numSubroutines);
+//
+//                            thread.setMaxInclusivePerCall(metric, inclusive);
+//
+//                            if ((thread.getMaxExclusive(metric)) < exclusive) {
+//                                thread.setMaxExclusive(metric, exclusive);
+//                            }
+//                            if ((thread.getMaxExclusivePercent(metric)) < exclusivePercent) {
+//                                thread.setMaxExclusivePercent(metric, exclusivePercent);
+//                                thread.setMaxInclusivePercent(metric, exclusivePercent);
+//                            }
 
                         }
                     }

@@ -16,12 +16,12 @@ import java.io.IOException;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.9 2005/01/06 23:17:28 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.10 2005/01/10 20:09:08 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
- * @see		DataSession#getExperimentList
- * @see		DataSession#setExperiment
+ * @see		DatabaseAPI#getExperimentList
+ * @see		DatabaseAPI#setExperiment
  * @see		Application
  * @see		Trial
  */

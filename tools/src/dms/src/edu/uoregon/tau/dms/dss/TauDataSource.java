@@ -92,10 +92,6 @@ public class TauDataSource extends DataSource {
             //Only need to call addDefaultToVectors() if not the first run.
             if (metric != 0) { // If this isn't the first metric, call i
 
-                for (Iterator it = this.getFunctions(); it.hasNext();) {
-                    Function function = (Function) it.next();
-                    function.incrementStorage();
-                }
 
                 for (Iterator it = this.getNodes(); it.hasNext();) {
                     Node node = (Node) it.next();
@@ -211,18 +207,6 @@ public class TauDataSource extends DataSource {
                             functionProfile.setInclusivePerCall(metric,
                                     functionProfile.getInclusivePerCall(metric) + inclusivePerCall);
 
-                            //Set the max values (thread max values are calculated in the
-                            // edu.uoregon.tau.dms.dss.Thread class).
-                            if ((func.getMaxExclusive(metric)) < functionDataLine.d0)
-                                func.setMaxExclusive(metric, functionDataLine.d0);
-                            if ((func.getMaxInclusive(metric)) < functionDataLine.d1)
-                                func.setMaxInclusive(metric, functionDataLine.d1);
-                            if (func.getMaxNumCalls() < functionDataLine.i0)
-                                func.setMaxNumCalls(functionDataLine.i0);
-                            if (func.getMaxNumSubr() < functionDataLine.i1)
-                                func.setMaxNumSubr(functionDataLine.i1);
-                            if (func.getMaxInclusivePerCall(metric) < inclusivePerCall)
-                                func.setMaxInclusivePerCall(metric, inclusivePerCall);
 
                             if (metric == 0 && groupNames != null) {
                                 StringTokenizer st = new StringTokenizer(groupNames, " |");
@@ -331,8 +315,8 @@ public class TauDataSource extends DataSource {
 
        
 
-//        time = (System.currentTimeMillis()) - time;
-//        System.out.println("Time to process (in milliseconds): " + time);
+        //time = (System.currentTimeMillis()) - time;
+        //System.out.println("Time to process (in milliseconds): " + time);
 //        time = System.currentTimeMillis();
 
         
@@ -341,7 +325,6 @@ public class TauDataSource extends DataSource {
 
         if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
             setCallPathDataPresent(true);
-            CallPathUtilFuncs.buildRelations(this);
         }
 
 //        time = (System.currentTimeMillis()) - time;

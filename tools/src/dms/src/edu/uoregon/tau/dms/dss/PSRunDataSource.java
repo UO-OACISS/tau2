@@ -136,7 +136,6 @@ public class PSRunDataSource extends DataSource {
 
     private void processHardwareCounter(String key, String value) {
         thread.incrementStorage();
-        function.incrementStorage();
         functionProfile.incrementStorage();
         double eventValue = 0;
         eventValue = Double.parseDouble(value);
@@ -152,14 +151,14 @@ public class PSRunDataSource extends DataSource {
         functionProfile.setNumCalls(1);
         functionProfile.setNumSubr(0);
 
-        if ((function.getMaxExclusive(metric)) < eventValue) {
-            function.setMaxExclusive(metric, eventValue);
-            function.setMaxInclusive(metric, eventValue);
-        }
-        if (function.getMaxInclusivePerCall(metric) < eventValue)
-            function.setMaxInclusivePerCall(metric, eventValue);
-        function.setMaxNumCalls(1);
-        function.setMaxNumSubr(0);
+//        if ((function.getMaxExclusive(metric)) < eventValue) {
+//            function.setMaxExclusive(metric, eventValue);
+//            function.setMaxInclusive(metric, eventValue);
+//        }
+//        if (function.getMaxInclusivePerCall(metric) < eventValue)
+//            function.setMaxInclusivePerCall(metric, eventValue);
+//        function.setMaxNumCalls(1);
+//        function.setMaxNumSubr(0);
 
     }
 

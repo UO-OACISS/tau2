@@ -109,10 +109,6 @@ public class TauPprofDataSource extends DataSource {
             //Only need to call addDefaultToVectors() if not the first run.
             if (!(this.getFirstMetric())) {
 
-                for (Iterator i1 = this.getFunctions(); i1.hasNext();) {
-                    Function tmpFunc = (Function) i1.next();
-                    tmpFunc.incrementStorage();
-                }
 
                 this.meanData.incrementStorage();
 
@@ -286,10 +282,10 @@ public class TauPprofDataSource extends DataSource {
 
                     break;
                 case 4:
-                    if ((function.getMaxExclusive(metric)) < functionDataLine1.d0)
-                        function.setMaxExclusive(metric, functionDataLine1.d0);
-                    if ((function.getMaxExclusivePercent(metric)) < functionDataLine1.d1)
-                        function.setMaxExclusivePercent(metric, functionDataLine1.d1);
+//                    if ((function.getMaxExclusive(metric)) < functionDataLine1.d0)
+//                        function.setMaxExclusive(metric, functionDataLine1.d0);
+//                    if ((function.getMaxExclusivePercent(metric)) < functionDataLine1.d1)
+//                        function.setMaxExclusivePercent(metric, functionDataLine1.d1);
 
                     //Get the node,context,thread.
                     int[] array = this.getNCT(inputString);
@@ -313,27 +309,27 @@ public class TauPprofDataSource extends DataSource {
                     functionProfile.setExclusive(metric, functionDataLine1.d0);
                     functionProfile.setExclusivePercent(metric, functionDataLine1.d1);
                     //Now check the max values on this thread.
-                    if ((thread.getMaxExclusive(metric)) < functionDataLine1.d0)
-                        thread.setMaxExclusive(metric, functionDataLine1.d0);
-                    if ((thread.getMaxExclusivePercent(metric)) < functionDataLine1.d1)
-                        thread.setMaxExclusivePercent(metric, functionDataLine1.d1);
+//                    if ((thread.getMaxExclusive(metric)) < functionDataLine1.d0)
+//                        thread.setMaxExclusive(metric, functionDataLine1.d0);
+//                    if ((thread.getMaxExclusivePercent(metric)) < functionDataLine1.d1)
+//                        thread.setMaxExclusivePercent(metric, functionDataLine1.d1);
                     break;
                 case 5:
-                    if ((function.getMaxInclusive(metric)) < functionDataLine1.d0)
-                        function.setMaxInclusive(metric, functionDataLine1.d0);
-
-                    if ((function.getMaxInclusivePercent(metric)) < functionDataLine1.d1)
-                        function.setMaxInclusivePercent(metric, functionDataLine1.d1);
+//                    if ((function.getMaxInclusive(metric)) < functionDataLine1.d0)
+//                        function.setMaxInclusive(metric, functionDataLine1.d0);
+//
+//                    if ((function.getMaxInclusivePercent(metric)) < functionDataLine1.d1)
+//                        function.setMaxInclusivePercent(metric, functionDataLine1.d1);
 
                     thread = this.getThread(nodeID, contextID, threadID);
                     functionProfile = thread.getFunctionProfile(function);
 
                     functionProfile.setInclusive(metric, functionDataLine1.d0);
                     functionProfile.setInclusivePercent(metric, functionDataLine1.d1);
-                    if ((thread.getMaxInclusive(metric)) < functionDataLine1.d0)
-                        thread.setMaxInclusive(metric, functionDataLine1.d0);
-                    if ((thread.getMaxInclusivePercent(metric)) < functionDataLine1.d1)
-                        thread.setMaxInclusivePercent(metric, functionDataLine1.d1);
+//                    if ((thread.getMaxInclusive(metric)) < functionDataLine1.d0)
+//                        thread.setMaxInclusive(metric, functionDataLine1.d0);
+//                    if ((thread.getMaxInclusivePercent(metric)) < functionDataLine1.d1)
+//                        thread.setMaxInclusivePercent(metric, functionDataLine1.d1);
 
                     //Get the number of calls and number of sub routines
                     inputString = br.readLine();
@@ -345,21 +341,15 @@ public class TauPprofDataSource extends DataSource {
                     functionProfile.setNumSubr(functionDataLine2.d1);
                     functionProfile.setInclusivePerCall(metric, functionDataLine2.d2);
 
-                    //Set the max values.
-                    if (function.getMaxNumCalls() < functionDataLine2.d0)
-                        function.setMaxNumCalls(functionDataLine2.d0);
-                    if (thread.getMaxNumCalls() < functionDataLine2.d0)
-                        thread.setMaxNumCalls(functionDataLine2.d0);
-
-                    if (function.getMaxNumSubr() < functionDataLine2.d1)
-                        function.setMaxNumSubr(functionDataLine2.d1);
-                    if (thread.getMaxNumSubr() < functionDataLine2.d1)
-                        thread.setMaxNumSubr(functionDataLine2.d1);
-
-                    if (function.getMaxInclusivePerCall(metric) < functionDataLine2.d2)
-                        function.setMaxInclusivePerCall(metric, functionDataLine2.d2);
-                    if (thread.getMaxInclusivePerCall(metric) < functionDataLine2.d2)
-                        thread.setMaxInclusivePerCall(metric, functionDataLine2.d2);
+//                    //Set the max values.
+//                    if (thread.getMaxNumCalls() < functionDataLine2.d0)
+//                        thread.setMaxNumCalls(functionDataLine2.d0);
+//
+//                    if (thread.getMaxNumSubr() < functionDataLine2.d1)
+//                        thread.setMaxNumSubr(functionDataLine2.d1);
+//
+//                    if (thread.getMaxInclusivePerCall(metric) < functionDataLine2.d2)
+//                        thread.setMaxInclusivePerCall(metric, functionDataLine2.d2);
                     break;
                 case 6:
                     //Just ignore the string if this is not the first
@@ -427,8 +417,8 @@ public class TauPprofDataSource extends DataSource {
 
             //Set firstRead to false.
             this.setFirstMetric(false);
-
-            meanData.setThreadDataAllMetrics();
+//
+//            meanData.setThreadDataAllMetrics();
 
             time = (System.currentTimeMillis()) - time;
             //System.out.println("Time to process file (in milliseconds): " + time);
@@ -437,7 +427,6 @@ public class TauPprofDataSource extends DataSource {
         //System.out.println("Processing callpath data ...");
         if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
             setCallPathDataPresent(true);
-            CallPathUtilFuncs.buildRelations(this);
         } else {
             //System.out.println("No callpath data found.");
         }
