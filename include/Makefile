@@ -63,7 +63,7 @@ LSX = .a
 #GNU#PROFILEOPT10              = -DNO_RTTI             #ENDIF#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI#PROFILEOPT12	       = 		       #ENDIF#
-#CRAYCC#PROFILEOPT13	       = -h instantiation=used #ENDIF#
+#CRAYCC#PROFILEOPT13	       = -h instantiate=used #ENDIF#
 #SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
 #PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS           #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
