@@ -1,4 +1,3 @@
-
 /* 
   
 StaticMainWindowPanel.java
@@ -357,21 +356,21 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		else if(arg.equals("Un-Highlight this Function")){   
 		    trial.getColorChooser().setHighlightColorMappingID(-1);}
 		else if(arg.equals("Show Total Statistics Windows")){
-		    StatWindow tmpRef = new StatWindow(trial, serverNumber, contextNumber,
-						       threadNumber, sMWindow.getSMWData(), 1);
+		    StatWindow tmpRef = new StatWindow(trial, node, context,
+						       thread, sMWindow.getSMWData(), 1);
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
 		else if(arg.equals("Show Total User Event Statistics Windows")){
-		    StatWindow tmpRef = new StatWindow(trial, serverNumber, contextNumber,
-								     threadNumber, sMWindow.getSMWData(), 2);
+		    StatWindow tmpRef = new StatWindow(trial, node, context,
+								     thread, sMWindow.getSMWData(), 2);
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
 		else if(arg.equals("Show Call Path Thread Relations")){
-		    CallPathUtilFuncs.trimCallPathData(trial,serverNumber,contextNumber,threadNumber);
-		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, serverNumber, contextNumber,
-								       threadNumber, sMWindow.getSMWData(),false);
+		    CallPathUtilFuncs.trimCallPathData(trial,node,context,thread);
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, node, context,
+								       thread, sMWindow.getSMWData(),false);
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
@@ -392,15 +391,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
       
 	    //Get the number of times clicked.
 	    int clickCount = evt.getClickCount();
-      
-	    //if(meanBarTest(evt, clickCount, xCoord, yCoord))
-	    //return;
-      
-	    //**********
-	    //Reset the counters.
-	    serverCounter = contextCounter = threadCounter = sMWThreadDataElementCounter = 0;
-	    //End - Reset the counters.
-	    //**********
       
 	    //**********
 	    //Check to see if the click occured in the mean values bar.
@@ -476,16 +466,18 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
 						//Bring up the thread data window for this thread object!
 						if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
-						    ThreadDataWindow tmpRef = new ThreadDataWindow(trial, serverCounter, contextCounter,
-												   threadCounter, sMWindow.getSMWData(), 1);                  
+						    ThreadDataWindow tmpRef = new ThreadDataWindow(trial, sMWThreadDataElement.getNodeID(),
+												   sMWThreadDataElement.getContextID(),
+												   sMWThreadDataElement.getThreadID(),
+												   sMWindow.getSMWData(), 1);                  
 						    trial.getSystemEvents().addObserver(tmpRef);
 						    tmpRef.show();
 						}
 						else{
 						    popup2.show(this, evt.getX(), evt.getY());
-						    serverNumber = serverCounter;
-						    contextNumber = contextCounter;
-						    threadNumber = threadCounter;
+						    node = sMWThreadDataElement.getNodeID();
+						    context = sMWThreadDataElement.getContextID();
+						    thread = sMWThreadDataElement.getThreadID();
 						    return;
 						}
 					    }
@@ -514,22 +506,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					}
 				    }
 				}
-				//End if statement!
-				
-				//Update the thread counter.
-				threadCounter++;
 			    }
 			}
-			//End if statement!
-			
-			//Update the context counter.
-			contextCounter++;
 		    }
 		}
-		//End if statement!
-		
-		//Update the server counter!
-		serverCounter++;
 	    }
 	    //End - Check for clicking in the rest of the window.
 	    //**********
@@ -592,8 +572,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 	    //Other initializations.
 	    //######
-	    //Reset the counters.
-	    serverCounter = contextCounter = threadCounter = sMWThreadDataElementCounter = colorCounter = 0;
 	    highlighted = false;
 	    xCoord = yCoord = 0;
 	    int yBeg = 0;
@@ -815,27 +793,16 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		
 	    //**********
 	    //Draw the thread data bars.
-		
-	    //Setting the server counter to zero ... not that it is really required.
-	    serverCounter = 0;
 	    for(Enumeration e1 = list[0].elements(); e1.hasMoreElements() ;){
 		//Get the next server.
 		sMWServer = (SMWServer) e1.nextElement();
-		    
 		//Get the context list for this server.
 		contextList = sMWServer.getContextList();
-		    
-		//Setting the context counter to zero ... this is really required.
-		contextCounter = 0;
 		for(Enumeration e2 = contextList.elements(); e2.hasMoreElements() ;){
 		    //Get the next context.
 		    sMWContext = (SMWContext) e2.nextElement();
-			
 		    //Get the thread list for this context.
 		    threadList = sMWContext.getThreadList();
-			
-		    //Setting the context counter to zero ... this is really required as well. :-)
-		    threadCounter = 0;
 		    for(Enumeration e3 = threadList.elements(); e3.hasMoreElements() ;){
 			//Reset the highlighted boolean.
 			highlighted = false;
@@ -849,7 +816,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			//Now select whether to draw this thread.
 			if((yCoord >= yBeg) && (yCoord <= yEnd)){
 			    //Draw the n,c,t string to the left of the bar start position.
-			    String s1 = "n,c,t   " + serverCounter + "," + contextCounter + "," + threadCounter;
+			    String s1 = "n,c,t   " + sMWServer.getNodeID() + "," + sMWContext.getContextID() + "," + sMWThread.getThreadID();
 			    int tmpStringWidth = fmFont.stringWidth(s1);
 			    g2D.drawString(s1, (barXStart - tmpStringWidth - 5), yCoord);
 				
@@ -1092,27 +1059,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			//max y draw value for this thread.
 			if(instruction==0)
 			    sMWThread.setYDrawCoord(yCoord);
-			    
-			//Update the thread counter.
-			threadCounter++;
-			    
 		    }
 		    //We are about to move on to drawing the next context.  Thus, record the
 		    //max y draw value for this context.
 		    if(instruction==0)
 			sMWContext.setYDrawCoord(yCoord);
-			
-		    //Update the context counter.
-		    contextCounter++;
 		}
 		    
 		//We are about to move on to drawing the next server.  Thus, record the
 		//max y draw value for this server.
 		if(instruction==0)
 		    sMWServer.setYDrawCoord(yCoord);
-		    
-		//Update the server counter.
-		serverCounter++;
 	    }
 	}
 	catch(Exception e){
@@ -1222,12 +1179,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     //######
     //Convenient counters.
     //######
-    int serverCounter = 0;
-    int contextCounter = 0;
-    int threadCounter = 0;
-    int serverNumber = 0;
-    int contextNumber = 0;
-    int threadNumber = 0;
+    int node = 0;
+    int context = 0;
+    int thread = 0;
     int sMWThreadDataElementCounter = 0;
     int colorCounter = 0;
     //######

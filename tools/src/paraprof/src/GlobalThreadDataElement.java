@@ -405,6 +405,15 @@ public class GlobalThreadDataElement{
     public static int getPositionOfUserEventName(){
 	return 72;
     }
+
+    public void addCall(double exclusive, double inclusive){
+	if(calls==null)
+	    calls = new Vector();
+	double[] arr = new double[2];
+	arr[0] = exclusive;
+	arr[1] = inclusive;
+	calls.add(arr);
+    }
     
     public boolean isCallPathObject(){
 	return globalMappingElement.isCallPathObject();}
@@ -586,6 +595,8 @@ public class GlobalThreadDataElement{
     int userEventNumberValue = 0;
     boolean userevent = false;
 
+    Vector calls = null;
+
     private Vector parents = null;
     private Vector children = null;
     private Vector callPathIDSParents = null;
@@ -594,7 +605,3 @@ public class GlobalThreadDataElement{
     //End - Instance data.
     //####################################
 }
-
-
-
-

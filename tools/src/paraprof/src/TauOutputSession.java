@@ -267,6 +267,10 @@ public class TauOutputSession extends ParaProfDataSession{
 			    inputString = br.readLine();
 			    if(this.debug())
 				System.out.println("Profile Calls line: " + inputString);
+			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+			    //Arguments are evaluated left to right.
+			    globalThreadDataElement.addCall(Double.parseDouble(genericTokenizer.nextToken()),
+							    Double.parseDouble(genericTokenizer.nextToken()));
 			}
 			    
 		    }

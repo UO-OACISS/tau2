@@ -59,6 +59,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
 	    maskMappingItem.addActionListener(this);
 	    popup.add(maskMappingItem);
+
+	    
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDWP02");
