@@ -16,6 +16,7 @@ Version 2.9 changes (from 2.8):
 4. Added support for selective profiling in Java (-XrunTAU:exclude=java,sun)
 5. Java RMI support changes.
 6. Introduced TAU Java source instrumentation API.
+7. Added support for enabling and disabling group level instrumentation.
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
