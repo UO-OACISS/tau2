@@ -17,8 +17,10 @@ int fourth(void)
   TAU_PROFILE_TIMER(tautimer,"fourth()", "int ()", TAU_DEFAULT);
   TAU_PROFILE_START(tautimer);
   printf("Reached fourth\n");
+
   for (i = 0; i < 100; i++)
     user_square(i);
+
   TAU_PROFILE_STOP(tautimer);
   return 0;
 }
@@ -114,7 +116,7 @@ int main (int argc, char **argv)
 }
 /***************************************************************************
  * $RCSfile: hello.c,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1999/04/06 22:55:27 $
- * POOMA_VERSION_ID: $Id: hello.c,v 1.4 1999/04/06 22:55:27 sameer Exp $
+ * $Revision: 1.5 $   $Date: 1999/06/18 17:09:54 $
+ * POOMA_VERSION_ID: $Id: hello.c,v 1.5 1999/06/18 17:09:54 sameer Exp $
  ***************************************************************************/
 
