@@ -3,7 +3,7 @@ package dms.dss;
 /**
  * Holds all the data for a function data object in the database.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.12 2003/08/12 00:08:29 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.13 2003/08/12 00:25:17 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -75,7 +75,6 @@ public class FunctionDataObject {
 	}
 
 	public void setInclusive (int metricIndex, double inclusive) {
-		System.out.println ("setInclusive: " + metricIndex + ", " + inclusive);
 		insertDouble(metricIndex, 1, inclusive);
 	}
 

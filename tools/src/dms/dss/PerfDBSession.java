@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.21 2003/08/12 00:08:29 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.22 2003/08/12 00:25:18 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -385,7 +385,6 @@ public class PerfDBSession extends DataSession {
 				funs.addElement(fun);
 				tmpFunction = (Function)functionHash.get(new Integer(fun.getIndexID()));
 				if (tmpFunction == null) {
-					System.out.println("Adding " + fun.getIndexID() + " to the hashtable");
 					functionHash.put(new Integer(fun.getIndexID()), fun);
 				}
 	    	}
@@ -640,7 +639,7 @@ public class PerfDBSession extends DataSession {
 			Function function;
         	for(Enumeration en = functions.elements(); en.hasMoreElements() ;) {
 				function = (Function) en.nextElement();
-				buf.append(function.getFunctionID());
+				buf.append(function.getIndexID());
 				if (en.hasMoreElements())
 					buf.append(", ");
 				else
@@ -834,12 +833,9 @@ public class PerfDBSession extends DataSession {
 	public Function getFunction(int id) {
 		Function function = null;
 		if (functionHash != null) {
-			System.out.println("functionHash != null...");
-			System.out.println("getting " + id + " from the hashtable");
 			function = (Function)functionHash.get(new Integer(id));
 		}
 		if (function == null) {
-			System.out.println("function == null...");
 			// create a string to hit the database
 			String whereClause;
 			whereClause = " where f.id = " + id;
