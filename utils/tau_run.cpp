@@ -50,6 +50,8 @@ BPatch *bpatch;
 
 /* For selective instrumentation */
 extern int processInstrumentationRequests(char *fname);
+extern bool areFileIncludeExcludeListsEmpty(void);
+extern bool processFileForInstrumentation(const string& file_name); 
 extern void printExcludeList();
 extern bool instrumentEntity(const string& function_name);
 
@@ -70,6 +72,22 @@ void errorFunc(BPatchErrorLevel level, int num, const char **params){
     }//if
 }//errorFunc()
 
+//
+// For compatibility purposes
+//
+
+BPatch_function * tauFindFunction (BPatch_image *appImage, char * functionName)
+{
+   // Extract the vector of functions 
+   BPatch_Vector<BPatch_function *> found_funcs;
+   if ((NULL == appImage->findFunction(functionName, found_funcs)) || !found_funcs.size()) {
+     dprintf("tau_run: Unable to find function %s\n", functionName); 
+     return NULL;
+   }
+   return found_funcs[0]; // return the first function found 
+   // FOR DYNINST 3.0 and previous versions:
+   // return appImage->findFunction(functionName);
+}
 
 //
 // invokeRoutineInFunction calls routine "callee" with no arguments when 
@@ -111,7 +129,7 @@ BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
 void Initialize(BPatch_thread *appThread, BPatch_image *appImage, 
 	BPatch_Vector<BPatch_snippet *>& initArgs){
   // Find the initialization function and call it
-  BPatch_function *call_func = appImage->findFunction("TauInitCode");
+  BPatch_function *call_func = tauFindFunction(appImage,"TauInitCode");
   if (call_func == NULL) {
     fprintf(stderr, "Unable to find function TauInitCode\n");
     exit(1);
@@ -179,15 +197,32 @@ void errorFuncNull(BPatchErrorLevel level, int num, const char **params){
 int moduleConstraint(char *fname){ // fname is the name of module/file 
   int len = strlen(fname);
 
-  if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
-     ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
-     ((fname[len-3] == '.') && (fname[len-2] == 'c') && (fname[len-1] == 'c')) || 
-      (strcmp(fname, "LIBRARY_MODULE") == 0)){
-    /* It is ok to instrument this module. Constraint doesn't exist. */
-    return false;
-  }//if
+  if (areFileIncludeExcludeListsEmpty()) 
+  { // there are no user sepecified constraints on modules. Use our default 
+    // constraints 
+    if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
+       ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
+       ((fname[len-3] == '.') && (fname[len-2] == 'c') && (fname[len-1] == 'c')) || 
+       (strcmp(fname, "LIBRARY_MODULE") == 0)){
+      /* It is ok to instrument this module. Constraint doesn't exist. */
+      return false;
+    }//if
+    else
+      return true;
+  } // the selective instrumentation file lists are not empty! 
   else
-    return true;
+  { 
+    // See if the file should be instrumented 
+    if (processFileForInstrumentation(string(fname)))
+    { // Yes, it should be instrumented. moduleconstraint should return false! 
+      return false; 
+    }
+    else
+    { // No, the file should not be instrumented. Constraint exists return true
+      return true; 
+    }
+
+  }
 }//moduleConstraint()
 
 // Constriant for routines. The constraint returns true for those routines that 
@@ -219,15 +254,15 @@ int routineConstraint(char *fname){ // fname is the function name
 int checkIfMPI(BPatch_image * appImage, BPatch_function * & mpiinit,
 		BPatch_function * & mpiinitstub){
 
-  mpiinit 	= appImage->findFunction("PMPI_Comm_rank");
-  mpiinitstub 	= appImage->findFunction("TauMPIInitStub");
+  mpiinit 	= tauFindFunction(appImage, "PMPI_Comm_rank");
+  mpiinitstub 	= tauFindFunction(appImage, "TauMPIInitStub");
 
   if (mpiinitstub == (BPatch_function *) NULL)
     printf("*** TauMPIInitStub not found! \n");
   
   if (mpiinit == (BPatch_function *) NULL) {
     dprintf("*** PMPI_Comm_rank not found looking for MPI_Comm_rank...\n");
-    mpiinit = appImage->findFunction("MPI_Comm_rank");
+    mpiinit = tauFindFunction(appImage, "MPI_Comm_rank");
   }//if
   
   if (mpiinit == (BPatch_function *) NULL) { 
@@ -306,7 +341,8 @@ int main(int argc, char **argv){
   dprintf("Before createProcess\n");
   // Specially added to disable Dyninst 2.0 feature of debug parsing. We were
   // getting an assertion failure under Linux otherwise 
-  bpatch->setDebugParsing(false); 
+  // bpatch->setDebugParsing(false); 
+  // removed for DyninstAPI 4.0
   appThread = bpatch->createProcess(argv[1], &argv[1] , NULL);
   dprintf("After createProcess\n");
 
@@ -350,9 +386,9 @@ int main(int argc, char **argv){
   }//loadlib == true
 
   BPatch_function *inFunc;
-  BPatch_function *enterstub = appImage->findFunction("TauRoutineEntry");
-  BPatch_function *exitstub = appImage->findFunction("TauRoutineExit");
-  BPatch_function *terminationstub = appImage->findFunction("TauProgramTermination");
+  BPatch_function *enterstub = tauFindFunction(appImage, "TauRoutineEntry");
+  BPatch_function *exitstub = tauFindFunction(appImage, "TauRoutineExit");
+  BPatch_function *terminationstub = tauFindFunction(appImage, "TauProgramTermination");
   BPatch_Vector<BPatch_snippet *> initArgs;
   
   char modulename[256];
@@ -437,7 +473,7 @@ int main(int argc, char **argv){
     }//if -- module constraint
   }//for -- modules
 
-  BPatch_function *exitpoint = appImage->findFunction("_exit");
+  BPatch_function *exitpoint = tauFindFunction(appImage, "_exit");
 
   if (exitpoint == NULL) {
     fprintf(stderr, "UNABLE TO FIND exit() \n");
