@@ -161,6 +161,7 @@ monitor=no
 profilecounters=no
 multiplecounters=no
 profilestats=no
+profilememory=no
 callpath=no
 profilecalls=no
 profilecallstack=no
@@ -623,6 +624,12 @@ do
     shift
     ;;
 
+  -PROFILEMEMORY)
+    profile=yes
+    profilememory=yes
+    shift
+    ;;
+
   -PROFILECALLSTACK)
     profile=yes
     profilecallstack=yes
@@ -748,6 +755,7 @@ do
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
+    echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
@@ -1063,6 +1071,11 @@ fi
 if [ $profilestats = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILESTATS"
+fi
+
+if [ $profilememory = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILEMEMORY"
 fi
 
 if [ $tag = yes ]

@@ -28,13 +28,14 @@ void TauSetInterruptInterval(int interval);
 void TauTrackMemoryUtilization(void);
 void TauTrackMuseEvents(void);
 void TauTrackMemoryHere(void);
+double TauGetMaxRSS(void);
 
 #endif /* _TAU_HANDLER_H_ */
   
 /***************************************************************************
  * $RCSfile: TauHandler.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2004/06/10 18:08:30 $
- * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.3 2004/06/10 18:08:30 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 2004/07/20 23:22:45 $
+ * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.4 2004/07/20 23:22:45 sameer Exp $ 
  ***************************************************************************/
 
 	

@@ -775,6 +775,10 @@ ALPHATIMERS)
 	echo "NOTE: Using Profile Statistics (Std. Dev. of Excl time/counts)"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PROFILEMEMORY)
+	echo "NOTE: Using PROFILEMEMORY options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PROFILECALLPATH)
 	echo "NOTE: Using Call Path Profiles"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

@@ -47,6 +47,8 @@
 #define MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
 #endif//TAU_MULTIPLE_COUNTERS
 
+class TauUserEvent; 
+
 class FunctionInfo
 {
 public:
@@ -107,6 +109,10 @@ public:
 	int AppendExclInclTimeThisCall(double ex, double in); 
 	// to ExclInclCallList
 #endif // PROFILE_CALLS
+#ifdef TAU_PROFILEMEMORY
+	TauUserEvent * MemoryEvent;
+	TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
+#endif // TAU_PROFILEMEMORY
 
 
 
@@ -287,6 +293,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2002/11/28 00:48:40 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.26 2002/11/28 00:48:40 sameer Exp $ 
+ * $Revision: 1.27 $   $Date: 2004/07/20 23:22:45 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.27 2004/07/20 23:22:45 sameer Exp $ 
  ***************************************************************************/
