@@ -472,6 +472,10 @@ fi
 	echo "NOTE: Using Java Virtual Machine Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OPENMP)
+	echo "NOTE: Using OpenMP Threads ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PCLPTHREAD)
 	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
