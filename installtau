@@ -155,6 +155,7 @@ do
     echo "-mpiinc=<mpiincdir>  "
     echo "-mpilib=<mpilibdir>  "
     echo "-mpilibrary=<mpilibrary>  "
+    echo "-mpi"
     echo "-tag=<unique name> "
     echo "-nocomm"
     echo "-opari=<oparidir>  "
@@ -242,7 +243,7 @@ echo " " > wishver
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt"
     ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts $commopt <wishver
     make clean; make install
-    if [ "x$commopt" = "x" ]
+    if [ "x$commopt" != "x" ]
     then
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -nocomm"
       ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -nocomm <wishver
