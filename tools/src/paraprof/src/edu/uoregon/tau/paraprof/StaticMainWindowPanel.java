@@ -119,8 +119,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
 	    SMWThread sMWThread = null;
 	    
-	    //Calculate which SMWThreadDataElement was clicked on.
-	    int index = (yCoord)/(trial.getPreferences().getBarSpacing())-1;
+	    int index = 0;
+
+	    if (trial.getPreferences().getBarSpacing() != 0) {
+		//Calculate which SMWThreadDataElement was clicked on.
+		index = (yCoord)/(trial.getPreferences().getBarSpacing())-1;
+	    }
 
 	    if(index==-1){
 		if(xCoord<barXCoord){
