@@ -163,12 +163,16 @@ public class PPFunctionProfile implements Comparable {
                 return checkDescending(this.getThreadID() - other.getThreadID());
         } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
 
-            return checkDescending(Double.compare(valueType.getValue(this.meanProfile,
+//            return checkDescending(Double.compare(valueType.getValue(this.meanProfile,
+//                    dataSorter.getSelectedMetricID()), valueType.getValue(other.meanProfile,
+//                    dataSorter.getSelectedMetricID())));
+
+            return checkDescending(compareToHelper(valueType.getValue(this.meanProfile,
                     dataSorter.getSelectedMetricID()), valueType.getValue(other.meanProfile,
-                    dataSorter.getSelectedMetricID())));
+                    dataSorter.getSelectedMetricID()), this.meanProfile, other.meanProfile));
 
         } else if (dataSorter.getSortType() == SortType.VALUE) {
-            return checkDescending(Double.compare(valueType.getValue(this.getFunctionProfile(),
+            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(),
                     dataSorter.getSelectedMetricID()), valueType.getValue(other.getFunctionProfile(),
                     dataSorter.getSelectedMetricID())));
 
@@ -295,7 +299,7 @@ public class PPFunctionProfile implements Comparable {
             return 1;
     }
 
-    private int compareToHelper(double d1, double d2, PPFunctionProfile f1, PPFunctionProfile f2) {
+    private int compareToHelper(double d1, double d2, FunctionProfile f1, FunctionProfile f2) {
         double result = d1 - d2;
         if (result < 0.00)
             return -1;
@@ -303,7 +307,7 @@ public class PPFunctionProfile implements Comparable {
             // this is here to make sure that things get sorted the same for mean and other threads
             // in the case of callpath profiles, multiple functionProfiles may have the same values
             // we need them in the same order for everyone
-            return f1.functionProfile.getFunction().compareTo(f2.functionProfile.getFunction());
+            return f1.getFunction().compareTo(f2.getFunction());
         } else
             return 1;
     }

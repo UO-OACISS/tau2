@@ -169,7 +169,7 @@ public class PPUserEventProfile implements Comparable {
             //                    dataSorter.getSelectedMetricID())));
             //
         } else if (dataSorter.getSortType() == SortType.VALUE) {
-            return checkDescending(Double.compare(valueType.getValue(this.getUserEventProfile()),
+            return checkDescending(compareToHelper(valueType.getValue(this.getUserEventProfile()),
                     valueType.getValue(other.getUserEventProfile())));
 
         } else {
