@@ -58,6 +58,8 @@ class RtsLayer
 
  	static TauGroup_t  enableProfileGroup(TauGroup_t  ProfileGroup) ;
 
+ 	static TauGroup_t  disableProfileGroup(TauGroup_t  ProfileGroup) ;
+
         static TauGroup_t  resetProfileGroup(void) ;
 
 	static int setAndParseProfileGroups (char *prog, char *str) ;
@@ -115,6 +117,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2000/10/12 19:12:24 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.9 2000/10/12 19:12:24 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 2001/01/05 22:23:58 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.10 2001/01/05 22:23:58 sameer Exp $ 
  ***************************************************************************/

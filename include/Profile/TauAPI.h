@@ -75,6 +75,8 @@
 #define TAU_REGISTER_FORK(id, op) 		RtsLayer::RegisterFork(id, op);
 #define TAU_ENABLE_INSTRUMENTATION() 		RtsLayer::TheEnableInstrumentation() = true;
 #define TAU_DISABLE_INSTRUMENTATION() 		RtsLayer::TheEnableInstrumentation() = false;
+#define TAU_ENABLE_GROUP(group)			RtsLayer::enableProfileGroup(group)
+#define TAU_DISABLE_GROUP(group)		RtsLayer::disableProfileGroup(group)
 
 #ifdef NO_RTTI
 #define CT(obj) string(#obj)
@@ -111,6 +113,8 @@
 #define TAU_REGISTER_FORK(id, op) 
 #define TAU_ENABLE_INSTRUMENTATION() 		
 #define TAU_DISABLE_INSTRUMENTATION() 	
+#define TAU_ENABLE_GROUP(group)
+#define TAU_DISABLE_GROUP(group)
 
 #define CT(obj)
 
@@ -137,6 +141,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2000/10/12 19:12:24 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.6 2000/10/12 19:12:24 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 2001/01/05 22:23:58 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.7 2001/01/05 22:23:58 sameer Exp $ 
  ***************************************************************************/

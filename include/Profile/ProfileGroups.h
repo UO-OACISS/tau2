@@ -70,9 +70,43 @@ SPACE for 			0x00080000
 #define TAU_USER1   		0x40000000   /* User1 	      '1' */
 #define TAU_USER    		0x80000000   /* User 	      'u' */
 
+#define TAU_GROUP_0		0x80000000
+#define TAU_GROUP_1		0x40000000
+#define TAU_GROUP_2		0x20000000
+#define TAU_GROUP_3		0x10000000 
+#define TAU_GROUP_4		0x08000000 
+#define TAU_GROUP_5		0x04000000
+#define TAU_GROUP_6 		0x02000000
+#define TAU_GROUP_7		0x01000000
+#define TAU_GROUP_8		0x00800000 
+#define TAU_GROUP_9		0x00400000
+#define TAU_GROUP_10		0x00200000
+#define TAU_GROUP_11		0x00100000
+#define TAU_GROUP_12		0x00080000
+#define TAU_GROUP_13		0x00040000 
+#define TAU_GROUP_14		0x00020000
+#define TAU_GROUP_15		0x00010000
+#define TAU_GROUP_16		0x00008000
+#define TAU_GROUP_17		0x00004000
+#define TAU_GROUP_18		0x00002000
+#define TAU_GROUP_19		0x00001000
+#define TAU_GROUP_20		0x00000800
+#define TAU_GROUP_21		0x00000400
+#define TAU_GROUP_22		0x00000200
+#define TAU_GROUP_23		0x00000100 
+#define TAU_GROUP_24		0x00000080
+#define TAU_GROUP_25		0x00000040 
+#define TAU_GROUP_26		0x00000020
+#define TAU_GROUP_27		0x00000010
+#define TAU_GROUP_28		0x00000008
+#define TAU_GROUP_29		0x00000004
+#define TAU_GROUP_30		0x00000002
+#define TAU_GROUP_31		0x00000001
+
+
 #endif /* _PROFILE_GROUPS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileGroups.h,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2000/10/11 18:41:56 $
- * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.4 2000/10/11 18:41:56 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 2001/01/05 22:23:58 $
+ * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.5 2001/01/05 22:23:58 sameer Exp $ 
  ***************************************************************************/
