@@ -143,7 +143,10 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
     fprintf(stdout, "TAU> Class Load : %s\n", event->u.class_load.class_name);
 #endif /* DEBUG_PROF */
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
+/* Do this for single threaded appls that don't have PROFILE_SET_NODE */
+#ifndef TAU_MPI
   static int j = TAU_MAPPING_PROFILE_SET_NODE(0, tid);
+#endif 
   
   for (i = 0; i < event->u.class_load.num_methods; i++)
   {
@@ -268,7 +271,7 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2000/03/19 00:19:51 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.14 2000/03/19 00:19:51 sameer Exp $
+ * $Revision: 1.15 $   $Date: 2000/03/20 20:04:18 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.15 2000/03/20 20:04:18 sameer Exp $
  ***************************************************************************/
 
