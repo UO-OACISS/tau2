@@ -1,0 +1,122 @@
+The PHASE profiling API in TAU consists of:
+
+1. TAU_PHASE("name", "type", group); [C++ only]
+
+similar to TAU_PROFILE. e.g.,
+
+int foo(void)
+{
+  TAU_PHASE("foo", "int (void)", TAU_USER);
+  ...
+  return 0;
+}
+
+2. TAU_PHASE_CREATE_DYNAMIC(phasevar, "name", "type", group);
+
+This allows you to create a different phase for each invocation. This may
+be useful for tracking phases that occur in different iterations of a loop.
+
+int foo(int N)
+{
+  char name[32];
+  int i;
+
+  for (i = 0; i < N; i++)
+  {
+    sprintf(name, "Loop iteration %d", i);
+    TAU_PHASE_CREATE_DYNAMIC(ph, name, "", TAU_USER);
+    TAU_PHASE_START(ph);
+    /* work */
+      bar();
+    TAU_PHASE_STOP(ph);
+  }
+}
+
+3. TAU_PHASE_CREATE_STATIC(phasevar, "name", "type", group);
+
+This creates a phase that is initialized the first time the statement is
+executed (static). 
+
+int foo(void)
+{
+  TAU_PHASE_CREATE_STATIC(ph, "foo()", "PHASE", TAU_DEFAULT);
+
+  TAU_PHASE_START(ph);
+
+  /* work */
+    bar();
+  TAU_PHASE_STOP(ph);
+
+  return 0;
+}
+
+
+4. TAU_PHASE_START(ph);
+ Starts a phase specified by ph.
+
+5. TAU_PHASE_STOP(ph);
+ Stops a phase specified by ph.
+
+6. TAU_GLOBAL_PHASE(phasevar, "name", "type", group);
+
+ Creates a globally accessible phase. e.g.,
+
+  TAU_GLOBAL_PHASE(ph, "I/O", "", TAU_DEFAULT);
+
+  int doread(int fp, char *buffer, int size)
+  {
+    int bytes;
+    TAU_GLOBAL_PHASE_START(ph);
+    if ((bytes = read(fp, buffer, size)) != size)
+    {
+       perror("Read returns value less than size.");
+    }
+    TAU_GLOBAL_PHASE_STOP();
+    return bytes;
+  }
+   
+  int dowrite(int fp, char *buffer, int size)
+  {
+    int bytes;
+    TAU_GLOBAL_PHASE_START(ph);
+    if ((bytes = write(fp, buffer, size)) != size)
+    {
+       perror("Write returns value less than size.");
+    }
+    TAU_GLOBAL_PHASE_STOP();
+    return bytes;
+  }
+
+7. TAU_GLOBAL_PHASE_EXTERNAL(phasevar);
+   To access the ph phase variable in the above example in a different file, 
+   you may use TAU_GLOBAL_PHASE_EXTERNAL.
+
+   TAU_GLOBAL_PHASE_EXTERNAL(ph);
+
+   int bar()
+   {
+     TAU_GLOBAL_PHASE_START(ph);
+     /* do work */
+     TAU_GLOBAL_PHASE_STOP();
+   }
+
+8. TAU_GLOBAL_PHASE_START(phasevar);
+   Starts a global phase as illustrated above.
+9. TAU_GLOBAL_PHASE_STOP();
+   Stops a global phase. 
+
+
+Phases differs from callpaths in the following ways:
+a) If main() calls f1() which calls f2() which calls f3() and we use callpath profiles,
+we can get "main() => f1() => f2() => f3()" as the time spent in f3 when it was called
+by f2, when it was called by f1, when it was called by main.
+
+With callpath profiling, if f2 is instrumented as a phase, we get:
+"main => f1"
+"main => f2"
+"f2 => f3"
+but there's no main => f3 as scoping rules for phases assigns f3 to phase f2 instead of the
+default application phase of main. 
+
+b) The length of callpath profiles can be specified at runtime using TAU_CALLPATH_DEPTH. 
+However, a phase profile is always 2 deep (phase => routine). 
