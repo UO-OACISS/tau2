@@ -247,28 +247,32 @@ public class ColorChooser implements WindowListener {
             colors.clear();
 
             //Add the default colours.
-            addColor(new Color(61, 104, 63));
-            addColor(new Color(102, 0, 51));
-            addColor(new Color(0, 102, 102));
-            addColor(new Color(0, 51, 255));
-            addColor(new Color(102, 132, 25));
-            addColor(new Color(119, 71, 145));
-            addColor(new Color(221, 232, 30));
             addColor(new Color(70, 156, 168));
             addColor(new Color(255, 153, 0));
+
+            
+            addColor(new Color(0, 51, 255));
+            
+            
+            addColor(new Color(102, 0, 51));
+            addColor(new Color(221, 232, 30));
             addColor(new Color(0, 255, 0));
             addColor(new Color(121, 196, 144));
             addColor(new Color(86, 88, 112));
 
             addColor(new Color(151, 204, 255));
             addColor(new Color(102, 102, 255));
+            addColor(new Color(0, 102, 102));
             addColor(new Color(204, 255, 51));
+            addColor(new Color(102, 132, 25));
             addColor(new Color(255, 204, 153));
             addColor(new Color(204, 0, 204));
             addColor(new Color(0, 102, 102));
             addColor(new Color(204, 204, 255));
+            addColor(new Color(61, 104, 63));
             addColor(new Color(102, 255, 255));
             addColor(new Color(255, 102, 102));
+            addColor(new Color(119, 71, 145));
             addColor(new Color(255, 204, 204));
             addColor(new Color(240, 97, 159));
             addColor(new Color(0, 102, 153));
@@ -316,7 +320,7 @@ public class ColorChooser implements WindowListener {
             
             for (int i = 0; i < list.size(); i++) {
                 Function func = ((PPFunctionProfile) list.get(i)).getFunction();
-                func.setColor(this.getColor((func.getID()) % numberOfColors));
+                func.setColor(this.getColor(i % numberOfColors));
             }
         }
 

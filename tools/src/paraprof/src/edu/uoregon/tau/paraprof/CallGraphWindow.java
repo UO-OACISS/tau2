@@ -103,34 +103,48 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     class Graph extends JGraph {
 
         public String getToolTipText(MouseEvent event) {
-            Object cell = getFirstCellForLocation(event.getX(), event.getY());
-
-            Object origCell = cell;
             
-            if (cell instanceof Edge) 
-                cell = getNextCellForLocation(cell, event.getX(), event.getY());
-            while (cell instanceof Edge && cell != origCell) {
-                cell = getNextCellForLocation(cell, event.getX(), event.getY());
+            GraphCell gc = callGraphWindow.getGraphCellForLocation(event.getX(), event.getY());
+            
+            if (gc != null) {
+                return gc.getToolTipString();
             }
             
-            if (cell instanceof GraphCell) {
-                return ((GraphCell) cell).getToolTipString();
-            }
-
             return null;
+            
+//            Object cell = getFirstCellForLocation(event.getX(), event.getY());
+//
+//            Object origCell = cell;
+//            
+//            if (cell instanceof Edge) 
+//                cell = getNextCellForLocation(cell, event.getX(), event.getY());
+//            while (cell instanceof Edge && cell != origCell) {
+//                System.out.println ("getToolTipText: testing!");
+//                cell = getNextCellForLocation(cell, event.getX(), event.getY());
+//            }
+//            
+//            if (cell instanceof GraphCell) {
+//                System.out.println ("getToolTipText: End!");
+//                return ((GraphCell) cell).getToolTipString();
+//            }
+//            System.out.println ("getToolTipText: End!");
+//
+//            return null;
         }
 
         public Dimension getPreferredSize() {
             Dimension inner = super.getPreferredSize();
-            inner.setSize(inner.width+10,inner.height);
+            inner.setSize(inner.width+10,inner.height+10);
             return inner;
         }
         
-        public Graph(GraphModel gm) {
+        public Graph(GraphModel gm, CallGraphWindow cgw) {
             super(gm);
+            this.callGraphWindow = cgw;
             this.setSelectionModel(new ThisGraphSelectionModel(this));
         }
 
+        private CallGraphWindow callGraphWindow;
     }
 
     class BackEdge {
@@ -206,6 +220,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public int width;
         public int height;
         public float color;
+        
+        public int xBeg, yBeg, xEnd, yEnd;
         
         public boolean pathHighlight = false;
 
@@ -708,7 +724,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         // Construct Model and Graph
         model = new DefaultGraphModel();
-        graph = new Graph(model);
+        graph = new Graph(model, this);
         graph.addMouseListener(this);
         graph.addKeyListener(this);
 
@@ -740,8 +756,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     void recreateGraph() {
 
-        for (int i = 0; i < vertexVector.size(); i++) {
-            DefaultGraphCell dgc = (DefaultGraphCell) vertexVector.get(i);
+        for (int i = 0; i < graphCellVector.size(); i++) {
+            DefaultGraphCell dgc = (DefaultGraphCell) graphCellVector.get(i);
             dgc.removeAllChildren();
         }
 
@@ -791,7 +807,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         // Create Nested Map (from Cells to Attributes)
         Map attributes = new HashMap();
 
-        vertexVector = new Vector();
+        graphCellVector = new Vector();
         Vector cellVector = new Vector();
 
         for (int i = 0; i < levels.size(); i++) {
@@ -804,12 +820,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
                 if (v.function != null) {
                     //                    System.out.println("level " + i + ", column " + j + ": " + v.function.getName());
-                    dgc = createVertex(v, v.position - (v.width / 2),
+                    dgc = createGraphCell(v, v.position - (v.width / 2),
                             MARGIN + i * VERTICAL_SPACING, v.height, v.width, v.color, attributes);
 
                     v.graphCell = dgc;
                     cellVector.add(dgc);
-                    vertexVector.add(dgc);
+                    graphCellVector.add(dgc);
                 } else {
                     // dummy node, don't make a graph cell
                 }
@@ -1420,7 +1436,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     
   
     
-    public GraphCell createVertex(Vertex v, int x, int y, int height, int width, float color, Map attributes) {
+    public GraphCell createGraphCell(Vertex v, int x, int y, int height, int width, float color, Map attributes) {
         // Create Hello Vertex
         GraphCell vertex = new GraphCell(v);
 
@@ -1428,6 +1444,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         Map attrib = new Hashtable();
         attributes.put(vertex, attrib);
 
+        v.xBeg = x;
+        v.xEnd = x + width;
+        v.yBeg = y;
+        v.yEnd = y + height;
         //        System.out.println("placing at x=" + x + ", y = " + y);
 
         // Set bounds
@@ -1448,7 +1468,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
         
         GraphConstants.setOpaque(attrib, true);
-
+        GraphConstants.setEditable(attrib, false);
         GraphConstants.setFont(attrib, font);
 
         // Set raised border
@@ -1611,8 +1631,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         recreateGraph();
 //        
-//        for (int i = 0; i < vertexVector.size(); i++) {
-//            GraphCell dgc = (GraphCell) vertexVector.get(i);
+//        for (int i = 0; i < graphCellVector.size(); i++) {
+//            GraphCell dgc = (GraphCell) graphCellVector.get(i);
 //
 //            Map attrib = dgc.getAttributes();
 //
@@ -1633,13 +1653,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     public void handleColorEvent() {
 
-        System.out.println ("--handleColorEvent: Start");
+//        System.out.println ("--handleColorEvent: Start");
         Map attributeMap = new Hashtable();
 
         // color all edges black
         // and reset pathHighlight to false
-        for (int i = 0; i < vertexVector.size(); i++) {
-            GraphCell dgc = (GraphCell) vertexVector.get(i);
+        for (int i = 0; i < graphCellVector.size(); i++) {
+            GraphCell dgc = (GraphCell) graphCellVector.get(i);
             Vertex v = dgc.getVertex();
             v.pathHighlight = false;
 
@@ -1661,8 +1681,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
 
         // run through each vertex and find the "highlighted" one
-        for (int i = 0; i < vertexVector.size(); i++) {
-            GraphCell dgc = (GraphCell) vertexVector.get(i);
+        for (int i = 0; i < graphCellVector.size(); i++) {
+            GraphCell dgc = (GraphCell) graphCellVector.get(i);
 
             if (dgc.function == trial.getColorChooser().getHighlightedFunction()) { // this is the one
 
@@ -1710,7 +1730,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                                 GraphConstants.setLineColor(attrib, Color.blue);
 
                                 if (e == null) {
-                                    System.out.println("uh oh");
+  //                                  System.out.println("uh oh");
                                 } else {
                                     attributeMap.put(e, attrib);
                                 }
@@ -1725,9 +1745,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
 
         // now do the final coloring
-        for (int i = 0; i < vertexVector.size(); i++) {
+        for (int i = 0; i < graphCellVector.size(); i++) {
 
-            GraphCell dgc = (GraphCell) vertexVector.get(i);
+            GraphCell dgc = (GraphCell) graphCellVector.get(i);
             Map attrib = new HashMap();
 
             if (dgc.function == trial.getColorChooser().getHighlightedFunction()) {
@@ -1751,7 +1771,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         graph.getGraphLayoutCache().edit(attributeMap, null, null, null);
 
-        System.out.println ("--handleColorEvent: End");
+    //    System.out.println ("--handleColorEvent: End");
     }
 
     public void update(Observable o, Object arg) {
@@ -1813,48 +1833,81 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         dispose();
     }
 
+    
+    public GraphCell getGraphCellForLocation(int x, int y) {
+        for (int i=0; i < graphCellVector.size(); i++) {
+            GraphCell gc = (GraphCell) graphCellVector.get(i);
+            
+            Map attrib = gc.getAttributes();
+            Rectangle2D bounds = GraphConstants.getBounds(attrib);
+
+            if (bounds.contains(x,y))
+                return gc;
+        }
+        return null;
+    }
+    
     public void mouseClicked(MouseEvent evt) {
         // Get Cell under Mousepointer
         int x = evt.getX(), y = evt.getY();
-        Object cell = this.graph.getFirstCellForLocation(x, y);
-        Object origCell = cell;
-        // Print Cell Label
-        if (cell != null) {
+        
+        GraphCell gc = getGraphCellForLocation(evt.getX(), evt.getY());
+        
+        if (gc != null) {
+            Function f = ((Function) gc.getFunction());
 
-            
-            if (cell instanceof Edge) 
-                cell = this.graph.getNextCellForLocation(cell, x, y);
-            while (cell instanceof Edge && cell != origCell) {
-                cell = this.graph.getNextCellForLocation(cell, x, y);
-            }
+            if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                clickedOnObject = f;
+                popup.show(this, evt.getX(), evt.getY());
+                return;
 
-            if (cell instanceof GraphCell) {
-                GraphCell gc = (GraphCell) cell;
-
-                if (gc != null) {
-                    Function f = ((Function) gc.getFunction());
-
-                    if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-                        clickedOnObject = f;
-                        popup.show(this, evt.getX(), evt.getY());
-                        return;
-
-                    } else {
-                        trial.getColorChooser().toggleHighlightedFunction(f);
-                    }
-                    //FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial, f,
-                    //        this.dataSorter, false);
-                    //trial.getSystemEvents().addObserver(functionDataWindow);
-                    //functionDataWindow.show();
-                }
             } else {
-                //System.out.println("Not a GraphCell");
-
+                trial.getColorChooser().toggleHighlightedFunction(f);
             }
-        } else {
 
-//            System.out.println("Didn't click on anything");
         }
+        
+        
+//        
+//        Object cell = this.graph.getFirstCellForLocation(x, y);
+//        Object origCell = cell;
+//        // Print Cell Label
+//        if (cell != null) {
+//
+//            
+//            if (cell instanceof Edge) 
+//                cell = this.graph.getNextCellForLocation(cell, x, y);
+//            while (cell instanceof Edge && cell != origCell) {
+//                cell = this.graph.getNextCellForLocation(cell, x, y);
+//            }
+//
+//            if (cell instanceof GraphCell) {
+//                GraphCell gc = (GraphCell) cell;
+//
+//                if (gc != null) {
+//                    Function f = ((Function) gc.getFunction());
+//
+//                    if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+//                        clickedOnObject = f;
+//                        popup.show(this, evt.getX(), evt.getY());
+//                        return;
+//
+//                    } else {
+//                        trial.getColorChooser().toggleHighlightedFunction(f);
+//                    }
+//                    //FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial, f,
+//                    //        this.dataSorter, false);
+//                    //trial.getSystemEvents().addObserver(functionDataWindow);
+//                    //functionDataWindow.show();
+//                }
+//            } else {
+//                //System.out.println("Not a GraphCell");
+//
+//            }
+//        } else {
+//
+////            System.out.println("Didn't click on anything");
+//        }
 
     }
 
@@ -2154,7 +2207,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private JSlider boxWidthSlider = new JSlider(0, 500, boxWidth);
 
     DefaultGraphModel model;
-    Vector vertexVector;
+    Vector graphCellVector;
     Object[] cells;
     Vector levels;
     Vector backEdges;
