@@ -18,7 +18,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/research/parallel/mikek/tau2
+TAUROOT=/research/parallel/sameer/gar/research/tau2
 #######################################################################
  
 #MIPSR8K##ABI 	     = -64		  #ENDIF#
@@ -42,6 +42,9 @@ LINKER	= $(CC)
 # tools EVERYONE needs
 BASIC = utils src/Profile examples/instrument
 
+# library and tools
+EXPORTS = utils src/Profile 
+
 # Example Programs
 EXAMPLES = examples/matrix examples/instrument examples/pi
 
@@ -60,6 +63,17 @@ SUBDIR  = $(BASIC) $(PCXX) $(HPCXX) $(ANSIC)
 
 all:
 	@echo "At the installation root, use \"make install\" "
+
+exports : 
+	@echo "Determining Configuration..."
+	@if [ x`utils/ConfigQuery -arch` = xdefault ] ; then \
+          (echo Run the configure script before attempting to compile ; \
+           exit 1) ; \
+         else echo System previously configured as a `utils/ConfigQuery -arch` ; fi
+	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
+	@for i in ${EXPORTS}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
+             $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" ); done
+	@echo "***************** DONE ************************"
 
 tests: 
 	@echo "Determining Configuration..."
