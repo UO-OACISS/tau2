@@ -807,11 +807,11 @@ case $machine in
      fi
      ;;
   
-   rs6000)
+   rs6000 | ibm64)
      if [ $cxx_compiler = default ]
        then
          # If it has the IBM xlC compiler, use it
-	 if [ -f /usr/bin/xlC ]
+	 if [ -f /usr/bin/xlC -o -f /usr/vacpp/bin/xlC ]
            then
              cxx_compiler=xlC
              c_compiler=xlc
@@ -1083,7 +1083,12 @@ case $cxx_compiler in
       ibmxlc=yes
       if [ $fortran_compiler = no ] 
       then
-        fixmakeargs="$fixmakeargs IBM_FORTRAN"
+	if [ "$machine" = "ibm64" ]
+        then
+          fixmakeargs="$fixmakeargs IBM64_FORTRAN"
+	else
+          fixmakeargs="$fixmakeargs IBM_FORTRAN"
+	fi
       fi
       threadtest=`echo $cxx_compiler | sed -e 's/_r//'`
       if [ "y$threadtest" = "y$cxx_compiler" ]
@@ -1344,13 +1349,13 @@ EOF
   fi
   /bin/rm -rf mpi_thread_test.C mpi_thread_test.o
 else
-  fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+  fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
 
 if [ $mpi = yes -a "x$mpiinc" = "x" ] 
 then
   case $machine in 
-  rs6000)
+  rs6000|ibm64)
 	mpiinc=/usr/lpp/ppe.poe/include
         if [ $ibmxlc_r = yes ] 
         then
@@ -1383,7 +1388,7 @@ fi
 if [ $mpi = yes -a "x$mpilib" = "x" ]
 then
   case $machine in 
-  rs6000) 
+  rs6000|ibm64) 
 	mpilib=/usr/lpp/ppe.poe/lib
         if [ $ibmxlc_r = yes ] 
         then
@@ -1541,6 +1546,13 @@ fi # if mpilib is specified
 
 ######################################################################
 # Set default CC compiler in all Makefiles
+
+if [ "$mpi"="yes" -a "$ibmxlc_r" = "no" -a "$ibmxlc"="yes" -a "$machine" = "ibm64" ]
+then
+  echo "WARNING: PLEASE use xlC_r instead of xlC with MPI in 64 bit mode!! Reconfigure."
+  echo "----------------------------------------------------------------"
+fi
+
 
 gcclibdir=unknown
 if [ $c_compiler != gcc ]
@@ -1765,6 +1777,15 @@ case $machine in
 	if [ $papi = yes ]
  	  then
 	    fixmakeargs="$fixmakeargs IA64PAPI"
+	fi
+	;;
+     ibm64)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine $fixmakeargs SP1 IBM64"
+
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs IBM64PAPI"
 	fi
 	;;
      rs6000)
@@ -2041,7 +2062,7 @@ if [ $python = yes ]
     tauoptions="${tauoptions}-python"
     if [ $machine = rs6000 -a "x$pythonlib" = "x" ] 
     then
-      echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory is located!"
+      echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
       exit 1
     fi
 fi
