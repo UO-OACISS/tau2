@@ -2,7 +2,7 @@
 #*			TAU Portable Profiling Package			   **
 #*			http://www.acl.lanl.gov/tau		           **
 #****************************************************************************
-#*    Copyright 1997, 1998, 1999 				   	   **
+#*    Copyright 1997-2002        				   	   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #****************************************************************************
@@ -110,6 +110,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #COMPAQ_FORTRAN#TAU_F90      = f90      $(ABI)    #ENDIF#
 #KAI_FORTRAN#TAU_F90         = guidef90 $(ABI)    #ENDIF#
 #HP_FORTRAN#TAU_F90          = f90 	$(ABI)    #ENDIF#
+#HITACHI_FORTRAN#TAU_F90     = f90 	$(ABI)    #ENDIF#
 
 
 ############# Profiling Options #############
@@ -155,6 +156,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #KAINOEX#PROFILEOPT20  	       = --no_exceptions   #ENDIF#
 #SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
 #HPGNU#PROFILEOPT21	       = -fPIC #ENDIF#
+#HITACHI#PROFILEOPT21	       = -DTAU_HITACHI #ENDIF#
 #SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -D_XOPEN_SOURCE -DTAU_AIX #ENDIF#
 #USE_IBMXLC#PROFILEOPT21	       = -DTAU_DOT_H_LESS_HEADERS -DTAU_XLC#ENDIF#
 #PCLPTHREAD#PROFILEOPT22	       = -DPCL_MUTEX_LOCK #ENDIF#
@@ -218,6 +220,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SOL2#EXTRALIBS = -lsocket -lnsl      #ENDIF#
 #COMPAQ_FORTRAN#TAU_FORTRANLIBS =  $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -L$(EXTRADIR)/lib -L$(EXTRADIR)/lib/cmplrs/fort90 -L$(EXTRADIR)/lib/cmplrs/fort90 -lUfor -lfor -lFutil -lm -lmld -lexc -lc #ENDIF#
 #ABSOFT_FORTRAN#TAU_FORTRANLIBS =  -L$(EXTRADIR)/lib -lfio -lf90math -lU77 -lf77math -lfio #ENDIF#
+#HITACHI_FORTRAN#TAU_FORTRANLIBS =  -lf90 -lhf90math #ENDIF#
 
 # EXTERNAL PACKAGES: EPILOG
 #EPILOG#EXT_PACKAGES_EXTRA 	=  -L$(EPILOGDIR)/lib -lelg #ENDIF#
