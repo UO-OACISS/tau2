@@ -14,6 +14,9 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+//Some useful defines.
+#define NUMBER_OF_COUNTERS 1 //At the moment TAU only supports one counter.
+
 
 //Helper function used to determine the counter value
 //from the event name.
@@ -37,8 +40,6 @@ int map_eventnames(char *name)
 #include <pthread.h>
 
 
-
-
 long long PapiLayer::getCounters(int tid)
 {
   static ThreadValue * ThreadList[TAU_MAX_THREADS];
@@ -50,9 +51,15 @@ long long PapiLayer::getCounters(int tid)
   static bool RunBefore = false;
   
   //PAPI init stuff.
-  int PAPI_CounterList[1] = {0};
-  long long values[1] = {-1};
-  int Result;
+  
+  //Defining a static element which indicates the list of counters
+  //to be measured.  This array is initialized in the run-once section
+  //below.
+  static int PAPI_CounterList[NUMBER_OF_COUNTERS];
+
+  //A test declaration used to test the success of function calls.
+  //It does not store any counter values.
+  int Result = -1;
 
   //******************************************
   //This section is only run once.
@@ -68,6 +75,13 @@ long long PapiLayer::getCounters(int tid)
       //Initializing the static thread list.
       for(int i=0;i<TAU_MAX_THREADS;i++)
 	ThreadList[i] = NULL;
+
+      //Initialize the counter list.
+      for(int j=0;j<NUMBER_OF_COUNTERS;j++)
+	{
+	  PAPI_CounterList[j] = -1;
+	}
+
 
       char * EnvironmentVariable = NULL;
       EnvironmentVariable = getenv("PAPI_EVENT");
@@ -134,17 +148,27 @@ long long PapiLayer::getCounters(int tid)
 	}
       ThreadList[tid] = new ThreadValue;
       ThreadList[tid]->ThreadID = tid;
-      ThreadList[tid]->CounterValue = 0;
+      ThreadList[tid]->EventSet = PAPI_NULL;
+      ThreadList[tid]->CounterValues = new long long[NUMBER_OF_COUNTERS];
       
       //cout << "New thread added to the thread list." << endl;
 
-      //Starting the counter.
+      //Adding the events and starting the counter.
       if((pthread_mutex_lock(&lock) != 0))
 	 {
 	   cout << "There was a problem locking or unlocking a resource" << endl;
 	   return -1;
 	 }
-      Result = PAPI_start_counters(&PAPI_CounterList[0], 1);
+
+      Result = PAPI_add_events(&(ThreadList[tid]->EventSet) ,PAPI_CounterList ,NUMBER_OF_COUNTERS);
+      if(Result != PAPI_OK)
+	{
+	  cout << "Something went wrong adding events!" << endl;
+	  return -1;
+	}
+
+      
+      Result = PAPI_start(ThreadList[tid]->EventSet);
       if((pthread_mutex_unlock(&lock) != 0))
 	 {
 	   cout << "There was a problem locking or unlocking a resource" << endl;
@@ -153,6 +177,7 @@ long long PapiLayer::getCounters(int tid)
       if(Result != PAPI_OK)
 	{
 	  cout << "Something went wrong" << endl;
+	  cout << "The error code returned by Papi was: " << Result << "." << endl;
 	  return -1;
 	}
 
@@ -175,7 +200,7 @@ long long PapiLayer::getCounters(int tid)
        return -1;
      }
 
-  if((PAPI_read_counters(&values[0], 1)) != PAPI_OK)
+  if((PAPI_read(ThreadList[tid]->EventSet, ThreadList[tid]->CounterValues)) != PAPI_OK)
     {
       cout << "There were problems reading the counters" << endl;
       if((pthread_mutex_unlock(&lock) != 0))
@@ -193,12 +218,8 @@ long long PapiLayer::getCounters(int tid)
      }
 
   
-    //Update the ThreadList and return the counter value.
-    ThreadList[tid]->CounterValue = ThreadList[tid]->CounterValue  + values[0];
-  
-  //cout << "The thread ID is: " << tid << endl;
-  //cout << "The value being returned is: " << (ThreadList[tid]->CounterValue) << endl;
-  return ThreadList[tid]->CounterValue;
+  return ThreadList[tid]->CounterValues[0];  //At the moment, TAU can only deal
+                                             //with one value being returned.
 
 }
 
@@ -216,9 +237,15 @@ long long PapiLayer::getCounters(int tid)
   static bool RunBefore = false;
   
   //PAPI init stuff.
-  int PAPI_CounterList[1] = {0};
-  long long values[1] = {-1};
-  int Result;
+  
+  //Defining a static element which indicates the list of counters
+  //to be measured.  This array is initialized in the run-once section
+  //below.
+  static int PAPI_CounterList[NUMBER_OF_COUNTERS];
+
+  //A test declaration used to test the success of function calls.
+  //It does not store any counter values.
+  int Result = -1;
 
   //******************************************
   //This section is only run once.
@@ -228,6 +255,13 @@ long long PapiLayer::getCounters(int tid)
       //Initializing the static thread list.
       for(int i=0;i<TAU_MAX_THREADS;i++)
 	ThreadList[i] = NULL;
+
+      //Initialize the counter list.
+      for(int j=0;j<NUMBER_OF_COUNTERS;j++)
+	{
+	  PAPI_CounterList[j] = -1;
+	}
+
 
       char * EnvironmentVariable = NULL;
       EnvironmentVariable = getenv("PAPI_EVENT");
@@ -281,12 +315,18 @@ long long PapiLayer::getCounters(int tid)
 	}
       ThreadList[tid] = new ThreadValue;
       ThreadList[tid]->ThreadID = tid;
-      ThreadList[tid]->CounterValue = 0;
-      
-      //cout << "New thread added to the thread list." << endl;
+      ThreadList[tid]->EventSet = PAPI_NULL;
+      ThreadList[tid]->CounterValues = new long long[NUMBER_OF_COUNTERS];
 
-      //Starting the counter.
-      Result = PAPI_start_counters(&PAPI_CounterList[0], 1);
+      //Adding the events and starting the counter.
+      Result = PAPI_add_events(&(ThreadList[tid]->EventSet) ,PAPI_CounterList ,NUMBER_OF_COUNTERS);
+      if(Result != PAPI_OK)
+	{
+	  cout << "Something went wrong adding events!" << endl;
+	  return -1;
+	}
+
+      Result = PAPI_start(ThreadList[tid]->EventSet);
 
       if(Result != PAPI_OK)
 	{
@@ -306,19 +346,14 @@ long long PapiLayer::getCounters(int tid)
   //Reading the performance counters and
   //outputting the counter values.
   //*****************************************
-  if((PAPI_read_counters(&values[0], 1)) != PAPI_OK)
+  if((PAPI_read(ThreadList[tid]->EventSet, ThreadList[tid]->CounterValues)) != PAPI_OK)
     {
       cout << "There were problems reading the counters" << endl;
       return -1;
     }
 
-
-    //Update the ThreadList and return the counter value.
-    ThreadList[tid]->CounterValue = ThreadList[tid]->CounterValue  + values[0];
-  
-  //cout << "The thread ID is: " << tid << endl;
-  //cout << "The value being returned is: " << (ThreadList[tid]->CounterValue) << endl;
-  return ThreadList[tid]->CounterValue;
+  return ThreadList[tid]->CounterValues[0];  //At the moment, TAU can only deal
+                                             //with one value being returned.
 }
 
 #endif
