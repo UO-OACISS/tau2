@@ -413,6 +413,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			System.out.println("About to add an application!");
 			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
 		    }
+		    else if(clickedOnObject == dbApps){
+			ParaProfApplication application  = new Application();
+			application.setName("New Application");
+			System.out.println("About to add an application to the database!");
+			
+		    }
+		}
+		else if(arg.equals("Add Experiment")){
 		}
 		else if(arg.equals("Update Meta Data in DB")){
 		    //A few things to check here.
