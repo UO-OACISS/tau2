@@ -1,0 +1,25 @@
+#example rule file
+#rule grammar: FIELD OPERATOR NUMBER
+#FIELD = numcalls, numsubrs, usec, cumusec, stddev, count, totalcount,
+#        percent, usecs/call, counts/call
+#OPERATOR = <, >, =
+#NUMBER = any number (may use scientific notation, ie, 1000000 or 1e+6)
+
+usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
+#usec > 1000 & numcalls > 400000 & percent > 10 & usecs/call < 75
+#this rule should give same results of the previous rule--which
+#will ultimately be ignored because the results are duplicated
+TAU_USER: usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
+
+# count > 50
+#stddev < 2.5 & usec > 120
+#cumusec = 0
+#uncommenting this rule will give an error because there is no field
+#TAU_DEFAULT:
+
+#Test multi line comments \
+ to see if the work
+
+#Test dual character operators
+usec <= 200 & numcalls < 5
+numcalls > 1e6 & usecs/call < 2

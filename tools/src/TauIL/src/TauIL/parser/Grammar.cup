@@ -1,0 +1,120 @@
+package TauIL.parser;
+
+import TauIL.absyn.*;
+import TauIL.lexer.Lexer;
+import TauIL.error.*;
+import java_cup.runtime.Symbol;
+
+/* Parser Action Code */
+action code {:
+	void error(String message, int pos, int line, boolean report) {
+		parser.error_message = message;
+		parser.pos = pos;
+		parser.line = line;
+
+		if (report)
+			parser.syntax_error(null);
+	}
+
+	void warning(String message, int pos, int line) {
+		parser.errors.reportWarning(message, line, pos);
+	}
+:}
+
+/* Parser Class Code */
+parser code {:
+	ErrorMessage errors;
+	public String error_message;
+	public int pos= 0, line = 0;
+
+	public Grammar(Scanner s, ErrorMessage errors) {
+		super(s);
+		this.errors = errors;
+	}
+
+	public void unrecovered_syntax_error(Symbol cur_token) {
+		errors.reportSyntaxError("Unrecoverable syntax error occurred.", cur_token.left, cur_token.right);
+		report_fatal_error("Unrecoverable syntax error occurred!", null);
+	}
+
+	public void report_fatal_error(String message, Object info) {
+		done_parsing();
+	}
+
+	public void syntax_error(Symbol cur_token) {
+		if (error_message == null) {
+			error_message = "Parse error occurred.";
+			pos = cur_token.left;
+			line = cur_token.right;
+		}
+		errors.reportSyntaxError((error_message != null) ? error_message : "Parse error occurred.", line, pos);
+		error_message = null;
+		pos = 0;
+		line = 0;
+	}
+
+	public int error_sync() { return 6; }
+:}
+
+/* Terminals */
+terminal String GROUP;
+terminal Double NUM;
+terminal COLON, EQUAL, LT, GT, GTEQ, LTEQ, NEQ, AND;
+terminal CALLS, SUBRS, PERCENT, USEC, CUMUSEC, COUNT, TOTCOUNT;
+terminal STDDEV, USECS_CALL, COUNTS_CALL;
+terminal String ERROR;
+
+/* Non-Terminals */
+non terminal Rules rules;
+non terminal RuleSeq ruleseq;
+non terminal Rule rule;
+non terminal Group groupname;
+non terminal Rule line, lineseq;
+non terminal Operator operator;
+non terminal Field field;
+
+/* Precedences */
+precedence left AND, COLON;
+precedence nonassoc EQUAL, LT, GT, field;
+
+/* Grammar Productions */
+start with rules;
+
+rules		::= 	  ruleseq:r				{: RESULT = new Rules(r); :};
+
+ruleseq		::= 	  ruleseq:rs rule:r			{: RESULT = new RuleSeq(rs, r); :}
+			| rule:r				{: RESULT = new RuleSeq(null, r); :};
+
+rule		::=	  groupname:g lineseq:e			{: if (e != null) e.addGroup(g); RESULT = e; :}
+			| lineseq:l				{: RESULT = l; :};
+
+groupname	::=	  GROUP:g COLON				{: RESULT = new Group(g); :}
+			| GROUP:g				{: warning("Missing colon after group name.", gleft, gright); 
+								   RESULT = new Group(g); :};
+
+lineseq		::= 	  line:e1 AND lineseq:e2		{: RESULT = new Rule(e1, e2); :}
+			| line:e1				{: RESULT = e1; :};
+
+line		::=	  field:f operator:op NUM:num		{: RESULT = new Rule(f, op, num); :};
+
+operator	::=	  EQUAL					{: RESULT = new Operator(Operator.EQUAL); :}
+			| LT					{: RESULT = new Operator(Operator.LT); :}
+			| GT					{: RESULT = new Operator(Operator.GT); :}
+			| GTEQ					{: RESULT = new Operator(Operator.GTEQ); :}
+			| LTEQ					{: RESULT = new Operator(Operator.LTEQ); :}
+			| NEQ					{: RESULT = new Operator(Operator.NEQ); :}
+			| ERROR:e				{: error("Unrecognized operator.", eleft, eright, true);
+								   RESULT = new Operator(Operator.EQUAL); :};
+
+field		::=	  CALLS					{: RESULT = new Field(Field.CALLS); :}
+			| SUBRS					{: RESULT = new Field(Field.SUBRS); :}
+			| PERCENT				{: RESULT = new Field(Field.PERCENT); :}
+			| USEC					{: RESULT = new Field(Field.USEC); :}
+			| CUMUSEC				{: RESULT = new Field(Field.CUMUSEC); :}
+			| COUNT					{: RESULT = new Field(Field.COUNT); :}
+			| TOTCOUNT				{: RESULT = new Field(Field.TOTCOUNT); :}
+			| STDDEV				{: RESULT = new Field(Field.STDDEV); :}
+			| USECS_CALL				{: RESULT = new Field(Field.USECS_CALL); :}
+			| COUNTS_CALL				{: RESULT = new Field(Field.COUNTS_CALL); :}
+			| GROUP:e				{: error("Unrecognized field.", eleft, eright, true); 
+								   RESULT = new Field(Field.CALLS); :};

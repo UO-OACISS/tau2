@@ -1,0 +1,298 @@
+TAU Instrumentation Language - (TauIL v0.2)
+-------------------------------------------------------
+
+Table of Contents
+
+-  File Format
+- Interpreter Environment Variables
+- Declarations
+-  Blocks
+  +- Directives
+  +- Conditions
+  +- Anti-Conditions
+- Macros
+
+ File Format
+-------------------------------------------------------
+
+The TauIL instrumentation file format consists of three parts: interpreter 
+environment variables, global declarations, and instrumentation definitions. 
+Comments are inserted into the instrumentation file using either "//" or a "#". 
+The latter is also used for preprocessor elements and thus it is recommended 
+that the C-style comments be used. If "#" is used it should always be followed 
+by a space so that the comment doesn't conflict with a preprocessor entity. 
+The lexical and grammar specifications for TauIL can be found in the file SPEC 
+located in the TauIL documentation directory.
+
+Interpreter Environment Variables
+-------------------------------------------------------
+
+Environment variables are used to override the default behavior of the TauIL 
+interpreter. The environment variables are preprocessor entities and are 
+always preceded with a "#". TauIL environment variables have the following 
+grammatical form:
+
+	interpreter-environment-variable ::= ENV_<variable-name> [ <value> ]
+
+	variable-name ::= version
+
+Currently the version variable is the only supported interpreter variable. The 
+version variable is used to provide backward compatibility when possible with 
+older language specifications. The intuition is as follows: as the language 
+specification evolves, interpreters designed for a newer specification can 
+identify instrumentation files using older language constructs, and thus use 
+the appropriate parser. The version environment variable defaults to the most 
+recent TauIL language specification. The following demonstrates how the version 
+variable would be set:
+
+	#ENV_version[0.2]
+
+The following table lists all environment variables and their default values:
+
+ENVIRONMENT VARIABLES
+
+	variable	args		default value
+	----------------------------------------------
+	version		1		0.2
+
+Declarations
+-------------------------------------------------------
+
+Declarations are used to force specified entities to always be included or 
+always be excluded in an instrumentation. Allowable entities are events, 
+files, and profile groups. Declarations have the following grammatical form:
+
+	dec-block ::= declarations {: <dec-list> :}
+
+	dec-list ::= <dec> | <dec> <dec-list>
+
+	dec ::= <dec-type> <entity-type> <entities>
+
+	dec-type ::= include | exclude
+
+	entity-type ::= file | group | event
+
+	entities ::= <entity> | { <ent-list> }
+
+	ent-list ::= <ent> | <ent> <ent-list>
+
+	ent ::= <regexp>
+
+The entities named in a declaration are treated as simple regular 
+expression. There are two forms of declaration blocks allowable: global and 
+local. Global declarations effect all instrumentations where as local 
+declarations only effect the instrumentation block they reside within. The 
+following is an example of a global declaration:
+
+	declarations
+	{:
+		// Include any events that contain the text "main" or "foo".
+		include event {
+			main
+			foo
+		}
+
+		// Exclude any events that are part of the MPI profile group.
+		exclude group MPI
+	:} 
+
+ Blocks
+-------------------------------------------------------
+
+ blocks are used to define an instrumentation scenario in 
+the context of some form of program data. The data can be data that is 
+acquired statically, dynamically, or even post runtime. The keywords for 
+the currently allowed data sources are "static", "runtime", or "profile". 
+An instrumentation scenario generates a list of events that are to be 
+either included or excluded by the TAU insturmentor. An instrumentation 
+block consists of four parts: directives, declarations, conditions, and 
+anti-conditions. The following is the grammatical form:
+
+	instr-block ::= instrument with <data-source> as <output-name> 
+				<instr-body> end
+
+	instr-body ::= <directives> <dec-block> <conditions> <anti-conditions>
+
+The following is an example of an instrumentation block:
+
+	// Instrument based on profile data, place event list
+	// in a file called "inst.inc".
+	instrument with profile as "inst.inc"
+
+		// The default behavior is to exclude events, so
+		// tell the instrumentation to select events for
+		// inclusion instead.
+		directives
+		{:
+			target include
+		:}
+
+		// Require that any event containing the text "main" is
+		// included in the instrumentation. Further, don't
+		// instrument anything in the file "foo.cpp".
+		declarations
+		{:
+			include event main
+			exclude file foo.cpp
+		:}
+
+		// Include an event that calls no subroutines.
+		conditions
+		{:
+			numsubrs = 0
+		:}
+
+		// Force exclusion of any event that makes up less than
+		// 2% of inclusive execution time.
+		anti-conditions
+		{:
+			percent < 2
+		:}
+	end
+
+The next sections cover directives, conditions, and anti-conditions. Refer 
+to the previous section for a discussion of declarations.
+
+Directives
+-------------------------------------------------------
+
+Directive blocks are used to define information about the current 
+instrumentations block. The type of relevant information could be the 
+particular type of data being used, where to obtain the program data from, or 
+whether the instrumentation should generate a list of events that should be 
+excluded in context of all events or a list of only the events that should be 
+included. Directives are relative to the type of program data being used for 
+instrumentation purposes. Certain directives are implied and have default 
+values. The grammatical form is as follows:
+
+	directives ::= {: <direct-list> :}
+
+	direct-list ::= <direct> | <direct> <direct-list>
+
+The following tables give the directives that are available for each type 
+of program data:
+
+ALL DATA:
+
+	directive	values			args	default value	
+	--------------------------------------------------------------
+	target		include, exclude	0	exclude		
+
+PROFILE DATA :
+	
+	directive	values			args	default value
+	--------------------------------------------------------------
+	type		tau_profile		0	tau_profile
+	use		file, db		1	file "pprof.dat"
+
+STATIC DATA
+
+	directive	values			args	default value
+	--------------------------------------------------------------
+	type		pdt			0	pdt
+	use 		file			1	*UNDEFINED*		
+
+RUNTIME DATA
+
+	directive	values			args	default value
+	--------------------------------------------------------------
+	******************* NONE AT THIS TIME ************************
+
+Conditions
+-------------------------------------------------------
+
+Condition blocks define the conditions that an event must meet to be either 
+excluded or included as is dictated by the instrumentation block. The actual 
+conditions that make up the conditions block are relative to the type of 
+program data being used as part of the instrumentation scenario. The 
+conditions form is as follows:
+
+	conditions ::= conditions {: <cond-list> :}
+
+	cond-list ::= <condition> | <condition> <cond-list>
+
+	condition ::= <prof-cond> | <static-cond> | <run-cond>
+
+Conditions based on profile data have the following form:
+
+	prof-cond ::= <statement> | <group> <statement>
+
+	group ::= profile-group-name :
+
+	statement ::= <op-statement> | <op-statement> & <statement>
+
+	op-statement ::= <field> <op> num-value
+
+	field ::=   numcalls | numsubrs | percent | usec | cumusec | count 
+		  | totcount | counts/call | usecs/call | stddev
+
+	op ::= < | <= | > | >= | = | !=
+
+Anti-Conditions
+-------------------------------------------------------
+
+An anti-condition block has the pretty much the same form as a condition 
+block. However, anti-conditions have the opposite effect of conditions. 
+If the current instrumentation block is generating events to exclude than 
+an event identified by an anti-condition will be included. It should be 
+noted that anti-conditions have higher priority than conditions, and thus 
+if an event is matched by both an anti-condition and a condition the 
+anti-condition takes precedence. Anti-conditions have the following form:
+
+	anti-conditions ::= anti-conditions {: <cond-list> :}
+
+Macros
+-------------------------------------------------------
+
+TauIL macros are a preprocessor entities whose values can be defined either 
+on the command line or directly within the instrumentation file. Macros are 
+defined in a manner similar to C-style macros using the "define" keyword. 
+Similarly, "ifndef" and "ifdef" are used in conjunction with "endif" to form 
+conditional blocks based on whether a macro has been defined. Note that 
+since the macro keywords are preprocessor elements the must always be 
+immediately preceded with a "#". Once a macro is defined the macro is 
+referenced using the "$" symbol in the same manner as shell environment 
+variables. The following demonstrates the use of macros in an instrumentation 
+file:
+
+	#ENV_version[0.2]
+
+	// Global declaration.
+	declarations
+	{:
+		include event main
+	:}
+
+	// If no output file has been given specify a default file
+	#ifndef $OUTFILE
+	#define OUTFILE "inst.sel"
+	#endif
+
+	// Process this block if RUN1 was defined on the command line
+	#ifdef $RUN1
+
+	// If no profile file was given specify a default file
+	#ifndef $PROFILE
+	#define PROFILE "pprof.dat"
+	#endif
+
+	// Instrument based on profile data 
+	instrument with profile as $OUTFILE
+
+		// Use TAU profile data in the given file
+		directives 
+		{: 
+			use file $PROFILE
+			type tau_profile
+		:}
+
+		// If an event is called more than a million times and
+		// averages less than 2 micro-seconds per call exclude
+		// that event.
+		conditions
+		{:
+			numcalls > 1e+6 & usecs/call < 2
+		:}
+	end
+
+	#endif

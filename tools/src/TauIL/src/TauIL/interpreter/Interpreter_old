@@ -1,0 +1,384 @@
+package TauIL.interpreter;
+
+import java.io.StringWriter;
+import java.io.File;
+import java.io.PrintStream;
+import java.io.FileOutputStream;
+import java.util.Vector;
+import java.util.ListIterator;
+
+import paraprof.*;
+
+import TauIL.absyn.*;
+import TauIL.error.ErrorMessage;
+
+/**
+ * The TauIL interpreter generates the appropriate selective insturmentation
+ * list for each insturmentation scenario in the TauIL insturmentation file.
+ * The interpreter requires that the insturmentation file already be parsed
+ * into an intermediate form using the TauIL {@link TauIL.lexer.Lexer} and 
+ * {@link TauIL.parser.Parser}.
+ */
+public class Interpreter {
+    private AbstractSyntaxTree ast;
+    private StringWriter str_buf;
+
+    private Vector exclude_lists = new Vector(), include_lists = new Vector();
+    
+    private Vector current_list;
+    private Vector exclude, include;
+
+    private Vector global_exclude = new Vector(), global_include = new Vector();
+    private Vector local_exclude = new Vector(), local_include = new Vector();
+
+    // Profile data structures
+    private Trial trial;
+    private GlobalMapping event_mapping;
+
+    private boolean verbose;
+    private boolean debug = false;
+    private boolean time_metric = true;
+
+    private boolean include_flag = false;
+
+    private File empty_file = new File("tauIL_dev_null");
+    private PrintStream dev_null;
+
+    /**
+     * Creates a new TauIL Interpreter instance.
+     */
+    public Interpreter() {
+	this(false);
+    }
+
+    /**
+     * Creates a new TauIL Interpreter instance with the specified verbose
+     * mode.
+     *
+     * @param verbose determines how verbose the interpreter will be.
+     */
+    public Interpreter(boolean verbose) {
+	this.verbose = verbose;
+    }
+
+    /**
+     * Interprets a {@link AbstractSyntaxTree} that was created by the
+     * TauIL {@link TauIL.parser.Parser} and {@link TauIL.lexer.Lexer} 
+     * from the original insturmentation specification.
+     *
+     * @param ast the parsed inturmentation specification to interpret.
+     * @throws Exception in the event of some error situation. 
+     */
+    public void interpret(AbstractSyntaxTree ast) throws Exception {
+	// If not in verbose create an empty file to direct noise from
+	// paraprof code into.
+	if (!verbose) {
+	    if (empty_file.exists())
+		empty_file.delete();
+
+	    empty_file.createNewFile();
+
+	    dev_null = new PrintStream(new FileOutputStream(empty_file));
+	}
+
+	this.ast = ast;
+
+	// Interpret global declarations.
+	include = global_include;
+	exclude = global_exclude;
+
+	interpret(ast.declarations);
+
+	include = local_include;
+	exclude = local_exclude;
+
+	// Interpret inturmentation scenarios.
+	interpret(ast.root);
+
+	// If not in verbose mode close the temporary file.
+	if (!verbose) {
+	    dev_null.close();
+	    empty_file.delete();
+	} else
+	    System.out.println();
+    }
+
+    public void setDebugMode(boolean debug) {
+	this.debug = debug;
+    }
+
+    public int numLists() {
+	return exclude_lists.size();
+    }
+
+    public Vector getExcludeList(int index) {
+	return (Vector) exclude_lists.elementAt(index);
+    }
+
+    public ListIterator getExcludeLists() {
+	return exclude_lists.listIterator();
+    }
+
+    private void interpret(AbstractSyntax absyn) {
+	if (absyn == null) return;
+	else if (absyn instanceof SyntaxAttribute) throw new Error("Syntax attributes can not be interpreted : " + absyn);
+	else if (absyn instanceof SyntaxElement) interpret((SyntaxElement) absyn);
+	else throw new Error("Unrecogonized abstract syntax element : " + absyn);
+    }
+
+    private void interpretList(SyntaxList list) {
+	ListManager iterator = new ListManager(list);
+	while (iterator.hasNext())
+	    interpret(iterator.next());
+    }
+
+    private void interpret(SyntaxElement elem) {
+	if (elem == null) return;
+	else if (elem instanceof Statement) interpret((Statement) elem);
+	else if (elem instanceof Declaration) interpret((Declaration) elem);
+	else if (elem instanceof Insturmentation) interpret((Insturmentation) elem);
+	else if (elem instanceof InsturmentationList) interpretList((InsturmentationList) elem);
+	else throw new Error("Unrecogonized syntax element : " + elem);
+    }
+
+    private void interpret(Statement elem) {
+	if (elem == null) return;
+	else if (elem instanceof MultiStatement) interpret((MultiStatement) elem);
+	else if (elem instanceof OperatorStatement) throw new Error("Operator statements must be contained within a mulitstatement : "  + elem);
+	
+	// interpret((OperatorStatement) elem);
+
+	else if (elem instanceof StatementList) interpretList((StatementList) elem);
+	else throw new Error("Unrecogonized statement element : " + elem);
+    }
+
+    private void interpret(Declaration dec) {
+	if (dec == null) return;
+	else if (dec instanceof IncludeDec) interpret((IncludeDec) dec);
+	else if (dec instanceof DecList) interpretList((DecList) dec);
+	else throw new Error("Unrecogonized declaration element : " + dec);
+    }
+
+    private void interpret(Insturmentation inst) {
+	debug("Interpreter : interpret(Insturmentation)");
+
+	current_list = new Vector();
+	include.clear();
+	exclude.clear();
+
+        newProfile();
+	
+	interpret(inst.directives);
+	interpret(inst.declarations);
+	interpret(inst.conditions);
+	interpret(inst.anti_conditions);
+
+	// Need to analyze exclude and include lists
+
+	exclude_lists.add(current_exclude_list);
+    }
+
+    private void interpret(Directive direct) {
+	debug("Interpreter : interpret(Directive)");
+
+	switch (direct.directive) {
+	case Directive.TYPE :
+	    switch (direct.flag) {
+	    case Directive.TAU_PROFILE :
+		break;
+	    case Directive.PDT :
+		throw new Exception("No support for PDT data at this time.");
+	    }
+	    break;
+	case Directive.TARGET :
+	    switch (direct.flag) {
+	    case Directive.INCLUDE :
+		include_flag = true;
+		break;
+	    case Directive.EXCLUDE :
+		break;
+	    }
+	    break;
+	case Directive.USE :
+	    switch (direct.flag) {
+	    case Directive.FILE :
+		break;
+	    case Directive.DB :
+		throw new Exception("No support for database access at this time.");
+	    }
+	    break;
+	default :
+	}
+    }
+
+    private void interpret(IncludeDec dec) {
+	debug("Interpreter : interpret(IncludeDec)");
+	Vector inc_or_exc = exclude;
+	
+	switch (dec.include_flag) {
+	case IncludeDec.INCLUDE :
+	    inc_or_exc = include;
+	case IncludeDec.EXCLUDE :
+	    ListManager iterator = new ListManager(dec.list);
+	    while (iterator.hasNext()) {
+		Event event = (Event) iterator.next();
+		inc_or_exc.add(event.name);
+	    }
+	    break;
+	default :
+	    throw new Error("Unrecognized include declaration type : " + dec.include_flag);
+	}
+    }
+
+    private void interpret(MultiStatement list) {
+	debug("Interpreter : interpret(MultiStatement)");
+
+	if (verbose) {
+	    System.out.println("____________________________________________________________");
+	    System.out.println(list.generateSyntax());
+	    System.out.println();
+	}
+	    
+	ListManager iterator = new ListManager(list);
+	ListIterator profile = event_mapping.getMappingIterator(0);
+	
+	GlobalMappingElement event;
+	Group group = list.group;
+
+	boolean match = true;
+
+	while (profile.hasNext()) {
+	    event = (GlobalMappingElement) profile.next();
+
+	    iterator.reset();
+	    while (iterator.hasNext() && match)
+		match = interpret(iterator.next(), event);
+
+	    if (match) {
+		String name = event.getMappingName();
+
+		if (verbose)
+		    System.out.println("\t" + name);
+		
+		if (current_exclude_list.indexOf(name) == -1)
+		    current_exclude_list.add(name);
+	    } else
+		match = true;
+	}
+    }
+
+    private boolean interpret(AbstractSyntax absyn, GlobalMappingElement event) {
+	if (absyn instanceof OperatorStatement) return interpret((OperatorStatement) absyn, event);
+	else throw new Error("Currently only operator statements can be interpreted in context of profile data.");
+    }
+
+    private boolean interpret(OperatorStatement rule, GlobalMappingElement event) {
+	debug("Interpret : interpret(" + rule.generateSyntax() + ", " + event.getMappingName() + ")");
+
+	boolean result = false;
+	double data;
+
+	if (time_metric && (rule.field.metric == Field.COUNTER)) {
+	    System.out.println("Counter metrics in rule, but profile contains timer metrics");
+	    return false;
+	} else if (!time_metric && (rule.field.metric == Field.TIMER)) {
+	    System.out.println("Timer metrics in rule, but profile contains counter metrics");
+	    return false;
+	}
+
+	switch (rule.field.field) {
+	case Field.NUMCALLS :
+	    data = (double) event.getMaxNumberOfCalls();
+	    break;
+	case Field.NUMSUBRS :
+	    data = (double) event.getMaxNumberOfSubRoutines();
+	    break;
+	case Field.PERCENT :
+	    data = event.getMeanInclusivePercentValue(0);
+	    break;
+	case Field.USEC :
+	case Field.COUNT :
+	    data = event.getTotalExclusiveValue(0);
+	    break;
+	case Field.CUMUSEC :
+	case Field.TOTCOUNT :
+	    data = event.getTotalInclusiveValue(0);
+	    break;
+	case Field.STDDEV :
+	    data = 0.0;
+	    break;
+	case Field.USECS_CALL :
+	case Field.COUNTS_CALL :
+	    data = event.getMeanUserSecPerCall(0);
+	    break;
+	default :
+	    return false;
+	}
+
+	result = evaluate(data, rule.op, rule.val);
+	return result;
+    }
+
+    private boolean evaluate(double data, Operator op, Literal value) {
+	debug("Interpreter : evalutate(" + data + ", " + op.generateSyntax() + ", " + value.value + ")");
+
+	double val = value.value.doubleValue();
+       
+	switch (op.op) {
+	case Operator.EQ :
+	    return (data == val);
+	case Operator.LT :
+	    return (data < val);
+	case Operator.GT :
+	    return (data > val);
+	case Operator.GTEQ :
+	    return (data >= val);
+	case Operator.LTEQ :
+	    return (data <= val);
+	case Operator.NEQ :
+	    return (data != val);
+	default :
+	    return false;
+	}
+    }
+
+    public void prettyPrint(AbstractSyntaxTree ast) {
+	System.out.println(ast.generateSyntax());
+	System.out.println();
+    }
+
+    private void newProfile() {
+	debug("Interpreter : newProfile()");
+
+	PrintStream temp = null;
+
+	if (verbose)
+	    System.out.println("Loading pprof.dat profile data...");
+	File pprof = new File("pprof.dat");
+	if (!pprof.exists()) 
+	    throw new Error("Can't find a pprof.dat file.");
+
+	trial = new Trial(null);
+
+	if (!verbose) {
+	    temp = System.out;
+	    System.setOut(dev_null);
+	}
+
+	trial.buildStaticData(pprof);
+
+	if (!verbose)
+	    System.setOut(temp);
+
+	time_metric = trial.isTimeMetric();
+	event_mapping = trial.getGlobalMapping();
+
+	if (verbose)
+	    System.out.println("Finished loading profile data...");
+    }
+
+    private void debug(String text) {
+	if (debug)
+	    System.out.println(text);
+    }
+}

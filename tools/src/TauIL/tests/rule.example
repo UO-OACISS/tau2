@@ -1,0 +1,53 @@
+// Example of purposed TauIL instrumentation specification
+
+//TauIL version for backwards compatability
+#ENV_version[0.2]
+
+// Global declarations
+declarations 
+{: 
+	include file
+	{
+		klargest.cpp
+		array.h
+	}
+:}
+
+// Macros
+#ifndef $INST1
+#define INST1 "inst1.sel"
+#endif
+
+#ifndef $PROFILE
+#define PROFILE "pprof.dat"
+#endif
+
+// Instrumentation based on profile data
+instrument with profile as $INST1
+
+	// Generate exclude list with TAU profile data
+	// using profile data defined by $PROFILE macro
+	directives 
+	{: 
+		target exclude
+		type tau_profile
+		use file $PROFILE
+	:}
+
+	// Include all events containing the words main or sort
+	// and exclude all events in MPI profile group
+	declarations 
+	{:
+		include event 
+		{ 
+			main
+			sort 
+		}
+
+		exclude group MPI
+	:}
+
+	// Exclude events called more than 1000000 times and
+	// average less than a microsecond per call
+	conditions {: numcalls > 1E6 & usecs/call < 1 :}
+end

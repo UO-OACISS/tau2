@@ -1,0 +1,16 @@
+instrument with profile as "tau.sel"
+	conditions 
+	{:
+		usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
+		TAU_USER : usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
+		usec <= 200 & numcalls < 5
+		numcalls > 1E6 & usecs/call < 2
+	:}
+end
+
+// instrument with profile as "inst.sel"
+//	conditions
+//	{:
+//		numcalls > 1E6 & usecs/call < 2
+//	:}
+// end

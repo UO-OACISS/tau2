@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title> JFlex - Frequently Asked Questions
+
+ </title>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+    <meta http-equiv="Content-Language" content="en-us">
+    <META NAME="Author" CONTENT="Gerwin Klein">   
+    <script language="JavaScript"> 
+    <!-- 
+    if( top.parent.frames.length > 0)    
+      top.parent.location.href = self.location.href;
+    // --> 
+    </script> 
+  </head> 
+
+  <body TEXT="#10101O" BGCOLOR="#F8F8F8" LINK="#000000" VLINK="#101010" ALINK="#000000">
+    <p> 
+    <h2> JFlex - Frequently Asked Questions
+
+ </h2>
+    <p> 
+    <UL>
+<LI>
+<B>Can I use my old JLex specifications with JFlex?</B></LI>
+
+<UL>Yes. You usually can use them unchanged. See section <A HREF="manual.html#Porting">[porting
+from JLex]</A> of the manual for more information on that topic.
+<BR>&nbsp;</UL>
+
+<LI>
+<B>Where can I get the latest version of JFlex?</B></LI>
+
+<UL>Check out the <A HREF="http://www.jflex.de/">JFlex website</A> at
+<tt><A HREF="http://www.jflex.de/">http://www.jflex.de</A></tt>.
+There is an <a href="http://www.jflex.de/mailing.html">announcement
+mailing list</a>, in case you want to be notified of new JFlex releases.
+<BR>&nbsp;</UL>
+
+<LI>
+<B>What platforms does JFlex support?</B></LI>
+
+<UL>
+JFlex is written with Sun's JDK 1.1 and produces JDK 1.1 compatible code.
+It should run on any platform that supports JRE/JDK 1.1 or above.
+At the <a href="http://www.jflex.de">JFlex website</a>, there is a <a href="http://www.jflex.de/platforms.html">list of platforms</a> JFlex has been positively tested on.
+<BR>&nbsp;</UL>
+
+<LI>
+<B>My program crashes when I use a large scanner (about 250 states)</B></LI>
+
+<UL>No problem. Just use the <TT>%pack</TT> directive for more compression
+of the transition table. See section <A HREF="manual.html#CodeGeneration">[code
+generation]</A> of the manual for more information on this topic.
+<BR>&nbsp;</UL>
+
+<LI>
+<B>I get a java.lang.VerifyError when I start my program with java -verify</B></LI>
+
+<UL>This is in fact the same problem as described above. You can use the
+<TT>%pack</TT> directive to avoid it. See section <A HREF="manual.html#CodeGeneration">[code
+generation]</A> of the manual for more information on this topic.
+<BR>&nbsp;</UL>
+
+<LI>
+<B>Can I use CUP and JFlex together?</B></LI>
+
+<UL>You can. See section <A HREF="manual.html#CUPWork">[Working together:
+JFlex and CUP]</A> of the manual on how to do it.<BR>&nbsp;</UL>
+
+<LI>
+<B>Can I use the generated code of my JFlex specification commercially?</B></LI>
+
+<UL>You can use your generated code without restriction. See the file <A HREF="COPYRIGHT">copyright</A> for more 
+information.<BR>&nbsp;</UL>
+
+
+<LI>
+<B>I want my scanner to read from a network byte stream or from interactive stdin. Can I do this with JFlex?</B></LI>
+
+<UL>
+This actually depends on the syntax of the input you want to read. The problem is, that for some
+expressions the scanner needs one character of lookahead to decide which action to execute.
+For interactive use and network streams this is very inconvenient, because the stream 
+doesn't send an EOF (or any other data) when the user stops typing while the scanner just waits
+for the next character and doesn't return a symbol. Since version 1.1.1 of JFlex this problem
+can be avoided because of a little more analysis at generation time. Take a look at these three
+rules:<BR>
+<tt>1. a</tt><BR>
+<tt>2. a*</tt><BR>
+<tt>3. ";"</tt><BR>
+When the scanner has read one <tt>a</tt>, an additional input character is needed to decide,
+if this matches rule 1 (just one <tt>a</tt>) or rule two (when the next character is another
+<tt>a</tt>). With input <tt>aaa</tt> the scanner also has to read one additional character,
+because it is supposed to return the longest match (so if there comes another <tt>a</tt>, the match
+is <tt>aaaa</tt> and not only <tt>aaa</tt>). But: When the scanner reads a "<tt>;</tt>",
+it does not need an additional character and can immediatly execute the action for rule 
+number 3. This is the case for all rules that are not prefixes of any other rules in the
+specification and that have a fixed length end (so <tt>(a* b)</tt> is ok but <tt>(a b*)</tt> is not).
+<p>
+For your application this means: if all commands (or whatever units of input you have) are
+terminated by some delimiter (for instance "<tt>;</tt>" or LF or "<tt>end</tt>") reading from a network bytestream or an interactive stream works fine with JFlex.
+<BR>&nbsp;</UL>
+
+<LI>
+<b>How can I let my scanner read its input from a string?</b>
+<UL>
+<pre>String myString = "some input";
+Scanner myScanner = new Scanner( new java.io.StringReader(myString) );
+</pre>
+<BR>&nbsp;</UL>
+</LI>
+
+<LI>
+<b>Why do standalone scanners have a different standard return type (<tt>int</tt> instead 
+   of <tt>Yytoken</tt>)?</b>
+<UL>
+That's because <tt>int</tt> is a predefined type in Java and <tt>Yytoken</tt> is not. If a scanner
+generated with <tt>%standalone</tt> option would have return type <tt>Yytoken</tt>, you would have
+to provide this class for every standalone scanner you write. In most cases you don't want to do that,
+because the scanner wouldn't be really <em>standalone</em> then. 
+The standard <tt>Yytoken</tt> for non standalone 
+cases stems from JLex and is only kept for compatibility (it's rarely used anyway).
+If you still <em>really</em> want <tt>Yytoken</tt> as return type in a standalone scanner, you can always
+explicitly specify it with <tt>%type Yytoken</tt>. If you just want to test your scanner scanner and see what
+it does without a parser attached, use <tt>%debug</tt> instead of <tt>%standalone</tt>. 
+<BR>&nbsp;</UL>
+</LI>
+
+<LI>
+<b>The expression <tt>.*$</tt> used to work, but now JFlex complains about trailing context</b>
+<UL>
+This is because <tt>.*$</tt> is now matched with the more general lookahead operator <tt>/</tt> and is
+equivalent to <tt>.* / \r|\n|\r\n</tt>. The problem with this expression is that the character class
+<tt>.</tt> contains the <tt>\r</tt> character and therefore matches the beginning of the trailing context.
+Earlier versions of JFlex used a special implementation for <tt>$</tt> and had no lookahead operator.<br>
+A simple workaround is not to use the <tt>.</tt> class, but to use the expression <tt>[^\r\n]</tt> 
+instead (so the full expression is now <tt>[^\r\n]*$</tt> and should work without error).
+<BR>&nbsp;</UL>
+</LI>
+
+<LI>
+<b>I use <tt>%8bit</tt> and get an Exception, but I know my platform
+only uses 8 bit. Is <tt>%8bit</tt> broken?</b>
+<UL>
+Short answer: not broken, use <tt>%unicode</tt>. Long answer:
+Most probably this is an encoding problem. Java uses Unicode internally and converts
+the bytes it reads from files (or somewhere else) to Unicode first. The 8 bit value
+of your platform may not be 8 bit anymore when converted to Unicode. On many Windozes
+for instance Cp1252 (Windows-Latin-1) is used as standard encoding, and there the 
+character "single right quotation mark" has code <tt>\x92</tt> but after conversion to
+Unicode it's <tt>\u2019</tt> which is not 8 bit any more. See also the section
+on <a href="manual.html#sec:encodings">Encodings, platforms, and Unicode</a> of the JFlex 
+manual for more information.
+
+<BR>&nbsp;</UL>
+</LI>
+
+<LI>
+<b>My scanner needs to read a file that is not in my platforms standard encoding, but in encoding XYZ. How?</b>
+<UL>
+Since the scanner reads Java Unicode characters, it is independent
+of the actual character encoding a file or a string uses. The
+transformation byte-stream to Java characters for files 
+usually happens in the <tt>java.io.InputStreamReader</tt> 
+object connected with the input stream. Class 
+<tt>java.io.FileReader</tt> uses the platforms default 
+encoding automatically. If you would like to explicitly
+specify another encoding, for instance UTF-8, you
+could do something like
+<pre>
+Reader r = new InputStreamReader(new FileInputStream(file), "UTF8");
+</pre>
+Now you have a Reader <tt>r</tt> that can be passed to the
+scanner's constructor in the usual way.
+For more information on encodings see also Sun's JDK documentation,
+especially in <i>Guide to Features - Java Platform</i> item
+<i>Internationalization</i> and there the <i>FAQ</i> and <i>Supported Encodings</i>.
+<BR>&nbsp;</UL>
+</LI>
+
+<LI>
+<b>JFlex generates with 0 errors, 0 warnings, but the generated code does not compile</b>
+<UL>
+If you are sure that the problem is because of JFlex and not because of user code
+in the specification, try to run JFlex without the JIT compiler. Some versions of
+Sun's JIT compiler sunwjit in JDK 1.2.2 on Solaris 7/Intel seem to have a bug that is triggered by
+JFlex (if your scanner compiles ok, there should be no problem). 
+<center>
+<b>Please do report this as a bug to <a href="mailto:lsf@jflex.de">lsf@jflex.de</a> in any case.</b>
+</center>
+If there is a problem with a specific platform/JDK/JIT combination it may be important
+for other people to know. Also, I might be able to work around the JIT bug from the JFlex side.
+<BR>&nbsp;</UL>
+</LI>
+
+</UL>
+
+  </body>
+</html>

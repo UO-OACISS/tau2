@@ -1,0 +1,26 @@
+TAU Instrumentation Language (TauIL v0.2)
+------------------------------------------------------------
+
+To compile and install TauIL:
+
+	1.) Generate dependencies
+
+		make deps
+
+	2.) Build class files
+
+		make build
+
+	3.) (Optional) Run tests
+
+		make tests
+
+	4.) Install build
+
+		make install
+
+	5.) (Optional) Generate TauIL API documentation
+
+		make docs
+
+

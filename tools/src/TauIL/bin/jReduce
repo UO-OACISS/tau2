@@ -1,0 +1,30 @@
+#! /bin/bash
+TAU_HOME=${HOME}/cvs/tau2/
+PARAPROF_HOME=${TAU_HOME}/tools/src/paraprof/src
+JAVA=java
+
+BIN_PATH=`type $0`
+BIN_PATH=${BIN_PATH##* }
+
+# Chase symbolic links to actual directory
+while [ -L "$BIN_PATH" ]
+do
+	ln_path="`ls -l ${BIN_PATH}`"
+	ln_path=${ln_path##*-> }
+	
+	if [ ${ln_path} = ${ln_path#/} ]
+	then
+		ln_path=${BIN_PATH%/*}/${ln_path##./}
+	fi
+
+	BIN_PATH=${ln_path}
+done
+
+BIN_PATH=${BIN_PATH%/*}
+JREDUCE_HOME=${BIN_PATH%/*}/classes
+JREDUCE_LIB=${BIN_PATH%/*}/lib
+
+CLASSPATH=${JREDUCE_LIB}/TauIL.jar:${JREDUCE_LIB}/java_cup.jar:${JREDUCE_HOME}:${PARAPROF_HOME}:${CLASSPATH}
+
+$JAVA -Xmx128m TauIL.jReduce $@
+

@@ -1,0 +1,183 @@
+LEXER SPEC (TauIL v0.2)
+------------------------------------------------------
+
+	(Regular Expression Macros)
+
+	LineTerminator	=	\r|\n|\r\n|\u2028|\u2029|\u000B|\u000C|\u0085
+	WhiteSpace	=	{LineTerminator} | [ \t\f]
+
+	NonDigit	=	[a-zA-Z_]
+	Digit		=	[0-9]
+	Identifier	=	{NonDigit} ({NonDigit} | {Digit})*
+
+	StringChar	=	[\r\n\"\\]+
+
+	NLit1		= 	[0-9]+ \. [0-9]*
+	NLit2		= 	\. [0-9]+
+	NLit3		= 	[0-9]+
+	Exp		= 	[eE] [+-]? [0-9]+
+
+	NumLiteral	= 	({NLit1} | {NLit2} | {NLit3}) ({Exp})?
+
+	(Table of Lexer Tokens)
+
+	Regular Expression	Token
+	-----------------------------------------------
+
+	{WhiteSpace}		(ignore all whitespace)
+
+	"#"			(Indicates comment or preprocessor directive, ignore remainder of line)
+	"//"			(Indicates comment, ignore remainder of line)
+
+	{NumLiteral}		NUM
+
+	{Identifier}		ID
+	\" {StringChar} \"	STRING
+
+	"&"			AND
+	":"			COLON
+
+	"="			EQ
+	"<"			LT
+	">"			GT
+	"<="			LTEQ
+	">="			GTEQ
+	"!="			NEQ
+
+	"{"			LBRACE
+	"}"			RBRACE
+	"{:"			LCOLBRACE
+	":}"			RCOLBRACE
+
+	"numcalls"		NUMCALLS
+	"numsubrs"		NUMSUBRS
+	"percent"		PERCENT
+	"usec"			USEC
+	"cumusec"		CUMUSEC
+	"count"			COUNT
+	"totalcount"		TOTCOUNT
+	"stddev"		STDDEV
+	"usecs/call"		USECS_CALL
+	"counts/call"		COUNTS_CALL
+
+	"declarations"		DECS
+	"directives"		DIRS
+	"conditions"		CONDS
+	"anti-conditions"	ANTICONDS
+
+	"instrument with"	INSTRUMENT
+	"static"		STATIC
+	"profile"		PROFILE
+	"runtime"		RUNTIME
+	"as"			AS
+	"end"			END
+
+	"include"		INCLUDE
+	"exclude"		EXCLUDE
+
+	"use"			USE	
+	"target"		TARGET
+	"type"			TYPE
+
+	"file"			FILE
+	"event"			EVENT
+	"group"			GROUP
+
+	"db"			DB
+
+	"tau_profile"		TAU_PROFILE
+	"pdt"			PDT
+
+GRAMMAR SPEC (TauIL v0.2)
+------------------------------------------------------
+
+	inst-spec	::=	  decs inst-list
+
+	decs		::=	  DECS LCOLBRACE dec-list RCOLBRACE
+
+	dec-list	::=	  dec
+				| declist dec
+
+	dec		::=	  dec-type entity-type entiites
+
+	dec-type	::=	  INCLUDE
+				| EXCLUDE
+
+	entity-type	::=	  FILE
+				| EVENT
+				| GROUP
+
+	entities	::=	  entity
+				| LBRACE entity-list RBRACE
+
+	entity-list	::=	  entity
+				| entity-list entitiy
+
+	entity		::=	  ID
+
+	inst-list	::=	  inst-block
+				| inst-block inst-list
+
+	inst-block	::= 	  INSTRUMENT data-type AS STRING inst-body END
+
+	data-type	::=	  PROFILE
+				| STATIC
+				| RUNTIME
+
+	inst-body	::=	  directives decs conditions anti-conditions
+
+	directives	::=	 DIRS LCOLBRACE dir-list RCOLBRACE
+
+	dir-list	::=	  direct 
+				| dir-list direct
+
+	direct		::=	  TARGET dec-type
+				| TYPE dir-type
+				| USE dir-use STRING
+
+	dir-type	::=	  TAU_PROFILE
+				| PDT
+
+	dir-use		::=	  FILE
+				| DB
+
+	conditions	::=	  CONDS LCOLBRACE cond-list RCOLBRACE
+
+	cond-list	::=	  cond
+				| cond-list cond
+
+	cond		::=	  prof-cond
+				| static-cond
+				| run-cond
+
+	static-cond	::=	*** NOT YET SUPPORTED ***
+
+	run-cond	::=	*** NOT YET SUPPORTED ***
+
+	prof-cond	::=	  statement
+				| group statement
+
+	group		::=	  ID COLON
+
+	statement	::=	  op-statement
+				| statement AND op-statement
+
+	op-statement	::=	  field operator NUM
+
+	field		::=	  NUMCALLS
+				| NUMSUBRS
+				| PERCENT
+				| USEC
+				| CUMUSEC
+				| COUNT
+				| TOTCOUNT
+				| COUNTS_CALL
+				| USECS_CALL
+				| STDDEV
+
+	operator	::=	  EQ
+				| LT
+				| LTEQ
+				| GT
+				| GTEQ
+				| NEQ

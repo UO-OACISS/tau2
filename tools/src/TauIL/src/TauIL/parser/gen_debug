@@ -1,0 +1,4 @@
+#!/bin/sh
+
+rm debug.info
+java -cp /home/users/tyreld/cvs/TauIL/tools/CUP java_cup.Main -parser Parser -dump_grammar -dump_states Parser.y > debug.info 2>&1

@@ -1,0 +1,99 @@
+default.dep
+8 templated_functions -stddev
+%time         msec   total msec       #call      #subrs  usec/call     stddev name
+0,0,0 5 "void quicksort(int *, int, int)  " excl 5341226.344726562 74.02 GROUP="TAU_USER"
+ 93.4        5,341        6,739 4.20241E+06 1.40268E+07          2      69.16 void quicksort(int *, int, int)  
+0,0,0 4 "void interchange(int *, int *)  " excl 1398498.910568237 19.38 GROUP="TAU_USER"
+ 19.4        1,398        1,398 1.02744E+07           0          0    0.07477 void interchange(int *, int *)  
+0,0,0 7 "void sort_5elements(int *)  " excl 218733.1959381104 3.03 GROUP="TAU_USER"
+ 32.2          218        2,319      449978      449978          5     0.1335 void sort_5elements(int *)  
+0,0,0 3 "int select_kth_largest(int, int *, int)  " excl 179187.7407684326 2.48 GROUP="TAU_USER"
+ 34.6          179        2,499          28      450057      89261  1.679E+04 int select_kth_largest(int, int *, int)  
+0,0,0 2 "int main(int, char **)  " excl 55853.68170166016 0.77 GROUP="TAU_DEFAULT"
+100.0           55        7,215           1           4    7215665  0.0007603 int main(int, char **)  
+0,0,0 6 "void setup(int *)  " excl 22149.95640563965 0.31 GROUP="TAU_USER"
+  0.3           22           22           1           0      22150  0.0001608 void setup(int *)  
+0,0,0 0 "int ceil(int, int)  " excl 10.51806640625 0.00 GROUP="TAU_USER"
+  0.0       0.0105       0.0105          49           0          0     0.1427 int ceil(int, int)  
+0,0,0 1 "int kth_largest_qs(int, int *, int)  " excl 5.14508056640625 0.00 GROUP="TAU_USER"
+ 64.3      0.00515        4,638           5           5     927698     0.8887 int kth_largest_qs(int, int *, int)  
+0,0,0 2 "int main(int, char **)  " incl 7215665.493255615 100.00 GROUP="TAU_DEFAULT"
+100.0           55        7,215           1           4    7215665  0.0007603 int main(int, char **)  
+0,0,0 5 "void quicksort(int *, int, int)  " incl 6739725.2552948 93.40 GROUP="TAU_USER"
+ 93.4        5,341        6,739 4.20241E+06 1.40268E+07          2      69.16 void quicksort(int *, int, int)  
+0,0,0 1 "int kth_largest_qs(int, int *, int)  " incl 4638490.492507935 64.28 GROUP="TAU_USER"
+ 64.3      0.00515        4,638           5           5     927698     0.8887 int kth_largest_qs(int, int *, int)  
+0,0,0 3 "int select_kth_largest(int, int *, int)  " incl 2499294.420562744 34.64 GROUP="TAU_USER"
+ 34.6          179        2,499          28      450057      89261  1.679E+04 int select_kth_largest(int, int *, int)  
+0,0,0 7 "void sort_5elements(int *)  " incl 2319973.103805542 32.15 GROUP="TAU_USER"
+ 32.2          218        2,319      449978      449978          5     0.1335 void sort_5elements(int *)  
+0,0,0 4 "void interchange(int *, int *)  " incl 1398498.910568237 19.38 GROUP="TAU_USER"
+ 19.4        1,398        1,398 1.02744E+07           0          0    0.07477 void interchange(int *, int *)  
+0,0,0 6 "void setup(int *)  " incl 22149.95640563965 0.31 GROUP="TAU_USER"
+  0.3           22           22           1           0      22150  0.0001608 void setup(int *)  
+0,0,0 0 "int ceil(int, int)  " incl 10.51806640625 0.00 GROUP="TAU_USER"
+  0.0       0.0105       0.0105          49           0          0     0.1427 int ceil(int, int)  
+t 5 "void quicksort(int *, int, int)  " excl 5341226.344726562 74.02 GROUP="TAU_USER"
+ 93.4        5,341        6,739 4.20241E+06 1.40268E+07          2      69.16 void quicksort(int *, int, int)  
+t 4 "void interchange(int *, int *)  " excl 1398498.910568237 19.38 GROUP="TAU_USER"
+ 19.4        1,398        1,398 1.02744E+07           0          0    0.07477 void interchange(int *, int *)  
+t 7 "void sort_5elements(int *)  " excl 218733.1959381104 3.03 GROUP="TAU_USER"
+ 32.2          218        2,319      449978      449978          5     0.1335 void sort_5elements(int *)  
+t 3 "int select_kth_largest(int, int *, int)  " excl 179187.7407684326 2.48 GROUP="TAU_USER"
+ 34.6          179        2,499          28      450057      89261  1.679E+04 int select_kth_largest(int, int *, int)  
+t 2 "int main(int, char **)  " excl 55853.68170166016 0.77 GROUP="TAU_DEFAULT"
+100.0           55        7,215           1           4    7215665  0.0007603 int main(int, char **)  
+t 6 "void setup(int *)  " excl 22149.95640563965 0.31 GROUP="TAU_USER"
+  0.3           22           22           1           0      22150  0.0001608 void setup(int *)  
+t 0 "int ceil(int, int)  " excl 10.51806640625 0.00 GROUP="TAU_USER"
+  0.0       0.0105       0.0105          49           0          0     0.1427 int ceil(int, int)  
+t 1 "int kth_largest_qs(int, int *, int)  " excl 5.14508056640625 0.00 GROUP="TAU_USER"
+ 64.3      0.00515        4,638           5           5     927698     0.8887 int kth_largest_qs(int, int *, int)  
+t 2 "int main(int, char **)  " incl 7215665.493255615 100.00 GROUP="TAU_DEFAULT"
+100.0           55        7,215           1           4    7215665  0.0007603 int main(int, char **)  
+t 5 "void quicksort(int *, int, int)  " incl 6739725.2552948 93.40 GROUP="TAU_USER"
+ 93.4        5,341        6,739 4.20241E+06 1.40268E+07          2      69.16 void quicksort(int *, int, int)  
+t 1 "int kth_largest_qs(int, int *, int)  " incl 4638490.492507935 64.28 GROUP="TAU_USER"
+ 64.3      0.00515        4,638           5           5     927698     0.8887 int kth_largest_qs(int, int *, int)  
+t 3 "int select_kth_largest(int, int *, int)  " incl 2499294.420562744 34.64 GROUP="TAU_USER"
+ 34.6          179        2,499          28      450057      89261  1.679E+04 int select_kth_largest(int, int *, int)  
+t 7 "void sort_5elements(int *)  " incl 2319973.103805542 32.15 GROUP="TAU_USER"
+ 32.2          218        2,319      449978      449978          5     0.1335 void sort_5elements(int *)  
+t 4 "void interchange(int *, int *)  " incl 1398498.910568237 19.38 GROUP="TAU_USER"
+ 19.4        1,398        1,398 1.02744E+07           0          0    0.07477 void interchange(int *, int *)  
+t 6 "void setup(int *)  " incl 22149.95640563965 0.31 GROUP="TAU_USER"
+  0.3           22           22           1           0      22150  0.0001608 void setup(int *)  
+t 0 "int ceil(int, int)  " incl 10.51806640625 0.00 GROUP="TAU_USER"
+  0.0       0.0105       0.0105          49           0          0     0.1427 int ceil(int, int)  
+m 5 "void quicksort(int *, int, int)  " excl 5341226.344726562 74.02 GROUP="TAU_USER"
+ 93.4        5,341        6,739 4.20241E+06 1.40268E+07          2      69.16 void quicksort(int *, int, int)  
+m 4 "void interchange(int *, int *)  " excl 1398498.910568237 19.38 GROUP="TAU_USER"
+ 19.4        1,398        1,398 1.02744E+07           0          0    0.07477 void interchange(int *, int *)  
+m 7 "void sort_5elements(int *)  " excl 218733.1959381104 3.03 GROUP="TAU_USER"
+ 32.2          218        2,319      449978      449978          5     0.1335 void sort_5elements(int *)  
+m 3 "int select_kth_largest(int, int *, int)  " excl 179187.7407684326 2.48 GROUP="TAU_USER"
+ 34.6          179        2,499          28      450057      89261  1.679E+04 int select_kth_largest(int, int *, int)  
+m 2 "int main(int, char **)  " excl 55853.68170166016 0.77 GROUP="TAU_DEFAULT"
+100.0           55        7,215           1           4    7215665  0.0007603 int main(int, char **)  
+m 6 "void setup(int *)  " excl 22149.95640563965 0.31 GROUP="TAU_USER"
+  0.3           22           22           1           0      22150  0.0001608 void setup(int *)  
+m 0 "int ceil(int, int)  " excl 10.51806640625 0.00 GROUP="TAU_USER"
+  0.0       0.0105       0.0105          49           0          0     0.1427 int ceil(int, int)  
+m 1 "int kth_largest_qs(int, int *, int)  " excl 5.14508056640625 0.00 GROUP="TAU_USER"
+ 64.3      0.00515        4,638           5           5     927698     0.8887 int kth_largest_qs(int, int *, int)  
+m 2 "int main(int, char **)  " incl 7215665.493255615 100.00 GROUP="TAU_DEFAULT"
+100.0           55        7,215           1           4    7215665  0.0007603 int main(int, char **)  
+m 5 "void quicksort(int *, int, int)  " incl 6739725.2552948 93.40 GROUP="TAU_USER"
+ 93.4        5,341        6,739 4.20241E+06 1.40268E+07          2      69.16 void quicksort(int *, int, int)  
+m 1 "int kth_largest_qs(int, int *, int)  " incl 4638490.492507935 64.28 GROUP="TAU_USER"
+ 64.3      0.00515        4,638           5           5     927698     0.8887 int kth_largest_qs(int, int *, int)  
+m 3 "int select_kth_largest(int, int *, int)  " incl 2499294.420562744 34.64 GROUP="TAU_USER"
+ 34.6          179        2,499          28      450057      89261  1.679E+04 int select_kth_largest(int, int *, int)  
+m 7 "void sort_5elements(int *)  " incl 2319973.103805542 32.15 GROUP="TAU_USER"
+ 32.2          218        2,319      449978      449978          5     0.1335 void sort_5elements(int *)  
+m 4 "void interchange(int *, int *)  " incl 1398498.910568237 19.38 GROUP="TAU_USER"
+ 19.4        1,398        1,398 1.02744E+07           0          0    0.07477 void interchange(int *, int *)  
+m 6 "void setup(int *)  " incl 22149.95640563965 0.31 GROUP="TAU_USER"
+  0.3           22           22           1           0      22150  0.0001608 void setup(int *)  
+m 0 "int ceil(int, int)  " incl 10.51806640625 0.00 GROUP="TAU_USER"
+  0.0       0.0105       0.0105          49           0          0     0.1427 int ceil(int, int)  

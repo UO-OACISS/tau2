@@ -1,0 +1,37 @@
+# Example of TauIL rule file
+
+# Environment variable for backwards compatability
+#ENV_version[0.2]
+
+# Global Declarations
+# Include main function in all insturmentations
+declarations {:
+	include event main
+	include file *.cpp
+:}
+
+# Use TAU profile data for analysis
+insturment with tau_profile as "instr1.sel"
+	actions {: use file "pprof.dat" :}
+		
+	# Exclude everything in the MPI and MY_GROUP profile groups
+	declarations {:
+		exclude group 
+		{
+			MPI,
+			MY_GROUP
+		}
+	:}
+
+	conditions {: numcalls > 1E6 & usecs/call < 1 :}
+end insturment
+
+
+# Use PDT data for analysis
+insturment with pdt as "instr2.sel"
+	actions {: use file "klargest.pdb" :}
+
+	conditions {: TAU_USER : numsubrs < 3 & recursive :}
+
+	force {: leafnode :}
+end insturment
