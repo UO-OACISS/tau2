@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.13 2004/04/06 18:00:07 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.14 2004/04/06 19:09:14 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -559,6 +559,7 @@ public class PerfDBSession extends DataSession {
 		// get the metric count
 		metrics = trial.getDataSession().getMetrics();
 		int metricCount = metrics.size();
+		System.out.println("Found " + metricCount + " metrics...");
 
 		// create the Vectors to store the data
 		functions = new Vector();
@@ -567,6 +568,7 @@ public class PerfDBSession extends DataSession {
 		userEventData = new Vector();
 
 		// create the functions
+		System.out.print("Getting the functions...");
 		for(Enumeration e = mapping.getMapping(0).elements(); e.hasMoreElements() ;) {
 			GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
 			if(element!=null) {
@@ -587,6 +589,7 @@ public class PerfDBSession extends DataSession {
 				functions.add(function);
 
 				// get the total data
+				System.out.print(".");
 				for (int i = 0 ; i < metricCount ; i++) {
 					FunctionDataObject funTS = new FunctionDataObject();
 					FunctionDataObject funMS = new FunctionDataObject();
@@ -611,9 +614,11 @@ public class PerfDBSession extends DataSession {
 	    }
 
 		// create the user events
+		System.out.print("\nGetting user events...");
 		for(Enumeration e = mapping.getMapping(2).elements(); e.hasMoreElements() ;) {
 			GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
 			if(element!=null) {
+				System.out.print(".");
 				// create a user event
 				UserEvent userEvent = new UserEvent();
 				userEvent.setName(element.getMappingName());
@@ -631,6 +636,7 @@ public class PerfDBSession extends DataSession {
 	    	}
 	    }
 
+		System.out.print("\nGetting the function data...");
 	    StringBuffer groupsStringBuffer = new StringBuffer(10);
 	    Vector nodes = trial.getDataSession().getNCT().getNodes();
 	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
@@ -647,6 +653,7 @@ public class PerfDBSession extends DataSession {
 			for(Enumeration e4 = functions.elements(); e4.hasMoreElements() ;){
 			    GlobalThreadDataElement function = (GlobalThreadDataElement) e4.nextElement();
 			    if (function!=null){
+					System.out.print(".");
 					FunctionDataObject fdo = new FunctionDataObject();
 					fdo.setNode(thread.getNodeID());
 					fdo.setContext(thread.getContextID());
@@ -666,11 +673,13 @@ public class PerfDBSession extends DataSession {
 			    }
 			}
 
+			System.out.print("\nGetting the user event data...");
 			//Write out user event data for this thread.
 			if(userevents!=null){
 			    for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
 				GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
 				if (userevent!=null){
+					System.out.print(".");
 					UserEventDataObject udo = new UserEventDataObject();
 				    udo.setUserEventID(userevent.getMappingID());
 					udo.setNode(thread.getNodeID());
@@ -693,11 +702,14 @@ public class PerfDBSession extends DataSession {
 		// output the trial data, which also saves the functions, 
 		// function data, user events and user event data
 		if (saveMetricIndex < 0) {
+			System.out.println("Saving the trial...");
 			newTrialID = trial.saveTrial(db);
+			System.out.println("Saving the functions...");
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
 				saveFunctionData(newFunHash, metrics, saveMetricIndex);
 			}
+			System.out.println("Saving the user events...");
 			if (userEvents != null && userEvents.size() > 0) {
 				Hashtable newUEHash = saveUserEvents(newTrialID);
 				if (userEventData != null && userEventData.size() > 0) {
@@ -706,7 +718,9 @@ public class PerfDBSession extends DataSession {
 			}
 		} else {
 			newTrialID = trial.getID();
+			System.out.println("Saving the metric...");
 			trial.saveMetric(db, saveMetricIndex);
+			System.out.println("Saving the function data...");
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
 				saveFunctionData(newFunHash, metrics, saveMetricIndex);
