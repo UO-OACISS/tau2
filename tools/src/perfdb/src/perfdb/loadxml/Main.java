@@ -98,11 +98,11 @@ public class Main {
 
 		StringBuffer buf = new StringBuffer();
 		
-		ExpPartitionManager expTable = new ExpPartitionManager("Applications");
+		ExpPartitionManager expTable = new ExpPartitionManager("application");
 		String tableName0 = "EXP_FOR_APP"+appid;
 		buf.append(expTable.tableCreation(tableName0));
 
-		buf.append("update Applications set exp_table_name = '"+tableName0+"' where appid = "+appid+";");
+		buf.append("update application set experiment_table_name = '"+tableName0+"' where id = "+appid+";");
 		buf.append("ALTER TABLE ONLY "+tableName0+" ALTER trial_table_name SET DEFAULT 'TRIAL_FOR_APP" + appid+"'; ");
 		
 		TrialPartitionManager trialTable = new TrialPartitionManager(tableName0);
@@ -228,7 +228,7 @@ public class Main {
 
 		// Obtain enough experiment information, begin loading. First check whether the experiment has been loaded.
 
-		String expTableName = "Experiments";
+		String expTableName = "experiment";
 		expid = getLoad().lookupExp(expTableName, appid, sysinfo, configinfo, compilerinfo, instruinfo);
 				
 		if (expid!=null){ // i.e., the expriment has been loaded. Quit loading.
@@ -243,11 +243,11 @@ public class Main {
 		String nextLevelTable = null;
 		String tableName0;
 
-		buf.append("select exp_table_name from Applications where appid = "+appid+";");
+		buf.append("select experiment_table_name from application where id = "+appid+";");
 		
 		expTableName = getLoad().getDB().getDataItem(buf.toString());	
 
-		if (expTableName.equalsIgnoreCase("experiments"))
+		if (expTableName.equalsIgnoreCase("experiment"))
 		    setAppPartition(0);
 		else setAppPartition(1);
 
@@ -291,7 +291,7 @@ public class Main {
 			    tableName2 = "MEAN_FOR_APP"+appid+"_EXP" + expid;
 			    buf.append(meanTable.tableCreation(tableName2));
    			       			    
-			    buf.append("update "+expTableName+" set trial_table_name = '"+nextLevelTable+"' where expid = "+expid+";");
+			    buf.append("update "+expTableName+" set trial_table_name = '"+nextLevelTable+"' where id = "+expid+";");
 			    System.out.println(buf.toString());
 			    try {
 				getLoad().getDB().executeUpdate(buf.toString());			
@@ -337,7 +337,7 @@ public class Main {
 			    tableName2 = "MEAN_FOR_EXP" + expid;
 			    buf.append(meanTable.tableCreation(tableName2));
 
-			    buf.append("update "+expTableName+" set trial_table_name = '"+nextLevelTable+"' where expid = "+expid+";");
+			    buf.append("update "+expTableName+" set trial_table_name = '"+nextLevelTable+"' where id = "+expid+";");
 			    System.out.println(buf.toString());
 			    try {
 				getLoad().getDB().executeUpdate(buf.toString());			

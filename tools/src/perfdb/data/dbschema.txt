@@ -1,108 +1,107 @@
-CREATE TABLE Applications (
-	AppID          SERIAL          NOT NULL    PRIMARY KEY,
-	AppName        VARCHAR(100)    NOT NULL,
-	Version        VARCHAR(100)    DEFAULT '1.0'        ,
-	Description    TEXT            , 
-	Language       VARCHAR(100)    NOT NULL,    
-	Paradigm       VARCHAR(100)     ,
-	UsageText          TEXT            ,
-	Exe_opt        TEXT            ,	
-	Exp_table_name VARCHAR(100)     DEFAULT 'EXPERIMENTS'    
+CREATE TABLE application (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    name                    VARCHAR(100)    NOT NULL,
+    version                 VARCHAR(100)    DEFAULT '1.0',
+    description             TEXT, 
+    language                VARCHAR(100)    NOT NULL,    
+    para_diag               VARCHAR(100),
+    usage_text              TEXT,
+    execution_options       TEXT,
+    experiment_table_name   VARCHAR(100)    DEFAULT 'experiment'    
 );
 
-CREATE TABLE Experiments (
-	ExpID          SERIAL             NOT NULL    PRIMARY KEY,
-	AppID          INT             NOT NULL,
-	SysInfo        TEXT            DEFAULT 'Sys_Info.xml', 
-	ConfigInfo     TEXT            DEFAULT 'Config_Info.xml',
-	InstruInfo     TEXT            DEFAULT 'Instru_Info.xml',
-	CompilerInfo   TEXT            DEFAULT 'Compiler_Info.xml',
-	Trial_table_name VARCHAR(100)   DEFAULT 'TRIALS' ,
-	CONSTRAINT efkey FOREIGN KEY(AppID) REFERENCES Applications(AppID) ON DELETE CASCADE ON UPDATE CASCADE
-	
-);
-
-
-CREATE TABLE XMLfiles (
-	XMLfileID    SERIAL              NOT NULL     PRIMARY KEY,
-	XMLfileName  TEXT      NOT NULL
-);
-
-CREATE TABLE Trials (
-	TrialID         SERIAL             NOT NULL    PRIMARY KEY,
-	ExpID           INT                NOT NULL,
-	Time            TIMESTAMP WITHOUT TIME ZONE,
-	Metric          VARCHAR(50)     , 
-	ProblemSize     INT,
-	NodeNum         INT,
-	ContextPNode    INT,
-	ThreadPContext  INT,
-	XMLfileID       INT,
-	CONSTRAINT tfkey1 FOREIGN KEY(ExpID) REFERENCES Experiments(ExpID) ON DELETE CASCADE ON UPDATE CASCADE,
-	CONSTRAINT tfkey2 FOREIGN KEY(XMLfileID) REFERENCES XMLfiles(XMLfileID) ON DELETE NO ACTION ON UPDATE CASCADE
+CREATE TABLE experiment (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    application             INT             NOT NULL,
+    system_info             TEXT            DEFAULT 'Sys_Info.xml', 
+    configuration_info      TEXT            DEFAULT 'Config_Info.xml',
+    instrumentation_info    TEXT            DEFAULT 'Instru_Info.xml',
+    compiler_info           TEXT            DEFAULT 'Compiler_Info.xml',
+    trial_table_name        VARCHAR(100)    DEFAULT 'trial'
 );
 
 
-CREATE TABLE FunIndex (
-	FunIndexID      SERIAL           NOT NULL    PRIMARY KEY,
-	FunID           INT,
-	FunName         TEXT		 NOT NULL,
-	FunGroup        VARCHAR(50),
-	TrialID         INT              NOT NULL,
-	CONSTRAINT ffkey FOREIGN KEY(TrialID) REFERENCES Trials(TrialID) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE xml_file (
+    id                      SERIAL          NOT NULL     PRIMARY KEY,
+    trial                   INT,
+    metric                  VARCHAR(50),
+    name                    TEXT            NOT NULL
 );
 
-CREATE TABLE LocationIndex (
-	LocID           SERIAL           NOT NULL    PRIMARY KEY,
-	NodeID          INT              NOT NULL,             
-	ContextID       INT              NOT NULL,
-	ThreadID        INT              NOT NULL,
-	FunIndexID      INT              NOT NULL,
-	CONSTRAINT lfkey FOREIGN KEY(FunIndexID) REFERENCES FunIndex(FunIndexID) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE trial (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    experiment              INT             NOT NULL,
+    time                    TIMESTAMP       WITHOUT TIME ZONE,
+    problem_size            INT,
+    node_count              INT,
+    contexts_per_node       INT,
+    threads_per_context     INT
 );
 
-CREATE TABLE Pprof (
-	LocID           INT              NOT NULL   PRIMARY KEY,
-	Inclperc        DECIMAL,
-	Incl            DECIMAL,
-	Exclperc        DECIMAL,
-	Excl            DECIMAL,
-	Call            DECIMAL,
-	Subrs           DECIMAL,
-	InclPCall       DECIMAL,
-	CONSTRAINT pfkey FOREIGN KEY(LocID) REFERENCES LocationIndex(LocID) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE function (
+    id                      SERIAL          NOT NULL    PRIMARY KEY,
+    trial                   INT             NOT NULL,
+    function_number         INT,
+    name                    TEXT            NOT NULL,
+    metric                  VARCHAR(50),
+    group_name              VARCHAR(50)
 );
 
-CREATE TABLE UserEvent (
-        LocID           INT              NOT NULL   PRIMARY KEY,
-        NumOfSamples    INT    ,         
-	MaxValue        DECIMAL,
-	MinValue        DECIMAL,
-	MeanValue       DECIMAL,
-	CONSTRAINT ufkey FOREIGN KEY(LocID) REFERENCES LocationIndex(LocID) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE user_event (
+    id                      SERIAL           NOT NULL    PRIMARY KEY,
+    trial                   INT              NOT NULL,
+    name                    TEXT             NOT NULL,
+    group_name              VARCHAR(50)
 );
 
-CREATE TABLE Totalsummary (
-	FunIndexID      INT              NOT NULL   PRIMARY KEY,
-	Inclperc        DECIMAL,
-	Incl            DECIMAL,
-	Exclperc        DECIMAL,
-	Excl            DECIMAL,
-	Call            DECIMAL,
-	Subrs           DECIMAL,
-	InclPCall       DECIMAL,
-	CONSTRAINT tfkey FOREIGN KEY(FunIndexID) REFERENCES FunIndex(FunIndexID) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE interval_location_profile (
+    id                      SERIAL           NOT NULL    PRIMARY KEY,
+    function                INT              NOT NULL,
+    node                    INT              NOT NULL,             
+    context                 INT              NOT NULL,
+    thread                  INT              NOT NULL,
+    inclusive_percentage    DECIMAL,
+    inclusive               DECIMAL,
+    exclusive_percentage    DECIMAL,
+    exclusive               DECIMAL,
+    call                    DECIMAL,
+    subroutines             DECIMAL,
+    inclusive_per_call      DECIMAL
 );
 
-CREATE TABLE Meansummary (
-	FunIndexID      INT              NOT NULL   PRIMARY KEY,
-	Inclperc        DECIMAL,
-	Incl            DECIMAL,
-	Exclperc        DECIMAL,
-	Excl            DECIMAL,
-	Call            DECIMAL,
-	Subrs           DECIMAL,
-	InclPCall       DECIMAL,
-	CONSTRAINT mfkey FOREIGN KEY(FunIndexID) REFERENCES FunIndex(FunIndexID) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE atomic_location_profile (
+    id                      SERIAL           NOT NULL    PRIMARY KEY,
+    user_event              INT              NOT NULL,
+    node                    INT              NOT NULL,             
+    context                 INT              NOT NULL,
+    thread                  INT              NOT NULL,
+    sample_count            INT    ,         
+    maximum_value           DECIMAL,
+    minimum_value           DECIMAL,
+    mean_value              DECIMAL,
+    standard_deviation      DECIMAL
 );
+
+CREATE TABLE interval_total_summary (
+    function                INT              NOT NULL   PRIMARY KEY,
+    inclusive_percentage    DECIMAL,
+    inclusive               DECIMAL,
+    exclusive_percentage    DECIMAL,
+    exclusive               DECIMAL,
+    call                    DECIMAL,
+    subroutines             DECIMAL,
+    inclusive_per_call      DECIMAL
+);
+
+CREATE TABLE interval_mean_summary (
+    function                INT              NOT NULL   PRIMARY KEY,
+    inclusive_percentage    DECIMAL,
+    inclusive               DECIMAL,
+    exclusive_percentage    DECIMAL,
+    exclusive               DECIMAL,
+    call                    DECIMAL,
+    subroutines             DECIMAL,
+    inclusive_per_call      DECIMAL
+);
+
 

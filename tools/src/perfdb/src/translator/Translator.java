@@ -530,7 +530,7 @@ public class Translator implements Serializable{
 					//Get the number of user events.
 					int numberOfUserEvents = getNumberOfUserEvents(inputString);
 					ueAmount = numberOfUserEvents;
-					System.out.println("The number of user events defined is: " + numberOfUserEvents);
+					// System.out.println("The number of user events defined is: " + numberOfUserEvents);
 														
 					//The first line will be the user event heading ... get it.
 					inputString = preader.readLine();
@@ -2409,9 +2409,9 @@ public class Translator implements Serializable{
 	String returnVal = null;
 	
 	StringBuffer buf = new StringBuffer();
-        buf.append("select a.appid from ");
-	buf.append("applications a ");
-	buf.append("where a.appid=" + appid + "; ");
+        buf.append("select a.id from ");
+	buf.append("application a ");
+	buf.append("where a.id=" + appid + "; ");
 	try {
               //  System.out.println(buf.toString());
                 returnVal = connector.getDB().getDataItem(buf.toString());               
@@ -2426,9 +2426,9 @@ public class Translator implements Serializable{
 	String appid = null;
 	
 	StringBuffer buf = new StringBuffer();
-        buf.append("select a.appid from ");
-        buf.append("applications a ");
-        buf.append("where a.appname='" + appname.trim()                   
+        buf.append("select a.id from ");
+        buf.append("application a ");
+        buf.append("where a.name='" + appname.trim()                   
                    + "' and a.version='" + appversion.trim() + "'; ");
 	try {
                 //System.out.println(buf.toString());
@@ -2445,9 +2445,9 @@ public class Translator implements Serializable{
 	String returnVal = null;
 	
 	StringBuffer buf = new StringBuffer();
-        buf.append("select e.expid from ");
-	buf.append("experiments e ");
-	buf.append("where e.expid=" + expid + "; ");
+        buf.append("select e.id from ");
+	buf.append("experiment e ");
+	buf.append("where e.id=" + expid + "; ");
 	try {
               //  System.out.println(buf.toString());
                 returnVal = connector.getDB().getDataItem(buf.toString());
@@ -2465,13 +2465,13 @@ public class Translator implements Serializable{
 	String expid = null;
 	
 	StringBuffer buf = new StringBuffer();
-        buf.append("select e.expid from ");
-        buf.append("experiments e ");
-        buf.append("where e.appid='" + appid.trim()
-                   + "' and e.sysinfo like '%" + sys
-                   + "%' and e.configinfo like '%" + config
-                   + "%' and e.instruinfo like '%" + instru
-                   + "%' and e.compilerinfo like '%" + compiler + "%'; ");
+        buf.append("select e.id from ");
+        buf.append("experiment e ");
+        buf.append("where e.application='" + appid.trim()
+                   + "' and e.system_info like '%" + sys
+                   + "%' and e.configuration_info like '%" + config
+                   + "%' and e.instrumentation_info like '%" + instru
+                   + "%' and e.compiler_info like '%" + compiler + "%'; ");
 	try {
                 //System.out.println(buf.toString());
                 expid = connector.getDB().getDataItem(buf.toString());

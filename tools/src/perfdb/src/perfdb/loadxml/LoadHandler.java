@@ -14,21 +14,18 @@ import java.sql.*;
 
 public class LoadHandler extends DefaultHandler {
 	
-    protected String TRIAL_TABLE = "Trials";
-    protected String PPROF_TABLE = "Pprof";   
-    protected String UE_TABLE = "UserEvent";
-
-    protected String XMLFILE_TABLE = "XMLfiles";
-
-    protected String FUN_TABLE = "FunIndex";
+    protected String TRIAL_TABLE = "trial";
+    protected String XMLFILE_TABLE = "xml_file";
+    protected String FUN_TABLE = "function";
+    protected String TOTAL_TABLE = "interval_total_summary";
+    protected String MEAN_TABLE = "interval_mean_summary";
+    protected String INTER_LOC_TABLE = "interval_location_profile";
+    protected String UE_TABLE = "user_event";
+    protected String ATOMIC_LOC_TABLE = "atomic_location_profile";
     protected int funIndexCounter;
-
-    protected String LOC_TABLE = "LocationIndex";
-    protected int locCounter;
-
-    protected String TOTAL_TABLE = "Totalsummary";
-    
-    protected String MEAN_TABLE = "Meansummary";
+    protected int ueIndexCounter;
+    protected int interLocCounter;
+    protected int atomicLocCounter;
     
     protected String appid = "";
     protected String expid = "";
@@ -74,13 +71,11 @@ public class LoadHandler extends DefaultHandler {
     protected String maxvalue = "";
     protected String minvalue = "";
     protected String meanvalue = "";
+    protected String standardDeviation = "";
        
     private DB dbconnector; 
-    private int partitionFlag = 0;
     private String[] funArray;
-
-    private File pprofTempFile;
-    private BufferedWriter pwriter;
+    private String[] ueArray;
 
     private File ueTempFile;
     private BufferedWriter uewriter;
@@ -88,8 +83,11 @@ public class LoadHandler extends DefaultHandler {
     private File funTempFile;
     private BufferedWriter fwriter;
  
-    private File locTempFile;
-    private BufferedWriter lwriter;
+    private File interLocTempFile;
+    private BufferedWriter ilwriter;
+
+    private File atomicLocTempFile;
+    private BufferedWriter alwriter;
 
     private File totalTempFile;
     private BufferedWriter twriter;
@@ -100,114 +98,94 @@ public class LoadHandler extends DefaultHandler {
 
     public LoadHandler(DB db){	
 	
-	super();
-	this.dbconnector = db;
+		super();
+		this.dbconnector = db;
 	
-	try{
+		try{
 
-	    pprofTempFile = new File("pprof.tmp");
-	    pprofTempFile.createNewFile();	
-	    pwriter = new BufferedWriter(new FileWriter(this.pprofTempFile));
+		    atomicLocTempFile = new File("atomicLoc.tmp");
+		    atomicLocTempFile.createNewFile();	
+		    alwriter = new BufferedWriter(new FileWriter(this.atomicLocTempFile));
 
-	    ueTempFile = new File("ue.tmp");
-	    ueTempFile.createNewFile();
-	    uewriter = new BufferedWriter(new FileWriter(this.ueTempFile));
+		    ueTempFile = new File("ue.tmp");
+		    ueTempFile.createNewFile();
+		    uewriter = new BufferedWriter(new FileWriter(this.ueTempFile));
 
-	    funTempFile = new File("fun.tmp");
-	    funTempFile.createNewFile();	
-	    fwriter = new BufferedWriter(new FileWriter(this.funTempFile));
+		    funTempFile = new File("fun.tmp");
+		    funTempFile.createNewFile();	
+		    fwriter = new BufferedWriter(new FileWriter(this.funTempFile));
 
-	    locTempFile = new File("loc.tmp");
-	    locTempFile.createNewFile();	
-	    lwriter = new BufferedWriter(new FileWriter(this.locTempFile));
+		    interLocTempFile = new File("interLoc.tmp");
+		    interLocTempFile.createNewFile();	
+		    ilwriter = new BufferedWriter(new FileWriter(this.interLocTempFile));
 
-	    totalTempFile = new File("total.tmp");
-	    totalTempFile.createNewFile();	
-	    twriter = new BufferedWriter(new FileWriter(this.totalTempFile));
+		    totalTempFile = new File("total.tmp");
+		    totalTempFile.createNewFile();	
+		    twriter = new BufferedWriter(new FileWriter(this.totalTempFile));
 
-	    meanTempFile = new File("mean.tmp");
-	    meanTempFile.createNewFile();	
-	    mwriter = new BufferedWriter(new FileWriter(this.meanTempFile));
+		    meanTempFile = new File("mean.tmp");
+		    meanTempFile.createNewFile();	
+		    mwriter = new BufferedWriter(new FileWriter(this.meanTempFile));
 	   
-	}catch (IOException ioe){
-	    ioe.printStackTrace();
-	}
+		}catch (IOException ioe){
+		    ioe.printStackTrace();
+		}
 
-	StringBuffer buf = new StringBuffer();
+		StringBuffer buf = new StringBuffer();
 	
-	buf.append("select max(funindexid) from FunIndex;");
-	
-	String tempStr = getDB().getDataItem(buf.toString());
+		// get the current max(id) for the function table
 
-	if (tempStr == null)
-	    funIndexCounter = 0;
-	else
-	    funIndexCounter = Integer.parseInt(tempStr);
+		buf.append("select max(id) from function;");
+		String tempStr = getDB().getDataItem(buf.toString());
+		if (tempStr == null)
+	    	funIndexCounter = 0;
+		else
+	    	funIndexCounter = Integer.parseInt(tempStr);
 
-	buf.delete(0, buf.toString().length());
+		// get the current max(id) for the user_event table
 
-	buf.append("select max(locid) from LocationIndex;");
+		buf.delete(0, buf.toString().length());
+		buf.append("select max(id) from user_event;");
+		tempStr = getDB().getDataItem(buf.toString());
+		if (tempStr == null)
+	    	ueIndexCounter = 0;
+		else
+	    	ueIndexCounter = Integer.parseInt(tempStr);
 
-	tempStr = getDB().getDataItem(buf.toString());
+		// get the current max(id) for the interval_location_profile table
 
-	if (tempStr == null)
-	    locCounter = 0;
-	else 
-	    locCounter = Integer.parseInt(tempStr);	
- 		
-    }
+		buf.delete(0, buf.toString().length());
+		buf.append("select max(id) from interval_location_profile;");
+		tempStr = getDB().getDataItem(buf.toString());
+		if (tempStr == null)
+	    	interLocCounter = 0;
+		else 
+	    	interLocCounter = Integer.parseInt(tempStr);	
 
-    public void setTableName(String appid, String expid){
-	if (partitionFlag!=0){
-	    if (partitionFlag==1){ // i.e., partition according to applications only.
-		TRIAL_TABLE = "trial_for_app"+appid;
-		FUN_TABLE = "fun_for_app"+appid;
-		PPROF_TABLE = "pprof_for_app"+appid;
-		UE_TABLE = "ue_for_app"+appid;
-		LOC_TABLE = "loc_for_app"+appid;
-		TOTAL_TABLE = "total_for_app"+appid;
-		MEAN_TABLE = "mean_for_app"+appid;
-	    }
-	    else if (partitionFlag == 2){ //i.e., partition according to experiments only.
-		TRIAL_TABLE = "trial_for_exp"+expid;
-		FUN_TABLE = "fun_for_exp"+expid;
-		PPROF_TABLE = "pprof_for_exp"+expid;
-		UE_TABLE = "ue_for_exp"+expid;
-		LOC_TABLE = "loc_for_exp"+expid;
-		TOTAL_TABLE = "total_for_exp"+expid;
-		MEAN_TABLE = "mean_for_exp"+expid;
-	    }
-	    else if (partitionFlag == 3){ //i.e., partition according to experiments and applications.
-		TRIAL_TABLE = "trial_for_app"+appid+"_exp"+expid;
-		FUN_TABLE = "fun_for_app"+appid+"_exp"+expid;
-		PPROF_TABLE = "pprof_for_app"+appid+"_exp"+expid;
-		UE_TABLE = "ue_for_app"+appid+"_exp"+expid;
-		LOC_TABLE = "loc_for_app"+appid+"_exp"+expid;
-		TOTAL_TABLE = "total_for_app"+appid+"_exp"+expid;
-		MEAN_TABLE = "mean_for_app"+appid+"_exp"+expid;
-	    }
-	    else {
-		System.out.println("Wrong partition flag: 1 for application partition, 2 for experiment partition, and 3 for both.");
-		System.exit(-1);
-	    }
-	}
+		// get the current max(id) for the atomic_location_profile table
+
+		buf.delete(0, buf.toString().length());
+		buf.append("select max(id) from atomic_location_profile;");
+		tempStr = getDB().getDataItem(buf.toString());
+		if (tempStr == null)
+	    	atomicLocCounter = 0;
+		else 
+	    	atomicLocCounter = Integer.parseInt(tempStr);	
     }
 
     public String getTrialTable(){ return TRIAL_TABLE; }
 
     public String getFunTable(){  return FUN_TABLE; }
     
-    public String getPprofTable(){ return PPROF_TABLE; }
+    public String getInterLocTable(){ return INTER_LOC_TABLE; }
 
     public String getUETable(){ return UE_TABLE; }    
 
-    public String getLocTable(){ return LOC_TABLE; }
+    public String getAtomicLocTable(){ return ATOMIC_LOC_TABLE; }
 
     public String getTotalTable(){ return TOTAL_TABLE; }
 
     public String getMeanTable(){ return MEAN_TABLE; }
-
-    public int getParFlag(){ return partitionFlag; }
 
     public DB getDB() {
 	return dbconnector;
@@ -239,7 +217,7 @@ public class LoadHandler extends DefaultHandler {
 	StringBuffer buf = new StringBuffer();
 	buf.append("insert into");
 	buf.append(" " + XMLFILE_TABLE + " ");
-	buf.append("(xmlfilename)");
+	buf.append("(name)");
 	buf.append(" values ");
 	File ff = new File(getDocumentName());
         String filename = ff.getAbsolutePath();
@@ -250,7 +228,7 @@ public class LoadHandler extends DefaultHandler {
 		if (getDB().getDBType().compareTo("mysql") == 0)
 		   	buf.append("select LAST_INSERT_ID();");
 		else
-	    	buf.append("select currval('xmlfiles_xmlfileid_seq');");
+	    	buf.append("select currval('xml_file_id_seq');");
 	    documentId = getDB().getDataItem(buf.toString());
 	} catch (SQLException ex) {
 	    ex.printStackTrace();
@@ -268,115 +246,115 @@ public class LoadHandler extends DefaultHandler {
 
     public void startElement(String url, String name, String qname, Attributes attrList) throws SAXException {	
 	
-	if( name.equalsIgnoreCase("Trials") ) {
-	    currentElement = "Trials";
-	}
-	if( name.equalsIgnoreCase("Onetrial") ) {
-	    currentElement = "Onetrial";
-	    metricStr = metricAttrToString(attrList);	     
-	}
-	if( name.equalsIgnoreCase("ComputationModel") ) {
-	    currentElement = "ComputationModel";
-	}
-	if( name.equalsIgnoreCase("AppID") ){
-	    currentElement = "AppID";		    
-	}
-	if( name.equalsIgnoreCase("ExpID") ){
-	    currentElement = "ExpID";	
-	}
-	if( name.equalsIgnoreCase("ProblemSize") ){
-	    currentElement = "ProblemSize";
-	}
-	if( name.equalsIgnoreCase("FunAmt") ){
-	    currentElement = "FunAmt";
-	}
-	if( name.equalsIgnoreCase("UserEventAmt") ){	    
-	    currentElement = "UEAmt";
-	}    
-	if( name.equalsIgnoreCase("Trialtime") ){
-	    currentElement = "Trialtime";
-	}
-	if( name.equalsIgnoreCase("node") ) {
-	    currentElement = "node";
-	}
-	if( name.equalsIgnoreCase("context") ) {
-	    currentElement = "context";
-	}
-	if( name.equalsIgnoreCase("thread") ) {
-	    currentElement = "thread";
-	}
-	if( name.equalsIgnoreCase("Pprof") ) {
-	    currentElement = "Pprof";
-	}
-	if( name.equalsIgnoreCase("nodeID") ) {
-	    currentElement = "nodeID";
-	}
-	if( name.equalsIgnoreCase("contextID") ) {
-	    currentElement = "contextID";
-	}
-	if( name.equalsIgnoreCase("threadID") ) {
-	    currentElement = "threadID";
-	}
-	if( name.equalsIgnoreCase("instrumentedobj") ) {
-	    currentElement = "instrumentedobj";
-	}
-	if( name.equalsIgnoreCase("funname") ) {
-	    currentElement = "funname";
-	}
-	if( name.equalsIgnoreCase("funID") ) {
-	    currentElement = "funID";
-	}
-	if (name.equalsIgnoreCase("fungroup")){
-	    currentElement = "fungroup";
-	}
-	if( name.equalsIgnoreCase("inclperc") ) {
-	    currentElement = "inclperc";
-	}
-	if( name.equalsIgnoreCase("inclutime") ) {
-	    currentElement = "inclutime";
-	}
-	if( name.equalsIgnoreCase("exclperc") ) {
-	    currentElement = "exclperc";
-	}
-	if( name.equalsIgnoreCase("exclutime") ) {
-	    currentElement = "exclutime";
-	}
-	if( name.equalsIgnoreCase("call") ) {
-	    currentElement = "call";
-	}
-	if( name.equalsIgnoreCase("subrs") ) {
-	    currentElement = "subrs";
-	}
-	if( name.equalsIgnoreCase("inclutimePcall") ) {
-	    currentElement = "inclutimePcall";
-	}
-	if( name.equalsIgnoreCase("userevent") ) {
-	    currentElement = "userevent";
-	}    
-	if( name.equalsIgnoreCase("uename") ) {
-	    currentElement = "uename";
-	}
-	if( name.equalsIgnoreCase("ueID") ) {
-	    currentElement = "ueID";
-	}    
-	if( name.equalsIgnoreCase("numofsamples") ) {
-	    currentElement = "numofsamples";
-	}
-	if( name.equalsIgnoreCase("maxvalue") ) {
-	    currentElement = "maxvalue";
-	}    
-	if( name.equalsIgnoreCase("minvalue") ) {
-	    currentElement = "minvalue";
-	}
-	if( name.equalsIgnoreCase("meanvalue") ) {
-	    currentElement = "meanvalue";
-	}    
-	if( name.equalsIgnoreCase("totalfunsummary") ) {
-	    currentElement = "totalfunsummary";
-	}    
-	if( name.equalsIgnoreCase("meanfunsummary") ) {
-	    currentElement = "meanfunsummary";
-	}	 
+		if( name.equalsIgnoreCase("Trials") ) {
+	    	currentElement = "Trials";
+		}
+		else if( name.equalsIgnoreCase("Onetrial") ) {
+	    	currentElement = "Onetrial";
+	    	metricStr = metricAttrToString(attrList);	     
+		}
+		else if( name.equalsIgnoreCase("ComputationModel") ) {
+	    	currentElement = "ComputationModel";
+		}
+		else if( name.equalsIgnoreCase("AppID") ){
+	    	currentElement = "AppID";		    
+		}
+		else if( name.equalsIgnoreCase("ExpID") ){
+	    	currentElement = "ExpID";	
+		}
+		else if( name.equalsIgnoreCase("ProblemSize") ){
+	    	currentElement = "ProblemSize";
+		}
+		else if( name.equalsIgnoreCase("FunAmt") ){
+	    	currentElement = "FunAmt";
+		}
+		else if( name.equalsIgnoreCase("UserEventAmt") ){	    
+	    	currentElement = "UEAmt";
+		}    
+		else if( name.equalsIgnoreCase("Trialtime") ){
+	    	currentElement = "Trialtime";
+		}
+		else if( name.equalsIgnoreCase("node") ) {
+	    	currentElement = "node";
+		}
+		else if( name.equalsIgnoreCase("context") ) {
+	    	currentElement = "context";
+		}
+		else if( name.equalsIgnoreCase("thread") ) {
+	    	currentElement = "thread";
+		}
+		else if( name.equalsIgnoreCase("Pprof") ) {
+	    	currentElement = "Pprof";
+		}
+		else if( name.equalsIgnoreCase("nodeID") ) {
+	    	currentElement = "nodeID";
+		}
+		else if( name.equalsIgnoreCase("contextID") ) {
+	    	currentElement = "contextID";
+		}
+		else if( name.equalsIgnoreCase("threadID") ) {
+	    	currentElement = "threadID";
+		}
+		else if( name.equalsIgnoreCase("instrumentedobj") ) {
+	    	currentElement = "instrumentedobj";
+		}
+		else if( name.equalsIgnoreCase("funname") ) {
+	    	currentElement = "funname";
+		}
+		else if( name.equalsIgnoreCase("funID") ) {
+	    	currentElement = "funID";
+		}
+		else if (name.equalsIgnoreCase("fungroup")){
+	    	currentElement = "fungroup";
+		}
+		else if( name.equalsIgnoreCase("inclperc") ) {
+	    	currentElement = "inclperc";
+		}
+		else if( name.equalsIgnoreCase("inclutime") ) {
+	    	currentElement = "inclutime";
+		}
+		else if( name.equalsIgnoreCase("exclperc") ) {
+	    	currentElement = "exclperc";
+		}
+		else if( name.equalsIgnoreCase("exclutime") ) {
+	    	currentElement = "exclutime";
+		}
+		else if( name.equalsIgnoreCase("call") ) {
+	    	currentElement = "call";
+		}
+		else if( name.equalsIgnoreCase("subrs") ) {
+	    	currentElement = "subrs";
+		}
+		else if( name.equalsIgnoreCase("inclutimePcall") ) {
+	    	currentElement = "inclutimePcall";
+		}
+		else if( name.equalsIgnoreCase("userevent") ) {
+	    	currentElement = "userevent";
+		}    
+		else if( name.equalsIgnoreCase("uename") ) {
+	    	currentElement = "uename";
+		}
+		else if( name.equalsIgnoreCase("ueID") ) {
+	    	currentElement = "ueID";
+		}    
+		else if( name.equalsIgnoreCase("numofsamples") ) {
+	    	currentElement = "numofsamples";
+		}
+		else if( name.equalsIgnoreCase("maxvalue") ) {
+	    	currentElement = "maxvalue";
+		}    
+		else if( name.equalsIgnoreCase("minvalue") ) {
+	    	currentElement = "minvalue";
+		}
+		else if( name.equalsIgnoreCase("meanvalue") ) {
+	    	currentElement = "meanvalue";
+		}    
+		else if( name.equalsIgnoreCase("totalfunsummary") ) {
+	    	currentElement = "totalfunsummary";
+		}    
+		else if( name.equalsIgnoreCase("meanfunsummary") ) {
+	    	currentElement = "meanfunsummary";
+		}	 
     }
 
     /*** Handle character data regions. ***/
@@ -407,120 +385,56 @@ public class LoadHandler extends DefaultHandler {
 	    }	    
 	}
 	
-	if (currentElement.equals("ExpID")) {
+	else if (currentElement.equals("ExpID")) {
 	    expid = tempcode;
 	    if  (expid.length()==0){
 		System.out.println("No valid experiment ID. Quit loadding.");
 		System.exit(-1);
 	    }
-
-	    setParFlag(expid);
-		
-	    setTableName(appid, expid);	    	    
 	}    
 
-	if (currentElement.equals("ProblemSize")) probsize = tempcode;
+	else if (currentElement.equals("ProblemSize")) probsize = tempcode;
 
-	if (currentElement.equals("Trialtime")) trialTime = tempcode;
+	else if (currentElement.equals("Trialtime")) trialTime = tempcode;
 	
-	if (currentElement.equals("FunAmt")) {
+	else if (currentElement.equals("FunAmt")) {
 	    funAmt = Integer.parseInt(tempcode);	    
+		if (funAmt > 0)
+		    funArray = new String[funAmt];
 	}
 
-	if (currentElement.equals("UEAmt")){
-	    
+	else if (currentElement.equals("UEAmt")){
 	    ueAmt = Integer.parseInt(tempcode);
-	    
-	    if (ueAmt > 0){
-		
-		ResultSet rs;
-		StringBuffer buf = new StringBuffer();
-		UEPartitionManager ueTable;
-
-		try {
-		    DatabaseMetaData dbMetaData = ((DBConnector)getDB()).getConnection().getMetaData();
-
-		    if (getParFlag()==3){		    
-			rs = dbMetaData.getTables(null, null, "ue_for_app"+appid, new String[]{ "TABLE" });
-
-			if (rs.next() == false){// no user event tables generated for this application yet.
-			    ueTable = new UEPartitionManager("LOC_FOR_APP" + appid);			
-			    buf.append(ueTable.tableCreation("UE_FOR_APP"+appid));
-			}		    
-		    }	
-	    
-		    rs = dbMetaData.getTables(null, null, getUETable(), new String[]{ "TABLE" });
-		    if (rs.next() == false){
-			ueTable = new UEPartitionManager(getLocTable());
-			if (getParFlag()==3) ueTable.setInheritTable("UE_FOR_APP"+appid);
-			buf.append(ueTable.tableCreation(getUETable()));		       	       
-		    }
-		    
-		    if (buf.toString().length()>0)
-			getDB().executeUpdate(buf.toString());			
-			
-		    rs.close();
-
-		} catch (SQLException ex) {
-		    ex.printStackTrace();
-		}
-	    }
-	 	    
-	    try{
-		if ((ueAmt+funAmt) > 0)
-		    funArray = new String[funAmt+ueAmt];
-		else {
+		if (ueAmt > 0)
+		    ueArray = new String[ueAmt];
+		if ((ueAmt+funAmt) == 0) {
 		    System.out.println("Cannot get a valid function amount, quit loadding.");
 		    System.exit(-1);
-		}
-	    } catch (Exception ex){
-		ex.printStackTrace();
 	    }	
 	}
 
 	if (currentElement.equals("node")) nodenum = tempcode;
-	 
-	if (currentElement.equals("context")) contextpnode = tempcode;
-	
-	if (currentElement.equals("thread")) threadpcontext = tempcode;      	
-
-	if (currentElement.equals("nodeID")) nodeid = tempcode;
-	 
-	if (currentElement.equals("contextID")) contextid = tempcode;
-	
-	if (currentElement.equals("threadID")) threadid = tempcode;
-	
-	if (currentElement.equals("funname")) funname += tempcode; 
-      
-	if (currentElement.equals("fungroup")) fungroup += tempcode;
-
-	if (currentElement.equals("funID")) funid = tempcode;
-	
-	if (currentElement.equals("inclperc")) inclperc = tempcode;
-	
-	if (currentElement.equals("inclutime")) incl = tempcode;
-	
-	if (currentElement.equals("exclperc")) exclperc = tempcode;
-	
-	if (currentElement.equals("exclutime")) excl = tempcode;
-	
-	if (currentElement.equals("call")) callnum = tempcode;
-	
-	if (currentElement.equals("subrs")) subrs = tempcode;
-	
-	if (currentElement.equals("inclutimePcall")) inclpcall = tempcode;
-
-	if (currentElement.equals("uename")) uename = tempcode;
-
-	if (currentElement.equals("ueID")) ueid = tempcode; 
-
-	if (currentElement.equals("numofsamples")) numofsamples = tempcode;
-
-	if (currentElement.equals("maxvalue")) maxvalue = tempcode;
-
-	if (currentElement.equals("minvalue")) minvalue = tempcode;
-
-	if (currentElement.equals("meanvalue")) meanvalue = tempcode;
+	else if (currentElement.equals("context")) contextpnode = tempcode;
+	else if (currentElement.equals("thread")) threadpcontext = tempcode;      	
+	else if (currentElement.equals("nodeID")) nodeid = tempcode;
+	else if (currentElement.equals("contextID")) contextid = tempcode;
+	else if (currentElement.equals("threadID")) threadid = tempcode;
+	else if (currentElement.equals("funname")) funname += tempcode; 
+	else if (currentElement.equals("fungroup")) fungroup += tempcode;
+	else if (currentElement.equals("funID")) funid = tempcode;
+	else if (currentElement.equals("inclperc")) inclperc = tempcode;
+	else if (currentElement.equals("inclutime")) incl = tempcode;
+	else if (currentElement.equals("exclperc")) exclperc = tempcode;
+	else if (currentElement.equals("exclutime")) excl = tempcode;
+	else if (currentElement.equals("call")) callnum = tempcode;
+	else if (currentElement.equals("subrs")) subrs = tempcode;
+	else if (currentElement.equals("inclutimePcall")) inclpcall = tempcode;
+	else if (currentElement.equals("uename")) uename = tempcode;
+	else if (currentElement.equals("ueID")) ueid = tempcode; 
+	else if (currentElement.equals("numofsamples")) numofsamples = tempcode;
+	else if (currentElement.equals("maxvalue")) maxvalue = tempcode;
+	else if (currentElement.equals("minvalue")) minvalue = tempcode;
+	else if (currentElement.equals("meanvalue")) meanvalue = tempcode;
     }
 
     public void endElement(String url, String name, String qname) {
@@ -531,83 +445,65 @@ public class LoadHandler extends DefaultHandler {
 	    buf.append("insert into");
 	    buf.append(" " + getTrialTable() + " ");
 	    if (probsize==""){	
-	    	buf.append("(expid, time, nodenum, contextpnode, threadpcontext, xmlfileid)");
+	    	buf.append("(experiment, time, node_count, contexts_per_node, threads_per_context)");
 	    	buf.append(" values ");
 	    	buf.append("(" + expid + ", '" + trialTime 
 			   + "', "  + nodenum 
 			   + ", " + contextpnode
-			   + ", " + threadpcontext + ", " + getDocumentId() + "); ");       
+			   + ", " + threadpcontext + "); ");       
 	    }
 	    else {
-	    	buf.append("(expid, time, problemsize, nodenum, contextpnode, threadpcontext, xmlfileid)");
+	    	buf.append("(experiment, time, problem_size, node_count, contexts_per_node, threads_per_context)");
 	    	buf.append(" values ");
 	    	buf.append("(" + expid + ", '" + trialTime 
 			   + "', " + probsize + ", " + nodenum 
 			   + ", " + contextpnode
-			   + ", " + threadpcontext + ", " + getDocumentId() + "); ");       
+			   + ", " + threadpcontext + "); ");       
 	    }
-	   	System.out.println(buf.toString());
+	   	// System.out.println(buf.toString());
 	    try{	
 	    	getDB().executeUpdate(buf.toString());
 	    	buf.delete(0, buf.toString().length());
 			if (getDB().getDBType().compareTo("mysql") == 0)
 		    	buf.append("select LAST_INSERT_ID();");
 			else
-	    		buf.append("select currval('trials_trialid_seq');");
+	    		buf.append("select currval('trial_id_seq');");
 	    	trialId = getDB().getDataItem(buf.toString());
 	    } catch (SQLException ex){
                 ex.printStackTrace();
 	    }		    
 
 	    try{	
-			// is the metric in the metrics table?
+			// update the xml_file table to have this trial, metric
 	   		buf.delete(0, buf.toString().length());
-	    	buf.append("select MetricID from Metrics where MetricName = TRIM('" + metricStr + " ');");
-	   		metricId = getDB().getDataItem(buf.toString());
-
-			// if the metric doesn't exist yet, add the metric to the metrics table
-			if (metricId == null) {
-	   			buf.delete(0, buf.toString().length());
-	    		buf.append("insert into Metrics (MetricName) values (TRIM('" + metricStr + " '));");
-	    		getDB().executeUpdate(buf.toString());
-	   			buf.delete(0, buf.toString().length());
-				if (getDB().getDBType().compareTo("mysql") == 0)
-	    			buf.append("select LAST_INSERT_ID();");
-				else
-	   				buf.append("select currval('metrics_metricid_seq');");
-	   			metricId = getDB().getDataItem(buf.toString());
-			}
+			buf.append("update " + XMLFILE_TABLE + " set trial = " + trialId);
+			buf.append(", metric = TRIM('" + metricStr + "') where id = " + getDocumentId() + ";");
+	   		// System.out.println(buf.toString());
+	    	getDB().executeUpdate(buf.toString());
 	    } catch (SQLException ex){
-                ex.printStackTrace();
+            ex.printStackTrace();
 	    }		    
 	}
 
 	if (name.equalsIgnoreCase("instrumentedobj")) {
 	    try{
-		int tempInt = Integer.parseInt(funid);
-		if (funArray[tempInt] == null){
+			int tempInt = Integer.parseInt(funid);
+			if (funArray[tempInt] == null){
+		    	funIndexCounter++;
+		    	if (fungroup.trim().length() == 0) // the function doesn't belong to any group.
+					fungroup = "NA";
+		    	String ftempStr = String.valueOf(funIndexCounter)+"\t"+getTrialId()+"\t"+funid+"\t"+funname+"\t"+metricStr+"\t"+fungroup;
+		    	fwriter.write(ftempStr, 0, ftempStr.length());
+		    	fwriter.newLine();
+		    	funArray[tempInt] = String.valueOf(funIndexCounter);	
+			}	
 
-		    funIndexCounter++;
-		    if (fungroup.trim().length() == 0) // the function doesn't belong to any group.
-			fungroup = "NA";
-		    String ftempStr = String.valueOf(funIndexCounter)+"\t"+funid+"\t"+funname+"\t"+fungroup+"\t"+getTrialId();
-		    fwriter.write(ftempStr, 0, ftempStr.length());
-		    fwriter.newLine();
-								
-		    funArray[tempInt] = String.valueOf(funIndexCounter);	
-		}	
-
-		locCounter++;
-		String ltempStr = String.valueOf(locCounter)+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+funArray[tempInt]+"\t"+metricId;
-		lwriter.write(ltempStr, 0, ltempStr.length());
-		lwriter.newLine();
-	    		     
-		String ptempStr = String.valueOf(locCounter)+ "\t" + inclperc + "\t" + incl + "\t" + exclperc
-		    + "\t" + excl + "\t" + callnum + "\t" + subrs + "\t" + inclpcall;
-		pwriter.write(ptempStr, 0, ptempStr.length());
-		pwriter.newLine();
+			interLocCounter++;
+			String ltempStr = String.valueOf(interLocCounter)+"\t"+funArray[tempInt]+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+ inclperc + "\t" + incl + "\t" + exclperc + "\t" + excl + "\t" + callnum + "\t" + subrs + "\t" + inclpcall;
+			ilwriter.write(ltempStr, 0, ltempStr.length());
+			ilwriter.newLine();
 	    } catch (IOException ex){
-		ex.printStackTrace();
+			ex.printStackTrace();
 	    }
 	    
 	    funname = "";
@@ -616,29 +512,22 @@ public class LoadHandler extends DefaultHandler {
 
 	if (name.equalsIgnoreCase("userevent")){
 	    try{		
-		
-		int ueidInt= Integer.parseInt(ueid);
-		if (funArray[ueidInt+funAmt] == null){
-		    
-		    funIndexCounter++;
-		    String ftempStr = String.valueOf(funIndexCounter)+"\t"+ueid+"\t"+uename+"\t"+uegroup+"\t"+getTrialId();
-		    fwriter.write(ftempStr, 0, ftempStr.length());
-		    fwriter.newLine();
-					    
-		    funArray[ueidInt+funAmt] = String.valueOf(funIndexCounter);	
-		}	
+			int ueidInt= Integer.parseInt(ueid);
+			if (ueArray[ueidInt] == null){
+		    	ueIndexCounter++;
+		    	String ftempStr = String.valueOf(ueIndexCounter)+"\t"+getTrialId()+"\t"+uename+"\t"+uegroup;
+		    	uewriter.write(ftempStr, 0, ftempStr.length());
+		    	uewriter.newLine();
+		    	ueArray[ueidInt] = String.valueOf(ueIndexCounter);	
+			}	
 
-		locCounter++;
-		String ltempStr = String.valueOf(locCounter)+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+funArray[ueidInt+funAmt]+"\t"+metricId;
-		lwriter.write(ltempStr, 0, ltempStr.length());
-		lwriter.newLine();
+			atomicLocCounter++;
+			String ltempStr = String.valueOf(atomicLocCounter)+"\t"+ueArray[ueidInt]+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t" + numofsamples + "\t" + maxvalue + "\t" + minvalue + "\t" + meanvalue + "\t0.0";
+			alwriter.write(ltempStr, 0, ltempStr.length());
+			alwriter.newLine();
 	    		     
-		String uetempStr = String.valueOf(locCounter)+ "\t" + numofsamples + "\t" + maxvalue + "\t" + minvalue
-		    + "\t" + meanvalue;
-		uewriter.write(uetempStr, 0, uetempStr.length());
-		uewriter.newLine();
 	    } catch (IOException ex){
-		ex.printStackTrace();
+			ex.printStackTrace();
 	    }
 	    
 	    uename = "";	    
@@ -684,13 +573,13 @@ public class LoadHandler extends DefaultHandler {
 		fwriter.newLine();
 		fwriter.close();
 
-		lwriter.write("\\.", 0, ("\\.").length());
-		lwriter.newLine();
-		lwriter.close();
+		ilwriter.write("\\.", 0, ("\\.").length());
+		ilwriter.newLine();
+		ilwriter.close();
 
-		pwriter.write("\\.", 0, ("\\.").length());
-		pwriter.newLine();
-		pwriter.close();
+		alwriter.write("\\.", 0, ("\\.").length());
+		alwriter.newLine();
+		alwriter.close();
 
 		uewriter.write("\\.", 0, ("\\.").length());
 		uewriter.newLine();
@@ -719,7 +608,7 @@ public class LoadHandler extends DefaultHandler {
 	    	buf.append("'" + funTempFile.getAbsolutePath() + "';");
 		}
 
-	    System.out.println(buf.toString());
+	    // System.out.println(buf.toString());
 
 	    try{	
 	    	getDB().executeUpdate(buf.toString());
@@ -732,17 +621,17 @@ public class LoadHandler extends DefaultHandler {
 	    	
 		if (getDB().getDBType().compareTo("mysql") == 0) {
 	    	buf.append("load data infile '");
-	    	buf.append(locTempFile.getAbsolutePath());
+	    	buf.append(interLocTempFile.getAbsolutePath());
 	    	buf.append("' into table ");
-	    	buf.append(getLocTable() + ";");
+	    	buf.append(getInterLocTable() + ";");
 		} else {
 	    	buf.append("copy ");
-	    	buf.append(getLocTable());
+	    	buf.append(getInterLocTable());
 	    	buf.append(" from ");
-	    	buf.append("'" + locTempFile.getAbsolutePath() + "';");
+	    	buf.append("'" + interLocTempFile.getAbsolutePath() + "';");
 		}
 
-	    System.out.println(buf.toString());
+	    // System.out.println(buf.toString());
 
 	    try{	
 	    	getDB().executeUpdate(buf.toString());
@@ -750,54 +639,54 @@ public class LoadHandler extends DefaultHandler {
 	    } catch (SQLException ex){
                 ex.printStackTrace();
 	    }	
-
-	    buf.delete(0, buf.toString().length());
-
-		if (getDB().getDBType().compareTo("mysql") == 0) {
-	    	buf.append("load data infile '");
-	    	buf.append(pprofTempFile.getAbsolutePath());
-	    	buf.append("' into table ");
-	    	buf.append(getPprofTable() + ";");
-		} else {
-	    	buf.append("copy ");
-	    	buf.append(getPprofTable());
-	    	buf.append(" from ");
-	    	buf.append("'" + pprofTempFile.getAbsolutePath() + "';");
-		}
-
-	    System.out.println(buf.toString());
-
-	    try{	
-	    	getDB().executeUpdate(buf.toString());
-	    	
-	    } catch (SQLException ex){
-                ex.printStackTrace();
-	    }
 
 	    if (ueAmt > 0){
 
-		buf.delete(0, buf.toString().length());
+			buf.delete(0, buf.toString().length());
 
-		if (getDB().getDBType().compareTo("mysql") == 0) {
-	    	buf.append("load data infile '");
-	    	buf.append(ueTempFile.getAbsolutePath());
-	    	buf.append("' into table ");
-	    	buf.append(getUETable() + ";");
-		} else {
-			buf.append("copy ");
-			buf.append(getUETable());
-			buf.append(" from ");
-			buf.append("'" + ueTempFile.getAbsolutePath() + "';");
-		}
+			if (getDB().getDBType().compareTo("mysql") == 0) {
+	    		buf.append("load data infile '");
+	    		buf.append(ueTempFile.getAbsolutePath());
+	    		buf.append("' into table ");
+	    		buf.append(getUETable() + ";");
+			} else {
+				buf.append("copy ");
+				buf.append(getUETable());
+				buf.append(" from ");
+				buf.append("'" + ueTempFile.getAbsolutePath() + "';");
+			}
 
-		System.out.println(buf.toString());
+			// System.out.println(buf.toString());
 
-		try{	
-		    getDB().executeUpdate(buf.toString());
+			try{	
+		    	getDB().executeUpdate(buf.toString());
+	    		
+			} catch (SQLException ex){
+		    	ex.printStackTrace();
+			}
+
+	    	buf.delete(0, buf.toString().length());
 	    	
-		} catch (SQLException ex){
-		    ex.printStackTrace();
-		}
+			if (getDB().getDBType().compareTo("mysql") == 0) {
+	    		buf.append("load data infile '");
+	    		buf.append(atomicLocTempFile.getAbsolutePath());
+	    		buf.append("' into table ");
+	    		buf.append(getAtomicLocTable() + ";");
+			} else {
+	    		buf.append("copy ");
+	    		buf.append(getAtomicLocTable());
+	    		buf.append(" from ");
+	    		buf.append("'" + atomicLocTempFile.getAbsolutePath() + "';");
+			}
+
+	    	// System.out.println(buf.toString());
+
+	    	try{	
+	    		getDB().executeUpdate(buf.toString());
+	    		
+	    	} catch (SQLException ex){
+                	ex.printStackTrace();
+	    	}	
 	    }
 
 	    buf.delete(0, buf.toString().length());
@@ -814,7 +703,7 @@ public class LoadHandler extends DefaultHandler {
 	    	buf.append("'" + totalTempFile.getAbsolutePath() + "';");
 		}
 
-	    System.out.println(buf.toString());
+	    // System.out.println(buf.toString());
 
 	    try{	
 	    	getDB().executeUpdate(buf.toString());
@@ -837,7 +726,7 @@ public class LoadHandler extends DefaultHandler {
 	    	buf.append("'" + meanTempFile.getAbsolutePath() + "';");
 		}
 
-	    System.out.println(buf.toString());
+	    // System.out.println(buf.toString());
 
 	    try{	
 	    	getDB().executeUpdate(buf.toString());
@@ -847,29 +736,13 @@ public class LoadHandler extends DefaultHandler {
 	    }
 	       
 	    funTempFile.delete();   
-	    pprofTempFile.delete();
+	    interLocTempFile.delete();
 	    ueTempFile.delete();
-	    locTempFile.delete();
+	    atomicLocTempFile.delete();
 	    totalTempFile.delete();
 	    meanTempFile.delete();
 	    	    
 	}
-    }
-
-    public void setParFlag(String expid){
-	StringBuffer buf = new StringBuffer();
-	buf.append("select trial_table_name from Experiments where expid = "+expid+";");
-	String tableName = getDB().getDataItem(buf.toString()).toUpperCase();
-	if (tableName.indexOf("_APP")>0)
-	    if (tableName.indexOf("_EXP")>0)
-		this.partitionFlag = 3;
-	    else 
-		this.partitionFlag = 1;
-	else 
-	    if (tableName.indexOf("EXP")>0)
-		this.partitionFlag = 2;
-	    else 
-		this.partitionFlag = 0;
     }
 
 }

@@ -107,12 +107,12 @@ public class Load {
 
     public String lookupApp(String name, String version){
 	StringBuffer buf = new StringBuffer();
-	buf.append("select distinct appid from ");
-	buf.append("Applications ");
+	buf.append("select distinct id from ");
+	buf.append("application ");
 	if (version.trim().length()==0) {
-	    buf.append("  where AppName='" + name.trim() + "'; ");
+	    buf.append("  where name='" + name.trim() + "'; ");
 	}
-	else buf.append("  where AppName='" + name.trim() + "' and version='" + version.trim() + "'; ");
+	else buf.append("  where name='" + name.trim() + "' and version='" + version.trim() + "'; ");
 
 	try {
 	    ResultSet appId = getDB().executeQuery(buf.toString());	
@@ -137,9 +137,9 @@ public class Load {
     public String lookupExp(String exptable, String appid, String sysinfo, String configinfo, String compilerinfo, String instruinfo){
 	StringBuffer buf = new StringBuffer();
 	
-	buf.append("select distinct expid from ");
+	buf.append("select distinct id from ");
 	buf.append(exptable);
-	buf.append("  where appid='" + appid.trim() + "' and sysinfo='" + sysinfo.trim() + "' and configinfo='" + configinfo.trim() + "' and instruinfo='" + instruinfo.trim() +"' and compilerinfo='" + compilerinfo.trim() + "'; ");
+	buf.append("  where application = '" + appid.trim() + "' and system_info='" + sysinfo.trim() + "' and configuration_info='" + configinfo.trim() + "' and instrumentation_info='" + instruinfo.trim() +"' and compiler_info='" + compilerinfo.trim() + "'; ");
 
 	try {
 	    ResultSet expId = getDB().executeQuery(buf.toString());	
@@ -167,10 +167,10 @@ public class Load {
 	try {
 	    buf.append("insert into ");
 	    // buf.append(exptable);
-	    buf.append("Experiments ");
+	    buf.append("experiment ");
 	    if (defValue==null)
-		buf.append(" (appid, sysinfo, configinfo, instruinfo, compilerinfo)");
-	    else buf.append(" (appid, sysinfo, configinfo, instruinfo, compilerinfo, trial_table_name)");
+		buf.append(" (application, system_info, configuration_info, instrumentation_info, compiler_info)");
+	    else buf.append(" (application, system_info, configuration_info, instrumentation_info, compiler_info, trial_table_name)");
 
 	    buf.append(" values ");
 
@@ -186,7 +186,7 @@ public class Load {
 		if (getDB().getDBType().compareTo("mysql") == 0)
 	    	buf.append("select LAST_INSERT_ID();");
 		else
-	    	buf.append("select currval('experiments_expid_seq');");
+	    	buf.append("select currval('experiment_id_seq');");
 	    expid = getDB().getDataItem(buf.toString());
 	    System.out.println("The ID for the experiment is: "+ expid);	
 	    return expid;

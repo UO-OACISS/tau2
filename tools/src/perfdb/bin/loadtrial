@@ -5,4 +5,6 @@ XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
 JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
 
 #store pprof.xml into Postgresql
+date
 java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadxml ${PERFDB_HOME}/data/pprof.xml
+date

@@ -10,18 +10,18 @@ import java.sql.*;
 
 public class AppLoadHandler extends DefaultHandler {
 
-	protected final static String APP_TABLE = "Applications";
-	protected final static String EXP_TABLE = "Experiments";
+	protected final static String APP_TABLE = "application";
+	protected final static String EXP_TABLE = "experiment";
 	
     // w.r.t. applications
-        protected String appid = "";
-        protected String appname = "";
-        protected String version = "";
-        protected String desc = "";
-        protected String lang = "";
-        protected String paradiag = "";
-        protected String usage = "";
-        protected String exeopt = "";
+    protected String appid = "";
+    protected String name = "";
+    protected String version = "";
+    protected String desc = "";
+    protected String lang = "";
+    protected String paradiag = "";
+    protected String usage = "";
+    protected String exeopt = "";
 
 	protected String currentElement = "";
 	private DB dbconnector;
@@ -51,38 +51,23 @@ public void startDocument() throws SAXException{
 
 /*** Handle element, attributes, and the connection from this element to its parent. ***/
 
-/*public String metricAttrToString(AttributeList attrList) {
-        StringBuffer buf = new StringBuffer();
-        int length = attrList.getLength();
-        for (int i=0;i<length;i++) {
-                buf.append(attrList.getValue(i));
-        }
-        return buf.toString();
-}*/
-
 public void startElement(String url, String name, String qname, Attributes attrList) throws SAXException {	
 	
-	 if( name.equalsIgnoreCase("name") ) {
-	     currentElement = "appname";
-	 }
-         if( name.equalsIgnoreCase("description") ) {
-	     currentElement = "desc";
-	     }
-         if( name.equalsIgnoreCase("version") ) {
-	     currentElement = "version";
-	 }
-	 if( name.equalsIgnoreCase("language") ) {
-	     currentElement = "lang";
-	 }
-	 if( name.equalsIgnoreCase("para_diag") ) {
-	     currentElement = "paradiag";
-	 }
-	 if( name.equalsIgnoreCase("usage") ) {
-	     currentElement = "usage";
-	 }
-	 if( name.equalsIgnoreCase("exe_opt") ) {
-	     currentElement = "exeopt";
-	 }       
+	if( name.equalsIgnoreCase("name") ) {
+		currentElement = "name";
+	} else if( name.equalsIgnoreCase("description") ) {
+		currentElement = "description";
+	} else if( name.equalsIgnoreCase("version") ) {
+		currentElement = "version";
+	} else if( name.equalsIgnoreCase("language") ) {
+		currentElement = "language";
+	} else if( name.equalsIgnoreCase("para_diag") ) {
+		currentElement = "paradiagm";
+	} else if( name.equalsIgnoreCase("usage") ) {
+		currentElement = "usage";
+	} else if( name.equalsIgnoreCase("exe_opt") ) {
+		currentElement = "execution_options";
+	}       
 }
 
 /**
@@ -106,19 +91,13 @@ public void characters(char[] chars, int start, int length) {
 
 	String tempstr = new String(chars, start, length);
 	
-	if (currentElement.equals("appname")) appname = tempstr;
-	 
-	if (currentElement.equals("desc")) desc = tempstr;      	
-
-	if (currentElement.equals("version")) version = tempstr;
-	 
-	if (currentElement.equals("lang")) lang = tempstr;
-	
-	if (currentElement.equals("paradiag")) paradiag = tempstr;
-	
-	if (currentElement.equals("usage")) usage = tempstr;
-	
-	if (currentElement.equals("exeopt")) exeopt = tempstr;
+	if (currentElement.equals("name")) name = tempstr;
+	else if (currentElement.equals("description")) desc = tempstr;      	
+	else if (currentElement.equals("version")) version = tempstr;
+	else if (currentElement.equals("language")) lang = tempstr;
+	else if (currentElement.equals("paradiagm")) paradiag = tempstr;
+	else if (currentElement.equals("usage_text")) usage = tempstr;
+	else if (currentElement.equals("execution_options")) exeopt = tempstr;
 	
 }
 
@@ -128,17 +107,17 @@ public void endElement(String url, String name, String qname) {
 
 	    // check if the application is already stored in DB
 	    StringBuffer buf = new StringBuffer();
-	    buf.append("select appid from  ");
+	    buf.append("select id from  ");
 	    buf.append(APP_TABLE);
-	    buf.append("  where AppName='" + appname + "' and version='" + version + "'; ");
+	    buf.append("  where name='" + name + "' and version='" + version + "'; ");
 	    if (getDB().getDataItem(buf.toString()) == null){
 
 	    	buf = new StringBuffer();
 	    	buf.append("insert into");
 	    	buf.append(" " + APP_TABLE + " ");
-	    	buf.append("(AppName, Version, Description, Language, Paradigm, UsageText, Exe_opt)");
+	    	buf.append("(name, version, description, language, para_diag, usage_text, execution_options)");
 	    	buf.append(" values ");
-	    	buf.append("('" + appname + "', '" + version + "', '" 
+	    	buf.append("('" + name + "', '" + version + "', '" 
 		       + desc + "', '" + lang + "', '" + paradiag + "', '" + usage + "', '" + exeopt + "'); ");       
 	    	// System.out.println(buf.toString());
 	    	try {
@@ -147,7 +126,7 @@ public void endElement(String url, String name, String qname) {
 			if (getDB().getDBType().compareTo("mysql") == 0)
 		    	buf.append("select LAST_INSERT_ID();");
 			else
-		    	buf.append("select currval('applications_appid_seq');");
+		    	buf.append("select currval('application_id_seq');");
 		    appid = getDB().getDataItem(buf.toString()); 
 		    System.out.println("The ID for the application is: "+ appid);
 		} catch (SQLException ex) {
