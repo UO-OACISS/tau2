@@ -1,0 +1,15 @@
+Tuesday 27th March 2002.
+
+//Please down load the very latest version of TAU.
+//There are a number of changes and additions to this
+//API happing on a daily basis (not to mention fixes).
+//Comments are VERY welcome.
+
+This API basically allow an application access to TAU's internal
+data. You can access the function list, and all data at function name
+resolution.  In the example, the beginning and end of the main()
+function contains internal data access function examples.
+
+There will be some memory clean up functions, as well as some
+addition dump routines added over the next couple of days to complete
+the API.  Please check back!!
