@@ -524,15 +524,24 @@ if [ $gotoNextStep == $TRUE ]; then
 			else
 				newCmd="$newCmd -o $outputFile" 
 			fi
+			echoIfDebug "PassedOutFile: $passedOutputFile outputFile: $outputFile"
 			#echoIfDebug "cmd after appending the .o file is $newCmd"
 
 			evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
 			echoIfVerbose "Looking for file: $outputFile "
+			if [ $hasAnOutputFile == $TRUE ]; then
 
-			if [  ! -e $outputFile ]; then
+			  if [  ! -e $passedOutputFile ]; then
+			  	echoIfVerbose "Error: Tried Looking for file: $passedOutputFile"
+			    	printError "$CMD" "$newCmd"
+			    	break
+			  fi
+			else
+			  if [  ! -e $outputFile ]; then
 				echoIfVerbose "Error: Tried Looking for file: $outputFile"
 				printError "$CMD" "$newCmd"
 				break
+			  fi
 			fi
 			tempCounter=tempCounter+1
 		done
