@@ -84,15 +84,23 @@ public class ParaProf implements ActionListener{
 	    FileList fl = new FileList();
 	    Vector v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 ,ParaProf.debugIsOn);
 
-	    boolean dataAdded = false;
 	    if(v.size()>0){
 		trial.initialize(v);
-		dataAdded = true;
-	    }
-	    
-	    if(dataAdded){
 		experiment.addTrial(trial);
 		trial.showMainWindow();
+	    }
+	    else{
+		//Try finding profile.*.*.* files.
+		 v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 ,ParaProf.debugIsOn);
+		 if(v.size()>0){
+		     trial.initialize(v);
+		     //experiment.addTrial(trial);
+		     //trial.showMainWindow();
+		 }
+		 else{
+		     System.out.println("No profile files found in the current directory.");
+		     System.out.println("Use ParaProf's manager window to load them manually.");
+		 }
 	    }
 
 	    ParaProfManager paraProfManager = new ParaProfManager();

@@ -23,8 +23,10 @@ import javax.swing.tree.*;
 import dms.dss.*;
 
 public class ParaProfTrial extends Trial{
-    public ParaProfTrial(){
-	super();}
+    public ParaProfTrial(int type){
+	super();
+	this.type = type;
+    }
 
     public void initialize(Object obj){
 	dataSession = new TauPprofOutputSession();
@@ -161,7 +163,7 @@ public class ParaProfTrial extends Trial{
     }
 
     //####################################
-    //Functions that control the obtaining and the openning
+    //Functions that control the obtaining and the opening
     //and closing of the static main window for
     //this trial.
     //####################################
@@ -333,6 +335,7 @@ public class ParaProfTrial extends Trial{
     //####################################
     //Instance data.
     //####################################
+    TauOutputSession 
     TauPprofOutputSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
