@@ -86,6 +86,12 @@ fi
         ptdir=`echo $1 | sed -e 's/^ptdir=//'`
 	echo "s,^PTDIR=.*$,PTDIR=$ptdir,g" >> $sedout
 	;;
+
+     tulipdir=*)
+        tulipdir=`echo $1 | sed -e 's/^tulipdir=//'`
+	echo "s,^TULIPDIR=.*$,TULIPDIR=$tulipdir,g" >> $sedout
+	;;
+
 ###############################################################
 # Set the default optimization flags for compiling pcxx und user programs
 ###############################################################
@@ -332,6 +338,10 @@ fi
 	;;
      PTHREAD_AVAILABLE)
 	echo "NOTE: Using pthreads as the thread package. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TULIPTHREADS)
+	echo "NOTE: Using Tulip Threads as the thread package. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LWP_AVAILABLE)
