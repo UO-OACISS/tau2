@@ -38,7 +38,7 @@ using namespace std;
 #endif // TRACING_ON
 
 #ifdef TAU_MPI
-extern "C" TauUserEvent sendevent;
+extern TauUserEvent& TheSendEvent(void);
 #endif /* TAU_MPI */
 
 
@@ -240,11 +240,13 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
    counterEvents = new TauUserEvent * [numberOfActiveFunctions] ; 
    /* We obtain the timestamp from COUNTER1, so we only need to trigger 
       COUNTER2-N or i=1 through no. of active functions not through 0 */
+   RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
    for (int i = 1; i < numberOfActiveFunctions; i++)
    {
      counterEvents[i] = new TauUserEvent(names[i], true);
      /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/ 
    }
+   RtsLayer::LockDB(); // We do this to prevent a deadlock. Lock it again!
 #endif /* TRACING_ON */
   }
   RtsLayer::UnLockDB(); // mutual exclusion primitive
@@ -671,7 +673,7 @@ void MultipleCounterLayer::tauMUSEMCL(int tid, double values[]){
 
 void MultipleCounterLayer::tauMPIMessageSizeMCL(int tid, double values[]){
 #ifdef TAU_MPI
-  values[tauMPIMessageSizeMCL_CP[0]] = sendevent.GetSumValue(tid); //Currently TAU_EVENT_DATATYPE is a double.
+  values[tauMPIMessageSizeMCL_CP[0]] = TheSendEvent().GetSumValue(tid); //Currently TAU_EVENT_DATATYPE is a double.
 #endif//TAU_MPI
 }
 
