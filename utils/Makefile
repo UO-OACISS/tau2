@@ -80,7 +80,7 @@ CWARNING	= $(WARNINGSOPT)
 
 # Do we use a different compiler for PDT based tau_instrumentor?
 PDT_CXX_COMP = $(CXX)
-#PDTCXX#PDT_CXX_COMP = $(PDT_CXX) #ENDIF#
+#PDTCXX#PDT_CXX_COMP = $(PDT_CXX) $(ABI) $(ISA) #ENDIF#
 
 SAGE1DIR=
 INCLUDEPATH = $(SAGE1DIR)/lib/include
