@@ -1073,7 +1073,7 @@ void tau_phase_create_static__(void **ptr, char *infname, int slen)
 
 void tau_phase_create_dynamic__(void **ptr, char *infname, int slen)
 {
-  tau_phase_create_dynamic__(ptr, infname, slen);
+  tau_phase_create_dynamic_(ptr, infname, slen);
 }
 
 void tau_phase_start__(void **profiler)
@@ -1098,7 +1098,7 @@ void tau_phase_create_static(void **ptr, char *infname, int slen)
 
 void tau_phase_create_dynamic(void **ptr, char *infname, int slen)
 {
-  tau_phase_create_dynamic__(ptr, infname, slen);
+  tau_phase_create_dynamic_(ptr, infname, slen);
 }
 
 void tau_phase_start(void **profiler)
@@ -1118,7 +1118,7 @@ void TAU_PHASE_CREATE_STATIC(void **ptr, char *infname, int slen)
 
 void TAU_PHASE_CREATE_DYNAMIC(void **ptr, char *infname, int slen)
 {
-  tau_phase_create_dynamic__(ptr, infname, slen);
+  tau_phase_create_dynamic_(ptr, infname, slen);
 }
 
 void TAU_PHASE_START(void **profiler)
@@ -1136,6 +1136,6 @@ void TAU_PHASE_STOP(void **profiler)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.37 $   $Date: 2005/01/12 02:50:11 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.37 2005/01/12 02:50:11 sameer Exp $ 
+ * $Revision: 1.38 $   $Date: 2005/01/12 02:55:57 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.38 2005/01/12 02:55:57 sameer Exp $ 
  ***************************************************************************/
