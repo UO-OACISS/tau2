@@ -507,6 +507,10 @@ fi
 	echo "NOTE: *** SP development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     IBM64)
+	echo "NOTE: *** Using IBM 64 bit options.  ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      T3D)
 	echo "NOTE: *** CRAY T3D development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -764,6 +768,10 @@ fi
 	;;
      SGI64PAPI)
 	echo "NOTE: Using PAPI with SGI64 options ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     IBM64PAPI)
+	echo "NOTE: Using PAPI with IBM64 options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      GNU)
