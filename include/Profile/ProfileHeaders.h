@@ -55,17 +55,17 @@ using std::map;
 #else
 #include <vector.h>
 #include <map.h>
-#if ((!defined(POOMA_KAI)) && (!defined(TAU_STDCXXLIB)))
+#if !defined(KAI)
 #include <pair.h>
 #else
 #include <utility.h>
-#endif /* not POOMA_KAI */
+#endif /* not KAI */
 #include <list.h>
 #endif /* POOMA_STDSTL */
 
 #endif /* _PROFILE_HEADERS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileHeaders.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/07/10 20:11:29 $
- * POOMA_VERSION_ID: $Id: ProfileHeaders.h,v 1.2 1998/07/10 20:11:29 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 1998/09/22 01:03:54 $
+ * POOMA_VERSION_ID: $Id: ProfileHeaders.h,v 1.3 1998/09/22 01:03:54 sameer Exp $ 
  ***************************************************************************/
