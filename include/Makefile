@@ -34,10 +34,13 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
-TAUROOT=/home/grads/sameer/gar/rs/pcl-tau/tau2
-TULIPDIR=/users/sameer/s
-PCLDIR=/home/grads/sameer/gar/rs/pcl
-TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/gar/rs/pcl-tau/tau2
+TAUROOT=/research/paraducks/apps/pdt/dev/tau2
+TULIPDIR=
+PCLDIR=
+TAU_MPI_INC=
+TAU_MPI_LIB=
+TAU_MPI_FLIB=
+TAU_PREFIX_INSTALL_DIR=/research/paraducks/apps/pdt/dev/tau2
 TAU_OPTIONS=
 #######################################################################
  
@@ -121,6 +124,10 @@ TAUINC        	= -I$(TAUROOT)/include
 
 TAULIBS		= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA) 
 
+TAUMPILIBS	= $(TAU_MPI_LIB)
+
+TAUFMPILIBS	= $(TAU_MPI_FLIB)
+
 ### ACL S/W requirement
 TAU_DEFS	= $(TAUDEFS)
 
@@ -129,6 +136,10 @@ TAU_INCLUDE 	= -I$(TAUROOT)/include
 TAU_LIBS	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA)
 
 TAU_DISABLE	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauDisable
+
+TAU_MPI_LIBS	= $(TAU_MPI_LIB)
+
+TAU_FMPI_LIBS	= $(TAU_MPI_FLIB)
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 # These options could be included in the application Makefile as 
