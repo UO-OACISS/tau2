@@ -301,6 +301,21 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 
 #HITACHI#TAU_HITACHI_EXTRA 	=  -L/usr/local/lib -llrz32 #ENDIF#
 
+## To use the standard F90 linker instead of TAU_LINKER + TAU_FORTRANLIBS, add
+#GNU#TAU_CXXLIBS		= -lstdc++ -lgcc_s #ENDIF#
+#PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
+
+#ENABLE64BIT#TAU_SGI_INIT  = /usr/lib64/c++init.o #ENDIF#
+#ENABLEN32BIT#TAU_SGI_INIT = /usr/lib32/c++init.o #ENDIF#
+#ENABLE32BIT#TAU_SGI_INIT  = /usr/lib/c++init.o   #ENDIF#
+
+#SGICC#TAU_CXXLIBS      	= $(TAU_SGI_INIT) -lC #ENDIF#
+#APPLECXX#AR_SHFLAGS 		= -lstd -lC #ENDIF#
+#SOL2#TAU_CXXLIBS               = -lCstd -lCrun #ENDIF#
+#USE_IBMXLC#TAU_CXXLIBS         = -lC            #ENDIF#
+#USE_DECCXX#TAU_CXXLIBS         = -lcxxstd -lcxx #ENDIF#
+#USE_INTELCXX#TAU_CXXLIBS        = -lcprts -lPEPCF90 #ENDIF#
+
 # EXTERNAL PACKAGES: EPILOG
 #EPILOG#TAU_LINKER_OPT3 	=  -L$(EPILOGDIR)/lib -L$(EPILOGDIR)/src -lelg $(TAU_HITACHI_EXTRA) #ENDIF#
 #EPILOGMPI#TAU_LINKER_OPT3 	=  -L$(EPILOGDIR)/lib -L$(EPILOGDIR)/src -lelg.mpi  $(TAU_HITACHI_EXTRA) #ENDIF#
