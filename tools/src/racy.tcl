@@ -2932,3 +2932,4 @@ if {![ALONE]} {
 wm protocol .$myself WM_DELETE_WINDOW exit
 
 removeMessage
+
