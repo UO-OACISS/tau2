@@ -8,7 +8,7 @@ CLASS_DIR        = $(PERFDB_HOME)/classes
 MAKE_DIR         = $(PERFDB_HOME)/make
 JAR_DIR          = $(PERFDB_HOME)/jars
 
-SOURCE_DIR       = $(PERFDB_HOME)/java
+SOURCE_DIR       = $(PERFDB_HOME)/src
 DESTINATION      = $(PERFDB_HOME)/classes
 
 JAVA_BIN         = $(JAVA_HOME)/bin
