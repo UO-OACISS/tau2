@@ -184,7 +184,7 @@ void Profiler::Start(int tid)
 	}
 	//Now get the start times.
 	RtsLayer::getUSecD(tid, StartTime);	  
-	TimeStamp = (unsigned long long) StartTime[0]; // USE COUNTER1 for tracing
+	TimeStamp += (unsigned long long) StartTime[0]; // USE COUNTER1 for tracing
 #endif//TAU_MULTIPLE_COUNTERS
 
 #ifdef TAU_CALLPATH
@@ -1929,9 +1929,8 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 			 << " Excl : " << 0 << " Incl : "
 			 << 0 << endl;);
 	    
-	    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(),
-		    (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
-		    0, 0);
+	    fprintf(fp,"\"%s %s\" %ld %ld 0 0 ", (*it)->GetName(),
+	    (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid));
 	  }
 	  fprintf(fp,"0 "); // Indicating - profile calls is turned off
 	  fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
@@ -2339,9 +2338,8 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
 		       << " Excl : " << 0 << " Incl : "
 		       << 0 << endl;);
 	  
-	  fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(),
-		  (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
-		  0, 0);
+	  fprintf(fp,"\"%s %s\" %ld %ld 0 0 ", (*it)->GetName(),
+		  (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid));
 	}
 	fprintf(fp,"0 "); // Indicating - profile calls is turned off
 	fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
@@ -2636,8 +2634,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.95 $   $Date: 2004/05/31 16:09:20 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.95 2004/05/31 16:09:20 sameer Exp $ 
+ * $Revision: 1.96 $   $Date: 2004/05/31 16:20:47 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.96 2004/05/31 16:20:47 sameer Exp $ 
  ***************************************************************************/
 
 	
