@@ -46,6 +46,8 @@ ARFLAGS         = rcv
 #SOL2CC#ARFLAGS                 = -o                       #ENDIF#
 ##################################################################
 
+#USE_DECCXX#EXTRAOBJS=cxx_repository/*.o #ENDIF#
+
 
 RM		= /bin/rm -f
 
@@ -61,7 +63,7 @@ LDFLAGS	      	= $(USER_OPT) $(TAU_LDFLAGS)
 
 LIBTARGET 	= libTAU_traceinput$(TAU_OPTIONS).a
 
-OBJS		= TAU_tf.o TAU_Cwrapper.o
+OBJS		= TAU_tf.o TAU_Cwrapper.o 
 
 HDRS 		= ../../include/TAU_tf.h TAU_tf_decl.h TAU_tf_headers.h
 
@@ -81,7 +83,7 @@ $(INSTALLDEST)/$(LIBTARGET): $(LIBTARGET)
 
 
 $(LIBTARGET):	$(OBJS)
-	$(AR) $(ARFLAGS) $(LIBTARGET) $(OBJS)
+	$(AR) $(ARFLAGS) $(LIBTARGET) $(OBJS) $(EXTRAOBJS)
 	$(TAU_RANLIB) $(LIBTARGET)
 
 TAU_tf.o : TAU_tf.cpp $(HDRS)
@@ -91,10 +93,10 @@ TAU_Cwrapper.o : TAU_Cwrapper.cpp $(HDRS)
 	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 clean: 	
-	$(RM) $(OBJS) $(LIBTARGET) 
+	$(RM) $(OBJS) $(LIBTARGET)  $(EXTRAOBJS)
 ##############################################
 #/***************************************************************************
 # * $RCSfile: Makefile,v $   $Author: sameer $
-# * $Revision: 1.3 $   $Date: 2003/12/05 23:50:00 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.3 2003/12/05 23:50:00 sameer Exp $ 
+# * $Revision: 1.4 $   $Date: 2004/10/29 00:37:03 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.4 2004/10/29 00:37:03 sameer Exp $ 
 # ***************************************************************************/
