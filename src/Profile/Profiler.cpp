@@ -184,7 +184,7 @@ void Profiler::Start(int tid)
 	}
 	//Now get the start times.
 	RtsLayer::getUSecD(tid, StartTime);	  
-	TimeStamp = StartTime[0]; // USE COUNTER1 for tracing
+	TimeStamp = (unsigned long long) StartTime[0]; // USE COUNTER1 for tracing
 #endif//TAU_MULTIPLE_COUNTERS
 
 #ifdef TAU_CALLPATH
@@ -336,6 +336,7 @@ Profiler& Profiler::operator= (const Profiler& X)
 void Profiler::Stop(int tid)
 {
       unsigned long long TimeStamp = 0L; 
+      int i;
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
@@ -349,8 +350,10 @@ void Profiler::Stop(int tid)
 #endif /* TAU_COMPENSATE */
 
 #ifdef TAU_COMPENSATE
+#ifndef TAU_MULTIPLE_COUNTERS 
 	double tover = TauGetTimerOverhead(TauFullTimerOverhead);
 	double tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+#endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_COMPENSATE */
 
 #ifndef TAU_MULTIPLE_COUNTERS
@@ -359,21 +362,33 @@ void Profiler::Stop(int tid)
 	TimeStamp += (unsigned long long) CurrentTime; 
 
 
-#ifdef TAU_COMPENSATE 
+#if (defined(TAU_COMPENSATE ) && defined(PROFILING_ON))
 	/* To compensate for timing overhead, shrink the totaltime! */
 	TotalTime = TotalTime - tnull - GetNumChildren() * tover; 
 	if (TotalTime < 0 ) {
 	  TotalTime = 0;
 	  DEBUGPROFMSG("TotalTime negative in "<<ThisFunction->GetName()<<endl;);
         }
-#endif /* TAU_COMPENSATE */
+#endif /* TAU_COMPENSATE && PROFILING_ON */
 #else //TAU_MULTIPLE_COUNTERS
 	//Get the current counter values.
 	RtsLayer::getUSecD(tid, CurrentTime);
 
 #ifdef PROFILING_ON
+#ifdef TAU_COMPENSATE
+	double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
+	double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+#endif /* TAU_COMPENSATE */
 	for(int k=0;k<MAX_TAU_COUNTERS;k++){
 	  TotalTime[k] = CurrentTime[k] - StartTime[k];
+#ifdef TAU_COMPENSATE 
+  	  /* To compensate for timing overhead, shrink the totaltime! */
+	  TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k]; 
+	  if (TotalTime[k] < 0 ) {
+	    TotalTime[k] = 0;
+	    DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
+          }
+#endif /* TAU_COMPENSATE */
 	}
 #endif // PROFILING_ON
 	TimeStamp += (unsigned long long) CurrentTime[0]; // USE COUNTER1
@@ -422,10 +437,21 @@ void Profiler::Stop(int tid)
 	// In either case we need to add time to the exclusive time.
 
 #ifdef TAU_COMPENSATE
+#ifndef TAU_MULTIPLE_COUNTERS
 	if (ThisFunction->GetExclTime(tid) < 0) 
 	{
  	  ThisFunction->SetExclTime(tid, 0.0);
 	}
+#else /* TAU_MULTIPLE_COUNTERS */
+ 	/* Lets get the vector of exclusive times for each counter */
+	double * exclcounters= ThisFunction->GetExclTime(tid);
+        for(i = 0; i < MAX_TAU_COUNTERS; i++)	
+	{
+	  if (exclcounters[i] < 0)
+	    exclcounters[i] = 0.0; 
+	}
+ 	ThisFunction->SetExclTime(tid, exclcounters);
+#endif /* TAU_MULTIPLE_COUNTERS */
 #ifdef TAU_CALLPATH
 	if ((ParentProfiler != NULL) && (CallPathFunction->GetExclTime(tid) < 0)) 
 	{
@@ -2605,8 +2631,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.91 $   $Date: 2004/02/27 20:08:50 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.91 2004/02/27 20:08:50 sameer Exp $ 
+ * $Revision: 1.92 $   $Date: 2004/03/02 03:05:41 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.92 2004/03/02 03:05:41 sameer Exp $ 
  ***************************************************************************/
 
 	
