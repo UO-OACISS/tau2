@@ -195,7 +195,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
       editPrefItem.addActionListener(this);
       fileMenu.add(editPrefItem);
       
-      
+      //Add a menu item.
+      JMenuItem saveImageItem = new JMenuItem("Save Image");
+      saveImageItem.addActionListener(this);
+      fileMenu.add(saveImageItem);
+
       //Add a menu item.
       JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
       exitItem.addActionListener(this);
@@ -669,7 +673,12 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         else if(arg.equals("Edit ParaProf Preferences!"))
         {
           trial.getPreferences().showPreferencesWindow();
-        } 
+        }
+	else if(arg.equals("Save Image"))
+        {
+          ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+	  imageOutput.saveImage((ParaProfImageInterface) sMWPanel);
+        }
         else if(arg.equals("Exit ParaProf!"))
         {
           setVisible(false);

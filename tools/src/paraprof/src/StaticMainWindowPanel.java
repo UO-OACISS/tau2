@@ -20,7 +20,7 @@ import java.awt.geom.*;
 //import javax.print.*;
 
 
-public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener
+public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener, ParaProfImageInterface
 
 {
     //******************************
@@ -669,7 +669,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	try{
 	    super.paintComponent(g);
 	    
-	    renderIt((Graphics2D) g, false);
+	    renderIt((Graphics2D) g, "print");
 	}
 	catch(Exception e){
 	    System.out.println(e);
