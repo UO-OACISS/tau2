@@ -366,29 +366,30 @@ void Profiler::ProfileExit(const char *message, int tid)
     << message << endl;);
   if (current == 0) 
   {   
-     DEBUGPROFMSG("Current is NULL, Storing data "<<endl;);
-     StoreData(tid);
+     DEBUGPROFMSG("Current is NULL, No need to store data TID = " << tid << endl;);
+     //StoreData(tid);
   }
-    
-
-  while (current != 0) {
-    DEBUGPROFMSG("Thr "<< RtsLayer::myNode() << " ProfileExit() calling Stop :" 
-      << current->ThisFunction->GetName() << " " 
-      << current->ThisFunction->GetType() << endl;);
-    current->Stop(tid); // clean up 
-
-    if (current->ParentProfiler == 0) {
-      if (!RtsLayer::isCtorDtor(current->ThisFunction->GetName())) {
-       // Not a destructor of a static object - its a function like main
-         DEBUGPROFMSG("Thr " << RtsLayer::myNode()
-           << " ProfileExit() : Reached top level function - dumping data"
-           << endl;);
-
-          StoreData(tid); // static now. Don't need current. 
+  else 
+  {  
+    while (current != 0) {
+      DEBUGPROFMSG("Thr "<< RtsLayer::myNode() << " ProfileExit() calling Stop:"        << current->ThisFunction->GetName() << " " 
+        << current->ThisFunction->GetType() << endl;);
+      current->Stop(tid); // clean up 
+  
+      if (current->ParentProfiler == 0) {
+        if (!RtsLayer::isCtorDtor(current->ThisFunction->GetName())) {
+         // Not a destructor of a static object - its a function like main
+           DEBUGPROFMSG("Thr " << RtsLayer::myNode()
+             << " ProfileExit() : Reached top level function - dumping data"
+             << endl;);
+  
+        //    StoreData(tid); // static now. Don't need current. 
+        // The above Stop should call StoreData. We needn't do it again.
+        }
       }
+  
+      current = CurrentProfiler[tid]; // Stop should set it
     }
-
-    current = CurrentProfiler[tid]; // Stop should set it
   }
 
 }
@@ -707,8 +708,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 1999/08/19 22:26:54 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.28 1999/08/19 22:26:54 sameer Exp $ 
+ * $Revision: 1.29 $   $Date: 1999/08/20 20:33:00 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.29 1999/08/20 20:33:00 sameer Exp $ 
  ***************************************************************************/
 
 	

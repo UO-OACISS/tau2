@@ -112,7 +112,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 // initialized, other thread may have started executing and setting 
 // these values? 
      	    NumCalls[i] = 0;
-	//  SetAlreadyOnStack(false, i);
+#ifdef JAVA
+	    SetAlreadyOnStack(false, i);
+#endif /* JAVA  */
      	    NumSubrs[i] = 0;
        	    ExclTime[i] = 0;
        	    InclTime[i] = 0;
@@ -254,6 +256,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 1999/08/19 22:26:54 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.19 1999/08/19 22:26:54 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 1999/08/20 20:32:59 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.20 1999/08/20 20:32:59 sameer Exp $ 
  ***************************************************************************/
