@@ -1,6 +1,7 @@
 This API basically allow an application access to TAU's internal
 data. You can access the function list, and all data at function name
-resolution.  In the example, the beginning and end of the main()
+resolution.  Also, you can access user defined event data.
+In the example, the beginning and end of the main()
 function contains internal data access function examples.
 
 The list of macros that are used in this example are:
@@ -36,3 +37,13 @@ The list of macros that are used in this example are:
 * TAU_DB_DUMP_INCR();
  Similar to TAU_DB_DUMP except that it, like the above, dumps
  with a date stamp to the file name.
+
+* TAU_GET_EVENT_NAMES(eventList, numEvents);
+ Retrieves a list of user defined events.
+
+* TAU_GET_EVENT_VALS(eventList, numEvents, numSamples, max, min, mean, sumSqr);
+ Retrieves user defined event data.  The user specifies the list of
+events to get, and gets back 5 arrays.  numSamples, an array of
+integers corresponding to the number of samples taken for the given
+user event.  Max, min, mean, and sumSqr (sum squared) contain the
+statistical data available for user defined events.

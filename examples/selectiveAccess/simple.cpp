@@ -27,6 +27,11 @@ positions of the middle elements in the array */
 int size; /* global - size of the array */
 int *M;   /* the median array */
 
+TAU_REGISTER_EVENT(qsize, "Size of Array given to QuickSort");
+
+TAU_REGISTER_EVENT(ksize, "Size of Array given to Select Kth Largest");
+
+
 /**************************************************************************
 ** Function   : select_kth_largest				   
 ** Parameters : k, array of integers S and n - the size of array.
@@ -37,6 +42,8 @@ int *M;   /* the median array */
 int select_kth_largest(int k, int *S, int n)
 {
   TAU_PROFILE("int select_kth_largest(int, int *, int)", " ", TAU_USER);
+
+  TAU_EVENT(ksize, n);
  /* return the kth largest element from the ordered set S of integers */
   /* n is the number of elements in S */
   /* Algorithm : if n < 50 then sort in dec. order S, return kth largest element
@@ -202,6 +209,8 @@ void quicksort(int *arr, int m, int n)
 {
   TAU_PROFILE("void quicksort(int *, int, int)", " ", TAU_USER);
  /* sort the array in decreasing order */
+
+  TAU_EVENT(qsize, n);
 
 int k; /* control key */
 int i, j;
@@ -505,6 +514,33 @@ int *A;
 
   TAU_DB_DUMP_INCR();
 
+
+  const char **eventList;
+  int numEvents;
+  
+  TAU_GET_EVENT_NAMES(eventList, numEvents);
+
+  cout << "numEvents: " << numEvents << endl;
+  
+  if (numEvents > 0) {
+    int *numSamples;
+    double *max;
+    double *min;
+    double *mean;
+    double *sumSqr;
+
+    TAU_GET_EVENT_VALS(eventList, numEvents, numSamples, max, min, mean, sumSqr);
+
+    for (int i=0; i<numEvents; i++) {
+      cout << "-------------------\n";
+      cout << "User Event:        " << eventList[i] << endl;
+      cout << "Number of Samples: " << numSamples[i] << endl;
+      cout << "Maximum Value:     " << max[i] << endl;
+      cout << "Minimum Value:     " << min[i] << endl;
+      cout << "Mean Value:        " << mean[i] << endl;
+      cout << "Sum Squared:       " << sumSqr[i] << endl;
+    }
+  }
 }
 
 
