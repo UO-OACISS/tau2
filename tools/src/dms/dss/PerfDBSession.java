@@ -545,7 +545,7 @@ public class PerfDBSession extends DataSession {
 		return fun;
 	}
 
-	public void getFunctionData() {
+	public ListIterator getFunctionData() {
 		Vector functionData = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
@@ -676,11 +676,15 @@ public class PerfDBSession extends DataSession {
 			function = (FunctionDataObject) en.nextElement();
 			System.out.println ("Function Data = " + function.getInclusivePercentage() + ", " + function.getInclusive() + ", " + function.getExclusivePercentage() + ", " + function.getExclusive() + ", " + function.getNumCalls() + ", " + function.getNumSubroutines() + ", " + function.getInclusivePerCall());
 		}
+
+		//Added by Robert.  Looks like the correct place to add it. :-)
+		return DataSessionIterator(functionData);
+
 		*/
 	}
 	
-	public Vector getUserEventData() {
-		return new Vector();
+	public ListIterator getUserEventData() {
+		return new DataSessionIterator(new Vector());
 	}
 	
 
