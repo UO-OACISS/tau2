@@ -159,7 +159,7 @@ $(TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TARGET) $(OBJS) $(EXTRAOBJS)
 		$(TAU_RANLIB)
-		
+
 
 $(TAU_SHLIB): 	$(TARGET) $(OBJS)
 		$(PRELINK_PHASE)
@@ -190,7 +190,7 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		$(RM) $(INSTALLDEST)/libTAU.so
-		ln -s $@ $(INSTALLDEST)/libTAU.so
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.so
 
 $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX): libTauMpi$(TAU_OPTIONS)$(LSX)
 		$(MAKE) -f Makefile.wrapper install
@@ -200,7 +200,7 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
                    else mkdir $(TAU_JAVA_INSTALLDIR) ;fi
 		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
-		
+
 install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1)
 
 # Rules
