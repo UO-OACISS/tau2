@@ -203,7 +203,7 @@ public class DBConnector implements DB {
     }
 
     public String getSchemaPrefix(){
-	if (db.getDBType().compareTo("oracle") == 0) {
+	if (this.getDBType().compareTo("oracle") == 0) {
 	    
 	    if (this.parseConfig.getDBSchemaPrefix() != null && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
 		return new String(this.parseConfig.getDBSchemaPrefix() + ".");
