@@ -76,10 +76,7 @@ JDKARCH                 = linux
 #############################################
 # DYNINST DEFAULT ARCH
 #############################################
-DYNINST_PLATFORM = i386-unknown-linux2.2
-#SOL2#DYNINST_PLATFORM 	= sparc-sun-solaris2.4 #ENDIF#
-#SP1#DYNINST_PLATFORM 	= rs6000-ibm-aix4.1    #ENDIF#
-#SGIMP#DYNINST_PLATFORM = mips-sgi-irix6.5     #ENDIF#
+DYNINST_PLATFORM 	= $(PLATFORM) 
 
 
 #PCL#include $(TAUROOT)/include/makefiles/PCLMakefile.stub	  #ENDIF#
@@ -143,6 +140,9 @@ DYNINST_PLATFORM = i386-unknown-linux2.2
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
 #SGIMP#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
+#SP1#TAU_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
+#SP164BIT#TAU_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
+
 #CRAYKAI#TAU_FORTRANLIBS	       =        #ENDIF#
 #PGI#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902        #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
