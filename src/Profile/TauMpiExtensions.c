@@ -1,5 +1,10 @@
 #include <Profile/Profiler.h>
 #include <mpi.h>
+#ifdef TAU_MPICONSTCHAR
+#define TAU_CONST const 
+#else
+#define TAU_CONST 
+#endif 
 /******************************************************/
 /******************************************************/
 
@@ -7954,7 +7959,7 @@ int mpi_info_create__( MPI_Info * info)
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
-int MPI_Info_set( MPI_Info Info, char * key, char * value)
+int MPI_Info_set( MPI_Info Info, TAU_CONST char * key, TAU_CONST char * value)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_set()", "", TAU_MESSAGE); 
@@ -7967,7 +7972,7 @@ int MPI_Info_set( MPI_Info Info, char * key, char * value)
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
-int MPI_INFO_SET( MPI_Info Info, char * key, char * value)
+int MPI_INFO_SET( MPI_Info Info, TAU_CONST char * key, TAU_CONST char * value)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_set()", "", TAU_MESSAGE); 
@@ -7980,7 +7985,7 @@ int MPI_INFO_SET( MPI_Info Info, char * key, char * value)
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
-int mpi_info_set( MPI_Info Info, char * key, char * value)
+int mpi_info_set( MPI_Info Info, TAU_CONST char * key, TAU_CONST char * value)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_set()", "", TAU_MESSAGE); 
@@ -7993,7 +7998,7 @@ int mpi_info_set( MPI_Info Info, char * key, char * value)
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
-int mpi_info_set_( MPI_Info Info, char * key, char * value)
+int mpi_info_set_( MPI_Info Info, TAU_CONST char * key, TAU_CONST char * value)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_set()", "", TAU_MESSAGE); 
@@ -8006,7 +8011,7 @@ int mpi_info_set_( MPI_Info Info, char * key, char * value)
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
-int mpi_info_set__( MPI_Info Info, char * key, char * value)
+int mpi_info_set__( MPI_Info Info, TAU_CONST char * key, TAU_CONST char * value)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_set()", "", TAU_MESSAGE); 
@@ -8023,7 +8028,7 @@ int mpi_info_set__( MPI_Info Info, char * key, char * value)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-int MPI_Info_delete( MPI_Info info, char * key)
+int MPI_Info_delete( MPI_Info info, TAU_CONST char * key)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_delete()", "", TAU_MESSAGE); 
@@ -8036,7 +8041,7 @@ int MPI_Info_delete( MPI_Info info, char * key)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-int MPI_INFO_DELETE( MPI_Info info, char * key)
+int MPI_INFO_DELETE( MPI_Info info, TAU_CONST char * key)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_delete()", "", TAU_MESSAGE); 
@@ -8049,7 +8054,7 @@ int MPI_INFO_DELETE( MPI_Info info, char * key)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-int mpi_info_delete( MPI_Info info, char * key)
+int mpi_info_delete( MPI_Info info, TAU_CONST char * key)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_delete()", "", TAU_MESSAGE); 
@@ -8062,7 +8067,7 @@ int mpi_info_delete( MPI_Info info, char * key)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-int mpi_info_delete_( MPI_Info info, char * key)
+int mpi_info_delete_( MPI_Info info, TAU_CONST char * key)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_delete()", "", TAU_MESSAGE); 
@@ -8075,7 +8080,7 @@ int mpi_info_delete_( MPI_Info info, char * key)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-int mpi_info_delete__( MPI_Info info, char * key)
+int mpi_info_delete__( MPI_Info info, TAU_CONST char * key)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_delete()", "", TAU_MESSAGE); 
@@ -8092,7 +8097,7 @@ int mpi_info_delete__( MPI_Info info, char * key)
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
-int MPI_Info_get( MPI_Info info, char * key, int valuelen, char * value, int * flag)
+int MPI_Info_get( MPI_Info info, TAU_CONST char * key, int valuelen, char * value, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get()", "", TAU_MESSAGE); 
@@ -8105,7 +8110,7 @@ int MPI_Info_get( MPI_Info info, char * key, int valuelen, char * value, int * f
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
-int MPI_INFO_GET( MPI_Info info, char * key, int valuelen, char * value, int * flag)
+int MPI_INFO_GET( MPI_Info info, TAU_CONST char * key, int valuelen, char * value, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get()", "", TAU_MESSAGE); 
@@ -8118,7 +8123,7 @@ int MPI_INFO_GET( MPI_Info info, char * key, int valuelen, char * value, int * f
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
-int mpi_info_get( MPI_Info info, char * key, int valuelen, char * value, int * flag)
+int mpi_info_get( MPI_Info info, TAU_CONST char * key, int valuelen, char * value, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get()", "", TAU_MESSAGE); 
@@ -8131,7 +8136,7 @@ int mpi_info_get( MPI_Info info, char * key, int valuelen, char * value, int * f
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
-int mpi_info_get_( MPI_Info info, char * key, int valuelen, char * value, int * flag)
+int mpi_info_get_( MPI_Info info, TAU_CONST char * key, int valuelen, char * value, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get()", "", TAU_MESSAGE); 
@@ -8144,7 +8149,7 @@ int mpi_info_get_( MPI_Info info, char * key, int valuelen, char * value, int * 
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
-int mpi_info_get__( MPI_Info info, char * key, int valuelen, char * value, int * flag)
+int mpi_info_get__( MPI_Info info, TAU_CONST char * key, int valuelen, char * value, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get()", "", TAU_MESSAGE); 
@@ -8161,7 +8166,7 @@ int mpi_info_get__( MPI_Info info, char * key, int valuelen, char * value, int *
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-int MPI_Info_get_valuelen( MPI_Info info, char * key, int * valuelen, int * flag)
+int MPI_Info_get_valuelen( MPI_Info info, TAU_CONST char * key, int * valuelen, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get_valuelen()", "", TAU_MESSAGE); 
@@ -8174,7 +8179,7 @@ int MPI_Info_get_valuelen( MPI_Info info, char * key, int * valuelen, int * flag
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-int MPI_INFO_GET_VALUELEN( MPI_Info info, char * key, int * valuelen, int * flag)
+int MPI_INFO_GET_VALUELEN( MPI_Info info, TAU_CONST char * key, int * valuelen, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get_valuelen()", "", TAU_MESSAGE); 
@@ -8187,7 +8192,7 @@ int MPI_INFO_GET_VALUELEN( MPI_Info info, char * key, int * valuelen, int * flag
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-int mpi_info_get_valuelen( MPI_Info info, char * key, int * valuelen, int * flag)
+int mpi_info_get_valuelen( MPI_Info info, TAU_CONST char * key, int * valuelen, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get_valuelen()", "", TAU_MESSAGE); 
@@ -8200,7 +8205,7 @@ int mpi_info_get_valuelen( MPI_Info info, char * key, int * valuelen, int * flag
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-int mpi_info_get_valuelen_( MPI_Info info, char * key, int * valuelen, int * flag)
+int mpi_info_get_valuelen_( MPI_Info info, TAU_CONST char * key, int * valuelen, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get_valuelen()", "", TAU_MESSAGE); 
@@ -8213,7 +8218,7 @@ int mpi_info_get_valuelen_( MPI_Info info, char * key, int * valuelen, int * fla
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-int mpi_info_get_valuelen__( MPI_Info info, char * key, int * valuelen, int * flag)
+int mpi_info_get_valuelen__( MPI_Info info, TAU_CONST char * key, int * valuelen, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get_valuelen()", "", TAU_MESSAGE); 
@@ -9338,6 +9343,7 @@ int mpi_win_get_name__( MPI_Win win, char * win_name, int * resultlen)
 /******************************************************/
 
 
+#ifdef TAU_MPI_INIT_THREAD_WRAPPER
 /******************************************************
 ***      MPI_Init_thread wrapper function 
 ******************************************************/
@@ -9403,6 +9409,7 @@ int mpi_init_thread__( int * argc, char *** argv, int required, int * provided)
   return retvalue; 
 }
 
+#endif /* TAU_MPI_INIT_THREAD_WRAPPER */
 /******************************************************/
 /******************************************************/
 
