@@ -830,6 +830,14 @@ if [ $multiplecounters = yes ]
   then
     fixmakeargs="$fixmakeargs MULTIPLECOUNTERS"
     tauoptions="${tauoptions}-multiplecounters"
+    if [ $profilecalls = yes -o $profilestats = yes -o $profilecounters = yes ]
+    then
+      echo "******** ERROR : -MULTIPLECOUNTERS option is incompatible with "
+      echo "**************** -PROFILECOUNTERS, -PROFILECALLS, or -PROFILESTATS"
+      echo "**************** Please reconfigure TAU without these."
+      echo "******** EXITING .... "
+      exit 1
+    fi
 fi
 
 if [ $papivirtual = yes ]
