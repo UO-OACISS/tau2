@@ -39,6 +39,7 @@ public class LoadHandler extends DefaultHandler {
     protected String documentId = "";
 
     protected String metricStr = "";
+    protected String metricId = "";
     protected String trialId = "";
     protected String trialTime = "";
 
@@ -430,8 +431,6 @@ public class LoadHandler extends DefaultHandler {
 	    
 	    ueAmt = Integer.parseInt(tempcode);
 	    
-	    System.out.println(getParFlag());
-
 	    if (ueAmt > 0){
 		
 		ResultSet rs;
@@ -457,7 +456,6 @@ public class LoadHandler extends DefaultHandler {
 			buf.append(ueTable.tableCreation(getUETable()));		       	       
 		    }
 		    
-		    System.out.println(buf.toString());
 		    if (buf.toString().length()>0)
 			getDB().executeUpdate(buf.toString());			
 			
@@ -533,23 +531,22 @@ public class LoadHandler extends DefaultHandler {
 	    buf.append("insert into");
 	    buf.append(" " + getTrialTable() + " ");
 	    if (probsize==""){	
-	    	buf.append("(expid, time, metric, nodenum, contextpnode, threadpcontext, xmlfileid)");
+	    	buf.append("(expid, time, nodenum, contextpnode, threadpcontext, xmlfileid)");
 	    	buf.append(" values ");
 	    	buf.append("(" + expid + ", '" + trialTime 
-			   + "', '" + metricStr + "', "  + nodenum 
+			   + "', "  + nodenum 
 			   + ", " + contextpnode
 			   + ", " + threadpcontext + ", " + getDocumentId() + "); ");       
-	    	System.out.println(buf.toString());
 	    }
 	    else {
-	    	buf.append("(expid, time, metric, problemsize, nodenum, contextpnode, threadpcontext, xmlfileid)");
+	    	buf.append("(expid, time, problemsize, nodenum, contextpnode, threadpcontext, xmlfileid)");
 	    	buf.append(" values ");
 	    	buf.append("(" + expid + ", '" + trialTime 
-			   + "', '" + metricStr + "', " + probsize + ", " + nodenum 
+			   + "', " + probsize + ", " + nodenum 
 			   + ", " + contextpnode
 			   + ", " + threadpcontext + ", " + getDocumentId() + "); ");       
-	    	System.out.println(buf.toString());
 	    }
+	   	System.out.println(buf.toString());
 	    try{	
 	    	getDB().executeUpdate(buf.toString());
 	    	buf.delete(0, buf.toString().length());
@@ -558,6 +555,28 @@ public class LoadHandler extends DefaultHandler {
 			else
 	    		buf.append("select currval('trials_trialid_seq');");
 	    	trialId = getDB().getDataItem(buf.toString());
+	    } catch (SQLException ex){
+                ex.printStackTrace();
+	    }		    
+
+	    try{	
+			// is the metric in the metrics table?
+	   		buf.delete(0, buf.toString().length());
+	    	buf.append("select MetricID from Metrics where MetricName = TRIM('" + metricStr + " ');");
+	   		metricId = getDB().getDataItem(buf.toString());
+
+			// if the metric doesn't exist yet, add the metric to the metrics table
+			if (metricId == null) {
+	   			buf.delete(0, buf.toString().length());
+	    		buf.append("insert into Metrics (MetricName) values (TRIM('" + metricStr + " '));");
+	    		getDB().executeUpdate(buf.toString());
+	   			buf.delete(0, buf.toString().length());
+				if (getDB().getDBType().compareTo("mysql") == 0)
+	    			buf.append("select LAST_INSERT_ID();");
+				else
+	   				buf.append("select currval('metrics_metricid_seq');");
+	   			metricId = getDB().getDataItem(buf.toString());
+			}
 	    } catch (SQLException ex){
                 ex.printStackTrace();
 	    }		    
@@ -579,7 +598,7 @@ public class LoadHandler extends DefaultHandler {
 		}	
 
 		locCounter++;
-		String ltempStr = String.valueOf(locCounter)+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+funArray[tempInt];
+		String ltempStr = String.valueOf(locCounter)+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+funArray[tempInt]+"\t"+metricId;
 		lwriter.write(ltempStr, 0, ltempStr.length());
 		lwriter.newLine();
 	    		     
@@ -610,7 +629,7 @@ public class LoadHandler extends DefaultHandler {
 		}	
 
 		locCounter++;
-		String ltempStr = String.valueOf(locCounter)+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+funArray[ueidInt+funAmt];
+		String ltempStr = String.valueOf(locCounter)+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t"+funArray[ueidInt+funAmt]+"\t"+metricId;
 		lwriter.write(ltempStr, 0, ltempStr.length());
 		lwriter.newLine();
 	    		     
@@ -841,7 +860,6 @@ public class LoadHandler extends DefaultHandler {
 	StringBuffer buf = new StringBuffer();
 	buf.append("select trial_table_name from Experiments where expid = "+expid+";");
 	String tableName = getDB().getDataItem(buf.toString()).toUpperCase();
-	//System.out.println(tableName);
 	if (tableName.indexOf("_APP")>0)
 	    if (tableName.indexOf("_EXP")>0)
 		this.partitionFlag = 3;
