@@ -568,7 +568,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //Calculate which SMWThreadDataElement was clicked on.
 	    int index = (yCoord)/(trial.getPreferences().getBarSpacing())-1;
 
-	    if(index<list.size()){
+	    if (list!=null && index<list.size()) {
 		if(index!=-1)
 		    sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(index);
 		if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){

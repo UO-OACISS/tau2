@@ -118,6 +118,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     }
   
     public void renderIt(Graphics2D g2D, int instruction, boolean header){
+
 	try{
 	    list = tDWindow.getData();
 
@@ -156,13 +157,16 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 	    //Set max values.
 	    //######
-	    if(windowType==0){
+
+
+	    if(windowType==0){ // mean
 		switch(tDWindow.getValueType()){
-		case 2: 
+		case 2: // exclusive
 		    if(tDWindow.isPercent())
 			maxValue = trial.getGlobalMapping().getMaxMeanExclusivePercentValue(trial.getSelectedMetricID());
-		    else
+		    else {
 			maxValue = trial.getGlobalMapping().getMaxMeanExclusiveValue(trial.getSelectedMetricID());
+		    }
 		    break;			    
 		case 4:
 		    if(tDWindow.isPercent())
@@ -210,6 +214,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		}
 	    }
+
 
 	    if(tDWindow.isPercent()){
 		stringWidth = fmFont.stringWidth(UtilFncs.adjustDoublePresision(maxValue, ParaProf.defaultNumberPrecision) + "%");
@@ -343,16 +348,18 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		else{
 		    switch(tDWindow.getValueType()){
 		    case 2:
-			if(tDWindow.isPercent())
+			if(tDWindow.isPercent()) {
 			    value = sMWThreadDataElement.getExclusivePercentValue();
-			else
+			} else {
 			    value = sMWThreadDataElement.getExclusiveValue();
+			}
 			break;			    
 		    case 4:
-			if(tDWindow.isPercent())
+			if(tDWindow.isPercent()) {
 			    value = sMWThreadDataElement.getInclusivePercentValue();
-			else
+			} else {
 			    value = sMWThreadDataElement.getInclusiveValue();
+			}
 			break;
 		    case 6:
 			value = sMWThreadDataElement.getNumberOfCalls();
@@ -366,8 +373,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    default:
 			UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		    }
-		}
 
+		}
+		
 		yCoord = yCoord + (barSpacing);
 		drawBar(g2D, fmFont, value, maxValue, barXCoord, yCoord, barHeight, sMWThreadDataElement, instruction);
 	    }
@@ -537,7 +545,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    //Calculate which SMWThreadDataElement was clicked on.
 	    int index = (yCoord)/(trial.getPreferences().getBarSpacing());
 
-	    if(index<list.size()){
+	    if (list!=null && index<list.size()) {
 		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(index);
 		if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
 		    //Set the clickedSMWMeanDataElement.
