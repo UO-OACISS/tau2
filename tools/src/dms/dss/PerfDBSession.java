@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.23 2003/08/12 23:37:53 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.24 2003/08/25 17:32:15 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -30,9 +30,12 @@ public class PerfDBSession extends DataSession {
 		String configFileName = (String)(obj);
 		// initialize the connection to the database,
 		// using the configuration settings.
-		connector = new perfdb.ConnectionManager(configFileName);
-		connector.connect();
-		db = connector.getDB();
+		try {
+			connector = new perfdb.ConnectionManager(configFileName);
+			connector.connect();
+			db = connector.getDB();
+		} catch ( Exception e ) {
+		}
 	}
 
 	public void terminate () {
@@ -228,7 +231,7 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		String whereClause = " where id = " + id;
 		Vector applications = getApplicationList(whereClause);
-		if (applications.size() != 1) {
+		if (applications.size() == 1) {
 			this.application = (Application)applications.elementAt(0);
 		} // else exception?
 		return this.application;
@@ -847,15 +850,15 @@ public class PerfDBSession extends DataSession {
 	    	ResultSet resultSet = db.executeQuery(buf.toString());	
 	    	while (resultSet.next() != false) {
 				UserEventDataObject ueDO = new UserEventDataObject();
-				ueDO.setUserEventIndexID(resultSet.getInt(1));
-				ueDO.setNode(resultSet.getInt(2));
-				ueDO.setContext(resultSet.getInt(3));
-				ueDO.setThread(resultSet.getInt(4));
-				ueDO.setSampleCount(resultSet.getInt(5));
-				ueDO.setMaximumValue(resultSet.getDouble(6));
-				ueDO.setMinimumValue(resultSet.getDouble(7));
-				ueDO.setMeanValue(resultSet.getDouble(8));
-				ueDO.setStandardDeviation(resultSet.getDouble(9));
+				ueDO.setUserEventIndexID(resultSet.getInt(2));
+				ueDO.setNode(resultSet.getInt(3));
+				ueDO.setContext(resultSet.getInt(4));
+				ueDO.setThread(resultSet.getInt(5));
+				ueDO.setSampleCount(resultSet.getInt(6));
+				ueDO.setMaximumValue(resultSet.getDouble(7));
+				ueDO.setMinimumValue(resultSet.getDouble(8));
+				ueDO.setMeanValue(resultSet.getDouble(9));
+				ueDO.setStandardDeviation(resultSet.getDouble(10));
 				userEventData.addElement(ueDO);
 	    	}
 			resultSet.close(); 

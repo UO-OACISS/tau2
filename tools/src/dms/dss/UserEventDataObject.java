@@ -3,11 +3,12 @@ package dms.dss;
 /**
  * Holds all the data for a user event data object in the database.
  *
- * <P>CVS $Id: UserEventDataObject.java,v 1.4 2003/08/01 21:38:24 khuck Exp $</P>
+ * <P>CVS $Id: UserEventDataObject.java,v 1.5 2003/08/25 17:32:16 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
 public class UserEventDataObject {
+	private int userEventIndexID;
 	private int userEventID;
 	private int profileID;
 	private int node;
@@ -20,6 +21,10 @@ public class UserEventDataObject {
 	private double standardDeviation;
 
 	public void setUserEventIndexID (int userEventID) {
+		this.userEventID = userEventID;
+	}
+
+	public void setUserEventID (int userEventID) {
 		this.userEventID = userEventID;
 	}
 

@@ -77,6 +77,10 @@ public class TestPerfDBSession {
 		// select a trial, another way
 		session.setTrial(trial.getID());
 
+		// get the metric count
+		int metricCount = trial.getMetricCount();
+		System.out.println ("Metric count: " + metricCount);
+
 		// Get the list of functions
 		ListIterator functions;
 		functions = session.getFunctions();

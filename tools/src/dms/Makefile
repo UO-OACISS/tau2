@@ -1,6 +1,6 @@
-all: .simple
+all: .buildtest .simple
 
-dms.jar: classes/dms/dss/PerfDBSession.class
+dms.jar: classes/dms/dss/*.class
 	jar -cvf dms.jar -C classes .
 
 classes/dms/dss/*.class: dss/*.java

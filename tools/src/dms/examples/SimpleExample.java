@@ -79,6 +79,35 @@ public class SimpleExample {
 			System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = [" + inclusive + ", " + exclusive + ", " + inclusivePercentage + ", " + exclusivePercentage + ", " + inclusivePerCall +"]");
 		}
 
+		// get the user events
+		System.out.println("Getting userEvent data...");
+		myIterator = session.getUserEventData();
+		System.out.println(" ...done.");
+		UserEventDataObject userEventDataObject;
+		UserEvent userEvent = null;
+		int id;
+		double sampleCount, minimumValue, maximumValue, meanValue, standardDeviation;
+
+		System.out.println ("UserEVents:");
+		System.out.println ("Trial, Node, Context, Thread, Name, Group, Count, Min, Max, Mean, StdDev:");
+		while (myIterator.hasNext()) {
+			userEventDataObject = (UserEventDataObject)(myIterator.next());
+			id = userEventDataObject.getUserEventID();
+			userEvent = session.getUserEvent(id);
+			name = userEvent.getName();
+			group = userEvent.getGroup();
+			trial = userEvent.getTrialID();
+			node = userEventDataObject.getNode();
+			context = userEventDataObject.getContext();
+			thread = userEventDataObject.getThread();
+			sampleCount = userEventDataObject.getSampleCount();
+			minimumValue = userEventDataObject.getMinimumValue();
+			maximumValue = userEventDataObject.getMaximumValue();
+			meanValue = userEventDataObject.getMeanValue();
+			standardDeviation = userEventDataObject.getStandardDeviation();
+			System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = [" + sampleCount + ", " + minimumValue + ", " + maximumValue + ", " + meanValue + ", " + standardDeviation +"]");
+		}
+
 		// disconnect and exit.
 		session.terminate();
 		System.out.println ("Exiting.");
