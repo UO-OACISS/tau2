@@ -410,7 +410,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 						  " operations window.  Clicking on the metrics of a trial will update the" +
 						  " arguments to the selected operation.  Currently, you can only derive metrics" +
 						  " from metric in the same trial (thus for example creating floating point" +
-						  " operations per second), and you cannot enter the arguments manually.");
+						  " operations per second by taking PAPI_FP_INS and dividing it by GET_TIME_OF_DAY)." +
+						  " The 2nd argument is a user editable textbox and can be filled in with scalar " + 
+						  " values using the keyword 'val' (e.g. \"val 1.5\".");
 		    ParaProf.helpWindow.writeText("");
 		    ParaProf.helpWindow.writeText("------------------");
 		    ParaProf.helpWindow.writeText("");
