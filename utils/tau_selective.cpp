@@ -181,7 +181,7 @@ bool matchName(const string& str1, const string& str2)
   // OLD 
   //if (strncmp(str1.c_str(), str2.c_str(), size_to_compare) == 0)
   /* Use '#' as the wildcard kleene star operator character */
-  if (wildcardCompare((char *)(str1.c_str()), (char *)(str2.c_str()), '+'))
+  if (wildcardCompare((char *)(str1.c_str()), (char *)(str2.c_str()), '#'))
     return true;
   else 
     return false;
@@ -367,6 +367,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2004/05/13 00:40:47 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.5 2004/05/13 00:40:47 sameer Exp $
+ * $Revision: 1.6 $   $Date: 2004/05/13 18:46:32 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.6 2004/05/13 18:46:32 sameer Exp $
  ***************************************************************************/
