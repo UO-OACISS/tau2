@@ -12,6 +12,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.3  2003/03/15 01:49:13  sameer
+// Python bindings and wish fix.
+//
 // Revision 1.2  2003/03/15 01:39:11  sameer
 // Added <limits> [HP-UX] and moved funcDB in PyTimer.cpp to inside the profileTimer routine.
 //
@@ -21,6 +24,7 @@
 //
 // 
 
+#include <limits>
 #include <Python.h>
 
 // Tau includes
@@ -161,7 +165,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.2 2003/03/15 01:39:11 sameer Exp $
+// $Id: PyTimer.cpp,v 1.3 2003/03/15 01:49:13 sameer Exp $
 
 // End of file
   

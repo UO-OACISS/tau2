@@ -2387,15 +2387,12 @@ else
         echo "Found Tcl/Tk wish $tversion"
       else
         echo "ERROR: No working wish found - need Tcl 7.4/Tk 4.0 or higher for TAU"
-        echo "Enter the name of your wish command (tcl7.4/tk4.0): "
-        ask=""
-        $echo "? ${nnl}"
-        read wishname
+        wishname=wish
         if tversion=`( $wishname -f /tmp/tau$$ ) 2>/dev/null`
         then
           echo "Found Tcl/Tk wish $tversion"
         else
-          echo "Wish not found or wrong version!  Exiting..."
+          echo "Using $wishname as the wish interpreter in racy"
           #rm /tmp/tau$$
           #exit
         fi    
