@@ -574,7 +574,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    
 	    for(int i = startElement; i <= endElement; i++){   
 		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
-		width = barXCoord+5+(fmFont.stringWidth(sMWThreadDataElement.getMappingName()));
+		//As a temporary fix, at 500 pixels to the end.
+		width = barXCoord+5+(fmFont.stringWidth(sMWThreadDataElement.getMappingName()))+500;
 		if(width>newXPanelSize)
 		    newXPanelSize=width;
 	    }

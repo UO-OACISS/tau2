@@ -49,10 +49,13 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
 	    setLocation(new java.awt.Point(0, 0));
 	    setSize(new java.awt.Dimension(800, 600));
-	    
+
 	    //Now set the title.
-	    this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
-      
+	    if(windowType==0)
+		this.setTitle("Mean Data Window Total: " + trial.getTrialIdentifier(true));
+	    else
+		this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
+	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {
 		    public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -406,10 +409,15 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		    this.setHeader();
 		    panel.repaint();
 		}
-		else if(arg.equals("Show Path Title in Reverse"))
-		    this.setTitle("Total " + "n,c,t, " + nodeID + 
-				  "," + contextID + "," + threadID + 
-				  " - " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+		else if(arg.equals("Show Path Title in Reverse")){
+		    if(windowType==0)
+			this.setTitle("Mean Data Window Total: " + 
+				      trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+		    else
+			this.setTitle("Total " + "n,c,t, " + nodeID + 
+				      "," + contextID + "," + threadID + 
+				      " - " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+		}
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
