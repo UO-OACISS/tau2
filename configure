@@ -3345,7 +3345,6 @@ then
   cp ${tauroot}/tools/src/contrib/jatha.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jgraph.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar ${tauroot}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/junit.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauroot}/${architecture}/lib
   echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauroot}/${architecture}/lib"
 
