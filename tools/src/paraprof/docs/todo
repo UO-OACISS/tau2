@@ -154,3 +154,12 @@ correct directory, one needs to click on select and then it works. It just
 felt clunky. I thought double clicking on the name of a directory and
 navigating to it and clicking "OK/Select" (with a second Cancel button) might be easier.
 ------
+
+------
+# Report 17
+# Date: 13th August 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Re-write the setting of thread data for all metrics to make it more efficient.
+------
+
