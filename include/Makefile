@@ -67,6 +67,8 @@ LSX = .a
 #SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
 #PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS           #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
+#TRACE#EVENTS_O                = pcxx_events.o         #ENDIF#
+#PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o           #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA      += -lpthread	       #ENDIF#
