@@ -60,7 +60,7 @@ then
      
       echo "Done ... now starting ParaProf ..."
   fi
-  PPROFOPT="--filetype pprof"
+  PPROFOPT="-f pprof pprof.dat"
 fi 
 #Searching for a preference file.
 
