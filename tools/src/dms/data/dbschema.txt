@@ -78,7 +78,6 @@ CREATE TABLE atomic_event (
 );
 
 CREATE TABLE interval_location_profile (
-    id                      SERIAL           NOT NULL    PRIMARY KEY,
     interval_event          INT              NOT NULL,
     node                    INT              NOT NULL,             
     context                 INT              NOT NULL,
@@ -91,11 +90,11 @@ CREATE TABLE interval_location_profile (
     call                    DECIMAL,
     subroutines             DECIMAL,
     inclusive_per_call      DECIMAL,
-	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE atomic_location_profile (
-    id                      SERIAL           NOT NULL    PRIMARY KEY,
     atomic_event            INT              NOT NULL,
     node                    INT              NOT NULL,             
     context                 INT              NOT NULL,
@@ -109,7 +108,6 @@ CREATE TABLE atomic_location_profile (
 );
 
 CREATE TABLE interval_total_summary (
-    id                		SERIAL           NOT NULL   PRIMARY KEY,
     interval_event          INT              NOT NULL,
     metric                  INT				 NOT NULL,
     inclusive_percentage    DECIMAL,
@@ -119,11 +117,11 @@ CREATE TABLE interval_total_summary (
     call                    DECIMAL,
     subroutines             DECIMAL,
     inclusive_per_call      DECIMAL,
-	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_mean_summary (
-    id                		SERIAL           NOT NULL   PRIMARY KEY,
     interval_event          INT              NOT NULL,
     metric                  INT				 NOT NULL,
     inclusive_percentage    DECIMAL,
@@ -133,7 +131,8 @@ CREATE TABLE interval_mean_summary (
     call                    DECIMAL,
     subroutines             DECIMAL,
     inclusive_per_call      DECIMAL,
-	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE INDEX experiment_application_index on experiment (application);
@@ -144,30 +143,13 @@ CREATE INDEX interval_total_interval_event_metric_index on interval_total_summar
 CREATE INDEX interval_mean_interval_event_metric_index on interval_mean_summary (interval_event, metric);
 CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread);
 
-CREATE VIEW interval_event_detail
-	( id, metric, mean_inclusive_percentage, mean_inclusive, 
-	mean_exclusive_percentage, mean_exclusive, mean_call, mean_subroutines, 
-	mean_inclusive_per_call, total_inclusive_percentage, total_inclusive, 
-	total_exclusive_percentage, total_exclusive, total_call, 
-	total_subroutines, total_inclusive_per_call )
-	AS SELECT
-	ms.interval_event, ms.metric, ms.inclusive_percentage, ms.inclusive, 
-	ms.exclusive_percentage, ms.exclusive, ms.call, ms.subroutines, 
-	ms.inclusive_per_call, ts.inclusive_percentage, ts.inclusive, 
-	ts.exclusive_percentage, ts.exclusive, ts.call, ts.subroutines, 
-	ts.inclusive_per_call
-	FROM interval_mean_summary ms inner join interval_total_summary ts 
-	ON ms.interval_event = ts.interval_event and ms.metric = ts.metric;
-	
-CREATE VIEW interval_event_interval
-	( trial, interval_event, metric, node, context, thread, inclusive_percentage, 
-	inclusive, exclusive_percentage, exclusive, call, 
-	subroutines, inclusive_per_call )
-	AS SELECT
-	f.trial, f.id, p.metric, p.node, p.context, p.thread,
-	p.inclusive_percentage, p.inclusive, 
-	p.exclusive_percentage, p.exclusive, p.call, p.subroutines, 
-	p.inclusive_per_call
-	FROM interval_event f inner join interval_location_profile p
-	ON f.id = p.interval_event;
-	
+GRANT ALL PRIVILEGES ON TABLE application TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE experiment TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE trial TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE metric TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE interval_event TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE atomic_event TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE interval_location_profile TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE atomic_location_profile TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE interval_total_summary TO GROUP @DATABASE_NAME@;
+GRANT ALL PRIVILEGES ON TABLE interval_mean_summary TO GROUP @DATABASE_NAME@;

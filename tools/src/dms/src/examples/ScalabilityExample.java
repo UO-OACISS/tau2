@@ -1,3 +1,5 @@
+package examples;
+
 import java.util.*;
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.analysis.*;

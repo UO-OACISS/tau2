@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.2 2004/05/05 23:16:29 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.3 2004/05/27 17:24:35 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -347,7 +347,7 @@ public class Trial {
 	buf.append("from trial t inner join experiment e ");
 	buf.append("on t.experiment = e.id ");
 	buf.append(whereClause);
-	buf.append(" order by t.node_count, t.contexts_per_node, t.threads_per_context ");
+	buf.append(" order by t.node_count, t.contexts_per_node, t.threads_per_context, t.id ");
 	// System.out.println(buf.toString());
 
 	// get the results

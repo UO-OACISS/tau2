@@ -37,7 +37,7 @@ $(ANALYSIS_CLASSES): $(ANALYSIS_SOURCES) $(DSS_CLASSES)
 	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(ANALYSIS_SOURCES)
 
 $(EXAMPLE_CLASSES): dms.jar $(EXAMPLE_SOURCES)
-	javac -classpath dms.jar $(EXAMPLE_SOURCES)
+	javac -d $(CLASSPATH) -classpath dms.jar $(EXAMPLE_SOURCES)
 
 javadoc: dms.jar $(SRC_PATH)/dms/dss/package.html
 	javadoc -d $(DOC_PATH) -classpath $(CLASSPATH) $(DSS_SOURCES)
@@ -45,7 +45,7 @@ javadoc: dms.jar $(SRC_PATH)/dms/dss/package.html
 # these are maintenance targets.
 
 clean:
-	rm -rf dms.jar ./classes/edu ./src/examples/*.class ./doc/[a-z]*
+	rm -rf dms.jar ./classes/edu ./classes/examples ./doc/[a-z]*
 
 remake: clean all
 
@@ -81,4 +81,4 @@ rebuilddb: dms.jar
 	perfdmf_loadschema
 	perfdmf_loadapp -x data/App_Info.xml
 	perfdmf_loadexp -x data/Exp_Info.xml -a 1
-	perfdmf_loadtrial -e 1 -f pprof -s data/pprof.dat -n "My Test"
+	perfdmf_loadtrial -e 1 -f pprof -s data/pprof.dat -n Test

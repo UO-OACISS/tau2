@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.4 2004/05/18 21:18:30 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.5 2004/05/27 17:24:35 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -193,9 +193,9 @@ public class PerfDMFSession extends DataSession {
 	// gets the mean & total data for a intervalEvent
 	public void getIntervalEventDetail(IntervalEvent intervalEvent) {
 		StringBuffer buf = new StringBuffer();
-		buf.append(" where id = " + intervalEvent.getID());
+		buf.append(" where ms.interval_event = " + intervalEvent.getID());
 		if (metrics != null && metrics.size() > 0) {
-			buf.append(" and metric in (");
+			buf.append(" and ms.metric in (");
 			Metric metric;
         	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
 				metric = (Metric) en.nextElement();
@@ -225,7 +225,7 @@ public class PerfDMFSession extends DataSession {
 		AtomicEvent ue;
         for(Enumeration en = atomicEvents.elements(); en.hasMoreElements() ;) {
 			ue = (AtomicEvent) en.nextElement();
-			atomicEventHash.put(new Integer(ue.getAtomicEventID()), ue);
+			atomicEventHash.put(new Integer(ue.getID()), ue);
 		}
 		return new DataSessionIterator(atomicEvents);
 	}
@@ -273,46 +273,17 @@ public class PerfDMFSession extends DataSession {
 		}
 
 		// create a string to hit the database
+		boolean gotWhere = false;
 		StringBuffer buf = new StringBuffer();
-		buf.append(" where trial = " + trial.getID());
-		if (nodes != null && nodes.size() > 0) {
-			buf.append(" and node in (");
-			Integer node;
-        	for(Enumeration en = nodes.elements(); en.hasMoreElements() ;) {
-				node = (Integer) en.nextElement();
-				buf.append(node);
-				if (en.hasMoreElements())
-					buf.append(", ");
-				else
-					buf.append(") ");
-			}
-		}
-		if (contexts != null && contexts.size() > 0) {
-			buf.append(" and context in (");
-			Integer context;
-        	for(Enumeration en = contexts.elements(); en.hasMoreElements() ;) {
-				context = (Integer) en.nextElement();
-				buf.append(context);
-				if (en.hasMoreElements())
-					buf.append(", ");
-				else
-					buf.append(") ");
-			}
-		}
-		if (threads != null && threads.size() > 0) {
-			buf.append(" and thread in (");
-			Integer thread;
-        	for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
-				thread = (Integer) en.nextElement();
-				buf.append(thread);
-				if (en.hasMoreElements())
-					buf.append(", ");
-				else
-					buf.append(") ");
-			}
+		if (trial != null) {
+			buf.append(" where e.trial = " + trial.getID());
+			gotWhere = true;
 		}
 		if (intervalEvents != null && intervalEvents.size() > 0) {
-			buf.append(" and interval_event in (");
+			if (gotWhere)
+				buf.append(" and p.interval_event in (");
+			else
+				buf.append(" where p.interval_event in (");
 			IntervalEvent intervalEvent;
         	for(Enumeration en = intervalEvents.elements(); en.hasMoreElements() ;) {
 				intervalEvent = (IntervalEvent) en.nextElement();
@@ -323,35 +294,6 @@ public class PerfDMFSession extends DataSession {
 					buf.append(") ");
 			}
 		}
-		if (metrics != null && metrics.size() > 0) {
-			buf.append(" and metric in (");
-			Metric metric;
-        	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
-				metric = (Metric) en.nextElement();
-				buf.append(metric.getID());
-				if (en.hasMoreElements())
-					buf.append(", ");
-				else
-					buf.append(") ");
-			}
-		}
-		intervalEventData = IntervalLocationProfile.getIntervalEventData(db, metricCount, buf.toString());
-		return new DataSessionIterator(intervalEventData);
-	}
-	
-	public ListIterator getAtomicEventData() {
-		// check to make sure this is a meaningful request
-		if (trial == null && atomicEvents == null) {
-			System.out.println("Please select a trial or a set of user events before getting user event data.");
-			return null;
-		}
-
-		// get the hash of atomicEvent names first
-		if (atomicEvents == null)
-			getAtomicEvents();
-
-		StringBuffer buf = new StringBuffer();
-		buf.append(" where t.id = " + trial.getID());
 		if (nodes != null && nodes.size() > 0) {
 			buf.append(" and p.node in (");
 			Integer node;
@@ -388,12 +330,86 @@ public class PerfDMFSession extends DataSession {
 					buf.append(") ");
 			}
 		}
+		if (metrics != null && metrics.size() > 0) {
+			buf.append(" and p.metric in (");
+			Metric metric;
+        	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
+				metric = (Metric) en.nextElement();
+				buf.append(metric.getID());
+				if (en.hasMoreElements())
+					buf.append(", ");
+				else
+					buf.append(") ");
+			}
+		}
+		intervalEventData = IntervalLocationProfile.getIntervalEventData(db, metricCount, buf.toString());
+		return new DataSessionIterator(intervalEventData);
+	}
+	
+	public ListIterator getAtomicEventData() {
+		// check to make sure this is a meaningful request
+		if (trial == null && atomicEvents == null) {
+			System.out.println("Please select a trial or a set of user events before getting user event data.");
+			return null;
+		}
+
+		// get the hash of atomicEvent names first
+		if (atomicEvents == null)
+			getAtomicEvents();
+
+		boolean gotWhere = false;
+		StringBuffer buf = new StringBuffer();
+		if (trial != null) {
+			buf.append(" where e.trial = " + trial.getID());
+			gotWhere = true;
+		}
+		
 		if (atomicEvents != null && atomicEvents.size() > 0) {
-			buf.append(" and u.id in (");
+			if (gotWhere)
+				buf.append(" and e.id in (");
+			else
+				buf.append(" where e.id in (");
 			AtomicEvent atomicEvent;
         	for(Enumeration en = atomicEvents.elements(); en.hasMoreElements() ;) {
 				atomicEvent = (AtomicEvent) en.nextElement();
-				buf.append(atomicEvent.getAtomicEventID());
+				buf.append(atomicEvent.getID());
+				if (en.hasMoreElements())
+					buf.append(", ");
+				else
+					buf.append(") ");
+			}
+		}
+
+		if (nodes != null && nodes.size() > 0) {
+			buf.append(" and p.node in (");
+			Integer node;
+        	for(Enumeration en = nodes.elements(); en.hasMoreElements() ;) {
+				node = (Integer) en.nextElement();
+				buf.append(node);
+				if (en.hasMoreElements())
+					buf.append(", ");
+				else
+					buf.append(") ");
+			}
+		}
+		if (contexts != null && contexts.size() > 0) {
+			buf.append(" and p.context in (");
+			Integer context;
+        	for(Enumeration en = contexts.elements(); en.hasMoreElements() ;) {
+				context = (Integer) en.nextElement();
+				buf.append(context);
+				if (en.hasMoreElements())
+					buf.append(", ");
+				else
+					buf.append(") ");
+			}
+		}
+		if (threads != null && threads.size() > 0) {
+			buf.append(" and p.thread in (");
+			Integer thread;
+        	for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
+				thread = (Integer) en.nextElement();
+				buf.append(thread);
 				if (en.hasMoreElements())
 					buf.append(", ");
 				else
@@ -440,7 +456,7 @@ public class PerfDMFSession extends DataSession {
 			} //else exception?
 			if (atomicEventHash == null)
 				atomicEventHash = new Hashtable();
-			atomicEventHash.put(new Integer(atomicEvent.getAtomicEventID()), atomicEvent);
+			atomicEventHash.put(new Integer(atomicEvent.getID()), atomicEvent);
 		}
 		return atomicEvent;
 	}
@@ -527,7 +543,7 @@ public class PerfDMFSession extends DataSession {
 		while (enum.hasMoreElements()) {
 			atomicEvent = (AtomicEvent)enum.nextElement();
 			int newAtomicEventID = atomicEvent.saveAtomicEvent(db, newTrialID);
-			newUEHash.put (new Integer(atomicEvent.getAtomicEventID()), new Integer(newAtomicEventID));
+			newUEHash.put (new Integer(atomicEvent.getID()), new Integer(newAtomicEventID));
 			System.out.print("\rSaving the user events: " + ++count + " records saved...");
 		}
 		System.out.print("\n");
@@ -695,7 +711,7 @@ public class PerfDMFSession extends DataSession {
 				// create a user event
 				AtomicEvent atomicEvent = new AtomicEvent();
 				atomicEvent.setName(element.getMappingName());
-				atomicEvent.setAtomicEventID(element.getMappingID());
+				atomicEvent.setID(element.getMappingID());
 				// build the group name
 				int[] groupIDs = element.getGroups();
 				StringBuffer buf = new StringBuffer();
@@ -759,7 +775,7 @@ public class PerfDMFSession extends DataSession {
 					udo.setNode(thread.getNodeID());
 					udo.setContext(thread.getContextID());
 					udo.setThread(thread.getThreadID());
-				    udo.setProfileID(userevent.getUserEventNumberValue());
+				    udo.setSampleCount(userevent.getUserEventNumberValue());
 				    udo.setMaximumValue(userevent.getUserEventMaxValue());
 				    udo.setMinimumValue(userevent.getUserEventMinValue());
 				    udo.setMeanValue(userevent.getUserEventMeanValue());

@@ -17,7 +17,7 @@ import java.util.Vector;
  * A atomic event has particular information, including the name of the atomic event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: AtomicEvent.java,v 1.2 2004/05/05 23:16:28 khuck Exp $</P>
+ * <P>CVS $Id: AtomicEvent.java,v 1.3 2004/05/27 17:24:34 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -41,7 +41,7 @@ public class AtomicEvent {
  *
  * @return	the unique identifier of the atomic event
  */
-	public int getAtomicEventID () {
+	public int getID () {
 		return this.atomicEventID;
 	}
 
@@ -97,7 +97,7 @@ public class AtomicEvent {
  *
  * @param	id unique ID associated with this atomic event
  */
-	public void setAtomicEventID (int id) {
+	public void setID (int id) {
 		this.atomicEventID = id;
 	}
 
@@ -175,7 +175,7 @@ public class AtomicEvent {
 			AtomicEvent tmpAtomicEvent = null;
 	    	while (resultSet.next() != false) {
 				AtomicEvent ue = new AtomicEvent();
-				ue.setAtomicEventID(resultSet.getInt(1));
+				ue.setID(resultSet.getInt(1));
 				ue.setTrialID(resultSet.getInt(2));
 				ue.setName(resultSet.getString(3));
 				ue.setGroup(resultSet.getString(4));

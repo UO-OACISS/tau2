@@ -88,33 +88,33 @@ public class ConnectionManager {
     /*** This method loads database schema. Be sure to load it ONLY once. ***/
 
     public void genParentSchema(String filename){
-	File readSchema = new File(filename);
-	String inputString;
-	StringBuffer buf = new StringBuffer();
+		File readSchema = new File(filename);
+		String inputString;
+		StringBuffer buf = new StringBuffer();
 
-	if (readSchema.exists()){
+		if (readSchema.exists()){
             System.out.println("Found " + filename + "  ... Loading");
         }
         else System.out.println("Did not find " +  filename);
 
-	try{	
-	    BufferedReader preader = new BufferedReader(new FileReader(readSchema));	
+		try{	
+	    	BufferedReader preader = new BufferedReader(new FileReader(readSchema));	
 
-	    while ((inputString = preader.readLine())!= null){
-		buf.append(inputString);
-		if (isEnd(inputString)) {
-		    try {
-			getDB().executeUpdate(buf.toString());
-			buf = buf.delete(0,buf.length());
-		    } catch (SQLException ex) {
-			ex.printStackTrace();
-		    }				
-		}		
-	    }
-	}catch (Exception e){
-	    e.printStackTrace();
-	}
-
+	    	while ((inputString = preader.readLine())!= null){
+				inputString = inputString.replaceAll("@DATABASE_NAME@", parser.getDBName());
+				buf.append(inputString);
+				if (isEnd(inputString)) {
+		    		try {
+						getDB().executeUpdate(buf.toString());
+						buf = buf.delete(0,buf.length());
+		    		} catch (SQLException ex) {
+						ex.printStackTrace();
+		    		}				
+				}		
+	    	}
+		}catch (Exception e){
+	    	e.printStackTrace();
+		}
     }
 
 	public void genParentSchema() {

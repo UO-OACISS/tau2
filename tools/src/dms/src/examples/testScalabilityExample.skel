@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/@SHELL@
 TAUROOT=@TAUROOTDIR@
 PERFDMF_HOME=${TAUROOT}/tools/src/dms
 XMLSAX_JAR=${TAUROOT}/tools/src/contrib/xerces.jar
 JDBC_JAR=${TAUROOT}/tools/src/contrib/postgresql.jar
 DMS_JAR=${PERFDMF_HOME}/dms.jar
 
-java -cp ${PERFDMF_HOME}/src/examples:${DMS_JAR}:${XMLSAX_JAR}:${JDBC_JAR} ScalabilityExample ${PERFDMF_HOME}/data/perfdmf.cfg
+java -cp ${PERFDMF_HOME}/classes:${DMS_JAR}:${XMLSAX_JAR}:${JDBC_JAR} examples.ScalabilityExample ${PERFDMF_HOME}/data/perfdmf.cfg

@@ -25,7 +25,7 @@ import java.util.Hashtable;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.1 2004/05/05 17:43:34 khuck Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.2 2004/05/27 17:24:35 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -377,17 +377,20 @@ public class IntervalLocationProfile extends Object {
 	public static void getIntervalEventDetail(DB db, IntervalEvent intervalEvent, String whereClause) {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select id, ");
-		buf.append("mean_inclusive_percentage, mean_inclusive, ");
-		buf.append("mean_exclusive_percentage, mean_exclusive, ");
-		buf.append("mean_call, mean_subroutines, mean_inclusive_per_call, ");
-		buf.append("metric, ");
-		buf.append("total_inclusive_percentage, total_inclusive, ");
-		buf.append("total_exclusive_percentage, total_exclusive, ");
-		buf.append("total_call, total_subroutines, total_inclusive_per_call ");
-		buf.append("from interval_event_detail ");
+		buf.append("select ms.interval_event, ");
+		buf.append("ms.inclusive_percentage, ms.inclusive, ");
+		buf.append("ms.exclusive_percentage, ms.exclusive, ");
+		buf.append("ms.call, ms.subroutines, ms.inclusive_per_call, ");
+		buf.append("ms.metric, ");
+		buf.append("ts.inclusive_percentage, ts.inclusive, ");
+		buf.append("ts.exclusive_percentage, ts.exclusive, ");
+		buf.append("ts.call, ts.subroutines, ts.inclusive_per_call ");
+		buf.append("from interval_mean_summary ms inner join ");
+		buf.append("interval_total_summary ts ");
+		buf.append("on ms.interval_event = ts.interval_event ");
+		buf.append("and ms.metric = ts.metric ");
 		buf.append(whereClause);
-		buf.append(" order by id, metric");
+		buf.append(" order by ms.interval_event, ms.metric");
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -407,13 +410,13 @@ public class IntervalLocationProfile extends Object {
 				eMS.setNumSubroutines((int)(resultSet.getDouble(7)));
 				eMS.setInclusivePerCall(metricIndex, resultSet.getDouble(8));
 				// get the total summary data
-				eTS.setInclusivePercentage(metricIndex, resultSet.getDouble(9));
-				eTS.setInclusive(metricIndex, resultSet.getDouble(10));
-				eTS.setExclusivePercentage(metricIndex, resultSet.getDouble(11));
-				eTS.setExclusive(metricIndex, resultSet.getDouble(12));
-				eTS.setNumCalls((int)(resultSet.getDouble(13)));
-				eTS.setNumSubroutines((int)(resultSet.getDouble(14)));
-				eTS.setInclusivePerCall(metricIndex, resultSet.getDouble(15));
+				eTS.setInclusivePercentage(metricIndex, resultSet.getDouble(10));
+				eTS.setInclusive(metricIndex, resultSet.getDouble(11));
+				eTS.setExclusivePercentage(metricIndex, resultSet.getDouble(12));
+				eTS.setExclusive(metricIndex, resultSet.getDouble(13));
+				eTS.setNumCalls((int)(resultSet.getDouble(14)));
+				eTS.setNumSubroutines((int)(resultSet.getDouble(15)));
+				eTS.setInclusivePerCall(metricIndex, resultSet.getDouble(16));
 				metricIndex++;
 	    	}
 			intervalEvent.setMeanSummary(eMS);
@@ -426,13 +429,14 @@ public class IntervalLocationProfile extends Object {
 
 	public static Vector getIntervalEventData (DB db, int metricCount, String whereClause) {
 		StringBuffer buf = new StringBuffer();
-		buf.append("select interval_event, metric, node, context, thread, ");
-		buf.append("inclusive_percentage, ");
-		buf.append("inclusive, exclusive_percentage, exclusive, ");
-		buf.append("call, subroutines, inclusive_per_call ");
-		buf.append("from interval_event_interval ");
+		buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
+		buf.append("p.inclusive_percentage, ");
+		buf.append("p.inclusive, p.exclusive_percentage, p.exclusive, ");
+		buf.append("p.call, p.subroutines, p.inclusive_per_call ");
+		buf.append("from interval_event e inner join interval_location_profile p ");
+		buf.append("on e.id = p.interval_event ");
 		buf.append(whereClause);
-		buf.append(" order by interval_event, node, context, thread, metric ");
+		buf.append(" order by p.interval_event, p.node, p.context, p.thread, p.metric ");
 		// System.out.println(buf.toString());
 
 		int size = 0;

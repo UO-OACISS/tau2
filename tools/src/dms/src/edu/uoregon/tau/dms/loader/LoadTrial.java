@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.util.Date;
 import java.util.Vector;
 import java.awt.Component;
+import java.io.*;
 
 public class LoadTrial implements ParaProfObserver {
 
@@ -69,6 +70,7 @@ public class LoadTrial implements ParaProfObserver {
 
 	Vector v = null;
 	File[] inFile = new File[1];
+	FileList fl = null;
 	switch (fileType) {
 		case 0:
 			inFile[0] = new File (sourceFile);
@@ -77,7 +79,7 @@ public class LoadTrial implements ParaProfObserver {
 			dataSession = new TauPprofOutputSession();
 			break;
 		case 1:
-			FileList fl = new FileList();
+			fl = new FileList();
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", false);
 			dataSession = new TauOutputSession();
 			break;
@@ -94,9 +96,18 @@ public class LoadTrial implements ParaProfObserver {
 			dataSession = new MpiPOutputSession();
 			break;
 		case 4:
-			inFile[0] = new File (sourceFile);
-			v = new Vector();
-			v.add(inFile);
+			if (fileExists()) {
+				inFile[0] = new File (sourceFile);
+				v = new Vector();
+				v.add(inFile);
+			} else {
+				fl = new FileList();
+				String[] sourcePath = extractSourcePath();
+				if (sourcePath[0] != null)
+					v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
+				else
+					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+			}
 			dataSession = new HPMToolkitDataSession();
 			break;
 	}
@@ -181,6 +192,37 @@ public class LoadTrial implements ParaProfObserver {
     public void update () {
 	saveTrial();
     }
+
+	private boolean fileExists() {
+		boolean rc = false;
+		try {
+			FileInputStream fileIn = new FileInputStream(sourceFile);
+			if (fileIn != null) {
+				InputStreamReader inReader = new InputStreamReader(fileIn);
+				if (inReader != null) {
+					BufferedReader br = new BufferedReader(inReader);
+					if (br != null) {
+						rc = true;
+						br.close();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// do nothing but return false
+		}
+		return rc;
+	}
+
+	private String[] extractSourcePath() {
+		//StringTokenizer st = new StringTokenizer(sourceFile, "/");
+		File inFile = new File(sourceFile);
+		String[] newPath = new String[2];
+		newPath[0] = new String(inFile.getParent());
+		if (newPath[0] != null) {
+			newPath[1] = new String(inFile.getName());
+		}
+		return newPath;
+	}
 
     //******************************
     //End - Helper functions for buildStatic data.

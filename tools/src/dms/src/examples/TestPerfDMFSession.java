@@ -1,3 +1,5 @@
+package examples;
+
 import java.util.*;
 import edu.uoregon.tau.dms.dss.*;
 
@@ -92,8 +94,11 @@ public class TestPerfDMFSession {
 
 		// select a function
 		session.setIntervalEvent(function);
-		// select a function, another way
-		session.setIntervalEvent(function.getID());
+
+		if (function != null) {
+			// select a function, another way
+			session.setIntervalEvent(function.getID());
+		}
 
 		// Get the list of user events
 		ListIterator userEvents;
@@ -110,7 +115,7 @@ public class TestPerfDMFSession {
 		session.setAtomicEvent(userEvent);
 		// select a userEvent, another way
 		if (userEvent != null)
-			session.setAtomicEvent(userEvent.getAtomicEventID());
+			session.setAtomicEvent(userEvent.getID());
 
 		Vector nodes = new Vector();
 		Integer node = new Integer(0);
