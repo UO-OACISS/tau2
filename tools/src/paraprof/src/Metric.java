@@ -35,7 +35,7 @@ public class Metric extends dms.dss.Metric implements ParaProfTreeNodeUserObject
     public void setDBMetric(boolean dBMetric){
 	this.dBMetric = dBMetric;}
 
-    public boolean getDBMetric(){
+    public boolean dBMetric(){
 	return dBMetric;}
 
     public void setDerivedMetric(boolean derivedMetric){
