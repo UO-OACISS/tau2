@@ -29,6 +29,9 @@ For both profiling and tracing
 On Solaris, you may need to disable the JIT compiler (it works on Linux) while
 using TAU. 
 % java -XrunTAU -Djava.compiler=  Pi 200000
+If you're using JAVA HotSpot JVM, you may need the -classic flag too.
+% java -classic -XrunTAU -Djava.compiler= Pi 200000
+(java -version shows the version of JVM).
 
 4) Displaying profiles/traces
 For Profiling:
