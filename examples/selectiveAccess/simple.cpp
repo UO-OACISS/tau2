@@ -10,6 +10,7 @@
 *****************************************************************************/
 #include <string>
 #include <vector>
+#include <iostream>
 using namespace std;
 #include <stdio.h>
 #include <sys/time.h>
