@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.7 2004/12/29 00:09:47 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.8 2004/12/29 00:34:28 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -65,7 +65,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 ArrayList result = new ArrayList();
                 // Roots Are Always Selectable
                 Stack s = new Stack();
-                GraphModel model = graph.getModel();
+                GraphModel model = this.graph.getModel();
                 for (int i = 0; i < model.getRootCount(); i++)
                     s.add(model.getRootAt(i));
                 while (!s.isEmpty()) {
@@ -79,7 +79,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 }
                 return result.toArray();
             }
-            return graph.getRoots();
+            return this.graph.getRoots();
         }
 
     }
