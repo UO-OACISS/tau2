@@ -51,6 +51,11 @@ public class GlobalThreadDataElement{
   
     public int getMappingID(){
 	return mappingID;}
+
+    public boolean isGroupMember(int groupID){
+	GlobalMappingElement tmpGME = (GlobalMappingElement) (trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
+	return tmpGME.isGroupMember(groupID);
+    }
   
     public void setInclusiveValue(int dataValueLocation, double inDouble){
 	this.insertDouble(dataValueLocation,0,inDouble);}

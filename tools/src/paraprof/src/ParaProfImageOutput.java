@@ -30,7 +30,7 @@ public class ParaProfImageOutput{
     public void saveImage(ParaProfImageInterface ref){
 	System.out.println("We have turned this feature off as it has not been fully tested.");
 	System.out.println("Saving to an image will be supported in the next release!");
-	/*
+	
 	try{
 	    
 	    //Ask the user for a filename and location.
@@ -59,7 +59,7 @@ public class ParaProfImageOutput{
 		g2D.setColor(Color.black);
 		
 		//Draw to this graphics object.
-		ref.renderIt(g2D, "image");
+		ref.renderIt(g2D, 2);
 
 		//Now write the image to file.
 		String format = "JPG";
@@ -83,6 +83,6 @@ public class ParaProfImageOutput{
 	}
 	catch(Exception e){
 	    ParaProf.systemError(null, null, "PPII02");
-	}*/
+	}
     }
 }

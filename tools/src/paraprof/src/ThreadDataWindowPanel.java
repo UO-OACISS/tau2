@@ -41,7 +41,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 				 int contextID,
 				 int threadID,
 				 ThreadDataWindow tDWindow,
-				 StaticMainWindowData sMWData){
+				 StaticMainWindowData sMWData,
+				 int windowType){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
@@ -54,10 +55,12 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    this.threadID = threadID;
 	    this.trial = trial;
 	    this.tDWindow = tDWindow;
+	    this.windowType = windowType;
 	    this.sMWData = sMWData;
 	    barLength = baseBarLength;
 	    
-	    thread = trial.getThread(nodeID,contextID,threadID);
+	    if(windowType==1)
+		thread = trial.getThread(nodeID,contextID,threadID);
 
 	    //**********
 	    //Add items to the popu menu.
@@ -95,8 +98,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }     
     
-  
-  
     public int print(Graphics g, PageFormat pf, int page){
 	
 	if(pf.getOrientation() == PageFormat.PORTRAIT)
@@ -117,7 +118,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
   
     public void drawPage(Graphics2D g2D, boolean print){
   	try{ 
-	    functionList = tDWindow.getStaticMainWindowSystemData();
+	    list = tDWindow.getData();
 
 	    //**********
 	    //Some declarations.
@@ -126,44 +127,45 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    int stringWidth = 0;
 	    int yCoord = 0;
 	    int barXCoord = barLength + textOffset;
+	    SMWThreadDataElement sMWThreadDataElement = null;
 	    //End - Some declarations.
 	    //**********
       	    
 	    //With group support present, it is possible that the number of mappings in
 	    //our data list is zero.  This can occur when the user's selected groups to display are
 	    //not present on this thread ... for examaple. If so, just return.
-	    if((functionList.size()) == 0)
+	    if((list.size()) == 0)
 		return;
 	    
 	    Rectangle clipRect = g2D.getClipBounds();
 	    
 	    int yBeg = (int) clipRect.getY();
 	    int yEnd = (int) (yBeg + clipRect.getHeight());
-	    int startThreadElement = 0;
-	    int endThreadElement = 0;
+	    int startElement = 0;
+	    int endElement = 0;
 	    
 	    if(print){
-		startThreadElement = 0;
-		endThreadElement = 100; //((functionList.size()) - 1);
+		startElement = 0;
+		endElement = 100; //((list.size()) - 1);
 	    }
 	    else{
 		
-		startThreadElement = ((yBeg - yCoord) / barSpacing) - 1;
-		endThreadElement  = ((yEnd - yCoord) / barSpacing) + 1;
+		startElement = ((yBeg - yCoord) / barSpacing) - 1;
+		endElement  = ((yEnd - yCoord) / barSpacing) + 1;
 		
-		if(startThreadElement < 0)
-		    startThreadElement = 0;
+		if(startElement < 0)
+		    startElement = 0;
 		
-		if(endThreadElement < 0)
-		    endThreadElement = 0;
+		if(endElement < 0)
+		    endElement = 0;
 		
-		if(startThreadElement > (functionList.size() - 1))
-		    startThreadElement = (functionList.size() - 1);
+		if(startElement > (list.size() - 1))
+		    startElement = (list.size() - 1);
 		
-		if(endThreadElement > (functionList.size() - 1))
-		    endThreadElement = (functionList.size() - 1);
+		if(endElement > (list.size() - 1))
+		    endElement = (list.size() - 1);
 		
-		yCoord = yCoord + (startThreadElement * barSpacing);
+		yCoord = yCoord + (startElement * barSpacing);
 	    }
 	    
 	    //To make sure the bar details are set, this
@@ -182,30 +184,59 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    //***
 	    //Set max values.
 	    //***
-	    switch(tDWindow.getMetric()){
-	    case 0: 
-		if(tDWindow.isPercent())
-		    maxValue = thread.getMaxInclusivePercentValue(trial.getCurValLoc());
-		else
-		    maxValue = thread.getMaxInclusiveValue(trial.getCurValLoc());
-		break;			    
-	    case 1:
-		if(tDWindow.isPercent())
-		    maxValue = thread.getMaxExclusivePercentValue(trial.getCurValLoc());
-		else
-		    maxValue = thread.getMaxExclusiveValue(trial.getCurValLoc());
-		break;
-	    case 2:
-		maxValue = thread.getMaxNumberOfCalls();
-		break;
-	    case 3:
-		maxValue = thread.getMaxNumberOfSubRoutines();
-		break;
-	    case 4:
-		maxValue = thread.getMaxUserSecPerCall(trial.getCurValLoc());
-		break;
-	    default:
-		ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+	    if(windowType==0){
+		switch(tDWindow.getMetric()){
+		case 2: 
+		    if(tDWindow.isPercent())
+			maxValue = trial.getMaxMeanExclusivePercentValue(trial.getCurValLoc());
+		    else
+			maxValue = trial.getMaxMeanExclusiveValue(trial.getCurValLoc());
+		    break;			    
+		case 4:
+		    if(tDWindow.isPercent())
+			maxValue = trial.getMaxMeanInclusivePercentValue(trial.getCurValLoc());
+		    else
+			maxValue = trial.getMaxMeanInclusiveValue(trial.getCurValLoc());
+		    break;
+		case 6:
+		    maxValue = trial.getMaxMeanNumberOfCalls();
+		    break;
+		case 8:
+		    maxValue = trial.getMaxMeanNumberOfSubRoutines();
+		    break;
+		case 10:
+		    maxValue = trial.getMaxMeanUserSecPerCall(trial.getCurValLoc());
+		    break;
+		default:
+		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+		}
+	    }
+	    else{
+		switch(tDWindow.getMetric()){
+		case 2: 
+		    if(tDWindow.isPercent())
+			maxValue = thread.getMaxExclusivePercentValue(trial.getCurValLoc());
+		    else
+			maxValue = thread.getMaxExclusiveValue(trial.getCurValLoc());
+		    break;			    
+		case 4:
+		    if(tDWindow.isPercent())
+			maxValue = thread.getMaxInclusivePercentValue(trial.getCurValLoc());
+		    else
+			maxValue = thread.getMaxInclusiveValue(trial.getCurValLoc());
+		    break;
+		case 6:
+		    maxValue = thread.getMaxNumberOfCalls();
+		    break;
+		case 8:
+		    maxValue = thread.getMaxNumberOfSubRoutines();
+		    break;
+		case 10:
+		    maxValue = thread.getMaxUserSecPerCall(trial.getCurValLoc());
+		    break;
+		default:
+		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+		}
 	    }
 	    
 	    if(tDWindow.isPercent()){
@@ -224,38 +255,67 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    //At this point we can determine the size this panel will
 	    //require. If we need to resize, don't do any more drawing,
 	    //just call revalidate.
-	    if(resizePanel(fmFont, barXCoord, functionList, startThreadElement, endThreadElement)){
+	    if(resizePanel(fmFont, barXCoord, list, startElement, endElement)){
 		this.revalidate();
 		return;
 	    }
 
-	    for(int i = startThreadElement; i <= endThreadElement; i++){   
-		sMWThreadDataElement = (SMWThreadDataElement) functionList.elementAt(i);
+	    for(int i = startElement; i <= endElement; i++){   
+		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
 	    
-		switch(tDWindow.getMetric()){
-		case 0:
-		    if(tDWindow.isPercent())
-			value = sMWThreadDataElement.getInclusivePercentValue();
-		    else
-			value = sMWThreadDataElement.getInclusiveValue();
-		    break;			    
-		case 1:
-		    if(tDWindow.isPercent())
-			value = sMWThreadDataElement.getExclusivePercentValue();
-		    else
-			value = sMWThreadDataElement.getExclusiveValue();
-		    break;
-		case 2:
-		    value = sMWThreadDataElement.getNumberOfCalls();
-		    break;
-		case 3:
-		    value = sMWThreadDataElement.getNumberOfSubRoutines();
-		    break;
-		case 4:
-		    value = sMWThreadDataElement.getUserSecPerCall();
-		    break;
-		default:
-		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+		if(windowType==0){
+		    switch(tDWindow.getMetric()){
+		    case 2:
+			if(tDWindow.isPercent())
+			    value = sMWThreadDataElement.getMeanExclusivePercentValue();
+			else
+			    value = sMWThreadDataElement.getMeanExclusiveValue();
+			break;			    
+		    case 4:
+			if(tDWindow.isPercent())
+			    value = sMWThreadDataElement.getMeanInclusivePercentValue();
+			else
+			    value = sMWThreadDataElement.getMeanInclusiveValue();
+			break;
+		    case 6:
+			value = sMWThreadDataElement.getMeanNumberOfCalls();
+			break;
+		    case 8:
+			value = sMWThreadDataElement.getMeanNumberOfSubRoutines();
+			break;
+		    case 10:
+			value = sMWThreadDataElement.getMeanUserSecPerCall();
+			break;
+		    default:
+			ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+		    }
+		}
+		else{
+		    switch(tDWindow.getMetric()){
+		    case 2:
+			if(tDWindow.isPercent())
+			    value = sMWThreadDataElement.getExclusivePercentValue();
+			else
+			    value = sMWThreadDataElement.getExclusiveValue();
+			break;			    
+		    case 4:
+			if(tDWindow.isPercent())
+			    value = sMWThreadDataElement.getInclusivePercentValue();
+			else
+			    value = sMWThreadDataElement.getInclusiveValue();
+			break;
+		    case 6:
+			value = sMWThreadDataElement.getNumberOfCalls();
+			break;
+		    case 8:
+			value = sMWThreadDataElement.getNumberOfSubRoutines();
+			break;
+		    case 10:
+			value = sMWThreadDataElement.getUserSecPerCall();
+			break;
+		    default:
+			ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+		    }
 		}
 
 		yCoord = yCoord + (barSpacing);
@@ -314,10 +374,10 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    g2D.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
 	}
 	
-	//Now print the percentage to the left of the bar.
+	//Draw the value next to the bar.
 	g2D.setColor(Color.black);
-	//Need to figure out how long the percentage string will be.
-	if((tDWindow.isPercent()) && ((tDWindow.getMetric())<2))					
+	//Do not want to put a percent sign after the bar if we are not exclusive or inclusive.
+	if((tDWindow.isPercent()) && ((tDWindow.getMetric())<=4))					
 	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
 	else
 	    s = UtilFncs.getOutputString(tDWindow.units(),value);
@@ -332,7 +392,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	//Grab the width of the mappingName.
 	stringWidth = fmFont.stringWidth(mappingName);	
 	//Update the drawing coordinates.
-	sMWThreadDataElement.setTDWDrawCoords(stringStart, (barXCoord+5+stringWidth), (yCoord - barHeight), yCoord);
+	sMWThreadDataElement.setDrawCoords(stringStart, (barXCoord+5+stringWidth), (yCoord - barHeight), yCoord);
     }
 
     public void changeInMultiples(){
@@ -421,18 +481,19 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     //******
     public void mouseClicked(MouseEvent evt){
 	try{
+	    SMWThreadDataElement sMWThreadDataElement = null;
 	    //Get the location of the mouse.
 	    int xCoord = evt.getX();
 	    int yCoord = evt.getY();
 	    
 	    //Get the number of times clicked.
 	    int clickCount = evt.getClickCount();
-	    for(Enumeration e1 = functionList.elements(); e1.hasMoreElements() ;){
+	    for(Enumeration e1 = list.elements(); e1.hasMoreElements() ;){
 		sMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
 		
-		if(yCoord <= (sMWThreadDataElement.getTDWYEnd())){
-		    if((yCoord >= (sMWThreadDataElement.getTDWYBeg())) && (xCoord >= (sMWThreadDataElement.getTDWXBeg()))
-		       && (xCoord <= (sMWThreadDataElement.getTDWXEnd()))){
+		if(yCoord <= (sMWThreadDataElement.getYEnd())){
+		    if((yCoord >= (sMWThreadDataElement.getYBeg())) && (xCoord >= (sMWThreadDataElement.getXBeg()))
+		       && (xCoord <= (sMWThreadDataElement.getXEnd()))){
 			if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
 			    //Set the clickedSMWMeanDataElement.
 			    clickedOnObject = sMWThreadDataElement;
@@ -486,22 +547,23 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     //************************************
     
     //This method sets both xPanelSize and yPanelSize.
-    private boolean resizePanel(FontMetrics fmFont, int barXCoord, Vector functionList, int startThreadElement, int endThreadElement){
+    private boolean resizePanel(FontMetrics fmFont, int barXCoord, Vector list, int startElement, int endElement){
 	boolean resized = false;
 	try{
 	    int newXPanelSize = 0;
 	    int newYPanelSize = 0;
 	    int width = 0;
 	    int height = 0;
-
-	    for(int i = startThreadElement; i <= endThreadElement; i++){   
-		sMWThreadDataElement = (SMWThreadDataElement) functionList.elementAt(i);
+	    SMWThreadDataElement sMWThreadDataElement = null;
+	    
+	    for(int i = startElement; i <= endElement; i++){   
+		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
 		width = barXCoord+5+(fmFont.stringWidth(sMWThreadDataElement.getMappingName()));
 		if(width>newXPanelSize)
 		    newXPanelSize=width;
 	    }
 
-	    newYPanelSize = barSpacing + ((functionList.size() + 1) * barSpacing);
+	    newYPanelSize = barSpacing + ((list.size() + 1) * barSpacing);
 
 	    if((newYPanelSize!=yPanelSize)||(newXPanelSize!=xPanelSize)){
 		yPanelSize = newYPanelSize;
@@ -533,19 +595,17 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
     private int maxXLength = 0;
   
+    private Trial trial = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
-  
-    private Trial trial = null;
-    private StaticMainWindowData sMWData = null;
     private ThreadDataWindow tDWindow = null;
+    private int windowType = -1;
+    private StaticMainWindowData sMWData = null;
     private Thread thread = null;  
-    private Vector functionList = null;
-    private SMWThreadDataElement sMWThreadDataElement = null;
+    private Vector list = null;
   
     private JPopupMenu popup = new JPopupMenu();
-
     private Object clickedOnObject = null;
   
     //************************************

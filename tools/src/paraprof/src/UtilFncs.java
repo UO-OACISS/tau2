@@ -1,4 +1,4 @@
-/* 
+ /* 
    UtilFncs.java
 
    Title:      ParaProf
@@ -8,33 +8,35 @@
 
 package paraprof;
 import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
 import java.lang.*;
 import java.io.*;
 import java.text.*;
 
 public class UtilFncs{
   
-    public static double adjustDoublePresision(double inDouble, int precision){
+    public static double adjustDoublePresision(double d, int precision){
 	String result = null;
-    
-	try{
+ 	try{
 	    String formatString = "##0.0";
 	    for(int i=0;i<(precision-1);i++){
 		formatString = formatString+"0";
 	    }
-	    if(inDouble < 0.001){
+	    if(d < 0.001){
 		for(int i=0;i<4;i++){
 		    formatString = formatString+"0";
 		}
 	    }
         
 	    DecimalFormat dF = new DecimalFormat(formatString);
-	    result = dF.format(inDouble);
+	    result = dF.format(d);
 	}
-	catch(Exception e)
-	    {
+	catch(Exception e){
 		ParaProf.systemError(e, null, "UF01");
-	    }
+	}
 	return Double.parseDouble(result);
     }
     
@@ -128,5 +130,229 @@ public class UtilFncs{
 		return j;
 	}
 	return -1;
+    }
+
+    public static void fileMenuItems(JMenu jMenu, ActionListener actionListener){
+	JMenu subMenu = null;
+	JMenuItem menuItem = null;
+
+	//######
+	//Open menu.
+	//######
+	subMenu = new JMenu("Open ...");
+	
+	menuItem = new JMenuItem("ParaProf Manager");
+	menuItem.addActionListener(actionListener);
+	subMenu.add(menuItem);
+	
+	menuItem = new JMenuItem("Bin Window");
+	menuItem.addActionListener(actionListener);
+	subMenu.add(menuItem);
+	
+	jMenu.add(subMenu);
+	//######
+	//End - Open menu.
+	//######
+	
+	//######
+	//Save menu.
+	//######
+	subMenu = new JMenu("Save ...");
+	
+	menuItem = new JMenuItem("ParaProf Preferrences");
+	menuItem.addActionListener(actionListener);
+	subMenu.add(menuItem);
+
+	menuItem = new JMenuItem("Save Image");
+	menuItem.addActionListener(actionListener);
+	subMenu.add(menuItem);
+	
+	jMenu.add(subMenu);
+	//######
+	//End - Save menu.
+	//######
+	
+	menuItem = new JMenuItem("Edit ParaProf Preferences!");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+	
+	menuItem = new JMenuItem("Close This Window");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+	
+	menuItem = new JMenuItem("Exit ParaProf!");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+    }
+
+    public static void optionMenuItems(JMenu jMenu, ActionListener actionListener){
+	JMenu subMenu = null;
+	ButtonGroup group = null;
+	JCheckBoxMenuItem box = null;
+	JRadioButtonMenuItem button = null;
+
+	box = new JCheckBoxMenuItem("Sort By Name", false);
+	box.addActionListener(actionListener);
+	jMenu.add(box);
+
+	box = new JCheckBoxMenuItem("Decending Order", true);
+	box.addActionListener(actionListener);
+	jMenu.add(box);
+
+	box = new JCheckBoxMenuItem("Show Values as Percent", true);
+	box.addActionListener(actionListener);
+	jMenu.add(box);
+
+	//######
+	//Units submenu.
+	//######
+	subMenu = new JMenu("Select Units");
+	group = new ButtonGroup();
+	
+	button = new JRadioButtonMenuItem("hr:min:sec", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Seconds", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Milliseconds", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Microseconds", true);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	jMenu.add(subMenu);
+	//######
+	//End - Units submenu.
+	//######
+
+	//######
+	//Set the metric options.
+	//######
+	subMenu = new JMenu("Select Metric");
+	group = new ButtonGroup();
+
+	button = new JRadioButtonMenuItem("Exclusive", true);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Inclusive", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Number of Calls", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Number of Subroutines", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Per Call Value", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	jMenu.add(subMenu);
+	//######
+	//End - Set the metric options.
+	//######
+
+	box = new JCheckBoxMenuItem("Display Sliders", false);
+	box.addActionListener(actionListener);
+	jMenu.add(box);
+    }
+
+    public static void usereventOptionMenuItems(JMenu jMenu, ActionListener actionListener){
+	JMenu subMenu = null;
+	ButtonGroup group = null;
+	JCheckBoxMenuItem box = null;
+	JRadioButtonMenuItem button = null;
+
+	box = new JCheckBoxMenuItem("Decending Order", true);
+	box.addActionListener(actionListener);
+	jMenu.add(box);
+
+	//######
+	//Set the metric options.
+	//######
+	subMenu = new JMenu("Select Metric");
+	group = new ButtonGroup();
+
+	button = new JRadioButtonMenuItem("Number of Userevents", true);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Min. Value", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Max. Value", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+
+	button = new JRadioButtonMenuItem("Mean Value", false);
+	button.addActionListener(actionListener);
+	group.add(button);
+	subMenu.add(button);
+	jMenu.add(subMenu);
+	//######
+	//End - Set the metric options.
+	//######
+
+	box = new JCheckBoxMenuItem("Display Sliders", false);
+	box.addActionListener(actionListener);
+	jMenu.add(box);
+    }
+
+    public static void windowMenuItems(JMenu jMenu, ActionListener actionListener){
+	JMenuItem menuItem = null;
+
+	menuItem = new JMenuItem("Show Function Ledger");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+	
+	menuItem = new JMenuItem("Show Group Ledger");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+	
+	menuItem = new JMenuItem("Show User Event Ledger");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+	
+	menuItem = new JMenuItem("Show Call Path Relations");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+	
+	menuItem = new JMenuItem("Close All Sub-Windows");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+    }
+
+    public static void helpMenuItems(JMenu jMenu, ActionListener actionListener){
+	JMenuItem menuItem = null;
+
+	menuItem = new JMenuItem("Show Help Window");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
+	
+	menuItem = new JMenuItem("About ParaProf");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
     }
 }

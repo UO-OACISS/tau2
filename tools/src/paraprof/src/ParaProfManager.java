@@ -1080,7 +1080,7 @@ public class ParaProfManager extends JFrame implements ActionListener
       
       String tmpString3 = (String) operation.getSelectedItem();
       
-      Value newValue = tmpTrial.applyOperation(tmpValue1.getValueName(), tmpValue2.getValueName(), tmpString3);
+      Value newValue = PPML.applyOperation(tmpTrial, tmpValue1.getValueName(), tmpValue2.getValueName(), tmpString3);
       DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(newValue);
       newValue.setDMTN(valueNode);
       

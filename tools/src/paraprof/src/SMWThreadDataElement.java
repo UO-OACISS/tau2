@@ -3,8 +3,18 @@
 
    Title:      ParaProf
    Author:     Robert Bell
-   Description:  This class holds the mapping data for one of the mappings on this thread.
-   It also holds all the drawing information for this mapping.
+   Description: The primary functions of this class are:
+                1)Pass data calls onto the objects which contain function
+		  userevent, mean, and other data.
+		2)Implement the Comparable interface to allow it to be sorted.
+		3)Hold drawing information.
+
+		Thus, it can be considered loosly as representing a particular object
+		that will be drawn onto the screen at some point. It is not set up to
+		represent MULTIPLE occurrences of drawing or sorting information. That is,
+		it can hold only one set of drawing and sorting data at a time. Different
+		windows must create their own instances of this object to avoid conflicts.
+
 */
 
 package paraprof;
@@ -18,397 +28,327 @@ import javax.swing.event.*;
 
 public class SMWThreadDataElement implements Comparable{
     //Constructor.
-    public SMWThreadDataElement(Trial inTrial, GlobalThreadDataElement inGTDEReference){ 
-	trial = inTrial;
-    
-	gTDEReference = inGTDEReference;
-	globalMappingReference = trial.getGlobalMapping();
-    
-	value = 0;
-    
-	xBeginPosition = 0;
-	xEndPosition = 0;
-	yBeginPosition = 0;
-	yEndPosition = 0;
-    
-	tDWXEndPosition = 0;
-	tDWXBegPosition = 0;
-	tDWYEndPosition = 0;
-	tDWYBegPosition = 0;
-    
-	mDWXEndPosition = 0;
-	mDWXBegPosition = 0;
-	mDWYEndPosition = 0;
-	mDWYBegPosition = 0;
-    
-    
-	int sortSetting = 0;
-    
-	sortByMappingID = false;
-	sortByName = true;
-	sortByValue = false;
-	sortByReverse = false;
-    }
-  
-    //Rest of the public functions.
-    public GlobalThreadDataElement getGTDE(){
-	return gTDEReference;
-    }
-    
-    public String getMappingName(){
-	tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-	return tmpGME.getMappingName();
-    }
-  
-    public void setMappingID(int inMappingID){
-	mappingID = inMappingID;}
-  
-    public int getMappingID(){
-	return mappingID;}
-  
-    public Color getMappingColor(){
-	tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-	return tmpGME.getMappingColor();
-    }
-  
-    public boolean getMappingExists(){
-	return gTDEReference.getMappingExists();}
-  
-    public boolean isGroupMember(int inGroupID){
-	return globalMappingReference.isGroupMember(mappingID, inGroupID, 0);}
-
-    public boolean isCallPathObject(){
-	tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-	return tmpGME.isCallPathObject();
-    }
-
-    public Vector getParents(){
-	return gTDEReference.getParents();}
-
-    public Vector getChildren(){
-	return gTDEReference.getChildren();}
-
-    public ListIterator getParentsIterator(){
-	return gTDEReference.getParentsIterator();}
-
-    public ListIterator getChildrenIterator(){
- 	return gTDEReference.getChildrenIterator();}
-
-    public ListIterator getCallPathIDParents(int id){
-	return gTDEReference.getCallPathIDParents(id);}
-
-    public ListIterator getCallPathIDChildren(int id){
-	return gTDEReference.getCallPathIDChildren(id);}
-  
-    public double getInclusiveValue(){
-	return gTDEReference.getInclusiveValue(trial.getCurValLoc());}
-  
-    public double getExclusiveValue(){
-	return gTDEReference.getExclusiveValue(trial.getCurValLoc());}
-  
-    public double getInclusivePercentValue(){
-	return gTDEReference.getInclusivePercentValue(trial.getCurValLoc());}
-  
-    public double getExclusivePercentValue(){
-	return gTDEReference.getExclusivePercentValue(trial.getCurValLoc());}
-  
-    public int getNumberOfCalls(){
-	return gTDEReference.getNumberOfCalls();}
-  
-    public int getNumberOfSubRoutines(){
-	return gTDEReference.getNumberOfSubRoutines();}
-  
-    public double getUserSecPerCall(){
-	return gTDEReference.getUserSecPerCall(trial.getCurValLoc());}
-  
-    public String getTStatString(int type){
-	return gTDEReference.getTStatString(type, trial.getCurValLoc());}
-  
-    //User event interface.
-    public String getUserEventName(){
-	tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
-    	return tmpGME.getMappingName();
-    }
-  
-    public int getUserEventID(){
-	return gTDEReference.getUserEventID();}
-  
-    public Color getUserEventMappingColor(){
-	tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
-	return tmpGME.getMappingColor();
-    }
-  
-    public int getUserEventNumberValue(){
-	return gTDEReference.getUserEventNumberValue();}
-  
-    public double getUserEventMinValue(){
-	return gTDEReference.getUserEventMinValue();}
-  
-    public double getUserEventMaxValue(){
-	return gTDEReference.getUserEventMaxValue();}
-  
-    public double getUserEventMeanValue(){
-	return gTDEReference.getUserEventMeanValue();}
-  
-    public String getUserEventStatString(){
-	return gTDEReference.getUserEventStatString();}
-
-    /*
-      1 FIdD FunctionID
-      2 FIdA FunctionID
-      3 ND Name
-      4 NA Name
-      5 MD Millisec
-      6 MA Millisec
-    */
-  
-  
-    public int compareTo(Object inObject){
-    
-	double tmpDouble = 0;
-    
-	switch(sortSetting){
-	case(1):
-	    return ((((SMWThreadDataElement)inObject).getMappingID()) - mappingID);
-	case(2):
-	    return (mappingID - (((SMWThreadDataElement)inObject).getMappingID()));
-	case(3):
-	    return (((SMWThreadDataElement) inObject).getMappingName()).compareTo(this.getMappingName());
-	case(4):
-	    return (this.getMappingName()).compareTo(((SMWThreadDataElement)inObject).getMappingName());
-	case(5):
-	    tmpDouble = (value - (((SMWThreadDataElement)inObject).getValue()));
-	    if(tmpDouble < 0.00)
-		return 1;
-	    else if(tmpDouble == 0.00)
-		return 0;
-	    else
-		return -1;
-	case(6):
-	    tmpDouble = (value - (((SMWThreadDataElement)inObject).getValue()));
-	    if(tmpDouble < 0.00)
-		return -1;
-	    else if(tmpDouble == 0.00)
-		return 0;
-	    else
-		return 1;
-          
-	default:
-	    return 0;
+    public SMWThreadDataElement(Trial trial, int nodeID, int contextID, int threadID, Object obj){ 
+	
+	this.trial = trial;
+	this.nodeID = nodeID;
+	this.contextID = contextID;
+	this.threadID = threadID;
+	//At present, obj should either be of type GlobalThreadDataElement or
+	//GlobalMappingElement.
+	if(obj instanceof GlobalThreadDataElement){
+	    this.globalThreadDataElement = (GlobalThreadDataElement) obj;
+	    this.globalMapping = trial.getGlobalMapping();
+	    this.globalMappingElement = globalMapping.getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
+	    
+	}
+	else if(obj instanceof GlobalMappingElement){
+	    globalMapping = trial.getGlobalMapping();
+	    this.globalMappingElement = (GlobalMappingElement) obj;
+	}
+	else{
+	    ParaProf.systemError(null, null, "Unexpected object type - SMWTDE value: " + obj.getClass().getName());
 	}
     }
   
-    public int testCompareTo(Object inObject){
-	//Note that list will never call to compare against mapping id.  This
-	//is because all the mappings are already sorted on the system.
-	double tmpDouble = 0;
+    //Rest of the public functions.
+    public int getNodeID(){
+	return nodeID;}
+
+    public int getContextID(){
+	return contextID;}
+
+    public int getThreadID(){
+	return threadID;}
+
+    public GlobalThreadDataElement getGTDE(){
+	return globalThreadDataElement;}
     
-	if(sortByMappingID)
-	    {
-		if(!sortByReverse)
-		    return (mappingID - (((SMWThreadDataElement)inObject).getMappingID()));
-		else
-		    return ((((SMWThreadDataElement)inObject).getMappingID()) - mappingID);
-	    } 
-        
-	else if(sortByName)
-	    {
-		if(!sortByReverse)
-		    return (this.getMappingName()).compareTo(((SMWThreadDataElement)inObject).getMappingName());
-		else
-		    return (((SMWThreadDataElement) inObject).getMappingName()).compareTo(this.getMappingName());
-	    }
+    public String getMappingName(){
+	return globalMappingElement.getMappingName();}
+  
+    public int getMappingID(){
+	return globalMappingElement.getGlobalID();}
+  
+    public Color getMappingColor(){
+	return globalMappingElement.getMappingColor();}
+  
+    public boolean getMappingExists(){
+	return globalThreadDataElement.getMappingExists();}
+  
+    public boolean isGroupMember(int groupID){
+	return globalMapping.isGroupMember(this.getMappingID(), groupID, 0);}
+
+    public boolean isCallPathObject(){
+	return globalMappingElement.isCallPathObject();}
+
+    //####################################
+    //Function interface.
+    //####################################
+    public Vector getParents(){
+	return globalThreadDataElement.getParents();}
+
+    public Vector getChildren(){
+	return globalThreadDataElement.getChildren();}
+
+    public ListIterator getParentsIterator(){
+	return globalThreadDataElement.getParentsIterator();}
+
+    public ListIterator getChildrenIterator(){
+ 	return globalThreadDataElement.getChildrenIterator();}
+
+    public ListIterator getCallPathIDParents(int id){
+	return globalThreadDataElement.getCallPathIDParents(id);}
+
+    public ListIterator getCallPathIDChildren(int id){
+	return globalThreadDataElement.getCallPathIDChildren(id);}
+  
+    public double getInclusiveValue(){
+	return globalThreadDataElement.getInclusiveValue(trial.getCurValLoc());}
+  
+    public double getExclusiveValue(){
+	return globalThreadDataElement.getExclusiveValue(trial.getCurValLoc());}
+  
+    public double getInclusivePercentValue(){
+	return globalThreadDataElement.getInclusivePercentValue(trial.getCurValLoc());}
+  
+    public double getExclusivePercentValue(){
+	return globalThreadDataElement.getExclusivePercentValue(trial.getCurValLoc());}
+  
+    public int getNumberOfCalls(){
+	return globalThreadDataElement.getNumberOfCalls();}
+  
+    public int getNumberOfSubRoutines(){
+	return globalThreadDataElement.getNumberOfSubRoutines();}
+  
+    public double getUserSecPerCall(){
+	return globalThreadDataElement.getUserSecPerCall(trial.getCurValLoc());}
+  
+    public String getTStatString(int type){
+	return globalThreadDataElement.getTStatString(type, trial.getCurValLoc());}
+    //####################################
+    //End - Function interface.
+    //####################################
+  
+    //####################################
+    //Userevent interface.
+    //####################################
+    public int getUserEventNumberValue(){
+	return globalThreadDataElement.getUserEventNumberValue();}
+  
+    public double getUserEventMinValue(){
+	return globalThreadDataElement.getUserEventMinValue();}
+  
+    public double getUserEventMaxValue(){
+	return globalThreadDataElement.getUserEventMaxValue();}
+  
+    public double getUserEventMeanValue(){
+	return globalThreadDataElement.getUserEventMeanValue();}
+  
+    public String getUserEventStatString(){
+	return globalThreadDataElement.getUserEventStatString();}
+    //####################################
+    //End - Userevent interface.
+    //####################################
+
+    //####################################
+    //Mean interface.
+    //####################################
+    public boolean getMeanValuesSet(){
+	return globalMappingElement.getMeanValuesSet();}
+  
+    public double getMeanExclusiveValue(){
+	return globalMappingElement.getMeanExclusiveValue(trial.getCurValLoc());}
+  
+    public double getMeanExclusivePercentValue(){
+	return globalMappingElement.getMeanExclusivePercentValue(trial.getCurValLoc());}
+  
+    public double getMeanInclusiveValue(){
+	return globalMappingElement.getMeanInclusiveValue(trial.getCurValLoc());}
     
-	//If here, means that we are in sort by value.
-	tmpDouble = (value - (((SMWThreadDataElement)inObject).getValue()));
-	if(tmpDouble < 0.00)
-	    if(!sortByReverse)
-		return -1;
-	    else
-		return 1;
-	if(tmpDouble == 0.00)
-	    return 0;
-    
-	if(!sortByReverse)
+    public double getMeanInclusivePercentValue(){
+	return globalMappingElement.getMeanInclusivePercentValue(trial.getCurValLoc());}
+  
+    public double getMeanNumberOfCalls(){
+	return globalMappingElement.getMeanNumberOfCalls();}
+  
+    public double getMeanNumberOfSubRoutines(){
+	return globalMappingElement.getMeanNumberOfSubRoutines();}
+  
+    public double getMeanUserSecPerCall(){
+	return globalMappingElement.getMeanUserSecPerCall(trial.getCurValLoc());}
+
+    public String getMeanTotalStatString(int type){
+	return globalMappingElement.getMeanTotalStatString(type, trial.getCurValLoc());}
+    //####################################
+    //End - Mean interface.
+    //####################################
+
+
+    /*
+      (0) name
+      (2) exclusive
+      (4) inclusive
+      (6) number of calls
+      (8) number of subroutines
+      (10) per call value
+      (12) userevent number value
+      (14) userevent min value
+      (16) userevent max value
+      (18) userevent mean value
+      (20) mean exclusive
+      (22) mean inclusive
+      (24) mean number of calls
+      (26) mean number of subroutines
+      (28) mean per call value
+
+      The even values represent these items sorted in decending order,
+      the odd values in ascending order. Thus (0) is name decending, and
+      (1) is name ascending. Set sortType to the integer value required.
+    */
+  
+    public int compareTo(Object inObject){
+	switch(sortType){
+	case 0:
+	    return (((SMWThreadDataElement) inObject).getMappingName()).compareTo(this.getMappingName());
+	case 1:
+	    return (this.getMappingName()).compareTo(((SMWThreadDataElement)inObject).getMappingName());
+	case 2:
+	    return compareToHelper(this.getExclusiveValue(),((SMWThreadDataElement)inObject).getExclusiveValue());
+	case 3:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getExclusiveValue(),this.getExclusiveValue());
+	case 4:
+	    return compareToHelper(this.getInclusiveValue(),((SMWThreadDataElement)inObject).getInclusiveValue());
+	case 5:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getInclusiveValue(),this.getInclusiveValue());
+	case 6:
+	    return compareToHelper(this.getNumberOfCalls(),((SMWThreadDataElement)inObject).getNumberOfCalls());
+	case 7:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getNumberOfCalls(),this.getNumberOfCalls());
+	case 8:
+	    return compareToHelper(this.getNumberOfSubRoutines(),((SMWThreadDataElement)inObject).getNumberOfSubRoutines());
+	case 9:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getNumberOfSubRoutines(),this.getNumberOfSubRoutines());
+	case 10:
+	    return compareToHelper(this.getUserSecPerCall(),((SMWThreadDataElement)inObject).getUserSecPerCall());
+	case 11:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getUserSecPerCall(),this.getUserSecPerCall());
+	case 12:
+	    return compareToHelper(this.getUserEventNumberValue(),((SMWThreadDataElement)inObject).getUserEventNumberValue());
+	case 13:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getUserEventNumberValue(),this.getUserEventNumberValue());
+	case 14:
+	    return compareToHelper(this.getUserEventMinValue(),((SMWThreadDataElement)inObject).getUserEventMinValue());
+	case 15:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getUserEventMinValue(),this.getUserEventMinValue());
+	case 16:
+	    return compareToHelper(this.getUserEventMaxValue(),((SMWThreadDataElement)inObject).getUserEventMaxValue());
+	case 17:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getUserEventMaxValue(),this.getUserEventMaxValue());
+	case 18:
+	    return compareToHelper(this.getUserEventMeanValue(),((SMWThreadDataElement)inObject).getUserEventMeanValue());
+	case 19:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getUserEventMeanValue(),this.getUserEventMeanValue());
+	case 20:
+	    return compareToHelper(this.getMeanExclusiveValue(),((SMWThreadDataElement)inObject).getMeanExclusiveValue());
+	case 21:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanExclusiveValue(),this.getMeanExclusiveValue());
+	case 22:
+	    return compareToHelper(this.getMeanInclusiveValue(),((SMWThreadDataElement)inObject).getMeanInclusiveValue());
+	case 23:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanInclusiveValue(),this.getMeanInclusiveValue());
+	case 24:
+	    return compareToHelper(this.getMeanNumberOfCalls(),((SMWThreadDataElement)inObject).getMeanNumberOfCalls());
+	case 25:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getNumberOfCalls(),this.getNumberOfCalls());
+	case 26:
+	    return compareToHelper(this.getMeanNumberOfSubRoutines(),((SMWThreadDataElement)inObject).getMeanNumberOfSubRoutines());
+	case 27:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanNumberOfSubRoutines(),this.getMeanNumberOfSubRoutines());
+	case 28:
+	    return compareToHelper(this.getMeanUserSecPerCall(),((SMWThreadDataElement)inObject).getMeanUserSecPerCall());
+	case 29:
+	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanUserSecPerCall(),this.getMeanUserSecPerCall());
+ 	default:
+	    ParaProf.systemError(null, null, "Unexpected sort type - SMWTDE value: " + sortType);
+	}
+	return 0;
+    }
+
+    private int compareToHelper(double d1, double d2){
+	double result = d1 - d2;
+	if(result < 0.00)
 	    return 1;
+	else if(result == 0.00)
+	    return 0;
 	else
 	    return -1;
     }
-  
-    public void setValue(double inValue){
-	value = inValue;}
-  
-    public double getValue(){
-	return value;}
-  
-    public void setDrawCoords(int inXBeg, int inXEnd, int inYBeg, int inYEnd){
-	xBeginPosition = inXBeg;
-	xEndPosition = inXEnd;
-	yBeginPosition = inYBeg;
-	yEndPosition = inYEnd;
+ 
+    public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd){
+	this.xBeg = xBeg;
+	this.xEnd = xEnd;
+	this.yBeg = yBeg;
+	this.yEnd = yEnd;
     }
   
     public int getXBeg(){
-	return xBeginPosition;}
+	return xBeg;}
   
     public int getXEnd(){
-	return xEndPosition;}
+	return xEnd;}
   
     public int getYBeg(){
-	return yBeginPosition;}
+	return yBeg;}
   
     public int getYEnd(){
-	return yEndPosition;}
-  
-    public void setTDWDrawCoords(int inTDWXBeg, int inTDWXEnd, int inTDWYBeg, int inTDWYEnd){
-	tDWXBegPosition = inTDWXBeg;
-	tDWXEndPosition = inTDWXEnd;
-	tDWYBegPosition = inTDWYBeg;
-	tDWYEndPosition = inTDWYEnd;
-    }
-    
-    public int getTDWYBeg(){
-	return tDWYBegPosition;}
-  
-    public int getTDWYEnd(){
-	return tDWYEndPosition;}
-  
-    public int getTDWXBeg(){
-	return tDWXBegPosition;}
-  
-    public int getTDWXEnd(){
-	return tDWXEndPosition;}
-  
-    public void setMDWDrawCoords(int inMDWXBeg, int inMDWXEnd, int inMDWYBeg, int inMDWYEnd){
-	mDWXBegPosition = inMDWXBeg;
-	mDWXEndPosition = inMDWXEnd;
-	mDWYBegPosition = inMDWYBeg;
-	mDWYEndPosition = inMDWYEnd;
-    }
-    
-    public int getMDWYBeg(){
-	return mDWYBegPosition;}
-  
-    public int getMDWYEnd(){
-	return mDWYEndPosition;}
-  
-    public int getMDWXBeg(){
-	return mDWXBegPosition;}
-  
-    public int getMDWXEnd(){
-	return mDWXEndPosition;}
-  
-    //User Event Window.
-    public void setUEWDrawCoords(int inUEWXBeg, int inUEWXEnd, int inUEWYBeg, int inUEWYEnd){
-	uEWXBegPosition = inUEWXBeg;
-	uEWXEndPosition = inUEWXEnd;
-	uEWYBegPosition = inUEWYBeg;
-	uEWYEndPosition = inUEWYEnd;
-    }
-    
-    public int getUEWYBeg(){
-	return uEWYBegPosition;}
-  
-    public int getUEWYEnd(){
-	return uEWYEndPosition;}
-  
-    public int getUEWXBeg(){
-	return uEWXBegPosition;}
-  
-    public int getUEWXEnd(){
-	return uEWXEndPosition;}
+	return yEnd;}
   
     public boolean getStatDrawnTo(){
 	return statDrawnTo;}
   
-    public void setStatDrawnTo(boolean inBoolean){
-	statDrawnTo = inBoolean;}
+    public void setStatDrawnTo(boolean statDrawnTo){
+	this.statDrawnTo = statDrawnTo;}
   
-    public void setHighlighted(boolean inBool){
-	highlighted = inBool;}
+    public void setHighlighted(boolean highlighted){
+	this.highlighted = highlighted;}
   
     public boolean isHighlighted(){
 	return highlighted;}
   
   
-    public void setSortSetting(int inInt){
-	sortSetting = inInt;}
+    public void setSortType(int sortType){
+	this.sortType = sortType;}
   
-    public void setSortByMappingID(){
-	sortByMappingID = true;
-	sortByName = false;
-	sortByValue = false;
-    }
-  
-    public void setSortByName(){
-	sortByMappingID = false;
-	sortByName = true;
-	sortByValue = false;
-    }
-  
-    public void setSortByValue(){
-	sortByMappingID = false;
-	sortByName = false;
-	sortByValue = true;
-    }
-  
-    public void setSortByReverse(boolean inBool){
-	sortByReverse = inBool;}
-
+    //####################################
     //Instance data.
+    //####################################
   
     private Trial trial = null;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
 
     //Global Thread Data Element Reference.
-    GlobalThreadDataElement gTDEReference;
+    GlobalThreadDataElement globalThreadDataElement;
   
     //Global Mapping reference.
-    GlobalMapping globalMappingReference;
-  
-    //A global mapping element reference.
-    GlobalMappingElement tmpGME;
-  
-    //Mapping ID
-    int mappingID;
-
-    //Named data values.
-    double value;
+    GlobalMapping globalMapping;
+    GlobalMappingElement globalMappingElement;
   
     //Drawing coordinates for this thread data object.
-    int xBeginPosition;
-    int xEndPosition;
-    int yBeginPosition;
-    int yEndPosition;
-  
-    //Drawing coordinates the thread data window.
-    int tDWXEndPosition;
-    int tDWXBegPosition;
-    int tDWYEndPosition;
-    int tDWYBegPosition;
-  
-    //Drawing coordinates the mapping data window.
-    int mDWXEndPosition;
-    int mDWXBegPosition;
-    int mDWYEndPosition;
-    int mDWYBegPosition;
-  
-    //Drawing coordinates the mapping data window.
-    int uEWXEndPosition;
-    int uEWXBegPosition;
-    int uEWYEndPosition;
-    int uEWYBegPosition;
-  
+    int xBeg = 0;
+    int xEnd = 0;
+    int yBeg = 0;
+    int yEnd = 0;
+
     boolean statDrawnTo;
   
     //Boolean indicating whether or not this object is highlighted.
     boolean highlighted = false;
   
-    //
-    int sortSetting;
-    boolean sortByMappingID;
-    boolean sortByName;
-    boolean sortByValue;
-    boolean sortByReverse;
-  
-    boolean compareOnMappingName;
+    int sortType;
+    //####################################
+    //End - Instance data.
+    //####################################
 }

@@ -14,6 +14,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
+import java.awt.print.*;
 
 public class MappingDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener{
   
@@ -30,12 +31,11 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	}
     }
   
-    public MappingDataWindow(Trial inTrial, int inMappingID, StaticMainWindowData inSMWData)
-    {
+    public MappingDataWindow(Trial trial, int mappingID, StaticMainWindowData sMWData){
 	try{
-	    mappingID = inMappingID;
-	    trial = inTrial;
-	    sMWData = inSMWData;
+	    this.mappingID = mappingID;
+	    this.trial = trial;
+	    this.sMWData = sMWData;
 
 	    int windowWidth = 650;
 	    int windowHeight = 550;
@@ -56,7 +56,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
       
 	    //Grab the appropriate global mapping element.
 	    GlobalMapping tmpGM = trial.getGlobalMapping();
-	    GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(inMappingID, 0);
+	    GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(mappingID, 0);
       
 	    mappingName = tmpGME.getMappingName();
       
@@ -73,202 +73,49 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
       
 	    //Set the help window text if required.
 	    if(ParaProf.helpWindow.isVisible()){
-		ParaProf.helpWindow.clearText();
-		//Since the data must have been loaded.  Tell them someting about
-		//where they are.
-		ParaProf.helpWindow.writeText("This is the function data window for:");
-		ParaProf.helpWindow.writeText(mappingName);
-		ParaProf.helpWindow.writeText("");
-		ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
-		ParaProf.helpWindow.writeText("");
-		ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-		ParaProf.helpWindow.writeText("");
-		ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-		ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-		ParaProf.helpWindow.writeText("for this function.");
+		this.help(false);
 	    }
+
+	    //Sort the local data.
+	    sortLocalData();
       
-      
-	    //******************************
+	    //####################################
 	    //Code to generate the menus.
-	    //******************************
+	    //####################################
 	    JMenuBar mainMenu = new JMenuBar();
-      
-	    //******************************
+
 	    //File menu.
-	    //******************************
 	    JMenu fileMenu = new JMenu("File");
-      
-	    //Add a menu item.
-	    /*
-	    JMenuItem showBinWindowItem = new JMenuItem("Bin Window");
-	    showBinWindowItem.addActionListener(this);
-	    fileMenu.add(showBinWindowItem);
-	    */
-	    
-	    //Add a menu item.
-	    JMenuItem closeItem = new JMenuItem("Close This Window");
-	    closeItem.addActionListener(this);
-	    fileMenu.add(closeItem);
-      
-	    //Add a menu item.
-	    JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
-	    exitItem.addActionListener(this);
-	    fileMenu.add(exitItem);
-	    //******************************
-	    //End - File menu.
-	    //******************************
-      
-	    //******************************
+	    UtilFncs.fileMenuItems(fileMenu, this);
+
 	    //Options menu.
-	    //******************************
-	    JMenu optionsMenu = new JMenu("Options");
+	    optionsMenu = new JMenu("Options");
 	    optionsMenu.addMenuListener(this);
-      
-	    //Add a submenu.
-	    JMenu metricMenu = new JMenu("Select Metric");
-	    metricGroup = new ButtonGroup();
-      
-	    //Add listeners
-	    inclusiveRadioButton.addActionListener(this);
-	    exclusiveRadioButton.addActionListener(this);
-	    numOfCallsRadioButton.addActionListener(this);
-	    numOfSubRoutinesRadioButton.addActionListener(this);
-	    userSecPerCallRadioButton.addActionListener(this);
-      
-	    metricGroup.add(inclusiveRadioButton);
-	    metricGroup.add(exclusiveRadioButton);
-	    metricGroup.add(numOfCallsRadioButton);
-	    metricGroup.add(numOfSubRoutinesRadioButton);
-	    metricGroup.add(userSecPerCallRadioButton);
-	    metricMenu.add(inclusiveRadioButton);
-	    metricMenu.add(exclusiveRadioButton);
-	    metricMenu.add(numOfCallsRadioButton);
-	    metricMenu.add(numOfSubRoutinesRadioButton);
-	    metricMenu.add(userSecPerCallRadioButton);
-	    optionsMenu.add(metricMenu);
-	    //End Submenu.
-      
-	    //Add a submenu.
-	    valuePercentMenu = new JMenu("Select Value or Percent");
-	    valuePercentGroup = new ButtonGroup();
-      
-	    percentButton = new JRadioButtonMenuItem("Percent", true);
-	    //Add a listener for this radio button.
-	    percentButton.addActionListener(this);
-      
-	    valueButton = new JRadioButtonMenuItem("Value", false);
-	    //Add a listener for this radio button.
-	    valueButton.addActionListener(this);
-      
-	    valuePercentGroup.add(percentButton);
-	    valuePercentGroup.add(valueButton);
-      
-	    valuePercentMenu.add(percentButton);
-	    valuePercentMenu.add(valueButton);
-	    optionsMenu.add(valuePercentMenu);
-	    //End Submenu.
-      
-	    //Add a submenu.
-	    unitsMenu = new JMenu("Select Units");
-	    unitsGroup = new ButtonGroup();
-      
-	    secondsButton = new JRadioButtonMenuItem("Seconds", false);
-	    //Add a listener for this radio button.
-	    secondsButton.addActionListener(this);
-      
-	    millisecondsButton = new JRadioButtonMenuItem("Milliseconds", false);
-	    //Add a listener for this radio button.
-	    millisecondsButton.addActionListener(this);
-      
-	    microsecondsButton = new JRadioButtonMenuItem("Microseconds", true);
-	    //Add a listener for this radio button.
-	    microsecondsButton.addActionListener(this);
-      
-	    unitsGroup.add(secondsButton);
-	    unitsGroup.add(millisecondsButton);
-	    unitsGroup.add(microsecondsButton);
-      
-	    unitsMenu.add(secondsButton);
-	    unitsMenu.add(millisecondsButton);
-	    unitsMenu.add(microsecondsButton);
-	    optionsMenu.add(unitsMenu);
-	    //End Submenu.
-      
-	    displaySlidersButton = new JRadioButtonMenuItem("Display Sliders", false);
-	    //Add a listener for this radio button.
-	    displaySlidersButton.addActionListener(this);
-	    optionsMenu.add(displaySlidersButton);
-          
-	    //******************************
-	    //End - Options menu.
-	    //******************************
-      
-      
-	    //******************************
-	    //Window menu.
-	    //******************************
-	    JMenu windowsMenu = new JMenu("Windows");
+	    UtilFncs.optionMenuItems(optionsMenu,this);
+
+	    //Windows menu
+	    windowsMenu = new JMenu("Windows");
 	    windowsMenu.addMenuListener(this);
-      
-	    //Add a submenu.
-	    JMenuItem mappingLedgerItem = new JMenuItem("Show Function Ledger");
-	    mappingLedgerItem.addActionListener(this);
-	    windowsMenu.add(mappingLedgerItem);
-      
-	    //Add a submenu.
-	    mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
-	    mappingGroupLedgerItem.addActionListener(this);
-	    windowsMenu.add(mappingGroupLedgerItem);
-      
-	    //Add a submenu.
-	    userEventLedgerItem = new JMenuItem("Show User Event Ledger");
-	    userEventLedgerItem.addActionListener(this);
-	    windowsMenu.add(userEventLedgerItem);
-      
-	    //Add listeners
-	    JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
-	    closeAllSubwindowsItem.addActionListener(this);
-	    windowsMenu.add(closeAllSubwindowsItem);
-	    //******************************
-	    //End - Window menu.
-	    //******************************
-      
-      
-	    //******************************
+	    UtilFncs.windowMenuItems(windowsMenu,this);
+
 	    //Help menu.
-	    //******************************
 	    JMenu helpMenu = new JMenu("Help");
-      
-	    //Add a menu item.
-	    JMenuItem aboutItem = new JMenuItem("About ParaProf");
-	    aboutItem.addActionListener(this);
-	    helpMenu.add(aboutItem);
-      
-	    //Add a menu item.
-	    JMenuItem showHelpWindowItem = new JMenuItem("Show Help Window");
-	    showHelpWindowItem.addActionListener(this);
-	    helpMenu.add(showHelpWindowItem);
-	    //******************************
-	    //End - Help menu.
-	    //******************************
-      
-      
+	    UtilFncs.helpMenuItems(helpMenu, this);
+	    
 	    //Now, add all the menus to the main menu.
 	    mainMenu.add(fileMenu);
 	    mainMenu.add(optionsMenu);
 	    mainMenu.add(windowsMenu);
 	    mainMenu.add(helpMenu);
-      
+	    
 	    setJMenuBar(mainMenu);
-      
-	    //******************************
+	    //####################################
 	    //End - Code to generate the menus.
-	    //******************************
-      
-	    //******************************
-	    //Create and add the componants.
-	    //******************************
+	    //####################################
+	          
+	    //####################################
+	    //Create and add the components.
+	    //####################################
 	    //Setting up the layout system for the main window.
 	    contentPane = getContentPane();
 	    gbl = new GridBagLayout();
@@ -276,21 +123,21 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    gbc = new GridBagConstraints();
 	    gbc.insets = new Insets(5, 5, 5, 5);
 
-	    //**********
-	    //Panel and scroll bar definitions.
-	    //**********
-	    panel = new MappingDataWindowPanel(trial, inMappingID, this);
+	    //######
+	    //Panel and ScrollPane definition.
+	    //######
+	    panel = new MappingDataWindowPanel(trial, mappingID, this);
 	    sp = new JScrollPane(panel);
 	    label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName);
             sp.setColumnHeaderView(label);
-	    //**********
-	    //End - Panel and scroll bar definitions.
-	    //**********
-      
-	    //**********
+	    //######
+	    //End - Panel and ScrollPane definition.
+	    //######
+	          
+	    //######
 	    //Slider setup.
 	    //Do the slider stuff, but don't add.  By default, sliders are off.
-	    //**********
+	    //######
 	    String sliderMultipleStrings[] = {"1.00", "0.75", "0.50", "0.25", "0.10"};
 	    sliderMultiple = new JComboBox(sliderMultipleStrings);
 	    sliderMultiple.addActionListener(this);
@@ -301,9 +148,10 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    barLengthSlider.setPaintLabels(true);
 	    barLengthSlider.setSnapToTicks(true);
 	    barLengthSlider.addChangeListener(this);
-	    //**********
+	    //######
 	    //End - Slider setup.
-	    //**********
+	    //Do the slider stuff, but don't add.  By default, sliders are off.
+	    //######
       
 	    gbc.fill = GridBagConstraints.BOTH;
 	    gbc.anchor = GridBagConstraints.CENTER;
@@ -316,188 +164,176 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	}
     }
   
-    //******************************
-    //Event listener code!!
-    //******************************
-  
-    //******************************
-    //ActionListener code.
-    //******************************
-  
-    //ActionListener code.
+    //####################################
+    //Interface code.
+    //####################################
+
+    //######
+    //ActionListener.
+    //######
     public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
 	    
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
-		
-		if(arg.equals("Close This Window")){
-		    closeThisWindow();
+		if(arg.equals("Print")){
+		    PrinterJob job = PrinterJob.getPrinterJob();
+		    PageFormat defaultFormat = job.defaultPage();
+		    PageFormat selectedFormat = job.pageDialog(defaultFormat);
+		    job.setPrintable(panel, selectedFormat);
+		    if(job.printDialog()){
+			job.print();
+		    }
 		}
+		else if(arg.equals("Edit ParaProf Preferences!")){
+		    trial.getPreferences().showPreferencesWindow();
+		}
+		else if(arg.equals("Close This Window")){
+		    closeThisWindow();}
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
 		    System.exit(0);
 		}
-		else if(arg.equals("Bin Window")){
-		    System.out.println("Mapping is in MDW is: " + mappingID);
-		    BinWindow bW = new BinWindow(trial, sMWData, false, mappingID);
-		    bW.show();
+		else if(arg.equals("name")){
+		    if(((JCheckBoxMenuItem)optionsMenu.getItem(0)).isSelected())
+			name = true;
+		    else
+			name = false;
+		    sortLocalData();
+		    panel.repaint();
 		}
-		else if(arg.equals("Inclusive")){
-		    if(inclusiveRadioButton.isSelected()){
-			metric = 0;
-			//Call repaint.
-			panel.repaint();
-			}
+		else if(arg.equals("Decending Order")){
+		    if(((JCheckBoxMenuItem)optionsMenu.getItem(1)).isSelected())
+			order = 0;
+		    else
+			order = 1;
+		    sortLocalData();
+		    panel.repaint();
+		}
+		else if(arg.equals("Show Values as Percent")){
+		    if(((JCheckBoxMenuItem)optionsMenu.getItem(2)).isSelected())
+			percent = true;
+		    else
+			percent = false;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Exclusive")){
-		    if(exclusiveRadioButton.isSelected()){
-			metric = 1;
-			//Call repaint.
-			panel.repaint();
-			}
+		    metric = 2;
+		    sortLocalData();
+		    panel.repaint();
+		}
+		else if(arg.equals("Inclusive")){
+		    metric = 4;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
-		    if(numOfCallsRadioButton.isSelected()){
-			metric = 2;
-			panel.repaint();
-		    }
+		    metric = 6;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
-		    if(numOfSubRoutinesRadioButton.isSelected()){
-			metric = 3;
-			panel.repaint();
-		    }
+		    metric = 8;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
-		    if(userSecPerCallRadioButton.isSelected()){
-			metric = 4;
-			panel.repaint();
-		    }
-		}
-		else if(arg.equals("Percent")){
-		    if(percentButton.isSelected()){
-			percent = true;
-			//Call repaint.
-			panel.repaint();
-		    }
-		}
-		else if(arg.equals("Value")){
-		    if(valueButton.isSelected()){
-			percent = false;
-			//Call repaint.
-			panel.repaint();
-		    }
+		    metric = 10;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Microseconds")){
-		    if(microsecondsButton.isSelected()){
-			units = 0;
-			//Call repaint.
-			panel.repaint();
-		    }
+		    units = 0;
+		    panel.repaint();
 		}
 		else if(arg.equals("Milliseconds")){
-		    if(millisecondsButton.isSelected()){
-			units = 1;
-			//Call repaint.
-			panel.repaint();
-		    }
+		    units = 1;
+		    panel.repaint();
 		}
 		else if(arg.equals("Seconds")){
-		    if(secondsButton.isSelected()){
-			units = 2;
-			//Call repaint.
-			    panel.repaint();
-		    }
+		    units = 2;
+		    panel.repaint();
+		}
+		else if(arg.equals("hr:min:sec")){
+		    units = 3;
+		    panel.repaint();
 		}
 		else if(arg.equals("Display Sliders")){
-		    if(displaySlidersButton.isSelected()){ 
+		    if(((JCheckBoxMenuItem)optionsMenu.getItem(5)).isSelected())
 			displaySiders(true);
-		    }
-		    else{
+		    else
 			displaySiders(false);
-			}
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(0);}
-		else if(arg.equals("Show Group Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(1);}
-		else if(arg.equals("Show User Event Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(2);}
-		else if(arg.equals("Close All Sub-Windows")){
-		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");}
-		else if(arg.equals("About ParaProf")){
-		    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());}
-		else if(arg.equals("Show Help Window")){
-		    ParaProf.helpWindow.clearText();
-		    ParaProf.helpWindow.show();
-		    //Since the data must have been loaded.  Tell them someting about
-		    //where they are.
-		    ParaProf.helpWindow.writeText("This is the mapping data window for:");
-		    ParaProf.helpWindow.writeText(mappingName);
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("This window shows you this mapping's statistics across all the threads.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-		    ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-		    ParaProf.helpWindow.writeText("for this mapping.");
+		    (trial.getGlobalMapping()).displayMappingLedger(0);
 		}
-	    }
+		else if(arg.equals("Show Group Ledger")){
+		    (trial.getGlobalMapping()).displayMappingLedger(1);
+		}
+		else if(arg.equals("Show User Event Ledger")){
+		    (trial.getGlobalMapping()).displayMappingLedger(2);
+		}
+		else if(arg.equals("Close All Sub-Windows")){
+		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+		}
+		else if(arg.equals("About ParaProf")){
+		    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
+		}
+		else if(arg.equals("Show Help Window")){
+		    this.help(true);
+		}
+		    }
 	    else if(EventSrc == sliderMultiple){
 		panel.changeInMultiples();
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "MDW03");
+	    ParaProf.systemError(e, null, "TDW03");
 	}
     }
-    //******************************
-    //End - ActionListener code.
-    //******************************
-  
-  
-    //******************************
-    //Change listener code.
-    //******************************
+    //######
+    //End - ActionListener
+    //######
+
+    //######
+    //ChangeListener.
+    //######
     public void stateChanged(ChangeEvent event){
 	panel.changeInMultiples();}
-    //******************************
-    //End - Change listener code.
-    //******************************
-  
-    //******************************
-    //MenuListener code.
-    //******************************
+    //######
+    //End - ChangeListener.
+    //######
+
+    //######
+    //MenuListener.
+    //######
     public void menuSelected(MenuEvent evt){
 	try{
-	    if(metric > 1){
-		valuePercentMenu.setEnabled(false);
-		unitsMenu.setEnabled(false);}
+	    if(metric > 4){
+		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(false);
+		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
 	    else if(percent){
-		valuePercentMenu.setEnabled(true);
-		unitsMenu.setEnabled(false);}
+		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
+		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
 	    else if(trial.isTimeMetric()){
-		valuePercentMenu.setEnabled(true);
-		unitsMenu.setEnabled(true);
-	    }
-	    else{
-		valuePercentMenu.setEnabled(true);
-		unitsMenu.setEnabled(false);
-	    }
-
+		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
+		((JMenu)optionsMenu.getItem(3)).setEnabled(true);}
+	else{
+		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
+		((JMenuItem)optionsMenu.getItem(3)).setEnabled(false);}
+	    
 	    if(trial.groupNamesPresent())
-		mappingGroupLedgerItem.setEnabled(true);
+		((JMenuItem)windowsMenu.getItem(1)).setEnabled(true);
 	    else
-		mappingGroupLedgerItem.setEnabled(false);
+		((JMenuItem)windowsMenu.getItem(1)).setEnabled(false);
 	    
 	    if(trial.userEventsPresent())
-		userEventLedgerItem.setEnabled(true);
+		((JMenuItem)windowsMenu.getItem(2)).setEnabled(true);
 	    else
-		userEventLedgerItem.setEnabled(false);
+		((JMenuItem)windowsMenu.getItem(2)).setEnabled(false);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "TDW04");
@@ -506,12 +342,13 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 
     public void menuDeselected(MenuEvent evt){}
     public void menuCanceled(MenuEvent evt){}
-    //******************************
-    //End - MenuListener code.
-    //******************************
-  
-  
-    //Observer functions.
+    //######
+    //End - MenuListener.
+    //######
+
+    //######
+    //Observer.
+    //######
     public void update(Observable o, Object arg){
 	try{
 	    String tmpString = (String) arg;
@@ -524,8 +361,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("dataEvent")){
-		//Clear any locally saved data.
-		sMWGeneralData = null;
+		sortLocalData();
 		if(!(trial.isTimeMetric()))
 		    units = 0;
 		String counterName = trial.getCounterName();
@@ -543,23 +379,42 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    ParaProf.systemError(e, null, "MDW05");
 	}
     }
-  
-    //MappingDataWindowPanel call back functions.
-    public Vector getStaticMainWindowSystemData(){
+    //######
+    //End - Observer.
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
+
+    private void help(boolean display){
+	//Show the ParaProf help window.
+	ParaProf.helpWindow.clearText();
+	if(display)
+	    ParaProf.helpWindow.show();
+	ParaProf.helpWindow.writeText("This is the function data window for:");
+	ParaProf.helpWindow.writeText(mappingName);
+	ParaProf.helpWindow.writeText("");
+	ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
+	ParaProf.helpWindow.writeText("");
+	ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
+	ParaProf.helpWindow.writeText("");
+	ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
+	ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
+	ParaProf.helpWindow.writeText("for this function.");
+    }
+      
+    public void sortLocalData(){
 	try{
-	    if(sMWGeneralData == null){
-		sMWGeneralData = sMWData.getSMWMappingData(mappingID);
-		return sMWGeneralData;
-	    }
-	    else{
-		return sMWGeneralData;
-	    }
+	    list = sMWData.getMappingData(mappingID, 1, metric+order);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDW06");
 	}
-	return null;
     }
+    
+    public Vector getData(){
+	return list;}
     
     public int getMetric(){
 	return metric;}
@@ -679,41 +534,20 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	}
     }
       
-    //******************************
+    //####################################
     //Instance data.
-    //******************************
+    //####################################
     private Trial trial = null;
     private StaticMainWindowData sMWData = null;
     Vector sMWGeneralData = null;
     private int mappingID = -1;
     private String mappingName = null;
+
+    private JMenu optionsMenu = null;
+    private JMenu windowsMenu = null;
   
-    private JMenu unitsMenu;
-    JMenu valuePercentMenu;
-    private JMenuItem mappingGroupLedgerItem;
-    private JMenuItem userEventLedgerItem;
-  
-    private ButtonGroup inclusiveExclusiveGroup = null;
-    private ButtonGroup valuePercentGroup = null;
-    private ButtonGroup unitsGroup = null;
-    private ButtonGroup metricGroup = null;
-  
-    private JRadioButtonMenuItem metricButton =  new JRadioButtonMenuItem("Selected Metric", true);
-    private JRadioButtonMenuItem inclusiveRadioButton =  new JRadioButtonMenuItem("Inclusive", false);
-    private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
-    private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
-    private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
-    private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
-    private JRadioButtonMenuItem valueButton = null;
-    private JRadioButtonMenuItem percentButton = null;
-    private JRadioButtonMenuItem secondsButton = null;
-    private JRadioButtonMenuItem millisecondsButton = null;
-    private JRadioButtonMenuItem microsecondsButton = null;
-  
-    private JRadioButtonMenuItem displaySlidersButton;
     private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
     private JComboBox sliderMultiple;
-  
     private JLabel barLengthLabel = new JLabel("Bar Mulitiple");
     private JSlider barLengthSlider = new JSlider(0, 40, 1);
   
@@ -725,10 +559,14 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     JScrollPane sp = null;
     JLabel label = null;
 
-    private int metric = 1; //0-inclusive,1-exclusive,2-number of calls,3-number of subroutines,4-per call value.
-    boolean percent = true;
+    private Vector list = null;
+  
+    private boolean name = false; //true: sort by name,false: sort by metric.
+    private int order = 0; //0: descending order,1: ascending order.
+    private boolean percent = true; //true: show values as percent,false: show actual values.
+    private int metric = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
-    //******************************
+    //####################################
     //End - Instance data.
-    //******************************
+    //####################################
 }

@@ -13,13 +13,14 @@ import java.text.*;
 import java.awt.font.TextAttribute;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.print.*;
 import javax.swing.*;
-import javax.swing.border.*;
+import java.awt.geom.*;
 import javax.swing.event.*;
 
-public class CallPathTextWindowPanel extends JPanel implements ActionListener{
+public class CallPathTextWindowPanel extends JPanel implements ActionListener, Printable, ParaProfImageInterface{
     
-    public CallPathTextWindowPanel(Trial inTrial,
+    public CallPathTextWindowPanel(Trial trial,
 				   int nodeID,
 				   int contextID,
 				   int threadID,
@@ -33,7 +34,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 	    this.contextID = contextID;
 	    this.threadID = threadID;
 	    
-	    trial = inTrial;
+	    this.trial = trial;
 	    cPTWindow = inCPTWindow;
 	    this.global = global;
 	    this.repaint();
@@ -42,16 +43,41 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 	    ParaProf.systemError(e, null, "CPTWP01");
 	}
     }
-  
 
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    
+	    renderIt((Graphics2D) g, 0);
+	}
+	catch(Exception e){
+	    System.out.println(e);
+	    ParaProf.systemError(e, null, "TDWP03");
+	}
+    }
+
+    public int print(Graphics g, PageFormat pf, int page){
+	
+	if(pf.getOrientation() == PageFormat.PORTRAIT)
+	    System.out.println("PORTRAIT");
+	else if(pf.getOrientation() == PageFormat.LANDSCAPE)
+	    System.out.println("LANDSCAPE");
+	
+	if(page >=3)
+	    return Printable.NO_SUCH_PAGE;
+	Graphics2D g2 = (Graphics2D)g;
+	g2.translate(pf.getImageableX(), pf.getImageableY());
+	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
+    
+	renderIt(g2, 1);
+    
+	return Printable.PAGE_EXISTS;
+    }  
+    
+    public void renderIt(Graphics2D g2D, int instruction){
+	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int yCoord = 0;
 	    
-
 	    //In this window, a Monospaced font has to be used.  This will probably not be the same
 	    //font as the rest of ParaProf.  As a result, some extra work will have to be done to calculate
 
@@ -67,10 +93,10 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 	    //Create font.
 	    MonoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
 	    //Compute the font metrics.
-	    fmMonoFont = g.getFontMetrics(MonoFont);
+	    fmMonoFont = g2D.getFontMetrics(MonoFont);
 	    maxFontAscent = fmMonoFont.getMaxAscent();
 	    maxFontDescent = fmMonoFont.getMaxDescent();
-	    g.setFont(MonoFont);
+	    g2D.setFont(MonoFont);
       
 	    if(spacing <= (maxFontAscent + maxFontDescent)){
 		spacing = spacing + 1;
@@ -143,7 +169,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		
 		
 		yCoord = yCoord + (spacing);
-		g.setColor(Color.black);
+		g2D.setColor(Color.black);
 		l1 = gm.getMappingIterator(0);
 		while(l1.hasNext()){
 		    gme1 = (GlobalMappingElement) l1.next();
@@ -158,10 +184,10 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 			    while(l3.hasNext()){
 				s=s+":["+(((Integer)l3.next()).toString())+"]";
 			    }
-			    g.drawString("    "+gme2.getMappingName()+"["+gme2.getGlobalID()+"]"+s, 20, yCoord);
+			    g2D.drawString("    "+gme2.getMappingName()+"["+gme2.getGlobalID()+"]"+s, 20, yCoord);
 			    yCoord = yCoord + (spacing);
 			}
-			g.drawString("--> "+gme1.getMappingName()+"["+gme1.getGlobalID()+"]", 20, yCoord);
+			g2D.drawString("--> "+gme1.getMappingName()+"["+gme1.getGlobalID()+"]", 20, yCoord);
 			yCoord = yCoord + (spacing);
 			l2 = gme1.getChildrenIterator();
 			while(l2.hasNext()){
@@ -172,7 +198,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 			    while(l3.hasNext()){
 				s=s+":["+(((Integer)l3.next()).toString())+"]";
 			    }
-			    g.drawString("    "+gme2.getMappingName()+"["+gme2.getGlobalID()+"]"+s, 20, yCoord);
+			    g2D.drawString("    "+gme2.getMappingName()+"["+gme2.getGlobalID()+"]"+s, 20, yCoord);
 			    yCoord = yCoord + (spacing);
 			}
 			
@@ -182,12 +208,12 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		}
 		
 		if(ParaProf.debugIsOn){
-		    g.drawString("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 20, yCoord);
+		    g2D.drawString("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 20, yCoord);
 		    yCoord = yCoord + (spacing);
 		    l1 = gm.getMappingIterator(0);
 		    while(l1.hasNext()){
 			gme1 = (GlobalMappingElement) l1.next();
-			g.drawString("["+gme1.getGlobalID()+"] - "+gme1.getMappingName(), 20, yCoord);
+			g2D.drawString("["+gme1.getGlobalID()+"] - "+gme1.getMappingName(), 20, yCoord);
 			yCoord = yCoord + (spacing);
 		    }
 		}
@@ -312,13 +338,13 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		//**********
 
 		yCoord = yCoord + (spacing);
-		g.setColor(Color.black);
-		g.drawString("Exclusive", excPos, yCoord);
-		g.drawString("Inclusive", incPos, yCoord);
-		g.drawString("Calls/Tot.Calls", callsPos1, yCoord);
-		g.drawString("Name[id]", namePos, yCoord);
+		g2D.setColor(Color.black);
+		g2D.drawString("Exclusive", excPos, yCoord);
+		g2D.drawString("Inclusive", incPos, yCoord);
+		g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
+		g2D.drawString("Name[id]", namePos, yCoord);
 		yCoord = yCoord + (spacing);
-		g.drawString("--------------------------------------------------------------------------------", incPos, yCoord);
+		g2D.drawString("--------------------------------------------------------------------------------", incPos, yCoord);
 		yCoord = yCoord + (spacing);
 		l1 = cPTWindow.getDataIterator();
 		while(l1.hasNext()){
@@ -341,20 +367,20 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 				d3=d3+gtde.getNumberOfCalls();
 				s=s+":["+tmpInt+"]";
 			    }
-			    g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
-			    g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
-			    g.drawString(d3+"/"+smwtde.getNumberOfCalls(), callsPos1, yCoord);
+			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
+			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
+			    g2D.drawString(d3+"/"+smwtde.getNumberOfCalls(), callsPos1, yCoord);
 			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
-			    //g.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]"+s, namePos, yCoord);
-			    g.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
+			    //g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]"+s, namePos, yCoord);
+			    g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
 			    yCoord = yCoord + (spacing);
 			}
 			d1 = smwtde.getExclusiveValue(); 
 			d2 = smwtde.getInclusiveValue();
-			g.drawString("--> "+ (UtilFncs.getOutputString(cPTWindow.units(),d1)), base, yCoord);
-			g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
-			g.drawString(Integer.toString(smwtde.getNumberOfCalls()), callsPos1, yCoord);
-			g.drawString(smwtde.getMappingName()+"["+smwtde.getMappingID()+"]", namePos, yCoord);
+			g2D.drawString("--> "+ (UtilFncs.getOutputString(cPTWindow.units(),d1)), base, yCoord);
+			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
+			g2D.drawString(Integer.toString(smwtde.getNumberOfCalls()), callsPos1, yCoord);
+			g2D.drawString(smwtde.getMappingName()+"["+smwtde.getMappingID()+"]", namePos, yCoord);
 			yCoord = yCoord + (spacing);
 			l2 = smwtde.getChildrenIterator();
 			while(l2.hasNext()){
@@ -372,12 +398,12 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 				d3=d3+gtde.getNumberOfCalls();
 				s=s+":["+tmpInt+"]";
 			    }
-			    g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
-			    g.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
+			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
+			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
 			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
-			    g.drawString(d3+"/"+gtde.getNumberOfCalls(), callsPos1, yCoord);
-			    //g.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]"+s, namePos, yCoord);
-			    g.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
+			    g2D.drawString(d3+"/"+gtde.getNumberOfCalls(), callsPos1, yCoord);
+			    //g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]"+s, namePos, yCoord);
+			    g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
 			    yCoord = yCoord + (spacing);
 			}
 			
@@ -401,6 +427,10 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
     }
 	
     public void actionPerformed(ActionEvent evt){}
+
+    public Dimension getImageSize(){
+	return this.getPreferredSize();
+    }
  
     public Dimension getPreferredSize(){
 	return new Dimension(xPanelSize, (yPanelSize + 10));

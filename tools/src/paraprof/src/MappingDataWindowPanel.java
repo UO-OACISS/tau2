@@ -8,7 +8,6 @@ Description:
   
 Things to do:
   
-1) Add clipping support to this window. 
 */
 
 package paraprof;
@@ -16,13 +15,14 @@ package paraprof;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.print.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.geom.*;
 
 
-public class MappingDataWindowPanel extends JPanel implements ActionListener, MouseListener{
+public class MappingDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable{
     public MappingDataWindowPanel(){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -65,13 +65,38 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	}
 	
     }
-  
 
     public void paintComponent(Graphics g){
 	try{
-	    super.paintComponent(g);	    
-	    Graphics2D g2D = (Graphics2D) g;
+	    super.paintComponent(g);
+	    drawPage((Graphics2D) g, false);
+	}
+	catch(Exception e){
+	    System.out.println(e);
+	    ParaProf.systemError(e, null, "TDWP03");
+	}
+    }
 
+    public int print(Graphics g, PageFormat pf, int page){
+	
+	if(pf.getOrientation() == PageFormat.PORTRAIT)
+	    System.out.println("PORTRAIT");
+	else if(pf.getOrientation() == PageFormat.LANDSCAPE)
+	    System.out.println("LANDSCAPE");
+	
+	if(page >=3)
+	    return Printable.NO_SUCH_PAGE;
+	Graphics2D g2 = (Graphics2D)g;
+	g2.translate(pf.getImageableX(), pf.getImageableY());
+	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
+    
+	drawPage(g2, true);
+    
+	return Printable.PAGE_EXISTS;
+    }
+
+    public void drawPage(Graphics2D g2D, boolean print){
+	try{
 	    double value = 0.0;
 	    double maxValue = 0.0;
 	    int stringWidth = 0;
@@ -101,17 +126,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //Set the max and mean values for this mapping.
 	    //***
 	    switch(mDWindow.getMetric()){
-	    case 0:
-		if(mDWindow.isPercent()){
-		    maxValue = gME.getMaxInclusivePercentValue(trial.getCurValLoc());
-		    value = gME.getMeanInclusivePercentValue(trial.getCurValLoc());
-		}
-		else{
-		    maxValue = gME.getMaxInclusiveValue(trial.getCurValLoc());
-		    value = gME.getMeanInclusiveValue(trial.getCurValLoc());
-		}
-		break;			    
-	    case 1:
+	    case 2:
 		if(mDWindow.isPercent()){
 		    maxValue = gME.getMaxExclusivePercentValue(trial.getCurValLoc());
 		    value = gME.getMeanExclusivePercentValue(trial.getCurValLoc());
@@ -121,15 +136,25 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		    value = gME.getMeanExclusiveValue(trial.getCurValLoc());
 		}
 		break;
-	    case 2:
+	    case 4:
+		if(mDWindow.isPercent()){
+		    maxValue = gME.getMaxInclusivePercentValue(trial.getCurValLoc());
+		    value = gME.getMeanInclusivePercentValue(trial.getCurValLoc());
+		}
+		else{
+		    maxValue = gME.getMaxInclusiveValue(trial.getCurValLoc());
+		    value = gME.getMeanInclusiveValue(trial.getCurValLoc());
+		}
+		break;	
+	    case 6:
 		maxValue = gME.getMaxNumberOfCalls();
 		value = gME.getMeanNumberOfCalls();
 		break;
-	    case 3:
+	    case 8:
 		maxValue = gME.getMaxNumberOfSubRoutines();
 		value = gME.getMeanNumberOfSubRoutines();
 		break;
-	    case 4:
+	    case 10:
 		maxValue = gME.getMaxUserSecPerCall(trial.getCurValLoc());
 		value = gME.getMeanUserSecPerCall(trial.getCurValLoc());
 		break;
@@ -181,100 +206,56 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //yCoord = yCoord + (barSpacing);//Uncomment this.
 	    //}//Uncomment this.
 	    
-	    //***
+	    //######
 	    //Draw thread information for this mapping.
-	    //***
-	    nodeNumber = 0;
-	    for(Enumeration e1 = (mDWindow.getStaticMainWindowSystemData()).elements(); e1.hasMoreElements() ;){
-		tmpSMWServer = (SMWServer) e1.nextElement();
-		contextNumber = 0;
-		tmpContextList = tmpSMWServer.getContextList();
-		for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;){
-		    //Get the next context.
-		    tmpSMWContext = (SMWContext) e2.nextElement();
-		    tmpThreadList = tmpSMWContext.getThreadList();
-		    //Setting the context counter to zero ... this is really required as well. :-)
-		    threadNumber = 0;
-		    for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;){
-			tmpSMWThread = (SMWThread) e3.nextElement();
-			tmpThreadDataElementList = tmpSMWThread.getThreadDataList();
-			for(Enumeration e4 = tmpThreadDataElementList.elements(); e4.hasMoreElements() ;){
-			    tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-			    switch(mDWindow.getMetric()){
-			    case 0:
-				if(mDWindow.isPercent())
-				    value = tmpSMWThreadDataElement.getInclusivePercentValue();
-				else
-				    value = tmpSMWThreadDataElement.getInclusiveValue();
-				break;			    
-			    case 1:
-				if(mDWindow.isPercent())
-				    value = tmpSMWThreadDataElement.getExclusivePercentValue();
-				else
-				    value = tmpSMWThreadDataElement.getExclusiveValue();
-				break;
-			    case 2:
-				value = tmpSMWThreadDataElement.getNumberOfCalls();
-				break;
-			    case 3:
-				value = tmpSMWThreadDataElement.getNumberOfSubRoutines();
-				break;
-			    case 4:
-				value = tmpSMWThreadDataElement.getUserSecPerCall();
-				break;
-			    default:
-				ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
-			    }
-			    
-			    //For consistancy in drawing, the y coord is updated at the beginning of the loop.
-			    yCoord = yCoord + (barSpacing);
-			    
-			    //Now select whether to draw this thread based on clip rectangle.
-			    if((yCoord >= yBeg) && (yCoord <= yEnd)){
-				drawBar(g2D, fmFont, value, maxValue,
-					"n,c,t " + nodeNumber + "," + contextNumber + "," + threadNumber,
-					barXCoord, yCoord, barHeight, groupMember);
-			    }
-			}
-			threadNumber++;
-		    }		    
-		    contextNumber++;		    
-		}		
-		nodeNumber++;
+	    //######
+	    for(Enumeration e = (mDWindow.getData()).elements(); e.hasMoreElements() ;){
+		tmpSMWThreadDataElement = (SMWThreadDataElement) e.nextElement();
+		switch(mDWindow.getMetric()){
+		case 2:
+		    if(mDWindow.isPercent())
+			value = tmpSMWThreadDataElement.getExclusivePercentValue();
+		    else
+			value = tmpSMWThreadDataElement.getExclusiveValue();
+		    break;
+		case 4:
+		    if(mDWindow.isPercent())
+			value = tmpSMWThreadDataElement.getInclusivePercentValue();
+		    else
+			value = tmpSMWThreadDataElement.getInclusiveValue();
+		    break;
+		case 6:
+		    value = tmpSMWThreadDataElement.getNumberOfCalls();
+		    break;
+		case 8:
+		    value = tmpSMWThreadDataElement.getNumberOfSubRoutines();
+		    break;
+		case 10:
+		    value = tmpSMWThreadDataElement.getUserSecPerCall();
+		    break;
+		default:
+		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
+		}
+		
+		//For consistancy in drawing, the y coord is updated at the beginning of the loop.
+		yCoord = yCoord + (barSpacing);
+		
+		//Now select whether to draw this thread based on clip rectangle.
+		if((yCoord >= yBeg) && (yCoord <= yEnd)){
+		    drawBar(g2D, fmFont, value, maxValue,
+			    "n,c,t " + (tmpSMWThreadDataElement.getNodeID()) +
+			    "," + (tmpSMWThreadDataElement.getContextID()) +
+			    "," + (tmpSMWThreadDataElement.getThreadID()),
+			    barXCoord, yCoord, barHeight, groupMember);
+		}
 	    }
-	    //***
-	    //Draw thread information for this mapping.
-	    //***
+	    //######
+	    //End - Draw thread information for this mapping.
+	    //######
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDWP03");
 	}
-    }
-
-    //Computes the number of threads this mapping exists on.
-    //Computation only occurs in the first call.
-    private int activeThreads(){
-	if(aT==-1){
-	    for(Enumeration e1 = (mDWindow.getStaticMainWindowSystemData()).elements(); e1.hasMoreElements() ;){
-		//Get the name of the server.
-		tmpSMWServer = (SMWServer) e1.nextElement();
-		tmpContextList = tmpSMWServer.getContextList();
-		for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;){
-		    tmpSMWContext = (SMWContext) e2.nextElement();
-		    tmpThreadList = tmpSMWContext.getThreadList();
-		    for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;){
-			tmpSMWThread = (SMWThread) e3.nextElement();
-			tmpThreadDataElementList = tmpSMWThread.getThreadDataList();
-			for(Enumeration e4 = tmpThreadDataElementList.elements(); e4.hasMoreElements() ;){
-			    tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-			    if((tmpSMWThreadDataElement.getMappingID()) == mappingID)
-				aT++;
-			}
-		    }
-		}
-	    }
-	}
-	return aT;
     }
 
     private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
@@ -320,10 +301,10 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    g2D.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
 	}
 	
-	//Now print the percentage to the left of the bar.
+	//Draw the value next to the bar.
 	g2D.setColor(Color.black);
-	//Need to figure out how long the percentage string will be.
-	if((mDWindow.isPercent()) && ((mDWindow.getMetric())<2))					
+	//Do not want to put a percent sign after the bar if we are not exclusive or inclusive.
+	if((mDWindow.isPercent()) && ((mDWindow.getMetric())<=4))					
 	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
 	else
 	    s = UtilFncs.getOutputString(mDWindow.units(),value);
@@ -405,7 +386,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     private boolean resizePanel(FontMetrics fmFont, int barXCoord){
 	boolean resized = false;
 	try{
-	    int newYPanelSize = (activeThreads()+2)*barSpacing+10;
+	    int newYPanelSize = ((mDWindow.getData().size())+2)*barSpacing+10;
 	    int[] nct = trial.getMaxNCTNumbers();
 	    String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];;
 	    int newXPanelSize = barXCoord+5+(fmFont.stringWidth(nctString))+ 25;
@@ -428,7 +409,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     //******************************
     //Instance data.
     //******************************
-    private Vector staticNodeList;
     private String counterName = null;
     private int mappingID = -1;
     private String mappingName;
@@ -440,20 +420,9 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     private int textOffset = 60;
     private int maxXLength = 0;
     private boolean groupMember = false;
-    private int aT = -1;
-    private int nodeNumber = -1;
-    private int contextNumber = -1;
-    private int threadNumber = -1;
     private Trial trial = null;
     private MappingDataWindow mDWindow = null;
-    private StaticMainWindowData sMWData = null;
-    private SMWServer tmpSMWServer = null;
-    private SMWContext tmpSMWContext = null;
-    private SMWThread tmpSMWThread = null;
     private SMWThreadDataElement tmpSMWThreadDataElement = null;
-    private Vector tmpContextList = null;
-    private Vector tmpThreadList = null;
-    private Vector tmpThreadDataElementList = null;
     int xPanelSize = 0;
     int yPanelSize = 0;
   
@@ -466,4 +435,3 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     //End - Instance data.
     //******************************
 }
-

@@ -17,7 +17,7 @@ public class Thread{
     //Contructor(s).
     //####################################
     public Thread(){
-	doubleList = new double[5];
+	doubleList = new double[7];
     }
     //####################################
     //End - Contructor(s).
@@ -51,7 +51,7 @@ public class Thread{
     public void incrementStorage(){
 	int currentLength = doubleList.length;
 	//can use a little space here ... space for speed! :-)
-	double[] newArray = new double[currentLength+5];
+	double[] newArray = new double[currentLength+7];
 	
 	for(int i=0;i<currentLength;i++){
 	    newArray[i] = doubleList[i];
@@ -105,7 +105,76 @@ public class Thread{
     public ListIterator getUsereventListIterator(){
 	return new ParaProfIterator(userevents);}
 
-     public void setMaxInclusiveValue(int dataValueLocation, double inDouble){
+    public void setThreadSummaryData(int metric){
+	double maxInclusiveValue = 0.0;
+	double maxExclusiveValue = 0.0;
+	double maxInclusivePercentValue = 0.0;
+	double maxExclusivePercentValue = 0.0;
+	double maxUserSecPerCall = 0.0;
+	int maxNumberOfCalls = 0;
+	int maxNumberOfSubroutines = 0;
+
+	double totalInclusiveValue = 0.0;
+	double totalExclusiveValue = 0.0;
+	
+	double d = 0.0;
+	int i = 0;
+	ListIterator l = this.getFunctionListIterator();
+	
+	while(l.hasNext()){
+	    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
+	    
+	    d = globalThreadDataElement.getInclusiveValue(metric);
+	    if(d>maxInclusiveValue)
+		maxInclusiveValue = d;
+	    totalInclusiveValue+=d;
+	    d = globalThreadDataElement.getExclusiveValue(metric);
+	    if(d>maxExclusiveValue)
+		maxExclusiveValue = d;
+	    totalExclusiveValue+=d;
+	    d = globalThreadDataElement.getInclusivePercentValue(metric);
+	    if(d>maxInclusivePercentValue)
+		maxInclusivePercentValue = d;
+	    d = globalThreadDataElement.getExclusivePercentValue(metric);
+	    if(d>maxExclusivePercentValue)
+		maxExclusivePercentValue = d;
+	    d = globalThreadDataElement.getUserSecPerCall(metric);
+	    if(d>maxUserSecPerCall)
+		maxUserSecPerCall = d;
+	    i = globalThreadDataElement.getNumberOfCalls();
+	    if(i>maxNumberOfCalls)
+		maxNumberOfCalls = i;
+	    i = globalThreadDataElement.getNumberOfSubRoutines();
+	    if(i>maxNumberOfSubroutines)
+		maxNumberOfSubroutines = i;
+	}
+
+	if(ParaProf.debugIsOn){
+	    System.out.println("------");
+	    System.out.println("T-D01");
+	    System.out.println("maxInclusiveValue:"+maxInclusiveValue);
+	    System.out.println("maxExclusiveValue:"+maxExclusiveValue);
+	    System.out.println("maxInclusivePercentValue:"+maxInclusivePercentValue);
+	    System.out.println("maxExclusivePercentValue:"+maxExclusivePercentValue);
+	    System.out.println("maxUserSecPerCall:"+maxUserSecPerCall);
+	    System.out.println("maxNumberOfCalls:"+maxNumberOfCalls);
+	    System.out.println("maxNumberOfSubroutines:"+maxNumberOfSubroutines);
+	    System.out.println("totalInclusiveValue:"+totalInclusiveValue);
+	    System.out.println("totalExclusiveValue:"+totalExclusiveValue);
+	    System.out.println("------");
+	}
+	this.setMaxInclusiveValue(metric, maxInclusiveValue);
+	this.setMaxExclusiveValue(metric, maxExclusiveValue);
+	this.setMaxInclusivePercentValue(metric, maxInclusivePercentValue);
+	this.setMaxExclusivePercentValue(metric, maxExclusivePercentValue);
+	this.setMaxUserSecPerCall(metric, maxUserSecPerCall);
+	this.setMaxNumberOfCalls(maxNumberOfCalls);
+	this.setMaxNumberOfSubRoutines(maxNumberOfSubroutines);
+	this.setTotalInclusiveValue(metric, totalInclusiveValue);
+	this.setTotalExclusiveValue(metric, totalExclusiveValue);
+    }
+
+    public void setMaxInclusiveValue(int dataValueLocation, double inDouble){
 	this.insertDouble(dataValueLocation,0,inDouble);}
   
     public double getMaxInclusiveValue(int dataValueLocation){
@@ -146,27 +215,19 @@ public class Thread{
     
     public int getMaxNumberOfSubRoutines(){
 	return maxNumberOfSubRoutines;}
-    
-    //Functions used to calculate the percentage values for derived values (such as flops)
-    public void setTotalExclusiveValue(double inDouble){
-	totalExclusiveValue = inDouble;}
-    
-    public void incrementTotalExclusiveValue(double inDouble){
-	totalExclusiveValue = totalExclusiveValue + inDouble;}
-    
-    public double getTotalExclusiveValue(){
-	return totalExclusiveValue;}
-    
-    public void setTotalInclusiveValue(double inDouble){
-	totalInclusiveValue = inDouble;}
-    
-    public void incrementTotalInclusiveValue(double inDouble){
-	totalInclusiveValue = totalInclusiveValue + inDouble;}
-    
-    public double getTotalInclusiveValue(){
-	return totalInclusiveValue;}
 
-    
+    public void setTotalInclusiveValue(int dataValueLocation, double inDouble){
+	this.insertDouble(dataValueLocation,5,inDouble);}
+
+    public double getTotalInclusiveValue(int dataValueLocation){
+	return this.getDouble(dataValueLocation,5);}
+
+    public void setTotalExclusiveValue(int dataValueLocation, double inDouble){
+	this.insertDouble(dataValueLocation,6,inDouble);}
+
+    public double getTotalExclusiveValue(int dataValueLocation){
+	return this.getDouble(dataValueLocation,6);}
+        
     //#######
     //The following two functions assist in determining whether this
     //thread's callpath information has been set correctly.

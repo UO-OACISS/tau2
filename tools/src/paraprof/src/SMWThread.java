@@ -15,35 +15,46 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 public class SMWThread{
-    //Constructor.
-    public SMWThread(){
-	threadDataList = new Vector();
-	userThreadDataList = new Vector();
-    }
-  
-    //The following function adds a thread data element to
-    //the threadDataList
-    void addThreadDataElement(SMWThreadDataElement inSMWTDE){
-	threadDataList.addElement(inSMWTDE);
-    }
-  
-    //The following function adds a thread data element to
-    //the userThreadDataList
-    void addUserThreadDataElement(SMWThreadDataElement inSMWTDE){
-	userThreadDataList.addElement(inSMWTDE);
-    }
-  
-    public Vector getThreadDataList(){
-	return threadDataList;
+
+    public SMWThread(){}
+
+    public SMWThread(int threadID){
+	this.threadID = threadID;}
+
+    public SMWThread(SMWContext parentContext, int threadID){
+	this.parentContext = parentContext;
+	this.threadID = threadID;
     }
 
-    public ListIterator getThreadDataListIterator(){
-	return new ParaProfIterator(threadDataList);
-    }
+    public void setParentContext(SMWContext parentContext){
+	this.parentContext = parentContext;}
+
+    public SMWContext getParentContext(){
+	return parentContext;}
+
+    public void setThreadID(int threadID){
+	this.threadID = threadID;}
+    
+    public int getThreadID(){
+	return this.threadID;}
   
-    public Vector getUserThreadDataList(){
-	return userThreadDataList;
-    }
+    public void addFunction(SMWThreadDataElement sMWThreadDataElement){
+	functions.addElement(sMWThreadDataElement);}
+
+    public void addUserevent(SMWThreadDataElement sMWThreadDataElement){
+	userevents.addElement(sMWThreadDataElement);}
+
+    public Vector getFunctionList(){
+	return functions;}
+
+    public ListIterator getFunctionListIterator(){
+	return new ParaProfIterator(functions);}
+  
+    public Vector getUsereventList(){
+	return userevents;}
+
+    public ListIterator getUsereventListIterator(){
+	return new ParaProfIterator(userevents);}
   
     //Rest of the public functions.
     public void setYDrawCoord(int inYDrawCoord){
@@ -54,9 +65,16 @@ public class SMWThread{
 	return yDrawCoord;
     }
     
+    //####################################
     //Instance data.
-    Vector threadDataList;
-    Vector userThreadDataList;
+    //####################################
+    SMWContext parentContext = null;
+    int threadID = -1;
+    Vector functions = new Vector();
+    Vector userevents = new Vector();
     //To aid with drawing searches.
-    int yDrawCoord;
+    int yDrawCoord = -1;
+    //####################################
+    //End - Instance data.
+    //####################################
 }

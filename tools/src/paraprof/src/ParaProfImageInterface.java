@@ -13,6 +13,6 @@ import java.awt.*;
 
 interface ParaProfImageInterface{
 
-    void renderIt(Graphics2D g, String instruction);
+    void renderIt(Graphics2D g, int instruction);
     Dimension getImageSize();
 }

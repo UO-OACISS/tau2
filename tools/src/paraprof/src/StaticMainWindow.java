@@ -29,9 +29,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  trial = inTrial;
 	  
 
-	  //******************************
+	  //####################################
 	  //Window Stuff.
-	  //******************************
+	  //####################################
 	  setTitle("ParaProf: " + trial.getProfilePathName());
 	  
 	  int windowWidth = 750;
@@ -59,207 +59,48 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  int yPosition = (screenHeight - windowHeight) / 2;
 	  
 	  setLocation(xPosition, yPosition);
-	  //******************************
+	  //####################################
 	  //End -Window Stuff.
-	  //******************************
+	  //####################################
 
-	  //******************************
+	  //####################################
 	  //Code to generate the menus.
-	  //******************************
+	  //####################################
 	  JMenuBar mainMenu = new JMenuBar();
+
+	  JMenu subMenu = null;
+	  JMenuItem menuItem = null;
 	  
-	  //******************************
-	  //File menu.
-	  //******************************
 	  JMenu fileMenu = new JMenu("File");
-	  
-	  
-	  //Add a submenu.
-	  JMenu openMenu = new JMenu("Open ...");
-	  /*
-	  //Add a menu item.
-	  JMenuItem openPprofDumpFileItem = new JMenuItem("Pprof Dump File");
-	  openPprofDumpFileItem.addActionListener(this);
-	  openMenu.add(openPprofDumpFileItem);
-	  
-	  
-	  //Add a menu item.
-	  JMenuItem openParaProfOutputItem = new JMenuItem("ParaProf Output File");
-	  openParaProfOutputItem.addActionListener(this);
-	  openMenu.add(openParaProfOutputItem);
-	  */
-	  
-	  //Add a menu item.
-	  JMenuItem openExperimentManagerItem = new JMenuItem("ParaProf Manager");
-	  openExperimentManagerItem.addActionListener(this);
-	  openMenu.add(openExperimentManagerItem);
-	  
-	  //Add a menu item.
-	  JMenuItem showBinWindowItem = new JMenuItem("Bin Window");
-	  showBinWindowItem.addActionListener(this);
-	  openMenu.add(showBinWindowItem);
-	  
-	  //Add a menu item.
-	  JMenuItem testItem = new JMenuItem("test");
-	  testItem.addActionListener(this);
-	  openMenu.add(testItem);
-	  
-	  fileMenu.add(openMenu);
-	  //End submenu.
-	  
-	  //Add a submenu.
-	  JMenu saveMenu = new JMenu("Save ...");
-	  //Add a menu item.
-	  //JMenuItem saveParaProfDataFileFileItem = new JMenuItem("To A ParaProf Output File");
-	  //saveParaProfDataFileFileItem.addActionListener(this);
-	  //saveMenu.add(saveParaProfDataFileFileItem);
-	  
-	  
-	  //Add a menu item.
-	  JMenuItem saveParaProfPreferencesItem = new JMenuItem("ParaProf Preferrences");
-	  saveParaProfPreferencesItem.addActionListener(this);
-	  saveMenu.add(saveParaProfPreferencesItem);
-	  
-	  fileMenu.add(saveMenu);
-	  //End submenu.
-	  
-	  /*//Add a menu item.
-	    JMenuItem printItem = new JMenuItem("Print");
-	    printItem.addActionListener(this);
-	    fileMenu.add(printItem);
-	  */
-	  
-	  //Add a menu item.
-	  JMenuItem editPrefItem = new JMenuItem("Edit ParaProf Preferences!");
-	  editPrefItem.addActionListener(this);
-	  fileMenu.add(editPrefItem);
-	  
-	  //Add a menu item.
-	  JMenuItem saveImageItem = new JMenuItem("Save Image");
-	  saveImageItem.addActionListener(this);
-	  fileMenu.add(saveImageItem);
+	  UtilFncs.fileMenuItems(fileMenu, this);
 
-	  //Add a menu item.
-	  JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
-	  exitItem.addActionListener(this);
-	  fileMenu.add(exitItem);
-	  //******************************
-	  //End - File menu.
-	  //******************************
-	  
-	  //******************************
+	  //######
 	  //Options menu.
-	  //******************************
-	  JMenu optionsMenu = new JMenu("Options");
+	  //######
+	  optionsMenu = new JMenu("Options");
 	  
-	  //Add a submenu.
-	  JMenu sortMenu = new JMenu("Sort by ...");
-	  sortGroup = new ButtonGroup();
-	  
-	  mappingIDButton = new JRadioButtonMenuItem("function ID", false);
-	  //Add a listener for this radio button.
-	  mappingIDButton.addActionListener(this);
-	  
-	  nameButton = new JRadioButtonMenuItem("name", false);
-	  //Add a listener for this radio button.
-	  nameButton.addActionListener(this);
-	  
-	  millisecondButton = new JRadioButtonMenuItem("millisecond", true);
-	  //Add a listener for this radio button.
-	  millisecondButton.addActionListener(this);
-	  
-	  sortGroup.add(mappingIDButton);
-	  sortGroup.add(nameButton);
-	  sortGroup.add(millisecondButton);
-	  
-	  sortMenu.add(mappingIDButton);
-	  sortMenu.add(nameButton);
-	  sortMenu.add(millisecondButton);
-	  optionsMenu.add(sortMenu);
-	  //End Submenu.
-      
-	  //Add a submenu.
-	  JMenu sortOrderMenu = new JMenu("Sort Order");
-	  sortOrderGroup = new ButtonGroup();
-      
-	  ascendingButton = new JRadioButtonMenuItem("Ascending", false);
-	  //Add a listener for this radio button.
-	  ascendingButton.addActionListener(this);
-      
-	  descendingButton = new JRadioButtonMenuItem("Descending", true);
-	  //Add a listener for this radio button.
-	  descendingButton.addActionListener(this);
-      
-	  sortOrderGroup.add(ascendingButton);
-	  sortOrderGroup.add(descendingButton);
-      
-	  sortOrderMenu.add(ascendingButton);
-	  sortOrderMenu.add(descendingButton);
-	  optionsMenu.add(sortOrderMenu);
-	  //End Submenu.
-      
-	  displaySlidersButton = new JRadioButtonMenuItem("Display Sliders", false);
-	  //Add a listener for this radio button.
-	  displaySlidersButton.addActionListener(this);
-	  optionsMenu.add(displaySlidersButton);
-	  //******************************
-	  //End - Options menu.
-	  //******************************
-      
-      
-	  //******************************
-	  //Window menu.
-	  //******************************
-	  JMenu windowsMenu = new JMenu("Windows");
-	  windowsMenu.addMenuListener(this);
-      
-	  //Add a submenu.
-	  JMenuItem mappingLedgerItem = new JMenuItem("Show Function Ledger");
-	  mappingLedgerItem.addActionListener(this);
-	  windowsMenu.add(mappingLedgerItem);
-      
-	  //Add a submenu.
-	  mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
-	  mappingGroupLedgerItem.addActionListener(this);
-	  windowsMenu.add(mappingGroupLedgerItem);
-      
-	  //Add a submenu.
-	  userEventLedgerItem = new JMenuItem("Show User Event Ledger");
-	  userEventLedgerItem.addActionListener(this);
-	  windowsMenu.add(userEventLedgerItem);
+	  nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
+	  nameCheckBox.addActionListener(this);
+	  optionsMenu.add(nameCheckBox);
 
-	  //Add a submenu.
-	  callPathItem = new JMenuItem("Show Call Path Relations");
-	  callPathItem.addActionListener(this);
-	  windowsMenu.add(callPathItem);
-      
-	  //Add a submenu.
-	  JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
-	  closeAllSubwindowsItem.addActionListener(this);
-	  windowsMenu.add(closeAllSubwindowsItem);
-	  //******************************
-	  //End - Window menu.
-	  //******************************
-      
-      
-	  //******************************
-	  //Help menu.
-	  //******************************
+	  orderCheckBox = new JCheckBoxMenuItem("Decending Order", true);
+	  orderCheckBox.addActionListener(this);
+	  optionsMenu.add(orderCheckBox);
+
+	  slidersCheckBox = new JCheckBoxMenuItem("Display Sliders", false);
+	  slidersCheckBox.addActionListener(this);
+	  optionsMenu.add(slidersCheckBox);
+	  //######
+	  //End - Options menu.
+	  //######
+
+	  //Windows menu
+	  windowsMenu = new JMenu("Windows");
+	  windowsMenu.addMenuListener(this);
+	  UtilFncs.windowMenuItems(windowsMenu,this);
+
 	  JMenu helpMenu = new JMenu("Help");
-      
-	  //Add a menu item.
-	  JMenuItem showHelpWindowItem = new JMenuItem("Show Help Window");
-	  showHelpWindowItem.addActionListener(this);
-	  helpMenu.add(showHelpWindowItem);
-      
-	  //Add a menu item.
-	  JMenuItem aboutItem = new JMenuItem("About Racy");
-	  aboutItem.addActionListener(this);
-	  helpMenu.add(aboutItem);
-	  //******************************
-	  //End - Help menu.
-	  //******************************
-      
+	  UtilFncs.helpMenuItems(helpMenu, this);
       
 	  //Now, add all the menus to the main menu.
 	  mainMenu.add(fileMenu);
@@ -268,15 +109,14 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  mainMenu.add(helpMenu);
       
 	  setJMenuBar(mainMenu);
-      
-	  //******************************
+	  //####################################
 	  //End - Code to generate the menus.
-	  //******************************
+	  //####################################
       
-      
-	  //******************************
-	  //Create and add the componants.
-	  //******************************
+	  //####################################
+	  //Create and add the components.
+	  //####################################
+
 	  //Setting up the layout system for the main window.
 	  contentPane = getContentPane();
 	  gbl = new GridBagLayout();
@@ -284,26 +124,22 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  gbc = new GridBagConstraints();
 	  gbc.insets = new Insets(5, 5, 5, 5);
       
-	  //Create some borders.
-	  Border mainloweredbev = BorderFactory.createLoweredBevelBorder();
-	  Border mainraisedbev = BorderFactory.createRaisedBevelBorder();
-	  Border mainempty = BorderFactory.createEmptyBorder();
-      
-	  //**********
+	  //######
 	  //Panel and ScrollPane definition.
-	  //**********
-	  sMWPanel = new StaticMainWindowPanel(trial, this);
-	  sMWPanel.setPreferredSize(new Dimension(600,300));
+	  //######
+	  panel = new StaticMainWindowPanel(trial, this);
+	  panel.setPreferredSize(new Dimension(600,300));
 	  //The scroll panes into which the list shall be placed.
-	  scrollPane = new JScrollPane(sMWPanel);
-	  scrollPane.setBorder(mainloweredbev);
+	  scrollPane = new JScrollPane(panel);
 	  scrollPane.setPreferredSize(new Dimension(600, 300));
-      
-	  //**********
+	  //######
 	  //End - Panel and ScrollPane definition.
-	  //**********
-      
+	  //######
+
+	  //######
+	  //Slider setup.
 	  //Do the slider stuff, but don't add.  By default, sliders are off.
+	  //######
 	  String sliderMultipleStrings[] = {"1.00", "0.75", "0.50", "0.25", "0.10"};
 	  sliderMultiple = new JComboBox(sliderMultipleStrings);
 	  sliderMultiple.addActionListener(this);
@@ -314,31 +150,34 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  barLengthSlider.setPaintLabels(true);
 	  barLengthSlider.setSnapToTicks(true);
 	  barLengthSlider.addChangeListener(this);
+	  //######
+	  //End - Slider setup.
+	  //Do the slider stuff, but don't add.  By default, sliders are off.
+	  //######
       
 	  gbc.fill = GridBagConstraints.BOTH;
 	  gbc.anchor = GridBagConstraints.CENTER;
 	  gbc.weightx = 1;
 	  gbc.weighty = 1;
 	  addCompItem(scrollPane, gbc, 0, 0, 1, 1);
-      
-	  //******************************
-	  //End - Create and add the componants.
-	  //******************************
-      
-	  //******************************
+	  //####################################
+	  //End - Create and add the components.
+	  //####################################
+
+	  //####################################
 	  //Setup the static main window data lists.
-	  //******************************
+	  //####################################
 	  sMWData = new StaticMainWindowData(trial);
-	  sMWData.buildStaticMainWindowDataLists();
-	  //******************************
+	  sMWData.buildSMWGeneralData();
+	  //####################################
 	  //End - Setup the static main window data lists.
-	  //******************************
+	  //####################################
       
 	  //Sort the data for the main window.
 	  sortLocalData();
       
-	  //Call a repaint of the sMWPanel
-	  sMWPanel.repaint();
+	  //Call a repaint of the panel
+	  panel.repaint();
       }
       catch(Exception e) { 
 	  ParaProf.systemError(e, null, "SMW01");
@@ -346,11 +185,13 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
       
   }
     
-    //******************************
-    //Event listener code!!
-    //******************************
+    //####################################
+    //Interface code.
+    //####################################
     
-    //ActionListener code.
+    //######
+    //ActionListener.
+    //######
     public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
@@ -363,16 +204,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    jRM.show();
 		}
 		else if(arg.equals("Bin Window")){
-		    BinWindow bW = new BinWindow(trial, sMWData, true, -1);
-		    bW.show();
-		}
-		else if(arg.equals("test")){
-		    //DSSTraditionalTAUProfile test = new DSSTraditionalTAUProfile();
-		    //test.loadData(new DMSAccessSession());
-		}
-		else if(arg.equals("testImage")){
-		    //DSSTraditionalTAUProfile test = new DSSTraditionalTAUProfile();
-		    //test.loadData(new DMSAccessSession());
+		    //BinWindow bW = new BinWindow(trial, sMWData, true, -1);
+		    //bW.show();
 		}
 		else if(arg.equals("ParaProf Preferrences")){
 		    
@@ -421,66 +254,31 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		else if(arg.equals("Save Image")){
 		    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-		    imageOutput.saveImage((ParaProfImageInterface) sMWPanel);
+		    imageOutput.saveImage((ParaProfImageInterface) panel);
 		}
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
 		    System.exit(0);
 		}
-		else if(arg.equals("function ID")){
-		    if(mappingIDButton.isSelected()){
-			sortByMappingID = true;
-			sortByName = false;
-			sortByMillisecond = false;
-			//Sort the local data.
-			sortLocalData();
-			//Call repaint.
-			sMWPanel.repaint();
-		    }
-		}
 		else if(arg.equals("name")){
-		    if(nameButton.isSelected()){
-			sortByMappingID = false;
-			sortByName = true;
-			sortByMillisecond = false;
-			//Sort the local data.
-			sortLocalData();
-		    //Call repaint.
-			sMWPanel.repaint();
-		    }
+		    if(nameCheckBox.isSelected())
+			name = true;
+		    else
+			name = false;
+		    sortLocalData();
+		    panel.repaint();
 		}
-		else if(arg.equals("millisecond")){
-		    if(millisecondButton.isSelected()){
-			sortByMappingID = false;
-			sortByName = false;
-			sortByMillisecond = true;
-			//Sort the local data.
-			sortLocalData();
-			//Call repaint.
-			sMWPanel.repaint();
-		    }
-		}
-		else if(arg.equals("Descending")){
-		    if(descendingButton.isSelected()){
-			descendingOrder = true;
-			//Sort the local data.
-			sortLocalData();
-			//Call repaint.
-			sMWPanel.repaint();
-		    }
-		}
-		else if(arg.equals("Ascending")){
-		    if(ascendingButton.isSelected()){
-			descendingOrder = false;
-			//Sort the local data.
-			sortLocalData();
-			//Call repaint.
-			sMWPanel.repaint();
-		    }
+		else if(arg.equals("Decending Order")){
+		    if(orderCheckBox.isSelected())
+			order = 0;
+		    else
+			order = 1;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Display Sliders")){
-		    if(displaySlidersButton.isSelected()){ 
+		    if(slidersCheckBox.isSelected()){ 
 			displaySiders(true);
 		    }
 		    else{
@@ -488,8 +286,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    }
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    //Grab the global mapping and bring up the mapping ledger window.
-		(trial.getGlobalMapping()).displayMappingLedger(0);
+		    (trial.getGlobalMapping()).displayMappingLedger(0);
 		}
 		else if(arg.equals("Show Group Ledger")){
 		    (trial.getGlobalMapping()).displayMappingLedger(1);
@@ -503,95 +300,83 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    tmpRef.show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
-		//Close the all subwindows.
+		    //Close the all subwindows.
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 		}
-		else if(arg.equals("About Racy")){
+		else if(arg.equals("About ParaProf")){
 		    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
 		}
 		else if(arg.equals("Show Help Window")){
-		    //Show the racy help window.
 		    ParaProf.helpWindow.show();
 		}
 	    }
 	    else if(EventSrc == sliderMultiple){
-		sMWPanel.changeInMultiples();
+		panel.changeInMultiples();
 	    }
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "SMW02");
 	}
     }
+    //######
+    //End - ActionListener.
+    //######
+
+     //######
+    //ChangeListener.
+    //######
+    public void stateChanged(ChangeEvent event){
+	panel.changeInMultiples();}
+    //######
+    //End - ChangeListener.
+    //######
     
-    //******************************
-    //MenuListener code.
-    //******************************
+    //######
+    //MenuListener.
+    //######
     public void menuSelected(MenuEvent evt){
 	try{
 	    if(trial.groupNamesPresent())
-		mappingGroupLedgerItem.setEnabled(true);
+		((JMenuItem)windowsMenu.getItem(1)).setEnabled(true);
 	    else
-		mappingGroupLedgerItem.setEnabled(false);
+		((JMenuItem)windowsMenu.getItem(1)).setEnabled(false);
 	    
 	    if(trial.userEventsPresent())
-		userEventLedgerItem.setEnabled(true);
+		((JMenuItem)windowsMenu.getItem(2)).setEnabled(true);
 	    else
-		userEventLedgerItem.setEnabled(false);
-
-	    if(trial.callPathDataPresent()){
-		callPathItem.setEnabled(true);
-	    }
-	    else{
-		callPathItem.setEnabled(false);
-	    }
-
+		((JMenuItem)windowsMenu.getItem(2)).setEnabled(false);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "SMW03");
 	}
 	
     }
-    
+
     public void menuDeselected(MenuEvent evt){}
     public void menuCanceled(MenuEvent evt){}
-    
-    //******************************
-    //End - MenuListener code.
-    //******************************
-    
-    //******************************
-    //Change listener code.
-    //******************************
-    public void stateChanged(ChangeEvent event){
-	sMWPanel.changeInMultiples();
-    }
-    //******************************
-    //End - Change listener code.
-    //******************************
-    
-    
-    //Observer functions.
+    //######
+    //End - MenuListener.
+    //######
+        
+    //######
+    //Observer.
+    //######
     public void update(Observable o, Object arg){
 	try{
 	    String tmpString = (String) arg;
 	    if(tmpString.equals("prefEvent")){
 		//Just need to call a repaint on the ThreadDataWindowPanel.
-		sMWPanel.repaint();
+		panel.repaint();
 	    }
 	    else if(tmpString.equals("colorEvent")){
 		//Just need to call a repaint on the ThreadDataWindowPanel.
-		sMWPanel.repaint();
+		panel.repaint();
 	    }
 	    else if(tmpString.equals("dataEvent")){
 		sortLocalData();
-		sMWPanel.repaint();
+		panel.repaint();
 	    }
 	    else if(tmpString.equals("dataSetChangeEvent")){
-		//Clear any locally saved data.
-		currentSMWGeneralData = null;
-		currentSMWMeanData = null;
-		
-		//Now sort the data.
 		sortLocalData();
 	    }
 	}
@@ -599,6 +384,13 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    ParaProf.systemError(e, null, "SMW04");
 	}
     }
+    //######
+    //End - Observer.
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
     
     public int getSliderValue(){
 	int tmpInt = -1;
@@ -676,8 +468,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    addCompItem(scrollPane, gbc, 0, 0, 1, 1);
 	}
     
-    //Now call validate so that these componant changes are displayed.
-    validate();
+	//Now call validate so that these component changes are displayed.
+	validate();
     }
     
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h){
@@ -693,11 +485,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    ParaProf.systemError(e, null, "SMW07");
 	}
     }
-    
-    //******************************
-    //End - Event listener code!!
-    //******************************
-    
+
     public StaticMainWindowData getSMWData(){
 	return sMWData;
     }
@@ -705,45 +493,13 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     //Updates the sorted lists after a change of sorting method takes place.
     private void sortLocalData(){
 	try{
-	    //First, do the currentSMWGeneralData.
-	    if(sortByMappingID){
-		if(descendingOrder)
-		    currentSMWGeneralData = sMWData.getSMWGeneralData("FIdDE");
-		else
-		    currentSMWGeneralData = sMWData.getSMWGeneralData("FIdAE");
+	    if(name){
+		list[0] = sMWData.getSMWGeneralData(0+order);
+		list[1] = sMWData.getMeanData(18+order);
 	    }
-	    else if(sortByName){
-		if(descendingOrder)
-		    currentSMWGeneralData = sMWData.getSMWGeneralData("NDE");
-		else
-		    currentSMWGeneralData = sMWData.getSMWGeneralData("NAE");
-	    }
-	    else if(sortByMillisecond){
-		if(descendingOrder)
-		    currentSMWGeneralData = sMWData.getSMWGeneralData("MDE");
-		else
-		    currentSMWGeneralData = sMWData.getSMWGeneralData("MAE");
-	    }
-	    
-	    //Now do the currentSMWMeanData.
-	    if(sortByMappingID){
-		if(descendingOrder)
-		    currentSMWMeanData = sMWData.getSMWMeanData("FIdDE");
-		else
-		    currentSMWMeanData = sMWData.getSMWMeanData("FIdAE");
-	    }
-	    else if(sortByName){
-		if(descendingOrder)
-		    currentSMWMeanData = sMWData.getSMWMeanData("NDE");
-		else{
-		    currentSMWMeanData = sMWData.getSMWMeanData("NAE");
-		}
-	    }
-	    else if(sortByMillisecond){
-		if(descendingOrder)
-		    currentSMWMeanData = sMWData.getSMWMeanData("MDE");
-		else
-		    currentSMWMeanData = sMWData.getSMWMeanData("MAE");
+	    else{
+		list[0] = sMWData.getSMWGeneralData(2+order);
+		list[1] = sMWData.getMeanData(20+order);
 	    }
 	}
 	catch(Exception e){
@@ -751,21 +507,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	}
 	
     }
-    
-    //This function passes the correct data list to its panel when asked for.
-    //Note:  This is only meant to be called by the StaticMainWindowPanel.
-    public Vector getSMWGeneralData(){
-	return currentSMWGeneralData;
-    }
-    
-    //This function passes the correct data list to its panel when asked for.
-    //Note:  This is only meant to be called by the StaticMainWindowPanel.
-    public Vector getSMWMeanData(){
-	return currentSMWMeanData;
-    }
+
+    public Vector[] getData(){
+	return list;}
     
     private boolean mShown = false;
-    
     public void addNotify(){
 	super.addNotify();
 	
@@ -784,69 +530,49 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	mShown = true;
     }
     
-    // Close the window when the close box is clicked
+    //Close the window when the close box is clicked
     void thisWindowClosing(java.awt.event.WindowEvent e){
 	setVisible(false);
 	dispose();
 	System.exit(0);
     }
 
-    //******************************
+    //####################################
     //Instance data.
-    //******************************
-    
+    //####################################    
     Trial trial = null;
     
     //Create a file chooser to allow the user to select files for loading data.
     JFileChooser fileChooser = new JFileChooser();
     
-    //References for some of the componants for this frame.
-    private StaticMainWindowPanel sMWPanel = null;
+    //References for some of the components for this frame.
+    private StaticMainWindowPanel panel = null;
     private StaticMainWindowData sMWData = null;
-    
-    private ButtonGroup sortGroup = null;
-    private ButtonGroup sortOrderGroup = null;
-    
-    private JRadioButtonMenuItem mappingIDButton = null;
-    private JRadioButtonMenuItem nameButton = null;
-    private JRadioButtonMenuItem millisecondButton = null;
-    
-    private JRadioButtonMenuItem ascendingButton = null;
-    private JRadioButtonMenuItem descendingButton = null;
-    
-    private JRadioButtonMenuItem displaySlidersButton = null;
-    
-    private JMenuItem mappingGroupLedgerItem = null;
-    private JMenuItem userEventLedgerItem = null;
-    private JMenuItem callPathItem = null;
+
+    private JMenu optionsMenu = null;
+    private JMenu windowsMenu = null;
+    private JCheckBoxMenuItem nameCheckBox = null;
+    private JCheckBoxMenuItem orderCheckBox = null;
+    private JCheckBoxMenuItem slidersCheckBox = null;
     
     private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
     private JComboBox sliderMultiple;
-    
     private JLabel barLengthLabel = new JLabel("Bar Mulitiple");
     private JSlider barLengthSlider = new JSlider(0, 40, 1);
     
     private Container contentPane = null;
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;
-    
     private JScrollPane scrollPane;
     
-    boolean sortByMappingID = false;
-    boolean sortByName = false;
-    boolean sortByMillisecond = true;
-    
-    boolean descendingOrder = true;
-    
+    private boolean name = false; //true: sort by name,false: sort by metric.
+    private int order = 0; //0: descending order,1: ascending order.
+
     boolean displaySliders = false;
     
-    
-    //Local data
-    private Vector currentSMWGeneralData = null;
-    private Vector currentSMWMeanData = null;
-  
-    
-    //******************************
+    private Vector[] list = new Vector[2]; //list[0]:The result of a call to getSMWGeneralData in StaticMainWindowData
+                                           //list[1]:The result of a call to getMeanData in StaticMainWindowData
+    //####################################
     //End - Instance data.
-    //******************************
+    //#################################### 
 }

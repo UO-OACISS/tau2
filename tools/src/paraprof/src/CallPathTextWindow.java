@@ -14,6 +14,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
+import java.awt.print.*;
 
 public class CallPathTextWindow extends JFrame implements ActionListener, MenuListener, Observer{
 
@@ -30,15 +31,15 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	}
     }
   
-    public CallPathTextWindow(Trial inTrial,
-			      int inServerNumber,
-			      int inContextNumber,
-			      int inThreadNumber,
-			      StaticMainWindowData inSMWData,
+    public CallPathTextWindow(Trial trial, int nodeID, int contextID, int threadID, 
+			      StaticMainWindowData sMWData, 
 			      boolean global){
 	try{
-	    trial = inTrial;
-	    sMWData = inSMWData;
+	    this.trial = trial;
+	    this.nodeID = nodeID;
+	    this.contextID = contextID;
+	    this.threadID = threadID;
+	    this.sMWData = sMWData;
 	    this.global = global;
       
 	    setLocation(new java.awt.Point(0, 0));
@@ -48,216 +49,60 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    if(global)
 		this.setTitle("Call Path Data Relations - " + trial.getProfilePathName());
 	    else
-		this.setTitle("Call Path Data " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber + " - " + trial.getProfilePathName());
-      
-	    server = inServerNumber;
-	    context = inContextNumber;
-	    thread = inThreadNumber;
-      
+		this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getProfilePathName());
+	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {
 		    public void windowClosing(java.awt.event.WindowEvent evt) {
 			thisWindowClosing(evt);
 		    }
 		});
-        
+	    
 	    //Set the help window text if required.
 	    if(ParaProf.helpWindow.isVisible()){
-		ParaProf.helpWindow.clearText();
-		//Since the data must have been loaded.  Tell them someting about
-		//where they are.
-		ParaProf.helpWindow.writeText("Call path text window.");
-		ParaProf.helpWindow.writeText("");
-		ParaProf.helpWindow.writeText("This window displays call path relationships in two ways:");
-		ParaProf.helpWindow.writeText("1- If this window has been invoked from the \"windows\" menu of");
-		ParaProf.helpWindow.writeText("ParaProf, the information displayed is all call path relations found.");
-		ParaProf.helpWindow.writeText("That is, all the parent/child relationships.");
-		ParaProf.helpWindow.writeText("Thus, in this case, given the parallel nature of ParaProf, this information");
-		ParaProf.helpWindow.writeText("might not be valid for a particular thread. It is however useful to observe");
-		ParaProf.helpWindow.writeText("all the realtionships that exist in the data.");
-		ParaProf.helpWindow.writeText("");
-		ParaProf.helpWindow.writeText("2- If this window has been invoked from the popup menu to the left of a thread bar");
-		ParaProf.helpWindow.writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
-		ParaProf.helpWindow.writeText("and will thus contain both parent/child relations and the data relating to those");
-		ParaProf.helpWindow.writeText("relationships.");
-
+		this.help(false);
 	    }
-      
-      
-	    //******************************
+
+	    //Sort the local data.
+	    sortLocalData();
+
+	    //####################################
 	    //Code to generate the menus.
-	    //******************************
-      
-      
+	    //####################################
 	    JMenuBar mainMenu = new JMenuBar();
-      
-	    //******************************
+
 	    //File menu.
-	    //******************************
 	    JMenu fileMenu = new JMenu("File");
-      
-	    //Add a menu item.
-	    JMenuItem closeItem = new JMenuItem("Close This Window");
-	    closeItem.addActionListener(this);
-	    fileMenu.add(closeItem);
-      
-	    //Add a menu item.
-	    JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
-	    exitItem.addActionListener(this);
-	    fileMenu.add(exitItem);
-	    //******************************
-	    //End - File menu.
-	    //******************************
+	    UtilFncs.fileMenuItems(fileMenu, this);
 
-
-	    //******************************
 	    //Options menu.
-	    //******************************
-	    JMenu optionsMenu = new JMenu("Options");
+	    optionsMenu = new JMenu("Options");
 	    optionsMenu.addMenuListener(this);
-	    
-	    //Add a submenu.
-	    sortGroup = new ButtonGroup();
-	    ascendingButton.addActionListener(this);
-	    descendingButton.addActionListener(this);
-	    sortGroup.add(ascendingButton);
-	    sortGroup.add(descendingButton);
-	    
-	    JMenu sortOrderMenu = new JMenu("Sort Order");
-	    sortOrderGroup = new ButtonGroup();
-	    
-	    nameButton.addActionListener(this);
-	    inclusiveRadioButton.addActionListener(this);
-	    exclusiveRadioButton.addActionListener(this);
-	    numOfCallsRadioButton.addActionListener(this);
-	    numOfSubRoutinesRadioButton.addActionListener(this);
-	    userSecPerCallRadioButton.addActionListener(this);
-	    
-	    sortOrderGroup.add(ascendingButton);
-	    sortOrderGroup.add(descendingButton);
-	    sortOrderGroup.add(nameButton);
-	    sortOrderGroup.add(inclusiveRadioButton);
-	    sortOrderGroup.add(exclusiveRadioButton);
-	    sortOrderGroup.add(numOfCallsRadioButton);
-	    sortOrderGroup.add(numOfSubRoutinesRadioButton);
-	    sortOrderGroup.add(userSecPerCallRadioButton);
-	    
-	    sortOrderMenu.add(ascendingButton);
-	    sortOrderMenu.add(descendingButton);
-	    sortOrderMenu.add(nameButton);
-	    sortOrderMenu.add(inclusiveRadioButton);
-	    sortOrderMenu.add(exclusiveRadioButton);
-	    sortOrderMenu.add(numOfCallsRadioButton);
-	    sortOrderMenu.add(numOfSubRoutinesRadioButton);
-	    sortOrderMenu.add(userSecPerCallRadioButton);
-	    
-	    sortOrderMenu.insertSeparator(2);
-	    
-	    optionsMenu.add(sortOrderMenu);
-	    //End Submenu.
+	    UtilFncs.optionMenuItems(optionsMenu,this);
 
-	    //Add a submenu.
-	    unitsMenu = new JMenu("Select Units");
-	    unitsGroup = new ButtonGroup();
-      
-	    secondsButton = new JRadioButtonMenuItem("Seconds", false);
-	    //Add a listener for this radio button.
-	    secondsButton.addActionListener(this);
-      
-	    millisecondsButton = new JRadioButtonMenuItem("Milliseconds", false);
-	    //Add a listener for this radio button.
-	    millisecondsButton.addActionListener(this);
-      
-	    microsecondsButton = new JRadioButtonMenuItem("Microseconds", true);
-	    //Add a listener for this radio button.
-	    microsecondsButton.addActionListener(this);
-      
-	    hMSButton = new JRadioButtonMenuItem("hr:min:sec", false);
-	    //Add a listener for this radio button.
-	    hMSButton.addActionListener(this);
-
-	    unitsGroup.add(secondsButton);
-	    unitsGroup.add(millisecondsButton);
-	    unitsGroup.add(microsecondsButton);
-	    unitsGroup.add(hMSButton);
-      
-	    unitsMenu.add(secondsButton);
-	    unitsMenu.add(millisecondsButton);
-	    unitsMenu.add(microsecondsButton);
-	    unitsMenu.add(hMSButton);
-	    optionsMenu.add(unitsMenu);
-	    //End Submenu.
-
-
-	    //******************************
-	    //End - Options menu.
-	    //******************************
-      
-	    //******************************
-	    //Window menu.
-	    //******************************
-	    JMenu windowsMenu = new JMenu("Windows");
+	    //Windows menu
+	    windowsMenu = new JMenu("Windows");
 	    windowsMenu.addMenuListener(this);
-      
-	    //Add a submenu.
-	    JMenuItem mappingLedgerItem = new JMenuItem("Show Function Ledger");
-	    mappingLedgerItem.addActionListener(this);
-	    windowsMenu.add(mappingLedgerItem);
-      
-	    //Add a submenu.
-	    mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
-	    mappingGroupLedgerItem.addActionListener(this);
-	    windowsMenu.add(mappingGroupLedgerItem);
-      
-	    //Add a submenu.
-	    userEventLedgerItem = new JMenuItem("Show User Event Ledger");
-	    userEventLedgerItem.addActionListener(this);
-	    windowsMenu.add(userEventLedgerItem);
-      
-	    //Add a submenu.
-	    JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
-	    closeAllSubwindowsItem.addActionListener(this);
-	    windowsMenu.add(closeAllSubwindowsItem);
-	    //******************************
-	    //End - Window menu.
-	    //******************************
-      
-      
-	    //******************************
+	    UtilFncs.windowMenuItems(windowsMenu,this);
+
 	    //Help menu.
-	    //******************************
 	    JMenu helpMenu = new JMenu("Help");
-      
-	    //Add a menu item.
-	    JMenuItem aboutItem = new JMenuItem("About ParaProf");
-	    aboutItem.addActionListener(this);
-	    helpMenu.add(aboutItem);
-      
-	    //Add a menu item.
-	    JMenuItem showHelpWindowItem = new JMenuItem("Show Help Window");
-	    showHelpWindowItem.addActionListener(this);
-	    helpMenu.add(showHelpWindowItem);
-	    //******************************
-	    //End - Help menu.
-	    //******************************
-      
-      
+	    UtilFncs.helpMenuItems(helpMenu, this);
+	    
 	    //Now, add all the menus to the main menu.
 	    mainMenu.add(fileMenu);
 	    mainMenu.add(optionsMenu);
 	    mainMenu.add(windowsMenu);
 	    mainMenu.add(helpMenu);
-      
+	    
 	    setJMenuBar(mainMenu);
-      
-	    //******************************
+	    //####################################
 	    //End - Code to generate the menus.
-	    //******************************
-      
-      
-	    //******************************
+	    //####################################
+
+      	    //####################################
 	    //Create and add the components.
-	    //******************************
+	    //####################################
 	    //Setting up the layout system for the main window.
 	    Container contentPane = getContentPane();
 	    GridBagLayout gbl = new GridBagLayout();
@@ -265,28 +110,18 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    GridBagConstraints gbc = new GridBagConstraints();
 	    gbc.insets = new Insets(5, 5, 5, 5);
       
-	    //Create some borders.
-	    Border mainloweredbev = BorderFactory.createLoweredBevelBorder();
-	    Border mainraisedbev = BorderFactory.createRaisedBevelBorder();
-	    Border mainempty = BorderFactory.createEmptyBorder();
-      
-	    //**********
+	    //######
 	    //Panel and ScrollPane definition.
-	    //**********
-	    panel = new CallPathTextWindowPanel(trial,
-						   inServerNumber,
-						   inContextNumber,
-						   inThreadNumber, this, global);
-      
+	    //######
+	    panel = new CallPathTextWindowPanel(trial, nodeID, contextID, threadID, this, global);
 	    //The scroll panes into which the list shall be placed.
 	    JScrollPane sp = new JScrollPane(panel);
 	    JScrollBar vScollBar = sp.getVerticalScrollBar();
 	    vScollBar.setUnitIncrement(35);
-	    sp.setBorder(mainloweredbev);
 	    sp.setPreferredSize(new Dimension(500, 450));
-	    //**********
+	    //######
 	    //End - Panel and ScrollPane definition.
-	    //**********
+	    //######
       
 	    //Now add the componants to the main screen.
 	    gbc.fill = GridBagConstraints.BOTH;
@@ -294,25 +129,45 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    gbc.weightx = 1;
 	    gbc.weighty = 1;
 	    addCompItem(sp, gbc, 0, 0, 1, 1);
+	    //####################################
+	    //End - Create and add the components.
+	    //####################################
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "CPTW02");
 	}
     }
   
-    //******************************
-    //Event listener code!!
-    //******************************
-  
-    //ActionListener code.
-    public void actionPerformed(ActionEvent evt){
+    //####################################
+    //Interface code.
+    //####################################
+
+    //######
+    //ActionListener.
+    //######
+        public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
 	    
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
-		
-		if(arg.equals("Close This Window")){
+		if(arg.equals("Print")){
+		    PrinterJob job = PrinterJob.getPrinterJob();
+		    PageFormat defaultFormat = job.defaultPage();
+		    PageFormat selectedFormat = job.pageDialog(defaultFormat);
+		    job.setPrintable(panel, selectedFormat);
+		    if(job.printDialog()){
+			job.print();
+		    }
+		}
+		else if(arg.equals("Edit ParaProf Preferences!")){
+		    trial.getPreferences().showPreferencesWindow();
+		}
+		else if(arg.equals("Save Image")){
+		    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+		    imageOutput.saveImage((ParaProfImageInterface) panel);
+		}
+		else if(arg.equals("Close This Window")){
 		    closeThisWindow();
 		}
 		else if(arg.equals("Exit ParaProf!")){
@@ -320,193 +175,228 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    dispose();
 		    System.exit(0);
 		}
-		else if(arg.equals("Name")){
-		    if(nameButton.isSelected()){
-			metric = "Name";
-			panel.repaint();
-		    }
+		else if(arg.equals("name")){
+		    if(((JCheckBoxMenuItem)optionsMenu.getItem(0)).isSelected())
+			name = true;
+		    else
+			name = false;
+		    sortLocalData();
+		    panel.repaint();
 		}
-		else if(arg.equals("Descending")){
-		    if(descendingButton.isSelected()){
-			descendingOrder = true;
-			panel.repaint();
-		    }
+		else if(arg.equals("Decending Order")){
+		    if(((JCheckBoxMenuItem)optionsMenu.getItem(1)).isSelected())
+			order = 0;
+		    else
+			order = 1;
+		    sortLocalData();
+		    panel.repaint();
 		}
-		else if(arg.equals("Ascending")){
-		    if(ascendingButton.isSelected()){
-			descendingOrder = false;
-			panel.repaint();
-		    }
-		}
-		else if(arg.equals("Inclusive")){
-		    if(inclusiveRadioButton.isSelected()){
-			metric = "Inclusive";
-			panel.repaint();
-		    }
+		else if(arg.equals("Show Values as Percent")){
+		    if(((JCheckBoxMenuItem)optionsMenu.getItem(2)).isSelected())
+			percent = true;
+		    else
+			percent = false;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Exclusive")){
-		    if(exclusiveRadioButton.isSelected()){
-			metric = "Exclusive";
-			panel.repaint();
-		    }
+		    metric = 2;
+		    sortLocalData();
+		    panel.repaint();
+		}
+		else if(arg.equals("Inclusive")){
+		    metric = 4;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
-		    if(numOfCallsRadioButton.isSelected()){
-			metric = "Number of Calls";
-			panel.repaint();
-		    }
+		    metric = 6;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
-		    if(numOfSubRoutinesRadioButton.isSelected()){
-			metric = "Number of Subroutines";
-			panel.repaint();
-		    }
+		    metric = 8;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
-		    if(userSecPerCallRadioButton.isSelected()){
-			metric = "Per Call Value";
-			panel.repaint();
-		    }
-		}
-		else if(arg.equals("hr:min:sec")){
-		    if(hMSButton.isSelected()){
-			units = 3;
-			//Call repaint.
-			panel.repaint();
-		    }
+		    metric = 10;
+		    sortLocalData();
+		    panel.repaint();
 		}
 		else if(arg.equals("Microseconds")){
-			if(microsecondsButton.isSelected()){
-			    units = 0;
-			    //Call repaint.
-			    panel.repaint();
-			}
+		    units = 0;
+		    panel.repaint();
 		}
 		else if(arg.equals("Milliseconds")){
-		    if(millisecondsButton.isSelected()){
-			units = 1;
-			//Call repaint.
-			panel.repaint();
-		    }
+		    units = 1;
+		    panel.repaint();
 		}
 		else if(arg.equals("Seconds")){
-		    if(secondsButton.isSelected()){
-			units = 2;
-			//Call repaint.
-			panel.repaint();
-		    }
+		    units = 2;
+		    panel.repaint();
+		}
+		else if(arg.equals("hr:min:sec")){
+		    units = 3;
+		    panel.repaint();
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    //In order to be in this window, I must have loaded the data. So,
-		    //just show the mapping ledger window.
 		    (trial.getGlobalMapping()).displayMappingLedger(0);
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    //In order to be in this window, I must have loaded the data. So,
-		    //just show the mapping ledger window.
 		    (trial.getGlobalMapping()).displayMappingLedger(1);
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    //In order to be in this window, I must have loaded the data. So,
-		    //just show the mapping ledger window.
 		    (trial.getGlobalMapping()).displayMappingLedger(2);
 		}
 		else if(arg.equals("Close All Sub-Windows")){
-		    //Close the all subwindows.
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 		}
 		else if(arg.equals("About ParaProf")){
 		    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
 		}
 		else if(arg.equals("Show Help Window")){
-		    //Show the racy help window.
-		    ParaProf.helpWindow.clearText();
-		    ParaProf.helpWindow.show();
-		    //Since the data must have been loaded.  Tell them someting about
-		    //where they are.
-		    ParaProf.helpWindow.writeText("Call path text window.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("This window displays call path relationships in two ways:");
-		    ParaProf.helpWindow.writeText("1- If this window has been invoked from the \"windows\" menu of");
-		    ParaProf.helpWindow.writeText("ParaProf, the information displayed is all call path relations found.");
-		    ParaProf.helpWindow.writeText("That is, all the parent/child relationships.");
-		    ParaProf.helpWindow.writeText("Thus, in this case, given the parallel nature of ParaProf, this information");
-		    ParaProf.helpWindow.writeText("might not be valid for a particular thread. It is however useful to observe");
-		    ParaProf.helpWindow.writeText("all the realtionships that exist in the data.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("2- If this window has been invoked from the popup menu to the left of a thread bar");
-		    ParaProf.helpWindow.writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
-		    ParaProf.helpWindow.writeText("and will thus contain both parent/child relations and the data relating to those");
-		    ParaProf.helpWindow.writeText("relationships.");
+		    this.help(true);
 		}
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "CPTW03");
+	    ParaProf.systemError(e, null, "TDW03");
 	}
     }
-    
-    public int units(){
-	return units;}
-    
-    //******************************
-    //MenuListener code.
-    //******************************
-    public void menuSelected(MenuEvent evt){
+    //######
+    //End - ActionListener
+    //######
+
+    //######
+    //MenuListener.
+    //######
+   public void menuSelected(MenuEvent evt){
 	try{
-	    String trialName = trial.getCounterName();
-	    trialName = trialName.toUpperCase();
-	    if((trial.isTimeMetric())&&(!global))
-		unitsMenu.setEnabled(true);
-	    else
-		unitsMenu.setEnabled(false);
-
-
+	    if(metric > 4){
+		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(false);
+		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
+	    else if(percent){
+		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
+		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
+	    else if(trial.isTimeMetric()){
+		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
+		((JMenu)optionsMenu.getItem(3)).setEnabled(true);}
+	    else{
+		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(true);
+		((JMenuItem)optionsMenu.getItem(3)).setEnabled(false);}
+	    
 	    if(trial.groupNamesPresent())
-		mappingGroupLedgerItem.setEnabled(true);
+		((JMenuItem)windowsMenu.getItem(1)).setEnabled(true);
 	    else
-		mappingGroupLedgerItem.setEnabled(false);
+		((JMenuItem)windowsMenu.getItem(1)).setEnabled(false);
 	    
 	    if(trial.userEventsPresent())
-		userEventLedgerItem.setEnabled(true);
-	    else{
-		userEventLedgerItem.setEnabled(false);
-	    }
+		((JMenuItem)windowsMenu.getItem(2)).setEnabled(true);
+	    else
+		((JMenuItem)windowsMenu.getItem(1)).setEnabled(false);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "CPTW03");
+	    ParaProf.systemError(e, null, "TDW04");
 	}
-	
     }
+    
     public void menuDeselected(MenuEvent evt){}
     public void menuCanceled(MenuEvent evt){}
-    //******************************
-    //End - MenuListener code.
-    //******************************
-  
-    //Observer functions.
+    //######
+    //End - MenuListener.
+    //######
+
+        //######
+    //Observer.
+    //######
     public void update(Observable o, Object arg){
 	try{
 	    String tmpString = (String) arg;
 	    if(tmpString.equals("prefEvent")){
 		panel.repaint();
 	    }
-	    if(tmpString.equals("colorEvent")){
+	    else if(tmpString.equals("colorEvent")){
 		panel.repaint();
 	    }
-	    else if(tmpString.equals("dataEvent")){ 
+	    else if(tmpString.equals("dataEvent")){
+		sortLocalData();
+		if(!(trial.isTimeMetric()))
+		    units = 0;
 		panel.repaint();
 	    }
-	    else if(tmpString.equals("subWindowCloseEvent")){ 
+	    else if(tmpString.equals("subWindowCloseEvent")){
 		closeThisWindow();
 	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "CPTW04");
+	    ParaProf.systemError(e, null, "TDW05");
 	}
-    } 
-  
-    //Helper functions.
+    }
+    //######
+    //End - Observer.
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
+
+    private void help(boolean display){
+	//Show the ParaProf help window.
+	ParaProf.helpWindow.clearText();
+	if(display)
+	    ParaProf.helpWindow.show();
+	ParaProf.helpWindow.writeText("Call path text window.");
+	ParaProf.helpWindow.writeText("");
+	ParaProf.helpWindow.writeText("This window displays call path relationships in two ways:");
+	ParaProf.helpWindow.writeText("1- If this window has been invoked from the \"windows\" menu of");
+	ParaProf.helpWindow.writeText("ParaProf, the information displayed is all call path relations found.");
+	ParaProf.helpWindow.writeText("That is, all the parent/child relationships.");
+	ParaProf.helpWindow.writeText("Thus, in this case, given the parallel nature of ParaProf, this information");
+	ParaProf.helpWindow.writeText("might not be valid for a particular thread. It is however useful to observe");
+	ParaProf.helpWindow.writeText("all the realtionships that exist in the data.");
+	ParaProf.helpWindow.writeText("");
+	ParaProf.helpWindow.writeText("2- If this window has been invoked from the popup menu to the left of a thread bar");
+	ParaProf.helpWindow.writeText("in the main ParaProf window, the information dispayed will be specific to this thread,");
+	ParaProf.helpWindow.writeText("and will thus contain both parent/child relations and the data relating to those");
+	ParaProf.helpWindow.writeText("relationships.");
+    }
+
+    //Updates this window's data copy.
+    private void sortLocalData(){ 
+	try{
+	    //The name selection behaves slightly differently. Thus the check for it.
+	    if(name){
+		list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, order);
+	    }
+	    else{
+		list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, metric+order);
+	    }
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "TDW06");
+	}
+    }
+
+    public Vector getData(){
+	return list;}
+
+    public ListIterator getDataIterator(){
+	return new ParaProfIterator(this.getData());
+    }
+
+    public int getWindowType(){
+	return windowType;}
+
+    public boolean isPercent(){
+	return percent;}
+    
+    public int getMetric(){
+	return metric;}
+    
+    public int units(){
+	return units;}
+
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h){
 	try{
 	    gbc.gridx = x;
@@ -525,63 +415,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     void thisWindowClosing(java.awt.event.WindowEvent e){
 	closeThisWindow();
     }
-
-    //This function passes the correct data list to its panel when asked for.
-    //Note:  This is only meant to be called by the TotalStatWindowPanel.
-    public Vector getData(){
-	try{
-	    if(metric.equals("Name")){
-		if(descendingOrder)
-		    return sMWData.getSMWThreadData(server, context, thread, "NDE");
-		else
-		    return sMWData.getSMWThreadData(server, context, thread, "NAE");
-	    }
-	    if(metric.equals("Inclusive")){
-		if(descendingOrder)
-		    return sMWData.getSMWThreadData(server, context, thread, "MDI");
-		else
-		    return sMWData.getSMWThreadData(server, context, thread, "MAI");
-	    }
-	    else if(metric.equals("Exclusive")){
-		if(descendingOrder)
-		    return sMWData.getSMWThreadData(server, context, thread, "MDE");
-		else
-		    return sMWData.getSMWThreadData(server, context, thread, "MAE");
-	    }
-	    else if(metric.equals("Number of Calls")){
-		if(descendingOrder)
-		    return sMWData.getSMWThreadData(server, context, thread, "MDNC");
-		else
-		    return sMWData.getSMWThreadData(server, context, thread, "MANC");
-	    }
-	    else if(metric.equals("Number of Subroutines")){
-		if(descendingOrder)
-		    return sMWData.getSMWThreadData(server, context, thread, "MDNS");
-		else
-		    return sMWData.getSMWThreadData(server, context, thread, "MANS");
-	    }
-	    else if(metric.equals("Per Call Value")){
-		if(descendingOrder)
-		    return sMWData.getSMWThreadData(server, context, thread, "MDUS");
-		else
-		    return sMWData.getSMWThreadData(server, context, thread, "MAUS");
-	    }
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "CTPW06");
-	}
-	return null;
-    }
-
-    public ListIterator getDataIterator(){
-	return new ParaProfIterator(this.getData());
-    }
   
     void closeThisWindow(){ 
 	try{
 	    if(ParaProf.debugIsOn){
 		System.out.println("------------------------");
-		System.out.println("A total stat window for: \"" + "n,c,t, " + server + "," + context + "," + thread + "\" is closing");
+		System.out.println("A total stat window for: \"" + "n,c,t, " + nodeID + "," + contextID + "," + threadID + "\" is closing");
 		System.out.println("Clearing resourses for this window.");
 	    }
       
@@ -594,51 +433,31 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	}
     }
   
-    //******************************
+    //####################################
     //Instance data.
-    //******************************
+    //####################################
     private Trial trial = null;
+    private int nodeID = -1;
+    private int contextID = -1;
+    private int threadID = -1;
     private CallPathTextWindowPanel panel;
     private StaticMainWindowData sMWData;
     private boolean global = false;
-  
-    private JMenu unitsMenu = null;;
-    private JMenuItem mappingGroupLedgerItem = null;;
-    private JMenuItem userEventLedgerItem = null;;
+    private int windowType = 1; //0: mean data,1: function data.
+                                //Note that in this window, windowType
+                                //will always be 1.
 
-    private ButtonGroup sortGroup = null;;
-    private ButtonGroup sortOrderGroup = null;;
-    private ButtonGroup unitsGroup = null;
-    private ButtonGroup metricGroup = null;
-  
-    JRadioButtonMenuItem ascendingButton = new JRadioButtonMenuItem("Ascending", false);
-    JRadioButtonMenuItem descendingButton = new JRadioButtonMenuItem("Descending", true);
-    
-    private JRadioButtonMenuItem nameButton = new JRadioButtonMenuItem("Name", false);
-    private JRadioButtonMenuItem inclusiveRadioButton =  new JRadioButtonMenuItem("Inclusive", false);
-    private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
-    private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
-    private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
-    private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
-    private JRadioButtonMenuItem secondsButton = null;
-    private JRadioButtonMenuItem millisecondsButton = null;
-    private JRadioButtonMenuItem microsecondsButton = null;
-    private JRadioButtonMenuItem hMSButton = null;
-    
-    private String metric = "Exclusive";
-    
-    boolean sortByMappingID = false;
-    boolean sortByName = false;
-    boolean sortByMillisecond = true;    
-    boolean descendingOrder = true;
-    boolean inclusive = false;
-    private int units = 0; //0-microseconds,1-milliseconds,2-seconds,3-hr:min:sec.
+    private JMenu optionsMenu = null;
+    private JMenu windowsMenu = null;
 
+    private Vector list = null;
 
-    int server;
-    int context;
-    int thread;
-    //******************************
-    //End - Instance data.
-    //******************************
+    private boolean name = false; //true: sort by name,false: sort by metric.
+    private int order = 0; //0: descending order,1: ascending order.
+    private boolean percent = true; //true: show values as percent,false: show actual values.
+    private int metric = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
+    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+    //####################################
+    //Instance data.
+    //####################################
 }
