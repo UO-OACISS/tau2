@@ -33,10 +33,10 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/gar/rs/tau2cray
+TAUROOT=/home/users/sameer/tau2
 TULIPDIR=/users/sameer/s
-TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/gar/rs/tau2cray
-TAU_OPTIONS=
+TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
+TAU_OPTIONS=-pthread-pgi
 #######################################################################
  
 #ENABLE64BIT#ABI 	     = -64		  #ENDIF#
@@ -79,6 +79,7 @@ LSX = .a
 #SMARTS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/lib -I$(TULIPDIR)/machine-specific/$(HOSTTYPE)  #ENDIF#
 #SMARTS#PROFILEOPT18  = -DSMARTS   #ENDIF#
 #KAI#PROFILEOPT19  	       = -DKAI   #ENDIF#
+#PGI#PROFILEOPT19  	       = -DPGI -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
 #KAINOEX#PROFILEOPT20  	       = --no_exceptions   #ENDIF#
 #SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
 #SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -D_XOPEN_SOURCE -DTAU_AIX #ENDIF#
@@ -90,6 +91,9 @@ LSX = .a
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
 #SGIMP#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
 #CRAYKAI#TAU_FORTRANLIBS	       =        #ENDIF#
+#PGI#TAU_FORTRANLIBS	       = $(PGI)/linux86/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902        #ENDIF#
+#PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
+#PGI#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
@@ -104,16 +108,16 @@ TAUDEFS 	= $(PROFILEOPTS) $(USER_OPT)
 
 TAUINC        	= -I$(TAUROOT)/include
 
-TAULIBS		= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA) 
+TAULIBS		= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA) 
 
 ### ACL S/W requirement
 TAU_DEFS	= $(TAUDEFS)
 
 TAU_INCLUDE 	= -I$(TAUROOT)/include
 
-TAU_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA)
+TAU_LIBS	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA)
 
-TAU_DISABLE	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauDisable
+TAU_DISABLE	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauDisable
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 # These options could be included in the application Makefile as 
