@@ -22,6 +22,14 @@
 #endif
 #include "pdbAll.h"
 
+/* defines */
+#ifdef TAU_WINDOWS
+#define TAU_DIR_CHARACTER '\\'
+#else
+#define TAU_DIR_CHARACTER '/'
+#endif /* TAU_WINDOWS */
+
+
 /* For selective instrumentation */
 extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const string& function_name);
@@ -1293,6 +1301,42 @@ void setGroupName(PDB& p, string& group_name)
 }
 
 /* -------------------------------------------------------------------------- */
+/* -- Fuzzy Match. Allows us to match files that don't quite match properly, 
+ * but infact refer to the same file. For e.g., /home/pkg/foo.cpp and ./foo.cpp
+ * or foo.cpp and ./foo.cpp. This routine allows us to match such files! 
+ * -------------------------------------------------------------------------- */
+bool fuzzyMatch(const string& a, const string& b)
+{ /* This function allows us to match string like ./foo.cpp with
+     /home/pkg/foo.cpp */
+  if (a == b)
+  { /* the two files do match */
+    return true;
+  }
+  else 
+  { /* fuzzy match */
+    /* Extract the name without the / character */
+    int loca = a.find_last_of(TAU_DIR_CHARACTER);
+    int locb = b.find_last_of(TAU_DIR_CHARACTER);
+
+    /* truncate the strings */
+    string trunca(a,loca+1);
+    string truncb(b,locb+1);
+    /*
+    cout <<"trunca = "<<trunca<<endl;
+    cout <<"truncb = "<<truncb<<endl;
+    */
+    if (trunca == truncb) 
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* -- Instrument the program using C, C++ or F90 instrumentation routines --- */
 /* -------------------------------------------------------------------------- */
 int main(int argc, char **argv)
@@ -1424,11 +1468,14 @@ int main(int argc, char **argv)
   }
 
 
+  bool instrumentThisFile;
+  bool fuzzyMatchResult;
   for (PDB::filevec::const_iterator it=p.getFileVec().begin();
        it!=p.getFileVec().end(); ++it) 
   {
-     bool instrumentThisFile = false;
-     if (((*it)->name() == string(filename)) && 
+     /* reset this variable at the beginning of the loop */
+     instrumentThisFile = false;
+     if ((fuzzyMatchResult = fuzzyMatch((*it)->name(), string(filename))) && 
          (instrumentThisFile = processFileForInstrumentation(string(filename))))
      { /* should we instrument this file? Yes */
        PDB::lang_t l = p.language();
@@ -1466,16 +1513,30 @@ int main(int argc, char **argv)
      } /* don't instrument this file. Should we copy in to out? */
      else
      { 
-       if (((*it)->name() == string(filename)) &&
-         (instrumentThisFile == false))
+       if ((fuzzyMatchResult == true) && (instrumentThisFile == false))
        { /* we should copy the file to outFile */
          ifstream ifs(filename);
          ofstream ofs(outFileName.c_str());
          /* copy ifs to ofs */
          if (ifs.is_open() && ofs.is_open())
            ofs << ifs.rdbuf(); /* COPY */ 
+	 instrumentThisFile = true; /* sort of like instrumentation,
+		more like processed this file. Later we need to know
+		if no files were processed */
        }
      }
+  }
+  if (instrumentThisFile == false)
+  { /* no files were processed */
+#ifdef DEBUG
+    cout <<"No files were processed"<<endl;
+#endif /* DEBUG */
+    /* We should copy this file to outfile */
+    ifstream ifsc(filename);
+    ofstream ofsc(outFileName.c_str());
+    /* copy ifsc to ofsc */
+    if (ifsc.is_open() && ofsc.is_open())
+       ofsc << ifsc.rdbuf(); /* COPY */ 
   }
 
   /* start with routines */
@@ -1501,8 +1562,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.60 $   $Date: 2004/05/31 16:03:50 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.60 2004/05/31 16:03:50 sameer Exp $
+ * $Revision: 1.61 $   $Date: 2004/06/17 17:49:02 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.61 2004/06/17 17:49:02 sameer Exp $
  ***************************************************************************/
 
 
