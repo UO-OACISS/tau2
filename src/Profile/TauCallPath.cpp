@@ -49,7 +49,6 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////
 // How deep should the callpath be? The default value is 2
 //////////////////////////////////////////////////////////////////////
-int TauCalibrateTimerOverheads(void);
 int& TauGetCallPathDepth(void)
 {
   char *depth; 
@@ -59,7 +58,6 @@ int& TauGetCallPathDepth(void)
     if ((depth = getenv("TAU_CALLPATH_DEPTH")) != NULL)
     {
       value = atoi(depth);
-      TauCalibrateTimerOverheads();
       if (value > 1) 
       {
         return value;
@@ -73,7 +71,6 @@ int& TauGetCallPathDepth(void)
     else 
     {
       value = TAU_DEFAULT_CALLPATH_DEPTH;
-      TauCalibrateTimerOverheads();
       return value;
     }
   }
@@ -179,29 +176,6 @@ inline bool TauCallPathShouldBeProfiled(long *s)
 
 
 //////////////////////////////////////////////////////////////////////
-// Calibrate TimerOverheads
-//////////////////////////////////////////////////////////////////////
-int TauCalibrateTimerOverheads(void)
-{
-  return 0;
-  TAU_PROFILE_TIMER(tnull, ".TAU null timer overhead", " ", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(tone,  ".TAU 100 null timers overhead", " ", TAU_DEFAULT);
-  int i;
-
-  TAU_PROFILE_START(tone);
-    /* nested */
-  for(i=0; i< 100; i++)
-  {
-    TAU_PROFILE_START(tnull);
-    TAU_PROFILE_STOP(tnull);
-  }
-  TAU_PROFILE_STOP(tone);
-  return 0;
-}
-
-
-
-//////////////////////////////////////////////////////////////////////
 // Member Function Definitions for class Profiler (contd).
 //////////////////////////////////////////////////////////////////////
 
@@ -293,6 +267,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2004/02/02 21:56:37 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.13 2004/02/02 21:56:37 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 2004/02/27 19:55:59 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.14 2004/02/27 19:55:59 sameer Exp $ 
  ***************************************************************************/
