@@ -102,7 +102,8 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PROFILE(name, type, group) \
 	static TauGroup_t tau_gr = group; \
 	static FunctionInfo *tauFI = NULL; \
-        tauCreateFI(&tauFI, name, type, tau_gr, #group); \
+        if (tauFI == 0) \
+          tauCreateFI(&tauFI, name, type, tau_gr, #group); \
 	Profiler tauFP(tauFI, tau_gr); 
 
 #ifdef TAU_PROFILEPHASE
@@ -119,7 +120,8 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PROFILE_TIMER(var, name, type, group) \
 	static TauGroup_t var##tau_gr = group; \
 	static FunctionInfo *var##fi = NULL; \
-        tauCreateFI(&var##fi, name, type, var##tau_gr, #group); 
+        if (var##fi == 0) \
+          tauCreateFI(&var##fi, name, type, var##tau_gr, #group); 
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) \
@@ -174,7 +176,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
         tauCreateFI(&timer##fi, name, type, group, #group); \
 	return *timer##fi; }
 
-#define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (void); \
+#define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
 	int tau_tid = RtsLayer::myThread(); \
 	Profiler *t = new Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
         t->Start(tau_tid); }
@@ -370,7 +372,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.42 $   $Date: 2005/01/11 00:44:11 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.42 2005/01/11 00:44:11 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.43 $   $Date: 2005/01/11 02:56:41 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.43 2005/01/11 02:56:41 amorris Exp $ 
  ***************************************************************************/
