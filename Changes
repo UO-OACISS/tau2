@@ -9,7 +9,10 @@
 
 Change log:
 ------------
-Version 2.11 changes (from 2.9):
+Version 2.12 changes (from 2.11):
+1. Enhancements in jracy for supporting multiple counter data [LLNL].
+
+Version 2.11 changes (from 2.10):
 1. Added -i header option for tau_instrumentor [CASC]. 
 2. Added -LINUXTIMERS option for low overhead Linux wallclock time [CACR].
 3. Added -c|-c++|-fortran options to tau_instrumentor [CACR].
