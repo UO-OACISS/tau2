@@ -347,8 +347,8 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		
 		
 		//Figure out how wide that string was for x coord reasons.
-		if(tmpXWidthCalc < 2*fmMonoFont.stringWidth(tmpString)){
-		    tmpXWidthCalc = (20 + 2*fmMonoFont.stringWidth(tmpString));
+		if (tmpXWidthCalc < (20 + namePosition + fmMonoFont.stringWidth(sMWThreadDataElement.getMappingName()))) {
+		    tmpXWidthCalc = (20 + namePosition + fmMonoFont.stringWidth(sMWThreadDataElement.getMappingName()));
 		}
 	    }
 	    
