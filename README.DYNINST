@@ -62,3 +62,40 @@ more than one version of TAU is configured. For e.g.,
 /home/users/sameer/tau2/i386_linux/bin/tau_run -XrunTAUsh-papiwallclock-papi /home/users/sameer/tau2/examples/mpi-ek/ek $*
 
 
+To use tau_run to re-write a binary file, use the -o <outputfile> option. 
+For e.g., 
+% f90 app.f90
+creates a.out
+% tau_run a.out
+does runtime pre-execution instrumentation by spawning a.out.
+% tau_run -o a.out.rewritten a.out
+reads a.out, instruments it and rewrites the binary image as a.out.rewritten
+(typically in _dyninstsaved<n> directory where n = 0, 1, 2...)
+NOTE: The binary rewriting feature has been tested under Sparc Solaris 2.8+
+with the application binary files created with the Sun F90 compiler. 
+
+SELECTIVE INSTRUMENTATION FEATURES:
+-----------------------------------
+tau_run takes a -f <selective> instrumentation specification file option. This
+allows the user to specify which routines and/or files should be included or
+excluded. If a user wishes to only instrument routines main and foo in the 
+binary, a file with
+BEGIN_INCLUDE_LIST
+main
+foo
+END_INCLUDE_LIST
+can be made and specified with the -f option. Other tags (like 
+BEGIN_INCLUDE_LIST) include BEGIN_EXCLUDE_LIST/END_EXCLUDE_LIST (the routines
+specified between these are excluded from instrumentation, and 
+BEGIN_FILE_INCLUDE_LIST/END_FILE_INCLUDE_LIST for specifying a list of files
+for including (only these files are instrumented). e.g., 
+BEGIN_FILE_INCLUDE_LIST
+app_main.cpp
+f*.cpp
+END_FILE_INCLUDE_LIST
+Note that you can specify the file name with wildcard characters (* and ?). 
+Also, BEGIN_FILE_EXCLUDE_LIST/END_FILE_EXCLUDE_LIST can be used to exclude 
+the list of files (*.so for instance). You may specify either include or excludelists but not both. The selective instrumentation file specification is common 
+to DyninstAPI based tau_run and PDT based tau_instrumentor.  
+
+Please direct any questions to tau-bugs@cs.uoregon.edu.
