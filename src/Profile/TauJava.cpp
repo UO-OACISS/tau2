@@ -191,9 +191,9 @@ int * TauJavaLayer::RegisterThread(JVMPI_Event *event)
 void TauJavaLayer::ThreadStart(JVMPI_Event *event)
 {
   int * ptid = RegisterThread(event);
-  int tid = *ptid;
 
 #ifdef DEBUG_PROF
+  int tid = *ptid;
   fprintf(stdout, "TAU> Thread Start : id = %d, name = %s, group = %s\n", 
 	tid, event->u.thread_start.thread_name, 
 	event->u.thread_start.group_name);
