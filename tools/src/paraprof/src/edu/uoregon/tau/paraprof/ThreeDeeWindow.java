@@ -953,7 +953,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
         return UtilFncs.getOutputString(units,
                 settings.getHeightValue().getValue(fp, settings.getHeightMetricID()), 6).trim()
                 + getUnitsString(units, settings.getHeightValue(), ppMetric);
-        ;
 
         //Double.toString(settings.getHeightValue().getValue(fp, settings.getHeightMetricID()));
 
