@@ -212,7 +212,7 @@ public class HelpWindow extends JFrame implements ActionListener, Observer{
         {
           setVisible(false);
           dispose();
-          System.exit(0);
+          ParaProf.exitParaProf(0);
         } 
       }
     }

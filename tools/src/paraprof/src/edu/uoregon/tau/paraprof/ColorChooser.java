@@ -501,7 +501,7 @@ class ColorChooserFrame extends JFrame implements ActionListener{
 	    if(arg.equals("Exit ParaProf!")){
 		setVisible(false);
 		dispose();
-		System.exit(0);
+		ParaProf.exitParaProf(0);
 	    }
 	    else if(arg.equals("Close This Window")){
 		setVisible(false);

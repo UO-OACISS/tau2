@@ -196,11 +196,15 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		case 5:
+		    System.out.println("case 5");
 		    dataSession = new GprofOutputSession(fixNames);
-		    if(filePrefix==null)
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "gprof", UtilFncs.debug);
-		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
+		    if(filePrefix==null){
+			System.out.println("1- About to call FileList.getFileList(...)!");
+			System.out.println("1-sourceFile: "+sourceFile);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, UtilFncs.debug);}
+		    else{
+			System.out.println("2 - About to call FileList.getFileList(...)!");
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, UtilFncs.debug);}
 		    break;
 		default:
 		    v = new Vector();
@@ -362,9 +366,27 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 
     public static String getInfoString(){
 	return new String("ParaProf Version 2.0 ... The Tau Group!");}
+
+    //This method is reponsible for any cleanup required in ParaProf before an exit takes place.
+    public static void exitParaProf(int exitValue){
+	if(UtilFncs.objectDebug != null){
+	    UtilFncs.objectDebug.outputToFile("ParaProf exiting!!");
+	    UtilFncs.objectDebug.flushDebugFileBuffer();
+	    UtilFncs.objectDebug.closeDebugFile();
+	}
+	System.exit(exitValue);
+    }
   
     // Main entry point
     static public void main(String[] args){
+
+	//######
+	//Static Initialization
+	//######
+	UtilFncs.objectDebug = new Debug();
+	//######
+	//End - Static Initialization
+	//######
 	
 	//Make sure we drop a line before beginning any output.
 	System.out.println("");
@@ -384,7 +406,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	/*
 	if(System.getProperty("user.name").equals("sameer")){
 	    JOptionPane.showMessageDialog(null,"Sorry, user \"sameer\" detected. We no longer support this user!", "ParaProf Error", JOptionPane.ERROR_MESSAGE);
-	    System.exit(-1);
+	    exitParaProf(-1);
 	    }*/
 
 	//Bring ParaProf into being!
@@ -409,7 +431,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
         catch ( CmdLineParser.OptionException e ) {
             System.err.println(e.getMessage());
 	    System.err.println(ParaProf.USAGE);
-	    System.exit(-1);
+	    exitParaProf(-1);
         }
 
 	Boolean help = (Boolean)parser.getOptionValue(helpOpt);
@@ -422,16 +444,20 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	if(help!=null && help.booleanValue()){
 	    System.out.println("In help!");
 	    System.err.println(ParaProf.USAGE);
-	    System.exit(-1);
+	    exitParaProf(-1);
     	}
-
-	System.out.println("Here!!!!!");
 
 	if(fixNames!=null)
 	    ParaProf.fixNames = fixNames.booleanValue();
 
-	if(debug!=null)
+	if(debug!=null){
 	    UtilFncs.debug = debug.booleanValue();
+	    UtilFncs.objectDebug.debug = debug.booleanValue();
+	}
+
+	if (sourceFile!=null) {
+	    System.out.println("Source file: "+sourceFile);
+	}
 
 	if(fileTypeString != null){
 	    if(fileTypeString.equals("pprof")) {
@@ -459,7 +485,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    }else{
 		System.err.println("Please enter a valid file type.");
 	    	System.err.println(USAGE);
-	    	System.exit(-1);
+	    	exitParaProf(-1);
 	    }
 	}
 	//######
@@ -467,7 +493,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	//######
 	if(paraProf.dump){
 	    System.out.println("ParaProf will dump to the standard out with dump type: " + paraProf.dumptype);
-	    System.exit(0);
+	    exitParaProf(0);
 	}
 	
 	ParaProf.runtime = Runtime.getRuntime();

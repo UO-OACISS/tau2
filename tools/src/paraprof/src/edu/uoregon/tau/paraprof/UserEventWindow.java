@@ -342,7 +342,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
-		    System.exit(0);
+		    ParaProf.exitParaProf(0);
 		}
 		else if(arg.equals("Number of Userevents")){
 		    valueType = 12;

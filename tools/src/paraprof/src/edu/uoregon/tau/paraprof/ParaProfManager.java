@@ -317,14 +317,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
-		    System.exit(0);
+		    ParaProf.exitParaProf(0);
 		} 
 		else if(arg.equals("Close This Window")){
 		    if(!(ParaProf.runHasBeenOpened)){
 			setVisible(false);
 			dispose();
 			System.out.println("Quiting ParaProf!");
-			System.exit(0);
+			ParaProf.exitParaProf(0);
 		    }
 		    else{
 			dispose();

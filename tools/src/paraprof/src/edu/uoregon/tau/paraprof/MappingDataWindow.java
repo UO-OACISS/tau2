@@ -381,7 +381,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
-		    System.exit(0);
+		    ParaProf.exitParaProf(0);
 		}
 		else if(arg.equals("Sort By N,C,T")){
 		    if(sortByNCT.isSelected())

@@ -377,7 +377,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
-		    System.exit(0);
+		    ParaProf.exitParaProf(0);
 		}
 		else if(arg.equals("Sort By Name")){
 		    if(sortByName.isSelected())

@@ -362,7 +362,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
-		    System.exit(0);
+		    ParaProf.exitParaProf(0);
 		}
 		else if(arg.equals("Sort By Name")){
 		    if(sortByName.isSelected())

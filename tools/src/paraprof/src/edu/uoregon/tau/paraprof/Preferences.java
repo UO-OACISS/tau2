@@ -459,7 +459,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	    else if(arg.equals("Exit ParaProf!")){
 		setVisible(false);
 		dispose();
-		System.exit(0);
+		ParaProf.exitParaProf(0);
 	    }
 	    else if(arg.equals("Apply and Close Window")){
 		setVisible(false);

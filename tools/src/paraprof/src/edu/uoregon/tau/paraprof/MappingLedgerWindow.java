@@ -260,7 +260,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
-		    System.exit(0);
+		    ParaProf.exitParaProf(0);
 		}
 		else if(arg.equals("Show Function Ledger")){
 		    (new MappingLedgerWindow(trial, 0, this.debug())).show();

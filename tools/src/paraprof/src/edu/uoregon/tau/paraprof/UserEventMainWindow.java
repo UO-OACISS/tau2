@@ -369,7 +369,7 @@ public class UserEventMainWindow extends JFrame implements ActionListener, MenuL
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
-		    System.exit(0);
+		    ParaProf.exitParaProf(0);
 		}
 		else if(arg.equals("name")){
 		    if(nameCheckBox.isSelected())

@@ -364,7 +364,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		else if(arg.equals("Exit ParaProf!")){
 		    setVisible(false);
 		    dispose();
-		    System.exit(0);
+		    ParaProf.exitParaProf(0);
 		}
 		else if(arg.equals("name")){
 		    if(nameCheckBox.isSelected())
