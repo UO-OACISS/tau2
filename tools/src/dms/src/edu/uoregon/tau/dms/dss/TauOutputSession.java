@@ -133,7 +133,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		}
 
 		files = (File[]) e.nextElement();
-		for(int i=0;i<files.length;i++){
+		for(int i=0;i<files.length;i++) {
 		    if(this.debug()){
 			System.out.println("######");
 			System.out.println("Processing file: " + files[i].getName());
@@ -237,7 +237,7 @@ public class TauOutputSession extends ParaProfDataSession{
 			    this.getFunctionDataLine(inputString);
 			    String groupNames = this.getGroupNames(inputString);
 			    //Calculate usec/call
-			    double usecCall = functionDataLine.d0/functionDataLine.i0;
+			    double usecCall = functionDataLine.d1/functionDataLine.i0;
 			    if(this.debug())
 				this.outputDebugMessage("function line: "+inputString+"\nName:"+functionDataLine.s0+"Calls:"+functionDataLine.i0+" Subrs:"+functionDataLine.i1+" Excl:"+functionDataLine.d0+" Incl:"+functionDataLine.d1+" SumExclSqr:"+functionDataLine.d2+" ProfileCalls:"+functionDataLine.i2+"\ngroupNames:"+groupNames);
 			    if(functionDataLine.i0 !=0){
@@ -408,6 +408,10 @@ public class TauOutputSession extends ParaProfDataSession{
 			//Remove after testing is complete.
 			//thread.setThreadData(metric);
 		    }
+
+		    br.close();
+		    inReader.close();
+		    fileIn.close();
 		}
 		metric++;
 	    }
