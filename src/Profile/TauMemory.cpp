@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 #include <Profile/Profiler.h>
-#ifdef __APPLE_CC__
+#if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC))
 #include <malloc/malloc.h>
 #else
 #include <malloc.h> 
@@ -195,6 +195,6 @@ extern "C" void Tau_free_C(const char *file, int line, void *p)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2004/03/02 01:46:36 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.5 2004/03/02 01:46:36 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 2004/03/17 02:14:35 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.6 2004/03/17 02:14:35 sameer Exp $ 
  ***************************************************************************/
