@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.6 2004/07/21 15:54:21 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.7 2004/08/02 23:50:32 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -163,10 +163,10 @@ public class Trial {
      * @return	metric count for this trial.
      */
     public int getMetricCount() {
-		if (this.metric == null)
-			return 0;
-		else
-			return this.metric.size();
+	if (this.metric == null)
+	    return 0;
+	else
+	    return this.metric.size();
     }
 
     /**
@@ -388,40 +388,40 @@ public class Trial {
     }
 
     public int saveTrial(DB db) {
-		boolean itExists = exists(db);
-		int newTrialID = 0;
-		try {
-	    	// save this trial
-	    	PreparedStatement statement = null;
-			if (itExists) {
-	    		statement = db.prepareStatement("UPDATE trial SET name = ?, experiment = ?, time = ?, problem_definition = ?, node_count = ?, contexts_per_node = ?, threads_per_context = ?, userdata = ? WHERE id = ?");
-			} else {
-	    		statement = db.prepareStatement("INSERT INTO trial (name, experiment, time, problem_definition, node_count, contexts_per_node, threads_per_context, userdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-			}
-	    	statement.setString(1, name);
-	    	statement.setInt(2, experimentID);
-	    	statement.setString(3, time);
-	    	statement.setString(4, problemDefinition);
-	    	statement.setInt(5, nodeCount);
-	    	statement.setInt(6, contextsPerNode);
-	    	statement.setInt(7, threadsPerContext);
-	    	statement.setString(8, userData);
-			if (itExists) {
-				statement.setInt(9, trialID);
-			}
-	    	statement.executeUpdate();
-			if (itExists) {
-				newTrialID = trialID;
-			} else {
-	    		String tmpStr = new String();
-	    		if (db.getDBType().compareTo("mysql") == 0)
-					tmpStr = "select LAST_INSERT_ID();";
-				else if (db.getDBType().compareTo("db2") == 0)
-					tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
-	    		else
-					tmpStr = "select currval('trial_id_seq');";
-	    		newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
-			}
+	boolean itExists = exists(db);
+	int newTrialID = 0;
+	try {
+	    // save this trial
+	    PreparedStatement statement = null;
+	    if (itExists) {
+		statement = db.prepareStatement("UPDATE trial SET name = ?, experiment = ?, time = ?, problem_definition = ?, node_count = ?, contexts_per_node = ?, threads_per_context = ?, userdata = ? WHERE id = ?");
+	    } else {
+		statement = db.prepareStatement("INSERT INTO trial (name, experiment, time, problem_definition, node_count, contexts_per_node, threads_per_context, userdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+	    }
+	    statement.setString(1, name);
+	    statement.setInt(2, experimentID);
+	    statement.setString(3, time);
+	    statement.setString(4, problemDefinition);
+	    statement.setInt(5, nodeCount);
+	    statement.setInt(6, contextsPerNode);
+	    statement.setInt(7, threadsPerContext);
+	    statement.setString(8, userData);
+	    if (itExists) {
+		statement.setInt(9, trialID);
+	    }
+	    statement.executeUpdate();
+	    if (itExists) {
+		newTrialID = trialID;
+	    } else {
+		String tmpStr = new String();
+		if (db.getDBType().compareTo("mysql") == 0)
+		    tmpStr = "select LAST_INSERT_ID();";
+		else if (db.getDBType().compareTo("db2") == 0)
+		    tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
+		else
+		    tmpStr = "select currval('trial_id_seq');";
+		newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
+	    }
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the trial.");
 	    e.printStackTrace();
@@ -431,58 +431,90 @@ public class Trial {
     }
 
     public static void deleteTrial(DB db, int trialID) {
-		try {
-	    	// save this trial
-	    	PreparedStatement statement = null;
-	    	statement = db.prepareStatement("delete from atomic_location_profile where atomic_event in (select id from atomic_event where trial = ?)");
-	    	statement.setInt(1, trialID);
-	    	statement.execute();
-	    	statement = db.prepareStatement(" delete from atomic_event where trial = ?"); 
-	    	statement.setInt(1, trialID);
-	    	statement.execute();
-	    	statement = db.prepareStatement(" delete from interval_location_profile where interval_event in (select id from interval_event where trial = ?)");
-	    	statement.setInt(1, trialID);
-	    	statement.execute();
-	    	statement = db.prepareStatement(" delete from interval_mean_summary where interval_event in (select id from interval_event where trial = ?)");
-	    	statement.setInt(1, trialID);
-	    	statement.execute();
-	    	statement = db.prepareStatement(" delete from interval_total_summary where interval_event in (select id from interval_event where trial = ?)");
-	    	statement.setInt(1, trialID);
-	    	statement.execute();
-	    	statement = db.prepareStatement(" delete from interval_event where trial = ?");
-	    	statement.setInt(1, trialID);
-	    	statement.execute();
-	    	statement = db.prepareStatement(" delete from metric where trial = ?");
-	    	statement.setInt(1, trialID);
-	    	statement.execute();
-	    	statement = db.prepareStatement(" delete from trial where id = ?");
-	    	statement.setInt(1, trialID);
-	    	statement.execute();
-		} catch (SQLException e) {
-	    	System.out.println("An error occurred while deleting the trial.");
-	    	e.printStackTrace();
-	    	System.exit(0);
-		}
+	try {
+	    // save this trial
+	    PreparedStatement statement = null;
+
+	    // delete from the atomic_location_profile table
+	    if (db.getDBType().compareTo("mysql") == 0) {
+		statement = db.prepareStatement(" DELETE atomic_location_profile.* FROM atomic_location_profile LEFT JOIN atomic_event ON atomic_location_profile.atomic_event = atomic_event.id WHERE atomic_event.trial = ?");
+	    } else {
+		// Postgresql and DB2?
+		statement = db.prepareStatement(" DELETE FROM atomic_location_profile WHERE atomic_event in (SELECT id FROM atomic_event WHERE trial = ?)");
+	    }
+	    statement.setInt(1, trialID);
+	    statement.execute();
+
+
+	    // delete the from the atomic_events table
+	    statement = db.prepareStatement(" DELETE FROM atomic_event WHERE trial = ?"); 
+	    statement.setInt(1, trialID);
+	    statement.execute();
+
+	    // delete from the interval_location_profile table
+	    if (db.getDBType().compareTo("mysql") == 0) {
+		statement = db.prepareStatement(" DELETE interval_location_profile.* FROM interval_location_profile LEFT JOIN interval_event ON interval_location_profile.interval_event = interval_event.id WHERE interval_event.trial = ?");
+	    } else {
+		// Postgresql and DB2?
+		statement = db.prepareStatement(" DELETE FROM interval_location_profile WHERE interval_event IN (SELECT id FROM interval_event WHERE trial = ?)");
+	    }
+	    statement.setInt(1, trialID);
+	    statement.execute();
+	    
+	    // delete from the interval_mean_summary table
+	    if (db.getDBType().compareTo("mysql") == 0) {
+		statement = db.prepareStatement(" DELETE interval_mean_summary.* FROM interval_mean_summary LEFT JOIN interval_event ON interval_mean_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
+	    } else {
+		// Postgresql and DB2?
+		statement = db.prepareStatement(" DELETE FROM interval_mean_summary WHERE interval_event IN (SELECT id FROM interval_event WHERE trial = ?)");
+	    }
+	    statement.setInt(1, trialID);
+	    statement.execute();
+
+
+	    if (db.getDBType().compareTo("mysql") == 0) {
+		statement = db.prepareStatement(" DELETE interval_total_summary.* FROM interval_total_summary LEFT JOIN interval_event ON interval_total_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
+	    } else {
+		// Postgresql and DB2?
+		statement = db.prepareStatement(" DELETE FROM interval_total_summary WHERE interval_event IN (SELECT id FROM interval_event WHERE trial = ?)");
+	    }
+
+	    statement.setInt(1, trialID);
+	    statement.execute();
+	    statement = db.prepareStatement(" DELETE FROM interval_event WHERE trial = ?");
+	    statement.setInt(1, trialID);
+	    statement.execute();
+	    statement = db.prepareStatement(" DELETE FROM metric WHERE trial = ?");
+	    statement.setInt(1, trialID);
+	    statement.execute();
+	    statement = db.prepareStatement(" DELETE FROM trial WHERE id = ?");
+	    statement.setInt(1, trialID);
+	    statement.execute();
+	} catch (SQLException e) {
+	    System.out.println("An error occurred while deleting the trial.");
+	    e.printStackTrace();
+	    System.exit(0);
+	}
     }
 
-	private boolean exists(DB db) {
-		boolean retval = false;
-		try {
-			PreparedStatement statement = db.prepareStatement("SELECT name FROM trial WHERE id = ?");
-			statement.setInt(1, trialID);
-			ResultSet results = statement.executeQuery();
-	    	while (results.next() != false) {
-				retval = true;
-				break;
-			}
-			results.close();
-		} catch (SQLException e) {
-			System.out.println("An error occurred while saving the application.");
-			e.printStackTrace();
-			System.exit(0);
-		}
-		return retval;
+    private boolean exists(DB db) {
+	boolean retval = false;
+	try {
+	    PreparedStatement statement = db.prepareStatement("SELECT name FROM trial WHERE id = ?");
+	    statement.setInt(1, trialID);
+	    ResultSet results = statement.executeQuery();
+	    while (results.next() != false) {
+		retval = true;
+		break;
+	    }
+	    results.close();
+	} catch (SQLException e) {
+	    System.out.println("An error occurred while saving the application.");
+	    e.printStackTrace();
+	    System.exit(0);
 	}
+	return retval;
+    }
 
 
 }
