@@ -58,6 +58,10 @@ void tau_userevent(void *ue, double data);
 void tau_report_statistics(void);
 void tau_report_thread_statistics(void);
 void tau_dump(void);
+void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name);
+extern "C" { TauGroup_t tau_get_profile_group(char * group) ; }
+
+#define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = (char *) malloc(l+1); tau_extract_groupinfo(n, gr, gr_name); 
 
 /*****************************************************************************
 * The following routines are called by the Fortran program and they in turn
@@ -87,6 +91,31 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
   return;
 }
 
+void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
+{
+  /* See if a > appears in the function name. If it does, it separates the
+     group name from the function name. Separate these two */
+  char *first, *second;
+  first = strtok(fname, ">"); 
+  if (first != 0)
+  {
+    second = strtok(NULL,  ">");
+    if (second == NULL) 
+    {
+      fname = first; 
+      gr = TAU_USER;
+      gr_name = fname; 
+    }
+    else
+    {
+      gr = tau_get_profile_group(first); 
+      gr_name = first;
+      fname = second;
+    }
+  }
+  
+
+}
 
 
 void tau_profile_timer_(void **ptr, char *infname, int slen)
@@ -102,7 +131,8 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
     
-    *ptr = tau_get_profiler(fname, (char *)" ", TAU_USER, fname);
+    EXTRACT_GROUP(fname, slen, gr, gr_name)
+    *ptr = tau_get_profiler(fname, (char *)" ", gr, gr_name);
   }
 
 #ifdef DEBUG_PROF 
@@ -274,7 +304,8 @@ void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
 #ifdef DEBUG_PROF
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
-    *ptr = tau_get_profiler(fname, (char *)" ", TAU_USER, fname);
+    EXTRACT_GROUP(fname, flen, gr, gr_name)
+    *ptr = tau_get_profiler(fname, (char *)" ", gr, gr_name);
   }
 
 #ifdef DEBUG_PROF 
@@ -415,10 +446,11 @@ void tau_profile_timer(int **profiler, char *fname, int len)
     char *name = (char *) malloc(len+1); 
     strncpy(name, fname, len);
     name[len]='\0';
-
-    *profiler = (int *) tau_get_profiler(name, (char *)" ", TAU_USER, name);
+    EXTRACT_GROUP(name, len, gr, gr_name)
+    *profiler = (int *) tau_get_profiler(name, (char *)" ", gr, gr_name);
 #else 
-    *profiler = (int *) tau_get_profiler(fname, (char *)" ", TAU_USER, fname);
+    EXTRACT_GROUP(fname, len, gr, gr_name)
+    *profiler = (int *) tau_get_profiler(fname, (char *)" ", gr, gr_name);
 #endif /* HP_FORTRAN */
   }
 }
@@ -509,7 +541,7 @@ void tau_event(int **ptr, double *data)
 
 #ifdef TAU_GNU
 
-void tau_profile_timer__(void **ptr, char *fname, int *flen)
+void tau_profile_timer__(void **ptr, char *fname, int flen)
 {
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
@@ -525,7 +557,8 @@ void tau_profile_timer__(void **ptr, char *fname, int *flen)
 #ifdef DEBUG_PROF
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
-    *ptr = tau_get_profiler(fname, " ", TAU_USER, fname );
+    EXTRACT_GROUP(fname, flen, gr, gr_name)
+    *ptr = tau_get_profiler(fname, " ", gr, gr_name);
   }
 
 #ifdef DEBUG_PROF 
@@ -627,6 +660,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2002/01/09 22:51:04 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.23 2002/01/09 22:51:04 sameer Exp $ 
+ * $Revision: 1.24 $   $Date: 2002/01/10 02:54:40 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.24 2002/01/10 02:54:40 sameer Exp $ 
  ***************************************************************************/
