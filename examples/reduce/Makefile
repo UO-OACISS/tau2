@@ -76,10 +76,10 @@ showdata: run2
 run2: $(TARGET).refined
 	./$(TARGET).refined $(ARGS)
 
-$(TARGET).refined: $(TARGET).o.refined 
+$(TARGET).refined: $(TARGET).refined.o 
 	$(CXX) $(LDFLAGS) $< -o $@ $(LIBS)
 	
-$(TARGET).o.refined: $(TARGET).inst.refined.cpp 
+$(TARGET).refined.o: $(TARGET).inst.refined.cpp 
 	$(CXX) -c $(CFLAGS) $<  -o $@
 
 $(TARGET).inst.refined.cpp: select.refined $(TARGET).pdb
