@@ -114,7 +114,6 @@ void Profiler::Start(int tid)
 #endif /* TRACING_ON */
 
 #ifdef PROFILING_ON
-	ThisFunction->SetWritten(0, tid);
 	// First, increment the number of calls
 	ThisFunction->IncrNumCalls(tid);
         // now increment parent's NumSubrs()
@@ -237,7 +236,6 @@ void Profiler::Stop(int tid)
 #endif //TRACING_ON
 
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
-	ThisFunction->SetWritten(0, tid);
 	double TotalTime = RtsLayer::getUSecD(tid) - StartTime;
 
         DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
@@ -588,7 +586,7 @@ int Profiler::DumpData(int tid)
 #ifdef PROFILING_ON 
 	vector<FunctionInfo*>::iterator it;
   	vector<TauUserEvent*>::iterator eit;
-	char *filename, *errormsg, *header;
+	char *filename, *dumpfile, *errormsg, *header;
 	char *dirname;
 	FILE* fp;
  	int numFunc, numEvents;
@@ -597,6 +595,8 @@ int Profiler::DumpData(int tid)
 	long listSize, numCalls;
 	list<pair<double,double> >::iterator iter;
 #endif // PROFILE_CALLS
+ 	double excltime, incltime; 
+	double currenttime, prevtime, total;
 
 	DEBUGPROFMSG("Profiler::DumpData( tid = "<<tid <<" ) "<<endl;);
 
@@ -606,6 +606,7 @@ int Profiler::DumpData(int tid)
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
+	currenttime = RtsLayer::getUSecD(tid); 
 	RtsLayer::LockDB();
 	if ((dirname = getenv("PROFILEDIR")) == NULL) {
 	// Use default directory name .
@@ -614,10 +615,11 @@ int Profiler::DumpData(int tid)
 	}
 	 
 	filename = new char[1024];
-	sprintf(filename,"%s/dump.%d.%d.%d",dirname, RtsLayer::myNode(),
+	sprintf(filename,"%s/temp.%d.%d.%d",dirname, RtsLayer::myNode(),
 		RtsLayer::myContext(), tid);
 	DEBUGPROFMSG("Creating " << filename << endl;);
-	if ((fp = fopen (filename, "a")) == NULL) {
+	/* Changed: TRUNCATE dump file */ 
+	if ((fp = fopen (filename, "w+")) == NULL) {
 	 	errormsg = new char[1024];
 		sprintf(errormsg,"Error: Could not create %s",filename);
 		perror(errormsg);
@@ -668,50 +670,66 @@ int Profiler::DumpData(int tid)
 	*/
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
-          if (((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) &&
-	   !((*it)->IsWritten(tid))) { 
+          if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask())
+	  { 
 
-	    (*it)->SetWritten(1, tid);
-  
-  	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping " 
+	    if ((*it)->GetAlreadyOnStack(tid)) 
+	    { 
+	      /* it is on the callstack. We need to do some processing. */
+	      /* Calculate excltime, incltime */
+	      Profiler *current; 
+	      /* Traverse the Callstack */
+	      current = CurrentProfiler[tid];
+	  
+	      if (current == 0)
+	      { /* current is null */
+		DEBUGPROFMSG("Current is NULL when it should be on the stack! TID = " << tid << endl;);
+	      }
+	      else 
+	      { /* current is not null */
+		incltime = (*it)->GetInclTime(tid); 
+		excltime = (*it)->GetExclTime(tid); 
+		total = 0;  /* Initialize what gets added */
+		prevtime = 0; /* for reducing from the parent profiler */
+		while (current != 0) 
+		{
+		  /* Traverse the stack */ 
+		  if ((*it) == current->ThisFunction) 
+	 	  { /* Match! */
+		    DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
+	  	      <<endl;);
+		    total = currenttime - current->StartTime; 
+		    excltime += total - prevtime; 
+		    /* prevtime is the inclusive time of the subroutine that should
+		       be subtracted from the current exclusive time */ 
+		    /* If there is no instance of this function higher on the 	
+			callstack, we should add the total to the inclusive time */
+		  }
+        	  prevtime = currenttime - current->StartTime;  
+		  /* to calculate exclusive time */
+
+	          current = current->ParentProfiler; 
+	        } /* We've reached the top! */
+		incltime += total; /* add this to the inclusive time */ 
+		/* prevtime and incltime are calculated */
+	      } /* Current is not null */
+	    } /* On call stack */
+ 	    else 
+	    { /* it is not on the callstack. */ 
+	      excltime = (*it)->GetExclTime(tid);
+	      incltime = (*it)->GetInclTime(tid); 
+	    } // Not on the Callstack
+
+	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping " 
   	      << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : " 
               << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid) 
-  	      << " Excl : " << (*it)->GetExclTime(tid) << " Incl : " 
-  	      << (*it)->GetInclTime(tid) << endl;);
+  	      << " Excl : " << excltime << " Incl : " << incltime << endl;);
   	
   	    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
   	      (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
-  	      (*it)->GetExclTime(tid), (*it)->GetInclTime(tid));
+	      excltime, incltime); 
 
-#ifdef PROFILE_STATS 
-  	    fprintf(fp,"%.16G ", (*it)->GetSumExclSqr(tid));
-#endif //PROFILE_STATS
-  
-#ifdef PROFILE_CALLS
-  	    listSize = (long) (*it)->ExclInclCallList->size(); 
-  	    numCalls = (*it)->GetCalls(tid);
-  	    // Sanity check
-  	    if (listSize != numCalls) 
-  	    {
-  	      fprintf(fp,"0 \n"); // don't write any invocation data
-  	      DEBUGPROFMSG("Error *** list (profileCalls) size mismatch size "
-  	        << listSize << " numCalls " << numCalls << endl;);
-  	    }
-  	    else { // List is maintained correctly
-  	      fprintf(fp,"%ld \n", listSize); // no of records to follow
-  	      for (iter = (*it)->ExclInclCallList->begin(); 
-  	        iter != (*it)->ExclInclCallList->end(); iter++)
-  	      {
-  	        DEBUGPROFMSG("Node: " << RtsLayer::myNode() <<" Name "
-  	          << (*it)->GetName() << " " << (*it)->GetType()
-  	          << " ExclThisCall : "<< (*iter).first <<" InclThisCall : " 
-  	          << (*iter).second << endl; );
-  	        fprintf(fp,"%G %G\n", (*iter).first , (*iter).second);
-  	      }
-            } // sanity check 
-#else  // PROFILE_CALLS
   	    fprintf(fp,"0 \n"); // Indicating - profile calls is turned off 
-#endif // PROFILE_CALLS
 	  } // ProfileGroup test 
 	} // for loop. End of FunctionInfo data
 	fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
@@ -753,6 +771,11 @@ int Profiler::DumpData(int tid)
 
 	RtsLayer::UnLockDB();
 	fclose(fp);
+	dumpfile = new char[1024];
+        sprintf(dumpfile,"%s/dump.%d.%d.%d",dirname, RtsLayer::myNode(),
+                RtsLayer::myContext(), tid);
+	rename(filename, dumpfile); 
+
 
 #endif //PROFILING_ON
 	return 1;
@@ -770,7 +793,6 @@ void Profiler::PurgeData(int tid)
 	// Reset The Function Database (save callstack entries)
 	for(it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
 // May be able to recycle fns which never get called again??
-	    (*it)->SetWritten(0,tid);
 	    (*it)->SetCalls(tid,0);
 	    (*it)->SetSubrs(tid,0);
 	    (*it)->SetExclTime(tid,0);
@@ -949,8 +971,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.44 $   $Date: 2001/03/08 23:55:51 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.44 2001/03/08 23:55:51 sameer Exp $ 
+ * $Revision: 1.45 $   $Date: 2001/06/20 20:30:39 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.45 2001/06/20 20:30:39 sameer Exp $ 
  ***************************************************************************/
 
 	
