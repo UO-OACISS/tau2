@@ -57,15 +57,15 @@ public:
           TauGroup_t ProfileGroup = TAU_DEFAULT, 
 	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false,
 	  int tid = RtsLayer::myThread());
-	FunctionInfo(const char* name, string& type, 
+	FunctionInfo(const char* name, const string& type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
 	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false,
 	  int tid = RtsLayer::myThread());
-	FunctionInfo(string& name, string& type, 
+	FunctionInfo(const string& name, const string& type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
 	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false,
 	  int tid = RtsLayer::myThread());
-	FunctionInfo(string& name, const char * type, 
+	FunctionInfo(const string& name, const char * type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
 	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false,
 	  int tid = RtsLayer::myThread());
@@ -223,6 +223,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2001/08/28 18:42:44 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.14 2001/08/28 18:42:44 sameer Exp $ 
+ * $Revision: 1.15 $   $Date: 2001/10/03 20:59:13 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.15 2001/10/03 20:59:13 sameer Exp $ 
  ***************************************************************************/
