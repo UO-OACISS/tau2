@@ -57,4 +57,4 @@ if [ -f ~/.ParaProf/ParaProfPreferences.dat ] ; then
     cp ~/.ParaProf/ParaProfPreferences.dat . ; \
 fi
 
-java -Xmx500m -jar ${TAUROOT}/${MACHINE}/lib/ParaProf.jar 
+java -Xmx500m -jar ${TAUROOT}/${MACHINE}/bin/ParaProf.jar 
