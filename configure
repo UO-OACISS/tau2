@@ -139,6 +139,7 @@ tcltkfile="/"
 kai=no
 pgi=no
 fujitsu=no
+guidef90=no
 stdcxxlib=no
 inteltflop=no
 intel=no
@@ -1101,6 +1102,7 @@ case $cxx_compiler in
       if [ $fortran_compiler = no ]
       then
         fixmakeargs="$fixmakeargs KAI_FORTRAN"
+        guidef90=yes
       fi
         
       ;;
@@ -1244,6 +1246,7 @@ case $fortran_compiler in
    kai)
       echo "Default Fortran compiler will be KAI guidef90"
       fixmakeargs="$fixmakeargs KAI_FORTRAN"
+      guidef90=yes
       ;;
 
    intel)
@@ -1263,7 +1266,6 @@ case $fortran_compiler in
       ;;
 
 esac
-
 
 
 ######################################################################
@@ -1718,6 +1720,17 @@ case $machine in
         if [ $pdt_cxx_compiler = cxx ]
         then
           fixmakeargs="$fixmakeargs PDTALPHACXX"
+        fi
+        if [ $guidef90 = yes ]
+        then
+          f90loaded=`which f90 | sed -e 's/f90/../g' | grep "^no"`
+          if [ "x$f90loaded" = "x" ]
+          then
+    	    # f90 module has been loaded and which f90 returns a path	
+            extradir="`which f90 | sed s/f90/../`"
+	    echo "Found f90 in `which f90`"
+          fi
+          fixmakeargs="$fixmakeargs extradir=$extradir COMPAQ_GUIDEF90"
         fi
 	;;
 
