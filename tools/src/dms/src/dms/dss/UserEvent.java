@@ -17,7 +17,7 @@ import java.util.Vector;
  * A user event has particular information, including the name of the user event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: UserEvent.java,v 1.3 2004/04/07 17:36:58 khuck Exp $</P>
+ * <P>CVS $Id: UserEvent.java,v 1.4 2004/04/16 14:25:44 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -166,6 +166,7 @@ public class UserEvent {
 		buf.append("from user_event u inner join trial t on u.trial = t.id ");
 		buf.append("inner join experiment e on t.experiment = e.id ");
 		buf.append(whereClause);
+		buf.append(" order by id ");
 		// System.out.println(buf.toString());
 
 		// get the results

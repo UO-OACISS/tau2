@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.10 2004/04/16 01:10:31 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.11 2004/04/16 14:25:42 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -170,6 +170,7 @@ public abstract class DataSession {
  * @see	Trial
  */
 	public void setTrial(Trial trial) {
+		this.metrics = null;
 		this.trial = trial;
 		/* don't know if we want to do this
 		if (this.experiment == null && this.trial != null) {

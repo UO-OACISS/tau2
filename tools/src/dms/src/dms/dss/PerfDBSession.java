@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.22 2004/04/16 01:10:31 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.23 2004/04/16 14:25:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -143,6 +143,7 @@ public class PerfDBSession extends DataSession {
 
 	private Trial setTrial(int id, boolean clearHashes) {
 		this.trial = null;
+		this.metrics = null;
 		if (clearHashes) {
 			this.functionHash = null;
 			this.userEventHash = null;
@@ -591,6 +592,7 @@ public class PerfDBSession extends DataSession {
  */
 
 	public int saveParaProfTrial(Trial trial, int saveMetricIndex) {
+		long start = System.currentTimeMillis();
 		GlobalMapping mapping = trial.getDataSession().getGlobalMapping();
 	
 		//Build an array of group names.  This speeds lookup of group names.
@@ -782,6 +784,10 @@ public class PerfDBSession extends DataSession {
 		}
 
 		vacuumDatabase();
+		long stop = System.currentTimeMillis();
+		long elapsedMillis = stop - start;
+		double elapsedSeconds = (double)(elapsedMillis) / 100.0;
+		System.out.println("Elapsed time: " + elapsedSeconds);
 		return newTrialID;
     }
 

@@ -1,4 +1,4 @@
-connect to perfdb
+connect to pdbbench
 
 CREATE TABLE application ( \
 	id						INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, \

@@ -14,7 +14,7 @@ import java.util.Vector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.3 2004/04/16 01:10:31 khuck Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.4 2004/04/16 14:25:42 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -619,8 +619,8 @@ public class Experiment {
 		buf.append("compiler_java_dirpath, compiler_java_version, ");
 		buf.append("compiler_userdata, userdata from experiment ");
 		buf.append(whereClause);
-		// System.out.println(buf.toString());
 		buf.append(" order by name asc ");
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
