@@ -1,0 +1,20 @@
+*****************************************************************************
+**                      TAU Portable Profiling Package                     **
+**                      http://www.acl.lanl.gov/tau                        **
+*****************************************************************************
+**    Copyright 1997                                                       **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+*****************************************************************************
+
+Change log:
+------------
+Version 2.1 changes (from 2.0):
+1. Better colors in racy
+2. Support for T3E.
+3. Support for Tcl/Tk 8.0 as the default.
+4. Introduced Callstack profiling.
+5. Blitz specific changes. 
+
+Version 2.0 changes (from 1.0):
+1. Introduced Tracing.
