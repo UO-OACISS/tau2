@@ -123,5 +123,7 @@ public class Distance {
 	public int getThreadCount() { return results == null ? 0 : results.threadCount; }
 
 	public int getEventCount() { return results == null ? 0 : results.eventCount; }
+
+	public String toString() { return results == null ? new String("") : results.toString(); }
 }
 

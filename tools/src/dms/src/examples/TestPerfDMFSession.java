@@ -148,6 +148,8 @@ public class TestPerfDMFSession {
 		Metric metric = (Metric)(metrics.elementAt(0));
 		Distance distance = new Distance((PerfDMFSession)session, trial, metric);
 		double[][] matrix = distance.getEuclidianDistance();
+		System.out.print(distance.toString());
+		/*
 		System.out.println("Euclidian distance:");
 		for (int i = 0 ; i < distance.getThreadCount(); i++ ) {
 			System.out.print("thread " + i + ": ");
@@ -157,7 +159,10 @@ public class TestPerfDMFSession {
 			}
 			System.out.println("");
 		}
+		*/
 		matrix = distance.getManhattanDistance();
+		System.out.print(distance.toString());
+		/*
 		System.out.println("Manhattan distance:");
 		for (int i = 0 ; i < distance.getThreadCount(); i++ ) {
 			System.out.print("thread " + i + ": ");
@@ -167,6 +172,7 @@ public class TestPerfDMFSession {
 			}
 			System.out.println("");
 		}
+		*/
 		// disconnect and exit.
 		session.terminate();
 		System.out.println ("Exiting.");
