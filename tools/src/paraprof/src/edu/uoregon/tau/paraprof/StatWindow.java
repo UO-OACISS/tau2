@@ -561,6 +561,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    else if(tmpString.equals("dataEvent")){
 		if(!(trial.isTimeMetric()))
 		    units = 0;
+		this.setHeader();
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){ 
