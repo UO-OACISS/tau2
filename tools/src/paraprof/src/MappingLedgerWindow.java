@@ -57,64 +57,34 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
       if(ParaProf.helpWindow.isVisible())
       {
         ParaProf.helpWindow.clearText();
-        
-        if(!((trial.getStaticMainWindow().getSMWData()).isDataLoaded()))
-          {
-            if(mappingSelection == 0){
-              ParaProf.helpWindow.writeText("This is the function ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the functions tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window will be blank until you load data.");
-              ParaProf.helpWindow.writeText("You can do this from the file menu of the main window.");
-            }
-            else if(mappingSelection == 1){
-              ParaProf.helpWindow.writeText("This is the group ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the groups tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window will be blank until you load data.");
-              ParaProf.helpWindow.writeText("You can do this from the file menu of the main window.");
-            }
-            else{
-              ParaProf.helpWindow.writeText("This is the user event ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the user events tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window will be blank until you load data.");
-              ParaProf.helpWindow.writeText("You can do this from the file menu of the main window.");
-            }
-          }
-          else
-          {
-            if(mappingSelection == 0){
-              ParaProf.helpWindow.writeText("This is the function ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the functions tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("To see more information about any of the mappings shown here,");
-              ParaProf.helpWindow.writeText("right click on that function, and select from the popup menu.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
-            }
-            else if(mappingSelection == 1){
-              ParaProf.helpWindow.writeText("This is the group ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the groups tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("Left click any group to hightlight it in the system.");
-              ParaProf.helpWindow.writeText("Right click on any group, and select from the popup menu"
-              + " to display more options for masking or displaying functions in a particular group.");
-            }
-            else{
-              ParaProf.helpWindow.writeText("This is the user event ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the user events tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("Left click any mapping to hightlight it in the system.");
-              ParaProf.helpWindow.writeText("Right click on any user event, and select from the popup menu.");
-            }
-          }
+ 
+	if(mappingSelection == 0){
+	    ParaProf.helpWindow.writeText("This is the function ledger window.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("This window shows all the functions tracked in this profile.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("To see more information about any of the mappings shown here,");
+	    ParaProf.helpWindow.writeText("right click on that function, and select from the popup menu.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+	}
+	else if(mappingSelection == 1){
+	    ParaProf.helpWindow.writeText("This is the group ledger window.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("This window shows all the groups tracked in this profile.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("Left click any group to hightlight it in the system.");
+	    ParaProf.helpWindow.writeText("Right click on any group, and select from the popup menu"
+					  + " to display more options for masking or displaying functions in a particular group.");
+	}
+	else{
+	    ParaProf.helpWindow.writeText("This is the user event ledger window.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("This window shows all the user events tracked in this profile.");
+	    ParaProf.helpWindow.writeText("");
+	    ParaProf.helpWindow.writeText("Left click any mapping to hightlight it in the system.");
+	    ParaProf.helpWindow.writeText("Right click on any user event, and select from the popup menu.");
+	}
       }
       
       //******************************
@@ -333,38 +303,8 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
           //Show the ParaProf help window.
           ParaProf.helpWindow.clearText();
           ParaProf.helpWindow.show();
-          //See if any system data has been loaded.  Give a helpful hint
-          //if it has not.
-          if(!((trial.getStaticMainWindow().getSMWData()).isDataLoaded()))
-          {
-            if(mappingSelection == 0){
-              ParaProf.helpWindow.writeText("This is the function ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the functions tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window will be blank until you load data.");
-              ParaProf.helpWindow.writeText("You can do this from the file menu of the main window.");
-            }
-            else if(mappingSelection == 1){
-              ParaProf.helpWindow.writeText("This is the group ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the groups tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window will be blank until you load data.");
-              ParaProf.helpWindow.writeText("You can do this from the file menu of the main window.");
-            }
-            else{
-              ParaProf.helpWindow.writeText("This is the user event ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the user events tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window will be blank until you load data.");
-              ParaProf.helpWindow.writeText("You can do this from the file menu of the main window.");
-            }
-          }
-          else
-          {
-            if(mappingSelection == 0){
+
+	  if(mappingSelection == 0){
               ParaProf.helpWindow.writeText("This is the function ledger window.");
               ParaProf.helpWindow.writeText("");
               ParaProf.helpWindow.writeText("This window shows all the functions tracked in this profile.");
@@ -373,8 +313,8 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
               ParaProf.helpWindow.writeText("right click on that function, and select from the popup menu.");
               ParaProf.helpWindow.writeText("");
               ParaProf.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
-            }
-            else if(mappingSelection == 1){
+	  }
+	  else if(mappingSelection == 1){
               ParaProf.helpWindow.writeText("This is the group ledger window.");
               ParaProf.helpWindow.writeText("");
               ParaProf.helpWindow.writeText("This window shows all the groups tracked in this profile.");
@@ -382,17 +322,16 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
               ParaProf.helpWindow.writeText("Left click any group to hightlight it in the system.");
               ParaProf.helpWindow.writeText("Right click on any group, and select from the popup menu"
               + " to display more options for masking or displaying functions in a particular group.");
-            }
+	  }
             else{
-              ParaProf.helpWindow.writeText("This is the user event ledger window.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("This window shows all the user events tracked in this profile.");
-              ParaProf.helpWindow.writeText("");
-              ParaProf.helpWindow.writeText("Left click any user event to hightlight it in the system.");
-              ParaProf.helpWindow.writeText("Right click on any user event, and select from the popup menu.");
+		ParaProf.helpWindow.writeText("This is the user event ledger window.");
+		ParaProf.helpWindow.writeText("");
+		ParaProf.helpWindow.writeText("This window shows all the user events tracked in this profile.");
+		ParaProf.helpWindow.writeText("");
+		ParaProf.helpWindow.writeText("Left click any user event to hightlight it in the system.");
+		ParaProf.helpWindow.writeText("Right click on any user event, and select from the popup menu.");
             }
-          }
-        }
+	}
       }
     }
     catch(Exception e)

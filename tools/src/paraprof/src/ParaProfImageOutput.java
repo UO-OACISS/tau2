@@ -11,6 +11,7 @@ package paraprof;
 
 import java.util.*;
 import java.awt.*;
+import java.awt.image.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
@@ -28,25 +29,38 @@ public class ParaProfImageOutput{
 
     public void saveImage(ParaProfImageInterface ref){
 	
-	BufferedImage bi = new BufferedImage(500, 500, BufferedImage.TYPE_INT_ARGB);
-	Graphics2D g2D = bi.createGraphics();
-	ref.renderIt(g2D, "image");
+	try{
+	    
+	    Dimension d = ref.getImageSize();
 
-	String format = "JPG";
-	ImageWriter writer = null;
-	Iterator iter = IOImage.getImageWritersByFormatName(format);
-	if(iter.hasNext())
-	    writer = (ImageWriter) iter.next();
+       	    BufferedImage bi = new BufferedImage((int)d.getWidth(), (int)d.getHeight(), BufferedImage.TYPE_INT_RGB);
+	    Graphics2D g2D = bi.createGraphics();
+	    
+	    //Paint the background white.
+	    g2D.setColor(Color.white);
+	    g2D.fillRect(0, 0, (int)d.getWidth(), (int)d.getHeight());
 
-	File f = new File("test.JPG");
-	ImageOutputStream imageOut = IIO.createImageOutputStream(f);
-	writer.setOutput(imageOut);
+	    //Reset the drawing color to black.  The renderIt methods expect it.
+	    g2D.setColor(Color.black);
 
-	IIOImage iioImage = new IIOImage(bi,null,null);
-	
-	writer.write(iioImage);
-	
+	    //Draw to this graphics object.
+	    ref.renderIt(g2D, "image");
 
-	System.out.println("Save image request received!");
+	    //Now write the image to file.
+	    String format = "JPG";
+	    ImageWriter writer = null;
+	    Iterator iter = ImageIO.getImageWritersByFormatName(format);
+	    if(iter.hasNext()){
+		writer = (ImageWriter) iter.next();
+	    }
+	    File f = new File("test.JPG");
+	    ImageOutputStream imageOut = ImageIO.createImageOutputStream(f);
+	    writer.setOutput(imageOut);
+	    IIOImage iioImage = new IIOImage(bi,null,null);
+	    writer.write(bi);
+	}
+	catch(Exception e){
+	    System.out.println(e.toString());
+	    }
     }
 }

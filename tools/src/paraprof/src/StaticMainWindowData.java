@@ -20,9 +20,6 @@ public class StaticMainWindowData
 
   private Trial trial = null;
   
-  //A variable to check to make sure that the user has loaded system data.
-  boolean dataLoaded = false;
-      
   //The sorted system data lists.  It makes more sense to sort at the beginning.
   //F:Function;N:Name;M:Millisecond;D:Descending;A:Ascending;E:Exclusive;I:Inclusive;Id:Function ID
   
@@ -35,19 +32,6 @@ public class StaticMainWindowData
   {
     trial = inTrial;
   }
-  
-  //Setting and getting the loaded system data boolean.
-  public void setDataLoaded(boolean inBoolean)
-  {
-    dataLoaded = inBoolean;
-  }
-  
-  public boolean isDataLoaded()
-  {
-    return dataLoaded;
-  }
-  
-  
   
   //********************************
   //
@@ -155,9 +139,6 @@ public class StaticMainWindowData
         }
       }
     }
-    
-    //Set the dataLoaded boolean to true.
-    dataLoaded = true;
   }
   
   private void buildSMWMeanList()

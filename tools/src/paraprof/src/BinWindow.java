@@ -302,22 +302,11 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
           ParaProf.helpWindow.show();
           //See if any system data has been loaded.  Give a helpful hint
           //if it has not.
-          if(!(sMWData.isDataLoaded()))
-          {
-            ParaProf.helpWindow.writeText("Welcome to ParaProf");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("The first step is to load a pprof dump file."
-                                      + "You can find this option in the file menu.");
-            ParaProf.helpWindow.writeText("");
-            ParaProf.helpWindow.writeText("To create a pprof dump file, simply run pprof" +
-                          " with the -d option, and pipe the output to a file.");
-          }
         }
       }
     }
-    catch(Exception e)
-    {
-      ParaProf.systemError(e, null, "BW02");
+    catch(Exception e){
+	ParaProf.systemError(e, null, "BW02");
     }
   }
   
