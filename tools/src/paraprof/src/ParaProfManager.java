@@ -292,7 +292,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		}
 	    }
 	    tree.expandPath(path);
-	    jSplitPane.setRightComponent(getPanelHelpMessage(-1));
+	    jSplitPane.setRightComponent(getTable(userObject));
 	    jSplitPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof Metric){

@@ -63,7 +63,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		case(0):
 		    return "Name";
 		case(1):
-		    return "ID";
+		    return "Application ID";
 		case(2):
 		    return "Language";
 		case(3):
@@ -220,6 +220,58 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		}
 	    }
 	case 2:
+	    if(c==0){
+		switch(r){
+		case(0):
+		    return "Name";
+		case(1):
+		    return "Application ID";
+		case(2):
+		    return "Experiment ID";
+		case(3):
+		    return "Trial ID";
+		case(4):
+		    return "Time";
+		case(5):
+		    return "Node Count";
+		case(6):
+		    return "Contexts Per Node";
+		case(7):
+		    return "Threads Per Context";
+		case(8):
+		    return "User Data";
+		case(9):
+		    return "Problem Definition";
+		default:
+		    return "";
+		}
+	    }
+	    else{
+		switch(r){
+		case(0):
+		    return trial.getName();
+		case(1):
+		    return new Integer(trial.getApplicationID());
+		case(2):
+		    return new Integer(trial.getExperimentID());
+		case(3):
+		    return new Integer(trial.getID());
+		case(4):
+		    return trial.getTime();
+		case(5):
+		    return new Integer(trial.getNodeCount());
+		case(6):
+		    return new Integer(trial.getNumContextsPerNode());
+		case(7):
+		    return new Integer(trial.getNumThreadsPerContext());
+		case(8):
+		    return trial.getUserData();
+		case(9):
+		    return trial.getProblemDefinition();
+		default:
+		    return "";
+		}
+	    }
 	default:
 	    return "";
 	}
@@ -233,7 +285,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
     }
   
     public void setValueAt(Object obj, int r, int c){
-	//Should be getting a string I think.
+	//Should be getting a string.
 	if(obj instanceof String){
 	    String tmpString = (String) obj;
 	    if(c==1){
@@ -262,6 +314,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 			application.setDescription(tmpString);
 			break;
 		    }
+		    defaultTreeModel.nodeChanged(application.getDMTN());
 		    break;
 		case 1:
 		    break;
@@ -270,8 +323,6 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		}
 	    }
 	}
-	defaultTreeModel.nodeChanged(application.getDMTN());
-	//defaultTreeModel.reload(application.getDMTN());
     }
   
     private int type = -1; //0-application table model,1-experiment table model,2-trial table model.
