@@ -316,6 +316,14 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     public double getMaxUserEventMeanValue(){
 	return maxUserEventMeanValue;
     }
+
+    public void setMaxUserEventSumSquared(double maxUserEventSumSquaredValue){
+	this.maxUserEventSumSquared = maxUserEventSumSquared;}
+  
+    public double getMaxUserEventSumSquared(){
+	return maxUserEventSumSquared;
+    }
+
     //######
     //End - Userevent max section.
     //######
@@ -606,6 +614,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     private double maxUserEventMinValue = 0;
     private double maxUserEventMaxValue = 0;
     private double maxUserEventMeanValue = 0;
+    private double maxUserEventSumSquared = 0;
     private double meanNumberOfCalls = 0;
     private double meanNumberOfSubRoutines = 0;
     private int totalNumberOfCalls = 0;

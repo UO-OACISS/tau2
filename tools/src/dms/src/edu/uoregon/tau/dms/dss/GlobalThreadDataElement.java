@@ -18,7 +18,7 @@ public class GlobalThreadDataElement implements Mapping{
     public GlobalThreadDataElement(GlobalMappingElement globalMappingElement, boolean ue){
 	if(ue){
 	    userevent = true;
-	    doubleList = new double[3];
+	    doubleList = new double[4];
 	}
 	else{
 	    doubleList = new double[5];
@@ -30,7 +30,7 @@ public class GlobalThreadDataElement implements Mapping{
     public GlobalThreadDataElement(GlobalMappingElement globalMappingElement, boolean ue, int capacity){
 	if(ue){
 	    userevent = true;
-	    doubleList = new double[capacity*3];
+	    doubleList = new double[capacity*4];
 	}
 	else{
 	    doubleList = new double[capacity*5];
@@ -264,7 +264,7 @@ public class GlobalThreadDataElement implements Mapping{
   
     public double getUserEventMinValue(){
 	return doubleList[0];}
-  
+    
     public void setUserEventMaxValue(double inDouble){
 	doubleList[1]=inDouble;}
   
@@ -277,6 +277,12 @@ public class GlobalThreadDataElement implements Mapping{
     public double getUserEventMeanValue(){
 	return doubleList[2];}
   
+    public void setUserEventSumSquared(double inDouble){
+	doubleList[3]=inDouble;}
+  
+    public double getUserEventSumSquared(){
+	return doubleList[3];}
+
   
     public static String getUserEventStatStringHeading(){
 	try{
@@ -368,6 +374,9 @@ public class GlobalThreadDataElement implements Mapping{
 		position++;
 	    }
       
+
+	    // add on sumsquared???
+
 	    //Everything should be added now except the function name.
 	    return new String(statStringArray);
 	}

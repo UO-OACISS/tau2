@@ -432,7 +432,8 @@ public class TauOutputSession extends ParaProfDataSession{
 					globalThreadDataElement.setUserEventMaxValue(usereventDataLine.d0);
 					globalThreadDataElement.setUserEventMinValue(usereventDataLine.d1);
 					globalThreadDataElement.setUserEventMeanValue(usereventDataLine.d2);
-				    
+					globalThreadDataElement.setUserEventSumSquared(usereventDataLine.d3);
+    
 					if((globalMappingElement.getMaxUserEventNumberValue()) < usereventDataLine.i0)
 					    globalMappingElement.setMaxUserEventNumberValue(usereventDataLine.i0);
 					if((globalMappingElement.getMaxUserEventMaxValue()) < usereventDataLine.d0)
@@ -441,6 +442,8 @@ public class TauOutputSession extends ParaProfDataSession{
 					    globalMappingElement.setMaxUserEventMinValue(usereventDataLine.d1);
 					if((globalMappingElement.getMaxUserEventMeanValue()) < usereventDataLine.d2)
 					    globalMappingElement.setMaxUserEventMeanValue(usereventDataLine.d2);
+					if((globalMappingElement.getMaxUserEventSumSquared()) < usereventDataLine.d3)
+					    globalMappingElement.setMaxUserEventSumSquared(usereventDataLine.d3);
 				    }
 				}
 			    }
@@ -489,10 +492,12 @@ public class TauOutputSession extends ParaProfDataSession{
 	    //to dump request onto the event dispatch thread to ensure
 	    //safe update of said swing elements.  Remember, swing is not thread
 	    //safe for the most part.
+
+
 	    EventQueue.invokeLater(new Runnable(){
-		    public void run(){
-			TauOutputSession.this.notifyObservers();
-		    }
+	        public void run(){
+		    TauOutputSession.this.notifyObservers();
+		}
 		});
 	}
         catch(Exception e){

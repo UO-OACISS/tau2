@@ -264,6 +264,7 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		globalThreadDataElement.setUserEventMaxValue(alp.getMaximumValue());
 		globalThreadDataElement.setUserEventMinValue(alp.getMinimumValue());
 		globalThreadDataElement.setUserEventMeanValue(alp.getMeanValue());
+		globalThreadDataElement.setUserEventSumSquared(alp.getSumSquared());
 		
 		if ((globalMappingElement.getMaxUserEventNumberValue()) < alp.getSampleCount())
 		    globalMappingElement.setMaxUserEventNumberValue(alp.getSampleCount());
@@ -273,6 +274,8 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		    globalMappingElement.setMaxUserEventMinValue(alp.getMinimumValue());
 		if ((globalMappingElement.getMaxUserEventMeanValue()) < alp.getMeanValue())
 		    globalMappingElement.setMaxUserEventMeanValue(alp.getMeanValue());
+		if ((globalMappingElement.getMaxUserEventSumSquared()) < alp.getSumSquared())
+		    globalMappingElement.setMaxUserEventSumSquared(alp.getSumSquared());
 	    }
 
 	    time = (System.currentTimeMillis()) - time;
