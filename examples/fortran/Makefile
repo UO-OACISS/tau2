@@ -32,7 +32,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-F77		= pgf90 
+F77		= f90 
 
 TARGET	      	= hello
 
