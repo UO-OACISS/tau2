@@ -1416,7 +1416,8 @@ double  MPI_Wtime(  )
 {
   double  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Wtime()",  " ", TAU_MESSAGE); 
+  /* To enable the instrumentation change group to TAU_MESSAGE */
+  TAU_PROFILE_TIMER(tautimer, "MPI_Wtime()",  " ", TAU_DISABLE); 
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Wtime(  );
