@@ -587,7 +587,7 @@ case $machine in
      if [ $cxx_compiler = default ]
        then
          # If it has the IBM xlC compiler, use it
-	 if [ -f /bin/xlC ]
+	 if [ -f /usr/bin/xlC ]
            then
              cxx_compiler=xlC
              c_compiler=cc
@@ -964,7 +964,7 @@ BEGIN {cinc=""; cppinc="";}
 END {printf("-I%s -I%s\n", cinc, cppinc);}
 EOF
 
-stdinc=`$cxx_compiler -E get_stdinc.C | awk -f find_stdinc.awk`
+stdinc=`$cxx_compiler -w -E get_stdinc.C | awk -f find_stdinc.awk`
 
 rm -f get_stdinc.C find_stdinc.awk
 
