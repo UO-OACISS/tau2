@@ -39,15 +39,15 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
 }
  
 static const char *toName(pdbItem::templ_t v) ;
-static const char *toName(pdbItem::store_t v) ;
+static const char *toName(pdbItem::rspec_t v) ;
 void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
-  PDB::routinevec routines = pdb.getRoutineVec();
-  for (PDB::routinevec::const_iterator rit=routines.begin();
+  PDB::croutinevec routines = pdb.getCRoutineVec();
+  for (PDB::croutinevec::const_iterator rit=routines.begin();
        rit!=routines.end(); ++rit) 
   {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
-	 ((*rit)->storageClass() != pdbItem::ST_EXT)) 
+	 ((*rit)->kind() != pdbItem::RO_EXT)) 
     {
 	
 	if ((*rit)->isStatic()) 
@@ -56,7 +56,7 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	  cout <<" STATIC "<< (*rit)->fullName() <<endl;
 #endif /* DEBUG */
 	}
-	if ((((*rit)->parentClass()) == 0) || (*rit)->isStatic())
+	if ((((*rit)->parentGroup()) == 0) || (*rit)->isStatic())
 	{ // If it is a static function or if 
 	  // there's no parent class. No need to add CT(*this)
           itemvec.push_back(new itemRef(*rit, true));
@@ -86,7 +86,7 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   	// templates need some processing. Give it a false for isTarget arg.
 	// target helps identify if we need to put a CT(*this) in the type
 	// old: 
-        //if ((((*te)->parentClass()) == 0) && (tekind != pdbItem::TE_STATMEM)) 
+        //if ((((*te)->parentGroup()) == 0) && (tekind != pdbItem::TE_STATMEM)) 
         if ((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_STATMEM))
 	{ 
 	  // There's no parent class. No need to add CT(*this)
@@ -122,24 +122,24 @@ static const char *toName(pdbItem::access_t v) {
   }
 }
 
-static const char *toName(pdbItem::store_t v) {
+static const char *toName(pdbItem::rspec_t v) {
   switch (v) {
-  case pdbItem::ST_ASM : return "assembler";
-  case pdbItem::ST_AUTO: return "automatic";
-  case pdbItem::ST_EXT : return "extern";
-  case pdbItem::ST_STAT: return "static";
-  case pdbItem::ST_NA  :
+  case pdbItem::RO_ASM : return "assembler";
+  case pdbItem::RO_AUTO: return "automatic";
+  case pdbItem::RO_EXT : return "extern";
+  case pdbItem::RO_STAT: return "static";
+  case pdbItem::RO_NA  :
   default              : return "NA";
   }
 }
 
-static const char *toName(pdbItem::func_t v) {
+static const char *toName(pdbItem::routine_t v) {
   switch (v) {
-  case pdbItem::FU_CONV: return "conversionOperator";
-  case pdbItem::FU_CTOR: return "constructor";
-  case pdbItem::FU_DTOR: return "destructor";
-  case pdbItem::FU_OP  : return "operator";
-  case pdbItem::FU_NA  :
+  case pdbItem::RS_CONV: return "conversionOperator";
+  case pdbItem::RS_CTOR: return "constructor";
+  case pdbItem::RS_DTOR: return "destructor";
+  case pdbItem::RS_OP  : return "operator";
+  case pdbItem::RS_NA  :
   default              : return "NA";
   }
 }
@@ -217,7 +217,7 @@ static const char *toName(pdbItem::type_t v) {
   case pdbItem::TY_PTRMEM: return "pointerToMember";
   case pdbItem::TY_TPARAM: return "templateParameter";
   case pdbItem::TY_WCHAR : return "wideCharacter";
-  case pdbItem::TY_CLASS : return "classType";
+  case pdbItem::TY_GROUP : return "groupType";
   case pdbItem::TY_NA    :
   default                : return "NA";
   }
@@ -232,12 +232,12 @@ static const char *toName(pdbItem::qual_t v) {
   }
 }
 
-static const char *toName(pdbItem::class_t v) {
+static const char *toName(pdbItem::group_t v) {
   switch (v) {
-  case pdbItem::CL_CLASS : return "class";
-  case pdbItem::CL_STRUCT: return "struct";
-  case pdbItem::CL_UNION : return "union";
-  case pdbItem::CL_NA    :
+  case pdbItem::GR_CLASS : return "class";
+  case pdbItem::GR_STRUCT: return "struct";
+  case pdbItem::GR_UNION : return "union";
+  case pdbItem::GR_NA    :
   default                : return "NA";
   }
 }
@@ -266,8 +266,8 @@ void printItem(ostream& ostr, const pdbItem *i) {
   ostr << toUpper(i->desc()[0]) << toUpper(i->desc()[1]) << "#" << i->id()
        << " " << i->fullName() << "\n";
   printLo(ostr, i->location());
-  if ( const pdbClass* cptr = i->parentClass() ) {
-    ostr << "class:              CL#"
+  if ( const pdbGroup* cptr = i->parentGroup() ) {
+    ostr << "class:              GR#"
          << cptr->id() << " " << cptr->name() << "\n";
     ostr << "access:             " << toName(i->access()) << "\n";
   }
@@ -281,7 +281,7 @@ void printItem(ostream& ostr, const pdbItem *i) {
 const int INBUF_SIZE = 2048;
 
 /* to instrument the file */
-int instrumentFile(PDB& pdb, pdbFile* f, string& outfile) 
+int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile) 
 {
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
@@ -427,6 +427,15 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
   return 0;
 }
 
+int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile) 
+{ /* To be implemented */
+
+}
+
+int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile) 
+{ /* To be implemented */
+
+}
 
 int main(int argc, char **argv)
 {
@@ -471,14 +480,20 @@ int main(int argc, char **argv)
 #ifdef DEBUG
        cout <<" *** FILE *** "<< (*it)->name()<<endl;
 #endif
-       instrumentFile(p, *it, outFileName);
+       PDB::lang_t l = p.language();
+       if (l == PDB::LA_CXX)
+         instrumentCXXFile(p, *it, outFileName);
+       if (l == PDB::LA_C)
+         instrumentCFile(p, *it, outFileName);
+       if (l == PDB::LA_FORTRAN)
+         instrumentFFile(p, *it, outFileName);
      }
   }
 
   /* start with routines */
 /* 
-  for (PDB::routinevec::iterator r=p.getRoutineVec().begin();
-       r != p.getRoutineVec().end(); r++)
+  for (PDB::croutinevec::iterator r=p.getCRoutineVec().begin();
+       r != p.getCRoutineVec().end(); r++)
   {
     
 #ifdef DEBUG
