@@ -1930,6 +1930,17 @@ int Profiler::StoreData(int tid){
 
   DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
 
+#ifdef TRACING_ON
+#ifdef TAU_EPILOG 
+	DEBUGPROFMSG("Calling elg_close()"<<endl;);
+ 	if (RtsLayer::myThread() == 0)
+	  elg_close();
+#else /* TAU_EPILOG */
+	TraceEvClose(tid);
+	RtsLayer::DumpEDF(tid);
+#endif /* TAU_EPILOG */
+#endif // TRACING_ON
+
 #ifdef PROFILING_ON
   
   //Create directories for storage.
@@ -2493,9 +2504,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.75 $   $Date: 2002/07/11 00:05:30 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.75 2002/07/11 00:05:30 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: bertie $
+ * $Revision: 1.76 $   $Date: 2002/07/23 19:32:00 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.76 2002/07/23 19:32:00 bertie Exp $ 
  ***************************************************************************/
 
 	
