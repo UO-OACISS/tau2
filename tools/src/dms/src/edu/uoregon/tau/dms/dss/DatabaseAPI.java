@@ -9,11 +9,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.15 2005/01/20 00:19:24 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.16 2005/03/10 18:14:04 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 public class DatabaseAPI {
 
@@ -37,12 +37,11 @@ public class DatabaseAPI {
     private String configFileName = null;
 
     private boolean cancelUpload = false;
-    
-    
+
     public void cancelUpload() {
         this.cancelUpload = true;
     }
-    
+
     public String getMetricName(int metricID) {
         if (this.metrics == null) {
             if (this.trial != null) {
@@ -86,6 +85,9 @@ public class DatabaseAPI {
         connector = new ConnectionManager(configFileName, prompt);
         connector.connect();
         db = connector.getDB();
+        Application.getMetaData(db);
+        Experiment.getMetaData(db);
+        Trial.getMetaData(db);
     }
 
     public void initialize(Object obj, String password) throws SQLException {
@@ -95,6 +97,9 @@ public class DatabaseAPI {
         connector = new ConnectionManager(configFileName, password);
         connector.connect();
         db = connector.getDB();
+        Application.getMetaData(db);
+        Experiment.getMetaData(db);
+        Trial.getMetaData(db);
     }
 
     public void terminate() {
@@ -988,10 +993,10 @@ public class DatabaseAPI {
         Map map = new HashMap();
 
         String group = null; // no groups right now?
-        
-        for (Iterator it = dataSource.getUserEvents(); it.hasNext(); ) {
+
+        for (Iterator it = dataSource.getUserEvents(); it.hasNext();) {
             UserEvent ue = (UserEvent) it.next();
-            
+
             PreparedStatement statement = null;
             statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
                     + "atomic_event (trial, name, group_name) VALUES (?, ?, ?)");
@@ -1000,7 +1005,7 @@ public class DatabaseAPI {
             statement.setString(3, group);
             statement.executeUpdate();
             statement.close();
-            
+
             String tmpStr = new String();
             if (db.getDBType().compareTo("mysql") == 0)
                 tmpStr = "select LAST_INSERT_ID();";
@@ -1099,10 +1104,10 @@ public class DatabaseAPI {
 
                             FunctionProfile fp = thread.getFunctionProfile(function);
                             if (fp != null) { // only if this thread calls this function
-                                
+
                                 if (this.cancelUpload)
                                     return;
-                                
+
                                 addBatchFunctionProfile(threadInsertStatement, thread, metric.getID(),
                                         dbMetricID.intValue(), fp, intervalEventID.intValue());
                             }
@@ -1112,9 +1117,9 @@ public class DatabaseAPI {
             }
         }
 
-//        totalInsertStatement.executeBatch();
-//        meanInsertStatement.executeBatch();
-//        threadInsertStatement.executeBatch();
+        //        totalInsertStatement.executeBatch();
+        //        meanInsertStatement.executeBatch();
+        //        threadInsertStatement.executeBatch();
 
         totalInsertStatement.close();
         meanInsertStatement.close();
@@ -1122,11 +1127,9 @@ public class DatabaseAPI {
 
     }
 
-    
-    
     private void uploadUserEventProfiles(int trialID, DataSource dataSource, Map userEventMap)
-    	throws SQLException {
-        
+            throws SQLException {
+
         for (Iterator it = dataSource.getNodes(); it.hasNext();) {
             Node node = (Node) it.next();
             for (Iterator it2 = node.getContexts(); it2.hasNext();) {
@@ -1134,37 +1137,39 @@ public class DatabaseAPI {
                 for (Iterator it3 = context.getThreads(); it3.hasNext();) {
                     edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) it3.next();
 
-                    for (Iterator it4 = thread.getUserEventProfiles().iterator(); it4.hasNext(); ) {
+                    for (Iterator it4 = thread.getUserEventProfiles().iterator(); it4.hasNext();) {
                         UserEventProfile uep = (UserEventProfile) it4.next();
-                        
+
                         if (this.cancelUpload)
                             return;
-                        
+
                         if (uep != null) {
-                            int atomicEventID = ((Integer)userEventMap.get(uep.getUserEvent())).intValue();
-                            
-                    	    PreparedStatement statement = null;
-                    	    statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "atomic_location_profile (atomic_event, node, context, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    	    statement.setInt(1, atomicEventID);
-                    	    statement.setInt(2, thread.getNodeID());
-                    	    statement.setInt(3, thread.getContextID());
-                    	    statement.setInt(4, thread.getThreadID());
-                    	    statement.setInt(5, uep.getUserEventNumberValue());
-                    	    statement.setDouble(6, uep.getUserEventMaxValue());
-                    	    statement.setDouble(7, uep.getUserEventMinValue());
-                    	    statement.setDouble(8, uep.getUserEventMeanValue());
-                    	    statement.setDouble(9, uep.getUserEventSumSquared());
-                    	    statement.executeUpdate();
+                            int atomicEventID = ((Integer) userEventMap.get(uep.getUserEvent())).intValue();
+
+                            PreparedStatement statement = null;
+                            statement = db.prepareStatement("INSERT INTO "
+                                    + db.getSchemaPrefix()
+                                    + "atomic_location_profile (atomic_event, node, context, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            statement.setInt(1, atomicEventID);
+                            statement.setInt(2, thread.getNodeID());
+                            statement.setInt(3, thread.getContextID());
+                            statement.setInt(4, thread.getThreadID());
+                            statement.setInt(5, uep.getUserEventNumberValue());
+                            statement.setDouble(6, uep.getUserEventMaxValue());
+                            statement.setDouble(7, uep.getUserEventMinValue());
+                            statement.setDouble(8, uep.getUserEventMeanValue());
+                            statement.setDouble(9, uep.getUserEventSumSquared());
+                            statement.executeUpdate();
                             statement.close();
                         }
-                        
+
                     }
                 }
             }
         }
-                    
+
     }
-    
+
     private void computeUploadSize(DataSource dataSource) {
         this.totalItems = 0;
 
@@ -1197,7 +1202,7 @@ public class DatabaseAPI {
         }
     }
 
-    public synchronized int uploadTrial(Trial trial, int saveMetricIndex) throws DatabaseException {
+    public synchronized int uploadTrial(Trial trial) throws DatabaseException {
         long start = System.currentTimeMillis();
 
         DataSource dataSource = trial.getDataSource();
@@ -1211,41 +1216,25 @@ public class DatabaseAPI {
         int newTrialID = -1;
 
         try {
-            if (saveMetricIndex < 0) { // this means save the whole thing???
-                // save the trial metadata (which returns the new id)
-                newTrialID = trial.saveTrial(db);
-                trial.setID(newTrialID);
+            // save the trial metadata (which returns the new id)
+            newTrialID = trial.saveTrial(db);
+            trial.setID(newTrialID);
 
-                computeUploadSize(dataSource);
-                // upload the metrics and get a map that maps the metrics 0 -> n-1 to their unique DB IDs
-                Map metricMap = uploadMetrics(newTrialID, dataSource);
-                Map functionMap = uploadFunctions(newTrialID, dataSource);
+            computeUploadSize(dataSource);
+            // upload the metrics and get a map that maps the metrics 0 -> n-1 to their unique DB IDs
+            Map metricMap = uploadMetrics(newTrialID, dataSource);
+            Map functionMap = uploadFunctions(newTrialID, dataSource);
 
-                uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap);
+            uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap);
 
-                Map userEventMap = uploadUserEvents(newTrialID, dataSource);
-                
-                uploadUserEventProfiles(newTrialID, dataSource, userEventMap);
+            Map userEventMap = uploadUserEvents(newTrialID, dataSource);
 
-                if (this.cancelUpload) {
-                    db.rollback();
-                    deleteTrial(newTrialID);
-                    return -1;
-                }
-                //  System.out.println("New Trial ID: " + newTrialID);
-            } else {
-                //                newTrialID = trial.getID();
-                //                //   System.out.println("\nSaving the metric...");
-                //                Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
-                //                
-                //                if (intervalEvents != null && intervalEvents.size() > 0) {
-                //                    Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, saveMetricIndex);
-                //                    saveIntervalLocationProfiles(db, newFunHash, intervalEventData.elements(),
-                //                            newMetHash, saveMetricIndex);
-                //
-                //                }
-                //
-                //                //   System.out.println("Modified Trial ID: " + newTrialID);
+            uploadUserEventProfiles(newTrialID, dataSource, userEventMap);
+
+            if (this.cancelUpload) {
+                db.rollback();
+                deleteTrial(newTrialID);
+                return -1;
             }
 
         } catch (SQLException e) {
@@ -1268,7 +1257,7 @@ public class DatabaseAPI {
         long stop = System.currentTimeMillis();
         long elapsedMillis = stop - start;
         double elapsedSeconds = (double) (elapsedMillis) / 1000.0;
-//        System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
+        //        System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
         return newTrialID;
     }
 
@@ -1311,7 +1300,7 @@ public class DatabaseAPI {
         Experiment.deleteExperiment(db, experimentID);
     }
 
-    public void deleteApplication(int applicationID) throws DatabaseException, SQLException{
+    public void deleteApplication(int applicationID) throws DatabaseException, SQLException {
         // create a new DatabaseAPI to handle this request!
         // Why? Because we have to set the experiment to get the trials
         // and that will screw up the state of the current object.

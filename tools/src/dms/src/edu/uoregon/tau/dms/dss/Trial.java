@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.18 2005/02/28 23:50:43 khuck Exp $
+ * CVS $Id: Trial.java,v 1.19 2005/03/10 18:14:05 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -35,40 +35,46 @@ import java.io.IOException;
  * @see AtomicEvent
  */
 public class Trial implements Serializable {
+    private static String fieldNames[];
+    private static int fieldTypes[];
+
     private int trialID;
     private int experimentID;
     private int applicationID;
     private String name;
-    private Vector metric;
+    private Vector metrics;
+    private String fields[];
 
+    
     //    protected DataSession dataSession = null;
     protected DataSource dataSource = null;
 
-    private String fields[];
-    private static String fieldNames[];
-    private static int fieldTypes[];
 
-    public Trial(int numFields) {
-        fields = new String[numFields];
+    public Trial() {
+        if (Trial.fieldNames == null) {
+            this.fields = new String[0];
+        } else {
+            this.fields = new String[Trial.fieldNames.length];
+        }
     }
 
-    //     public Trial(String fieldNames[], int fieldTypes[]) {
-    // 	this.fields = new String[fieldNames.length];
-    // 	this.fieldNames = fieldNames;
-    // 	this.fieldTypes = fieldTypes;
-    //     }
-
-    // copy constructor (sort of)
+    // copy constructor
     public Trial(Trial trial) {
         this.name = trial.getName();
         this.applicationID = trial.getApplicationID();
         this.experimentID = trial.getExperimentID();
         this.trialID = trial.getID();
-
-        this.fields = trial.fields;
-        // 	this.fieldNames = trial.fieldNames;
-        // 	this.fieldTypes = trial.fieldTypes;
+        this.fields = (String[])trial.fields.clone();
     }
+    
+    public void reallocMetaData() {
+        if (Trial.fieldNames == null) {
+            this.fields = new String[0];
+        } else {
+            this.fields = new String[Trial.fieldNames.length];
+        }
+    }
+
 
     // these are here because I don't have time to fix the analysis
     // routines that are using them
@@ -226,10 +232,10 @@ public class Trial implements Serializable {
      * @return metric count for this trial.
      */
     public int getMetricCount() {
-        if (this.metric == null)
+        if (this.metrics == null)
             return 0;
         else
-            return this.metric.size();
+            return this.metrics.size();
     }
 
     /**
@@ -238,7 +244,7 @@ public class Trial implements Serializable {
      * @return metric vector
      */
     public Vector getMetrics() {
-        return this.metric;
+        return this.metrics;
     }
 
     /**
@@ -254,8 +260,8 @@ public class Trial implements Serializable {
     public String getMetricName(int metricID) {
 
         //Try getting the metric name.
-        if ((this.metric != null) && (metricID < this.metric.size()))
-            return ((Metric) this.metric.elementAt(metricID)).getName();
+        if ((this.metrics != null) && (metricID < this.metrics.size()))
+            return ((Metric) this.metrics.elementAt(metricID)).getName();
         else
             return null;
     }
@@ -327,9 +333,9 @@ public class Trial implements Serializable {
      *            Adds a metric to this trial
      */
     public void addMetric(Metric metric) {
-        if (this.metric == null)
-            this.metric = new Vector();
-        this.metric.addElement(metric);
+        if (this.metrics == null)
+            this.metrics = new Vector();
+        this.metrics.addElement(metric);
     }
 
     // gets the metric data for the trial
@@ -448,7 +454,7 @@ public class Trial implements Serializable {
             Vector trials = new Vector();
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
-                Trial trial = new Trial(Trial.fieldNames.length);
+                Trial trial = new Trial();
 
                 int pos = 1;
                 trial.setID(resultSet.getInt(pos++));

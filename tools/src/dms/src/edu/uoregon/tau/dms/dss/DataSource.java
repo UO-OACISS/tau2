@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.10 2005/03/08 00:55:53 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.11 2005/03/10 18:14:04 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		TrialData
  * @see		NCT
  */
@@ -598,8 +598,4 @@ public abstract class DataSource {
         return thread;
     }
 
-    protected boolean debug() {
-        //return true;
-        return UtilFncs.debug;
-    }
 }

@@ -16,7 +16,7 @@ import java.io.IOException;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.12 2005/02/28 23:50:43 khuck Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.13 2005/03/10 18:14:04 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -26,90 +26,107 @@ import java.io.IOException;
  * @see		Trial
  */
 public class Experiment implements Serializable {
-    private int experimentID;
-    private int applicationID;
-    private String name;
-
-    private String fields[];
-
     private static String fieldNames[];
     private static int fieldTypes[];
 
-    public Experiment(int numFields) {
-        fields = new String[numFields];
+    private int experimentID;
+    private int applicationID;
+    private String name;
+    private String fields[];
+
+
+    public Experiment() {
+        if (Experiment.fieldNames == null) {
+            this.fields = new String[0];
+        } else {
+            this.fields = new String[Experiment.fieldNames.length];
+        }
     }
 
-    public Experiment(DB db) throws DatabaseException {
-        Experiment.getMetaData(db);
-        this.fields = new String[Experiment.fieldNames.length];
-    }
-
-    // shallow copy constructor (sort of)
+    // copy constructor
     public Experiment(Experiment exp) {
         this.name = exp.getName();
         this.applicationID = exp.getApplicationID();
         this.experimentID = exp.getID();
-
-        this.fields = exp.fields;
+        this.fields = (String[]) exp.fields.clone();
     }
 
-    private static void getMetaData(DB db) throws DatabaseException {
+    public void reallocMetaData() {
+        if (Experiment.fieldNames == null) {
+            this.fields = new String[0];
+        } else {
+            this.fields = new String[Experiment.fieldNames.length];
+        }
+    }
+
+    
+    
+    public String[] getFields() {
+        return fields;
+    }
+    
+    public void setFields(String[] fields) {
+        this.fields = fields;
+    }
+    
+    public static void getMetaData(DB db) {
         // see if we've already have them
         if (Experiment.fieldNames != null)
             return;
 
         try {
-        ResultSet resultSet = null;
+            ResultSet resultSet = null;
 
-        String expFieldNames[] = null;
-        int expFieldTypes[] = null;
+            String expFieldNames[] = null;
+            int expFieldTypes[] = null;
 
-        DatabaseMetaData dbMeta = db.getMetaData();
+            DatabaseMetaData dbMeta = db.getMetaData();
 
-        if (db.getDBType().compareTo("oracle") == 0) {
-            resultSet = dbMeta.getColumns(null, null, "EXPERIMENT", "%");
-        } else {
-            resultSet = dbMeta.getColumns(null, null, "experiment", "%");
-        }
-
-        Vector nameList = new Vector();
-        Vector typeList = new Vector();
-
-        while (resultSet.next() != false) {
-
-            int ctype = resultSet.getInt("DATA_TYPE");
-            String cname = resultSet.getString("COLUMN_NAME");
-            String typename = resultSet.getString("TYPE_NAME");
-            //System.out.println ("column: " + cname + ", type: " + ctype + ", typename: " + typename);
-
-            // only integer and string types (for now)
-            // don't do name and id, we already know about them
-
-            if (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
-                    && cname.toUpperCase().compareTo("NAME") != 0
-                    && cname.toUpperCase().compareTo("APPLICATION") != 0) {
-
-                nameList.add(resultSet.getString("COLUMN_NAME"));
-                typeList.add(new Integer(ctype));
+            if (db.getDBType().compareTo("oracle") == 0) {
+                resultSet = dbMeta.getColumns(null, null, "EXPERIMENT", "%");
+            } else {
+                resultSet = dbMeta.getColumns(null, null, "experiment", "%");
             }
 
-        }
-        resultSet.close();
+            Vector nameList = new Vector();
+            Vector typeList = new Vector();
 
-        Experiment.fieldNames = new String[nameList.size()];
-        Experiment.fieldTypes = new int[typeList.size()];
+            while (resultSet.next() != false) {
 
-        for (int i = 0; i < typeList.size(); i++) {
-            Experiment.fieldNames[i] = (String) nameList.get(i);
-            Experiment.fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
-        }
-        
+                int ctype = resultSet.getInt("DATA_TYPE");
+                String cname = resultSet.getString("COLUMN_NAME");
+                String typename = resultSet.getString("TYPE_NAME");
+                //System.out.println ("column: " + cname + ", type: " + ctype + ", typename: " + typename);
+
+                // only integer and string types (for now)
+                // don't do name and id, we already know about them
+
+                if (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
+                        && cname.toUpperCase().compareTo("NAME") != 0
+                        && cname.toUpperCase().compareTo("APPLICATION") != 0) {
+
+                    nameList.add(resultSet.getString("COLUMN_NAME"));
+                    typeList.add(new Integer(ctype));
+                }
+
+            }
+            resultSet.close();
+
+            Experiment.fieldNames = new String[nameList.size()];
+            Experiment.fieldTypes = new int[typeList.size()];
+
+            for (int i = 0; i < typeList.size(); i++) {
+                Experiment.fieldNames[i] = (String) nameList.get(i);
+                Experiment.fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+            }
+
         } catch (SQLException e) {
-            throw new DatabaseException("Error retrieving Experiment metadata", e);
+            e.printStackTrace();
         }
+//        } catch (SQLException e) {
+//            throw new DatabaseException("Error retrieving Experiment metadata", e);
+//        }
     }
-
-   
 
     public int getNumFields() {
         return fields.length;
@@ -212,16 +229,16 @@ public class Experiment implements Serializable {
         this.name = name;
     }
 
-	/**
-	 * Returns the column names for the Experiment table
-	 *
-	 * @param	db	the database connection
-	 * @return	String[] an array of String objects
-	 */
-	public static String[] getFieldNames(DB db) throws DatabaseException {
-		getMetaData(db);
-		return fieldNames;
-	}
+    /**
+     * Returns the column names for the Experiment table
+     *
+     * @param	db	the database connection
+     * @return	String[] an array of String objects
+     */
+    public static String[] getFieldNames(DB db) throws DatabaseException {
+        getMetaData(db);
+        return fieldNames;
+    }
 
     public static Vector getExperimentList(DB db, String whereClause) throws DatabaseException {
         try {
@@ -252,7 +269,7 @@ public class Experiment implements Serializable {
 
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
-                Experiment exp = new Experiment(db);
+                Experiment exp = new Experiment();
                 exp.setID(resultSet.getInt(1));
                 exp.setApplicationID(resultSet.getInt(2));
                 exp.setName(resultSet.getString(3));

@@ -24,7 +24,7 @@ public class CreateApplication {
 
     public int createApp(String name) {
         int appid = -1;
-        Application app = new Application(0);
+        Application app = new Application();
         app.setName(name);
         //app.setVersion("");
         //app.setLanguage("");

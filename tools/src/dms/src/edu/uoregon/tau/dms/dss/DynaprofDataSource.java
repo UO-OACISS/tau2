@@ -72,8 +72,6 @@ public class DynaprofDataSource extends DataSource {
                     System.out.println("Unexpected end of file!");
                     return;
                 } else if ((inputString.charAt(0)) == '#') {
-                    if (this.debug())
-                        System.out.println("Header present");
                     //Do not need second header line at the moment..
                     br.readLine();
                     //Third header line contains the number of metrics.
@@ -87,14 +85,8 @@ public class DynaprofDataSource extends DataSource {
                         genericTokenizer.nextToken();
                         String metricName = genericTokenizer.nextToken();
                         this.addMetric(metricName);
-                        if (this.debug())
-                            System.out.println("metric name found: " + metricName);
                     }
-                    if (this.debug())
-                        System.out.println("Number of metrics: " + this.getNumberOfMetrics());
                 } else {
-                    if (this.debug())
-                        System.out.println("No header present");
                     this.addMetric("Time");
                     metric = 0;
                 }
@@ -126,19 +118,6 @@ public class DynaprofDataSource extends DataSource {
                 }
 
                 double inclusivePerCall = functionDataLine.d3 / functionDataLine.i1;
-                if (this.debug()) {
-                    System.out.println("function line: " + inputString);
-                    System.out.println("name:" + functionDataLine.s0);
-                    System.out.println("number_of_children:" + functionDataLine.i0);
-                    System.out.println("excl.total:" + functionDataLine.d0);
-                    System.out.println("excl.calls:" + functionDataLine.i1);
-                    System.out.println("excl.min:" + functionDataLine.d1);
-                    System.out.println("excl.max:" + functionDataLine.d2);
-                    System.out.println("incl.total:" + functionDataLine.d3);
-                    System.out.println("incl.calls:" + functionDataLine.i2);
-                    System.out.println("incl.min:" + functionDataLine.d4);
-                    System.out.println("incl.max:" + functionDataLine.d5);
-                }
                 if (!totalLine && functionDataLine.i1 != 0) {
                     function = this.addFunction(functionDataLine.s0, this.getNumberOfMetrics());
 
@@ -176,14 +155,6 @@ public class DynaprofDataSource extends DataSource {
                     inputString = br.readLine();
                     if (inputString.charAt(1) != ',') { // I don't know why these lines are in the files sometimes, but wallclockrpt seems to skip over them too
                         this.getFunctionChildDataLine(inputString);
-                        if (this.debug()) {
-                            System.out.println("function child line: " + inputString);
-                            System.out.println("name:" + functionChildDataLine.s0);
-                            System.out.println("incl.total:" + functionChildDataLine.d3);
-                            System.out.println("incl.calls:" + functionChildDataLine.i2);
-                            System.out.println("incl.min:" + functionChildDataLine.d4);
-                            System.out.println("incl.max:" + functionChildDataLine.d5);
-                        }
                         if (functionDataLine.i1 != 0) {
                             function = this.addFunction(
                                     functionDataLine.s0 + " => " + functionChildDataLine.s0,

@@ -272,7 +272,7 @@ public class UtilFncs {
     //####################################
     //Error handling.
     //####################################
-    public static boolean debug = false;
+    //public static boolean debug = false;
 
 //    public static void systemError(Object obj, Component component, String string) {
 //

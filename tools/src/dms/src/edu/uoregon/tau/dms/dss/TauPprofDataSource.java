@@ -403,9 +403,6 @@ public class TauPprofDataSource extends DataSource {
                     }
                     break;
                 default:
-                    if (UtilFncs.debug) {
-                        System.out.println("Skipping line: " + bSDCounter);
-                    }
                     break;
                 }
 

@@ -224,7 +224,7 @@ public class LoadTrial {
             break;
         }
 
-        trial = new Trial(0);
+        trial = new Trial();
         trial.setDataSource(dataSource);
 
         try {

@@ -37,7 +37,7 @@ public class CreateExperiment {
 
         checkForApp(appid);
 
-        Experiment exp = new Experiment(0);
+        Experiment exp = new Experiment();
         exp.setName(name);
         exp.setApplicationID(appid);
         session.setExperiment(exp);

@@ -19,7 +19,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.14 2005/02/28 23:50:43 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.15 2005/03/10 18:14:04 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -28,30 +28,47 @@ import java.sql.*;
  * @see		Experiment
  */
 public class Application implements Serializable {
-    private int applicationID;
-    private String name;
-
-    public String fields[];
     public static String fieldNames[];
     public static int fieldTypes[];
 
+    private int applicationID;
+    private String name;
+    private String fields[];
+
     // numFields, the number of optional fields found in the DB
-    public Application(int numFields) {
-        fields = new String[numFields];
+    public Application() {
+        if (Application.fieldNames == null) {
+            this.fields = new String[0];
+        } else {
+            this.fields = new String[Application.fieldNames.length];
+        }
     }
 
-    public Application(DB db) {
-        Application.getMetaData(db);
-        this.fields = new String[Application.fieldNames.length];
-    }
-
-    // shallow copy constructor (sort of)
+    // copy constructor
     public Application(Application app) {
         this.name = app.getName();
         this.applicationID = app.getID();
-        this.fields = app.fields;
+        this.fields = (String[]) app.fields.clone();
     }
 
+    
+    public void reallocMetaData() {
+        if (Application.fieldNames == null) {
+            this.fields = new String[0];
+        } else {
+            this.fields = new String[Application.fieldNames.length];
+        }
+    }
+    
+    
+    public String[] getFields() {
+        return fields;
+    }
+    
+    public void setFields(String[] fields) {
+        this.fields = fields;
+    }
+    
    	/**
 	 * Returns the column names for the Application table
 	 *
@@ -232,7 +249,7 @@ public class Application implements Serializable {
 
             resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
-                Application application = new Application(db);
+                Application application = new Application();
 
                 application.setID(resultSet.getInt(1));
                 application.setName(resultSet.getString(2));
