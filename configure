@@ -105,6 +105,7 @@
 
 rm -f .last_config
 echo $* > .last_config
+echo $* >> .all_configs
 
 # Record all the arguments
 arguments=$*
