@@ -9,7 +9,7 @@ import java.util.ListIterator;
 public class Scalability {
 	private DB db = null;
 
-	public Scalability (PerfDMFSession session) {
+	public Scalability (DatabaseAPI session) {
 		this.db = session.db();
 	}
 
@@ -31,7 +31,7 @@ public class Scalability {
 
 	public ScalabilityResults trials (Vector inTrials, String measurement, String function) {
 		ScalabilityResults results = new ScalabilityResults();
-		ListIterator trials = new DataSessionIterator(inTrials);
+		ListIterator trials = new DssIterator(inTrials);
 
 		StringBuffer buf = new StringBuffer();
 		buf.append("select e.name, e.trial, t.node_count * ");

@@ -1,10 +1,6 @@
 package edu.uoregon.tau.dms.loader;
 
 import edu.uoregon.tau.dms.database.*;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.xml.sax.Attributes;
@@ -239,7 +235,7 @@ public class LoadHandler extends DefaultHandler {
 	    	}		    
 		} else {
 	    	try{	
-				// get the functions from the database
+				// get the functionProfiles from the database
 				newTrial = false;
 				buf.append("select id, function_number from function where trial = "+trialId+" order by function_number asc;");
 	    		ResultSet functions = getDB().executeQuery(buf.toString());	

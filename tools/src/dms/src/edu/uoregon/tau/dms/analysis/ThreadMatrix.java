@@ -1,6 +1,5 @@
 package edu.uoregon.tau.dms.analysis;
 
-import java.lang.StrictMath;
 
 public class ThreadMatrix extends DistanceMatrix {
 

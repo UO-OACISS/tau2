@@ -12,7 +12,6 @@ import java.sql.*;
 import jargs.gnu.CmdLineParser;
 
 
-import java.util.Properties;
 
 public class Configure {
     private DB db = null;

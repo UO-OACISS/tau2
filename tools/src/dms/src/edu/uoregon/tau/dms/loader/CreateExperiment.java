@@ -1,24 +1,18 @@
 package edu.uoregon.tau.dms.loader;
 
-import edu.uoregon.tau.dms.database.*;
 import edu.uoregon.tau.dms.dss.*;
 import jargs.gnu.CmdLineParser;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.sql.SQLException;
 
 public class CreateExperiment {
     
     private static String APP_USAGE = 
         "USAGE: perfdmf_loadapp [{-h,--help}] {-a,--applicationid} applicationID {-n,--name} name\n";
 
-    private PerfDMFSession session;
+    private DatabaseAPI session;
 
     public CreateExperiment(String configFileName) {
 	super();
-	session = new PerfDMFSession();
+	session = new DatabaseAPI();
 	session.initialize(configFileName);
     }
 

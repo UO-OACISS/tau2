@@ -5,8 +5,6 @@ import edu.uoregon.tau.dms.database.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Vector;
-import java.util.ListIterator;
 
 /**
  * This is the top level class for doing distance analysis.
@@ -20,7 +18,7 @@ import java.util.ListIterator;
  * details.  The two extensions of this class are EventDistance and
  * ThreadDistance.
  *
- * <P>CVS $Id: DistanceAnalysis.java,v 1.5 2004/08/12 00:29:00 khuck Exp $</P>
+ * <P>CVS $Id: DistanceAnalysis.java,v 1.6 2004/12/21 00:19:49 amorris Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1
@@ -34,11 +32,11 @@ abstract public class DistanceAnalysis {
 /**
  * Basic constructor for the DistanceAnalysis object.
  *
- * @param	session	a reference to a PerfDMFSession database session object.
+ * @param	session	a reference to a DatabaseAPI database session object.
  * @param	inTrial	a reference to a PerfDMF Trial object of interest.
  * @param	inMetric	a reference to a PerfDMF Metric object of interest.
  */
-	public DistanceAnalysis (PerfDMFSession session, Trial inTrial, Metric inMetric) {
+	public DistanceAnalysis (DatabaseAPI session, Trial inTrial, Metric inMetric) {
 		this.db = session.db();
 		this.trial = inTrial;
 		this.metric = inMetric;

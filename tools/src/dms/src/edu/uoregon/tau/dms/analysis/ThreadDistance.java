@@ -1,16 +1,13 @@
 package edu.uoregon.tau.dms.analysis;
 
 import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.dms.database.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Vector;
-import java.util.ListIterator;
 
 public class ThreadDistance extends DistanceAnalysis {
 
-	public ThreadDistance (PerfDMFSession session, Trial inTrial, Metric inMetric) {
+	public ThreadDistance (DatabaseAPI session, Trial inTrial, Metric inMetric) {
 		super (session, inTrial, inMetric);
 	}
 

@@ -1,16 +1,13 @@
 package edu.uoregon.tau.dms.analysis;
 
 import edu.uoregon.tau.dms.dss.*;
-import edu.uoregon.tau.dms.database.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Vector;
-import java.util.ListIterator;
 
 public class EventDistance extends DistanceAnalysis {
 
-	public EventDistance (PerfDMFSession session, Trial inTrial, Metric inMetric) {
+	public EventDistance (DatabaseAPI session, Trial inTrial, Metric inMetric) {
 		super (session, inTrial, inMetric);
 	}
 
