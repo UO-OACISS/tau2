@@ -760,7 +760,7 @@ fi
 # Choose the c++ and cc compiler
 
 case $machine in
-   tc2000 | ksr1 | c90 | cray | t3e | crayx1 )
+   tc2000 | ksr1 | c90 | cray | t3e | crayx1 | craysv1)
      if [ $cxx_compiler = default ]
        then
          cxx_compiler=CC
@@ -920,7 +920,7 @@ if [ $machine = t3e -a $cxx_compiler = CC ]
     fixmakeargs="$fixmakeargs CRAYCC"
 fi
 
-if [ $machine = crayx1 -a $cxx_compiler = CC ]
+if [ $machine = crayx1 -o $machine = craysv1 -a $cxx_compiler = CC ]
   then
     fixmakeargs="$fixmakeargs CRAYX1CC"
 fi
@@ -1062,7 +1062,7 @@ if [ $machine = t3e -a $cxx_compiler = KCC ]
     fi
 fi
 
-if [ $machine = crayx1 ]
+if [ $machine = crayx1 -o $machine = craysv1 ]
   then 
     if [ $fortran_compiler = no ]
     then
@@ -1293,7 +1293,7 @@ case $fortran_compiler in
 
    cray)
       echo "Default Fortran compiler will be Cray f90"
-      if [ $machine = crayx1 ] 
+      if [ $machine = crayx1 -o $machine = craysv1 ] 
       then 
         fixmakeargs="$fixmakeargs CRAY_X1_FORTRAN"
       else
@@ -1426,7 +1426,7 @@ then
   linux) 
 	mpiinc=/usr/local/packages/mpich/include
 	;;
-  t3e|crayx1)
+  t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
 	;;
   *)
