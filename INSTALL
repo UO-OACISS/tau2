@@ -173,7 +173,10 @@ The following  command-line options are available to configure:
    Specifies the location of the installed PDT (Program Database Toolkit) root 
    directory. PDT is used to build tau_instrumentor, a C++, C and F90 
    instrumentation program that automatically inserts TAU annotations in the 
-   source code.  
+   source code. If PDT is configured with a subdirectory option (-compdir=<opt>)
+   then TAU can be configured with the same option by specifying 
+   -pdt=<dir> -pdtcompdir=<opt>. 
+
    [ Ref: http://www.acl.lanl.gov/pdtoolkit ]
    
 -pcl=<directory>
