@@ -3,8 +3,8 @@
 
 	Title:			jRacy
 	Author:			Robert Bell
-	Description:	This class holds the function data for one of the functions on this thread.
-					It also holds all the drawing information for this function.
+	Description:	This class holds the mapping data for one of the mappings on this thread.
+					It also holds all the drawing information for this mapping.
 */
 
 package jRacy;
@@ -41,7 +41,7 @@ public class SMWThreadDataElement implements Comparable
 		fDWYEndPosition = 0;
 		fDWYBegPosition = 0;
 		
-		sortByFunctionID = false;
+		sortByMappingID = false;
 		sortByName = true;
 		sortByValue = false;
 		sortByReverse = false;
@@ -53,32 +53,37 @@ public class SMWThreadDataElement implements Comparable
 		return gTDEReference;
 	}
 		
-	public String getFunctionName()
+	public String getMappingName()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
-		return tmpGME.getFunctionName();
+		return tmpGME.getMappingName();
 	}
 	
-	public void setFunctionID(int inFunctionID)
+	public void setMappingID(int inMappingID)
 	{
-		functionID = inFunctionID;
+		mappingID = inMappingID;
 	}
 	
-	public int getFunctionID()
+	public int getMappingID()
 	{
-		return functionID;
+		return mappingID;
 	}
 	
-	public Color getFunctionColor()
+	public Color getMappingColor()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
-		return tmpGME.getFunctionColor();
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		return tmpGME.getMappingColor();
 	}
 	
-	public boolean getFunctionExists()
+	public boolean getMappingExists()
 	{
-		return gTDEReference.getFunctionExists();
+		return gTDEReference.getMappingExists();
+	}
+	
+	public boolean isGroupMember(int inGroupID)
+	{
+		return globalMappingReference.isGroupMember(mappingID, inGroupID, 0);
 	}
 	
 	public double getInclusiveValue()
@@ -155,24 +160,24 @@ public class SMWThreadDataElement implements Comparable
 	
 	public int compareTo(Object inObject)
 	{
-		//Note that list will never call to compare against function id.  This
-		//is because all the functions are already sorted on the system.
+		//Note that list will never call to compare against mapping id.  This
+		//is because all the mappings are already sorted on the system.
 		double tmpDouble = 0;
 		
-		if(sortByFunctionID)
+		if(sortByMappingID)
 		{
 			if(!sortByReverse)
-				return (functionID - (((SMWThreadDataElement)inObject).getFunctionID()));
+				return (mappingID - (((SMWThreadDataElement)inObject).getMappingID()));
 			else
-				return ((((SMWThreadDataElement)inObject).getFunctionID()) - functionID);
+				return ((((SMWThreadDataElement)inObject).getMappingID()) - mappingID);
 		} 
 				
 		else if(sortByName)
 		{
 			if(!sortByReverse)
-				return (this.getFunctionName()).compareTo(((SMWThreadDataElement)inObject).getFunctionName());
+				return (this.getMappingName()).compareTo(((SMWThreadDataElement)inObject).getMappingName());
 			else
-				return (((SMWThreadDataElement) inObject).getFunctionName()).compareTo(this.getFunctionName());
+				return (((SMWThreadDataElement) inObject).getMappingName()).compareTo(this.getMappingName());
 		}
 		
 		//If here, means that we are in sort by value.
@@ -305,23 +310,23 @@ public class SMWThreadDataElement implements Comparable
 		return highlighted;
 	}
 	
-	public void setSortByFunctionID()
+	public void setSortByMappingID()
 	{
-		sortByFunctionID = true;
+		sortByMappingID = true;
 		sortByName = false;
 		sortByValue = false;
 	}
 	
 	public void setSortByName()
 	{
-		sortByFunctionID = false;
+		sortByMappingID = false;
 		sortByName = true;
 		sortByValue = false;
 	}
 	
 	public void setSortByValue()
 	{
-		sortByFunctionID = false;
+		sortByMappingID = false;
 		sortByName = false;
 		sortByValue = true;
 	}
@@ -342,8 +347,8 @@ public class SMWThreadDataElement implements Comparable
 	//A global mapping element reference.
 	GlobalMappingElement tmpGME;
 	
-	//Function ID
-	int functionID;
+	//Mapping ID
+	int mappingID;
 
 	//Named data values.
 	double value;
@@ -360,7 +365,7 @@ public class SMWThreadDataElement implements Comparable
 	int tDWYEndPosition;
 	int tDWYBegPosition;
 	
-	//Drawing coordinates the function data window.
+	//Drawing coordinates the mapping data window.
 	int fDWXEndPosition;
 	int fDWXBegPosition;
 	int fDWYEndPosition;
@@ -372,10 +377,10 @@ public class SMWThreadDataElement implements Comparable
 	boolean highlighted = false;
 	
 	//
-	boolean sortByFunctionID;
+	boolean sortByMappingID;
 	boolean sortByName;
 	boolean sortByValue;
 	boolean sortByReverse;
 	
-	boolean compareOnFunctionName;
+	boolean compareOnMappingName;
 }

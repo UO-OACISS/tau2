@@ -21,7 +21,7 @@ public class SavedPreferences implements Serializable
 	Vector globalColors = null;
 	
 	private Color highlightColor = null;
-	private Color miscFunctionsColor = null;
+	private Color miscMappingsColor = null;
 	private int barSpacing = -1;
 	private int barHeight = -1;
 	boolean barDetailsSet = false;
@@ -60,14 +60,14 @@ public class SavedPreferences implements Serializable
 		return highlightColor;
 	}
 	
-	public void setMiscFunctionsColor(Color inMiscFunctionsColor)
+	public void setMiscMappingsColor(Color inMiscMappingsColor)
 	{
-		miscFunctionsColor = inMiscFunctionsColor;
+		miscMappingsColor = inMiscMappingsColor;
 	}
 	
-	public Color getMiscFunctionsColor()
+	public Color getMiscMappingsColor()
 	{
-		return miscFunctionsColor;
+		return miscMappingsColor;
 	}
 	
 	public String getJRacyFont()

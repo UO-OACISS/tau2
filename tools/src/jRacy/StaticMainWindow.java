@@ -18,7 +18,7 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.colorchooser.*;
 
-public class StaticMainWindow extends JFrame implements ActionListener, Observer, ChangeListener  
+public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener  
 {	
 	//******************************
 	//Instance data.
@@ -31,15 +31,19 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 	private StaticMainWindowPanel sMWPanel;
 	private StaticMainWindowData sMWData = new StaticMainWindowData();
 	
-	ButtonGroup sortGroup;
-	ButtonGroup sortOrderGroup;
+	private ButtonGroup sortGroup;
+	private ButtonGroup sortOrderGroup;
 	
-	JRadioButtonMenuItem functionIDButton;
-	JRadioButtonMenuItem nameButton;
-	JRadioButtonMenuItem millisecondButton;
+	private JRadioButtonMenuItem mappingIDButton;
+	private JRadioButtonMenuItem nameButton;
+	private JRadioButtonMenuItem millisecondButton;
 	
-	JRadioButtonMenuItem ascendingButton;
-	JRadioButtonMenuItem descendingButton;
+	private JRadioButtonMenuItem ascendingButton;
+	private JRadioButtonMenuItem descendingButton;
+	
+	private JRadioButtonMenuItem displaySlidersButton;
+	
+	private JMenuItem mappingGroupLedgerItem;
 	
 	private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
 	private JComboBox sliderMultiple;
@@ -47,16 +51,24 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 	private JLabel barLengthLabel = new JLabel("Bar Mulitiple");
 	private JSlider barLengthSlider = new JSlider(0, 40, 1);
 	
-	boolean sortByFunctionID = false;
+	private Container contentPane = null;
+	private GridBagLayout gbl = null;
+	private GridBagConstraints gbc = null;
+	
+	private JScrollPane scrollPane;
+	
+	boolean sortByMappingID = false;
 	boolean sortByName = false;
 	boolean sortByMillisecond = true;
 	
 	boolean descendingOrder = true;
 	
+	boolean displaySliders = false;
+	
 	
 	//Local data
- 	Vector currentSMWGeneralData = null;
- 	Vector currentSMWMeanData = null;
+ 	private Vector currentSMWGeneralData = null;
+ 	private Vector currentSMWMeanData = null;
 	
 	
 	//******************************
@@ -68,7 +80,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 	{
 		try{
 			//Window Stuff.
-			setTitle("jRacy");
+			setTitle("jRacy: No Data Loaded");
 			
 			int windowWidth = 750;
 			int windowHeight = 400;
@@ -164,9 +176,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			JMenu sortMenu = new JMenu("Sort by ...");
 			sortGroup = new ButtonGroup();
 			
-			functionIDButton = new JRadioButtonMenuItem("function ID", false);
+			mappingIDButton = new JRadioButtonMenuItem("mapping ID", false);
 			//Add a listener for this radio button.
-			functionIDButton.addActionListener(this);
+			mappingIDButton.addActionListener(this);
 			
 			nameButton = new JRadioButtonMenuItem("name", false);
 			//Add a listener for this radio button.
@@ -176,11 +188,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			//Add a listener for this radio button.
 			millisecondButton.addActionListener(this);
 			
-			sortGroup.add(functionIDButton);
+			sortGroup.add(mappingIDButton);
 			sortGroup.add(nameButton);
 			sortGroup.add(millisecondButton);
 			
-			sortMenu.add(functionIDButton);
+			sortMenu.add(mappingIDButton);
 			sortMenu.add(nameButton);
 			sortMenu.add(millisecondButton);
 			optionsMenu.add(sortMenu);
@@ -206,6 +218,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			optionsMenu.add(sortOrderMenu);
 			//End Submenu.
 			
+			displaySlidersButton = new JRadioButtonMenuItem("Display Sliders", false);
+			//Add a listener for this radio button.
+			displaySlidersButton.addActionListener(this);
+			optionsMenu.add(displaySlidersButton);
 			//******************************
 			//End - Options menu.
 			//******************************
@@ -215,11 +231,17 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			//Window menu.
 			//******************************
 			JMenu windowsMenu = new JMenu("Windows");
+			windowsMenu.addMenuListener(this);
 			
 			//Add a submenu.
-			JMenuItem functionLedgerItem = new JMenuItem("Show Function Ledger");
-			functionLedgerItem.addActionListener(this);
-			windowsMenu.add(functionLedgerItem);
+			JMenuItem mappingLedgerItem = new JMenuItem("Show Mapping Ledger");
+			mappingLedgerItem.addActionListener(this);
+			windowsMenu.add(mappingLedgerItem);
+			
+			//Add a submenu.
+			mappingGroupLedgerItem = new JMenuItem("Show Group Mapping Ledger");
+			mappingGroupLedgerItem.addActionListener(this);
+			windowsMenu.add(mappingGroupLedgerItem);
 			
 			//Add a submenu.
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
@@ -236,14 +258,14 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			JMenu helpMenu = new JMenu("Help");
 			
 			//Add a menu item.
-			JMenuItem aboutItem = new JMenuItem("About Racy");
-			aboutItem.addActionListener(this);
-			helpMenu.add(aboutItem);
-			
-			//Add a menu item.
 			JMenuItem showHelpWindowItem = new JMenuItem("Show Help Window");
 			showHelpWindowItem.addActionListener(this);
 			helpMenu.add(showHelpWindowItem);
+			
+			//Add a menu item.
+			JMenuItem aboutItem = new JMenuItem("About Racy");
+			aboutItem.addActionListener(this);
+			helpMenu.add(aboutItem);
 			//******************************
 			//End - Help menu.
 			//******************************
@@ -266,10 +288,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			//Create and add the componants.
 			//******************************
 			//Setting up the layout system for the main window.
-			Container contentPane = getContentPane();
-			GridBagLayout gbl = new GridBagLayout();
+			contentPane = getContentPane();
+			gbl = new GridBagLayout();
 			contentPane.setLayout(gbl);
-			GridBagConstraints gbc = new GridBagConstraints();
+			gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			
 			//Create some borders.
@@ -283,7 +305,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			sMWPanel = new StaticMainWindowPanel(this);
 			sMWPanel.setPreferredSize(new Dimension(600,300));
 			//The scroll panes into which the list shall be placed.
-			JScrollPane scrollPane = new JScrollPane(sMWPanel);
+			scrollPane = new JScrollPane(sMWPanel);
 			scrollPane.setBorder(mainloweredbev);
 			scrollPane.setPreferredSize(new Dimension(600, 300));
 			
@@ -291,6 +313,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			//End - Panel and ScrollPane definition.
 			//**********
 			
+			//Do the slider stuff, but don't add.  By default, sliders are off.
 			String sliderMultipleStrings[] = {"1.00", "0.75", "0.50", "0.25", "0.10"};
 			sliderMultiple = new JComboBox(sliderMultipleStrings);
 			sliderMultiple.addActionListener(this);
@@ -302,42 +325,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			barLengthSlider.setSnapToTicks(true);
 			barLengthSlider.addChangeListener(this);
 			
-			//Now add the componants to the main screen.
-			gbc.fill = GridBagConstraints.NONE;
-			gbc.anchor = GridBagConstraints.EAST;
-			gbc.weightx = 0.10;
-			gbc.weighty = 0.01;
-			addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
-			
-			gbc.fill = GridBagConstraints.NONE;
-			gbc.anchor = GridBagConstraints.WEST;
-			gbc.weightx = 0.10;
-			gbc.weighty = 0.01;
-			addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
-			
-			gbc.fill = GridBagConstraints.NONE;
-			gbc.anchor = GridBagConstraints.EAST;
-			gbc.weightx = 0.10;
-			gbc.weighty = 0.01;
-			addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
-			
-			gbc.fill = GridBagConstraints.HORIZONTAL;
-			gbc.anchor = GridBagConstraints.WEST;
-			gbc.weightx = 0.70;
-			gbc.weighty = 0.01;
-			addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
-			
 			gbc.fill = GridBagConstraints.BOTH;
 			gbc.anchor = GridBagConstraints.CENTER;
-			gbc.weightx = 1.0;
-			gbc.weighty = 0.99;
-			addCompItem(scrollPane, gbc, 0, 1, 4, 1);
-			
-			//gbc.fill = GridBagConstraints.BOTH;
-			//gbc.anchor = GridBagConstraints.CENTER;
-			//gbc.weightx = 1;
-			//gbc.weighty = 1;
-			//addCompItem(scrollPane, gbc, 0, 0, 1, 1);
+			gbc.weightx = 1;
+			gbc.weighty = 1;
+			addCompItem(scrollPane, gbc, 0, 0, 1, 1);
 			
 			//******************************
 			//End - Create and add the componants.
@@ -413,6 +405,21 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 						if(file != null)
 						{	
 							
+							//To avoid some null pointer stuff, for the moment, explicitly close the ledger windows.
+							//Might want to re-think how the mapping ledger window is maintained.  Separate its data
+							//for example!
+							if(jRacy.debugIsOn)
+								System.out.println("Closing the mapping ledger windows.");
+							(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(0);
+							(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(1);
+							if(jRacy.debugIsOn)
+								System.out.println("End - Closing the mapping ledger windows.");
+							
+							//Closing all subwindows.
+							System.out.println("Closing all subwindows.");
+							jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
+							
+							
 							jRacy.profilePathName = file.getCanonicalPath();
 				
 							setTitle("jRacy: " + jRacy.profilePathName);
@@ -422,12 +429,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 							sMWData = new StaticMainWindowData();
 							
 							//Call the garbage collector.
-							System.out.println("Cleaning the virtual machine memory footprint.");
+							if(jRacy.debugIsOn)
+								System.out.println("Cleaning the virtual machine memory footprint.");
 							jRacy.runtime.gc();
-							
-							//Closing all subwindows.
-							System.out.println("Closing all subwindows.");
-							jRacy.systemEvents.updateRegisteredObjects("subWindowCloseEvent");
 							
 							System.out.println("Building internal data system ... please wait ...");
 							
@@ -441,7 +445,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 							System.out.println("Finished building internal lists.");
 							
 							//Reset the hightlight colour.
-							jRacy.clrChooser.setHighlightColorFunctionID(-1);
+							jRacy.clrChooser.setHighlightColorMappingID(-1);
 							
 							//Indicate to the rest of the system that there has been a change of data.
 							jRacy.systemEvents.updateRegisteredObjects("dataSetChangeEvent");
@@ -509,7 +513,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 							System.out.println("Finished building internal lists.");
 							
 							//Reset the hightlight colour.
-							jRacy.clrChooser.setHighlightColorFunctionID(-1);
+							jRacy.clrChooser.setHighlightColorMappingID(-1);
 							
 							//Indicate to the rest of the system that there has been a change of data.
 							jRacy.systemEvents.updateRegisteredObjects("dataSetChangeEvent");
@@ -625,11 +629,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 					dispose();
 					System.exit(0);
 				}
-				else if(arg.equals("function ID"))
+				else if(arg.equals("mapping ID"))
 				{
-					if(functionIDButton.isSelected())
+					if(mappingIDButton.isSelected())
 					{
-						sortByFunctionID = true;
+						sortByMappingID = true;
 						sortByName = false;
 						sortByMillisecond = false;
 						//Sort the local data.
@@ -642,7 +646,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 				{
 					if(nameButton.isSelected())
 					{
-						sortByFunctionID = false;
+						sortByMappingID = false;
 						sortByName = true;
 						sortByMillisecond = false;
 						//Sort the local data.
@@ -655,7 +659,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 				{
 					if(millisecondButton.isSelected())
 					{
-						sortByFunctionID = false;
+						sortByMappingID = false;
 						sortByName = false;
 						sortByMillisecond = true;
 						//Sort the local data.
@@ -686,13 +690,40 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 						sMWPanel.repaint();
 					}
 				}
-				else if(arg.equals("Show Function Ledger"))
+				else if(arg.equals("Display Sliders"))
+				{
+					if(displaySlidersButton.isSelected())
+					{	
+						displaySiders(true);
+					}
+					else
+					{
+						displaySiders(false);
+					}
+				}
+				else if(arg.equals("Show Mapping Ledger"))
+				{
+					
+					//Check to make sure that the system data file has been loaded!
+					if(sMWData.isDataLoaded())
+					{
+						//Grab the global mapping and bring up the mapping ledger window.
+						(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+					}
+					else
+					{
+						//Pop up an error!
+						JOptionPane.showMessageDialog(this, "Sorry, but you must load a pprof data file first!", "Selection Error!"
+																  ,JOptionPane.ERROR_MESSAGE);
+					}
+				}
+				else if(arg.equals("Show Group Mapping Ledger"))
 				{
 					//Check to make sure that the system data file has been loaded!
 					if(sMWData.isDataLoaded())
 					{
-						//Grab the global mapping and bring up the function ledger window.
-						(jRacy.staticSystemData.getGlobalMapping()).displayFunctionLedger();
+						//Grab the global mapping and bring up the mapping ledger window.
+						(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
 					}
 					else
 					{
@@ -726,13 +757,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 						jRacy.helpWindow.writeText("To create a pprof dump file, simply run pprof" +
 												  " with the -d option, and pipe the output to a file.");
 					}
-					else
-					{
-						jRacy.helpWindow.writeText("Welcome to jRacy");
-						jRacy.helpWindow.writeText("");
-						
-						
-					}
 				}
 			}
 			else if(EventSrc == sliderMultiple)
@@ -745,6 +769,37 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			jRacy.systemError(null, "SMW02");
 		}
 	}
+	
+	//******************************
+	//MenuListener code.
+	//******************************
+	public void menuSelected(MenuEvent evt)
+	{
+		try
+		{
+			if(jRacy.staticSystemData.groupNamesPresent())
+				mappingGroupLedgerItem.setEnabled(true);
+			else
+				mappingGroupLedgerItem.setEnabled(false);
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "SMW03");
+		}
+		
+	}
+	
+	public void menuDeselected(MenuEvent evt)
+	{
+	}
+	
+	public void menuCanceled(MenuEvent evt)
+	{
+	}
+	
+	//******************************
+	//End - MenuListener code.
+	//******************************
 	
 	//******************************
 	//Change listener code.
@@ -785,7 +840,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW03");
+			jRacy.systemError(null, "SMW04");
 		}
 	}
 	
@@ -799,7 +854,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW04");
+			jRacy.systemError(null, "SMW05");
 		}
 		
 		return tmpInt;
@@ -815,10 +870,69 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW05");
+			jRacy.systemError(null, "SMW06");
 		}
 		
 		return 0;
+	}
+	
+	private void displaySiders(boolean displaySliders)
+	{
+		if(displaySliders)
+		{
+			//Since the menu option is a toggle, the only component that needs to be
+			//removed is that scrollPane.  We then add back in with new parameters.
+			//This might not be required as it seems to adjust well if left in, but just
+			//to be sure.
+			contentPane.remove(scrollPane);
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.EAST;
+			gbc.weightx = 0.10;
+			gbc.weighty = 0.01;
+			addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.weightx = 0.10;
+			gbc.weighty = 0.01;
+			addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.EAST;
+			gbc.weightx = 0.10;
+			gbc.weighty = 0.01;
+			addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.weightx = 0.70;
+			gbc.weighty = 0.01;
+			addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.BOTH;
+			gbc.anchor = GridBagConstraints.CENTER;
+			gbc.weightx = 1.0;
+			gbc.weighty = 0.99;
+			addCompItem(scrollPane, gbc, 0, 1, 4, 1);
+		}
+		else
+		{
+			contentPane.remove(sliderMultipleLabel);
+			contentPane.remove(sliderMultiple);
+			contentPane.remove(barLengthLabel);
+			contentPane.remove(barLengthSlider);
+			contentPane.remove(scrollPane);
+			
+			gbc.fill = GridBagConstraints.BOTH;
+			gbc.anchor = GridBagConstraints.CENTER;
+			gbc.weightx = 1;
+			gbc.weighty = 1;
+			addCompItem(scrollPane, gbc, 0, 0, 1, 1);
+		}
+		
+		//Now call validate so that these componant changes are displayed.
+		validate();
 	}
 		
 	private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h)
@@ -829,11 +943,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			gbc.gridwidth = w;
 			gbc.gridheight = h;
 			
-			getContentPane().add(c, gbc);
+			contentPane.add(c, gbc);
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW06");
+			jRacy.systemError(null, "SMW07");
 		}
 	}
 	
@@ -851,7 +965,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 	{
 		try{
 			//First, do the currentSMWGeneralData.
-			if(sortByFunctionID)
+			if(sortByMappingID)
 			{
 				if(descendingOrder)
 					currentSMWGeneralData = sMWData.getSMWGeneralData("FIdDE");
@@ -874,7 +988,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 			}
 			
 			//Now do the currentSMWMeanData.
-			if(sortByFunctionID)
+			if(sortByMappingID)
 			{
 				if(descendingOrder)
 					currentSMWMeanData = sMWData.getSMWMeanData("FIdDE");
@@ -898,7 +1012,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW07");
+			jRacy.systemError(null, "SMW08");
 		}
 		
 	}
@@ -924,7 +1038,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW08");
+			jRacy.systemError(null, "SMW09");
 		}
 		
 		return false;

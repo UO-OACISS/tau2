@@ -64,17 +64,17 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			sMWData = inSMWData;
 			
 			//Add items to the popu menu.
-			JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
-			functionDetailsItem.addActionListener(this);
-			popup.add(functionDetailsItem);
+			JMenuItem mappingDetailsItem = new JMenuItem("Show Mapping Details");
+			mappingDetailsItem.addActionListener(this);
+			popup.add(mappingDetailsItem);
 			
-			JMenuItem changeColorItem = new JMenuItem("Change Function Color");
+			JMenuItem changeColorItem = new JMenuItem("Change Mapping Color");
 			changeColorItem.addActionListener(this);
 			popup.add(changeColorItem);
 			
-			JMenuItem maskFunctionItem = new JMenuItem("Reset to Generic Color");
-			maskFunctionItem.addActionListener(this);
-			popup.add(maskFunctionItem);
+			JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
+			maskMappingItem.addActionListener(this);
+			popup.add(maskMappingItem);
 			
 			//Schedule a repaint of this panel.
 			this.repaint();
@@ -243,16 +243,22 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//Now set the color values for drawing!
 							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+							tmpColor = tmpSMWThreadDataElement.getMappingColor();
 							g.setColor(tmpColor);
 							
 							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -264,11 +270,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else
 							{
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								else
 								{
-									tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+									tmpColor = tmpSMWThreadDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								
@@ -284,8 +292,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							stringStart = barXCoord - xLength - stringWidth - 5;
 							g.drawString(tmpDataValue + "%", stringStart, yCoord);
 							
-							//Now print the name of the function to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getFunctionName();
+							//Now print the name of the mapping to the right of the bar.
+							tmpString = tmpSMWThreadDataElement.getMappingName();
 							g.drawString(tmpString, (barXCoord + 5), yCoord);
 							
 							//Figure out how wide that string was for x coord reasons.
@@ -345,16 +353,22 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//Now set the color values for drawing!
 							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+							tmpColor = tmpSMWThreadDataElement.getMappingColor();
 							g.setColor(tmpColor);
 							
 							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -366,11 +380,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else
 							{
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								else
 								{
-									tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+									tmpColor = tmpSMWThreadDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								
@@ -405,8 +421,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
 							}				
 							
-							//Now print the name of the function to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getFunctionName();
+							//Now print the name of the mapping to the right of the bar.
+							tmpString = tmpSMWThreadDataElement.getMappingName();
 							g.drawString(tmpString, (barXCoord + 5), yCoord);
 							
 							//Figure out how wide that string was for x coord reasons.
@@ -464,16 +480,22 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//Now set the color values for drawing!
 							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+							tmpColor = tmpSMWThreadDataElement.getMappingColor();
 							g.setColor(tmpColor);
 							
 							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -485,11 +507,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else
 							{
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								else
 								{
-									tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+									tmpColor = tmpSMWThreadDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								
@@ -505,8 +529,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							//Now draw the percent value to the left of the bar.
 							g.drawString(tmpDataValue + "%", stringStart, yCoord);
 							
-							//Now print the name of the function to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getFunctionName();
+							//Now print the name of the mapping to the right of the bar.
+							tmpString = tmpSMWThreadDataElement.getMappingName();
 							g.drawString(tmpString, (barXCoord + 5), yCoord);
 							
 							//Figure out how wide that string was for x coord reasons.
@@ -568,16 +592,22 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//Now set the color values for drawing!
 							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+							tmpColor = tmpSMWThreadDataElement.getMappingColor();
 							g.setColor(tmpColor);
 							
 							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -589,11 +619,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else
 							{
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								else
 								{
-									tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+									tmpColor = tmpSMWThreadDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								
@@ -629,8 +661,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
 							}				
 							
-							//Now print the name of the function to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getFunctionName();
+							//Now print the name of the mapping to the right of the bar.
+							tmpString = tmpSMWThreadDataElement.getMappingName();
 							g.drawString(tmpString, (barXCoord + 5), yCoord);
 							
 							//Figure out how wide that string was for x coord reasons.
@@ -685,16 +717,22 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//Now set the color values for drawing!
 							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+							tmpColor = tmpSMWThreadDataElement.getMappingColor();
 							g.setColor(tmpColor);
 							
 							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -706,11 +744,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else
 							{
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								else
 								{
-									tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+									tmpColor = tmpSMWThreadDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								
@@ -726,8 +766,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							stringStart = barXCoord - xLength - stringWidth - 5;
 							g.drawString(tmpDataValue + "%", stringStart, yCoord);
 							
-							//Now print the name of the function to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getFunctionName();
+							//Now print the name of the mapping to the right of the bar.
+							tmpString = tmpSMWThreadDataElement.getMappingName();
 							g.drawString(tmpString, (barXCoord + 5), yCoord);
 							
 							//Figure out how wide that string was for x coord reasons.
@@ -784,16 +824,22 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//Now set the color values for drawing!
 							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+							tmpColor = tmpSMWThreadDataElement.getMappingColor();
 							g.setColor(tmpColor);
 							
 							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -805,11 +851,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else
 							{
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								else
 								{
-									tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+									tmpColor = tmpSMWThreadDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								
@@ -844,8 +892,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
 							}				
 							
-							//Now print the name of the function to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getFunctionName();
+							//Now print the name of the mapping to the right of the bar.
+							tmpString = tmpSMWThreadDataElement.getMappingName();
 							g.drawString(tmpString, (barXCoord + 5), yCoord);
 							
 							//Figure out how wide that string was for x coord reasons.
@@ -895,16 +943,22 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//Now set the color values for drawing!
 							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+							tmpColor = tmpSMWThreadDataElement.getMappingColor();
 							g.setColor(tmpColor);
 							
 							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -916,11 +970,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else
 							{
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								else
 								{
-									tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+									tmpColor = tmpSMWThreadDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								
@@ -936,8 +992,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							//Now draw the percent value to the left of the bar.
 							g.drawString(tmpDataValue + "%", stringStart, yCoord);
 							
-							//Now print the name of the function to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getFunctionName();
+							//Now print the name of the mapping to the right of the bar.
+							tmpString = tmpSMWThreadDataElement.getMappingName();
 							g.drawString(tmpString, (barXCoord + 5), yCoord);
 							
 							//Figure out how wide that string was for x coord reasons.
@@ -995,16 +1051,22 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//Now set the color values for drawing!
 							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+							tmpColor = tmpSMWThreadDataElement.getMappingColor();
 							g.setColor(tmpColor);
 							
 							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -1016,11 +1078,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else
 							{
-								if((tmpSMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								else
 								{
-									tmpColor = tmpSMWThreadDataElement.getFunctionColor();
+									tmpColor = tmpSMWThreadDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								
@@ -1056,8 +1120,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
 							}				
 							
-							//Now print the name of the function to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getFunctionName();
+							//Now print the name of the mapping to the right of the bar.
+							tmpString = tmpSMWThreadDataElement.getMappingName();
 							g.drawString(tmpString, (barXCoord + 5), yCoord);
 							
 							//Figure out how wide that string was for x coord reasons.
@@ -1126,31 +1190,31 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Show Function Details"))
+				if(arg.equals("Show Mapping Details"))
 				{
 					
 					if(clickedOnObject instanceof SMWThreadDataElement)
 					{
 						tmpSMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
-						//Bring up an expanded data window for this function, and set this function as highlighted.
-						jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWThreadDataElement.getFunctionID());
-						FunctionDataWindow tmpRef = new FunctionDataWindow(tmpSMWThreadDataElement.getFunctionName(), sMWData);
+						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
+						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWThreadDataElement.getMappingName(), sMWData);
 						jRacy.systemEvents.addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
-				else if(arg.equals("Change Function Color"))
+				else if(arg.equals("Change Mapping Color"))
 				{	
-					int functionID = -1;
+					int mappingID = -1;
 					
 					//Get the clicked on object.
 					if(clickedOnObject instanceof SMWThreadDataElement)
-						functionID = ((SMWThreadDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					
 					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
-					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
-					Color tmpCol = tmpGME.getFunctionColor();
+					Color tmpCol = tmpGME.getMappingColor();
 					
 					JColorChooser tmpJColorChooser = new JColorChooser();
 					tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
@@ -1166,14 +1230,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 				else if(arg.equals("Reset to Generic Color"))
 				{	
 					
-					int functionID = -1;
+					int mappingID = -1;
 					
 					//Get the clicked on object.
 					if(clickedOnObject instanceof SMWThreadDataElement)
-						functionID = ((SMWThreadDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					
 					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
-					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					tmpGME.setColorFlag(false);
 					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
@@ -1218,18 +1282,18 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 						}
 						else
 						{
-							//Want to set the clicked on function to the current highlight color or, if the one
+							//Want to set the clicked on mapping to the current highlight color or, if the one
 							//clicked on is already the current highlighted one, set it back to normal.
-							if((jRacy.clrChooser.getHighlightColorFunctionID()) == -1)
+							if((jRacy.clrChooser.getHighlightColorMappingID()) == -1)
 							{
-								jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWThreadDataElement.getFunctionID());
+								jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
 							}
 							else
 							{
-								if(!((jRacy.clrChooser.getHighlightColorFunctionID()) == (tmpSMWThreadDataElement.getFunctionID())))
-									jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWThreadDataElement.getFunctionID());
+								if(!((jRacy.clrChooser.getHighlightColorMappingID()) == (tmpSMWThreadDataElement.getMappingID())))
+									jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
 								else
-									jRacy.clrChooser.setHighlightColorFunctionID(-1);
+									jRacy.clrChooser.setHighlightColorMappingID(-1);
 							}
 						}
 						//Nothing more to do ... return.
@@ -1237,7 +1301,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 					}
 					else
 					{
-						//If we get here, it means that we are outside the function draw area.  That is, we
+						//If we get here, it means that we are outside the mapping draw area.  That is, we
 						//are either to the left or right of the draw area, or just above it.
 						//It is better to return here as we do not want the sysstem to cycle through the
 						//rest of the objects, which would be pointless as we know that it will not be

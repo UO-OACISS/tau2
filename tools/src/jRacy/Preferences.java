@@ -47,9 +47,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 	private JSlider barSpacingSlider = new JSlider(SwingConstants.VERTICAL, 0, 100, 0);
 	private JSlider barHeightSlider = new JSlider(SwingConstants.VERTICAL, 0, 100, 0);
 	
-	
 	private JButton colorButton;
-	private JButton closeButton;
 	
 	int fontStyle;
 	
@@ -64,7 +62,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 	
 	//Variable to determine which sorting paradigm has been chosen.
 	String sortBy;	//Possible values are:
-					//functionID
+					//mappingID
 					//millDes
 					//millAsc
 	
@@ -101,8 +99,8 @@ public class Preferences extends JFrame implements ActionListener, Observer
 			//******************************	
 			//Set inExValue ... exclusive by default.
 			inExValue = new String("Exclusive");
-			//Set sortBy ... functionID by default.
-			String sortBy = new String("functionID");
+			//Set sortBy ... mappingID by default.
+			String sortBy = new String("mappingID");
 			
 			
 			jRacyFont = "SansSerif";
@@ -114,6 +112,13 @@ public class Preferences extends JFrame implements ActionListener, Observer
 			//End - Set the default values.
 			//******************************
 		}
+		
+		//Add some window listener code
+		addWindowListener(new java.awt.event.WindowAdapter() {
+			public void windowClosing(java.awt.event.WindowEvent evt) {
+				thisWindowClosing(evt);
+			}
+		});
 		
 		//Get available fonts and initialize the fontComboBox..
 		GraphicsEnvironment gE = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -151,10 +156,10 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		pSPanel = new PrefSpacingPanel();
 		
 		//Window Stuff.
-		setTitle("jRacy Preferences: " + jRacy.profilePathName);
+		setTitle("jRacy Preferences: No Data Loaded");
 		
 		int windowWidth = 900;
-		int windowHeight = 450;
+		int windowHeight = 350;
 		setSize(new java.awt.Dimension(windowWidth, windowHeight));
 		
 		//There is really no need to resize this window.
@@ -188,7 +193,22 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		JMenu fileMenu = new JMenu("File");
 		
 		//Add a menu item.
-		JMenuItem closeItem = new JMenuItem("Close This Window");
+		JMenuItem editColorItem = new JMenuItem("Edit Color Map");
+		editColorItem.addActionListener(this);
+		fileMenu.add(editColorItem);
+		
+		//Add a menu item.
+		JMenuItem saveColorItem = new JMenuItem("Save Color Map");
+		saveColorItem.addActionListener(this);
+		fileMenu.add(saveColorItem);
+		
+		//Add a menu item.
+		JMenuItem loadColorItem = new JMenuItem("Load Color Map");
+		loadColorItem.addActionListener(this);
+		fileMenu.add(loadColorItem);
+		
+		//Add a menu item.
+		JMenuItem closeItem = new JMenuItem("Apply and Close Window");
 		closeItem.addActionListener(this);
 		fileMenu.add(closeItem);
 		
@@ -279,27 +299,6 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		//**********
 		
 		//**********
-		//Button Setup
-		//**********
-		colorButton = new JButton("Adjust Colours");
-		colorButton.addActionListener(this);
-		closeButton = new JButton("Close");
-		closeButton.addActionListener(this);
-		//**********
-		//End - Button Setup
-		//**********
-		
-		
-		//**********
-		//CheckBox Setup
-		//**********
-		//loadPprofDat = new JCheckBox("Load Pprof.dat File on Startup");
-		//loadPprofDat.addActionListener(this);
-		//**********
-		//End - CheckBox Setup
-		//**********
-		
-		//**********
 		//RadioButton and ButtonGroup Setup
 		//**********
 		normal = new JRadioButton("Plain Font", ((fontStyle == Font.PLAIN) || (fontStyle == (Font.PLAIN|Font.ITALIC))));
@@ -315,48 +314,53 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		//**********
 		//End - RadioButton and ButtonGroup Setup
 		//**********
+		//gbc.fill = GridBagConstraints.NONE;
+		//gbc.anchor = GridBagConstraints.EAST;
+		//gbc.weightx = 1;
+		//gbc.weighty = 1;
+		//addCompItem(fontLabel, gbc, 2, 0, 1, 1);
 		
 		//gbc.fill = GridBagConstraints.BOTH;
 		//gbc.anchor = GridBagConstraints.CENTER;
 		//gbc.weightx = 1;
 		//gbc.weighty = 1;
-		//addCompItem(loadPprofDat, gbc, 0, 0, 1, 1);
+		//addCompItem(fontComboBox, gbc, 3, 0, 1, 1);
 		
-		gbc.fill = GridBagConstraints.NONE;
+		//gbc.fill = GridBagConstraints.NONE;
+		//gbc.anchor = GridBagConstraints.CENTER;
+		//gbc.weightx = 1;
+		//gbc.weighty = 1;
+		//addCompItem(colorButton, gbc, 0, 1, 1, 1);
+		
+		gbc.fill = GridBagConstraints.BOTH;
 		gbc.anchor = GridBagConstraints.EAST;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(fontLabel, gbc, 2, 0, 1, 1);
+		addCompItem(fontLabel, gbc, 0, 0, 1, 1);
 		
 		gbc.fill = GridBagConstraints.BOTH;
-		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.anchor = GridBagConstraints.EAST;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(fontComboBox, gbc, 3, 0, 1, 1);
+		addCompItem(fontComboBox, gbc, 1, 0, 1, 1);
 		
 		gbc.fill = GridBagConstraints.NONE;
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(colorButton, gbc, 0, 1, 1, 1);
+		addCompItem(normal, gbc, 2, 0, 1, 1);
 		
 		gbc.fill = GridBagConstraints.NONE;
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(normal, gbc, 1, 1, 1, 1);
+		addCompItem(bold, gbc, 3, 0, 1, 1);
 		
 		gbc.fill = GridBagConstraints.NONE;
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(bold, gbc, 2, 1, 1, 1);
-		
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.CENTER;
-		gbc.weightx = 1;
-		gbc.weighty = 1;
-		addCompItem(italic, gbc, 3, 1, 1, 1);
+		addCompItem(italic, gbc, 4, 0, 1, 1);
 		
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.anchor = GridBagConstraints.CENTER;
@@ -387,13 +391,6 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		addCompItem(barHeightSlider, gbc, 3, 4, 1, 1);
-		
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.CENTER;
-		gbc.weightx = 1;
-		gbc.weighty = 1;
-		addCompItem(closeButton, gbc, 3, 5, 1, 1);
-		
 		//******************************
 		//End - Create and add the componants.
 		//******************************
@@ -405,6 +402,8 @@ public class Preferences extends JFrame implements ActionListener, Observer
 	
 	public void showPreferencesWindow()
 	{
+		//The path to data might have changed, therefore, reset the title.
+		this.setTitle("jRacy Preferences: " + jRacy.profilePathName);
 		this.show();
 	}
 	
@@ -508,27 +507,139 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		
 		if(EventSrc instanceof JMenuItem)
 		{
-			if(arg.equals("Exit jRacy!"))
+			
+			if(arg.equals("Edit Color Map"))
+			{
+				jRacy.clrChooser.showColorChooser();
+			}
+			else if(arg.equals("Load Color Map"))
+			{
+				JFileChooser fileChooser = new JFileChooser();
+				
+				//Set the directory to the current directory.
+				fileChooser.setCurrentDirectory(new File("."));
+				
+				//Bring up the file chooser.
+				int resultValue = fileChooser.showOpenDialog(this);
+				
+				if(resultValue == JFileChooser.APPROVE_OPTION)
+				{
+					//Try and get the file name.
+					File file = fileChooser.getSelectedFile();
+					
+					//Test to see if valid.
+					if(file != null)
+					{	
+						System.out.println("Loading color map ...");
+						loadColorMap(file);
+						jRacy.systemEvents.updateRegisteredObjects("prefEvent");
+						System.out.println("Done loading color map ...");
+					}
+					else
+					{
+						System.out.println("There was some sort of internal error!");
+					}
+				}
+				
+			}
+			else if(arg.equals("Save Color Map"))
+			{
+				JFileChooser fileChooser = new JFileChooser();
+				
+				//Set the directory to the current directory.
+				fileChooser.setCurrentDirectory(new File("."));
+				fileChooser.setSelectedFile(new File("colorMap.dat"));
+				
+				//Display the save file chooser.
+				int resultValue = fileChooser.showSaveDialog(this);
+				
+				if(resultValue == JFileChooser.APPROVE_OPTION)
+				{
+					//Get the file.
+					File file = fileChooser.getSelectedFile();
+					
+					
+					//Check to make sure that something was obtained.
+					if(file != null)
+					{
+						try
+						{
+							//Just output the data for the moment to have a look at it.
+							Vector nameColorVector = new Vector();
+							GlobalMapping tmpGlobalMapping = jRacy.staticSystemData.getGlobalMapping();
+							
+							int numOfMappings = tmpGlobalMapping.getNumberOfMappings(0);
+							
+							for(int i=0; i<numOfMappings; i++)
+							{
+								GlobalMappingElement tmpGME = (GlobalMappingElement) tmpGlobalMapping.getGlobalMappingElement(i,0);
+								if((tmpGME.getMappingName()) != null)
+								{	
+									ColorPair tmpCP = new ColorPair(tmpGME.getMappingName(),tmpGME.getMappingColor());
+									nameColorVector.add(tmpCP);
+								}
+							}
+							Collections.sort(nameColorVector);
+							
+							
+							PrintWriter out = new PrintWriter(new FileWriter(file));
+							
+							System.out.println("Saving color map ...");
+							if(jRacy.debugIsOn)
+							{
+								System.out.println("**********************");
+								System.out.println("Color values loaded were:");
+							}
+							for(Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements() ;)
+							{
+								ColorPair tmpCP = (ColorPair) e1.nextElement();
+								Color tmpColor = tmpCP.getMappingColor();
+								if(jRacy.debugIsOn)
+								{
+									System.out.println("MAPPING_NAME=\"" + (tmpCP.getMappingName()) + "\"" +
+												" RGB=\"" +
+												tmpColor.getRed() +
+												"," + tmpColor.getGreen() +
+												"," + tmpColor.getBlue() + "\"");
+								}
+								out.println("MAPPING_NAME=\"" + (tmpCP.getMappingName()) + "\"" +
+											" RGB=\"" +
+											tmpColor.getRed() +
+											"," + tmpColor.getGreen() +
+											"," + tmpColor.getBlue() + "\"");
+							}
+							if(jRacy.debugIsOn)
+							{
+								System.out.println("**********************");
+							}
+							System.out.println("Done saving color map!");
+							out.close();
+						}
+						catch(Exception e)
+						{
+							//Display an error
+							JOptionPane.showMessageDialog(this, "An error occured whilst trying to save the color map.", "Error!"
+														  	,JOptionPane.ERROR_MESSAGE);
+						}
+					}
+					else
+					{
+						//Display an error
+						JOptionPane.showMessageDialog(this, "No filename was given!", "Error!"
+														  	,JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+			else if(arg.equals("Exit jRacy!"))
 			{
 				setVisible(false);
 				dispose();
 				System.exit(0);
 			}
-			else if(arg.equals("Close This Window"))
-			{
-				setVisible(false);
-			}
-		}
-		else if(EventSrc instanceof JButton)
-		{
-			if(arg.equals("Close"))
+			else if(arg.equals("Apply and Close Window"))
 			{
 				setVisible(false);
 				jRacy.systemEvents.updateRegisteredObjects("prefEvent");
-			}
-			if(arg.equals("Adjust Colours"))
-			{
-				jRacy.clrChooser.showColorChooser();
 			}
 		}
 		else if(EventSrc instanceof JRadioButton)
@@ -598,6 +709,96 @@ public class Preferences extends JFrame implements ActionListener, Observer
 	//End - Event listener code!!
 	//******************************
 	
+	public void loadColorMap(File inFile)
+	{
+		try
+		{
+			//First, get the file stuff.
+			BufferedReader br = new BufferedReader(new FileReader(inFile));
+			
+			Vector nameColorVector = new Vector();
+			String tmpString;
+			int red = 0;
+			int green = 0;
+			int blue = 0;
+			
+			GlobalMapping tmpGlobalMapping = jRacy.staticSystemData.getGlobalMapping(); 
+			
+			
+			//Read in the file line by line!
+			while((tmpString = br.readLine()) != null)
+			{	
+				StringTokenizer getMappingNameTokenizer = new StringTokenizer(tmpString, "\"");
+				ColorPair tmpCP = new ColorPair();
+				
+				//The mapping name will be within the first set of quotes.
+				//Grab the first token.
+				tmpString = getMappingNameTokenizer.nextToken();
+				//Grab the second token.
+				tmpString = getMappingNameTokenizer.nextToken();
+				
+				tmpCP.setMappingName(tmpString);
+				
+				//The RGB values will be within the next set of quotes.
+				//Grab the third token.
+				tmpString = getMappingNameTokenizer.nextToken();
+				//Grab the forth token.
+				tmpString = getMappingNameTokenizer.nextToken();
+				
+				StringTokenizer getMappingColorTokenizer = new StringTokenizer(tmpString, ",");
+				
+				tmpString = getMappingColorTokenizer.nextToken();
+				red = Integer.parseInt(tmpString);
+				
+				tmpString = getMappingColorTokenizer.nextToken();
+				green = Integer.parseInt(tmpString);
+				
+				tmpString = getMappingColorTokenizer.nextToken();
+				blue = Integer.parseInt(tmpString);
+				
+				Color tmpColor = new Color(red,green,blue);
+				tmpCP.setMappingColor(tmpColor);
+				
+				nameColorVector.add(tmpCP);
+			}
+			
+			if(jRacy.debugIsOn)
+			{
+				System.out.println("**********************");
+				System.out.println("Color values loaded were:");
+			}
+			for(Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements() ;)
+			{
+				ColorPair tmpCP = (ColorPair) e1.nextElement();
+				int mappingID = tmpGlobalMapping.getMappingId(tmpCP.getMappingName(), 0);
+				if(mappingID != -1)
+				{
+					GlobalMappingElement tmpGME = tmpGlobalMapping.getGlobalMappingElement(mappingID, 0);
+					
+					Color tmpColor = tmpCP.getMappingColor();
+					tmpGME.setSpecificColor(tmpColor);
+					tmpGME.setColorFlag(true);
+					if(jRacy.debugIsOn)
+					{
+						System.out.println("MAPPING_NAME=\"" + (tmpCP.getMappingName()) + "\"" +
+									" RGB=\"" +
+									tmpColor.getRed() +
+									"," + tmpColor.getGreen() +
+									"," + tmpColor.getBlue() + "\"");
+					}
+				}
+			}
+			if(jRacy.debugIsOn)
+			{
+				System.out.println("**********************");
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "P01");
+		}
+	}
+				
 	private boolean mShown = false;
 	
 	public void addNotify() 

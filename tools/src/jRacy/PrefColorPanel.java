@@ -109,7 +109,7 @@ public class PrefColorPanel extends JPanel implements ChangeListener
 		g.setColor(Color.black);
 		yCoord = yCoord + (barSpacing);
 		
-		//Now draw the highlight function colour and the misc. function colour.
+		//Now draw the highlight mapping colour and the misc. mapping colour.
 		int tmpInt = barXStart - stringWidth - 5;
 		g.drawString("Highlight colour:", tmpInt, yCoord);
 		stringWidth = fmFont.stringWidth("Highlight colour:");
@@ -121,7 +121,7 @@ public class PrefColorPanel extends JPanel implements ChangeListener
 		tmpInt = tmpInt + 30 + 100;
 		g.drawString("Misc. colour:", tmpInt, yCoord);
 		tmpInt = tmpInt + 5 + stringWidth;
-		g.setColor(jRacy.clrChooser.getMiscFunctionsColor());
+		g.setColor(jRacy.clrChooser.getMiscMappingsColor());
 		g.fillRect(tmpInt, (yCoord - barHeight), 100, barHeight);
 		
 		

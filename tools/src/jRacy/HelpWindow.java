@@ -17,7 +17,7 @@ import javax.swing.text.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class HelpWindow extends JFrame implements Observer
+public class HelpWindow extends JFrame implements ActionListener, Observer
 {
 
 	//*****
@@ -25,7 +25,7 @@ public class HelpWindow extends JFrame implements Observer
 	//*****
 	
 	//General.
-	int windowWidth = 500;
+	int windowWidth = 750;
 	int windowHeight = 500;
 	
 	//Text area stuff.
@@ -41,6 +41,43 @@ public class HelpWindow extends JFrame implements Observer
 		//Set the preferend initial size for this window.
 		setSize(new java.awt.Dimension(windowWidth, windowHeight));
 		setTitle("Racy Help Window");
+		
+		//******************************
+		//Code to generate the menus.
+		//******************************
+		JMenuBar mainMenu = new JMenuBar();
+		
+		//******************************
+		//File menu.
+		//******************************
+		JMenu fileMenu = new JMenu("File");
+		
+		//Add a menu item.
+		JMenuItem generalHelpItem = new JMenuItem("Display General Help");
+		generalHelpItem.addActionListener(this);
+		fileMenu.add(generalHelpItem);
+		
+		//Add a menu item.
+		JMenuItem closeItem = new JMenuItem("Close jRacy Help Window");
+		closeItem.addActionListener(this);
+		fileMenu.add(closeItem);
+		
+		
+		//Add a menu item.
+		JMenuItem exitItem = new JMenuItem("Exit jRacy!");
+		exitItem.addActionListener(this);
+		fileMenu.add(exitItem);
+		//******************************
+		//End - File menu.
+		//******************************
+		
+		//Now, add all the menus to the main menu.
+		mainMenu.add(fileMenu);
+		
+		setJMenuBar(mainMenu);
+		//******************************
+		//End - Code to generate the menus.
+		//******************************
 		
 		//Create the text area and get its document.
 		helpJTextArea = new JTextArea();
@@ -69,7 +106,11 @@ public class HelpWindow extends JFrame implements Observer
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(scrollPane, gbc, 0, 0, 2, 1);		
+		addCompItem(scrollPane, gbc, 0, 0, 2, 1);
+		
+		writeText("Welcome to jRacy!");
+		writeText("");
+		writeText("For general help, please select display general help from the file menu.");		
 		
 	}
 	
@@ -111,5 +152,68 @@ public class HelpWindow extends JFrame implements Observer
 		gbc.gridheight = h;
 		
 		getContentPane().add(c, gbc);
+	}
+	
+	//ActionListener code.
+	public void actionPerformed(ActionEvent evt)
+	{
+		try{
+			Object EventSrc = evt.getSource();
+			
+			if(EventSrc instanceof JMenuItem)
+			{
+				String arg = evt.getActionCommand();
+				
+				if(arg.equals("Display General Help"))
+				{
+					clearText();
+					
+					writeText("Welcome to jRacy!");
+					writeText("");
+					writeText("More detailed information can be found in the jRacyHelp.txt that is distributed with TAU."
+					+ " What follows is a brief summary of the new features.");
+					writeText("");
+					writeText("1) Added new group tracking in jRacy:");
+					writeText("pprof has been updated to track group names, and jRacy has also been updated to take"
+					+ " advantage of this.  At present, a new group ledger window has been added to display groups."
+					+ " Clicking on one of the groups in this window will cause all members of the group to be"
+					+ " highlighted in all open windows, except for the total stat windows."
+					+ " This is only the first stage of group capabilities, but it has proved more time consuming"
+					+ " than expected to add all the features.  Much more to follow!");
+					writeText("");
+					writeText("2) Add the ability to save color maps between sessions:");
+					writeText("When you save a color map, a text file is created with the current map." 
+					+ " Loading a map causes the system to try and match the mapping names it know about"
+					+ " with names in the selected color map file. If it finds a match, it updates the color."
+					+ " This means that you do not need to have exactly the same mappings in the system as when"
+					+ " the map was saved.");
+					writeText("");
+					writeText("3) Sliders have been added to all windows that have bars.");
+					writeText("To display the sliders, select the display sliders option from the options menu"
+					+ " of any window containing bars.  This will display the sliders for that window.  The slider"
+					+ " options are as follows: A drop down list selecting a portion of the original length, and a bar"
+					+ " giving a multiple of this length.  This has proved useful in tailoring the exact lengths of"
+					+ " bars needed.");
+					writeText("");
+					writeText("4) A number of other minor changes and bug fixes.  As always, this is an ongoing project" 
+					+ " as such, ANY suggestions are welcome.  There will also be a clean up of the code to provide" 
+					+ " more effective searching as some things have been implimented just to get it working.");
+				}
+				else if(arg.equals("Close jRacy Help Window"))
+				{
+					setVisible(false);
+				}
+				else if(arg.equals("Exit jRacy!"))
+				{
+					setVisible(false);
+					dispose();
+					System.exit(0);
+				}	
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "HW01");
+		}
 	}
 }

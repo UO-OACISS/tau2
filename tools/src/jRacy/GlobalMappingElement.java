@@ -20,11 +20,15 @@ public class GlobalMappingElement implements Serializable
 	//Constructors.
 	public GlobalMappingElement()
 	{
-		functionName = null;
+		mappingName = null;
 		globalID = -1;
+		groups = new int[10];
+		numberOfGroups = 0;
 		colorFlag = false;
-		genericFunctionColor = null;
-		specificFunctionColor = null;
+		groupColorFlag = false;
+		genericMappingColor = null;
+		specificMappingColor = null;
+		Color groupMappingColor = null;
 		
 		meanExclusiveValue = 0.0;
 		totalExclusiveValue = 0.0;
@@ -40,16 +44,15 @@ public class GlobalMappingElement implements Serializable
 		totalTotalStatString = null;
 	}
 	
-	public void setFunctionName(String inFunctionName)
+	public void setMappingName(String inMappingName)
 	{
-		functionName = inFunctionName;
+		mappingName = inMappingName;
 	}
 	
-	public String getFunctionName()
+	public String getMappingName()
 	{
-		return functionName;
+		return mappingName;
 	}
-
 	
 	public void setGlobalID(int inGlobalID)
 	{
@@ -61,9 +64,39 @@ public class GlobalMappingElement implements Serializable
 		return globalID;
 	}
 	
+	public boolean addGroup(int inGroupID)
+	{
+		
+		if(numberOfGroups < 10)
+		{
+			groups[numberOfGroups] = inGroupID;
+			numberOfGroups++;
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean isGroupMember(int inGroupID)
+	{
+		for(int i=0;i<numberOfGroups;i++)
+		{
+			if(groups[i] == inGroupID)
+				return true;
+		}
+		
+		return false;
+	}
+	
 	public void setColorFlag(boolean inBoolean)
 	{
 		colorFlag = inBoolean;
+	}
+	
+	public void setGroupColorFlag(boolean inBoolean)
+	{
+		groupColorFlag = inBoolean;
 	}
 	
 	public boolean isColorFlagSet()
@@ -71,22 +104,40 @@ public class GlobalMappingElement implements Serializable
 		return colorFlag;
 	}
 	
+	public boolean isGroupColorFlagSet()
+	{
+		return groupColorFlag;
+	}
+	
 	public void setGenericColor(Color inColor)
 	{
-		genericFunctionColor = inColor;
+		genericMappingColor = inColor;
 	}
 	
 	public void setSpecificColor(Color inColor)
 	{
-		specificFunctionColor = inColor;
+		specificMappingColor = inColor;
 	}
 	
-	public Color getFunctionColor()
+	public void setGroupColor(Color inColor)
 	{
-		if(colorFlag)
-			return specificFunctionColor;
+		groupMappingColor = inColor;
+	}
+	
+	public Color getMappingColor()
+	{
+		//Group coloring takes priority.
+		if(groupColorFlag)
+			return groupMappingColor;
+		else if(colorFlag)
+			return specificMappingColor;
 		else
-			return genericFunctionColor;
+			return genericMappingColor;
+	}
+	
+	public Color getGenericColor()
+	{
+		return genericMappingColor;
 	}
 	
 	//Exclusive part.	
@@ -300,13 +351,18 @@ public class GlobalMappingElement implements Serializable
 	//Instance elmements.
 	
 	//Global Mapping reference.
-	String functionName;
-	int globalID;			//Global ID for this function name.
+	String mappingName;
+	int globalID;			//Global ID for this mapping.
+	
+	int[] groups;
+	int numberOfGroups;
 	
 	//Color Settings.
 	boolean colorFlag;
-	Color genericFunctionColor;
-	Color specificFunctionColor;
+	boolean groupColorFlag;
+	Color genericMappingColor;
+	Color specificMappingColor;
+	Color groupMappingColor;
 	
 	double maxInclusiveValue = 0;
 	double maxExclusiveValue = 0;
@@ -334,11 +390,5 @@ public class GlobalMappingElement implements Serializable
 	boolean meanValuesSet = false;
 	
 	String meanTotalStatString;
-	String totalTotalStatString; 
-	
-	//A note on colour values.
-	//Each function name will have its own unique colour assigned
-	//to it.  This insures that the same colour is diplayed for
-	//any drawing reference to that function, thus enabling functions
-	//in different drawing windows to be more easily identified.
+	String totalTotalStatString;
 }

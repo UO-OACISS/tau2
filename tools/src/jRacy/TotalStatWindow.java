@@ -76,16 +76,16 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				jRacy.helpWindow.clearText();
 				//Since the data must have been loaded.  Tell them someting about
 				//where they are.
-				jRacy.helpWindow.writeText("This is the total function statistics window.");
+				jRacy.helpWindow.writeText("This is the total mapping statistics window.");
 				jRacy.helpWindow.writeText("");
-				jRacy.helpWindow.writeText("This window shows you the total statistics for all functions on this thread.");
+				jRacy.helpWindow.writeText("This window shows you the total statistics for all mappings on this thread.");
 				jRacy.helpWindow.writeText("");
 				jRacy.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
 				jRacy.helpWindow.writeText("");
-				jRacy.helpWindow.writeText("Right click on any function within this window to bring up a popup");
+				jRacy.helpWindow.writeText("Right click on any mapping within this window to bring up a popup");
 				jRacy.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-				jRacy.helpWindow.writeText("for the function, or to show more details about the function.");
-				jRacy.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+				jRacy.helpWindow.writeText("for the mapping, or to show more details about the mapping.");
+				jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
 			}
 			
 			
@@ -123,9 +123,9 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			JMenu sortMenu = new JMenu("Sort by ...");
 			sortGroup = new ButtonGroup();
 			
-			functionIDButton = new JRadioButtonMenuItem("function ID", false);
+			mappingIDButton = new JRadioButtonMenuItem("mapping ID", false);
 			//Add a listener for this radio button.
-			functionIDButton.addActionListener(this);
+			mappingIDButton.addActionListener(this);
 			
 			nameButton = new JRadioButtonMenuItem("name", false);
 			//Add a listener for this radio button.
@@ -135,11 +135,11 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			//Add a listener for this radio button.
 			millisecondButton.addActionListener(this);
 			
-			sortGroup.add(functionIDButton);
+			sortGroup.add(mappingIDButton);
 			sortGroup.add(nameButton);
 			sortGroup.add(millisecondButton);
 			
-			sortMenu.add(functionIDButton);
+			sortMenu.add(mappingIDButton);
 			sortMenu.add(nameButton);
 			sortMenu.add(millisecondButton);
 			optionsMenu.add(sortMenu);
@@ -197,9 +197,9 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			JMenu windowsMenu = new JMenu("Windows");
 			
 			//Add a submenu.
-			JMenuItem functionLedgerItem = new JMenuItem("Show Function Ledger");
-			functionLedgerItem.addActionListener(this);
-			windowsMenu.add(functionLedgerItem);
+			JMenuItem mappingLedgerItem = new JMenuItem("Show Mapping Ledger");
+			mappingLedgerItem.addActionListener(this);
+			windowsMenu.add(mappingLedgerItem);
 			
 			//Add a submenu.
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
@@ -315,11 +315,11 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				{
 					jRacy.clrChooser.showColorChooser();	//The ColorChooser class maintains all the state.
 				}
-				else if(arg.equals("function ID"))
+				else if(arg.equals("mapping ID"))
 				{
-					if(functionIDButton.isSelected())
+					if(mappingIDButton.isSelected())
 					{
-						sortByFunctionID = true;
+						sortByMappingID = true;
 						sortByName = false;
 						sortByMillisecond = false;
 						//Call repaint.
@@ -330,7 +330,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				{
 					if(nameButton.isSelected())
 					{
-						sortByFunctionID = false;
+						sortByMappingID = false;
 						sortByName = true;
 						sortByMillisecond = false;
 						//Call repaint.
@@ -341,7 +341,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				{
 					if(millisecondButton.isSelected())
 					{
-						sortByFunctionID = false;
+						sortByMappingID = false;
 						sortByName = false;
 						sortByMillisecond = true;
 						//Call repaint.
@@ -382,11 +382,11 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 						totalStatWindowPanelRef.repaint();
 					}
 				}
-				else if(arg.equals("Show Function Ledger"))
+				else if(arg.equals("Show Mapping Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
-					//just show the function ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayFunctionLedger();
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
@@ -404,16 +404,16 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 					jRacy.helpWindow.show();
 					//Since the data must have been loaded.  Tell them someting about
 					//where they are.
-					jRacy.helpWindow.writeText("This is the total function statistics window.");
+					jRacy.helpWindow.writeText("This is the total mapping statistics window.");
 					jRacy.helpWindow.writeText("");
-					jRacy.helpWindow.writeText("This window shows you the total statistics for all functions on this thread.");
+					jRacy.helpWindow.writeText("This window shows you the total statistics for all mappings on this thread.");
 					jRacy.helpWindow.writeText("");
 					jRacy.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
 					jRacy.helpWindow.writeText("");
-					jRacy.helpWindow.writeText("Right click on any function within this window to bring up a popup");
+					jRacy.helpWindow.writeText("Right click on any mapping within this window to bring up a popup");
 					jRacy.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-					jRacy.helpWindow.writeText("for the function, or to show more details about the function.");
-					jRacy.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+					jRacy.helpWindow.writeText("for the mapping, or to show more details about the mapping.");
+					jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
 				}
 			}
 		}
@@ -471,7 +471,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 	public Vector getStaticMainWindowSystemData()
 	{
 		try{
-			if(sortByFunctionID)
+			if(sortByMappingID)
 			{
 				if(descendingOrder)
 				{
@@ -616,7 +616,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 	ButtonGroup sortOrderGroup;
 	ButtonGroup inclusiveExclusiveGroup;
 	
-	JRadioButtonMenuItem functionIDButton;
+	JRadioButtonMenuItem mappingIDButton;
 	JRadioButtonMenuItem nameButton;
 	JRadioButtonMenuItem millisecondButton;
 	
@@ -626,7 +626,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 	JRadioButtonMenuItem inclusiveRadioButton;
 	JRadioButtonMenuItem exclusiveRadioButton;
 	
-	boolean sortByFunctionID = false;
+	boolean sortByMappingID = false;
 	boolean sortByName = false;
 	boolean sortByMillisecond = true;
 	

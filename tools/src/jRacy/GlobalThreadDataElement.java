@@ -31,7 +31,7 @@ public class GlobalThreadDataElement implements Serializable
 		inclusivePercentValue = 0;
 		exclusivePercentValue = 0;
 		
-		functionID = -1;
+		mappingID = -1;
 		
 		tStatString = null;
 		
@@ -44,31 +44,31 @@ public class GlobalThreadDataElement implements Serializable
 	}
 	
 	//Rest of the public functions.
-	public String getFunctionName()
+	public String getMappingName()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
-		return tmpGME.getFunctionName();
+		return tmpGME.getMappingName();
 	}
 	
-	public void setFunctionID(int inFunctionID)
+	public void setMappingID(int inMappingID)
 	{
-		functionID = inFunctionID;
+		mappingID = inMappingID;
 	}
 	
-	public void setFunctionExists()
+	public void setMappingExists()
 	{
-		functionExists = true;
+		mappingExists = true;
 	}
 	
-	public boolean getFunctionExists()
+	public boolean getMappingExists()
 	{
-		return functionExists;
+		return mappingExists;
 	}
 	
-	public int getFunctionID()
+	public int getMappingID()
 	{
-		return functionID;
+		return mappingID;
 	}
 	
 	public void setInclusiveValue(double inInclusiveValue)
@@ -220,11 +220,11 @@ public class GlobalThreadDataElement implements Serializable
 	//A global mapping element reference.
 	GlobalMappingElement tmpGME;
 	
-	//Set if function exists on this thread.
-	boolean functionExists = false;
+	//Set if mapping exists on this thread.
+	boolean mappingExists = false;
 	
-	//Function ID
-	int functionID;
+	//Mapping ID
+	int mappingID;
 	
 	//Named data values.
 	private double inclusiveValue;

@@ -137,14 +137,14 @@ public class StaticMainWindowData
 					{
 						tmpGlobalThreadDataElement = (GlobalThreadDataElement) e4.nextElement();
 						
-						//Only want to add an element if this function existed on this thread.
+						//Only want to add an element if this mapping existed on this thread.
 						//Check for this.
 						if(tmpGlobalThreadDataElement != null)
 						{
 							//Create a new thread data object.
 							tmpSMWThreadDataElement = new SMWThreadDataElement(tmpGlobalThreadDataElement);
 							
-							tmpSMWThreadDataElement.setFunctionID(tmpGlobalThreadDataElement.getFunctionID());
+							tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getMappingID());
 							
 							//Add to the thread data object.
 							tmpSMWThread.addThreadDataElement(tmpSMWThreadDataElement);
@@ -163,7 +163,7 @@ public class StaticMainWindowData
 		//First, grab the global mapping element list.
 		GlobalMapping tmpGlobalMapping = jRacy.staticSystemData.getGlobalMapping();
 		
-		Vector tmpVector = tmpGlobalMapping.getNameIDMapping();
+		Vector tmpVector = tmpGlobalMapping.getMapping(0);
 		
 		//Clear the sMWMeanData for safety.
 		sMWMeanData.removeAllElements();
@@ -178,7 +178,7 @@ public class StaticMainWindowData
 				//Create a new mean data element.
 				SMWMeanDataElement tmpSMWMeanDataElement = new SMWMeanDataElement();
 
-				tmpSMWMeanDataElement.setFunctionID(tmpGME.getGlobalID());
+				tmpSMWMeanDataElement.setMappingID(tmpGME.getGlobalID());
 				tmpSMWMeanDataElement.setValue(tmpGME.getMeanExclusiveValue());
 				tmpSMWMeanDataElement.setSortByValue();
 				tmpSMWMeanDataElement.setSortByReverse(true);
@@ -231,9 +231,9 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByFunctionID();
+				tmpSMWThreadDataElementCopy.setSortByMappingID();
 				tmpSMWThreadDataElementCopy.setSortByReverse(true);
 				
 				tmpVector.addElement(tmpSMWThreadDataElementCopy);
@@ -247,9 +247,9 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByFunctionID();
+				tmpSMWThreadDataElementCopy.setSortByMappingID();
 				tmpSMWThreadDataElementCopy.setSortByReverse(true);
 				
 				tmpVector.addElement(tmpSMWThreadDataElementCopy);
@@ -263,9 +263,9 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByFunctionID();
+				tmpSMWThreadDataElementCopy.setSortByMappingID();
 				
 				tmpVector.addElement(tmpSMWThreadDataElementCopy);
 			}
@@ -278,9 +278,9 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByFunctionID();
+				tmpSMWThreadDataElementCopy.setSortByMappingID();
 				
 				tmpVector.addElement(tmpSMWThreadDataElementCopy);
 			}
@@ -293,7 +293,7 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
 				tmpSMWThreadDataElementCopy.setSortByName();
 				tmpSMWThreadDataElementCopy.setSortByReverse(true);
@@ -309,7 +309,7 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
 				tmpSMWThreadDataElementCopy.setSortByName();
 				tmpSMWThreadDataElementCopy.setSortByReverse(true);
@@ -325,7 +325,7 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
 				tmpSMWThreadDataElementCopy.setSortByName();
 				
@@ -340,7 +340,7 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 			
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
 				tmpSMWThreadDataElementCopy.setSortByName();
 				
@@ -355,7 +355,7 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 			
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
 				tmpSMWThreadDataElementCopy.setSortByValue();
 				tmpSMWThreadDataElementCopy.setSortByReverse(true);
@@ -371,7 +371,7 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 			
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
 				tmpSMWThreadDataElementCopy.setSortByValue();
 				tmpSMWThreadDataElementCopy.setSortByReverse(true);
@@ -387,7 +387,7 @@ public class StaticMainWindowData
 				//Create a new thread data object.
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 			
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
 				tmpSMWThreadDataElementCopy.setSortByValue();
 				
@@ -403,7 +403,7 @@ public class StaticMainWindowData
 				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 			
 			
-				tmpSMWThreadDataElementCopy.setFunctionID(tmpSMWThreadDataElement.getFunctionID());
+				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
 				tmpSMWThreadDataElementCopy.setSortByValue();
 				
@@ -461,7 +461,7 @@ public class StaticMainWindowData
 						{
 							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
 							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-							tmpSMWThreadDataElement.setSortByFunctionID();
+							tmpSMWThreadDataElement.setSortByMappingID();
 							tmpSMWThreadDataElement.setSortByReverse(true);
 						}
 						
@@ -500,7 +500,7 @@ public class StaticMainWindowData
 						{
 							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
 							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-							tmpSMWThreadDataElement.setSortByFunctionID();
+							tmpSMWThreadDataElement.setSortByMappingID();
 							tmpSMWThreadDataElement.setSortByReverse(true);
 						}
 						
@@ -539,7 +539,7 @@ public class StaticMainWindowData
 						{
 							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
 							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-							tmpSMWThreadDataElement.setSortByFunctionID();
+							tmpSMWThreadDataElement.setSortByMappingID();
 							tmpSMWThreadDataElement.setSortByReverse(false);
 						}
 						
@@ -578,7 +578,7 @@ public class StaticMainWindowData
 						{
 							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
 							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-							tmpSMWThreadDataElement.setSortByFunctionID();
+							tmpSMWThreadDataElement.setSortByMappingID();
 							tmpSMWThreadDataElement.setSortByReverse(false);
 						}
 						
@@ -926,10 +926,10 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());				
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByFunctionID();
+				tmpSMWMeanDataElementCopy.setSortByMappingID();
 				tmpSMWMeanDataElementCopy.setSortByReverse(true);
 				
 				tmpVector.addElement(tmpSMWMeanDataElementCopy);
@@ -947,10 +947,10 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByFunctionID();
+				tmpSMWMeanDataElementCopy.setSortByMappingID();
 				tmpSMWMeanDataElementCopy.setSortByReverse(true);
 				
 				tmpVector.addElement(tmpSMWMeanDataElementCopy);
@@ -967,10 +967,10 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByFunctionID();
+				tmpSMWMeanDataElementCopy.setSortByMappingID();
 				tmpSMWMeanDataElementCopy.setSortByReverse(false);
 				
 				tmpVector.addElement(tmpSMWMeanDataElementCopy);
@@ -987,10 +987,10 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByFunctionID();
+				tmpSMWMeanDataElementCopy.setSortByMappingID();
 				tmpSMWMeanDataElementCopy.setSortByReverse(false);
 				
 				tmpVector.addElement(tmpSMWMeanDataElementCopy);
@@ -1007,7 +1007,7 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
 				tmpSMWMeanDataElementCopy.setSortByName();
@@ -1028,7 +1028,7 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
 				tmpSMWMeanDataElementCopy.setSortByName();
@@ -1048,7 +1048,7 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
 				tmpSMWMeanDataElementCopy.setSortByName();
@@ -1068,7 +1068,7 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
 				tmpSMWMeanDataElementCopy.setSortByName();
@@ -1088,7 +1088,7 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
 				tmpSMWMeanDataElementCopy.setSortByValue();
@@ -1108,7 +1108,7 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
 				tmpSMWMeanDataElementCopy.setSortByValue();
@@ -1128,7 +1128,7 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
 				tmpSMWMeanDataElementCopy.setSortByValue();
@@ -1148,7 +1148,7 @@ public class StaticMainWindowData
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
 				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
 				//Set the sorting method.
 				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
 				tmpSMWMeanDataElementCopy.setSortByValue();

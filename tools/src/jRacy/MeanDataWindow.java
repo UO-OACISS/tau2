@@ -1,5 +1,5 @@
 /* 
-	ThreadDataWindow.java
+	MeanDataWindow.java
 
 	Title:			jRacy
 	Author:			Robert Bell
@@ -15,7 +15,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class MeanDataWindow extends JFrame implements ActionListener, Observer, ChangeListener
+public class MeanDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener
 {
 	
 	public MeanDataWindow()
@@ -65,14 +65,14 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 				//where they are.
 				jRacy.helpWindow.writeText("This is the mean data window");
 				jRacy.helpWindow.writeText("");
-				jRacy.helpWindow.writeText("This window shows you the mean values for all functions.");
+				jRacy.helpWindow.writeText("This window shows you the mean values for all mappings.");
 				jRacy.helpWindow.writeText("");
 				jRacy.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
 				jRacy.helpWindow.writeText("");
-				jRacy.helpWindow.writeText("Right click on any function within this window to bring up a popup");
+				jRacy.helpWindow.writeText("Right click on any mapping within this window to bring up a popup");
 				jRacy.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-				jRacy.helpWindow.writeText("for the function, or to show more details about the function.");
-				jRacy.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+				jRacy.helpWindow.writeText("for the mapping, or to show more details about the mapping.");
+				jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
 			}
 				
 			//Sort the local data.
@@ -108,14 +108,15 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 			//Options menu.
 			//******************************
 			JMenu optionsMenu = new JMenu("Options");
+			optionsMenu.addMenuListener(this);
 			
 			//Add a submenu.
 			JMenu sortMenu = new JMenu("Sort by ...");
 			sortGroup = new ButtonGroup();
 			
-			functionIDButton = new JRadioButtonMenuItem("function ID", false);
+			mappingIDButton = new JRadioButtonMenuItem("mapping ID", false);
 			//Add a listener for this radio button.
-			functionIDButton.addActionListener(this);
+			mappingIDButton.addActionListener(this);
 			
 			nameButton = new JRadioButtonMenuItem("name", false);
 			//Add a listener for this radio button.
@@ -125,11 +126,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 			//Add a listener for this radio button.
 			millisecondButton.addActionListener(this);
 			
-			sortGroup.add(functionIDButton);
+			sortGroup.add(mappingIDButton);
 			sortGroup.add(nameButton);
 			sortGroup.add(millisecondButton);
 			
-			sortMenu.add(functionIDButton);
+			sortMenu.add(mappingIDButton);
 			sortMenu.add(nameButton);
 			sortMenu.add(millisecondButton);
 			optionsMenu.add(sortMenu);
@@ -192,7 +193,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 			//End Submenu.
 			
 			//Add a submenu.
-			JMenu unitsMenu = new JMenu("Select Units");
+			unitsMenu = new JMenu("Select Units");
 			unitsGroup = new ButtonGroup();
 			
 			secondsButton = new JRadioButtonMenuItem("Seconds", false);
@@ -217,6 +218,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 			optionsMenu.add(unitsMenu);
 			//End Submenu.
 			
+			displaySlidersButton = new JRadioButtonMenuItem("Display Sliders", false);
+			//Add a listener for this radio button.
+			displaySlidersButton.addActionListener(this);
+			optionsMenu.add(displaySlidersButton);
+			
 			//******************************
 			//End - Options menu.
 			//******************************
@@ -226,13 +232,19 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 			//Window menu.
 			//******************************
 			JMenu windowsMenu = new JMenu("Windows");
+			windowsMenu.addMenuListener(this);
 			
 			//Add a submenu.
-			JMenuItem functionLedgerItem = new JMenuItem("Show Function Ledger");
-			functionLedgerItem.addActionListener(this);
-			windowsMenu.add(functionLedgerItem);
+			JMenuItem mappingLedgerItem = new JMenuItem("Show Mapping Ledger");
+			mappingLedgerItem.addActionListener(this);
+			windowsMenu.add(mappingLedgerItem);
 			
 			//Add a submenu.
+			mappingGroupLedgerItem = new JMenuItem("Show Group Mapping Ledger");
+			mappingGroupLedgerItem.addActionListener(this);
+			windowsMenu.add(mappingGroupLedgerItem);
+			
+			//Add listeners
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
 			closeAllSubwindowsItem.addActionListener(this);
 			windowsMenu.add(closeAllSubwindowsItem);
@@ -276,10 +288,10 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 			//Create and add the componants.
 			//******************************
 			//Setting up the layout system for the main window.
-			Container contentPane = getContentPane();
-			GridBagLayout gbl = new GridBagLayout();
+			contentPane = getContentPane();
+			gbl = new GridBagLayout();
 			contentPane.setLayout(gbl);
-			GridBagConstraints gbc = new GridBagConstraints();
+			gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			
 			//Create some borders.
@@ -297,10 +309,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 			//**********
 			
 			//The scroll panes into which the list shall be placed.
-			JScrollPane meanDataWindowPanelScrollPane = new JScrollPane(meanDataWindowPanelRef);
+			meanDataWindowPanelScrollPane = new JScrollPane(meanDataWindowPanelRef);
 			meanDataWindowPanelScrollPane.setBorder(mainloweredbev);
 			meanDataWindowPanelScrollPane.setPreferredSize(new Dimension(500, 450));
 			
+			//Do the slider stuff, but don't add.  By default, sliders are off.
 			String sliderMultipleStrings[] = {"1.00", "0.75", "0.50", "0.25", "0.10"};
 			sliderMultiple = new JComboBox(sliderMultipleStrings);
 			sliderMultiple.addActionListener(this);
@@ -312,36 +325,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 			barLengthSlider.setSnapToTicks(true);
 			barLengthSlider.addChangeListener(this);
 			
-			//Now add the componants to the main screen.
-			gbc.fill = GridBagConstraints.NONE;
-			gbc.anchor = GridBagConstraints.EAST;
-			gbc.weightx = 0.10;
-			gbc.weighty = 0.01;
-			addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
-			
-			gbc.fill = GridBagConstraints.NONE;
-			gbc.anchor = GridBagConstraints.WEST;
-			gbc.weightx = 0.10;
-			gbc.weighty = 0.01;
-			addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
-			
-			gbc.fill = GridBagConstraints.NONE;
-			gbc.anchor = GridBagConstraints.EAST;
-			gbc.weightx = 0.10;
-			gbc.weighty = 0.01;
-			addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
-			
-			gbc.fill = GridBagConstraints.HORIZONTAL;
-			gbc.anchor = GridBagConstraints.WEST;
-			gbc.weightx = 0.7;
-			gbc.weighty = 0.01;
-			addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
-			
 			gbc.fill = GridBagConstraints.BOTH;
 			gbc.anchor = GridBagConstraints.CENTER;
 			gbc.weightx = 0.95;
 			gbc.weighty = 0.98;
-			addCompItem(meanDataWindowPanelScrollPane, gbc, 0, 1, 4, 1);
+			addCompItem(meanDataWindowPanelScrollPane, gbc, 0, 0, 1, 1);
 		}
 		catch(Exception e)
 		{
@@ -375,11 +363,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 					dispose();
 					System.exit(0);
 				}
-				else if(arg.equals("function ID"))
+				else if(arg.equals("mapping ID"))
 				{
-					if(functionIDButton.isSelected())
+					if(mappingIDButton.isSelected())
 					{
-						sortByFunctionID = true;
+						sortByMappingID = true;
 						sortByName = false;
 						sortByMillisecond = false;
 						sortLocalData();
@@ -391,7 +379,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 				{
 					if(nameButton.isSelected())
 					{
-						sortByFunctionID = false;
+						sortByMappingID = false;
 						sortByName = true;
 						sortByMillisecond = false;
 						sortLocalData();
@@ -403,7 +391,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 				{
 					if(millisecondButton.isSelected())
 					{
-						sortByFunctionID = false;
+						sortByMappingID = false;
 						sortByName = false;
 						sortByMillisecond = true;
 						sortLocalData();
@@ -494,11 +482,28 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 						meanDataWindowPanelRef.repaint();
 					}
 				}
-				else if(arg.equals("Show Function Ledger"))
+				else if(arg.equals("Display Sliders"))
+				{
+					if(displaySlidersButton.isSelected())
+					{	
+						displaySiders(true);
+					}
+					else
+					{
+						displaySiders(false);
+					}
+				}
+				else if(arg.equals("Show Mapping Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
-					//just show the function ledger window.
-					(jRacy.staticSystemData.getGlobalMapping()).displayFunctionLedger();
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+				}
+				else if(arg.equals("Show Group Mapping Ledger"))
+				{
+					//In order to be in this window, I must have loaded the data. So,
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
@@ -518,14 +523,14 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 					//where they are.
 					jRacy.helpWindow.writeText("This is the mean data window");
 					jRacy.helpWindow.writeText("");
-					jRacy.helpWindow.writeText("This window shows you the mean values for all functions.");
+					jRacy.helpWindow.writeText("This window shows you the mean values for all mappings.");
 					jRacy.helpWindow.writeText("");
 					jRacy.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
 					jRacy.helpWindow.writeText("");
-					jRacy.helpWindow.writeText("Right click on any function within this window to bring up a popup");
+					jRacy.helpWindow.writeText("Right click on any mapping within this window to bring up a popup");
 					jRacy.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-					jRacy.helpWindow.writeText("for the function, or to show more details about the function.");
-					jRacy.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+					jRacy.helpWindow.writeText("for the mapping, or to show more details about the mapping.");
+					jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
 				}
 			}
 			else if(EventSrc == sliderMultiple)
@@ -550,6 +555,42 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 	//End - Change listener code.
 	//******************************
 	
+	//******************************
+	//MenuListener code.
+	//******************************
+	public void menuSelected(MenuEvent evt)
+	{
+		try
+		{
+			if(percent)
+				unitsMenu.setEnabled(false);
+			else
+				unitsMenu.setEnabled(true);
+				
+			if(jRacy.staticSystemData.groupNamesPresent())
+				mappingGroupLedgerItem.setEnabled(true);
+			else
+				mappingGroupLedgerItem.setEnabled(false);
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDW04");
+		}
+		
+	}
+	
+	public void menuDeselected(MenuEvent evt)
+	{
+	}
+	
+	public void menuCanceled(MenuEvent evt)
+	{
+	}
+	
+	//******************************
+	//End - MenuListener code.
+	//******************************
+	
 	//Observer functions.
 	public void update(Observable o, Object arg)
 	{
@@ -572,7 +613,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW04");
+			jRacy.systemError(null, "MDW05");
 		}
 	}
 	
@@ -581,7 +622,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 	{
 		try
 		{
-			if(sortByFunctionID)
+			if(sortByMappingID)
 			{
 				if(inclusive)
 				{
@@ -636,7 +677,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW05");
+			jRacy.systemError(null, "MDW06");
 		}
 	}
 	
@@ -672,7 +713,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW06");
+			jRacy.systemError(null, "MDW07");
 		}
 		
 		return tmpInt;
@@ -688,10 +729,69 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW07");
+			jRacy.systemError(null, "MDW08");
 		}
 		
 		return 0;
+	}
+	
+	private void displaySiders(boolean displaySliders)
+	{
+		if(displaySliders)
+		{
+			//Since the menu option is a toggle, the only component that needs to be
+			//removed is that scrollPane.  We then add back in with new parameters.
+			//This might not be required as it seems to adjust well if left in, but just
+			//to be sure.
+			contentPane.remove(meanDataWindowPanelScrollPane);
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.EAST;
+			gbc.weightx = 0.10;
+			gbc.weighty = 0.01;
+			addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.weightx = 0.10;
+			gbc.weighty = 0.01;
+			addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.EAST;
+			gbc.weightx = 0.10;
+			gbc.weighty = 0.01;
+			addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.weightx = 0.70;
+			gbc.weighty = 0.01;
+			addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.BOTH;
+			gbc.anchor = GridBagConstraints.CENTER;
+			gbc.weightx = 0.95;
+			gbc.weighty = 0.98;
+			addCompItem(meanDataWindowPanelScrollPane, gbc, 0, 1, 4, 1);
+		}
+		else
+		{
+			contentPane.remove(sliderMultipleLabel);
+			contentPane.remove(sliderMultiple);
+			contentPane.remove(barLengthLabel);
+			contentPane.remove(barLengthSlider);
+			contentPane.remove(meanDataWindowPanelScrollPane);
+			
+			gbc.fill = GridBagConstraints.BOTH;
+			gbc.anchor = GridBagConstraints.CENTER;
+			gbc.weightx = 0.95;
+			gbc.weighty = 0.98;
+			addCompItem(meanDataWindowPanelScrollPane, gbc, 0, 0, 1, 1);
+		}
+		
+		//Now call validate so that these componant changes are displayed.
+		validate();
 	}
 	
 	//Helper functions.
@@ -707,7 +807,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW08");
+			jRacy.systemError(null, "MDW09");
 		}
 	}
 	
@@ -735,13 +835,15 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW09");
+			jRacy.systemError(null, "MDW10");
 		}
 	}
 	
 	//******************************
 	//Instance data.
 	//******************************
+	private JMenu unitsMenu;
+	private JMenuItem mappingGroupLedgerItem;
 	
 	private ButtonGroup sortGroup;
 	private ButtonGroup sortOrderGroup;
@@ -752,7 +854,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 	private JRadioButtonMenuItem ascendingButton;
 	private JRadioButtonMenuItem descendingButton;
 	
-	private JRadioButtonMenuItem functionIDButton;
+	private JRadioButtonMenuItem mappingIDButton;
 	private JRadioButtonMenuItem nameButton;
 	private JRadioButtonMenuItem millisecondButton;
 	
@@ -766,13 +868,21 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
 	private JRadioButtonMenuItem millisecondsButton;
 	private JRadioButtonMenuItem microsecondsButton;
 	
-	private JRadioButtonMenuItem showZeroFunctionsItem;
+	private JRadioButtonMenuItem showZeroMappingsItem;
+	
+	private JRadioButtonMenuItem displaySlidersButton;
 	
 	private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
 	private JComboBox sliderMultiple;
 	
 	private JLabel barLengthLabel = new JLabel("Bar Mulitiple");
 	private JSlider barLengthSlider = new JSlider(0, 40, 1);
+	
+	private Container contentPane = null;
+	private GridBagLayout gbl = null;
+	private GridBagConstraints gbc = null;
+	
+	private JScrollPane meanDataWindowPanelScrollPane;
 	
  	private MeanDataWindowPanel meanDataWindowPanelRef;
  	
@@ -781,7 +891,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer, 
  	//Local data.
  	Vector currentSMWMeanData = null;
  	
- 	private boolean sortByFunctionID = false;
+ 	private boolean sortByMappingID = false;
 	private boolean sortByName = false;
 	private boolean sortByMillisecond = true;
 	

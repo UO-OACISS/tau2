@@ -107,25 +107,25 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			barXStart = 100;
 			
 			//Add items to the popu menu.
-			JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
-			functionDetailsItem.addActionListener(this);
-			popup.add(functionDetailsItem);
+			JMenuItem mappingDetailsItem = new JMenuItem("Show Mapping Details");
+			mappingDetailsItem.addActionListener(this);
+			popup.add(mappingDetailsItem);
 			
-			JMenuItem changeColorItem = new JMenuItem("Change Function Color");
+			JMenuItem changeColorItem = new JMenuItem("Change Mapping Color");
 			changeColorItem.addActionListener(this);
 			popup.add(changeColorItem);
 			
-			JMenuItem maskFunctionItem = new JMenuItem("Reset to Generic Color");
-			maskFunctionItem.addActionListener(this);
-			popup.add(maskFunctionItem);
+			JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
+			maskMappingItem.addActionListener(this);
+			popup.add(maskMappingItem);
 			
-			JMenuItem highlightFunctionItem = new JMenuItem("Highlight this Function");
-			highlightFunctionItem.addActionListener(this);
-			popup.add(highlightFunctionItem);
+			JMenuItem highlightMappingItem = new JMenuItem("Highlight this Mapping");
+			highlightMappingItem.addActionListener(this);
+			popup.add(highlightMappingItem);
 			
-			JMenuItem unHighlightFunctionItem = new JMenuItem("Un-Highlight this Function");
-			unHighlightFunctionItem.addActionListener(this);
-			popup.add(unHighlightFunctionItem);
+			JMenuItem unHighlightMappingItem = new JMenuItem("Un-Highlight this Mapping");
+			unHighlightMappingItem.addActionListener(this);
+			popup.add(unHighlightMappingItem);
 		}
 		catch(Exception e)
 		{
@@ -178,13 +178,13 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 									jRacy.helpWindow.writeText("");
 									jRacy.helpWindow.writeText("Using either the right or left mouse buttons, click once" +
 															  " to display more detailed data about the" +
-															  " mean values for the functions in the system.");
+															  " mean values for the mappings in the system.");
 								}
 								
 								//Return a string indicating that clicking before the display bar
 								//will cause thread data to be displayed.
 								
-								return new String("Right click here to display mean data.");
+								return new String("Left click - detailed display/Right click - Total Statistics.");
 							}
 							else if(xCoord < sMWMeanDataElement.getXEnd())
 							{
@@ -197,25 +197,25 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 									//Now send the help info.
 									jRacy.helpWindow.writeText("Your mouse is over the mean draw bar!");
 									jRacy.helpWindow.writeText("");
-									jRacy.helpWindow.writeText("Current function name is: " + sMWMeanDataElement.getFunctionName());
+									jRacy.helpWindow.writeText("Current mapping name is: " + sMWMeanDataElement.getMappingName());
 									jRacy.helpWindow.writeText("");
 									jRacy.helpWindow.writeText("The mean draw bars give a visual representation of the" +
-															  " mean values for the functions which have run in the system." +
+															  " mean values for the mappings which have run in the system." +
 															  "  The funtions are assigned a color from the current" +
-															  " Racy color set.  The colors are cycled through when the" +
+															  " jRacy color set.  The colors are cycled through when the" +
 															  " number of funtions exceeds the number of available" +
-															  " colors." +
+															  " colors. In the preferences section, you can add more colors." +
 															  "  Use the right and left mouse buttons " +
 															  "to give additional information.");
 								}
 								
-								//Return the name of the function in the current thread data object.
-								return sMWMeanDataElement.getFunctionName();
+								//Return the name of the mapping in the current thread data object.
+								return sMWMeanDataElement.getMappingName();
 							}			
 						}
 						
 						//If in here, and at this position, it means that the mouse is not over
-						//a bar. However, we might be over the misc. function section.  Check for this.
+						//a bar. However, we might be over the misc. mapping section.  Check for this.
 						if(xCoord <= (barXStart + defaultBarLength))
 						{
 							//Output data to the help window if it is showing.
@@ -225,17 +225,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 								jRacy.helpWindow.clearText();
 								
 								//Now send the help info.
-								jRacy.helpWindow.writeText("Your mouse is over the misc. function section!");
+								jRacy.helpWindow.writeText("Your mouse is over the misc. mapping section!");
 								jRacy.helpWindow.writeText("");
-								jRacy.helpWindow.writeText("These are functions which have a non zero value," +
+								jRacy.helpWindow.writeText("These are mappings which have a non zero value," +
 																					" but whose screen representation is less than a pixel.");
 								jRacy.helpWindow.writeText("");
-								jRacy.helpWindow.writeText("To view these functions, right or left click to the left of" +
+								jRacy.helpWindow.writeText("To view these mappings, right or left click to the left of" +
 																					" this bar to bring up windows which will show more detailed information.");
 							}
 							
-							//Return the name of the function in the current thread data object.
-							return "Misc function section ... see help window for details";
+							//Return the name of the mapping in the current thread data object.
+							return "Misc mapping section ... see help window for details";
 						}
 					}
 				}
@@ -295,7 +295,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 															
 															//Return a string indicating that clicking before the display bar
 															//will cause thread data to be displayed.
-															return new String("Click once here to display more thread data.");
+															return new String("Left click - detailed display/Right click - Total Statistics.");
 														}
 													else
 													{	
@@ -319,10 +319,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 																//Now send the help info.
 																jRacy.helpWindow.writeText("Your mouse is over one of the thread draw bars!");
 																jRacy.helpWindow.writeText("");
-																jRacy.helpWindow.writeText("Current function name is: " + sMWThreadDataElement.getFunctionName());
+																jRacy.helpWindow.writeText("Current mapping name is: " + sMWThreadDataElement.getMappingName());
 																jRacy.helpWindow.writeText("");
 																jRacy.helpWindow.writeText("The thread draw bars give a visual representation" +
-																						  " functions which have run on this thread." +
+																						  " mappings which have run on this thread." +
 																						  "  The funtions are assigned a color from the current" +
 																						  " Racy color set.  The colors are cycled through when the" +
 																						  " number of funtions exceeds the number of available" +
@@ -331,8 +331,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 															  							  "to give additional information.");
 															}
 															
-															//Return the name of the function in the current thread data object.
-															return sMWThreadDataElement.getFunctionName();
+															//Return the name of the mapping in the current thread data object.
+															return sMWThreadDataElement.getMappingName();
 														}
 														else
 														{
@@ -348,7 +348,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 													}
 											}
 											//If in here, and at this position, it means that the mouse is not over
-											//a bar. However, we might be over the misc. function section.  Check for this.
+											//a bar. However, we might be over the misc. mapping section.  Check for this.
 											if((yCoord >= tmpYBegin) && (yCoord <= tmpYEnd))
 											{
 												if(xCoord <= (barXStart + defaultBarLength))
@@ -360,17 +360,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 														jRacy.helpWindow.clearText();
 														
 														//Now send the help info.
-														jRacy.helpWindow.writeText("Your mouse is over the misc. function section!");
+														jRacy.helpWindow.writeText("Your mouse is over the misc. mapping section!");
 														jRacy.helpWindow.writeText("");
-														jRacy.helpWindow.writeText("These are functions which have a non zero value," +
+														jRacy.helpWindow.writeText("These are mappings which have a non zero value," +
 																											" but whose screen representation is less than a pixel.");
 														jRacy.helpWindow.writeText("");
-														jRacy.helpWindow.writeText("To view these functions, right or left click to the left of" +
+														jRacy.helpWindow.writeText("To view these mappings, right or left click to the left of" +
 																					" this bar to bring up windows which will show more detailed information.");
 													}
 													
-													//Return the name of the function in the current thread data object.
-													return "Misc function section ... see help window for details";
+													//Return the name of the mapping in the current thread data object.
+													return "Misc mapping section ... see help window for details";
 												}
 											}
 											return S;
@@ -381,7 +381,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 								//End if statement!
 							}
 							
-							//At this point, we drop out of the function, returning the default string.
+							//At this point, we drop out of the mapping, returning the default string.
 							return S;
 						}
 						//End if statement!
@@ -420,42 +420,42 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Show Function Details"))
+				if(arg.equals("Show Mapping Details"))
 				{
 					
 					if(clickedOnObject instanceof SMWThreadDataElement)
 					{
 						tmpSMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
-						//Bring up an expanded data window for this function, and set this function as highlighted.
-						jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWThreadDataElement.getFunctionID());
-						FunctionDataWindow tmpRef = new FunctionDataWindow(tmpSMWThreadDataElement.getFunctionName(), (sMWindow.getSMWData()));
+						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
+						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWThreadDataElement.getMappingName(), (sMWindow.getSMWData()));
 						jRacy.systemEvents.addObserver(tmpRef);
 						tmpRef.show();
 					}
 					else
 					{
 						tmpSMWMeanDataElement = (SMWMeanDataElement) clickedOnObject;
-						//Bring up an expanded data window for this function, and set this function as highlighted.
-						jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWMeanDataElement.getFunctionID());
-						FunctionDataWindow tmpRef = new FunctionDataWindow(tmpSMWMeanDataElement.getFunctionName(), (sMWindow.getSMWData()));
+						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
+						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWMeanDataElement.getMappingName(), (sMWindow.getSMWData()));
 						jRacy.systemEvents.addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
-				else if(arg.equals("Change Function Color"))
+				else if(arg.equals("Change Mapping Color"))
 				{	
-					int functionID = -1;
+					int mappingID = -1;
 					
 					//Get the clicked on object.
 					if(clickedOnObject instanceof SMWThreadDataElement)
-						functionID = ((SMWThreadDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					else
-						functionID = ((SMWMeanDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
 					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
-					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
-					Color tmpCol = tmpGME.getFunctionColor();
+					Color tmpCol = tmpGME.getMappingColor();
 					
 					JColorChooser tmpJColorChooser = new JColorChooser();
 					tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
@@ -471,35 +471,35 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				else if(arg.equals("Reset to Generic Color"))
 				{	
 					
-					int functionID = -1;
+					int mappingID = -1;
 					
 					//Get the clicked on object.
 					if(clickedOnObject instanceof SMWThreadDataElement)
-						functionID = ((SMWThreadDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					else
-						functionID = ((SMWMeanDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
 					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
-					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					tmpGME.setColorFlag(false);
 					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
 				}
-				else if(arg.equals("Highlight this Function"))
+				else if(arg.equals("Highlight this Mapping"))
 				{		
-					int functionID = -1;
+					int mappingID = -1;
 					
 					//Get the clicked on object.
 					if(clickedOnObject instanceof SMWThreadDataElement)
-						functionID = ((SMWThreadDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					else
-						functionID = ((SMWMeanDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
-					jRacy.clrChooser.setHighlightColorFunctionID(functionID);
+					jRacy.clrChooser.setHighlightColorMappingID(mappingID);
 				}
-				else if(arg.equals("Un-Highlight this Function"))
+				else if(arg.equals("Un-Highlight this Mapping"))
 				{		
-					jRacy.clrChooser.setHighlightColorFunctionID(-1);
+					jRacy.clrChooser.setHighlightColorMappingID(-1);
 				}
 			}
 		}
@@ -584,24 +584,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							else
 							{
 								
-								jRacy.clrChooser.setHighlightColorFunctionID(sMWMeanDataElement.getFunctionID());
-								FunctionDataWindow tmpRef = new FunctionDataWindow(sMWMeanDataElement.getFunctionName(), (sMWindow.getSMWData()));
+								jRacy.clrChooser.setHighlightColorMappingID(sMWMeanDataElement.getMappingID());
+								MappingDataWindow tmpRef = new MappingDataWindow(sMWMeanDataElement.getMappingName(), (sMWindow.getSMWData()));
 								jRacy.systemEvents.addObserver(tmpRef);
 								tmpRef.show();
-								
-								//Want to set the clicked on function to the current highlight color or, if the one
-								//clicked on is already the current highlighted one, set it back to normal.
-								//if((jRacy.clrChooser.getHighlightColorFunctionID()) == -1)
-								//{
-									//jRacy.clrChooser.setHighlightColorFunctionID(sMWMeanDataElement.getFunctionID());
-								//}
-								//else
-								//{
-									//if(!((jRacy.clrChooser.getHighlightColorFunctionID()) == (sMWMeanDataElement.getFunctionID())))
-										//jRacy.clrChooser.setHighlightColorFunctionID(sMWMeanDataElement.getFunctionID());
-									//else
-										//jRacy.clrChooser.setHighlightColorFunctionID(-1);
-								//}
 							}
 							
 							//Return from this function.
@@ -688,24 +674,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 													}
 													else
 													{
-														jRacy.clrChooser.setHighlightColorFunctionID(sMWThreadDataElement.getFunctionID());
-														FunctionDataWindow tmpRef = new FunctionDataWindow(sMWThreadDataElement.getFunctionName(), (sMWindow.getSMWData()));
+														jRacy.clrChooser.setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+														MappingDataWindow tmpRef = new MappingDataWindow(sMWThreadDataElement.getMappingName(), (sMWindow.getSMWData()));
 														jRacy.systemEvents.addObserver(tmpRef);
 														tmpRef.show();
-														
-														//Want to set the clicked on function to the current highlight color or, if the one
-														//clicked on is already the current highlighted one, set it back to normal.
-														//if((jRacy.clrChooser.getHighlightColorFunctionID()) == -1)
-														//{
-															//jRacy.clrChooser.setHighlightColorFunctionID(sMWThreadDataElement.getFunctionID());
-														//}
-														//else
-														//{
-															//if(!((jRacy.clrChooser.getHighlightColorFunctionID()) == (sMWThreadDataElement.getFunctionID())))
-																//jRacy.clrChooser.setHighlightColorFunctionID(sMWThreadDataElement.getFunctionID());
-															//else
-																//jRacy.clrChooser.setHighlightColorFunctionID(-1);
-														//}
 													}
 													
 													//Return from this function.
@@ -874,14 +846,21 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						{		
 							if(barHeight > 2)
 							{
-								tmpColor = sMWMeanDataElement.getFunctionColor();
+								tmpColor = sMWMeanDataElement.getMappingColor();
 								g.setColor(tmpColor);
 								g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((sMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+								if((sMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 								{	
 									highlighted = true;
 									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((sMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									highlighted = true;
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 									g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -914,19 +893,16 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							{
 								//Now set the color values for drawing!
 								//Get the appropriate color.
-								if((jRacy.clrChooser.getHighlightColorFunctionID()) != -1)
+								
+								if((sMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((sMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
 								{
-									if((sMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
-										g.setColor(jRacy.clrChooser.getHighlightColor());
-									else
-									{
-										tmpColor = sMWMeanDataElement.getFunctionColor();
-										g.setColor(tmpColor);
-									}
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 								}
 								else
 								{
-									tmpColor = sMWMeanDataElement.getFunctionColor();
+									tmpColor = sMWMeanDataElement.getMappingColor();
 									g.setColor(tmpColor);
 								}
 								g.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
@@ -941,14 +917,14 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							}
 						}
 						
-						//Still want to set the draw coords for this function, were it to be none zero.
+						//Still want to set the draw coords for this mapping, were it to be none zero.
 						//This aids in mouse click and tool tip events.
 						sMWMeanDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 						
 					}
 					else
 					{
-						//Still want to set the draw coords for this function, were it to be none zero.
+						//Still want to set the draw coords for this mapping, were it to be none zero.
 						//This aids in mouse click and tool tip events.
 						sMWMeanDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 					}
@@ -962,10 +938,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				
 				//We have reached the end of the cycle for this thread.  However, we might be less
 				//than the max length of the bar.  Therefore, fill in the rest of the bar with the
-				//misc. function colour.
+				//misc. mapping colour.
 				if(barXCoord < (defaultBarLength + barXStart))
 				{
-					g.setColor(jRacy.clrChooser.getMiscFunctionsColor());
+					g.setColor(jRacy.clrChooser.getMiscMappingsColor());
 					g.fillRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
 					g.setColor(Color.black);
 					g.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
@@ -1050,14 +1026,21 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 									{		
 										if(barHeight > 2)
 										{
-											tmpColor = sMWThreadDataElement.getFunctionColor();
+											tmpColor = sMWThreadDataElement.getMappingColor();
 											g.setColor(tmpColor);
 											g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 											
-											if((sMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+											if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 											{	
 												highlighted = true;
 												g.setColor(jRacy.clrChooser.getHighlightColor());
+												g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+											}
+											else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+											{
+												highlighted = true;
+												g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 												g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 												g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 											}
@@ -1090,21 +1073,18 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 										{
 											//Now set the color values for drawing!
 											//Get the appropriate color.
-											if((jRacy.clrChooser.getHighlightColorFunctionID()) != -1)
+											if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												g.setColor(jRacy.clrChooser.getHighlightColor());
+											else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
 											{
-												if((sMWThreadDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
-													g.setColor(jRacy.clrChooser.getHighlightColor());
-												else
-												{
-													tmpColor = sMWThreadDataElement.getFunctionColor();
-													g.setColor(tmpColor);
-												}
+												g.setColor(jRacy.clrChooser.getGroupHighlightColor());
 											}
 											else
 											{
-												tmpColor = sMWThreadDataElement.getFunctionColor();
+												tmpColor = sMWThreadDataElement.getMappingColor();
 												g.setColor(tmpColor);
 											}
+											
 											g.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 											g.setColor(Color.black);
 											g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
@@ -1118,14 +1098,14 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 											
 									}
 									
-									//Still want to set the draw coords for this function, were it to be none zero.
+									//Still want to set the draw coords for this mapping, were it to be none zero.
 									//This aids in mouse click and tool tip events.
 									sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 									
 								}
 								else
 								{
-									//Still want to set the draw coords for this function, were it to be none zero.
+									//Still want to set the draw coords for this mapping, were it to be none zero.
 									//This aids in mouse click and tool tip events.
 									sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
 								}
@@ -1139,10 +1119,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							
 							//We have reached the end of the cycle for this thread.  However, we might be less
 							//than the max length of the bar.  Therefore, fill in the rest of the bar with the
-							//misc. function colour.
+							//misc. mapping colour.
 							if(barXCoord < (defaultBarLength + barXStart))
 							{
-								g.setColor(jRacy.clrChooser.getMiscFunctionsColor());
+								g.setColor(jRacy.clrChooser.getMiscMappingsColor());
 								g.fillRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
 								g.setColor(Color.black);
 								g.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
@@ -1190,15 +1170,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				
 				if(sizeChange)
 					revalidate();
-				
-				/*//Resize the panel if needed.
-				if((yCoord >= yPanelSize)  || (tmpXWidthCalc  >= xPanelSize))
-				{
-					xPanelSize = tmpXWidthCalc + 1;
-					yPanelSize = yCoord + 1;
-					revalidate();
-				}
-				*/
 			}
 			//End - Draw the thread data bars.
 			//**********

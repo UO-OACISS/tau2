@@ -47,13 +47,14 @@ public class StaticSystemData implements Serializable
 	}
 	
 	//The following funtion initializes the GlobalMapping object.
-	//Since we are in the static mode, the number of functions is known,
+	//Since we are in the static mode, the number of mappings is known,
 	//therefore, the appropriate number of GlobalMappingElements are created.
-	void initializeGlobalMapping(int inNumberOfFunctions)
+	void initializeGlobalMapping(int inNumberOfMappings)
 	{
-		for(int i=0; i<inNumberOfFunctions; i++)
+		for(int i=0; i<inNumberOfMappings; i++)
 		{
-			globalMapping.addGlobalFunction("Error ... the function name has not been set!");
+			//globalMapping.addGlobalMapping("Error ... the mapping name has not been set!");
+			globalMapping.addGlobalMapping(null, 0);
 		}
 	}
 	
@@ -68,7 +69,6 @@ public class StaticSystemData implements Serializable
 		return counterName;
 	}
 	
-	
 	//The core public function of this class.  It reads pprof dump files ... that is pprof
 	//run with the -d option.  If any changes occur to the "pprof -d" file output format,
 	//the working of this function might be affected.
@@ -82,19 +82,20 @@ public class StaticSystemData implements Serializable
 			//Some useful strings.
 			String inputString;
 			String tokenString;
-			String functionNameString;
-			String userEventNameString;
+			String mappingNameString = null;
+			String groupNamesString = null;
+			String userEventNameString = null;
 			
 			StringTokenizer genericTokenizer;
 			
-			int functionID = -1;
+			int mappingID = -1;
 			int userEventID = -1;
 			double value = -1;
 			double percentValue = -1;
 			int node = -1;
 			int context = -1;
 			int thread = -1;
-			int numberOfFunctions = -1;
+			int numberOfMappings = -1;
 			
 			GlobalMappingElement tmpGlobalMappingElement;
 			
@@ -139,38 +140,53 @@ public class StaticSystemData implements Serializable
 								counter++;
 								if(checkForExclusiveWithTOrM(inputString))
 								{	
-									//Grab the function name.
-									functionNameString = getFunctionName(inputString);
+									//Grab the mapping name.
+									mappingNameString = getMappingName(inputString);
 									
-									//Grab the function ID.
-									functionID = getFunctionID(inputString);
-									if(functionID > maxID)
-										maxID = functionID;
+									//Grab the mapping ID.
+									mappingID = getMappingID(inputString);
+									if(mappingID > maxID)
+										maxID = mappingID;
+										
+									//Grab the group names.
+									groupNamesString = getGroupNames(inputString);
+									if(groupNamesString != null){
+										StringTokenizer st = new StringTokenizer(groupNamesString, " |");
+									    while (st.hasMoreTokens()){
+									         String tmpString = st.nextToken();
+									         if(tmpString != null){
+									         	int tmpInt = globalMapping.addGlobalMapping(tmpString, 1);
+									         	globalMapping.addGroup(mappingID, tmpInt, 0);
+									         	if((tmpInt != -1) && (jRacy.debugIsOn))
+									         		System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + mappingNameString);
+									      	 }   	
+										}    
+									}
 									
-									//Now that we have the function name and id, fill in the global mapping element
-									//for this function.  I am assuming here that pprof's output lists only the
+									//Now that we have the mapping name and id, fill in the global mapping element
+									//for this mapping.  I am assuming here that pprof's output lists only the
 									//global ids.
-									if(!(globalMapping.setFunctionNameAt(functionNameString, functionID)))
-										System.out.println("There was an error adding function to the global mapping");
+									if(!(globalMapping.setMappingNameAt(mappingNameString, mappingID, 0)))
+										System.out.println("There was an error adding mapping to the global mapping");
 									
 									//Grab the value.
 									value = getValue(inputString);
 									
 									
-									//Set the value for this function.
-									if(!(globalMapping.setTotalExclusiveValueAt(value, functionID)))
+									//Set the value for this mapping.
+									if(!(globalMapping.setTotalExclusiveValueAt(value, mappingID, 0)))
 										System.out.println("There was an error setting Exc/Inc total time");
 									
 									
 								}
 								else if(checkForInclusiveWithTOrM(inputString))
 								{
-									//Grab the function ID.
-									functionID = getFunctionID(inputString);
+									//Grab the mapping ID.
+									mappingID = getMappingID(inputString);
 									//Grab the value.
 									value = getValue(inputString);
-									//Set the value for this function.
-									if(!(globalMapping.setTotalInclusiveValueAt(value, functionID)))
+									//Set the value for this mapping.
+									if(!(globalMapping.setTotalInclusiveValueAt(value, mappingID, 0)))
 										System.out.println("There was an error setting Exc/Inc total time");
 								}
 							}
@@ -178,14 +194,14 @@ public class StaticSystemData implements Serializable
 							{
 								if(checkForExclusiveWithTOrM(inputString))
 								{
-									//Grab the function ID.
-									functionID = getFunctionID(inputString);
+									//Grab the mapping ID.
+									mappingID = getMappingID(inputString);
 									//Grab the value.
 									value = getValue(inputString);
 									percentValue = getPercentValue(inputString);
 									
 									//Grab the correct global mapping element.
-									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(functionID);
+									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
 									
 									//Now set the values correctly.
 									if(maxMeanExclusiveValue < value)
@@ -203,14 +219,14 @@ public class StaticSystemData implements Serializable
 								}
 								else if(checkForInclusiveWithTOrM(inputString))
 								{
-									//Grab the function ID.
-									functionID = getFunctionID(inputString);
+									//Grab the mapping ID.
+									mappingID = getMappingID(inputString);
 									//Grab the value.
 									value = getValue(inputString);
 									percentValue = getPercentValue(inputString);
 									
 									//Grab the correct global mapping element.
-									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(functionID);
+									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
 									
 									//Now set the values correctly.
 									if(maxMeanInclusiveValue < value)
@@ -240,15 +256,15 @@ public class StaticSystemData implements Serializable
 							{
 								if(checkForExclusive(inputString))
 								{
-									//Grab the function ID.
-									functionID = getFunctionID(inputString);
+									//Grab the mapping ID.
+									mappingID = getMappingID(inputString);
 									//Grab the value.
 									value = getValue(inputString);
 									percentValue = getPercentValue(inputString);
 									
 									//Update the max values if required.
 									//Grab the correct global mapping element.
-									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(functionID);
+									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
 									
 									if((tmpGlobalMappingElement.getMaxExclusiveValue()) < value)
 										tmpGlobalMappingElement.setMaxExclusiveValue(value);
@@ -286,7 +302,7 @@ public class StaticSystemData implements Serializable
 											//Create a new thread ... and set it to be the current thread.
 											currentGlobalThread = new GlobalThread();
 											//Add the correct number of global thread data elements.
-											for(i=0;i<numberOfFunctions;i++)
+											for(i=0;i<numberOfMappings;i++)
 											{
 												GlobalThreadDataElement tmpRef = null;
 												
@@ -301,15 +317,15 @@ public class StaticSystemData implements Serializable
 											Vector tmpVector = currentGlobalThread.getThreadDataList();
 											GlobalThreadDataElement tmpGTDE = null;
 											
-											tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(functionID);
+											tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
 											
 											if(tmpGTDE == null)
 											{
 												tmpGTDE = new GlobalThreadDataElement();
-												tmpGTDE.setFunctionID(functionID);
-												currentGlobalThread.addThreadDataElement(tmpGTDE, functionID);
+												tmpGTDE.setMappingID(mappingID);
+												currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
 											}
-											tmpGTDE.setFunctionExists();
+											tmpGTDE.setMappingExists();
 											tmpGTDE.setExclusiveValue(value);
 											tmpGTDE.setExclusivePercentValue(percentValue);
 											//Now check the max values on this thread.
@@ -359,7 +375,7 @@ public class StaticSystemData implements Serializable
 											//Thread number is not zero.  Create a new thread ... and set it to be the current thread.
 											currentGlobalThread = new GlobalThread();
 											//Add the correct number of global thread data elements.
-											for(i=0;i<numberOfFunctions;i++)
+											for(i=0;i<numberOfMappings;i++)
 											{
 												GlobalThreadDataElement tmpRef = null;
 												
@@ -373,17 +389,17 @@ public class StaticSystemData implements Serializable
 											//Not thread changes.  Just set the appropriate global thread data element.
 											Vector tmpVector = currentGlobalThread.getThreadDataList();
 											GlobalThreadDataElement tmpGTDE = null;
-											tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(functionID);
+											tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
 											
 											
 											if(tmpGTDE == null)
 											{
 												tmpGTDE = new GlobalThreadDataElement();
-												tmpGTDE.setFunctionID(functionID);
-												currentGlobalThread.addThreadDataElement(tmpGTDE, functionID);
+												tmpGTDE.setMappingID(mappingID);
+												currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
 											}
 											
-											tmpGTDE.setFunctionExists();
+											tmpGTDE.setMappingExists();
 											tmpGTDE.setExclusiveValue(value);
 											tmpGTDE.setExclusivePercentValue(percentValue);
 											//Now check the max values on this thread.
@@ -401,17 +417,17 @@ public class StaticSystemData implements Serializable
 										//Not thread changes.  Just set the appropriate global thread data element.
 										Vector tmpVector = currentGlobalThread.getThreadDataList();
 										GlobalThreadDataElement tmpGTDE = null;
-										tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(functionID);
+										tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
 									
 											
 										if(tmpGTDE == null)
 										{
 											tmpGTDE = new GlobalThreadDataElement();
-											tmpGTDE.setFunctionID(functionID);
-											currentGlobalThread.addThreadDataElement(tmpGTDE, functionID);
+											tmpGTDE.setMappingID(mappingID);
+											currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
 										}
 										
-										tmpGTDE.setFunctionExists();
+										tmpGTDE.setMappingExists();
 										tmpGTDE.setExclusiveValue(value);
 										tmpGTDE.setExclusivePercentValue(percentValue);
 										//Now check the max values on this thread.
@@ -423,8 +439,8 @@ public class StaticSystemData implements Serializable
 								}
 								else if(checkForInclusive(inputString))
 								{
-									//Grab the function ID.
-									functionID = getFunctionID(inputString);
+									//Grab the mapping ID.
+									mappingID = getMappingID(inputString);
 									//Grab the value.
 									value = getValue(inputString);
 									percentValue = getPercentValue(inputString);
@@ -432,7 +448,7 @@ public class StaticSystemData implements Serializable
 									
 									//Update the max values if required.
 									//Grab the correct global mapping element.
-									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(functionID);
+									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
 									
 									if((tmpGlobalMappingElement.getMaxInclusiveValue()) < value)
 										tmpGlobalMappingElement.setMaxInclusiveValue(value);
@@ -454,14 +470,14 @@ public class StaticSystemData implements Serializable
 									GlobalThread tmpGT = (GlobalThread) tmpGlobalThreadList.elementAt(thread);
 									Vector tmpGlobalThreadDataElementList = tmpGT.getThreadDataList();
 									
-									GlobalThreadDataElement tmpGTDE = (GlobalThreadDataElement) tmpGlobalThreadDataElementList.elementAt(functionID);
+									GlobalThreadDataElement tmpGTDE = (GlobalThreadDataElement) tmpGlobalThreadDataElementList.elementAt(mappingID);
 									//Now set the inclusive value!
 									
 									if(tmpGTDE == null)
 									{
 										tmpGTDE = new GlobalThreadDataElement();
-										tmpGTDE.setFunctionID(functionID);
-										currentGlobalThread.addThreadDataElement(tmpGTDE, functionID);
+										tmpGTDE.setMappingID(mappingID);
+										currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
 									}
 									
 									
@@ -536,10 +552,10 @@ public class StaticSystemData implements Serializable
 										
 										
 										//Extract all the information out of the string that I need.
-										//Grab the function name.
+										//Grab the mapping name.
 										userEventNameString = getUserEventName(inputString);
 										//System.out.println("The user event name is: " + userEventNameString);
-										//Grab the function ID.
+										//Grab the mapping ID.
 										userEventID = getUserEventID(inputString);
 										//System.out.println("The user event ID: " + userEventID);
 										
@@ -569,13 +585,13 @@ public class StaticSystemData implements Serializable
 					else
 					{
 						//This is the second line of the file.  It's first token will
-						//be the number of functions present.  Get it.
+						//be the number of mappings present.  Get it.
 						tokenString = genericTokenizer.nextToken();
 						
-						//Set the number of functions.
-						numberOfFunctions = Integer.parseInt(tokenString);
+						//Set the number of mappings.
+						numberOfMappings = Integer.parseInt(tokenString);
 						
-						//Now initialize the global mapping with the correct number of functions.
+						//Now initialize the global mapping with the correct number of mappings.
 						initializeGlobalMapping(Integer.parseInt(tokenString));
 						
 						//Set the counter name.
@@ -584,7 +600,7 @@ public class StaticSystemData implements Serializable
 						//For testing purposes, print it out.
 						if(counterName != null)
 							System.out.println("Pprof output for counter: " + counterName);
-						System.out.println("The number of functions in the system is: " + tokenString);
+						System.out.println("The number of mappings in the system is: " + tokenString);
 					}
 						
 				}
@@ -651,7 +667,7 @@ public class StaticSystemData implements Serializable
 	{
 		
 		try{
-			//In this function I need to be careful.  If the function name contains "excl", I
+			//In this function I need to be careful.  If the mapping name contains "excl", I
 			//might interpret this line as being the exclusive line when in fact it is not.
 			
 			//Check for the right string.
@@ -661,7 +677,7 @@ public class StaticSystemData implements Serializable
 			{
 				//Ok, so at least we have the correct string.
 				//Now, we want to grab the substring that occurs AFTER the SECOND '"'.
-				//At present, pprof does not seem to allow an '"' in the function name.  So
+				//At present, pprof does not seem to allow an '"' in the mapping name.  So
 				//, I can be assured that I will not find more than two before the "excl" or "incl".
 				StringTokenizer checkQuotesTokenizer = new StringTokenizer(inString,"\"");
 				
@@ -698,12 +714,12 @@ public class StaticSystemData implements Serializable
 	{
 		
 		try{
-			//In this function I need to be careful.  If the function name contains "excl", I
+			//In this function I need to be careful.  If the mapping name contains "excl", I
 			//might interpret this line as being the exclusive line when in fact it is not.
 			
 			//Ok, so at least we have the correct string.
 			//Now, we want to grab the substring that occurs AFTER the SECOND '"'.
-			//At present, pprof does not seem to allow an '"' in the function name.  So
+			//At present, pprof does not seem to allow an '"' in the mapping name.  So
 			//, I can be assured that I will not find more than two before the "excl" or "incl".
 			StringTokenizer checkQuotesTokenizer = new StringTokenizer(inString,"\"");
 			
@@ -739,7 +755,7 @@ public class StaticSystemData implements Serializable
 	{
 		
 		try{
-			//In this function I need to be careful.  If the function name contains "incl", I
+			//In this function I need to be careful.  If the mapping name contains "incl", I
 			//might interpret this line as being the inclusive line when in fact it is not.
 			
 			
@@ -750,7 +766,7 @@ public class StaticSystemData implements Serializable
 			{
 			
 				//Now, we want to grab the substring that occurs AFTER the SECOND '"'.
-				//At present, pprof does not seem to allow an '"' in the function name.  So
+				//At present, pprof does not seem to allow an '"' in the mapping name.  So
 				//, I can be assured that I will not find more than two before the "excl" or "incl".
 				StringTokenizer checkQuotesTokenizer = new StringTokenizer(inString,"\"");
 				
@@ -786,12 +802,12 @@ public class StaticSystemData implements Serializable
 	{
 		
 		try{
-			//In this function I need to be careful.  If the function name contains "incl", I
+			//In this function I need to be careful.  If the mapping name contains "incl", I
 			//might interpret this line as being the inclusive line when in fact it is not.
 
 			//Ok, so at least we have the correct string.
 			//Now, we want to grab the substring that occurs AFTER the SECOND '"'.
-			//At present, pprof does not seem to allow an '"' in the function name.  So
+			//At present, pprof does not seem to allow an '"' in the mapping name.  So
 			//, I can be assured that I will not find more than two before the "excl" or "incl".
 			StringTokenizer checkQuotesTokenizer = new StringTokenizer(inString,"\"");
 			
@@ -823,21 +839,21 @@ public class StaticSystemData implements Serializable
 		return false;
 	}
 	
-	String getFunctionName(String inString)
+	String getMappingName(String inString)
 	{
 		try{
 			String tmpString;
 			
-			StringTokenizer getFunctionNameTokenizer = new StringTokenizer(inString, "\"");
+			StringTokenizer getMappingNameTokenizer = new StringTokenizer(inString, "\"");
 			
-			//Since we know that the function name is the only one in the quotes, just ignore the
+			//Since we know that the mapping name is the only one in the quotes, just ignore the
 			//first token, and then grab the next.
 			
 			//Grab the first token.
-			tmpString = getFunctionNameTokenizer.nextToken();
+			tmpString = getMappingNameTokenizer.nextToken();
 			
 			//Grab the second token.
-			tmpString = getFunctionNameTokenizer.nextToken();
+			tmpString = getMappingNameTokenizer.nextToken();
 			
 			//Now return the second string.
 			return tmpString;
@@ -850,20 +866,20 @@ public class StaticSystemData implements Serializable
 		return null;
 	}
 	
-	int getFunctionID(String inString)
+	int getMappingID(String inString)
 	{
 		try{
 			String tmpString;
 			
-			StringTokenizer getFunctionIDTokenizer = new StringTokenizer(inString, " \t\n\r");
+			StringTokenizer getMappingIDTokenizer = new StringTokenizer(inString, " \t\n\r");
 			
-			//The function id will be the second token on its line.
+			//The mapping id will be the second token on its line.
 			
 			//Grab the first token.
-			tmpString = getFunctionIDTokenizer.nextToken();
+			tmpString = getMappingIDTokenizer.nextToken();
 			
 			//Grab the second token.
-			tmpString = getFunctionIDTokenizer.nextToken();
+			tmpString = getMappingIDTokenizer.nextToken();
 			
 			
 			//Now return the id.
@@ -877,6 +893,56 @@ public class StaticSystemData implements Serializable
 		}
 		
 		return -1;
+	}
+	
+	String getGroupNames(String inString)
+	{
+		
+		try{
+				String tmpString = null;
+				
+				StringTokenizer getMappingNameTokenizer = new StringTokenizer(inString, "\"");
+				
+				//Grab the first token.
+				tmpString = getMappingNameTokenizer.nextToken();
+				//Grab the second token.
+				tmpString = getMappingNameTokenizer.nextToken();
+				//Grab the third token.
+				tmpString = getMappingNameTokenizer.nextToken();
+				
+				//Just do the group check once.
+				if(!groupNamesCheck)
+				{
+					//If present, "GROUP=" will be in this token.
+					int tmpInt = inString.indexOf("GROUP=");
+					if(tmpInt > 0)
+					{
+						groupNamesPresent = true;
+					}
+					
+					groupNamesCheck = true;
+					
+				}
+				
+				if(groupNamesPresent)
+				{
+					//We can grab the group name.
+					
+					//Grab the forth token.
+					tmpString = getMappingNameTokenizer.nextToken();
+					return tmpString;
+				}
+				
+				//If here, this profile file does not track the group names.
+				return null;
+
+			}
+			catch(Exception e)
+			{
+				jRacy.systemError(null, "SSD10");
+			}
+		
+		return null;
 	}
 	
 	double getValue(String inString)
@@ -902,7 +968,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD10");
+			jRacy.systemError(null, "SSD11");
 		}
 		
 		return -1;
@@ -932,7 +998,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD11");
+			jRacy.systemError(null, "SSD12");
 		}
 		
 		return -1;
@@ -961,7 +1027,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD12");
+			jRacy.systemError(null, "SSD13");
 		}
 		
 		return false;	
@@ -982,7 +1048,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD13");
+			jRacy.systemError(null, "SSD14");
 		}
 		
 		return -1;
@@ -1009,7 +1075,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD14");
+			jRacy.systemError(null, "SSD15");
 		}
 		
 		return null;
@@ -1022,7 +1088,7 @@ public class StaticSystemData implements Serializable
 			
 			StringTokenizer getUserEventIDTokenizer = new StringTokenizer(inString, " \t\n\r");
 			
-			//The function id will be the third token on its line.
+			//The mapping id will be the third token on its line.
 			
 			//Grab the first token.
 			tmpString = getUserEventIDTokenizer.nextToken();
@@ -1037,7 +1103,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD15");
+			jRacy.systemError(null, "SSD16");
 		}
 		
 		return -1;
@@ -1066,7 +1132,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD16");
+			jRacy.systemError(null, "SSD17");
 		}
 		
 		return -1;
@@ -1096,7 +1162,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD17");
+			jRacy.systemError(null, "SSD18");
 		}
 		
 		return -1;
@@ -1125,7 +1191,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD18");
+			jRacy.systemError(null, "SSD19");
 		}
 		
 		return -1;
@@ -1156,7 +1222,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD19");
+			jRacy.systemError(null, "SSD20");
 		}
 		
 		return -1;
@@ -1185,7 +1251,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD20");
+			jRacy.systemError(null, "SSD21");
 		}
 		
 		return -1;
@@ -1218,7 +1284,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD21");
+			jRacy.systemError(null, "SSD22");
 		}
 		
 		return -1;
@@ -1253,7 +1319,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD22");
+			jRacy.systemError(null, "SSD23");
 		}
 		
 		return -1;
@@ -1279,7 +1345,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD23");
+			jRacy.systemError(null, "SSD24");
 		}
 		
 		return null;
@@ -1348,6 +1414,10 @@ public class StaticSystemData implements Serializable
 	{
 		return maxMeanExclusivePercentValue;
 	}
+	
+	public boolean groupNamesPresent(){
+		return groupNamesPresent;
+	}
 	//******************************
 	//End - Useful functions to help the drawing windows.
 	//******************************
@@ -1363,6 +1433,8 @@ public class StaticSystemData implements Serializable
 	private String heading;
 	private String userEventHeading;
 	private boolean isUserEventHeadingSet;
+	boolean groupNamesCheck = false;
+	boolean groupNamesPresent = false;
 	
 	//Max mean values.
 	double maxMeanInclusiveValue = 0;

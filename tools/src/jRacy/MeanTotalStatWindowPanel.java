@@ -50,19 +50,19 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			addMouseListener(this);
 			
 			//Add items to the popu menu.
-			JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
-			functionDetailsItem.addActionListener(this);
-			popup.add(functionDetailsItem);
+			JMenuItem mappingDetailsItem = new JMenuItem("Show Mapping Details");
+			mappingDetailsItem.addActionListener(this);
+			popup.add(mappingDetailsItem);
 			
-			JMenuItem changeColorItem = new JMenuItem("Change Function Color");
+			JMenuItem changeColorItem = new JMenuItem("Change Mapping Color");
 			changeColorItem.addActionListener(this);
 			popup.add(changeColorItem);
 			
-			JMenuItem maskFunctionItem = new JMenuItem("Reset to Generic Color");
-			maskFunctionItem.addActionListener(this);
-			popup.add(maskFunctionItem);
+			JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
+			maskMappingItem.addActionListener(this);
+			popup.add(maskMappingItem);
 			
-			//JMenuItem toGenericColorItem = new JMenuItem("Mask Function");
+			//JMenuItem toGenericColorItem = new JMenuItem("Mask Mapping");
 			//toGenericColorItem.addActionListener(this);
 			//popup.add(toGenericColorItem);
 			
@@ -215,23 +215,23 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 					AttributedString as = new AttributedString(tmpString);
 					as.addAttribute(TextAttribute.FONT, MonoFont);
 					
-					if((jRacy.clrChooser.getHighlightColorFunctionID()) != -1)
+					if((jRacy.clrChooser.getHighlightColorMappingID()) != -1)
 					{
-						if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+						if((tmpSMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 							as.addAttribute(TextAttribute.FOREGROUND, 
 								(jRacy.clrChooser.getHighlightColor()),
 								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 						else
 						{
 							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWMeanDataElement.getFunctionColor()),
+								(tmpSMWMeanDataElement.getMappingColor()),
 								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 						}
 					}
 					else
 					{
 						as.addAttribute(TextAttribute.FOREGROUND, 
-							(tmpSMWMeanDataElement.getFunctionColor()),
+							(tmpSMWMeanDataElement.getMappingColor()),
 							jRacy.staticSystemData.getPositionOfName(), tmpString.length()); 
 					}
 					
@@ -292,23 +292,23 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 					AttributedString as = new AttributedString(tmpString);
 					as.addAttribute(TextAttribute.FONT, MonoFont);
 					
-					if((jRacy.clrChooser.getHighlightColorFunctionID()) != -1)
+					if((jRacy.clrChooser.getHighlightColorMappingID()) != -1)
 					{
-						if((tmpSMWMeanDataElement.getFunctionID()) == (jRacy.clrChooser.getHighlightColorFunctionID()))
+						if((tmpSMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
 							as.addAttribute(TextAttribute.FOREGROUND, 
 								(jRacy.clrChooser.getHighlightColor()),
 								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 						else
 						{
 							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWMeanDataElement.getFunctionColor()),
+								(tmpSMWMeanDataElement.getMappingColor()),
 								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 						}
 					}
 					else
 					{
 						as.addAttribute(TextAttribute.FOREGROUND, 
-							(tmpSMWMeanDataElement.getFunctionColor()),
+							(tmpSMWMeanDataElement.getMappingColor()),
 							jRacy.staticSystemData.getPositionOfName(), tmpString.length()); 
 					}
 					
@@ -354,31 +354,31 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Show Function Details"))
+				if(arg.equals("Show Mapping Details"))
 				{
 					
 					if(clickedOnObject instanceof SMWMeanDataElement)
 					{
 						tmpSMWMeanDataElement = (SMWMeanDataElement) clickedOnObject;
-						//Bring up an expanded data window for this function, and set this function as highlighted.
-						jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWMeanDataElement.getFunctionID());
-						FunctionDataWindow tmpRef = new FunctionDataWindow(tmpSMWMeanDataElement.getFunctionName(), jRacy.staticMainWindow.getSMWData());
+						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
+						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWMeanDataElement.getMappingName(), jRacy.staticMainWindow.getSMWData());
 						jRacy.systemEvents.addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
-				else if(arg.equals("Change Function Color"))
+				else if(arg.equals("Change Mapping Color"))
 				{	
-					int functionID = -1;
+					int mappingID = -1;
 					
 					//Get the clicked on object.
 					if(clickedOnObject instanceof SMWMeanDataElement)
-						functionID = ((SMWMeanDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
 					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
-					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
-					Color tmpCol = tmpGME.getFunctionColor();
+					Color tmpCol = tmpGME.getMappingColor();
 					
 					JColorChooser tmpJColorChooser = new JColorChooser();
 					tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
@@ -394,14 +394,14 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 				else if(arg.equals("Reset to Generic Color"))
 				{	
 					
-					int functionID = -1;
+					int mappingID = -1;
 					
 					//Get the clicked on object.
 					if(clickedOnObject instanceof SMWMeanDataElement)
-						functionID = ((SMWMeanDataElement) clickedOnObject).getFunctionID();
+						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
 					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
-					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					tmpGME.setColorFlag(false);
 					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
@@ -453,18 +453,18 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 							}
 							else
 							{
-								//Want to set the clicked on function to the current highlight color or, if the one
+								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((jRacy.clrChooser.getHighlightColorFunctionID()) == -1)
+								if((jRacy.clrChooser.getHighlightColorMappingID()) == -1)
 								{
-									jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWMeanDataElement.getFunctionID());
+									jRacy.clrChooser.setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
 								}
 								else
 								{
-									if(!((jRacy.clrChooser.getHighlightColorFunctionID()) == (tmpSMWMeanDataElement.getFunctionID())))
-										jRacy.clrChooser.setHighlightColorFunctionID(tmpSMWMeanDataElement.getFunctionID());
+									if(!((jRacy.clrChooser.getHighlightColorMappingID()) == (tmpSMWMeanDataElement.getMappingID())))
+										jRacy.clrChooser.setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
 									else
-										jRacy.clrChooser.setHighlightColorFunctionID(-1);
+										jRacy.clrChooser.setHighlightColorMappingID(-1);
 								}
 							}
 						}

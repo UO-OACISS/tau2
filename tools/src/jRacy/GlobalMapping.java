@@ -21,59 +21,117 @@ public class GlobalMapping implements WindowListener, Serializable
 	//Constructors.
 	public GlobalMapping()
 	{
-		nameIDMapping = new Vector();
-		numberOfGlobalFunctions = 0;
-	}
-	
-	public void addGlobalFunction(String inFunctionName)
-	{
-		//Just adds to the end of the list.  Its position becomes
-		//the value of its function ID.
-		GlobalMappingElement tmpGME = new GlobalMappingElement();
-		tmpGME.setFunctionName(inFunctionName);
-		tmpGME.setGlobalID(numberOfGlobalFunctions);
-		tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(numberOfGlobalFunctions % (jRacy.clrChooser.getNumberOfColors())));
-		nameIDMapping.addElement(tmpGME);
+		mappings = new Vector[2];
+		numberOfMappings = new int[2];
+		mappingLedgerWindows = new MappingLedgerWindow[2];
 		
-		//Update the number of global functions present.  (Example ... first time
-		//round, numberOfGlobalFunctions = 0, and thus the new function name gets an
-		//ID of 0.  The numberOfGlobalFunctions is now updated to 1 and thus returns
-		//the correct amount should it be asked for.
-		numberOfGlobalFunctions++;
+		mappings[0] = new Vector();
+		mappings[1] = new Vector();
+		
+		numberOfMappings[0] = 0;
+		numberOfMappings[1] = 0;
 	}
 	
-	public boolean setFunctionNameAt(String inFunctionName, int inPosition)
+	public int addGlobalMapping(String inMappingName, int mappingSelection)
+	{
+		int tmpInt = getMappingId(inMappingName, mappingSelection);
+		
+		if(tmpInt == -1){
+			//Just adds to the end of the list.  Its position becomes
+			//the value of its mapping ID.
+			GlobalMappingElement tmpGME = new GlobalMappingElement();
+			tmpGME.setMappingName(inMappingName);
+			tmpGME.setGlobalID(numberOfMappings[mappingSelection]);
+			tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(numberOfMappings[mappingSelection] % (jRacy.clrChooser.getNumberOfColors())));
+			mappings[mappingSelection].addElement(tmpGME);
+			
+			//Update the number of global mappings present for the selection.  (Example ... first time
+			//round, numberOfMappings[mappingSelection] = 0, and thus the new mapping name gets an
+			//ID of 0.  The numberOfMappings[mappingSelection] is now updated to 1 and thus returns
+			//the correct amount should it be asked for.
+			numberOfMappings[mappingSelection]++;
+			
+			//Return the mapping id of the just added mapping (since we just incremented, knock off one).
+			return (numberOfMappings[mappingSelection] -1);
+		}
+		
+		//If here, the mapping was already present.  Therefore, just return the already existing id for this mapping.
+		return tmpInt;
+	}
+	
+	public boolean setMappingNameAt(String inMappingName, int inPosition, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
-		//functions present (minus one of course for vector numbering).
-		if(inPosition > (this.getNumberOfFunctions() - 1))
+		//mappings present (minus one of course for vector numbering).
+		if(inPosition > (this.getNumberOfMappings(mappingSelection) - 1))
 		{
 			return false;
 		}
 		
 		//If here, the size of inPosition is ok.
 		//Therefore grab the element at that position.
-		GlobalMappingElement tmpGME = (GlobalMappingElement) nameIDMapping.elementAt(inPosition);
+		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the name.
-		tmpGME.setFunctionName(inFunctionName);
+		tmpGME.setMappingName(inMappingName);
 		
 		//Successful ... return true.
 		return true;
 	}
 	
-	public boolean setMeanExclusiveValueAt(double inMeanExclusiveValue, int inPosition)
+	public boolean addGroup(int inPosition, int inGroupID, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
-		//functions present (minus one of course for vector numbering).
-		if(inPosition > (this.getNumberOfFunctions() - 1))
+		//mappings present (minus one of course for vector numbering).
+		if(inPosition > (this.getNumberOfMappings(mappingSelection) - 1))
 		{
 			return false;
 		}
 		
 		//If here, the size of inPosition is ok.
 		//Therefore grab the element at that position.
-		GlobalMappingElement tmpGME = (GlobalMappingElement) nameIDMapping.elementAt(inPosition);
+		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
+		
+		//Set the name.
+		if(tmpGME.addGroup(inGroupID))
+			return true;
+		else
+			return false;
+	}
+	
+	public boolean isGroupMember(int inPosition, int inGroupID, int mappingSelection)
+	{
+		
+		//First check to make sure that inPosition is not greater than the number of
+		//mappings present (minus one of course for vector numbering).
+		if(inPosition > (this.getNumberOfMappings(mappingSelection) - 1))
+		{
+			return false;
+		}
+		
+		//If here, the size of inPosition is ok.
+		//Therefore grab the element at that position.
+		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
+		
+		//Set the name.
+		if(tmpGME.isGroupMember(inGroupID))
+			return true;
+		else
+			return false;
+	}
+	
+	public boolean setMeanExclusiveValueAt(double inMeanExclusiveValue, int inPosition, int mappingSelection)
+	{
+		//First check to make sure that inPosition is not greater than the number of
+		//mappings present (minus one of course for vector numbering).
+		if(inPosition > (this.getNumberOfMappings(mappingSelection) - 1))
+		{
+			return false;
+		}
+		
+		//If here, the size of inPosition is ok.
+		//Therefore grab the element at that position.
+		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the mean value.
 		tmpGME.setMeanExclusiveValue(inMeanExclusiveValue);
@@ -82,18 +140,18 @@ public class GlobalMapping implements WindowListener, Serializable
 		return true;
 	}
 	
-	public boolean setMeanInclusiveValueAt(double inMeanInclusiveValue, int inPosition)
+	public boolean setMeanInclusiveValueAt(double inMeanInclusiveValue, int inPosition, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
-		//functions present (minus one of course for vector numbering).
-		if(inPosition > (this.getNumberOfFunctions() - 1))
+		//mappings present (minus one of course for vector numbering).
+		if(inPosition > (this.getNumberOfMappings(mappingSelection) - 1))
 		{
 			return false;
 		}
 		
 		//If here, the size of inPosition is ok.
 		//Therefore grab the element at that position.
-		GlobalMappingElement tmpGME = (GlobalMappingElement) nameIDMapping.elementAt(inPosition);
+		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the mean value.
 		tmpGME.setMeanInclusiveValue(inMeanInclusiveValue);
@@ -102,18 +160,18 @@ public class GlobalMapping implements WindowListener, Serializable
 		return true;
 	}
 	
-	public boolean setTotalExclusiveValueAt(double inTotalExclusiveValue, int inPosition)
+	public boolean setTotalExclusiveValueAt(double inTotalExclusiveValue, int inPosition, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
-		//functions present (minus one of course for vector numbering).
-		if(inPosition > (this.getNumberOfFunctions() - 1))
+		//mappings present (minus one of course for vector numbering).
+		if(inPosition > (this.getNumberOfMappings(mappingSelection) - 1))
 		{
 			return false;
 		}
 		
 		//If here, the size of inPosition is ok.
 		//Therefore grab the element at that position.
-		GlobalMappingElement tmpGME = (GlobalMappingElement) nameIDMapping.elementAt(inPosition);
+		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the mean value.
 		tmpGME.setTotalExclusiveValue(inTotalExclusiveValue);
@@ -122,18 +180,18 @@ public class GlobalMapping implements WindowListener, Serializable
 		return true;
 	}
 	
-	public boolean setTotalInclusiveValueAt(double inTotalInclusiveValue, int inPosition)
+	public boolean setTotalInclusiveValueAt(double inTotalInclusiveValue, int inPosition, int mappingSelection)
 	{
 		//First check to make sure that inPosition is not greater than the number of
-		//functions present (minus one of course for vector numbering).
-		if(inPosition > (this.getNumberOfFunctions() - 1))
+		//mappings present (minus one of course for vector numbering).
+		if(inPosition > (this.getNumberOfMappings(mappingSelection) - 1))
 		{
 			return false;
 		}
 		
 		//If here, the size of inPosition is ok.
 		//Therefore grab the element at that position.
-		GlobalMappingElement tmpGME = (GlobalMappingElement) nameIDMapping.elementAt(inPosition);
+		GlobalMappingElement tmpGME = (GlobalMappingElement) mappings[mappingSelection].elementAt(inPosition);
 		
 		//Set the mean value.
 		tmpGME.setTotalInclusiveValue(inTotalInclusiveValue);
@@ -143,124 +201,172 @@ public class GlobalMapping implements WindowListener, Serializable
 	}
 		
 	
-	public boolean isFunctionPresent(String inFunctionName)
+	public boolean isMappingPresent(String inMappingName, int mappingSelection)
 	{
+		if(inMappingName == null)
+			return false;
+		
 		GlobalMappingElement tmpElement;
 		String tmpString;
 		
-		for(Enumeration e = nameIDMapping.elements(); e.hasMoreElements() ;)
+		for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
 		{
 			tmpElement = (GlobalMappingElement) e.nextElement();
-			tmpString = tmpElement.getFunctionName();
-			if(inFunctionName.equals(tmpString))
-				return true;
+			tmpString = tmpElement.getMappingName();
+			if(tmpString != null)
+			{
+				if(inMappingName.equals(tmpString))
+					return true;
+			}
 		}
 		
-		//If here, it means that the function was not found.
+		//If here, it means that the mapping was not found.
 		return false;
 	}
 	
-	public int getNumberOfFunctions()
+	public int getNumberOfMappings(int mappingSelection)
 	{
-		return numberOfGlobalFunctions;
+		return numberOfMappings[mappingSelection];
 	}
 	
-	public GlobalMappingElement getGlobalMappingElement(int functionID)
+	public GlobalMappingElement getGlobalMappingElement(int inMappingID, int mappingSelection)
 	{
-		//Note that by default the elments in nameIDMapping are in functionID order.
+		//Note that by default the elments in nameIDMapping are in mappingID order.
 		
-		//First check to make sure that functionID is not greater than the number of
-		//functions present (minus one of course for vector numbering).
-		if(functionID > (this.getNumberOfFunctions() - 1))
+		//First check to make sure that mappingID is not greater than the number of
+		//mappings present (minus one of course for vector numbering).
+		if(inMappingID > (this.getNumberOfMappings(mappingSelection) - 1))
 		{
 			return null;
 		}
 		
 		//We are ok, therefore, grab the element at that position.
-		return (GlobalMappingElement) nameIDMapping.elementAt(functionID);
+		return (GlobalMappingElement) mappings[mappingSelection].elementAt(inMappingID);
 	}
 	
-	public int getFunctionId(String inFunctionName)
+	public int getMappingId(String inMappingName, int mappingSelection)
 	{
-		//Cycle through the list to obtain the function id.  Return -1
+		//Cycle through the list to obtain the mapping id.  Return -1
 		//if we cannot find the name.
-		
 		int count = 0;
 		GlobalMappingElement tmpGlobalMappingElement = null;
-		for(Enumeration e1 = nameIDMapping.elements(); e1.hasMoreElements() ;)
+		for(Enumeration e1 = mappings[mappingSelection].elements(); e1.hasMoreElements() ;)
 		{
 			tmpGlobalMappingElement = (GlobalMappingElement) e1.nextElement();
-			if((tmpGlobalMappingElement.getFunctionName()).equals(inFunctionName))
-				return count;
+			String tmpString = tmpGlobalMappingElement.getMappingName();
+			if(tmpString != null)
+			{
+				if(tmpString.equals(inMappingName))
+					return count;
+			}
 				
 			count++;
 		}
 		
-		//If here,  means that we did not find the function name.
+		//If here,  means that we did not find the mapping name.
 		return -1;
 	}
 	
-	public GlobalMappingElement getGlobalMappingElement(String inFunctionName)
+	public GlobalMappingElement getGlobalMappingElement(String inMappingName, int mappingSelection)
 	{
-		//Cycle through the list to obtain the function id.  Return null
+		//Cycle through the list to obtain the mapping id.  Return null
 		//if we cannot find the name.
 		
 		GlobalMappingElement tmpGlobalMappingElement = null;
-		for(Enumeration e1 = nameIDMapping.elements(); e1.hasMoreElements() ;)
+		for(Enumeration e1 = mappings[mappingSelection].elements(); e1.hasMoreElements() ;)
 		{
 			tmpGlobalMappingElement = (GlobalMappingElement) e1.nextElement();
-			if((tmpGlobalMappingElement.getFunctionName()).equals(inFunctionName))
-				return tmpGlobalMappingElement;
+			String tmpString = tmpGlobalMappingElement.getMappingName();
+			if(tmpString != null)
+			{
+				if(tmpString.equals(inMappingName))
+					return tmpGlobalMappingElement;
+			}
 		}
 		
-		//If here,  means that we did not find the function name.
+		//If here,  means that we did not find the mapping name.
 		return null;
 	}
 	
-	public Vector getNameIDMapping()
+	public Vector getMapping(int mappingSelection)
 	{
-		return nameIDMapping;
+		return mappings[mappingSelection];
 	}
 	
-	public void updateGenericColors()
+	public void updateGenericColors(int mappingSelection)
 	{
-		for(Enumeration e = nameIDMapping.elements(); e.hasMoreElements() ;)
+		for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
 		{
 			
 			GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
-			int functionID = tmpGME.getGlobalID();
-			tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(functionID % (jRacy.clrChooser.getNumberOfColors())));
+			int mappingID = tmpGME.getGlobalID();
+			tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(mappingID % (jRacy.clrChooser.getNumberOfColors())));
 		}
 	}
 	
-	public void displayFunctionLedger()
+	public void setGroupMappingHighlight(int inGroupID, int mappingSelectionApply, int mappingSelectionSource)
 	{
-		if(!FunctionLedgerWindowShowing)
+		GlobalMappingElement tmpGME1 = (GlobalMappingElement) mappings[mappingSelectionSource].elementAt(inGroupID);
+		Color tmpColor = tmpGME1.getGenericColor();
+		System.out.println("r,g,b: " + tmpColor.getRed() + "," + tmpColor.getGreen()+ "," + tmpColor.getBlue());
+		
+		for(Enumeration e = mappings[mappingSelectionApply].elements(); e.hasMoreElements() ;)
 		{
-			//Bring up the Servers and Contexts frame.
-			funLedgerWindow = new FunctionLedgerWindow(nameIDMapping);
+			GlobalMappingElement tmpGME2 = (GlobalMappingElement) e.nextElement();
+			if(tmpGME2.isGroupMember(inGroupID)){
+				tmpGME2.setGroupColor(tmpColor);
+				tmpGME2.setGroupColorFlag(true);
+			}
+		}
+	}
+	
+	public void unsetGroupMappingHighlight(int mappingSelection)
+	{
+		for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
+		{
+			GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
+			tmpGME.setGroupColorFlag(false);
+		}
+	}
+	
+	public void displayMappingLedger(int mappingSelection)
+	{
+		if(mappingLedgerWindows[mappingSelection] == null)
+		{
+			
+			mappingLedgerWindows[mappingSelection] = new MappingLedgerWindow(mappings[mappingSelection], mappingSelection);
 			//Add the main window as a listener as it needs
 			//to know when this window closes.
-			funLedgerWindow.addWindowListener(this);
-			jRacy.systemEvents.addObserver(funLedgerWindow);
-			funLedgerWindow.show();
-			FunctionLedgerWindowShowing = true;
+			mappingLedgerWindows[mappingSelection].addWindowListener(this);
+			jRacy.systemEvents.addObserver(mappingLedgerWindows[mappingSelection]);
+			mappingLedgerWindows[mappingSelection].show();
 		}
 		else
 		{
 			//Just bring it to the foreground.
-			funLedgerWindow.show();
+			mappingLedgerWindows[mappingSelection].show();
 		}
 	}
 	
-	public void closeFunctionLedger()
+	public void closeMappingLedger(int mappingSelection)
 	{
-		jRacy.systemEvents.deleteObserver(funLedgerWindow); 
-		
-		funLedgerWindow.setVisible(false);
-		funLedgerWindow.dispose();
 	
-		FunctionLedgerWindowShowing = false;
+		if(jRacy.debugIsOn)
+			System.out.println("Inside closeMappingLedger - mapping selection is: " + mappingSelection);
+		
+		if(mappingLedgerWindows[mappingSelection] != null)
+		{
+			jRacy.systemEvents.deleteObserver(mappingLedgerWindows[mappingSelection]);
+			mappingLedgerWindows[mappingSelection].setVisible(false);
+			mappingLedgerWindows[mappingSelection].dispose();
+			mappingLedgerWindows[mappingSelection] = null;
+		}
+		else
+		{
+			if(jRacy.debugIsOn)
+				System.out.println("Inside closeMappingLedger - mapping selection " + mappingSelection + " is null.  Not attemptinga close.");
+		}
+		
 	}
 	//Window Listener code.
 	public void windowClosed(WindowEvent winevt){}
@@ -268,9 +374,14 @@ public class GlobalMapping implements WindowListener, Serializable
 	public void windowOpened(WindowEvent winevt){}
 	public void windowClosing(WindowEvent winevt)
 	{
-		if(winevt.getSource() == funLedgerWindow)
+		if(winevt.getSource() == mappingLedgerWindows[0])
 		{
-			FunctionLedgerWindowShowing = false;
+			mappingLedgerWindows[0] = null;
+		}
+		
+		if(winevt.getSource() == mappingLedgerWindows[1])
+		{
+			mappingLedgerWindows[1] = null;
 		}
 	}
 	
@@ -280,10 +391,11 @@ public class GlobalMapping implements WindowListener, Serializable
 	
 	
 	//Instance element.
-	Vector nameIDMapping;	//Elements in this vector for the GlobalMapping class
-							//will be GlobalMappingElements.
-	int numberOfGlobalFunctions;
+	Vector[] mappings;
+	int[] numberOfMappings;
+	MappingLedgerWindow[] mappingLedgerWindows;
 	
-	private FunctionLedgerWindow funLedgerWindow;
-	private boolean FunctionLedgerWindowShowing = false;
+	int sizeOfArray = 2;
+	
+	private MappingLedgerWindow mappingLedgerWindow;
 }

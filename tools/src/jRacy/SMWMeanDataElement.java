@@ -30,55 +30,60 @@ public class SMWMeanDataElement implements Comparable
 		yBeginPosition = 0;
 		yEndPosition = 0;
 		
-		sortByFunctionID = false;
+		sortByMappingID = false;
 		sortByName = true;
 		sortByValue = false;
 		sortByReverse = false;
 	}
 	
-	public String getFunctionName()
+	public String getMappingName()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
-		return tmpGME.getFunctionName();
+		return tmpGME.getMappingName();
 	}
 	
-	public void setFunctionID(int inFunctionID)
+	public void setMappingID(int inMappingID)
 	{
-		functionID = inFunctionID;
+		mappingID = inMappingID;
 	}
 	
-	public int getFunctionID()
+	public int getMappingID()
 	{
-		return functionID;
+		return mappingID;
 	}
 	
-	public Color getFunctionColor()
+	public Color getMappingColor()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
-		return tmpGME.getFunctionColor();
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		return tmpGME.getMappingColor();
+	}
+	
+	public boolean isGroupMember(int inGroupID)
+	{
+		return globalMappingReference.isGroupMember(mappingID, inGroupID, 0);
 	}
 	
 	public int compareTo(Object inObject)
 	{
-		//Note that list will never call to compare against function id.  This
-		//is because all the functions are already sorted on the system.
+		//Note that list will never call to compare against mapping id.  This
+		//is because all the mappings are already sorted on the system.
 		double tmpDouble = 0;
 		
-		if(sortByFunctionID)
+		if(sortByMappingID)
 		{
 			if(!sortByReverse)
-				return (functionID - (((SMWMeanDataElement)inObject).getFunctionID()));
+				return (mappingID - (((SMWMeanDataElement)inObject).getMappingID()));
 			else
-				return ((((SMWMeanDataElement)inObject).getFunctionID()) - functionID);
+				return ((((SMWMeanDataElement)inObject).getMappingID()) - mappingID);
 		} 
 				
 		else if(sortByName)
 		{
 			if(!sortByReverse)
-				return (this.getFunctionName()).compareTo(((SMWMeanDataElement)inObject).getFunctionName());
+				return (this.getMappingName()).compareTo(((SMWMeanDataElement)inObject).getMappingName());
 			else
-				return (((SMWMeanDataElement) inObject).getFunctionName()).compareTo(this.getFunctionName());
+				return (((SMWMeanDataElement) inObject).getMappingName()).compareTo(this.getMappingName());
 		}
 		
 		//If here, means that we are in sort by value.
@@ -109,49 +114,49 @@ public class SMWMeanDataElement implements Comparable
 	
 	public boolean getMeanValuesSet()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
 		return tmpGME.getMeanValuesSet();
 	}
 	
 	public double getMeanExclusiveValue()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
 		return tmpGME.getMeanExclusiveValue();
 	}
 	
 	public double getMeanExclusivePercentValue()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
 		return tmpGME.getMeanExclusivePercentValue();
 	}
 	
 	public double getMeanInclusiveValue()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
 		return tmpGME.getMeanInclusiveValue();
 	}
 	
 	public double getMeanInclusivePercentValue()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
 		return tmpGME.getMeanInclusivePercentValue();
 	}
 	
 	public String getMeanTotalStatString()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
 		return tmpGME.getMeanTotalStatString();
 	}
 	
 	public String getTotalTotalStatString()
 	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(functionID);
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
 		return tmpGME.getTotalTotalStatString();
 	}
@@ -194,23 +199,23 @@ public class SMWMeanDataElement implements Comparable
 		return highlighted;
 	}
 	
-	public void setSortByFunctionID()
+	public void setSortByMappingID()
 	{
-		sortByFunctionID = true;
+		sortByMappingID = true;
 		sortByName = false;
 		sortByValue = false;
 	}
 	
 	public void setSortByName()
 	{
-		sortByFunctionID = false;
+		sortByMappingID = false;
 		sortByName = true;
 		sortByValue = false;
 	}
 	
 	public void setSortByValue()
 	{
-		sortByFunctionID = false;
+		sortByMappingID = false;
 		sortByName = false;
 		sortByValue = true;
 	}
@@ -228,8 +233,8 @@ public class SMWMeanDataElement implements Comparable
 	//Global Mapping reference.
 	GlobalMapping globalMappingReference;
 	
-	//Function ID
-	int functionID;
+	//Mapping ID
+	int mappingID;
 
 	//Named data values.
 	double value;  
@@ -243,10 +248,10 @@ public class SMWMeanDataElement implements Comparable
 	//Boolean indicating whether or not this object is highlighted.
 	boolean highlighted = false;
 	
-	boolean sortByFunctionID;
+	boolean sortByMappingID;
 	boolean sortByName;
 	boolean sortByValue;
 	boolean sortByReverse;
 	
-	boolean compareOnFunctionName;
+	boolean compareOnMappingName;
 }
