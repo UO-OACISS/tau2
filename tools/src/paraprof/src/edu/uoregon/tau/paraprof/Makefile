@@ -39,9 +39,9 @@ old: ../bin/ParaProf-Old.jar
 
 ../bin/ParaProf-Old.jar: $(OLD_SOURCES)
 	rm -f ./paraprof/*.class
-	$(CC) -d ./ -classpath ../../dms/dms.jar $(OLD_SOURCES)
-	jar -cvf ParaProf-Old.jar paraprof
-	mv ParaProf-Old.jar ../bin
+	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar $(OLD_SOURCES)
+	cd classes; jar -cvf ParaProf-Old.jar edu
+	mv ./classes/ParaProf-Old.jar $(TOOLS_SRC)/paraprof/bin
 
 clean:
 	rm -f classes/edu/uoregon/tau/paraprof/*
