@@ -176,7 +176,7 @@ do
 
   -dec)
       c_compiler=cc
-      cxx_compiler=cxx
+      cxx_compiler=g++
     shift
     ;;
 
@@ -534,14 +534,16 @@ case $machine in
    alpha)
      if [ $cxx_compiler = default ]
        then
-         # If it has the DEC cxx compiler, use it
-	 if [ -d /lib/cmplrs/cxx ]
-           then
-             cxx_compiler=cxx
-             c_compiler=cc
-           else
-             cxx_compiler=g++
-         fi
+#      # If it has the DEC cxx compiler, use it
+#	 if [ -d /lib/cmplrs/cxx ]
+#           then
+#             cxx_compiler=cxx
+#             c_compiler=cc
+#           else
+#             cxx_compiler=g++
+#         fi
+	 cxx_compiler=g++
+	 c_compiler=cc
      fi
 
      if [ $c_compiler = default ]
