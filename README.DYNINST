@@ -17,10 +17,8 @@ setenv LD_LIBRARY_PATH <tau-root>/i386_linux/lib\:$DYNINST_ROOT/lib/$PLATFORM
 
 Compiling Dyninst (optional, you may download the binary release).
 
-% cd $DYNINST_ROOT/core/dyninstAPI/$PLATFORM
-% make ; make install
-% cd $DYNINST_ROOT/core/dyninstAPI_RT/$PLATFORM
-% make ; make install
+% cd $DYNINST_ROOT/core/
+% make 
 % cd $DYNINST_ROOT/core/dyninstAPI/tests/$PLATFORM
 % make 
 % ./test1
