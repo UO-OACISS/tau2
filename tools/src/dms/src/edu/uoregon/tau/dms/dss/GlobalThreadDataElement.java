@@ -520,6 +520,13 @@ public class GlobalThreadDataElement implements Mapping{
 	}
     }
 
+	public int getStorageSize() {
+	    if (userevent == true) 
+			return doubleList.length / 4;
+		else
+			return doubleList.length / 5;
+	}
+
     public void incrementStorage(){
 	if(userevent)
 	    UtilFncs.systemError(null, null, "Error: Attemp to increase storage on a user event object!");
@@ -542,6 +549,12 @@ public class GlobalThreadDataElement implements Mapping{
 	    doubleList[actualLocation] = inDouble;
 	}
 	catch(Exception e){
+		e.printStackTrace();
+		System.out.println("inDouble: " + inDouble);
+		System.out.println("metric: " + metric);
+		System.out.println("offset: " + offset);
+		System.out.println("actualLocation: " + actualLocation);
+		System.out.println("doubleList size: " + doubleList.length);
 	    UtilFncs.systemError(e, null, "GTDE06");
 	}
     }
@@ -552,6 +565,12 @@ public class GlobalThreadDataElement implements Mapping{
 	    return doubleList[actualLocation];
 	}
 	catch(Exception e){
+		e.printStackTrace();
+		e.printStackTrace();
+		System.out.println("metric: " + metric);
+		System.out.println("offset: " + offset);
+		System.out.println("actualLocation: " + actualLocation);
+		System.out.println("doubleList size: " + doubleList.length);
 	    UtilFncs.systemError(e, null, "GTDE06");
 	}
 	return -1;

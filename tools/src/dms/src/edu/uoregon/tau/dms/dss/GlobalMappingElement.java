@@ -39,6 +39,10 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     //Storage control.
     //######
+	public int getStorageSize() {
+		return doubleList.length / 14;
+	}
+
     public void incrementStorage(){
 	int currentLength = doubleList.length;
 	double[] newArray = new double[currentLength+14];
@@ -573,6 +577,9 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	try{
 	    return doubleList[(location*14)+offset];}
 	catch(Exception e){
+		System.out.println("location: " + location);
+		System.out.println("offset: " + offset);
+		System.out.println("doubleList.length: " + doubleList.length);
 	    UtilFncs.systemError(e, null, "GME02");}
 	return -1;
     }

@@ -99,6 +99,7 @@ public class PSRunDataSession extends ParaProfDataSession{
 		this.generateDerivedData(0);
 
 		} catch(Exception e) {
+			e.printStackTrace();
 	    	UtilFncs.systemError(e, null, "SSD01");
 		}
     }
