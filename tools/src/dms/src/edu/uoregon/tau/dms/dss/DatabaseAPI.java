@@ -8,11 +8,11 @@ import java.sql.*;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.12 2005/01/06 22:46:56 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.13 2005/01/06 23:17:28 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class DatabaseAPI {
 
@@ -105,12 +105,13 @@ public class DatabaseAPI {
     }
 
     // returns Vector of Experiment objects
-    public ListIterator getExperimentList() {
-
+    public ListIterator getExperimentList() throws DatabaseException {
+       
         String whereClause = "";
         if (application != null)
             whereClause = "WHERE application = " + application.getID();
         return new DssIterator(Experiment.getExperimentList(db, whereClause));
+       
     }
 
     // returns Vector of Trial objects
@@ -156,12 +157,14 @@ public class DatabaseAPI {
         Vector applications = Application.getApplicationList(db, whereClause.toString());
         if (applications.size() == 1) {
             this.application = (Application) applications.elementAt(0);
-        } // else exception?
-        return this.application;
+            return this.application;
+        } else {
+            return null;
+        }
     }
 
     // set the Experiment for this session
-    public Experiment setExperiment(int id) {
+    public Experiment setExperiment(int id) throws DatabaseException {
         this.experiment = null;
         this.trial = null;
         this.intervalEventHash = null;
@@ -172,9 +175,10 @@ public class DatabaseAPI {
         Vector experiments = Experiment.getExperimentList(db, whereClause);
         if (experiments.size() == 1) {
             this.experiment = (Experiment) experiments.elementAt(0);
-        } //else exception?
-
-        return this.experiment;
+            return this.experiment;
+        } else {
+            return null;
+        }
     }
 
     // set the Trial for this session
@@ -507,8 +511,12 @@ public class DatabaseAPI {
         return app.saveApplication(db);
     }
 
-    public int saveExperiment(Experiment exp) {
+    public int saveExperiment(Experiment exp) throws DatabaseException {
+        try {
         return exp.saveExperiment(db);
+        } catch (SQLException e) {
+            throw new DatabaseException("Error saving experiment", e);
+        }
     }
 
     // override the saveTrial method
@@ -524,7 +532,7 @@ public class DatabaseAPI {
     }
 
     // save the metrics
-    private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) {
+    private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) throws SQLException {
         // System.out.print("Saving the metrics: ");
         Hashtable newMetHash = new Hashtable();
         Enumeration en = trial.getDataSource().getMetrics().elements();
@@ -918,7 +926,7 @@ public class DatabaseAPI {
         return appid;
     }
 
-    public int saveExperiment() {
+    public int saveExperiment() throws SQLException {
         int expid = 0;
         if (experiment != null) {
             expid = experiment.saveExperiment(db);
@@ -930,7 +938,7 @@ public class DatabaseAPI {
         Trial.deleteTrial(db, trialID);
     }
 
-    public void deleteExperiment(int experimentID) {
+    public void deleteExperiment(int experimentID) throws DatabaseException {
         // create a new DatabaseAPI to handle this request!
         // Why? Because we have to set the experiment to get the trials
         // and that will screw up the state of the current object.
@@ -949,7 +957,7 @@ public class DatabaseAPI {
         Experiment.deleteExperiment(db, experimentID);
     }
 
-    public void deleteApplication(int applicationID) {
+    public void deleteApplication(int applicationID) throws DatabaseException {
         // create a new DatabaseAPI to handle this request!
         // Why? Because we have to set the experiment to get the trials
         // and that will screw up the state of the current object.

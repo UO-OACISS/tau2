@@ -85,7 +85,12 @@ public class LoadTrial {
 
     public boolean checkForExp(String expid) {
         this.expID = Integer.parseInt(expid);
-        exp = databaseAPI.setExperiment(this.expID);
+
+        try {
+            exp = databaseAPI.setExperiment(this.expID);
+        } catch (Exception e) {
+
+        }
         if (exp == null) {
             System.err.println("Experiment id " + expid + " not found,  please enter a valid experiment ID.");
             System.exit(-1);

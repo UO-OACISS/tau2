@@ -67,16 +67,11 @@ public class DynaprofDataSource extends DataSource {
             //######
             v = (Vector) initializeObject;
             for (Enumeration e = v.elements(); e.hasMoreElements();) {
-                System.out.println("Processing data, please wait ......");
+                //System.out.println("Processing data, please wait ......");
                 long time = System.currentTimeMillis();
 
                 files = (File[]) e.nextElement();
                 for (int i = 0; i < files.length; i++) {
-                    if (this.debug()) {
-                        System.out.println("######");
-                        System.out.println("Processing file: " + files[i].getName());
-                        System.out.println("######");
-                    }
 
                     FileInputStream fileIn = new FileInputStream(files[i]);
                     InputStreamReader inReader = new InputStreamReader(fileIn);
@@ -351,18 +346,14 @@ public class DynaprofDataSource extends DataSource {
                 //Remove after testing is complete.
                 //this.setMeanDataAllMetrics(0);
 
-                System.out.println("Processing callpath data ...");
                 if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
                     setCallPathDataPresent(true);
                     CallPathUtilFuncs.buildRelations(this);
-                } else {
-                    System.out.println("No callpath data found.");
                 }
-                System.out.println("Done - Processing callpath data!");
 
                 time = (System.currentTimeMillis()) - time;
-                System.out.println("Done processing data!");
-                System.out.println("Time to process (in milliseconds): " + time);
+                //System.out.println("Done processing data!");
+                //System.out.println("Time to process (in milliseconds): " + time);
 
             }
        
@@ -436,21 +427,8 @@ public class DynaprofDataSource extends DataSource {
         return headerProcessed;
     }
 
-    //######
-    //End - Dynaprof string processing methods.
-    //######
-
-    //####################################
-    //End - Private Section.
-    //####################################
-
-    //####################################
-    //Instance data.
-    //####################################
+    
     private LineData functionDataLine = new LineData();
     private LineData functionChildDataLine = new LineData();
     private boolean headerProcessed = false;
-    //####################################
-    //End - Instance data.
-    //####################################
 }

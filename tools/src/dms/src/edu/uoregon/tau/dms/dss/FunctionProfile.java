@@ -10,9 +10,6 @@ public class FunctionProfile implements Comparable {
     }
 
     public FunctionProfile(Function function, int numMetrics) {
-        if (numMetrics < 1) {
-            System.out.println ("poopie");
-        }
         doubleList = new double[numMetrics * METRIC_SIZE];
         this.function = function;
     }
@@ -212,12 +209,8 @@ public class FunctionProfile implements Comparable {
 
     //Private section.
     private void insertDouble(int metric, int offset, double inDouble) {
-        try {
-            int actualLocation = (metric * METRIC_SIZE) + offset;
-            doubleList[actualLocation] = inDouble;
-        } catch (Exception e) {
-            System.out.println("poopie");
-        }
+        int actualLocation = (metric * METRIC_SIZE) + offset;
+        doubleList[actualLocation] = inDouble;
     }
 
     private double getDouble(int metric, int offset) {

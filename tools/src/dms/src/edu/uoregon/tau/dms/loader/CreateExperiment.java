@@ -41,7 +41,11 @@ public class CreateExperiment {
         exp.setName(name);
         exp.setApplicationID(appid);
         session.setExperiment(exp);
-        expid = session.saveExperiment();
+        try {
+            expid = session.saveExperiment();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.println("Created Experiment, ID: " + expid);
         session.terminate();
         return expid;
