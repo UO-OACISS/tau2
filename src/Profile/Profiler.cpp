@@ -62,8 +62,12 @@ using namespace std;
 #endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG
+#include "elg_trc.h"
+#else /* TAU_EPILOG */
 #define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
+#endif /* TAU_EPILOG */
 #endif // TRACING_ON 
 
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
@@ -114,7 +118,13 @@ void Profiler::Start(int tid)
       DEBUGPROFMSG("Profiler::Start Entering " << ThisFunction->GetName()<<endl;);
 	
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG
+	DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
+	     << ThisFunction->GetName()<<endl;);
+	elg_enter(ThisFunction->GetFunctionId(), ELG_NO_ID, ELG_NO_LNO);
+#else /* TAU_EPILOG */
 	TraceEvent(ThisFunction->GetFunctionId(), 1, tid); // 1 is for entry
+#endif /* TAU_EPILOG */
 #endif /* TRACING_ON */
 
 #ifdef PROFILING_ON
@@ -268,7 +278,12 @@ void Profiler::Stop(int tid)
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
         DEBUGPROFMSG("Profiler::Stop for routine = " << ThisFunction->GetName()<<endl;);
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG
+        DEBUGPROFMSG("Calling elg_exit(): "<< ThisFunction->GetName()<<endl;);
+	elg_exit();
+#else /* TAU_EPILOG */
 	TraceEvent(ThisFunction->GetFunctionId(), -1, tid); // -1 is for exit
+#endif /* TAU_EPILOG */
 #endif //TRACING_ON
 
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
@@ -705,8 +720,14 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	DEBUGPROFMSG("Profiler::DumpData( tid = "<<tid <<" ) "<<endl;);
 
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG 
+	DEBUGPROFMSG("Calling elg_close()"<<endl;);
+ 	if (RtsLayer::myThread() == 0)
+	  elg_close();
+#else /* TAU_EPILOG */
 	TraceEvClose(tid);
 	RtsLayer::DumpEDF(tid);
+#endif /* TAU_EPILOG */
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
@@ -943,8 +964,14 @@ int Profiler::StoreData(int tid)
 	DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
 
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG 
+	DEBUGPROFMSG("Calling elg_close()"<<endl;);
+ 	if (RtsLayer::myThread() == 0)
+	  elg_close();
+#else /* TAU_EPILOG */
 	TraceEvClose(tid);
 	RtsLayer::DumpEDF(tid);
+#endif /* TAU_EPILOG */
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
@@ -1133,8 +1160,14 @@ int Profiler::DumpData(bool increment, int tid)
 	DEBUGPROFMSG("Profiler::DumpData( tid = "<<tid <<" ) "<<endl;);
 
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG 
+	DEBUGPROFMSG("Calling elg_close()"<<endl;);
+ 	if (RtsLayer::myThread() == 0)
+	  elg_close();
+#else /* TAU_EPILOG */
 	TraceEvClose(tid);
 	RtsLayer::DumpEDF(tid);
+#endif /* TAU_EPILOG */
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
@@ -2446,9 +2479,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.73 $   $Date: 2002/04/23 07:15:46 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.73 2002/04/23 07:15:46 bertie Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.74 $   $Date: 2002/05/06 12:23:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.74 2002/05/06 12:23:35 sameer Exp $ 
  ***************************************************************************/
 
 	

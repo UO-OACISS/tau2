@@ -251,7 +251,11 @@ int RtsLayer::setMyNode(int NodeId, int tid) {
   TheNode() = NodeId;
 // At this stage, we should create the trace file because we know the node id
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG
+// EPILOG specific function not needed here. 
+#else /* TAU_EPILOG */
   TraceEvInit(tid);
+#endif /* TAU_EPILOG */
 #endif // TRACING_ON
   return TheNode();
 }
@@ -1012,6 +1016,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.40 $   $Date: 2002/03/28 20:45:28 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.40 2002/03/28 20:45:28 sameer Exp $ 
+ * $Revision: 1.41 $   $Date: 2002/05/06 12:23:36 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.41 2002/05/06 12:23:36 sameer Exp $ 
  ***************************************************************************/

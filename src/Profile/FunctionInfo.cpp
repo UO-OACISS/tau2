@@ -58,8 +58,12 @@ using namespace std;
 #endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG
+#include "elg_trc.h"
+#else /* TAU_EPILOG */
 #define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
+#endif /* TAU_EPILOG */
 #endif // TRACING_ON 
 
 
@@ -86,6 +90,18 @@ int& TheSafeToDumpData()
 
   return SafeToDumpData;
 }
+
+#ifdef TAU_EPILOG 
+//////////////////////////////////////////////////////////////////////
+// Initialize EPILOG Tracing package
+//////////////////////////////////////////////////////////////////////
+int TauInitEpilog(void)
+{
+  DEBUGPROFMSG("Calling elg_open"<<endl;);
+  elg_open();
+  return 1;
+}
+#endif /* TAU_EPILOG */
 
 //////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class FunctionInfo
@@ -153,12 +169,20 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	// Important in the presence of concurrent threads.
 	TheFunctionDB().push_back(this);
 #ifdef TRACING_ON
+#ifdef TAU_EPILOG
+        static int tau_elg_init=TauInitEpilog();
+	string tau_elg_name(Name+" "+Type);
+	FunctionId = elg_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
+		ELG_NO_LNO, GroupName.c_str(), ELG_FUNCTION);
+	DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
+#else /* TAU_EPILOG */
 	// FOR Tracing, we should make the two a single operation 
 	// when threads are supported for traces. There needs to be 
 	// a lock in RtsLayer that can be locked while the push_back
 	// and size operations are done (this should be atomic). 
 	// Function Id is the index into the DB vector
 	FunctionId = TheFunctionDB().size();
+#endif /* TAU_EPILOG */
 #endif //TRACING_ON
 	RtsLayer::UnLockDB();
 		
@@ -282,7 +306,7 @@ long FunctionInfo::GetFunctionId(void)
 //////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: bertie $
- * $Revision: 1.30 $   $Date: 2002/04/16 18:51:21 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.30 2002/04/16 18:51:21 bertie Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
+ * $Revision: 1.31 $   $Date: 2002/05/06 12:23:34 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.31 2002/05/06 12:23:34 sameer Exp $ 
  ***************************************************************************/
