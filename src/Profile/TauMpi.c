@@ -1255,6 +1255,8 @@ char *** argv;
   return returnVal;
 }
 
+#ifdef TAU_MPI_THREADED
+
 int  MPI_Init_thread (argc, argv, required, provided )
 int * argc;
 char *** argv;
@@ -1277,6 +1279,7 @@ int *provided;
 
   return returnVal;
 }
+#endif /* TAU_MPI_THREADED */
 
 
 
