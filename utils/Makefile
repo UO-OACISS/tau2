@@ -107,7 +107,7 @@ LDFLAGS	      = $(PCXX_OPT)
 MAKEFILE      = Makefile
 
 OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_merge.o tau_selective.o \
-		tau_instrumentor.o user_event_data.o function_data.o pprof_elem.o
+		tau_instrumentor.o user_event_data.o function_data.o pprof_elem.o tau_run.o
 
 PRINT	      = pr
 
