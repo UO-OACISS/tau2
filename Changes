@@ -19,6 +19,7 @@ Version 2.14 changes (from 2.13):
 7. Introduced vtf2profile tool to get profiles from VTF3 traces.
 8. Added histograms, full callgraph, not-normalized displays to paraprof. 
 9. Added support for PathScale compilers and -exec-prefix option. 
+10. Improved support for locking of performance data in multi-threaded apps. 
 
 Version 2.13 changes (from 2.12):
 1. Paraprof enhancements.
