@@ -643,6 +643,7 @@ I) The Profiling Library needs a recent C++ compiler. Our recommended list:
         g) SUN (http://www.sun.com) Sun CC 5.0+ compiler
         h) HP (http://www.hp.com) Tru64 cxx 6.x compiler  
 	i) HP (http://www.hp.com) aCC compiler 
+        j) Intel (http://www.intel.com) Intel 7.1, 8.x compilers. 
  
 II) Platforms :
    TAU has been tested on 
@@ -681,7 +682,7 @@ III) Software Requirements :
    paraprof requires Java 1.2+. Java can be downloaded from http://www.sun.com
 
    b) Tcl/Tk
-   TAU's GUI racy needs Tcl 7.4/Tk 4.0 or better. The default is 8.0. 
+   TAU's GUI racy needs Tcl 6.4/Tk 4.0 or better. The default is 8.0. 
    Tcl/Tk can be downloaded from http://www.scriptics.com. 
    NOTE: Tcl/Tk is only required for running the profile browser racy. The
    current version of TAU supports the new Java based paraprof profile browser that
@@ -694,6 +695,13 @@ III) Software Requirements :
    include this makefile and use the make variables TAU_INCLUDE TAU_LIBS
    and TAU_DEFS appropriately in their makefiles. See (examples/instrument/
    Makefile)  
+
+   [NEW] To ease the process of instrumentation of source code, users can 
+   use the $(TAU_COMPILER) makefile variable to parse, instrument, compile
+   and link the applications. This option should be used with PDT. See 
+   examples/taucompiler and tools/doc/tau_compiler.txt files for options. 
+   <arch>/bin/tau_compiler.sh can be used without TAU's stub Makefiles as well. 
+ 
 
 8. Examples of configuration and usage on the IBM SP
         
