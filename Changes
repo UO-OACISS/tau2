@@ -29,6 +29,8 @@ Version 2.9 changes (from 2.8):
 17. Changes in tau_merge to support Uintah.
 18. Added support for SGI sproc threads.
 19. Added support for dumping profile data in a consistent state (profile snapshot).
+20. Added support for Opari OpenMP directive rewriting tool [EWOMP'01].
+21. Improved MPI wrapper library support [Uintah].
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
