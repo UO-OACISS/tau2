@@ -42,6 +42,8 @@
 
 #include <Profile/PthreadLayer.h>
 
+#include <Profile/TulipThreadLayer.h>
+
 #include <Profile/RtsLayer.h>
 
 
@@ -112,6 +114,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 1998/08/09 23:04:01 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.16 1998/08/09 23:04:01 sameer Exp $ 
+ * $Revision: 1.17 $   $Date: 1998/08/14 15:33:30 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.17 1998/08/14 15:33:30 sameer Exp $ 
  ***************************************************************************/
