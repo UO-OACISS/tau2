@@ -1,0 +1,168 @@
+*****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.acl.lanl.gov/tau		           **
+*****************************************************************************
+**    Copyright 1997  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+*****************************************************************************
+
+Installation Procedure:
+-----------------------
+In this directory invoke
+% ./configure
+% make install
+This will install the TAU Portable Profiling Package.                 
+
+TAU System Requirements :
+-------------------------
+I) The Profiling Library needs a recent C++ compiler. Recommended :
+	a) Kuck and Associates' (http://www.kai.com) KCC compiler
+	b) SGI (http://www.sgi.com) MipsPro 7.1 or 7.2 CC compiler
+	c) Portland Group Inc. (http://www.pgroup.com) C++ compiler for 
+	Intel Teraflop machine at Sandia National Labs/NM.
+   It also works with gnu g++ 2.7.2.3 with a reduced functionality and
+   should work when gnu supports runtime type information. We are
+   in the process of investigating other compilers on different platforms.
+	
+
+II) Platforms :
+   TAU has been tested on 
+	a) SGI R10000 based systems.  SGI Power Challenge/ Origin series.
+	Currently support for hardware performance counters is available
+   for R10000 based systems and this is the recommended platform for 
+   low level hardware profiling for say cache analysis. The default time 
+   based profiling is available on a variety of other platforms.
+	b) LINUX PCs. Tested with KAI compiler. 
+	c) Sun Solaris2. Tested with g++.
+	d) HP PA-RISC. Tested with g++. 
+	e) Intel Teraflop Machine. Tested with PGI C++ cross compilers.
+   Other platforms will be supported and it may work with other systems
+   with minor modifications.
+	
+
+III) Software Requirements :
+   a) Tcl/Tk
+   TAU's GUI racy needs Tcl 7.4/Tk 4.0 or better.
+   Tcl/Tk can be downloaded from http://www.sunlabs.com 
+   
+   b) xauth
+   The display needs to be secure. xhost+ should not be used. Xauth style
+   security is required. See TAU FAQ on how to use this. Contact your 
+   system administrator if your X-server is not configured for Xauth 
+   cookies. 
+
+   c) xrdb
+   The configure script ensures that the display is ok using xrdb.
+  
+   d) C++ compiler that supports STL (Standard Templates Library). STL
+   can be downloaded from http://www.sgi.com/Technology/STL/
+
+
+Configure options :
+-------------------
+   The `configure' shell script attempts to guess correct values for
+various system-dependent variables used during compilation, and
+creates the Makefile(s) (one in each subdirectory of the source
+directory). 
+
+To compile this package:
+
+1.  Configure the package for your system.
+
+   Normally, you just `cd' to the directory containing the package's
+source code and type `./configure'. Running `configure' takes a minute or 
+two.  While it is running, it prints some messages that tell what it is doing. 
+   configure takes the following optional arguments:
+   % ./configure -cc=<C Compiler> -c++=<C++ Compiler> 
+     -useropt='<list of commandline parameters>'  
+     -gnu   
+     -PROFILECOUNTERS
+     -PROFILECALLS
+     -PROFILESTATS
+     -sgi
+     -ibm
+     -dec
+     -INTELTFLOP
+
+Note: By default if 
+   % ./configure 
+   is invoked, configure uses time based profiling. This can be overriden
+   by -PROFILECOUNTERS option which configures it for using CPU counters.
+   -PROFILESTATS is used to configure TAU Profiling Package to generate
+   statistics such as standard deviation of exclusive time/counts for 
+   each function. This can be viewed using `pprof'.
+   -PROFILECALLS is used to generate a trace of exclusive and inclusive 
+   counts for each function invocation but there is an additional runtime
+   overhead for doing this.
+
+   Example:
+   On SGI Origin 2000, 
+   % ./configure -c++=KCC 
+   or
+   % ./configure -c++=CC -useropt='-64 -I/local/apps/STL/'
+
+  Configure changes Makefiles in all subdirectories. It replaces system 
+  dependent options and profiling options. The compilation flags associated
+  with the above profiling options are :
+  ----------------------------------------------------------------
+  Parameter			Compilation Flags
+  ----------------------------------------------------------------
+  Default			-DPROFILING_ON
+  PROFILECOUNTERS 		-DSGI_HW_COUNTERS
+  PROFILESTATS 			-DPROFILE_STATS
+  PROFILECALLS			-DPROFILE_CALLS
+  For SGI			-DSGI_TIMERS
+  ----------------------------------------------------------------
+
+  These flags are also changed in the examples/ directory. It is 
+  *important* for the library and the application to be compiled with 
+  the *same* set of compilation flags. After configure, see the Makefile
+  in the examples directory for the flags and use it appropriately in 
+  other applications. To disable profiling, ensure that -DPROFILING_ON
+  is not defined. The instrumented application then runs without any 
+  profiling runtime overhead.           
+
+2. Compilation.
+
+   Type `make install' to compile the package.
+
+   Make installs the libraries  in $(TAUROOT)/lib/$(TAU_ARCH) subdirectory
+   and installs utilities such as pprof and racy in 
+   $(TAU_ROOT)/bin/$(TAU_ARCH) subdirectory.
+
+   
+   Add to your .cshrc file the bin/$(TAU_ARCH) subdirectory.
+   e.g.,
+   # in .cshrc file
+   set path=($path /usr/local/packages/tau/bin/sgi8k)
+
+3. Examples.
+
+   After building the library, the applications that need to be profiled
+   have to be instrumented by manually inserting TAU Profiling calls in the
+   source. This is explained in detail in the documentation available at
+   http://www.acl.lanl.gov and can be seen in the examples directory.
+   This process involves identifying functions and associating each function
+   with one or more TAU profile groups. This enables selectively profiling 
+   groups of functions. By default all instrumented functions that are 
+   invoked are profiled.
+   
+   % cd examples/instrument
+   % ./t1
+   % pprof
+   % racy
+
+4. Racy.
+
+   Racy is the GUI for TAU performance analysis. It brings up a project
+   management window. Type in any filename with a .pmf extension. e.g.,
+   matrix.pmf and it will bring up the racy main window.
+   
+    
+
+
+
+
+
+

@@ -1,0 +1,1301 @@
+#!/bin/sh 
+#****************************************************************************
+#*			TAU Portable Profiling Package			   **
+#*			http://www.acl.lanl.gov/tau		           **
+#****************************************************************************
+#*    Copyright 1997  						   	   **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+#*	
+#*  Permission to use, copy, modify, and distribute this software and its
+#*  documentation for any purpose and without fee is hereby granted,
+#*  provided that the above copyright notice appear in all copies and that
+#*  both that copyright notice and this permission notice appear in
+#*  supporting documentation, and that the name of University of Oregon (UO)
+#*  and Los Alamos National Laboratory (LANL) not be
+#*  used in advertising or publicity pertaining to distribution of
+#*  the software without specific, written prior permission.  The
+#*  University of Oregon and LANL makes no representations about the
+#*  suitability of this software for any purpose.  It is provided "as is"
+#*  without express or implied warranty.
+#*
+#*  THE UNIVERSITY OF OREGON AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO
+#*  THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+#*  FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF OREGON OR LANL BE LIABLE FOR
+#*  ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+#*  RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+#*  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+#*  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#****************************************************************************
+#****************************************************************************
+#*  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO, LANL)
+#*		 Peter Beckman, Steve Karmesin (ACL, LANL)
+#*		 Kathleen Lindlan (UO)		
+#*  Principal Investigators : 
+#*		 Janice Cuny, Allen Malony (UO)
+#*  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 
+#*  Darryl Brown, et. al. and directed by Allen Malony at University of Oregon.
+#*  The TAU Portable Profiling Package uses part of TAU.
+#****************************************************************************
+
+# Configure script for TAU
+#   Sameer Shende 11/12/97 for TAU Portable Profiling Package
+#   Kurt Windisch 12/9/96
+# Based on the configure script for Sage/pC++ by:
+#   Pete Beckman 9/6/93
+#   Lars Thomas Hansen 2/27/95 (Solaris fix)
+#
+# New options for TAU/HPC++:
+#   -pcxx <sageroot directory>
+#   -sage2 <edg-sage2 directory>
+#   -pstl <pstl directory>
+#   -hpnx <hpc++lib/nexus directory>
+#
+# Options for Configure :
+#   ./configure -cc=<C Compiler> -c++=<C++ Compiler> -useropt=<User options>
+#   -gnu   
+# 
+# Recommended configuration for testing on SGI:
+#   ./configure -useropt=-64
+# For testing with KAI's KCC compiler 
+#   ./configure -cc=cc -c++=KCC 
+# If your C++ compiler does not support STL, you could use something like:
+#   ./configure -useropt='-I/usr/local/packages/SGI-STL/' 
+# after downloading the Standard Templates Library.
+# This configure script has been tested on SGI, LINUX, SOLARIS2 and HP
+#
+
+# Currently this configure file modifies Makefiles within Sage to the
+# following architecture names (see ./utils/archfind) :
+#   ptx             a Sequent Symmetry running DYNIX/ptx (386/486 based)
+#   symmetry        a Sequent Symmetry running DYNIX 3 (386/486 based)
+#   hp9000s700      an HP 9000, series 700, running hpux
+#   hp9000s800      an HP 9000, series 800, running hpux
+#   decstation      a DecStation XXXX
+#   rs6000	    an IBM RS6000 running AIX
+#   sun4            a Sun Microsystems series 4 workstation (SPARC based)
+#   solaris2	    a Sun Workstation running SVR4 Solaris 
+#   next            a NeXT computer
+#   sgi4k           an SGI R4K-based machine
+#   sgi8k           an SGI R8K-based (Power) machine
+#   cm5             a Thinking Machines Corporation CM-5
+#   paragon         an Intel paragon
+#   tc2000          a BBN Butterfly tc2000
+#   ksr1            a Kendall Square KSR1
+#   unknown         default setup, no machine selected (original)
+#   alpha           a DEC Alpha running OSF/1
+#   c90             a Cray C90 running Unicos
+#   t3d             a Cray T3D (Alpha-based) computer array
+#   i386_linux 	    an Intel ix86 PC running LINUX
+#   default         Returns all files to "distribution" snapshot. 
+#                      This MUST be done before any CVS commands are called
+#
+# The tkfile may contain definitions of environment variables in the
+# style of /bin/sh, e.g. (these are the defaults)
+#
+#   tcltkheader="-I/usr/local/include"
+#   tcltklib="-L/usr/local/lib -ltk4.0 -ltcl7.4"
+#   x11header="-I/usr/include"
+#   x11lib="-L/usr/lib -lX11"
+#
+# If a file name is given, it must contain all these definitions.
+# No checking is done to ensure that it does so.
+
+# Record all the arguments
+arguments=$*
+
+# Default compilers and options
+c_compiler=default
+cxx_compiler=default
+fixmakeargs=""
+pcxxopt=-g
+useropt=-g
+awe=no
+pthread=no
+task=no
+lwp=no
+tcltk=yes
+tcltkfile="/"
+kai=no
+stdcxxlib=no
+inteltflop=no
+profilecounters=no
+profilestats=no
+profilecalls=no
+debugprof=no
+use_pcxx=no
+use_hpcxx=no
+use_ansic=no
+use_sage2=no
+use_pstl=no
+use_hpnx=no
+
+# debug:
+# echo $arguments
+
+# PARSE COMMAND LINE SWITCHES
+###############################################################
+for arg in "$@";
+do
+  case $arg in
+
+  -cc=*)
+    myarg=`echo $arg | sed 's/-cc=//'`
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC ]
+      then
+        c_compiler=$myarg
+      else
+      echo "WARNING: valid options for cc are 'cc', 'gcc' and 'KCC'"
+#      exit 1
+    fi
+    shift
+    ;;
+
+  -c++=*)
+    myarg=`echo $arg | sed 's/-c++=//'`
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC ]
+      then
+        cxx_compiler=$myarg
+      else
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' and 'NCC'"
+#      exit 1
+    fi
+    shift
+   ;;
+
+  -gnu)
+      c_compiler=gcc
+      cxx_compiler=g++
+    shift
+    ;;
+
+  -dec)
+      c_compiler=cc
+      cxx_compiler=cxx
+    shift
+    ;;
+
+  -ibm)
+      c_compiler=cc
+      cxx_compiler=xlC
+    shift
+    ;;
+
+  -cfront)
+      c_compiler=cc
+      cxx_compiler=CC
+    shift
+    ;;
+
+  -sgi)
+      c_compiler=cc
+      cxx_compiler=CC
+    shift
+    ;;
+
+  -task)
+      task=yes
+    shift
+    ;;
+
+  -awe=*)
+      awe=yes
+      awedir=`echo $arg | sed -e 's/-awe=//'`
+    shift
+    ;;
+
+  -lwp)
+      lwp=yes
+    shift
+    ;;
+
+  -pthread=*)
+      pthread=yes
+      ptdir=`echo $arg | sed -e 's/-pthread=//'`
+    shift
+    ;;
+
+  -pcxxopt=*)
+    pcxxopt=`echo $arg | sed -e 's/-pcxxopt=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -useropt=*)
+    useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -opt=*)
+    pcxxopt=`echo $arg | sed -e 's/-opt=//' -e 's/ /_/g'`
+    useropt="$pcxxopt"
+    shift
+    ;;
+
+  -pcxx=*)
+    use_pcxx=yes
+    sage1dir=`echo $arg | sed -e 's/-pcxx=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -sage2=*)
+    use_sage2=yes
+    sage2dir=`echo $arg | sed -e 's/-sage2=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -hpcxx)
+    use_hpcxx=yes
+    shift
+    ;;
+
+  -hpcxx=*)
+    use_hpcxx=yes
+    sage2dir=`echo $arg | sed -e 's/-hpcxx=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -pstl=*)
+    use_pstl=yes
+    pstldir=`echo $arg | sed -e 's/-pstl=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -hpnx=*)
+    use_hpnx=yes
+    hpnxdir=`echo $arg | sed -e 's/-hpnx=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -tkfile=*)
+    tcltkfile=`echo $arg | sed -e 's/-tkfile=//' -e 's/ /_/g'`
+    shift
+    ;;
+
+  -ansic)
+    use_ansic=yes
+    shift
+    ;;
+
+  -PROFILECOUNTERS)
+    profilecounters=yes
+    shift
+    ;;
+
+  -PROFILECALLS)
+    profilecalls=yes
+    shift
+    ;;
+
+  -PROFILESTATS)
+    profilestats=yes
+    shift
+    ;;
+
+  -DEBUGPROF)
+    debugprof=yes
+    shift
+    ;;
+
+  -INTELTFLOP)
+    inteltflop=yes
+    shift
+    ;;
+
+  -*)
+    echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
+    exit 1
+    ;;
+  esac
+done
+
+# -- set up portable echo command
+case "`echo 'x\c'`" in
+'x\c')  echo="echo -n"  nnl= ;;     #BSD
+x)      echo="echo"     nnl="\c";;  #SysV
+*)      echo 'Cannot setup echo. What weird machine do you have?' 1>2&
+        exit 1;;
+esac
+
+# lth@cs.uoregon.edu: don't mess with the compiler if it is 'default'.
+# The user may define CCOM as an environment variable or let it be blank;
+# if blank, it is defaulted in archfind.
+
+if [ "$c_compiler" != "" -a "$c_compiler" != "default" ]; then
+  CCOM="$c_compiler"          # for 'archfind'
+  export CCOM
+fi
+
+
+echo "-------------------- TAU configure script ---------------"
+
+tauroot=`pwd | sed -e 's,^/tmp_mnt/nfs,,' -e 's,^/tmp_mnt,,'`
+echo \#define TAUROOT \"$tauroot\" > include/tauroot.h
+
+echo "  The TAU source code has just been configured to use the"
+echo "  tau root directory $tauroot."
+echo "  If you move the Tau distribution, you must either"
+echo "    * set an environment variable TAUROOT containing the new"
+echo "      location before running any TAU tools"
+echo "  or"
+echo "    * run configure again and recompile"
+echo "-----------------------------------------------------------------"
+
+# Try and figure out architecture
+detectarch=unknown
+detectarch=`utils/archfind`
+detectxdev=`utils/archfind -x`
+detectspec=`utils/archfind -s`
+
+
+###########################################################################
+## Prompt the user for other packages
+#echo " "
+#echo "TAU requires language and compiler support from the distributions"
+#echo "of its supported languages.  Currently, the following languages"
+#echo "are supported:"
+#echo "  * C++"
+#echo "  * pC++"
+#echo "  * HPC++ PSTL"
+#echo "  * HPC++ HPC++Lib"
+#echo "You will be prompted for the paths to language distributions that"
+#echo "you wish to use with TAU.  When entering paths, do not include a"
+#echo "trailing slash ('/')."
+#echo " "
+#
+#if [ "x${sage1dir}" = "x" ] 
+#then
+#  sage1dir=""
+#  echo "Please enter the absolute path name for the pC++ distribution,"
+#  echo "or hit return if you do not want to install support for pC++."
+#  $echo "? ${nnl}"
+#  read sage1dir
+#  if [ "x${sage1dir}" = "x" ] 
+#  then
+#    echo "TAU not using pC++."
+#    use_pcxx=no
+#  else
+#    echo "pC++ path set to: ${sage1dir}"
+#    use_pcxx=yes
+#  fi
+#else
+#  echo "pC++ path set on command line to: ${sage1dir}"
+#fi
+#echo " "
+#
+#if [ "x${sage2dir}" = "x" ] 
+#then
+#  sage2dir=""
+#  echo "HPC++ support requires the Sage++ toolkit version 2.0."
+#  echo "Please enter the absolute path name for the Sage++2 distribution,"
+#  echo "or hit return if you do not want to install support for HPC++."
+#  $echo "? ${nnl}"
+#  read sage2dir
+#  if [ "x${sage2dir}" = "x" ] 
+#  then
+#    echo "TAU not using Sage++2 or HPC++."
+#    use_hcxx=no
+#    use_sage2=no
+#  else
+#    echo "Sage++2 path set to: ${sage2dir}"
+#    use_hpcxx=yes
+#    use_sage2=yes
+#  fi
+#else
+#  echo "Sage++2 path set on command line to: ${sage2dir}"
+#fi
+#echo " "
+#
+#if [ "x${use_hpcxx}" = "xyes" ]
+#then
+#  if [ "x${hpnxdir}" = "x" ] 
+#  then
+#    echo "HPC++Lib support requires the Nexus4.0 distribution."
+#    echo "Please enter the absolute path name for the Nexus 4.0 distribution,"
+#    echo "or hit return if you do not want to install support for HPC++Lib."
+#    $echo "? ${nnl}"
+#    read hpnxdir
+#    if [ "x${hpnxdir}" = "x" ] 
+#    then
+#      echo "TAU not using Nexus or HPC++Lib."
+#      use_hpnx=no
+#    else
+#      echo "Nexus path set to: ${hpnxdir}"
+#      use_hpnx=yes
+#    fi
+#  else
+#    echo "Nexus path set on command line to: ${hpnxdir}"
+#  fi
+#fi
+#echo " "
+#
+#if [ "x${use_hpcxx}" = "xyes" ]
+#then
+#  if [ "x${pstldir}" = "x" ] 
+#  then
+#    echo "HPC++ PSTL support requires the PSTL distribution."
+#    echo "Please enter the absolute path name for the PSTL distribution,"
+#    echo "or hit return if you do not want to install support for the PSTL."
+#    $echo "? ${nnl}"
+#    read pstldir
+#    if [ "x${pstldir}" = "x" ] 
+#    then
+#      echo "TAU not using the PSTL."
+#      use_pstl=no
+#    else
+#      echo "PSTL path set to: ${hpnxdir}"
+#      use_pstl=yes
+#    fi
+#  else
+#    echo "PSTL path set on command line to: ${pstldir}"
+#  fi
+#fi
+echo " "
+echo "Done obtaining external package information."
+echo " "
+
+###############################################################
+# if there are no arguments, GUESS at system configuration
+if [ x$1 = x ]
+  then 
+    echo Attempting to auto-configure system, determining architecture...
+    machine=$detectarch
+    if [ $machine = unknown ]
+      then
+        echo I could not determine the architecture of this host
+        echo You must give me a hint.
+        exit 0
+    fi
+    echo I think this is a $machine...
+  else
+    machine=$1
+    if [ $detectarch != unknown -a $machine != unknown ]
+      then
+        detectxdev=$machine
+        if [ $detectarch != $machine ]
+           then
+	     echo WARNING\!\! Auto-detect:$detectarch overridden with $machine
+        fi
+    fi
+fi
+
+
+######################################################################
+# If the default gcc/g++ is not used, Modify the Makefiles...
+# Choose the c++ and cc compiler
+
+case $machine in
+   tc2000 | ksr1 | c90 | cray | t3e)
+     if [ $cxx_compiler = default ]
+       then
+         cxx_compiler=CC
+     fi
+
+     if [ $c_compiler = default ]
+       then
+         c_compiler=cc             
+     fi
+     ;;
+   
+   alpha)
+     if [ $cxx_compiler = default ]
+       then
+         # If it has the DEC cxx compiler, use it
+	 if [ -d /lib/cmplrs/cxx ]
+           then
+             cxx_compiler=cxx
+             c_compiler=cc
+           else
+             cxx_compiler=g++
+         fi
+     fi
+
+     if [ $c_compiler = default ]
+       then
+         c_compiler=gcc
+     fi
+     ;;
+  
+   rs6000)
+     if [ $cxx_compiler = default ]
+       then
+         # If it has the IBM xlC compiler, use it
+	 if [ -f /bin/xlC ]
+           then
+             cxx_compiler=xlC
+             c_compiler=cc
+           else
+             cxx_compiler=g++
+         fi
+     fi
+
+     if [ $c_compiler = default ]
+       then
+         c_compiler=gcc
+     fi
+     ;;
+  
+   sgi4k | sgi8k)
+     if [ $cxx_compiler = default ]
+       then
+	# SGI has no 64 bit C++ compiler except "CC", so if we are an
+	# R8K, we have to use "CC"
+	if [ $machine = sgi8k ]
+	  then 
+	    cxx_compiler=CC
+            c_compiler=cc
+	  else
+            # We are an SGI R4K-based machine, use NCC if available
+	    if [ -f /bin/NCC ]
+              then
+                cxx_compiler=NCC
+                c_compiler=cc
+              else
+                cxx_compiler=g++
+            fi
+          fi
+        fi
+     if [ $c_compiler = default ]
+       then
+         c_compiler=gcc
+     fi
+     ;;
+  
+   *)
+     if [ $cxx_compiler = default ]
+       then
+         cxx_compiler=g++
+     fi
+
+     if [ $c_compiler = default ]
+       then
+         c_compiler=gcc             
+     fi
+     ;;
+
+esac
+
+
+######################################################################
+# Set default Profiling Options in Makefiles
+fixmakeargs="$fixmakeargs PROFILE"
+if [ $profilecalls = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILECALLS"
+fi
+
+if [ $profilestats = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILESTATS"
+fi
+
+if [ $machine = sgi8k -a $profilecounters = yes ]
+  then
+      fixmakeargs="$fixmakeargs SGICOUNTERS"
+fi
+
+if [ $machine = sgi8k -a $profilecounters = no ]
+  then
+      fixmakeargs="$fixmakeargs SGITIMERS"
+fi
+
+if [ $debugprof = yes ]
+  then
+    fixmakeargs="$fixmakeargs DEBUGPROF"
+fi
+
+if [ $inteltflop = yes ]
+  then
+      fixmakeargs="$fixmakeargs INTELTFLOP"
+fi 
+    
+
+######################################################################
+# Set default C++ compiler in all Makefiles
+
+case $cxx_compiler in
+   CC)
+      echo "Default C++ compiler will be CC"
+      fixmakeargs="$fixmakeargs USE_CFRONT"
+      ;;
+
+   g++)
+      echo "Default C++ compiler will be " \
+         `gcc -v 2>&1 | tail -1 | sed 's/gcc/g++/g'`
+      # No fixmakeargs needed because it is the default
+      ;;
+
+   cxx)
+      echo "Default C++ compiler will be the DEC cxx C++ compiler"
+      fixmakeargs="$fixmakeargs USE_DECCXX"
+      ;;
+
+   xlC)
+      echo "Default C++ compiler will be IBMs xlC C++ compiler"
+      fixmakeargs="$fixmakeargs USE_IBMXLC"
+      ;;
+
+   NCC)
+      echo "Default C++ compiler will be SGI's Delta C++ compiler"
+      fixmakeargs="$fixmakeargs USE_SGINCC"
+      ;;
+   
+   KCC)
+      echo "Default C++ compiler will be KAI KCC C++ Compiler"
+      kai=yes
+      fixmakeargs="$fixmakeargs KAI"
+      ;;
+
+   *)
+      echo "ERROR Unknown C++ compiler"
+      exit 1
+      ;;
+
+esac
+
+######################################################################
+# Set default CC compiler in all Makefiles
+
+gcclibdir=unknown
+if [ $c_compiler != gcc ]
+  then
+    echo Default C compiler will be $c_compiler
+    fixmakeargs="$fixmakeargs USE_CC"
+  else
+    echo "Default C compiler will be " `gcc -v 2>&1 | tail -1`
+
+# I must set the gcclibdir in the Makefiles if we combine gcc, cc, and CC 
+    gcclibdir=`gcc -v 2>&1 | awk '{print $4;}' | \
+       awk -F/ '{for (i=2; i<NF; i++) printf("/%s",$i); printf("\n"); }'`
+#    echo $gcclibdir
+fi
+
+######################################################################
+# Set default compiler options
+
+if [ $use_pcxx = yes ]
+then
+  opt=`echo $pcxxopt | sed -e 's/_/ /g' -e 's/^$/(none)/'`
+  echo "Default compiler options for pC++ programs are $opt"
+  opt=`echo $useropt | sed -e 's/_/ /g' -e 's/^$/(none)/'`
+  echo "Default compiler options for pC++ user programs are $opt"
+
+  fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt $fixmakeargs"
+fi
+
+fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt $fixmakeargs"
+
+######################################################################
+# discover the paths for standard system include directories
+
+cat << EOF > get_stdinc.C
+#include <stddef.h>
+#include <iostream.h>
+EOF
+
+cat << EOF > find_stdinc.awk
+BEGIN {cinc=""; cppinc="";}
+/^#[0123456789]+ ".+\/stddef.h"/ {cinc = substr(\$2, 2, length(\$2)-11);}
+/^#line [0123456789]+ ".+\/stddef.h"/ {cinc = substr(\$3, 2, length(\$3)-11);}
+/^# [0123456789]+ ".+\/stddef.h"/ {cinc = substr(\$3, 2, length(\$3)-11);}
+/^#[0123456789]+ ".+\/iostream.h"/ {cppinc = substr(\$2, 2, length(\$2)-13);}
+/^#line [0123456789]+ ".+\/iostream.h"/ {cppinc = substr(\$3, 2, length(\$3)-13);}
+/^# [0123456789]+ ".+\/iostream.h"/ {cppinc = substr(\$3, 2, length(\$3)-13);}
+END {printf("-I%s -I%s\n", cinc, cppinc);}
+EOF
+
+stdinc=`$cxx_compiler -E get_stdinc.C | awk -f find_stdinc.awk`
+
+rm -f get_stdinc.C find_stdinc.awk
+
+######################################################################
+# Save C++ compiler, C compiler, and USEROPT for build
+
+echo "$machine: cxx         = $cxx_compiler" >> ./build/Config.info
+echo "$machine: cc          = $c_compiler" >> ./build/Config.info
+opt=`echo $useropt | sed -e 's/_/ /g'`
+echo "$machine: useropt     = $opt" >> ./build/Config.info
+echo "$machine: stdincludes = $stdinc" >> ./build/Config.info 
+echo "" >> ./build/Config.info
+
+######################################################################
+# test whether C++ compiler supports AT&T task library
+
+echo "#include <task.h>" > /tmp/tau$$.C
+echo "class IamReallyATTtask : public object {};" >> /tmp/tau$$.C
+
+if $cxx_compiler -c /tmp/tau$$.C 1> /dev/null 2>&1
+then
+  echo "AT&T task library found; using it"
+  task=yes
+fi
+rm -f /tmp/tau$$.C tau$$.o
+
+
+######################################################################
+# test whether C++ compiler supports Std C++ Library (KAI KCC compiler) 
+echo "Testing for Standard C++ Library support for string class"
+echo "#include <string> "  > /tmp/tau$$.C
+echo "using std::string;" >> /tmp/tau$$.C
+echo "void foo(void) { string s1; return; }" >> /tmp/tau$$.C
+
+if $cxx_compiler -c /tmp/tau$$.C 1> /dev/null 2>&1
+then 
+  echo "Found support for Standard C++ Library string"
+  echo "NOTE: Compiling Profiling Library and Applications with -DTAU_STDCXXLIB"
+  echo "***********************************************************************"
+  stdcxxlib=yes
+else
+  echo "Did not find <string> Standard C++ Library header file. Using <bstring.h> "
+fi 
+rm -f /tmp/tau$$.C tau$$.o
+
+
+######################################################################
+# test whether C++ compiler supports SUN LWP thread library
+
+if [ -f /usr/include/lwp/lwp.h ]
+then
+  echo "SUN LWP thread library found; using it"
+  lwp=yes
+fi
+
+
+######################################################################
+# Set some more Profiling options
+
+if [ $stdcxxlib = yes ]
+  then
+    fixmakeargs="$fixmakeargs STDCXXLIB"
+fi    
+
+
+######################################################################
+# g++ at this time does not support RTTI. 
+if [ $cxx_compiler = g++ ]   
+  then
+    fixmakeargs="$fixmakeargs GNU"
+fi
+######################################################################
+# TEST FOR ALL MACHINE TYPES
+case $machine in
+     hp9000s700 | hp9000s800)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine NO_RANLIB $fixmakeargs"
+# HP-ALLOCA HP_CFLAGS
+
+	if [ `/bin/uname -r | cut -d. -f2` = 10 ]
+	then
+          echo This machine uses HPUX Version 10
+          fixmakeargs="HPUX10 $fixmakeargs"
+        fi
+
+	if [ $c_compiler = cc ]
+  	then
+		fixmakeargs="HP_CFLAGS HP-ALLOCA $fixmakeargs"
+	fi
+
+# Check for Convex SPP enviroment
+	if [ $detectxdev = cnxspp ]
+	  then
+	    fixmakeargs="$fixmakeargs CNXSPP"
+	fi
+
+	;;
+
+     decstation)
+	echo Found a \"$machine\" configuration definition
+#	fixmakeargs="arch=$machine MIPS_CC $fixmakeargs"
+# with gcc, there are no changes needed...
+	fixmakeargs="arch=$machine $fixmakeargs"
+	;;
+
+     rs6000)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine $fixmakeargs"
+
+# Check for SP1 xdev enviroment
+        if [ $detectxdev = sp1 ]
+          then
+            fixmakeargs="$fixmakeargs SP1"
+        fi
+	;;
+
+     alpha)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine $fixmakeargs"
+	;;
+
+     sgi4k | sgi8k)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine $fixmakeargs"
+	if [ $c_compiler = cc ]
+          then
+# Check CPU type for compiler optimization flags... (-mips2) (-mips4)
+            if [ $machine = sgi4k ]
+              then
+	        fixmakeargs="$fixmakeargs MIPS_CC"
+                fixmakeargs="$fixmakeargs MIPSR4K"
+                echo "NOTE: *** This is an SGI Challenge (R4K) ***"
+              else
+                fixmakeargs="$fixmakeargs MIPSR8K"
+              echo "NOTE: *** This is an SGI POWER Challenge/Origin (R8K, R10K) ***"
+            fi
+        fi
+
+# Check for sgimp xdev enviroment
+        if [ $detectxdev = sgimp ]
+          then
+            fixmakeargs="$fixmakeargs SGIMP"
+        fi
+	;;
+
+     next)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine NEXT_CLIB $fixmakeargs"
+	;;
+
+# Currently cm5 cross-development environments are NOT supported
+# for solaris2 machines....
+     solaris2)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine SOL2 $fixmakeargs"
+	if [ $cxx_compiler = CC ]  
+	  then
+	    fixmakeargs="$fixmakeargs SOL2CC"
+        fi
+	 
+		
+
+# Check for Meiko CS2 xdev enviroment
+        if [ $detectxdev = cs2 ]
+          then
+            fixmakeargs="$fixmakeargs CS2"
+        fi
+	;;
+
+     sun4 | cm5)
+	echo Found a \"$machine\" configuration definition
+        fixmakeargs="arch=$machine $fixmakeargs"
+
+# Check for cm5 xdev enviroment
+        if [ $machine = cm5 -o $detectxdev = cm5 ]
+          then
+            fixmakeargs="$fixmakeargs CM5"
+        fi
+	;;
+
+     ptx)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine PTX HP-ALLOCA $fixmakeargs"
+        ;;
+
+     tc2000)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine TC2000 $fixmakeargs"
+        ;;
+
+     c90)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine C90 CRAY-ALLOCA $fixmakeargs"
+# Check for T3D xdev enviroment
+        if [ $detectxdev = t3d ]
+          then
+            fixmakeargs="$fixmakeargs T3D"
+        fi
+	;;
+
+     t3e)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine T3E CRAY-ALLOCA $fixmakeargs"
+        ;;
+
+     ksr1)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine KSR NO_RANLIB $fixmakeargs"
+        ;;
+
+     paragon)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine PARAGON $fixmakeargs"
+        ;;
+
+     symmetry)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine SYMMETRY $fixmakeargs"
+	;;
+
+     unknown)
+        echo unknown architecture.
+	fixmakeargs="arch=$machine $fixmakeargs"
+	;;
+
+     default)
+	fixmakeargs="arch=$machine $fixmakeargs"
+	;;
+
+     -*)
+	echo "Invalid option \`$1'" 1>&2
+	exit 1
+	;;
+
+     *)
+	echo No special modifications found for architecture \"$machine\"
+	fixmakeargs="arch=$machine  $fixmakeargs"
+	;;
+    esac
+
+# write out .h file to define this architecture __easily__
+echo \#define TAU_$machine > ./include/tauarch.h
+echo \#define TAU_ARCH $machine >> ./include/tauarch.h
+
+# make bin dir if it does not exist
+if [ ! -d bin ] 
+  then
+    mkdir bin
+fi
+if [ ! -d bin/$machine ] 
+  then
+    mkdir bin/$machine
+fi
+
+# make lib dir if it does not exist
+# TAUFIX - do we need this?
+if [ ! -d lib ] 
+  then
+    mkdir lib
+fi
+if [ ! -d lib/$machine ] 
+  then
+    mkdir lib/$machine
+fi
+
+# make XtraP directories
+if [ -d XtraP ]
+then
+  if [ ! -d XtraP/lib/$machine ] 
+    then
+      mkdir XtraP/lib/$machine
+  fi
+fi
+
+if [ $awe = yes ]
+  then
+    fixmakeargs="$fixmakeargs AWE_AVAILABLE awedir=$awedir"
+    echo "$machine: AWEDIR = $awedir" >> ./build/Config.info
+fi
+
+if [ $pthread = yes ]
+  then
+    fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
+    echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
+fi
+
+if [ $lwp = yes ]
+  then
+    fixmakeargs="$fixmakeargs LWP_AVAILABLE"
+fi
+
+if [ $task = yes ]
+  then
+    if [ -d XtraP ] 
+    then
+      XtraPRoot=${tauroot}/XtraP
+      if [ $machine != default ]
+        then
+          echo \#define XTRAPROOT \"$XtraPRoot\"> ${XtraPRoot}/include/XtraPRoot.h
+          fixmakeargs="$fixmakeargs TASK_AVAILABLE"
+        else
+          echo \#define XTRAPROOT \"\" > ${XtraPRoot}/include/XtraPRoot.h
+      fi
+    fi
+fi
+
+if [ $use_pcxx = yes ] 
+then	
+  fixmakeargs="$fixmakeargs PCXX sage1dir=$sage1dir"
+fi
+
+if [ $use_hpcxx = yes ] 
+then	
+  fixmakeargs="$fixmakeargs HPCXX"
+fi
+
+if [ $use_ansic = yes ] 
+then	
+  fixmakeargs="$fixmakeargs ANSIC"
+fi
+
+if [ $use_sage2 = yes ]
+then
+  fixmakeargs="sage2dir=$sage2dir $fixmakeargs"
+fi
+
+if [ $tcltk = yes ]
+then
+  fixmakeargs="$fixmakeargs TCLTK"
+fi
+
+
+
+
+
+#############################################################################
+# Set up TAU-specific configuration options
+
+# -- first, make sure the display is set - wish won't work otherwise
+if ( xrdb -query ) 1>/dev/null 2>&1
+  then
+    echo "The display is okay."
+  else
+    echo "ERROR: You do not have permission to use the display ${DISPLAY}."
+    echo "       Make sure the DISPLAY environment variable is set correctly."
+    echo "       xrdb fails. If DISPLAY is ok, try "
+    echo "       % unsetenv LD_LIBRARY_PATH "
+    exit
+fi
+
+
+# -- determine Tcl/Tk version
+cat << EOF > /tmp/tau$$
+
+  wm withdraw .
+  puts [info tclversion]/\$tk_version
+  if { ([info tclversion] >= 7.4) && (\$tk_version >= 4.0) } {
+    exit 0
+  } else {
+    exit 1
+  }
+	
+EOF
+
+if tversion=`( wish4.0 -f /tmp/tau$$ ) 2>/dev/null`
+then
+  wishname=wish4.0
+  echo "Found Tcl/Tk wish $tversion"
+else
+  if tversion=`( wish -f /tmp/tau$$ ) 2>/dev/null`
+  then
+    wishname=wish
+    echo "Found Tcl/Tk wish $tversion"
+  else
+    echo "ERROR: No working wish found - need Tcl 7.4/Tk 4.0 or higher for TAU"
+    echo "Enter the name of your wish command (tcl7.4/tk4.0): "
+    ask=""
+    $echo "? ${nnl}"
+    read wishname
+    if tversion=`( $wishname -f /tmp/tau$$ ) 2>/dev/null`
+    then
+      echo "Found Tcl/Tk wish $tversion"
+    else
+      echo "Wish not found or wrong version!  Exiting..."
+      rm /tmp/tau$$
+      exit
+    fi    
+  fi
+fi
+rm /tmp/tau$$
+
+echo "Using wish command: $wishname"
+echo " "
+
+# -- find out where tkman is installed
+echo " "
+echo "The TAU editor requires the manual page viewer, TkMan 1.7"  
+echo "(compiled w/ tk4.0-) to be installed."
+echo " "
+tk_path=""
+if tk_path=`( which tkman ) 2>/dev/null`
+then
+  echo "Found tkman in $tk_path"
+else 
+  $echo "Please enter the absolute path/file name for the"
+  $echo "tkman executable [/usr/local/bin/tkman]:"
+  $echo "? ${nnl}"
+  read tk_path
+fi
+if [ "x$tk_path" = "x" ]
+  then
+    tk_path="/usr/local/bin/tkman"
+fi
+echo "tkman path set to: $tk_path"
+
+# -- set name of remote shell command
+if [ $machine = "hp9000s700" -o $machine = "hp9000s800" ]
+then
+  remotesh=remsh
+else
+  remotesh=rsh
+fi
+
+# -- now install the TAU tools
+#TAUTOOLS="tau taud fancy classy cagey racy dandy cosy dumpy speedy handy spiffy"
+# TAU Portable profiling package just needs racy
+TAUTOOLS="taud racy"
+
+echo " "
+echo "TAU: installing tools in ${tauroot}/bin/${machine}"
+for tool in $TAUTOOLS
+do
+  $echo "TAU: installing ${tool}... ${nnl}"
+  rm -f ${tauroot}/bin/${machine}/$tool
+  cat ${tauroot}/tools/tool.skel |
+  sed -e 's,@TAUROOT@,'$tauroot',' -e 's,@ARCH@,'$machine',' -e 's,@TOOL@,'$tool',' \
+      -e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
+      -e 's,@WISHNAME@,'$wishname',' \
+      > ${tauroot}/bin/${machine}/${tool}
+  chmod a+rx ${tauroot}/bin/${machine}/${tool}
+  echo "done"
+done
+
+
+
+if [ $use_pcxx = yes ]
+then
+
+$echo "TAU: installing breezy... ${nnl}"
+rm -f ${tauroot}/bin/${machine}/breezy
+cat lang_support/pc++/breezy/userAgent/tool.skel |
+sed -e 's,@TAUROOT@,'${tauroot}',' -e 's,@ARCH@,'${machine}',' -e 's,@TOOL@,'breezy',' \
+> ${tauroot}/bin/${machine}/breezy
+chmod a+rx ${tauroot}/bin/${machine}/breezy
+echo "done"
+
+if [ $tcltkfile  = "/" ]
+then
+  echo ""
+  echo "For compiling the breezy user interface, we need the very"
+  echo "site-specific locations for header files and libraries for"
+  echo "X11 and Tcl/Tk. Typing <return> after the questions will use"
+  echo "the specified default locations in brackets."
+  echo ""
+
+  echo "Options for including Tcl/Tk headers [-I/usr/local/include]"
+  $echo "? ${nnl}"
+  read tcltkheader
+  if [ "x$tcltkheader" = "x" ]; then tcltkheader="-I/usr/local/include"; fi
+
+  foo="`echo $tcltkheader | sed -e 's/-I/-L/' -e 's/include/lib/'` -ltk4.0 -ltcl7.4"
+  echo "Options for linking Tcl/Tk [$foo]"
+  $echo "? ${nnl}"
+  read tcltklib
+  if [ "x$tcltklib" = "x" ]; then tcltklib="$foo"; fi
+
+  echo "Options for including X11 headers [-I/usr/include]"
+  $echo "? ${nnl}"
+  read x11header
+  if [ "x$x11header" = "x" ]; then x11header="-I/usr/include"; fi
+
+  foo="`echo $x11header | sed -e 's/-I/-L/' -e 's/include/lib/'` -lX11"
+  echo "Options for linking X11 [$foo]"
+  $echo "? ${nnl}"
+  read x11lib
+  if [ "x$x11lib" = "x" ]; then x11lib="$foo"; fi
+
+  echo ""
+else
+  echo "TAU: using make info from file $tcltkfile"
+  . $tcltkfile
+fi
+
+sed -e 's,^TCLTKHEADER =.*$,TCLTKHEADER = '"$tcltkheader"',' \
+    -e 's,^X11HEADER   =.*$,X11HEADER   = '"$x11header"','   \
+    -e 's,^X11LIB      =.*$,X11LIB      = '"$x11lib"','      \
+    -e 's,^TCLTKLIB    =.*$,TCLTKLIB    = '"$tcltklib"','    \
+    lang_support/pc++/breezy/userAgent/Makefile > tmpmake
+mv tmpmake lang_support/pc++/breezy/userAgent/Makefile
+
+fi  # if breezy
+
+if [ $use_hpcxx = yes ]
+then
+# Fix the file info for preprocessor in lang_support/hpc++/include-clean
+sed -e 's,^#1 ".*/lang_support/hpc++/include/hpc++.h",'#1\ \"$tauroot/lang_support/hpc++/include/hpc++.h\"',' lang_support/hpc++/include-clean/hpc++.h > tmplib
+mv tmplib lang_support/hpc++/include-clean/hpc++.h
+fi
+
+# Save the FixMakefile args
+# Clear any old data
+grep "^#" ./utils/FixMakefile.info > ./utils/FixMakefile.info~~0
+/bin/mv ./utils/FixMakefile.info~~0 ./utils/FixMakefile.info
+echo $fixmakeargs >> ./utils/FixMakefile.info
+
+# Now FINALLY FixMakefile with the string I have built
+utils/FixMakefile $fixmakeargs
+
+# Use default setups, forget everything else (PHB)
+if [ $machine = default ]
+  then
+    /bin/cp ./utils/FixMakefile.sed.default  ./utils/FixMakefile.sed
+    /bin/cp ./utils/FixMakefile.info.default ./utils/FixMakefile.info
+    /bin/cp ./build/Config.info.default      ./build/Config.info
+fi
+
+    sedout="./utils/FixMakefile.sed"
+echo "Applying script to all Makefiles, please wait, this may take a while..."
+for i in `find . -name Makefile -print `
+  do 
+    $echo ".${nnl}"
+    sed -f $sedout < ${i} > ${i}~~0
+    mv ${i}~~0 ${i}
+done
+echo .
+
+
+# Attempt to install metatext (jev)
+if [ -f ./metatext/configure ]
+  then
+    cd ./metatext
+    ./configure  1> /dev/null 2>&1
+    cd ..
+fi
+
+
+
+#############################################################################
+# Set up TAU-specific build system
+
+echo " "
+echo "Configuring TAU Build scripts..."
+
+# -- Save C++ compiler, C compiler, and USEROPT for pC++
+if [ $use_pcxx = yes ]
+then
+echo "$machine: pcxx_root    = $sage1dir" >> \
+        ./build/pc++/Config.info
+echo "$machine: pcxx_cxx     = $cxx_compiler" >> \
+        ./build/pc++/Config.info
+echo "$machine: pcxx_cc      = $c_compiler" >> \
+        ./build/pc++/Config.info
+opt=`echo $useropt | sed -e 's/_/ /g'`
+echo "$machine: pcxx_useropt = $opt" >> \
+        ./build/pc++/Config.info
+echo "" >> ./build/pc++/Config.info
+fi
+
+# -- Save C++ compiler, C compiler, and USEROPT for HPC++
+if [ $use_hpcxx = yes ]
+then
+opt=`echo $useropt | sed -e 's/_/ /g'`
+echo "$machine: hpcxx_useropt = $opt" >> \
+        ./build/hpc++/Config.info
+echo "$machine: hpcxx_sage1 = $sage1dir" >> \
+        ./build/hpc++/Config.info
+echo "$machine: hpcxx_sage2 = $sage2dir" >> \
+        ./build/hpc++/Config.info
+echo "$machine: hpcxx_pstl = $pstldir" >> \
+        ./build/hpc++/Config.info
+echo "$machine: hpcxx_hpnx = $hpnxdir" >> \
+        ./build/hpc++/Config.info
+echo "" >> ./build/hpc++/Config.info
+fi
+
+
+
+# bye bye
+echo 
+echo "Configuration complete!"
+echo "   Please add " $tauroot/bin/$machine " to your path"
+echo '   Type "make install" to begin compilation'
+
+exit 0

@@ -1,0 +1,4 @@
+#define xline3_width 4
+#define xline3_height 4
+static unsigned char xline3_bits[] = {
+  0x03, 0x06, 0x0c, 0x09, };

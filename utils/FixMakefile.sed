@@ -1,0 +1,9 @@
+s/\(.*\)#ENDIF#\(.*\)/\2\1#ENDIF#/g
+s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=default/g
+s/#PVM_INSTALLED#\(.*\)/\1#PVM_INSTALLED#/g
+s/^PVM_ARCH=\(.*\)/PVM_ARCH=default/g
+s@^PVM_DIR=\(.*\)@PVM_DIR=default@g
+s@^CONFIG_CC=\(.*\)@CONFIG_CC=gcc@g
+s@^CONFIG_CXX=\(.*\)@CONFIG_CXX=g++@g
+s@^PCXX_OPT=\(.*\)@PCXX_OPT=-g@g
+s@^USER_OPT=\(.*\)@USER_OPT=-g@g

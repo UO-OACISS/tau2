@@ -1,0 +1,13 @@
+#######################################################################
+##				   TAU				     ##
+##              based on pC++/Sage++  Copyright (C) 1993             ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
+#
+# Configure specified information
+#
+# DO NOT CHANGE MANUALLY!!!!
+#
+default: cxx     = g++
+default: cc      = gcc
+default: useropt = -g

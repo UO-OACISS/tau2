@@ -1,0 +1,12 @@
+#######################################################################
+##                  pC++/Sage++  Copyright (C) 1993                  ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
+#
+# Configure specified information
+#
+# DO NOT CHANGE MANUALLY!!!!
+#
+# This file records the arguments that were passed to FixMakefile
+#
+arch=default c_compiler=gcc cxx_compiler=g++ pcxxopt=-g useropt=-g

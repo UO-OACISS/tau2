@@ -1,0 +1,27 @@
+#!/bin/csh
+
+#############################################################################
+# This script looks at the files in ./utils and simply
+# shows how this machine was configured
+#
+# Pete Beckman 3/16/95
+#############################################################################
+
+# Command line parameters (one of the following):
+# -arch          Show how this machine was configured.
+
+set BDIR="./utils"
+
+if ( $#argv == 1 ) then
+  if ( "$argv[1]" == "-arch" ) then
+    grep -v ^\# $BDIR/FixMakefile.info | awk '{print $1};' | \
+	sed -e 's/^arch=//'
+  endif
+else
+  grep -v ^\# $BDIR/FixMakefile.info
+  grep -v ^\# $BDIR/FixMakefile.sed
+endif
+
+
+
+

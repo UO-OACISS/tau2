@@ -1,0 +1,386 @@
+#!/bin/sh
+
+#############################################################################
+# FixMakefile script for TAU
+#   based on the Sage/pC++ FixMakefiles
+
+# An IMPROVED, FASTER script.  It now builds sed.cmd, and applies it ONCE!
+#
+# This script recursively finds Makefiles, and modifies them according
+# to the keyword provided
+#
+# Kurt Windisch 12/10/96
+# Pete Beckman 9/6/93
+#############################################################################
+
+# Record all the arguments
+arguments=$*
+
+# debug:
+#echo $arguments
+
+sedout=./utils/FixMakefile.sed
+
+# Clear any old data
+grep "^#" $sedout > $sedout.~~0
+/bin/mv $sedout.~~0 $sedout
+
+# Silly GOOFY Stupid /bin/sh on decstations gobble up the "\2" and make
+# it an ASCII 002.  That breaks the echo commands below, since I REALLY
+# want \2 to be output, not 002.  How in the world can DEC mess up /bin/sh?
+bs=""
+
+if [ $1 = "arch=decstation" ]
+  then
+    bs="\\"
+fi
+
+# Default makefile sed commands.  Returns things to normal
+echo "s/\(.*\)#ENDIF#\(.*\)/$bs\2$bs\1#ENDIF#/g" >> $sedout
+
+###############################################################
+# PARSE AN ARGUMENT
+###############################################################
+while [ x$1 != x ]
+do
+
+#echo Parsing $1
+case $1 in
+
+###############################################################
+# Restore Makefiles to their original beauty
+###############################################################
+     arch=default)
+        echo Restoring all files to original distribution
+        config_arch=`echo $1 | sed 's/^arch=//'`
+	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
+if [ -d target ]
+  then
+        pvm_arch=default
+	pvm_homedir=default
+
+        echo "s/#PVM_INSTALLED#\(.*\)/$bs\1#PVM_INSTALLED#/g" >> $sedout
+	echo "s/^PVM_ARCH=\(.*\)/PVM_ARCH=$pvm_arch/g" >> $sedout
+	echo "s@^PVM_DIR=\(.*\)@PVM_DIR=$pvm_homedir@g" >> $sedout
+
+# make dir if it does not exist
+	if [ ! -d target/pvm/lib ] 
+	  then
+		mkdir target/pvm/lib
+	fi
+ 
+# make dir if it does not exist
+	if [ ! -d target/pvm/lib/$pvm_arch ] 
+	  then
+		mkdir target/pvm/lib/$pvm_arch
+	fi
+fi
+	;;
+
+     awedir=*)
+        awedir=`echo $1 | sed -e 's/^awedir=//'`
+	echo "s,^AWEDIR=.*$,AWEDIR=$awedir,g" >> $sedout
+	;;
+
+     Ptdir=*)
+        ptdir=`echo $1 | sed -e 's/^ptdir=//'`
+	echo "s,^PTDIR=.*$,PTDIR=$ptdir,g" >> $sedout
+	;;
+###############################################################
+# Set the default optimization flags for compiling pcxx und user programs
+###############################################################
+     pcxxopt=*)
+        pcxxopt=`echo $1 | sed -e 's/^pcxxopt=//' -e 's/_/ /'`
+	echo "s@^PCXX_OPT=\(.*\)@PCXX_OPT=$pcxxopt@g" >> $sedout
+        ;;
+     useropt=*)
+        useropt=`echo $1 | sed -e 's/^useropt=//' -e 's/_/ /'`
+	echo "s@^USER_OPT=\(.*\)@USER_OPT=$useropt@g" >> $sedout
+        ;;
+
+###############################################################
+# Set the default compilers
+###############################################################
+     c_compiler=*)
+        c_compiler=`echo $1 | sed -e 's/^c_compiler=//' -e 's/_/ /'`
+	echo "s@^CONFIG_CC=\(.*\)@CONFIG_CC=$c_compiler@g" >> $sedout
+        ;;
+     cxx_compiler=*)
+        cxx_compiler=`echo $1 | sed -e 's/^cxx_compiler=//' -e 's/_/ /'`
+	echo "s@^CONFIG_CXX=\(.*\)@CONFIG_CXX=$cxx_compiler@g" >> $sedout
+        ;;
+
+###############################################################
+# Set the CONFIG_ARCH=<machine-name> in the Makefiles.
+###############################################################
+     arch=*)
+        config_arch=`echo $1 | sed 's/^arch=//'`
+	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
+
+###############################################################
+# Set up PVM stuff if possible
+###############################################################
+
+#Only do the PVM stuff if this is a pC++ distribution
+if [ -d target ]
+  then
+        xdev_arch=`utils/archfind -x`
+        pvm_arch=`grep "^$config_arch" utils/pvm_arches | awk '{print $2;}'`
+        pvm_parch=`grep "^$xdev_arch" utils/pvm_arches | awk '{print $2;}'`
+
+	pvm_homedir=`utils/checkPVM`
+	if [ $pvm_homedir = no ]
+	  then
+            echo PVM:  Could not find a PVM installation, PVM run-time will not be compiled
+	  else
+	    echo PVM:  Found PVM installation at $pvm_homedir
+	    echo PVM:  PVM run-time module will be installed
+            echo "s/#PVM_INSTALLED#\(.*\)/$bs\1#PVM_INSTALLED#/g" >> $sedout
+	fi
+
+# used to be "xnone"
+        if [ x$pvm_parch = x$pvm_parch ]
+          then
+            if [ x$pvm_arch = x ]
+              then
+                echo PVM:  No matching PVM architecture name in utils/pvm_arches for $config_arch
+                echo PVM:  Configuring pC++ PVM runtime module for UNKNOWN
+	        pvm_arch=UNKNOWN
+            else
+              echo PVM:  Matching PVM-style architecture name is $pvm_arch
+            fi
+          else
+            echo PVM:  Found Parallel PVM machine $pvm_parch
+            pvm_arch=$pvm_parch
+	fi
+
+	echo "s/^PVM_ARCH=\(.*\)/PVM_ARCH=$pvm_arch/g" >> $sedout
+	echo "s@^PVM_DIR=\(.*\)@PVM_DIR=$pvm_homedir@g" >> $sedout
+
+# make dir if it does not exist
+	if [ ! -d target/pvm/lib ] 
+	  then
+		mkdir target/pvm/lib
+	fi
+ 
+# make dir if it does not exist
+	if [ ! -d target/pvm/lib/$pvm_arch ] 
+	  then
+		mkdir target/pvm/lib/$pvm_arch
+	fi
+fi
+	;;
+
+     sage1dir=*)
+        sage1dir=`echo $1 | sed -e 's/^sage1dir=//' -e 's/_/ /'`
+	echo "s@^SAGE1DIR=\(.*\)@SAGE1DIR=$sage1dir@g" >> $sedout
+        ;;
+
+     sage2dir=*)
+        sage2dir=`echo $1 | sed -e 's/^sage2dir=//' -e 's/_/ /'`
+	echo "s@^SAGE2DIR=\(.*\)@SAGE2DIR=$sage2dir@g" >> $sedout
+        ;;
+
+###############################################################
+# Else, just do the standard modification based on the keyword
+###############################################################
+     NO_RANLIB)
+	echo NOTE: ranlib not required for this architecture.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     USE_DECCXX)
+	echo NOTE: Using the DEC cxx C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     USE_IBMXLC)
+	echo NOTE: Using the IBM xlC C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     USE_SGINCC)
+	echo NOTE: Using the SGI NCC C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     NEXT_CLIB)
+	echo NOTE: The NeXTs do not have a libc.a
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     USE_CFRONT)
+	echo "NOTE: Using the 'CC' C++ Compiler"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HP-ALLOCA)
+	echo NOTE: Compatibility library -lPW will be used.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HPUX10)
+	echo NOTE: HPUX Version 10 fixes will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     USE_CC)
+	echo "NOTE: Using default cc compiler."
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HP_CFLAGS)
+	echo NOTE: Using -Aa flag and shared libraries for HP native compiler.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MIPS_CC)
+	echo NOTE: Using -Wf,-XNg800 flags for MIPS native compiler.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MIPSR4K)
+	echo NOTE: Using -mips2 optimization flag MIPS native compiler.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MIPSR8K)
+	echo NOTE: Using -mips4 optimization flag MIPS native compiler.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     USE_GCC)
+	echo NOTE: Using the Gnu C Compiler, GCC
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CM5)
+	echo "NOTE: *** CM5 development enviroment found ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PARAGON)
+	echo "NOTE: *** Paragon development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SP1)
+	echo "NOTE: *** SP development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     T3D)
+	echo "NOTE: *** CRAY T3D development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     T3E)
+	echo "NOTE: *** CRAY T3E development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAY-ALLOCA)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SGIMP)
+	echo "NOTE: *** SGI Symmetric Multiprocessing Environment found. ***"
+        numproc=`/bin/hinv | /usr/bsd/head -1 | /bin/cut -d" " -f1 `
+	echo NOTE: "*** There are $numproc processors in this system ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SOL2)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CNXSPP)
+	echo "NOTE: *** Convex SPP development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CS2)
+	echo "NOTE: *** Meiko CS2 development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     C90)
+	echo "NOTE: *** Cray C90 development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     KSR)
+	echo "NOTE: *** Kendall Square KSR-1 development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PTX)
+	echo "NOTE: *** Symmetry PTX development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TC2000)
+        echo "Bernd, I dont know what to do here...."
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SYMMETRY)
+	echo "NOTE: *** Symmetry Dynix development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TCLTK)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     AWE_AVAILABLE)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PTHREAD_AVAILABLE)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     LWP_AVAILABLE)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TASK_AVAILABLE)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PCXX)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HPCXX)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     ANSIC)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+# PROFILING OPTIONS
+     PROFILE)
+	echo "NOTE: Enabled Profiling. Compiling with -DPROFILING_ON"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     KAI)
+	echo "NOTE: Using KAI KCC options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SGICOUNTERS)
+	echo "NOTE: Using SGI R10000 Hardware Counters for Profiling"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SGITIMERS)
+	echo "NOTE: Using SGI Fast Nanosecond Timers for Profiling"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PROFILESTATS)
+	echo "NOTE: Using Profile Statistics (Std. Dev. of Excl time/counts)"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PROFILECALLS)
+	echo "NOTE: Using PROFILECALLS for tracing timings for each function invocation "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     INTELTFLOP)
+	echo "NOTE: Using INTEL TeraFlop Profiling Options -DPOOMA_TFLOP"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DEBUGPROF)
+	echo "NOTE: Using Debugging Mode for Profiling Library -DDEBUG_PROF"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     STDCXXLIB)
+	echo "NOTE: Using Standard C++ Library"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SOL2CC)
+	echo "NOTE: Solaris2 CC doesn't support RTTI yet, using -DNO_RTTI"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GNU)
+	echo "NOTE: g++ doesn't support RTTI yet, using -DNO_RTTI"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     *)
+	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"
+	;;
+    esac
+
+shift
+done
+
+#############################################################################
+# Ok, I have built up $sedout, now apply it to all the Makefile\* I can find!
+#############################################################################
+
+# OK, stop here, and let another script actually hack all the Makefiles
+echo "Script to modify Makefiles created."
+

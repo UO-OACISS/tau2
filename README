@@ -1,0 +1,77 @@
+*****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.acl.lanl.gov/tau		           **
+*****************************************************************************
+**    Copyright 1997  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+*****************************************************************************
+*****************************************************************************
+**  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO, LANL)
+**		 Peter Beckman, Steve Karmesin (ACL, LANL)
+**		 Kathleen Lindlan (UO)		
+**  Principal Investigators : 
+**		 Janice Cuny, Allen Malony (UO)
+**  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 
+**  Darryl Brown, et. al. and directed by Allen Malony at University of Oregon.
+**  The TAU Portable Profiling Package uses part of TAU.
+*****************************************************************************
+
+***************************************************************************
+Instructions on installing TAU can be found in the INSTALL file.   
+***************************************************************************
+
+The TAU Portable Profiling Package
+**********************************
+
+TAU provides a framework for integrating program and performance analysis
+tools and components.  A core tool component for parallel performance
+evaluation is a profile measurement and analysis package.  The TAU portable
+profiling package was developed jointly by the University of Oregon and
+LANL for profiling parallel, multi-threaded C++ programs.  The profiling
+model supported maintains performance data for each thread, context, and
+node of an application.  The package implements a instrumentation library,
+profile analysis procedures, and a visualization tool.
+
+The TAU profiling instrumentation is supported through an Application
+Programmer's Interface (API) that can be used at the library or application
+level.  The API features the ability to capture performance data for C++
+function, method, basic block, and statement execution, as well as template
+instantiation.  The latter is particularly important for inserting
+instrumentation in the SciTL component libraries.  The API also provides
+for selection of profiling groups for organizing and controlling
+instrumentation.  Because the API for TAU profiling instrumentation 
+is small it can be added to existing C++ libraries and frameworks quickly, 
+and can be used to profile optimized code.
+
+From the profiling data collected, TAU's profile analysis 
+procedures can generate a wealth of performance information for 
+the user.  It can show the exclusive and inclusive time spent in 
+each function with nanosecond resolution.  For templated 
+entities, it shows the breakup of time spent for each instantiation.  
+Other data includes the number of times each function was 
+called, the number of profiled functions each function invoked, 
+and the mean inclusive time per call.  Time information can also 
+be displayed relative to nodes, contexts, and threads.  Hardware 
+performance data can also be given:  the number of instructions 
+issued for each function, the cycles, loads, stores, floating point 
+operations, primary and secondary data cache misses, TLB 
+misses, etc.  TAU can also calculate statistics, such as the 
+standard deviation of the exclusive time (or counts) spent in each 
+templated function.  Instead of profiling functions, the user can 
+profile selected statements using multiple user-defined timers.
+
+The third part of the package is the TAU profile visualization tool, racy.
+Racy provides graphical displays of all the performance analysis results,
+in aggregate and per node/context/thread form.  The user can quickly
+identify sources of performance bottlenecks in the application using the
+graphical interface.
+
+The TAU profiling package has been integrated in the SciTL framework.  In
+addition, it is available to be used with other C++ libraries.
+
+Further information about the TAU framework can be found at:
+
+        http://www.acl.lanl.gov/tau/
+
+
