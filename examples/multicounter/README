@@ -117,4 +117,7 @@ PCL_FP_INSTR       --- For floating point operations using PCL (-pcl=<dir>)
 PAPI_FP_INS        --- For floating point operations using PAPI (-papi=<dir>)
 
 
-
+NOTE: When -MULTIPLECOUNTERS is used with -TRACE option, the tracing library
+uses the wallclock time from the function specified in the COUNTER1 variable. This
+should typically point to wallclock time routines (such as GET_TIME_OF_DAY or SGI_TIMERS
+or LINUX_TIMERS). 

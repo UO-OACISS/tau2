@@ -277,8 +277,8 @@ The following  command-line options are available to configure:
    time, wallclock time, etc.) Configure with other options such as -papi=<dir>,
    -pcl=<dir>, -LINUXTIMERS, -SGITIMERS, -CPUTIME, -PAPIVIRTUAL, etc. See 
    examples/multicounters/README file for detailed instructions on setting the
-   environment variables for this option. Currently, -MULTIPLECOUNTERS should 
-   not be used with the -TRACE option.
+   environment variables for this option. If -MULTIPLECOUNTERS is used with the
+   -TRACE option, tracing employs the COUNTER1 variable for wallclock time. 
    
 -SGITIMERS
    
