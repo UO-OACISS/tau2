@@ -79,6 +79,7 @@ class MultipleCounterLayer
   //Data specific to the papiMCL function.
   static int numberOfPapiHWCounters;
   static int PAPI_CounterCodeList[MAX_TAU_COUNTERS];
+  static ThreadValue * ThreadList[TAU_MAX_THREADS];
 #endif//TAU_PAPI
 
 #ifdef TAU_PCL
@@ -86,6 +87,11 @@ class MultipleCounterLayer
   //Data specific to the pclMCL function.
   static int numberOfPCLHWCounters;
   static int PCL_CounterCodeList[MAX_TAU_COUNTERS];
+  static unsigned int PCL_Mode;
+  static PCL_DESCR_TYPE descr;
+  static bool threadInit[TAU_MAX_THREADS];
+  static PCL_CNT_TYPE CounterList[MAX_TAU_COUNTERS];
+  static PCL_FP_CNT_TYPE FpCounterList[MAX_TAU_COUNTERS];
 #endif//TAU_PCL
 
   static int linuxTimerMCL_CP[1];

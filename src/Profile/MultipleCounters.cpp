@@ -32,11 +32,17 @@ int MultipleCounterLayer::papiWallClockMCL_CP[1];
 int MultipleCounterLayer::papiVirtualMCL_CP[1];
 int MultipleCounterLayer::numberOfPapiHWCounters;
 int MultipleCounterLayer::PAPI_CounterCodeList[MAX_TAU_COUNTERS];
+ThreadValue * MultipleCounterLayer::ThreadList[TAU_MAX_THREADS];
 #endif//TAU_PAPI
 #ifdef TAU_PCL
 int MultipleCounterLayer::pclMCL_CP[MAX_TAU_COUNTERS];
 int MultipleCounterLayer::numberOfPCLHWCounters;
 int MultipleCounterLayer::PCL_CounterCodeList[MAX_TAU_COUNTERS];
+unsigned int MultipleCounterLayer::PCL_Mode = PCL_MODE_USER;
+PCL_DESCR_TYPE MultipleCounterLayer::descr;
+bool MultipleCounterLayer::threadInit[TAU_MAX_THREADS];
+PCL_CNT_TYPE MultipleCounterLayer::CounterList[MAX_TAU_COUNTERS];
+PCL_FP_CNT_TYPE MultipleCounterLayer::FpCounterList[MAX_TAU_COUNTERS];
 #endif//TAU_PCL
 int MultipleCounterLayer::linuxTimerMCL_CP[1];
 
@@ -66,10 +72,14 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 #ifdef TAU_PAPI 
       MultipleCounterLayer::papiMCL_CP[a] = -1;
       MultipleCounterLayer::PAPI_CounterCodeList[a] = -1;
+      MultipleCounterLayer::ThreadList[TAU_MAX_THREADS] = NULL;
 #endif//TAU_PAPI
 #ifdef TAU_PCL
       MultipleCounterLayer::pclMCL_CP[a] = -1;
       MultipleCounterLayer::PCL_CounterCodeList[a] = -1;
+      MultipleCounterLayer::threadInit[TAU_MAX_THREADS] = false;
+      MultipleCounterLayer::CounterList[MAX_TAU_COUNTERS] = 0;
+      MultipleCounterLayer::FpCounterList[MAX_TAU_COUNTERS] = 0;      
 #endif//TAU_PCL
     }
 
@@ -101,6 +111,7 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
       else
 	cout << endl;
     }
+
 
   //Initialize the function array with the correct active functions.
   for(int e=0; e<SIZE_OF_INIT_ARRAY; e++)
@@ -189,13 +200,13 @@ bool MultipleCounterLayer::papiMCLInit(int functionPosition){
       if(MultipleCounterLayer::names[i] != NULL){
 	if (strstr(MultipleCounterLayer::names[i],"PAPI") != NULL) {
 	  
+	  PapiLayer::multiCounterPapiInit();
+
 	  int tmpCode = PapiLayer::map_eventnames(MultipleCounterLayer::names[i]);
 	  
 	  if(tmpCode != -1){
 	 
 	    cout << "Found a papi counter: " << MultipleCounterLayer::names[i] << endl;
-
-	    PapiLayer::multiCounterPapiInit();
 
 	    //Check if this is possible on this machine!
 	    if((PAPI_query_event(tmpCode) == PAPI_OK)){
@@ -311,7 +322,58 @@ bool MultipleCounterLayer::papiVirtualMCLInit(int functionPosition)
 
 bool MultipleCounterLayer::pclMCLInit(int functionPosition){
 #ifdef  TAU_PCL
-  return false;
+  //This function uses the pcl layer counters.
+  
+  bool returnValue = false;
+  
+  for(int i=0; i<MAX_TAU_COUNTERS; i++){
+    if(MultipleCounterLayer::names[i] != NULL){
+      if (strstr(MultipleCounterLayer::names[i],"PCL") != NULL) {
+	
+	PCL_Layer::multiCounterPCLInit(&MultipleCounterLayer::descr);
+	
+	int tmpCode = PCL_Layer::map_eventnames(MultipleCounterLayer::names[i]);
+	
+	if(tmpCode != -1){
+	  
+	  cout << "Found a pcl counter: " << MultipleCounterLayer::names[i] << endl;
+	  
+	  //Set the counter position.
+	  pclMCL_CP[numberOfPCLHWCounters] = i;
+	  
+	  //Set the counter code.
+	  MultipleCounterLayer::PCL_CounterCodeList[numberOfPCLHWCounters] = tmpCode;
+	  
+	  //Update the number of Papi counters.
+	  numberOfPCLHWCounters++;
+	}
+      }
+    }
+  }
+
+  if(numberOfPCLHWCounters != 0){
+    //Now check whether these pcl events are possible.
+    if(PCLquery(descr, PCL_CounterCodeList, numberOfPCLHWCounters, PCL_Mode) == PCL_SUCCESS){
+      returnValue = true;
+    }
+    else{
+      cout << "Requested pcl events, or event combination not possible!" << endl;
+    } 
+  }
+
+  if(returnValue){
+    //If we found viable Pcl events, update the counterUsed and function arrays.
+    for(int j=0;j<numberOfPCLHWCounters;j++){
+      MultipleCounterLayer::counterUsed[pclMCL_CP[j]] = true;
+    }
+    cout << "Inserting pclMCL in position: " << functionPosition << endl;
+    MultipleCounterLayer::functionArray[functionPosition] = pclMCL;
+  }
+  else
+    cout << "pclMCL is not active." << endl;
+
+  return returnValue;
+
 #else //TAU_PCL
   return false;
 #endif//TAU_PCL
@@ -333,9 +395,12 @@ void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
 
 void MultipleCounterLayer::papiMCL(int tid, double values[]){
 #ifdef TAU_PAPI
-  static ThreadValue * ThreadList[TAU_MAX_THREADS];
+  //static ThreadValue * ThreadList[TAU_MAX_THREADS];
 
-  static int PAPI_CounterList[];
+  //static bool initFlag = intializeThreadArray(ThreadList);
+
+
+  //static int PAPI_CounterList[];
 
 
   //******************************************
@@ -419,9 +484,55 @@ void MultipleCounterLayer::papiVirtualMCL(int tid, double values[]){
 
 void MultipleCounterLayer::pclMCL(int tid, double values[]){
 #ifdef  TAU_PCL
+  //******************************************
+  //Start peformance counting.
+  //This section is run once for each thread.
+  //******************************************
+  if(threadInit[tid] == 0)
+    {
+      //Since this is also the first call to
+      //getCounters for this thread, just return
+      //zero.
+      if(tid >= TAU_MAX_THREADS){
+	cout << "Exceeded max thread count of TAU_MAX_THREADS" << endl;
+      }
+      threadInit[tid] = 1;
+
+      //Starting the counter.
+      if((PCLstart(descr, PCL_CounterCodeList,
+		   numberOfPCLHWCounters, PCL_Mode)) != PCL_SUCCESS){
+	cout << "Error starting PCL counters!" << endl;
+      }
+
+      //Initialize the array the Pcl portion of the passed in values
+      //array to zero.
+      for(int i=0;i<numberOfPCLHWCounters;i++){
+	values[pclMCL_CP[i]] = 0;
+      }
+    }
+  else{
+    //If here, it means that the thread has already been registered
+    //and we need to just read and update the counters.
+  
+    //*****************************************
+    //Reading the performance counters and
+    //outputting the counter values.
+    //*****************************************
+    if( PCLread(descr, CounterList, FpCounterList, numberOfPCLHWCounters) != PCL_SUCCESS){
+      cout << "Error reading PCL counters!" << endl;
+    }
+
+    for(int i=0;i<numberOfPCLHWCounters;i++){
+      if(PCL_CounterCodeList[i]<PCL_MFLOPS){
+	values[pclMCL_CP[i]] = CounterList[i];
+      }
+      else{
+	values[pclMCL_CP[i]] = FpCounterList[i];
+      }
+    }
+  }
 #endif//TAU_PCL
 }
-
 void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){}
 
 /////////////////////////////////////////////////

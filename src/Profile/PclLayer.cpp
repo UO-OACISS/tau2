@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////
 //Function definintion file for the PCL_Layer class.
 //
-//Author:   Robert Ansell-Bell
+//Author:   Robert Bell
 //Created:  July 1999
 //
 /////////////////////////////////////////////////
@@ -11,7 +11,7 @@
 
 //Helper function used to determine the counter value
 //from the event name.
-int map_eventnames(char *name)
+int PCL_Layer::map_eventnames(char *name)
 {
   int i;
 
@@ -23,6 +23,27 @@ int map_eventnames(char *name)
   /* not found */
   return -1;
 }
+
+int PCL_Layer::PCLLayerInit(PCL_DESCR_TYPE *descr)
+{
+  //Call PCLinit.
+  if(PCLinit(descr) != PCL_SUCCESS){
+    cout << "unable to allocate PCL handle" << endl;
+    return -1;
+  }
+
+  return 0;
+}
+
+void PCL_Layer::multiCounterPCLInit(PCL_DESCR_TYPE *descr)
+{
+  //This function has the possibility if being called
+  //one or more times by MultipleCounter routines.
+  //Only want to do the init. once however.
+  static int initFlag = PCLLayerInit(descr);
+}
+
+
 /////////////////////////
 //If mutex locking of resourses is desired
 //define PCL_MUTEX_LOCK and the following version
@@ -31,9 +52,6 @@ int map_eventnames(char *name)
 #ifdef PCL_MUTEX_LOCK
 
 #include <pthread.h>
-
-
-
 
 PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 {

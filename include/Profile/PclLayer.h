@@ -27,8 +27,11 @@ class PCL_Layer
   //The default ones will do.
 
   public:
-    //Default getCounters ... without sychronization of resources.
-    static PCL_FP_CNT_TYPE getCounters(int tid);
+    //Default getCounters.
+  static int map_eventnames(char *name);
+  static int PCLLayerInit(PCL_DESCR_TYPE *descr);
+  static void multiCounterPCLInit(PCL_DESCR_TYPE *descr);
+  static PCL_FP_CNT_TYPE getCounters(int tid);
 };
 
 #endif /* TAU_PCL */
