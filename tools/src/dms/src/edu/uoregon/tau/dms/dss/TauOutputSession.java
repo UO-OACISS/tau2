@@ -85,6 +85,9 @@ public class TauOutputSession extends ParaProfDataSession{
 	    //End - Frequently used items.
 	    //######
 	    v = (Vector) initializeObject;
+
+	    boolean validFilesFound = false;
+
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
 		System.out.println("Processing data, please wait ......");
 		if(this.debug())
@@ -141,12 +144,15 @@ public class TauOutputSession extends ParaProfDataSession{
 			this.outputDebugMessage("Processing file: " + files[i].getName());
 		    }
 
-		    FileInputStream fileIn = new FileInputStream(files[i]);
-		    InputStreamReader inReader = new InputStreamReader(fileIn);
-		    BufferedReader br = new BufferedReader(inReader);
 
 		    int[] nct = this.getNCT(files[i].getName());
-		    if(nct!=null){
+		    if (nct!=null) {
+
+			FileInputStream fileIn = new FileInputStream(files[i]);
+			InputStreamReader inReader = new InputStreamReader(fileIn);
+			BufferedReader br = new BufferedReader(inReader);
+
+
 			nodeID = nct[0];
 			contextID = nct[1];
 			threadID = nct[2];
@@ -407,14 +413,22 @@ public class TauOutputSession extends ParaProfDataSession{
 			}
 			//Remove after testing is complete.
 			//thread.setThreadData(metric);
+
+			validFilesFound = true;
+
+			br.close();
+			inReader.close();
+			fileIn.close();
 		    }
 
-		    br.close();
-		    inReader.close();
-		    fileIn.close();
 		}
 		metric++;
 	    }
+
+	    if (!validFilesFound)
+		throw new Exception("No valid profiles found");
+
+
 	    //Generate derived data.
 	    this.generateDerivedData(0);
 	    //Remove after testing is complete.
