@@ -30,17 +30,18 @@ public class ConnectionManager {
 	
     public ConnectionManager(String configFileName, String password) {
 		super();
+		parser = new ParseConfig(configFileName);
 		initialize(configFileName, password);
 	}
 
     public ConnectionManager(String configFileName) {
 		super();
+		parser = new ParseConfig(configFileName);
 		String password = getPassword();
 		initialize(configFileName, password);
     }
 
 	public void initialize(String configFileName, String password) {
-		parser = new ParseConfig(configFileName);
 		if (parser.getDBType().compareTo("mysql") == 0)
 			perfdbAcct = "user=" + parser.getDBUserName() + "&password=" + password;	
 		else
@@ -152,7 +153,7 @@ public class ConnectionManager {
 		String tmpString = new String ("");
 		try {
 			PasswordField passwordField = new PasswordField();
-			tmpString = passwordField.getPassword("Please enter database password:");
+			tmpString = passwordField.getPassword(parser.getDBUserName() + "'s database password:");
 		} catch (IOException ex) {
 	    	ex.printStackTrace();
 			System.exit(0);
