@@ -333,7 +333,7 @@ int Profiler::StoreData()
 	char filename[1024], errormsg[1024];
 	char *dirname;
 	FILE* fp;
- 	int numFunc;
+ 	int numFunc, numEvents;
 #endif //PROFILING_ON
 #ifdef PROFILE_CALLS
 	long listSize, numCalls;
@@ -442,6 +442,33 @@ int Profiler::StoreData()
 	} // for loop. End of FunctionInfo data
 	fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
 	// Change this when aggregate profiling in introduced in Pooma 
+
+	// Print UserEvent Data if any
+	
+        numEvents = TheEventDB().size();
+	if (numEvents > 0) {
+    	// Data format 
+    	// # % userevents
+    	// # name numsamples max min mean sumsqr 
+    	  fprintf(fp, "%d userevents\n", numEvents);
+    	  fprintf(fp, "# eventname numevents max min mean sumsqr\n");
+
+    	  vector<TauUserEvent*>::iterator it;
+    	  for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
+    	  {
+      
+	    DEBUGPROFMSG("Thr "<< RtsLayer::myThread()<< " TauUserEvent "<<
+              (*it)->GetEventName() << "\n Min " << (*it)->GetMin() 
+              << "\n Max " << (*it)->GetMax() << "\n Mean " 
+	      << (*it)->GetMean() << "\n SumSqr " << (*it)->GetSumSqr() 
+	      << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
+
+     	    fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
+	    (*it)->GetEventName(), (*it)->GetNumEvents(), (*it)->GetMax(),
+	    (*it)->GetMin(), (*it)->GetMean(), (*it)->GetSumSqr());
+    	  }
+	}
+	// End of userevents data 
 
 	fclose(fp);
 
@@ -591,8 +618,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 1998/04/26 07:29:23 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.10 1998/04/26 07:29:23 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 1998/05/14 22:09:54 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.11 1998/05/14 22:09:54 sameer Exp $ 
  ***************************************************************************/
 
 	

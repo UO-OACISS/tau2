@@ -37,12 +37,13 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
-#define DEBUG_PROF
+//#define DEBUG_PROF
 
 #include "Profile/Profiler.h"
 
-// UserEvent structure definition
-#include "Profile/UserEvent.h"
+
+#include <stdio.h>
+#include <fcntl.h>
 
 #include <math.h>
 #include <iostream.h>
@@ -215,26 +216,13 @@ double TauUserEvent::GetSumSqr(void)
   return (SumSqrValue);
 }
 
-double TauUserEvent::GetStdDev(void)
-{
-  double stddev = 0;
-  // Formula to calculate StdDev is 
-  // sigma = sqrt( (sumvalue^2/n) - (mean^2)) 
-
-  stddev = sqrt(fabs( (SumSqrValue/NumEvents) - (SumValue/NumEvents) 
-	        * (SumValue/NumEvents) ) ); 
-
-  return stddev;
-}
-
-// Get Routines
 long TauUserEvent::GetNumEvents(void)
 {
   return NumEvents;
 }
 
 // Get the event name
-const char * TauUserEvent::GetEventName(void)
+const char * TauUserEvent::GetEventName (void) const
 {
   return EventName.c_str();
 }
@@ -286,25 +274,37 @@ void TauUserEvent::SetDisableStdDev(bool value)
 
 TauUserEvent::~TauUserEvent(void)
 {
- 
+  DEBUGPROFMSG(" DTOR CALLED for " << GetEventName() << endl;); 
 }
 
 void TauUserEvent::StoreData(void)
 {
+  /*
+vector::size_type numevents;
 
-  vector<TauUserEvent*>::iterator it;
-  for(it  = TheEventDB().begin(); 
-      it != TheEventDB().end(); it++)
-  {
-    cout << "Thr "<< RtsLayer::myThread()<< " TauUserEvent "<< 
-      (*it)->GetEventName() << "\n Min " << (*it)->GetMin() << "\n Max " <<
-      (*it)->GetMax() << "\n Mean " << (*it)->GetMean() << "\n Std Dev " <<
-      (*it)->GetStdDev() << "\n NumEvents " << (*it)->GetNumEvents() << endl;
-  }
+  numevents = TheEventDB().size();
+  if (numevents > 0) {
+    // Data format 
+    // # % userevents
+    // # name numsamples max min mean sumsqr 
+    fprintf(fp, "# %d userevents\n", static_cast<int> numevents);
+    fprintf(fp, "# eventname numevents max min mean sumsqr\n");
+    
+  */
+    vector<TauUserEvent*>::iterator it;
+    for(it  = TheEventDB().begin(); 
+        it != TheEventDB().end(); it++)
+    {
+      DEBUGPROFMSG("Thr "<< RtsLayer::myThread()<< " TauUserEvent "<< 
+        (*it)->GetEventName() << "\n Min " << (*it)->GetMin() << "\n Max " <<
+        (*it)->GetMax() << "\n Mean " << (*it)->GetMean() << "\n Std Dev " <<
+        (*it)->GetStdDev() << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
+      
+    }
 }
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/04/26 07:29:28 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.2 1998/04/26 07:29:28 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 1998/05/14 22:09:57 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.3 1998/05/14 22:09:57 sameer Exp $ 
  ***************************************************************************/
