@@ -332,8 +332,11 @@ for arg in "$@"
 			argsRemaining="$argsRemaining $arg"
 			;;
 
-		-M*)
-# We ignore -M processing step for making dependencies
+		-M*|-S|-E)
+# We ignore -M processing step for making dependencies, -S for assembly
+# and -E for preprocessing the source code. These are the options that are 
+# ignored by PDT. Add to this list if you need an additional option that should
+# be ignored by the PDT step. 
 #			echoIfDebug "tau_compiler.sh> Ignoring -M* compilation step for making dependencies"
 			disablePdtStep=$TRUE
 			gotoNextStep=$FALSE
