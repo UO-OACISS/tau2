@@ -372,10 +372,13 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         //Check to see if this trial needs to be uploaded to the database.
         if (this.upload()) {
             
-            DatabaseAPI databaseAPI = ParaProf.paraProfManager.getDBSession();
-            if (databaseAPI != null) {
-                this.setID(databaseAPI.saveParaProfTrial(this, -1));
-                databaseAPI.terminate();
+            dbAPI = ParaProf.paraProfManager.getDatabaseAPI();
+            if (dbAPI != null) {
+                // this call will block until the entire thing is uploaded (could be a while)
+                //this.setID(dbAPI.saveParaProfTrial(this, -1));
+
+                this.setID(dbAPI.uploadTrial(this, -1));
+                dbAPI.terminate();
             }
 
             //Now safe to set this to be a dbTrial.
@@ -391,9 +394,15 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
     }
 
+    
+    
     public void update() {
     }
-    
+
+    public DatabaseAPI getDatabaseAPI() {
+        return dbAPI;
+    }
+
     
 //    public boolean getUploading() {
 //        return uploading;
@@ -409,6 +418,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     }
 
 //    private boolean uploading;
+    
+    private DatabaseAPI dbAPI;
     private boolean defaultTrial = false;
     private ParaProfExperiment experiment = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;

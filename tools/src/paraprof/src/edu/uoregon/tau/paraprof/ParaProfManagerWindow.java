@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.8 2005/01/19 02:33:26 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.9 2005/01/20 00:19:54 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -357,7 +357,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         ParaProfApplication application = (ParaProfApplication) clickedOnObject;
                         if (application.dBApplication()) {
 
-                            DatabaseAPI databaseAPI = this.getDBSession();
+                            DatabaseAPI databaseAPI = this.getDatabaseAPI();
                             if (databaseAPI != null) {
                                 databaseAPI.deleteApplication(application.getID());
                                 databaseAPI.terminate();
@@ -378,7 +378,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
                         if (experiment.dBExperiment()) {
 
-                            DatabaseAPI databaseAPI = this.getDBSession();
+                            DatabaseAPI databaseAPI = this.getDatabaseAPI();
                             if (databaseAPI != null) {
                                 databaseAPI.deleteExperiment(experiment.getID());
                                 databaseAPI.terminate();
@@ -401,7 +401,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         ParaProfTrial trial = (ParaProfTrial) clickedOnObject;
                         if (trial.dBTrial()) {
 
-                            DatabaseAPI databaseAPI = this.getDBSession();
+                            DatabaseAPI databaseAPI = this.getDatabaseAPI();
                             if (databaseAPI != null) {
                                 databaseAPI.deleteTrial(trial.getID());
                                 databaseAPI.terminate();
@@ -491,7 +491,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         ParaProfTrial clickedOnTrial = (ParaProfTrial) clickedOnObject;
                         int[] array = this.getSelectedDBExperiment();
                         if (array != null) {
-                            DatabaseAPI databaseAPI = this.getDBSession();
+                            DatabaseAPI databaseAPI = this.getDatabaseAPI();
                             if (databaseAPI != null) {
                                 Trial trial = new Trial(0);
                                 trial.setDataSource(clickedOnTrial.getDataSource());
@@ -635,7 +635,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i - 1)));
                     }
 
-                    DatabaseAPI databaseAPI = this.getDBSession();
+                    DatabaseAPI databaseAPI = this.getDatabaseAPI();
                     if (databaseAPI != null) {
 
                         ListIterator l = databaseAPI.getApplicationList();
@@ -660,7 +660,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                     }
 
-                    DatabaseAPI databaseAPI = this.getDBSession();
+                    DatabaseAPI databaseAPI = this.getDatabaseAPI();
                     if (databaseAPI != null) {
                         databaseAPI.setApplication(application.getID());
                         ListIterator l = databaseAPI.getExperimentList();
@@ -697,7 +697,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                     }
 
-                    DatabaseAPI databaseAPI = this.getDBSession();
+                    DatabaseAPI databaseAPI = this.getDatabaseAPI();
                     if (databaseAPI != null) {
                         databaseAPI.setExperiment(experiment.getID());
                         ListIterator l = databaseAPI.getTrialList();
@@ -756,7 +756,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         //System.out.println("Loading trial ...");
                         ppTrial.setLoading(true);
 
-                        DatabaseAPI databaseAPI = this.getDBSession();
+                        DatabaseAPI databaseAPI = this.getDatabaseAPI();
                         if (databaseAPI != null) {
                             databaseAPI.setApplication(ppTrial.getApplicationID());
                             databaseAPI.setExperiment(ppTrial.getExperimentID());
@@ -847,7 +847,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     public void uploadMetric(ParaProfMetric metric) {
         if (metric != null) {
-            DatabaseAPI databaseAPI = this.getDBSession();
+            DatabaseAPI databaseAPI = this.getDatabaseAPI();
             if (databaseAPI != null) {
                 try {
                     databaseAPI.saveParaProfTrial(metric.getTrial(), metric.getID());
@@ -991,7 +991,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         ParaProfApplication application = null;
         if (dBApplication) {
 
-            DatabaseAPI databaseAPI = this.getDBSession();
+            DatabaseAPI databaseAPI = this.getDatabaseAPI();
             if (databaseAPI != null) {
                 application = new ParaProfApplication(databaseAPI.db());
                 application.setDBApplication(true);
@@ -1010,7 +1010,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     public ParaProfExperiment addExperiment(boolean dBExperiment, ParaProfApplication application) {
         ParaProfExperiment experiment = null;
         if (dBExperiment) {
-            DatabaseAPI databaseAPI = this.getDBSession();
+            DatabaseAPI databaseAPI = this.getDatabaseAPI();
             if (databaseAPI != null) {
                 try {
                     experiment = new ParaProfExperiment(databaseAPI.db());
@@ -1260,7 +1260,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     //        return null;
     //    }
 
-    public DatabaseAPI getDBSession() {
+    public DatabaseAPI getDatabaseAPI() {
 
         try {
             //Check to see if the user has set configuration information.

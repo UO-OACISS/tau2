@@ -17,6 +17,16 @@ import java.util.*;
 
 public class LoadTrialProgressWindow extends JFrame implements ActionListener, ParaProfObserver {
 
+    private ParaProfManagerWindow paraProfManager = null;
+    private JProgressBar progressBar = null;
+    private DataSource dataSource = null;
+    private ParaProfTrial ppTrial = null;
+    private boolean aborted = false;
+    private JLabel label;
+    private boolean dbUpload = false;
+    private javax.swing.Timer jTimer;
+    
+    
     class UpdateRunner implements Runnable {
 
         LoadTrialProgressWindow ltpw;
@@ -134,9 +144,11 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
 
                 if (dbUpload) {
                     // we are on the db upload phase
-
-                    int progress = DatabaseAPI.getProgress();
-                    progressBar.setValue(progress);
+                    DatabaseAPI dbAPI = ppTrial.getDatabaseAPI();
+                    if (dbAPI != null) { // it may not be set yet
+                        int progress = dbAPI.getProgress();
+                        progressBar.setValue(progress);
+                    }
 
                 } else {
                     int progress = (int) dataSource.getProgress();
@@ -148,9 +160,12 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
                 String arg = evt.getActionCommand();
 
                 if (arg.equals("Cancel")) {
-                    if (!dbUpload) {
+                    aborted = true;
+                    if (dbUpload) {
+                        DatabaseAPI dbAPI = ppTrial.getDatabaseAPI();
+                        dbAPI.cancelUpload();
+                    } else {
                         dataSource.cancelLoad();
-                        aborted = true;
                     }
                 }
             }
@@ -161,7 +176,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
 
     public void finishDatabase(boolean success) {
 
-        if (success) {
+        if (success && !aborted) {
             ParaProf.paraProfManager.populateTrialMetrics(ppTrial);
             progressBar.setValue(100);
             ppTrial.showMainWindow();
@@ -228,8 +243,13 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
 
     void closeThisWindow() {
         try {
-            dataSource.cancelLoad();
             aborted = true;
+            if (dbUpload) {
+                DatabaseAPI dbAPI = ppTrial.getDatabaseAPI();
+                dbAPI.cancelUpload();
+            } else {
+                dataSource.cancelLoad();
+            }
             jTimer.stop();
             this.setVisible(false);
         } catch (Exception e) {
@@ -238,15 +258,5 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
         dispose();
     }
 
-    //####################################
-    //Instance data.
-    //####################################
-    ParaProfManagerWindow paraProfManager = null;
-    JProgressBar progressBar = null;
-    DataSource dataSource = null;
-    ParaProfTrial ppTrial = null;
-    boolean aborted = false;
-    JLabel label;
-    boolean dbUpload = false;
-    javax.swing.Timer jTimer;
+  
 }
