@@ -84,15 +84,35 @@ int& TauGetCallPathDepth(void)
 //////////////////////////////////////////////////////////////////////
 // Global variables (wrapped in routines for static initialization)
 /////////////////////////////////////////////////////////////////////////
-#define TAU_CALLPATH_MAP_TYPE char *, FunctionInfo *, Taultstr
-struct Taultstr
+#define TAU_CALLPATH_MAP_TYPE long *, FunctionInfo *, TaultLong
+
+/////////////////////////////////////////////////////////////////////////
+/* The comparison function for callpath requires the TaultLong struct
+ * to be defined. The operator() method in this struct compares two callpaths.
+ * Since it only compares two arrays of longs (containing addresses), we can
+ * look at the callpath depth as the first index in the two arrays and see if
+ * they're equal. If they two arrays have the same depth, then we iterate
+ * through the array and compare each array element till the end */
+/////////////////////////////////////////////////////////////////////////
+struct TaultLong
 {
-  bool operator()(const char* s1, const char* s2) const
-  {
-    return strcmp(s1, s2) < 0;
-  }
+  bool operator() (const long *l1, const long *l2) const
+ {
+   int i;
+   /* first check 0th index (size) */
+   if (l1[0] != l2[0]) return (l1[0] < l2[0]);
+   /* they're equal, see the size and iterate */
+   for (i = 0; i < l1[0] ; i++)
+   {
+     if (l1[i] != l2[i]) return l1[i] < l2[i];
+   }
+   return (l1[i] < l2[i]);
+ }
 };
 
+/////////////////////////////////////////////////////////////////////////
+// We use one global map to store the callpath information
+/////////////////////////////////////////////////////////////////////////
 map<TAU_CALLPATH_MAP_TYPE >& TheCallPathMap(void)
 { // to avoid initialization problems of non-local static variables
   static map<TAU_CALLPATH_MAP_TYPE > callpathmap;
@@ -101,26 +121,29 @@ map<TAU_CALLPATH_MAP_TYPE >& TheCallPathMap(void)
 }
 
 //////////////////////////////////////////////////////////////////////
-string * TauFormulateComparisonString(Profiler *p)
+long* TauFormulateComparisonArray(Profiler *p)
 {
-  char str1[32];
-  char str2[32];
-  string *comparison = new string; 
   int depth = TauGetCallPathDepth();
+  /* Create a long array with size depth+1. We need to put the depth
+   * in it as the 0th index */
+  long *ary = new long [depth+1];
 
-  Profiler *current = p;
-  while (current != NULL && depth != 0)
-  {
-    sprintf(str1, "%lx", current->ThisFunction);
-    *comparison = *comparison + string(" ") + string(str1); 
-    depth --;
-    current = current->ParentProfiler;
-  }
-    
-  DEBUGPROFMSG("Returning comparison = "<<*comparison<<endl;);
-  return comparison;  
+  int i = 0;
+  Profiler *current = p; /* argument */
    
-}
+  if (ary)
+  {
+    ary[0] = depth; /* this tells us how deep it is */
+    while (current != NULL && depth != 0)
+    {
+      i++; /* increment i */
+      ary[i] = (long) current->ThisFunction; 
+      depth --;
+      current = current->ParentProfiler;
+    }
+  }
+  return ary;
+} 
 
 //////////////////////////////////////////////////////////////////////
 string * TauFormulateNameString(Profiler *p)
@@ -149,7 +172,7 @@ string * TauFormulateNameString(Profiler *p)
 
 
 //////////////////////////////////////////////////////////////////////
-inline bool TauCallPathShouldBeProfiled(string *s)
+inline bool TauCallPathShouldBeProfiled(long *s)
 { 
   return true; // for now profile all callpaths
 }
@@ -184,25 +207,26 @@ int TauCalibrateTimerOverheads(void)
 
 void Profiler::CallPathStart(int tid)
 {
-  string *comparison = 0; 
+//  string *comparison = 0; 
+  long *comparison = 0;
   // Start the callpath profiling
   if (ParentProfiler != NULL)
   { // There is a callpath 
     DEBUGPROFMSG("Inside CallPath Start "<<ThisFunction->GetName()<<endl;);
-    comparison = TauFormulateComparisonString(this);
+    comparison = TauFormulateComparisonArray(this);
     DEBUGPROFMSG("Comparison string = "<<*comparison<<endl;);
 
     // Should I profile this path? 
     if (TauCallPathShouldBeProfiled(comparison))
     {
-      map<TAU_CALLPATH_MAP_TYPE>::iterator it = TheCallPathMap().find((char *)(comparison->c_str()));
+      map<TAU_CALLPATH_MAP_TYPE>::iterator it = TheCallPathMap().find(comparison);
       if (it == TheCallPathMap().end())
       {
         string *callpathname = TauFormulateNameString(this);
         DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
   	CallPathFunction = new FunctionInfo(*callpathname, " ", 
 	  ThisFunction->GetProfileGroup(), "TAU_CALLPATH", true );
-	TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type((char *)(comparison->c_str()), CallPathFunction));
+	TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
       } 
       else
       {
@@ -269,6 +293,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2004/01/09 01:14:12 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.12 2004/01/09 01:14:12 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 2004/02/02 21:56:37 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.13 2004/02/02 21:56:37 sameer Exp $ 
  ***************************************************************************/
