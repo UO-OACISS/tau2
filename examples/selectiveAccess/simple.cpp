@@ -348,7 +348,6 @@ int main(int argc, char **argv)
 
   TAU_DUMP_FUNC_NAMES();
 
-#ifdef TAU_MULTIPLE_COUNTERS
   int numOfCounters;
   const char ** counterList;
 
@@ -357,7 +356,6 @@ int main(int argc, char **argv)
   for(int j=0;j<numOfCounters;j++){
     cout << "The counter names so far are: " << counterList[j] << endl;
   }
-#endif //TAU_MULTIPLE_COUNTERS
 
 int klarge, k;
 struct timeval tp1, tp2;
@@ -436,6 +434,7 @@ int *A;
 /*  printf("%d 	%f\n", size, time_taken); */
 
   const char **inFuncs;
+  /* The first dimension is functions, and the second dimension is counters */
   double **counterExclusiveValues;
   double **counterInclusiveValues;
   int *numOfCalls;
@@ -445,13 +444,16 @@ int *A;
 
   TAU_GET_FUNC_NAMES(functionList, numOfFunctions);
 
-  if(numOfFunctions >=2 ){ //Brain dead test considering the placement of code.
+  /* We are only interested in the first two routines that are executing in 
+     this context. So, we allocate space for two routine names and get the 
+     performance data for these two routines at runtime. */
+  if(numOfFunctions >=2 ){ 
     inFuncs = (const char **) malloc(sizeof(const char *) * 2);
 
     inFuncs[0] = functionList[0];
     inFuncs[1] = functionList[1];
 
-    //Just to show consistancy.
+    //Just to show consistency.
     TAU_DB_DUMP();
 
     TAU_GET_FUNC_VALS(inFuncs, 2,
@@ -468,8 +470,7 @@ int *A;
   cout << "The first counter is: " << counterNames[0] << endl;
 
   cout << "The Exclusive value of: " << inFuncs[0]
-       << " is: " << counterExclusiveValues[0][0]
-       << endl;
+       << " is: " << counterExclusiveValues[0][0] << endl;
   cout << "The numOfSubRoutines of: " << inFuncs[0]
        << " is: " << numOfSubRoutines[0]
        << endl;

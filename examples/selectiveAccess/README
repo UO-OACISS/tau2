@@ -1,10 +1,3 @@
-Tuesday 27th March 2002.
-
-//Please down load the very latest version of TAU.
-//There are a number of changes and additions to this
-//API happing on a daily basis (not to mention fixes).
-//Comments are VERY welcome.
-
 This API basically allow an application access to TAU's internal
 data. You can access the function list, and all data at function name
 resolution.  In the example, the beginning and end of the main()
@@ -13,3 +6,28 @@ function contains internal data access function examples.
 There will be some memory clean up functions, as well as some
 addition dump routines added over the next couple of days to complete
 the API.  Please check back!!
+
+The list of macros that are used in this example are:
+-----------------------------------------------------
+* TAU_GET_FUNC_NAMES(functionList, numOfFunctions); 
+ It gets the list of routines that are active. 
+* TAU_DUMP_FUNC_NAMES(); 
+ It writes the names of active functions to a file (dump_functionnames_n,c.0.0).
+* TAU_GET_COUNTER_NAMES(counterList, numOfCounters);
+ It gets the list of counters. 
+* TAU_GET_FUNC_VALS(inFuncs, 2,
+                      counterExclusiveValues,
+                      counterInclusiveValues,
+                      numOfCalls,
+                      numOfSubRoutines,
+                      counterNames,
+                      numOfCouns);
+
+ It gets detailed performance data for the list of routines. The user 
+ specifies inFuncs and and the number of routines (2); TAU then returns the 
+ other arguments with the performance data. counterExclusiveValues and 
+ counterInclusiveValues are two dimensional arrays: 
+ the first dimension is the routine id and the second is counter id. The value
+ is indexed by these two dimensions. numOfCalls and numOfSubRoutines are one
+ dimensional arrays. See the simple.cpp file for its usage. 
+
