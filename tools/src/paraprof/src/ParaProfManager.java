@@ -342,8 +342,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			ParaProfTrial paraProfTrial = (ParaProfTrial) clickedOnObject;
 			int[] array = this.getSelectedDBExperiment();
 			if(array!=null){
-			    System.out.println("Upload Trial request received from a ParaProfTrial!");
-			    System.out.println("Upload the trial to appID, expID: "+ array[0]+", "+array[1]);
 			    PerfDBSession perfDBSession = new PerfDBSession(); 
 			    perfDBSession.initialize(configFile, password);
 			    perfDBSession.setApplication(array[0]);
@@ -364,10 +362,20 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		else if(arg.equals("Upload Metric")){
 		    if(clickedOnObject instanceof Metric){
+			Metric metric = (Metric) clickedOnObject;
 			int[] array = this.getSelectedDBTrial();
 			if(array!=null){
-			    System.out.println("Upload Metric request received from a ParaProfMetric!");
-			    System.out.println("Upload the metric to appID, expID , trialID: "+ array[0]+", "+array[1]+", "+array[2]);
+			    PerfDBSession perfDBSession = new PerfDBSession(); 
+			    perfDBSession.initialize(configFile, password);
+			    perfDBSession.setApplication(array[0]);
+			    perfDBSession.setExperiment(array[1]);
+			    perfDBSession.setTrial(array[2]);
+			    Trial trial = new Trial();
+			    trial.setDataSession(metric.getTrial().getDataSession());
+			    trial.setApplicationID(array[0]);
+			    trial.setExperimentID(array[1]);
+			    perfDBSession.saveParaProfTrial(trial, metric.getID());
+			    perfDBSession.terminate();
 			}
 		    }
 		}
