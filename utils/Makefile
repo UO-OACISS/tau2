@@ -18,7 +18,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+TAU_PREFIX_INSTALL_DIR=/u1/sameer/tau2
 PDTDIR=
 DYNINSTDIR=
 #######################################################################
@@ -40,6 +40,7 @@ LINKER	= $(CC)
 #SYMMETRY#LEXTRA = -lseq#ENDIF#
 #PTX#LEXTRA = -lseq#ENDIF#
 #SP1#CEXTRA = -D__SP1__ -D_POSIX_SOURCE -D_XOPEN_SOURCE #ENDIF#
+#USE_IBMXLC#CEXTRA = -DTAU_DOT_H_LESS_HEADERS -DTAU_XLC #ENDIF#
 #CM5#CEXTRA = -D__CM5__#ENDIF#
 #SGIMP#CEXTRA = -D__SGIMP__#ENDIF#
 #PCXX#RUNTIME1 = pcxx_merge#ENDIF#
