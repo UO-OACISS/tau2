@@ -252,36 +252,31 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public boolean isDerivedMetric(){
 	return this.getMetric(this.getSelectedMetricID()).getDerivedMetric();}
 	
+    //Overide this function.
     public Vector getMetrics(){
-	return metrics;}
+	return dataSession.getMetrics();}
 
     public DataSessionIterator getMetricList(){
-	return new DataSessionIterator(metrics);}
+	return new DataSessionIterator(this.getMetrics());}
 
     public int getNumberOfMetrics(){
-	return metrics.size();}
+	return dataSession.getNumberOfMetrics();}
 
     public int getMetricID(String string){
-	for(Enumeration e = metrics.elements(); e.hasMoreElements() ;){
-	    Metric metric = (Metric) e.nextElement();
-	    if((metric.getName()).equals(string))
-		return metric.getID();
-	}
-	return -1;
-    }
+	return dataSession.getMetricID(string);}
 
     public Metric getMetric(int metricID){
-	return (Metric) metrics.elementAt(metricID);}
+	return (Metric) dataSession.getMetric(metricID);}
 
     public String getMetricName(int metricID){
-	return this.getMetric(metricID).getName();}
+	return dataSession.getMetricName(metricID);}
 
     public Metric addMetric(){
 	Metric metric = new Metric();
-	metric.setID((metrics.size()));
-	metrics.add(metric);
+	dataSession.addMetric(metric);
 	return metric;
     }
+
     //####################################
     //End - Interface for ParaProfMetrics. 
     //####################################
@@ -327,24 +322,25 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	//Set the colours.
 	clrChooser.setColors(dataSession.getGlobalMapping(), -1);
 	
-	//Set the metrics.
+	//The dataSession has accumulated dms.dss.Metrics. Inside ParaProf,
+	//these need to be paraprof.Metrics.
 	int numberOfMetrics = dataSession.getNumberOfMetrics();
+	Vector metrics = new Vector();
 	for(int i=0;i<numberOfMetrics;i++){
-	    Metric metric = this.addMetric();
+	    Metric metric = new Metric();
 	    metric.setName(dataSession.getMetricName(i));
+	    metric.setID(i);
 	    metric.setTrial(this);
+	    metrics.add(metric);
 	}
-
-	System.out.println("I am HERE$%$%$%$$%$%$%$%$%$%$%$%$%$%$$%$%$%$%$%$%$%$%$$$%");
-
+	//Now set the data session metrics.
+	dataSession.setMetrics(metrics);
 	ParaProf.paraProfManager.populateTrialMetrics(this, defaultTrial);
 	
 	//Notify any observers of this trial that the Data Session is done.
 	this.notifyObservers();
     }
-    public void update(){
-	System.out.println("I am HERE$%$%$%$$%$%$%$%$%$%$%$%$%$%$$%$%$%$%$%$%$%$%$$$%2");
-    }
+    public void update(){}
     //######
     //End - Observer.
     //######
@@ -398,11 +394,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     private String path = null;
     private String pathReverse = null;
     private int selectedMetricID = 0;
-
-    private Vector metrics = new Vector();
-
     private Vector observers = new Vector();
-
     private boolean debug = false;
     //####################################
     //Instance data.
