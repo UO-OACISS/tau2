@@ -14,38 +14,59 @@ import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProf implements ParaProfObserver, ActionListener{
+    
+    //####################################
+    //Class declarations
+    //####################################
+
     //######
-    //Some system wide state variables.
+    //System wide stuff.
+    //######
     static String homeDirectory = null;
     static File paraProfHomeDirectory = null;
     static String profilePathName = null;       //This contains the path to the currently loaded profile data.
     static int defaultNumberPrecision = 4;
     static boolean dbSupport = false;
-    //End - Some system wide state variables.
-    //######
-    
-    //######
-    //Start or define all the persistant objects.
     static ParaProfLisp paraProfLisp = null;
     static SavedPreferences savedPreferences = null;
     static ParaProfManager paraProfManager = null;
     static ApplicationManager applicationManager = null;
     static HelpWindow helpWindow = null;
-    //End start of persistant objects.
-    
-    //Useful in the system.
-    private static String USAGE = "ParaProf/ParaProf (help | debug)";
-    static Runtime runtime;
+    static Runtime runtime = null;
     static boolean runHasBeenOpened = false;
     //######
+    //End - System wide stuff.
+    //######
+
+    //######
+    //Command line options related.
+    //######
+    public static String USAGE = "USAGE: paraprof [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-p,--filenameprefix} filenameprefix] [{-i --fixnames}] [{-d,--debug} debug]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n";
+    private static int fileType = -1; //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun 
+    private static boolean dump = false;
+    private static int dumptype = -1;
+    private static String sourceFile = null;
+    private static String filePrefix = null;
+    private static boolean fixNames = false;
+    //######
+    //End - Command line options related.
+    //######
+
+    //####################################
+    //End - Class declarations
+    //####################################
     
-    private int type = -1; //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun 
-    private boolean dump = false;
-    private int dumptype = -1;
-    String filePrefix = null;
+    //####################################
+    //Instance declarations
+    //####################################
+    private ParaProfTrial trial = null;
+    //####################################
+    //End - Instance declarations
+    //####################################
     
     public ParaProf(){
 	/*try {
@@ -62,15 +83,15 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    //######
 	    //Initialization of static objects takes place on a need basis. This helps prevent
 	    //the creation of a graphical system unless it is absolutly necessary. Static initializations
-	    //are marked with "Static Initilization" to make them easy to find.
+	    //are marked with "Static Initialization" to make them easy to find.
 	    //######
 
 	    //######
-	    //Static Initilization
+	    //Static Initialization
 	    //######
 	    ParaProf.savedPreferences = new SavedPreferences();
 	    //######
-	    //End - Static Initilization
+	    //End - Static Initialization
 	    //######
 	    
 	    //Establish the presence of a .ParaProf directory.  This is located by default in the user's home
@@ -116,22 +137,22 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    }
 		
 	    //######
-	    //Static Initilization
+	    //Static Initialization
 	    //######
 	    ParaProf.paraProfLisp = new ParaProfLisp(UtilFncs.debug);
 	    //######
-	    //End - Static Initilization
+	    //End - Static Initialization
 	    //######
 	    
             //Register lisp primatives in ParaProfLisp.
 	    ParaProf.paraProfLisp.registerParaProfPrimitives();
 
 	    //######
-	    //Static Initilization
+	    //Static Initialization
 	    //######
 	    ParaProf.applicationManager = new ApplicationManager();
 	    //######
-	    //End - Static Initilization
+	    //End - Static Initialization
 	    //######
 
             //Create a default application.
@@ -141,48 +162,45 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    //Create a default experiment.
 	    ParaProfExperiment experiment = app.addExperiment();
 	    experiment.setName("Default Exp");
-	    ParaProfTrial trial = null;
+	    ParaProfDataSession dataSession = null;
 	    FileList fl = new FileList();
 	    Vector v = null;
 
 	    //######
-	    //Static Initilization
+	    //Static Initialization
 	    //######
 	    ParaProf.helpWindow = new HelpWindow(UtilFncs.debug);
-	    //######
-	    //End - Static Initilization
-	    //######
-
-	    //######
-	    //Static Initilization
-	    //######
 	    ParaProf.paraProfManager = new ParaProfManager();
 	    //######
-	    //End - Static Initilization
+	    //End - Static Initialization
 	    //######
 
-	    if(type!=-1){
-		switch(type){
+	    if(fileType!=-1){
+		switch(fileType){
 		case 0:
+		    dataSession = new TauPprofOutputSession();
 		    if(filePrefix==null)
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "pprof", UtilFncs.debug);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "pprof", UtilFncs.debug);
 		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		case 1:
+		    dataSession = new TauOutputSession();
 		    if(filePrefix==null)
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "profile", UtilFncs.debug);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", UtilFncs.debug);
 		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		case 2:
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
+		    dataSession = new DynaprofOutputSession();
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		case 5:
+		    dataSession = new GprofOutputSession(fixNames);
 		    if(filePrefix==null)
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "gprof", UtilFncs.debug);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "gprof", UtilFncs.debug);
 		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, UtilFncs.debug);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		default:
 		    v = new Vector();
@@ -191,14 +209,18 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    break;
 		}
 		if(v.size()>0){
-		    trial = new ParaProfTrial(null, type);
-		    trial.addObserver(this);
+		    trial = new ParaProfTrial(fileType);
+		    trial.setApplicationID(0);
+		    trial.setExperimentID(0);
+		    trial.setID(0);
 		    trial.setName("Default Trial");
 		    trial.setDefaultTrial(true);
 		    trial.setPaths(fl.getPath());
 		    experiment.addTrial(trial);
 		    trial.setLoading(true);
-		    trial.initialize(v);
+		    dataSession.setDebug(UtilFncs.debug);
+		    dataSession.addObserver(this);
+		    dataSession.initialize(v);
 		}
 		else{
 		    System.out.println("No profile files found in the current directory.");
@@ -211,14 +233,19 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		else
 		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, UtilFncs.debug);
 		if(v.size()>0){
-		    trial = new ParaProfTrial(null, 0);
-		    trial.addObserver(this);
+		    dataSession = new TauPprofOutputSession();
+		    trial = new ParaProfTrial(0);
+		    trial.setApplicationID(0);
+		    trial.setExperimentID(0);
+		    trial.setID(0);
 		    trial.setName("Default Trial");
 		    trial.setDefaultTrial(true);
 		    trial.setPaths(fl.getPath());
 		    experiment.addTrial(trial);
 		    trial.setLoading(true);
-		    trial.initialize(v);
+		    dataSession.setDebug(UtilFncs.debug);
+		    dataSession.addObserver(this);
+		    dataSession.initialize(v);
 		}
 		else{
 		    //Try finding profile.*.*.* files.
@@ -227,14 +254,19 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    else
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, UtilFncs.debug);
 		    if(v.size()>0){
-			trial = new ParaProfTrial(null, 1);
-			trial.addObserver(this);
+			dataSession = new TauOutputSession();
+			trial = new ParaProfTrial(1);
+			trial.setApplicationID(0);
+			trial.setExperimentID(0);
+			trial.setID(0);
 			trial.setName("Default Trial");
 			trial.setDefaultTrial(true);
 			trial.setPaths(fl.getPath());
 			experiment.addTrial(trial);
 			trial.setLoading(true);
-			trial.initialize(v);
+			dataSession.setDebug(UtilFncs.debug);
+			dataSession.addObserver(this);
+			dataSession.initialize(v);
 		    }
 		    else{
 			System.out.println("No profile files found in the current directory.");
@@ -264,8 +296,37 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     //ParaProfObserver interface.
     //######
     public void update(Object obj){
-	//We are only ever watching an instance of ParaProfTrial.
-	ParaProfTrial trial = (ParaProfTrial) obj;
+	//We are only ever watching an instance of DataSession.
+	DataSession dataSession = (DataSession)obj;
+
+	//Data session has finished loading. Call its terminate method to
+	//ensure proper cleanup.
+	dataSession.terminate();
+
+	//Need to update setup the DataSession object for correct usage in
+	//in a ParaProfTrial object.
+	//Set the colours.
+	trial.getColorChooser().setColors(dataSession.getGlobalMapping(), -1);
+	//The dataSession has accumulated edu.uoregon.tau.dms.dss.Metrics. Inside ParaProf,
+	//these need to be paraprof.Metrics.
+	int numberOfMetrics = dataSession.getNumberOfMetrics();
+	Vector metrics = new Vector();
+	for(int i=0;i<numberOfMetrics;i++){
+	    Metric metric = new Metric();
+	    metric.setName(dataSession.getMetricName(i));
+	    metric.setID(i);
+	    metric.setTrial(trial);
+	    metrics.add(metric);
+	}
+	//Now set the data session metrics.
+	dataSession.setMetrics(metrics);
+
+	//Now set the trial's DataSession object to be this one.
+	trial.setDataSession(dataSession);
+	//Set loading to be false, and indicate to ParaProfManager that it should display
+	//the path to this (default) trial.
+	trial.setLoading(false);
+	ParaProf.paraProfManager.populateTrialMetrics(trial);
 	trial.showMainWindow();
 
 	//See if the user has defined any lisp code to run.
@@ -334,97 +395,83 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	//ParaProf has numerous modes of operation. A number of these mode
 	//can be specified on the command line.
 	//######
-	int position = 0;
-	String argument = null;
-	//Deal with help and debug individually, then the rest.
-	//Help
-	while (position < args.length) {
-	    argument = args[position++];
-	    if (argument.equalsIgnoreCase("HELP")) {
-		System.out.println("-----------------------------------");
-		System.out.println("ParaProf accepts the arguments below.");
-		System.out.println("If an incorrect combination is given, an error will be generated.");
-		System.out.println("For any assitance, please email tau-bugs@cs.uoregon.edu");
-		System.out.println("Thank you!");
-		System.out.println("------");
-		System.out.println("help - prints this message.");
-		System.out.println("debug - Causes ParaProf to output debugging information (some to file, and some to the standard out).");
-		System.out.println("prefix  - prefix path for ParaProf to look for profile data (the default is the current directory).");
-		System.out.println("filetype [pprof|profile|dynaprof] - the type of profile data to look for.");
-		System.out.println("dump [pprof|standard] - Data is dumped to the standard out.");
-		System.out.println("------");
-		System.out.println("Some examples:");
-		System.out.println("paraprof/ParaProf debug");
-		System.out.println("paraprof/ParaProf prefix /tmp/data debug");
-		System.out.println("paraprof/ParaProf prefix /tmp/data filetype dynaprof");
-		System.out.println("-----------------------------------");
-		System.exit(0);
-	    }
-	}
-	//Debug
-	position = 0;
-	while (position < args.length) {
-	    argument = args[position++];
-	    if (argument.equalsIgnoreCase("DEBUG")) {
-		UtilFncs.debug = true;
-	    }
-	}
-	//Now the rest.
-	position = 0;
-	while (position < args.length) {
-	    argument = args[position++];
-	    if (argument.equalsIgnoreCase("FILETYPE")){
-		if(args.length==position){
-		    System.out.println("No file type given!");
-		    System.exit(0);
-		}
-		argument = args[position++];
-		if(argument.equalsIgnoreCase("pprof"))
-		    paraProf.type = 0;
-		else if(argument.equalsIgnoreCase("profile"))
-		    paraProf.type = 1;
-		else if(argument.equalsIgnoreCase("dynaprof"))
-		    paraProf.type = 2;
-		else if(argument.equalsIgnoreCase("gprof"))
-		    paraProf.type = 5;
-		else{
-		    System.out.println("Unrecognized file type: " + argument);
-		    System.exit(0);
-		}
-	    }
-	    else if (argument.equalsIgnoreCase("PREFIX")){
-		argument = args[position++];
-		paraProf.filePrefix = argument;
-	    }
-	    if (argument.equalsIgnoreCase("DUMP")){
-		paraProf.dump = true;
-		if(args.length==position){
-		    System.out.println("No dump type given!");
-		    System.exit(0);
-		}
-		argument = args[position++];
-		if(argument.equalsIgnoreCase("pprof"))
-		    paraProf.dumptype = 0;
-		else if(argument.equalsIgnoreCase("standard"))
-		    paraProf.dumptype = 1;
-		else{
-		    System.out.println("Unrecognized dump type: " + argument);
-		    System.exit(0);
-		}
+	CmdLineParser parser = new CmdLineParser();
+        CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
+	CmdLineParser.Option debugOpt = parser.addBooleanOption('d', "debug");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option sourcefileOpt = parser.addStringOption('s', "sourcefile");
+	CmdLineParser.Option prefixOpt = parser.addStringOption('p', "prefix");
+	CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
+	CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
+	try {
+            parser.parse(args);
+        }
+        catch ( CmdLineParser.OptionException e ) {
+            System.err.println(e.getMessage());
+	    System.err.println(ParaProf.USAGE);
+	    System.exit(-1);
+        }
+
+	Boolean help = (Boolean)parser.getOptionValue(helpOpt);
+	Boolean debug = (Boolean)parser.getOptionValue(debugOpt);
+        ParaProf.sourceFile = (String)parser.getOptionValue(sourcefileOpt);
+        String fileTypeString = (String)parser.getOptionValue(typeOpt);
+	ParaProf.filePrefix = (String)parser.getOptionValue(prefixOpt);
+	Boolean fixNames = (Boolean)parser.getOptionValue(fixOpt);
+	
+	if(help!=null && help.booleanValue()){
+	    System.out.println("In help!");
+	    System.err.println(ParaProf.USAGE);
+	    System.exit(-1);
+    	}
+
+	System.out.println("Here!!!!!");
+
+	if(fixNames!=null)
+	    ParaProf.fixNames = fixNames.booleanValue();
+
+	if(debug!=null)
+	    UtilFncs.debug = debug.booleanValue();
+
+	if(fileTypeString != null){
+	    if(fileTypeString.equals("pprof")) {
+		ParaProf.fileType = 0;
+	    }else if (fileTypeString.equals("profiles")) {
+		ParaProf.fileType = 1;
+	    }else if (fileTypeString.equals("dynaprof")) {
+		ParaProf.fileType = 2;
+	    }else if (fileTypeString.equals("mpip")) {
+		ParaProf.fileType = 3;
+	    }else if (fileTypeString.equals("hpm")) {
+		ParaProf.fileType = 4;
+	    }else if (fileTypeString.equals("gprof")) {
+		ParaProf.fileType = 5;
+	    }else if (fileTypeString.equals("psrun")) {
+		ParaProf.fileType = 6;
+/*
+  } else if (fileTypeString.equals("sppm")) {
+  ParaProf.fileType = 101;
+  } else if (fileTypeString.equals("xprof")) {
+  ParaProf.fileType = 0;
+  } else if (fileTypeString.equals("sddf")) {
+  ParaProf.fileType = 0;
+*/
+	    }else{
+		System.err.println("Please enter a valid file type.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
 	    }
 	}
 	//######
 	//End - Process command line arguments.
 	//######
-
 	if(paraProf.dump){
 	    System.out.println("ParaProf will dump to the standard out with dump type: " + paraProf.dumptype);
 	    System.exit(0);
 	}
-
-
+	
 	ParaProf.runtime = Runtime.getRuntime();
-
+	
 	if(UtilFncs.debug){
 	    //Create and start the a timer, and then add racy to it.
 	    javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);
