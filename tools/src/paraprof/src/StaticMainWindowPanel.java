@@ -973,6 +973,16 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }
 
+    private boolean groupTest(SMWThreadDataElement sMWThreadDataElement){
+	GlobalMapping globalMapping = trial.getGlobalMapping();
+	boolean isSelectedGroupOn = false;
+	    int selectedGroupID = 0;
+	    if(tmpGM.getIsSelectedGroupOn()){
+		isSelectedGroupOn = true;
+		selectedGroupID = tmpGM.getSelectedGroupID();
+	    } 
+    }
+
     public Dimension getImageSize(){
 	return this.getPreferredSize();
     }

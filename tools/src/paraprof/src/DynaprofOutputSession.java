@@ -404,14 +404,29 @@ public class DynaprofOutputSession extends ParaProfDataSession{
     //######
      private int[] getNCT(String string){
 	int[] nct = new int[3];
+	Vector tokens = new Vector();
 	StringTokenizer st = new StringTokenizer(string, ".\t\n\r");
-	st.nextToken();
+	int numberOfTokens = st.countTokens();
 	nct[0] = 0;
-	nct[1] = Integer.parseInt(st.nextToken());
-	if(st.hasMoreTokens())
-	    nct[2] = Integer.parseInt(st.nextToken());
-	else
-	    nct[2] = 0;
+	for(int i=0;i<numberOfTokens-2;i++){
+	    st.nextToken();
+	}
+	String penultimate = st.nextToken();
+	String last = st.nextToken();
+
+	try{
+	    nct[1] = Integer.parseInt(penultimate);
+	    nct[2] = Integer.parseInt(last);
+	}
+	catch(NumberFormatException e1){
+	    System.out.println("Thread identifier not present ... grabbing context ...");
+	    try{
+		nct[1] = Integer.parseInt(last);
+	    }
+	    catch(NumberFormatException e2){
+		System.out.println("Error, unable to find context identifier");
+	    }
+	}
 	return nct;
     }
 
