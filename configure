@@ -518,7 +518,7 @@ do
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
-    echo "-PROFILECOUNTERS .... Use Hardware Performance Counters (default time)."
+    echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
     echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
