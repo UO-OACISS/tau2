@@ -42,13 +42,13 @@ class TauUserEvent {
     STORAGE(TAU_EVENT_DATATYPE, LastValueRecorded);
     STORAGE(TAU_EVENT_DATATYPE, UserFunctionValue);
     STORAGE(long, NumEvents);
-    bool DisableMin, DisableMax, DisableMean, DisableStdDev;
+    bool DisableMin, DisableMax, DisableMean, DisableStdDev, MonotonicallyIncreasing;
     string EventName;
     long EventId;
 
     void AddEventToDB();
     TauUserEvent();
-    TauUserEvent(const char * EName);
+    TauUserEvent(const char * EName, bool MonotonicallyIncreasing=false);
     TauUserEvent(TauUserEvent& );
     TauUserEvent& operator= (const TauUserEvent& );
     void TriggerEvent(TAU_EVENT_DATATYPE data, int tid = RtsLayer::myThread());
@@ -71,6 +71,8 @@ class TauUserEvent {
     void SetDisableMax(bool value);
     void SetDisableMean(bool value);
     void SetDisableStdDev(bool value);
+    void SetMonotonicallyIncreasing(bool value);
+    bool GetMonotonicallyIncreasing(void);
     static void ReportStatistics(bool ForEachThread = false); 
 };
 
@@ -104,6 +106,6 @@ TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 2004/07/26 23:54:26 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.8 2004/07/26 23:54:26 sameer Exp $ 
+ * $Revision: 1.9 $   $Date: 2004/08/13 00:43:30 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.9 2004/08/13 00:43:30 sameer Exp $ 
  ***************************************************************************/
