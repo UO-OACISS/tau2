@@ -308,6 +308,11 @@ extern void Tau_global_stop(void);
 #define TAU_GLOBAL_PHASE_START(timer) 
 #define TAU_GLOBAL_PHASE_STOP(timer)  
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer) 
+#define TAU_GLOBAL_TIMER(timer, name, type, group)
+#define TAU_GLOBAL_TIMER_EXTERNAL(timer)
+#define TAU_GLOBAL_TIMER_START(timer)
+#define TAU_GLOBAL_TIMER_STOP()
+
 
 #endif /* PROFILING_ON */
 
@@ -333,8 +338,8 @@ extern void Tau_global_stop(void);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.36 $   $Date: 2005/01/12 19:00:20 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.36 2005/01/12 19:00:20 sameer Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: amorris $
+ * $Revision: 1.37 $   $Date: 2005/01/14 18:39:31 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.37 2005/01/14 18:39:31 amorris Exp $
  ***************************************************************************/
 

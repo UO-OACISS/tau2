@@ -355,10 +355,19 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_TRACK_MUSE_EVENTS()		
 #define TAU_SET_INTERRUPT_INTERVAL(value)
 
-#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group)
-#define TAU_PHASE_START(timer)
-#define TAU_PHASE_CREATE_STATIC(var, name, type, group)
-#define TAU_PHASE_STOP(timer)
+#define TAU_PHASE_CREATE_STATIC(var, name, type, group) 
+#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) 
+#define TAU_PHASE_START(var) 
+#define TAU_PHASE_STOP(var) 
+#define TAU_GLOBAL_PHASE(timer, name, type, group) 
+#define TAU_GLOBAL_PHASE_START(timer) 
+#define TAU_GLOBAL_PHASE_STOP(timer)  
+#define TAU_GLOBAL_PHASE_EXTERNAL(timer) 
+#define TAU_GLOBAL_TIMER(timer, name, type, group)
+#define TAU_GLOBAL_TIMER_EXTERNAL(timer)
+#define TAU_GLOBAL_TIMER_START(timer)
+#define TAU_GLOBAL_TIMER_STOP()
+
 
 #define CT(obj)
 
@@ -385,6 +394,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.47 $   $Date: 2005/01/14 18:19:38 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.47 2005/01/14 18:19:38 amorris Exp $ 
+ * $Revision: 1.48 $   $Date: 2005/01/14 18:39:31 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.48 2005/01/14 18:39:31 amorris Exp $ 
  ***************************************************************************/

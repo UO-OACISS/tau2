@@ -100,6 +100,19 @@
 #define TAU_MAPPING_PROFILE_GET_TYPE(timer)
 
 
+#define TAU_PHASE_CREATE_STATIC(var, name, type, group) 
+#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) 
+#define TAU_PHASE_START(var) 
+#define TAU_PHASE_STOP(var) 
+#define TAU_GLOBAL_PHASE(timer, name, type, group) 
+#define TAU_GLOBAL_PHASE_START(timer) 
+#define TAU_GLOBAL_PHASE_STOP(timer)  
+#define TAU_GLOBAL_PHASE_EXTERNAL(timer) 
+#define TAU_GLOBAL_TIMER(timer, name, type, group)
+#define TAU_GLOBAL_TIMER_EXTERNAL(timer)
+#define TAU_GLOBAL_TIMER_START(timer)
+#define TAU_GLOBAL_TIMER_STOP()
+
 #endif /* PROFILING_ON || TRACING_ON */
 
 #endif /* _TAU_H_ */
