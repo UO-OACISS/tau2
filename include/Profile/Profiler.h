@@ -82,7 +82,7 @@ public:
 	void Stop(void);
 	~Profiler();
   	static void ProfileExit(const char *message=0);
-	int StoreData(int tid); 
+	static int StoreData(int tid); 
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
@@ -123,6 +123,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 1999/07/20 21:47:27 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.21 1999/07/20 21:47:27 sameer Exp $ 
+ * $Revision: 1.22 $   $Date: 1999/08/12 00:00:31 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.22 1999/08/12 00:00:31 sameer Exp $ 
  ***************************************************************************/
