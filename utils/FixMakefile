@@ -98,6 +98,11 @@ fi
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     taugcclibdir=*)
+        taugcclibdir=`echo $1 | sed -e 's/^taugcclibdir=//'`
+        echo "s,^TAUGCCLIBDIR=.*$,TAUGCCLIBDIR=$taugcclibdir,g" >> $sedout
+        ;;
+
      papisubdir=*)
         papisubdir=`echo $1 | sed -e 's/^papisubdir=//'`
 	echo "s,^PAPISUBDIR=.*$,PAPISUBDIR=$papisubdir,g" >> $sedout

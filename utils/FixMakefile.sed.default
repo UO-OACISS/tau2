@@ -2,6 +2,7 @@ s/\(.*\)#ENDIF#\(.*\)/\2\1#ENDIF#/g
 s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=default/g
 s@^TAUROOT=\(.*\)@TAUROOT=@g
 s@^TULIPDIR=\(.*\)@TULIPDIR=@g
+s@^TAUGCCLIBDIR=\(.*\)@TAUGCCLIBDIR=@g
 s@^PCLDIR=\(.*\)@PCLDIR=@g
 s@^PAPIDIR=\(.*\)@PAPIDIR=@g
 s@^PAPISUBDIR=\(.*\)@PAPISUBDIR=@g

@@ -36,6 +36,7 @@ USER_OPT=-g
 EXTRADIR=
 TAUROOT=
 TULIPDIR=
+TAUGCCLIBDIR=
 PCLDIR=
 PAPIDIR=
 PAPISUBDIR=
@@ -340,7 +341,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #HITACHI#TAU_HITACHI_EXTRA 	=  -L/usr/local/lib -llrz32 #ENDIF#
 
 ## To use the standard F90 linker instead of TAU_LINKER + TAU_FORTRANLIBS, add
-#GNU#TAU_CXXLIBS		= -lstdc++ -lgcc_s #ENDIF#
+#GNU#TAU_CXXLIBS		= -L$(TAUGCCLIBDIR) -lstdc++ -lgcc_s #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
 #CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
 
