@@ -171,6 +171,9 @@ The following  command-line options are available to configure:
 -jdk=<directory>
    Specifies the location of the Java 2 development kit (jdk1.2+). See
    README.JAVA on instructions on using TAU with Java 2 applications. 
+   This option should only be used for configuring TAU to use JVMPI for 
+   profiling and tracing of Java applications. It should not be used for 
+   configuring jracy, which uses java from the user's path. 
 
 -dyninst=<directory>
    Specifies the location of the DynInst (dynamic instrumentation) package. 
@@ -354,7 +357,10 @@ The following  command-line options are available to configure:
    jracy is the GUI for TAU performance analysis. It requires Java 1.2+. An
    earlier version of the profile browser, racy, was implemented using Tcl/Tk.
    It is also available in this distribution but support for racy will be 
-   gradually phased out. Users are encouraged to use jracy instead. 
+   gradually phased out. Users are encouraged to use jracy instead. jracy 
+   does *not* require -jdk=<dir> option to be specified (which is used for 
+   configuring TAU for analyzing Java applications). The 'java' jvm program 
+   should be in the user's path.
 
 5. TAU System Requirements :
    -------------------------
