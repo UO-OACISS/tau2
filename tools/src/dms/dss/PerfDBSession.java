@@ -7,11 +7,12 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 import java.sql.*;
+import java.util.Date;
 
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.30 2004/01/19 17:09:56 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.31 2004/01/29 23:02:04 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -712,7 +713,11 @@ public class PerfDBSession extends DataSession {
 
 		// get the results
 		try {
+			Date start = new Date();
 	    	ResultSet resultSet = db.executeQuery(buf.toString());	
+			Date end = new Date();
+			long interval = end.getTime() - start.getTime();
+			System.out.print(interval);
 	    	while (resultSet.next() != false) {
 				int metricIndex = 0;
 				FunctionDataObject funDO = new FunctionDataObject();
@@ -909,6 +914,52 @@ public class PerfDBSession extends DataSession {
 		return userEvent;
 	}
 	
+	// override the setMetric method
+	public void setMetric(String metricName) {
+		if (metricName == null) {
+			this.metrics = null;
+			return;
+		}
+		this.metrics = new Vector();
+		String sql = "select id from metric where name = '" + metricName + "';";
+		try {
+	    	ResultSet resultSet = db.executeQuery(sql);	
+	    	while (resultSet.next() != false) {
+				String tmpStr = new String(resultSet.getString(1));
+				this.metrics.addElement(tmpStr);
+			}
+			resultSet.close(); 
+		}catch (Exception ex) {
+	    	ex.printStackTrace();
+	    	return;
+		}
+	}
+
+	// override the setMetric method
+	public void setMetric(Vector metricNames) {
+		if (metricNames == null) {
+			this.metrics = null;
+			return;
+		}
+		this.metrics = new Vector();
+		StringBuffer sql = new StringBuffer();
+		sql.append ("select id from metric where name = ");
+		for (int i=0; i < metricNames.size() ; i++) {
+			sql.append ("'" + metricNames.elementAt(i) + "'");
+		}
+		sql.append (";");
+		try {
+	    	ResultSet resultSet = db.executeQuery(sql.toString());	
+	    	while (resultSet.next() != false) {
+				String tmpStr = new String(resultSet.getString(1));
+				this.metrics.addElement(tmpStr);
+			}
+			resultSet.close(); 
+		}catch (Exception ex) {
+	    	ex.printStackTrace();
+	    	return;
+		}
+	}
 
 };
 

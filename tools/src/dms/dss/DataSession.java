@@ -6,7 +6,7 @@ import dms.dss.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.16 2003/11/17 21:57:56 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.17 2004/01/29 23:02:04 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -282,7 +282,7 @@ public abstract class DataSession {
 /**
  * Get a Vector of metric values for this DataSession.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
  *
- * @returns	Vector of metric values
+ * @return	Vector of metric values
  */
 	public Vector getMetrics() {
 		return this.metrics;
