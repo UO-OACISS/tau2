@@ -185,7 +185,7 @@ public class Thread implements Comparable{
 	    }
 	}
 
-	if(ParaProf.debugIsOn){
+	if(this.debug()){
 	    System.out.println("------");
 	    System.out.println("T-D01");
 	    System.out.println("maxInclusiveValue:"+maxInclusiveValue);
@@ -210,57 +210,69 @@ public class Thread implements Comparable{
 	this.setTotalExclusiveValue(metric, totalExclusiveValue);
     }
 
-    public void setPercentData(int dataValueLocation){
+    public void setPercentData(int metric){
 	ListIterator l = this.getFunctionListIterator();
 	while(l.hasNext()){
 	    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
-	    double exclusiveTotal = this.getTotalExclusiveValue(dataValueLocation);
-	    double inclusiveMax = this.getMaxInclusiveValue(dataValueLocation);
 	    
-	    double d1 = globalThreadDataElement.getExclusiveValue(dataValueLocation);
-	    double d2 = globalThreadDataElement.getInclusiveValue(dataValueLocation);
-		
-	    if(exclusiveTotal!=0){
-		double result = (d1/exclusiveTotal)*100.00;
-		globalThreadDataElement.setExclusivePercentValue(dataValueLocation, result);
-	    }
+	    if(globalThreadDataElement!=null){
+		GlobalMappingElement globalMappingElement = globalThreadDataElement.getGlobalMappingElement();
 
-	    if(inclusiveMax!=0){
-		double result = (d2/inclusiveMax) * 100;
-		globalThreadDataElement.setInclusivePercentValue(dataValueLocation, result);
+		double exclusiveTotal = this.getTotalExclusiveValue(metric);
+		double inclusiveMax = this.getMaxInclusiveValue(metric);
+		
+		double d1 = globalThreadDataElement.getExclusiveValue(metric);
+		double d2 = globalThreadDataElement.getInclusiveValue(metric);
+		
+		if(exclusiveTotal!=0){
+		    double result = (d1/exclusiveTotal)*100.00;
+		    globalThreadDataElement.setExclusivePercentValue(metric, result);
+		    //Now do the global mapping element exclusive stuff.
+		    if((globalMappingElement.getMaxExclusivePercentValue(metric)) < result)
+			globalMappingElement.setMaxExclusivePercentValue(metric, result);
+		    
+		}
+		
+		if(inclusiveMax!=0){
+		    double result = (d2/inclusiveMax) * 100;
+		    globalThreadDataElement.setInclusivePercentValue(metric, result);
+		    //Now do the global mapping element exclusive stuff.
+		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < result)
+			globalMappingElement.setMaxInclusivePercentValue(metric, result);
+		}
 	    }
 	}
     }
     
-    public void setMaxInclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,0,inDouble);}
+    public void setMaxInclusiveValue(int metric, double inDouble){
+	this.insertDouble(metric,0,inDouble);}
   
-    public double getMaxInclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,0);}
+    public double getMaxInclusiveValue(int metric){
+	return this.getDouble(metric,0);}
 
-    public void setMaxExclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,1,inDouble);}
+    public void setMaxExclusiveValue(int metric, double inDouble){
+	this.insertDouble(metric,1,inDouble);}
   
-    public double getMaxExclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,1);}
+    public double getMaxExclusiveValue(int metric){
+	return this.getDouble(metric,1);}
 
-    public void setMaxInclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,2,inDouble);}
+    public void setMaxInclusivePercentValue(int metric, double inDouble){
+	this.insertDouble(metric,2,inDouble);}
   
-    public double getMaxInclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,2);}
+    public double getMaxInclusivePercentValue(int metric){
+	return this.getDouble(metric,2);}
 
-    public void setMaxExclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,3,inDouble);}
+    public void setMaxExclusivePercentValue(int metric, double inDouble){
+	this.insertDouble(metric,3,inDouble);}
   
-    public double getMaxExclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,3);}
+    public double getMaxExclusivePercentValue(int metric){
+	return this.getDouble(metric,3);}
 
-    public void setMaxUserSecPerCall(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,4,inDouble);}
+    public void setMaxUserSecPerCall(int metric, double inDouble){
+	this.insertDouble(metric,4,inDouble);}
   
-    public double getMaxUserSecPerCall(int dataValueLocation){
-	return this.getDouble(dataValueLocation,4);}
+    public double getMaxUserSecPerCall(int metric){
+	return this.getDouble(metric,4);}
   
     public void setMaxNumberOfCalls(int inInt){
 	maxNumberOfCalls = inInt;}
@@ -274,17 +286,17 @@ public class Thread implements Comparable{
     public int getMaxNumberOfSubRoutines(){
 	return maxNumberOfSubRoutines;}
 
-    public void setTotalInclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,5,inDouble);}
+    public void setTotalInclusiveValue(int metric, double inDouble){
+	this.insertDouble(metric,5,inDouble);}
 
-    public double getTotalInclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,5);}
+    public double getTotalInclusiveValue(int metric){
+	return this.getDouble(metric,5);}
 
-    public void setTotalExclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,6,inDouble);}
+    public void setTotalExclusiveValue(int metric, double inDouble){
+	this.insertDouble(metric,6,inDouble);}
 
-    public double getTotalExclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,6);}
+    public double getTotalExclusiveValue(int metric){
+	return this.getDouble(metric,6);}
         
     //#######
     //The following two functions assist in determining whether this
@@ -303,6 +315,12 @@ public class Thread implements Comparable{
 	else
 	    return threadID - ((Thread)obj).getThreadID();
     }
+
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //End - Public section.
     //####################################
@@ -311,8 +329,8 @@ public class Thread implements Comparable{
     //####################################
     //Private section.
     //####################################
-    private void insertDouble(int dataValueLocation, int offset, double inDouble){
-	int actualLocation = (dataValueLocation*5)+offset;
+    private void insertDouble(int metric, int offset, double inDouble){
+	int actualLocation = (metric*5)+offset;
 	try{
 	    doubleList[actualLocation] = inDouble;
 	}
@@ -321,8 +339,8 @@ public class Thread implements Comparable{
 	}
     }
   
-    private double getDouble(int dataValueLocation, int offset){
-	int actualLocation = (dataValueLocation*5)+offset;
+    private double getDouble(int metric, int offset){
+	int actualLocation = (metric*5)+offset;
 	try{
 	    return doubleList[actualLocation];
 	}
@@ -349,6 +367,8 @@ public class Thread implements Comparable{
     private int maxNumberOfCalls = 0;
     private int maxNumberOfSubRoutines = 0;
     private boolean trimmed = false;
+
+    private boolean debug = false;
     //####################################
     //End - Instance data.
     //####################################

@@ -35,6 +35,9 @@ public class GlobalThreadDataElement{
     //####################################
     //Public section.
     //####################################
+    public GlobalMappingElement getGlobalMappingElement(){
+	return globalMappingElement;}
+
     public int getMappingID(){
 	return globalMappingElement.getGlobalID();}
 
@@ -50,29 +53,29 @@ public class GlobalThreadDataElement{
     public boolean isGroupMember(int groupID){
 	return globalMappingElement.isGroupMember(groupID);}
   
-    public void setInclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,0,inDouble);}
+    public void setInclusiveValue(int metric, double inDouble){
+	this.insertDouble(metric,0,inDouble);}
   
-    public double getInclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,0);}
+    public double getInclusiveValue(int metric){
+	return this.getDouble(metric,0);}
   
-    public void setExclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,1,inDouble);}
+    public void setExclusiveValue(int metric, double inDouble){
+	this.insertDouble(metric,1,inDouble);}
     
-    public double getExclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,1);}
+    public double getExclusiveValue(int metric){
+	return this.getDouble(metric,1);}
     
-    public void setInclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,2,inDouble);}
+    public void setInclusivePercentValue(int metric, double inDouble){
+	this.insertDouble(metric,2,inDouble);}
   
-    public double getInclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,2);}
+    public double getInclusivePercentValue(int metric){
+	return this.getDouble(metric,2);}
   
-    public void setExclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,3,inDouble);}
+    public void setExclusivePercentValue(int metric, double inDouble){
+	this.insertDouble(metric,3,inDouble);}
     
-    public double getExclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,3);}
+    public double getExclusivePercentValue(int metric){
+	return this.getDouble(metric,3);}
   
     public void setNumberOfCalls(int inInt){
 	numberOfCalls = inInt;}
@@ -86,11 +89,11 @@ public class GlobalThreadDataElement{
     public int getNumberOfSubRoutines(){
 	return numberOfSubRoutines;}
   
-    public void setUserSecPerCall(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,4,inDouble);}
+    public void setUserSecPerCall(int metric, double inDouble){
+	this.insertDouble(metric,4,inDouble);}
   
-    public double getUserSecPerCall(int dataValueLocation){
-	return this.getDouble(dataValueLocation,4);}
+    public double getUserSecPerCall(int metric){
+	return this.getDouble(metric,4);}
   
   
     public static int getPositionOfName(){
@@ -172,7 +175,7 @@ public class GlobalThreadDataElement{
 	return "An error occured pocessing this string!"; 
     }
   
-    public String getTStatString(int type, int dataValueLocation){
+    public String getTStatString(int type, int metric){
 	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int initialBufferLength = 99;
@@ -185,7 +188,7 @@ public class GlobalThreadDataElement{
       
 	    DecimalFormat dF = new DecimalFormat();
 	    dF.applyPattern("##0.0");
-	    tmpArray = (dF.format(this.getInclusivePercentValue(dataValueLocation))).toCharArray();
+	    tmpArray = (dF.format(this.getInclusivePercentValue(metric))).toCharArray();
       
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -193,7 +196,7 @@ public class GlobalThreadDataElement{
 	    }
       
 	    position = 9;
-	    tmpString = UtilFncs.getOutputString(type,this.getExclusiveValue(dataValueLocation));
+	    tmpString = UtilFncs.getOutputString(type,this.getExclusiveValue(metric));
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -202,7 +205,7 @@ public class GlobalThreadDataElement{
 	    }
       
 	    position = 27;
-	    tmpString = UtilFncs.getOutputString(type,this.getInclusiveValue(dataValueLocation));
+	    tmpString = UtilFncs.getOutputString(type,this.getInclusiveValue(metric));
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -231,7 +234,7 @@ public class GlobalThreadDataElement{
 	    }
       
 	    position = 81;
-	    tmpString = UtilFncs.getOutputString(type,this.getUserSecPerCall(dataValueLocation));
+	    tmpString = UtilFncs.getOutputString(type,this.getUserSecPerCall(metric));
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -539,8 +542,8 @@ public class GlobalThreadDataElement{
     //####################################
     //Private section.
     //####################################
-    private void insertDouble(int dataValueLocation, int offset, double inDouble){
-	int actualLocation = (dataValueLocation*5)+offset;
+    private void insertDouble(int metric, int offset, double inDouble){
+	int actualLocation = (metric*5)+offset;
 	try{
 	    doubleList[actualLocation] = inDouble;
 	}
@@ -549,8 +552,8 @@ public class GlobalThreadDataElement{
 	}
     }
   
-    private double getDouble(int dataValueLocation, int offset){
-	int actualLocation = (dataValueLocation*5)+offset;
+    private double getDouble(int metric, int offset){
+	int actualLocation = (metric*5)+offset;
 	try{
 	    return doubleList[actualLocation];
 	}

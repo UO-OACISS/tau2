@@ -34,193 +34,6 @@ public class TauOutputSession extends ParaProfDataSession{
     }
 
     /**
-     * Terminate the DataSession object.
-     *
-     */
-    public void terminate(){}   // formerly "close"
-
-    /**
-     * Returns a ListIterator of Application objects.
-     *
-     * @return	DataSessionIterator object of all Applications.
-     * @see	DataSessionIterator
-     * @see	Application
-     */
-    public ListIterator getApplicationList(){
-	return null;}
-
-    /**
-     * Returns a ListIterator of Experiment objects
-     *
-     * @return	DataSessionIterator object of all Experiments.  If there is an Application saved in the DataSession, then only the Experiments for that Application are returned.
-     * @see	DataSessionIterator
-     * @see	Experiment
-     * @see	DataSession#setApplication
-     */
-    public ListIterator getExperimentList(){
-	return null;}
-
-    /**
-     * Returns a ListIterator of Trial objects
-     *
-     * @return	DataSessionIterator object of all Trials.  If there is an Application and/or Experiment saved in the DataSession, then only the Trials for that Application and/or Experiment are returned.
-     * @see	DataSessionIterator
-     * @see	Trial
-     * @see	DataSession#setApplication
-     * @see	DataSession#setExperiment
-     */
-    public ListIterator getTrialList(){
-	return null;}
-
-
-    /**
-     * Set the Application for this DataSession.  The DataSession object will maintain a reference to the Application referenced by the id.  To clear this reference, call setApplication(Application) with a null reference.
-     *
-     * @param	id unique id of the Application object to be saved.
-     * @see	Application
-     * @see	DataSession#setApplication(Application)
-     */
-    public Application setApplication(int id){
-	return null;}
-    
-    /**
-     * Set the Application for this DataSession.  The DataSession object will maintain a reference to the Application referenced by the name and/or version.  To clear this reference, call setApplication(Application) with a null reference.
-     *
-     * @param	name name of the Application object to be saved.
-     * @param	version version of the Application object to be saved.
-     * @see	Application
-     * @see	DataSession#setApplication(Application)
-     */
-    public Application setApplication(String name, String version){
-	return null;}
-
-    /**
-     * Set the Experiment for this DataSession.  The DataSession object will maintain a reference to the Experiment referenced by the id.  To clear this reference, call setExperiment(Experiment) with a null reference.
-     *
-     * @param	id unique id of the Experiment object to be saved.
-     * @see	Experiment
-     * @see	DataSession#setExperiment(Experiment)
-     */
-    public Experiment setExperiment(int id){
-	return null;}
-    
-    /**
-     * Set the Trial for this DataSession.  The DataSession object will maintain a reference to the Trial referenced by the id.  To clear this reference, call setTrial(Trial) with a null reference.
-     *
-     * @param	id unique id of the Trial object to be saved.
-     * @see	Trial
-     * @see	DataSession#setTrial(Trial)
-     */
-    public Trial setTrial(int id){
-	return null;}
-
-    /**
-     * Returns a ListIterator of Function objects.
-     *
-     * @return	DataSessionIterator object of all Functions.  If there is an Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) saved in the DataSession, then only the Functions for that Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) are returned.
-     * @see	DataSessionIterator
-     * @see	Function
-     * @see	DataSession#setApplication
-     * @see	DataSession#setExperiment
-     * @see	DataSession#setTrial
-     * @see	DataSession#setNode
-     * @see	DataSession#setContext
-     * @see	DataSession#setThread
-     */
-    public ListIterator getFunctions(){
-	return null;}
-
-    /**
-     * Set the Function for this DataSession.  The DataSession object will maintain a reference to the Function referenced by the id.  To clear this reference, call setFunction(Function) with a null reference.
-     *
-     * @param	id unique id of the Function object to be saved.
-     * @see	Function
-     * @see	DataSession#setFunction(Function)
-     */
-    public Function setFunction(int id){
-	return null;}
-
-    /**
-     * Returns the Function identified by the unique function id.
-     *
-     * @param	functionID unique id of the Function object.
-     * @return	Function object identified by the unique function id.
-     * @see	Function
-     */
-    public Function getFunction(int functionID){
-	return null;}
-	
-    /**
-     * Returns a ListIterator of UserEvent objects.
-     *
-     * @return	DataSessionIterator object of all UserEvents.  If there is an Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) saved in the DataSession, then only the UserEvents for that Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) are returned.
-     * @see	DataSessionIterator
-     * @see	UserEvent
-     * @see	DataSession#setApplication
-     * @see	DataSession#setExperiment
-     * @see	DataSession#setTrial
-     * @see	DataSession#setNode
-     * @see	DataSession#setContext
-     * @see	DataSession#setThread
-     */
-    public ListIterator getUserEvents(){
-	return null;}
-
-    /**
-     * Set the UserEvent for this DataSession.  The DataSession object will maintain a reference to the UserEvent referenced by the id.  To clear this reference, call setUserEvent(UserEvent) with a null reference.
-     *
-     * @param	id unique id of the UserEvent object to be saved.
-     * @see	UserEvent
-     * @see	DataSession#setUserEvent(UserEvent)
-     */
-    public UserEvent setUserEvent(int id){
-	return null;}
-
-    /**
-     * Returns the UserEvent identified by the unique user event id.
-     *
-     * @param	userEventID unique id of the UserEvent object to be saved.
-     * @return	UserEvent object identified by the unique user event id.
-     * @see	UserEvent
-     */
-    public UserEvent getUserEvent(int userEventID){
-	return null;}
-	
-    /**
-     * Returns the FunctionData for this DataSession
-     *
-     * @return	DataSessionIterator of FunctionData objects.  If there is an Application, Experiment, Trial(s), node(s), context(s), thread(s) and/or Function(s) saved in the DataSession, then only the Functions for that Application, Experiment, Trial(s), node(s), context(s), thread(s) and/or Function(s) are returned.
-     * @see	DataSessionIterator
-     * @see	FunctionDataObject
-     * @see	DataSession#setApplication
-     * @see	DataSession#setExperiment
-     * @see	DataSession#setTrial
-     * @see	DataSession#setNode
-     * @see	DataSession#setContext
-     * @see	DataSession#setThread
-     * @see	DataSession#setFunction
-     */
-    public ListIterator getFunctionData(){
-	return null;}
-
-    /**
-     * Returns the UserEventData for this DataSession
-     *
-     * @return	DataSessionIterator of UserEventData objects.  If there is an Application, Experiment, Trial(s), node(s), context(s), thread(s) and/or Function(s) saved in the DataSession, then only the UserEvents for that Application, Experiment, Trial(s), node(s), context(s), thread(s) and/or Function(s) are returned.
-     * @see	DataSessionIterator
-     * @see	UserEventDataObject
-     * @see	DataSession#setApplication
-     * @see	DataSession#setExperiment
-     * @see	DataSession#setTrial
-     * @see	DataSession#setNode
-     * @see	DataSession#setContext
-     * @see	DataSession#setThread
-     * @see	DataSession#setUserEvent
-     */
-    public ListIterator getUserEventData(){
-	return null;}
-
-    /**
      * Initialize the DataSession object.
      *
      * @param	obj	an implementation-specific object required to initialize the DataSession
@@ -331,13 +144,22 @@ public class TauOutputSession extends ParaProfDataSession{
 			thread = context.addThread(threadID);
 			thread.initializeFunctionList(this.getNumberOfMappings());
 		    }
-		    System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
+		    if(this.debug())
+			System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
 
 		    //####################################
 		    //First  Line
 		    //####################################
 		    inputString = br.readLine();
-
+		    if(inputString == null){
+			System.out.println("Error processing file: " + files[i].getName());
+			System.out.println("Unexpected end of file!");
+			return;
+		    }
+		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+		    //It's first token will be the number of function present.
+		    tokenString = genericTokenizer.nextToken();
+		    
 		    if(i==0){
 			//Set the counter name.
 			String counterName = getCounterName(inputString);
@@ -345,10 +167,9 @@ public class TauOutputSession extends ParaProfDataSession{
 			if(counterName == null)
 			    counterName = new String("Time");
 			System.out.println("Counter name is: " + counterName);
-		    
+			
 			metricRef.setName(counterName);
 		    }
-		    
 		    //####################################
 		    //End - First Line
 		    //####################################
@@ -356,27 +177,43 @@ public class TauOutputSession extends ParaProfDataSession{
 		    //####################################
 		    //Second Line
 		    //####################################
-		    //This line is not required. Check to make sure that it is there however.
 		    inputString = br.readLine();
-		    if(inputString == null)
+		    if(inputString == null){
+			System.out.println("Error processing file: " + files[i].getName());
+			System.out.println("Unexpected end of file!");
 			return;
+		    }
+		    if(i==0){
+			//Determine if profile stats or profile calls data is present.
+			if(inputString.indexOf("SumExclSqr")!=-1)
+			    this.setProfileStatsPresent(true);
+		    }
 		    //####################################
 		    //End - Second Line
 		    //####################################
 
-		    while(((inputString = br.readLine()) != null) && ((inputString.indexOf('"'))==0)){
-			System.out.println(inputString);
+		    for(int j=Integer.parseInt(tokenString);j>0;j--){
+			inputString = br.readLine();
+			if(inputString==null){
+			    System.out.println("Error processing file: " + files[i].getName());
+			    System.out.println("Unexpected end of file!");
+			    return;
+			}
 			this.getFunctionDataLine(inputString);
 			String groupNames = this.getGroupNames(inputString);
 			//Calculate usec/call
 			double usecCall = functionDataLine.d0/functionDataLine.i0;
-			System.out.println("Name:"+functionDataLine.s0);
-			System.out.println("Calls:"+functionDataLine.i0);
-			System.out.println("Subrs:"+functionDataLine.i1);
-			System.out.println("Excl:"+functionDataLine.d0);
-			System.out.println("Incl:"+functionDataLine.d1);
-			System.out.println("ProfileCalls:"+functionDataLine.d2);
-			System.out.println("groupNames:"+groupNames);
+			if(this.debug()){
+			    System.out.println("function line: " + inputString);
+			    System.out.println("Name:"+functionDataLine.s0);
+			    System.out.println("Calls:"+functionDataLine.i0);
+			    System.out.println("Subrs:"+functionDataLine.i1);
+			    System.out.println("Excl:"+functionDataLine.d0);
+			    System.out.println("Incl:"+functionDataLine.d1);
+			    System.out.println("SumExclSqr:"+functionDataLine.d2);
+			    System.out.println("ProfileCalls:"+functionDataLine.i2);
+			    System.out.println("groupNames:"+groupNames);
+			}
 			if(functionDataLine.i0 !=0){
 			    mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0);
 			    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
@@ -424,72 +261,79 @@ public class TauOutputSession extends ParaProfDataSession{
 			    if(thread.getMaxUserSecPerCall(metric) < usecCall)
 				thread.setMaxUserSecPerCall(metric, usecCall);
 			}
+			//Process the appropriate number of profile call lines.
+			for(int k=0;k<functionDataLine.i2;k++){
+			    this.setProfileCallsPresent(true);
+			    inputString = br.readLine();
+			    if(this.debug())
+				System.out.println("Profile Calls line: " + inputString);
+			}
+			    
 		    }
-		    System.out.println("done processing functions");
+		    if(this.debug())
+			System.out.println("done processing functions");
 		    
-		    while(((inputString = br.readLine()) != null) && ((inputString.indexOf('"'))==0)){
-			System.out.println(inputString);
-		    }
-		    System.out.println("done processing aggregates");
 
-		    //If the above while loop was not terminated because inputString was null, then
-		    //userevents are present. Skip userevent heading line, then get the userevents.
+		    //Process the appropriate number of aggregate lines.
+		    inputString = br.readLine();
+		    //A valid profile.*.*.* will always contain this line.
+		    if(inputString==null){
+			System.out.println("Error processing file: " + files[i].getName());
+			System.out.println("Unexpected end of file!");
+			return;
+		    }
+		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+		    //It's first token will be the number of aggregates.
+		    tokenString = genericTokenizer.nextToken();
+		    
+		    for(int j=Integer.parseInt(tokenString);j>0;j--){
+			this.setAggregatesPresent(true);
+			inputString = br.readLine();
+			if(this.debug())
+			    System.out.println("Aggregates line: " + inputString);
+		    }
+		    if(this.debug())
+			System.out.println("done processing aggregates");
+
+
+		    //Process the appropriate number of userevent lines.
 		    br.readLine();
+		    if(inputString==null){
+			if(this.debug())
+			    System.out.println("No userevent data in this file.");
+			return;
+		    }
+		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+		    //It's first token will be the number of userevents
+		    tokenString = genericTokenizer.nextToken();
 		    
 		    if(this.firstMetric()){
-			while(((inputString = br.readLine()) != null) && ((inputString.indexOf('"'))==0)){
-			    System.out.println(inputString);
+			for(int j=Integer.parseInt(tokenString);j>0;j--){
+			    inputString = br.readLine();
+			    if(inputString==null){
+				System.out.println("Error processing file: " + files[i].getName());
+				System.out.println("Unexpected end of file!");
+				return;
+			    }
 			    this.getUserEventData(inputString);
-			    System.out.println("eventname:"+usereventDataLine.s0);
-			    System.out.println("numevents:"+usereventDataLine.i0);
-			    System.out.println("max:"+usereventDataLine.d0);
-			    System.out.println("min:"+usereventDataLine.d1);
-			    System.out.println("mean:"+usereventDataLine.d2);
-			    System.out.println("sumsqr:"+usereventDataLine.d3);
+			    if(this.debug()){
+				System.out.println("userevent line: " + inputString);
+				System.out.println("eventname:"+usereventDataLine.s0);
+				System.out.println("numevents:"+usereventDataLine.i0);
+				System.out.println("max:"+usereventDataLine.d0);
+				System.out.println("min:"+usereventDataLine.d1);
+				System.out.println("mean:"+usereventDataLine.d2);
+				System.out.println("sumsqr:"+usereventDataLine.d3);
+			    }
 			}
-			System.out.println("done processing userevents");
+			if(this.debug())
+			    System.out.println("done processing userevents");
 		    }
 		    
-		    //The thread object takes care of computing maximums and totals for a given metric.
+		    //The thread object takes care of computing maximums and totals for a given metric, as
+		    //well as the percent.  Must do the order correctly to get the correct results.
 		    thread.setThreadSummaryData(metric);
-
-		    //######
-		    //Compute percent values.
-		    //######
-		    ListIterator l = thread.getFunctionListIterator();
-		    while(l.hasNext()){
-			globalThreadDataElement = (GlobalThreadDataElement) l.next();
-			double exclusiveTotal = thread.getTotalExclusiveValue(metric);
-			double inclusiveMax = thread.getMaxInclusiveValue(metric);
-			
-			if(globalThreadDataElement != null){
-			    globalMappingElement =
-				this.getGlobalMapping().getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
-			    
-			    double d1 = globalThreadDataElement.getExclusiveValue(metric);
-			    double d2 = globalThreadDataElement.getInclusiveValue(metric);
-			    
-			    if(exclusiveTotal!=0){
-				double result = (d1/exclusiveTotal)*100.00;
-				globalThreadDataElement.setExclusivePercentValue(metric, result);
-				//Now do the global mapping element exclusive stuff.
-				if((globalMappingElement.getMaxExclusivePercentValue(metric)) < result)
-				    globalMappingElement.setMaxExclusivePercentValue(metric, result);
-			    }
-			    
-			    if(inclusiveMax!=0){
-				double result = (d2/inclusiveMax) * 100;
-				globalThreadDataElement.setInclusivePercentValue(metric, result);
-				//Now do the global mapping element exclusive stuff.
-				if((globalMappingElement.getMaxInclusivePercentValue(metric)) < result)
-				    globalMappingElement.setMaxInclusivePercentValue(metric, result);
-			    }
-			}
-		    }
-		    //######
-		    //End - Compute percent values.
-		    //######
-		    
+		    thread.setPercentData(metric);
 		    //Call the setThreadSummaryData function again on this thread so that
 		    //it can fill in all the summary data.
 		    thread.setThreadSummaryData(metric);
@@ -590,7 +434,9 @@ public class TauOutputSession extends ParaProfDataSession{
 	    functionDataLine.i1 = Integer.parseInt(st2.nextToken()); //Subroutines
 	    functionDataLine.d0 = Double.parseDouble(st2.nextToken()); //Exclusive
 	    functionDataLine.d1 = Double.parseDouble(st2.nextToken()); //Inclusive
-	    functionDataLine.d2 = Double.parseDouble(st2.nextToken()); //ProfileCalls
+	    if(this.profileStatsPresent())
+		functionDataLine.d2 = Double.parseDouble(st2.nextToken()); //SumExclSqr
+	    functionDataLine.i2 = Integer.parseInt(st2.nextToken()); //ProfileCalls
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD08");

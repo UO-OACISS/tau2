@@ -46,8 +46,8 @@ public class PPML{
       
 	Metric newMetric = trial.addMetric();
 	newMetric.setName(tmpString3);
-	int currentValueLocation = newMetric.getID();
-	trial.setCurValLoc(currentValueLocation);
+	int metric = newMetric.getID();
+	trial.setCurValLoc(metric);
 
 	ListIterator l = trial.getGlobalMapping().getMappingIterator(0);
 	while(l.hasNext()){
@@ -101,67 +101,31 @@ public class PPML{
 			    d2 = globalThreadDataElement.getExclusiveValue(opB);
 			    result = PPML.apply(operation,d1,d2);
 			    
-			    globalThreadDataElement.setExclusiveValue(currentValueLocation, result);
+			    globalThreadDataElement.setExclusiveValue(metric, result);
 			    //Now do the global mapping element exclusive stuff.
-			    if((globalMappingElement.getMaxExclusiveValue(currentValueLocation)) < result)
-				globalMappingElement.setMaxExclusiveValue(currentValueLocation, result);
+			    if((globalMappingElement.getMaxExclusiveValue(metric)) < result)
+				globalMappingElement.setMaxExclusiveValue(metric, result);
 			    globalMappingElement.incrementTotalExclusiveValue(result);
                   
 			    d1 = globalThreadDataElement.getInclusiveValue(opA);
 			    d2 = globalThreadDataElement.getInclusiveValue(opB);
 			    result = PPML.apply(operation,d1,d2);
 			    
-			    globalThreadDataElement.setInclusiveValue(currentValueLocation, result);			    
+			    globalThreadDataElement.setInclusiveValue(metric, result);			    
 			    //Now do the global mapping element inclusive stuff.
-			    if((globalMappingElement.getMaxInclusiveValue(currentValueLocation)) < result)
-				globalMappingElement.setMaxInclusiveValue(currentValueLocation, result);
+			    if((globalMappingElement.getMaxInclusiveValue(metric)) < result)
+				globalMappingElement.setMaxInclusiveValue(metric, result);
 			    globalMappingElement.incrementTotalInclusiveValue(result);
 			}
 		    }
 
-		    //The thread object takes care of computing maximums and totals for a given metric.
-		    thread.setThreadSummaryData(currentValueLocation);
-		    
-		    //######
-		    //Compute percent values.
-		    //######
-		    l = thread.getFunctionListIterator();
-		    while(l.hasNext()){
-			GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
-			double exclusiveTotal = thread.getTotalExclusiveValue(currentValueLocation);
-			double inclusiveMax = thread.getMaxInclusiveValue(currentValueLocation);
-			
-			if(globalThreadDataElement != null){
-			    GlobalMappingElement globalMappingElement =
-				trial.getGlobalMapping().getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
-			    
-			    double d1 = globalThreadDataElement.getExclusiveValue(currentValueLocation);
-			    double d2 = globalThreadDataElement.getInclusiveValue(currentValueLocation);
-			    
-			    if(exclusiveTotal!=0){
-				double result = (d1/exclusiveTotal)*100.00;
-				globalThreadDataElement.setExclusivePercentValue(currentValueLocation, result);
-				//Now do the global mapping element exclusive stuff.
-				if((globalMappingElement.getMaxExclusivePercentValue(currentValueLocation)) < result)
-				    globalMappingElement.setMaxExclusivePercentValue(currentValueLocation, result);
-			    }
-
-			    if(inclusiveMax!=0){
-				double result = (d2/inclusiveMax) * 100;
-				globalThreadDataElement.setInclusivePercentValue(currentValueLocation, result);
-				//Now do the global mapping element exclusive stuff.
-				if((globalMappingElement.getMaxInclusivePercentValue(currentValueLocation)) < result)
-				    globalMappingElement.setMaxInclusivePercentValue(currentValueLocation, result);
-			    }
-			}
-		    }
-		    //######
-		    //End - Compute percent values.
-		    //######
-
+		    //The thread object takes care of computing maximums and totals for a given metric, as
+		    //well as the percent.  Must do the order correctly to get the correct results.
+		    thread.setThreadSummaryData(metric);
+		    thread.setPercentData(metric);
 		    //Call the setThreadSummaryData function again on this thread so that
 		    //it can fill in all the summary data.
-		    thread.setThreadSummaryData(currentValueLocation);
+		    thread.setThreadSummaryData(metric);
 		}
 	    }
 	}

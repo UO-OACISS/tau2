@@ -187,7 +187,7 @@ public class FileList{
 		    Vector v = new Vector();
 		    for(int i = 0;i<files.length;i++){
 			if(files[i] != null){
-			    if(files[i].getName().indexOf("profile.") != -1)
+			    if(files[i].getName().indexOf("profile.") == 0)
 				v.add(files[i]);
 			}
 		    }
