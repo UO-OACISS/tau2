@@ -18,6 +18,7 @@
 #if defined(sparc_sun_sunos4_1_3) || defined(sparc_sun_solaris2_4)
 #include <unistd.h>
 #endif
+#include <unistd.h>
 
 #define FUNCNAMELEN 32*1024
 #ifdef i386_unknown_nt4_0
@@ -499,8 +500,10 @@ int main(int argc, char **argv)
   appThread->continueExecution();
   
   while (!appThread->isTerminated())
-        bpatch->waitForStatusChange();
-
+   {        bpatch->waitForStatusChange();
+    sleep(1);
+   }
+    		
   if (appThread->isTerminated()) {
         dprintf("End of application\n");
   }
