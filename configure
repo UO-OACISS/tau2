@@ -153,6 +153,7 @@ pdt_root_dir="."
 pdt=no
 dyninst=no
 java=no
+openmp=no
 
 # debug:
 # echo $arguments
@@ -276,6 +277,11 @@ do
   -dyninst=*)
       dyninst=yes
       dyninstdir=`echo $arg | sed -e 's/-dyninst=//'`
+    shift
+    ;;
+
+  -openmp)
+      openmp=yes
     shift
     ;;
 
@@ -1327,6 +1333,11 @@ if [ $java = yes ]
     fixmakeargs="$fixmakeargs JAVA jdkdir=$jdkdir"
 fi
 
+if [ $openmp = yes ]
+  then
+    fixmakeargs="$fixmakeargs OPENMP"
+fi
+
 if [ $dyninst = yes ]
   then
     fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
@@ -1334,7 +1345,7 @@ fi
 
 if [ $pcl = yes ]
   then
-    if [ $pthread = yes ]
+    if [ $pthread = yes  -o $openmp = yes ]
     then 
       fixmakeargs="$fixmakeargs PCLPTHREAD"
     fi
@@ -1342,7 +1353,7 @@ fi
 
 if [ $papi = yes ]
   then
-    if [ $pthread = yes ]
+    if [ $pthread = yes -o $openmp = yes ]
     then
       fixmakeargs="$fixmakeargs PAPIPTHREAD"
     fi
