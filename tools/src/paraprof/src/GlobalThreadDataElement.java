@@ -68,6 +68,9 @@ public class GlobalThreadDataElement implements Mapping{
   
     public boolean isGroupMember(int groupID){
 	return globalMappingElement.isGroupMember(groupID);}
+
+    public int[] getGroups(){
+	return globalMappingElement.getGroups();}
   
     public void setInclusiveValue(int metric, double inDouble){
 	this.insertDouble(metric,0,inDouble);}

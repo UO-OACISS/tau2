@@ -94,6 +94,9 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	return false;
     }
 
+    public int[] getGroups(){
+	return groups;}
+
     public void setGroupsSet(boolean groupsSet){
 	this.groupsSet = groupsSet;}
 
