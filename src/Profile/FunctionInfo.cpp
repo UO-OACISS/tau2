@@ -138,15 +138,6 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
-  : 
-    NumCalls(TAU_SIZE), 
-    NumSubrs(TAU_SIZE),
-    ExclTime(TAU_SIZE),
-    InclTime(TAU_SIZE),
-    AlreadyOnStack(TAU_SIZE)
-#ifdef PROFILE_STATS
-    , SumExclSqr(TAU_SIZE) 
-#endif //PROFILE_STATS
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -161,15 +152,6 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 
 FunctionInfo::FunctionInfo(const char *name, string& type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
-  : 
-    NumCalls(TAU_SIZE), 
-    NumSubrs(TAU_SIZE),
-    ExclTime(TAU_SIZE),
-    InclTime(TAU_SIZE),
-    AlreadyOnStack(TAU_SIZE)
-#ifdef PROFILE_STATS
-    , SumExclSqr(TAU_SIZE) 
-#endif //PROFILE_STATS
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -184,15 +166,6 @@ FunctionInfo::FunctionInfo(const char *name, string& type,
 
 FunctionInfo::FunctionInfo(string& name, const char * type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
-  : 
-    NumCalls(TAU_SIZE), 
-    NumSubrs(TAU_SIZE),
-    ExclTime(TAU_SIZE),
-    InclTime(TAU_SIZE),
-    AlreadyOnStack(TAU_SIZE)
-#ifdef PROFILE_STATS
-    , SumExclSqr(TAU_SIZE) 
-#endif //PROFILE_STATS
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -207,15 +180,6 @@ FunctionInfo::FunctionInfo(string& name, const char * type,
 
 FunctionInfo::FunctionInfo(string& name, string& type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
-  : 
-    NumCalls(TAU_SIZE), 
-    NumSubrs(TAU_SIZE),
-    ExclTime(TAU_SIZE),
-    InclTime(TAU_SIZE),
-    AlreadyOnStack(TAU_SIZE)
-#ifdef PROFILE_STATS
-    , SumExclSqr(TAU_SIZE) 
-#endif //PROFILE_STATS
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -225,37 +189,6 @@ FunctionInfo::FunctionInfo(string& name, string& type,
       }
 }
 
-//////////////////////////////////////////////////////////////////////
-#ifdef OLDDD
-
-FunctionInfo::FunctionInfo(const FunctionInfo& X) 
-: Name(X.Name),
-  Type(X.Type),
-  NumCalls(X.NumCalls),
-  NumSubrs(X.NumSubrs),
-  ExclTime(X.ExclTime),
-  InclTime(X.InclTime),
-  MyProfileGroup_(X.MyProfileGroup_) 
-{
-	DEBUGPROFMSG("FunctionInfo::FunctionInfo (const FunctionInfo& X)"<<endl;);
-	TheFunctionDB().push_back(this);
-}
-//////////////////////////////////////////////////////////////////////
-
-FunctionInfo& FunctionInfo::operator= (const FunctionInfo& X) 
-{
-	DEBUGPROFMSG("FunctionInfo::operator= (const FunctionInfo& X)" << endl;);
-   	Name = X.Name;
-	Type = X.Type;
-	NumCalls = X.NumCalls;
-	NumSubrs = X.NumSubrs;
-	ExclTime = X.ExclTime;
-	InclTime = X.InclTime;
-	MyProfileGroup_ = X.MyProfileGroup_;
-	return (*this);
-}
-
-#endif //OLDDD
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::~FunctionInfo()
@@ -282,6 +215,6 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1998/07/16 17:28:02 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.4 1998/07/16 17:28:02 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 1998/08/09 23:04:00 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.5 1998/08/09 23:04:00 sameer Exp $ 
  ***************************************************************************/

@@ -33,11 +33,6 @@
 #include <Profile/ProfileGroups.h>
 
 #define TAU_MAX_THREADS 64
-#if (defined (PTHREADS) && defined (STLVECT))
-#define TAU_SIZE TAU_MAX_THREADS
-#else
-#define TAU_SIZE
-#endif 
 
 #include <Profile/TauAPI.h>
 
@@ -117,6 +112,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 1998/08/09 22:11:51 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.15 1998/08/09 22:11:51 sameer Exp $ 
+ * $Revision: 1.16 $   $Date: 1998/08/09 23:04:01 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.16 1998/08/09 23:04:01 sameer Exp $ 
  ***************************************************************************/
