@@ -12,7 +12,7 @@
 # use "nmake /f makefile.win32 "JDK=<path\to\jdk> java
 # (e.g. nmake /f makefile.win32 "JDK=c:\j2sdk1.4.2_05"
 
-CFLAGS= $(CFLAGS) /O2 /GR /nologo /TP /EHsc -I .
+CFLAGS= $(CFLAGS) /O2 /Gd /nologo /TP /EHsc -I .
 CC=cl
 INCLUDES=-Iinclude -I../include
 DEFINES=-DTAU_WINDOWS -DTAU_DOT_H_LESS_HEADERS
