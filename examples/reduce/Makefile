@@ -77,10 +77,10 @@ run2: $(TARGET).refined
 	./$(TARGET).refined $(ARGS)
 
 $(TARGET).refined: $(TARGET).refined.o 
-	$(CXX) $(LDFLAGS) $< -o $@ $(LIBS)
+	$(CXX) $(LDFLAGS) $(TARGET).refined.o -o $@ $(LIBS)
 	
 $(TARGET).refined.o: $(TARGET).inst.refined.cpp 
-	$(CXX) -c $(CFLAGS) $<  -o $@
+	$(CXX) -c $(CFLAGS) $(TARGET).inst.refined.cpp  -o $@
 
 $(TARGET).inst.refined.cpp: select.refined $(TARGET).pdb
 	$(TAUINSTR) $(TARGET).pdb $(TARGET).cpp -o $(TARGET).inst.refined.cpp -f select.refined
