@@ -147,16 +147,14 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     }
 
   
-  cout << "The names obtained were:" << endl;
-  for(int d=0; d<MAX_TAU_COUNTERS; d++)
-    {
-      cout << "COUNTER" << d << " = " ;
-
-      if(MultipleCounterLayer::names[d] != NULL)
-	cout << MultipleCounterLayer::names[d] << endl;
-      else
-	cout << endl;
-    }
+  //  cout << "The names obtained were:" << endl;
+  //for(int d=0; d<MAX_TAU_COUNTERS; d++)
+  //{
+  //  if(MultipleCounterLayer::names[d] != NULL){
+  //cout << "COUNTER" << d << " = " ;
+  //cout << MultipleCounterLayer::names[d] << endl;
+  //  }
+  //}
 
 
   //Initialize the function array with the correct active functions.
@@ -170,10 +168,12 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 	  //Update the number of active functions.
 	  numberOfActiveFunctions++;
 
-	  //       cout << "Adding function specified by in init function in position: " << e << " of the init array." << endl;
-	}
+	  //cout << "Adding function to position: " 
+	  //     << e << " of the init array." << endl;
+      }
       else{
-	//	cout << "Not adding function specified by in init function in position: " << e << " of the init array." << endl;
+	//cout << "Not function to position: " 
+	//     << e << " of the init array." << endl;
       }
     }
 
@@ -214,7 +214,7 @@ bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition)
       if(MultipleCounterLayer::names[i] != NULL){
 	if(strcmp(MultipleCounterLayer::names[i], "GET_TIME_OF_DAY") == 0){
 	
-	  //	  cout << "gettimeofdayMCL is active." << endl;
+	  //cout << "gettimeofdayMCL is active." << endl;
 
 	  //Set the counter position.
 	  gettimeofdayMCL_CP[0] = i;
@@ -223,7 +223,8 @@ bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition)
 	  MultipleCounterLayer::counterUsed[i] = true;
 
 	  //Update the functionArray.
-	  //	  cout << "Inserting gettimeofdayMCL in position: " << functionPosition << endl;
+	  //cout << "Inserting gettimeofdayMCL in position: " 
+	  //   << functionPosition << endl;
 	  MultipleCounterLayer::functionArray[functionPosition] = gettimeofdayMCL;
 	  gettimeofdayMCL_FP = functionPosition;
 	  //Now just return with beginCountersPosition incremented.
@@ -241,13 +242,13 @@ bool MultipleCounterLayer::sgiTimersMCLInit(int functionPosition){
 #ifdef SGI_TIMERS
 
   //This function uses SGI fast nanosecs timer.
-  //Checks for SGI_TIMER
+  //Checks for SGI_TIMERS
 
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
     if(MultipleCounterLayer::names[i] != NULL){
-      if(strcmp(MultipleCounterLayer::names[i], "SGI_TIMER") == 0){
+      if(strcmp(MultipleCounterLayer::names[i], "SGI_TIMERS") == 0){
 	
-	cout << "sgiTimersMCL is active." << endl;
+	//cout << "sgiTimersMCL is active." << endl;
 	
 	//Set the counter position.
 	sgiTimersMCL_CP[0] = i;
@@ -256,7 +257,7 @@ bool MultipleCounterLayer::sgiTimersMCLInit(int functionPosition){
 	MultipleCounterLayer::counterUsed[i] = true;
 	
 	//Update the functionArray.
-	cout << "Inserting sgiTimersMCL in position: " << functionPosition << endl;
+	//cout << "Inserting sgiTimersMCL in position: " << functionPosition << endl;
 	MultipleCounterLayer::functionArray[functionPosition] = sgiTimersMCL;
 	sgiTimersMCL_FP = functionPosition;
 	//Now just return with beginCountersPosition incremented.
@@ -266,7 +267,7 @@ bool MultipleCounterLayer::sgiTimersMCLInit(int functionPosition){
   }
   
   //If we are here, then this function is not active.
-  cout << "sgiTimersMCL is not active." << endl;
+  //cout << "sgiTimersMCL is not active." << endl;
   return false;
 #else //SGI_TIMERS
   return false;
@@ -283,7 +284,7 @@ bool MultipleCounterLayer::cpuTimeMCLInit(int functionPosition){
     if(MultipleCounterLayer::names[i] != NULL){
       if(strcmp(MultipleCounterLayer::names[i], "CPU_TIME") == 0){
 	
-	cout << "cpuTimeMCL is active." << endl;
+	//cout << "cpuTimeMCL is active." << endl;
 	
 	//Set the counter position.
 	cpuTimeMCL_CP[0] = i;
@@ -292,7 +293,7 @@ bool MultipleCounterLayer::cpuTimeMCLInit(int functionPosition){
 	MultipleCounterLayer::counterUsed[i] = true;
 	
 	//Update the functionArray.
-	cout << "Inserting cpuTimeMCL in position: " << functionPosition << endl;
+	//cout << "Inserting cpuTimeMCL in position: " << functionPosition << endl;
 	MultipleCounterLayer::functionArray[functionPosition] = cpuTimeMCL;
 	cpuTimeMCL_FP = functionPosition;
 	//Now just return with beginCountersPosition incremented.
@@ -302,7 +303,7 @@ bool MultipleCounterLayer::cpuTimeMCLInit(int functionPosition){
   }
   
   //If we are here, then this function is not active.
-  cout << "cpuTimeMCL is not active." << endl;
+  //cout << "cpuTimeMCL is not active." << endl;
   return false;
 #else //CPU_TIME
   return false;
@@ -325,7 +326,7 @@ bool MultipleCounterLayer::papiMCLInit(int functionPosition){
 	  
 	  if(tmpCode != -1){
 	 
-	    cout << "Found a papi counter: " << MultipleCounterLayer::names[i] << endl;
+	    //cout << "Found a papi counter: " << MultipleCounterLayer::names[i] << endl;
 
 	    //Check if this is possible on this machine!
 	    if((PAPI_query_event(tmpCode) == PAPI_OK)){
@@ -353,14 +354,14 @@ bool MultipleCounterLayer::papiMCLInit(int functionPosition){
     }
   if(returnValue){
     //If we found viable Papi events, update the function array.
-    cout << "Inserting papiMCL in position: " << functionPosition << endl;
+    //cout << "Inserting papiMCL in position: " << functionPosition << endl;
     MultipleCounterLayer::functionArray[functionPosition] = papiMCL;
 
     papiMCL_FP = functionPosition;
   }
 
-  if(!returnValue)
-    cout << "papiMCL is not active." << endl;
+  //if(!returnValue)
+    //cout << "papiMCL is not active." << endl;
   return returnValue;
 #else //TAU_PAPI
   return false;
@@ -371,14 +372,14 @@ bool MultipleCounterLayer::papiWallClockMCLInit(int functionPosition)
 {
 #ifdef TAU_PAPI
   //This function uses the papi PAPI_get_real_usec()  function.
-  //Checks for P_WALL_CLOCK
+  //Checks for P_WALL_CLOCK_TIME
 
   for(int i=0; i<MAX_TAU_COUNTERS; i++)
     {
       if(MultipleCounterLayer::names[i] != NULL){
-	if(strcmp(MultipleCounterLayer::names[i], "P_WALL_CLOCK") == 0){
+	if(strcmp(MultipleCounterLayer::names[i], "P_WALL_CLOCK_TIME") == 0){
 
-	  cout << "papiWallClockMCL is active." << endl;
+	  //cout << "papiWallClockMCL is active." << endl;
 	  PapiLayer::multiCounterPapiInit();
 
 	  //Set the counter position.
@@ -388,7 +389,7 @@ bool MultipleCounterLayer::papiWallClockMCLInit(int functionPosition)
 	  MultipleCounterLayer::counterUsed[i] = true;
 
 	  //Update the functionArray.
-	  cout << "Inserting papiWallClockMCL in position: " << functionPosition << endl;
+	  //cout << "Inserting papiWallClockMCL in position: " << functionPosition << endl;
 	  MultipleCounterLayer::functionArray[functionPosition] = papiWallClockMCL;
 	  papiWallClockMCL_FP = functionPosition;
 	  //Now just return with beginCountersPosition incremented.
@@ -398,7 +399,7 @@ bool MultipleCounterLayer::papiWallClockMCLInit(int functionPosition)
     }
 
   //If we are here, then this function is not active.
-  cout << "papiWallClockMCL is not active." << endl;
+  //cout << "papiWallClockMCL is not active." << endl;
   return false;
 #else  // TAU_PAPI
   return false;
@@ -409,14 +410,14 @@ bool MultipleCounterLayer::papiVirtualMCLInit(int functionPosition)
 {
 #ifdef TAU_PAPI
   //This function uses the papi PAPI_get_virt_usec()  function.
-  //Checks for P_VIRTUAL
+  //Checks for P_VIRTUAL_TIME
 
   for(int i=0; i<MAX_TAU_COUNTERS; i++)
     {
       if(MultipleCounterLayer::names[i] != NULL){
-        if(strcmp(MultipleCounterLayer::names[i], "P_VIRTUAL") == 0){
+        if(strcmp(MultipleCounterLayer::names[i], "P_VIRTUAL_TIME") == 0){
 
-          cout << "papiVirtualMCL is active." << endl;
+          //cout << "papiVirtualMCL is active." << endl;
           PapiLayer::multiCounterPapiInit();
 
           //Set the counter position.
@@ -426,7 +427,7 @@ bool MultipleCounterLayer::papiVirtualMCLInit(int functionPosition)
 	  MultipleCounterLayer::counterUsed[i] = true;
 
           //Update the functionArray.
-          cout << "Inserting papiVirtualMCL in position: " << functionPosition << endl;
+          //cout << "Inserting papiVirtualMCL in position: " << functionPosition << endl;
           MultipleCounterLayer::functionArray[functionPosition] = papiVirtualMCL;
 	  papiVirtualMCL_FP = functionPosition;
           //Now just return with beginCountersPosition incremented.
@@ -436,7 +437,7 @@ bool MultipleCounterLayer::papiVirtualMCLInit(int functionPosition)
     }
 
   //If we are here, then this function is not active.
-  cout << "papiVirtualMCL is not active." << endl;
+  //cout << "papiVirtualMCL is not active." << endl;
   return false;
 #else  // TAU_PAPI
   return false;
@@ -459,7 +460,7 @@ bool MultipleCounterLayer::pclMCLInit(int functionPosition){
 	
 	if(tmpCode != -1){
 	  
-	  cout << "Found a pcl counter: " << MultipleCounterLayer::names[i] << endl;
+	  //cout << "Found a pcl counter: " << MultipleCounterLayer::names[i] << endl;
 	  
 	  //Set the counter position.
 	  pclMCL_CP[numberOfPCLHWCounters] = i;
@@ -481,7 +482,7 @@ bool MultipleCounterLayer::pclMCLInit(int functionPosition){
       for(int j=0;j<numberOfPCLHWCounters;j++){
 	MultipleCounterLayer::counterUsed[pclMCL_CP[j]] = true;
       }
-      cout << "Inserting pclMCL in position: " << functionPosition << endl;
+      //cout << "Inserting pclMCL in position: " << functionPosition << endl;
       MultipleCounterLayer::functionArray[functionPosition] = pclMCL;
       papiVirtualMCL_FP = functionPosition;
 
@@ -489,23 +490,10 @@ bool MultipleCounterLayer::pclMCLInit(int functionPosition){
     }
     else{
       cout << "Requested pcl events, or event combination not possible!" << endl;
-      cout << "pclMCL is not active." << endl;
+      //cout << "pclMCL is not active." << endl;
       return false;
     } 
   }
-
-  //  if(returnValue){
-    //If we found viable Pcl events, update the counterUsed and function arrays.
-  //    for(int j=0;j<numberOfPCLHWCounters;j++){
-  //      MultipleCounterLayer::counterUsed[pclMCL_CP[j]] = true;
-  //    }
-  //    cout << "Inserting pclMCL in position: " << functionPosition << endl;
-  //    MultipleCounterLayer::functionArray[functionPosition] = pclMCL;
-  //  }
-  //  else
-  //    cout << "pclMCL is not active." << endl;
-
-  //return returnValue;
 
 #else //TAU_PCL
   return false;
@@ -522,7 +510,7 @@ bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){
       if(MultipleCounterLayer::names[i] != NULL){
 	if(strcmp(MultipleCounterLayer::names[i], "LINUX_TIMERS") == 0){
 	
-	  cout << "linuxTimerMCL is active." << endl;
+	  //cout << "linuxTimerMCL is active." << endl;
 
 	  //Set the counter position.
 	  linuxTimerMCL_CP[0] = i;
@@ -531,7 +519,7 @@ bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){
 	  MultipleCounterLayer::counterUsed[i] = true;
 
 	  //Update the functionArray.
-	  cout << "Inserting linuxTimerMCL in position: " << functionPosition << endl;
+	  //cout << "Inserting linuxTimerMCL in position: " << functionPosition << endl;
 	  MultipleCounterLayer::functionArray[functionPosition] = linuxTimerMCL;
 	  linuxTimerMCL_FP = functionPosition;
 	  //Now just return with beginCountersPosition incremented.
@@ -541,18 +529,13 @@ bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){
     }
 
   //If we are here, then this function is not active.
-  cout << "linuxTimerMCL is not active." << endl;
+  //cout << "linuxTimerMCL is not active." << endl;
   return false;
 #else //TAU_LINUX_TIMERS
 return false;
 #endif//TAU_LINUX_TIMERS
 }
 void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
-
-  //cout << endl;
-  //cout << "gettimeofdayMCL" << endl;
-  //cout << "Storing value in position: " << gettimeofdayMCL_CP[0] << endl;
-
   struct timeval tp;
   gettimeofday (&tp, 0);
   values[gettimeofdayMCL_CP[0]] = ( (double) tp.tv_sec * 1e6 + tp.tv_usec );
@@ -561,11 +544,6 @@ void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
 
 void MultipleCounterLayer::sgiTimersMCL(int tid, double values[]){
 #ifdef  SGI_TIMERS
-  
-  cout << endl;
-  cout << "sgiTimersMCL" << endl;
-  cout << "Storing value in position: " << sgiTimersMCL_CP[0] << endl;
-
   struct timespec tp;
   clock_gettime(CLOCK_SGI_CYCLE,&tp);
   values[sgiTimersMCL_CP[0]] = (tp.tv_sec * 1e6 + (tp.tv_nsec * 1e-3)) ;
@@ -574,11 +552,6 @@ void MultipleCounterLayer::sgiTimersMCL(int tid, double values[]){
 
 void MultipleCounterLayer::cpuTimeMCL(int tid, double values[]){
 #ifdef  CPU_TIME
-  
-  cout << endl;
-  cout << "cpuTimeMCL" << endl;
-  cout << "Storing value in position: " << cpuTimeMCL_CP[0] << endl;
-
   struct rusage current_usage;
 
   getrusage (RUSAGE_SELF, &current_usage);
@@ -668,19 +641,11 @@ void MultipleCounterLayer::papiMCL(int tid, double values[]){
 
 void MultipleCounterLayer::papiWallClockMCL(int tid, double values[]){
 #ifdef TAU_PAPI
-  //cout << endl;
-  //cout << "PapiWallClockMCL" << endl;
-  //cout << "Storing value in position: " << papiWallClockMCL_CP[0] << endl;
-
   values[papiWallClockMCL_CP[0]] = PAPI_get_real_usec();
 #endif // TAU_PAPI
 }
 void MultipleCounterLayer::papiVirtualMCL(int tid, double values[]){
 #ifdef TAU_PAPI
-  //cout << endl;
-  //cout << "PapiVirtualMCL" << endl;
-  //cout << "Storing value in position: " << papiVirtualMCL_CP[0] << endl;
-
   values[papiVirtualMCL_CP[0]] = PAPI_get_virt_usec();
 #endif // TAU_PAPI
 }
