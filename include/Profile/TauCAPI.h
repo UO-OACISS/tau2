@@ -113,7 +113,17 @@
 #define TAU_DISABLE_ALL_GROUPS()            	Tau_disable_all_groups() 
 #define TAU_DISABLE_GROUP_NAME(group)           Tau_disable_group_name(group)
 #define TAU_GET_PROFILE_GROUP(group)            Tau_get_profile_group(group)
+#define TAU_BCAST_DATA(data)  	Tau_bcast_data(data)
+#define TAU_REDUCE_DATA(data)  	Tau_reduce_data(data)
+#define TAU_ALLTOALL_DATA(data) Tau_alltoall_data(data) 
+#define TAU_SCATTER_DATA(data)  Tau_scatter_data(data) 
+#define TAU_GATHER_DATA(data)  	Tau_gather_data(data)
 
+extern void Tau_bcast_data(int data);
+extern void Tau_reduce_data(int data);
+extern void Tau_alltoall_data(int data);
+extern void Tau_scatter_data(int data);
+extern void Tau_gather_data(int data);
 
 extern void * Tau_get_profiler(char *fname, char *type, TauGroup_t  group, char *gr_name);
 extern void Tau_start_timer(void *profiler);
@@ -205,6 +215,11 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 #define TAU_ENABLE_GROUP_NAME(group)            
 #define TAU_DISABLE_GROUP_NAME(group)          
 #define TAU_GET_PROFILE_GROUP(group) 
+#define TAU_BCAST_DATA(data)  	
+#define TAU_REDUCE_DATA(data)  
+#define TAU_ALLTOALL_DATA(data)
+#define TAU_SCATTER_DATA(data)
+#define TAU_GATHER_DATA(data)
 
 #define CT(obj)
 
@@ -229,7 +244,7 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2003/07/18 18:49:51 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.24 2003/07/18 18:49:51 sameer Exp $
+ * $Revision: 1.25 $   $Date: 2003/11/12 04:28:35 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.25 2003/11/12 04:28:35 sameer Exp $
  ***************************************************************************/
 
