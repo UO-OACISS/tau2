@@ -38,16 +38,12 @@
 #include "Profile/Profiler.h"
 
 
-#ifdef POOMA_USE_STANDARD_HEADERS
-#include <iostream>
-using namespace std;
-#else
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
+using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
-#endif
 
 #include <stdio.h> 
 #include <fcntl.h>
@@ -589,6 +585,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 1999/06/20 17:34:40 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.9 1999/06/20 17:34:40 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 1999/06/22 22:33:12 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.10 1999/06/22 22:33:12 sameer Exp $ 
  ***************************************************************************/

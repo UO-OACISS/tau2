@@ -34,16 +34,12 @@
 #include "Profile/Profiler.h"
 
 
-#ifdef POOMA_USE_STANDARD_HEADERS
-#include <iostream>
-using namespace std;
-#else
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
+using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
-#endif /* POOMA_USE_STANDARD_HEADERS */
 
 #include <stdio.h> 
 #include <fcntl.h>
@@ -83,7 +79,7 @@ Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
 // Explicit Instantiations for templated entities needed for ASCI Red
 //////////////////////////////////////////////////////////////////////
 
-#ifdef PGI
+#ifdef PGI1.7
 template
 void vector<FunctionInfo *>::insert_aux(vector<FunctionInfo *>::pointer, FunctionInfo *const &);
 // need a few other function templates instantiated
@@ -712,8 +708,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 1999/06/20 17:34:39 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.23 1999/06/20 17:34:39 sameer Exp $ 
+ * $Revision: 1.24 $   $Date: 1999/06/22 22:33:12 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.24 1999/06/22 22:33:12 sameer Exp $ 
  ***************************************************************************/
 
 	

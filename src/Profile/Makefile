@@ -33,17 +33,19 @@ CC  = $(TAU_CC)
 #This includes all profile options in $(PROFILEOPTS).
 
 
+CEXTRA = 
 
 ##############################################
 #SOL2CC#EXTRAOBJS		= Templates.DB/*.o  #ENDIF#
+#############################################
+##############################################
+#PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
 #############################################
 
 
 LINKER	= $(TAU_CC)
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
-
-CEXTRA = 
 
 TAUINC	      = -I$(TAUROOT)/include 
 
@@ -95,6 +97,7 @@ TAU_DISABLE   = libTauDisable$(LSX)
 all:		$(TARGET) $(TAU_DISABLE)  
 
 $(TARGET):	$(OBJS)
+		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TARGET) $(OBJS) $(EXTRAOBJS)
 
 $(TAU_DISABLE): TauDisable.o

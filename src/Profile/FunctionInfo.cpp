@@ -33,16 +33,12 @@
 #include "Profile/Profiler.h"
 
 
-#ifdef POOMA_USE_STANDARD_HEADERS
-#include <iostream>
-using namespace std;
-#else
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
+using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
-#endif
 
 #include <stdio.h> 
 #include <fcntl.h>
@@ -256,6 +252,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 1999/06/20 17:34:38 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.17 1999/06/20 17:34:38 sameer Exp $ 
+ * $Revision: 1.18 $   $Date: 1999/06/22 22:33:11 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.18 1999/06/22 22:33:11 sameer Exp $ 
  ***************************************************************************/
