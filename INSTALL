@@ -233,7 +233,9 @@ The following  command-line options are available to configure:
    
    Allows TAU to track more than one quantity (multiple hardware counters, CPU
    time, wallclock time, etc.) Configure with other options such as -papi=<dir>,
-   -pcl=<dir>, -LINUXTIMERS, -SGITIMERS, -CPUTIME, -PAPIVIRTUAL, etc. 
+   -pcl=<dir>, -LINUXTIMERS, -SGITIMERS, -CPUTIME, -PAPIVIRTUAL, etc. See 
+   examples/multicounters/README file for detailed instructions on setting the
+   environment variables for this option. 
    
 -SGITIMERS
    
