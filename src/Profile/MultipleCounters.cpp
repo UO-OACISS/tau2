@@ -45,7 +45,7 @@ int MultipleCounterLayer::linuxTimerMCL_FP;
 
 #ifdef CRAY_TIMERS
 int MultipleCounterLayer::crayTimersMCL_CP[1];
-int MultipleCounerLayer::crayTimersMCL_FP;
+int MultipleCounterLayer::crayTimersMCL_FP;
 #endif // CRAY_TIMERS
 
 
@@ -146,7 +146,7 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 
 #ifdef CRAY_TIMERS
     MultipleCounterLayer::crayTimersMCL_CP[0] = -1;
-    MultipleCounterLayer::crayTimerrsMCL_FP = -1;
+    MultipleCounterLayer::crayTimersMCL_FP = -1;
 #endif // CRAY_TIMERS
 
 
