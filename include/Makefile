@@ -54,7 +54,7 @@ TAU_PREFIX_INSTALL_DIR=
 
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
-TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA)
+TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(USER_OPT)
 DEFINES =
 INSTALL = /bin/cp
 SHELL = /bin/sh
@@ -116,10 +116,12 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used -DCRAYCC   #ENDIF#
 #SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
 #PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS  	       #ENDIF#
+#TAU_SPROC#PROFILEOPT15 	= -DTAU_SPROC  	       #ENDIF#
 #TULIPTHREADS#PROFILEOPT16 = -DTULIPTHREADS            #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 #TRACE#EVENTS_O                = Tracer.o              #ENDIF#
 #PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o        #ENDIF#
+#TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#
 #JAVA#THR_O       	       = JavaThreadLayer.o     #ENDIF#
 #TULIPTHREADS#THR_O       = TulipThreadLayer.o         #ENDIF#
 #TULIPTHREADS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/Tuliplib   #ENDIF#
@@ -178,7 +180,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 ##############################################
 
 ############# TAU Options ####################
-TAUDEFS 	= $(PROFILEOPTS) $(USER_OPT)
+TAUDEFS 	= $(PROFILEOPTS) 
 
 TAUINC        	= -I$(TAUROOT)/include
 
@@ -207,7 +209,7 @@ TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 # These options could be included in the application Makefile as 
-#CFLAGS        	= $(USER_OPT) $(TAUDEFS) $(TAUINC)
+#CFLAGS        	= $(TAUDEFS) $(TAUINC)
 #
 #LIBS 	      	= $(TAULIBS)
 #
