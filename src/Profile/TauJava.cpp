@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://www.acl.lanl.gov/tau                        **
 *****************************************************************************
-**    Copyright 1997                                                       **
+**    Copyright 1997-2000                                                  **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
@@ -266,10 +266,9 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
 /* EOF : TauJava.cpp */
 
 
-
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2000/03/19 00:18:59 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.13 2000/03/19 00:18:59 sameer Exp $
+ * $Revision: 1.14 $   $Date: 2000/03/19 00:19:51 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.14 2000/03/19 00:19:51 sameer Exp $
  ***************************************************************************/
 
