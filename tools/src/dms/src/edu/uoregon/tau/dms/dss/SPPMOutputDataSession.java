@@ -24,7 +24,7 @@ public class SPPMOutputDataSession extends ParaProfDataSession{
 		this.setMetrics(new Vector());
     }
 
-    public void run(){
+    public void initialize(Object initializeObject){
 		boolean firstFile = true;
 		try{
 	    	v = (Vector) initializeObject;
@@ -112,17 +112,7 @@ public class SPPMOutputDataSession extends ParaProfDataSession{
 		this.generateDerivedData(0);
 		//Remove after testing is complete.
 		//this.setMeanDataAllMetrics(0);	
-			    
-	    	//Need to notify observers that we are done.  Be careful here.
-	    	//It is likely that they will modify swing elements.  Make sure
-	    	//to dump request onto the event dispatch thread to ensure
-	    	//safe update of said swing elements.  Remember, swing is not thread
-	    	//safe for the most part.
-	    	EventQueue.invokeLater(new Runnable(){
-		    	public void run(){
-					SPPMOutputDataSession.this.notifyObservers();
-		    	}
-			});
+
 		} catch(Exception e) {
 	    	UtilFncs.systemError(e, null, "SSD01");
 		}

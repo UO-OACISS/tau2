@@ -38,7 +38,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
     //End - Contructors.
     //######
 
-    public void run(){
+    public void initialize(Object initializeObject){
 	try{
 	    //######
 	    //Frequently used items.
@@ -440,17 +440,6 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    else
 		System.out.println("No callpath data found.");
 	    System.out.println("Done - Processing callpath data!");
-
-	    //Need to notify observers that we are done.  Be careful here.
-	    //It is likely that they will modify swing elements.  Make sure
-	    //to dump request onto the event dispatch thread to ensure
-	    //safe update of said swing elements.  Remember, swing is not thread
-	    //safe for the most part.
-	    EventQueue.invokeLater(new Runnable(){
-		    public void run(){
-			TauPprofOutputSession.this.notifyObservers();
-		    }
-		});
 	}
         catch(Exception e){
 	    UtilFncs.systemError(new ParaProfError(this.toString()+": run()", null,

@@ -41,7 +41,7 @@ public class TauOutputSession extends ParaProfDataSession{
     //End - Contructors.
     //######
 
-    public void run(){
+    public void initialize(Object initializeObject){
 	try{
 	    //Record time.
 	    long time = System.currentTimeMillis();
@@ -438,19 +438,6 @@ public class TauOutputSession extends ParaProfDataSession{
 		this.outputDebugMessage("Done processing data!"+"\nTime to process (in milliseconds): "+time);
 	    this.flushDebugFileBuffer();
 	    this.closeDebugFile();
-
-	    //Need to notify observers that we are done.  Be careful here.
-	    //It is likely that they will modify swing elements.  Make sure
-	    //to dump request onto the event dispatch thread to ensure
-	    //safe update of said swing elements.  Remember, swing is not thread
-	    //safe for the most part.
-
-
-	    EventQueue.invokeLater(new Runnable(){
-		    public void run(){
-			TauOutputSession.this.notifyObservers();
-		    }
-		});
 	}
         catch(Exception e){
 	    UtilFncs.systemError(new ParaProfError(this.toString()+": run()", null,

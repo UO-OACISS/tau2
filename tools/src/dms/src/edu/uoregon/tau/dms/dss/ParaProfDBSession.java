@@ -28,7 +28,7 @@ public class ParaProfDBSession extends ParaProfDataSession {
 	this.setMetrics(new Vector());
     }
 
-    public void run() {
+    public void initialize(Object initializeObject){
 	try {
 	    //######
 	    //Frequently used items.
@@ -281,17 +281,6 @@ public class ParaProfDBSession extends ParaProfDataSession {
 	    time = (System.currentTimeMillis()) - time;
 	    System.out.println("Done processing data file!");
 	    System.out.println("Time to process file (in milliseconds): " + time);
-	    
-	    //Need to notify observers that we are done.  Be careful here.
-	    //It is likely that they will modify swing elements.  Make sure
-	    //to dump request onto the event dispatch thread to ensure
-	    //safe update of said swing elements.  Remember, swing is not thread
-	    //safe for the most part.
-	    EventQueue.invokeLater(new Runnable(){
-		    public void run(){
-			ParaProfDBSession.this.notifyObservers();
-		    }
-		});
 	}
         catch (Exception e) {
 	    e.printStackTrace();

@@ -9,7 +9,7 @@ package edu.uoregon.tau.dms.dss;
 import java.util.*;
 import java.io.*;
 
-public abstract class ParaProfDataSession  extends DataSession implements Runnable{
+public abstract class ParaProfDataSession  extends DataSession{
     public ParaProfDataSession() {
 	super();
 	this.setGlobalMapping(new GlobalMapping());
@@ -26,17 +26,6 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     //####################################
     //Public Section.
     //####################################
-
-    /**
-     * Initialize the DataSession object.
-     *
-     * @param	obj	an implementation-specific object required to initialize the DataSession
-     */
-    public void initialize(Object obj){
-	initializeObject = obj;
-	java.lang.Thread thread = new java.lang.Thread(this);
-	thread.start();
-    }
 
     /**
      * Terminate the DataSession object.
@@ -710,31 +699,6 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     //End - Set mean values functions.
     //######
 
-    //######
-    //Methods that manage the ParaProfObservers.
-    //######
-    public void addObserver(ParaProfObserver observer){
-	observers.add(observer);}
-
-    public void removeObserver(ParaProfObserver observer){
-	observers.remove(observer);}
-
-    public void notifyObservers(){
-	if(this.debug()){
-	    System.out.println("######");
-	    System.out.println("ParaProfDataSession.notifyObservers()");
-	    System.out.println("Listening classes ...");
-	    for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
-		System.out.println(e.nextElement().getClass());
-	    System.out.println("######");
-	}
-	for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
-	    ((ParaProfObserver) e.nextElement()).update(this);
-    }
-    //######
-    //End - Methods that manage the ParaProfObservers.
-    //######
-
     //####################################
     //End - Public Section.
     //####################################
@@ -825,7 +789,6 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     //Initialized in this.setDebug(...).
     private PrintWriter out = null;
     
-    private Vector observers = new Vector();
     //######
     //End - Private Section.
     //######
