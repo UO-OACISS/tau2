@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.11 2004/04/02 23:28:17 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.12 2004/04/05 16:54:36 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -584,8 +584,6 @@ public class PerfDBSession extends DataSession {
 					buf.append(groupNames[groupIDs[i]]);
 				}
 				function.setGroup(buf.toString());
-				// debugging...
-				System.out.println("Added function: " + function.getName());
 				// put the function in the vector
 				functions.add(function);
 
@@ -620,7 +618,7 @@ public class PerfDBSession extends DataSession {
 				// create a user event
 				UserEvent userEvent = new UserEvent();
 				userEvent.setName(element.getMappingName());
-				// userEvent.setTrialID(newTrialID);
+				userEvent.setUserEventID(element.getMappingID());
 				// build the group name
 				int[] groupIDs = element.getGroups();
 				StringBuffer buf = new StringBuffer();
@@ -629,8 +627,6 @@ public class PerfDBSession extends DataSession {
 					buf.append(groupNames[groupIDs[i]]);
 				}
 				userEvent.setGroup(buf.toString());
-				// debugging...
-				System.out.println("Added user event: " + userEvent.getName());
 				// put the userEvent in the vector
 				userEvents.add(userEvent);
 	    	}
