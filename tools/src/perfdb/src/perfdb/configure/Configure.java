@@ -54,7 +54,7 @@ public class Configure {
 			System.out.println(PDBHomePrompt);
 			// todo - the default is pwd/..
 			String tmpString = reader.readLine();
-			if (tmpString.length() > 0) perfdb_home = reader.readLine();
+			if (tmpString.length() > 0) perfdb_home = tmpString;
 
 			// Check to see if the configuration file exists
 			configFileName = perfdb_home + "/bin/perfdb.cfg";
