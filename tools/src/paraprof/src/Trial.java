@@ -230,17 +230,16 @@ public class Trial extends Thread{
 	    BufferedReader br = new BufferedReader(inReader);
       
 	    String inputString = null;
+	    String s1 = null;
+	    String s2 = null;
 	    //Some useful strings.
 	    //String inputString;
 	    String tokenString;
 	    String mappingNameString = null;
 	    String groupNamesString = null;
-	    String userEventNameString = null;
-      
 	    StringTokenizer genericTokenizer;
       
 	    int mappingID = -1;
-	    int userEventID = -1;
 	    double value = -1;
 	    double percentValue = -1;
 	    int node = -1;
@@ -546,13 +545,7 @@ public class Trial extends Thread{
 				    currentGlobalThread = new GlobalThread();
 				    totalNumberOfThreads++;
 				    //Add the correct number of global thread data elements.
-				    for(i=0;i<numberOfMappings;i++){
-					GlobalThreadDataElement tmpRef = null;
-					
-					//Add it to the currentGlobalThreadObject.
-					currentGlobalThread.addThreadDataElement(tmpRef);
-				    }
-				    
+				    currentGlobalThread.initializeThreadDataList(numberOfMappings);
 				    //Update the thread number.
 				    lastThread = thread;
 				    
@@ -612,13 +605,7 @@ public class Trial extends Thread{
 				    currentGlobalThread = new GlobalThread();
 				    totalNumberOfThreads++;
 				    //Add the correct number of global thread data elements.
-				    for(i=0;i<numberOfMappings;i++){
-					GlobalThreadDataElement tmpRef = null;
-					
-					//Add it to the currentGlobalThreadObject.
-					currentGlobalThread.addThreadDataElement(tmpRef);
-				    }
-				    
+				    currentGlobalThread.initializeThreadDataList(numberOfMappings);
 				    //Update the thread number.
 				    lastThread = thread;
 				    
@@ -626,8 +613,7 @@ public class Trial extends Thread{
 				    Vector tmpVector = currentGlobalThread.getThreadDataList();
 				    GlobalThreadDataElement tmpGTDE = null;
 				    tmpGTDE = (GlobalThreadDataElement) tmpVector.elementAt(mappingID);
-				    
-				    
+				    				    
 				    if(tmpGTDE == null){
 					tmpGTDE = new GlobalThreadDataElement(this, false);
 					tmpGTDE.setMappingID(mappingID);
@@ -745,7 +731,7 @@ public class Trial extends Thread{
 			inputString = br.readLine();
 			setNumberOfCSU(inputString, tmpGlobalMappingElement, tmpGT, tmpGTDE);
 		    }
-		    else if(checkForUserEvents(inputString)){
+		    else if(noue(inputString)){
 			//Just ignore the string if this is not the first check.
 			//Assuming is that user events do not change for each counter value.
 			if(firstRun){
@@ -775,7 +761,10 @@ public class Trial extends Thread{
 			    
 			    //Now that we know how many user events to expect, we can grab that number of lines.
 			    for(int j=0; j<numberOfUserEvents; j++){
-				inputString = br.readLine();
+
+				s1 = br.readLine();
+				s2 = br.readLine();
+				UserEventData ued = getData(s1,s2, userEventsPresent);
 				
 				//Initialize the user list for this thread.
 				if(j == 0){
@@ -783,63 +772,51 @@ public class Trial extends Thread{
 				    //ALL the user events for each THREAD NODE are processed in the above for-loop.  Therefore,
 				    //the below for-loop is only run once on each THREAD NODE.
 				    
-				    //Get the node,context,thread.
-				    node = getNCT(0,inputString, true);
-				    context = getNCT(1,inputString, true);
-				    thread = getNCT(2,inputString, true);
-				    
 				    //Find the correct global thread data element.
-				    tmpGSUE = (GlobalServer) StaticServerList.elementAt(node);
+				    tmpGSUE = (GlobalServer) StaticServerList.elementAt(ued.node);
 				    tmpGlobalContextListUE = tmpGSUE.getContextList();
-				    tmpGCUE = (GlobalContext) tmpGlobalContextListUE.elementAt(context);
+				    tmpGCUE = (GlobalContext) tmpGlobalContextListUE.elementAt(ued.context);
 				    tmpGlobalThreadListUE = tmpGCUE.getThreadList();
-				    tmpGT = (GlobalThread) tmpGlobalThreadListUE.elementAt(thread);
+				    tmpGT = (GlobalThread) tmpGlobalThreadListUE.elementAt(ued.thread);
 				    
 				    
 				    if(firstRun){
-					for(int k=0; k<numberOfUserEvents; k++){
-					    tmpGT.addUserThreadDataElement(new GlobalThreadDataElement(this, true));
-					}
+					tmpGT.initializeUserThreadDataList(numberOfUserEvents);
 				    }
 				    
 				    tmpGlobalThreadDataElementListUE = tmpGT.getUserThreadDataList();
 				}
-				//Grab the mapping ID.
-				userEventID = getUserEventID(inputString);
 				//Only need to set the name in the global mapping once.
 				if(!(userEventsPresent())){
-				    //Grab the mapping name.
-				    userEventNameString = getUserEventName(inputString);
-				    if(!(globalMapping.setMappingNameAt(userEventNameString, userEventID, 2)))
+				    if(!(globalMapping.setMappingNameAt(ued.name, ued.id, 2)))
 					System.out.println("There was an error adding mapping to the global mapping");
 				}
-				int userEventNumberValue = getUENValue(inputString);
-				double userEventMinValue = getUEMinValue(inputString);
-				double userEventMaxValue = getUEMaxValue(inputString);
-				double userEventMeanValue = getUEMeanValue(inputString);
-				//Update the max values if required.
-				//Grab the correct global mapping element.
-				tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(userEventID, 2);
-				if((tmpGlobalMappingElement.getMaxUserEventNumberValue()) < userEventNumberValue)
-				    tmpGlobalMappingElement.setMaxUserEventNumberValue(userEventNumberValue);
-				if((tmpGlobalMappingElement.getMaxUserEventMinValue()) < userEventMinValue)
-				    tmpGlobalMappingElement.setMaxUserEventMinValue(userEventMinValue);
-				if((tmpGlobalMappingElement.getMaxUserEventMaxValue()) < userEventMaxValue)
-				    tmpGlobalMappingElement.setMaxUserEventMaxValue(userEventMaxValue);
-				if((tmpGlobalMappingElement.getMaxUserEventMeanValue()) < userEventMeanValue)
-				    tmpGlobalMappingElement.setMaxUserEventMeanValue(userEventMeanValue);
-				
-				GlobalThreadDataElement tmpGTDEUE = (GlobalThreadDataElement) tmpGlobalThreadDataElementListUE.elementAt(userEventID);
-				//Ok, now set the instance data elements.
-				tmpGTDEUE.setUserEventID(userEventID);
-				tmpGTDEUE.setUserEventNumberValue(userEventNumberValue);
-				tmpGTDEUE.setUserEventMinValue(userEventMinValue);
-				tmpGTDEUE.setUserEventMaxValue(userEventMaxValue);
-				tmpGTDEUE.setUserEventMeanValue(userEventMeanValue);
-				//Ok, now get the next string as that is the stat string for this event.
-				inputString = br.readLine();
+				if(ued.noc != 0){
+				    //Update the max values if required.
+				    //Grab the correct global mapping element.
+				    tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(ued.id, 2);
+				    if((tmpGlobalMappingElement.getMaxUserEventNumberValue()) < ued.noc)
+					tmpGlobalMappingElement.setMaxUserEventNumberValue(ued.noc);
+				    if((tmpGlobalMappingElement.getMaxUserEventMinValue()) < ued.min)
+					tmpGlobalMappingElement.setMaxUserEventMinValue(ued.min);
+				    if((tmpGlobalMappingElement.getMaxUserEventMaxValue()) < ued.max)
+					tmpGlobalMappingElement.setMaxUserEventMaxValue(ued.max);
+				    if((tmpGlobalMappingElement.getMaxUserEventMeanValue()) < ued.mean)
+					tmpGlobalMappingElement.setMaxUserEventMeanValue(ued.mean);
+				    
+				    GlobalThreadDataElement tmpGTDEUE = 
+					(GlobalThreadDataElement) tmpGlobalThreadDataElementListUE.elementAt(ued.id);
+				    //tmpGTHEUE should be null (since we have only just initialized
+				    //for this thread.
+				    tmpGTDEUE = new GlobalThreadDataElement(this, true);
+				    //Ok, now set the instance data elements.
+				    tmpGTDEUE.setUserEventID(ued.id);
+				    tmpGTDEUE.setUserEventNumberValue(ued.noc);
+				    tmpGTDEUE.setUserEventMinValue(ued.min);
+				    tmpGTDEUE.setUserEventMaxValue(ued.max);
+				    tmpGTDEUE.setUserEventMeanValue(ued.mean);
+				}
 			    }
-			    
 			    //Now set the userEvents flag.
 			    setUserEventsPresent(true);
 			}
@@ -875,6 +852,120 @@ public class Trial extends Thread{
     //******************************
     //Helper functions for buildStatic data.
     //******************************
+
+    public boolean noue(String s){
+	int stringPosition = 0;
+	char tmpChar = s.charAt(stringPosition);
+	while(tmpChar!='\u0020'){
+	    stringPosition++;
+	    tmpChar = s.charAt(stringPosition);
+	}
+	stringPosition++;
+	tmpChar = s.charAt(stringPosition);
+	if(tmpChar=='u')
+	    return true;
+	else
+	    return false;
+    }
+
+    public UserEventData getData(String s1, String s2, boolean doneNames){
+	UserEventData ued = new UserEventData();
+	try{
+	    char[] tmpArray = s1.toCharArray();
+	    char[] result = new char[tmpArray.length];
+
+	    char lastCharCheck = ',';
+	    int stringPosition = 10;
+	    
+	    int start = 0;
+	    int end = 9;
+	    int resultPosition = 0;
+
+	    for(int i=start;i<9;i++){
+		if(i==2)
+		    lastCharCheck = '\u0020';
+		else if(i==4){
+		    //Want to skip processing the name if we
+		    //do not need it.
+		    if(doneNames){
+			stringPosition++;
+			lastCharCheck = '"';
+			while(tmpArray[stringPosition]!=lastCharCheck){
+			    stringPosition++;
+			}
+			stringPosition++;
+
+			//Set things to look as if we are in i=5 iteration.
+			i=5;
+			lastCharCheck = '\u0020';
+			stringPosition++;
+		    }
+		    else{
+			lastCharCheck = '"';
+			stringPosition++;
+		    }
+		}
+		else if(i==5){
+		    lastCharCheck = '\u0020';
+		    stringPosition++;
+		}
+		while(tmpArray[stringPosition]!=lastCharCheck){
+		    result[resultPosition]=tmpArray[stringPosition];
+		    stringPosition++;
+		    resultPosition++;
+		}
+		
+		switch(i){
+		case 0:
+		    ued.node = Integer.parseInt(new String(result,0,resultPosition));
+		    break;
+		case 1:
+		    ued.context = Integer.parseInt(new String(result,0,resultPosition));
+		    break;
+		case 2:
+		    ued.thread = Integer.parseInt(new String(result,0,resultPosition));
+		    break;
+		case 3:
+		    ued.id = Integer.parseInt(new String(result,0,resultPosition));
+		    break;
+		case 4:
+		    if(!userEventsPresent)
+			ued.name = new String(result,0,resultPosition);  
+		    break;
+		case 5:
+		    ued.noc = (int) Double.parseDouble(new String(result,0,resultPosition));
+		    break;
+		case 6:
+		    ued.max = Double.parseDouble(new String(result,0,resultPosition));
+		    break;
+		case 7:
+		    ued.min = Double.parseDouble(new String(result,0,resultPosition));
+		    break;
+		case 8:
+		    ued.mean = Double.parseDouble(new String(result,0,resultPosition));
+		    break;
+		default:
+		    throw new UnexpectedStateException(String.valueOf(i));
+		}
+		resultPosition=0;
+		stringPosition++;
+	    }
+	    //One more item to pick up if userevent string.
+	    int length = tmpArray.length;
+	    while(stringPosition < length){
+		result[resultPosition]=tmpArray[stringPosition];
+		stringPosition++;
+		resultPosition++;
+	    }
+	    ued.std = Double.parseDouble(new String(result,0,resultPosition));
+	}
+	catch(Exception e){
+	    System.out.println("An error occured!");
+	    e.printStackTrace();
+	}
+	return ued;
+    }
+
     String getMappingName(String inString)
     {
 	try{
@@ -1159,34 +1250,6 @@ public class Trial extends Thread{
 	return -1;
     }
   
-    boolean checkForUserEvents(String inString){
-	try{
-	    String tmpString;
-      
-	    StringTokenizer checkForUserEventsTokenizer = new StringTokenizer(inString, " \t\n\r");
-      
-	    //Looking for the second token ... no danger of conflict here.
-      
-	    //Grab the first token.
-	    tmpString = checkForUserEventsTokenizer.nextToken();
-      
-	    //Grab the second token.
-	    tmpString = checkForUserEventsTokenizer.nextToken();
-      
-	    //No do the check.
-	    if(tmpString.equals("userevents"))
-		return true;
-	    else
-		return false;
-	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD15");
-	    }
-    
-	return false;
-    }
-  
     int getNumberOfUserEvents(String inString){
 	try{
 	    StringTokenizer getNumberOfUserEventsTokenizer = new StringTokenizer(inString, " \t\n\r");
@@ -1205,162 +1268,6 @@ public class Trial extends Thread{
 	    }
     
 	return -1;
-    }
-                    
-    String getUserEventName(String inString){
-	try{
-	    String tmpString;
-      
-	    StringTokenizer getUserEventNameTokenizer = new StringTokenizer(inString, "\"");
-      
-	    //Since we know that the user event name is the only one in the quotes, just ignore the
-	    //first token, and then grab the next.
-      
-	    //Grab the first token.
-	    tmpString = getUserEventNameTokenizer.nextToken();
-      
-	    //Grab the second token.
-	    tmpString = getUserEventNameTokenizer.nextToken();
-      
-	    //Now return the second string.
-	    return tmpString;
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD17");
-	}
-    	return null;
-    }
-  
-    int getUserEventID(String inString)
-    {
-	try{
-	    String tmpString;
-      
-	    StringTokenizer getUserEventIDTokenizer = new StringTokenizer(inString, " \t\n\r");
-      
-	    //The mapping id will be the third token on its line.
-      
-	    //Grab the first token.
-	    tmpString = getUserEventIDTokenizer.nextToken();
-      
-	    //Grab the second token.
-	    tmpString = getUserEventIDTokenizer.nextToken();
-      
-	    //Grab the second token.
-	    tmpString = getUserEventIDTokenizer.nextToken();
-      
-	    return Integer.parseInt(tmpString);
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD18");
-	}
-    	return -1;
-    }
-  
-    int getUENValue(String inString){
-	try{
-	    String tmpString;
-      
-	    //First strip away the portion of the string not needed.
-	    StringTokenizer uEQuotesTokenizer = new StringTokenizer(inString,"\"");
-      
-	    //Grab the third token.
-	    tmpString = uEQuotesTokenizer.nextToken();
-	    tmpString = uEQuotesTokenizer.nextToken();
-	    tmpString = uEQuotesTokenizer.nextToken();
-      
-	    //Ok, now concentrate on the third token.  The token in question should be the first.
-	    StringTokenizer uETokenizer = new StringTokenizer(tmpString, " \t\n\r");
-	    tmpString = uETokenizer.nextToken();
-      
-	    //Now return the value obtained.
-	    return (int) Double.parseDouble(tmpString);
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD19");
-	}
-    	return -1;
-    }
-  
-    double getUEMinValue(String inString){
-	try{
-	    String tmpString;
-      
-	    //First strip away the portion of the string not needed.
-	    StringTokenizer uEQuotesTokenizer = new StringTokenizer(inString,"\"");
-      
-	    //Grab the third token.
-	    tmpString = uEQuotesTokenizer.nextToken();
-	    tmpString = uEQuotesTokenizer.nextToken();
-	    tmpString = uEQuotesTokenizer.nextToken();
-      
-	    //Ok, now concentrate on the third token.  The token in question should be the third.
-	    StringTokenizer uETokenizer = new StringTokenizer(tmpString, " \t\n\r");
-	    tmpString = uETokenizer.nextToken();
-	    tmpString = uETokenizer.nextToken();
-	    tmpString = uETokenizer.nextToken();
-      
-	    //Now return the value obtained.
-	    return Double.parseDouble(tmpString);
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD20");
-	}
-	return -1;
-    }
-  
-    double getUEMaxValue(String inString){
-	try{
-	    String tmpString;
-      
-	    //First strip away the portion of the string not needed.
-	    StringTokenizer uEQuotesTokenizer = new StringTokenizer(inString,"\"");
-      
-	    //Grab the third token.
-	    tmpString = uEQuotesTokenizer.nextToken();
-	    tmpString = uEQuotesTokenizer.nextToken();
-	    tmpString = uEQuotesTokenizer.nextToken();
-      
-	    //Ok, now concentrate on the third token.  The token in question should be the second.
-	    StringTokenizer uETokenizer = new StringTokenizer(tmpString, " \t\n\r");
-	    tmpString = uETokenizer.nextToken();
-	    tmpString = uETokenizer.nextToken();
-      
-	    //Now return the value obtained.
-	    return Double.parseDouble(tmpString);
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD21");
-	}
-    	return -1;
-    }
-  
-    double getUEMeanValue(String inString){
-	try{
-	    String tmpString;
-      
-	    //First strip away the portion of the string not needed.
-	    StringTokenizer uEQuotesTokenizer = new StringTokenizer(inString,"\"");
-      
-	    //Grab the third token.
-	    tmpString = uEQuotesTokenizer.nextToken();
-	    tmpString = uEQuotesTokenizer.nextToken();
-	    tmpString = uEQuotesTokenizer.nextToken();
-      
-	    //Ok, now concentrate on the third token.  The token in question should be the forth.
-	    StringTokenizer uETokenizer = new StringTokenizer(tmpString, " \t\n\r");
-	    tmpString = uETokenizer.nextToken();
-	    tmpString = uETokenizer.nextToken();
-	    tmpString = uETokenizer.nextToken();
-	    tmpString = uETokenizer.nextToken();
-      
-	    //Now return the value obtained.
-	    return Double.parseDouble(tmpString);
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD22");
-	}
-    	return -1;
     }
   
     public int getNCT(int selector, String inString, boolean UEvent){
@@ -1925,7 +1832,9 @@ public class Trial extends Thread{
     boolean groupNamesPresent = false;
     boolean userEventsPresent = false;
     int bSDCounter;
-  
+    private int uENamesSet = 0;
+    StringBuffer tmpBuffer = new StringBuffer();
+
     private int numberOfMappings = -1;
     private int numberOfUserEvents = -1;
     private int totalNumberOfThreads = 0; 
@@ -1949,6 +1858,23 @@ public class Trial extends Thread{
 
 }
 
+class UserEventData{
+    public int node = -1;
+    public int context = -1;
+    public int thread = -1;
+    public int id = -1;
+    public String name = null;
+    public int noc = -1;
+    public double max = -1.0;
+    public double min = -1.0;
+    public double mean = -1.0;
+    public double std = -1.0;
+}
 
-
+class UnexpectedStateException extends Exception{
+    public UnexpectedStateException(){}
+    public UnexpectedStateException(String err){
+	super("UnexpectedStateException - message: " + err);
+    }
+}
 
