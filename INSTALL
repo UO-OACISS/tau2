@@ -54,6 +54,8 @@ using a different set of options each time. Commonly used configurations are
 typically installed using the 'installtau' tool described below.
 
 % ./configure -help 
+TAU Configuration Utility 
+***********************************************************************
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
 -c++=<compiler>  ............................ specify the C++ compiler.
@@ -80,6 +82,7 @@ Usage: configure [OPTIONS]
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
 -jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+).
 -dyninst=<dir> ................... Specify location of DynInst Package.
+-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
 -mpi .......................... Specify use of TAU MPI wrapper library.
 -mpiinc=<dir> ............. Specify location of MPI include dir and use
                            the TAU MPI Profiling and Tracing Interface.
@@ -101,6 +104,7 @@ Usage: configure [OPTIONS]
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
 -PROFILESTATS .................. Enable standard deviation calculation.
+-PROFILEMEMORY .. Track heap memory utilization at each function entry.
 -MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
 -COMPENSATE ........ Compensate for profiling measurement perturbation.
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
@@ -261,6 +265,13 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    binary runtime instrumentation (instead of manual instrumentation) or
    prior to execution by rewriting it. 
    [ Ref: http://www.cs.umd.edu/projects/dyninstAPI/ ]
+
+-vtf=<directory>
+   Specifies the location of the VTF3 trace generation package. TAU's binary
+   traces can be converted to the VTF3 format using tau2vtf, a tool that links
+   with the VTF3 library. The VTF3 format is read by Intel trace analyzer, 
+   formerly known as vampir, a commercial trace visualization tool developed
+   by TU. Dresden, Germany. 
 
 -mpiinc=<dir>
    
@@ -577,18 +588,19 @@ Usage: installtau [OPTIONS]
    % make clean; make
    Before you do this, please ensure that javac (1.2+) is in your path. 
 
-5. Performance Database: PerfDB
+5. Performance Database: PerfDMF
 
-   PerfDB is a tool related to the TAU framework.  The PerfDB database is
-   designed to store and provide access to TAU profile data.  A number of
-   utility programs have been written in Java to load the data into PerfDB
-   and to query the data.  With PerfDB, users can perform performance analyses 
-   such as regression analysis, scalability analysis across multiple trials, 
-   and so on.  An unlimited number of comparative analyses are available
-   through the PerfDB toolkit.  Work is being done to provide the user
-   with standard analysis tools, and an API has been developed to access the
-   data with standard Java classes. For further information, please refer to 
-   tools/src/perfdb/doc/README file for installation and usage instructions. 
+   Performance Data Management Framework (PerfDMF) is a tool related to the 
+   TAU framework.  The PerfDMF database is designed to store and provide 
+   access to TAU profile data.  A number of utility programs have been written 
+   in Java to load the data into PerfDMF and to query the data.  With PerfDMF, 
+   users can perform performance analyses such as regression analysis, 
+   scalability analysis across multiple trials, and so on.  An unlimited 
+   number of comparative analyses are available through the PerfDMF toolkit.  
+   Work is being done to provide the user with standard analysis tools, and 
+   an API has been developed to access the data with standard Java classes. 
+   For further information, please refer to tools/src/dms/doc/README.perfdmf
+   file for installation and usage instructions. 
 
 
 6. TAU System Requirements :

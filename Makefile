@@ -66,7 +66,7 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 
 
 # Subdirectories to make resursively
-SUBDIR  = $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(TRACEINPUT)
+SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) 
 
 all:
 	@echo "At the installation root, use \"make install\" "

@@ -269,6 +269,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #FOR F90 MPI on SGI
 #SGIMP#FWRAPPER	       = TauFMpi.o       #ENDIF#
 #SP1#FWRAPPER	       = TauFMpi.o       #ENDIF#
+#MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
 #PGI_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
 #INTEL_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
 #INTEL32_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#

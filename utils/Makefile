@@ -20,6 +20,7 @@ PDT_CXX=
 PCXX_OPT=-g
 USER_OPT=-g
 TAU_PREFIX_INSTALL_DIR=
+VTFDIR=
 PDTDIR=
 DYNINSTDIR=
 #######################################################################
@@ -71,6 +72,8 @@ CWARNING	= $(WARNINGSOPT)
 #PDT#PDTOPTS 	= -L$(PDTDIR)/$(PDTARCHDIR)/lib -lpdb #ENDIF#
 #PDT#INSTR 		= tau_instrumentor #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
+#VTF#TAU2VTF 	= tau2vtf #ENDIF#
+#VTF#INSTALLTAU2VTF 	= $(INSTALLDEST)/tau2vtf #ENDIF#
 #DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h -I$(DYNINSTDIR)/core #ENDIF#
 #DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -liberty -lelf #ENDIF#
 #SP1#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI #ENDIF#
@@ -103,7 +106,7 @@ INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
 #PDT#INSTALLINSTR 	= $(INSTALLDEST)/tau_instrumentor #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 
-CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT)
+CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) 
 
 HDRS	      =
 
@@ -125,7 +128,7 @@ SRCS	      = pcxx_merge.c \
 		pcxx_convert.c
 
 EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
-		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN)
+		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN) $(TAU2VTF)
 
 all:		$(EXECUTABLES)
 
@@ -144,6 +147,9 @@ pcxx2ar : pcxx2ar.c $(EVHEADER)
 
 tau_convert: 	tau_convert.c 
 		$(CXX) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRA)
+
+tau2vtf: 	tau2vtf.cpp
+		$(CXX) $(CFLAGS)  tau2vtf.cpp -o tau2vtf -lm $(LEXTRA) -L$(VTFDIR) -I$(VTFDIR) -lvtf3 $(TAU_TRACE_INPUT_LIB)
 
 tau_merge: 	tau_merge.o tau_events.o
 		$(CXX) $(CFLAGS)  tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
@@ -247,6 +253,12 @@ $(INSTALLDEST)/tau_run: tau_run
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 
+$(INSTALLDEST)/tau2vtf: tau2vtf
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+
 #$(INSTALLDEST)/$(RUNTIME1): $(RUNTIME1)
 #		@echo Installing $? in $(INSTALLDEST)
 #		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -281,7 +293,7 @@ $(INSTALLDEST)/tau_run: tau_run
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF)
 
 program:        $(PROGRAM)
 

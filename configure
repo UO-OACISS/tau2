@@ -746,6 +746,7 @@ do
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+)."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
+    echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
     echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
@@ -1585,40 +1586,7 @@ esac
 
 
 ######################################################################
-# Set MPI options
-if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ]
-then
-  #echo "MPI is specified"
-  mpi=yes
-  fixmakeargs="$fixmakeargs MPI"
-  tauoptions="${tauoptions}-mpi"
-  cat <<EOF > mpi_thread_test.C
-  #include <mpi.h>
-
-  int main(int argc, char **argv)
-  {
-    int ret, req, provided;
-    ret = MPI_Init_thread(&argc, &argv, req, &provided);
-    return ret;
-  }
-EOF
-  if [ "x$mpiinc" != "x" ]
-  then
-    # echo "mpiinc is specified"
-    mpi_include=-I$mpiinc
-  fi
-     
-
-  if $cxx_compiler $orig_useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
-  then
-    echo "Thread-safe MPI interface is defined... "
-    fixmakeargs="$fixmakeargs MPI_THREADED"
-  fi
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o
-else
-  fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
-fi
-
+# Set MPI options. First set the include dir if it is not specified
 if [ $mpi = yes -a $machine = ibm64 ]
 then
   ibmxlc_r=yes
@@ -1650,6 +1618,59 @@ then
 	;;
   esac
 fi
+
+# Next, check the properties of the MPI implementation.
+if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ]
+then
+  #echo "MPI is specified"
+  mpi=yes
+  fixmakeargs="$fixmakeargs MPI"
+  tauoptions="${tauoptions}-mpi"
+  cat <<EOF > mpi_thread_test.C
+  #include <mpi.h>
+
+  int main(int argc, char **argv)
+  {
+    int ret, req, provided;
+    ret = MPI_Init_thread(&argc, &argv, req, &provided);
+    return ret;
+  }
+EOF
+  if [ "x$mpiinc" != "x" ]
+  then
+    # echo "mpiinc is specified"
+    mpi_include=-I$mpiinc
+  fi
+     
+  cat <<EOF > mpi2.C
+  #include <mpi.h>
+
+  int foo(MPI_Win win)
+  {
+    int ret;
+    ret = MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
+    return ret;
+  }
+EOF
+
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
+  then
+    echo "Thread-safe MPI interface is defined... "
+    fixmakeargs="$fixmakeargs MPI_THREADED"
+  fi
+
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2.C  1> /dev/null 2>&1
+  then
+    echo "MPI-2 Interface is defined..."
+    fixmakeargs="$fixmakeargs MPI2"
+    mpi2=yes
+  fi
+  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o
+else
+  fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
+fi
+
+
   
 
 if [ "x$mpiinc" != "x" ]
