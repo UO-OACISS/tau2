@@ -11,14 +11,16 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
+include ../include/Makefile
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=/research/paraducks/apps/pdt/dev/tau2
-PDTDIR=/home/pdt
+TAU_PREFIX_INSTALL_DIR=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+PDTDIR=
+DYNINSTDIR=
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
@@ -56,6 +58,10 @@ WARNINGSOPT	= -w
 CWARNING	= $(WARNINGSOPT)
 #PDT#PDTOPTS 	= -I$(PDTDIR)/include -L$(PDTDIR)/$(CONFIG_ARCH)/lib -lpdb #ENDIF#
 #PDT#INSTR 		= tau_instrumentor #ENDIF#
+#DYNINST#TAURUN 	= tau_run #ENDIF#
+#DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h #ENDIF#
+#DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -lpdutil -liberty -lelf #ENDIF#
+# -lelf is for Solaris only
 
 
 
@@ -70,6 +76,7 @@ SAGE1LIBS = $(SAGE1DIR)/lib/$(CONFIG_ARCH)
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
 #PDT#INSTALLINSTR 	= $(INSTALLDEST)/tau_instrumentor #ENDIF#
+#DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 
 CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC)
 
@@ -92,7 +99,7 @@ SRCS	      = pcxx_merge.c \
 		pcxx_convert.c
 
 EXECUTABLES =	pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
-		$(RUNTIME4) $(RUNTIME5) $(INSTR)
+		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN)
 
 all:		$(EXECUTABLES)
 
@@ -123,6 +130,9 @@ tau_events.o: 	tau_events.cpp
 
 tau_instrumentor: 	tau_instrumentor.cpp  $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a 
 		$(CXX) $(CFLAGS) tau_instrumentor.cpp -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+
+tau_run: 	tau_run.cpp  
+		$(CXX) $(CFLAGS) $(DYNINC) tau_run.cpp -o $@ $(DYNLIBS) $(LEXTRA) 
 
 $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a:
 		@echo 
@@ -168,6 +178,13 @@ $(INSTALLDEST)/tau_instrumentor: tau_instrumentor
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
+
+$(INSTALLDEST)/tau_run: tau_run
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(INSTALL) $? $(INSTALLDEST)
+
 #$(INSTALLDEST)/$(RUNTIME1): $(RUNTIME1)
 #		@echo Installing $? in $(INSTALLDEST)
 #		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -202,7 +219,7 @@ $(INSTALLDEST)/tau_instrumentor: tau_instrumentor
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN)
 
 program:        $(PROGRAM)
 

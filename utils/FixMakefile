@@ -97,6 +97,11 @@ fi
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
 	;;
 
+     dyninstdir=*)
+        dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
+	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
+	;;
+
      jdkdir=*)
         jdkdir=`echo $1 | sed -e 's/^jdkdir=//'`
 	echo "s,^JDKDIR=.*$,JDKDIR=$jdkdir,g" >> $sedout
@@ -448,6 +453,10 @@ fi
 	;;
      PDT)
 	echo "NOTE: Using PDT for TAU Source Code Instrumentation ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST)
+	echo "NOTE: Using DYNINST for TAU Runtime Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      JAVA)
