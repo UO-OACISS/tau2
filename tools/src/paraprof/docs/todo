@@ -68,7 +68,7 @@ well with ParaProfTrial or not?
 ------
 # Report 07
 # Date: 19th March 2004
-# Status: (outstanding)
+# Status: (completed - Robert Bell (10th August 2004))
 # Reporter: Sameer Shende (University of Oregon).
 When ParaProf reads raw data output from tau, if it encounters duplicate names then
 treat it as additional data, and add to the name data rather then overwrite as is
