@@ -70,7 +70,7 @@ public class ParaProfError{
 	"@@@ Please email us at: tau-bugs@cs.uoregon.edu\n"+
 	"@@@ If possible, include the profile files that caused this error,\n"+
 	"@@@ and a brief desciption your sequence of operation.\n"+
-	"@@@ Also email this error message,as it will tell us where the error occured.\n"+
+	"@@@ Also email this error message,as it will tell us where the error occurred.\n"+
 	"@@@ Thank you for your help!\n"+
 	"@@@@@@@@@";
 

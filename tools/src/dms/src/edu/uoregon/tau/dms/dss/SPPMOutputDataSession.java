@@ -168,7 +168,7 @@ public class SPPMOutputDataSession extends ParaProfDataSession{
 	    	lineData.i0 = Integer.parseInt(st1.nextToken().trim()); // timestep ID
 	    	// System.out.println (lineData.i0);
 		} catch(Exception e) {
-	    	System.out.println("An error occured while parsing the header!");
+	    	System.out.println("An error occurred while parsing the header!");
 	    	e.printStackTrace();
 		}
 	}
@@ -181,7 +181,7 @@ public class SPPMOutputDataSession extends ParaProfDataSession{
 	    	lineData.i1 = Integer.parseInt(st1.nextToken().trim()); // thread count
 	    	// System.out.println (lineData.i1);
 		} catch(Exception e) {
-	    	System.out.println("An error occured while parsing the header!");
+	    	System.out.println("An error occurred while parsing the header!");
 	    	e.printStackTrace();
 		}
 	} 
@@ -226,7 +226,7 @@ public class SPPMOutputDataSession extends ParaProfDataSession{
 				subroutines[index.intValue()] = subroutineCount;
 			}
 		} catch(Exception e) {
-	    	System.out.println("An error occured while parsing the callsite data!");
+	    	System.out.println("An error occurred while parsing the callsite data!");
 	    	e.printStackTrace();
 		}
     }
@@ -263,7 +263,7 @@ public class SPPMOutputDataSession extends ParaProfDataSession{
 				}
 			}
 		} catch(Exception e) {
-	    	System.out.println("An error occured while parsing the callsite data!");
+	    	System.out.println("An error occurred while parsing the callsite data!");
 	    	e.printStackTrace();
 		}
     }

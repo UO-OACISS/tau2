@@ -173,7 +173,7 @@ public class PSRunDataSession extends ParaProfDataSession{
 			globalMappingElement.setMaxNumberOfSubRoutines(0);
 
 		} catch(Exception e) {
-	    	System.out.println("An error occured while parsing the XML data!");
+	    	System.out.println("An error occurred while parsing the XML data!");
 	    	e.printStackTrace();
 		}
     }

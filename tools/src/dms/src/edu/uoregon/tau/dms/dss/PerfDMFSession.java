@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.14 2004/08/17 18:48:17 amorris Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.15 2004/10/12 18:38:25 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -934,7 +934,7 @@ public class PerfDMFSession extends DataSession {
     }
 
     // This method has been added to let applications get the number of metrics
-    // after the setApplition, setExperiment, setTrial have been called.
+    // after the setApplication, setExperiment, setTrial have been called.
     // It does not affect the state of this object in any way.
     public int getNumberOfMetrics() {
 	StringBuffer buf = new StringBuffer();

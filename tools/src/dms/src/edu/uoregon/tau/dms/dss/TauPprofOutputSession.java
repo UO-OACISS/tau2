@@ -443,11 +443,11 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	}
         catch(Exception e){
 	    UtilFncs.systemError(new ParaProfError(this.toString()+": run()", null,
-						   "An error occured whilst trying to load!\nExpected format to be of type \"pprof\".",
+						   "An error occurred whilst trying to load!\nExpected format to be of type \"pprof\".",
 						   "Please check for the correct file type or a corrupt file.",
 						   e, null, null, null, false,false, false),null,null);
 	    if(this.debug())
-		this.outputDebugMessage(this.toString()+": run()\nAn error occured whilst trying to load!\nExpected format to be of type \"profiles\".");
+		this.outputDebugMessage(this.toString()+": run()\nAn error occurred whilst trying to load!\nExpected format to be of type \"profiles\".");
 	}
     }
 
@@ -575,7 +575,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation.
 	}
 	catch(Exception e){
-	    System.out.println("An error occured!");
+	    System.out.println("An error occurred!");
 	    e.printStackTrace();
 	}
     }

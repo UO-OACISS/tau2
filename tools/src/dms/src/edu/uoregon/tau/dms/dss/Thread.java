@@ -369,13 +369,13 @@ public class Thread implements Comparable{
 
     private void setPercentData(int metric){
 	ListIterator l = this.getFunctionListIterator();
-	while(l.hasNext()){
+	while (l.hasNext()) {
 	    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
 	    
-	    if(globalThreadDataElement!=null){
+	    if (globalThreadDataElement!=null) {
 		GlobalMappingElement globalMappingElement = globalThreadDataElement.getGlobalMappingElement();
 
-		//Note: Assumtion is made that the max inclusive value is the value required to calculate
+		//Note: Assumption is made that the max inclusive value is the value required to calculate
 		//percentage (ie, divide by). Thus, we are assuming that the sum of the exclusive
 		//values is equal to the max inclusive value. This is a reasonable assuption. This also gets
 		//us out of sticky situations when call path data is present (this skews attempts to calculate
@@ -386,17 +386,19 @@ public class Thread implements Comparable{
 		double d1 = globalThreadDataElement.getExclusiveValue(metric);
 		double d2 = globalThreadDataElement.getInclusiveValue(metric);
 		
-		if(inclusiveMax!=0){
+		if (inclusiveMax!=0) {
 		    double result = (d1/inclusiveMax)*100.00;
+
 		    globalThreadDataElement.setExclusivePercentValue(metric, result);
 		    //Now do the global mapping element exclusive stuff.
 		    if((globalMappingElement.getMaxExclusivePercentValue(metric)) < result)
 			globalMappingElement.setMaxExclusivePercentValue(metric, result);
-
+		    
 		    result = (d2/inclusiveMax) * 100;
+		    
 		    globalThreadDataElement.setInclusivePercentValue(metric, result);
 		    //Now do the global mapping element exclusive stuff.
-		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < result)
+		    if ((globalMappingElement.getMaxInclusivePercentValue(metric)) < result)
 			globalMappingElement.setMaxInclusivePercentValue(metric, result);
 		}
 	    }

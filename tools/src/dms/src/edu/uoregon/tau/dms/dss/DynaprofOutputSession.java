@@ -437,7 +437,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 	    functionChildDataLine.d5 = Double.parseDouble(st.nextToken()); //incl.max
 	}
 	catch(Exception e){
-	    System.out.println("An error occured!");
+	    System.out.println("An error occurred!");
 	    e.printStackTrace();
 	}
     }

@@ -46,7 +46,8 @@ public abstract class ParaProfDataSession  extends DataSession{
     /**
      * Returns a ListIterator of Experiment objects
      *
-     * @return	DataSessionIterator object of all Experiments.  If there is an Application saved in the DataSession, then only the Experiments for that Application are returned.
+     * @return	DataSessionIterator object of all Experiments.  If there is an Application saved 
+     *          in the DataSession, then only the Experiments for that Application are returned.
      * @see	DataSessionIterator
      * @see	Experiment
      * @see	DataSession#setApplication
@@ -351,7 +352,8 @@ public abstract class ParaProfDataSession  extends DataSession{
 	}
 	this.setMeanDataAllMetrics(mappingSelection);
     }
-    
+
+        
     public void setMeanData(int mappingSelection, int metric){
 	if(this.debug()){
 	    this.outputToFile("####################################");
@@ -392,7 +394,7 @@ public abstract class ParaProfDataSession  extends DataSession{
 	    }
 	    if(count!=0){
 		double meanExlusiveValue = exclusiveTotal/count;
-		double meanInlusiveValue = inclusiveTotal/count;
+		double meanInclusiveValue = inclusiveTotal/count;
 		double meanNumberOfCalls = (double)numberOfCallsTotal/count;
 		double meanNumberOfSubroutines = (double)numberOfSubroutinesTotal/count;
 		double meanUserSecPerCallValue = userSecPerCallValueTotal/count;
@@ -401,9 +403,9 @@ public abstract class ParaProfDataSession  extends DataSession{
 		if(globalMapping.getMaxMeanExclusiveValue(metric) < meanExlusiveValue)
 		    globalMapping.setMaxMeanExclusiveValue(metric, meanExlusiveValue);
 		
-		globalMappingElement.setMeanInclusiveValue(metric, meanInlusiveValue);
-		if(globalMapping.getMaxMeanInclusiveValue(metric) < meanInlusiveValue)
-		    globalMapping.setMaxMeanInclusiveValue(metric, meanInlusiveValue);
+		globalMappingElement.setMeanInclusiveValue(metric, meanInclusiveValue);
+		if(globalMapping.getMaxMeanInclusiveValue(metric) < meanInclusiveValue)
+		    globalMapping.setMaxMeanInclusiveValue(metric, meanInclusiveValue);
 
 		globalMappingElement.setMeanNumberOfCalls(meanNumberOfCalls);
 		if(globalMapping.getMaxMeanNumberOfCalls() < meanNumberOfCalls)
@@ -419,19 +421,42 @@ public abstract class ParaProfDataSession  extends DataSession{
 	    }
 	}
 
+
+
+	// the total inclusive value (sum of "top level" function over all threads) : 
+	// used to generate percentages by comparing against this value
+	double threadTotalInclusiveValue;
+
+	// Sum up the max inclusive value (top level "timer") for each thread to get the total
+	// program time.  We use this to make comparisons against when computing mean percentages
+	threadTotalInclusiveValue = 0;
+	for (Enumeration e = this.getNCT().getThreads().elements(); e.hasMoreElements() ;) {
+	    threadTotalInclusiveValue += ((Thread) e.nextElement()).getMaxInclusiveValue(metric);
+	}
+
 	//Now set the percent values.
 	l = globalMapping.getMappingIterator(mappingSelection);
 	double maxMeanInclusiveValue = globalMapping.getMaxMeanInclusiveValue(metric);
-	while(l.hasNext()){
+	while (l.hasNext()) {
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
 	    double meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
 	    globalMappingElement.setMeanExclusivePercentValue(metric,meanExclusivePercentValue);
 	    if(globalMapping.getMaxMeanExclusivePercentValue(metric) < meanExclusivePercentValue)
 		globalMapping.setMaxMeanExclusivePercentValue(metric, meanExclusivePercentValue);
 	    double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
+	    
+	    
 	    globalMappingElement.setMeanInclusivePercentValue(metric,meanInclusivePercentValue);
 	    if(globalMapping.getMaxMeanInclusivePercentValue(metric) < meanInclusivePercentValue)
 		globalMapping.setMaxMeanInclusivePercentValue(metric, meanInclusivePercentValue);
+
+
+	    
+	    if (threadTotalInclusiveValue != 0) {
+		globalMappingElement.setMeanInclusivePercentValue(metric,(globalMappingElement.getTotalInclusiveValue(metric) / threadTotalInclusiveValue)*100.0);
+		globalMappingElement.setTotalInclusivePercentValue(metric,(globalMappingElement.getTotalInclusiveValue(metric) / threadTotalInclusiveValue)*100.0);
+	    }
+	    
 	    	    
 	    globalMappingElement.setMeanValuesSet(true);
 	}
@@ -440,6 +465,7 @@ public abstract class ParaProfDataSession  extends DataSession{
 	    this.outputToFile("####################################");
 	}
     }
+    
 
     public void setMeanDataAllMetrics(int mappingSelection){
 	if(this.debug()){
@@ -459,8 +485,8 @@ public abstract class ParaProfDataSession  extends DataSession{
 	double[] exclusiveTotalTotal = new double[numberOfMetrics];
 	double[] inclusiveTotalTotal = new double[numberOfMetrics];
 	for(int i=0;i<numberOfMetrics;i++){
-		exclusiveTotalTotal[i] = 0;
-		inclusiveTotalTotal[i] = 0;
+	    exclusiveTotalTotal[i] = 0;
+	    inclusiveTotalTotal[i] = 0;
 	}
 
 	//Allocate outside loop, and reset to zero at each iteration.
@@ -468,36 +494,59 @@ public abstract class ParaProfDataSession  extends DataSession{
 	//re-allocating in each loop iteration. 
 	double[] exclusiveTotal = new double[numberOfMetrics];
 	double[] inclusiveTotal = new double[numberOfMetrics];
-	double[] exclusivePercentTotal = new double[numberOfMetrics];
-	double[] inclusivePercentTotal = new double[numberOfMetrics];
+	//	double[] exclusivePercentTotal = new double[numberOfMetrics];
+	//	double[] inclusivePercentTotal = new double[numberOfMetrics];
 	int numberOfCallsTotal = 0;
 	int numberOfSubroutinesTotal = 0;
 	double[] userSecPerCallValueTotal = new double[numberOfMetrics];
 	
 	double[] meanExclusiveValue = new double[numberOfMetrics];
 	double[] meanInclusiveValue = new double[numberOfMetrics];
-	double[] meanExclusivePercentValue = new double[numberOfMetrics];
-	double[] meanInclusivePercentValue = new double[numberOfMetrics];
+	//	double[] meanExclusivePercentValue = new double[numberOfMetrics];
+	//	double[] meanInclusivePercentValue = new double[numberOfMetrics];
 	double[] meanUserSecPerCallValue = new double[numberOfMetrics];
 	double[] maxMeanInclusiveValue = new double[numberOfMetrics];
 
 	//double[] exclusivePercentTotal = new double[globalMapping.getNumberOfMappings(0)];
 	//double[] inclusivePercentTotal = new double[globalMapping.getNumberOfMappings(0)];
 
-	while(l.hasNext()){
+
+
+
+	// the total inclusive value (sum of "top level" function over all threads) : 
+	// used to generate percentages by comparing against this value
+	double[] threadTotalInclusiveValue = new double[numberOfMetrics];
+
+	// Sum up the max inclusive value (top level "timer") for each thread to get the total
+	// program time.  We use this to make comparisons against when computing mean percentages
+	for (int i=0;i<numberOfMetrics;i++) {
+	    threadTotalInclusiveValue[i] = 0;
+	    
+	    for (Enumeration e = this.getNCT().getThreads().elements(); e.hasMoreElements() ;) {
+		threadTotalInclusiveValue[i] += ((Thread) e.nextElement()).getMaxInclusiveValue(i);
+	    }
+	}
+
+
+	while (l.hasNext()) {
+
+	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
+
 	    //Reset values for this itertion.
 	    numberOfCallsTotal = 0;
 	    numberOfSubroutinesTotal = 0;
-	    for(int i=0;i<numberOfMetrics;i++){
+	    for (int i=0;i<numberOfMetrics;i++) {
 		exclusiveTotal[i] = 0;
 		inclusiveTotal[i] = 0;
-		exclusivePercentTotal[i] = 0;
-		inclusivePercentTotal[i] = 0;
+		//exclusivePercentTotal[i] = 0;
+		//inclusivePercentTotal[i] = 0;
 		userSecPerCallValueTotal[i] = 0;
 		meanExclusiveValue[i] = 0;
 		meanInclusiveValue[i] = 0;
 		meanUserSecPerCallValue[i] = 0;
+		
 	    }
+
 	    //Two separtate counters are used here.  Mean values are calculated in a manner which is in line
 	    //with pprof's calculations of mean.  These are as follows:
 	    //With the exception of usec/call, mean values are calculated based on division by the total number
@@ -506,26 +555,28 @@ public abstract class ParaProfDataSession  extends DataSession{
 	    //function was made.
 	    int count = 0;
 	    int userSecPerCallCount = 0;
-	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
 	    int id = globalMappingElement.getMappingID();
-	    if(this.debug){
+	    if (this.debug) {
 		this.outputToFile("######");
 		this.outputToFile("GlobalMappingElement: " + globalMappingElement.getMappingName());
 	    }
-	    for(Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
+	    for (Enumeration e1 = this.getNCT().getNodes().elements(); e1.hasMoreElements() ;) {
 		Node node = (Node) e1.nextElement();
-		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+		for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;) {
 		    Context context = (Context) e2.nextElement();
-		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
+		    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;) {
 			edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
 			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(id);
-			if(globalThreadDataElement != null){
-			    for(int i=0;i<numberOfMetrics;i++){
+			if (globalThreadDataElement != null) {
+
+			    for (int i=0;i<numberOfMetrics;i++) {
 				exclusiveTotal[i]+=globalThreadDataElement.getExclusiveValue(i);
 				inclusiveTotal[i]+=globalThreadDataElement.getInclusiveValue(i);
-				exclusivePercentTotal[i]+=globalThreadDataElement.getExclusivePercentValue(i);
-				inclusivePercentTotal[i]+=globalThreadDataElement.getInclusivePercentValue(i);
-				if(i==0){
+				//exclusivePercentTotal[i]+=globalThreadDataElement.getExclusivePercentValue(i);
+				//inclusivePercentTotal[i]+=globalThreadDataElement.getInclusivePercentValue(i);
+				
+				// the same for every metric
+				if (i==0) {
 				    numberOfCallsTotal+=globalThreadDataElement.getNumberOfCalls();
 				    numberOfSubroutinesTotal+=globalThreadDataElement.getNumberOfSubRoutines();
 				}
@@ -533,10 +584,12 @@ public abstract class ParaProfDataSession  extends DataSession{
 				if(this.debug){
 				    this.outputToFile("exclusiveTotal["+i+"]: "+exclusiveTotal[i]);
 				    this.outputToFile("inclusiveTotal["+i+"]: "+inclusiveTotal[i]);
-				    this.outputToFile("exclusivePercentTotal["+i+"]: "+exclusivePercentTotal[i]);
-				    this.outputToFile("inclusivePercentTotal["+i+"]: "+inclusivePercentTotal[i]);
+				    //this.outputToFile("exclusivePercentTotal["+i+"]: "+exclusivePercentTotal[i]);
+				    //this.outputToFile("inclusivePercentTotal["+i+"]: "+inclusivePercentTotal[i]);
 				    this.outputToFile("userSecPerCallValueTotal["+i+"]: "+userSecPerCallValueTotal[i]);
 				}
+
+
 			    }
 			    userSecPerCallCount++;
 			}
@@ -563,7 +616,7 @@ public abstract class ParaProfDataSession  extends DataSession{
 		inclusiveTotalTotal[i] += inclusiveTotal[i];
 	    }
 	    
-	    if(count!=0){
+	    if (count!=0) {
 		//Since we only need to do the numberOfCalls and numberOfSubroutines for
 		//the first metric, do it first (outside the loop).
 		double meanNumberOfCalls = (double)numberOfCallsTotal/count;
@@ -580,14 +633,14 @@ public abstract class ParaProfDataSession  extends DataSession{
 		for(int i=0;i<numberOfMetrics;i++){
 		    meanExclusiveValue[i] = exclusiveTotal[i]/count;
 		    meanInclusiveValue[i] = inclusiveTotal[i]/count;
-		    meanExclusivePercentValue[i] = exclusivePercentTotal[i]/count;
-		    meanInclusivePercentValue[i] = inclusivePercentTotal[i]/count;
+		    //meanExclusivePercentValue[i] = exclusivePercentTotal[i]/count;
+		    //meanInclusivePercentValue[i] = inclusivePercentTotal[i]/count;
 		    
 		    if(this.debug){
 			this.outputToFile("meanExclusiveValue["+i+"]: "+meanExclusiveValue[i]);
 			this.outputToFile("meanInclusiveValue["+i+"]: "+meanInclusiveValue[i]);
-			this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue[i]);
-			this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue[i]);
+			//this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue[i]);
+			//this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue[i]);
 		    }
 		    
 		    globalMappingElement.setMeanExclusiveValue(i, meanExclusiveValue[i]);
@@ -598,13 +651,15 @@ public abstract class ParaProfDataSession  extends DataSession{
 		    if(globalMapping.getMaxMeanInclusiveValue(i) < meanInclusiveValue[i])
 			globalMapping.setMaxMeanInclusiveValue(i, meanInclusiveValue[i]);
 
-		    globalMappingElement.setMeanExclusivePercentValue(i, meanExclusivePercentValue[i]);
-		    if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue[i])
-			globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue[i]);
+		    //globalMappingElement.setMeanExclusivePercentValue(i, meanExclusivePercentValue[i]);
+		    //if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue[i])
+		    //globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue[i]);
 		    
-		    globalMappingElement.setMeanInclusivePercentValue(i, meanInclusivePercentValue[i]);
-		    if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue[i])
-			globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue[i]);
+		    //System.out.println ("ALAN:setting meanInclusivePercentValue = " + meanInclusivePercentValue[i]);
+
+		    //globalMappingElement.setMeanInclusivePercentValue(i, meanInclusivePercentValue[i]);
+		    //if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue[i])
+		    //	globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue[i]);
 		}
 
 		if(userSecPerCallCount!=0){
@@ -634,53 +689,82 @@ public abstract class ParaProfDataSession  extends DataSession{
 	    }
 	}
 
-	/*
+
+////////////////////////////  UNCOMMENTED ///////////////////////
 
 	//Now set the percent values.
-	for(int i=0;i<numberOfMetrics;i++){
+	for (int i=0;i<numberOfMetrics;i++) {
 	    maxMeanInclusiveValue[i] = globalMapping.getMaxMeanInclusiveValue(i);
-	    if(this.debug){
-		this.outputToFile("maxMeanInclusiveValue["+i+"]: "+maxMeanInclusiveValue[i]);
+	    if (this.debug) {
+		this.outputToFile("maxMeanInclusiveValue["+i+"]: " + maxMeanInclusiveValue[i]);
 	    }
 	}
+
+	// for each function
 	l = globalMapping.getMappingIterator(mappingSelection);
-	while(l.hasNext()){
+	while (l.hasNext()) {
+
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    if(this.debug){
+
+	    if (this.debug) {
 		this.outputToFile("######");
 		this.outputToFile("GlobalMappingElement: " + globalMappingElement.getMappingName() + "(Percent)");
 	    }
-	    for(int i=0;i<numberOfMetrics;i++){
-			double meanExclusivePercentValue = 0.0;
-    		if (maxMeanInclusiveValue[i] != 0.0) {
-				meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
-			}
-			globalMappingElement.setMeanExclusivePercentValue(i,meanExclusivePercentValue);
-			if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue)
-		    	globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue);
-			double meanInclusivePercentValue = 0.0;
-			if (maxMeanInclusiveValue[i] != 0.0) {
-				meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
-			}
-			globalMappingElement.setMeanInclusivePercentValue(i,meanInclusivePercentValue);
-			if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue)
-		    	globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue);
+
+	    for (int i=0;i<numberOfMetrics;i++) {
+		double meanExclusivePercentValue = 0.0;
+		if (maxMeanInclusiveValue[i] != 0.0) {
+		    meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+		}
+		globalMappingElement.setMeanExclusivePercentValue(i,meanExclusivePercentValue);
+		if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue)
+		    globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue);
+		double meanInclusivePercentValue = 0.0;
+		if (maxMeanInclusiveValue[i] != 0.0) {
+		    meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+		}
+		globalMappingElement.setMeanInclusivePercentValue(i,meanInclusivePercentValue);
+		if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue)
+		    globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue);
 			
-			if(this.debug){
-		    	this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue);
-		    	this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue);
-			}
+		if(this.debug){
+		    this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue);
+		    this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue);
+		}
 
-			if (exclusiveTotalTotal[i] != 0.0)
-				globalMappingElement.setTotalExclusivePercentValue(i,(globalMappingElement.getTotalExclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
-			else
-				globalMappingElement.setTotalExclusivePercentValue(i,0.0);
 
-			if (inclusiveTotalTotal[i] != 0.0)
-				globalMappingElement.setTotalInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / inclusiveTotalTotal[i])*100.0);
-			else
-				globalMappingElement.setTotalInclusivePercentValue(i,0.0);
 
+		if (globalMappingElement.getMeanNumberOfCalls() != 0) {
+		    globalMappingElement.setMeanUserSecPerCall(i, globalMappingElement.getMeanInclusiveValue(i) / globalMappingElement.getMeanNumberOfCalls());
+		}
+
+		if (exclusiveTotalTotal[i] != 0.0)
+		    globalMappingElement.setTotalExclusivePercentValue(i,(globalMappingElement.getTotalExclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
+		else
+		    globalMappingElement.setTotalExclusivePercentValue(i,0.0);
+
+
+		// Set the Mean Inclusive Percent
+
+
+		if (threadTotalInclusiveValue[i] != 0) {
+		    globalMappingElement.setMeanInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / threadTotalInclusiveValue[i])*100.0);
+		    globalMappingElement.setTotalInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / threadTotalInclusiveValue[i])*100.0);
+		}
+
+
+
+		/*
+		if (exclusiveTotalTotal[i] != 0.0) {
+		    globalMappingElement.setTotalInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
+		    globalMappingElement.setTotalInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
+		    //   globalMappingElement.setMeanInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
+
+
+		} else {
+		    globalMappingElement.setTotalInclusivePercentValue(i,0.0);
+		}
+		*/
 	    }
 	    globalMappingElement.setMeanValuesSet(true);
 	    if(this.debug){
@@ -688,7 +772,6 @@ public abstract class ParaProfDataSession  extends DataSession{
 		this.outputToFile("######");
 	    }
 	}
-	*/
 	
 	if(this.debug()){
 	    this.outputToFile("Done - Setting mean data :: public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics)");

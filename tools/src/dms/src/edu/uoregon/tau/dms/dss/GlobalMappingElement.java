@@ -415,8 +415,9 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	    }
       
 	    position = 45;
+
 	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getMeanNumberOfCalls(),
+	    					   UtilFncs.adjustDoublePresision(this.getMeanNumberOfCalls(),
 										  precision)));
 	    tmpArray = tmpString.toCharArray();                       
 	    for(int i=0;i<tmpArray.length;i++){
@@ -449,7 +450,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GTDE01");
 	}
-    	return "An error occured pocessing this string!";
+    	return "An error occurred processing this string!";
     }
 
     public void setMeanValuesSet(boolean meanValuesSet){
@@ -577,9 +578,9 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	try{
 	    return doubleList[(location*14)+offset];}
 	catch(Exception e){
-		System.out.println("location: " + location);
-		System.out.println("offset: " + offset);
-		System.out.println("doubleList.length: " + doubleList.length);
+	    System.out.println("location: " + location);
+	    System.out.println("offset: " + offset);
+	    System.out.println("doubleList.length: " + doubleList.length);
 	    UtilFncs.systemError(e, null, "GME02");}
 	return -1;
     }

@@ -215,8 +215,7 @@ public class ParaProfDBSession extends ParaProfDataSession {
 	    l = perfDMFSession.getAtomicEvents();
 	    while (l.hasNext()) {
 		AtomicEvent ue = (AtomicEvent) l.next();
-		this.getGlobalMapping().addGlobalMapping(ue.getName(), 2, 1);  // 2, 1?  What the hell are these numbers?
-				
+		this.getGlobalMapping().addGlobalMapping(ue.getName(), 2, 1);
 	    }
 
 
@@ -278,17 +277,11 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		    globalMappingElement.setMaxUserEventSumSquared(alp.getSumSquared());
 	    }
 
-
-
 	    System.out.println("Processing callpath data ...");
 	    if (CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))) {
 		setCallPathDataPresent(true);
 		CallPathUtilFuncs.buildRelations(getGlobalMapping());
 	    }
-
-
-
-
 
 	    time = (System.currentTimeMillis()) - time;
 	    System.out.println("Done processing data file!");

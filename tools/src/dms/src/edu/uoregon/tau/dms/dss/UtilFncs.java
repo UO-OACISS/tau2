@@ -16,6 +16,18 @@ import java.io.*;
 import java.text.*;
 
 public class UtilFncs{
+
+
+    public static String pad (String s, int plen) {
+	int len = plen - s.length();
+	if (len <= 0) 
+	    return s;
+	char padchars[] = new char[len];
+	for (int i = 0; i < len; i++) 
+	    padchars[i] = ' ';
+	return s.concat(new String (padchars, 0, len));
+    }
+
   
     public static double adjustDoublePresision(double d, int precision){
 	String result = null;
@@ -466,7 +478,7 @@ public class UtilFncs{
 	}
 	catch(Exception exception){
 	    UtilFncs.systemError(new ParaProfError("UF05", "File write error! Check console for details.",
-						   "An error occured whilst trying to save txt file.",null,
+						   "An error occurred whilst trying to save txt file.",null,
 						   exception, component, null, null, true, false, false), null, null);
 	}
     }

@@ -17,7 +17,7 @@ public class Debug{
 	    out = new PrintWriter(new FileWriter(new File("ParaProf.debug.out")));
 	}
 	catch(IOException exception){
-	    System.out.println("An error occured trying whilst trying to create ParaProf.debug.out!");
+	    System.out.println("An error occurred trying whilst trying to create ParaProf.debug.out!");
 	    System.out.println("Debugging information will be printed to the standard out instead.");
 	    System.out.println("Details about this error are below:");
 	    exception.printStackTrace();

@@ -10,6 +10,7 @@ import java.util.*;
 import java.io.*;
 import java.text.*;
 
+
 public class GlobalThreadDataElement implements Mapping{
     
     //####################################
@@ -167,7 +168,7 @@ public class GlobalThreadDataElement implements Mapping{
 	    UtilFncs.systemError(e, null, "GTDE01");
 	}
     
-	return "An error occured pocessing this string!"; 
+	return "An error occurred processing this string!"; 
     }
   
     public String getTStatString(int type, int metric, int precision){
@@ -244,7 +245,7 @@ public class GlobalThreadDataElement implements Mapping{
 		UtilFncs.systemError(e, null, "GTDE01");
 	    }
     
-	return "An error occured pocessing this string!"; 
+	return "An error occurred processing this string!"; 
     }
   
     //User event interface.
@@ -285,14 +286,26 @@ public class GlobalThreadDataElement implements Mapping{
 
   
     public static String getUserEventStatStringHeading(){
-	try{
-	    int initialBufferLength = 72;
+
+	int w = 18;
+	return UtilFncs.pad("NumSamples",w) + 
+	    UtilFncs.pad("Max",w) + 
+	    UtilFncs.pad("Min",w) +
+	    UtilFncs.pad("Mean",w) +
+	    UtilFncs.pad("Std. Dev",w);	    
+
+	// this is great fun to maintain, what is the point of this stuff?
+	/*	try{
+
+	    
+	    int width = 16;
+	    int initialBufferLength = 91;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
 	    char [] tmpArray;
 	    String tmpString;
       
-	    insertSpaces(statStringArray , 0, 72);
+	    insertSpaces(statStringArray , 0, 91);
       
 	    tmpArray = ("NumSamples").toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -320,23 +333,25 @@ public class GlobalThreadDataElement implements Mapping{
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
+
 	    return new String(statStringArray);
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GTDE01");
 	}
-	return "An error occured pocessing this string!"; 
+	return "An error occurred processing this string!"; 
+	*/
     }
   
     public String getUserEventStatString(int precision){
 	try{
-	    int initialBufferLength = 72;
+	    int initialBufferLength = 90;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
 	    char [] tmpArray;
 	    String tmpString;
       
-	    this.insertSpaces(statStringArray , 0, 72);
+	    this.insertSpaces(statStringArray , 0, 90);
       
 	    tmpArray = (Integer.toString(this.getUserEventNumberValue()).toCharArray());
 	    for(int i=0;i<tmpArray.length;i++){
@@ -375,7 +390,26 @@ public class GlobalThreadDataElement implements Mapping{
 	    }
       
 
-	    // add on sumsquared???
+	    // compute the standard deviation
+	    // this should be computed just once, somewhere else
+	    // but it's here, for now
+	    double sumsqr = this.getUserEventSumSquared();
+	    double numEvents = this.getUserEventNumberValue();
+	    double mean = this.getUserEventMeanValue();
+
+	    double stddev = java.lang.Math.sqrt(java.lang.Math.abs( sumsqr/numEvents)
+				- ( mean * mean ));
+
+	    position = 72;
+	    tmpString = new String(Double.toString(
+						   UtilFncs.adjustDoublePresision(stddev,
+										  precision)));
+	    tmpArray = tmpString.toCharArray();
+	    for(int i=0;i<tmpArray.length;i++){
+		statStringArray[position] = tmpArray[i];
+		position++;
+	    }
+
 
 	    //Everything should be added now except the function name.
 	    return new String(statStringArray);
@@ -384,12 +418,9 @@ public class GlobalThreadDataElement implements Mapping{
 	    UtilFncs.systemError(e, null, "GTDE01");
 	}
     
-	return "An error occured pocessing this string!";
+	return "An error occurred processing this string!";
     }
   
-    public static int getPositionOfUserEventName(){
-	return 72;
-    }
 
     public void addCall(double exclusive, double inclusive){
 	if(calls==null)
@@ -529,7 +560,7 @@ public class GlobalThreadDataElement implements Mapping{
 
     public void incrementStorage(){
 	if(userevent)
-	    UtilFncs.systemError(null, null, "Error: Attemp to increase storage on a user event object!");
+	    UtilFncs.systemError(null, null, "Error: Attempt to increase storage on a user event object!");
 	int currentLength = doubleList.length;
 	//can use a little space here ... space for speed! :-)
 	double[] newArray = new double[currentLength+5];

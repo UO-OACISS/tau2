@@ -250,7 +250,7 @@ public class TauOutputSession extends ParaProfDataSession{
 				    thread.addFunction(globalThreadDataElement, mappingID);
 				}
 			    
-				//When we enconter duplicat names in the profile.x.x.x file, treat as additional
+				//When we encounter duplicate names in the profile.x.x.x file, treat as additional
 				//data for the name (that is, don't just overwrite what was there before).
 				//See todo item 7 in the ParaProf docs. directory.
 				globalThreadDataElement.setExclusiveValue(metric, globalThreadDataElement.getExclusiveValue(metric)+functionDataLine.d0);
@@ -344,11 +344,10 @@ public class TauOutputSession extends ParaProfDataSession{
 			    if(this.debug())
 				this.outputDebugMessage("processing userevents");
 			    inputString = br.readLine();
-			    if(inputString==null){
+			    if (inputString==null) {
 				if(this.debug())
 				    this.outputDebugMessage("No userevent data in this file.");
-			    }
-			    else{
+			    } else {
 				genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 				//It's first token will be the number of userevents
 				tokenString = genericTokenizer.nextToken();
@@ -372,7 +371,9 @@ public class TauOutputSession extends ParaProfDataSession{
 				    this.getUserEventData(inputString);
 				    if(this.debug())
 					this.outputDebugMessage("userevent line: "+inputString+"\neventname:"+usereventDataLine.s0+"\nnumevents:"+usereventDataLine.i0+" max:"+usereventDataLine.d0+" min:"+usereventDataLine.d1+" mean:"+usereventDataLine.d2+" sumsqr:"+usereventDataLine.d3);
-				    if(usereventDataLine.i0 !=0){
+				   
+				    // User events
+				    if (usereventDataLine.i0 !=0) {
 					mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2, 1);
 					globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
 					globalThreadDataElement = thread.getUserevent(mappingID);
@@ -441,11 +442,11 @@ public class TauOutputSession extends ParaProfDataSession{
 	}
         catch(Exception e){
 	    UtilFncs.systemError(new ParaProfError(this.toString()+": run()", null,
-						   "An error occured whilst trying to load!\nExpected format to be of type \"profiles\".",
+						   "An error occurred whilst trying to load!\nExpected format to be of type \"profiles\".",
 						   "Please check for the correct file type or a corrupt file.",
 						   e, null, null, null, false,false, false),null,null);
 	    if(this.debug())
-		this.outputDebugMessage("run()\nAn error occured whilst trying to load!\nExpected format to be of type \"profiles\".");
+		this.outputDebugMessage("run()\nAn error occurred whilst trying to load!\nExpected format to be of type \"profiles\".");
 	}
     }
 
@@ -479,20 +480,20 @@ public class TauOutputSession extends ParaProfDataSession{
 
 	    if(nct[0]<0||nct[1]<0||nct[2]<0){
 		UtilFncs.systemError(new ParaProfError(this.toString()+": getNCT(...)",
-						       "An error occured whilst processing file: " + string,
+						       "An error occurred whilst processing file: " + string,
 						       "This file will be ignored!"),null,null);
 		if(this.debug())
-		    this.outputDebugMessage("getNCT(...)\nAn error occured whilst processing file: " + string + "\nThis file will be ignored!");
+		    this.outputDebugMessage("getNCT(...)\nAn error occurred whilst processing file: " + string + "\nThis file will be ignored!");
 		return null;
 	    }
 	    return nct;
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(new ParaProfError(this.toString()+": getNCT(...)",
-						   "An error occured whilst processing file: " + string,
+						   "An error occurred whilst processing file: " + string,
 						   "This file will be ignored!"),null,null);
 	    if(this.debug())
-		this.outputDebugMessage("getNCT(...)\nAn error occured whilst processing file: " + string + "\nThis file will be ignored!");
+		this.outputDebugMessage("getNCT(...)\nAn error occurred whilst processing file: " + string + "\nThis file will be ignored!");
 	    return null;
 	}
     }
@@ -583,7 +584,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation.
 	}
 	catch(Exception e){
-	    System.out.println("An error occured!");
+	    System.out.println("An error occurred!");
 	    e.printStackTrace();
 	}
     }

@@ -263,7 +263,7 @@ public class MpiPOutputSession extends ParaProfDataSession{
 	    	callsiteHeader.i1 = Integer.parseInt(st1.nextToken()); // Line
 	    	callsiteHeader.s3 = st1.nextToken(); // PC
 		} catch(Exception e) {
-	    	System.out.println("An error occured while parsing the callsite header!");
+	    	System.out.println("An error occurred while parsing the callsite header!");
 	    	e.printStackTrace();
 		}
     }
@@ -286,7 +286,7 @@ public class MpiPOutputSession extends ParaProfDataSession{
 	    	callsiteData.d4 = Double.parseDouble(st1.nextToken()); // MPI%
 	    	callsiteData.d5 = callsiteData.d1 * callsiteData.i2; // Total time for this node
 		} catch(Exception e) {
-	    	System.out.println("An error occured while parsing the callsite data!");
+	    	System.out.println("An error occurred while parsing the callsite data!");
 	    	e.printStackTrace();
 		}
     }

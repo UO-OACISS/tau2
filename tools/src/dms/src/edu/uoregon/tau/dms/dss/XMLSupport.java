@@ -465,7 +465,7 @@ public class XMLSupport{
     //######
     //For errors writing to the xml file.
     private ParaProfError xmlWriteError = new ParaProfError("", "XML Write Error: See console for details.",
-						    "An error occured whilst writing XML file. Operation aborted!", 
+						    "An error occurred whilst writing XML file. Operation aborted!", 
 						    "Note: Dependent operations also aborted.", null, false);
 
     //####################################
