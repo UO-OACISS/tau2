@@ -45,6 +45,11 @@ autoinstrument  - Shows the use of Program Database Toolkit (PDT) for
 cinstrument     - Shows the use of PDT for C. Requires configuring TAU with 
                   -pdt=<dir> option.
 
+mixedmode	- This example illustrates the use of PDT, hand-instrumentation
+		  (for threads), MPI library instrumentation and TAU system 
+		  call wrapper library instrumentation. Requires configuring TAU
+		  with -mpiinc=<dir> -mpilib=<dir> -pdt=<dir> -pthread options.
+
 fortran & f90   - Show how to instrument a simple Fortran 90 program. A C++ 
 		  linker needs to be used when linking the fortran application.
 
