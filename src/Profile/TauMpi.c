@@ -727,6 +727,10 @@ int * rank;
 
   TAU_PROFILE_STOP(tautimer); 
 
+  /* Set the node as we did in MPI_Init */
+  if (comm == MPI_COMM_WORLD)
+    TAU_PROFILE_SET_NODE(*rank);
+
   return returnVal;
 }
 
