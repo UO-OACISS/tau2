@@ -1775,7 +1775,7 @@ then
   int main(int argc, char **argv)
   {
     int ret, req, provided;
-    ret = MPI_Init_thread(&argc, &argv, req, &provided);
+    ret = PMPI_Init_thread(&argc, &argv, req, &provided);
     return ret;
   }
 EOF
