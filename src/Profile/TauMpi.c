@@ -1102,9 +1102,15 @@ int * keyval;
   return returnVal;
 }
 
+/* LAM MPI defines MPI_Abort as a macro! We check for this and if it is 
+   defined that way, we change the MPI_Abort wrapper */
+#if (defined(MPI_Abort) && defined(_ULM_MPI_H_))
+int _MPI_Abort( MPI_Comm comm, int errorcode, char * file, int line) 
+#else
 int  MPI_Abort( comm, errorcode )
 MPI_Comm comm;
 int errorcode;
+#endif /* MPI_Abort & LAM MPI [LAM MPI] */
 {
   int  returnVal;
 
