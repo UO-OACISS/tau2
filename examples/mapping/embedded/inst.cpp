@@ -4,6 +4,7 @@ time spent in each instance of an object. We use an embedded association here. *
 #include <Profile/Profiler.h>
 #include <iostream.h>
 #include <unistd.h>
+#include <stdio.h>
 
 class MyClass
 {
