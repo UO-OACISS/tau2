@@ -70,7 +70,7 @@
 class Profiler
 {
 public:
-	Profiler(FunctionInfo * fi, unsigned int ProfileGroup = TAU_DEFAULT, 
+	Profiler(FunctionInfo * fi, TauGroup_t ProfileGroup = TAU_DEFAULT, 
 	  bool StartStop = false);
 
 	void Start(void);
@@ -101,7 +101,7 @@ public:
 #endif /* PROFILE_CALLSTACK  */
 
 private:
-	unsigned int MyProfileGroup_;
+	TauGroup_t MyProfileGroup_;
 	bool	StartStopUsed_;
 	bool 	AddInclFlag; 
 	// There is a class that will do some initialization
@@ -121,6 +121,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 1999/04/27 22:20:10 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.19 1999/04/27 22:20:10 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 1999/05/04 22:32:10 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.20 1999/05/04 22:32:10 sameer Exp $ 
  ***************************************************************************/

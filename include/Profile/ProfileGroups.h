@@ -29,6 +29,8 @@
 #ifndef _PROFILE_GROUPS_H_
 #define _PROFILE_GROUPS_H_
 
+typedef unsigned int TauGroup_t;
+
 /* TAU PROFILING GROUPS. More will be added later.  */
 #define TAU_DEFAULT 		0xffffffff   /* All profiling groups enabled*/
 #define TAU_MESSAGE 		0x00000001   /* Message 'm'*/
@@ -70,6 +72,6 @@ SPACE for 			0x00080000
 #endif /* _PROFILE_GROUPS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileGroups.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/07/10 20:11:30 $
- * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.2 1998/07/10 20:11:30 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 1999/05/04 22:32:09 $
+ * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.3 1999/05/04 22:32:09 sameer Exp $ 
  ***************************************************************************/

@@ -79,7 +79,7 @@
 
 #define TAU_REGISTER_THREAD()			tau_register_thread();	
 
-extern void * tau_get_profiler(char *fname, char *type, unsigned int group);
+extern void * tau_get_profiler(char *fname, char *type, TauGroup_t  group);
 extern void tau_start_timer(void *profiler);
 extern void tau_stop_timer(void *profiler);
 extern void tau_exit(char *msg);
@@ -135,7 +135,7 @@ extern void tau_event_disable_stddev(void *event);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1999/04/06 22:52:50 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.2 1999/04/06 22:52:50 sameer Exp $
+ * $Revision: 1.3 $   $Date: 1999/05/04 22:32:10 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.3 1999/05/04 22:32:10 sameer Exp $
  ***************************************************************************/
 

@@ -54,16 +54,16 @@ class FunctionInfo
 public:
 	// Construct with the name of the function and its type.
 	FunctionInfo(const char* name, const char * type, 
-          unsigned int ProfileGroup = TAU_DEFAULT, 
+          TauGroup_t ProfileGroup = TAU_DEFAULT, 
 	  const char *ProfileGroupName = "TAU_DEFAULT");
 	FunctionInfo(const char* name, string& type, 
-	  unsigned int ProfileGroup = TAU_DEFAULT,
+	  TauGroup_t ProfileGroup = TAU_DEFAULT,
 	  const char *ProfileGroupName = "TAU_DEFAULT");
 	FunctionInfo(string& name, string& type, 
-	  unsigned int ProfileGroup = TAU_DEFAULT,
+	  TauGroup_t ProfileGroup = TAU_DEFAULT,
 	  const char *ProfileGroupName = "TAU_DEFAULT");
 	FunctionInfo(string& name, const char * type, 
-	  unsigned int ProfileGroup = TAU_DEFAULT,
+	  TauGroup_t ProfileGroup = TAU_DEFAULT,
 	  const char *ProfileGroupName = "TAU_DEFAULT");
 
 	FunctionInfo(const FunctionInfo& X) ;
@@ -71,7 +71,7 @@ public:
 	~FunctionInfo();
         FunctionInfo& operator= (const FunctionInfo& X) ;
 
-	void FunctionInfoInit(unsigned int PGroup, const char *PGroupName);
+	void FunctionInfoInit(TauGroup_t PGroup, const char *PGroupName);
         
 
 	// Tell it about a function call finishing.
@@ -146,7 +146,7 @@ public:
 	long GetSubrs(int tid) { return NumSubrs[tid]; }
 	double GetExclTime(int tid) { return ExclTime[tid]; }
 	double GetInclTime(int tid) { return InclTime[tid]; }
-	unsigned int GetProfileGroup() const {return MyProfileGroup_; }
+	TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
 #ifdef PROFILE_STATS 
 	double GetSumExclSqr(int tid) { return SumExclSqr[tid]; }
 	void AddSumExclSqr(double ExclSqr, int tid) 
@@ -154,7 +154,7 @@ public:
 #endif // PROFILE_STATS 
 
 private:
-	unsigned int MyProfileGroup_;
+	TauGroup_t MyProfileGroup_;
 };
 
 // Global variables
@@ -210,6 +210,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 1998/09/26 15:44:20 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.6 1998/09/26 15:44:20 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 1999/05/04 22:32:09 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.7 1999/05/04 22:32:09 sameer Exp $ 
  ***************************************************************************/

@@ -48,19 +48,19 @@ class RtsLayer
  	RtsLayer () { }  // defaults
 	~RtsLayer () { } 
 
-	static unsigned int& TheProfileMask(void);
+	static TauGroup_t & TheProfileMask(void);
 	
 	static int& TheNode(void);
   
 	static int& TheContext(void);
 
- 	static unsigned int enableProfileGroup(unsigned int ProfileGroup) ;
+ 	static TauGroup_t  enableProfileGroup(TauGroup_t  ProfileGroup) ;
 
-        static unsigned int resetProfileGroup(void) ;
+        static TauGroup_t  resetProfileGroup(void) ;
 
 	static int setAndParseProfileGroups (char *prog, char *str) ;
 
-        static bool isEnabled(unsigned int ProfileGroup) ; 
+        static bool isEnabled(TauGroup_t  ProfileGroup) ; 
 
         static void ProfileInit(int argc, char **argv);
 
@@ -111,6 +111,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1998/07/16 17:20:59 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.4 1998/07/16 17:20:59 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 1999/05/04 22:32:10 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.5 1999/05/04 22:32:10 sameer Exp $ 
  ***************************************************************************/
