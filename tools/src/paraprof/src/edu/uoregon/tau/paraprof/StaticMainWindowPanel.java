@@ -55,9 +55,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
       
-	    jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
+	    /*jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
 	    jMenuItem.addActionListener(this);
-	    popup1.add(jMenuItem);
+	    popup1.add(jMenuItem);*/
 	    //######
 	    //End - Add items to the first popup menu.
 	    //######
