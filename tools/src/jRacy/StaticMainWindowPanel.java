@@ -733,7 +733,18 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			super.paintComponent(g);
 			
 			//Set the numberOfColors variable.
-			numberOfColors = jRacy.clrChooser.getNumberOfColors(); 
+			numberOfColors = jRacy.clrChooser.getNumberOfColors();
+			
+			//Check to see if selected groups only are being displayed.
+			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			
+			boolean isSelectedGroupOn = false;
+			int selectedGroupID = 0;
+			
+			if(tmpGM.getIsSelectedGroupOn()){
+				isSelectedGroupOn = true;
+				selectedGroupID = tmpGM.getSelectedGroupID();
+			} 
 			
 			if(sMWindow.isDataLoaded())
 			{	
@@ -1001,121 +1012,258 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							threadDataList = sMWThread.getThreadDataList();
 							//Cycle through the data values for this thread to get the total.
 							tmpSum = 0.00;
-							for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;)
-							{
-								sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-								tmpSum = tmpSum + (sMWThreadDataElement.getValue());
+							
+							if(!isSelectedGroupOn){
+								for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
+									sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+									tmpSum = tmpSum + (sMWThreadDataElement.getValue());
+								}
 							}
+							else{
+								for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
+									sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+									if(sMWThreadDataElement.isGroupMember(selectedGroupID))
+										tmpSum = tmpSum + (sMWThreadDataElement.getValue());
+								}
+							}
+							
 							//Now that we have the total, can begin drawing.
 							colorCounter = 0;
 							barXCoord = barXStart;
-							for(Enumeration e5 = threadDataList.elements(); e5.hasMoreElements() ;)
-							{
-								sMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
-								tmpDataValue = sMWThreadDataElement.getValue();
-								
-								if(tmpDataValue > 0.0)		//Don't want to draw a bar if the value is zero.
+							if(!isSelectedGroupOn){
+								for(Enumeration e5 = threadDataList.elements(); e5.hasMoreElements() ;)
 								{
-									//Now compute the length of the bar for this object.
-									//The default length for the bar shall be 200.
-									int xLength;
-									double tmpDouble;
-									tmpDouble = (tmpDataValue / tmpSum);
-									xLength = (int) (tmpDouble * defaultBarLength);
-									if(xLength > 2) 	//Only draw if there is something to draw.
-									{		
-										if(barHeight > 2)
-										{
-											tmpColor = sMWThreadDataElement.getMappingColor();
-											g.setColor(tmpColor);
-											g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-											
-											if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-											{	
-												highlighted = true;
-												g.setColor(jRacy.clrChooser.getHighlightColor());
-												g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-												g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-											}
-											else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-											{
-												highlighted = true;
-												g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-												g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-												g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-											}
-											else
-											{
-												g.setColor(Color.black);
-												if(highlighted)
-												{
-													//Manually draw in the lines for consistancy.
-													g.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
-													g.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
-													g.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
-													
-													//g.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
-													highlighted = false;
-												}
-												else
-												{
-													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-												}
-											}
-											
-											//Set the draw coords.
-											sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
-											
-											//Update barXCoord.
-											barXCoord = (barXCoord + xLength);
-										}
-										else
-										{
-											//Now set the color values for drawing!
-											//Get the appropriate color.
-											if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-												g.setColor(jRacy.clrChooser.getHighlightColor());
-											else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-											{
-												g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-											}
-											else
+									//@@@@1
+									sMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
+									//@@@@2
+									tmpDataValue = sMWThreadDataElement.getValue();
+									if(tmpDataValue > 0.0)		//Don't want to draw a bar if the value is zero.
+									{
+										//Now compute the length of the bar for this object.
+										//The default length for the bar shall be 200.
+										int xLength;
+										double tmpDouble;
+										tmpDouble = (tmpDataValue / tmpSum);
+										xLength = (int) (tmpDouble * defaultBarLength);
+										if(xLength > 2) 	//Only draw if there is something to draw.
+										{		
+											if(barHeight > 2)
 											{
 												tmpColor = sMWThreadDataElement.getMappingColor();
 												g.setColor(tmpColor);
+												g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+												
+												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												{	
+													highlighted = true;
+													g.setColor(jRacy.clrChooser.getHighlightColor());
+													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+												}
+												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												{
+													highlighted = true;
+													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+												}
+												else
+												{
+													g.setColor(Color.black);
+													if(highlighted)
+													{
+														//Manually draw in the lines for consistancy.
+														g.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
+														g.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
+														g.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
+														
+														//g.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
+														highlighted = false;
+													}
+													else
+													{
+														g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													}
+												}
+												
+												//Set the draw coords.
+												sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+												
+												//Update barXCoord.
+												barXCoord = (barXCoord + xLength);
 											}
-											
-											g.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-											g.setColor(Color.black);
-											g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-											
-											//Set the draw coords.
-											sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
-											
-											//Update barXCoord.
-											barXCoord = (barXCoord + xLength);
+											else
+											{
+												//Now set the color values for drawing!
+												//Get the appropriate color.
+												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+													g.setColor(jRacy.clrChooser.getHighlightColor());
+												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												{
+													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+												}
+												else
+												{
+													tmpColor = sMWThreadDataElement.getMappingColor();
+													g.setColor(tmpColor);
+												}
+												
+												g.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												g.setColor(Color.black);
+												g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												
+												//Set the draw coords.
+												sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+												
+												//Update barXCoord.
+												barXCoord = (barXCoord + xLength);
+											}
+												
 										}
-											
+										
+										//Still want to set the draw coords for this mapping, were it to be none zero.
+										//This aids in mouse click and tool tip events.
+										sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+										
 									}
+									else
+									{
+										//Still want to set the draw coords for this mapping, were it to be none zero.
+										//This aids in mouse click and tool tip events.
+										sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+									}
+										
+										
 									
-									//Still want to set the draw coords for this mapping, were it to be none zero.
-									//This aids in mouse click and tool tip events.
-									sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
-									
+									colorCounter = (colorCounter + 1) % numberOfColors;		//Want to cycle to the next color
+																				//whether we have drawn or not.
+																				
 								}
-								else
-								{
-									//Still want to set the draw coords for this mapping, were it to be none zero.
-									//This aids in mouse click and tool tip events.
-									sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
-								}
-									
-									
-								
-								colorCounter = (colorCounter + 1) % numberOfColors;		//Want to cycle to the next color
-																			//whether we have drawn or not.
-																			
 							}
+							else{
+								for(Enumeration e5 = threadDataList.elements(); e5.hasMoreElements() ;)
+								{
+									sMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
+									tmpDataValue = sMWThreadDataElement.getValue();
+									if((tmpDataValue > 0.0) && (sMWThreadDataElement.isGroupMember(selectedGroupID)))		//Don't want to draw a bar if the
+																															//value is zero or this group is
+																															//not being displayed.
+									{
+										//Now compute the length of the bar for this object.
+										//The default length for the bar shall be 200.
+										int xLength;
+										double tmpDouble;
+										tmpDouble = (tmpDataValue / tmpSum);
+										xLength = (int) (tmpDouble * defaultBarLength);
+										if(xLength > 2) 	//Only draw if there is something to draw.
+										{		
+											if(barHeight > 2)
+											{
+												tmpColor = sMWThreadDataElement.getMappingColor();
+												g.setColor(tmpColor);
+												g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+												
+												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												{	
+													highlighted = true;
+													g.setColor(jRacy.clrChooser.getHighlightColor());
+													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+												}
+												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												{
+													highlighted = true;
+													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+												}
+												else
+												{
+													g.setColor(Color.black);
+													if(highlighted)
+													{
+														//Manually draw in the lines for consistancy.
+														g.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
+														g.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
+														g.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
+														
+														//g.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
+														highlighted = false;
+													}
+													else
+													{
+														g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													}
+												}
+												
+												//Set the draw coords.
+												sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+												
+												//Update barXCoord.
+												barXCoord = (barXCoord + xLength);
+											}
+											else
+											{
+												//Now set the color values for drawing!
+												//Get the appropriate color.
+												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+													g.setColor(jRacy.clrChooser.getHighlightColor());
+												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												{
+													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+												}
+												else
+												{
+													tmpColor = sMWThreadDataElement.getMappingColor();
+													g.setColor(tmpColor);
+												}
+												
+												g.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												g.setColor(Color.black);
+												g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												
+												//Set the draw coords.
+												sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+												
+												//Update barXCoord.
+												barXCoord = (barXCoord + xLength);
+											}
+												
+										}
+										
+										//Still want to set the draw coords for this mapping, were it to be none zero.
+										//This aids in mouse click and tool tip events.
+										sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+										
+									}
+									else
+									{
+										//Still want to set the draw coords for this mapping, were it to be none zero.
+										//This aids in mouse click and tool tip events.
+										sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+									}
+										
+										
+									
+									colorCounter = (colorCounter + 1) % numberOfColors;		//Want to cycle to the next color
+																				//whether we have drawn or not.
+																				
+								}
+							}
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+								
 							
 							//We have reached the end of the cycle for this thread.  However, we might be less
 							//than the max length of the bar.  Therefore, fill in the rest of the bar with the

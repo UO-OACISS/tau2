@@ -69,6 +69,19 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			maskMappingItem.addActionListener(this);
 			popup.add(maskMappingItem);
 			
+			if(mappingSelection == 1)
+			{
+				//Add items to the popu menu.
+				JMenuItem showThisMappingOnlyItem = new JMenuItem("Show This Group Mapping Only");
+				showThisMappingOnlyItem.addActionListener(this);
+				popup.add(showThisMappingOnlyItem);
+				
+				//Add items to the popu menu.
+				JMenuItem showAllMappingsItem = new JMenuItem("Show All Group Mappings");
+				showAllMappingsItem.addActionListener(this);
+				popup.add(showAllMappingsItem);
+			}
+			
 			//JMenuItem toGenericColorItem = new JMenuItem("Mask Mapping");
 			//toGenericColorItem.addActionListener(this);
 			//popup.add(toGenericColorItem);
@@ -293,7 +306,6 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						jRacy.systemEvents.updateRegisteredObjects("colorEvent");
 					}
 				}
-				
 				else if(arg.equals("Reset to Generic Color"))
 				{	
 					
@@ -303,6 +315,30 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					tmpGlobalMappingElement.setColorFlag(false);
 					
 					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+				}
+				else if(arg.equals("Show This Group Mapping Only"))
+				{	
+					
+					if(clickedOnObject instanceof GlobalMappingElement)
+						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
+					
+					GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+					tmpGM.setIsSelectedGroupOn(true);
+					tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
+					
+					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
+				}
+				else if(arg.equals("Show All Group Mappings"))
+				{	
+					
+					if(clickedOnObject instanceof GlobalMappingElement)
+						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
+					
+					GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+					tmpGM.setIsSelectedGroupOn(false);
+					tmpGM.setSelectedGroupID(-1);
+					
+					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
 				}
 			}
 		}

@@ -404,6 +404,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 					if(descendingButton.isSelected())
 					{
 						descendingOrder = true;
+						sortLocalData();
 						meanDataWindowPanelRef.repaint();
 					}
 				}
@@ -604,6 +605,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			else if(tmpString.equals("colorEvent"))
 			{
 				//Just need to call a repaint on the ThreadDataWindowPanel.
+				meanDataWindowPanelRef.repaint();
+			}
+			else if(tmpString.equals("dataEvent"))
+			{
+				sortLocalData();
 				meanDataWindowPanelRef.repaint();
 			}
 			else if(tmpString.equals("subWindowCloseEvent"))

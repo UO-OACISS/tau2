@@ -616,6 +616,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 				//Just need to call a repaint on the ThreadDataWindowPanel.
 				threadDataWindowPanelRef.repaint();
 			}
+			else if(tmpString.equals("dataEvent"))
+			{
+				sortLocalData();
+				threadDataWindowPanelRef.repaint();
+			}
 			else if(tmpString.equals("subWindowCloseEvent"))
 			{
 				closeThisWindow();

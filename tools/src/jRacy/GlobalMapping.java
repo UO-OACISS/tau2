@@ -357,6 +357,22 @@ public class GlobalMapping implements WindowListener, Serializable
 		}
 	}
 	
+	public void setIsSelectedGroupOn(boolean inBool){
+		isSelectedGroupOn = inBool;
+	}
+	
+	public boolean getIsSelectedGroupOn(){
+		return isSelectedGroupOn;
+	}
+	
+	public void setSelectedGroupID(int inInt){
+		selectedGroupID = inInt;
+	}
+	
+	public int getSelectedGroupID(){
+		return selectedGroupID;
+	}
+	
 	public void displayMappingLedger(int mappingSelection)
 	{
 		if(mappingLedgerWindows[mappingSelection] == null)
@@ -425,6 +441,9 @@ public class GlobalMapping implements WindowListener, Serializable
 	MappingLedgerWindow[] mappingLedgerWindows;
 	
 	int sizeOfArray = 2;
+	
+	boolean isSelectedGroupOn = false;
+	int selectedGroupID = -1;
 	
 	private MappingLedgerWindow mappingLedgerWindow;
 }

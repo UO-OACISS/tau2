@@ -121,6 +121,11 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			
 			tmpThreadDataElementList = tSWindow.getStaticMainWindowSystemData();
 			
+			//With group support present, it is possible that the number of mappings in
+			//our data list is zero.  If so, just return.
+			if((tmpThreadDataElementList.size()) == 0)
+				return;
+			
 			
 			Rectangle clipRect = g.getClipBounds();
 			
@@ -210,25 +215,18 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 					AttributedString as = new AttributedString(tmpString);
 					as.addAttribute(TextAttribute.FONT, MonoFont);
 					
-					if((jRacy.clrChooser.getHighlightColorMappingID()) != -1)
-					{
-						if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(jRacy.clrChooser.getHighlightColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-						else
-						{
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWThreadDataElement.getMappingColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-						}
-					}
+					if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(jRacy.clrChooser.getHighlightColor()),
+							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
+					else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(jRacy.clrChooser.getGroupHighlightColor()),
+							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 					else
-					{
 						as.addAttribute(TextAttribute.FOREGROUND, 
 							(tmpSMWThreadDataElement.getMappingColor()),
-							jRacy.staticSystemData.getPositionOfName(), tmpString.length()); 
-					}
+							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 					
 					g.drawString(as.getIterator(), 20, yCoord);
 					
@@ -289,25 +287,18 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 						AttributedString as = new AttributedString(tmpString);
 						as.addAttribute(TextAttribute.FONT, MonoFont);
 						
-						if((jRacy.clrChooser.getHighlightColorMappingID()) != -1)
-						{
-							if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-								as.addAttribute(TextAttribute.FOREGROUND, 
-									(jRacy.clrChooser.getHighlightColor()),
-									jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-							else
-							{
-								as.addAttribute(TextAttribute.FOREGROUND, 
-									(tmpSMWThreadDataElement.getMappingColor()),
-									jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-							}
-						}
+						if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+							as.addAttribute(TextAttribute.FOREGROUND, 
+								(jRacy.clrChooser.getHighlightColor()),
+								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
+						else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+							as.addAttribute(TextAttribute.FOREGROUND, 
+								(jRacy.clrChooser.getGroupHighlightColor()),
+								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 						else
-						{
 							as.addAttribute(TextAttribute.FOREGROUND, 
 								(tmpSMWThreadDataElement.getMappingColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length()); 
-						}
+								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 						
 						g.drawString(as.getIterator(), 20, yCoord);
 						

@@ -158,6 +158,10 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			//Grab the appropriate thread.
 			tmpThreadDataElementList = tDWindow.getStaticMainWindowSystemData();
 			
+			//With group support present, it is possible that the number of mappings in
+			//our data list is zero.  If so, just return.
+			if((tmpThreadDataElementList.size()) == 0)
+				return;
 			
 			Rectangle clipRect = g.getClipBounds();
 			
@@ -683,6 +687,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		}
 		catch(Exception e)
 		{
+			System.out.println(e);
 			jRacy.systemError(null, "TDWP03");
 		}
 		

@@ -119,6 +119,11 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			
 			tmpMeanDataElementList = mTSWindow.getStaticMainWindowSystemData();
 			
+			//With group support present, it is possible that the number of mappings in
+			//our data list is zero.  If so, just return.
+			if((tmpMeanDataElementList.size()) == 0)
+				return;
+			
 			
 			Rectangle clipRect = g.getClipBounds();
 			
@@ -215,25 +220,18 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 					AttributedString as = new AttributedString(tmpString);
 					as.addAttribute(TextAttribute.FONT, MonoFont);
 					
-					if((jRacy.clrChooser.getHighlightColorMappingID()) != -1)
-					{
-						if((tmpSMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(jRacy.clrChooser.getHighlightColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-						else
-						{
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWMeanDataElement.getMappingColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-						}
-					}
+					if((tmpSMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+								as.addAttribute(TextAttribute.FOREGROUND, 
+									(jRacy.clrChooser.getHighlightColor()),
+									jRacy.staticSystemData.getPositionOfName(), tmpString.length());
+					else if((tmpSMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(jRacy.clrChooser.getGroupHighlightColor()),
+							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 					else
-					{
 						as.addAttribute(TextAttribute.FOREGROUND, 
 							(tmpSMWMeanDataElement.getMappingColor()),
-							jRacy.staticSystemData.getPositionOfName(), tmpString.length()); 
-					}
+							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 					
 					g.drawString(as.getIterator(), 20, yCoord);
 					
@@ -292,25 +290,18 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 					AttributedString as = new AttributedString(tmpString);
 					as.addAttribute(TextAttribute.FONT, MonoFont);
 					
-					if((jRacy.clrChooser.getHighlightColorMappingID()) != -1)
-					{
-						if((tmpSMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(jRacy.clrChooser.getHighlightColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-						else
-						{
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWMeanDataElement.getMappingColor()),
-								jRacy.staticSystemData.getPositionOfName(), tmpString.length());
-						}
-					}
+					if((tmpSMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(jRacy.clrChooser.getHighlightColor()),
+							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
+					else if((tmpSMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(jRacy.clrChooser.getGroupHighlightColor()),
+							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 					else
-					{
 						as.addAttribute(TextAttribute.FOREGROUND, 
 							(tmpSMWMeanDataElement.getMappingColor()),
-							jRacy.staticSystemData.getPositionOfName(), tmpString.length()); 
-					}
+							jRacy.staticSystemData.getPositionOfName(), tmpString.length());
 					
 					g.drawString(as.getIterator(), 20, yCoord);
 					

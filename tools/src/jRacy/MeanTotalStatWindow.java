@@ -414,6 +414,11 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, Obser
 				//Just need to call a repaint on the ThreadDataWindowPanel.
 				meanTotalStatWindowPanelRef.repaint();
 			}
+			else if(tmpString.equals("dataEvent"))
+			{
+				lastSorting = "";
+				meanTotalStatWindowPanelRef.repaint();
+			}
 			else if(tmpString.equals("subWindowCloseEvent"))
 			{
 				closeThisWindow();

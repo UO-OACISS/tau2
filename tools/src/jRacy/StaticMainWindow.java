@@ -828,6 +828,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 				//Just need to call a repaint on the ThreadDataWindowPanel.
 				sMWPanel.repaint();
 			}
+			else if(tmpString.equals("dataEvent"))
+			{
+				sortLocalData();
+				sMWPanel.repaint();
+			}
 			else if(tmpString.equals("dataSetChangeEvent"))
 			{
 				//Clear any locally saved data.

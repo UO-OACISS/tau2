@@ -148,6 +148,11 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 			//Grab the appropriate thread.
 			tmpMeanDataElementList = mDWindow.getStaticMainWindowSystemData();
 			
+			//With group support present, it is possible that the number of mappings in
+			//our data list is zero.  If so, just return.
+			if((tmpMeanDataElementList.size()) == 0)
+				return;
+			
 			//Cycle through the data values for this thread to get the total.
 			tmpSum = 0.00;
 			

@@ -208,6 +208,17 @@ public class StaticMainWindowData
 	{
 		//Return a copy of the requested data, sorted in the appropriate manner.
 		
+		//Check to see if selected groups only are being displayed.
+		GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+		
+		boolean isSelectedGroupOn = false;
+		int selectedGroupID = 0;
+		
+		if(tmpGM.getIsSelectedGroupOn()){
+			isSelectedGroupOn = true;
+			selectedGroupID = tmpGM.getSelectedGroupID();
+		}
+		
 		//First, obtain the appropriate server.
 		SMWServer tmpSMWServer = (SMWServer) sMWGeneralData.elementAt(inServer);
 		Vector tmpContextList = tmpSMWServer.getContextList();
@@ -225,189 +236,412 @@ public class StaticMainWindowData
 		if(inString.equals("FIdDE"))
 		{
 			
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByMappingID();
-				tmpSMWThreadDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByMappingID();
+					tmpSMWThreadDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+						
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByMappingID();
+						tmpSMWThreadDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if(inString.equals("FIdDI"))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByMappingID();
-				tmpSMWThreadDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByMappingID();
+					tmpSMWThreadDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+						
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByMappingID();
+						tmpSMWThreadDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if(inString.equals("FIdAE"))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByMappingID();
-				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByMappingID();
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+						
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByMappingID();
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if(inString.equals("FIdAI"))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByMappingID();
-				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByMappingID();
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+						
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByMappingID();
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if(inString.equals("NDE"))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByName();
-				tmpSMWThreadDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);			
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByName();
+					tmpSMWThreadDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);			
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByName();
+						tmpSMWThreadDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}			
+				}
 			}
 		}
 		else if(inString.equals("NDI"))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByName();
-				tmpSMWThreadDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByName();
+					tmpSMWThreadDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+						
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByName();
+						tmpSMWThreadDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if(inString.equals("NAE"))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByName();
-				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByName();
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+						
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByName();
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if(inString.equals("NAI"))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-			
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByName();
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByName();
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByName();
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if(inString.equals("MDE"))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-			
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByValue();
-				tmpSMWThreadDataElementCopy.setSortByReverse(true);
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByValue();
+					tmpSMWThreadDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByValue();
+						tmpSMWThreadDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if((inString.equals("MDI")))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-			
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByValue();
-				tmpSMWThreadDataElementCopy.setSortByReverse(true);
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByValue();
+					tmpSMWThreadDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByValue();
+						tmpSMWThreadDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else if((inString.equals("MAE")))
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-			
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByValue();
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByValue();
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByValue();
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		else
 		{
-			for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-				//Create a new thread data object.
-				tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-			
-			
-				tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-				tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-				tmpSMWThreadDataElementCopy.setSortByValue();
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					//Create a new thread data object.
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 				
-				tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				
+					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+					tmpSMWThreadDataElementCopy.setSortByValue();
+					
+					tmpVector.addElement(tmpSMWThreadDataElementCopy);
+				}
+			}
+			else{
+				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
+						//Create a new thread data object.
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
+					
+					
+						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
+						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+						tmpSMWThreadDataElementCopy.setSortByValue();
+						
+						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					}
+				}
 			}
 		}
 		
@@ -911,6 +1145,17 @@ public class StaticMainWindowData
 		SMWMeanDataElement tmpSMWMeanDataElement;
 		SMWMeanDataElement tmpSMWMeanDataElementCopy;
 		
+		//Check to see if selected groups only are being displayed.
+		GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+		
+		boolean isSelectedGroupOn = false;
+		int selectedGroupID = 0;
+		
+		if(tmpGM.getIsSelectedGroupOn()){
+			isSelectedGroupOn = true;
+			selectedGroupID = tmpGM.getSelectedGroupID();
+		}
+		
 		if(inString == null)
 		{
 			//Just return the current list as the caller does not care as to the order.
@@ -921,19 +1166,38 @@ public class StaticMainWindowData
 		//the specified string.
 		if(inString.equals("FIdDE"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByMappingID();
-				tmpSMWMeanDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByMappingID();
+					tmpSMWMeanDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByMappingID();
+						tmpSMWMeanDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -942,19 +1206,39 @@ public class StaticMainWindowData
 		}
 		else if(inString.equals("FIdDI"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByMappingID();
-				tmpSMWMeanDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByMappingID();
+					tmpSMWMeanDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByMappingID();
+						tmpSMWMeanDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 		
 			Collections.sort(tmpVector);
@@ -962,19 +1246,39 @@ public class StaticMainWindowData
 		}
 		else if(inString.equals("FIdAE"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByMappingID();
-				tmpSMWMeanDataElementCopy.setSortByReverse(false);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByMappingID();
+					tmpSMWMeanDataElementCopy.setSortByReverse(false);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByMappingID();
+						tmpSMWMeanDataElementCopy.setSortByReverse(false);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -982,19 +1286,39 @@ public class StaticMainWindowData
 		}
 		else if(inString.equals("FIdAI"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByMappingID();
-				tmpSMWMeanDataElementCopy.setSortByReverse(false);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByMappingID();
+					tmpSMWMeanDataElementCopy.setSortByReverse(false);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByMappingID();
+						tmpSMWMeanDataElementCopy.setSortByReverse(false);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -1002,19 +1326,39 @@ public class StaticMainWindowData
 		}
 		else if(inString.equals("NDE"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByName();
-				tmpSMWMeanDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByName();
+					tmpSMWMeanDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByName();
+						tmpSMWMeanDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			
@@ -1023,19 +1367,39 @@ public class StaticMainWindowData
 		}
 		else if(inString.equals("NDI"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByName();
-				tmpSMWMeanDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByName();
+					tmpSMWMeanDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByName();
+						tmpSMWMeanDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -1043,19 +1407,39 @@ public class StaticMainWindowData
 		}
 		else if(inString.equals("NAE"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByName();
-				tmpSMWMeanDataElementCopy.setSortByReverse(false);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByName();
+					tmpSMWMeanDataElementCopy.setSortByReverse(false);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByName();
+						tmpSMWMeanDataElementCopy.setSortByReverse(false);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -1063,19 +1447,39 @@ public class StaticMainWindowData
 		}
 		else if(inString.equals("NAI"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByName();
-				tmpSMWMeanDataElementCopy.setSortByReverse(false);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){	
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByName();
+					tmpSMWMeanDataElementCopy.setSortByReverse(false);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByName();
+						tmpSMWMeanDataElementCopy.setSortByReverse(false);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -1083,19 +1487,39 @@ public class StaticMainWindowData
 		}
 		else if(inString.equals("MDE"))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByValue();
-				tmpSMWMeanDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByValue();
+					tmpSMWMeanDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByValue();
+						tmpSMWMeanDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -1103,19 +1527,39 @@ public class StaticMainWindowData
 		}
 		else if((inString.equals("MDI")))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByValue();
-				tmpSMWMeanDataElementCopy.setSortByReverse(true);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByValue();
+					tmpSMWMeanDataElementCopy.setSortByReverse(true);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByValue();
+						tmpSMWMeanDataElementCopy.setSortByReverse(true);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -1123,19 +1567,39 @@ public class StaticMainWindowData
 		}
 		else if((inString.equals("MAE")))
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByValue();
-				tmpSMWMeanDataElementCopy.setSortByReverse(false);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByValue();
+					tmpSMWMeanDataElementCopy.setSortByReverse(false);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByValue();
+						tmpSMWMeanDataElementCopy.setSortByReverse(false);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);
@@ -1143,19 +1607,39 @@ public class StaticMainWindowData
 		}
 		else
 		{
-			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-				//Set the sorting method.
-				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-				tmpSMWMeanDataElementCopy.setSortByValue();
-				tmpSMWMeanDataElementCopy.setSortByReverse(false);
-				
-				tmpVector.addElement(tmpSMWMeanDataElementCopy);
-				
+			if(!isSelectedGroupOn){
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+					//Set the sorting method.
+					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+					tmpSMWMeanDataElementCopy.setSortByValue();
+					tmpSMWMeanDataElementCopy.setSortByReverse(false);
+					
+					tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					
+				}
+			}
+			else{
+				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+				{
+					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+					
+					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
+						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
+						//Set the sorting method.
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+						tmpSMWMeanDataElementCopy.setSortByValue();
+						tmpSMWMeanDataElementCopy.setSortByReverse(false);
+						
+						tmpVector.addElement(tmpSMWMeanDataElementCopy);
+					}
+					
+				}
 			}
 			
 			Collections.sort(tmpVector);

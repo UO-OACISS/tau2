@@ -438,6 +438,10 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				//Just need to call a repaint on the ThreadDataWindowPanel.
 				totalStatWindowPanelRef.repaint();
 			}
+			else if(tmpString.equals("dataEvent"))
+			{ 
+				totalStatWindowPanelRef.repaint();
+			}
 			else if(tmpString.equals("subWindowCloseEvent"))
 			{ 
 				closeThisWindow();
@@ -474,48 +478,16 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			if(sortByMappingID)
 			{
 				if(descendingOrder)
-				{
-					if(FIdDE == null)
-					{
-						FIdDE = sMWData.getSMWThreadData(server, context, thread, "FIdDE");
-						return FIdDE;
-					}
-					else
-						return FIdDE;
-				}
+					return sMWData.getSMWThreadData(server, context, thread, "FIdDE");
 				else
-				{
-					if(FIdAE == null)
-					{
-						FIdAE = sMWData.getSMWThreadData(server, context, thread, "FIdAE");
-						return FIdAE;
-					}
-					else
-						return FIdAE;
-				}
+					return sMWData.getSMWThreadData(server, context, thread, "FIdAE");
 			}
 			else if(sortByName)
 			{
 				if(descendingOrder)
-				{
-					if(NDE == null)
-					{
-						NDE = sMWData.getSMWThreadData(server, context, thread, "NDE");
-						return NDE;
-					}
-					else
-						return NDE;
-				}
+					return sMWData.getSMWThreadData(server, context, thread, "NDE");
 				else
-				{
-					if(NAE == null)
-					{
-						NAE = sMWData.getSMWThreadData(server, context, thread, "NAE");
-						return NAE;
-					}
-					else
-						return NAE;
-				}
+					return sMWData.getSMWThreadData(server, context, thread, "NAE");
 			}
 			else if(sortByMillisecond)
 			{
@@ -523,48 +495,16 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				{
 					
 					if(descendingOrder)
-					{
-						if(MDI == null)
-						{
-							MDI = sMWData.getSMWThreadData(server, context, thread, "MDI");
-							return MDI;
-						}
-						else
-							return MDI;
-					}
+						return sMWData.getSMWThreadData(server, context, thread, "MDI");
 					else
-					{
-						if(MAI == null)
-						{
-							MAI = sMWData.getSMWThreadData(server, context, thread, "MAI");
-							return MAI;
-						}
-						else
-							return MAI;
-					}
+						return sMWData.getSMWThreadData(server, context, thread, "MAI");
 				}
 				else
 				{
 					if(descendingOrder)
-					{
-						if(MDE == null)
-						{
-							MDE = sMWData.getSMWThreadData(server, context, thread, "MDE");
-							return MDE;
-						}
-						else
-							return MDE;
-					}
+						return sMWData.getSMWThreadData(server, context, thread, "MDE");
 					else
-					{
-						if(MAE == null)
-						{
-							MAE = sMWData.getSMWThreadData(server, context, thread, "MAE");
-							return MAE;
-						}
-						else
-							return MAE;
-					}
+						return sMWData.getSMWThreadData(server, context, thread, "MAE");
 				}
 			}
 			
