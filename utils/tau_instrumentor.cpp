@@ -325,7 +325,7 @@ bool isVoidRoutine(itemRef * i)
 bool isReturnTypeReference(itemRef * i)
 {
   const pdbType *t = ((pdbRoutine *)(i->item))->signature()->returnType();
-  if (t->kind() == pdbItem::TY_REF) 
+  if ((t->kind() == pdbItem::TY_REF) || (t->isGroup())) 
     return true;
   else
     return false;
@@ -1293,8 +1293,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.36 $   $Date: 2002/02/01 18:19:32 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.36 2002/02/01 18:19:32 sameer Exp $
+ * $Revision: 1.37 $   $Date: 2002/02/04 20:02:02 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.37 2002/02/04 20:02:02 sameer Exp $
  ***************************************************************************/
 
 
