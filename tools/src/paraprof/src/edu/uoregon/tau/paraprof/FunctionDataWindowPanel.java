@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.13 2005/03/09 18:07:50 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.14 2005/03/22 00:33:44 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -318,14 +318,12 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
                         CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial,
                                 ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID(), window.getDataSorter(), 1);
+                                ppFunctionProfile.getThreadID(), window.getDataSorter(), 0);
                         ppTrial.getSystemEvents().addObserver(callPathTextWindow);
                         callPathTextWindow.show();
                     }
                 } else if (arg.equals("Show Mean Call Graph")) {
-                    PPThread ppThread = (PPThread) clickedOnObject;
-
-                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppThread.getThread());
+                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppTrial.getDataSource().getMeanData());
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
 
@@ -358,11 +356,17 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                     }
 
                 } else if (arg.equals("Show Thread Call Graph")) {
-                    PPThread ppThread = (PPThread) clickedOnObject;
+                    
+                    if (clickedOnObject instanceof PPFunctionProfile) {
+                        ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
 
-                    CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppThread.getThread());
-                    ppTrial.getSystemEvents().addObserver(tmpRef);
-                    tmpRef.show();
+                        CallGraphWindow tmpRef = new CallGraphWindow(ppTrial,ppTrial.getDataSource().getThread(ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
+                                ppFunctionProfile.getThreadID()));
+                        ppTrial.getSystemEvents().addObserver(tmpRef);
+                        tmpRef.show();
+
+                    }
+
 
                 } else if (arg.equals("Change Function Color")) {
                     Color tmpCol = function.getColor();
