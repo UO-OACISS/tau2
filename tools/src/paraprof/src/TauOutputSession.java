@@ -260,8 +260,93 @@ public class TauOutputSession extends ParaProfDataSession{
 		    int[] nct = this.getNCT(files[i].getName());
 		    System.out.println("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
 		    
-		    //First, build the global mapping.  This needs to be done first as
-		    //the system needs to know how many functions are present.
+		    //####################################
+		    //Second  Line
+		    //####################################
+		    //This is an important line.
+		    inputString = br.readLine();
+		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+		    //It's first token will be the number of mappings present.  Get it.
+		    tokenString = genericTokenizer.nextToken();
+		    
+		    if(!(this.firstMetric())){
+			if((this.getNumberOfMappings()) != Integer.parseInt(tokenString)){
+			    System.out.println("***********************");
+			    System.out.println("The number of mappings does not match!!!");
+			    System.out.println("");
+			    System.out.println("To add to an existing run, you must be choosing from");
+			    System.out.println("a list of multiple metrics from that same run!!!");
+			    System.out.println("***********************");
+			    
+			    return;
+			}
+		    }
+		    
+		    //Set the counter name.
+		    String counterName = getCounterName(inputString);
+		    
+		    //Ok, we are adding a counter name.  Since nothing much has happened yet, it is a
+		    //good place to initialize a few things.
+		    
+		    //Need to call increaseVectorStorage() on all objects that require it.
+		    this.increaseVectorStorage();
+		    
+		//Only need to call addDefaultToVectors() if not the first run.
+		if(!(this.firstMetric())){
+		    if(ParaProf.debugIsOn)
+			System.out.println("Increasing the storage for the new counter.");
+		
+		    for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
+			GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
+			tmpGME.incrementStorage();
+		    }
+	  
+		    for(Enumeration e2 = (this.getGlobalMapping().getMapping(2)).elements(); e2.hasMoreElements() ;){
+			GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
+			tmpGME.incrementStorage();
+		    }
+	  
+		    for(Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements() ;){
+			node = (Node) e3.nextElement();
+			for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
+			    context = (Context) e4.nextElement();
+			    for(Enumeration e5 = context.getThreads().elements(); e5.hasMoreElements() ;){
+				thread = (Thread) e5.nextElement();
+				thread.incrementStorage();
+				for(Enumeration e6 = thread.getFunctionList().elements(); e6.hasMoreElements() ;){
+				    GlobalThreadDataElement ref = (GlobalThreadDataElement) e6.nextElement();
+				    //Only want to add an element if this mapping existed on this thread.
+				    //Check for this.
+				    if(ref != null)
+					ref.incrementStorage();
+				}
+			    }
+			}
+		    }
+	  
+		    if(ParaProf.debugIsOn)
+			System.out.println("Done increasing the storage for the new counter.");
+		}
+      
+		//Now set the counter name.
+		if(counterName == null)
+		    counterName = new String("Time");
+
+		System.out.println("Counter name is: " + counterName);
+      
+		Metric metricRef = this.addMetric();
+		metricRef.setName(counterName);
+		metric = metricRef.getID();
+		System.out.println("The number of mappings in the system is: " + tokenString);
+      
+		bSDCounter++;
+		//####################################
+		//End - Second  Line
+		//####################################
+
+
+
+
 		}
 	    }
 	}
