@@ -60,6 +60,8 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    int contextID = -1;
 	    int threadID = -1;
 	    int mappingID = -1;
+
+	    //Vector localMap = new Vector();
 	    //######
 	    //End - Frequently used items.
 	    //######
@@ -74,6 +76,10 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    while(l.hasNext()){
 		    Function f = (Function) l.next();
 		    int id = this.getGlobalMapping().addGlobalMapping(f.getName(), 0);
+		    
+		    //Add element to the localMap for more efficient lookup later in the function.
+		    //localMap.add(new FunIndexFunIDPair(f.getIndexID(), id));
+		    
 		    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(id, 0);
 		    for(int i=0;i<numberOfMetrics;i++){
 			FunctionDataObject fdo = f.getMeanSummary();
@@ -95,6 +101,8 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		    globalMappingElement.setMeanValuesSet(true);
 	    }
 	    
+	    //Collections.sort(localMap);
+
 	    //Increase storage.
 	    for(int i=0;i<(numberOfMetrics-1);i++){
 		if(this.debug())
@@ -145,8 +153,12 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		}
 		
 		//Get GlobalMappingElement and GlobalThreadDataElement.
+		
+		//Obtain the mapping id from the local map.
+		//int pos = Collections.binarySearch(localMap, new FunIndexFunIDPair(fdo.getFunctionIndexID(),0));
+		//mappingID = ((FunIndexFunIDPair)localMap.elementAt(pos)).paraProfId;
+		
 		mappingID = this.getGlobalMapping().getMappingID(perfDBSession.getFunction(fdo.getFunctionIndexID()).getName(),0);
-		//System.out.println("mappingID: "+mappingID);
 		globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 		globalMappingElement.incrementCounter();
 		globalThreadDataElement = thread.getFunction(mappingID);
@@ -198,7 +210,6 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		}
 	    }
 
-	    l = perfDBSession.getUserEvents();
 	    while(l.hasNext()){
 		UserEvent ue = (UserEvent) l.next();
 		System.out.println(ue.getName());
@@ -228,3 +239,16 @@ public class ParaProfDBSession extends ParaProfDataSession{
     //End - Instance data.
     //####################################
 }
+
+/*class FunIndexFunIDPair implements Comparable{
+    public FunIndexFunIDPair(int functionIndex, int paraProfId){
+	this.functionIndex = functionIndex;
+	this.paraProfId = paraProfId;
+    }
+
+    public int compareTo(Object obj){
+	return functionIndex - ((FunIndexFunIDPair)obj).functionIndex;}
+
+    public int functionIndex;
+    public int paraProfId;
+    }*/

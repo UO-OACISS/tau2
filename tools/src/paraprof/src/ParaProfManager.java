@@ -214,7 +214,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		System.out.println("Done loading experiment list.");
 	    }
 	    tree.expandPath(path);
-	    jSplitPane.setRightComponent(getApplicationTable((ParaProfApplication) userObject));
+	    jSplitPane.setRightComponent(getTable(userObject));
 	    jSplitPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfExperiment){
@@ -243,7 +243,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		System.out.println("Done loading trial list.");
 	    }
 	    tree.expandPath(path);
-	    jSplitPane.setRightComponent(getPanelHelpMessage(-1));
+	    jSplitPane.setRightComponent(getTable(userObject));
 	    jSplitPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfTrial){
@@ -355,8 +355,8 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	return (new JScrollPane(jTextArea));
     }
 
-    private Component getApplicationTable(ParaProfApplication application){
-	return (new JScrollPane(new JTable(new ParaProfManagerTableModel(application, treeModel))));}
+    private Component getTable(Object obj){
+	return (new JScrollPane(new JTable(new ParaProfManagerTableModel(obj, treeModel))));}
     
     //******************************
     //End - Component functions.
@@ -606,7 +606,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     DefaultMutableTreeNode defaultParaProfTrialNode = null;
 
     private String password = "";
-    private String configFile = "/home/bertie/Programming/data/perfdb.cfg";
+    private String configFile = "/Users/bertie/Desktop/Programming/data/perfdb.cfg";
     private Vector loadedTrials = new Vector();
     //####################################
     //End - Instance Data.
