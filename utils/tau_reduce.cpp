@@ -21,6 +21,7 @@
 
 FILE* fp;
 char line[SIZE_OF_LINE];           //input line of file
+char rule[SIZE_OF_LINE];           //to store a full rule
 string dumpfilename;               //filename of dump file
 string rulefilename;               //filename of rule file
 string outputfilename;             //filename of outputfile
@@ -341,7 +342,7 @@ void processCommand(int more){
 #endif /* DEBUG */
   //did we read something in for the field?  If not give error and return
   if(strlen(f)==0){
-    printf("Error: The field variable is empty.  Check rule, and try again.\n");
+    printf("Error: The field variable is empty.  Rule: '%s'\n",rule);
     return;
   }
   string field=string(f);
@@ -366,7 +367,7 @@ void processCommand(int more){
       }//for
     }//else if
     else{//unregonized op
-      printf("Error:  unrecognized operator: %c\n", op);
+      printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
     }//else
   }//if
   else if(field=="numsubrs"){
@@ -389,7 +390,7 @@ void processCommand(int more){
       }//for
     }//else if
     else{//unregonized op
-      printf("Error:  unrecognized operator: %c\n", op);
+      printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
     }//else
   }//else if
   else if(field=="percent"){
@@ -412,12 +413,12 @@ void processCommand(int more){
       }//for
     }//else if
     else{//unregonized op
-      printf("Error:  unrecognized operator: %c\n", op);
+      printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
     }//else
   }//else if
   else if(field=="usec"){
     if(hwcounters){
-      printf("Error:  no timing data for this file -- use count or totalcount\n");
+      printf("Error:  no timing data for this file -- use count or totalcount.  Rule: '%s'\n",rule);
     }//if
     else{
       if(op=='<'){
@@ -439,13 +440,13 @@ void processCommand(int more){
 	}//for
       }//else if
       else{//unregonized op
-	printf("Error:  unrecognized operator: %c\n", op);
+	printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
       }//else
     }//else
   }//else if
   else if(field=="cumusec"){
     if(hwcounters){
-      printf("Error:  no timing data for this file -- try count and totalcount\n");
+      printf("Error:  no timing data for this file -- try count and totalcount.  Rule: '%s'\n",rule);
     }//if
     else{
       if(op=='<'){
@@ -467,7 +468,7 @@ void processCommand(int more){
 	}//for
       }//else if
       else{//unregonized op
-	printf("Error:  unrecognized operator: %c\n", op);
+	printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
       }//else
     }//else
   }//else if
@@ -492,11 +493,11 @@ void processCommand(int more){
 	}//for
       }//else if
       else{//unregonized op
-	printf("Error:  unrecognized operator: %c\n", op);
+	printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
       }//else
     }//if
     else{
-      printf("Error:  no hardware counter data for this file -- use usec and cumusec\n");
+      printf("Error:  no hardware counter data for this file -- use usec and cumusec.  Rule: '%s'\n",rule);
     }//else
   }//else if
   else if(field=="totalcount"){
@@ -520,16 +521,16 @@ void processCommand(int more){
 	}//for
       }//else if
       else{//unregonized op
-	printf("Error:  unrecognized operator: %c\n", op);
+	printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
       }//else
     }//if
     else{
-      printf("Error:  no count data for this file -- try usec and cumusec\n");
+      printf("Error:  no count data for this file -- try usec and cumusec.  Rule: '%s'\n",rule);
     }//else
   }//else if
   else if(field=="stddev"){
     if(!profilestats){
-      printf("Error:  there is no standard deviation for this data\n");
+      printf("Error:  there is no standard deviation for this data.  Rule: '%s'\n",rule);
     }//if
     else{
       if(op=='<'){
@@ -551,13 +552,13 @@ void processCommand(int more){
 	}//for
       }//else if
       else{//unregonized op
-	printf("Error:  unrecognized operator: %c\n", op);
+	printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
       }//else
     }//else
   }//else if
   else if(field=="usecs/call"){
     if(hwcounters){
-      printf("Error:  no timing data for this file -- use counts/call\n");
+      printf("Error:  no timing data for this file -- use counts/call.  Rule: '%s'\n",rule);
     }//if
     else{
       if(op=='<'){
@@ -579,13 +580,13 @@ void processCommand(int more){
 	}//for
       }//else if
       else{//unregonized op
-	printf("Error:  unrecognized operator: %c\n", op);
+	printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
       }//else
     }//else
   }//else if
   else if(field=="counts/call"){
     if(!hwcounters){
-      printf("Error:  no timing data for this file -- use usecs/call\n");
+      printf("Error:  no timing data for this file -- use usecs/call.  Rule: '%s'\n",rule);
     }//if
     else{
       if(op=='<'){
@@ -607,12 +608,12 @@ void processCommand(int more){
 	}//for
       }//else if
       else{//unregonized op
-	printf("Error:  unrecognized operator: %c\n", op);
+	printf("Error:  unrecognized operator: '%c' in rule: '%s'\n", op,rule);
       }//else
     }//else
   }//else if
   else{ //unrecognized field
-    printf("Error:  unrecognized field: %s\n", field);
+    printf("Error:  unrecognized field: '%s' in rule: '%s'\n", field,rule);
   }//else
   if(!more){
     for(int i=0;i<number_of_functions;i++){
@@ -686,7 +687,6 @@ void parseRules(){
   //so, look for the ':'  if there is one, send it to procesGroupPrefix()
   if(strstr(line, ":")!=NULL)
     processGroupPrefix();
-
   //now if there's the " & " string, then we know there is atleast two rules.
   //so first, increment the numstmts variable and call the processCommand()
   //function with the value of 1 passed to it, signalling that there are
@@ -736,9 +736,13 @@ void acceptRules(){
   if(apply_default_rules){
     char defaultrule[]= "numcalls > 1000000 & usecs/call < 2";
     strncpy(line, defaultrule, strlen(defaultrule)+1);
+    strncpy(rule,line,strlen(line)+1);
     if(verbose)
      printf("___________________________________________________________\n%s\n",line);
     numstmts=0;
+    //first we need to put a copy of the whole rule in the rule variable
+    //this is used for error messages and debugging
+    strncpy(rule,line,strlen(line)+1);
     parseRules();
   }//if
 
@@ -756,6 +760,10 @@ void acceptRules(){
 	if(verbose)
 	  printf("___________________________________________________________\n%s",line);
 	numstmts=0;
+	strncpy(rule,line,strlen(line)+1);
+	if(rule[strlen(rule)-1]=='\n'){
+	  rule[strlen(rule)-1]='\0';
+	}//if
 	parseRules();
 	//zero out array again
 	for(int i=0; i<number_of_functions;i++){
@@ -960,7 +968,7 @@ int main (int argc, char *argv[]){
 
 /***************************************************************************
  * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
- * $Revision: 1.7 $   $Date: 2002/08/05 20:19:37 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.7 2002/08/05 20:19:37 ntrebon Exp $
+ * $Revision: 1.8 $   $Date: 2002/08/05 22:19:26 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.8 2002/08/05 22:19:26 ntrebon Exp $
  ***************************************************************************/
 
