@@ -2,7 +2,7 @@ TAU_HOME	= /home/users/tyreld/cvs/tau2
 
 TAUIL_HOME	= $(TAU_HOME)/tools/src/TauIL
 
-TOOLDIR		= $(TAUIL_HOME)/tools
+TOOLDIR		= $(HOME)/java
 CUPDIR		= $(TOOLDIR)/CUP
 JFLEXDIR	= $(TOOLDIR)/JFlex
 
