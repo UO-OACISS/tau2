@@ -34,7 +34,7 @@
 #include "Profile/Profiler.h"
 
 #ifndef TAU_WINDOWS
-extern "C" void Tau_disable_instrumentation(void);
+extern "C" void Tau_shutdown(void);
 #endif //TAU_WINDOWS
 
 #ifdef TAU_DOT_H_LESS_HEADERS
@@ -352,7 +352,7 @@ void Profiler::Stop(int tid)
 	  // after main exits. Still needed on Linux - we use TauProgramTermination()
 	  if (strcmp(ThisFunction->GetName(), "_fini") == 0) TheSafeToDumpData() = 0;
 	  #ifndef TAU_WINDOWS
-	  atexit(Tau_disable_instrumentation);
+	  atexit(Tau_shutdown);
 	  #endif //TAU_WINDOWS
   	  if (TheSafeToDumpData()) {
             if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
@@ -1007,8 +1007,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.53 $   $Date: 2002/01/15 22:25:34 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.53 2002/01/15 22:25:34 sameer Exp $ 
+ * $Revision: 1.54 $   $Date: 2002/01/16 00:40:03 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.54 2002/01/16 00:40:03 sameer Exp $ 
  ***************************************************************************/
 
 	

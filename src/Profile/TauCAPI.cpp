@@ -163,6 +163,13 @@ extern "C" void Tau_disable_instrumentation(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_shutdown(void)
+{
+  RtsLayer::TheShutdown() = true;
+  TAU_DISABLE_INSTRUMENTATION();
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" TauGroup_t Tau_enable_group_name(char * group)
 {
   return TAU_ENABLE_GROUP_NAME(group);
@@ -305,7 +312,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 2002/01/15 22:25:35 $
- * VERSION: $Id: TauCAPI.cpp,v 1.21 2002/01/15 22:25:35 sameer Exp $
+ * $Revision: 1.22 $   $Date: 2002/01/16 00:40:03 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.22 2002/01/16 00:40:03 sameer Exp $
  ***************************************************************************/
 
