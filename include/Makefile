@@ -160,7 +160,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
 #PAPI#LEXTRA	       	       = $(PAPIDIR)/src/libpapi.a #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/src/libpapi.a -lcpc #ENDIF#
-#SP1#LEXTRA  = $(PAPIDIR)/src/libpapi.a -L/usr/lpp/pmtoolkit/lib -lpmapi#ENDIF#
+#IBMPAPI#LEXTRA  = $(PAPIDIR)/src/libpapi.a -L/usr/lpp/pmtoolkit/lib -lpmapi#ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#

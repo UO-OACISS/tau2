@@ -1185,6 +1185,10 @@ case $machine in
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs SP1"
 
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs IBMPAPI"
+	fi
 # Check for SP1 xdev enviroment
 #        if [ $detectxdev = sp1 ]
 #          then
