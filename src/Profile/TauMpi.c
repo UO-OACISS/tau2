@@ -214,8 +214,8 @@ char *note;
   if ((rq) && rq->status == RQ_RECV)
   { /* See if we need to see the status to get values of tag & id */
     /* for wildcard receives from any task */
-    if (rq->otherParty == MPI_ANY_SOURCE)
-      otherid = status->MPI_SOURCE;
+    /* if (rq->otherParty == MPI_ANY_SOURCE) */ 
+    otherid = status->MPI_SOURCE;
     if (rq->tag == MPI_ANY_TAG)
       othertag = status->MPI_TAG;
     /* post the receive message */
