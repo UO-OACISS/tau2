@@ -58,7 +58,7 @@ unsigned long long pcxx_GetUSecLong(int tid)
 }
 
 /* -- write event to buffer only [without overflow check] ---- */
-static void TraceEventOnly(long int ev,long long par, int tid)
+void TraceEventOnly(long int ev,long long par, int tid)
 {
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
   pcxx_ev_ptr->ev   = ev;
