@@ -9,7 +9,7 @@ default: ParaProf.jar
 ParaProf.jar:
 	javac *.java
 	mv *.class ./paraprof
-	jar -cmvf manifest.txt ParaProf.jar ParaProf
+	jar -cmvf manifest.txt ParaProf.jar paraprof
 	mv ParaProf.jar ../bin
 
 clean:
