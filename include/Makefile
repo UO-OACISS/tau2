@@ -75,8 +75,10 @@ JDKARCH                 = linux
 #############################################
 # DYNINST DEFAULT ARCH
 #############################################
+DYNINST_PLATFORM = i386-unknown-linux2.0
 #SOL2#DYNINST_PLATFORM 	= sparc-sun-solaris2.4 #ENDIF#
-#SP1#DYNINST_PLATFORM 	= rs6000-ibm-aix       #ENDIF#
+#SP1#DYNINST_PLATFORM 	= rs6000-ibm-aix4.1    #ENDIF#
+
 
 #PCL#include $(TAUROOT)/include/makefiles/PCLMakefile.stub	  #ENDIF#
 
