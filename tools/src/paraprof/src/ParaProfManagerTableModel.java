@@ -278,10 +278,13 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
     }
   
     public boolean isCellEditable(int r, int c){
+	return false;
+	/*
 	if(c==1 && r!=1)
 	    return true;
 	else
 	    return false;
+	*/
     }
   
     public void setValueAt(Object obj, int r, int c){
