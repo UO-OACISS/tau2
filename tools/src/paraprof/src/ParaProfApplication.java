@@ -102,11 +102,7 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
     //ParaProfTreeUserObject
     //######
     public void clearDefaultMutableTreeNodes(){
-	this.setDMTN(null);
-	ListIterator l = this.getExperimentList();
-	while(l.hasNext())
-	    ((ParaProfExperiment)l.next()).clearDefaultMutableTreeNodes();
-    }
+	this.setDMTN(null);}
     //######
     //End - ParaProfTreeUserObject
     //######

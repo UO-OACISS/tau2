@@ -115,6 +115,12 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public boolean dBTrial(){
 	return dBTrial;}
 
+    public void setDefaultTrial(boolean defaultTrial){
+	this.defaultTrial = defaultTrial;}
+
+    public boolean defaultTrial(){
+	return defaultTrial;}
+
     public void setLoading(boolean loading){
 	this.loading = loading;}
 
@@ -171,11 +177,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //ParaProfTreeUserObject
     //######
     public void clearDefaultMutableTreeNodes(){
-	this.setDMTN(null);
-	ListIterator l = this.getMetricList();
-	while(l.hasNext())
-	    ((Metric)l.next()).clearDefaultMutableTreeNodes();
-    }
+	this.setDMTN(null);}
     //######
     //End - ParaProfTreeUserObject
     //######
@@ -330,8 +332,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	    metric.setTrial(this);
 	}
 
-	if(this.dBTrial())
-	    ParaProf.paraProfManager.addMetricTreeNodes(this);
+	ParaProf.paraProfManager.populateTrialMetrics(this, defaultTrial);
 	
 	//Notify any observers of this trial that the Data Session is done.
 	this.notifyObservers();
@@ -362,6 +363,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //Instance data.
     //####################################
     int type = -1;
+    boolean defaultTrial = false;
     ParaProfDataSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;

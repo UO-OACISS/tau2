@@ -142,11 +142,7 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
     //ParaProfTreeUserObject
     //######
     public void clearDefaultMutableTreeNodes(){
-	this.setDMTN(null);
-	ListIterator l = this.getTrialList();
-	while(l.hasNext())
-	    ((ParaProfTrial)l.next()).clearDefaultMutableTreeNodes();
-    }
+	this.setDMTN(null);}
     //######
     //End - ParaProfTreeUserObject
     //######

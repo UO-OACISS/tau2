@@ -16,7 +16,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import paraprof.*;
 
-public class ParaProf implements ActionListener, ParaProfObserver{
+public class ParaProf implements ParaProfObserver, ActionListener{
     //**********
     //Some system wide state variables.
     static String profilePathName = null;       //This contains the path to the currently loaded profile data.
@@ -85,9 +85,6 @@ public class ParaProf implements ActionListener, ParaProfObserver{
 	    FileList fl = new FileList();
 	    Vector v = null;
 	    if(type!=-1){
-		trial = new ParaProfTrial(null, type);
-		trial.addObserver(this);
-		trial.setName("Default Trial");
 		switch(type){
 		case 0:
 		    if(filePrefix==null)
@@ -111,9 +108,13 @@ public class ParaProf implements ActionListener, ParaProfObserver{
 		    break;
 		}
 		if(v.size()>0){
+		    trial = new ParaProfTrial(null, type);
+		    trial.addObserver(this);
+		    trial.setName("Default Trial");
+		    trial.setDefaultTrial(true);
 		    trial.setPaths(fl.getPath());
-		    trial.initialize(v);
 		    experiment.addTrial(trial);
+		    trial.initialize(v);
 		}
 		else{
 		    System.out.println("No profile files found in the current directory.");
@@ -129,23 +130,25 @@ public class ParaProf implements ActionListener, ParaProfObserver{
 		    trial = new ParaProfTrial(null, 0);
 		    trial.addObserver(this);
 		    trial.setName("Default Trial");
+		    trial.setDefaultTrial(true);
 		    trial.setPaths(fl.getPath());
-		    trial.initialize(v);
 		    experiment.addTrial(trial);
+		    trial.initialize(v);
 		}
 		else{
 		    //Try finding profile.*.*.* files.
-		    trial = new ParaProfTrial(null, 1);
-		    trial.addObserver(this);
-		    trial.setName("Default Trial");
 		    if(filePrefix==null) 
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", UtilFncs.debug);
 		    else
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, UtilFncs.debug);
 		    if(v.size()>0){
+			trial = new ParaProfTrial(null, 1);
+			trial.addObserver(this);
+			trial.setName("Default Trial");
+			trial.setDefaultTrial(true);
 			trial.setPaths(fl.getPath());
-			trial.initialize(v);
 			experiment.addTrial(trial);
+			trial.initialize(v);
 		    }
 		    else{
 			System.out.println("No profile files found in the current directory.");
@@ -155,8 +158,7 @@ public class ParaProf implements ActionListener, ParaProfObserver{
 	    }		
 	}
 	catch (Exception e) {
-    
-	    System.out.println("An un-caught exception has occurred within the program!");
+  	    System.out.println("An un-caught exception has occurred within the program!");
 	    System.out.println("The details of this execption has been stored in a file named: exception.err");
 	    System.out.println("Please email this file to Robert Bell at bertie@cs.uoregon.edu ");
 	    e.printStackTrace();
@@ -178,7 +180,6 @@ public class ParaProf implements ActionListener, ParaProfObserver{
     public void update(Object obj){
 	//We are only ever watching an instance of ParaProfTrial.
 	ParaProfTrial trial = (ParaProfTrial) obj;
-	ParaProf.paraProfManager.populateTrialMetrics(trial, true);
 	trial.showMainWindow();
     }
     public void update(){}
