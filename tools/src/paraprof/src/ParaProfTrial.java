@@ -197,7 +197,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public void showMainWindow(){
   
 	if(sMW == null){
-	    sMW = new StaticMainWindow(this);
+	    sMW = new StaticMainWindow(this, UtilFncs.debug);
 	    sMW.setVisible(true);
 	    this.getSystemEvents().addObserver(sMW);
 	}

@@ -31,11 +31,11 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	}
     }
   
-    public MappingLedgerWindow(ParaProfTrial trial, int windowType){
+    public MappingLedgerWindow(ParaProfTrial trial, int windowType, boolean debug){
 	try{
-	    
 	    this.trial = trial;
 	    this.windowType = windowType;
+	    this.debug = debug;
 	    
 	    setLocation(new java.awt.Point(300, 200));
 	    setSize(new java.awt.Dimension(350, 450));
@@ -202,7 +202,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new MappingLedgerWindowPanel(trial, this, windowType);
+	    panel = new MappingLedgerWindowPanel(trial, this, windowType, this.debug());
 	    sp = new JScrollPane(panel);
 	    //######
 	    //End - Panel and ScrollPane definition.
@@ -262,13 +262,13 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 		    System.exit(0);
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    (new MappingLedgerWindow(trial, 0)).show();
+		    (new MappingLedgerWindow(trial, 0, this.debug())).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (new MappingLedgerWindow(trial, 1)).show();
+		    (new MappingLedgerWindow(trial, 1, this.debug())).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (new MappingLedgerWindow(trial, 2)).show();
+		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -407,7 +407,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
   
     void closeThisWindow(){ 
 	try{
-	    if(UtilFncs.debug){
+	    if(this.debug()){
 		System.out.println("------------------------");
 		System.out.println("A Mapping Ledger Window for window type: " + windowType + " is closing");
 		System.out.println("Clearing resourses for that window.");
@@ -422,6 +422,11 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	}
     }
 
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -438,6 +443,8 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
     private MappingLedgerWindowPanel panel = null;
  
     private Vector list = null;
+    
+    private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //####################################

@@ -182,25 +182,19 @@ public class Thread implements Comparable{
 	int maxNumberOfCalls = 0;
 	int maxNumberOfSubroutines = 0;
 
-	double totalInclusiveValue = 0.0;
-	double totalExclusiveValue = 0.0;
-	
 	double d = 0.0;
 	int i = 0;
 	ListIterator l = this.getFunctionListIterator();
 	
 	while(l.hasNext()){
 	    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
-	    
 	    if(globalThreadDataElement!=null){
 		d = globalThreadDataElement.getInclusiveValue(metric);
 		if(d>maxInclusiveValue)
 		    maxInclusiveValue = d;
-		totalInclusiveValue+=d;
 		d = globalThreadDataElement.getExclusiveValue(metric);
 		if(d>maxExclusiveValue)
 		    maxExclusiveValue = d;
-		totalExclusiveValue+=d;
 		d = globalThreadDataElement.getInclusivePercentValue(metric);
 		if(d>maxInclusivePercentValue)
 		    maxInclusivePercentValue = d;
@@ -229,8 +223,6 @@ public class Thread implements Comparable{
 	    System.out.println("maxUserSecPerCall:"+maxUserSecPerCall);
 	    System.out.println("maxNumberOfCalls:"+maxNumberOfCalls);
 	    System.out.println("maxNumberOfSubroutines:"+maxNumberOfSubroutines);
-	    System.out.println("totalInclusiveValue:"+totalInclusiveValue);
-	    System.out.println("totalExclusiveValue:"+totalExclusiveValue);
 	    System.out.println("------");
 	}
 	this.setMaxInclusiveValue(metric, maxInclusiveValue);
@@ -240,8 +232,6 @@ public class Thread implements Comparable{
 	this.setMaxUserSecPerCall(metric, maxUserSecPerCall);
 	this.setMaxNumberOfCalls(maxNumberOfCalls);
 	this.setMaxNumberOfSubRoutines(maxNumberOfSubroutines);
-	this.setTotalInclusiveValue(metric, totalInclusiveValue);
-	this.setTotalExclusiveValue(metric, totalExclusiveValue);
     }
 
     private void setPercentData(int metric){
@@ -252,23 +242,18 @@ public class Thread implements Comparable{
 	    if(globalThreadDataElement!=null){
 		GlobalMappingElement globalMappingElement = globalThreadDataElement.getGlobalMappingElement();
 
-		double exclusiveTotal = this.getTotalExclusiveValue(metric);
 		double inclusiveMax = this.getMaxInclusiveValue(metric);
-		
 		double d1 = globalThreadDataElement.getExclusiveValue(metric);
 		double d2 = globalThreadDataElement.getInclusiveValue(metric);
 		
-		if(exclusiveTotal!=0){
-		    double result = (d1/exclusiveTotal)*100.00;
+		if(inclusiveMax!=0){
+		    double result = (d1/inclusiveMax)*100.00;
 		    globalThreadDataElement.setExclusivePercentValue(metric, result);
 		    //Now do the global mapping element exclusive stuff.
 		    if((globalMappingElement.getMaxExclusivePercentValue(metric)) < result)
 			globalMappingElement.setMaxExclusivePercentValue(metric, result);
-		    
-		}
-		
-		if(inclusiveMax!=0){
-		    double result = (d2/inclusiveMax) * 100;
+
+		    result = (d2/inclusiveMax) * 100;
 		    globalThreadDataElement.setInclusivePercentValue(metric, result);
 		    //Now do the global mapping element exclusive stuff.
 		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < result)
@@ -320,18 +305,6 @@ public class Thread implements Comparable{
     public int getMaxNumberOfSubRoutines(){
 	return maxNumberOfSubRoutines;}
 
-    public void setTotalInclusiveValue(int metric, double inDouble){
-	this.insertDouble(metric,5,inDouble);}
-
-    public double getTotalInclusiveValue(int metric){
-	return this.getDouble(metric,5);}
-
-    public void setTotalExclusiveValue(int metric, double inDouble){
-	this.insertDouble(metric,6,inDouble);}
-
-    public double getTotalExclusiveValue(int metric){
-	return this.getDouble(metric,6);}
-        
     //#######
     //The following two functions assist in determining whether this
     //thread's callpath information has been set correctly.

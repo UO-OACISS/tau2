@@ -41,7 +41,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	}
     }
     
-    public ThreadDataWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, StaticMainWindowData sMWData, int windowType){
+    public ThreadDataWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, StaticMainWindowData sMWData, int windowType, boolean debug){
 	try{
 	    this.trial = trial;
 	    this.sMWData = sMWData;
@@ -49,6 +49,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    this.contextID = contextID;
 	    this.threadID = threadID;
 	    this.windowType = windowType;
+	    this.debug = debug;
 
 	    setLocation(new java.awt.Point(300, 200));
 	    setSize(new java.awt.Dimension(700, 450));
@@ -303,7 +304,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this, sMWData, windowType);
+	    panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this, sMWData, windowType, this.debug());
 	    sp = new JScrollPane(panel);
 	    this.setHeader();
 	    //######
@@ -475,13 +476,13 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
-		    (new MappingLedgerWindow(trial, 0)).show();
+		    (new MappingLedgerWindow(trial, 0, this.debug())).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (new MappingLedgerWindow(trial, 1)).show();
+		    (new MappingLedgerWindow(trial, 1, this.debug())).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (new MappingLedgerWindow(trial, 2)).show();
+		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -770,7 +771,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
   
     void closeThisWindow(){ 
 	try{
-	    if(UtilFncs.debug){
+	    if(this.debug()){
 		System.out.println("------------------------");
 		System.out.println("A thread window for: \"" + "n,c,t, " + nodeID + "," + contextID + "," + threadID + "\" is closing");
 		System.out.println("Clearing resourses for that window.");
@@ -785,6 +786,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	}
     }
  
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -829,6 +835,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     private boolean percent = true; //true: show values as percent,false: show actual values.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+
+    private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //####################################

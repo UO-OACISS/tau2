@@ -39,7 +39,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 				 int threadID,
 				 ThreadDataWindow tDWindow,
 				 StaticMainWindowData sMWData,
-				 int windowType){
+				 int windowType,
+				 boolean debug){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
@@ -54,6 +55,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    this.tDWindow = tDWindow;
 	    this.windowType = windowType;
 	    this.sMWData = sMWData;
+	    this.debug = debug;
 	    barLength = baseBarLength;
 	    
 	    if(windowType==1)
@@ -433,7 +435,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 			trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-			MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), sMWData);
+			MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), sMWData, this.debug());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
@@ -595,6 +597,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     public Dimension getPreferredSize(){
 	return new Dimension(xPanelSize, (yPanelSize + 10));}
   
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -621,6 +628,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
   
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
+
+    private boolean debug = false; //Off by default.
     //####################################
     //Instance data.
     //####################################

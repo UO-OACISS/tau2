@@ -31,12 +31,12 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	}
     }
   
-    public MappingDataWindow(ParaProfTrial trial, int mappingID, StaticMainWindowData sMWData){
+    public MappingDataWindow(ParaProfTrial trial, int mappingID, StaticMainWindowData sMWData, boolean debug){
 	try{
 	    this.mappingID = mappingID;
 	    this.trial = trial;
 	    this.sMWData = sMWData;
-
+	    this.debug = debug;
 	    int windowWidth = 650;
 	    int windowHeight = 550;
 	    //Grab the screen size.
@@ -309,7 +309,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new MappingDataWindowPanel(trial, mappingID, this);
+	    panel = new MappingDataWindowPanel(trial, mappingID, this, this.debug());
 	    sp = new JScrollPane(panel);
 	    this.setHeader();
 	    //######
@@ -467,13 +467,13 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
-		    (new MappingLedgerWindow(trial, 0)).show();
+		    (new MappingLedgerWindow(trial, 0, this.debug())).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (new MappingLedgerWindow(trial, 1)).show();
+		    (new MappingLedgerWindow(trial, 1, this.debug())).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (new MappingLedgerWindow(trial, 2)).show();
+		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -748,7 +748,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
   
     void closeThisWindow(){
 	try{
-	    if(UtilFncs.debug){
+	    if(this.debug()){
 		System.out.println("------------------------");
 		System.out.println("A mapping window for: \"" + mappingName + "\" is closing");
 		System.out.println("Clearing resourses for that window.");
@@ -761,7 +761,12 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    UtilFncs.systemError(e, null, "MDW10");
 	}
     }
-      
+
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -805,6 +810,8 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     private boolean percent = true; //true: show values as percent,false: show actual values.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+
+    private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //####################################

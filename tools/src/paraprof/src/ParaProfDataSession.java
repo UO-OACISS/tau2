@@ -576,10 +576,10 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		this.outputToFile("Done - GlobalMappingElement: " + globalMappingElement.getMappingName() + "(Percent)");
 		this.outputToFile("######");
 	    }
-	    if(this.debug()){
-		this.outputToFile("Done - Setting mean data :: public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics)");
-		this.outputToFile("####################################");
-	    }
+	}
+	if(this.debug()){
+	    this.outputToFile("Done - Setting mean data :: public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics)");
+	    this.outputToFile("####################################");
 	}
     }
     //######

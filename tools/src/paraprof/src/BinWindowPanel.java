@@ -29,8 +29,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
   
     //**********
     //The constructors!!
-    public BinWindowPanel()
-    {
+    public BinWindowPanel(){
 	try{
 	    //Set the default tool tip for this panel.
 	    this.setToolTipText("Incorrect Constructor!!!");
@@ -41,21 +40,21 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    }
     }
   
-    public BinWindowPanel(ParaProfTrial trial, BinWindow bWindow, boolean normal, int mappingID)
-    {
+    public BinWindowPanel(ParaProfTrial trial, BinWindow bWindow, boolean normalBin, int mappingID, boolean debug){
 	try{
 	    //Set the default tool tip for this panel.
 	    this.setToolTipText("ParaProf bar graph draw window!");
 	    setBackground(Color.white);
       
-	    normalBin = normal;
-	    this.mappingID = mappingID;
-	    //Add this object as a mouse listener.
-	    addMouseListener(this);
-      
-	    //Set instance variables.
 	    this.trial = trial;
 	    this.bWindow = bWindow;
+	    this.normalBin = normalBin;
+	    this.mappingID = mappingID;
+	    this.debug = debug;
+
+	    //Add this object as a mouse listener.
+	    addMouseListener(this);
+
 	    barXStart = 100;
       
 	    //Add items to the first popup menu.
@@ -479,9 +478,14 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	return new Dimension(xPanelSize + 10, (yPanelSize + 10));
     }
 
-    //******************************
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
+    //####################################
     //Instance data.
-    //******************************
+    //####################################
     private ParaProfTrial trial = null;
     BinWindow bWindow = null;
     boolean normalBin = true;
@@ -533,4 +537,9 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
     int numberOfColors = 0;
     //End - Some misc stuff for the paintComponent function.
     //**********
+    
+    private boolean debug = false; //Off by default.
+    //####################################
+    //End - Instance data.
+    //####################################
 }

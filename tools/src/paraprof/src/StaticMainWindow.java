@@ -18,12 +18,11 @@ import java.awt.print.*;
 
 public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener{ 
   
-  public StaticMainWindow(ParaProfTrial inParaProfTrial){
+  public StaticMainWindow(ParaProfTrial inParaProfTrial, boolean debug){
       try{
-	  
 	  //This window needs to maintain a reference to its trial.
 	  trial = inParaProfTrial;
-	  
+	  this.debug = debug;
 
 	  //####################################
 	  //Window Stuff.
@@ -34,7 +33,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  int windowHeight = 400;
 	  setSize(new java.awt.Dimension(windowWidth, windowHeight));
 	  
-	  sMWData = new StaticMainWindowData(trial);
+	  sMWData = new StaticMainWindowData(trial, this.debug());
 	  
 	  //Add some window listener code
 	  addWindowListener(new java.awt.event.WindowAdapter() {
@@ -223,7 +222,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  //######
 	  //Panel and ScrollPane definition.
 	  //######
-	  panel = new StaticMainWindowPanel(trial, this);
+	  panel = new StaticMainWindowPanel(trial, this, this.debug());
 	  sp = new JScrollPane(panel);
 	  this.setHeader();
 	  //######
@@ -261,7 +260,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  //####################################
 	  //Setup the static main window data lists.
 	  //####################################
-	  sMWData = new StaticMainWindowData(trial);
+	  sMWData = new StaticMainWindowData(trial, this.debug());
 	  //####################################
 	  //End - Setup the static main window data lists.
 	  //####################################
@@ -351,16 +350,16 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
-		    (new MappingLedgerWindow(trial, 0)).show();
+		    (new MappingLedgerWindow(trial, 0, this.debug())).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (new MappingLedgerWindow(trial, 1)).show();
+		    (new MappingLedgerWindow(trial, 1, this.debug())).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (new MappingLedgerWindow(trial, 2)).show();
+		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Show Call Path Relations")){
-		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true);
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true, this.debug());
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
@@ -630,6 +629,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	}
     }
 
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################    
@@ -667,6 +671,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     
     private Vector[] list = new Vector[2]; //list[0]:The result of a call to getSMWGeneralData in StaticMainWindowData
                                            //list[1]:The result of a call to getMeanData in StaticMainWindowData
+
+    private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //#################################### 

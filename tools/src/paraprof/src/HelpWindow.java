@@ -17,8 +17,7 @@ import javax.swing.text.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class HelpWindow extends JFrame implements ActionListener, Observer
-{
+public class HelpWindow extends JFrame implements ActionListener, Observer{
 
   //*****
   //Instance data.
@@ -36,8 +35,9 @@ public class HelpWindow extends JFrame implements ActionListener, Observer
   //End - Instance data.
   //*****
   
-  public HelpWindow()
-  {
+  public HelpWindow(boolean debug){
+      this.debug = debug;
+
     //Set the preferend initial size for this window.
     setSize(new java.awt.Dimension(windowWidth, windowHeight));
     setTitle("Racy Help Window");
@@ -220,4 +220,17 @@ public class HelpWindow extends JFrame implements ActionListener, Observer
       UtilFncs.systemError(e, null, "HW01");
     }
   }
+
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
+    //####################################
+    //Instance data.
+    //####################################
+    private boolean debug = false; //Off by default.
+    //####################################
+    //End - Instance data.
+    //####################################
 }

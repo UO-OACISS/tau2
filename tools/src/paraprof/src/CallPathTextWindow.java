@@ -33,7 +33,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
   
     public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, 
 			      StaticMainWindowData sMWData, 
-			      boolean global){
+			      boolean global, boolean debug){
 	try{
 	    this.trial = trial;
 	    this.nodeID = nodeID;
@@ -41,6 +41,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    this.threadID = threadID;
 	    this.sMWData = sMWData;
 	    this.global = global;
+	    this.debug = debug;
       
 	    setLocation(new java.awt.Point(0, 0));
 	    setSize(new java.awt.Dimension(800, 600));
@@ -304,7 +305,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new CallPathTextWindowPanel(trial, nodeID, contextID, threadID, this, global);
+	    panel = new CallPathTextWindowPanel(trial, nodeID, contextID, threadID, this, global, this.debug());
 	    //The scroll panes into which the list shall be placed.
 	    sp = new JScrollPane(panel);
 	    JScrollBar vScollBar = sp.getVerticalScrollBar();
@@ -441,13 +442,13 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
-		    (new MappingLedgerWindow(trial, 0)).show();
+		    (new MappingLedgerWindow(trial, 0, this.debug())).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (new MappingLedgerWindow(trial, 1)).show();
+		    (new MappingLedgerWindow(trial, 1, this.debug())).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (new MappingLedgerWindow(trial, 2)).show();
+		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -507,7 +508,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //End - MenuListener.
     //######
 
-        //######
+    //######
     //Observer.
     //######
     public void update(Observable o, Object arg){
@@ -651,7 +652,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
   
     void closeThisWindow(){ 
 	try{
-	    if(UtilFncs.debug){
+	    if(this.debug){
 		System.out.println("------------------------");
 		System.out.println("A total stat window for: \"" + "n,c,t, " + nodeID + "," + contextID + "," + threadID + "\" is closing");
 		System.out.println("Clearing resourses for this window.");
@@ -666,6 +667,11 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	}
     }
   
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -703,6 +709,8 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private boolean percent = true; //true: show values as percent,false: show actual values.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+
+    private boolean debug = false; //Off by default.
     //####################################
     //Instance data.
     //####################################

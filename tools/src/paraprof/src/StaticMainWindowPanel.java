@@ -39,7 +39,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }
   
-    public StaticMainWindowPanel(ParaProfTrial trial, StaticMainWindow sMWindow){
+    public StaticMainWindowPanel(ParaProfTrial trial, StaticMainWindow sMWindow, boolean debug){
 	try{
 	    //Set the default tool tip for this panel.
 	    this.setToolTipText("ParaProf bar graph draw window!");
@@ -51,6 +51,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //Set instance variables.
 	    this.trial = trial;
 	    this.sMWindow = sMWindow;
+	    this.debug = debug;
 	    barXStart = 100;
       
 	    //Add items to the first popup menu.
@@ -321,7 +322,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		if(arg.equals("Show Function Details")){
 		    //Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 		    trial.getColorChooser().setHighlightColorID(clickedOnObject.getMappingID());
-		    MappingDataWindow tmpRef = new MappingDataWindow(trial, clickedOnObject.getMappingID(), (sMWindow.getSMWData()));
+		    MappingDataWindow tmpRef = new MappingDataWindow(trial, clickedOnObject.getMappingID(), (sMWindow.getSMWData()), this.debug());
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
@@ -357,20 +358,23 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    trial.getColorChooser().setHighlightColorID(-1);}
 		else if(arg.equals("Show Total Statistics Windows")){
 		    StatWindow tmpRef = new StatWindow(trial, node, context,
-						       thread, sMWindow.getSMWData(), 1);
+						       thread, sMWindow.getSMWData(),
+						       1, this.debug());
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
 		else if(arg.equals("Show Total User Event Statistics Windows")){
 		    StatWindow tmpRef = new StatWindow(trial, node, context,
-						       thread, sMWindow.getSMWData(), 2);
+						       thread, sMWindow.getSMWData(),
+						       2, this.debug());
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
 		else if(arg.equals("Show Call Path Thread Relations")){
 		    CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(node,context,thread));
 		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, node, context,
-								       thread, sMWindow.getSMWData(),false);
+								       thread, sMWindow.getSMWData(),
+								       false, this.debug());
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
@@ -405,13 +409,13 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			if(xCoord < barXStart){
 			    //Bring up the thread data window for this thread object!
 			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
-				ThreadDataWindow tmpRef = new ThreadDataWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0);
+				ThreadDataWindow tmpRef = new ThreadDataWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
 				trial.getSystemEvents().addObserver(tmpRef);
 				tmpRef.show();
 			    }
 			    else{
 				//Bring up the total stat window here!
-				StatWindow tmpRef = new StatWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0);
+				StatWindow tmpRef = new StatWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
 				trial.getSystemEvents().addObserver(tmpRef);
 				tmpRef.show();
 			    }
@@ -426,7 +430,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    }
 			    else{
 				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-				MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
+				MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()), this.debug());
 				trial.getSystemEvents().addObserver(tmpRef);
 				tmpRef.show();
 			    }
@@ -469,7 +473,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						    ThreadDataWindow tmpRef = new ThreadDataWindow(trial, sMWThreadDataElement.getNodeID(),
 												   sMWThreadDataElement.getContextID(),
 												   sMWThreadDataElement.getThreadID(),
-												   sMWindow.getSMWData(), 1);                  
+												   sMWindow.getSMWData(),
+												   1, this.debug());                  
 						    trial.getSystemEvents().addObserver(tmpRef);
 						    tmpRef.show();
 						}
@@ -493,7 +498,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						}
 						else{
 						    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-						    MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
+						    MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(),
+												     (sMWindow.getSMWData()), this.debug());
 						    trial.getSystemEvents().addObserver(tmpRef);
 						    tmpRef.show();
 						}
@@ -1017,6 +1023,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    }
     }
 
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -1038,9 +1049,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     JMenuItem threadCallpathItem = null;
     //######
     //######
-    
-    //**********
-  
+
     //######
     //Some place holder definitions - used for cycling through data lists.
     //######
@@ -1093,6 +1102,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     //End - Some misc stuff for the paintComponent function.
     //######
 
+    private boolean debug = false; //Off by default.
     //####################################
     //Instance data.
     //####################################

@@ -38,7 +38,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	
     }
   
-    public MappingLedgerWindowPanel(ParaProfTrial trial, MappingLedgerWindow mLWindow, int windowType){
+    public MappingLedgerWindowPanel(ParaProfTrial trial, MappingLedgerWindow mLWindow, int windowType, boolean debug){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
@@ -46,6 +46,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	    this.trial = trial;
 	    this.mLWindow = mLWindow;
 	    this.windowType = windowType;
+	    this.debug = debug;
       
 	    //Add this object as a mouse listener.
 	    addMouseListener(this);
@@ -279,7 +280,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 			trial.getColorChooser().setHighlightColorID(globalMapppingElement.getGlobalID());
-			MappingDataWindow tmpRef = new MappingDataWindow(trial, globalMapppingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData());
+			MappingDataWindow tmpRef = new MappingDataWindow(trial, globalMapppingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData(), this.debug());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
@@ -289,7 +290,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 			trial.getColorChooser().setUserEventHighlightColorID(globalMapppingElement.getGlobalID());
-			UserEventWindow tmpRef = new UserEventWindow(trial, globalMapppingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData());
+			UserEventWindow tmpRef = new UserEventWindow(trial, globalMapppingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData(), this.debug());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
@@ -465,6 +466,11 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	return new Dimension((xPanelSize + 10), (yPanelSize + 10));
     }
     
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -481,6 +487,8 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
   
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
+
+    private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //####################################

@@ -30,7 +30,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     static SavedPreferences savedPreferences = new SavedPreferences();
     static ParaProfManager paraProfManager = new ParaProfManager();
     static ApplicationManager applicationManager = new ApplicationManager();
-    static HelpWindow helpWindow = new HelpWindow();
+    static HelpWindow helpWindow = new HelpWindow(UtilFncs.debug);
     //End start of persistant objects.
     
     //Useful in the system.

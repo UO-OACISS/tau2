@@ -34,7 +34,9 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     }
   
   
-    public StatWindowPanel(ParaProfTrial inParaProfTrial, int nodeID, int contextID, int threadID, StatWindow sWindow, int windowType){
+    public StatWindowPanel(ParaProfTrial inParaProfTrial, int nodeID,
+			   int contextID, int threadID, StatWindow sWindow,
+			   int windowType, boolean debug){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
@@ -45,6 +47,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    this.threadID = threadID;
 	    this.sWindow = sWindow;
 	    this.windowType = windowType;
+	    this.debug = debug;
       
 	    //Add this object as a mouse listener.
 	    addMouseListener(this);
@@ -295,7 +298,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 			trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-			MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), trial.getStaticMainWindow().getSMWData());
+			MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), trial.getStaticMainWindow().getSMWData(), this.debug());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
@@ -434,6 +437,11 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	return new Dimension(xPanelSize, (yPanelSize + 10));
     }
     
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -462,6 +470,8 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
   
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
+
+    private boolean debug = false; //Off by default.private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //####################################

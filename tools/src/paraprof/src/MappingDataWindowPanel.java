@@ -35,12 +35,13 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	}
     }
   
-    public MappingDataWindowPanel(ParaProfTrial trial, int mappingID, MappingDataWindow mDWindow){
+    public MappingDataWindowPanel(ParaProfTrial trial, int mappingID, MappingDataWindow mDWindow, boolean debug){
 	try{
 
 	    this.trial = trial;
 	    this.mDWindow = mDWindow;
- 	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
+	    this.debug = debug;
+	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
  	    mappingName = gME.getMappingName();
 	    this.mappingID = mappingID;
 	    barLength = baseBarLength;
@@ -99,6 +100,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 
     public void renderIt(Graphics2D g2D, int instruction){
 	try{
+	    if(this.debug()){
+		System.out.println("####################################");
+		System.out.println("MappingDataWindowPanel.renderIt(...)");
+		System.out.println("####################################");
+	    }
 	    double value = 0.0;
 	    double maxValue = 0.0;
 	    int stringWidth = 0;
@@ -157,6 +163,10 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    default:
 		UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
 	    }
+	    if(this.debug()){
+		    System.out.println("Max value: " + maxValue);
+		    System.out.println("Mean value: " + value);
+		}
 
 	    if(mDWindow.isPercent()){
 		stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxValue, ParaProf.defaultNumberPrecision) + "%");
@@ -247,6 +257,10 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		default:
 		    UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
 		}
+		if(this.debug())
+		    System.out.println("Value: " + value);
+
+		
 		
 		//For consistancy in drawing, the y coord is updated at the beginning of the loop.
 		yCoord = yCoord + (barSpacing);
@@ -263,6 +277,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //######
 	    //End - Draw thread information for this mapping.
 	    //######
+	    if(this.debug()){
+		System.out.println("####################################");
+		System.out.println("End - MappingDataWindowPanel.renderIt(...)");
+		System.out.println("####################################");
+	    }
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "MDWP03");
@@ -271,6 +290,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 
     private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
 			 int barXCoord, int yCoord, int barHeight, boolean groupMember, int instruction){
+	if(this.debug()){
+	    System.out.println("####################################");
+	    System.out.println("MappingDataWindowPanel.drawBar(...)");
+	    System.out.println("####################################");
+	}
 	int xLength = 0;
 	double d = 0.0;
 	String s = null;
@@ -323,6 +347,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	stringStart = barXCoord - xLength - stringWidth - 5;
 	g2D.drawString(s, stringStart, yCoord);
 	g2D.drawString(text, (barXCoord + 5), yCoord);
+	if(this.debug()){
+	    System.out.println("####################################");
+	    System.out.println("End - MappingDataWindowPanel.drawBar(...)");
+	    System.out.println("####################################");
+	}
     }
 
     //####################################
@@ -441,6 +470,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     public Dimension getPreferredSize(){
 	return new Dimension(xPanelSize, yPanelSize);}
 
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -462,6 +496,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     int yPanelSize = 0;
   
     private JPopupMenu popup = new JPopupMenu();
+    
+    private boolean debug = false; //Off by default.
     //####################################
     //Instance data.
     //####################################

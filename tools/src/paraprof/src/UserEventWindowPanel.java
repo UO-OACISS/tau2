@@ -35,7 +35,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	}
     }
   
-    public UserEventWindowPanel(ParaProfTrial trial, int mappingID, UserEventWindow uEWindow){
+    public UserEventWindowPanel(ParaProfTrial trial, int mappingID, UserEventWindow uEWindow, boolean debug){
 	try{
 
 	    this.trial = trial;
@@ -43,6 +43,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
  	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 2);
  	    mappingName = gME.getMappingName();
 	    this.mappingID = mappingID;
+	    this.debug = debug;
 	    barLength = baseBarLength;
 
 	    //Want the background to be white.
@@ -378,9 +379,14 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     public Dimension getPreferredSize(){
 	return new Dimension(xPanelSize, yPanelSize);}
 
-    //******************************
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
+    //####################################
     //Instance data.
-    //******************************
+    //####################################
     private String counterName = null;
     private int mappingID = -1;
     private String mappingName;
@@ -398,12 +404,10 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     int xPanelSize = 0;
     int yPanelSize = 0;
   
-    //**********
-    //Popup menu definitions.
     private JPopupMenu popup = new JPopupMenu();
-    //**********
-  
-    //******************************
-    //End - Instance data.
-    //******************************
+
+    private boolean debug = false; //Off by default.
+    //####################################
+    //Instance data.
+    //####################################
 }

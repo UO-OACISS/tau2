@@ -31,11 +31,12 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	}
     }
   
-    public UserEventWindow(ParaProfTrial trial, int mappingID, StaticMainWindowData sMWData){
+    public UserEventWindow(ParaProfTrial trial, int mappingID, StaticMainWindowData sMWData, boolean debug){
 	try{
 	    this.mappingID = mappingID;
 	    this.trial = trial;
 	    this.sMWData = sMWData;
+	    this.debug = debug;
 
 	    int windowWidth = 650;
 	    int windowHeight = 550;
@@ -266,7 +267,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new UserEventWindowPanel(trial, mappingID, this);
+	    panel = new UserEventWindowPanel(trial, mappingID, this, this.debug());
 	    //The scroll panes into which the list shall be placed.
 	    sp = new JScrollPane(panel);
 	    this.setHeader();
@@ -381,13 +382,13 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
-		    (new MappingLedgerWindow(trial, 0)).show();
+		    (new MappingLedgerWindow(trial, 0, this.debug())).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (new MappingLedgerWindow(trial, 1)).show();
+		    (new MappingLedgerWindow(trial, 1, this.debug())).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (new MappingLedgerWindow(trial, 2)).show();
+		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -629,7 +630,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
   
     void closeThisWindow(){
 	try{
-	    if(UtilFncs.debug){
+	    if(this.debug()){
 		System.out.println("------------------------");
 		System.out.println("A mapping window for: \"" + mappingName + "\" is closing");
 		System.out.println("Clearing resourses for that window.");
@@ -643,6 +644,11 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	}
     }
   
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -681,6 +687,8 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     
     private int order = 0; //0: descending order,1: ascending order.
     private int valueType = 12; //12-number of userevents,14-min,16-max,18-mean.
+
+    private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //####################################

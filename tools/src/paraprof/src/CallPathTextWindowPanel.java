@@ -29,8 +29,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 				   int nodeID,
 				   int contextID,
 				   int threadID,
-				   CallPathTextWindow inCPTWindow,
-				   boolean global){
+				   CallPathTextWindow cPTWindow,
+				   boolean global,
+				   boolean debug){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
@@ -38,10 +39,10 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 	    this.nodeID = nodeID;
 	    this.contextID = contextID;
 	    this.threadID = threadID;
-	    
 	    this.trial = trial;
-	    cPTWindow = inCPTWindow;
+	    this.cPTWindow = cPTWindow;
 	    this.global = global;
+	    this.debug = debug;
 	    this.repaint();
 	}
 	catch(Exception e){
@@ -147,7 +148,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		    }
 		}
 		
-		if(UtilFncs.debug){
+		if(this.debug){
 		    yHeightNeeded = yHeightNeeded + (spacing);
 		    l1 = cPTWindow.getDataIterator();
 		    while(l1.hasNext()){
@@ -211,7 +212,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		    }
 		}
 		
-		if(UtilFncs.debug){
+		if(this.debug){
 		    g2D.drawString("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 20, yCoord);
 		    yCoord = yCoord + (spacing);
 		    l1 = cPTWindow.getDataIterator();
@@ -243,11 +244,12 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		thread = (Thread) trial.getNCT().getThread(nodeID,contextID,threadID); 
 		functionList = thread.getFunctionList();
 
-		//**********
+		//######
 		//Set panel size.
 		//Now we have reached here, we can calculate the size this panel
 		//needs to be.  We might have to call a revalidate to increase
 		//its size.
+		//######
 		int yHeightNeeded = 0;
 		int xWidthNeeded = 0;
 		yHeightNeeded = yHeightNeeded + (spacing);
@@ -338,8 +340,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		}
 		if(sizeChange && instruction==0)
 		    revalidate();
+		//######
 		//End - Set panel size. 
-		//**********
+		//######
 
 		yCoord = yCoord + (spacing);
 		g2D.setColor(Color.black);
@@ -435,9 +438,14 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 	return new Dimension(xPanelSize, (yPanelSize + 10));
     }
   
-    //******************************
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
+    //####################################
     //Instance data.
-    //******************************
+    //####################################
     int xPanelSize = 800;
     int yPanelSize = 600;
   
@@ -455,7 +463,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
     boolean global = false;
     Font MonoFont = null;
     FontMetrics fmMonoFont = null;
-    //******************************
+
+    private boolean debug = false; //Off by default.
+    //####################################
     //End - Instance data.
-    //******************************
+    //####################################
 }

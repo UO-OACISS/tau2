@@ -32,11 +32,12 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
     
     public StatWindow(ParaProfTrial trial,
-			   int nodeID,
-			   int contextID,
-			   int threadID,
-			   StaticMainWindowData sMWData,
-			   int windowType){
+		      int nodeID,
+		      int contextID,
+		      int threadID,
+		      StaticMainWindowData sMWData,
+		      int windowType,
+		      boolean debug){
 	try{
 	    this.trial = trial;
 	    this.sMWData = sMWData;
@@ -44,7 +45,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    this.contextID = contextID;
 	    this.threadID = threadID;
 	    this.windowType = windowType;
-	    
+	    this.debug = debug;
+
 	    setLocation(new java.awt.Point(0, 0));
 	    setSize(new java.awt.Dimension(800, 600));
 	    
@@ -288,7 +290,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new StatWindowPanel(trial,nodeID,contextID,threadID,this,windowType);
+	    panel = new StatWindowPanel(trial,nodeID,contextID,threadID,this,windowType, this.debug());
 	    sp = new JScrollPane(panel);
 	    this.setHeader();
 	    //######
@@ -411,13 +413,13 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
-		    (new MappingLedgerWindow(trial, 0)).show();
+		    (new MappingLedgerWindow(trial, 0, this.debug())).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (new MappingLedgerWindow(trial, 1)).show();
+		    (new MappingLedgerWindow(trial, 1, this.debug())).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (new MappingLedgerWindow(trial, 2)).show();
+		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -640,6 +642,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	}
     }
     
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
@@ -671,6 +678,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private int order = 0; //0: descending order,1: ascending order.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+
+    private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //####################################

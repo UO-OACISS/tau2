@@ -14,8 +14,9 @@ import java.lang.*;
 
 public class StaticMainWindowData{
 
-    public StaticMainWindowData(ParaProfTrial trial){
+    public StaticMainWindowData(ParaProfTrial trial, boolean debug){
 	this.trial = trial;
+	this.debug = debug;
     }
     
     public Vector getSMWGeneralData(int sortType){   
@@ -181,11 +182,18 @@ public class StaticMainWindowData{
 	return newList;
     }
 
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance Data.
     //####################################
     private ParaProfTrial trial = null;
     private Vector sMWGeneralData = new Vector();
+
+    private boolean debug = false; //Off by default.
     //####################################
     //End - Instance Data.
     //####################################

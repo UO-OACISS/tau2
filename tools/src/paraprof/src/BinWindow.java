@@ -36,11 +36,12 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	}
     }
     
-    public BinWindow(ParaProfTrial inParaProfTrial, StaticMainWindowData inSMWData, boolean normal, int mappingID){
+    public BinWindow(ParaProfTrial trial, StaticMainWindowData sMWData, boolean normal, int mappingID, boolean debug){
 	try{
-	    trial = inParaProfTrial;
-	    sMWData = inSMWData;
-	    
+	    this.trial = trial;
+	    this.sMWData = sMWData;
+	    this.mappingID = mappingID;
+	    this.debug = debug;
 
 	    setLocation(new java.awt.Point(300, 200));
 	    setSize(new java.awt.Dimension(700, 450));
@@ -194,7 +195,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new BinWindowPanel(trial, this, normal, mappingID);
+	    panel = new BinWindowPanel(trial, this, normal, mappingID, this.debug());
 	    sp = new JScrollPane(panel);
 	    //######
 	    //End - Panel and ScrollPane definition.
@@ -248,13 +249,13 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 		    System.exit(0);
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    (new MappingLedgerWindow(trial, 0)).show();
+		    (new MappingLedgerWindow(trial, 0, this.debug())).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (new MappingLedgerWindow(trial, 1)).show();
+		    (new MappingLedgerWindow(trial, 1, this.debug())).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (new MappingLedgerWindow(trial, 2)).show();
+		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -400,11 +401,17 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	}
     }
  
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
     //####################################
     //Instance data.
     //####################################
     private ParaProfTrial trial = null;
     private StaticMainWindowData sMWData = null;
+    private int mappingID = -1;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
@@ -419,6 +426,8 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
     private BinWindowPanel panel = null;
  
     private Vector list = null;
+
+    private boolean debug = false; //Off by default.private boolean debug = false; //Off by default.
     //####################################
     //End - Instance data.
     //####################################
