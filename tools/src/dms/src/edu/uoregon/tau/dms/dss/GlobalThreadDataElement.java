@@ -112,138 +112,40 @@ public class GlobalThreadDataElement implements Mapping{
 	return 103;
     }
   
-    public static String getTStatStringHeading(String metricType){
-	try{
-	    int initialBufferLength = 99;
-	    int position = 0;
-	    char [] statStringArray = new char[initialBufferLength];
-	    char [] tmpArray;
-	    String tmpString;
-      
-	    insertSpaces(statStringArray , 0, 99);
-      
-	    tmpArray = ("%"+metricType).toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 9;
-	    tmpArray = (metricType).toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 27;
-	    tmpArray = ("total "+metricType).toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 45;
-	    tmpArray = ("#calls").toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 63;
-	    tmpArray = ("#subrs").toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 81;
-	    tmpArray = ("total "+metricType+"/call").toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      	    return new String(statStringArray);
-	}
-	catch(Exception e){
+    public static String getTStatStringHeading(String metricType) {
+	try {
+	    return UtilFncs.lpad("%"+metricType,7) + 
+		UtilFncs.lpad(metricType,16) + 
+		UtilFncs.lpad("total "+metricType,18) +
+		UtilFncs.lpad("#calls",14) +
+		UtilFncs.lpad("#subrs",14) + 
+		UtilFncs.lpad("total "+metricType+"/call",21) 
+		+ "   ";	    
+	} catch (Exception e) {
 	    UtilFncs.systemError(e, null, "GTDE01");
 	}
-    
 	return "An error occurred processing this string!"; 
     }
   
-    public String getTStatString(int type, int metric, int precision){
+    public String getTStatString(int type, int metric) {
 	try{
-	    int initialBufferLength = 99;
-	    int position = 0;
-	    char [] statStringArray = new char[initialBufferLength];
-	    char [] tmpArray;
+
 	    String tmpString;
-      
-	    this.insertSpaces(statStringArray , 0, 99);
-      
-	    DecimalFormat dF = new DecimalFormat();
-	    dF.applyPattern("##0.0");
-	    tmpArray = (dF.format(this.getInclusivePercentValue(metric))).toCharArray();
-      
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 9;
-	    tmpString = UtilFncs.getOutputString(type,this.getExclusiveValue(metric),precision);
 
-	    tmpArray = tmpString.toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
+	    DecimalFormat dF = new DecimalFormat("##0.0");
+	    tmpString = UtilFncs.lpad(dF.format(this.getInclusivePercentValue(metric)),7);
       
-	    position = 27;
-	    tmpString = UtilFncs.getOutputString(type,this.getInclusiveValue(metric),precision);
-
-	    tmpArray = tmpString.toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 45;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getNumberOfCalls(),
-										  precision)));
-	    tmpArray = tmpString.toCharArray();                       
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 63;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getNumberOfSubRoutines(),
-										  precision)));
-	    tmpArray = tmpString.toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 81;
-	    tmpString = UtilFncs.getOutputString(type,this.getUserSecPerCall(metric),precision);
-
-	    tmpArray = tmpString.toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
+	    tmpString = tmpString + "  " + UtilFncs.getOutputString(type,this.getExclusiveValue(metric),14);
+	    tmpString = tmpString + "  " + UtilFncs.getOutputString(type,this.getInclusiveValue(metric),16);
+	    tmpString = tmpString + "  " + UtilFncs.formatDouble(this.getNumberOfCalls(),12);
+	    tmpString = tmpString + "  " + UtilFncs.formatDouble(this.getNumberOfSubRoutines(),12);
+	    tmpString = tmpString + "  " + UtilFncs.getOutputString(type,this.getUserSecPerCall(metric),19);
       
 	    //Everything should be added now except the function name.
-	    return  new String(statStringArray);
+	    return tmpString;
+	} catch(Exception e) {
+	    UtilFncs.systemError(e, null, "GTDE01");
 	}
-	catch(Exception e)
-	    {
-		UtilFncs.systemError(e, null, "GTDE01");
-	    }
     
 	return "An error occurred processing this string!"; 
     }

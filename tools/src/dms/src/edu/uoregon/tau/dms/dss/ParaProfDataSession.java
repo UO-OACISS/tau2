@@ -366,8 +366,8 @@ public abstract class ParaProfDataSession  extends DataSession{
 	double exclSum = 0;
 	double inclSum = 0;
 	double maxInclSum = 0;
-	int callSum = 0;
-	int subrSum = 0;
+	double callSum = 0;
+	double subrSum = 0;
 
 
 	GlobalMapping allFunctions = this.getGlobalMapping();

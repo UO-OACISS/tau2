@@ -377,77 +377,24 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     public double getMeanUserSecPerCall(int location){
   	return this.getDouble(location,9);}
 
-    public String getMeanTotalStatString(int type, int location, int precision){
+    public String getMeanTotalStatString(int type, int metric){
   	try{
-	    int initialBufferLength = 99;
-	    int position = 0;
-	    char [] statStringArray = new char[initialBufferLength];
-	    char [] tmpArray;
+	    
 	    String tmpString;
+	    
+	    DecimalFormat dF = new DecimalFormat("##0.0");
+	    tmpString = UtilFncs.lpad(dF.format(this.getMeanInclusivePercentValue(metric)),7);
       
-	    this.insertSpaces(statStringArray , 0, 99);
-      
-	    DecimalFormat dF = new DecimalFormat();
-	    dF.applyPattern("##0.0");
-	    tmpArray = (dF.format(this.getMeanInclusivePercentValue(location))).toCharArray();
-      
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 9;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanExclusiveValue(location),precision);
+	    tmpString = tmpString + "  " + UtilFncs.getOutputString(type,this.getMeanExclusiveValue(metric),14);
+	    tmpString = tmpString + "  " + UtilFncs.getOutputString(type,this.getMeanInclusiveValue(metric),16);
+	    tmpString = tmpString + "  " + UtilFncs.formatDouble(this.getMeanNumberOfCalls(),12);
+	    tmpString = tmpString + "  " + UtilFncs.formatDouble(this.getMeanNumberOfSubRoutines(),12);
+	    tmpString = tmpString + "  " + UtilFncs.getOutputString(type,this.getMeanUserSecPerCall(metric),19);
 
-	    tmpArray = tmpString.toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 27;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanInclusiveValue(location),precision);
-
-	    tmpArray = tmpString.toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 45;
-
-	    tmpString = new String(Double.toString(
-	    					   UtilFncs.adjustDoublePresision(this.getMeanNumberOfCalls(),
-										  precision)));
-	    tmpArray = tmpString.toCharArray();                       
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 63;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getMeanNumberOfSubRoutines(),
-										  precision)));
-	    tmpArray = tmpString.toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    position = 81;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanUserSecPerCall(location),precision);
-
-	    tmpArray = tmpString.toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    //Everything should be added now except the function name.
-	    return new String(statStringArray);
+	    return tmpString;
 	}
 	catch(Exception e){
+	    e.printStackTrace();
 	    UtilFncs.systemError(e, null, "GTDE01");
 	}
     	return "An error occurred processing this string!";
@@ -495,19 +442,19 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     public double getTotalExclusivePercentValue(int location){
 	return this.getDouble(location,13);}
 
-    public void setTotalNumberOfCalls(int i){
+    public void setTotalNumberOfCalls(double i){
 	totalNumberOfCalls = i;}
 
-    public void incrementTotalNumberOfCalls(int i){
+    public void incrementTotalNumberOfCalls(double i){
 	totalNumberOfCalls+=i;}
   
     public double getTotalNumberOfCalls(){
 	return totalNumberOfCalls;}
   
-    public void setTotalNumberOfSubRoutines(int i){
+    public void setTotalNumberOfSubRoutines(double i){
 	totalNumberOfSubRoutines = i;}
 
-    public void incrementTotalNumberOfSubRoutines(int i){
+    public void incrementTotalNumberOfSubRoutines(double i){
 	totalNumberOfSubRoutines+=i;}
   
     public double getTotalNumberOfSubRoutines(){
@@ -625,8 +572,8 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     private double maxUserEventSumSquared = 0;
     private double meanNumberOfCalls = 0;
     private double meanNumberOfSubRoutines = 0;
-    private int totalNumberOfCalls = 0;
-    private int totalNumberOfSubRoutines = 0;
+    private double totalNumberOfCalls = 0;
+    private double totalNumberOfSubRoutines = 0;
   
     //Drawing coordinates for this Global mapping element.
     private int xBeg;
