@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1997-99					   	   	   **
+**    Copyright 1997-2000				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,8 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.7                           *
- *                        Developer Release 1.0                    *
+ *                           Version 2.9                           *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *

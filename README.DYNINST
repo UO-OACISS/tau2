@@ -1,21 +1,21 @@
-Using TAU with Dyninst 2.0.
+Using TAU with Dyninst 2.x.
 ---------------------------
-Part I) Configuring and installing Dyninst 2.0 
+Part I) Configuring and installing Dyninst 2.x 
 
-% tar xzvf  srcDist2.0beta.tar.gz
+% tar xzvf  binDist2.x.tar.gz
 (Agree to Dyninst licensing terms)
-% cd <dir>/dyninstAPI-2.0-beta
+% cd <dir>/dyninstAPI-2.x
 
 Add to .cshrc file: 
 
-setenv DYNINST_ROOT <dyninst-dir>/dyninstAPI-2.0-beta/
-setenv PLATFORM    i386-unknown-linux2.0
+setenv DYNINST_ROOT <dyninst-dir>/dyninstAPI-2.x/
+setenv PLATFORM    i386-unknown-linux2.2
 setenv DYNINSTAPI_RT_LIB $DYNINST_ROOT/lib/$PLATFORM/libdyninstAPI_RT.so.1
 setenv LD_LIBRARY_PATH <tau-root>/i386_linux/lib\:$DYNINST_ROOT/lib/$PLATFORM
 
 % source ~/.cshrc
 
-Compiling Dyninst
+Compiling Dyninst (optional, you may download the binary release).
 
 % cd $DYNINST_ROOT/core/util/$PLATFORM
 % make ; make install
@@ -43,22 +43,3 @@ Part 2: Configuring TAU with Dyninst
 % make
 % tau_run klargest
 % pprof
-
-It is important to note that we need to add TauHooks.o -ltau -ldl to the 
-link command line for an application to work with Dyninst currently. This
-limitation may be eased in the future releases. 
-
-
-To use TAU and Dyninst with pthreads
-% configure -dyninst=$DYNINST_ROOT -pthread
-% make install
-% cd examples/dyninstthreads
-% make
-% tau_run hello
-
-See hello.cpp to see how the routine that is spawned by pthread_create needs
-to be hand instrumented currently. Also, this name has to be specified to 
-tau_run so it doesn't instrument it. grep for threaded_func in utils/tau_run.cpp
-There's a problem with Linux/Dyninst that the exit of the threaded function cannot be
-instrumented and it hangs the application. So, we've to resort to source code instrumentation.
-

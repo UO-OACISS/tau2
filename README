@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1997-99 				   	           **
+**    Copyright 1997-2000 				   	           **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **	
@@ -40,10 +40,10 @@ are described below.
 
 TAU Portable Profiling Package
 ****************************** 
-The model that TAU uses to profile parallel, multi-threaded C++ programs
-maintains performance data for each thread, context, and node in use by an
-application.  The profiling instrumentation needed to implement the model
-captures data for C++ functions, methods, basic blocks, and statement
+The model that TAU uses to profile parallel, multi-threaded C++, C, Fortran 90,
+and Java programs maintains performance data for each thread, context, and node 
+in use by an application.  The profiling instrumentation needed to implement the
+model captures data for functions, methods, basic blocks, and statement
 execution at these levels.  The instrumentation is complicated, however, by
 advanced features in the C++ language, such as templates and namespaces.
 All C++ language features are supported in the TAU profiling
