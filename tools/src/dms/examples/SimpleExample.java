@@ -19,7 +19,7 @@ public class SimpleExample {
 		session.initialize(args[0]);
 
 		// select the application
-		Application myApp = session.setApplication("application", null);
+		Application myApp = session.setApplication("example", null);
 		if (myApp != null)
 			System.out.println("Got application: " + myApp.getName() + ", version " + myApp.getVersion());
 
@@ -42,20 +42,22 @@ public class SimpleExample {
 		session.setNode(0);
 		session.setContext(0);
 		session.setThread(0);
+		session.setMetric("time");
+		session.setFunction(39);
 
 		ListIterator myIterator;
 		// Get the data
-		System.out.print("Getting function data...");
+		System.out.println("Getting function data...");
 		myIterator = session.getFunctionData();
-		System.out.println(" done.");
+		System.out.println(" ...done.");
 		FunctionDataObject functionDataObject;
-		Function function;
+		Function function = null;
 		String name, group;
 		int functionIndexID, trial, node, context, thread;
-		double inclusivePercentage;
+		double inclusivePercentage, inclusive, exclusive, exclusivePercentage, inclusivePerCall;
 
-		System.out.println ("Inclusive Percentages:");
-		System.out.println ("Trial, Node, Context, Thread, Name, Group, Value:");
+		System.out.println ("Inclusive, Exclusive, Inc. Percent, Ex. Percent, Inc. Per. call:");
+		System.out.println ("Trial, Node, Context, Thread, Name, Group, Values:");
 		while (myIterator.hasNext()) {
 			functionDataObject = (FunctionDataObject)(myIterator.next());
 			functionIndexID = functionDataObject.getFunctionIndexID();
@@ -66,8 +68,12 @@ public class SimpleExample {
 			node = functionDataObject.getNode();
 			context = functionDataObject.getContext();
 			thread = functionDataObject.getThread();
-			inclusivePercentage = functionDataObject.getInclusivePercentage(0);
-			System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = " + inclusivePercentage);
+			inclusivePercentage = functionDataObject.getInclusivePercentage();
+			exclusivePercentage = functionDataObject.getExclusivePercentage();
+			inclusive = functionDataObject.getInclusive();
+			exclusive = functionDataObject.getExclusive();
+			inclusivePerCall = functionDataObject.getInclusivePerCall();
+			System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = [" + inclusive + ", " + exclusive + ", " + inclusivePercentage + ", " + exclusivePercentage + ", " + inclusivePerCall +"]");
 		}
 
 		// disconnect and exit.

@@ -6,7 +6,7 @@ import dms.dss.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.11 2003/08/11 18:49:41 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.12 2003/08/12 00:08:29 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -18,6 +18,7 @@ public abstract class DataSession {
 	protected Vector contexts = null;
 	protected Vector threads = null;
 	protected Vector functions = null;
+	protected Vector metrics = null;
 	protected Vector functionData = null;
 	protected Vector userEvents = null;
 	protected Vector userEventData = null;
@@ -220,6 +221,29 @@ public abstract class DataSession {
  */
 	public void setThread(Vector threads) {
 		this.threads = threads;
+	}
+
+/**
+ * Set the metric for this DataSession.  The DataSession object will maintain the value of the metric identified by the String.  To clear this value, call setMetric(String) with null.
+ *
+ * @param	name value of the metric to be saved.
+ */
+	public void setMetric(String name) {
+		if (name == null) {
+			this.metrics = null;
+		} else {
+			this.metrics = new Vector();
+			this.metrics.addElement(name);
+		}
+	}
+
+/**
+ * Set a Vector of metric values for this DataSession.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
+ *
+ * @param	names Vector of metric values to be saved.
+ */
+	public void setMetric(Vector names) {
+		this.metrics = names;
 	}
 
 /**

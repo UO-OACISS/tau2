@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.20 2003/08/11 18:49:42 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.21 2003/08/12 00:08:29 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -303,8 +303,20 @@ public class PerfDBSession extends DataSession {
 		buf.append("from function f ");
 		buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
 		buf.append("inner join interval_total_summary ts on f.id = ts.function ");
-		buf.append("and ms.metric = ts.metric ");
+		buf.append("inner join metric m on m.id = ts.metric and m.id = ms.metric ");
 		buf.append("where f.id = " + function.getIndexID());
+		if (metrics != null) {
+			buf.append(" and m.name in ('");
+			String metric;
+        	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
+				metric = (String) en.nextElement();
+				buf.append(metric);
+				if (en.hasMoreElements())
+					buf.append("', '");
+				else
+					buf.append("') ");
+			}
+		}
 		buf.append(" order by f.id, ms.metric");
 		// System.out.println(buf.toString());
 
@@ -313,9 +325,10 @@ public class PerfDBSession extends DataSession {
 	    	ResultSet resultSet = db.executeQuery(buf.toString());	
 			Function tmpFunction = null;
 			int metricIndex = 0;
+			FunctionDataObject funMS = new FunctionDataObject();
+			FunctionDataObject funTS = new FunctionDataObject();
 	    	while (resultSet.next() != false) {
 				// get the mean summary data
-				FunctionDataObject funMS = new FunctionDataObject();
 				funMS.setInclusivePercentage(metricIndex, resultSet.getDouble(1));
 				funMS.setInclusive(metricIndex, resultSet.getDouble(2));
 				funMS.setExclusivePercentage(metricIndex, resultSet.getDouble(3));
@@ -325,7 +338,6 @@ public class PerfDBSession extends DataSession {
 				funMS.setInclusivePerCall(metricIndex, resultSet.getDouble(7));
 				function.setMeanSummary(funMS);
 				// get the total summary data
-				FunctionDataObject funTS = new FunctionDataObject();
 				funTS.setInclusivePercentage(metricIndex, resultSet.getDouble(9));
 				funTS.setInclusive(metricIndex, resultSet.getDouble(10));
 				funTS.setExclusivePercentage(metricIndex, resultSet.getDouble(11));
@@ -333,8 +345,8 @@ public class PerfDBSession extends DataSession {
 				funTS.setNumCalls((int)(resultSet.getDouble(13)));
 				funTS.setNumSubroutines((int)(resultSet.getDouble(14)));
 				funTS.setInclusivePerCall(metricIndex, resultSet.getDouble(15));
-				function.setTotalSummary(funTS);
 	    	}
+			function.setTotalSummary(funTS);
 			resultSet.close(); 
 		}catch (Exception ex) {
 	    	ex.printStackTrace();
@@ -372,8 +384,10 @@ public class PerfDBSession extends DataSession {
 				fun.setApplicationID(resultSet.getInt(7));
 				funs.addElement(fun);
 				tmpFunction = (Function)functionHash.get(new Integer(fun.getIndexID()));
-				if (tmpFunction == null)
+				if (tmpFunction == null) {
+					System.out.println("Adding " + fun.getIndexID() + " to the hashtable");
 					functionHash.put(new Integer(fun.getIndexID()), fun);
+				}
 	    	}
 			resultSet.close(); 
 		}catch (Exception ex) {
@@ -478,8 +492,9 @@ public class PerfDBSession extends DataSession {
 
 	public ListIterator getFunctionData() {
 		// get the hash of function names first
-		if (functions == null)
+		if (functions == null) {
 			getFunctions();
+		}
 
 		// get the metric count
 		int metricCount = 0;
@@ -509,6 +524,22 @@ public class PerfDBSession extends DataSession {
 			buf2.append(" t.id = " + trial.getID());
 			gotWhile = true;
 		}
+		if (metrics != null) {
+			if (gotWhile)
+				buf2.append(" and m.name in ('");
+			else
+				buf2.append(" where m.name in ('");
+			String metric;
+        	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
+				metric = (String) en.nextElement();
+				buf2.append(metric);
+				if (en.hasMoreElements())
+					buf2.append("', '");
+				else
+					buf2.append("') ");
+			}
+			gotWhile = true;
+		}
 		try {
 	    	ResultSet resultSet = db.executeQuery(buf2.toString());	
 	    	if (resultSet.next() != false) {
@@ -531,6 +562,7 @@ public class PerfDBSession extends DataSession {
 		buf.append("inner join function f on f.id = p.function ");
 		buf.append("inner join trial t on f.trial = t.id ");
 		buf.append("inner join experiment e on e.id = t.experiment ");
+		buf.append("inner join metric m on m.id = p.metric ");
 		gotWhile = false;
 		if (application != null) {
 			buf.append(" where e.application = " + application.getID());
@@ -613,6 +645,22 @@ public class PerfDBSession extends DataSession {
 					buf.append(", ");
 				else
 					buf.append(") ");
+			}
+			gotWhile = true;
+		}
+		if (metrics != null) {
+			if (gotWhile)
+				buf.append(" and m.name in ('");
+			else
+				buf.append(" where m.name in ('");
+			String metric;
+        	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
+				metric = (String) en.nextElement();
+				buf.append(metric);
+				if (en.hasMoreElements())
+					buf.append("', '");
+				else
+					buf.append("') ");
 			}
 			gotWhile = true;
 		}
@@ -786,9 +834,12 @@ public class PerfDBSession extends DataSession {
 	public Function getFunction(int id) {
 		Function function = null;
 		if (functionHash != null) {
+			System.out.println("functionHash != null...");
+			System.out.println("getting " + id + " from the hashtable");
 			function = (Function)functionHash.get(new Integer(id));
 		}
 		if (function == null) {
+			System.out.println("function == null...");
 			// create a string to hit the database
 			String whereClause;
 			whereClause = " where f.id = " + id;

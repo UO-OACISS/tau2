@@ -3,7 +3,7 @@ package dms.dss;
 /**
  * Holds all the data for a function data object in the database.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.11 2003/08/11 07:41:43 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.12 2003/08/12 00:08:29 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -75,6 +75,7 @@ public class FunctionDataObject {
 	}
 
 	public void setInclusive (int metricIndex, double inclusive) {
+		System.out.println ("setInclusive: " + metricIndex + ", " + inclusive);
 		insertDouble(metricIndex, 1, inclusive);
 	}
 
@@ -118,20 +119,40 @@ public class FunctionDataObject {
 		return getDouble(metricIndex, 0);
 	}
 
+	public double getInclusivePercentage () {
+		return getDouble(0, 0);
+	}
+
 	public double getInclusive (int metricIndex) {
 		return getDouble(metricIndex, 1);
+	}
+
+	public double getInclusive () {
+		return getDouble(0, 1);
 	}
 
 	public double getExclusivePercentage (int metricIndex) {
 		return getDouble(metricIndex, 2);
 	}
 
+	public double getExclusivePercentage () {
+		return getDouble(0, 2);
+	}
+
 	public double getExclusive (int metricIndex) {
 		return getDouble(metricIndex, 3);
 	}
 
+	public double getExclusive () {
+		return getDouble(0, 3);
+	}
+
 	public double getInclusivePerCall (int metricIndex) {
 		return getDouble(metricIndex, 4);
+	}
+
+	public double getInclusivePerCall () {
+		return getDouble(0, 4);
 	}
 
 	public int getNumCalls () {
