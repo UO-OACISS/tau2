@@ -936,7 +936,7 @@ case $machine in
 	fi
 
 # Check for sgimp xdev enviroment
-        if [ $detectxdev = sgimp ]
+        if [ $detectxdev = sgimp -o $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
           then
             fixmakeargs="$fixmakeargs SGIMP"
         fi
