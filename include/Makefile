@@ -555,7 +555,8 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTAU_trace
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 ## IBM SPECIFIC CHANGES TO TAU_MPI_LIBS
-#SP1#TAU_LDFLAGS  = $(TAU_IBM_LD_FLAGS) #ENDIF#
+#SP1#TAU_MPI_LDFLAGS  = $(TAU_IBM_LD_FLAGS) #ENDIF#
+#MPI#TAU_LDFLAGS  = $(TAU_MPI_LDFLAGS) #ENDIF#
 #SP1#TAU_MPI_LIBS    = $(TAU_MPI_LIB)  -L$(TAU_MPILIB_DIR)/ip  -lvtd$(TAU_MPI_R_SUFFIX) #ENDIF#
 #SP1#TAU_MPI_FLIBS   = $(TAU_MPI_FLIB) -L$(TAU_MPILIB_DIR)/ip  -lvtd$(TAU_MPI_R_SUFFIX) #ENDIF#
 
