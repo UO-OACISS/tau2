@@ -484,7 +484,7 @@ int main(int argc, char **argv)
        if (l == PDB::LA_CXX)
          instrumentCXXFile(p, *it, outFileName);
        if (l == PDB::LA_C)
-         instrumentCFile(p, *it, outFileName);
+         instrumentCXXFile(p, *it, outFileName);
        if (l == PDB::LA_FORTRAN)
          instrumentFFile(p, *it, outFileName);
      }
