@@ -1,4 +1,4 @@
-/*********************************************************************/
+/*********************************************************************
 /* 	TAU Tracing 						     */
 /* 	U.Oregon, ACL, LANL (C) 1997				     */
 /*                  pC++/Sage++  Copyright (C) 1994                  */
@@ -166,7 +166,7 @@ int parse_edf_file(int node)
     if (dynamictrace) /* get eventname in quotes */
     { 
       sscanf (linebuf, "%ld %s %d", &localEventId, inputev.state, &inputev.tag);
-#if DEBUG
+#ifdef DEBUG
       printf("Got localEventId %d state %s tag %d\n", localEventId, inputev.state, inputev.tag);
 #endif /* DEBUG */
       for(j=0; linebuf[j] !='"'; j++)
@@ -196,9 +196,9 @@ int parse_edf_file(int node)
 #ifdef DEBUG
 	printf("Found %s in map \n", eventname);
 #endif /* DEBUG */
-	delete stlEvName; /* don't need this if its already there */
         /* add to nodeEventTable the global id of the event */
 	nodeEventTable[node][localEventId] = eventNameMap[(const char *)stlEvName].gid;
+	delete stlEvName; /* don't need this if its already there */
 #ifdef DEBUG
 	printf("node %d local %ld global %d %s \n", node, localEventId,
 	  nodeEventTable[node][localEventId], stlEvName);
@@ -257,6 +257,10 @@ int store_merged_edffile(char *filename)
   }
 
   fprintf(fp,"%d dynamic_trace_events\n%s",eventNameMap.size(), header);
+#ifdef DEBUG
+  printf("%d dynamic_trace_events\n%s",eventNameMap.size(), header);
+  printf("\nEND OF HEADER\n");
+#endif 
 
   for (it = eventNameMap.begin(); it != eventNameMap.end(); it++) 
   {
@@ -264,7 +268,7 @@ int store_merged_edffile(char *filename)
       (*it).second.tag, (*it).first, (*it).second.param);
 
 #ifdef DEBUG
-    printf("%d %s %d %s %s\n", (*it).second.gid, (*it).second.state, 
+    printf("BEGIN:%d %s %d %s %s:END\n", (*it).second.gid, (*it).second.state, 
       (*it).second.tag, (*it).first, (*it).second.param);
 #endif /* DEBUG */
   }  

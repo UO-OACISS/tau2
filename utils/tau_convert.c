@@ -12,6 +12,7 @@
  * Revision Jan 1998 Author Sameer Shende, (sameer@cs.uoregon.edu)
  */
 
+//# include <Profile/aix.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <sys/types.h>
@@ -45,8 +46,8 @@ static struct trcdescr
   int     numevent;        /* -- number of event types                     -- */
   int     numproc;         /* -- number of processors                      -- */
   long    numrec;          /* -- number of event records already processed -- */
-  unsigned long firsttime; /* -- timestamp of first event record           -- */
-  unsigned long lasttime;  /* -- timestamp of previous event record        -- */
+  unsigned long long  firsttime; /* -- timestamp of first event record           -- */
+  unsigned long long  lasttime;  /* -- timestamp of previous event record        -- */
 
   PCXX_EV  *buffer;   /* -- input buffer                              -- */
   PCXX_EV  *erec;     /* -- current event record                      -- */
@@ -272,8 +273,8 @@ static void PrintEventDescr (FILE *out)
         else if ( outFormat == SDDF )
         {
           fprintf (out, "#%d:\n", ev->no);
-          fprintf (out, "\"%s\" {\n", ev->name);
-          fprintf (out, "\tint\t\"Timestamp\";\n");
+          fprintf (out, "%s {\n", ev->name);
+          fprintf (out, "\tunsigned long long\t\"Timestamp\";\n");
           fprintf (out, "\tint\t\"Processor Number\";\n");
           fprintf (out, "\tint\t\"Thread Id\";\n");
           if ( ev->param[0] ) fprintf (out, "\tint\t\"%s\";\n", ev->param);
@@ -696,8 +697,8 @@ int main (int argc, char *argv[])
     fprintf (outfp, " -3   0 0 %10d 0          0\n", intrc.numproc+1);
     fprintf (outfp, " -4   0 0          1 0          0\n");
     fprintf (outfp, " -5   0 0 %10d 0          0\n", numUsedEvent);
-    fprintf (outfp, " -6   0 0          0 0 %10lu\n", intrc.firsttime);
-    fprintf (outfp, " -7   0 0          0 0 %10lu\n", intrc.lasttime);
+    fprintf (outfp, " -6   0 0          0 0 %10llu\n", intrc.firsttime);
+    fprintf (outfp, " -7   0 0          0 0 %10llu\n", intrc.lasttime);
     fprintf (outfp, " -8   0 0 %10d 0          0\n", intrc.overflows+1);
     fprintf (outfp, " -1   0 0          0 0          0 tau_convert -alog %s\n",
              Today());
@@ -710,8 +711,8 @@ int main (int argc, char *argv[])
     fprintf (outfp, " * \"creation date\" \"%s\"\n", Today());
     fprintf (outfp, " * \"number records\" \"%ld\"\n", intrc.numrec);
     fprintf (outfp, " * \"number processors\" \"%d\"\n", intrc.numproc+1);
-    fprintf (outfp, " * \"first timestamp\" \"%ld\"\n", intrc.firsttime);
-    fprintf (outfp, " * \"last timestamp\" \"%ld\"\n", intrc.lasttime);
+    fprintf (outfp, " * \"first timestamp\" \"%llu\"\n", intrc.firsttime);
+    fprintf (outfp, " * \"last timestamp\" \"%llu\"\n", intrc.lasttime);
     fprintf (outfp, " */\n\n");
   }
   else if ( outFormat == pv )
@@ -726,8 +727,8 @@ int main (int argc, char *argv[])
     fprintf (outfp, "C CREATION PROGRAM tau_convert -pv\n");
     fprintf (outfp, "C CREATION DATE %s\n", Today());
     fprintf (outfp, "C NUMBER RECORDS %ld\n", intrc.numrec);
-    fprintf (outfp, "C FIRST TIMESTAMP %ld\n", intrc.firsttime);
-    fprintf (outfp, "C LAST TIMESTAMP %ld\n", intrc.lasttime);
+    fprintf (outfp, "C FIRST TIMESTAMP %llu\n", intrc.firsttime);
+    fprintf (outfp, "C LAST TIMESTAMP %llu\n", intrc.lasttime);
     fprintf (outfp, "C\n");
 
     /* -- initialize state stacks -- */
@@ -750,8 +751,8 @@ int main (int argc, char *argv[])
     fprintf (outfp, "#    number records: %ld\n", intrc.numrec);
     fprintf (outfp, "# number processors: %d\n", numproc);
     fprintf (outfp, "# max processor num: %d\n", intrc.numproc);
-    fprintf (outfp, "#   first timestamp: %ld\n", intrc.firsttime);
-    fprintf (outfp, "#    last timestamp: %ld\n\n", intrc.lasttime);
+    fprintf (outfp, "#   first timestamp: %llu\n", intrc.firsttime);
+    fprintf (outfp, "#    last timestamp: %llu\n\n", intrc.lasttime);
 
     fprintf (outfp, "#=NO= =======================EVENT==");
     fprintf (outfp, " ==TIME [us]= =NODE= =THRD= ==PARAMETER=\n");
@@ -855,7 +856,7 @@ int main (int argc, char *argv[])
     if ( outFormat == alog )
     {
       i = GetEvent (erec->ev);
-      fprintf (outfp, "%3d %3d 0 %10ld %d %10lu\n",
+      fprintf (outfp, "%3d %3d 0 %10lld %d %10llu\n",
         i,                /* event type */
         GetNodeId(erec),        /* process id */
         erec->par,        /* integer parameter */
@@ -866,10 +867,10 @@ int main (int argc, char *argv[])
     {
       ptr = GetEventName (erec->ev, &hasParam);
       if ( hasParam )
-        fprintf (outfp, "\"%s\" { %lu, %d, %d, %ld };;\n\n",
+        fprintf (outfp, "%s { %llu, %d, %d, %lld };;\n\n",
                  ptr, erec->ti, GetNodeId(erec), erec->tid, erec->par);
       else
-        fprintf (outfp, "\"%s\" { %lu, %d, %d };;\n\n",
+        fprintf (outfp, "%s { %llu, %d, %d };;\n\n",
                  ptr, erec->ti, GetNodeId(erec), erec->tid);
     }
     else if ( outFormat == pv )
@@ -886,7 +887,7 @@ int main (int argc, char *argv[])
 		So, mynode is the sender and its in GetNodeId(erec) 
 		SENDMSG <type> FROM <sender> TO <receiver> LEN <length>
 	  */
-          fprintf (outfp, "%lu SENDMSG %d FROM %d TO %d LEN %d\n", 
+          fprintf (outfp, "%llu SENDMSG %d FROM %d TO %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
                   ((erec->par>>16) & 0x000000FF), GetNodeId(erec)+1, 
                   ((erec->par>>24) & 0x000000FF) + 1, 
@@ -901,7 +902,7 @@ int main (int argc, char *argv[])
 		So, mynode is the receiver and its in GetNodeId(erec) 
 		RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
 	  */
-          fprintf (outfp, "%lu RECVMSG %d BY %d FROM %d LEN %d\n", 
+          fprintf (outfp, "%llu RECVMSG %d BY %d FROM %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
                   ((erec->par>>16) & 0x000000FF),
                   GetNodeId(erec)+1, ((erec->par>>24) & 0x000000FF) + 1,
@@ -915,15 +916,15 @@ int main (int argc, char *argv[])
           if ( stkptr[GetNodeId(erec)] < statestk[GetNodeId(erec)] )
           {
             fprintf (stderr, "ERROR: stack underflow on node %d\n", GetNodeId(erec));
-            fprintf (stderr, "       event %s at %lu\n", ev->name, erec->ti);
+            fprintf (stderr, "       event %s at %llu\n", ev->name, erec->ti);
             exit (1);
           }
           if ( pvCompact )
-            fprintf (outfp, "%lu EXCH %d 1 1 %s %d\n",
+            fprintf (outfp, "%llu EXCH %d 1 1 %s %d\n",
                     erec->ti - intrc.firsttime, GetNodeId(erec)+1,
                     stkptr[GetNodeId(erec)]->state, stkptr[GetNodeId(erec)]->tag);
           else
-            fprintf (outfp, "%lu EXCHANGE ON CPUID %d TO %s %d CLUSTER 1\n",
+            fprintf (outfp, "%llu EXCHANGE ON CPUID %d TO %s %d CLUSTER 1\n",
                     erec->ti - intrc.firsttime, GetNodeId(erec)+1,
                     stkptr[GetNodeId(erec)]->state, stkptr[GetNodeId(erec)]->tag);
         }
@@ -934,15 +935,15 @@ int main (int argc, char *argv[])
           if ( stkptr[GetNodeId(erec)] > (statestk[GetNodeId(erec)] + STACKSIZE) )
           {
             fprintf (stderr, "ERROR: stack overflow on node %d\n", GetNodeId(erec));
-            fprintf (stderr, "       event %s at %lu\n", ev->name, erec->ti);
+            fprintf (stderr, "       event %s at %llu\n", ev->name, erec->ti);
             exit (1);
           }
           if ( pvCompact )
-            fprintf (outfp, "%lu EXCH %d 1 1 %s %d\n",
+            fprintf (outfp, "%llu EXCH %d 1 1 %s %d\n",
                     /*???erec->ti, GetNodeId(erec)+1, ev->state, ev->tag);*/
                     erec->ti - intrc.firsttime, GetNodeId(erec)+1, ev->state, ev->no);
           else
-            fprintf (outfp, "%lu EXCHANGE ON CPUID %d TO %s %d CLUSTER 1\n",
+            fprintf (outfp, "%llu EXCHANGE ON CPUID %d TO %s %d CLUSTER 1\n",
                     /*???erec->ti, GetNodeId(erec)+1, ev->state, ev->tag);*/
                     erec->ti - intrc.firsttime, GetNodeId(erec)+1, ev->state, ev->no);
           stkptr[GetNodeId(erec)]->state = ev->state;
@@ -955,11 +956,12 @@ int main (int argc, char *argv[])
     {
       ptr = GetEventName (erec->ev, &hasParam);
       if ( hasParam )
-        fprintf (outfp, "%5ld %30.30s %12lu %6d %6d %12ld\n",
+        fprintf (outfp, "%5ld %30.30s %12llu %6d %6d %12lld\n",
                  intrc.numrec, ptr, erec->ti, GetNodeId(erec), erec->tid, erec->par);
       else
-        fprintf (outfp, "%5ld %30.30s %12lu %6d %6d\n",
+        fprintf (outfp, "%5ld %30.30s %12llu %6d %6d\n",
                  intrc.numrec, ptr, erec->ti, GetNodeId(erec), erec->tid);
+	/* Changed 12lu to 12llu for unsigned long long time */
     }
 
     if ( (erec = get_next_rec (&intrc)) == NULL )

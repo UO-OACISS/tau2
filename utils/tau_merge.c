@@ -11,6 +11,9 @@
  * Version 3.0
  */
 
+#ifdef __SP1__
+# include <Profile/aix.h> /* if its an IBM */
+#endif /* __SP1__ */
 # include <stdio.h>
 # include <stdlib.h>
 # include <sys/types.h>

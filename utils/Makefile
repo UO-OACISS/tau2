@@ -17,7 +17,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/gar/rs/demo/tau2
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
@@ -36,7 +36,7 @@ LINKER	= $(CC)
 #HP_CFLAGS#LSX = .sl#ENDIF#
 #SYMMETRY#LEXTRA = -lseq#ENDIF#
 #PTX#LEXTRA = -lseq#ENDIF#
-#SP1#CEXTRA = -D__SP1__#ENDIF#
+#SP1#CEXTRA = -D__SP1__ -D_POSIX_SOURCE -D_XOPEN_SOURCE #ENDIF#
 #CM5#CEXTRA = -D__CM5__#ENDIF#
 #SGIMP#CEXTRA = -D__SGIMP__#ENDIF#
 #PCXX#RUNTIME1 = pcxx_merge#ENDIF#
