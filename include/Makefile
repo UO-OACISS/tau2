@@ -249,6 +249,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #CRAY_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902 -lpgftnrtl #ENDIF#
 #HP_FORTRAN#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib/pa2.0 -lF90 -lcl        #ENDIF#
+#INTEL_FORTRAN#TAU_FORTRANLIBS         = -lcprts 	  #ENDIF#
+#INTEL32_FORTRAN#TAU_FORTRANLIBS       = -lcprts 	  #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
 #PGI1.7#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
 # LINKER OPTIONS
