@@ -454,6 +454,14 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	GlobalMapping globalMapping = this.getGlobalMapping();
 	ListIterator l = globalMapping.getMappingIterator(mappingSelection);
 
+	// need these to keep track of the total totals (?)
+	double[] exclusiveTotalTotal = new double[numberOfMetrics];
+	double[] inclusiveTotalTotal = new double[numberOfMetrics];
+	for(int i=0;i<numberOfMetrics;i++){
+		exclusiveTotalTotal[i] = 0;
+		inclusiveTotalTotal[i] = 0;
+	}
+
 	//Allocate outside loop, and reset to zero at each iteration.
 	//Working on the assumption that this is slightly quicker than
 	//re-allocating in each loop iteration. 
@@ -536,6 +544,9 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		    globalMappingElement.setTotalExclusiveValue(i, exclusiveTotal[i]);
 		    globalMappingElement.setTotalInclusiveValue(i, inclusiveTotal[i]);
 			globalMappingElement.setTotalUserSecPerCall(i, userSecPerCallValueTotal[i]);
+			// take advantage of this loop to accomplish this aggregation
+			exclusiveTotalTotal[i] += exclusiveTotal[i];
+			inclusiveTotalTotal[i] += inclusiveTotal[i];
 		}
 		
 	    if(count!=0){
@@ -628,6 +639,17 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		    	this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue);
 		    	this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue);
 			}
+
+			if (exclusiveTotalTotal[i] != 0.0)
+				globalMappingElement.setTotalExclusivePercentValue(i,(globalMappingElement.getTotalExclusiveValue(i) / exclusiveTotalTotal[i])*100.0);
+			else
+				globalMappingElement.setTotalExclusivePercentValue(i,0.0);
+
+			if (inclusiveTotalTotal[i] != 0.0)
+				globalMappingElement.setTotalInclusivePercentValue(i,(globalMappingElement.getTotalInclusiveValue(i) / inclusiveTotalTotal[i])*100.0);
+			else
+				globalMappingElement.setTotalInclusivePercentValue(i,0.0);
+
 	    }
 	    globalMappingElement.setMeanValuesSet(true);
 	    if(this.debug){

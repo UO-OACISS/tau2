@@ -234,16 +234,8 @@ public class MpiPOutputSession extends ParaProfDataSession{
 				System.out.println("Done processing data file!");
 				System.out.println("Time to process file (in milliseconds): " + time);
 	    	}
-			/*
-	    	System.out.println("Processing callpath data ...");
-	    	if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
-				setCallPathDataPresent(true);
-				CallPathUtilFuncs.buildRelations(getGlobalMapping());
-	    	}
-	    	else
-				System.out.println("No callpath data found.");
-	    	System.out.println("Done - Processing callpath data!");
-			*/
+
+			this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
 
 	    	//Need to notify observers that we are done.  Be careful here.
 	    	//It is likely that they will modify swing elements.  Make sure

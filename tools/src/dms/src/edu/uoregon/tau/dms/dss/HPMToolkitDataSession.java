@@ -82,8 +82,6 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 					//Close the file.
 					br.close();
 
-					this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
-	    
 					if(UtilFncs.debug){
 			    		System.out.println("The total number of threads is: " + this.getNCT().getTotalNumberOfThreads());
 			    		System.out.println("The number of mappings is: " + this.getGlobalMapping().getNumberOfMappings(0));
@@ -99,6 +97,8 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 				}
 	    	}
 
+			this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
+	    
 	    	//Need to notify observers that we are done.  Be careful here.
 	    	//It is likely that they will modify swing elements.  Make sure
 	    	//to dump request onto the event dispatch thread to ensure
@@ -339,30 +339,6 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 				globalMappingElement.setMaxNumberOfCalls(header3.i0);
 			globalMappingElement.setMaxNumberOfSubRoutines(0);
 
-/*
-// old code
-			// save the thing...
-			mappingID = this.getGlobalMapping().addGlobalMapping(metricName, 2, 1);
-			globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
-			globalThreadDataElement = thread.getUserevent(mappingID);
-			if(globalThreadDataElement == null) {
-				globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 2), true);
-				thread.addUserevent(globalThreadDataElement, mappingID);
-			}
-			globalThreadDataElement.setUserEventNumberValue(iEventValue);
-			globalThreadDataElement.setUserEventMinValue(dEventValue);
-			globalThreadDataElement.setUserEventMaxValue(dEventValue);
-			globalThreadDataElement.setUserEventMeanValue(dEventValue);
-
-			if((globalMappingElement.getMaxUserEventNumberValue()) < iEventValue)
-				globalMappingElement.setMaxUserEventNumberValue(iEventValue);
-			if((globalMappingElement.getMaxUserEventMaxValue()) < dEventValue)
-				globalMappingElement.setMaxUserEventMaxValue(dEventValue);
-   			if((globalMappingElement.getMaxUserEventMinValue()) < dEventValue)
-				globalMappingElement.setMaxUserEventMinValue(dEventValue);
-   			if((globalMappingElement.getMaxUserEventMeanValue()) < dEventValue)
-				globalMappingElement.setMaxUserEventMeanValue(dEventValue);
-*/
 		} catch(Exception e) {
 	    	System.out.println("An error occured while parsing the callsite data!");
 	    	e.printStackTrace();
