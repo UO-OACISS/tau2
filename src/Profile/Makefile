@@ -183,6 +183,7 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS)
 
 $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
+		$(TAU_RANLIB) $(TAU_DISABLE)
 
 libTauMpi$(TAU_OPTIONS)$(LSX): 
 		$(MAKE) -f Makefile.wrapper  
