@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.1 2004/05/05 17:43:34 khuck Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.2 2004/05/05 23:16:28 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -98,7 +98,7 @@ public class IntervalEvent {
  * @see		Trial
  * @see		IntervalLocationProfile
  * @see		DataSession#getIntervalEvents
- * @see		DataSession#setMetric(String)
+ * @see		DataSession#setMetric(Metric)
  */
 	public IntervalLocationProfile getMeanSummary () {
 		if (this.meanSummary == null)

@@ -9,7 +9,7 @@
  *
  *
  *
- * <P>CVS $Id: NCT.java,v 1.1 2004/05/05 17:43:36 khuck Exp $</P>
+ * <P>CVS $Id: NCT.java,v 1.2 2004/05/05 23:16:28 khuck Exp $</P>
  * @author	Robert Bell
  * @version	2.0
  * @since	0.1
@@ -35,7 +35,7 @@ public class NCT{
      * A node is not added if the node's id is < 0, or the node is already
      * present. Adds do not have to be consecutive (ie., nodes can be added out of order).
      *
-     * @param	Node The node to be inserted.
+     * @param	node The node to be inserted.
      */
     public boolean addNode(Node node){
 	boolean result = false;

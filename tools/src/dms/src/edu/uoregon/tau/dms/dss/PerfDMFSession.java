@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.2 2004/05/05 19:26:43 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.3 2004/05/05 23:16:28 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -552,7 +552,7 @@ public class PerfDMFSession extends DataSession {
 /**
  * Saves the Trial.
  *
- * @param intervalEvent
+ * @param trial
  * @return database index ID of the saved trial record
  */
 	public int saveTrial(Trial trial) {
@@ -563,6 +563,8 @@ public class PerfDMFSession extends DataSession {
  * Saves the IntervalEvent.
  *
  * @param intervalEvent
+ * @param newTrialID
+ * @param newMetHash
  * @return database index ID of the saved intervalEvent record
  */
 	public int saveIntervalEvent(IntervalEvent intervalEvent, int newTrialID, Hashtable newMetHash) {
@@ -573,6 +575,8 @@ public class PerfDMFSession extends DataSession {
  * Saves the IntervalLocationProfile.
  *
  * @param intervalEventData
+ * @param newIntervalEventID
+ * @param newMetHash
  * @return database index ID of the saved interval_location_profile record
  */
 	public void saveIntervalEventData(IntervalLocationProfile intervalEventData, int newIntervalEventID, Hashtable newMetHash) {
@@ -604,7 +608,8 @@ public class PerfDMFSession extends DataSession {
 /**
  * Saves the ParaProfTrial object to the database
  * 
- * @param paraProfTrial
+ * @param trial
+ * @param saveMetricIndex
  * @return the database index ID of the saved trial record
  */
 

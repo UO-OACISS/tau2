@@ -156,11 +156,11 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	return null;}
 	
     /**
-     * Returns a ListIterator of UserEvent objects.
+     * Returns a ListIterator of AtomicEvent objects.
      *
-     * @return	DataSessionIterator object of all UserEvents.  If there is an Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) saved in the DataSession, then only the UserEvents for that Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) are returned.
+     * @return	DataSessionIterator object of all AtomicEvents.  If there is an Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) saved in the DataSession, then only the AtomicEvents for that Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) are returned.
      * @see	DataSessionIterator
-     * @see	UserEvent
+     * @see	AtomicEvent
      * @see	DataSession#setApplication
      * @see	DataSession#setExperiment
      * @see	DataSession#setTrial
@@ -172,11 +172,11 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	return null;}
 
     /**
-     * Set the UserEvent for this DataSession.  The DataSession object will maintain a reference to the UserEvent referenced by the id.  To clear this reference, call setUserEvent(UserEvent) with a null reference.
+     * Set the AtomicEvent for this DataSession.  The DataSession object will maintain a reference to the AtomicEvent referenced by the id.  To clear this reference, call setAtomicEvent(AtomicEvent) with a null reference.
      *
-     * @param	id unique id of the UserEvent object to be saved.
-     * @see	UserEvent
-     * @see	DataSession#setUserEvent(UserEvent)
+     * @param	id unique id of the AtomicEvent object to be saved.
+     * @see	AtomicEvent
+     * @see	DataSession#setAtomicEvent(AtomicEvent)
      */
     public AtomicEvent setAtomicEvent(int id){
 	return null;}
@@ -211,7 +211,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     /**
      * Returns the AtomicEventData for this DataSession
      *
-     * @return	DataSessionIterator of AtomicEventData objects.  If there is an Application, Experiment, Trial(s), node(s), context(s), thread(s) and/or IntervalEvent(s) saved in the DataSession, then only the UserEvents for that Application, Experiment, Trial(s), node(s), context(s), thread(s) and/or IntervalEvent(s) are returned.
+     * @return	DataSessionIterator of AtomicEventData objects.  If there is an Application, Experiment, Trial(s), node(s), context(s), thread(s) and/or IntervalEvent(s) saved in the DataSession, then only the AtomicEvents for that Application, Experiment, Trial(s), node(s), context(s), thread(s) and/or IntervalEvent(s) are returned.
      * @see	DataSessionIterator
      * @see	AtomicLocationProfile
      * @see	DataSession#setApplication
@@ -220,7 +220,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
      * @see	DataSession#setNode
      * @see	DataSession#setContext
      * @see	DataSession#setThread
-     * @see	DataSession#setUserEvent
+     * @see	DataSession#setAtomicEvent
      */
     public ListIterator getAtomicEventData(){
 	return null;}
@@ -242,7 +242,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     /**
      * Saves the Trial.
      *
-     * @param intervalEvent
+     * @param trial
      * @return ID of the saved trial
      */
     public int saveTrial(Trial trial){return -1;}
@@ -251,6 +251,8 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
      * Saves the IntervalEvent.
      *
      * @param intervalEvent
+     * @param newTrialID
+     * @param newMetHash
      * @return ID of the saved intervalEvent
      */
     public int saveIntervalEvent(IntervalEvent intervalEvent, int newTrialID, Hashtable newMetHash){return -1;}
@@ -259,6 +261,8 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
      * Saves the IntervalLocationProfile.
      *
      * @param intervalEventData
+     * @param newIntervalEventID
+     * @param newMetHash
      */
     public void saveIntervalEventData(IntervalLocationProfile intervalEventData, int newIntervalEventID, Hashtable newMetHash){}
     
@@ -276,7 +280,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
      *
      * @param atomicEventData
      */
-    public void saveAtomicEventData(AtomicLocationProfile atomicEventData, int newUserEventID){}
+    public void saveAtomicEventData(AtomicLocationProfile atomicEventData, int newAtomicEventID){}
     
     public boolean profileStatsPresent(){
 	return profileStatsPresent;}

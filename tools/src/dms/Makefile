@@ -39,7 +39,7 @@ $(ANALYSIS_CLASSES): $(ANALYSIS_SOURCES) $(DSS_CLASSES)
 $(EXAMPLE_CLASSES): dms.jar $(EXAMPLE_SOURCES)
 	javac -classpath dms.jar $(EXAMPLE_SOURCES)
 
-javadoc: $(DSS_SOURCES) $(SRC_PATH)/dms/dss/package.html
+javadoc: dms.jar $(SRC_PATH)/dms/dss/package.html
 	javadoc -d $(DOC_PATH) -classpath $(CLASSPATH) $(DSS_SOURCES)
 
 # these are maintenance targets.

@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.1 2004/05/05 17:43:39 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.2 2004/05/05 23:16:29 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -27,8 +27,8 @@ import java.lang.String;
  * @see		DataSession#setTrial
  * @see		Application
  * @see		Experiment
- * @see		Function
- * @see		UserEvent
+ * @see		IntervalEvent
+ * @see		AtomicEvent
  */
 public class Trial {
     private int trialID;
@@ -244,7 +244,7 @@ public class Trial {
     /**
      * Sets the data session for this trial.
      *
-     * @param	 Data session for this trial
+     * @param	 dataSession DataSession for this trial
      */
     public void setDataSession (DataSession dataSession) {
 	this.dataSession = dataSession;

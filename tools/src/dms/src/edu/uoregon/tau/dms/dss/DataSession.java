@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.1 2004/05/05 17:43:30 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.2 2004/05/05 23:16:28 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -684,7 +684,7 @@ public abstract class DataSession {
 /**
   * Deletes the application
   *
-  * @param trialID the ID of the application to delete
+  * @param applicationID the ID of the application to delete
   */
 
   public void deleteApplication (int applicationID) {};
@@ -692,7 +692,7 @@ public abstract class DataSession {
 /**
   * Deletes the experiment
   *
-  * @param trialID the ID of the experiment to delete
+  * @param experimentID the ID of the experiment to delete
   */
 
   public void deleteExperiment (int experimentID) {};
@@ -700,7 +700,7 @@ public abstract class DataSession {
 /**
   * Saves the application
   *
-  * @param trialID the ID of the application to save
+  * @param application the application to save
   */
 
   public void saveApplication (Application application) {};
@@ -708,7 +708,7 @@ public abstract class DataSession {
 /**
   * Saves the experiment
   *
-  * @param trialID the ID of the experiment to save
+  * @param experiment the experiment to save
   */
 
   public void saveExperiment (Experiment experiment) {};
