@@ -1,0 +1,94 @@
+Set environment variable TAU_CALLPATH_DEPTH to an integer value (2-N) to get a profile with 
+callpaths with the desired depth. 
+
+[sameer@neuronic callpath]$ setenv TAU_CALLPATH_DEPTH 10
+[sameer@neuronic callpath]$ simple; pprof
+Inside main: calls f1, f5
+Inside f1: sleeps 1 sec, calls f2, f4
+Inside f2: sleeps 2 sec, calls f3
+Inside f3: sleeps 3 sec
+Inside f4: sleeps 4 sec, calls f2
+Inside f2: sleeps 2 sec, calls f3
+Inside f3: sleeps 3 sec
+Inside f5: sleeps 5 sec
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.249       20,011           1           2   20011184 main() (calls f1, f5)
+ 75.0        1,000       15,009           1           2   15009375 f1() (sleeps 1 sec, calls f2, f4)
+ 75.0        1,000       15,009           1           2   15009375 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4)  
+ 50.0        4,003       10,007           2           2    5003507 f2() (sleeps 2 sec, calls f3)
+ 45.0        4,001        9,005           1           1    9005224 f4() (sleeps 4 sec, calls f2)
+ 45.0        4,001        9,005           1           1    9005224 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4) => f4() (sleeps 4 sec, calls f2)  
+ 30.0        6,003        6,003           2           0    3001675 f3() (sleeps 3 sec)
+ 25.0        2,001        5,003           1           1    5003524 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4) => f4() (sleeps 4 sec, calls f2) => f2() (sleeps 2 sec, calls f3)  
+ 25.0        2,001        5,003           1           1    5003490 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4) => f2() (sleeps 2 sec, calls f3)  
+ 25.0        5,001        5,001           1           0    5001560 f5() (sleeps 5 sec)
+ 25.0        5,001        5,001           1           0    5001560 main() (calls f1, f5) => f5() (sleeps 5 sec)  
+ 15.0        3,001        3,001           1           0    3001677 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4) => f2() (sleeps 2 sec, calls f3) => f3() (sleeps 3 sec)  
+ 15.0        3,001        3,001           1           0    3001673 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4) => f4() (sleeps 4 sec, calls f2) => f2() (sleeps 2 sec, calls f3) => f3() (sleeps 3 sec)  
+[sameer@neuronic callpath]$ setenv TAU_CALLPATH_DEPTH 3
+[sameer@neuronic callpath]$ ./simple
+Inside main: calls f1, f5
+Inside f1: sleeps 1 sec, calls f2, f4
+Inside f2: sleeps 2 sec, calls f3
+Inside f3: sleeps 3 sec
+Inside f4: sleeps 4 sec, calls f2
+Inside f2: sleeps 2 sec, calls f3
+Inside f3: sleeps 3 sec
+Inside f5: sleeps 5 sec
+[sameer@neuronic callpath]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.226       20,012           1           2   20012395 main() (calls f1, f5)
+ 75.0        1,001       15,010           1           2   15010599 f1() (sleeps 1 sec, calls f2, f4)
+ 75.0        1,001       15,010           1           2   15010599 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4)  
+ 50.0        4,003       10,007           2           2    5003502 f2() (sleeps 2 sec, calls f3)
+ 45.0        4,001        9,005           1           1    9005218 f4() (sleeps 4 sec, calls f2)
+ 45.0        4,001        9,005           1           1    9005218 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4) => f4() (sleeps 4 sec, calls f2)  
+ 30.0        6,003        6,003           2           0    3001701 f3() (sleeps 3 sec)
+ 25.0        2,001        5,003           1           1    5003518 f1() (sleeps 1 sec, calls f2, f4) => f4() (sleeps 4 sec, calls f2) => f2() (sleeps 2 sec, calls f3)  
+ 25.0        2,001        5,003           1           1    5003486 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4) => f2() (sleeps 2 sec, calls f3)  
+ 25.0        5,001        5,001           1           0    5001570 f5() (sleeps 5 sec)
+ 25.0        5,001        5,001           1           0    5001570 main() (calls f1, f5) => f5() (sleeps 5 sec)  
+ 15.0        3,001        3,001           1           0    3001703 f1() (sleeps 1 sec, calls f2, f4) => f2() (sleeps 2 sec, calls f3) => f3() (sleeps 3 sec)  
+ 15.0        3,001        3,001           1           0    3001699 f4() (sleeps 4 sec, calls f2) => f2() (sleeps 2 sec, calls f3) => f3() (sleeps 3 sec)  
+[sameer@neuronic callpath]$ unsetenv TAU_CALLPATH_DEPTH
+[sameer@neuronic callpath]$ ./simple; pprof
+Inside main: calls f1, f5
+Inside f1: sleeps 1 sec, calls f2, f4
+Inside f2: sleeps 2 sec, calls f3
+Inside f3: sleeps 3 sec
+Inside f4: sleeps 4 sec, calls f2
+Inside f2: sleeps 2 sec, calls f3
+Inside f3: sleeps 3 sec
+Inside f5: sleeps 5 sec
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.207       20,011           1           2   20011689 main() (calls f1, f5)
+ 75.0        1,001       15,009           1           2   15009904 f1() (sleeps 1 sec, calls f2, f4)
+ 75.0        1,001       15,009           1           2   15009904 main() (calls f1, f5) => f1() (sleeps 1 sec, calls f2, f4)  
+ 50.0        4,003       10,007           2           2    5003524 f2() (sleeps 2 sec, calls f3)
+ 45.0        4,001        9,005           1           1    9005230 f1() (sleeps 1 sec, calls f2, f4) => f4() (sleeps 4 sec, calls f2)  
+ 45.0        4,001        9,005           1           1    9005230 f4() (sleeps 4 sec, calls f2)
+ 30.0        6,003        6,003           2           0    3001710 f2() (sleeps 2 sec, calls f3) => f3() (sleeps 3 sec)  
+ 30.0        6,003        6,003           2           0    3001710 f3() (sleeps 3 sec)
+ 25.0        2,001        5,003           1           1    5003546 f4() (sleeps 4 sec, calls f2) => f2() (sleeps 2 sec, calls f3)  
+ 25.0        2,001        5,003           1           1    5003502 f1() (sleeps 1 sec, calls f2, f4) => f2() (sleeps 2 sec, calls f3)  
+ 25.0        5,001        5,001           1           0    5001578 f5() (sleeps 5 sec)
+ 25.0        5,001        5,001           1           0    5001578 main() (calls f1, f5) => f5() (sleeps 5 sec)  
+
