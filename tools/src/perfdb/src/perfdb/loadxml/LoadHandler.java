@@ -374,6 +374,9 @@ public class LoadHandler extends DefaultHandler {
 		else if( name.equalsIgnoreCase("meanvalue") ) {
 	    	currentElement = "meanvalue";
 		}    
+		else if( name.equalsIgnoreCase("stddevvalue") ) {
+	    	currentElement = "stddevvalue";
+		}    
 		else if( name.equalsIgnoreCase("totalfunsummary") ) {
 	    	currentElement = "totalfunsummary";
 		}    
@@ -460,6 +463,7 @@ public class LoadHandler extends DefaultHandler {
 	else if (currentElement.equals("maxvalue")) maxvalue = tempcode;
 	else if (currentElement.equals("minvalue")) minvalue = tempcode;
 	else if (currentElement.equals("meanvalue")) meanvalue = tempcode;
+	else if (currentElement.equals("stddevvalue")) standardDeviation = tempcode;
     }
 
     public void endElement(String url, String name, String qname) {
@@ -586,7 +590,7 @@ public class LoadHandler extends DefaultHandler {
 			}	
 
 			atomicLocCounter++;
-			String ltempStr = String.valueOf(atomicLocCounter)+"\t"+ueArray[ueidInt]+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t" + numofsamples + "\t" + maxvalue + "\t" + minvalue + "\t" + meanvalue + "\t0.0";
+			String ltempStr = String.valueOf(atomicLocCounter)+"\t"+ueArray[ueidInt]+"\t"+nodeid+"\t"+contextid+"\t"+threadid+"\t" + numofsamples + "\t" + maxvalue + "\t" + minvalue + "\t" + meanvalue + "\t" + standardDeviation;
 			alwriter.write(ltempStr, 0, ltempStr.length());
 			alwriter.newLine();
 	    		     
@@ -805,7 +809,7 @@ public class LoadHandler extends DefaultHandler {
 	       
 	    funTempFile.delete();   
 	    interLocTempFile.delete();
-	    ueTempFile.delete();
+	    // ueTempFile.delete();
 	    atomicLocTempFile.delete();
 	    totalTempFile.delete();
 	    meanTempFile.delete();

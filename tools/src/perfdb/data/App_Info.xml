@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <application>
-    <name>example</name>
+    <name>example test</name>
     <version>1.0</version>
-    <description></description>
-    <language></language>
-    <para_diag></para_diag>
-    <usage></usage>
-    <exe_opt></exe_opt>
+    <description>description</description>
+    <language>language</language>
+    <para_diag>para</para_diag>
+    <usage>usage</usage>
+    <exe_opt>exe opt</exe_opt>
 </application>

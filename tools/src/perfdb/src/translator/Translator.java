@@ -597,6 +597,7 @@ public class Translator implements Serializable{
 						tmpGTDEUE.setUserEventMinValue(getUEMinValue(inputString));
 						tmpGTDEUE.setUserEventMaxValue(getUEMaxValue(inputString));
 						tmpGTDEUE.setUserEventMeanValue(getUEMeanValue(inputString));
+						tmpGTDEUE.setUserEventStdDevValue(getUEStdDevValue(inputString));
 																
 						//Ok, now get the next string as that is the stat string for this event.
 						inputString = preader.readLine();
@@ -854,6 +855,8 @@ public class Translator implements Serializable{
 				writeMinValue(xwriter,ueObject.getUserEventMinValue());
  
 				writeMeanValue(xwriter, ueObject.getUserEventMeanValue());
+ 
+				writeStdDevValue(xwriter, ueObject.getUserEventStdDevValue());
 			    }
 			}			
 		    }
@@ -1632,8 +1635,41 @@ public class Translator implements Serializable{
        		tmpString = uEQuotesTokenizer.nextToken();
        		tmpString = uEQuotesTokenizer.nextToken();
 			
-			//Ok, now concentrate on the third token.  The token in question should be the forth.
+			//Ok, now concentrate on the third token.  The token in question should be the fourth.
        		StringTokenizer uETokenizer = new StringTokenizer(tmpString, " \t\n\r");
+       		tmpString = uETokenizer.nextToken();
+       		tmpString = uETokenizer.nextToken();
+       		tmpString = uETokenizer.nextToken();
+       		tmpString = uETokenizer.nextToken();
+			
+			//Now return the value obtained.
+       		return Double.parseDouble(tmpString);
+       	}
+       	catch(Exception e)
+       	{
+       		e.printStackTrace();	
+       	
+       	}
+		
+       	return -1;
+    }
+	
+    double getUEStdDevValue(String inString)
+    {
+       	try{
+       		String tmpString;
+			
+			//First strip away the portion of the string not needed.
+       		StringTokenizer uEQuotesTokenizer = new StringTokenizer(inString,"\"");
+			
+			//Grab the third token.
+       		tmpString = uEQuotesTokenizer.nextToken();
+       		tmpString = uEQuotesTokenizer.nextToken();
+       		tmpString = uEQuotesTokenizer.nextToken();
+			
+			//Ok, now concentrate on the third token.  The token in question should be the fifth.
+       		StringTokenizer uETokenizer = new StringTokenizer(tmpString, " \t\n\r");
+       		tmpString = uETokenizer.nextToken();
        		tmpString = uETokenizer.nextToken();
        		tmpString = uETokenizer.nextToken();
        		tmpString = uETokenizer.nextToken();
@@ -2037,6 +2073,20 @@ public class Translator implements Serializable{
 	try{
 	    String tmpString;
 	    tmpString = "\t\t<meanvalue>"+meanValue+"</meanvalue>";
+	    writer.write(tmpString, 0, tmpString.length());
+	    writer.newLine();
+	}
+	catch(Exception e)
+       	{
+       		e.printStackTrace();	
+		
+       	}
+    }
+
+    public void writeStdDevValue(BufferedWriter writer, double stdDevValue){
+	try{
+	    String tmpString;
+	    tmpString = "\t\t<stddevvalue>"+stdDevValue+"</stddevvalue>";
 	    writer.write(tmpString, 0, tmpString.length());
 	    writer.newLine();
 	    writer.write("\t   </userevent>", 0, ("\t   </userevent>").length());

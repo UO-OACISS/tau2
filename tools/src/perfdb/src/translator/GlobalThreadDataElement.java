@@ -248,7 +248,7 @@ public class GlobalThreadDataElement implements Serializable
 		return userEventMeanValue;
 	}
 	
-        public void setUserEventStdDevValue(double inUserEventStdDevValue)
+	public void setUserEventStdDevValue(double inUserEventStdDevValue)
 	{
 		userEventStdDevValue = inUserEventStdDevValue;
 	}

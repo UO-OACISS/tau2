@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Trials>
-    <Onetrial Metric='time'>
+    <Onetrial Metric='time2'>
 	<ComputationModel>
 	   <node level="Top" statis_info="sum">2</node>
 	   <context level="Secondary" statis_info="contextPnode">1</context>
@@ -493,6 +493,7 @@
 		<maxvalue>87120.0</maxvalue>
 		<minvalue>1240.0</minvalue>
 		<meanvalue>3941.078941887107</meanvalue>
+		<stddevvalue>14989.09043534526</stddevvalue>
 	   </userevent>
 	   <userevent>
 		<uename>Message size sent to node 0</uename>
@@ -501,6 +502,7 @@
 		<maxvalue>0.0</maxvalue>
 		<minvalue>0.0</minvalue>
 		<meanvalue>0.0</meanvalue>
+		<stddevvalue>0.0</stddevvalue>
 	   </userevent>
 	   <userevent>
 		<uename>Message size sent to node 1</uename>
@@ -509,6 +511,7 @@
 		<maxvalue>87120.0</maxvalue>
 		<minvalue>1240.0</minvalue>
 		<meanvalue>3941.078941887107</meanvalue>
+		<stddevvalue>14989.09043534526</stddevvalue>
 	   </userevent>
 	   <nodeID>1</nodeID>
 	   <contextID>0</contextID>
@@ -988,6 +991,7 @@
 		<maxvalue>87120.0</maxvalue>
 		<minvalue>264.0</minvalue>
 		<meanvalue>3939.961270171786</meanvalue>
+		<stddevvalue>14986.8830211627</stddevvalue>
 	   </userevent>
 	   <userevent>
 		<uename>Message size sent to node 0</uename>
@@ -996,6 +1000,7 @@
 		<maxvalue>87120.0</maxvalue>
 		<minvalue>264.0</minvalue>
 		<meanvalue>3939.961270171786</meanvalue>
+		<stddevvalue>14986.8830211627</stddevvalue>
 	   </userevent>
 	   <userevent>
 		<uename>Message size sent to node 1</uename>
@@ -1004,6 +1009,7 @@
 		<maxvalue>0.0</maxvalue>
 		<minvalue>0.0</minvalue>
 		<meanvalue>0.0</meanvalue>
+		<stddevvalue>0.0</stddevvalue>
 	   </userevent>
 	</Pprof>
 
