@@ -23,7 +23,7 @@ PDTPARSE 	= $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
 
 TAUINSTR 	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
-TAUANALYZE	= $(TAUROOTDIR)/tools/src/TauIL/bin/tau_analyze
+TAUANALYZE	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_analyze
 
 TAUPPROF	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/pprof
 
