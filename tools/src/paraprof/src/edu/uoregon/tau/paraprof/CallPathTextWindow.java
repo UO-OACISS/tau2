@@ -97,9 +97,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //Save menu.
 	    subMenu = new JMenu("Save ...");
 	    
-	    menuItem = new JMenuItem("ParaProf Preferrences");
+	    /*menuItem = new JMenuItem("ParaProf Preferences");
 	    menuItem.addActionListener(this);
-	    subMenu.add(menuItem);
+	    subMenu.add(menuItem);*/
 	    
 	    menuItem = new JMenuItem("Save Image");
 	    menuItem.addActionListener(this);

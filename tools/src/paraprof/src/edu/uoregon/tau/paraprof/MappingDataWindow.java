@@ -109,9 +109,9 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    //Save menu.
 	    subMenu = new JMenu("Save ...");
 	    
-	    menuItem = new JMenuItem("ParaProf Preferrences");
+	    /*menuItem = new JMenuItem("ParaProf Preferences");
 	    menuItem.addActionListener(this);
-	    subMenu.add(menuItem);
+	    subMenu.add(menuItem);*/
 	    
 	    menuItem = new JMenuItem("Save Image");
 	    menuItem.addActionListener(this);

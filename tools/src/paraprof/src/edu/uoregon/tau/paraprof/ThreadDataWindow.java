@@ -104,9 +104,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    //Save menu.
 	    subMenu = new JMenu("Save ...");
 	    
-	    menuItem = new JMenuItem("ParaProf Preferrences");
+	    /*menuItem = new JMenuItem("ParaProf Preferences");
 	    menuItem.addActionListener(this);
-	    subMenu.add(menuItem);
+	    subMenu.add(menuItem);*/
 	    
 	    menuItem = new JMenuItem("Save Image");
 	    menuItem.addActionListener(this);
