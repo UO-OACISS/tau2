@@ -68,7 +68,10 @@ class ProfileDataSource extends DataSource implements ParaProfObserver {
 	while(loading) { /* Got Nothing to do so spin our wheels */ }
     }
 
-    public void update(Object obj){}
+    public void update(Object obj){
+	this.update();
+    }
+
     public void update(){
 	data.terminate();
 
