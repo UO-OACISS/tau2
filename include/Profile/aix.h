@@ -4,8 +4,6 @@
 
 //#define _XOPEN _SOURCE
 //#define _XOPEN_SOURCE_EXTENDED 1
-#define _POSIX_SOURCE
-#define _XOPEN_SOURCE 
 
 #ifndef _TIME_T
 #define _TIME_T
@@ -17,14 +15,18 @@ typedef long            time_t;
 typedef unsigned long   size_t;
 #endif
 
+#ifndef KAI
 struct timeval {
         time_t          tv_sec;         /* seconds */
         long            tv_usec;        /* microseconds */
 };
+#endif // KAI
 
 extern "C" {
 int              getdtablesize(void);
+#ifndef KAI
 int gettimeofday(struct timeval *, void *);
+#endif // KAI
 int  strncasecmp(const char *, const char *, size_t);
 int  strcasecmp(const char *, const char *);
 }
