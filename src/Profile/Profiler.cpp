@@ -1411,7 +1411,7 @@ bool Profiler::createDirectories(){
     if(MultipleCounterLayer::getCounterUsed(i)){
       char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
       char *newdirname = new char[1024];
-      char *rmdircommand = new char[1024];
+      //char *rmdircommand = new char[1024];
       char *mkdircommand = new char[1024];
       
       if ((dirname = getenv("PROFILEDIR")) == NULL) {
@@ -1420,11 +1420,11 @@ bool Profiler::createDirectories(){
 	strcpy (dirname,".");
       }
       
-      sprintf(newdirname,"%s/%s",dirname,tmpChar);
-      sprintf(rmdircommand,"rm -rf %s",newdirname);
-      sprintf(mkdircommand,"mkdir %s",newdirname);
+      sprintf(newdirname,"%s/MULTI__%s",dirname,tmpChar);
+      //sprintf(rmdircommand,"rm -rf %s",newdirname);
+      sprintf(mkdircommand,"mkdir -p %s",newdirname);
     
-      system(rmdircommand);
+      //system(rmdircommand);
       system(mkdircommand);
     }
   }
@@ -1656,7 +1656,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
       char *errormsg = new char[1024];
       char *header = new char[1024];
 
-      sprintf(newdirname,"%s/%s",dirname,tmpChar);
+      sprintf(newdirname,"%s/MULTI__%s",dirname,tmpChar);
 
       sprintf(filename,"%s/temp.%d.%d.%d",newdirname, RtsLayer::myNode(),
 	      RtsLayer::myContext(), tid);
@@ -1909,10 +1909,10 @@ int Profiler::StoreData(int tid){
       char *header = new char[1024];
       
 
-      sprintf(newdirname,"%s/%s",dirname,tmpChar);
+      sprintf(newdirname,"%s/MULTI__%s",dirname,tmpChar);
 
       sprintf(filename,"%s/profile.%d.%d.%d",newdirname, RtsLayer::myNode(),
-            RtsLayer::myContext(), tid);
+	      RtsLayer::myContext(), tid);
 
       DEBUGPROFMSG("Creating " << filename << endl;);
       if ((fp = fopen (filename, "w+")) == NULL) {
@@ -2447,8 +2447,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.72 $   $Date: 2002/04/15 19:14:26 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.72 2002/04/15 19:14:26 bertie Exp $ 
+ * $Revision: 1.73 $   $Date: 2002/04/23 07:15:46 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.73 2002/04/23 07:15:46 bertie Exp $ 
  ***************************************************************************/
 
 	
