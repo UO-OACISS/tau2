@@ -1,64 +1,83 @@
-/* 
-   NCT.java
-   
-   Title:      ParaProf
-   Author:     Robert Bell
-   Description:  
-*/
+/**
+ * 
+ * An object representation of the node, context, thread heirarchical method
+ * of representing performance data.
+ *
+ * <p>
+ * To do: Class is complete.
+ *
+ *
+ *
+ *
+ * <P>CVS $Id: NCT.java,v 1.2 2004/04/16 23:02:47 bertie Exp $</P>
+ * @author	Robert Bell
+ * @version	2.0
+ * @since	0.1
+ * @see		Node
+ * @see		Context
+ * @see		Thread
+ */
 
-/*
-  To do: 
-  1) Consider some improvements with regard to getNumberOfContexts/Threads.
-  Currently the paradigm is for one of flexibility. If this becomes a problem,
-  consider introducing some lookup improvements.
-*/
 
 package dms.dss;
 
 import java.util.*;
 
 public class NCT{
-    public NCT(){}
 
     //######
     //Node methods.
     //######
-    //Adds the specified node to the list of nodes.
-    public void addNode(Node node){
-	try{
-	    if(node.getNodeID()<0){
-		System.out.println("Error - Invalid node id (id less than zero). Node not added!");
-		return;
-	    }
 
-	    int pos = this.getNodePosition(node);
-	    if(pos>=0)
-		System.out.println("Error - Node already present. Node not added!");
-	    else
-		nodes.insertElementAt(node, (-(pos+1)));
+    /**
+     * Adds the node given to the the list of nodes. The postion in which the node
+     * is added is determined by the node's id (obtained from Node.getNodeID()).
+     * A node is not added if the node's id is < 0, or the node is already
+     * present. Adds do not have to be consecutive (ie., nodes can be added out of order).
+     *
+     * @param	Node The node to be inserted.
+     */
+    public boolean addNode(Node node){
+	boolean result = false;
+	try{
+	    if(node.getNodeID()>=0){
+		//Find the position in which this node should be added to
+		//the list of nodes.
+		int pos = this.getNodePosition(node);
+		if(pos<0){
+		    nodes.insertElementAt(node, (-(pos+1)));
+		    result = true;
+		}
+	    }
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "N1");
 	}
+	return result;
     }
 
-    //Creates a node with the specified node id and adds it to the list of nodes.
+    /**
+     * Creates and then adds a node with the given id to the the list of nodes. 
+     * The postion in which the node is added is determined by given id.
+     * A node is not added if the id is < 0, or that node id is already
+     * present. Adds do not have to be consecutive (ie., nodes can be added out of order).
+     * The node created will have an id matching the given id.
+     *
+     * @param	nodeID The id of the node to be added.
+     * @return	The Node that was added.
+     */
     public Node addNode(int nodeID){
 	Node node = null;
 	try{
-	    if(nodeID<0){
-		System.out.println("Error - Invalid node id (id less than zero). Node not added!");
-		return null;
+	    if(nodeID>=0){
+		//Find the position in which this node should be added to
+		//the list of nodes.
+		int pos = this.getNodePosition(new Integer(nodeID));
+		if(pos<0){
+		    node = new Node(nodeID);
+		    nodes.insertElementAt(node, (-(pos+1)));
+		}
 	    }
-
-	    int pos = this.getNodePosition(new Integer(nodeID));
-	    if(pos>=0)
-		System.out.println("Error - Node already present. Node not added!");
-	    else{
-		node = new Node(nodeID);
-		nodes.insertElementAt(node, (-(pos+1)));
-	    }
-	    return node;
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "N2");
@@ -66,14 +85,28 @@ public class NCT{
 	return node;
     }
     
+    /**
+     * Returns the number of nodes in this NCT object.
+     *
+     * @return	The number of nodes.
+     */
     public int getNumberOfNodes(){
 	return nodes.size();}
 
+    /**
+     * Returns the list of nodes in this object as a Vector.
+     *
+     * @return	A Vector of node objects.
+     */
     public Vector getNodes(){
 	return nodes;}
 
-    //Gets the node with the specified node id.  If the node is not found, the function returns
-    //null.
+    /**
+     * Gets the node with the specified node id.  If the node is not found, the function returns null.
+     *
+     * @param	nodeID The id of the node sought.
+     * @return	The node found (or null if it was not).
+     */
     public Node getNode(int nodeID){
 	Node node = null;
 	try{
@@ -87,11 +120,21 @@ public class NCT{
 	return node;
     }
 
+    //######
+    //Private node methods.
+    //######
+
+    //Gets the position in the nodes list of the node with the passed in id (specified with and Integer).
     private int getNodePosition(Integer integer){
 	return Collections.binarySearch(nodes, integer);}
 
+    //Gets the position in the nodes list of the passed in node.
     private int getNodePosition(Node node){
 	return Collections.binarySearch(nodes, node);}
+    //######
+    //End - Private node methods.
+    //######
+
     //######
     //End - Node methods.
     //######
