@@ -290,9 +290,20 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 	return AlreadyOnStack[tid];
 }
 
+
+void tauCreateFI(FunctionInfo **ptr, const char *name, const char *type, 
+		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
+void tauCreateFI(FunctionInfo **ptr, const char *name, const string& type, 
+		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
+void tauCreateFI(FunctionInfo **ptr, const string& name, const char *type, 
+		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
+void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type, 
+		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
+
+
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 2004/11/02 20:21:00 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.28 2004/11/02 20:21:00 sameer Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
+ * $Revision: 1.29 $   $Date: 2005/01/05 21:29:01 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.29 2005/01/05 21:29:01 amorris Exp $ 
  ***************************************************************************/

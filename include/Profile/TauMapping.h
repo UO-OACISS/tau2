@@ -35,17 +35,20 @@
 FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 #define TAU_MAPPING(stmt, group)   \
   { \
-    static FunctionInfo TauMapFI(#stmt, " " , group, #group); \
-    static Profiler *TauMapProf = new Profiler(&TauMapFI, group, true); \
-    TheTauMapFI(group) = &TauMapFI; \
+    static FunctionInfo *TauMapFI = NULL; \
+    tauCreateFI(&TauMapFI, #stmt, " " , group, #group); \
+    static Profiler *TauMapProf = new Profiler(TauMapFI, group, true); \
+    TheTauMapFI(group) = TauMapFI; \
     TauMapProf->Start(); \
     stmt; \
     TauMapProf->Stop(); \
     delete TauMapProf; \
   } 
 
-#define TAU_MAPPING_REGISTER(stmt, group)  { static FunctionInfo TauMapFI(stmt, " " , group, #group); \
-    TheTauMapFI(group) = &TauMapFI; \
+#define TAU_MAPPING_REGISTER(stmt, group)  { \
+    static FunctionInfo *TauMapFI = NULL; \
+    tauCreateFI(&TauMapFI,stmt, " " , group, #group); \
+    TheTauMapFI(group) = TauMapFI; \
   } 
 
 #define TAU_MAPPING_CREATE(name, type, key, groupname, tid)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, key, groupname, true, tid); \

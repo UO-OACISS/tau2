@@ -44,20 +44,22 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 #define TAU_PROFILE(name, type, group) \
 	static TauGroup_t tau_gr = group; \
-	static FunctionInfo tauFI(name, type, tau_gr, #group); \
-	Profiler tauFP(&tauFI, tau_gr); 
+	static FunctionInfo *tauFI = NULL; \
+        tauCreateFI(&tauFI, name, type, tau_gr, #group); \
+	Profiler tauFP(tauFI, tau_gr); 
 #define TAU_PROFILE_TIMER(var, name, type, group) \
 	static TauGroup_t var##tau_gr = group; \
-	static FunctionInfo var##fi(name, type, var##tau_gr, #group); 
+	static FunctionInfo *var##fi = NULL; \
+        tauCreateFI(&tauFI, name, type, var##tau_gr, #group); 
 
 //	Profiler var(&var##fi, var##tau_gr, true); 
 
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
 // e.g., FunctionInfo loop1fi(); Profiler loop1(); 
 #define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
- 				Tau_start_timer(&var##fi);
+ 				Tau_start_timer(var##fi);
 #define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
-				Tau_stop_timer(&var##fi);
+				Tau_stop_timer(var##fi);
 #define TAU_PROFILE_STMT(stmt) stmt;
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
@@ -71,8 +73,9 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PROFILE_TIMER_SET_GROUP(t, id) t##fi.SetProfileGroup(id); 
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) FunctionInfo& timer () { \
-	static FunctionInfo timer##fi (name, type, group, #group); \
-	return timer##fi; }
+	static FunctionInfo *timer##fi = NULL; \
+        tauCreateFI(&timer##fi, name, type, group, #group); \
+	return *timer##fi; }
 
 #define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
 	int tau_tid = RtsLayer::myThread(); \
@@ -239,7 +242,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.37 $   $Date: 2005/01/05 02:37:55 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.37 2005/01/05 02:37:55 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.38 $   $Date: 2005/01/05 21:29:01 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.38 2005/01/05 21:29:01 amorris Exp $ 
  ***************************************************************************/
