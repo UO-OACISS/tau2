@@ -23,7 +23,9 @@ PDTPARSE 	= $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
 
 TAUINSTR 	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
-APPLYRULES	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/applyrules
+TAUREDUCE	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_reduce
+
+TAUPPROF	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/pprof
 
 CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
 
@@ -69,10 +71,10 @@ EXTRAOBJS     	=
 all: 	showdata $(TARGET) $(PDTPARSE) $(TAUINSTR)
 
 showdata: run2
-	pprof
+	$(TAUPPROF)
 
 run2: $(TARGET).refined
-	$(TARGET).refined $(ARGS)
+	./$(TARGET).refined $(ARGS)
 
 $(TARGET).refined: $(TARGET).o.refined 
 	$(CXX) $(LDFLAGS) $< -o $@ $(LIBS)
@@ -84,13 +86,13 @@ $(TARGET).inst.refined.cpp: select.refined $(TARGET).pdb
 	$(TAUINSTR) $(TARGET).pdb $(TARGET).cpp -o $(TARGET).inst.refined.cpp -f select.refined
 
 select.refined: pprof.dat
-	$(APPLYRULES) -f pprof.dat -r rules.prop -o select.refined
+	$(TAUREDUCE) -f pprof.dat -r rules.prop -o select.refined
 
 pprof.dat: run1
-	pprof -d > pprof.dat
+	$(TAUPPROF) -d > pprof.dat
 
 run1:	$(TARGET)
-	$(TARGET) $(ARGS)
+	./$(TARGET) $(ARGS)
 	
 
 $(TARGET): $(TARGET).o 
