@@ -1593,7 +1593,7 @@ MPI_Fint * group_out;
 MPI_Fint *ierr;
 {
   MPI_Group local_group;
-  *ierr = MPI_Group_incl_( MPI_Group_f2c(*group), *n, ranks, &local_group );
+  *ierr = MPI_Group_incl( MPI_Group_f2c(*group), *n, ranks, &local_group );
   *group_out = MPI_Group_c2f(local_group);
 }
 
