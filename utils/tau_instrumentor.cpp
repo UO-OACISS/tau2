@@ -322,6 +322,18 @@ void print_tau_profile_init(ostream& ostr, pdbCRoutine *main_routine)
    }
 
 }
+/* -------------------------------------------------------------------------- */
+/* -- Define a TAU group after <Profile/Profiler.h> ------------------------- */
+/* -------------------------------------------------------------------------- */
+void defineTauGroup(ofstream& ostr, string& group_name)
+{
+  if (strcmp(group_name.c_str(), "TAU_USER") != 0)
+  { /* Write the following lines only when -DTAU_GROUP=string is defined */
+    ostr<< "#ifndef "<<group_name<<endl;
+    ostr<< "#define "<<group_name << " TAU_GET_PROFILE_GROUP(\""<<group_name.substr(10)<<"\")"<<endl;
+    ostr<< "#endif /* "<<group_name << " */ "<<endl;
+  }
+}
 
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C++ program ----------------------------- */
@@ -353,12 +365,7 @@ int instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
   // put in code to insert <Profile/Profiler.h> 
   ostr<< "#include <Profile/Profiler.h>"<<endl;
-  if (strcmp(group_name.c_str(), "TAU_USER") != 0)
-  { /* Write the following lines only when -DTAU_GROUP=string is defined */
-    ostr<< "#ifndef "<<group_name<<endl;
-    ostr<< "#define "<<group_name << " tau_get_group_info(\""<<group_name.substr(10)<<"\");"<<endl;
-    ostr<< "#endif /* "<<group_name << " */ "<<endl; 
-  }
+  defineTauGroup(ostr, group_name); 
   
   int inputLineNo = 0;
   int lastInstrumentedLineNo = 0;
@@ -586,6 +593,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   // Begin Instrumentation
   // put in code to insert <Profile/Profiler.h>
   ostr<< "#include <Profile/Profiler.h>"<<endl;
+  defineTauGroup(ostr, group_name); 
 
   int inputLineNo = 0;
   vector<itemRef *>::iterator lit = itemvec.begin();
@@ -1166,8 +1174,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 2002/01/09 04:04:25 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.28 2002/01/09 04:04:25 sameer Exp $
+ * $Revision: 1.29 $   $Date: 2002/01/09 22:53:43 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.29 2002/01/09 22:53:43 sameer Exp $
  ***************************************************************************/
 
 
