@@ -2,9 +2,10 @@
 #*			TAU Portable Profiling Package			   **
 #*			http://www.acl.lanl.gov/tau		           **
 #****************************************************************************
-#*    Copyright 1999  						   	   **
+#*    Copyright 1997-99  						   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#*    Research Center Juelich, ZAM Germany				   **
 #****************************************************************************
 #****************************************************************************
 #**      File            : Makefile                                        **
@@ -113,6 +114,7 @@ TAU_SHLIBX		= .so
 #JAVA#TAU_JAVA_O 		= TauJava.o  	   #ENDIF#
 #JAVA#TAU_JAVA_INSTALL  		= $(INSTALLDEST)/$(TAU_JAVALIB)  #ENDIF#
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+#PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2#AR_SHFLAGS  		= -G	        #ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 ##############################################
@@ -129,7 +131,7 @@ $(TAU_DISABLE): TauDisable.o
 libTauMpi$(LSX): 
 		$(MAKE) -f Makefile.wrapper 
 
-libTAU$(TAU_SHLIBX):  
+libTAU$(TAU_SHLIBX): $(TARGET) 
 		$(MAKE) -f Makefile.java ARFLAGS='$(TAU_ARFLAGS)' PRELINK_PHASE='$(PRELINK_PHASE)'
  
 
