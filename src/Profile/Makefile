@@ -75,9 +75,10 @@ MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
-		TauHooks.o TauHandler.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O)\
-		$(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) $(MULT_O) $(PLATFORM_O) \
-		$(CALLPATH_O) $(PYTHON_O) $(MUSE_O) $(COMPENSATE_O)
+		TauHooks.o TauHandler.o TauMemory.o $(EVENTS_O) $(THR_O) \
+		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
+		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
+		$(COMPENSATE_O)
 
 PRINT	      = pr
 
@@ -352,6 +353,9 @@ TauCompensate.o : TauCompensate.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauHandler.o : TauHandler.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauMemory.o : TauMemory.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
