@@ -79,7 +79,7 @@ Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
 // Explicit Instantiations for templated entities needed for ASCI Red
 //////////////////////////////////////////////////////////////////////
 
-#ifdef PGI1.7
+#ifdef PGI
 template
 void vector<FunctionInfo *>::insert_aux(vector<FunctionInfo *>::pointer, FunctionInfo *const &);
 // need a few other function templates instantiated
@@ -708,8 +708,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 1999/06/22 22:33:12 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.24 1999/06/22 22:33:12 sameer Exp $ 
+ * $Revision: 1.25 $   $Date: 1999/06/22 23:11:48 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.25 1999/06/22 23:11:48 sameer Exp $ 
  ***************************************************************************/
 
 	
