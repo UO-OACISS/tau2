@@ -195,6 +195,22 @@ TauGroup_t RtsLayer::enableProfileGroup(TauGroup_t ProfileGroup) {
 
 /////////////////////////////////////////////////////////////////////////
 
+TauGroup_t RtsLayer::enableAllGroups(void) {
+  TheProfileMask() = TAU_DEFAULT; // make all bits 1 
+  DEBUGPROFMSG("enableAllGroups " << " Mask = " << TheProfileMask() << endl;);
+  return TheProfileMask();
+}
+
+/////////////////////////////////////////////////////////////////////////
+
+TauGroup_t RtsLayer::disableAllGroups(void) {
+  TheProfileMask() = 0; // make all bits 1 
+  DEBUGPROFMSG("disableAllGroups " << " Mask = " << TheProfileMask() << endl;);
+  return TheProfileMask();
+}
+
+/////////////////////////////////////////////////////////////////////////
+
 TauGroup_t RtsLayer::disableProfileGroup(TauGroup_t ProfileGroup) {
   if (TheProfileMask() & ProfileGroup) { // if it is already set 
     TheProfileMask() ^= ProfileGroup; // Delete it from the mask
@@ -943,6 +959,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 2002/01/15 04:21:08 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.29 2002/01/15 04:21:08 sameer Exp $ 
+ * $Revision: 1.30 $   $Date: 2002/01/15 21:31:33 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.30 2002/01/15 21:31:33 sameer Exp $ 
  ***************************************************************************/
