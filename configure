@@ -2992,6 +2992,8 @@ then
     echo "You need javac in your path while using SLOG2. Please re-configure TAU."
   fi
   fixmakeargs="$fixmakeargs jdkdir=$jdkdir"
+  /bin/rm -f utils/slogconverter/trace_impl.h
+  utils/slogconverter/slogtest $jdkdir > utils/slogconverter/trace_impl.h
 fi
 
 if [ $pdt = yes ]
@@ -3461,7 +3463,6 @@ else
   cp ${tauroot}/tools/src/dms/dms.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jatha.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/junit.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
   echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauprefix}/${architecture}/lib"
 # Now we look at the installation of tau_compiler.sh 
@@ -3491,6 +3492,13 @@ then
   targetdir=${tauroot}
 else
   targetdir=${tauprefix}
+fi
+
+if [ $slog2 = yes ]
+then
+  utils/slogconverter/tau2slog2.skel $jdkdir $targetdir $slog2dir $architecture > $targetdir/$architecture/bin/tau2slog2
+  chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2
+  echo "TAU: installed tau2slog2 in ${targetdir}/${architecture}/bin"
 fi
 
 cat ${tauroot}/tools/src/dms/bin/configure.skel | 
