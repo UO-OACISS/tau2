@@ -24,7 +24,7 @@
 #
 # A debugging framework, for installing scaffolding.
 #
-set DEBUG_SET 0
+set DEBUG_SET 1
 proc DEBUG {} {
     global DEBUG_SET
 
@@ -227,12 +227,12 @@ proc bargraph {win bgtitle rightlabels percent values tags {nodes {}} {mode per}
   if [DEBUG] {
       puts " "
       puts "bargraph: "
-      puts "  rightlabels: $rightlabels"
-      puts "  percent: $percent"
-      puts "  values: $values"
-      puts "  tags: $tags"
-      puts "  nodes: $nodes"
-      puts "  mode: $mode"
+      #puts "  rightlabels: $rightlabels"
+      #puts "  percent: $percent"
+      #puts "  values: $values"
+      #puts "  tags: $tags"
+      #puts "  nodes: $nodes"
+      #puts "  mode: $mode"
   }
 
   set num [llength $rightlabels];  # number of bars
@@ -355,7 +355,7 @@ proc bargraph {win bgtitle rightlabels percent values tags {nodes {}} {mode per}
   for {set i 0} {$i<$num} {incr i} {
     # -- display leftt labels according to mode
   if [DEBUG] {
-      puts "  pers: $pers"
+      #puts "  pers: $pers"
   }
     set p [lindex $pers $i]
     if { $p > 0 } {
@@ -447,7 +447,7 @@ proc bargraph {win bgtitle rightlabels percent values tags {nodes {}} {mode per}
   }
 
   #set w [expr $max_llabel_width + $max_bar_width + $max_rlabel_width + 40]
-    set w [expr [expr $max_llabel_width + $max_bar_width + $max_rlabel_width]*500]
+  set w [expr [expr $max_llabel_width + $max_bar_width + $max_rlabel_width]*500]
   set h [expr ($num+2)*20];       # height of window
   $win configure -scrollregion [list 0 0 $w $h]
   #$win xview moveto 1; # to shift view of canvas to right
@@ -585,7 +585,7 @@ proc redrawText {node name} {
   global newver
   global stddev
   global heading
-  global mheading
+  #global mheading
   global column
 
 
@@ -618,46 +618,46 @@ proc redrawText {node name} {
 
   # -- redraw text area
 
-  #if { $newver == 1 } {
-  #  $win insert end \
-  #   "---------------------------------------------------------------------------------------------------------------\n"
-  #  foreach line $heading {
-  #     $win insert end "$line\n"
-  #  }
-  #  $win insert end \
-  #   "---------------------------------------------------------------------------------------------------------------\n"
-  #} else {
-  #$win insert end \
-  #  "---------------------------------------------------------------------------------------------------\n"
-  #$win insert end \
-  #  "%time         msec   total msec    #call   #subrs  usec/call name\n"
-  #$win insert end \
-  #  "---------------------------------------------------------------------------------------------------\n"
-  #}
   if { $newver == 1 } {
     $win insert end \
      "---------------------------------------------------------------------------------------------------------------\n"
-    if { $node == "m" && $stddev == 1 } {
-	foreach line $mheading {
-	   $win insert end "$line\n"
-	   set column [expr [llength $line]-1]
-	}
-    } else {
-	foreach line $heading {
-	   $win insert end "$line\n"
-	   set column [expr [llength $line]-1]
-	}
+    foreach line $heading {
+       $win insert end "$line\n"
     }
     $win insert end \
-      "---------------------------------------------------------------------------------------------------------------\n"
+     "---------------------------------------------------------------------------------------------------------------\n"
   } else {
-    $win insert end \
-     "---------------------------------------------------------------------------------------------------\n"
-    $win insert end \
-     "%time         msec   total msec    #call   #subrs  usec/call name\n"
-    $win insert end \
-     "---------------------------------------------------------------------------------------------------\n"
-  } 
+  $win insert end \
+    "---------------------------------------------------------------------------------------------------\n"
+  $win insert end \
+    "%time         msec   total msec    #call   #subrs  usec/call name\n"
+  $win insert end \
+    "---------------------------------------------------------------------------------------------------\n"
+  }
+  #if { $newver == 1 } {
+  #  $win insert end \
+  #   "---------------------------------------------------------------------------------------------------------------\n"
+  #  if { $node == "m" && $stddev == 1 } {
+  #	foreach line $mheading {
+  #	   $win insert end "$line\n"
+  #	   set column [expr [llength $line]-1]
+  #	}
+  #  } else {
+  #	foreach line $heading {
+  #	   $win insert end "$line\n"
+  #	   set column [expr [llength $line]-1]
+  #	}
+  #  }
+  #  $win insert end \
+  #    "---------------------------------------------------------------------------------------------------------------\n"
+  #} else {
+  #  $win insert end \
+  #   "---------------------------------------------------------------------------------------------------\n"
+  #  $win insert end \
+  #   "%time         msec   total msec    #call   #subrs  usec/call name\n"
+  #  $win insert end \
+  #   "---------------------------------------------------------------------------------------------------\n"
+  #} 
 
 
   set n 3
@@ -768,7 +768,6 @@ proc specialOrder {source target tags value field} {
     puts "  tags: $tags"
     puts "  value: $value"
     puts "  field: $field"
-    puts "  NA: $NA"
   }
   if { $source == $target } {
     return $data($target,$value$field)
@@ -1116,7 +1115,7 @@ proc multiFuncgraph {win leftlabels nodes percents tags} {
       puts "multiFuncgraph:"
       puts "  leftlabels: $leftlabels"
       puts "  nodes: $nodes"
-      puts "  percents: $percents"
+      #puts "  percents: $percents"
       puts "  tags: $tags"
       puts "  minheight: $minheight"
   }
@@ -1519,7 +1518,6 @@ proc readProfile {} {
 	    newver \
 	    stddev \
 	    heading \
-	    mheading \
 	    column \
 	    BINDIR REMBINDIR REMSH TAUDIR
   if [DEBUG] {
@@ -1587,14 +1585,14 @@ proc readProfile {} {
 		set heading {}
 		lappend heading $line
 	    }
-	    gets $in line
-	    set length [expr [llength $line]-1] 
-	    if { $length == 0 } {
-		lappend mheading $line
-	    } else {
-		set mheading {}
-		lappend mheading $line
-	    }
+	    #gets $in line
+	    #set length [expr [llength $line]-1] 
+	    #if { $length == 0 } {
+	    #   lappend mheading $line
+	    #} else {
+	    #	set mheading {}
+	    #	lappend mheading $line
+	    #}
 	} else {
 	    set stddev 0
 	    gets $in line
@@ -1856,7 +1854,7 @@ proc showFuncgraph {tag} {
 
   if [DEBUG] {
     puts "\nshowFuncgraph:"
-    puts "  tags: $tags"
+    #puts "  tags: $tags"
   }  
 
   if { ! [winfo exists .func$tag] } {
@@ -1910,8 +1908,8 @@ proc redrawFuncgraph {tag dummy} {
   global tagname
   if [DEBUG] {
     puts "\nredrawFuncgraph:"
-    puts "  tags: $tags"
-    puts "  dummy: $dummy"
+    #puts "  tags: $tags"
+    #puts "  dummy: $dummy"
   }
   # -- compute arguments for bargraph widget
   set value $funcvalue($tag)
