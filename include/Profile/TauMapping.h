@@ -32,12 +32,12 @@
 
 #if (PROFILING_ON || TRACING_ON)
 // For Mapping, global variables used between layers
-FunctionInfo *& TheTauMapFI();
-#define TAU_MAPPING(stmt)   \
+FunctionInfo *& TheTauMapFI(unsigned int ProfileGroup=TAU_DEFAULT);
+#define TAU_MAPPING(stmt, group)   \
   { \
-    static FunctionInfo TauMapFI(#stmt, " " , TAU_USER, "TAU_USER"); \
-    static Profiler *TauMapProf = new Profiler(&TauMapFI, TAU_USER, true); \
-    TheTauMapFI() = &TauMapFI; \
+    static FunctionInfo TauMapFI(#stmt, " " , group, #group); \
+    static Profiler *TauMapProf = new Profiler(&TauMapFI, group, true); \
+    TheTauMapFI(group) = &TauMapFI; \
     TauMapProf->Start(); \
     stmt; \
     cout <<#stmt <<endl; \
@@ -45,7 +45,7 @@ FunctionInfo *& TheTauMapFI();
   } 
 
 #else
-#define TAU_MAPPING(stmt) stmt
+#define TAU_MAPPING(stmt, group) stmt
 
 #endif /* PROFILING_ON or TRACING_ON  */
 #endif /* _TAU_MAPPING_H_ */
