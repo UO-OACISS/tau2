@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.15 2004/12/23 00:25:51 amorris Exp $
+ * CVS $Id: Trial.java,v 1.16 2005/01/11 01:39:45 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -121,12 +121,11 @@ public class Trial implements Serializable {
         }
         return null;
     }
-    
 
     public void setField(String field, String value) {
         for (int i = 0; i < Trial.fieldNames.length; i++) {
             if (field.toUpperCase().equals(Trial.fieldNames[i].toUpperCase())) {
-             
+
                 if (DBConnector.isIntegerType(fieldTypes[i]) && value != null) {
                     try {
                         int test = Integer.parseInt(value);
@@ -151,7 +150,6 @@ public class Trial implements Serializable {
         }
     }
 
-    
     public void setField(int idx, String value) {
         if (DBConnector.isIntegerType(fieldTypes[idx]) && value != null) {
             try {
@@ -393,8 +391,7 @@ public class Trial implements Serializable {
                 // only integer and string types (for now)
                 // don't do name and id, we already know about them
 
-                if (DBConnector.isReadAbleType(ctype)
-                        && cname.toUpperCase().compareTo("ID") != 0
+                if (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
                         && cname.toUpperCase().compareTo("NAME") != 0
                         && cname.toUpperCase().compareTo("APPLICATION") != 0
                         && cname.toUpperCase().compareTo("EXPERIMENT") != 0) {
@@ -431,8 +428,8 @@ public class Trial implements Serializable {
                 buf.append(", t." + Trial.fieldNames[i]);
             }
 
-            buf.append(" from " + db.getSchemaPrefix() + "trial t inner join "
-                    + db.getSchemaPrefix() + "experiment e ");
+            buf.append(" from " + db.getSchemaPrefix() + "trial t inner join " + db.getSchemaPrefix()
+                    + "experiment e ");
             buf.append("on t.experiment = e.id ");
             buf.append(whereClause);
             buf.append(" order by t.id ");
@@ -485,24 +482,28 @@ public class Trial implements Serializable {
                 Trial.getMetaData(db);
                 this.fields = new String[Trial.fieldNames.length];
             }
-            
-            this.setField("node_count", Integer.toString(1+this.getDataSource().getMaxNCTNumbers()[0]));
-            this.setField("contexts_per_node", Integer.toString(1+this.getDataSource().getMaxNCTNumbers()[1]));
-            this.setField("threads_per_context", Integer.toString(1+this.getDataSource().getMaxNCTNumbers()[2]));
-            
+
+            if (this.getDataSource() != null) { 
+                // If the user is simply manipulating apps/exps/trials in the treeview
+                // there may not be a dataSource for this trial (it isn't loaded)
+                this.setField("node_count", Integer.toString(1 + this.getDataSource().getMaxNCTNumbers()[0]));
+                this.setField("contexts_per_node",
+                        Integer.toString(1 + this.getDataSource().getMaxNCTNumbers()[1]));
+                this.setField("threads_per_context",
+                        Integer.toString(1 + this.getDataSource().getMaxNCTNumbers()[2]));
+            }
+
             StringBuffer buf = new StringBuffer();
 
             if (itExists) {
-                buf.append("UPDATE " + db.getSchemaPrefix()
-                        + "trial SET name = ?, experiment = ?");
+                buf.append("UPDATE " + db.getSchemaPrefix() + "trial SET name = ?, experiment = ?");
                 for (int i = 0; i < this.getNumFields(); i++) {
                     if (DBConnector.isWritableType(this.getFieldType(i)))
                         buf.append(", " + this.getFieldName(i) + " = ?");
                 }
                 buf.append(" WHERE id = ?");
             } else {
-                buf.append("INSERT INTO " + db.getSchemaPrefix()
-                        + "trial (name, experiment");
+                buf.append("INSERT INTO " + db.getSchemaPrefix() + "trial (name, experiment");
                 for (int i = 0; i < this.getNumFields(); i++) {
                     if (DBConnector.isWritableType(this.getFieldType(i)))
                         buf.append(", " + this.getFieldName(i));
@@ -540,14 +541,11 @@ public class Trial implements Serializable {
                 else if (db.getDBType().compareTo("db2") == 0)
                     tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
                 else if (db.getDBType().compareTo("oracle") == 0)
-                    tmpStr = "select " + db.getSchemaPrefix()
-                            + "trial_id_seq.currval FROM dual";
+                    tmpStr = "select " + db.getSchemaPrefix() + "trial_id_seq.currval FROM dual";
                 else
                     tmpStr = "select currval('trial_id_seq');";
                 newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
             }
-
-        
 
         } catch (SQLException e) {
             System.out.println("An error occurred while saving the trial.");
@@ -570,19 +568,17 @@ public class Trial implements Serializable {
                         + "atomic_event ON atomic_location_profile.atomic_event = atomic_event.id WHERE atomic_event.trial = ?");
             } else {
                 // Postgresql, oracle, and DB2?
-                statement = db.prepareStatement(" DELETE FROM "
-                        + db.getSchemaPrefix()
+                statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                         + "atomic_location_profile WHERE atomic_event in (SELECT id FROM "
-                        + db.getSchemaPrefix()
-                        + "atomic_event WHERE trial = ?)");
+                        + db.getSchemaPrefix() + "atomic_event WHERE trial = ?)");
             }
             statement.setInt(1, trialID);
             statement.execute();
             statement.close();
 
             // delete the from the atomic_events table
-            statement = db.prepareStatement(" DELETE FROM "
-                    + db.getSchemaPrefix() + "atomic_event WHERE trial = ?");
+            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+                    + "atomic_event WHERE trial = ?");
             statement.setInt(1, trialID);
             statement.execute();
             statement.close();
@@ -596,11 +592,9 @@ public class Trial implements Serializable {
                         + "interval_event ON interval_location_profile.interval_event = interval_event.id WHERE interval_event.trial = ?");
             } else {
                 // Postgresql and DB2?
-                statement = db.prepareStatement(" DELETE FROM "
-                        + db.getSchemaPrefix()
+                statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                         + "interval_location_profile WHERE interval_event IN (SELECT id FROM "
-                        + db.getSchemaPrefix()
-                        + "interval_event WHERE trial = ?)");
+                        + db.getSchemaPrefix() + "interval_event WHERE trial = ?)");
             }
             statement.setInt(1, trialID);
             statement.execute();
@@ -611,11 +605,9 @@ public class Trial implements Serializable {
                 statement = db.prepareStatement(" DELETE interval_mean_summary.* FROM interval_mean_summary LEFT JOIN interval_event ON interval_mean_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
             } else {
                 // Postgresql and DB2?
-                statement = db.prepareStatement(" DELETE FROM "
-                        + db.getSchemaPrefix()
+                statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                         + "interval_mean_summary WHERE interval_event IN (SELECT id FROM "
-                        + db.getSchemaPrefix()
-                        + "interval_event WHERE trial = ?)");
+                        + db.getSchemaPrefix() + "interval_event WHERE trial = ?)");
             }
             statement.setInt(1, trialID);
             statement.execute();
@@ -625,31 +617,27 @@ public class Trial implements Serializable {
                 statement = db.prepareStatement(" DELETE interval_total_summary.* FROM interval_total_summary LEFT JOIN interval_event ON interval_total_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
             } else {
                 // Postgresql and DB2?
-                statement = db.prepareStatement(" DELETE FROM "
-                        + db.getSchemaPrefix()
+                statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
                         + "interval_total_summary WHERE interval_event IN (SELECT id FROM "
-                        + db.getSchemaPrefix()
-                        + "interval_event WHERE trial = ?)");
+                        + db.getSchemaPrefix() + "interval_event WHERE trial = ?)");
             }
 
             statement.setInt(1, trialID);
             statement.execute();
             statement.close();
 
-            statement = db.prepareStatement(" DELETE FROM "
-                    + db.getSchemaPrefix() + "interval_event WHERE trial = ?");
+            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+                    + "interval_event WHERE trial = ?");
             statement.setInt(1, trialID);
             statement.execute();
             statement.close();
 
-            statement = db.prepareStatement(" DELETE FROM "
-                    + db.getSchemaPrefix() + "metric WHERE trial = ?");
+            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "metric WHERE trial = ?");
             statement.setInt(1, trialID);
             statement.execute();
             statement.close();
 
-            statement = db.prepareStatement(" DELETE FROM "
-                    + db.getSchemaPrefix() + "trial WHERE id = ?");
+            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "trial WHERE id = ?");
             statement.setInt(1, trialID);
             statement.execute();
             statement.close();
@@ -663,8 +651,8 @@ public class Trial implements Serializable {
     private boolean exists(DB db) {
         boolean retval = false;
         try {
-            PreparedStatement statement = db.prepareStatement("SELECT name FROM "
-                    + db.getSchemaPrefix() + "trial WHERE id = ?");
+            PreparedStatement statement = db.prepareStatement("SELECT name FROM " + db.getSchemaPrefix()
+                    + "trial WHERE id = ?");
             statement.setInt(1, trialID);
             ResultSet results = statement.executeQuery();
             while (results.next() != false) {
@@ -679,8 +667,7 @@ public class Trial implements Serializable {
         return retval;
     }
 
-    private void readObject(ObjectInputStream aInputStream)
-            throws ClassNotFoundException, IOException {
+    private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
         // always perform the default de-serialization first
         aInputStream.defaultReadObject();
         if (fieldNames == null)
@@ -689,8 +676,7 @@ public class Trial implements Serializable {
             fieldTypes = (int[]) aInputStream.readObject();
     }
 
-    private void writeObject(ObjectOutputStream aOutputStream)
-            throws IOException {
+    private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
         // always perform the default serialization first
         aOutputStream.defaultWriteObject();
         aOutputStream.writeObject(fieldNames);

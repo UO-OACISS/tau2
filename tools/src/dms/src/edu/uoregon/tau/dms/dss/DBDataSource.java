@@ -264,6 +264,12 @@ public class DBDataSource extends DataSource {
                 
             }
 
+            for (Enumeration e = this.getThreads().elements(); e.hasMoreElements();) {
+                ((Thread) e.nextElement()).setThreadDataAllMetrics();
+            }
+            this.meanData.setThreadDataAllMetrics();
+
+
             //System.out.println("Processing callpath data ...");
             if (CallPathUtilFuncs.checkCallPathsPresent(this.getFunctions())) {
                 setCallPathDataPresent(true);
