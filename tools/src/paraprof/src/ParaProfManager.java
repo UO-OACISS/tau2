@@ -261,14 +261,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		//Refresh the application list.
 		System.out.println("Loading application list ...");
 		for(int i=standard.getChildCount(); i>0; i--){
-		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
+		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) standard.getChildAt(i-1)));
 		}
 		ListIterator l = ParaProf.applicationManager.getApplicationList();
 		while (l.hasNext()){
 		    ParaProfApplication application = (ParaProfApplication)l.next();
 		    DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
 		    application.setDMTN(applicationNode);
-		    treeModel.insertNodeInto(applicationNode, standard, dbApps.getChildCount());
+		    treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
 		}
 		System.out.println("Done loading application list.");
 		tree.expandPath(path);
