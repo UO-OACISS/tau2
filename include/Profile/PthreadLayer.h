@@ -37,6 +37,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifdef PTHREADS
+#include <pthread.h>
 class PthreadLayer 
 { // Layer for RtsLayer to interact with pthreads 
   public:
@@ -68,8 +69,8 @@ class PthreadLayer
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/07/10 20:19:58 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.1 1998/07/10 20:19:58 sameer Exp $
+ * $Revision: 1.2 $   $Date: 1998/07/16 17:21:00 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.2 1998/07/16 17:21:00 sameer Exp $
  ***************************************************************************/
 
 

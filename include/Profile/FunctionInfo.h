@@ -42,7 +42,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#define STORAGE(type, variable) map<int, type> variable 
+
+//#define STORAGE(type, variable) map<int, type> variable 
+//#define STORAGE(type, variable) vector<type > variable 
+#define STORAGE(type, variable) type  variable[TAU_MAX_THREADS] 
 #define NOTHREADSTORAGE(type, variable) type variable[1]
 
 
@@ -207,6 +210,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/07/10 20:11:27 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.2 1998/07/10 20:11:27 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 1998/07/16 17:20:58 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.3 1998/07/16 17:20:58 sameer Exp $ 
  ***************************************************************************/
