@@ -70,6 +70,8 @@ void main(int argc, char* argv[])
     }
     mySum = h * sum;
 
+/* REGION A */
+    
     MPI_Reduce(&mySum, &sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (myid == 0)
