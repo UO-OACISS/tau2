@@ -24,7 +24,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/users/sameer/rs/tau2
+TAUROOT=/home/grads/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -41,7 +41,7 @@ CC  = $(TAU_CC)
 
 LINKER	= $(TAU_CC)
 
-INSTALLDEST	= $(TAUROOT)/lib/$(CONFIG_ARCH)
+INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 CEXTRA = 
 
@@ -82,13 +82,13 @@ ARFLAGS	      = rcv
 ##################################################################
 
 ############# For SGI CC compiler, replace AR accordingly #######
-#SGICC#AR			= $(CXX) -ar 		   #ENDIF#
-#SGICC#ARFLAGS			= -o			   #ENDIF#
+AR			= $(CXX) -ar 		   #ENDIF##SGICC#
+ARFLAGS			= -o			   #ENDIF##SGICC#
 ##################################################################
 
 RM 	      = /bin/rm -f
 
-TARGET	      = libprof$(LSX)
+TARGET	      = libtau$(TAU_OPTIONS)$(LSX)
 
 all:		$(TARGET)	
 
@@ -100,7 +100,7 @@ $(INSTALLDEST)/$(TARGET): $(TARGET)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
-		$(INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.inc
+		$(INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_OPTIONS)
 
 install:	$(INSTALLDEST)/$(TARGET) 
 
