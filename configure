@@ -3043,7 +3043,23 @@ then
   cp ${tauroot}/tools/src/contrib/junit.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauroot}/${architecture}/lib
   echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauroot}/${architecture}/lib"
-  cp ${tauroot}/tools/src/tau_compiler.sh ${tauroot}/${architecture}/bin
+
+# Now we look at the installation of tau_compiler.sh 
+   if [ ! -f /bin/bash ] 
+   then
+     bashpath=`which bash`
+     if [ ! -f $bashpath ]
+     then
+       echo "ERROR: You need a working bash shell in your path to use tau_compiler.sh"
+       echo "Please add bash to your path and re-run configure."
+       echo "**************************************************"
+     else
+       cat ${tauroot}/tools/src/tau_compiler.sh | sed -e 's#/bin/bash#'$bashpath'#'  > ${tauroot}/${architecture}/bin/tau_compiler.sh
+     fi
+   else
+     cp ${tauroot}/tools/src/tau_compiler.sh ${tauroot}/${architecture}/bin
+   fi
+
   echo "TAU: installed tau_compiler.sh in ${tauroot}/${architecture}/bin"
 else
   if [ ! -d ${tauprefix} ]
@@ -3090,7 +3106,22 @@ else
   cp ${tauroot}/tools/src/contrib/junit.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
   echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauprefix}/${architecture}/lib"
-  cp ${tauroot}/tools/src/tau_compiler.sh ${tauprefix}/${architecture}/bin
+# Now we look at the installation of tau_compiler.sh 
+   if [ ! -f /bin/bash ] 
+   then
+     bashpath=`which bash`
+     if [ ! -f $bashpath ]
+     then
+       echo "ERROR: You need a working bash shell in your path to use tau_compiler.sh"
+       echo "Please add bash to your path and re-run configure."
+       echo "**************************************************"
+     else
+       cat ${tauroot}/tools/src/tau_compiler.sh | sed -e 's#/bin/bash#'$bashpath'#'  > ${tauprefix}/${architecture}/bin/tau_compiler.sh
+     fi
+   else
+     cp ${tauroot}/tools/src/tau_compiler.sh ${tauprefix}/${architecture}/bin
+   fi
+
   echo "TAU: installed tau_compiler.sh in ${tauprefix}/${architecture}/bin"
 fi
 
