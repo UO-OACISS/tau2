@@ -16,6 +16,7 @@ Version 2.12 changes (from 2.11):
 4. Added support for Python bindings [CACR, LLNL]. 
 5. Added MPI shared library examples [CACR]. 
 6. Added support for building multiple configurations (installtau) [LANL, LLNL].
+7. Added support for Python under AIX and OSX [LLNL].
 
 Version 2.11 changes (from 2.10):
 1. Added -i header option for tau_instrumentor [CASC]. 
