@@ -1677,6 +1677,40 @@ then
   esac
 fi
 
+# Add threaded include dir to the MPI include dir for IBM 
+if [ "x$mpiinc" != "x" ] 
+then
+  case $machine in 
+    rs6000)
+      if [ -d /usr/lpp/ppe.poe/include/thread ] 
+      then 
+        mpiincf90dir='-I/usr/lpp/ppe.poe/include/thread'
+      fi
+      if [ $ibmxlc_r = yes ] 
+      then
+        additional_mpiincs='-I/usr/lpp/ssp/css/include'
+      fi
+      additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+      ;;
+    ibm64)
+      if [ -d /usr/lpp/ppe.poe/include/thread64 ] 
+      then 
+        mpiincf90dir='-I/usr/lpp/ppe.poe/include/thread64'
+      fi
+      if [ $ibmxlc_r = yes ] 
+      then
+        additional_mpiincs='-I/usr/lpp/ssp/css/include'
+      fi
+      additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+      ;;
+    *)
+      ;;
+  esac
+fi
+
+
+
+
 # Next, check the properties of the MPI implementation.
 if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ]
 then
