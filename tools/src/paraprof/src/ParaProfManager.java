@@ -395,13 +395,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    perfDBSession.setExperiment(trial.getExperimentID());
 		    perfDBSession.setTrial(trial.getID());
 		    trial.initialize(perfDBSession);
-		    //perfDBSession.terminate();
 		    //Add to the list of loaded trials.
 		    loadedTrials.add(trial);
-		    System.out.println("Done loading trial.");
 		}
 		
-		//The trial should now have been setup.  Check to see if it is loading ...
 		if(!trial.loading()){
 		    //Refresh the metrics list.
 		    for(int i=selectedNode.getChildCount(); i>0; i--){
