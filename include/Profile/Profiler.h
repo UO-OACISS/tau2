@@ -188,8 +188,8 @@ public:
 	void SetPhase(bool flag);
 #endif /* TAU_PROFILEPHASE */
 #ifdef TAU_DEPTH_LIMIT
-	int  GetProfileDepth(void);
-	void SetProfileDepth(int value);
+	int  GetDepthLimit(void);
+	void SetDepthLimit(int value);
 #endif /* TAU_DEPTH_LIMIT */ 
 
 private:
@@ -217,6 +217,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.56 $   $Date: 2005/03/14 19:56:54 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.56 2005/03/14 19:56:54 sameer Exp $ 
+ * $Revision: 1.57 $   $Date: 2005/03/15 00:18:02 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.57 2005/03/15 00:18:02 sameer Exp $ 
  ***************************************************************************/
