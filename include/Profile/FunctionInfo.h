@@ -148,12 +148,17 @@ public:
 	const char* GetPrimaryGroup() const { return GroupName.c_str(); }
 	long GetFunctionId() ;
 	long GetCalls(int tid) { return NumCalls[tid]; }
+	void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
 	long GetSubrs(int tid) { return NumSubrs[tid]; }
+	void SetSubrs(int tid, long subrs) { NumSubrs[tid] = subrs; }
 	double GetExclTime(int tid) { return ExclTime[tid]; }
+	void SetExclTime(int tid, double excltime) { ExclTime[tid] = excltime; }
 	double GetInclTime(int tid) { return InclTime[tid]; }
+	void SetInclTime(int tid, double incltime) { InclTime[tid] = incltime; }
 	TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
 #ifdef PROFILE_STATS 
 	double GetSumExclSqr(int tid) { return SumExclSqr[tid]; }
+	void SetSumExclSqr(int tid, double s) { SumExclSqr[tid] = s; }
 	void AddSumExclSqr(double ExclSqr, int tid) 
 	  { SumExclSqr[tid] += ExclSqr; }
 #endif // PROFILE_STATS 
@@ -214,7 +219,7 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 }
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
- * $Revision: 1.10 $   $Date: 1999/10/27 21:18:19 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.10 1999/10/27 21:18:19 bertie Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
+ * $Revision: 1.11 $   $Date: 2000/10/11 18:41:20 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.11 2000/10/11 18:41:20 sameer Exp $ 
  ***************************************************************************/
