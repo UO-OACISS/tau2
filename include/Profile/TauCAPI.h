@@ -96,6 +96,8 @@ extern void tau_event_disable_min(void *event);
 extern void tau_event_disable_max(void *event);
 extern void tau_event_disable_mean(void *event);
 extern void tau_event_disable_stddev(void *event);
+extern void tau_trace_sendmsg(int type, int destination, int length);
+extern void tau_trace_recvmsg(int type, int source, int length);
 
 
 #else /* PROFILING_ON */
@@ -130,12 +132,24 @@ extern void tau_event_disable_stddev(void *event);
 
 #endif /* PROFILING_ON */
 
+#ifdef TRACING_ON
+#define TAU_TRACE_SENDMSG(type, destination, length) \
+        tau_trace_sendmsg(type, destination, length);
+#define TAU_TRACE_RECVMSG(type, source, length) \
+        tau_trace_recvmsg(type, source, length);
+
+#else /* TRACING_ON */
+#define TAU_TRACE_SENDMSG(type, destination, length)
+#define TAU_TRACE_RECVMSG(type, source, length)
+#endif /* TRACING_ON */
+
+
 #endif /* __cplusplus */
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1999/05/04 22:32:10 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.3 1999/05/04 22:32:10 sameer Exp $
+ * $Revision: 1.4 $   $Date: 1999/06/18 17:40:05 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.4 1999/06/18 17:40:05 sameer Exp $
  ***************************************************************************/
 
