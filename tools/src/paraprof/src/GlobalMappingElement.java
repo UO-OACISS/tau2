@@ -420,8 +420,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	    }
       
 	    //Everything should be added now except the function name.
-	    String firstPart = new String(statStringArray);
-	    return firstPart + this.getMappingName();
+	    return new String(statStringArray);
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GTDE01");

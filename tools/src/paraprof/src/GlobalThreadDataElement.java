@@ -116,18 +116,18 @@ public class GlobalThreadDataElement implements Mapping{
   
   
     public static int getPositionOfName(){
-	return 97;
+	return 103;
     }
   
     public static String getTStatStringHeading(String metricType){
 	try{
-	    int initialBufferLength = 103;
+	    int initialBufferLength = 99;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
 	    char [] tmpArray;
 	    String tmpString;
       
-	    insertSpaces(statStringArray , 0, 103);
+	    insertSpaces(statStringArray , 0, 99);
       
 	    tmpArray = ("%"+metricType).toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -169,20 +169,11 @@ public class GlobalThreadDataElement implements Mapping{
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
-      
-	    position = 99;
-	    tmpArray = ("name").toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
-	    return new String(statStringArray);
+      	    return new String(statStringArray);
 	}
-	catch(Exception e)
-	    {
-		UtilFncs.systemError(e, null, "GTDE01");
-	    }
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "GTDE01");
+	}
     
 	return "An error occured pocessing this string!"; 
     }
@@ -254,8 +245,7 @@ public class GlobalThreadDataElement implements Mapping{
 	    }
       
 	    //Everything should be added now except the function name.
-	    String firstPart = new String(statStringArray);
-	    return firstPart + this.getMappingName();
+	    return  new String(statStringArray);
 	}
 	catch(Exception e)
 	    {
@@ -301,7 +291,7 @@ public class GlobalThreadDataElement implements Mapping{
   
     public static String getUserEventStatStringHeading(){
 	try{
-	    int initialBufferLength = 82;
+	    int initialBufferLength = 72;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
 	    char [] tmpArray;
@@ -335,21 +325,11 @@ public class GlobalThreadDataElement implements Mapping{
 		statStringArray[position] = tmpArray[i];
 		position++;
 	    }
-      
-	    position = 72;
-	    tmpArray = ("Event Name").toCharArray();
-	    for(int i=0;i<tmpArray.length;i++){
-		statStringArray[position] = tmpArray[i];
-		position++;
-	    }
-      
 	    return new String(statStringArray);
 	}
-	catch(Exception e)
-	    {
-		UtilFncs.systemError(e, null, "GTDE01");
-	    }
-    
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "GTDE01");
+	}
 	return "An error occured pocessing this string!"; 
     }
   
@@ -400,8 +380,7 @@ public class GlobalThreadDataElement implements Mapping{
 	    }
       
 	    //Everything should be added now except the function name.
-	    String firstPart = new String(statStringArray);
-	    return firstPart + this.getUserEventName();
+	    return new String(statStringArray);
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GTDE01");
