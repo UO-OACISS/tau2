@@ -98,6 +98,10 @@ callpath        - Shows the use of callpath profiling. Requires configuring
                   by a. See the README file in the callpath directory for an 
                   example.
 
+phase           - Shows the use of phase based profiling. Requires configuring
+                  TAU with the -PROFILEPHASE option. See the README file in the
+                  phase directory for details about the API and an example.
+
 selective	- This example illustrates the use of PDT, and selective 
 		  profiling using profile groups in the tau_instrumentor. 
 		  Requires configuring TAU with -pdt=<dir> -fortran=<...> 
