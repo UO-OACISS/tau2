@@ -100,7 +100,7 @@ public:
 	//static TAU_STD_NAMESPACE vector<FunctionInfo*> FunctionDB[TAU_MAX_THREADS];
 
 #ifdef PROFILE_CALLS
-	list < pair<double,double> > *ExclInclCallList; 
+	std::list < std::pair<double,double> > *ExclInclCallList; 
 	// Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
 	// time spent in each call
 
@@ -287,6 +287,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2002/11/08 02:09:41 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.25 2002/11/08 02:09:41 sameer Exp $ 
+ * $Revision: 1.26 $   $Date: 2002/11/28 00:48:40 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.26 2002/11/28 00:48:40 sameer Exp $ 
  ***************************************************************************/
