@@ -360,6 +360,8 @@ double getUserTimeInSec(void)
   return current_time; 
 }
 
+#ifdef TAU_LINUX_TIMERS
+
 ///////////////////////////////////////////////////////////////////////////
 inline double TauGetMHzRatings(void)
 {
@@ -380,7 +382,6 @@ inline double TauGetMHzRatings(void)
 }
 
   
-#ifdef TAU_LINUX_TIMERS
 ///////////////////////////////////////////////////////////////////////////
 inline double TauGetMHz(void)
 {
@@ -1006,6 +1007,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.35 $   $Date: 2002/01/24 23:44:53 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.35 2002/01/24 23:44:53 sameer Exp $ 
+ * $Revision: 1.36 $   $Date: 2002/01/24 23:59:14 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.36 2002/01/24 23:59:14 sameer Exp $ 
  ***************************************************************************/
