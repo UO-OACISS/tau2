@@ -125,33 +125,35 @@ public class GprofOutputSession extends ParaProfDataSession{
 				mappingID = this.getGlobalMapping().addGlobalMapping(self.s0, 0, 1);
 				gme1 = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 
+				System.out.println("SELF:"+"["+gme1.getMappingID()+ "]   " +self.s0);
 				globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(gme1.getMappingID(), 0), false);
 				thread.addFunction(globalThreadDataElement, gme1.getMappingID());
-				globalThreadDataElement.setInclusiveValue(0,self.d1);
-				globalThreadDataElement.setExclusiveValue(0,self.d2);
+				globalThreadDataElement.setInclusiveValue(0,self.d1+self.d2);
+				globalThreadDataElement.setExclusiveValue(0,self.d1);
 				globalThreadDataElement.setNumberOfCalls(self.i0);
 				globalThreadDataElement.setNumberOfSubRoutines(children.size());
 				//globalThreadDataElement.setUserSecPerCall(0,self.d1/self.i0); //Check that this is done using inclusive.
-				System.out.println("SELF:"+"["+gme1.getMappingID()+ "]   " +self.s0);
 
 				int size = parents.size();
 				for(int i=0;i<size;i++){
 				    LineData lineDataParent = (LineData) parents.elementAt(i);
 				    mappingID = this.getGlobalMapping().addGlobalMapping(lineDataParent.s0, 0, 1);
-				    String s = lineDataParent.s0 + " => " + self.s0;
-				    callPathMappingID = this.getGlobalMapping().addGlobalMapping(lineDataParent.s0 + " => " + self.s0, 0, 1);
+				    String s = lineDataParent.s0 + " => " + self.s0 + "  ";
+				    callPathMappingID = this.getGlobalMapping().addGlobalMapping(lineDataParent.s0 + " => " + self.s0 + "  ", 0, 1);
+				    System.out.println("call path name:"+this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).getMappingName());
 				    this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).setCallPathObject(true);
 				    //gme2 = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 				    //gme2.addChild(gme1.getMappingID(),callPathMappingID);
 				    //gme1.addParent(mappingID,callPathMappingID);
+
+				    System.out.println("PARENT:"+"["+mappingID+ "] "+lineDataParent.s0);
+				    System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
 
 				    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0), false);
 				    thread.addFunction(globalThreadDataElement, callPathMappingID);
 				    globalThreadDataElement.setInclusiveValue(0,lineDataParent.d0);
 				    globalThreadDataElement.setExclusiveValue(0,lineDataParent.d1);
 				    globalThreadDataElement.setNumberOfCalls(lineDataParent.i0);
-				    System.out.println("PARENT:"+"["+mappingID+ "] "+lineDataParent.s0);
-				    System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
 				}
 				parents.clear();
 				
@@ -159,20 +161,21 @@ public class GprofOutputSession extends ParaProfDataSession{
 				for(int i=0;i<size;i++){
 				    LineData lineDataChild = (LineData) children.elementAt(i);
 				    mappingID = this.getGlobalMapping().addGlobalMapping(lineDataChild.s0, 0, 1);
-				    String s = self.s0 + " => " + lineDataChild.s0;
-				    callPathMappingID = this.getGlobalMapping().addGlobalMapping(self.s0 + " => " + lineDataChild.s0, 0, 1);
+				    String s = self.s0 + " => " + lineDataChild.s0 + "  ";
+				    callPathMappingID = this.getGlobalMapping().addGlobalMapping(self.s0 + " => " + lineDataChild.s0 + "  ", 0, 1);
 				    this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0).setCallPathObject(true);
 				    //gme2 = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 				    //gme2.addParent(gme1.getMappingID(),callPathMappingID);
 				    //gme1.addChild(mappingID,callPathMappingID);
+
+				    System.out.println("CHILD:"+"["+mappingID+"]  "+lineDataChild.s0);
+				    System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
 
 				    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(callPathMappingID, 0), false);
 				    thread.addFunction(globalThreadDataElement, callPathMappingID);
 				    globalThreadDataElement.setInclusiveValue(0,lineDataChild.d0);
 				    globalThreadDataElement.setExclusiveValue(0,lineDataChild.d1);
 				    globalThreadDataElement.setNumberOfCalls(lineDataChild.i0);
-				    System.out.println("CHILD:"+"["+mappingID+"]  "+lineDataChild.s0);
-				    System.out.println("CALLPATH:"+"["+callPathMappingID+ "] "+s);
 				}
 				children.clear();
 				System.out.println(inputString);

@@ -87,28 +87,39 @@ public class Thread implements Comparable{
 	doubleList = newArray;
     }
 
+    //A user uses this function at their own risk.
     public void addFunction(GlobalThreadDataElement ref){
 	functions.addElement(ref);}
   
+    //Since name to id lookups do not occur at the thread level, we 
+    //store only in id order.  If an id is added which is greater than
+    //the current size of the Vector of functions, the vector will be
+    //increased in size.
     public void addFunction(GlobalThreadDataElement ref, int id){
-	//There are two paths here.
-	//1) This id has not been seen in the system before.
-	//   In this case, add to the end of functions.
-	//2) The id has been seen in the system before.
-	//   In this case, check to see if its location is
-	//   not set to null in functions, and if it is not
-	//   set the location to point to ref.
-	if(id >= (functions.size()))
-	    functions.add(ref);
-	else{
-	    if((functions.elementAt(id))==null)
-		functions.setElementAt(ref, id);
-	}
 	if(this.debug()){
 	    System.out.println("######");
-	    System.out.println("Thread.addFuntion(...)");
-	    System.out.println("id:"+id);
-	    System.out.println("functions.size():"+functions.size());
+	    System.out.println("#Thread.addFuntion(...)");
+	    System.out.println("#id:"+id);
+	    System.out.println("#name:"+ref.getMappingName());
+	    System.out.println("#functions.size():"+functions.size());
+	}
+	boolean added = false;
+	//Increase the function list size if required.
+	GlobalThreadDataElement placeHolder = null;
+	while(id >= (functions.size())){
+	    functions.add(placeHolder);
+	}
+	
+	//It is now safe to add (but do not add if there is already
+	//an element here.
+	if((functions.elementAt(id))==null){
+		functions.setElementAt(ref, id);
+		added = true;
+	}
+
+	if(this.debug()){
+	    System.out.println("#added?:"+added);
+	    System.out.println("#functions.size():"+functions.size());
 	    System.out.println("######");
 	}
     }
