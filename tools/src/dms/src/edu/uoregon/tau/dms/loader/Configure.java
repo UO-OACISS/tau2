@@ -143,14 +143,23 @@ public class Configure {
 
 
 	    String old_jdbc_db_type = jdbc_db_type;
-	    // Prompt for database type
-	    System.out.print("Please enter the database vendor (postgresql or mysql).\n(" + jdbc_db_type + "):");
-	    tmpString = reader.readLine();
-	    if (tmpString.length() > 0) jdbc_db_type = tmpString;
+	    boolean valid = false;
 
+	    while (!valid) {
+		// Prompt for database type
+		System.out.print("Please enter the database vendor (oracle, postgresql or mysql).\n(" 
+				 + jdbc_db_type + "):");
+		tmpString = reader.readLine();
+		if (tmpString.compareTo("oracle") == 0 || tmpString.compareTo("postgresql") == 0 
+		    || tmpString.compareTo("mysql") == 0 || tmpString.length() == 0) {
+		
+		    if (tmpString.length() > 0) 
+			jdbc_db_type = tmpString;
+		    valid = true;
+		}
+	    }
 
 	    if (configFileFound) {
-
 		if (jdbc_db_type.compareTo("postgresql") == 0 && old_jdbc_db_type.compareTo("postgresql") != 0) {
 		    // if the user has chosen postgresql and the config file is not already set for it
 		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "postgresql.jar";
@@ -163,7 +172,14 @@ public class Configure {
 		    jdbc_db_driver = "org.gjt.mm.mysql.Driver";
 		    db_schemafile = perfdmf_home + "/data/" + "dbschema.mysql.txt";
 		    db_portnum = "3306";
+		} else if (jdbc_db_type.compareTo("oracle") == 0 && old_jdbc_db_type.compareTo("oracle") != 0) {
+		    // if the user has chosen oracle and the config file is not already set for it
+		    jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "ojdbc14.jar";
+		    jdbc_db_driver = "oracle.jdbc.OracleDriver";
+		    db_schemafile = perfdmf_home + "/data/" + "dbschema.oracle.txt";
+		    db_portnum = "1521";
 		}
+
 	    } else {
 
 		if (jdbc_db_type.compareTo("postgresql") == 0) {
@@ -178,6 +194,12 @@ public class Configure {
 		    jdbc_db_driver = "org.gjt.mm.mysql.Driver";
 		    db_schemafile = "dbschema.mysql.txt";
 		    db_portnum = "3306";
+		} else if (jdbc_db_type.compareTo("oracle") == 0) {
+		    // if the user has chosen mysql and the config file is not already set for it
+		    jdbc_db_jarfile = "ojdbc14.jar";
+		    jdbc_db_driver = "oracle.jdbc.OracleDriver";
+		    db_schemafile = "dbschema.oracle.txt";
+		    db_portnum = "1521";
 		}
 	    }
 		
@@ -210,7 +232,12 @@ public class Configure {
 	    if (tmpString.length() > 0) db_portnum = tmpString;
 						
 	    // Prompt for database name
-	    System.out.print("Please enter the database name.\n(" + db_dbname + "):");
+
+	    if (jdbc_db_type.compareTo("oracle") == 0) {
+		System.out.print("Please enter the oracle TCP service name.\n(" + db_dbname + "):");
+	    } else {
+		System.out.print("Please enter the database name.\n(" + db_dbname + "):");
+	    }
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) db_dbname = tmpString;
 						

@@ -198,7 +198,7 @@ public class ConfigureTest {
         }
 
 	try {
-	    String query = new String ("SELECT version FROM version;");
+	    String query = new String ("SELECT version FROM version");
 	    ResultSet resultSet = db.executeQuery(query);
 	    
 	    String version = "none";
@@ -225,7 +225,7 @@ public class ConfigureTest {
 	    // The schema does not have the version table, it must be older than 2.13.7 (or whatever comes after 2.13.6)
 
 	    try {
-		String query = new String ("SELECT * FROM application;");
+		String query = new String ("SELECT * FROM application");
 		ResultSet resultSet = db.executeQuery(query);
 		
 		// if we got here (i.e. no exception) then the schema in the database must be the old one
@@ -298,9 +298,13 @@ public class ConfigureTest {
 	    } catch ( Exception f ) {
 		// no schema in the database (or at least no version/application tables)
 		// build the database
-		System.out.println("Uploading Schema: " + configFileName);
-		connector.genParentSchema(db_schemafile);
-		System.out.println("Successfully uploaded schema\n");
+		System.out.println("Uploading Schema: " + db_schemafile);
+		if (connector.genParentSchema(db_schemafile) == 0) {
+		    System.out.println("Successfully uploaded schema\n");
+		} else {
+		    System.out.println("Error uploading schema\n");
+		    System.exit(-1);
+		}
 		connector.dbclose();
 	    }
 	    
