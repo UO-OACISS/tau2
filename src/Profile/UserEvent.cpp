@@ -272,6 +272,18 @@ const char * TauUserEvent::GetEventName (void) const
   return EventName.c_str();
 }
 
+// Set the event name
+void TauUserEvent::SetEventName (const char *newname)
+{
+  EventName = newname;
+}
+
+// Set the event name
+void TauUserEvent::SetEventName (string newname)
+{
+  EventName = newname;
+}
+
 bool TauUserEvent::GetDisableMin(void)
 { 
   return DisableMin;
@@ -407,6 +419,6 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 1999/08/19 22:26:56 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.9 1999/08/19 22:26:56 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 2002/11/08 02:27:24 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.10 2002/11/08 02:27:24 sameer Exp $ 
  ***************************************************************************/
