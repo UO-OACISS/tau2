@@ -61,6 +61,7 @@ vector<string> TauFuncNameVec; /* holds just names */
 vector<FunctionInfo *> TauDynFI; /* global FI vector */
 // Initialization procedure. Should be called before invoking 
 // other TAU routines.
+extern "C" {
 void TauInitCode(char *arg, int isMPI)
 {
   char *name;
@@ -200,10 +201,11 @@ void TauMPIInitStub(int *rank)
   TAU_PROFILE_SET_NODE(*rank);
   dprintf("Setting rank = %d\n", *rank);
 }
+} // extern "C"
 
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2001/10/30 00:42:12 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.14 2001/10/30 00:42:12 sameer Exp $ 
+ * $Revision: 1.15 $   $Date: 2002/08/01 00:26:52 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.15 2002/08/01 00:26:52 sameer Exp $ 
  ***************************************************************************/
