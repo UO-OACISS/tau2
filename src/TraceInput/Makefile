@@ -63,7 +63,7 @@ LIBTARGET 	= libTAU_traceinput$(TAU_OPTIONS).a
 
 OBJS		= TAU_tf.o TAU_Cwrapper.o
 
-HDRS 		= TAU_tf.h TAU_tf_decl.h TAU_tf_headers.h
+HDRS 		= ../../include/TAU_tf.h TAU_tf_decl.h TAU_tf_headers.h
 
 ##############################################
 
@@ -84,14 +84,17 @@ $(LIBTARGET):	$(OBJS)
 	$(AR) $(ARFLAGS) $(LIBTARGET) $(OBJS)
 	$(TAU_RANLIB) $(LIBTARGET)
 
-%.o : %.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+TAU_tf.o : TAU_tf.cpp $(HDRS)
+	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TAU_Cwrapper.o : TAU_Cwrapper.cpp $(HDRS)
+	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 clean: 	
 	$(RM) $(OBJS) $(LIBTARGET) 
 ##############################################
 #/***************************************************************************
 # * $RCSfile: Makefile,v $   $Author: sameer $
-# * $Revision: 1.2 $   $Date: 2003/11/16 00:21:37 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.2 2003/11/16 00:21:37 sameer Exp $ 
+# * $Revision: 1.3 $   $Date: 2003/12/05 23:50:00 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.3 2003/12/05 23:50:00 sameer Exp $ 
 # ***************************************************************************/
