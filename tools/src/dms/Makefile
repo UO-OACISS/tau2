@@ -6,10 +6,10 @@ dms.jar: classes/dms/perfdb/*.class classes/dms/dss/*.class
 	jar -cvf dms.jar -C classes .
 
 classes/dms/perfdb/*.class: ./src/dms/perfdb/*.java
-	javac -d ./classes -classpath ./classes:../contrib/postgresql.jar:../contrib/jargs.jar:../contrib/xerces.jar:../paraprof/bin/ParaProf.jar ./src/dms/perfdb/*.java ./src/dms/dss/*.java	
+	javac -d ./classes -classpath ./classes:../contrib/postgresql.jar:../contrib/jargs.jar:../contrib/xerces.jar ./src/dms/perfdb/*.java ./src/dms/dss/*.java	
 
 classes/dms/dss/*.class: ./src/dms/dss/*.java
-	javac -d ./classes -classpath ./classes:../paraprof/bin/ParaProf.jar ./src/dms/dss/*.java	
+	javac -d ./classes -classpath ./classes ./src/dms/dss/*.java	
 
 ./src/examples/TestPerfDBSession.class: dms.jar ./src/examples/TestPerfDBSession.java
 	javac -d ./src/examples -classpath ./dms.jar ./src/examples/TestPerfDBSession.java
