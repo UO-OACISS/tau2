@@ -59,7 +59,7 @@ void * threaded_func(void *data)
   { /**** NOTE WE START ANOTHER BLOCK IN THREAD */
     TAU_PROFILE_TIMER(tautimer, "threaded_func()", "int ()", TAU_DEFAULT);
     TAU_PROFILE_START(tautimer);
-    work(); // work done by this thread 
+    work(); /* work done by this thread */
     TAU_PROFILE_STOP(tautimer);
   }
   return NULL;
@@ -67,13 +67,13 @@ void * threaded_func(void *data)
 
 int main (int argc, char **argv)
 {
+  int ret;
+  pthread_attr_t  attr;
+  pthread_t	  tid;
   TAU_PROFILE_TIMER(tautimer,"main()", "int (int, char **)", TAU_DEFAULT);
   TAU_PROFILE_START(tautimer);
   TAU_PROFILE_INIT(argc, argv);
   TAU_PROFILE_SET_NODE(0);
-  int ret;
-  pthread_attr_t  attr;
-  pthread_t	  tid;
 
   pthread_attr_init(&attr);
   
@@ -86,7 +86,6 @@ int main (int argc, char **argv)
     exit(1);
   }
 
-  //first();
 
   if (ret = pthread_join(tid, NULL) ) 
   {
