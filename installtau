@@ -16,6 +16,7 @@ useropt=no
 papi=no
 opari=no
 mpilibrary=no
+tauprefix=unknown
 
 # PARSE COMMAND LINE SWITCHES
 ###############################################################
@@ -115,6 +116,11 @@ do
     shift
     ;;
 
+  -prefix=*)
+    tauprefix=`echo $arg | sed -e 's/-prefix=//' -e 's/ /_/g'`
+    shift
+    ;;
+
   -help)
     echo "TAU Configuration Utility "
     echo "***********************************************************************"
@@ -145,6 +151,12 @@ do
     ;;
   esac
 done
+
+# Add tauprefix to tagopt
+if [ $tauprefix != unknown ]
+then
+  tagopt="$tagopt -prefix=$tauprefix"
+fi
 
 # Take care of wish version prompt
 echo " " > wishver
@@ -190,49 +202,49 @@ echo " " > wishver
 # Configure all versions with MPI
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt"
     ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt <wishver
-    make clean install
+    make clean; make install
     if [ "x$commopt" = "x" ]
     then
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -nocomm"
       ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -nocomm <wishver
-      make clean install
+      make clean; make install
     fi
 
 # Add callpath profiling 
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -PROFILECALLPATH"
     ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -PROFILECALLPATH <wishver
-    make clean install
+    make clean; make install
   
 # Add COMPENSATE
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -COMPENSATE"
     ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -COMPENSATE <wishver
-    make clean install
+    make clean; make install
 
 # Add TRACE
     echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE"
     ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE <wishver
-    make clean install
+    make clean; make install
   
     if [ $papi = yes ]
     then
 # Add PAPI
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -papi=$papidir -PAPIWALLCLOCK -PAPIVIRTUAL"
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
-      make clean install
+      make clean; make install
     fi
 
     if [ $opari = yes ]
     then
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -opari=$oparidir"
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -opari=$oparidir -openmp <wishver
-      make clean install
+      make clean; make install
     fi 
 
     if [ $opari = yes -a $papi = yes ] 
     then
       echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -opari=$oparidir -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL   <wishver
-      make clean install
+      make clean; make install
     fi 
   fi
 # MPI options are over
@@ -242,53 +254,53 @@ echo " " > wishver
   then
     echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt "
     ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt <wishver
-    make clean install
+    make clean; make install
   fi
 
   if [ $opari = yes ]
   then
     echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp "
     ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp <wishver
-    make clean install
+    make clean; make install
 
     if [ $papi = yes ]
     then 
       echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL "
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
-      make clean install
+      make clean; make install
     fi
   fi 
 
 # Just Pthread
   echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread "
   ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread <wishver
-  make clean install
+  make clean; make install
   
 # Just Sequential
   echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt "
   ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt <wishver
-  make clean install
+  make clean; make install
 
   if [ $papi = yes ]
   then 
 # PAPI with PTHREAD 
     echo "Configuring with -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL "
     ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
-    make clean install
+    make clean; make install
 
 # PAPI with -pdt 
     if [ $pdt = yes ]
     then
       echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt  -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
-      make clean install
+      make clean; make install
     fi
   fi
   if [ $dyninst = yes ] 
   then
     echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt -dyninst=$dyninstdir "
     ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt -dyninst=$dyninstdir < wishver
-    make clean install
+    make clean; make install
   fi
    
 
