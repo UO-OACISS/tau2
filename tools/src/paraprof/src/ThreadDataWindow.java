@@ -41,10 +41,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	}
     }
     
-    public ThreadDataWindow(Trial inTrial, int nodeID, int contextID, int threadID, StaticMainWindowData inSMWData, int windowType){
+    public ThreadDataWindow(Trial trial, int nodeID, int contextID, int threadID, StaticMainWindowData sMWData, int windowType){
 	try{
-	    trial = inTrial;
-	    sMWData = inSMWData;
+	    this.trial = trial;
+	    this.sMWData = sMWData;
 	    this.nodeID = nodeID;
 	    this.contextID = contextID;
 	    this.threadID = threadID;
