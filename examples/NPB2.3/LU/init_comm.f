@@ -40,6 +40,7 @@ c---------------------------------------------------------------------
       call MPI_COMM_RANK( MPI_COMM_WORLD,
      >                     id,
      >                     IERROR )
+      call TAU_PROFILE_SET_NODE(id)
 
 c---------------------------------------------------------------------
 c   establish the size of the global group
