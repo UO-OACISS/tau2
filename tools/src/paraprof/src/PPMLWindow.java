@@ -21,18 +21,6 @@ public class  PPMLWindow extends JFrame implements ActionListener{
     public PPMLWindow(ParaProfManager paraProfManager){
 	this.paraProfManager = paraProfManager;
 
-	String password = paraProfManager.getDatabasePassword();
-	if(password == null)
-	   passwordField = new JPasswordField(password, 20);
-	else
-	   passwordField = new JPasswordField(20);
-
-	String configFile = paraProfManager.getDatabaseConfigurationFile();
-	if(configFile == null)
-	    configFileField = new JTextField(System.getProperty("user.dir"), 30);
-	else
-	    configFileField = new JTextField(configFile, 30);
-	
 	//####################################
 	//Window Stuff.
 	//####################################
@@ -78,43 +66,48 @@ public class  PPMLWindow extends JFrame implements ActionListener{
 	gbc.anchor = GridBagConstraints.WEST;
 	gbc.weightx = 0;
 	gbc.weighty = 0;
-	addCompItem(new JLabel("Password:"), gbc, 0, 0, 1, 1);
+	addCompItem(new JLabel("Argument 1:"), gbc, 0, 0, 1, 1);
 
 	gbc.fill = GridBagConstraints.BOTH;
 	gbc.anchor = GridBagConstraints.WEST;
 	gbc.weightx = 100;
 	gbc.weighty = 0;
-	addCompItem(passwordField, gbc, 1, 0, 1, 1);
+	addCompItem(arg1Field, gbc, 1, 0, 2, 1);
 
-	JButton jButton = new JButton("Config File");
-	jButton.addActionListener(this);
 	gbc.fill = GridBagConstraints.NONE;
 	gbc.anchor = GridBagConstraints.WEST;
 	gbc.weightx = 0;
 	gbc.weighty = 0;
-	addCompItem(jButton, gbc, 0, 1, 1, 1);
+	addCompItem(new JLabel("Argument 2:"), gbc, 0, 1, 1, 1);
 	    
 	gbc.fill = GridBagConstraints.BOTH;
 	gbc.anchor = GridBagConstraints.WEST;
 	gbc.weightx = 100;
 	gbc.weighty = 0;
-	addCompItem(configFileField, gbc, 1, 1, 2, 1);
+	addCompItem(arg2Field, gbc, 1, 1, 2, 1);
 
-	jButton = new JButton("Ok");
-	jButton.addActionListener(this);
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	addCompItem(jButton, gbc, 2, 2, 1, 1);
-
-	jButton = new JButton("Cancel");
+	JButton jButton = new JButton("Cancel");
 	jButton.addActionListener(this);
 	gbc.fill = GridBagConstraints.NONE;
 	gbc.anchor = GridBagConstraints.EAST;
 	gbc.weightx = 0;
 	gbc.weighty = 0;
 	addCompItem(jButton, gbc, 0, 2, 1, 1);
+
+	jButton.addActionListener(this);
+	gbc.fill = GridBagConstraints.BOTH;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 100;
+	gbc.weighty = 0;
+	addCompItem(operation, gbc, 1, 2, 1, 1);
+
+	jButton = new JButton("Apply operation");
+	jButton.addActionListener(this);
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.EAST;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	addCompItem(jButton, gbc, 2, 2, 1, 1);
 	//####################################
 	//End - Create and add the components.
 	//####################################
@@ -131,22 +124,13 @@ public class  PPMLWindow extends JFrame implements ActionListener{
 	try{
 	    Object EventSrc = evt.getSource();
 	    String arg = evt.getActionCommand();
-	    if(arg.equals("Config File")){
-		JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
-		jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		jFileChooser.setMultiSelectionEnabled(false);
-		if((jFileChooser.showDialog(this, "Select")) != JFileChooser.APPROVE_OPTION){
-		    System.out.println("File selection cancelled by user!");
-		    return;
-		}
-		//User clicked the approve option.
-		configFileField.setText((jFileChooser.getSelectedFile()).getCanonicalPath());
-	    }
-	    else if(arg.equals("Cancel")){
+	    if(arg.equals("Cancel")){
 		closeThisWindow();}
-	    else if(arg.equals("Ok")){
-		paraProfManager.setDatabasePassword((new String(passwordField.getPassword())).trim());
-		paraProfManager.setDatabaseConfigurationFile(configFileField.getText().trim());
+	    else if(arg.equals("Apply operation")){
+		Metric metric = PPML.applyOperation(arg1Field.getText().trim(),
+						    arg2Field.getText().trim(),
+						    (String) operation.getSelectedItem());
+		paraProfManager.insertMetric(metric);
 		closeThisWindow();
 	    }
 	}
@@ -195,8 +179,10 @@ public class  PPMLWindow extends JFrame implements ActionListener{
     //Instance data.
     //####################################
     ParaProfManager paraProfManager = null;
-    JPasswordField passwordField = null;
-    JTextField configFileField = null;
+    JTextField arg1Field = new JTextField("Argument 1 (x:x:x:x)", 15);
+    JTextField arg2Field = new JTextField("Argument 2 (x:x:x:x)", 15);
+    String operationStrings[] = {"Add", "Subtract", "Multiply", "Divide"};
+    JComboBox operation = new JComboBox(operationStrings);
     //####################################
     //End - Instance data.
     //#################################### 

@@ -75,7 +75,7 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	gbc.insets = new Insets(5, 5, 5, 5);
 
  	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.WEST;
+	gbc.anchor = GridBagConstraints.EAST;
 	gbc.weightx = 0;
 	gbc.weighty = 0;
 	addCompItem(new JLabel("Password:"), gbc, 0, 0, 1, 1);
@@ -89,7 +89,7 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	JButton jButton = new JButton("Config File");
 	jButton.addActionListener(this);
 	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.WEST;
+	gbc.anchor = GridBagConstraints.EAST;
 	gbc.weightx = 0;
 	gbc.weighty = 0;
 	addCompItem(jButton, gbc, 0, 1, 1, 1);
@@ -100,14 +100,6 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	gbc.weighty = 0;
 	addCompItem(configFileField, gbc, 1, 1, 2, 1);
 
-	jButton = new JButton("Ok");
-	jButton.addActionListener(this);
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	addCompItem(jButton, gbc, 2, 2, 1, 1);
-
 	jButton = new JButton("Cancel");
 	jButton.addActionListener(this);
 	gbc.fill = GridBagConstraints.NONE;
@@ -115,6 +107,14 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	gbc.weightx = 0;
 	gbc.weighty = 0;
 	addCompItem(jButton, gbc, 0, 2, 1, 1);
+
+	jButton = new JButton("Ok");
+	jButton.addActionListener(this);
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.EAST;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	addCompItem(jButton, gbc, 2, 2, 1, 1);
 	//####################################
 	//End - Create and add the components.
 	//####################################

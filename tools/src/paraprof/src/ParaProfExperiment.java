@@ -68,6 +68,9 @@ public class ParaProfExperiment extends Experiment{
 
     public Vector getTrials(){
 	return trials;}
+
+    public ParaProfTrial getTrial(int trialID){
+	return (ParaProfTrial) trials.elementAt(trialID);}
   
     public void addTrial(ParaProfTrial trial){
 	trial.setExperiment(this);

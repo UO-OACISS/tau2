@@ -210,11 +210,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			}
 		    }
 		    else if(arg.equals("Database Configuration")){
-			(new DBConfiguration(this)).show();
-		    }
+			(new DBConfiguration(this)).show();}
 		    else if(arg.equals("Apply Operation")){
-
-		    }
+			(new PPMLWindow(this)).show();}
 		    else if(arg.equals("About ParaProf")){
 			JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
 		    }
@@ -591,6 +589,17 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    return;
 	}
     }
+
+    public void insertMetric(Metric metric){
+	DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+	metric.setDMTN(metricNode);
+	metricNode.setAllowsChildren(false);
+
+	ParaProfTrial trial = metric.getTrial();
+	DefaultMutableTreeNode trialNode = trial.getDMTN();
+
+	treeModel.insertNodeInto(metricNode, trialNode, trialNode.getChildCount());
+    }
   
     private void showMetric(ParaProfTrial trial, Metric metric){
 	try{
@@ -652,7 +661,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	if(defaultParaProfTrialNode != null)
 	    tree.expandPath(new TreePath(defaultParaProfTrialNode.getPath()));
     }
-
+    
     //Respond correctly when this window is closed.
     void thisWindowClosing(java.awt.event.WindowEvent e){
 	closeThisWindow();

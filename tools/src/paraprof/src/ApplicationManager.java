@@ -34,6 +34,15 @@ public class ApplicationManager extends Observable{
 	    return false;
     }
 
+    public ParaProfApplication getApplication(int applicationID){
+	return (ParaProfApplication) applications.elementAt(applicationID);}
+
+    public ParaProfExperiment getExperiment(int applicationID, int experimentID){
+	return (this.getApplication(applicationID)).getExperiment(experimentID);}
+
+    public ParaProfTrial getTrial(int applicationID, int experimentID, int trialID){
+	return ((this.getApplication(applicationID)).getExperiment(experimentID)).getTrial(trialID);}
+
   
     public boolean isApplicationPresent(String name){
 	for(Enumeration e = applications.elements(); e.hasMoreElements() ;){

@@ -40,6 +40,9 @@ public class ParaProfApplication extends Application{
   
     public boolean dBApplication(){
 	return dBApplication;}
+
+    public ParaProfExperiment getExperiment(int experimentID){
+	return (ParaProfExperiment) experiments.elementAt(experimentID);}
   
     public Vector getExperiments(){
 	return experiments;}

@@ -15,34 +15,48 @@ public class PPML{
 
     public PPML(){}
 
-    public static Metric applyOperation(ParaProfTrial trial, String tmpString1, String tmpString2, String inOperation){
-	  
-	int opA = trial.getMetricPosition(tmpString1);
-	int opB = trial.getMetricPosition(tmpString2);
+    public static Metric applyOperation(String tmpString1, String tmpString2, String inOperation){
 
+	
+	StringTokenizer st = new StringTokenizer(tmpString1, ":");
+	int applicationID = Integer.parseInt(st.nextToken());
+	int experimentID = Integer.parseInt(st.nextToken());
+	int trialID = Integer.parseInt(st.nextToken());
+	
+	ParaProfTrial trial = ParaProf.applicationManager.getTrial(applicationID, experimentID, trialID);
+
+	int opA = Integer.parseInt(st.nextToken());
+	st = new StringTokenizer(tmpString2, ":");
+	st.nextToken();
+	st.nextToken();
+	st.nextToken();
+	int opB = Integer.parseInt(st.nextToken());
+	
 	String tmpString3 = null;
     
 	int operation = -1;
     
 	if(inOperation.equals("Add")){
 	    operation = 0;
-	    tmpString3 = tmpString1 + " + " + tmpString2;
+	    tmpString3 = " + ";
 	}
 	else if(inOperation.equals("Subtract")){
 	    operation = 1;
-	    tmpString3 = tmpString1 + " - " + tmpString2;
+	    tmpString3 = " - ";
 	}
 	else if(inOperation.equals("Multiply")){
 	    operation = 2;
-	    tmpString3 = tmpString1 + " * " + tmpString2;
+	    tmpString3 = " * ";
 	}
 	else if(inOperation.equals("Divide")){
 	    operation = 3;
-	    tmpString3 = tmpString1 + " / " + tmpString2;
+	    tmpString3 = " / ";
 	}
 	else{
 	    System.out.println("Wrong operation type");
 	}
+
+	tmpString3 = ((Metric)trial.getMetrics().elementAt(opA)).getName() + tmpString3 + ((Metric)trial.getMetrics().elementAt(opA)).getName();
       
 	Metric newMetric = trial.addMetric();
 	newMetric.setName(tmpString3);
