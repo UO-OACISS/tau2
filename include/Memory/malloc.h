@@ -17,23 +17,31 @@
 
 #ifndef _TAU_MALLOC_H_
 #define _TAU_MALLOC_H_
-#include <stdio.h>
+#define _MALLOC_H 1 
+
+#include <sys/types.h>
+/* needed for Linux stdlib.h */
+#define __malloc_and_calloc_defined 
+#define __need_malloc_and_calloc
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+	/*
 void *malloc (size_t size);
 void free(void *p);
+
 void *calloc(size_t nmemb, size_t size);
 void *realloc(void *ptr, size_t size);
+
+*/
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#ifndef __GNUC__
+/*
 //////////////////////////////////////////////////////////////////////
 // Include Files 
 //////////////////////////////////////////////////////////////////////
-#include "/usr/include/malloc.h"
-#endif /* __GNUC__ */
+*/
 
 /********************************************************************/
 /* For further details see David Mazieres (NYU) article:
