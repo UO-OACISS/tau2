@@ -4,20 +4,39 @@ CREATE TABLE application (
     version                 VARCHAR(100)    DEFAULT '1.0',
     description             TEXT, 
     language                VARCHAR(100)    NOT NULL,    
-    para_diag               VARCHAR(100),
+    paradigm                VARCHAR(100),
     usage_text              TEXT,
     execution_options       TEXT,
-    experiment_table_name   VARCHAR(100)    DEFAULT 'experiment'    
+    experiment_table_name   VARCHAR(100)    DEFAULT 'experiment',
+    userdata                TEXT
 );
 
 CREATE TABLE experiment (
     id                      SERIAL          NOT NULL    PRIMARY KEY,
+    name                    VARCHAR(100),
     application             INT             NOT NULL,
-    system_info             TEXT            DEFAULT 'Sys_Info.xml', 
-    configuration_info      TEXT            DEFAULT 'Config_Info.xml',
-    instrumentation_info    TEXT            DEFAULT 'Instru_Info.xml',
-    compiler_info           TEXT            DEFAULT 'Compiler_Info.xml',
-    trial_table_name        VARCHAR(100)    DEFAULT 'trial'
+	system_name             VARCHAR(100),
+	system_machine_type     VARCHAR(100),
+	system_arch             VARCHAR(100),
+	system_os               VARCHAR(100),
+	system_memory_size      VARCHAR(100),
+	system_processor_amt    VARCHAR(100),
+	system_l1_cache_size    VARCHAR(100),
+	system_l2_cache_size    VARCHAR(100),
+	compiler_cpp_name       VARCHAR(100),
+	compiler_cpp_version    VARCHAR(100),
+	compiler_cc_name        VARCHAR(100),
+	compiler_cc_version     VARCHAR(100),
+	compiler_java_name      VARCHAR(100),
+	compiler_java_version   VARCHAR(100),
+	configure_prefix        VARCHAR(100),
+	configure_arch          VARCHAR(100),
+	configure_cpp           VARCHAR(100),
+	configure_cc            VARCHAR(100),
+	configure_jdk           VARCHAR(100),
+	configure_profile       VARCHAR(3),
+    trial_table_name        VARCHAR(100)    DEFAULT 'trial',
+    userdata                TEXT
 );
 
 
@@ -35,12 +54,14 @@ CREATE TABLE xml_file (
 
 CREATE TABLE trial (
     id                      SERIAL          NOT NULL    PRIMARY KEY,
+    name                    VARCHAR(100),
     experiment              INT             NOT NULL,
     time                    TIMESTAMP       WITHOUT TIME ZONE,
     problem_size            INT,
     node_count              INT,
     contexts_per_node       INT,
-    threads_per_context     INT
+    threads_per_context     INT,
+    userdata                TEXT
 );
 
 CREATE TABLE function (
