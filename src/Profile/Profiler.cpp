@@ -140,12 +140,16 @@ char * TauGetCounterString(void)
     return "templated_functions_MULTI_P_WALL_CLOCK_TIME";
 #endif /* TAU_PAPI_WALLCLOCKTIME */
 
+
 #ifdef TAU_PAPI_VIRTUAL
     return "templated_functions_MULTI_P_VIRTUAL_TIME";
 #endif /* TAU_PAPI_VIRTUAL */
     return "templated_functions_hw_counters";
   }
 #else  // ! (TAU_PAPI/PCL) => SGI_TIMERS, TULIP_TIMERS 
+#ifdef TAU_MUSE
+    return "templated_functions_hw_counters";
+#endif /* TAU_MUSE */
   return "templated_functions";
 #endif // ALL options
 }
@@ -2533,8 +2537,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.85 $   $Date: 2003/09/05 20:38:47 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.85 2003/09/05 20:38:47 sameer Exp $ 
+ * $Revision: 1.86 $   $Date: 2003/10/10 00:50:34 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.86 2003/10/10 00:50:34 sameer Exp $ 
  ***************************************************************************/
 
 	
