@@ -41,6 +41,7 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
     TauMapProf->Start(); \
     stmt; \
     TauMapProf->Stop(); \
+    delete TauMapProf; \
   } 
 
 #define TAU_MAPPING_REGISTER(stmt, group)  { static FunctionInfo TauMapFI(stmt, " " , group, #group); \
@@ -113,7 +114,7 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
 
 /* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer 
 */
-#define TAU_MAPPING_PROFILE_STOP(tid) Profiler::CurrentProfiler[tid]->Stop(tid);
+#define TAU_MAPPING_PROFILE_STOP(tid) Profiler *cur = Profiler::CurrentProfiler[tid]; cur->Stop(tid); delete cur; 
 #define TAU_MAPPING_PROFILE_EXIT(msg, tid)  Profiler::ProfileExit(msg, tid); 
 #define TAU_MAPPING_DB_DUMP(tid)  Profiler::DumpData(tid); 
 #define TAU_MAPPING_DB_PURGE(tid)  Profiler::PurgeData(tid); 
