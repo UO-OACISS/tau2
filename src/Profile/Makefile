@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/users/sameer/tau2
+TAUROOT=/home/grads/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -231,7 +231,7 @@ PapiLayer.o 	: PapiLayer.cpp $(HDRS)
 TauDisable.o 	: TauDisable.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
-OpenMP.o 	: OpenMP.cpp $(HDRS)
+OpenMPLayer.o 	: OpenMPLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
