@@ -606,7 +606,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     DefaultMutableTreeNode defaultParaProfTrialNode = null;
 
     private String password = "";
-    private String configFile = "/Users/bertie/Desktop/Programming/data/perfdb.cfg";
+    private String configFile = "/home/bertie/Programming/data/perfdb.cfg";
     private Vector loadedTrials = new Vector();
     //####################################
     //End - Instance Data.

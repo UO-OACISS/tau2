@@ -267,16 +267,6 @@ public class ParaProfTrial extends Trial{
     public int getCurValLoc(){
 	return currentValueLocation;}
   
-    //The following funtion initializes the GlobalMapping object.
-    //Since we are in the static mode, the number of mappings is known,
-    //therefore, the appropriate number of GlobalMappingElements are created.
-    void initializeGlobalMapping(int inNumberOfMappings, int mappingSelection){
-	for(int i=0; i<inNumberOfMappings; i++){
-	    //globalMapping.addGlobalMapping("Error ... the mapping name has not been set!");
-	    globalMapping.addGlobalMapping(null, mappingSelection);
-	}
-    }
-  
     GlobalMapping getGlobalMapping(){
 	return globalMapping;}
   

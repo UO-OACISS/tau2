@@ -18,11 +18,21 @@ import java.text.*;
 
 public class GlobalMappingElement implements Serializable, Comparable{
     //Constructors.
-    public GlobalMappingElement(){}
+    public GlobalMappingElement(int capacity){
+	doubleList = new double[capacity*14];}
     
     public void incrementStorage(){
 	int currentLength = doubleList.length;
 	double[] newArray = new double[currentLength+14];
+	for(int i=0;i<currentLength;i++){
+	    newArray[i] = doubleList[i];
+	}
+	doubleList = newArray;
+    }
+
+    public void incrementStorage(int increase){
+	int currentLength = doubleList.length;
+	double[] newArray = new double[currentLength+(increase*14)];
 	for(int i=0;i<currentLength;i++){
 	    newArray[i] = doubleList[i];
 	}
@@ -502,7 +512,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
     private Color mappingColor = null;
     private Color specificMappingColor = null;
   
-    private double[] doubleList = new double[14];
+    private double[] doubleList = null;
     private int maxNumberOfCalls = 0;
     private int maxNumberOfSubRoutines = 0;
     private int maxUserEventNumberValue = 0;

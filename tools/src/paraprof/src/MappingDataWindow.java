@@ -279,6 +279,10 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		    else
 			displaySiders(false);
 		}
+		else if(arg.equals("Show Path Title in Reverse"))
+		    this.setTitle("Function Data Window: " + trial.getTrialIdentifier(((JCheckBoxMenuItem)optionsMenu.getItem(6)).isSelected()));
+		else if(arg.equals("Show Meta Data in Panel"))
+		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
 		    (new MappingLedgerWindow(trial, 0)).show();
 		}
@@ -441,12 +445,16 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //without resetting the actual header. Printing and image generation
     //use this functionality for example.
     public void setHeader(){
-	JTextArea jTextArea = new JTextArea();
-	jTextArea.setLineWrap(true);
-	jTextArea.setWrapStyleWord(true);
-	jTextArea.setEditable(false);
-	jTextArea.append(this.getHeaderString());
-	sp.setColumnHeaderView(jTextArea);
+	if(((JCheckBoxMenuItem)optionsMenu.getItem(7)).isSelected()){
+	    JTextArea jTextArea = new JTextArea();
+	    jTextArea.setLineWrap(true);
+	    jTextArea.setWrapStyleWord(true);
+	    jTextArea.setEditable(false);
+	    jTextArea.append(this.getHeaderString());
+	    sp.setColumnHeaderView(jTextArea);
+	}
+	else
+	    sp.setColumnHeaderView(null);
     }
 
     public String getHeaderString(){

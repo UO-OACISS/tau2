@@ -237,7 +237,7 @@ public class TauOutputSession extends ParaProfDataSession{
 				this.outputToFile("groupNames:"+groupNames);
 			    }
 			    if(functionDataLine.i0 !=0){
-				mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0);
+				mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0, 1);
 				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 				globalMappingElement.incrementCounter();
 				globalThreadDataElement = thread.getFunction(mappingID);
@@ -278,7 +278,7 @@ public class TauOutputSession extends ParaProfDataSession{
 						if(group != null){
 						    //The potential new group is added here.  If the group is already present, the the addGlobalMapping
 						    //function will just return the already existing group id.  See the GlobalMapping class for more details.
-						    int groupID = this.getGlobalMapping().addGlobalMapping(group, 1);
+						    int groupID = this.getGlobalMapping().addGlobalMapping(group, 1, 1);
 						    if((groupID != -1) && (this.debug())){
 							this.outputToFile("######");
 							this.outputToFile("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
@@ -387,7 +387,7 @@ public class TauOutputSession extends ParaProfDataSession{
 							  " sumsqr:"+usereventDataLine.d3);
 				    }
 				    if(usereventDataLine.i0 !=0){
-					mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
+					mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2, 1);
 					globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
 					globalMappingElement.incrementCounter();
 					globalThreadDataElement = thread.getUserevent(mappingID);

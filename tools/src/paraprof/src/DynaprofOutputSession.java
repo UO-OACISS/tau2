@@ -205,7 +205,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			    System.out.println("incl.max:"+functionDataLine.d5);
 			}
 			if(!totalLine && functionDataLine.i1 !=0){
-			    mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0);
+			    mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0, 1);
 			    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 			    for(int j=this.getNumberOfMetrics();j>0;j--)
 				globalMappingElement.incrementStorage();
@@ -269,7 +269,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				System.out.println("incl.max:"+functionChildDataLine.d5);
 			    }
 			    if(functionDataLine.i1 !=0){
-				mappingID = this.getGlobalMapping().addGlobalMapping(functionChildDataLine.s0+" > child", 0);
+				mappingID = this.getGlobalMapping().addGlobalMapping(functionChildDataLine.s0+" > child", 0, 1);
 				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 				for(int k=this.getNumberOfMetrics();k>0;k--)
 				    globalMappingElement.incrementStorage();
@@ -322,7 +322,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				    thread.setMaxUserSecPerCall(metric, usecCall);
 
 				//Add as a call path from the parent above.
-				mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0+" => "+functionChildDataLine.s0+" > child  ", 0);
+				mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0+" => "+functionChildDataLine.s0+" > child  ", 0, 0);
 				globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 				for(int k=this.getNumberOfMetrics();k>0;k--)
 				    globalMappingElement.incrementStorage();

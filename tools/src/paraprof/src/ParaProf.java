@@ -129,6 +129,7 @@ public class ParaProf implements ActionListener{
 		else
 		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, ParaProf.debugIsOn);
 		if(v.size()>0){
+		    trial.setPaths(fl.getPath());
 		    trial.initialize(v);
 		    experiment.addTrial(trial);
 		    trial.showMainWindow();
@@ -140,7 +141,7 @@ public class ParaProf implements ActionListener{
 		    if(filePrefix==null) 
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", ParaProf.debugIsOn);
 		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", ParaProf.debugIsOn);
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, ParaProf.debugIsOn);
 		    if(v.size()>0){
 			trial.setPaths(fl.getPath());
 			trial.initialize(v);

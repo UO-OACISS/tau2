@@ -28,6 +28,18 @@ public class GlobalThreadDataElement{
 
 	this.globalMappingElement = globalMappingElement;
     }
+
+    public GlobalThreadDataElement(GlobalMappingElement globalMappingElement, boolean ue, int capacity){
+	if(ue){
+	    userevent = true;
+	    doubleList = new double[capacity*3];
+	}
+	else{
+	    doubleList = new double[capacity*5];
+	}
+
+	this.globalMappingElement = globalMappingElement;
+    }
     //####################################
     //End - Contructor(s).
     //####################################

@@ -205,7 +205,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		    //Common things to grab
 		    if((lineType!=6) && (lineType!=-1)){
 			this.getFunctionDataLine1(inputString);
-			mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine1.s0, 0);
+			mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine1.s0, 0, 1);
 			globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 		    }
 
@@ -221,7 +221,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 				    if(tmpString != null){
 					//The potential new group is added here.  If the group is already present, the the addGlobalMapping
 					//function will just return the already existing group id.  See the GlobalMapping class for more details.
-					int tmpInt = this.getGlobalMapping().addGlobalMapping(tmpString, 1);
+					int tmpInt = this.getGlobalMapping().addGlobalMapping(tmpString, 1, 1);
 					//The group is either already present, or has just been added in the above line.  Now, using the addGroup
 					//function, update this mapping to be a member of this group.
 					this.getGlobalMapping().addGroup(mappingID, tmpInt, 0);
@@ -379,7 +379,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 				System.out.println("noc:"+usereventDataLine.i0+"min:"+usereventDataLine.d1+"max:"+usereventDataLine.d0+"mean:"+usereventDataLine.d2);
 				
 				if(usereventDataLine.i0 != 0){
-				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
+				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2, 1);
 				    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 2);
 				    globalMappingElement.incrementCounter();
 				    globalThreadDataElement = thread.getUserevent(mappingID);

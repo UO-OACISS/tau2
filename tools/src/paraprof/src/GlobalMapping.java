@@ -43,7 +43,7 @@ public class GlobalMapping{
 	maxMeanUserSecPerCallList.add(new Double(0));
     }
     
-    public int addGlobalMapping(String mappingName, int mappingSelection){
+    public int addGlobalMapping(String mappingName, int mappingSelection, int capacity){
 	int mappingID = -1;
 	int pos = getSortedMappingPosition(mappingName, mappingSelection);
 
@@ -58,7 +58,7 @@ public class GlobalMapping{
 	    //still being able to use the id as a location into the mapping for
 	    //efficient lookup.
 	    mappingID = mappings[mappingSelection].size();
-	    GlobalMappingElement globalMappingElement = new GlobalMappingElement();
+	    GlobalMappingElement globalMappingElement = new GlobalMappingElement(capacity);
 	    globalMappingElement.setMappingName(mappingName);
 	    globalMappingElement.setGlobalID(mappingID);
 

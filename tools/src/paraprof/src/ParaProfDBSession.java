@@ -67,22 +67,23 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    //######
 	    System.out.println("Processing data, please wait ......");
 	    long time = System.currentTimeMillis();
-	    //Need to call increaseVectorStorage() on all objects that require it.
-	    this.getGlobalMapping().increaseVectorStorage();
 	    
 	    int numberOfMetrics = this.getNumberOfMetrics();
+	    for(int i=0;i<numberOfMetrics;i++)
+		this.getGlobalMapping().increaseVectorStorage();
+
 	    //Add the functions.
 	    ListIterator l = perfDBSession.getFunctions();
 	    while(l.hasNext()){
 		    Function f = (Function) l.next();
-		    int id = this.getGlobalMapping().addGlobalMapping(f.getName(), 0);
+		    int id = this.getGlobalMapping().addGlobalMapping(f.getName(), 0, numberOfMetrics);
 		    
 		    //Add element to the localMap for more efficient lookup later in the function.
 		    //localMap.add(new FunIndexFunIDPair(f.getIndexID(), id));
 		    
 		    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(id, 0);
 		    for(int i=0;i<numberOfMetrics;i++){
-			FunctionDataObject fdo = f.getMeanSummary();
+			FunctionDataObject fdo = f.getMeanSummary(i);
 			globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusive());
 			globalMappingElement.setMeanExclusivePercentValue(i, fdo.getExclusivePercentage());
 			globalMappingElement.setMeanInclusiveValue(i, fdo.getInclusive());
@@ -104,17 +105,9 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    //Collections.sort(localMap);
 
 	    //Increase storage.
-	    for(int i=0;i<(numberOfMetrics-1);i++){
+	    for(int i=0;i<numberOfMetrics;i++){
 		if(this.debug())
 		    System.out.println("Increasing the storage for the new counter.");
-		for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
-		    tmpGME.incrementStorage();
-		}
-		for(Enumeration e2 = (this.getGlobalMapping().getMapping(2)).elements(); e2.hasMoreElements() ;){
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
-		    tmpGME.incrementStorage();
-		}
 		for(Enumeration e3 = this.getNCT().getNodes().elements(); e3.hasMoreElements() ;){
 		    node = (Node) e3.nextElement();
 		    for(Enumeration e4 = node.getContexts().elements(); e4.hasMoreElements() ;){
@@ -163,7 +156,8 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		globalMappingElement.incrementCounter();
 		globalThreadDataElement = thread.getFunction(mappingID);
 		if(globalThreadDataElement == null){
-		    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
+		    globalThreadDataElement = 
+			new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false, numberOfMetrics);
 		    thread.addFunction(globalThreadDataElement,mappingID );
 		}
 		
@@ -213,7 +207,7 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    while(l.hasNext()){
 		UserEvent ue = (UserEvent) l.next();
 		System.out.println(ue.getName());
-		this.getGlobalMapping().addGlobalMapping(ue.getName(), 2);
+		this.getGlobalMapping().addGlobalMapping(ue.getName(), 2, 1);
 	    }
 
 	    l = perfDBSession.getUserEventData();

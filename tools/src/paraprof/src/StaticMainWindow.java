@@ -86,6 +86,15 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  slidersCheckBox = new JCheckBoxMenuItem("Display Sliders", false);
 	  slidersCheckBox.addActionListener(this);
 	  optionsMenu.add(slidersCheckBox);
+
+	  pathTitleCheckBox = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+	  pathTitleCheckBox.addActionListener(this);
+	  optionsMenu.add(pathTitleCheckBox);
+
+	  metaDataCheckBox = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+	  metaDataCheckBox.addActionListener(this);
+	  optionsMenu.add(metaDataCheckBox);
+
 	  //######
 	  //End - Options menu.
 	  //######
@@ -242,13 +251,15 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    panel.repaint();
 		}
 		else if(arg.equals("Display Sliders")){
-		    if(slidersCheckBox.isSelected()){ 
+		    if(slidersCheckBox.isSelected())
 			displaySiders(true);
-		    }
-		    else{
+		    else
 			displaySiders(false);
-		    }
 		}
+		else if(arg.equals("Show Path Title in Reverse"))
+		    this.setTitle("ParaProf: " + trial.getTrialIdentifier(pathTitleCheckBox.isSelected()));
+		else if(arg.equals("Show Meta Data in Panel"))
+		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
 		    (new MappingLedgerWindow(trial, 0)).show();
 		}
@@ -362,12 +373,16 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     //without resetting the actual header. Printing and image generation
     //use this functionality for example.
     public void setHeader(){
-	JTextArea jTextArea = new JTextArea();
-	jTextArea.setLineWrap(true);
-	jTextArea.setWrapStyleWord(true);
-	jTextArea.setEditable(false);
-	jTextArea.append(this.getHeaderString());
-	sp.setColumnHeaderView(jTextArea);
+	if(metaDataCheckBox.isSelected()){
+	    JTextArea jTextArea = new JTextArea();
+	    jTextArea.setLineWrap(true);
+	    jTextArea.setWrapStyleWord(true);
+	    jTextArea.setEditable(false);
+	    jTextArea.append(this.getHeaderString());
+	    sp.setColumnHeaderView(jTextArea);
+	}
+	else
+	    sp.setColumnHeaderView(null);
     }
 
     public String getHeaderString(){
@@ -542,6 +557,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     private JCheckBoxMenuItem nameCheckBox = null;
     private JCheckBoxMenuItem orderCheckBox = null;
     private JCheckBoxMenuItem slidersCheckBox = null;
+    private JCheckBoxMenuItem pathTitleCheckBox = null;
+    private JCheckBoxMenuItem metaDataCheckBox = null;
     
     private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
     private JComboBox sliderMultiple;

@@ -303,6 +303,14 @@ public class UtilFncs{
 	box = new JCheckBoxMenuItem("Display Sliders", false);
 	box.addActionListener(actionListener);
 	jMenu.add(box);
+
+	box = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+	box.addActionListener(actionListener);
+	jMenu.add(box);
+
+	box = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+	box.addActionListener(actionListener);
+	jMenu.add(box);
     }
 
     public static void usereventOptionMenuItems(JMenu jMenu, ActionListener actionListener){
