@@ -55,6 +55,7 @@ case $1 in
         echo Restoring all files to original distribution
         config_arch=`echo $1 | sed 's/^arch=//'`
 	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
+	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
 if [ -d target ]
   then
         pvm_arch=default
@@ -348,6 +349,7 @@ fi
      arch=*)
         config_arch=`echo $1 | sed 's/^arch=//'`
 	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
+	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
 
 ###############################################################
 # Set up PVM stuff if possible

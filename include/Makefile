@@ -29,6 +29,7 @@
 
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=default
+TAU_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
@@ -478,8 +479,8 @@ TAU_AR                 = ar             #ENDIF#
 
 ##############################################
 # PDT OPTIONS
-PDTARCHDIR=$(CONFIG_ARCH)
-#PDTARCH#PDTARCHDIR=$(CONFIG_ARCH)/$(PDTCOMPDIR)#ENDIF#
+PDTARCHDIR=$(TAU_ARCH)
+#PDTARCH#PDTARCHDIR=$(TAU_ARCH)/$(PDTCOMPDIR)#ENDIF#
 
 
 ##############################################
