@@ -31,26 +31,26 @@
 #define _TAU_MAPPING_H_
 
 #if (PROFILING_ON || TRACING_ON)
-FunctionInfo *TauMapFI;
-Profiler *TauMapProf;
+Profiler *& TheTauMapProf();
+// For Mapping, global variables used between layers
 #define TAU_MAPPING(stmt)   \
-  { static char TauStmtUsed[1024] = #stmt; \
+  { static char TauStmtUsed[1] = {'Y'}; \
     static Profiler *TauThisStatement; \
+    static FunctionInfo taufimap(#stmt, " ", TAU_USER, "TAU_USER"); \
     if (TauStmtUsed[0] != (char) NULL) \
     { \
-	TauMapFI = new FunctionInfo(TauStmtUsed, " ", TAU_USER, "TAU_USER");\
-	TauMapProf = new Profiler(TauMapFI, TAU_USER, true);\
-	TauThisStatement = TauMapProf; \
+	TheTauMapProf() = new Profiler(&taufimap, TAU_USER, true);\
+	TauThisStatement = TheTauMapProf(); \
     } \
     else { \
 	TauStmtUsed[0] = (char) NULL; \
-	TauMapProf = TauThisStatement; \
+	TheTauMapProf() = TauThisStatement; \
     } \
   } \
-  TauMapProf->Start(); \
+  TheTauMapProf()->Start(); \
   stmt; \
   cout <<#stmt <<endl; \
-  TauMapProf->Stop();
+  TheTauMapProf()->Stop();
 
 #else
 #define TAU_MAPPING(stmt) stmt
