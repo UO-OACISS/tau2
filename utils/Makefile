@@ -1,6 +1,6 @@
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
-#*			http://www.acl.lanl.gov/tau		           **
+#*			http://www.cs.uoregon.edu/research/paracomp/tau    **
 #****************************************************************************
 #*    Copyright 1997  						   	   **
 #*    Department of Computer and Information Science, University of Oregon **
@@ -75,7 +75,9 @@ CWARNING	= $(WARNINGSOPT)
 #PDT#INSTR 		= tau_instrumentor #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
 #VTF#TAU2VTF 	= tau2vtf #ENDIF#
+#VTF#VTF2PROFILE 	= vtfconverter/vtf2profile #ENDIF#
 #VTF#INSTALLTAU2VTF 	= $(INSTALLDEST)/tau2vtf #ENDIF#
+#VTF#INSTALLVTF2PROFILE 	= $(INSTALLDEST)/vtf2profile #ENDIF#
 #DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h -I$(DYNINSTDIR)/core #ENDIF#
 #DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -liberty -lelf #ENDIF#
 #SP1#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI #ENDIF#
@@ -130,7 +132,7 @@ SRCS	      = pcxx_merge.c \
 		pcxx_convert.c
 
 EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
-		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN) $(TAU2VTF)
+		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN) $(TAU2VTF) $(VTF2PROFILE)
 
 all:		$(EXECUTABLES)
 
@@ -155,6 +157,9 @@ tau2vtf: 	tau2vtf.o
 
 tau2vtf.o:	tau2vtf.cpp
 		$(CXX) $(CFLAGS)  tau2vtf.cpp -c -I$(VTFDIR)/include 
+
+vtfconverter/vtf2profile: 	
+		cd vtfconverter; $(MAKE) "MAKE=$(MAKE)" "CFLAGS=$(CFLAGS)"
 
 tau_merge: 	tau_merge.o tau_events.o
 		$(CXX) $(CFLAGS)  tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
@@ -264,6 +269,12 @@ $(INSTALLDEST)/tau2vtf: tau2vtf
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 
+$(INSTALLDEST)/vtf2profile: vtfconverter/vtf2profile
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) vtfconverter/vtf2profile $(INSTALLDEST)
+
 #$(INSTALLDEST)/$(RUNTIME1): $(RUNTIME1)
 #		@echo Installing $? in $(INSTALLDEST)
 #		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -298,7 +309,7 @@ $(INSTALLDEST)/tau2vtf: tau2vtf
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE)
 
 program:        $(PROGRAM)
 

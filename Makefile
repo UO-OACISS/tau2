@@ -64,9 +64,11 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 # Trace Reader Library
 #TRACE#TRACEINPUT=src/TraceInput#ENDIF#
 
+#VTF#VTFCONVERTER=utils/vtfconverter#ENDIF#
+
 
 # Subdirectories to make resursively
-SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) 
+SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER)
 
 all:
 	@echo "At the installation root, use \"make install\" "
