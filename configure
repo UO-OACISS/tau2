@@ -191,11 +191,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC' and 'guidec++' "
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++' and 'aCC'"
 #      exit 1
     fi
     shift
@@ -203,11 +203,11 @@ do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai ] 
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai ] 
     then
       fortran_compiler=$myarg
     else
-      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq' , and 'kai' "
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq' , and 'kai' "
       exit 1
     fi
     shift
@@ -929,6 +929,16 @@ case $cxx_compiler in
         
       ;;
 
+   aCC)
+      echo "Default C++ compiler will be HP aCC Compiler"
+      fixmakeargs="$fixmakeargs ACC"
+      tauoptions="${tauoptions}-acc"
+      if [ $fortran_compiler = no ]
+      then
+        fixmakeargs="$fixmakeargs HP_FORTRAN"
+      fi
+        
+      ;;
    *)
       echo "ERROR Unknown C++ compiler"
       exit 1
@@ -957,6 +967,12 @@ case $fortran_compiler in
    ibm64)
       echo "Default Fortran compiler will be IBM xlf90 (64 bits)"
       fixmakeargs="$fixmakeargs IBM64_FORTRAN"
+      ;;
+
+   hp)
+      echo "Default Fortran compiler will be HP f90"
+      extradir=`which f90 | sed s/f90/../`
+      fixmakeargs="$fixmakeargs HP_FORTRAN"
       ;;
 
    cray)
@@ -1359,7 +1375,7 @@ fi
 case $machine in
      hp9000s700 | hp9000s800)
 	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine NO_RANLIB $fixmakeargs"
+	fixmakeargs="arch=$machine NO_RANLIB HP $fixmakeargs"
 # HP-ALLOCA HP_CFLAGS
 
 	if [ `/bin/uname -r | cut -d. -f2` = 10 ]
@@ -1372,6 +1388,12 @@ case $machine in
   	then
 		fixmakeargs="HP_CFLAGS HP-ALLOCA $fixmakeargs"
 	fi
+
+	if [ $cxx_compiler = g++ ]
+  	then
+		fixmakeargs="HPGNU $fixmakeargs"
+	fi
+
 
 # Check for Convex SPP enviroment
 	if [ $detectxdev = cnxspp ]

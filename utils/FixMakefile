@@ -371,11 +371,22 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      HP-ALLOCA)
-	echo NOTE: Compatibility library -lPW will be used.
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      HPUX10)
 	echo NOTE: HPUX Version 10 fixes will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HP)
+	echo NOTE: HPUX fixes will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HPGNU)
+	echo NOTE: HP GNU fixes will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     ACC)
+	echo NOTE: HP aCC compiler will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      USE_CC)
@@ -383,7 +394,7 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      HP_CFLAGS)
-	echo NOTE: Using -Aa flag and shared libraries for HP native compiler.
+	echo NOTE: Using -AA flag and shared libraries for HP native compiler.
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      MIPS_CC)
@@ -631,6 +642,10 @@ fi
 	;;
      SGICCNOEX)
 	echo "NOTE: Using SGI CC with no exceptions for compiling"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HP_FORTRAN)
+	echo "NOTE: HP Fortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      GNU_FORTRAN)
