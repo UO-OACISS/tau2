@@ -15,10 +15,10 @@ public class ParaProfIterator implements ListIterator{
 				
 	//Check to make sure that the Vector is not null.
 	if(inVector == null)
-	    throw new IllegalArgumentException();
-				
-	//Safe to continue.				
-	listData = inVector;
+	    listData = new Vector(); 				
+	else
+	    listData = inVector;
+	
 	size = listData.size();
     }
 

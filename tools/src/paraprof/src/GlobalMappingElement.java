@@ -82,75 +82,71 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    return (!tmpBoolResult);
     }
 
-    public void addParent(int id){
-	
-	if(parents==null){
-	    parents = new int[5];
-	    callPathIDSParents = new int[5][5];
-	}
-	else if(parents.length<numberOfParents){
-	    int currentLength = parents.length;
-	    int[] newArray = new int[currentLength+5];
-	    for(int i=0;i<currentLength;i++){
-		newArray[i] = parents[i];
+    public void addParent(int id,int pathID){
+	//Check to see if this parent is already present,
+	//if so, add only the callpath to the system.
+	int location = UtilFncs.exists(parents,id);
+	if(location == -1){
+	    if(parents==null){
+		parents = new Vector();
+		callPathIDSParents = new Vector();
 	    }
-	    parents = newArray;
 	    
-	    int[][] newArray2 = new int[currentLength+5][];
-	    for(int j=0;j<currentLength;j++){
-		int subArrayLength = callPathIDSParents[j].length;
-		newArray2[j] = new int[subArrayLength+5];
-		for(int k=0;k<subArrayLength;k++){
-		    newArray2[j][k]=callPathIDS[j][k];
-		}
-	    }
-	    for(int l=currentLength;l<(currentLength+5);l++){
-		newArray2[l] = new int[5];
-	    }
-	    callPathIDSParents = newArray2;
-	    
+	    parents.add(new Integer(id));
+	    Vector tmpVector = new Vector();
+	    tmpVector.add(new Integer(pathID));
+	    callPathIDSParents.add(tmpVector);
+
 	}
-	//Safe to add.
-	parents[numberOfParents] = id;
-	numberOfParents++;
+	else{
+	    Vector tmpVector = (Vector) callPathIDSParents.elementAt(location);
+	    tmpVector.add(new Integer(pathID));
+	}
     }
 
-    public int[] getParents(){
+    public Vector getParents(){
 	return parents;
     }
 
-    public int getNumberOfParents(){
-	return numberOfParents;
-    }
-
-    public int[] getChildren(){
+    public Vector getChildren(){
 	return children;
     }
 
-    public int getNumberOfChildren(){
-	return numberOfChildren;
+    public ListIterator getParentsIterator(){
+	return new ParaProfIterator(parents);
+    }
+
+    public ListIterator getChildrenIterator(){
+	return new ParaProfIterator(children);
     }
 
     public void addChild(int id,int pathID){
 	//Check to see if this child is already present,
 	//if so, add only the callpath to the system.
-	int tmpInt = UtilFuncs.exists(children,id);
-	if(tmpInt != -1){
+	int location = UtilFncs.exists(children,id);
+	if(location == -1){
 	    if(children==null){
 		children = new Vector();
 		callPathIDSChildren = new Vector();
 	    }
 	    
-
-
-
-	    children[numberOfChildren] = id;
-	    //Check the length of the callpath array.
-	    if(
-	    numberOfChildren++;
+	    children.add(new Integer(id));
+	    Vector tmpVector = new Vector();
+	    tmpVector.add(new Integer(pathID));
+	    callPathIDSChildren.add(tmpVector);
 	}
 	else{
+	    Vector tmpVector = (Vector) callPathIDSChildren.elementAt(location);
+	    tmpVector.add(new Integer(pathID));
 	}
+    }
+
+    public void setCallPathObject(boolean b){
+	callPathObject = b;
+    }
+
+    public boolean isCallPathObject(){
+	return callPathObject;
     }
     
     public void setColorFlag(boolean inBoolean){
@@ -507,21 +503,21 @@ public class GlobalMappingElement implements Serializable, Comparable{
     private Trial trial = null;
   
     //Global Mapping reference.
-    String mappingName = null;
-    int globalID = -1;     //Global ID for this mapping.
+    private String mappingName = null;
+    private int globalID = -1;     //Global ID for this mapping.
   
-    int[] groups = null;
-    int numberOfGroups = 0;
-    int numberOfChildren = 0;
-    Vector parents = null;
-    Vector children = null;
-    Vector callPathIDSParents = null;
-    Vector callPathIDSChildren = null;
+    private int[] groups = null;
+    private int numberOfGroups = 0;
+    private Vector parents = null;
+    private Vector children = null;
+    private Vector callPathIDSParents = null;
+    private Vector callPathIDSChildren = null;
+    private boolean callPathObject = false;
 
     //Color Settings.
-    boolean colorFlag = false;
-    Color genericMappingColor = null;
-    Color specificMappingColor = null;
+    private boolean colorFlag = false;
+    private Color genericMappingColor = null;
+    private Color specificMappingColor = null;
   
     private double[] doubleList = new double[14];
     private int maxNumberOfCalls = 0;
@@ -534,15 +530,15 @@ public class GlobalMappingElement implements Serializable, Comparable{
     private double meanNumberOfSubRoutines = 0;
   
     //Drawing coordinates for this Global mapping element.
-    int xBeginPosition;
-    int xEndPosition;
-    int yBeginPosition;
-    int yEndPosition;
+    private int xBeginPosition;
+    private int xEndPosition;
+    private int yBeginPosition;
+    private int yEndPosition;
   
-    boolean meanValuesSet = false;
+    private boolean meanValuesSet = false;
   
     //Instance values used to calculate the mean values for derived values (such as flops)
-    int counter = 0;
-    double totalExclusiveValue = 0;
-    double totalInclusiveValue = 0;
+    private int counter = 0;
+    private double totalExclusiveValue = 0;
+    private double totalInclusiveValue = 0;
 }

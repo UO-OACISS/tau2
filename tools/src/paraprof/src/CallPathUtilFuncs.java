@@ -16,13 +16,16 @@ public class CallPathUtilFuncs{
     public static boolean isAvailable(ListIterator l){
 	GlobalMappingElement gme = null;
 	String s = null;
+	boolean result = false;
 	while(l.hasNext()){
 	    gme = (GlobalMappingElement) l.next();
 	    s = gme.getMappingName();
-	    if(s.indexOf("=>")>0)
-		return true;
+	    if(s.indexOf("=>")>0){
+		gme.setCallPathObject(true);
+		result = true;
+	    }
 	}
-	return false;
+	return result;
     }
 
     public static void buildRelations(GlobalMapping gm){
@@ -34,8 +37,9 @@ public class CallPathUtilFuncs{
 	    String parent = null;
 	    String child = null;
 	    int location = -1;
+	    ParaProfIterator l = null;
 	    
-	    ParaProfIterator l = (ParaProfIterator)gm.getMappingIterator(0);
+	    l = (ParaProfIterator)gm.getMappingIterator(0);
 	    while(l.hasNext()){
 		gme1 = (GlobalMappingElement) l.next();
 		s = gme1.getMappingName();
@@ -53,33 +57,30 @@ public class CallPathUtilFuncs{
 		    //Update parent/child relationships.
 		    gme2 = gm.getGlobalMappingElement(parent,0); 
 		    gme3 = gm.getGlobalMappingElement(child,0);
-		    gme2.addChild(gme2.getGlobalID(),gme1.getGlobalID());
-		    gme3.addParent(gme1.getGlobalID());
+		    gme2.addChild(gme3.getGlobalID(),gme1.getGlobalID());
+		    gme3.addParent(gme2.getGlobalID(),gme1.getGlobalID());
 		}
 	    }
 	    
 	    l.reset();
-	    int number = 0;
-	    int[] a = null;
+	    Integer listValue = null;
+	    ListIterator l2 = null;
 	    while(l.hasNext()){
 		gme1 = (GlobalMappingElement) l.next();
 		System.out.println("--------");
-		number = gme1.getNumberOfParents();
-		if(number!=0){
-		    a = gme1.getParents();
-		    for(int i=0;i<number;i++){
-			gme2 = gm.getGlobalMappingElement(a[i],0);
-			System.out.println(gme2.getMappingName()+"["+gme2.getGlobalID()+"]");
-		    }
+		l2 = gme1.getParentsIterator();
+		while(l2.hasNext()){
+		    listValue = (Integer)l2.next();
+		    gme2 = gm.getGlobalMappingElement(listValue.intValue(),0);
+		    System.out.println(gme2.getMappingName()+"["+gme2.getGlobalID()+"]");
 		}
+		
 		System.out.println("["+gme1.getGlobalID()+"]"+gme1.getMappingName());
-		number = gme1.getNumberOfChildren();
-		if(number!=0){
-		    a = gme1.getChildren();
-		    for(int i=0;i<number;i++){
-			gme2 = gm.getGlobalMappingElement(a[i],0);
-			System.out.println(gme2.getMappingName()+"["+gme2.getGlobalID()+"]");
-		    }
+		l2 = gme1.getChildrenIterator();
+		while(l2.hasNext()){
+		    listValue = (Integer)l2.next();
+		    gme2 = gm.getGlobalMappingElement(listValue.intValue(),0);
+		    System.out.println(gme2.getMappingName()+"["+gme2.getGlobalID()+"]");
 		}
 	    }
 	}

@@ -490,7 +490,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    tmpRef.show();
 			}
 		    else if(arg.equals("Show Call Path Information")){
-			System.out.println("Selected callpath information");
+			CallPathTextWindow tmpRef = new CallPathTextWindow(trial, serverNumber, contextNumber,
+									   threadNumber, sMWindow.getSMWData());
+			trial.getSystemEvents().addObserver(tmpRef);
+			tmpRef.show();
 		    }
 		}
 	}

@@ -59,7 +59,7 @@ public class UtilFncs{
 	    return -1;
 	int test = ref.length;
 	for(int j=0;j<test;j++){
-	    if(ref[j]=i)
+	    if(ref[j]==i)
 		return j;
 	}
 	return -1;
@@ -70,7 +70,7 @@ public class UtilFncs{
 	if(ref == null)
 	    return -1;
 	Integer current = null;
-	int test = ref.size;
+	int test = ref.size();
 	for(int j=0;j<test;j++){
 	    current = (Integer) ref.elementAt(j);
 	    if((current.intValue())==i)
