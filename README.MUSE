@@ -56,13 +56,18 @@ USAGE:
    These packages keep track of statistics by monitoring MAGNET events 
    MAGNET_TASK_CTX_IN and MAGNET_TASK_CTX_OUT of the specified PID. 
  
-   2.1) Package Name: total_busy_time
+   2.1) Package Name: busy_time
   	total time in millisec of processors in BUSY state doing work 
 	for the specified PID.
 
-	Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=total_busy_time
+	Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=busy_time
 
-   2.2) Package Name: total_time 
+   2.2) Package Name: idle_time
+  	total time in millisec of processors in Idle state. 
+
+	Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=idle_time
+
+   2.3) Package Name: total_time 
   	total time in millisec of processors in execution for the 
 	specified PID. 
 	
@@ -76,9 +81,6 @@ USAGE:
 		addfilter <handlerID> process_filter pid=<pid> event=259 //MAGNET_TASK_CTX_OUT	
  
 NOTE: 
-   Please specify the number of cpu of the machine in the include/profile/TauMuse.h file
-   by setting macro. 
-	#define NUMOFCPU
 
  
 BUGS:
