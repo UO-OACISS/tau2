@@ -283,7 +283,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    }
 
 	    //Check for group membership.
-	    int groupMember = gME.isGroupMember(trial.getColorChooser().getGroupHighlightColorID());
+	    boolean groupMember = gME.isGroupMember(trial.getColorChooser().getGroupHighlightColorID());
 
 	    //######
 	    //Draw the header if required.
