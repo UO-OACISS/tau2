@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/sh 
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -28,7 +28,7 @@ declare -i errorStatus=0
 declare -i numFiles=0
 
 declare -i tempCounter=0
-declare -i counterForOutput=0
+declare -i counterForOutput=-10
 declare -i counterForOptions=0
 declare -i temp=0
 
@@ -54,7 +54,7 @@ printUsage () {
 	fi
 }
 
-#Assumption pass only one argument. Concatenate them if there
+#Assumption: pass only one argument. Concatenate them if there
 #are multiple
 echoIfVerbose () {
 	if [ $isDebug == $TRUE ] || [ $isVerbose == $TRUE ]; then
@@ -62,7 +62,7 @@ echoIfVerbose () {
 	fi
 }
 
-#Assumption pass only one argument. Concatenate them if there
+#Assumption: pass only one argument. Concatenate them if there
 #are multiple
 echoIfDebug () {
 	if [ $isDebug == $TRUE ]; then
@@ -72,8 +72,11 @@ echoIfDebug () {
 
 
 printError() {
-	errorStatus=$TRUE
-	gotoNextStep=$FALSE
+	errorStatus=$TRUE 
+	#This steps ensures that the final regular command is executed
+	gotoNextStep=$FALSE 
+	#This steps ensures that all the intermediate steps are ignored.
+
 	echo -e "Error: Command(Executable) is -- $1"
 	echo -e "Error: Full Command attempted is -- $2"
 	echo -e "Error: Reverting to a Regular Make"
@@ -81,7 +84,6 @@ printError() {
 }
 
 evalWithDebugMessage() {
-	#return
 	echoIfVerbose "\n\nDebug: $2"
 	echoIfVerbose "Executing>  $1"
 	eval $1
@@ -99,8 +101,8 @@ fi
 #including verbose option [as -optVerbose]. The reason being
 #script assumes that all any tokens passed after -opt* sequenece
 #constitute the regular command, with the first command (immediately) 
-#after the sequence, being the compiler.
-
+#after the sequence, being the compiler.  In this "for" loops, the 
+#regular command is being read.
 for name in "$@"; do
 
 	case $name in
@@ -113,18 +115,21 @@ for name in "$@"; do
 			CMD=$name
 			#The first command (immediately) after the -opt sequence is the compiler.
 		fi
-		regularCmd="$regularCmd  $name"	#should not have any space in between the two commas.
+		regularCmd="$regularCmd  $name"	
 		tempCounter=tempCounter+1
 		;;
 
 	esac
 done
-
-
 echoIfDebug "\nRegular command passed is --  $regularCmd "; 
 echoIfDebug "The compiler being read is $CMD \n"
 
 
+
+
+####################################################################
+#Parsing all the Tokens of the Command passed
+####################################################################
 echoIfDebug "\nParsing all the arguments passed..."
 tempCounter=0
 for arg in "$@"
@@ -158,7 +163,7 @@ for arg in "$@"
 			arrFileName[$numFiles]=$arg
 			numFiles=numFiles+1
 			if [ $fortranParserDefined == $FALSE ]; then
-				#If it is not passed EXPLICITY, use the default.
+				#If it is not passed EXPLICITY, use the default f95parse.
 				pdtParserF="$optPdtDir""/f95parse"
 			fi
 			groupType=$group_f_F
@@ -170,7 +175,7 @@ for arg in "$@"
 			arrFileName[$numFiles]=$arg
 			numFiles=numFiles+1
 			if [ $fortranParserDefined == $FALSE ]; then
-				#If it is not passed EXPLICITY, use the default.
+				#If it is not passed EXPLICITY, use the default f95parse.
 				pdtParserF="$optPdtDir""/f95parse"
 			fi
 			groupType=$group_f_F
@@ -297,7 +302,7 @@ for arg in "$@"
 			-optTauSelectFile*)
 				optTauSelectFile=${arg#"-optTauSelectFile="}
 				echoIfDebug "\tTauSelectFile is: "$optTauSelectFile
-				#Passsing a blank file name with -f option would cause ERROR 
+				#Passing a blank file name with -f option would cause ERROR 
 				#And so if it is blank, -f option should not be appended at the start.
 				#This is the reason, one cannot pass it as a generic optTau
 				#with -f selectFile. What if the selectFile is blank? An -f optoin
@@ -387,18 +392,20 @@ echoIfDebug "Completed Parsing\n"
 
 
 
+
+
 ####################################################################
-#Linking if there are no source files passed.
+#Linking if there are no Source Files passed.
 ####################################################################
 if [ $numFiles == 0 ]; then
 	echoIfDebug "The number of source files is zero"
-	#The reason why regularCmd is modified is becuase sometimes, we have cases
+	#The reason why regularCmd is modified is because sometimes, we have cases
 	#like linking of instrumented object files, which require
 	#TAU_LIBS. Now, since object files have no files of types
 	#*.c, *.cpp or *.F or *.F90 [basically source files]. Hence
 	#the script understands that there is nothing to compile so
-	#it simply reverts to final compilation by assinging a status
-	#of FALSE to the $gotoNextStep. 
+	#it simply carries out the current linking. Compilation steps are
+	#avoided by assinging a status of $FALSE to the $gotoNextStep. 
 
 	if [ $hasMpi == $FALSE ]; then
 		echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
@@ -408,9 +415,12 @@ if [ $numFiles == 0 ]; then
 
 	if [ $hasAnOutputFile == $FALSE ]; then
 		passedOutputFile="a.out"
+		linkCmd="$regularCmd  $optLinking -o $passedOutputFile"
+	else
+		linkCmd="$regularCmd  $optLinking"
+		#Do not add -o, since the regular command has it already.
     fi	
 
-	linkCmd="$regularCmd  $optLinking -o $passedOutputFile"
 
 	evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
 
@@ -424,8 +434,10 @@ fi
 
 
 
+
+
 ####################################################################
-#Parsing the code
+#Parsing the Code
 ####################################################################
 if [ $gotoNextStep == $TRUE ]; then
 	tempCounter=0
@@ -492,8 +504,10 @@ fi
 
 
 
+
+
 ####################################################################
-#Instrumenting the code
+#Instrumenting the Code
 ####################################################################
 if [ $gotoNextStep == $TRUE ]; then
 
@@ -517,13 +531,14 @@ fi
 
 
 
+
+
 ####################################################################
-#Compiling the instrumented source code
+#Compiling the Instrumented Source Code
 ####################################################################
 if [ $gotoNextStep == $TRUE ]; then
 
 	#optCompile= $TAU_DEFS + $TAU_INCLUDE + $TAU_MPI_INCLUDE 
-	
 	#Assumption: If -o option is not specified for compilation, then simply produce
 	#an output -o with filebaseName.o as the output for EACH file. This is because, in the
 	#common.mk file, even though there was no output generated by the regular command
@@ -613,8 +628,10 @@ if [ $gotoNextStep == $TRUE ]; then
 fi
 
 
+
+
 ####################################################################
-#Regular Command
+#Regular Command: In case of an Intermediate Error. 
 ####################################################################
 if [ $errorStatus == $TRUE ] ; then
 	evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
