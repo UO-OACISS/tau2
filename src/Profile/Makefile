@@ -65,7 +65,9 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
 		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
 		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h	      \
-		$(INCDIR)/SprocLayer.h
+		$(INCDIR)/SprocLayer.h   $(INCDIR)/PyGroups.h         \
+		$(INCDIR)/PyExceptions.h $(INCDIR)/PyDatabase.h       \
+		$(INCDIR)/PyBindings.h   $(INCDIR)/PyTimer.h     
 
 LDFLAGS	      = $(PCXX_OPT) 
 
@@ -75,7 +77,7 @@ OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O) \
 		$(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) $(MULT_O) $(PLATFORM_O) \
-		$(CALLPATH_O)
+		$(CALLPATH_O) $(PYTHON_O)
 
 PRINT	      = pr
 
@@ -152,13 +154,16 @@ TAU_RANLIB = echo "Built $(TARGET)"
 #JAVA#TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
+#PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
+#PYTHON#TAUPYTHON_INSTALL = $(INSTALLDEST)/pytau$(TAU_SHLIBX) #ENDIF#
+#PYTHON#TAUPYTHON_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_OPTIONS) #ENDIF#
 ##############################################
 TAU_DSO         = $(TAU_SHLIB)
 TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
 #APPLECXX#TAU_SHLIB_INSTALL= $(TAU_DSO) #ENDIF#
 
 
-all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) 
+all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON)
 
 $(TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
@@ -194,8 +199,8 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
-		$(RM) $(INSTALLDEST)/libTAU.so
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.so
+		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX)
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 
 $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX): libTauMpi$(TAU_OPTIONS)$(LSX)
 		$(MAKE) -f Makefile.wrapper install
@@ -206,7 +211,19 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
                    else mkdir $(TAU_JAVA_INSTALLDIR) ;fi
 		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
 
-install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1)
+$(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
+		@echo Installing $(TAUPYTHON) and tau.py in $(INSTALLDEST)
+		@if [ -d $(INSTALLDEST) ] ; then true; \
+		   else mkdir $(INSTALLDEST) ;fi
+		$(RM) $(INSTALLDEST)/$(TAUPYTHON)
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(TAUPYTHON)
+		$(TAU_INSTALL) tau.py $(INSTALLDEST)
+		@echo Installing $(TAUPYTHON) and tau.py in $(TAUPYTHON_BINDINGSDIR)
+		@if [ -d $(TAUPYTHON_BINDINGSDIR) ] ; then true; \
+		    else mkdir $(TAUPYTHON_BINDINGSDIR); fi
+		cd $(TAUPYTHON_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../$(TAU_SHLIB) $(TAUPYTHON)
+
+install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL)
 
 # Rules
 Profile.class	: Profile.java
@@ -290,6 +307,23 @@ TauLinuxTimers.o : TauLinuxTimers.c $(HDRS)
 TauCallPath.o 	: TauCallPath.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+PyGroups.o 	: PyGroups.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+PyExceptions.o 	: PyExceptions.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+PyDatabase.o 	: PyDatabase.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+PyBindings.o 	: PyBindings.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+PyTimer.o 	: PyTimer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+PyTau.o 	: PyTau.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
