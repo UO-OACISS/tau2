@@ -546,7 +546,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 	if (strcmp(eventDescr->Param, "TriggerValue\n") == 0)
         { /* it is a user defined event */
           if (*cb.DefUserEvent)
-	    (*cb.DefUserEvent)(cb.UserData, localEventId, eventDescr->EventName);
+	    (*cb.DefUserEvent)(cb.UserData, localEventId, eventDescr->EventName, eventDescr->Tag);
 	}
 	else
         { /* it is not a user defined event */
@@ -577,6 +577,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2004/07/26 23:59:52 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.3 2004/07/26 23:59:52 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 2004/08/13 00:48:16 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.4 2004/08/13 00:48:16 sameer Exp $ 
  ***************************************************************************/
