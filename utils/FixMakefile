@@ -541,6 +541,14 @@ fi
 	echo "NOTE: Using usertime + system time for Profiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PAPIWALLCLOCK)
+	echo "NOTE: Using PAPI's low overhead wall clock time"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PAPIVIRTUAL)
+	echo "NOTE: Using PAPI's CPU Time (process virtual time)"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PROFILESTATS)
 	echo "NOTE: Using Profile Statistics (Std. Dev. of Excl time/counts)"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
