@@ -1606,9 +1606,9 @@ static void PrintFuncTab (struct p_prof_elem *tab, double total, int max)
       } /* cumusec > 0 */
       else {
 #ifdef USE_LONG
-        printf ("  0.0           0           0 %8ld %8ld          0 ",
+        printf ("  0.0            0            0 %8ld %8ld          0 ",
 #else // DEFAULT double 
-        printf ("  0.0           0           0 %8G %8G          0 ",
+        printf ("  0.0            0            0 %8G %8G          0 ",
 #endif // USE_LONG 
           tab[i].numcalls,
           tab[i].numsubrs);
@@ -1648,9 +1648,9 @@ static void PrintFuncTab (struct p_prof_elem *tab, double total, int max)
     } /* o_cumusec > 0 */
     else {
 #ifdef USE_LONG
-      printf ("  0.0           0           0 %8ld %8ld          0 ",
+      printf ("  0.0            0            0 %8ld %8ld          0 ",
 #else // DEFAULT double 
-      printf ("  0.0           0           0 %8G %8G          0 ",
+      printf ("  0.0            0            0 %8G %8G          0 ",
 #endif // USE_LONG 
         o_numcalls, o_numsubrs);
       if (profilestats) printf("%10.4G ", o_stddeviation);
@@ -2927,7 +2927,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 1999/07/22 23:30:26 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.17 1999/07/22 23:30:26 sameer Exp $                                                   
+ * $Revision: 1.18 $   $Date: 1999/08/19 23:50:28 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.18 1999/08/19 23:50:28 sameer Exp $                                                   
  ***************************************************************************/
 
