@@ -166,11 +166,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC' and 'pgCC'"
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs' and 'pgCC'"
 #      exit 1
     fi
     shift
@@ -678,6 +678,12 @@ case $cxx_compiler in
       # No fixmakeargs needed because it is the default
       ;;
 
+   egcs)
+      echo "Default C++ compiler will be " \
+         `egcs -v 2>&1 | tail -1 | sed 's/gcc/egcs/g'`
+      # No fixmakeargs needed because it is the default
+      ;;
+
    cxx)
       echo "Default C++ compiler will be the DEC cxx C++ compiler"
       fixmakeargs="$fixmakeargs USE_DECCXX"
@@ -702,13 +708,13 @@ case $cxx_compiler in
    pgCC)
       echo "Default C++ compiler will be PGI pgCC C++ Compiler"
       pgi=yes
-      pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l`
+      pgiflag=`pgCC -help | head -1 | grep 1. | wc -l`
       if [ $pgiflag = 1 ] 
       then
-	echo  "Using PGI ver 1.7 Compiler"
+	echo  "Using PGI ver 1.6/1.7 Compiler"
         fixmakeargs="$fixmakeargs PGI PGI1.7"
       else
-        fixmakeargs="$fixmakeargs PGI"
+        fixmakeargs="$fixmakeargs PGI PGICC"
       fi
       ;;
 
@@ -783,6 +789,30 @@ stdinc=`$cxx_compiler -E get_stdinc.C | awk -f find_stdinc.awk`
 rm -f get_stdinc.C find_stdinc.awk
 
 ######################################################################
+cat <<EOF > get_typeinfo1.C
+#include <typeinfo> 
+using std::type_info;
+EOF
+
+if $cxx_compiler $useropt -c get_typeinfo1.C 1> /dev/null 2>&1 
+then 
+  echo "C++ compiler supports Std Runtime Type Information (default)"
+else
+cat <<EOF > get_typeinfo2.C
+#include <typeinfo.h>
+EOF
+  if $cxx_compiler $useropt -c get_typeinfo2.C 1> /dev/null 2>&1 
+  then
+    echo "C++ compiler supports RTTI"
+    fixmakeargs="$fixmakeargs RTTI"
+  else
+    echo "C++ compiler doesn't support Runtime Type Information"
+    fixmakeargs="$fixmakeargs NORTTI"
+  fi 
+fi
+rm -f get_typeinfo1.C get_typeinfo2.C get_typeinfo*.o
+
+######################################################################
 # Save C++ compiler, C compiler, and USEROPT for build
 
 echo "$machine: cxx         = $cxx_compiler" >> ./build/Config.info
@@ -829,9 +859,18 @@ rm -f /tmp/tau$$.C tau$$.o
 ######################################################################
 # test whether C++ compiler supports Std C++ Library (KAI KCC compiler) 
 echo "Testing for Standard C++ Library support for string class"
-echo "#include <string> "  > /tmp/tau$$.C
-echo "using std::string;" >> /tmp/tau$$.C
-echo "void foo(void) { string s1; return; }" >> /tmp/tau$$.C
+cat <<EOF > /tmp/tau$$.C
+#include <string>
+#include <vector>
+#include <list>
+#include <map>
+using std::string;
+using std::vector;
+using std::pair;
+using std::list;
+using std::map;
+void foo(void) { string s1; return; }
+EOF
 
 if $cxx_compiler -c /tmp/tau$$.C 1> /dev/null 2>&1
 then 
@@ -865,8 +904,7 @@ fi
 
 
 ######################################################################
-# g++ at this time does not support RTTI. 
-if [ $cxx_compiler = g++ ]   
+if [ $cxx_compiler = g++ -o $cxx_compiler = egcs ]   
   then
     fixmakeargs="$fixmakeargs GNU"
 fi
