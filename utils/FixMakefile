@@ -87,6 +87,11 @@ fi
 	echo "s,^PTDIR=.*$,PTDIR=$ptdir,g" >> $sedout
 	;;
 
+     pcldir=*)
+        pcldir=`echo $1 | sed -e 's/^pcldir=//'`
+	echo "s,^PCLDIR=.*$,PCLDIR=$pcldir,g" >> $sedout
+	;;
+
      tulipdir=*)
         tulipdir=`echo $1 | sed -e 's/^tulipdir=//'`
 	echo "s,^TULIPDIR=.*$,TULIPDIR=$tulipdir,g" >> $sedout
@@ -398,6 +403,14 @@ fi
 	;;
      SMARTS)
 	echo "NOTE: Using SMARTS interface for Tulip threads. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PCL)
+	echo "NOTE: Using PCL interface for Hardware Performance Counters ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PCLPTHREAD)
+	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LWP_AVAILABLE)
