@@ -349,6 +349,11 @@ ARCHalpha
 ARCHapple 
 # endif 
 
+#if defined(__hiuxmpp)
+#  define _havehosttype_ 
+ARCHhitachi
+# endif 
+
 # if defined(m88k) || defined(__m88k__)
 #   ifndef _havehosttype_
 #     define _havehosttype_

@@ -26,8 +26,11 @@ if ( ${?CCOM} == "0" ) then
   set CCOM=cc
 endif
 
-set ARCH=`$CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'`
-
+if ( `uname -s ` == "HI-UX/MPP" ) then 
+  set ARCH=`$CCOM -msg=e -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+else
+  set ARCH=`$CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+endif 
 # I HATE THIS CRAP!!!!
 # The !@!^&*% SUN Solaris compiler (slumpro) does not seem to define any
 # unique -D<defines> that separates it from cc for SunOS machines.
