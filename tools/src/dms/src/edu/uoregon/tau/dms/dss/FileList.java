@@ -24,7 +24,7 @@ public class FileList{
     //it can be a file or a directory.
     //Returns a MetricFileList array of length 0 if no files are obtained.
     public Vector getFileList(File f, Component component, int type, String filePrefix, boolean debug){
-	Vector result = new Vector();
+	this.fileList = new Vector();
 
 	//Check to see if type is valid.
 	if(type>6 && (type <= 100 || type > 101)){
@@ -53,7 +53,7 @@ public class FileList{
 		//Validate the selection.  See above method description for an explanation.
 		if(selection.length == 0){
 		    System.out.println("No files selected!");
-		    return result;
+		    return this.fileList;
 		}
 		else if(selection.length > 1){
 		    for(int i=0;i<selection.length;i++){
@@ -61,7 +61,7 @@ public class FileList{
 			    JOptionPane.showMessageDialog(component,"Choose one or more files OR a single directory",
 							  "File Selection Error",
 							  JOptionPane.ERROR_MESSAGE);
-			    return result;
+			    return this.fileList;
 			}
 		    }
 		}
@@ -76,47 +76,18 @@ public class FileList{
 	    //If here, selection is valid.
 	    if(selection.length == 1){
 		if(selection[0].isDirectory()){
-		    if(filePrefix==null){
-			//Get prefix.
-			switch(type){
-			case 0:
-			    filePrefix = JOptionPane.showInputDialog("Enter file prefix", "pprof");
-			    if((filePrefix == null) || "".equals(filePrefix))
-				filePrefix = "pprof";
-			    break;
-			case 1:
-			    filePrefix = JOptionPane.showInputDialog("Enter file prefix", "profile");
-			    if((filePrefix == null) || "".equals(filePrefix))
-				filePrefix = "profile";
-			    break;
-			case 2:
-			    filePrefix = JOptionPane.showInputDialog("Enter file prefix");
-			    if((filePrefix == null) || "".equals(filePrefix)){
-				System.out.println("No prefix given!");
-				return new Vector();
-			    }
-			    break;
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 101:
-			    filePrefix = JOptionPane.showInputDialog("Enter file prefix");
-			    if((filePrefix == null) || "".equals(filePrefix)){
-				System.out.println("No prefix given!");
-				return new Vector();
-			    }
-			    break;
-			default:
-			    break;
-			}
-		    }
-
+		    if(filePrefix==null)
+			return new Vector(); //We need a prefix when searching in a directory, so just return and empty Vector object.
+		    
+		    //Type 0 and type 1 options correspond to pprof and profile.x.x.x outputs respectively. With this
+		    //form of output it is possible that the current directory contains the required data files, or
+		    //sub-directories with the prefix of "MULTI__" in their name.
 		    if(type==0 || type==1){
-			//First try and find a .dat file in the selected directory.
+			//First try and find a .dat file in the selected directory, and if none exist,
+			//then check to see if multiple counter directories are present.
 			files = this.helperGetFileList(selection[0], type, filePrefix, debug);
 			if(files.length > 0)
-			    result.add(files);
+			    this.fileList.add(files);
 			else{
 			    files = selection[0].listFiles();
 			    Vector v = new Vector();
@@ -132,25 +103,27 @@ public class FileList{
 				    file = (File)(v.elementAt(i));
 				    files = this.helperGetFileList(file, type, filePrefix, debug);
 				    if(files.length > 0)
-					result.add(files);
+					this.fileList.add(files);
 				}
 			    }
 			}
 		    }
+		    //All other types at present just use the current directory to search for files.
+		    //Therefore, a call to helperGetFileList(...) will resolve these files if present.
 		    else if(type==2 || type==3 || type==4 || type== 5 || type==6 || type==101){
 			files = this.helperGetFileList(selection[0], type, filePrefix, debug);
 			if(files.length > 0)
-			    result.add(files);
+			    this.fileList.add(files);
 		    }
 		}
 		else{
-		    result.add(selection);
+		    this.fileList.add(selection);
 		}
 	    }
 	    else{ //More than one file in selection (already checked for zero).
-		result.add(selection);
+		this.fileList.add(selection);
 	    }
-	    return result;
+	    return this.fileList;
 	}
 	catch(NullPointerException e){
 	    System.out.println("An error occurred getting file list:");
@@ -210,6 +183,7 @@ public class FileList{
 		    System.out.println("DEBUG MESSAGE");
 		    System.out.println("FileList.helperGetFileList(...):");
 		    System.out.println("type: " + type);
+		    System.out.println("File prefix: " + filePrefix);
 		    System.out.println("directry:" + directoryPath);
 		    System.out.println("End - DEBUG MESSAGE");
 		    System.out.println("####################################");
@@ -295,6 +269,15 @@ public class FileList{
 	else
 	    return files;
     }
+
+    public void setFileList(Vector fileList){
+	this.fileList = fileList;}
+
+    public Vector getFileList(){
+	return fileList;}
+
+    public void setPath(String path){
+	this.path = path;}
 
     public String getPath(){
 	return path;
@@ -431,6 +414,7 @@ public class FileList{
     //####################################
     //This stores the path to the last file list
     //obtained by a call to FileList.getFileList(...).
+    Vector fileList = null;
     String path = null;
     //####################################
     //End - Instance data.

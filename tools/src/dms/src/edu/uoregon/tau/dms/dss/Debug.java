@@ -30,7 +30,7 @@ public class Debug{
     //####################################
     public void outputToFile(String s){
 	if(out!=null)
-	    out.println(s);
+	    out.println("\n######\n"+s+"\n######");
 	else
 	    System.out.println(s);
     }

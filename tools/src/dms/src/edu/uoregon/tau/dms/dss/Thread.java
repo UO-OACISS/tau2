@@ -111,7 +111,7 @@ public class Thread implements Comparable{
 	}
 
 	if(this.debug){
-	    this.outputDebugMessage("\n######"+"\n#"+this.toString()+"\n#addFuntion(...)\n#id:"+id+"\n#name:"+ref.getMappingName()+"\n#added?:"+added+"\n#functions.size():"+functions.size()+"\n######");
+	    this.outputDebugMessage("addFuntion(...)\nid:"+id+"\nname:"+ref.getMappingName()+"\nadded?:"+added+"\nfunctions.size():"+functions.size());
 	}
     }
     
@@ -137,7 +137,7 @@ public class Thread implements Comparable{
 	}
 
 	if(this.debug){
-	    this.outputDebugMessage("######"+"\n#"+this.toString()+"\n#addUserevent(...)\n#id:"+id+"\n#name:"+ref.getMappingName()+"\n#added?:"+added+"\n#userevents.size():"+userevents.size()+"\n######");
+	    this.outputDebugMessage("addUserevent(...)\nid:"+id+"\nname:"+ref.getMappingName()+"\nadded?:"+added+"\nuserevents.size():"+userevents.size());
 	}
     }
   
@@ -251,7 +251,7 @@ public class Thread implements Comparable{
 	return debug;}
 
     public void outputDebugMessage(String debugMessage){
-	UtilFncs.objectDebug.outputToFile(debugMessage);}
+	UtilFncs.objectDebug.outputToFile(this.toString()+"\n"+debugMessage);}
 
     public String toString(){
 	return this.getClass().getName()+": "+this.getNodeID()+","+this.getContextID()+","+this.getThreadID();}
@@ -332,7 +332,7 @@ public class Thread implements Comparable{
 	}
 	
 	if(this.debug){
-	    this.outputDebugMessage("######"+"\n#"+this.toString()+"\n#setThreadDataHelper(...)\n#maxInclusiveValue:"+maxInclusiveValue+"\n#maxExclusiveValue:"+maxExclusiveValue+"\n#maxInclusivePercentValue:"+maxInclusivePercentValue+"\n#maxExclusivePercentValue:"+maxExclusivePercentValue+"\n#maxUserSecPerCall:"+maxUserSecPerCall+"\n#maxNumberOfCalls:"+maxNumberOfCalls+"\n#maxNumberOfSubroutines:"+maxNumberOfSubroutines+"\n######");
+	    this.outputDebugMessage("setThreadDataHelper(...)\nmaxInclusiveValue:"+maxInclusiveValue+"\nmaxExclusiveValue:"+maxExclusiveValue+"\nmaxInclusivePercentValue:"+maxInclusivePercentValue+"\nmaxExclusivePercentValue:"+maxExclusivePercentValue+"\nmaxUserSecPerCall:"+maxUserSecPerCall+"\nmaxNumberOfCalls:"+maxNumberOfCalls+"\nmaxNumberOfSubroutines:"+maxNumberOfSubroutines);
 	}
 
 	this.setMaxInclusiveValue(metric, maxInclusiveValue);

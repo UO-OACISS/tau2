@@ -23,10 +23,20 @@ import java.util.*;
 
 public class TauPprofOutputSession extends ParaProfDataSession{
 
+    //####################################
+    //Public Section.
+    //####################################
+
+    //######
+    //Contructors.
+    //######
     public TauPprofOutputSession(){
 	super();
 	this.setMetrics(new Vector());
     }
+    //######
+    //End - Contructors.
+    //######
 
     public void run(){
 	try{
@@ -443,9 +453,26 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		});
 	}
         catch(Exception e){
-	    UtilFncs.systemError(e, null, "SSD01");
+	    UtilFncs.systemError(new ParaProfError(this.toString()+": run()", null,
+						   "An error occured whilst trying to load!\nExpected format to be of type \"pprof\".",
+						   "Please check for the correct file type or a corrupt file.",
+						   e, null, null, null, false,false, false),null,null);
+	    if(this.debug())
+		this.outputDebugMessage(this.toString()+": run()\nAn error occured whilst trying to load!\nExpected format to be of type \"profiles\".");
 	}
     }
+
+    public void outputDebugMessage(String debugMessage){
+	UtilFncs.objectDebug.outputToFile(this.toString()+"\n"+debugMessage);}
+
+    public String toString(){
+	return this.getClass().getName();}
+
+    public static void main(String[] args){
+    }
+    //####################################
+    //End - Public Section.
+    //####################################
     
     //####################################
     //Private Section.
