@@ -22,6 +22,7 @@
 **			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
+**                        -DPROFILE_CALLSTACK to enable callstack traces  **
 **	Documentation	: See http://www.acl.lanl.gov/tau	          **
 ***************************************************************************/
 #ifndef PROFILER_H
@@ -160,12 +161,12 @@ public:
 
 
 
-  // Mike K.'s call stack edits--------------------------------------
-  //#ifdef PROFILE_CALLSTACK 
+// Mike K.'s call stack edits--------------------------------------
+#ifdef PROFILE_CALLSTACK 
   double InclTime_cs;
   double ExclTime_cs;
-  //#endif  // PROFILE_CALLSTACK
-  //------------------------------------------------------------------
+#endif  // PROFILE_CALLSTACK
+//------------------------------------------------------------------
 
 private:
 
@@ -236,13 +237,12 @@ FunctionInfo::IncrNumCalls(void)
 	NumCalls++; // Increment number of calls
 } 
 
-// #ifdef PROFILE_CALLSTACK   -mrk callstack
+
 inline void
 FunctionInfo::IncrNumSubrs(void)
 {
   NumSubrs++;  // increment # of subroutines
 }
-// #endif  // PROFILE_CALLSTACK
 
 inline void
 FunctionInfo::SetAlreadyOnStack(bool value)
@@ -284,7 +284,7 @@ public:
   	static void ProfileExit(const char *message=0);
 	int StoreData(void); 
 
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) ) 
+#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
 	double ExclTimeThisCall; // for this invocation of the function
 #endif // PROFILE_CALLS || PROFILE_STATS
@@ -296,12 +296,12 @@ public:
 
 
 
-  // Mike K.'s call stack edits---------------------------------------------
-  //#ifdef PROFILE_CALLSTACK
+// Mike K.'s call stack edits---------------------------------------------
+#ifdef PROFILE_CALLSTACK
   double InclTime_cs;
   double ExclTime_cs;
   void CallStackTrace();
-  //#endif // PROFILE_CALLSTACK 
+#endif // PROFILE_CALLSTACK ----------------------------------------------
 
 private:
 	unsigned int MyProfileGroup_;
@@ -438,7 +438,7 @@ class RtsLayer
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 1997/12/29 23:05:22 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.6 1997/12/29 23:05:22 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: mikek $
+ * $Revision: 1.7 $   $Date: 1998/01/06 00:33:56 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.7 1998/01/06 00:33:56 mikek Exp $ 
  ***************************************************************************/
