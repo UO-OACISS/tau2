@@ -90,7 +90,7 @@ evalWithDebugMessage() {
 	echoIfVerbose "\n\nDebug: $2"
 	echoIfVerbose "Executing>  $1"
 	eval $1
-	echoIfVerbose "....."
+#	echoIfVerbose "....."
 }
 
 if [ $isDebug == $TRUE ]; then
