@@ -50,10 +50,16 @@ set racy_progfile "";   # the single program file
 
 set tcl_precision 17
 
+#set Colors [list \
+#    magenta green red blue yellow purple orange gold brown \
+#    tan grey coral forestgreen skyblue seagreen beige steelblue1 royalblue \
+#    pink cyan violet snow steelblue white ]
+
 set Colors [list \
-    magenta green red blue yellow purple orange gold brown \
-    tan grey coral forestgreen skyblue seagreen beige steelblue1 royalblue \
-    pink cyan violet snow steelblue white ]
+    coral  lavender cornflowerblue turquoise yellow palevioletred \
+    mediumaquamarine dodgerblue1 salmon cadetblue1 orchid peachpuff1 \
+    springgreen papayawhip hotpink royalblue mistyrose powderblue \
+    chartreuse plum ] 
 
 set TextColors [list \
     black black black white black white black black white \
@@ -391,7 +397,11 @@ proc showText {node name} {
     } else {
       set textorder2($node) $proforder(all)
     }
-    toplevel .text$node
+
+    #toplevel .text$node
+    #wm title .text$node "$name profile"
+    set win2 [ toplevel .text$node]
+    wm minsize $win2 1000 250
     wm title .text$node "$name profile"
 
     frame .text$node.mbar -relief raised -borderwidth 2
@@ -461,9 +471,13 @@ proc redrawText {node name} {
   global textorder1 textorder2
   global pr_sel_tag
   global racy_progfile alltags
+  global newver
+  global heading
+  global column
+
 
   if [DEBUG] {
-    puts "\nredrawText"
+    puts "\nredrawText:"
     puts "  node: $node"
     puts "  name: $name"
   }
@@ -484,33 +498,65 @@ proc redrawText {node name} {
     $win delete 1.0 end
     $win configure -height [min 35 [expr 3+[llength $tags]]]
   } else {
-    text $win -height [min 35 [expr 3+[llength $tags]]] \
-      -background white -foreground black -padx 5 -pady 5
+      text $win -height [min 35 [expr 3+[llength $tags]]] \
+	  -background white -foreground black -padx 5 -pady 5
   }
 
   # -- redraw text area
+  if { $newver == 1 } {
+    $win insert end \
+     "---------------------------------------------------------------------------------------------------------------\n"
+    foreach line $heading {
+       $win insert end "$line\n"
+    }
+    $win insert end \
+     "---------------------------------------------------------------------------------------------------------------\n"
+  } else {
   $win insert end \
-    "-----------------------------------------------------------------------------------\n"
+    "---------------------------------------------------------------------------------------------------\n"
   $win insert end \
-    "%time         msec   total msec    #call  usec/call name\n"
+    "%time         msec   total msec    #call   #subrs  usec/call name\n"
   $win insert end \
-    "-----------------------------------------------------------------------------------\n"
+    "---------------------------------------------------------------------------------------------------\n"
+  }
   set n 3
   set txt [order $textorder2($node) $node $tags $v text {}]
+
   foreach line $txt {
     incr n
+
     set t [lindex $tags [expr $n-4]]
     if { $line == "" } {
-      $win insert end \
-           "                                                    $tagname($t)\n"
+	if { $column == 8 } {
+	    $win insert end \
+		  "                                                                        $tagname($t)\n"
+	} else {
+	    $win insert end \
+	       "                                                             $tagname($t)\n"
+	}
     } else {
       $win insert end "$line\n"
+
+
       if { $t == $pr_sel_tag } {
-        $win tag add seltag $n.0 $n.51
+	  if { $column == 8} {
+	      $win tag add seltag $n.0 $n.71
+	  } else { 
+	      $win tag add seltag $n.0 $n.61
+	  }
         $win tag configure seltag -foreground red
       }
     }
-    $win tag add t$n $n.52 "$n.52 lineend"
+    #$win tag add t$n $n.61 "$n.61 lineend"
+    if { $newver == 1 } {
+	if { $column == 8} {
+	    $win tag add t$n $n.72 "$n.72 lineend"
+	} else {
+	    $win tag add t$n $n.61 "$n.61 lineend"
+	}
+    } else {
+        $win tag add t$n $n.61 "$n.61 lineend"   
+    }
     if { [winfo depth .] == 2 } {
       $win tag configure t$n -background white -foreground black
     } else {
@@ -807,7 +853,8 @@ proc showBargraph {node name} {
 
     set win [toplevel .bar$node]
     wm title $win "$name profile"
-    wm minsize $win 250 250
+    #wm minsize $win 250 250
+    wm minsize $win 500 250
 
     bargraphmenu .bar$node bar redrawBargraph $node {$name}
     redrawBargraph $node {$name}
@@ -1284,6 +1331,9 @@ proc readProfile {} {
 	    evcol evstip evname \
 	    coll colls \
 	    aggr aggrs \
+	    newver \
+	    heading \
+	    column \
 	    BINDIR REMBINDIR REMSH TAUDIR
 
     set dir $depfile(dir)
@@ -1314,6 +1364,7 @@ proc readProfile {} {
 
     # -- read header: 1) name of corresponding depfile
     # --              2) number of profiled functions
+    # --              3) column headings, #-line
     if { [gets $in line] <= 0 } {
 	showError "environment variables not configured correctly in racy"
 	return NOT_OK
@@ -1321,6 +1372,25 @@ proc readProfile {} {
     scan $line "%s" depfile(file)
     gets $in line
     scan $line "%d" numfunc
+    set f [lindex $line 1]
+    if {$f == "templated_functions" || $f == "templated_functions_hw_counters" } {
+	set newver 1
+	#read line 3, the heading & count number of columns
+	gets $in line
+	set column [expr [llength $line]-1]
+	lappend heading $line
+    } else {
+	set newver 0
+	#check if the profile includes standard deviation
+	#set two [lindex $line 2]
+	#set three [lindex $line 3]
+	#if {$two == "-stddev" || $three == "-stddev"} {
+	#    set stddev 1
+	#} else {
+	#    set stddev 0
+	#}
+    }
+   
 
     # -- init
     set depfile(path) $dir/$depfile(file)
@@ -1440,7 +1510,7 @@ proc readProfile {} {
 	    }
 	} else {
 	    # -- function profile data
-	    #scan $line "%s %d %s %s %g %f" node tag name mode usec per
+	    #scan $line "%s %d %s %s %g %g %f" node tag name mode usec per
 	    set tag   [lindex $line 1]
 	    set name  [lindex $line 2]
 	    set mode  [lindex $line 3]
@@ -1555,6 +1625,8 @@ proc showFuncgraph {tag} {
   global funcvalue funcmode funcunit
   global proforder profvalue profmode profunit
   global tagname
+
+  
 
   if { ! [winfo exists .func$tag] } {
     set funcvalue($tag) $profvalue(all)
@@ -2164,6 +2236,8 @@ proc redraw {dummy1 dummy2} {
   global proforder profvalue profmode profunit
   global collmode colls aggrmode aggrs
 
+
+
   # -- redraw node and text node profile windows
   set i 0
   foreach n $funodes {
@@ -2195,6 +2269,7 @@ proc redraw {dummy1 dummy2} {
       } else {
         set textorder2($n) $proforder(all)
       }
+
       redrawText $n [lindex $fulabels $i]
     }
     incr i
@@ -2475,7 +2550,7 @@ proc mainmenu {parent prefix func node name} {
 	      -command showEventLegend
   }
 
-  $menubar.b1.m1 add command -label "print Functions" -underline 6 \
+  $menubar.b1.m1 add command -label "print Functions" -underline 0 \
                     -command "printCanvas .$myself.fu.bar profile.fu"
   if [llength $colls] {
       $menubar.b1.m1 add command -label "print Collections" -underline 6 \
@@ -2828,15 +2903,15 @@ set profunit(all) 1.0
 # racy is currently a standalone tool
 set ALONE_SET 1
 if {$argc == 0} {
-  set parg [pwd]
+    set parg [pwd]
 } elseif {$argc == 1} {
-  set parg [lindex $argv 0]
-  if {[file extension $parg] != ".pmf"} {
-    set parg "$parg.pmf"
-  }
+    set parg [lindex $argv 0]
+    if {[file extension $parg] != ".pmf"} {
+	set parg "$parg.pmf"
+    }
 } else {
-  puts stderr "usage: $myself \[\[host:\]projFile \| \[host:\]directory\]"
-  exit
+    puts stderr "usage: $myself \[\[host:\]projFile \| \[host:\]directory\]"
+    exit
 }
 
 # if want other than standalone tool, comment out above
@@ -2895,6 +2970,7 @@ if {[lindex $pm_status 0] == "NO_PROJECT"} {
     }
 
     set projfile [PM_OpenProject $patharg $hostarg]
+
     if {$projfile == "NO_PROJECT"} {
         showError "No project opened!"
         exit
@@ -2907,6 +2983,7 @@ set depfile(host)    [lindex $pm_status 1]
 set depfile(arch)    [lindex $pm_status 2]
 set depfile(root)    [lindex $pm_status 3]
 set depfile(dir)     [lindex $pm_status 4]
+
 
 # Check for language-tool compatibility
 if {![Lang_CheckCompatibility [PM_GetProjectLangs] $myself]} {
