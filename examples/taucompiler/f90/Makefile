@@ -17,7 +17,8 @@ include $(TAUROOTDIR)/include/Makefile
 # the source code. We can pass it optional arguments. See tau_compiler.sh -help
 
 #OPTS = -optVerbose -optPdtF95Opts="-R fixed" -optKeepFiles
-OPTS = -optVerbose -optCompile="$(TAU_F90_SUFFIX)"
+OPTS = -optVerbose -optReset="$(TAU_F90_SUFFIX) $(TAU_MPI_INCLUDE)"
+# Reset the compiler options to just $(TAU_F90_SUFFIX) and $(TAU_MPI_INCLUDE)
 F90=$(TAU_COMPILER) $(OPTS) $(TAU_F90) 
 LIBS= 
 INCLUDE=
