@@ -208,18 +208,18 @@ set pr_sel_tag -99;  # currently selected function
 #
 # bargraph: horizontal bargraph widget
 #
-#        win: pathname for bargraph
-#    bgtitle: title for bargraph
-# leftlabels: list of labels
-#    percent: list of percent values
-#     values: list of values
-#       tags: list of corresponding Sage++ id of functions
-#      nodes: list of corresponding node identifiers
-#             (if nonempty used instead of tags)
-#       mode: what to show as labels on the right side: per / val / none
+#         win: pathname for bargraph
+#     bgtitle: title for bargraph
+# rightlabels: list of labels
+#     percent: list of percent values
+#      values: list of values
+#        tags: list of corresponding Sage++ id of functions
+#       nodes: list of corresponding node identifiers
+#              (if nonempty used instead of tags)
+#        mode: what to show as labels on the right side: per / val / none
 #
 
-proc bargraph {win bgtitle leftlabels percent values tags {nodes {}} {mode per}} {
+proc bargraph {win bgtitle rightlabels percent values tags {nodes {}} {mode per}} {
   global tagcol tagstip
   global pr_sel_tag
   global racy_progfile
@@ -227,7 +227,7 @@ proc bargraph {win bgtitle leftlabels percent values tags {nodes {}} {mode per}}
   if [DEBUG] {
       puts " "
       puts "bargraph: "
-      puts "  leftlabels: $leftlabels"
+      puts "  rightlabels: $rightlabels"
       puts "  percent: $percent"
       puts "  values: $values"
       puts "  tags: $tags"
@@ -235,7 +235,7 @@ proc bargraph {win bgtitle leftlabels percent values tags {nodes {}} {mode per}}
       puts "  mode: $mode"
   }
 
-  set num [llength $leftlabels];  # number of bars
+  set num [llength $rightlabels];  # number of bars
 
   # -- create or reset canvas
   if { [winfo exists $win] } {
@@ -259,89 +259,198 @@ proc bargraph {win bgtitle leftlabels percent values tags {nodes {}} {mode per}}
   } else {
     set pers $percent
   }
-  
-  set max_llabel_width 0
-  for {set i 0} {$i<$num} {incr i} {
-    # -- create left labels; highlight selected functions in red
-    set t [lindex $tags $i]
-    if { $t == $pr_sel_tag } {
-      set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
-               -text "[lindex $leftlabels $i]" -anchor e -fill red \
-               -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
-    } else {
-      set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
-               -text "[lindex $leftlabels $i]" -anchor e \
-               -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
-    }
-    set bbox [$win bbox $ll_obj($i)]
-    set llabel_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
-    if {$llabel_width > $max_llabel_width} {set max_llabel_width $llabel_width}
 
-    # -- setup bindings for clicking on left labels
+#----------------------------------------------------------------------------
+# display function name on the left side of bar graph
+#----------------------------------------------------------------------------  
+#  set max_llabel_width 0
+#  for {set i 0} {$i<$num} {incr i} {
+#    # -- create left labels; highlight selected functions in red
+#    set t [lindex $tags $i]
+#    if { $t == $pr_sel_tag } {
+#      set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+#               -text "[lindex $leftlabels $i]" -anchor e -fill red \
+#               -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+#    } else {
+#      set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+#               -text "[lindex $leftlabels $i]" -anchor e \
+#               -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+#    }
+#    set bbox [$win bbox $ll_obj($i)]
+#    set llabel_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+#    if {$llabel_width > $max_llabel_width} {set max_llabel_width $llabel_width}
+#
+#    # -- setup bindings for clicking on left labels
+#    if { $nodes == {} } {
+#      $win bind $ll_obj($i) <Button-1> "showFuncgraph $t"
+#      # showFuncTag is not implemented by racy
+#      # $win bind $ll_obj($i) <Button-2> \
+#      #     "PM_GlobalSelect $racy_progfile global_showFuncTag $t"
+#      $win bind $ll_obj($i) <Button-3> \
+#	  "PM_GlobalSelect $racy_progfile global_selectFuncTag $t"
+#    } else {
+#      $win bind $ll_obj($i) <Button-1> \
+#	  "showBargraph [lindex $nodes $i] {[lindex $leftlabels $i]}"
+#      $win bind $ll_obj($i) <Button-2> \
+#	  "showText [lindex $nodes $i] {[lindex $leftlabels $i]}"
+#    }
+#  }
+#
+#  # -- create title
+#  set title [$win create text 0 20 \
+#		 -text "$bgtitle" -anchor e \
+#		 -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+#  set bbox [$win bbox $title]
+#  set title_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+#  set max_l_width [max $title_width $max_llabel_width]
+#  $win coords $title [expr $max_l_width+5] 20
+#
+#  set max_r_width 0
+#  for {set i 0} {$i<$num} {incr i} {
+#    # -- position left labels
+#    $win coords $ll_obj($i) [expr $max_l_width+5] [expr 40+$i*20]
+#
+#    # -- display bars and right labels according to mode
+#    set p [lindex $pers $i]
+#    if { $p > 0 } {
+#      set t [lindex $tags $i]
+#      $win create rectangle \
+#	  [expr $max_l_width+10]\
+#	  [expr 31+$i*20] \
+#	  [expr $max_l_width+10+$p*2] \
+#	  [expr 49+$i*20] \
+#	  -fill $tagcol($t) -stipple $tagstip($t)
+#      switch -exact $mode {
+#	  per   { set rl_obj [$win create text \
+#				  [expr $max_l_width+15+$p*2] \
+#				  [expr 40+$i*20] \
+#				  -text "[lindex $percent $i]%" -anchor w \
+#				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+#
+#	  val   { set rl_obj [$win create text \
+#				  [expr $max_l_width+15+$p*2] \
+#				  [expr 40+$i*20] \
+#				  -text "[wraplindex $values $i]" -anchor w \
+#				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+#
+#          none  {}
+#      }
+#      set bbox [$win bbox $rl_obj]
+#      set r_width [expr $p*2 + [lindex $bbox 2] - [lindex $bbox 0]]
+#      if {$r_width > $max_r_width} {set max_r_width $r_width}
+#    }
+#  }
+#
+#  set w [expr $max_l_width + $max_r_width + 20]
+#  set h [expr ($num+2)*20];       # height of window
+#  $win configure -scrollregion [list 0 0 $w $h]
+#  $win xview moveto 1; # to shift view of canvas to right
+
+
+#----------------------------------------------------------------------------
+# display function name on the right side of bar graph
+#----------------------------------------------------------------------------
+  set max_llabel_width 0
+  set max_bar_width 0
+  for {set i 0} {$i<$num} {incr i} {
+    # -- display leftt labels according to mode
+  if [DEBUG] {
+      puts "  pers: $pers"
+  }
+    set p [lindex $pers $i]
+    if { $p > 0 } {
+      # -- set the width of bar graph
+      set bar_width($i) [expr $p*2]
+      if {$bar_width($i) > $max_bar_width} {set max_bar_width $bar_width($i)}
+      # -- create left label according to its mode
+      switch -exact $mode {
+	  per   { set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+				  -text "[lindex $percent $i]%" -anchor e \
+				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+	  val   { set ll_obj($i) [$win create text 0 [expr 40+$i*20] \
+				  -text "[wraplindex $values $i]" -anchor e \
+				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
+
+          none  {}
+      }
+      set bbox [$win bbox $ll_obj($i)]
+      set llabel_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+      if {$llabel_width > $max_llabel_width} {set max_llabel_width $llabel_width}
+    }
+  }
+  set max_llabel_width [expr $max_llabel_width + 10]
+  set max_rlabel_width 0
+  for {set i 0} {$i<$num} {incr i} {
+    # -- create right labels/function names; highlight selected functions in red
+    set t [lindex $tags $i]
+    set p [lindex $pers $i]
+    if { $t == $pr_sel_tag } {
+      set rl_obj($i) [$win create text 0 [expr 40+$i*20] \
+                             -text "[lindex $rightlabels $i]" -anchor w -fill red \
+                             -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+    } else {
+      set rl_obj($i) [$win create text 0 [expr 40+$i*20] \
+                             -text "[lindex $rightlabels $i]" -anchor w \
+                             -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
+    }
+    set bbox [$win bbox $rl_obj($i)]
+    set rlabel_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
+    if {$rlabel_width > $max_rlabel_width} {set max_rlabel_width $rlabel_width}
+
+    # -- setup bindings for clicking on right labels
     if { $nodes == {} } {
-      $win bind $ll_obj($i) <Button-1> "showFuncgraph $t"
+      $win bind $rl_obj($i) <Button-1> "showFuncgraph $t"
       # showFuncTag is not implemented by racy
       # $win bind $ll_obj($i) <Button-2> \
       #     "PM_GlobalSelect $racy_progfile global_showFuncTag $t"
-      $win bind $ll_obj($i) <Button-3> \
+      $win bind $rl_obj($i) <Button-3> \
 	  "PM_GlobalSelect $racy_progfile global_selectFuncTag $t"
     } else {
-      $win bind $ll_obj($i) <Button-1> \
-	  "showBargraph [lindex $nodes $i] {[lindex $leftlabels $i]}"
-      $win bind $ll_obj($i) <Button-2> \
-	  "showText [lindex $nodes $i] {[lindex $leftlabels $i]}"
+      $win bind $rl_obj($i) <Button-1> \
+	  "showBargraph [lindex $nodes $i] {[lindex $rightlabels $i]}"
+      $win bind $rl_obj($i) <Button-2> \
+	  "showText [lindex $nodes $i] {[lindex $rightlabels $i]}"
     }
   }
 
   # -- create title
   set title [$win create text 0 20 \
-		 -text "$bgtitle" -anchor e \
+		 -text "$bgtitle" -anchor w \
 		 -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]
   set bbox [$win bbox $title]
   set title_width [expr [lindex $bbox 2] - [lindex $bbox 0]]
-  set max_l_width [max $title_width $max_llabel_width]
-  $win coords $title [expr $max_l_width+5] 20
+  set max_r_width [max $title_width $max_rlabel_width]
+  $win coords $title [expr $max_llabel_width + $max_bar_width + 5] 20
 
-  set max_r_width 0
+  # -- display bars and left labels according to mode
   for {set i 0} {$i<$num} {incr i} {
-    # -- position left labels
-    $win coords $ll_obj($i) [expr $max_l_width+5] [expr 40+$i*20]
-
-    # -- display bars and right labels according to mode
     set p [lindex $pers $i]
     if { $p > 0 } {
-      set t [lindex $tags $i]
-      $win create rectangle \
-	  [expr $max_l_width+10]\
+	# -- position left labels
+	$win coords $ll_obj($i) [expr $max_llabel_width+$max_bar_width-$bar_width($i)-5] \
+                            [expr 40+$i*20]
+
+	# -- display bars and right labels according to mode
+    
+	set t [lindex $tags $i]
+	$win create rectangle \
+	  [expr $max_llabel_width+$max_bar_width-1-$bar_width($i)]  \
 	  [expr 31+$i*20] \
-	  [expr $max_l_width+10+$p*2] \
+	  [expr $max_llabel_width+$max_bar_width] \
 	  [expr 49+$i*20] \
 	  -fill $tagcol($t) -stipple $tagstip($t)
-      switch -exact $mode {
-	  per   { set rl_obj [$win create text \
-				  [expr $max_l_width+15+$p*2] \
-				  [expr 40+$i*20] \
-				  -text "[lindex $percent $i]%" -anchor w \
-				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
-
-	  val   { set rl_obj [$win create text \
-				  [expr $max_l_width+15+$p*2] \
-				  [expr 40+$i*20] \
-				  -text "[wraplindex $values $i]" -anchor w \
-				  -font -Adobe-Helvetica-Bold-R-Normal--*-120-*]}
-
-          none  {}
-      }
-      set bbox [$win bbox $rl_obj]
-      set r_width [expr $p*2 + [lindex $bbox 2] - [lindex $bbox 0]]
-      if {$r_width > $max_r_width} {set max_r_width $r_width}
     }
+    # -- position right labels
+    $win coords $rl_obj($i) [expr $max_llabel_width + $max_bar_width + 5] \
+                            [expr 40+$i*20]
   }
 
-  set w [expr $max_l_width + $max_r_width + 20]
+  set w [expr $max_llabel_width + $max_bar_width + $max_rlabel_width + 40]
   set h [expr ($num+2)*20];       # height of window
   $win configure -scrollregion [list 0 0 $w $h]
-  $win xview moveto 1; # to shift view of canvas to right
+  #$win xview moveto 1; # to shift view of canvas to right
+
 }
 
 #
@@ -472,7 +581,9 @@ proc redrawText {node name} {
   global pr_sel_tag
   global racy_progfile alltags
   global newver
+  global stddev
   global heading
+  global mheading
   global column
 
 
@@ -480,6 +591,7 @@ proc redrawText {node name} {
     puts "\nredrawText:"
     puts "  node: $node"
     puts "  name: $name"
+    puts "  newver: $newver"
   }
 
   set win .text$node.text
@@ -503,22 +615,49 @@ proc redrawText {node name} {
   }
 
   # -- redraw text area
+
+  #if { $newver == 1 } {
+  #  $win insert end \
+  #   "---------------------------------------------------------------------------------------------------------------\n"
+  #  foreach line $heading {
+  #     $win insert end "$line\n"
+  #  }
+  #  $win insert end \
+  #   "---------------------------------------------------------------------------------------------------------------\n"
+  #} else {
+  #$win insert end \
+  #  "---------------------------------------------------------------------------------------------------\n"
+  #$win insert end \
+  #  "%time         msec   total msec    #call   #subrs  usec/call name\n"
+  #$win insert end \
+  #  "---------------------------------------------------------------------------------------------------\n"
+  #}
   if { $newver == 1 } {
     $win insert end \
      "---------------------------------------------------------------------------------------------------------------\n"
-    foreach line $heading {
-       $win insert end "$line\n"
+    if { $node == "m" && $stddev == 1 } {
+	foreach line $mheading {
+	   $win insert end "$line\n"
+	   set column [expr [llength $line]-1]
+	}
+    } else {
+	foreach line $heading {
+	   $win insert end "$line\n"
+	   set column [expr [llength $line]-1]
+	}
     }
     $win insert end \
-     "---------------------------------------------------------------------------------------------------------------\n"
+      "---------------------------------------------------------------------------------------------------------------\n"
   } else {
-  $win insert end \
-    "---------------------------------------------------------------------------------------------------\n"
-  $win insert end \
-    "%time         msec   total msec    #call   #subrs  usec/call name\n"
-  $win insert end \
-    "---------------------------------------------------------------------------------------------------\n"
-  }
+    $win insert end \
+     "---------------------------------------------------------------------------------------------------\n"
+    $win insert end \
+     "%time         msec   total msec    #call   #subrs  usec/call name\n"
+    $win insert end \
+     "---------------------------------------------------------------------------------------------------\n"
+  } 
+
+
   set n 3
   set txt [order $textorder2($node) $node $tags $v text {}]
 
@@ -585,6 +724,15 @@ proc redrawText {node name} {
 
 proc order {source target tags value field NA} {
   global data alltags
+  if [DEBUG] {
+    puts "\norder:"
+    puts "  source: $source"
+    puts "  target: $target"
+    puts "  tags: $tags"
+    puts "  value: $value"
+    puts "  field: $field"
+    puts "  NA: $NA"
+  }
 
   if { $source == $target } {
     return $data($target,$value$field)
@@ -998,11 +1146,28 @@ proc multiFuncgraph {win leftlabels nodes percents tags} {
     set p [lindex $percents $i]
     set sum 0.0
     for {set j 0} {$j<[llength $p]} {incr j} {
+      #if { [lindex $p $j] > 0 } {
+      #  set obj [$win create rectangle \
+      #		[expr $max_rlabel_width+10+$sum*2] \
+      #		[expr 29+$i*20] \
+      #		[expr $max_rlabel_width+10+($sum+[lindex $p $j])*2] \
+      #		[expr 11+$i*20]\
+      #		-fill $tagcol([lindex $tags $j]) \
+      #		-stipple $tagstip([lindex $tags $j])]
+      #  set t [lindex $tags $j]
+      #  $win bind $obj <Button-1> "showFuncgraph $t"
+      #	# showFuncTag is not implemented by racy
+      #  # $win bind $obj <Button-2> "PM_GlobalSelect $racy_progfile global_showFuncTag $t"
+      #  $win bind $obj <Button-3> "PM_GlobalSelect $racy_progfile global_selectFuncTag $t"
+      #  set sum [expr $sum+[lindex $p $j]]
+      # }
+
+      #fix the jagged edge of multiFuncgraph
       if { [lindex $p $j] > 0 } {
         set obj [$win create rectangle \
 		[expr $max_rlabel_width+10+$sum*2] \
 		[expr 29+$i*20] \
-		[expr $max_rlabel_width+10+($sum+[lindex $p $j])*2] \
+		[expr $max_rlabel_width+11+($sum+[lindex $p $j])*2] \
 		[expr 11+$i*20]\
 		-fill $tagcol([lindex $tags $j]) \
 		-stipple $tagstip([lindex $tags $j])]
@@ -1014,7 +1179,7 @@ proc multiFuncgraph {win leftlabels nodes percents tags} {
         set sum [expr $sum+[lindex $p $j]]
       }
     }
-  }
+  } 
 
   set w [expr $max_rlabel_width + 230]
   $win configure -width $w
@@ -1332,7 +1497,9 @@ proc readProfile {} {
 	    coll colls \
 	    aggr aggrs \
 	    newver \
+	    stddev \
 	    heading \
+	    mheading \
 	    column \
 	    BINDIR REMBINDIR REMSH TAUDIR
 
@@ -1376,9 +1543,47 @@ proc readProfile {} {
     if {$f == "templated_functions" || $f == "templated_functions_hw_counters" } {
 	set newver 1
 	#read line 3, the heading & count number of columns
-	gets $in line
-	set column [expr [llength $line]-1]
-	lappend heading $line
+#	gets $in line
+#	set column [expr [llength $line]-1]
+#	lappend heading $line
+
+	#check if the profile includes standard deviation
+	set two [lindex $line 2]
+	set three [lindex $line 3]
+	if {$two == "-stddev" || $three == "-stddev"} {
+	    set stddev 1
+	    gets $in line
+	    set column [expr [llength $line]-1]
+	    #lappend heading $line
+	    #gets $in line
+	    #lappend mheading $line
+	    if { $column == 0 } {
+		lappend heading $line
+	    } else {
+		#if there is old heading, delete old heading
+		set heading {}
+		lappend heading $line
+	    }
+	    gets $in line
+	    set length [expr [llength $line]-1] 
+	    if { $length == 0 } {
+		lappend mheading $line
+	    } else {
+		set mheading {}
+		lappend mheading $line
+	    }
+	} else {
+	    set stddev 0
+	    gets $in line
+	    set column [expr [llength $line]-1]
+	    if { $column == 0 } {
+		lappend heading $line
+	    } else {
+		#if there is old heading, delete old heading
+		set heading {}
+		lappend heading $line
+	    }
+	}
     } else {
 	set newver 0
 	#check if the profile includes standard deviation
@@ -2695,7 +2900,8 @@ proc loadProfile {} {
 
   # -- reset global configuration parameters
   set profvalue(all) excl
-  set proforder(all) glob
+  #set proforder(all) glob
+  set proforder(all) all
   set profmode(all) per
   set profunit(all) 1.0
 
@@ -2896,7 +3102,8 @@ proc initRacy {} {
 
 
 set profvalue(all) excl
-set proforder(all) glob
+#set proforder(all) glob
+set proforder(all) all
 set profmode(all) per
 set profunit(all) 1.0
 
