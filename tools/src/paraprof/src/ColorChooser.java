@@ -807,7 +807,7 @@ class CustomCellRenderer implements ListCellRenderer
           
           
           //Create font.
-          Font font = new Font(trial.getPreferences().getJRacyFont(), Font.PLAIN, barHeight);
+          Font font = new Font(trial.getPreferences().getParaProfFont(), Font.PLAIN, barHeight);
           g.setFont(font);
           FontMetrics fmFont = g.getFontMetrics(font);
           
@@ -883,7 +883,7 @@ class CustomCellRenderer implements ListCellRenderer
           int barHeight = 12;
           
           //Create font.
-          Font font = new Font(trial.getPreferences().getJRacyFont(), Font.PLAIN, barHeight);
+          Font font = new Font(trial.getPreferences().getParaProfFont(), Font.PLAIN, barHeight);
           Graphics g = getGraphics();
           FontMetrics fmFont = g.getFontMetrics(font);
           

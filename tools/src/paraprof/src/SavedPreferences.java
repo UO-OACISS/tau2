@@ -103,12 +103,12 @@ public class SavedPreferences implements Serializable
     return miscMappingsColor;
   }
   
-  public String getJRacyFont()
+  public String getParaProfFont()
   {
     return ParaProfFont;
   } 
   
-  public void setJRacyFont(String inString)
+  public void setParaProfFont(String inString)
   {
     ParaProfFont = inString;
   }

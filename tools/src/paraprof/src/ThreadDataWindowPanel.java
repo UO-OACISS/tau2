@@ -149,7 +149,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
       //**********
       //Do the standard font and spacing stuff.
       if(!(trial.getPreferences().areBarDetailsSet())){
-        Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), 12);
+        Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(), 12);
         g.setFont(font);
         FontMetrics fmFont = g.getFontMetrics(font);
         
@@ -163,7 +163,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
       barSpacing = trial.getPreferences().getBarSpacing();
       barHeight = trial.getPreferences().getBarHeight();
       
-      Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), barHeight);
+      Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(), barHeight);
       g.setFont(font);
       FontMetrics fmFont = g.getFontMetrics(font);
       //Do the standard font and spacing stuff.

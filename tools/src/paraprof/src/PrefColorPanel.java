@@ -63,7 +63,7 @@ public class PrefColorPanel extends JPanel implements ChangeListener
     {
       
       //Create font.
-      Font font = new Font(trial.getPreferences().getJRacyFont(), Font.PLAIN, 12);
+      Font font = new Font(trial.getPreferences().getParaProfFont(), Font.PLAIN, 12);
       g.setFont(font);
       FontMetrics fmFont = g.getFontMetrics(font);
       
@@ -85,7 +85,7 @@ public class PrefColorPanel extends JPanel implements ChangeListener
     yCoord = 25 + barHeight;
     
     //Create font.
-    Font font = new Font(trial.getPreferences().getJRacyFont(), Font.PLAIN, barHeight);
+    Font font = new Font(trial.getPreferences().getParaProfFont(), Font.PLAIN, barHeight);
     g.setFont(font);
     FontMetrics fmFont = g.getFontMetrics(font);
     

@@ -80,7 +80,7 @@ public class LocalPrefWindow extends JFrame implements ActionListener, Observer
       trial = inTrial;
       tDWindow = inTDWindow;
       
-      ParaProfFont = trial.getPreferences().getJRacyFont();
+      ParaProfFont = trial.getPreferences().getParaProfFont();
       barSpacing = trial.getPreferences().getBarSpacing();
       barHeight = trial.getPreferences().getBarHeight();
       fontStyle = trial.getPreferences().getFontStyle();
@@ -374,7 +374,7 @@ public class LocalPrefWindow extends JFrame implements ActionListener, Observer
   
   public void setSavedPreferences()
   {
-    ParaProf.savedPreferences.setJRacyFont(ParaProfFont);
+    ParaProf.savedPreferences.setParaProfFont(ParaProfFont);
     ParaProf.savedPreferences.setBarSpacing(barSpacing);
     ParaProf.savedPreferences.setBarHeight(barHeight);
     ParaProf.savedPreferences.setInExValue(inExValue);
@@ -394,7 +394,7 @@ public class LocalPrefWindow extends JFrame implements ActionListener, Observer
     return barDetailsSet;
   }
   
-  public String getJRacyFont()
+  public String getParaProfFont()
   {
     return ParaProfFont;
   }

@@ -15,7 +15,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class MappingDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, AdjustmentListener{
+public class MappingDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener{
   
     public MappingDataWindow(){
 	try{
@@ -100,10 +100,12 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    JMenu fileMenu = new JMenu("File");
       
 	    //Add a menu item.
+	    /*
 	    JMenuItem showBinWindowItem = new JMenuItem("Bin Window");
 	    showBinWindowItem.addActionListener(this);
 	    fileMenu.add(showBinWindowItem);
-      
+	    */
+	    
 	    //Add a menu item.
 	    JMenuItem closeItem = new JMenuItem("Close This Window");
 	    closeItem.addActionListener(this);
@@ -278,25 +280,14 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    Border mainloweredbev = BorderFactory.createLoweredBevelBorder();
 	    Border mainraisedbev = BorderFactory.createRaisedBevelBorder();
 	    Border mainempty = BorderFactory.createEmptyBorder();
-      
-      
-	    //**********
-	    //Panel and scroll bar definitions.
-	    //**********
-	    //panel = new MappingDataWindowPanel(trial, inMappingID, this);
-	    //hsb = new JScrollBar(JScrollBar.HORIZONTAL);
-	    //hsb.addAdjustmentListener(this);
-	    //vsb = new JScrollBar(JScrollBar.VERTICAL);
-	    //vsb.addAdjustmentListener(this);
-	    //**********
-	    //End - Panel and scroll bar definitions.
-	    //**********
 
 	    //**********
 	    //Panel and scroll bar definitions.
 	    //**********
 	    panel = new MappingDataWindowPanel(trial, inMappingID, this);
 	    JScrollPane sp = new JScrollPane(panel);
+	    JLabel label = new JLabel(mappingName);
+            sp.setColumnHeaderView(label);
 	    //**********
 	    //End - Panel and scroll bar definitions.
 	    //**********
@@ -324,20 +315,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    gbc.weightx = 100;
 	    gbc.weighty = 100;
 	    addCompItem(sp, gbc, 0, 0, 1, 1);
-            
-	    /*
-	    gbc.fill = GridBagConstraints.BOTH;
-	    gbc.anchor = GridBagConstraints.CENTER;
-	    gbc.weightx = 100;
-	    gbc.weighty = 0;
-	    addCompItem(hsb, gbc, 0, 1, 1, 1);
-
-	    gbc.fill = GridBagConstraints.BOTH;
-	    gbc.anchor = GridBagConstraints.CENTER;
-	    gbc.weightx = 0;
-	    gbc.weighty = 100;
-	    addCompItem(vsb, gbc, 1, 0, 1, 1);
-	    */
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDW02");
@@ -499,28 +476,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //End - Change listener code.
     //******************************
   
-  
-    //******************************
-    //Adjustment listener code.
-    //******************************
-    public void adjustmentValueChanged(AdjustmentEvent e){
-	Object EventSrc = e.getSource();
-	if(EventSrc == hsb){
-	    JScrollBar sb = (JScrollBar) EventSrc;
-      
-	    System.out.println("min: " + hsb.getMinimum() + ", max: " + hsb.getMaximum() +
-			       ", visible amount: " + hsb.getVisibleAmount() +
-			       ", value: " + hsb.getValue());
-                
-	    hsbValue = hsb.getValue();
-                
-	    panel.repaint();
-	}
-    }
-    //******************************
-    //End - Adjustment listener code.
-    //******************************
-  
     //******************************
     //MenuListener code.
     //******************************
@@ -650,9 +605,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 
     private void displaySiders(boolean displaySliders){
 	if(displaySliders){
-	    contentPane.remove(panel);
-	    contentPane.remove(hsb);
-	    contentPane.remove(vsb);
 	    
 	    gbc.fill = GridBagConstraints.NONE;
 	    gbc.anchor = GridBagConstraints.EAST;
@@ -682,19 +634,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    gbc.anchor = GridBagConstraints.CENTER;
 	    gbc.weightx = 100;
 	    gbc.weighty = 100;
-	    addCompItem(panel, gbc, 0, 1, 4, 1);
-
-	    gbc.fill = GridBagConstraints.HORIZONTAL;
-	    gbc.anchor = GridBagConstraints.NORTH;
-	    gbc.weightx = 100;
-	    gbc.weighty = 0;
-	    addCompItem(hsb, gbc, 0, 2, 4, 1);
-
-	    gbc.fill = GridBagConstraints.VERTICAL;
-	    gbc.anchor = GridBagConstraints.WEST;
-	    gbc.weightx = 0;
-	    gbc.weighty = 100;
-	    addCompItem(vsb, gbc, 4, 1, 1, 1);
+	    addCompItem(sp, gbc, 0, 1, 4, 1);
 	}
 	else{
 	    contentPane.remove(sliderMultipleLabel);
@@ -702,26 +642,12 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    contentPane.remove(barLengthLabel);
 	    contentPane.remove(barLengthSlider);
 	    contentPane.remove(panel);
-	    contentPane.remove(hsb);
-	    contentPane.remove(vsb);
 
 	    gbc.fill = GridBagConstraints.BOTH;
 	    gbc.anchor = GridBagConstraints.CENTER;
 	    gbc.weightx = 100;
 	    gbc.weighty = 100;
-	    addCompItem(panel, gbc, 0, 0, 1, 1);
-            
-	    gbc.fill = GridBagConstraints.BOTH;
-	    gbc.anchor = GridBagConstraints.CENTER;
-	    gbc.weightx = 100;
-	    gbc.weighty = 0;
-	    addCompItem(hsb, gbc, 0, 1, 1, 1);
-
-	    gbc.fill = GridBagConstraints.BOTH;
-	    gbc.anchor = GridBagConstraints.CENTER;
-	    gbc.weightx = 0;
-	    gbc.weighty = 100;
-	    addCompItem(vsb, gbc, 1, 0, 1, 1);
+	    addCompItem(sp, gbc, 0, 0, 1, 1);
 	}
 	
 	//Now call validate so that these componant changes are displayed.
@@ -805,10 +731,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     private GridBagConstraints gbc = null;
     
     MappingDataWindowPanel panel = null;
-    private JScrollBar hsb = null;
-    private JScrollBar vsb = null;
-    int hsbValue = 0;
-    int vsbValue = 0;
+    JScrollPane sp = null;
 
     private int metric = 1; //0-inclusive,1-exclusive,2-number of calls,3-number of subroutines,4-per call value.
     boolean inclusive = false;

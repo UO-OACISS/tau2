@@ -731,7 +731,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    if(!(trial.getPreferences().areBarDetailsSet())){
 		    
 		//Create font.
-		Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), 12);
+		Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(), 12);
 		g.setFont(font);
 		FontMetrics fmFont = g.getFontMetrics(font);
 		    
@@ -755,7 +755,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    int barHeight = trial.getPreferences().getBarHeight();
 		
 	    //Create font.
-	    Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), barHeight);
+	    Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(), barHeight);
 	    g.setFont(font);
 	    FontMetrics fmFont = g.getFontMetrics(font);
 

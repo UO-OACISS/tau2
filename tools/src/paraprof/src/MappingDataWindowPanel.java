@@ -37,17 +37,19 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
   
     public MappingDataWindowPanel(Trial inTrial, int inMappingID, MappingDataWindow inMDWindow){
 	try{
-	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
-	    setBackground(Color.white);
-      
-	    //Add this object as a mouse listener.
-	    addMouseListener(this);
-      
+
 	    trial = inTrial;
 	    mDWindow = inMDWindow;
  	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(inMappingID, 0);
  	    mappingName = gME.getMappingName();
 	    mappingID = gME.getGlobalID();
+	    barLength = baseBarLength;
+
+	    //Want the background to be white.
+	    setBackground(Color.white);
+      
+	    //Add this object as a mouse listener.
+	    addMouseListener(this);
       
 	    //Add items to the popu menu.
 	    JMenuItem changeColorItem = new JMenuItem("Change Function Color");
@@ -74,59 +76,26 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    double maxValue = 0.0;
 	    int stringWidth = 0;
 	    int yCoord = 0;
-	    int barXCoord = defaultBarLength + 60;
+	    int barXCoord = barLength + textOffset;
 	    
-	    //***
-	    //Setup font properties.
-	    //***
-	    if(!(trial.getPreferences().areBarDetailsSet())){
-		Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), 12);
-		g2D.setFont(font);
-		FontMetrics fmFont = g2D.getFontMetrics(font);
-		int maxFontAscent = fmFont.getAscent();
-		int maxFontDescent = fmFont.getMaxDescent();
-		int tmpInt = maxFontAscent + maxFontDescent;
-		trial.getPreferences().setBarDetails(maxFontAscent, (tmpInt + 5));
-		trial.getPreferences().setSliders(maxFontAscent, (tmpInt + 5));
-	    }
-	    Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), barHeight);
-	    g2D.setFont(font);
-	    FontMetrics fmFont = g2D.getFontMetrics(font);
-	    //***
-	    //End - Setup font properties.
-	    //***
+	    //To make sure the bar details are set, this
+	    //method must be called.
+	    trial.getPreferences().setBarDetails(g2D);	    
 	    
-	    //Set local spacing and bar heights.
+	    //Now safe to grab spacing and bar heights.
 	    barSpacing = trial.getPreferences().getBarSpacing();
 	    barHeight = trial.getPreferences().getBarHeight();
+
+	    //Obtain the font and its metrics.
+	    Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(), barHeight);
+	    g2D.setFont(font);
+	    FontMetrics fmFont = g2D.getFontMetrics(font);
 
 	    //Determine clipping information.
 	    Rectangle clipRect = g2D.getClipBounds();
 	    int yBeg = (int) clipRect.getY();
 	    int yEnd = (int) (yBeg + clipRect.getHeight());
-	    System.out.println("----");
-	    System.out.println("yBeg:"+yBeg+",yEnd:"+yEnd);
 	    yEnd = yEnd + barSpacing;
-	    System.out.println("yBeg:"+yBeg+",yEnd:"+yEnd);
-	    System.out.println("----");
-	    
-	    
-	    //***
-	    //Compute the size of this panel. Adjust if required.
-	    //***
-	    int ySize = (activeThreads()+1)*barSpacing+10;
-	    boolean sizeChange = false;   
-	    //Resize the panel if needed.
-	    if(ySize > yPanelSize){
-		System.out.println("ySize: " + ySize);
-		yPanelSize = ySize;
-		sizeChange = true;
-	    }
-	    //if(sizeChange)
-	    //revalidate();
-	    //***
-	    //End - Compute the size of this panel. Adjust if required.
-	    //***
 	    
 	    //***
 	    //Set the max and mean values for this mapping.
@@ -180,12 +149,20 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //End - Set the max and mean values for this mapping.
 	    //***
 	    
+	    //At this point we can determine the size this panel will
+	    //require. If we need to resize, don't do any more drawing,
+	    //just call revalidate.
+	    if(resizePanel(fmFont, barXCoord)){
+		this.revalidate();
+		return;
+	    }
+	    
 	    //Check for group membership.
 	    groupMember = gME.isGroupMember(trial.getColorChooser().getGHCMID());
 
 
 	    //Some points to note about drawing. When we draw, swing begins at the given y coord,
-	    //and draws up towards the top of the panel. Given that we use clipping to determine
+	    //and draws down towards the bottom of the panel. Given that we use clipping to determine
 	    //what to draw, we have to be careful to draw everytime our clipping coords intersect
 	    //the object. Otherwise, we run the risk of either not drawing when we need to, or 
 	    //clipping out sections that we would like to be redrawn. It is no good just increasing
@@ -196,7 +173,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 
 	    //Draw mean information.
 	    yCoord = yCoord + (barSpacing); //Comment this
-	    System.out.println("yCoord:"+yCoord);
 	    if((yCoord >= yBeg) && (yCoord <= yEnd)){
 		//yCoord = yCoord + (barSpacing);//Uncomment this.
 		drawBar(g2D, fmFont, value, maxValue, "mean", barXCoord, yCoord, barHeight, groupMember);
@@ -315,7 +291,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	int stringStart = 0;
 
 	d = (value / maxValue);
-	xLength = (int) (d * defaultBarLength);
+	xLength = (int) (d * barLength);
 	if(xLength == 0)
 	    xLength = 1;
 
@@ -415,24 +391,44 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     public void mouseExited(MouseEvent evt) {}
     
     public void changeInMultiples(){
-	computeDefaultBarLength();
+	computeBarLength();
 	this.repaint();
     }
 
-    public void computeDefaultBarLength(){
+    public void computeBarLength(){
 	try{
 	    double sliderValue = (double) mDWindow.getSliderValue();
 	    double sliderMultiple = mDWindow.getSliderMultiple();
-	    double result = 250*sliderValue*sliderMultiple;
-	    defaultBarLength = (int) result;
+	    barLength = baseBarLength*((int)(sliderValue*sliderMultiple));
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDWP06");
 	}
     }
+
+    //This method sets both xPanelSize and yPanelSize.
+    private boolean resizePanel(FontMetrics fmFont, int barXCoord){
+	boolean resized = false;
+	try{
+	    int newYPanelSize = (activeThreads()+2)*barSpacing+10;
+	    int[] nct = trial.getMaxNCTNumbers();
+	    String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];;
+	    int newXPanelSize = barXCoord+5+(fmFont.stringWidth(nctString))+ 25;
+	    if((newYPanelSize!=yPanelSize)||(newXPanelSize!=xPanelSize)){
+		yPanelSize = newYPanelSize;
+		xPanelSize = newXPanelSize;
+		this.setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+		resized = false;
+	    }
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDWP07");
+	}
+	return resized;
+    }
     
     public Dimension getPreferredSize(){
-	return new Dimension(xPanelSize, (yPanelSize + 10));}
+	return new Dimension(xPanelSize, yPanelSize);}
 
     //******************************
     //Instance data.
@@ -444,7 +440,9 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     GlobalMappingElement gME = null;
     private int barHeight = -1;
     private int barSpacing = -1;
-    private int defaultBarLength = 250;
+    private int baseBarLength = 250;
+    private int barLength = 0;
+    private int textOffset = 60;
     private int maxXLength = 0;
     private boolean groupMember = false;
     private int aT = -1;
@@ -461,8 +459,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     private Vector tmpContextList = null;
     private Vector tmpThreadList = null;
     private Vector tmpThreadDataElementList = null;
-    int xPanelSize = 300;
-    int yPanelSize = 300;
+    int xPanelSize = 0;
+    int yPanelSize = 0;
   
     //**********
     //Popup menu definitions.
