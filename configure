@@ -2566,6 +2566,47 @@ else
   echo "TAU: installed ParaProf.jar in ${tauprefix}/${architecture}/bin"
 fi
 
+
+echo "TAU: installing TAU's PerfDB database utilities" 
+
+cat ${tauroot}/tools/src/perfdb/bin/configure.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/${architecture}/bin/perfdb_configure
+chmod a+rx ${tauroot}/${architecture}/bin/perfdb_configure
+echo "TAU: installed perfdb_configure in ${tauroot}/${architecture}/bin"
+
+cat ${tauroot}/tools/src/perfdb/bin/loadapp.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/${architecture}/bin/perfdb_loadapp
+chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadapp
+echo "TAU: installed perfdb_loadapp in ${tauroot}/${architecture}/bin"
+
+cat ${tauroot}/tools/src/perfdb/bin/loadexp.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/${architecture}/bin/perfdb_loadexp
+chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadexp
+echo "TAU: installed perfdb_loadexp in ${tauroot}/${architecture}/bin"
+
+cat ${tauroot}/tools/src/perfdb/bin/loadschema.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/${architecture}/bin/perfdb_loadschema
+chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadschema
+echo "TAU: installed perfdb_loadschema in ${tauroot}/${architecture}/bin"
+
+cat ${tauroot}/tools/src/perfdb/bin/loadtrial.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/${architecture}/bin/perfdb_loadtrial
+chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadtrial
+echo "TAU: installed perfdb_loadtrial in ${tauroot}/${architecture}/bin"
+
+cat ${tauroot}/tools/src/perfdb/bin/translate.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/${architecture}/bin/perfdb_translate
+chmod a+rx ${tauroot}/${architecture}/bin/perfdb_translate
+echo "TAU: installed perfdb_translate in ${tauroot}/${architecture}/bin"
+
+
+
 # -- determine Tcl/Tk version
 #cat << EOF > /tmp/tau$$
 #
