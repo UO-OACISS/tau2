@@ -68,13 +68,63 @@ GET:                    <command=9> <size> <options (1st byte matters)>
 QUIT:                   <command=10> <size=0>
 *****************************************/
 
+/* TheMuseSockId() is a global variable now */
+int& TheMuseSockId(void)
+{
+  static int sockid = 0;
+  return sockid;
+}
+
+/* Mono_PkgList() is a global variable now */
+struct package_list_info &Mono_PkgList(void){
+        static struct package_list_info list;
+        return list;
+}
+
+/* NonMono_PkgList() is a global variable now */
+struct package_list_info &NonMono_PkgList(void){
+        static struct package_list_info list;
+        return list;
+}
+
+/* Get the name of TAU_MUSE predefine package */
+char * get_muse_package(void)
+{
+        char *package = getenv("TAU_MUSE_PACKAGE");
+        //if (package == (char *) NULL)
+        //{  /* the user has not specified any handler name */
+        //  return "TAU_count";
+        //} else
+        return package;
+}
+
+/* Get the name of TAU_MUSE predefine package */
+char *  get_muse_packages(int index)
+{
+        char str[30];
+	char *package;
+        sprintf(str,"TAU_MUSE_PACKAGE%d",index);
+        package=getenv(str); 
+	return package;
+}
+
+/* Get the name of TAU_MUSE predefine package */
+char * get_muse_event_packages(int index)
+{
+        char str[30];
+	char *package;
+        sprintf(str,"TAU_MUSE_EVENT_PACKAGE%d",index);
+        package=getenv(str); 
+	return package;
+}
+
 /************************************************************
  * Description	: Send binary command to MUSE server and verify
  * From		: mdsh/mdsh.c <modified>
  ***********************************************************/
 int send_and_check(int sockfd,int command_length,char *send_buffer,char *recv_buffer){
         struct pollfd poll_fd;
-        unsigned int b;
+        int b;
         int network_command_length;
 
         network_command_length = htonl(command_length);
@@ -179,7 +229,8 @@ int TauMuseInit(void){
 
 	// GO find the lock file, which is also the socket descriptor 
 	getcwd(current_directory,DIRNAMELENGTH);
-	if (chdir("/var/lock") < 0) {
+	if (chdir(VAR_LOCK_DIRECTORY) < 0) {
+	//if (chdir("/var/lock") < 0) {
 	printf("unable to change to lockfile directory: %s", strerror(errno));
 	return(1);
 	}
@@ -236,7 +287,6 @@ int TauMuseInit(void){
         }
 #endif //AF_UNIX_MODE
 
-
         // verify connection
         if(recv(sockfd, recv_buffer, BUFFERSIZE,0) == -1){
                 perror("recv");
@@ -259,6 +309,7 @@ int TauMuseInit(void){
         }
 	return(0);
 }
+
 /*************************************************************
  * Description	: Create handler according to the handler_name
  * 		  - send command create <handler_name> <args>
@@ -267,7 +318,7 @@ int TauMuseInit(void){
  * NOTE		: This function is called by TauMuseQuery	
  *************************************************************/
 
-int TauMuseCreate(void){
+int TauMuseCreate(struct package_info *pkg){
         char cmdstr[MAX_ARGLEN];
         char send_buffer[BUFFERSIZE];
         char recv_buffer[BUFFERSIZE];
@@ -277,20 +328,32 @@ int TauMuseCreate(void){
         int handlerID;
 	int i,j,b,k;
 
-
 	// Loop to create multiple handlers.
-	for(j=0;j<TheMusePackage().numofhandlers;j++){
+	for(j=0;j<pkg->numofhandlers;j++){
         
 	// ====================================
         // command "create <handler_name>"
         // ====================================
-        sprintf(cmdstr,"create %s",TheMusePackage().handlers[j].handler_name);
+        sprintf(cmdstr,"create %s",pkg->handlers[j].handler_name);
+
 #ifdef DEBUG_PROF
         printf("cmdstr = %s\n",cmdstr);
 #endif /* DEBUG_PROF */
+
 	memset(send_buffer,0,BUFFERSIZE);
-        command_length = create_encode_selector(TheMusePackage().handlers[j].handler_name,cmdstr,BUFFERSIZE,send_buffer);
+        command_length = create_encode_selector(pkg->handlers[j].handler_name,
+			cmdstr,BUFFERSIZE,send_buffer);
+
+#ifdef DEBUG_PROF
+	//DEBUG JEREMY
+	printf("cl: %u\n", command_length);
+	for (b=0;b<command_length;b++)
+		printf("%u ", (unsigned char)send_buffer[b]);
+	printf("\n");
+#endif// DEBUG_PROF
+
 	send_and_check(sockfd,command_length,send_buffer,recv_buffer);
+
 #ifdef DEBUG_PROF
         printf("!!!!!!!!!handler is created\n");
 #endif /* DEBUG_PROF */
@@ -301,6 +364,12 @@ int TauMuseCreate(void){
         // HACKY!!!... Endian stuff
         byteptr = (unsigned char *)recv_buffer+5;
         handlerID = (int) *byteptr;
+	
+	if(handlerID==0){
+		printf("TauMuseCreate:ERROR:handlerID=0\n");
+		return -1;
+	}
+	
 #ifdef DEBUG_PROF
         printf("!!!!!handlerID is %d\n",handlerID);
 #endif /* DEBUG_PROF */
@@ -311,15 +380,15 @@ int TauMuseCreate(void){
 	// command "addfilter <handlerID> <filter_name> <args>"
 	// =====================================
 	// Loop to add multiple filters.	
-	for(k=0;k<TheMusePackage().handlers[j].numoffilters;k++) {	
+	for(k=0;k<pkg->handlers[j].numoffilters;k++) {	
 		// Loop to add multiple arguements for each filter.	
-		for(i=0;i<TheMusePackage().handlers[j].filters[k].filter_argc;i++) {	
-			sprintf(cmdstr,"addfilter %d %s", handlerID,TheMusePackage().handlers[j].filters[k].args[i]);
+		for(i=0;i<pkg->handlers[j].filters[k].filter_argc;i++) {	
+			sprintf(cmdstr,"addfilter %d %s", handlerID,pkg->handlers[j].filters[k].args[i]);
 #ifdef DEBUG_PROF
 			printf("cmdstr = %s\n",cmdstr);
 #endif /* DEBUG_PROF */
 			command_length = addfilter_encode_selector(
-					strtok(TheMusePackage().handlers[j].filters[k].args[i]," ")
+					strtok(pkg->handlers[j].filters[k].args[i]," ")
 					,cmdstr,BUFFERSIZE,send_buffer);
 #ifdef DEBUG_PROF
 			//DEBUG JEREMY
@@ -350,8 +419,8 @@ int TauMuseCreate(void){
 #ifdef DEBUG_PROF
         printf("!!!!!!!!!handlerID %d is started\n",handlerID);
 #endif /* DEBUG_PROF */
-
-        TheMusePackage().handlers[j].handlerID = handlerID;
+        
+	pkg->handlers[j].handlerID = handlerID;
 	} // End for loop for each handler
 
 	return 0;
@@ -417,12 +486,31 @@ double TauMuseQuery(void){
         unsigned char *byteptr;
 	double result=0.0;
 	double data_tmp[1];
-	
+	int sockfd, handlerID,i,j;
+
+	//===================================================
+	// PACKAGE INITIALIZATION
+	// 
 	// This will get the value from environment variable
 	// to initilize the appropriate handler and filter arguments.
-	static int initialized=package_selector(NULL); 
-	int sockfd = TheMuseSockId(); /* read from the global */
-	int handlerID=TheMusePackage().handlers[0].handlerID;
+	// It should be done once at the begining.
+		
+	if(TheMuseSockId()==0){
+		TauMuseInit();
+	}
+	if(Mono_PkgList().initialized == 0){
+		Mono_PkgList().initialized=1;
+		Mono_PkgList().numofpackages=1;
+		sprintf(Mono_PkgList().packages[0].package_name,"%s",get_muse_package());
+		if(monotonic_package_selector(&(Mono_PkgList().packages[0])) == -1){
+			printf("TauMuseQuery:ERROR: Can't initialized package %s\n",
+				get_muse_package());
+				return(-1);
+		}
+	}
+	//===================================================
+	sockfd = TheMuseSockId(); /* read from the global */
+	handlerID = Mono_PkgList().packages[0].handlers[0].handlerID;
 
 #ifdef DEBUG_PROF
 	printf("TauMuseQuery--- : pid=%d\n",getpid());
@@ -440,11 +528,11 @@ double TauMuseQuery(void){
 #ifdef DEBUG_PROF
         printf("TauMuseQuery---: handlerID %d is queried\n",handlerID);
 #endif /* DEBUG_PROF */
-        result = (double)query_decode_selector(TheMusePackage().handlers[0].handler_name,
+        result = (double)query_decode_selector(Mono_PkgList().packages[0].handlers[0].handler_name,
 			send_buffer,recv_buffer, MAX_REPLY_LENGTH,result_buffer,data_tmp);
 #ifdef DEBUG_PROF
-	printf("TauMuseQuery---: TheMusePackage().handlers[0].handler_name=%s\n",
-			TheMusePackage().handlers[0].handler_name);
+	printf("TauMuseQuery---: Mono_PkgList().packages[0].handlers[0].handler_name=%s\n",
+			Mono_PkgList().packages[0].handlers[0].handler_name);
         printf("TauMuseQuery---: result value passing to TAU: %f\n",result);
         printf("TauMuseQuery---: result buffer:\n%s\n",result_buffer);
 #endif /* DEBUG_PROF */
@@ -452,128 +540,309 @@ double TauMuseQuery(void){
 	return result;
 
 }
-
 #endif //TAU_MUSE
-#ifdef TAU_MUSE_EVENT
 
+int PkgListInit(struct package_list_info *list,int size,char *envName){
+	int i,j,k;
+	int resultSize=0;
+	
+	list->numofpackages=0;
+	if(!strcmp("TAU_MUSE_PACKAGE",envName)){
+		for(i=0,j=0;i<MAXNUMOF_PACKAGES;i++){
+			// Read the environment variable for monotonic
+			if(get_muse_packages(i)){
+#ifdef DEBUG_PROF
+				printf("PkgListInit: %s%d = %s\n",envName,i,get_muse_packages(i));
+#endif// DEBUG_PROF
+				list->numofpackages++;
+				sprintf(list->packages[i].package_name,"%s",get_muse_packages(i));
+				// Initialize package
+				if(monotonic_package_selector(&(list->packages[i])) == -1){
+					printf("PkgListInit:ERROR: Can't initialized package %s\n",
+							get_muse_packages(i));
+							return(-1);
+				}
+				// Checking size of data array and the 
+				// number of counters.
+				resultSize+=list->packages[i].totalcounters;
+				if(resultSize > size){
+					printf("PkgListInit:ERROR: Size of data array is too small.\n");
+					return(-1);
+				}
+			}else
+				break;
+		}// endloop for each package
+	} else if(!strcmp("TAU_MUSE_EVENT_PACKAGE",envName)){
+		for(i=0,j=0;i<MAXNUMOF_PACKAGES;i++){
+			// Read the environment variable for monotonic
+			if(get_muse_event_packages(i)){
+#ifdef DEBUG_PROF
+				printf("PkgListInit: %s%d = %s\n",envName,i,get_muse_event_packages(i));
+#endif// DEBUG_PROF
+				list->numofpackages++;
+				sprintf(list->packages[i].package_name,"%s",get_muse_event_packages(i));
+				// Initialize package
+				if(nonmonotonic_package_selector(&(list->packages[i])) == -1){
+					printf("PkgListInit:ERROR: Can't initialized package %s\n",
+							get_muse_event_packages(i));
+							return(-1);
+				}
+				// Checking size of data array and the 
+				// number of counters.
+				resultSize+=list->packages[i].totalcounters;
+				if(resultSize > size){
+					printf("PkgListInit:ERROR: Size of data array is too small.\n");
+					return(-1);
+				}
+			}else
+				break;
+		}// endloop for each package
+	}
+	return resultSize;
+
+}
+
+
+#ifdef TAU_MUSE_EVENT
+/*
+int TauMuseGetSizeNonMono(void){
+  int result=0,i;
+
+  for(i=0;i<NonMono_PkgList().numofpackages;i++){
+    result+=NonMono_PkgList().packages[i].totalcounters;		
+  }    	
+  return result; 
+}
+*/
+int TauMuseGetMetricsNonMono(char *data[], int size){
+  int i,j,k;
+  int resultSize=0;  
+
+  //===================================================
+  // 		PACKAGE INILIZATION
+  // ****** MUST BE DONE ONCE FIRST THING *************
+  if(TheMuseSockId()==0){
+#ifdef DEBUG_PROF
+    printf("TauMuseGetMetricsNonMono: Calling TauMuseInit()\n");
+#endif //DEBUG_PROF
+    TauMuseInit();
+  }
+  if(NonMono_PkgList().initialized == 0){
+#ifdef DEBUG_PROF
+    printf("TauMuseGetMetricsNonMono: Initializing Package\n");
+#endif //DEBUG_PROF
+    NonMono_PkgList().initialized=1;
+    PkgListInit(&NonMono_PkgList(),size,"TAU_MUSE_EVENT_PACKAGE");
+  }	
+  //===================================================
+  
+  for(i=0;i<NonMono_PkgList().numofpackages;i++){
+    for(j=0;j<NonMono_PkgList().packages[i].numofhandlers;j++){
+      for(k=0;k<NonMono_PkgList().packages[i].handlers[j].numofcounters;k++){
+        resultSize++;
+        if(resultSize>size){
+	  printf("TauMuseGetMetrics:ERROR: Array size is too small.\n");
+	  return(-1);
+        }
+        sprintf(data[resultSize-1],"%s",NonMono_PkgList().packages[i].handlers[j].metrics[k].info);
+      }//endloop for each counter
+    }//endloop for each handler
+  }//endloop for each package
+  return(resultSize);
+}
+#endif // TAU_MUSE_EVENT
+
+#if defined(TAU_MUSE) || defined(TAU_MUSE_MULTIPLE)
+/*
+int TauMuseGetSizeMono(void){
+  int result=0,i;
+  for(i=0;i<Mono_PkgList().numofpackages;i++){
+    result+=Mono_PkgList().packages[i].totalcounters;		
+  }    	
+  return result; 
+}
+*/
+
+int TauMuseGetMetricsMono(char* data[], int size){
+  int i,j,k;
+  int resultSize=0;  
+
+  //===================================================
+  // 		PACKAGE INITIALIZATION
+  // ****** MUST BE DONE ONCE FIRST THING *************
+  if(TheMuseSockId()==0)
+    TauMuseInit();
+  if(Mono_PkgList().initialized == 0){
+    Mono_PkgList().initialized=1;
+    PkgListInit(&Mono_PkgList(),size,"TAU_MUSE_PACKAGE");
+  }	
+  //===================================================
+  
+  for(i=0;i<Mono_PkgList().numofpackages;i++){
+    for(j=0;j<Mono_PkgList().packages[i].numofhandlers;j++){
+      for(k=0;k<Mono_PkgList().packages[i].handlers[j].numofcounters;k++){
+        resultSize++;
+        if(resultSize>size){
+	  printf("TauMuseGetMetrics:ERROR: Array size is too small.\n");
+	  return(-1);
+        }
+        sprintf(data[resultSize-1],"%s",Mono_PkgList().packages[i].handlers[j].metrics[k].info);
+      }//endloop for each counter
+    }//endloop for each handler
+  }//endloop for each package
+    return(resultSize);
+}
+#endif //defined(TAU_MUSE) || defined(TAU_MUSE_MULTIPLE)
+
+#ifdef TAU_MUSE_EVENT
 /************************************************************
  * Description	: Query_handler from MUSE sever for 
  * 		  non-monotonically increasing value.
  * 		  - send command query_handler
  ***********************************************************/
-double TauMuseEventQuery(int data){
+int TauMuseEventQuery(double data[], int size){
         char send_buffer[BUFFERSIZE];
         char recv_buffer[BUFFERSIZE];
         char result_buffer[MAX_REPLY_LENGTH];
         unsigned char *byteptr;
-	double result;
-	double data_tmp[1];
+	int i,j,k;
+	int sockfd , handlerID;
+	int resultSize=0;
+	double tmp_data[MAXNUMOF_COUNTERS];
 	
-	// This will get the value from environment variable
-	// to initilize the appropriate handler and filter arguments.
-	static int initialized=package_selector(&data); 
-	int sockfd = TheMuseSockId(); /* read from the global */
-	int handlerID=TheMusePackage().handlers[0].handlerID;
+	//===================================================
+	// 		PACKAGE INITIALIZATION
+	// ****** MUST BE DONE ONCE FIRST THING *************
+	if(TheMuseSockId()==0){
+#ifdef DEBUG_PROF
+		printf("TauMuseEventQuery: Calling TauMuseInit()\n");
+#endif //DEBUG_PROF
+		TauMuseInit();
+	}
+	if(NonMono_PkgList().initialized == 0){
+#ifdef DEBUG_PROF
+		printf("TauMuseEventQuery: Initializing Package\n");
+#endif //DEBUG_PROF
+		NonMono_PkgList().initialized=1;
+		PkgListInit(&NonMono_PkgList(),size,"TAU_MUSE_EVENT_PACKAGE");
+	}	
+	//===================================================
+	sockfd = TheMuseSockId(); /* read from the global */
 
 #ifdef DEBUG_PROF
-	printf("DEBUG:TauMuseEventQuery : pid=%d,data=%d\n",getpid(),data);
+	printf("TauMuseEventQuery: Start Query\n");
+	printf("DEBUG:TauMuseEventQuery : pid=%d\n",getpid());
 #endif //DEBUG_PROF
 	
         // ====================================
         // command "query_handler <handlerID>"
         // ====================================
-        // create command in binary
-        memset(send_buffer,0,BUFFERSIZE);
-        send_buffer[0] = 3;
-        byteptr = (unsigned char *)&handlerID;
-        send_buffer[1] = (char)*byteptr;
-        send_and_check(sockfd,2+sizeof(int),send_buffer,recv_buffer);
-#ifdef DEBUG_PROF
-        printf("!!!!!!!!!handlerID %d is queried\n",handlerID);
-#endif /* DEBUG_PROF */
-        result = (double)query_decode_selector(TheMusePackage().handlers[0].handler_name,
-			send_buffer,recv_buffer, MAX_REPLY_LENGTH,result_buffer,data_tmp);
-#ifdef DEBUG_PROF
-	printf("TauMuseEventQuery---: TheMusePackage().handlers[0].handler_name=%s\n",
-			TheMusePackage().handlers[0].handler_name);
-        printf("TauMuseEventQuery---: result buffer:\n%s\n",result_buffer);
-        printf("TauMuseEventQuery---: result value passing to TAU: %f\n",result);
-#endif /* DEBUG_PROF */
-        return result;
+	resultSize=0;
+        for(i=0;i<NonMono_PkgList().numofpackages;i++){
+		for(k=0;k<NonMono_PkgList().packages[i].numofhandlers;k++){
+			
+			// create command in binary
+			memset(send_buffer,0,BUFFERSIZE);
+			send_buffer[0] = 3;
 
+			handlerID= NonMono_PkgList().packages[i].handlers[k].handlerID;
+			byteptr = (unsigned char *)&handlerID;
+			send_buffer[1] = (char)*byteptr;
+			send_and_check(sockfd,2+sizeof(int),send_buffer,recv_buffer);
+#ifdef DEBUG_PROF
+			printf("!!!!!!!!!handlerID %d is queried\n",handlerID);
+#endif /* DEBUG_PROF */
+
+			query_decode_selector(NonMono_PkgList().packages[i].handlers[k].handler_name,
+				send_buffer,recv_buffer, MAX_REPLY_LENGTH,result_buffer,tmp_data);
+#ifdef DEBUG_PROF
+			printf("TauMuseEventQuery---: NonMono_PkgList().packages[%d].handlers[%d].handler_name=%s\n",
+				i,k,NonMono_PkgList().packages[i].handlers[k].handler_name);
+			printf("TauMuseEventQuery---: result buffer:\n%s\n",result_buffer);
+#endif /* DEBUG_PROF */
+
+			// Copy result from tmp_data to data. 
+			for(j=0;j<NonMono_PkgList().packages[i].handlers[k].numofcounters;j++){
+				data[resultSize]=tmp_data[j];
+				resultSize++;
+			}
+		}//endloop for each package
+	}// endloop for all packages
+	/*	
+	//FOR TESTING
+	printf("REPORT!!!!!!!!!!!!!!!!!!!!!\n");
+	report_user_defined_events(data);
+	*/
+	return resultSize;
 }
-#endif //TAU_MUSE_EVENT
+#endif // TAU_MUSE_EVENT
 
 #ifdef TAU_MUSE_MULTIPLE
-/************************************************************
- * Description	: Query_handler from MUSE sever for
- * 		  monotonically incresing value.
- * 		  - send command query_handler
- ***********************************************************/
-int TauMuseMultipleQuery(double data[], int array_size){
+int TauMuseMultipleQuery(double data[],int size){
         char send_buffer[BUFFERSIZE];
         char recv_buffer[BUFFERSIZE];
         char result_buffer[MAX_REPLY_LENGTH];
         unsigned char *byteptr;
-	int i,j;
-	int handlerID;
-	double data_tmp[MAXNUMOF_COUNTERS];
-	double *data_ptr=data;
-	int data_counter=0;
-	
-	// This will get the value from environment variable
-	// to initilize the appropriate handler and filter arguments.
-	//static int handlerID = package_selector(NULL); 
-	static int initialized=package_selector(NULL); 
-	int sockfd = TheMuseSockId(); /* read from the global */
+	double result=0.0;
+	int sockfd, handlerID;
+	int i,j,k;
+	int resultSize=0;
+	double tmp_data[MAXNUMOF_COUNTERS];
 
-	if(array_size<=MAXNUMOF_COUNTERS){
-	for(i=0;i<TheMusePackage().numofhandlers;i++){	
-		handlerID=TheMusePackage().handlers[i].handlerID;
+	//===================================================
+	// 		PACKAGE INITIALIZATION
+	// ****** MUST BE DONE ONCE FIRST THING *************
+	if(TheMuseSockId()==0)
+		TauMuseInit();
+	if(Mono_PkgList().initialized == 0){
+		Mono_PkgList().initialized=1;
+		PkgListInit(&Mono_PkgList(),size,"TAU_MUSE_PACKAGE");
+	}	
+	//===================================================
+	sockfd = TheMuseSockId(); /* read from the global */
 
-//#ifdef DEBUG_PROF
-		printf("DEBUG:TauMuseMultipleQuery : pid=%d\n",getpid());
-//#endif //DEBUG_PROF
-	
-		// ====================================
-		// command "query_handler <handlerID>"
-		// ====================================
-		// create command in binary
-		memset(send_buffer,0,BUFFERSIZE);
-		send_buffer[0] = 3;
-		byteptr = (unsigned char *)&handlerID;
-		send_buffer[1] = (char)*byteptr;
-		send_and_check(sockfd,2+sizeof(int),send_buffer,recv_buffer);
-//#ifdef DEBUG_PROF
-		//printf("!!!!!!!!!handlerID %d is queried\n",handlerID);
-		printf("TauMuseMultipleQuery---: TheMusePackage().handlers[%d].handler_name=%s\n"
-				,i,TheMusePackage().handlers[i].handler_name);
-		//printf("TauMuseMultipleQuery---: result buffer:\n%s\n",result_buffer);
-//#endif /* DEBUG_PROF */
-		query_decode_selector(TheMusePackage().handlers[i].handler_name,
-			send_buffer,recv_buffer, MAX_REPLY_LENGTH,result_buffer,data_tmp);
-
-		//Copy data_tmp over to data
-		for(j=0;j<TheMusePackage().handlers[i].numofcounters;j++,data_ptr++){
-			// Check if the size of array provided is too small.
-			if(data_counter<array_size){
-				*data_ptr=data_tmp[j];
-				data_counter++;
 #ifdef DEBUG_PROF
-				printf("handlerID=%d : data_ptr = %f\n",handlerID,*data_ptr);
-				printf("data_counter=%d\n",data_counter);
+	printf("DEBUG:TauMuseMultipleQuery: pid=%d\n",getpid());
+#endif //DEBUG_PROF
+	
+        // ====================================
+        // command "query_handler <handlerID>"
+        // ====================================
+	resultSize=0;
+        for(i=0;i<Mono_PkgList().numofpackages;i++){
+		for(k=0;k<Mono_PkgList().packages[i].numofhandlers;k++){
+			
+			// create command in binary
+			memset(send_buffer,0,BUFFERSIZE);
+			send_buffer[0] = 3;
+
+			handlerID= Mono_PkgList().packages[i].handlers[k].handlerID;
+			byteptr = (unsigned char *)&handlerID;
+			send_buffer[1] = (char)*byteptr;
+			send_and_check(sockfd,2+sizeof(int),send_buffer,recv_buffer);
+#ifdef DEBUG_PROF
+			printf("!!!!!!!!!handlerID %d is queried\n",handlerID);
 #endif /* DEBUG_PROF */
-			}else{
-				printf("TauMuseMultipleQuery---: Number of data exceed array_size. array_size=%d, data_counter=%d\n",array_size,data_counter);
-				return(-1);
+
+			query_decode_selector(Mono_PkgList().packages[i].handlers[k].handler_name,
+				send_buffer,recv_buffer, MAX_REPLY_LENGTH,result_buffer,tmp_data);
+#ifdef DEBUG_PROF
+			printf("TauMuseMultipleQuery---: Mono_PkgList().packages[%d].handlers[%d].handler_name=%s\n",
+				i,k,Mono_PkgList().packages[i].handlers[k].handler_name);
+			printf("TauMuseMultipleQuery---: result buffer:\n%s\n",result_buffer);
+#endif /* DEBUG_PROF */
+
+			// Copy result from tmp_data to data. 
+			for(j=0;j<Mono_PkgList().packages[i].handlers[k].numofcounters;j++){
+				data[resultSize]=tmp_data[j];
+				resultSize++;
 			}
-		}
-	}
-	}else{
-		printf("TauMuseMultipleQuery---: array_size is too big\n");
-		return(-1);
-	}
-	return data_counter;
+		}//endloop for each package
+	}// endloop for all packages
+	
+	//return resultSize;
+	return data[0];
 }
-#endif //TAU_MUSE_MULTIPLE
+#endif // TAU_MUSE_MULTIPLE
+
 /* EOF */

@@ -48,6 +48,15 @@ bool& TheIsTauTrackingMemory(void)
 }
 
 //////////////////////////////////////////////////////////////////////
+// Is TAU using MUSE's user defined events? Set to true/false.
+//////////////////////////////////////////////////////////////////////
+bool& TheIsTauTrackingMuseEvents(void)
+{
+  static bool isit = false; /* TAU is not tracking MUSE events */
+  return isit;
+}
+
+//////////////////////////////////////////////////////////////////////
 // Start tracking memory 
 //////////////////////////////////////////////////////////////////////
 void TauEnableTrackingMemory(void)
@@ -57,11 +66,30 @@ void TauEnableTrackingMemory(void)
 }
 
 //////////////////////////////////////////////////////////////////////
+// Start tracking MUSE events 
+//////////////////////////////////////////////////////////////////////
+void TauEnableTrackingMuseEvents(void)
+{
+  // Set tracking to true
+#ifdef TAU_MUSE_EVENT
+  TheIsTauTrackingMuseEvents() = true;
+#endif /* TAU_MUSE_EVENT */
+}
+
+//////////////////////////////////////////////////////////////////////
 // Stop tracking memory 
 //////////////////////////////////////////////////////////////////////
 void TauDisableTrackingMemory(void)
 {
   TheIsTauTrackingMemory() = false;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Stop tracking MUSE events 
+//////////////////////////////////////////////////////////////////////
+void TauDisableTrackingMuseEvents(void)
+{
+  TheIsTauTrackingMuseEvents() = false;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -117,6 +145,33 @@ TauUserEvent& TheTauMemoryEvent(void)
 //////////////////////////////////////////////////////////////////////
 void TauAlarmHandler(int signum)
 {
+#ifdef TAU_MUSE_EVENT
+  double musedata[MAXNUMOF_COUNTERS];
+  static int flag = 0; 
+  static TauUserEvent *e[MAXNUMOF_COUNTERS];
+  int i, numevents;
+  if (flag == 0)
+  {
+    char *eventnames[MAXNUMOF_COUNTERS]; 
+    /* toggle flag. This code executes the first time the block is entered */
+    flag = 1;
+    for (i = 0; i < MAXNUMOF_COUNTERS; i++)
+    { /* allocate memory for event names */
+      eventnames[i] = new char[MAX_METRIC_LEN];
+    }
+    /* Fill the eventnames array inside the MUSE call. */
+    numevents = TauMuseGetMetricsNonMono(eventnames, MAXNUMOF_COUNTERS);
+    for(i=0; i<numevents; i++)
+    { /* for the event names that we've received */
+      e[i] = new TauUserEvent(eventnames[i]);
+      /* we've created e, an array of numevents user defined events */
+      /* delete the event name allocated */
+      delete eventnames[i]; 
+    }
+
+  }
+
+#endif /* TAU_MUSE_EVENT */
    /* Check and see if we're tracking memory events */
   if (TheIsTauTrackingMemory())
   {
@@ -124,10 +179,22 @@ void TauAlarmHandler(int signum)
     TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
   }
 
+#ifdef TAU_MUSE_EVENT 
+  if (TheIsTauTrackingMuseEvents())
+  { /* get an array of doubles from MUSE */
+    numevents = TauMuseEventQuery(musedata, MAXNUMOF_COUNTERS); 
+    for (i = 0; i < numevents; i++)
+    { /* iterate over numevents and trigger these user defined events */
+      e[i]->TriggerEvent(musedata[i]);
+    }
+  }
+#endif /* TAU_MUSE_EVENT */
+
   /* Set alarm for the next interrupt */
   alarm(TheTauInterruptInterval());
    
 }
+
 //////////////////////////////////////////////////////////////////////
 // Track Memory
 //////////////////////////////////////////////////////////////////////
@@ -151,11 +218,35 @@ void TauTrackMemoryUtilization(void)
   /* activate alarm */
   alarm(TheTauInterruptInterval());
 }
+
+//////////////////////////////////////////////////////////////////////
+// Track MUSE events
+//////////////////////////////////////////////////////////////////////
+void TauTrackMuseEvents(void)
+{
+  struct sigaction new_action, old_action;
+
+  // we're tracking memory
+  TheIsTauTrackingMuseEvents() = true; 
+
+  // set signal handler 
+  new_action.sa_handler = TauAlarmHandler; 
+ 
+  new_action.sa_flags = 0;
+  sigaction(SIGALRM, NULL, &old_action);
+  if (old_action.sa_handler != SIG_IGN)
+  { /* by default it is set to ignore */
+    sigaction(SIGALRM, &new_action, NULL);
+  }
+  
+  /* activate alarm */
+  alarm(TheTauInterruptInterval());
+}
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2004/03/02 01:46:35 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.2 2004/03/02 01:46:35 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 2004/03/03 02:24:11 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.3 2004/03/03 02:24:11 sameer Exp $ 
  ***************************************************************************/
 
 	
