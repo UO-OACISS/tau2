@@ -2760,6 +2760,134 @@ echo "$machine: hpcxx_hpnx = $hpnxdir" >> \
 echo "" >> ./build/hpc++/Config.info
 fi
 
+# Modify the Makefiles so include/Makefile is replaced by the TAU options 
+# for specific examples
+echo "s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/$machine/lib/Makefile.tau$tauoptions@g" > utils/sedexamples.out
+#echo "s@include/Makefile@$machine/lib/Makefile.tau$tauoptions@g" >utils/sedexamples.out
+sedex="./utils/sedexamples.out"
+
+echo "Modifying Makefiles in the examples subdirectory..."
+
+# Prefix start from examples directory
+pr=examples
+exampleslist="instrument/Makefile mapping/embedded/Makefile \
+  mapping/external/Makefile fork/Makefile selectiveAccess/Makefile"
+
+if [ $fortran_compiler != no ] 
+then
+  exampleslist="$exampleslist fortran/Makefile f90/Makefile"
+fi
+
+# Rules for adding examples follow...
+# If PDT is specified, then modify the following makefiles
+if [ $pdt = yes ]
+then
+  exampleslist="$exampleslist autoinstrument/Makefile reduce/Makefile cinstrument/Makefile"
+  if [ $fortran_compiler != no ]
+  then
+    exampleslist="$exampleslist selective/Makefile"
+  fi
+fi
+
+# If PDT is specified WITH MPI
+if [ $pdt = yes -a $mpi = yes ]
+then
+  exampleslist="$exampleslist pdt_mpi/c++/Makefile pdt_mpi/c/Makefile" 
+  if [ $pthread = yes ]
+  then
+    exampleslist="$exampleslist mixedmode/Makefile"
+  fi
+
+  if [ $fortran_compiler != no ]
+  then
+    exampleslist="$exampleslist pdt_mpi/f90/Makefile"
+  fi 
+fi
+
+if [ $mpi = yes ]
+then
+  exampleslist="$exampleslist pi/Makefile mpishlib/Makefile"
+  if [ $fortran_compiler != no ]
+  then
+    exampleslist="$exampleslist NPB2.3/config/make.def"
+  fi
+  if [ $openmp = yes ]
+  then 
+    exampleslist="$exampleslist openmpi/Makefile"
+  fi
+fi
+
+if [ $opari = yes ] 
+then
+  exampleslist="$exampleslist opari/c++/Makefile"
+  if [ $pdt = yes -a $fortran_compiler != no ]
+  then 
+    exampleslist="$exampleslist opari/pdt_f90/Makefile"
+  fi
+
+  if [ $mpi = yes ]
+  then
+    exampleslist="$exampleslist opari/openmpi/Makefile"
+  fi
+fi
+
+
+if [ $callpath = yes ]
+then
+  exampleslist="$exampleslist callpath/Makefile"
+fi
+
+if [ $python = yes -o $java = yes -o $dyninst = yes ]
+then
+# RESET the exampleslist, the C, C++, F90 examples don't matter!
+  exampleslist=""
+fi
+
+if [ $pthread = yes ]
+then
+  exampleslist="$exampleslist threads/Makefile cthreads/Makefile"
+fi
+
+if [ $sproc = yes ]
+then
+  exampleslist="$exampleslist sproc/Makefile"
+fi
+
+if [ $papi = yes -o $pcl = yes ]
+then
+  exampleslist="$exampleslist papi/Makefile multicounter/Makefile"
+  if [ $pthread = yes ]
+  then
+    exampleslist="$exampleslist papithreads/Makefile" 
+  fi 
+fi
+
+
+
+for i in $exampleslist
+  do 
+    $echo ".${nnl}"
+    sed -f $sedex < $pr/${i} > $pr/${i}~~0
+    mv $pr/${i}~~0 $pr/${i}
+done
+echo .
+
+# If it is default, restore to original state
+if [ "y$1"  = "ydefault" ]
+then
+  echo "Fixing examples Makefiles..."
+  echo "s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/include/Makefile@g" >utils/sedexamples.out
+  sedex="./utils/sedexamples.out"
+  for i in `find examples -name Makefile -print` examples/NPB2.3/config/make.def
+  do 
+    $echo ".${nnl}"
+    sed -f $sedex < ${i} > ${i}~~0
+    mv ${i}~~0 ${i}
+  done
+fi
+    
+  
+
 
 
 # bye bye
@@ -2774,7 +2902,6 @@ fi
 echo '   Type "make install" to begin compilation'
 
 exit 0
-
 
 
 
