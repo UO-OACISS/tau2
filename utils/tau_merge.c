@@ -435,7 +435,9 @@ int main(int argc, char *argv[])
 	/* parse edf file for this trace */
 	  if (edfspecified == FALSE)
 	  { /* use default edf file names  "events.*.edf" */
-	    open_edf_file("events", numtrc, FALSE);
+	    char eventfilename[2048];
+	    sprintf(eventfilename, "events.%d.edf", trcdes[numtrc].nid); 
+	    open_edf_file(eventfilename, numtrc, TRUE);
 	  }
 	  parse_edf_file(numtrc);
 	}
