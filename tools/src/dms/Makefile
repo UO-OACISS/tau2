@@ -1,5 +1,5 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=apple
+CONFIG_ARCH=@TAUARCH@
 TAUROOT=@TAUROOT@
 
 # these are classpaths for the build.  The second classpath is for the 
@@ -47,7 +47,7 @@ $(EXAMPLE_CLASSES): dms.jar $(EXAMPLE_SOURCES)
 	javac -d $(CLASSPATH) -classpath dms.jar $(EXAMPLE_SOURCES)
 
 javadoc: dms.jar $(SRC_PATH)/dms/dss/package.html
-	javadoc -d $(DOC_PATH) -classpath $(CLASSPATH) $(DSS_SOURCES)
+	javadoc -d $(DOC_PATH) -classpath $(CLASSPATH) $(DSS_SOURCES) $(ANALYSIS_SOURCES)
 
 # these are maintenance targets.
 
@@ -81,6 +81,9 @@ testdelete: $(EXAMPLE_CLASSES)
 
 testsave: $(EXAMPLE_CLASSES)
 	./src/examples/testSave
+
+analysis: $(EXAMPLE_CLASSES)
+	./src/examples/testAnalysis
 
 rebuilddb: dms.jar
 	dropdb perfdmf_buildtest
