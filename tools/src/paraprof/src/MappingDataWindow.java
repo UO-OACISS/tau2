@@ -604,6 +604,10 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
 	ParaProf.helpWindow.writeText("for this function.");
     }
+
+    public StaticMainWindowData getSMWData(){
+	return sMWData;
+    }
       
     public void sortLocalData(){
 	try{

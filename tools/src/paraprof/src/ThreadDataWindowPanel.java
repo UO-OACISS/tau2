@@ -282,7 +282,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
 	    for(int i = startElement; i <= endElement; i++){   
 		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
-	    
 		if(windowType==0){
 		    switch(tDWindow.getValueType()){
 		    case 2:
@@ -450,42 +449,35 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 			trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-			MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), sMWData, this.debug());
-			trial.getSystemEvents().addObserver(tmpRef);
-			tmpRef.show();
+			MappingDataWindow mappingDataWindow = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), sMWData, this.debug());
+			trial.getSystemEvents().addObserver(mappingDataWindow);
+			mappingDataWindow.show();
 		    }
 		}
 		else if(arg.equals("Change Function Color")){ 
-		    int mappingID = -1;
-		    
 		    //Get the clicked on object.
-		    if(clickedOnObject instanceof SMWThreadDataElement)
-			mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
-		    
-		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		    
-		    Color tmpCol = tmpGME.getColor();
-		    
-		    JColorChooser tmpJColorChooser = new JColorChooser();
-		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
-		    if(tmpCol != null){
-			tmpGME.setSpecificColor(tmpCol);
-			tmpGME.setColorFlag(true);
-			
-			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    if(clickedOnObject instanceof SMWThreadDataElement){
+			int mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
+			GlobalMapping globalMapping = trial.getGlobalMapping();
+			GlobalMappingElement globalMappingElement = (GlobalMappingElement) globalMapping.getGlobalMappingElement(mappingID, 0);
+			Color color = globalMappingElement.getColor();
+			color = (new JColorChooser()).showDialog(this, "Please select a new color", color);
+			if(color != null){
+			    globalMappingElement.setSpecificColor(color);
+			    globalMappingElement.setColorFlag(true);
+			    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+			}
 		    }
 		}
 		else if(arg.equals("Reset to Generic Color")){ 
-		    int mappingID = -1;
 		    //Get the clicked on object.
-		    if(clickedOnObject instanceof SMWThreadDataElement)
-			mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
-		    
-		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		    tmpGME.setColorFlag(false);
-		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    if(clickedOnObject instanceof SMWThreadDataElement){
+			int mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
+			GlobalMapping globalMapping = trial.getGlobalMapping();
+			GlobalMappingElement globalMappingElement = (GlobalMappingElement) globalMapping.getGlobalMappingElement(mappingID, 0);
+			globalMappingElement.setColorFlag(false);
+			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    }
 		}
 	    }
 	}

@@ -52,16 +52,52 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //Add this object as a mouse listener.
 	    addMouseListener(this);
       
-	    //Add items to the popu menu.
-	    JMenuItem changeColorItem = new JMenuItem("Change Function Color");
-	    changeColorItem.addActionListener(this);
-	    popup.add(changeColorItem);
-      
-	    JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
-	    maskMappingItem.addActionListener(this);
-	    popup.add(maskMappingItem);
-
 	    
+	    //######
+	    //Add items to the first popup menu.
+	    //######
+	    JMenuItem jMenuItem = new JMenuItem("Show Mean Total Statistics Windows");
+	    jMenuItem.addActionListener(this);
+	    popup1.add(jMenuItem);
+      
+	    jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
+	    jMenuItem.addActionListener(this);
+	    popup1.add(jMenuItem);
+	    //######
+	    //End - Add items to the first popup menu.
+	    //######
+
+	    //######
+	    //Add items to the seccond popup menu.
+	    //######
+	    jMenuItem = new JMenuItem("Show Total Statistics Windows");
+	    jMenuItem.addActionListener(this);
+	    popup2.add(jMenuItem);
+      
+	    jMenuItem = new JMenuItem("Show Total User Event Statistics Windows");
+	    jMenuItem.addActionListener(this);
+	    popup2.add(jMenuItem);
+
+	    jMenuItem = new JMenuItem("Show Call Path Thread Relations");
+	    jMenuItem.addActionListener(this);
+	    popup2.add(jMenuItem);
+	    //######
+	    //End - Add items to the second popup menu.
+	    //######
+
+	    //######
+	    //Add items to the third popup menu.
+	    //######
+	    jMenuItem = new JMenuItem("Change Function Color");
+	    jMenuItem.addActionListener(this);
+	    popup3.add(jMenuItem);
+      
+	    jMenuItem = new JMenuItem("Reset to Generic Color");
+	    jMenuItem.addActionListener(this);
+	    popup3.add(jMenuItem);
+	    //######
+	    //End - Add items to the third popup menu.
+	    //######
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "MDWP02");
@@ -105,11 +141,21 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		System.out.println("MappingDataWindowPanel.renderIt(...)");
 		System.out.println("####################################");
 	    }
+
+	    list = mDWindow.getData();
+
+	    //######
+	    //Some declarations.
+	    //######
 	    double value = 0.0;
 	    double maxValue = 0.0;
 	    int stringWidth = 0;
 	    int yCoord = 0;
-	    int barXCoord = barLength + textOffset;
+	    barXCoord = barLength + textOffset;
+	    SMWThreadDataElement sMWThreadDataElement = null;
+	    //######
+	    //Some declarations.
+	    //######
 	    
 	    //To make sure the bar details are set, this
 	    //method must be called.
@@ -190,69 +236,85 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 
 	    int yBeg = 0;
 	    int yEnd = 0;
+	    int startElement = 0;
+	    int endElement = 0;
 	    Rectangle clipRect = null;
-
-	    if(instruction==1 || instruction==2){
-		yBeg = 0;
-		yEnd = yPanelSize;
+	    Rectangle viewRect = null;
+	    
+	    if(instruction==0||instruction==1){
+		if(instruction==0){
+		    clipRect = g2D.getClipBounds();
+		    yBeg = (int) clipRect.getY();
+		    yEnd = (int) (yBeg + clipRect.getHeight());
+		    /*
+		      System.out.println("Clipping Rectangle: xBeg,xEnd: "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+
+		      " yBeg,yEnd: "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
+		    */
+		}
+		else{
+		    viewRect = mDWindow.getViewRect();
+		    yBeg = (int) viewRect.getY();
+		    yEnd = (int) (yBeg + viewRect.getHeight());
+		    /*
+		      System.out.println("Viewing Rectangle: xBeg,xEnd: "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+
+					   " yBeg,yEnd: "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
+		    */
+		}
+		startElement = ((yBeg - yCoord) / barSpacing) - 1;
+		endElement  = ((yEnd - yCoord) / barSpacing) + 1;
+		
+		if(startElement < 0)
+		    startElement = 0;
+		
+		if(endElement < 0)
+		    endElement = 0;
+		
+		if(startElement > (list.size() - 1))
+		    startElement = (list.size() - 1);
+		
+		if(endElement > (list.size() - 1))
+		    endElement = (list.size() - 1);
+		
+		yCoord = yCoord + (startElement * barSpacing);
 	    }
-	    else{
-		clipRect = g2D.getClipBounds();
-		yBeg = (int) clipRect.getY();
-		yEnd = (int) (yBeg + clipRect.getHeight());
-		yEnd = yEnd + barSpacing;
+	    else if(instruction==2 || instruction==3){
+		startElement = 0;
+		endElement = ((list.size()) - 1);
 	    }
 
 	    //Check for group membership.
 	    groupMember = gME.isGroupMember(trial.getColorChooser().getGroupHighlightColorID());
 
-
-	    //Some points to note about drawing. When we draw, swing begins at the given y coord,
-	    //and draws down towards the bottom of the panel. Given that we use clipping to determine
-	    //what to draw, we have to be careful to draw everytime our clipping coords intersect
-	    //the object. Otherwise, we run the risk of either not drawing when we need to, or 
-	    //clipping out sections that we would like to be redrawn. It is no good just increasing
-	    //what is being drawn to something larger than the clip rectangle, because that 
-	    //will just be clipped down to the clipping rectangle size.
-	    //As an example, change the marked sections below, and observe the effects
-	    //when scrolling down ~20 pixels, and the gradually scrolling back up.
-
-	    //Draw mean information.
-	    yCoord = yCoord + (barSpacing); //Comment this
-	    if((yCoord >= yBeg) && (yCoord <= yEnd)){
-		//yCoord = yCoord + (barSpacing);//Uncomment this.
+	    yCoord = yCoord + (barSpacing); //Still need to update the yCoord even if the mean bar is not drawn.
+	    if(startElement==0)
 		drawBar(g2D, fmFont, value, maxValue, "mean", barXCoord, yCoord, barHeight, groupMember, instruction);
-	    }
-	    //else{//Uncomment this.
-	    //yCoord = yCoord + (barSpacing);//Uncomment this.
-	    //}//Uncomment this.
-	    
+	    	    
 	    //######
 	    //Draw thread information for this mapping.
 	    //######
-	    for(Enumeration e = (mDWindow.getData()).elements(); e.hasMoreElements() ;){
-		tmpSMWThreadDataElement = (SMWThreadDataElement) e.nextElement();
+	    for(int i = startElement; i <= endElement; i++){
+		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
 		switch(mDWindow.getValueType()){
 		case 2:
 		    if(mDWindow.isPercent())
-			value = tmpSMWThreadDataElement.getExclusivePercentValue();
+			value = sMWThreadDataElement.getExclusivePercentValue();
 		    else
-			value = tmpSMWThreadDataElement.getExclusiveValue();
+			value = sMWThreadDataElement.getExclusiveValue();
 		    break;
 		case 4:
 		    if(mDWindow.isPercent())
-			value = tmpSMWThreadDataElement.getInclusivePercentValue();
+			value = sMWThreadDataElement.getInclusivePercentValue();
 		    else
-			value = tmpSMWThreadDataElement.getInclusiveValue();
+			value = sMWThreadDataElement.getInclusiveValue();
 		    break;
 		case 6:
-		    value = tmpSMWThreadDataElement.getNumberOfCalls();
+		    value = sMWThreadDataElement.getNumberOfCalls();
 		    break;
 		case 8:
-		    value = tmpSMWThreadDataElement.getNumberOfSubRoutines();
+		    value = sMWThreadDataElement.getNumberOfSubRoutines();
 		    break;
 		case 10:
-		    value = tmpSMWThreadDataElement.getUserSecPerCall();
+		    value = sMWThreadDataElement.getUserSecPerCall();
 		    break;
 		default:
 		    UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
@@ -260,19 +322,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		if(this.debug())
 		    System.out.println("Value: " + value);
 
-		
-		
-		//For consistancy in drawing, the y coord is updated at the beginning of the loop.
 		yCoord = yCoord + (barSpacing);
-		
-		//Now select whether to draw this thread based on clip rectangle.
-		if((yCoord >= yBeg) && (yCoord <= yEnd)){
-		    drawBar(g2D, fmFont, value, maxValue,
-			    "n,c,t " + (tmpSMWThreadDataElement.getNodeID()) +
-			    "," + (tmpSMWThreadDataElement.getContextID()) +
-			    "," + (tmpSMWThreadDataElement.getThreadID()),
-			    barXCoord, yCoord, barHeight, groupMember, instruction);
-		}
+		drawBar(g2D, fmFont, value, maxValue,
+			"n,c,t " + (sMWThreadDataElement.getNodeID()) +
+			"," + (sMWThreadDataElement.getContextID()) +
+			"," + (sMWThreadDataElement.getThreadID()),
+			barXCoord, yCoord, barHeight, groupMember, instruction);
 	    }
 	    //######
 	    //End - Draw thread information for this mapping.
@@ -364,10 +419,77 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
-	    
+	    SMWThreadDataElement sMWThreadDataElement = null;
+
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
-		if(arg.equals("Change Function Color")){ 
+		if(arg.equals("Show Mean Total Statistics Windows")){
+		    StatWindow statWindow = new StatWindow(trial, -1, -1, -1, mDWindow.getSMWData(), 0, this.debug());
+		    trial.getSystemEvents().addObserver(statWindow);
+		    statWindow.show();
+		}
+		else if(arg.equals("Show Mean Total User Event Statistics Windows")){
+		    if(clickedOnObject instanceof SMWThreadDataElement){
+			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
+			StatWindow statWindow = new StatWindow(trial, sMWThreadDataElement.getNodeID(),
+							       sMWThreadDataElement.getContextID(),
+							       sMWThreadDataElement.getThreadID(),mDWindow.getSMWData(),
+							       2, this.debug());
+			trial.getSystemEvents().addObserver(statWindow);
+			statWindow.show();
+		    }
+		}
+		else if(arg.equals("Show Mean Call Path Thread Relations")){
+		    if(clickedOnObject instanceof SMWThreadDataElement){
+			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
+			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThreadDataElement.getNodeID(),
+													     sMWThreadDataElement.getContextID(),
+													     sMWThreadDataElement.getThreadID()));
+			CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial, sMWThreadDataElement.getNodeID(),
+										       sMWThreadDataElement.getContextID(),
+										       sMWThreadDataElement.getThreadID(),mDWindow.getSMWData(),
+										       false, this.debug());
+			trial.getSystemEvents().addObserver(callPathTextWindow);
+			callPathTextWindow.show();
+		    }
+		}
+		else if(arg.equals("Show Total Statistics Windows")){
+		    if(clickedOnObject instanceof SMWThreadDataElement){
+			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
+			StatWindow statWindow = new StatWindow(trial, sMWThreadDataElement.getNodeID(),
+							       sMWThreadDataElement.getContextID(),
+							       sMWThreadDataElement.getThreadID(),mDWindow.getSMWData(),
+							       1, this.debug());
+			trial.getSystemEvents().addObserver(statWindow);
+			statWindow.show();
+		    }
+		}
+		else if(arg.equals("Show Total User Event Statistics Windows")){
+		    if(clickedOnObject instanceof SMWThreadDataElement){
+			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
+			StatWindow statWindow = new StatWindow(trial, sMWThreadDataElement.getNodeID(),
+							       sMWThreadDataElement.getContextID(),
+							       sMWThreadDataElement.getThreadID(),mDWindow.getSMWData(),
+							       2, this.debug());
+			trial.getSystemEvents().addObserver(statWindow);
+			statWindow.show();
+		    }
+		}
+		else if(arg.equals("Show Call Path Thread Relations")){
+		    if(clickedOnObject instanceof SMWThreadDataElement){
+			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
+			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThreadDataElement.getNodeID(),
+													     sMWThreadDataElement.getContextID(),
+													     sMWThreadDataElement.getThreadID()));
+			CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial, sMWThreadDataElement.getNodeID(),
+										       sMWThreadDataElement.getContextID(),
+										       sMWThreadDataElement.getThreadID(),mDWindow.getSMWData(),
+										       false, this.debug());
+			trial.getSystemEvents().addObserver(callPathTextWindow);
+			callPathTextWindow.show();
+		    }
+		}
+		else if(arg.equals("Change Function Color")){ 
 		    Color tmpCol = gME.getColor();
 		    
 		    JColorChooser tmpJColorChooser = new JColorChooser();
@@ -397,10 +519,65 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     //######
     public void mouseClicked(MouseEvent evt){
 	try{
-	    //For the moment, I am just showing the popup menu anywhere.
-	    //For a future release, there will be more here.
-	    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-		popup.show(this, evt.getX(), evt.getY());
+	    //Get the location of the mouse.
+	    int xCoord = evt.getX();
+	    int yCoord = evt.getY();
+	    
+	    //Get the number of times clicked.
+	    int clickCount = evt.getClickCount();
+
+	    SMWThreadDataElement sMWThreadDataElement = null;
+
+	    //Calculate which SMWThreadDataElement was clicked on.
+	    int index = (yCoord)/(trial.getPreferences().getBarSpacing())-1;
+
+	    if(index<list.size()){
+		if(index!=-1)
+		    sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(index);
+		if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+		    //Set the clickedSMWMeanDataElement.
+		    clickedOnObject = sMWThreadDataElement;
+		    if(xCoord>barXCoord){ //barXCoord should have been set during the last render.
+			if(index==-1)
+			    popup1.show(this, evt.getX(), evt.getY());
+			else
+			    popup2.show(this, evt.getX(), evt.getY());
+		    }
+		    else
+			popup3.show(this, evt.getX(), evt.getY());
+		    return;
+		}
+		else{
+		    if(xCoord>barXCoord){ //barXCoord should have been set during the last render.
+			if(index==-1){
+			    ThreadDataWindow threadDataWindow = new ThreadDataWindow(trial, -1, -1, -1, mDWindow.getSMWData(), 0, this.debug());
+			    trial.getSystemEvents().addObserver(threadDataWindow);
+			    threadDataWindow.show();
+			}
+			else{
+			    ThreadDataWindow  threadDataWindow = new ThreadDataWindow(trial, sMWThreadDataElement.getNodeID(),
+										      sMWThreadDataElement.getContextID(),
+										      sMWThreadDataElement.getThreadID(),
+										      mDWindow.getSMWData(),
+										      1, this.debug());
+			    trial.getSystemEvents().addObserver(threadDataWindow);
+			    threadDataWindow.show();
+			}
+		    }
+		    else{
+			//Want to set the clicked on mapping to the current highlight color or, if the one
+			//clicked on is already the current highlighted one, set it back to normal.
+			if((trial.getColorChooser().getHighlightColorID()) == -1){
+			    trial.getColorChooser().setHighlightColorID(mappingID);
+			}
+			else{
+			    if(!((trial.getColorChooser().getHighlightColorID()) == mappingID))
+				trial.getColorChooser().setHighlightColorID(mappingID);
+			    else
+				trial.getColorChooser().setHighlightColorID(-1);
+			}
+		    }
+		}
 	    }
 	}
 	catch(Exception e){
@@ -490,15 +667,19 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     private int baseBarLength = 250;
     private int barLength = 0;
     private int textOffset = 60;
+    private int barXCoord = 0;
     private int maxXLength = 0;
     private boolean groupMember = false;
     private ParaProfTrial trial = null;
     private MappingDataWindow mDWindow = null;
-    private SMWThreadDataElement tmpSMWThreadDataElement = null;
+    private Vector list = null;
     int xPanelSize = 0;
     int yPanelSize = 0;
   
-    private JPopupMenu popup = new JPopupMenu();
+    private JPopupMenu popup1 = new JPopupMenu();
+    private JPopupMenu popup2 = new JPopupMenu();
+    private JPopupMenu popup3 = new JPopupMenu();
+    private Object clickedOnObject = null;
     
     private boolean debug = false; //Off by default.
     //####################################
