@@ -13,7 +13,7 @@ import java.util.*;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.10 2003/10/17 23:03:28 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.11 2003/12/03 23:46:32 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -137,11 +137,11 @@ public class Trial {
 	}
 
 /**
- * Gets the metric at the particular index.
+ * Gets the metric name at the particular index.
  *
  * @return	a metric name.
  */
-	public String getMetric (int metricIndex) {
+	public String getMetricName (int metricIndex) {
 		return (String)this.metric.elementAt(metricIndex);
 	}
 
