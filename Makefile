@@ -66,9 +66,11 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 
 #VTF#VTFCONVERTER=utils/vtfconverter#ENDIF#
 
+#SLOG2#SLOGCONVERTER=utils/slogconverter/src#ENDIF#
+
 
 # Subdirectories to make resursively
-SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER)
+SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) $(SLOGCONVERTER)
 
 all:
 	@echo "At the installation root, use \"make install\" "
