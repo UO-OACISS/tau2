@@ -15,7 +15,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class TotalStatWindow extends JFrame implements ActionListener, Observer 
+public class TotalStatWindow extends JFrame implements ActionListener, MenuListener, Observer 
 {
 	
 	public TotalStatWindow()
@@ -166,19 +166,24 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			//End Submenu.
 			
 			//Add a submenu.
-			JMenu inclusiveExclusiveMenu = new JMenu("Select Inclusive or Exclusive");
-			inclusiveExclusiveGroup = new ButtonGroup();
-			inclusiveRadioButton = new JRadioButtonMenuItem("Inclusive", false);
-			//Add a listener for this radio button.
+			JMenu metricMenu = new JMenu("Select Metric");
+			metricGroup = new ButtonGroup();
+			
+			//Add listeners
 			inclusiveRadioButton.addActionListener(this);
-			exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
-			//Add a listener for this radio button.
 			exclusiveRadioButton.addActionListener(this);
-			inclusiveExclusiveGroup.add(inclusiveRadioButton);
-			inclusiveExclusiveGroup.add(exclusiveRadioButton);
-			inclusiveExclusiveMenu.add(inclusiveRadioButton);
-			inclusiveExclusiveMenu.add(exclusiveRadioButton);
-			optionsMenu.add(inclusiveExclusiveMenu);
+			numOfCallsRadioButton.addActionListener(this);
+			numOfSubRoutinesRadioButton.addActionListener(this);
+			
+			metricGroup.add(inclusiveRadioButton);
+			metricGroup.add(exclusiveRadioButton);
+			metricGroup.add(numOfCallsRadioButton);
+			metricGroup.add(numOfSubRoutinesRadioButton);
+			metricMenu.add(inclusiveRadioButton);
+			metricMenu.add(exclusiveRadioButton);
+			metricMenu.add(numOfCallsRadioButton);
+			metricMenu.add(numOfSubRoutinesRadioButton);
+			optionsMenu.add(metricMenu);
 			//End Submenu.
 					
 			
@@ -195,11 +200,22 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			//Window menu.
 			//******************************
 			JMenu windowsMenu = new JMenu("Windows");
+			windowsMenu.addMenuListener(this);
 			
 			//Add a submenu.
 			JMenuItem mappingLedgerItem = new JMenuItem("Show Function Ledger");
 			mappingLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingLedgerItem);
+			
+			//Add a submenu.
+			mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
+			mappingGroupLedgerItem.addActionListener(this);
+			windowsMenu.add(mappingGroupLedgerItem);
+			
+			//Add a submenu.
+			userEventLedgerItem = new JMenuItem("Show User Event Ledger");
+			userEventLedgerItem.addActionListener(this);
+			windowsMenu.add(userEventLedgerItem);
 			
 			//Add a submenu.
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
@@ -368,7 +384,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				{
 					if(inclusiveRadioButton.isSelected())
 					{
-						inclusive = true;
+						metric = "Inclusive";
 						//Call repaint.
 						totalStatWindowPanelRef.repaint();
 					}
@@ -377,7 +393,25 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				{
 					if(exclusiveRadioButton.isSelected())
 					{
-						inclusive = false;
+						metric = "Exclusive";
+						//Call repaint.
+						totalStatWindowPanelRef.repaint();
+					}
+				}
+				else if(arg.equals("Number of Calls"))
+				{
+					if(numOfCallsRadioButton.isSelected())
+					{
+						metric = "Number of Calls";
+						//Call repaint.
+						totalStatWindowPanelRef.repaint();
+					}
+				}
+				else if(arg.equals("Number of Subroutines"))
+				{
+					if(numOfSubRoutinesRadioButton.isSelected())
+					{
+						metric = "Number of Subroutines";
 						//Call repaint.
 						totalStatWindowPanelRef.repaint();
 					}
@@ -387,6 +421,18 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
 					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
+				}
+				else if(arg.equals("Show Group Ledger"))
+				{
+					//In order to be in this window, I must have loaded the data. So,
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+				}
+				else if(arg.equals("Show User Event Ledger"))
+				{
+					//In order to be in this window, I must have loaded the data. So,
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
@@ -422,6 +468,45 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			jRacy.systemError(null, "TSW03");
 		}
 	}
+	
+	//******************************
+	//MenuListener code.
+	//******************************
+	public void menuSelected(MenuEvent evt)
+	{
+		try
+		{
+			System.out.println("Here1");
+			if(jRacy.staticSystemData.groupNamesPresent())
+				mappingGroupLedgerItem.setEnabled(true);
+			else
+				mappingGroupLedgerItem.setEnabled(false);
+				
+			if(jRacy.staticSystemData.userEventsPresent())
+				userEventLedgerItem.setEnabled(true);
+			else{
+				System.out.println("Here2");
+				userEventLedgerItem.setEnabled(false);
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "TSW03");
+		}
+		
+	}
+	
+	public void menuDeselected(MenuEvent evt)
+	{
+	}
+	
+	public void menuCanceled(MenuEvent evt)
+	{
+	}
+	
+	//******************************
+	//End - MenuListener code.
+	//******************************
 	
 	//Observer functions.
 	public void update(Observable o, Object arg)
@@ -474,42 +559,103 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 	//Note:  This is only meant to be called by the TotalStatWindowPanel.
 	public Vector getStaticMainWindowSystemData()
 	{
-		try{
+		try
+		{
 			if(sortByMappingID)
 			{
-				if(descendingOrder)
-					return sMWData.getSMWThreadData(server, context, thread, "FIdDE");
-				else
-					return sMWData.getSMWThreadData(server, context, thread, "FIdAE");
+				if(metric.equals("Inclusive"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "FIdDI");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "FIdAI");
+				}
+				else if(metric.equals("Exclusive"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "FIdDE");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "FIdAE");
+				}
+				else if(metric.equals("Number of Calls"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "FIdDNC");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "FIdANC");
+				}
+				else if(metric.equals("Number of Subroutines"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "FIdDNS");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "FIdANS");
+				}
 			}
 			else if(sortByName)
 			{
-				if(descendingOrder)
-					return sMWData.getSMWThreadData(server, context, thread, "NDE");
-				else
-					return sMWData.getSMWThreadData(server, context, thread, "NAE");
+				
+				if(metric.equals("Inclusive"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "NDI");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "NAI");
+				}
+				else if(metric.equals("Exclusive"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "NDE");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "NAE");
+				}
+				else if(metric.equals("Number of Calls"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "NDNC");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "NANC");
+				}
+				else if(metric.equals("Number of Subroutines"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "NDNS");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "NANS");
+				}
 			}
 			else if(sortByMillisecond)
 			{
-				if(inclusive)
+				
+				if(metric.equals("Inclusive"))
 				{
-					
 					if(descendingOrder)
 						return sMWData.getSMWThreadData(server, context, thread, "MDI");
 					else
 						return sMWData.getSMWThreadData(server, context, thread, "MAI");
 				}
-				else
+				else if(metric.equals("Exclusive"))
 				{
 					if(descendingOrder)
 						return sMWData.getSMWThreadData(server, context, thread, "MDE");
 					else
 						return sMWData.getSMWThreadData(server, context, thread, "MAE");
 				}
+				else if(metric.equals("Number of Calls"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "MDNC");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "MANC");
+				}
+				else if(metric.equals("Number of Subroutines"))
+				{
+					if(descendingOrder)
+						return sMWData.getSMWThreadData(server, context, thread, "MDNS");
+					else
+						return sMWData.getSMWThreadData(server, context, thread, "MANS");
+				}
 			}
-			
-			//Should not get here.  Return null ... will force and exception.
-			return null;
 		}
 		catch(Exception e)
 		{
@@ -554,7 +700,10 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
  	
  	ButtonGroup sortGroup;
 	ButtonGroup sortOrderGroup;
-	ButtonGroup inclusiveExclusiveGroup;
+	private ButtonGroup metricGroup = null;
+	
+	private JMenuItem mappingGroupLedgerItem;
+	private JMenuItem userEventLedgerItem;
 	
 	JRadioButtonMenuItem mappingIDButton;
 	JRadioButtonMenuItem nameButton;
@@ -563,8 +712,12 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 	JRadioButtonMenuItem ascendingButton;
 	JRadioButtonMenuItem descendingButton;
 	
-	JRadioButtonMenuItem inclusiveRadioButton;
-	JRadioButtonMenuItem exclusiveRadioButton;
+	private JRadioButtonMenuItem inclusiveRadioButton =  new JRadioButtonMenuItem("Inclusive", false);
+	private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
+	private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
+	private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
+	
+	private String metric = "Exclusive";
 	
 	boolean sortByMappingID = false;
 	boolean sortByName = false;

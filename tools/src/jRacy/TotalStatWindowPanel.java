@@ -343,7 +343,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Show Munction Details"))
+				if(arg.equals("Show Function Details"))
 				{
 					
 					if(clickedOnObject instanceof SMWThreadDataElement)

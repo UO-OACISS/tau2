@@ -114,7 +114,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			JMenu sortMenu = new JMenu("Sort by ...");
 			sortGroup = new ButtonGroup();
 			
-			mappingIDButton = new JRadioButtonMenuItem("mapping ID", false);
+			mappingIDButton = new JRadioButtonMenuItem("function ID", false);
 			//Add a listener for this radio button.
 			mappingIDButton.addActionListener(this);
 			
@@ -240,14 +240,19 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			windowsMenu.addMenuListener(this);
 			
 			//Add a submenu.
-			JMenuItem mappingLedgerItem = new JMenuItem("Show Mapping Ledger");
+			JMenuItem mappingLedgerItem = new JMenuItem("Show Function Ledger");
 			mappingLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingLedgerItem);
 			
 			//Add a submenu.
-			mappingGroupLedgerItem = new JMenuItem("Show Group Mapping Ledger");
+			mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
 			mappingGroupLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingGroupLedgerItem);
+			
+			//Add a submenu.
+			userEventLedgerItem = new JMenuItem("Show User Event Ledger");
+			userEventLedgerItem.addActionListener(this);
+			windowsMenu.add(userEventLedgerItem);
 			
 			//Add listeners
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
@@ -368,7 +373,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 					dispose();
 					System.exit(0);
 				}
-				else if(arg.equals("mapping ID"))
+				else if(arg.equals("function ID"))
 				{
 					if(mappingIDButton.isSelected())
 					{
@@ -523,17 +528,23 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 						displaySiders(false);
 					}
 				}
-				else if(arg.equals("Show Mapping Ledger"))
+				else if(arg.equals("Show Function Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
 					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
 				}
-				else if(arg.equals("Show Group Mapping Ledger"))
+				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
 					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+				}
+				else if(arg.equals("Show User Event Ledger"))
+				{
+					//In order to be in this window, I must have loaded the data. So,
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
@@ -596,6 +607,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
+				
+			if(jRacy.staticSystemData.userEventsPresent())
+				userEventLedgerItem.setEnabled(true);
+			else
+				userEventLedgerItem.setEnabled(false);
 				
 				
 			
@@ -999,6 +1015,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	private JMenu unitsMenu;
 	private JMenu valuePercentMenu;
 	private JMenuItem mappingGroupLedgerItem;
+	private JMenuItem userEventLedgerItem;
 	
 	private ButtonGroup sortGroup;
 	private ButtonGroup sortOrderGroup;

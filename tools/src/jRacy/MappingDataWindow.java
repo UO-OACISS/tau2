@@ -196,9 +196,14 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			windowsMenu.add(mappingLedgerItem);
 			
 			//Add a submenu.
-			mappingGroupLedgerItem = new JMenuItem("Show Group Mapping Ledger");
+			mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
 			mappingGroupLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingGroupLedgerItem);
+			
+			//Add a submenu.
+			userEventLedgerItem = new JMenuItem("Show User Event Ledger");
+			userEventLedgerItem.addActionListener(this);
+			windowsMenu.add(userEventLedgerItem);
 			
 			//Add listeners
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
@@ -402,11 +407,17 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 					//just show the mapping ledger window.
 					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
 				}
-				else if(arg.equals("Show Group Mapping Ledger"))
+				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
 					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+				}
+				else if(arg.equals("Show User Event Ledger"))
+				{
+					//In order to be in this window, I must have loaded the data. So,
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
@@ -478,6 +489,11 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
+				
+			if(jRacy.staticSystemData.userEventsPresent())
+				userEventLedgerItem.setEnabled(true);
+			else
+				userEventLedgerItem.setEnabled(false);
 		}
 		catch(Exception e)
 		{
@@ -707,6 +723,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	
 	private JMenu unitsMenu;
 	private JMenuItem mappingGroupLedgerItem;
+	private JMenuItem userEventLedgerItem;
 	
 	private ButtonGroup inclusiveExclusiveGroup = null;
 	private ButtonGroup valuePercentGroup = null;

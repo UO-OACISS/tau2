@@ -1045,8 +1045,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 			{
 				if(descendingOrder)
 					currentSMWMeanData = sMWData.getSMWMeanData("NDE");
-				else
+				else{
 					currentSMWMeanData = sMWData.getSMWMeanData("NAE");
+					}
 			}
 			else if(sortByMillisecond)
 			{

@@ -834,7 +834,6 @@ public class StaticMainWindowData
 				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 			}
 		}
-		
 		Collections.sort(tmpVector);
 		return tmpVector;
 	}

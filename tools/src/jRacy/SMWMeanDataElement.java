@@ -76,7 +76,7 @@ public class SMWMeanDataElement implements Comparable
 			case(3):
 				return (((SMWMeanDataElement) inObject).getMappingName()).compareTo(this.getMappingName());
 			case(4):
-				return (this.getMappingName()).compareTo(((SMWThreadDataElement)inObject).getMappingName());
+				return (this.getMappingName()).compareTo(((SMWMeanDataElement)inObject).getMappingName());
 			case(5):
 				tmpDouble = (value - (((SMWMeanDataElement)inObject).getValue()));
 				if(tmpDouble < 0.00)

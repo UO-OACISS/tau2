@@ -53,11 +53,11 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 			sMWData = inSMWData;
 			
 			//Add items to the popu menu.
-			JMenuItem mappingDetailsItem = new JMenuItem("Show Mapping Details");
+			JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
 			mappingDetailsItem.addActionListener(this);
 			popup.add(mappingDetailsItem);
 			
-			JMenuItem changeColorItem = new JMenuItem("Change Mapping Color");
+			JMenuItem changeColorItem = new JMenuItem("Change Function Color");
 			changeColorItem.addActionListener(this);
 			popup.add(changeColorItem);
 			
@@ -853,7 +853,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Show Mapping Details"))
+				if(arg.equals("Show Function Details"))
 				{
 					
 					if(clickedOnObject instanceof SMWMeanDataElement)
@@ -866,7 +866,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						tmpRef.show();
 					}
 				}
-				else if(arg.equals("Change Mapping Color"))
+				else if(arg.equals("Change Function Color"))
 				{	
 					int mappingID = -1;
 					

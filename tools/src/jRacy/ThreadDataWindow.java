@@ -243,6 +243,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			mappingGroupLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingGroupLedgerItem);
 			
+			//Add a submenu.
+			userEventLedgerItem = new JMenuItem("Show User Event Ledger");
+			userEventLedgerItem.addActionListener(this);
+			windowsMenu.add(userEventLedgerItem);
+			
 			//Add listeners
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
 			closeAllSubwindowsItem.addActionListener(this);
@@ -552,6 +557,12 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 					//just show the mapping ledger window.
 					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
 				}
+				else if(arg.equals("Show User Event Ledger"))
+				{
+					//In order to be in this window, I must have loaded the data. So,
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
+				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
@@ -618,6 +629,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
+				
+			if(jRacy.staticSystemData.userEventsPresent())
+				userEventLedgerItem.setEnabled(true);
+			else
+				userEventLedgerItem.setEnabled(false);
 				
 				
 			
@@ -960,6 +976,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	private JMenu unitsMenu;
 	private JMenu valuePercentMenu;
 	private JMenuItem mappingGroupLedgerItem;
+	private JMenuItem userEventLedgerItem;
 	
 	private ButtonGroup sortGroup = null;
 	private ButtonGroup sortOrderGroup = null;

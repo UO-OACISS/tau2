@@ -15,7 +15,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class TotalStatUEWindow extends JFrame implements ActionListener, Observer 
+public class TotalStatUEWindow extends JFrame implements ActionListener, MenuListener, Observer 
 {
 	
 	public TotalStatUEWindow()
@@ -196,11 +196,22 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, Observe
 			//Window menu.
 			//******************************
 			JMenu windowsMenu = new JMenu("Windows");
+			windowsMenu.addMenuListener(this);
 			
 			//Add a submenu.
 			JMenuItem mappingLedgerItem = new JMenuItem("Show Function Ledger");
 			mappingLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingLedgerItem);
+			
+			//Add a submenu.
+			mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
+			mappingGroupLedgerItem.addActionListener(this);
+			windowsMenu.add(mappingGroupLedgerItem);
+			
+			//Add a submenu.
+			userEventLedgerItem = new JMenuItem("Show User Event Ledger");
+			userEventLedgerItem.addActionListener(this);
+			windowsMenu.add(userEventLedgerItem);
 			
 			//Add a submenu.
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
@@ -389,6 +400,18 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, Observe
 					//just show the mapping ledger window.
 					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
 				}
+				else if(arg.equals("Show Group Ledger"))
+				{
+					//In order to be in this window, I must have loaded the data. So,
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+				}
+				else if(arg.equals("Show User Event Ledger"))
+				{
+					//In order to be in this window, I must have loaded the data. So,
+					//just show the mapping ledger window.
+					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
+				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
@@ -423,6 +446,42 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, Observe
 			jRacy.systemError(null, "TSUEW03");
 		}
 	}
+	
+	//******************************
+	//MenuListener code.
+	//******************************
+	public void menuSelected(MenuEvent evt)
+	{
+		try
+		{
+			if(jRacy.staticSystemData.groupNamesPresent())
+				mappingGroupLedgerItem.setEnabled(true);
+			else
+				mappingGroupLedgerItem.setEnabled(false);
+				
+			if(jRacy.staticSystemData.userEventsPresent())
+				userEventLedgerItem.setEnabled(true);
+			else
+				userEventLedgerItem.setEnabled(false);
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "SMW03");
+		}
+		
+	}
+	
+	public void menuDeselected(MenuEvent evt)
+	{
+	}
+	
+	public void menuCanceled(MenuEvent evt)
+	{
+	}
+	
+	//******************************
+	//End - MenuListener code.
+	//******************************
 	
 	//Observer functions.
 	public void update(Observable o, Object arg)
@@ -552,6 +611,9 @@ public class TotalStatUEWindow extends JFrame implements ActionListener, Observe
 	//******************************
  	private TotalStatUEWindowPanel totalStatUEWindowPanelRef;
  	private StaticMainWindowData sMWData = new StaticMainWindowData();
+ 	
+ 	private JMenuItem mappingGroupLedgerItem;
+	private JMenuItem userEventLedgerItem;
  	
  	ButtonGroup sortGroup;
 	ButtonGroup sortOrderGroup;
