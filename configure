@@ -907,8 +907,8 @@ EOF
   then
     echo "Thread-safe MPI interface is defined... "
     fixmakeargs="$fixmakeargs MPI_THREADED"
-    /bin/rm -rf mpi_thread_test.C
   fi
+  /bin/rm -rf mpi_thread_test.C
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
 fi
