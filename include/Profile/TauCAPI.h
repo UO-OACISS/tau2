@@ -122,6 +122,13 @@
 #define TAU_ALLGATHER_DATA(data)  	Tau_allgather_data(data)
 #define TAU_REDUCESCATTER_DATA(data)  	Tau_reducescatter_data(data)
 #define TAU_SCAN_DATA(data)  		Tau_scan_data(data)
+#define TAU_ENABLE_TRACKING_MEMORY()	Tau_enable_tracking_memory()
+#define TAU_DISABLE_TRACKING_MEMORY()	Tau_disable_tracking_memory()
+#define TAU_TRACK_MEMORY()		Tau_track_memory()
+#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	Tau_enable_tracking_muse_events()	
+#define TAU_DISABLE_TRACKING_MUSE_EVENTS()	Tau_disable_tracking_muse_events()
+#define TAU_TRACK_MUSE_EVENTS()			Tau_track_muse_events()		
+#define TAU_SET_INTERRUPT_INTERVAL(value)	Tau_set_interrupt_interval(value)
 
 extern void Tau_bcast_data(int data);
 extern void Tau_reduce_data(int data);
@@ -174,6 +181,14 @@ extern TauGroup_t Tau_get_profile_group(char *group);
 extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, char *group_name);
 extern void Tau_create_top_level_timer_if_necessary(void);
 extern void Tau_stop_top_level_timer_if_necessary(void);
+extern void Tau_track_memory(void);
+extern void Tau_track_muse_events(void);
+extern void Tau_enable_tracking_memory(void);
+extern void Tau_disable_tracking_memory(void);
+extern void Tau_enable_tracking_muse_events(void);
+extern void Tau_disable_tracking_muse_events(void);
+extern void Tau_set_interrupt_interval(int value);
+
 
 
 
@@ -232,6 +247,13 @@ extern void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_SCATTER_DATA(data)
 #define TAU_GATHER_DATA(data)
 #define TAU_ALLGATHER_DATA(data)
+#define TAU_ENABLE_TRACKING_MEMORY()
+#define TAU_DISABLE_TRACKING_MEMORY()
+#define TAU_TRACK_MEMORY()
+#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	
+#define TAU_DISABLE_TRACKING_MUSE_EVENTS()
+#define TAU_TRACK_MUSE_EVENTS()		
+#define TAU_SET_INTERRUPT_INTERVAL(value)
 
 #define CT(obj)
 
@@ -256,7 +278,7 @@ extern void Tau_stop_top_level_timer_if_necessary(void);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 2004/01/05 19:08:16 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.28 2004/01/05 19:08:16 sameer Exp $
+ * $Revision: 1.29 $   $Date: 2004/03/03 18:44:54 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.29 2004/03/03 18:44:54 sameer Exp $
  ***************************************************************************/
 
