@@ -62,10 +62,10 @@ public class Main {
 
     /*** Parse and load an application. ***/   
 
-    public void storeApp(String appFile) {
+    public String storeApp(String appFile) {
 	BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 	String parInfo;
-	String appid;
+	String appid = null;
 
 	// I decided not to prompt the user for this.  
 	// Default to no.  - khuck 05/03/03
@@ -90,7 +90,7 @@ public class Main {
 	   
 	} catch (Throwable ex) {
 	    errorPrint("Error: " + ex.getMessage());
-	    return;
+	    return null;
 	}
 
 	if ((appid!=null)&&(appid.trim().length()>0)){
@@ -140,17 +140,18 @@ public class Main {
 	}
 	else {
 	    System.out.println("Loadding application failed");
-	    return;
+	    return null;
 	}
+	return appid;
     }
 
     /* Load environemnt information associated with an experiment*/
  
-    public void storeExp(String appid, String sysinfo, String configinfo, String compilerinfo, String instruinfo ) {
+    public String storeExp(String appid, String sysinfo, String configinfo, String compilerinfo, String instruinfo ) {
 	BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String appname;
 	String version;
-	String expid;
+	String expid = null;
 	String parInfo;
 	File ff;
 	
@@ -194,7 +195,7 @@ public class Main {
 		ff = new File(sysinfo.trim());
 		if (!ff.exists()) {
 		    System.out.println("Warning: the System file doesn't exist!");
-		    return;
+		    return null;
 		}
 		sysinfo = hostname + ":" + ff.getAbsolutePath();
 
@@ -203,7 +204,7 @@ public class Main {
 		ff = new File(configinfo.trim());
 		if (!ff.exists()) { 
 		    System.out.println("Warning: the configuration file doesn't exist!");
-		    return;
+		    return null;
 		}       
 		configinfo = hostname + ":" + ff.getAbsolutePath();
 
@@ -212,7 +213,7 @@ public class Main {
 		ff = new File(compilerinfo.trim());
 		if (!ff.exists()) {
 		    System.out.println("Warning: the compiler file doesn't exist!");
-		    return;
+		    return null;
 		}
 		compilerinfo = hostname + ":" + ff.getAbsolutePath();
 
@@ -221,7 +222,7 @@ public class Main {
 		ff = new File(instruinfo.trim());
 		if (!ff.exists()) {
 		    System.out.println("Warning: the instrumentation file doesn't exist!");
-		    return;
+		    return null;
 		}
 		instruinfo = hostname + ":" + ff.getAbsolutePath();
 
@@ -357,6 +358,7 @@ public class Main {
 	} catch (Throwable ex) {
 	    errorPrint("Error: " + ex.getMessage());
         }
+		return expid;
     }
 
     /*** Store a xml document for a trial ***/
@@ -397,6 +399,7 @@ public class Main {
 	Main demo = new Main(args[ctr++]);
 	demo.getConnector().connect();
 
+	int exitval = 0;
 	
 	while (ctr < args.length) {
 	    command = args[ctr++];
@@ -411,22 +414,29 @@ public class Main {
 	    }
 	    /***** Load appliation into PerfDB *********/
 	    if (command.equalsIgnoreCase("LOADAPP")) {
-		demo.storeApp(args[ctr++]);
-		continue;
+		String appid = demo.storeApp(args[ctr++]);
+		if (appid != null)
+			exitval = Integer.parseInt(appid);
+		// continue;
 	    }
 	    /***** Load experiment into PerfDB ********/
 	    if (command.equalsIgnoreCase("LOADEXP")) {
-		demo.storeExp(args[ctr], args[ctr+1], args[ctr+2], args[ctr+3], args[ctr+4]);
-		continue;
+		String expid = demo.storeExp(args[ctr], args[ctr+1], args[ctr+2], args[ctr+3], args[ctr+4]);
+		if (expid != null)
+			exitval = Integer.parseInt(expid);
+		// continue;
 	    }
 	    /***** Load a trial into PerfDB *********/
 	    if (command.equalsIgnoreCase("LOADXML")) {
-		demo.storeDocument(args[ctr++]);
-		continue;
+		String trialid = demo.storeDocument(args[ctr++]);
+		if (trialid != null)
+			exitval = Integer.parseInt(trialid);
+		// continue;
 	    }
 	}
 
 	demo.getConnector().dbclose();
+	System.exit(exitval);
     }
 
 }
