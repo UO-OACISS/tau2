@@ -103,7 +103,7 @@ ARFLAGS	      = rcv
 #SOL2CC#ARFLAGS			= -o			   #ENDIF#
 ##################################################################
 
-RM 	      = /bin/rm -f
+RM 	      = /bin/rm -rf
 
 TARGET	      = libtau$(TAU_OPTIONS)$(LSX)
 
@@ -150,7 +150,7 @@ $(TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TARGET) $(OBJS) $(EXTRAOBJS)
 
-$(TAU_SHLIB): 	$(OBJS)
+$(TAU_SHLIB): 	$(TARGET) $(OBJS)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS) $(EXTRA_LIBS) $(LEXTRA) $(LEXTRA1)
 
@@ -270,5 +270,5 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 
 
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(OPENMP_O) $(TAU_DSO) $(EXTRAOBJS) $(TAUJAPI) *.ii *.ti ti_files/* cxx_repository/*
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(OPENMP_O) $(TAU_DSO) $(EXTRAOBJS) $(TAUJAPI) *.ii *.ti ti_files cxx_repository ii_files rii_files
 
