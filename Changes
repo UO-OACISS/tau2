@@ -12,6 +12,8 @@ Change log:
 Version 2.9 changes (from 2.8):
 1. Better support for mixed model programming
 2. Changes for KCC and KAP/Pro.
+3. Added support for MPI with DyninstAPI.
+4. Added support for selective profiling in Java (-XrunTAU:exclude=java,sun)
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
