@@ -27,7 +27,7 @@ TAUREDUCE	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_reduce
 
 TAUPPROF	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/pprof
 
-CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
+CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -UTAU_MPI
 
 LIBS 	      	= $(TAU_LIBS) 
 
