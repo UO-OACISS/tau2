@@ -23,7 +23,8 @@ Version 2.9 changes (from 2.8):
 11. Changed TauGroup_t to 64 bits (unsigned long).[Mapping addresses].
 12. Added TAU_SHLIBS so DSO's are created everytime.
 13. Support for incremental profile dumps.
-14. PAPI on Solaris requires linking with a static library.
+14. PAPI on Solaris and other platforms requires linking with a static library.
+15. Added support for Compaq Alpha (cxx, cc, f90).
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
