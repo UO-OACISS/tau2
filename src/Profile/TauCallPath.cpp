@@ -152,7 +152,7 @@ void Profiler::CallPathStop(double TotalTime, int tid)
     CallPathFunction->AddExclTime(TotalTime, tid);  
     DEBUGPROFMSG("Before IncrNumSubr"<<endl;);
     if (ParentProfiler->CallPathFunction != 0)
-    { /* Increment the parent's NumSubrs and declrease its exclude time */
+    { /* Increment the parent's NumSubrs and decrease its exclude time */
       ParentProfiler->CallPathFunction->IncrNumSubrs(tid);
       ParentProfiler->CallPathFunction->ExcludeTime(TotalTime, tid);
     }
@@ -163,6 +163,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2002/08/09 00:16:09 $
- * POOMA_VERSION_ID: $Id: TauCallPath.cpp,v 1.3 2002/08/09 00:16:09 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 2002/08/09 00:56:56 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.4 2002/08/09 00:56:56 sameer Exp $ 
  ***************************************************************************/
