@@ -8,6 +8,7 @@ declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
 
+declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
 declare -i fortranParserDefined=$FALSE
 declare -i isForCompilation=$FALSE
@@ -169,6 +170,10 @@ for arg in "$@"
 			-optPdtDir*)
 				optPdtDir=${arg#"-optPdtDir="}"/bin"
 				echoIfDebug "\tpdtDir read is: $optPdtDir"
+				if [ ! -d $optPdtDir ]; then
+				  disablePdtStep=$TRUE
+				  echoIfDebug "PDT is not configured."
+				fi 
 				;;
 
 			-optPdtF95Opts*)
@@ -478,14 +483,21 @@ if [ $gotoNextStep == $TRUE ]; then
 
 		esac
 
-		evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
-		#Assumption: The pdb file would be formed int eh current directory, so need 
+		if [ $disablePdtStep == $FALSE ]; then
+		  evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
+		else
+		  echo "tau_compiler.sh> WARNING: Disabling instrumentation of source code. TAU was not configured with -pdt=<dir> option."
+		  gotoNextStep=$FALSE
+		  errorStatus=$TRUE
+		fi
+
+		#Assumption: The pdb file would be formed in the current directory, so need 
 		#to strip  the fileName from the directory. Since sometime,
 		#you can be creating a pdb in the current directory using
 		#a source file located in another directory.
 		tempFileName=${arrPdb[$tempCounter]##*/}
 		echoIfDebug "Looking for pdb file $tempFileName "
-		if [  ! -e $tempFileName ]; then
+		if [  ! -e $tempFileName  -a $disablePdtStep == $FALSE ]; then
 			echoIfVerbose "Error: Tried Looking for file: $tempFileName"
 			printError "$PDTPARSER" "$pdtCmd"
 			break
@@ -509,7 +521,11 @@ if [ $gotoNextStep == $TRUE ]; then
 		tempInstFileName=${arrTau[$tempCounter]##*/}
 		tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
 		tauCmd="$tauCmd $optTau $optTauSelectFile"
-		evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
+		if [ $disablePdtStep == $FALSE ]; then
+		  evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
+		else
+		  echoIfDebug "Not instrumenting source code. PDT not available."
+		fi
 
 		echoIfDebug "Looking for tau file $tempInstFileName"
 		if [  ! -e $tempInstFileName ]; then
@@ -630,7 +646,7 @@ fi
 
 if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	tempCounter=0
-	while [ $tempCounter -lt $numFiles ]; do
+	while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
 		eval "rm ${arrTau[$tempCounter]##*/}"
 		eval "rm ${arrPdb[$tempCounter]##*/}"
 		tempCounter=tempCounter+1
