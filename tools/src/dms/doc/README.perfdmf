@@ -1,6 +1,6 @@
 *****************************************************************************
-**			             PerfDMF  - Performance Database                    **
-**			             http://tau.cs.uoregon.edu  		               **
+**                      PerfDMF  - Performance Database                    **
+**                       http://tau.cs.uoregon.edu                         **
 *****************************************************************************
 **  Copyright 2003                                                         **
 **  Department of Computer and Information Science, University of Oregon   **
@@ -11,7 +11,7 @@
 **       Robert Michael Ansell Bell (UO), 
 **       Li Li (UO), 
 **  Principal Investigators : 
-**		 Allen Malony (UO)
+**       Allen Malony (UO)
 **  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 
 **  Darryl Brown, et. al. and directed by Allen Malony at University of Oregon.
 **  The TAU Portable Profiling Package uses part of TAU.
@@ -21,14 +21,15 @@ Performance Database: PerfDMF
 ****************************
 
 PerfDMF is a tool related to the TAU framework.  The PerfDMF database is
-designed to store and provide access to TAU profile data.  A number of
-utility programs have been written in Java to load the data into PerfDMF
-and to query the data.  With PerfDMF, users can perform performance analyses
-such as regression analysis, scalability analysis across multiple trials, 
-and so on.  An unlimited number of comparative analyses are available 
-through the PerfDMF toolkit.  Work is being done to provide the user
-with standard analysis tools, and an API has been developed to access the
-data with standard Java classes.
+designed to store and provide access to TAU profile data.  Other profile
+formats are also supported, including dynaprof, mpiP and HPMToolkit.
+A number of utility programs have been written in Java to load the data 
+into PerfDMF and to query the data.  With PerfDMF, users can perform 
+performance analyses such as regression analysis, scalability analysis 
+across multiple trials, and so on.  An unlimited number of comparative 
+analyses are available through the PerfDMF toolkit.  Work is being done 
+to provide the user with standard analysis tools, and an API has been 
+developed to access the data with standard Java classes.
 
 Prerequisites:
 ************** 
@@ -51,59 +52,99 @@ are installed in the TAU bin directory to run the configuration and
 loading utilities.  It is assumed that the user has installed TAU and
 run TAU's configure and 'make install'.
 
+*****************************************************************************
 1) Create a database
+*****************************************************************************
 
 Once a DBMS is installed, a database needs to be created.  This database
 can be called anything the user likes - perfdmf is the default.  If the 
 DBMS is PostgreSQL, the command from the shell prompt is:
 
-	$ createdb perfdmf
+	$ createdb -O perfdmf perfdmf
 
 If the user is in psql, the command is:
 
-	psql=# create database perfdmf
+	psql=# create database perfdmf with owner = perfdmf;
 
 Other DBMS are similar.
 
-2) Build PerfDMF
+*** PLEASE NOTE ***
+These commands, and the commands that follow, assume that there is a 
+user named 'perfdmf', and that there is a group named 'perfdmf', which 
+has the user 'perfdmf' as a member.  The appropriate commands are:
 
-The build process for PerfDMF is simple.  Change to the 
+	psql=# create user perfdmf with encrypted password 'some_password';
+	psql=# create group perfdmf with user perfdmf;
+
+See the DBMS documentation for details on setting user options, 
+passwords, etc.
+
+*****************************************************************************
+2) Build PerfDMF
+*****************************************************************************
+
+The build process for PerfDMF is simple.  Change directory to the 
 $TAUROOT/tools/src/dms directory, and issue the command:
 
 	$ make
 
+*****************************************************************************
 3) Configuration
+*****************************************************************************
 
-PerfDMF needs to be configured for the first time use.  To configure PerfDMF,
-run the command (assuming $TAUROOT/$arch/bin is in your path):
+PerfDMF needs to be configured for the first time use.  In order to
+run the configuration and all other command line utilities correctly,
+you must locate the postgresql.jar file, and either copy it to 
+$TAUROOT/tools/src/contrib or make a soft link to the jar file there.
+For example:
+
+	$ cp $POSTGRESQL_INSTALL_DIR/share/java/postgresql.jar $TAUROOT/tools/src/contrib
+
+or:
+
+	$ ln -s $POSTGRESQL_INSTALL_DIR/share/java/postgresql.jar $TAUROOT/tools/src/contrib/postgresql.jar
+
+If you are using some other DBMS, get the equivalent JDBC jar file(s).
+
+To configure PerfDMF, run the command (assuming $TAUROOT/$arch/bin is in your path):
 
 	$ perfdmf_configure
 
-The configure program will prompt the user for several values.  The default
-values in all cases will work for 99.9% of users.  Unless you need to specify
-something other than the default values (for example, if you are using MySQL
-instead of PostgreSQL, you need to specify a different JDBC .jar file, 
-driver name, and database vendor).  The only value for which there is no 
-default is the database username.  Enter the name of a database user which
-has administrative access.  Once the configuration
-program collects the information, it prompts for the user's database password,
-and connects to the database to test the configuration.  If the configuration
+The configure program will prompt the user for several values.  The default 
+values in all cases will work for most users using PostgreSQL.  Unless you 
+need to specify something other than the default values (for example, if you 
+are using MySQL instead of PostgreSQL, you need to specify a different JDBC 
+.jar file, driver name, and database vendor.  See your specific JDBC 
+documentation for details).  The only value for which there is no default 
+is the database username.  Enter the name of the database user which is the 
+owner of the database, 'perfdmf', in our example.  Once the configuration program 
+collects the information, it prompts for the user's database password, and 
+connects to the database to test the configuration.  If the configuration 
 is valid, the database schema is loaded into the database.
 
+*****************************************************************************
 4) Loading database schema
+*****************************************************************************
 
 If the configuration ended successfuly, then the database schema was loaded
 at the end of the configuration process.  If problems occurred, then it may
-be necessary to load the database schema later.  If that is the case, then
-the program to load the schema is:
+be necessary to load the database schema later, after the problems are resolved.  
+If that is the case, then the program to load the schema is:
 
 	$ perfdmf_loadschema
 
+Alternatively, if the DBMS has a SQL terminal, the $TAUROOT/tools/src/dms/data/dbschema.txt
+file can be run as valid SQL commands.  Some modifications may be necessary for
+DBMS other than PostgreSQL.  See your specific DBMS documentation for details.
+
+*****************************************************************************
 5) Loading application data
+*****************************************************************************
 
 To load application data, simply run the perfdmf_loadapp program.  There is 
 one parameter for perfdmf_loadapp, and it is:
 
+	{-h --help} : list these parameter options
 	{-x --xmlfile} filename : the name of the application data file
 
 The xmlfile passed in is the application data file.  A sample application
@@ -118,13 +159,21 @@ application in the database.
 Alternatively, just run the utility to create a default application, 
 perfdmf_createapp.  There is one parameter:
 
+	{-h --help} : list these parameter options
 	{-n --name} application_name : the name of the application
 
+For example, to create an entry for the NAS parallel benchmarks v.2.3:
+
+	$ perfdmf_createapp -n NPB2.3
+
+*****************************************************************************
 6) Loading experiment data
+*****************************************************************************
 
 To load experiment data, simply run the perfdmf_loadexp program.  There are 
 two parameters for perfdmf_loadexp, and they are:
 
+	{-h --help} : list these parameter options
 	{-x --xmlfile} filename : the name of the experiment data file
 	{-a --applicationid} value : the value of the application ID
 
@@ -138,36 +187,51 @@ The experiment loader will load the experiment, and return the ID of the
 experiment in the database.
 
 Alternatively, just run the utility to create a default experiment, 
-perfdmf_createexp.  There is one parameter:
+perfdmf_createexp.  There are two parameters:
 
+	{-h --help} : list these parameter options
 	{-n --name} experiment_name : the name of the experiment
+	{-a --applicationid} value : the value of the application ID
 
+For example, to create an entry for a 64 node experiment of application 1:
+
+	$ perfdmf_createexp -a 1 -n 64_nodes
+
+*****************************************************************************
 7) Loading translated Trial data
+*****************************************************************************
 
 The trial data is loaded by running the perfdmf_loadtrial command.  The 
 parameters for perfdmf_loadtrial are:
 
+	{-h --help} : list these parameter options
 	{-e --experimentid} value : the value of the experiment ID
-	{-f --filetype} file_type : the type of profile data: profiles (TAU),
-		pprof (TAU pprof.dat), dynaprof, gprof, xprof, sddf, etc.
+	{-f --filetype} file_type : the type of profile data, where file_type is one of: 
+		profiles = TAU profiles
+		pprof = TAU pprof output
+		dynaprof = dynaprof output
+		mpip = mpiP output
+		hpm = HPMToolkit output
 	{-s --sourcefile} filename : the name of the TAU data file
 	{-t --trialid} value : the value of an existing trial ID
 	{-n --name} trial_name : the name of the trial
 	{-p --problemfile} filename : the name of a problem definition file
 
-perfdmf_loadtrial can be run two ways.  When creating a new trial, the user
-calls perfdmf_loadtrial with an optional problem definition file.  The problem
-definition file is a user-defined XML file that describes the trial data.
-An example problem definiton file is in the data directory.  For example:
+perfdmf_loadtrial can be run one of two ways.  When creating a new trial, 
+the user calls perfdmf_loadtrial with an optional problem definition file.  
+The problem definition file is a user-defined file that describes the trial 
+data.  An example problem definiton file is in the data directory.  
+For example:
 
-	$ perfdmf_loadtrial -x pprof.xml -p sample_problem.xml
+	$ perfdmf_loadtrial -x pprof.xml -p sample_problem.xml -n test
 
-If the user is adding trial data to an existing trial (due to multiple
-metrics recorded during the run with TAU), then the problem 
+If the user is adding trial data to an existing trial then the problem 
 file is omitted, and the trial ID is passed in:
 
 	$ perfdmf_loadtrial -t 1
 
-Once the data has been loaded into the database, analysis can be performed.
-See the ${TAUROOT}/tools/src/dms/README file for more details.
-
+Once the data has been loaded into the database, query and analysis can be 
+performed.  See the ${TAUROOT}/tools/src/dms/README file for more details.
+Some tools have been integrated with the database.  One such tool is the
+paraprof tool that is in the TAU distribution.  See the paraprof documentation
+for details.
