@@ -983,21 +983,12 @@ inline double TauGetMHzMCL(void)
   return ratings;
 }
 ///////////////////////////////////////////////////////////////////////////
-#ifdef __ia64__
+// Fix Intel compiler does not support this asm statements
+extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
 inline unsigned long long getLinuxHighResolutionTscCounterMCL(void)
 {
-  unsigned long long tmp;
-  __asm__ __volatile__("mov %0=ar.itc" : "=r"(tmp) :: "memory");
-  return tmp;
+  return getLinuxHighResolutionTscCounter();
 }
-#else /* IA64 */
-inline unsigned long long getLinuxHighResolutionTscCounterMCL(void)
-{
-   unsigned long high, low;
-   __asm__ __volatile__(".byte 0x0f,0x31" : "=a" (low), "=d" (high));
-   return ((unsigned long long) high << 32) + low;
-}
-#endif /* IA64 */
 ///////////////////////////////////////////////////////////////////////////
 
 #endif //TAU_LINUX_TIMERS
