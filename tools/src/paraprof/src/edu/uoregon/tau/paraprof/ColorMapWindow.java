@@ -44,6 +44,8 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
         for (Iterator it = trials.iterator(); it.hasNext();) {
             ParaProfTrial ppTrial = (ParaProfTrial) it.next();
 
+            
+            
             //            String name = ppTrial.getExperiment().getApplication().getName() + "/"
             //            			  ppTrial.getExperiment().getName() + "/" +
             //            			  ppTrial.getName() + " (" +

@@ -15,7 +15,7 @@ import javax.swing.*;
 import edu.uoregon.tau.dms.dss.*;
 import java.util.*;
 
-public class LoadTrialProgressWindow extends JFrame implements ActionListener, ParaProfObserver {
+public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
     private ParaProfManagerWindow paraProfManager = null;
     private JProgressBar progressBar = null;
@@ -25,50 +25,13 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
     private JLabel label;
     private boolean dbUpload = false;
     private javax.swing.Timer jTimer;
-    
-    
-    class UpdateRunner implements Runnable {
 
-        LoadTrialProgressWindow ltpw;
-
-        UpdateRunner(LoadTrialProgressWindow ltpw) {
-            this.ltpw = ltpw;
-            java.lang.Thread thread = new java.lang.Thread(this);
-            thread.start();
-        }
-
-        public void run() {
-
-            try {
-                ppTrial.update(dataSource);
-                //Need to notify observers that we are done. Be careful here.
-                //It is likely that they will modify swing elements. Make sure
-                //to dump request onto the event dispatch thread to ensure
-                //safe update of said swing elements. Remember, swing is not thread
-                //safe for the most part.
-                EventQueue.invokeLater(new Runnable() {
-                    public void run() {
-                        ltpw.finishDatabase(true);
-                    }
-                });
-
-            } catch (DatabaseException e) {
-                ParaProfUtils.handleException(e);
-                EventQueue.invokeLater(new Runnable() {
-                    public void run() {
-                        ltpw.finishDatabase(false);
-                    }
-                });
-            }
-        }
-    }
-
-    public LoadTrialProgressWindow(ParaProfManagerWindow paraProfManager, DataSource dataSource,
-            ParaProfTrial ppTrial, boolean justDB) {
+    public LoadTrialProgressWindow(ParaProfManagerWindow paraProfManager, final DataSource dataSource,
+            final ParaProfTrial ppTrial, boolean justDB) {
 
         this.dataSource = dataSource;
         this.ppTrial = ppTrial;
-
+        ppTrial.getTrial().setDataSource(dataSource);
         this.paraProfManager = paraProfManager;
 
         //Window Stuff.
@@ -131,38 +94,113 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
         jTimer = new javax.swing.Timer(200, this);
         jTimer.start();
 
-        if (justDB) {
-            label.setText("Uploading Trial");
-            progressBar.setValue(0);
-            dbUpload = true;
-            new UpdateRunner(this);
+        execute(justDB);
+    }
+
+    private synchronized void setDBUpload(boolean dbUpload) {
+        this.dbUpload = dbUpload;
+    }
+
+    private synchronized boolean getDBUpload() {
+        return dbUpload;
+    }
+
+    private void upload() throws DatabaseException {
+        label.setText("Uploading Trial");
+        progressBar.setValue(0);
+        setDBUpload(true);
+
+        DatabaseAPI dbAPI = ParaProf.paraProfManager.getDatabaseAPI();
+        ppTrial.setDatabaseAPI(dbAPI);
+        if (dbAPI != null) {
+            // this call will block until the entire thing is uploaded (could be a while)
+            ppTrial.setID(dbAPI.uploadTrial(ppTrial.getTrial()));
+            dbAPI.terminate();
+        }
+
+        //Now safe to set this to be a dbTrial.
+        ppTrial.setDBTrial(true);
+    }
+
+    public synchronized void waitForLoad() {
+        try {
+            this.wait();
+        } catch (InterruptedException ie) {
+            // ?
+        }
+    }
+
+    public synchronized void finishLoad() {
+        this.notifyAll();
+    }
+    
+    private synchronized void execute(final boolean justDB) {
+
+        java.lang.Thread thread = new java.lang.Thread(new Runnable() {
+
+            public void run() {
+                try {
+
+                    if (justDB) {
+                        upload();
+                        jTimer.stop();
+                        ParaProf.paraProfManager.populateTrialMetrics(ppTrial);
+                        finishLoad();
+                        LoadTrialProgressWindow.this.dispose();
+                    } else {
+
+                        dataSource.load();
+                        ppTrial.finishLoad();
+                        //ppTrial.update(dataSource);
+                        progressBar.setValue(100);
+
+                        if (ppTrial.upload()) {
+                            upload();
+                        }
+
+                        ParaProf.paraProfManager.populateTrialMetrics(ppTrial);
+                        ppTrial.showMainWindow();
+                        jTimer.stop();
+                        LoadTrialProgressWindow.this.dispose();
+                    }
+                } catch (final Exception e) {
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            ParaProfUtils.handleException(e);
+                        }
+                    });
+                }
+            }
+
+        });
+        thread.start();
+
+    }
+
+    public void updateProgress() {
+        if (getDBUpload()) {
+            // we are on the db upload phase
+            DatabaseAPI dbAPI = ppTrial.getDatabaseAPI();
+            if (dbAPI != null) { // it may not be set yet
+                int progress = dbAPI.getProgress();
+                progressBar.setValue(progress);
+            }
+
         } else {
-            DataSourceThreadControl dataSourceThreadControl = new DataSourceThreadControl();
-            dataSourceThreadControl.addObserver(this);
-            dataSourceThreadControl.initialize(dataSource);
+            int progress = (int) dataSource.getProgress();
+            if (progress > 99)
+                progress = 99;
+            progressBar.setValue(progress);
         }
     }
 
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
-            if (EventSrc instanceof javax.swing.Timer) { 
+            if (EventSrc instanceof javax.swing.Timer) {
                 // the timer has ticked, get progress and post
 
-                if (dbUpload) {
-                    // we are on the db upload phase
-                    DatabaseAPI dbAPI = ppTrial.getDatabaseAPI();
-                    if (dbAPI != null) { // it may not be set yet
-                        int progress = dbAPI.getProgress();
-                        progressBar.setValue(progress);
-                    }
-
-                } else {
-                    int progress = (int) dataSource.getProgress();
-                    if (progress > 99)
-                        progress = 99;
-                    progressBar.setValue(progress);
-                }
+                updateProgress();
             } else {
                 String arg = evt.getActionCommand();
 
@@ -191,48 +229,6 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
         jTimer.stop();
 
         this.dispose();
-    }
-
-    public void update(Object obj) {
-
-        if (obj instanceof Exception) {
-            //bad read (exception in datasource load)
-            //            JOptionPane.showMessageDialog(this, "Error loading profile: \n" + ((Exception)obj).toString());
-
-            ParaProfUtils.handleException((Exception) obj);
-
-            jTimer.stop();
-
-            this.dispose();
-
-        } else {
-            if (aborted) {
-                jTimer.stop();
-                this.dispose();
-            } else {
-                progressBar.setValue(99);
-
-                if (ppTrial.upload()) {
-                    label.setText("Uploading Trial");
-                    progressBar.setValue(0);
-                    dbUpload = true;
-                    new UpdateRunner(this);
-                } else {
-                    try {
-                        ppTrial.update(dataSource);
-                        progressBar.setValue(100);
-                        ppTrial.showMainWindow();
-                    } catch (DatabaseException e) {
-                        ParaProfUtils.handleException(e);
-                    }
-                    jTimer.stop();
-                    this.dispose();
-                }
-            }
-        }
-    }
-
-    public void update() {
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
@@ -265,5 +261,4 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
         dispose();
     }
 
-  
 }

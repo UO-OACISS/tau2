@@ -12,11 +12,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.31 2005/03/10 18:14:37 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.32 2005/03/11 00:24:45 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.31 $
+ * @version $Revision: 1.32 $
  */
 public class ParaProf implements ActionListener {
 
@@ -108,7 +108,7 @@ public class ParaProf implements ActionListener {
 
         ParaProf.helpWindow = new HelpWindow();
         ParaProf.paraProfManager = new ParaProfManagerWindow();
-
+        
         paraProfManager.addTrial(app, experiment, sourceFiles, fileType, fixNames);
     }
  

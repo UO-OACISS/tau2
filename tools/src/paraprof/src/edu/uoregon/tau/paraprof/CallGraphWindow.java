@@ -31,12 +31,12 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.21 2005/03/09 18:07:49 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.22 2005/03/11 00:24:45 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.21 $
+ * @version	$Revision: 1.22 $
  */
-public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
-        KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
+public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, KeyListener,
+        ChangeListener, Observer, ParaProfImageInterface, Printable {
 
     private static final int MARGIN = 20;
     private static final int HORIZONTAL_SPACING = 10;
@@ -80,7 +80,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     }
 
-    private static class GraphCell extends DefaultGraphCell {
+    private class GraphCell extends DefaultGraphCell {
 
         private final Function function;
         private final Vertex vertex;
@@ -92,7 +92,35 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
 
         public String getToolTipString() {
-            return (String) this.getUserObject();
+            //return vertex.
+
+
+            String result = "<html>" + function;
+            
+            if (widthOption != CallGraphOption.STATIC && widthOption != CallGraphOption.NAME_LENGTH) {
+                float widthValue = (float) getValue(vertex.functionProfile, widthOption, 1.0, widthMetricID);
+                result = result + "<br>Width Value (" + widthOption;
+                if (widthOption != CallGraphOption.NUMCALLS && widthOption != CallGraphOption.NUMSUBR) {
+                    result = result + ", " + ppTrial.getMetricName(widthMetricID);
+                }
+                result = result + ") : " + widthValue;
+            }
+
+            if (colorOption != CallGraphOption.STATIC) {
+                float colorValue = (float) getValue(vertex.functionProfile, colorOption, 1.0, colorMetricID);
+                result = result + "<br>Color Value (" + colorOption;
+                if (colorOption != CallGraphOption.NUMCALLS && colorOption != CallGraphOption.NUMSUBR) {
+                    result = result + ", " + ppTrial.getMetricName(colorMetricID);
+                }
+                result = result + ") : " + colorValue;
+            }
+
+            return result;
+//            return "<html>" + function + "<br>WidthValue (" + widthOption + " "
+//                    + ppTrial.getMetricName(widthMetricID) + ") : " + widthValue + "<br>ColorValue ("
+//                    + colorOption + " " + ppTrial.getMetricName(widthMetricID) + ") : " + colorValue;
+
+            //            return (String) this.getUserObject();
         }
 
         public Function getFunction() {
@@ -104,7 +132,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
-    private static class Graph extends JGraph {
+    private class Graph extends JGraph implements MouseListener {
 
         public String getToolTipText(MouseEvent event) {
             double x = event.getX() / this.getScale();
@@ -117,6 +145,46 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             }
 
             return null;
+        }
+
+        public void mousePressed(MouseEvent evt) {
+        }
+
+        public void mouseReleased(MouseEvent evt) {
+        }
+
+        public void mouseEntered(MouseEvent evt) {
+        }
+
+        public void mouseExited(MouseEvent evt) {
+        }
+
+        public void mouseClicked(MouseEvent evt) {
+            try {
+                // Get Cell under Mousepointer
+
+                // scale the x and y (we could be zoomed in or out)
+                double x = evt.getX() / this.getScale();
+                double y = evt.getY() / this.getScale();
+
+                GraphCell gc = callGraphWindow.getGraphCellForLocation((int) x, (int) y);
+
+                if (gc != null) {
+                    Function f = ((Function) gc.getFunction());
+
+                    if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                        clickedOnObject = f;
+                        popup.show(this, evt.getX(), evt.getY());
+                        return;
+
+                    } else {
+                        ppTrial.toggleHighlightedFunction(f);
+                    }
+                }
+            } catch (Exception e) {
+                ParaProfUtils.handleException(e);
+            }
+
         }
 
         // override the JGraph getPreferredSize to add 10 pixels
@@ -258,8 +326,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         this.getContentPane().setLayout(gbl);
 
         // obtain the font and its metrics
-        font = new Font(trial.getPreferencesWindow().getParaProfFont(), trial.getPreferencesWindow().getFontStyle(),
-                trial.getPreferencesWindow().getBarHeight());
+        font = new Font(trial.getPreferencesWindow().getParaProfFont(),
+                trial.getPreferencesWindow().getFontStyle(), trial.getPreferencesWindow().getBarHeight());
         FontMetrics fm = getFontMetrics(font);
 
         // set the box height to the font height + 5
@@ -338,7 +406,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
-    
     private Component createColorMetricMenu(final CallGraphOption option, boolean enabled, ButtonGroup group) {
         JRadioButtonMenuItem button = null;
 
@@ -428,8 +495,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         subMenu = new JMenu("Box width by...");
         group = new ButtonGroup();
 
-        subMenu.add(createWidthMetricMenu(CallGraphOption.EXCLUSIVE, CallGraphOption.EXCLUSIVE == widthOption, group));
-        subMenu.add(createWidthMetricMenu(CallGraphOption.INCLUSIVE, CallGraphOption.INCLUSIVE == widthOption, group));
+        subMenu.add(createWidthMetricMenu(CallGraphOption.EXCLUSIVE, CallGraphOption.EXCLUSIVE == widthOption,
+                group));
+        subMenu.add(createWidthMetricMenu(CallGraphOption.INCLUSIVE, CallGraphOption.INCLUSIVE == widthOption,
+                group));
         subMenu.add(createWidthMetricMenu(CallGraphOption.EXCLUSIVE_PER_CALL,
                 CallGraphOption.EXCLUSIVE_PER_CALL == widthOption, group));
         subMenu.add(createWidthMetricMenu(CallGraphOption.INCLUSIVE_PER_CALL,
@@ -455,7 +524,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         group.add(button);
         subMenu.add(button);
 
-
         button = new JRadioButtonMenuItem("Static", CallGraphOption.STATIC == widthOption);
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -476,16 +544,16 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         group.add(button);
         subMenu.add(button);
 
-
-        
         optionsMenu.add(subMenu);
 
         // box color submenu
         subMenu = new JMenu("Box color by...");
         group = new ButtonGroup();
-        
-        subMenu.add(createColorMetricMenu(CallGraphOption.EXCLUSIVE, CallGraphOption.EXCLUSIVE == colorOption, group));
-        subMenu.add(createColorMetricMenu(CallGraphOption.INCLUSIVE, CallGraphOption.INCLUSIVE == colorOption, group));
+
+        subMenu.add(createColorMetricMenu(CallGraphOption.EXCLUSIVE, CallGraphOption.EXCLUSIVE == colorOption,
+                group));
+        subMenu.add(createColorMetricMenu(CallGraphOption.INCLUSIVE, CallGraphOption.INCLUSIVE == colorOption,
+                group));
         subMenu.add(createColorMetricMenu(CallGraphOption.EXCLUSIVE_PER_CALL,
                 CallGraphOption.EXCLUSIVE_PER_CALL == colorOption, group));
         subMenu.add(createColorMetricMenu(CallGraphOption.INCLUSIVE_PER_CALL,
@@ -510,7 +578,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         });
         group.add(button);
         subMenu.add(button);
-        
+
         button = new JRadioButtonMenuItem("Static", CallGraphOption.STATIC == colorOption);
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -521,8 +589,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         group.add(button);
         subMenu.add(button);
 
-        
-        
         optionsMenu.add(subMenu);
 
         optionsMenu.addMenuListener(this);
@@ -592,7 +658,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         } else if (option == CallGraphOption.STATIC) {
             maxValue = 1;
         } else {
-            throw new ParaProfException ("Unexpected CallGraphOption : " + option);
+            throw new ParaProfException("Unexpected CallGraphOption : " + option);
         }
         return maxValue;
     }
@@ -614,9 +680,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         } else if (option == CallGraphOption.EXCLUSIVE_PER_CALL) {
             value = fp.getExclusivePerCall(metric) / maxValue;
         } else if (option == CallGraphOption.STATIC) {
-            maxValue = 1;
+            value = 1;
         } else {
-            throw new ParaProfException ("Unexpected CallGraphOption : " + option);
+            throw new ParaProfException("Unexpected CallGraphOption : " + option);
         }
 
         return value;
@@ -829,7 +895,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         // Construct Model and Graph
         model = new DefaultGraphModel();
         graph = new Graph(model, this);
-        graph.addMouseListener(this);
+        graph.addMouseListener(graph);
         graph.addKeyListener(this);
 
         //graph.setAntiAliased(true);
@@ -1699,8 +1765,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         Map attributeMap = new Hashtable();
 
-        font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(), ppTrial.getPreferencesWindow().getFontStyle(),
-                ppTrial.getPreferencesWindow().getBarHeight());
+        font = new Font(ppTrial.getPreferencesWindow().getParaProfFont(),
+                ppTrial.getPreferencesWindow().getFontStyle(), ppTrial.getPreferencesWindow().getBarHeight());
 
         this.setFont(font);
         FontMetrics fm = getFontMetrics(font);
@@ -1905,34 +1971,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         return null;
     }
 
-    public void mouseClicked(MouseEvent evt) {
-        try {
-            // Get Cell under Mousepointer
-
-            // scale the x and y (we could be zoomed in or out)
-            double x = evt.getX() / scale;
-            double y = evt.getY() / scale;
-
-            GraphCell gc = getGraphCellForLocation((int) x, (int) y);
-
-            if (gc != null) {
-                Function f = ((Function) gc.getFunction());
-
-                if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-                    clickedOnObject = f;
-                    popup.show(this, evt.getX(), evt.getY());
-                    return;
-
-                } else {
-                    ppTrial.toggleHighlightedFunction(f);
-                }
-            }
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
-        }
-
-    }
-
     // listener for the boxWidthSlider
     public void stateChanged(ChangeEvent event) {
         try {
@@ -1941,18 +1979,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
-    }
-
-    public void mousePressed(MouseEvent evt) {
-    }
-
-    public void mouseReleased(MouseEvent evt) {
-    }
-
-    public void mouseEntered(MouseEvent evt) {
-    }
-
-    public void mouseExited(MouseEvent evt) {
     }
 
     public void keyTyped(KeyEvent evt) {

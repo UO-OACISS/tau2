@@ -18,7 +18,7 @@ import java.util.*;
 import javax.swing.tree.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class ParaProfTrial implements ParaProfObserver, ParaProfTreeNodeUserObject {
+public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     
     private Function highlightedFunction = null;
     private Group highlightedGroup = null;
@@ -192,9 +192,6 @@ public class ParaProfTrial implements ParaProfObserver, ParaProfTreeNodeUserObje
     }
 
     public String toString() {
-        if (trial == null) {
-            System.out.println ("poopie");
-        }
         if (this.loading()) {
             return trial.getName() + " (Loading...)";
         } else {
@@ -383,11 +380,7 @@ public class ParaProfTrial implements ParaProfObserver, ParaProfTreeNodeUserObje
     //####################################
 
     
-    public void finishLoad(DataSource dataSource) {
-
-        // Now set the trial's dataSource object to be this one.
-        //setDataSource(trial.getDataSource());
-        trial.setDataSource(dataSource);
+    public void finishLoad() {
 
         // The dataSource has accumulated edu.uoregon.tau.dms.dss.Metrics.
         // Inside ParaProf, these need to be ParaProfMetrics.
@@ -408,60 +401,20 @@ public class ParaProfTrial implements ParaProfObserver, ParaProfTreeNodeUserObje
         
         // set the colors
         clrChooser.setColors(this, -1);
-    }
-    
-    //######
-    //ParaProfObserver interface.
-    //######
-    public void update(Object obj) throws DatabaseException {
-
-        if (obj instanceof DataSourceException) {
-            ParaProfUtils.handleException((Exception) obj);
-        }
-        DataSource dataSource = (DataSource) obj;
-
-        finishLoad(dataSource);
-
-        //upload to database if necessary
-
-        //Check to see if this trial needs to be uploaded to the database.
-        if (this.upload()) {
-            
-            dbAPI = ParaProf.paraProfManager.getDatabaseAPI();
-            if (dbAPI != null) {
-                // this call will block until the entire thing is uploaded (could be a while)
-                trial.setID(dbAPI.uploadTrial(trial));
-                dbAPI.terminate();
-            }
-
-            //Now safe to set this to be a dbTrial.
-            this.setDBTrial(true);
-        } else {
-            //Set this trial's loading flag to false.
-            this.setLoading(false);
-            ParaProf.paraProfManager.populateTrialMetrics(this);
-        }
-
+        
+        
         //Set this trial's loading flag to false.
         this.setLoading(false);
-
     }
-
     
-    
-    public void update() {
-    }
-
+  
     public DatabaseAPI getDatabaseAPI() {
         return dbAPI;
     }
 
-    
-//    public boolean getUploading() {
-//        return uploading;
-//    }
-
-   
+    public void setDatabaseAPI(DatabaseAPI dbAPI) {
+        this.dbAPI = dbAPI;
+    }
     
     
     public void setHighlightedFunction(Function func) {
