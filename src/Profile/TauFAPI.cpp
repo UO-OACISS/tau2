@@ -195,9 +195,8 @@ void tau_db_dump_(void)
   return;
 }
 
-void tau_profile_init_(int *argc, char ***argv)
+void tau_profile_init_()
 {
-  /* tau_init(*argc, *argv); */
 #ifndef TAU_MPI
   Tau_set_node(0); 
 #endif /* TAU_MPI */
@@ -831,6 +830,6 @@ void tau_disable_group_name__(char * group_name, int len)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2002/01/15 22:25:35 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.25 2002/01/15 22:25:35 sameer Exp $ 
+ * $Revision: 1.26 $   $Date: 2002/03/27 22:18:10 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.26 2002/03/27 22:18:10 sameer Exp $ 
  ***************************************************************************/
