@@ -76,7 +76,6 @@ public class StaticSystemData implements Serializable
 	{
 		try
 		{
-			//First, get the file stuff.
 			BufferedReader br = new BufferedReader(new FileReader(inFile));
 			
 			//Some useful strings.
@@ -112,23 +111,26 @@ public class StaticSystemData implements Serializable
 			
 			
 			//A loop counter.
-			int i = 0;
+			bSDCounter = 0;
+			
+			//Another one.
+			int i=0;
 			int maxID = 0;
 			//Read in the file line by line!
 			while((inputString = br.readLine()) != null)
 			{	
 				//Skip over processing the first line ... not needed.
-				if(i>0)
+				if(bSDCounter>0)
 				{
 					//Set up some tokenizers.
 					//I want one that will first parse the line so that I can look for certian words.
 					genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 					
 					//Now I want to search for the tokens which interest me.
-					if(!(i==1))
+					if(!(bSDCounter==1))
 					{	
 						//Now, skip line three!
-						if(!(i==2))
+						if(!(bSDCounter==2))
 						{
 							//A lot of work goes on in this section.  Certain lines are searched for,
 							//and then action is taken depending on those lines.
@@ -605,7 +607,7 @@ public class StaticSystemData implements Serializable
 						
 				}
 				//Increment the loop counter.
-			i++;
+			bSDCounter++;
 			}
 		}
 		catch(Exception e)
@@ -898,7 +900,7 @@ public class StaticSystemData implements Serializable
 	String getGroupNames(String inString)
 	{
 		
-		try{
+		try{	
 				String tmpString = null;
 				
 				StringTokenizer getMappingNameTokenizer = new StringTokenizer(inString, "\"");
@@ -914,7 +916,7 @@ public class StaticSystemData implements Serializable
 				if(!groupNamesCheck)
 				{
 					//If present, "GROUP=" will be in this token.
-					int tmpInt = inString.indexOf("GROUP=");
+					int tmpInt = tmpString.indexOf("GROUP=");
 					if(tmpInt > 0)
 					{
 						groupNamesPresent = true;
@@ -1435,6 +1437,7 @@ public class StaticSystemData implements Serializable
 	private boolean isUserEventHeadingSet;
 	boolean groupNamesCheck = false;
 	boolean groupNamesPresent = false;
+	int bSDCounter;
 	
 	//Max mean values.
 	double maxMeanInclusiveValue = 0;

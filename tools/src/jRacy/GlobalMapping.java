@@ -3,7 +3,19 @@
 
 	Title:			jRacy
 	Author:			Robert Bell
-	Description:	
+	
+	
+	Description:	This is a rather large class.  It controls the mappings in the system.
+					Currently, there are two mapping structures.  These two mappings reflect
+					the current use of jRacy with TAU.  However, this class has been defined
+					to be as general as possible, and the interpretation of the two (or in the
+					future more) mapping structures is able to vary.  The first mapping structure
+					is viewed as a runtime defined mapping whereby low level entities are mapped
+					into higher level concepts.  With this mapping concept, information is not
+					available for these lower level entities.  The second mapping structure consists
+					of both runtime, and post runtime mappings.  Its interpretation is to group
+					the first set of mappings into higer level mappings without losing the information
+					about those mappings.	
 */
 
 package jRacy;
@@ -42,7 +54,10 @@ public class GlobalMapping implements WindowListener, Serializable
 			GlobalMappingElement tmpGME = new GlobalMappingElement();
 			tmpGME.setMappingName(inMappingName);
 			tmpGME.setGlobalID(numberOfMappings[mappingSelection]);
-			tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(numberOfMappings[mappingSelection] % (jRacy.clrChooser.getNumberOfColors())));
+			if(mappingSelection == 0)
+				tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(numberOfMappings[mappingSelection] % (jRacy.clrChooser.getNumberOfColors())));
+			else
+				tmpGME.setGenericColor(jRacy.clrChooser.getMappingGroupColorInLocation(numberOfMappings[mappingSelection] % (jRacy.clrChooser.getNumberOfMappingGroupColors())));
 			mappings[mappingSelection].addElement(tmpGME);
 			
 			//Update the number of global mappings present for the selection.  (Example ... first time
@@ -295,13 +310,26 @@ public class GlobalMapping implements WindowListener, Serializable
 	
 	public void updateGenericColors(int mappingSelection)
 	{
-		for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
-		{
-			
-			GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
-			int mappingID = tmpGME.getGlobalID();
-			tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(mappingID % (jRacy.clrChooser.getNumberOfColors())));
+		if(mappingSelection == 0){
+			int tmpInt = jRacy.clrChooser.getNumberOfColors();
+			for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
+			{
+				
+				GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
+				int mappingID = tmpGME.getGlobalID();
+				tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(mappingID % tmpInt));
+			}
 		}
+		else{
+			int tmpInt = jRacy.clrChooser.getNumberOfMappingGroupColors();
+			for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
+			{
+				
+				GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
+				int mappingID = tmpGME.getGlobalID();
+				tmpGME.setGenericColor(jRacy.clrChooser.getMappingGroupColorInLocation(mappingID % tmpInt));
+			}
+		}		
 	}
 	
 	public void setGroupMappingHighlight(int inGroupID, int mappingSelectionApply, int mappingSelectionSource)
@@ -368,6 +396,7 @@ public class GlobalMapping implements WindowListener, Serializable
 		}
 		
 	}
+	
 	//Window Listener code.
 	public void windowClosed(WindowEvent winevt){}
 	public void windowIconified(WindowEvent winevt){}

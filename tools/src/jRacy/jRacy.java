@@ -124,7 +124,7 @@ public class jRacy implements ActionListener
 	//The about jRacy info. string.
 	public static String getInfoString()
 	{
-		return new String("jRacy Version 1.1 ... The Paraducks Group!");
+		return new String("jRacy Version 1.2 ... The Paraducks Group!");
 	}
 	
 	//Handles system errors.

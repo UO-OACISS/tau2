@@ -332,14 +332,14 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		//gbc.weighty = 1;
 		//addCompItem(colorButton, gbc, 0, 1, 1, 1);
 		
-		gbc.fill = GridBagConstraints.BOTH;
+		gbc.fill = GridBagConstraints.NONE;
 		gbc.anchor = GridBagConstraints.EAST;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		addCompItem(fontLabel, gbc, 0, 0, 1, 1);
 		
-		gbc.fill = GridBagConstraints.BOTH;
-		gbc.anchor = GridBagConstraints.EAST;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.anchor = GridBagConstraints.WEST;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		addCompItem(fontComboBox, gbc, 1, 0, 1, 1);
@@ -369,25 +369,25 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		addCompItem(scrollPaneS, gbc, 0, 3, 2, 2);
 		
 		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.SOUTH;
+		gbc.anchor = GridBagConstraints.NORTH;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		addCompItem(barSpacingLabel, gbc, 2, 3, 1, 1);
 		
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.anchor = GridBagConstraints.NORTH;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		addCompItem(barSpacingSlider, gbc, 2, 4, 1, 1);
 		
 		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.SOUTH;
+		gbc.anchor = GridBagConstraints.NORTH;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		addCompItem(barHeightLabel, gbc, 3, 3, 1, 1);
 		
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.anchor = GridBagConstraints.NORTH;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
 		addCompItem(barHeightSlider, gbc, 3, 4, 1, 1);

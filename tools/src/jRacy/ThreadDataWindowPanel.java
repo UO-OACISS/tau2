@@ -57,12 +57,21 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			serverNumber = inServerNumber;
 			contextNumber = inContextNumber;
 			threadNumber = inThreadNumber;
-			
-			staticNodeList = jRacy.staticSystemData.getStaticServerList();
-
 			tDWindow = inTDWindow;
 			sMWData = inSMWData;
 			
+			
+			//Find the correct global thread.
+			//This should remain constant throughout the life of this window. Thus, it is
+			//safe to grab it here, and not have to grab in every paint component call.
+			GlobalServer tmpGS = (GlobalServer) (jRacy.staticSystemData.getStaticServerList()).elementAt(serverNumber);
+			Vector tmpGlobalContextList = tmpGS.getContextList();
+			GlobalContext tmpGC = (GlobalContext) tmpGlobalContextList.elementAt(contextNumber);
+			Vector tmpGlobalThreadList = tmpGC.getThreadList();
+			tmpGT = (GlobalThread) tmpGlobalThreadList.elementAt(threadNumber);
+
+			
+			//**********
 			//Add items to the popu menu.
 			JMenuItem mappingDetailsItem = new JMenuItem("Show Mapping Details");
 			mappingDetailsItem.addActionListener(this);
@@ -75,6 +84,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
 			maskMappingItem.addActionListener(this);
 			popup.add(maskMappingItem);
+			//End - Add items to the popu menu.
+			//**********
 			
 			//Schedule a repaint of this panel.
 			this.repaint();
@@ -96,54 +107,42 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			//Set the numberOfColors variable.
 			numberOfColors = jRacy.clrChooser.getNumberOfColors();
 			
+			//**********
 			//Do the standard font and spacing stuff.
-			if(!(jRacy.jRacyPreferences.areBarDetailsSet()))
-			{
-				
-				//Create font.
+			if(!(jRacy.jRacyPreferences.areBarDetailsSet())){
 				Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), 12);
 				g.setFont(font);
 				FontMetrics fmFont = g.getFontMetrics(font);
 				
-				//Set up the bar details.
-				
-				//Compute the font metrics.
 				int maxFontAscent = fmFont.getAscent();
 				int maxFontDescent = fmFont.getMaxDescent();
-				
 				int tmpInt = maxFontAscent + maxFontDescent;
-				
 				jRacy.jRacyPreferences.setBarDetails(maxFontAscent, (tmpInt + 5));
-				
-				jRacy.jRacyPreferences.setSliders(maxFontAscent, (tmpInt + 5));
-			}
+				jRacy.jRacyPreferences.setSliders(maxFontAscent, (tmpInt + 5));}
 			
 			//Set local spacing and bar heights.
 			barSpacing = jRacy.jRacyPreferences.getBarSpacing();
 			barHeight = jRacy.jRacyPreferences.getBarHeight();
 			
-			//Create font.
 			Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), barHeight);
 			g.setFont(font);
 			FontMetrics fmFont = g.getFontMetrics(font);
+			//Do the standard font and spacing stuff.
+			//**********
 
-			double tmpSum;
+			//**********
+			//Some declarations.
+			double tmpSum = 0.00;
 			double tmpDataValue;
 			Color tmpColor;
 			String tmpString;
 			int stringWidth;
 			int stringStart;
-			
-			//Convenient counters.
-			int colorCounter = 0;
-		
 			int yCoord = 0;
-			
 			int tmpXWidthCalc = 0;
-			
-			//An XCoord used in drawing the bars.
 			int barXCoord = 0;
-			yCoord = 0;
+			//End - Some declarations.
+			//**********
 			
 			yCoord = yCoord + (barSpacing);
 			
@@ -152,16 +151,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			counterName = jRacy.staticSystemData.getCounterName();
 			if(counterName != null){
 				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
-				yCoord = yCoord + (barSpacing);
-			}
+				yCoord = yCoord + (barSpacing);}
 			//End - Draw the counter name if required.
 			//**********
 		
 			//Grab the appropriate thread.
 			tmpThreadDataElementList = tDWindow.getStaticMainWindowSystemData();
 			
-			//Cycle through the data values for this thread to get the total.
-			tmpSum = 0.00;
 			
 			Rectangle clipRect = g.getClipBounds();
 			
@@ -170,15 +166,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			int startThreadElement = 0;
 			int endThreadElement = 0;
 			
-			//Find the correct global thread ... should change this to an access of the static main window's elements.
-			tmpGS = (GlobalServer) staticNodeList.elementAt(serverNumber);
-			tmpGlobalContextList = tmpGS.getContextList();
-			tmpGC = (GlobalContext) tmpGlobalContextList.elementAt(contextNumber);
-			tmpGlobalThreadList = tmpGC.getThreadList();
-			tmpGT = (GlobalThread) tmpGlobalThreadList.elementAt(threadNumber);
-			
-			
-		    //To be on the safe side, have an alternative to the clip rectangle.
 		    if ((clipRect != null))
 		    {	
 		    	//@@@In the clipping section. - This comment aids in matching up if/else statements.@@@
@@ -678,467 +665,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 					}
 				}
 			}
-			else
-			{
-				
-				//@@@In the non-clipping section. - This comment aids in matching up if/else statements.@@@
-				
-				//Test for the different menu options for this window.
-				if((tDWindow.isInclusive()))
-				{
-					//Get the maximum on this thread, and set the draw positions appropriately.
-					double maxValue = tmpGT.getMaxInclusivePercentValue();
-					int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
-					barXCoord = tmpValue + 60;
 					
-					if(tDWindow.isPercent())
-					{		
-						
-						//Need to figure out how long the percentage string will be.
-						tmpString = new String(maxValue + "%");
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-						
-						for(Enumeration e1 = tmpThreadDataElementList.elements(); e1.hasMoreElements() ;)
-						{
-							
-							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
-							yCoord = yCoord + (barSpacing);
-							
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-							tmpDataValue = tmpSMWThreadDataElement.getInclusivePercentValue();
-							
-							int xLength;
-							double tmpDouble;
-							tmpDouble = (tmpDataValue / 100.00);
-							xLength = (int) (tmpDouble * defaultBarLength);
-							if(xLength == 0)
-								xLength = 1;
-							
-							//Now set the color values for drawing!
-							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getMappingColor();
-							g.setColor(tmpColor);
-							
-							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
-							{
-								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-								
-								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-								{
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-								}
-								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-								{
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-								}
-								else
-								{
-									g.setColor(Color.black);
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-								}
-							}
-							else
-							{
-								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-								else
-								{
-									tmpColor = tmpSMWThreadDataElement.getMappingColor();
-									g.setColor(tmpColor);
-								}
-								
-								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
-							}
-							
-							//Now print the percentage to the left of the bar.
-							g.setColor(Color.black);
-							//Need to figure out how long the percentage string will be.
-							tmpString = new String(tmpDataValue + "%");
-							stringWidth = fmFont.stringWidth(tmpString);
-							//Now draw the percent value to the left of the bar.
-							stringStart = barXCoord - xLength - stringWidth - 5;
-							g.drawString(tmpDataValue + "%", stringStart, yCoord);
-							
-							//Now print the name of the mapping to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getMappingName();
-							g.drawString(tmpString, (barXCoord + 5), yCoord);
-							
-							//Figure out how wide that string was for x coord reasons.
-							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
-							if(tmpXWidthCalc < stringWidth)
-							{
-								tmpXWidthCalc = stringWidth + 15;
-							}
-							
-							//Update the drawing coordinates.
-							tmpSMWThreadDataElement.setTDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
-						}
-					}
-					else
-					{//@@@
-				
-						//Now get the raw values for printing at the end of the bars.
-						tmpDataValue = tmpGT.getMaxInclusiveValue();
-						//Check to see what the units are.
-						if((tDWindow.units()).equals("Seconds"))
-						{
-							tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
-							stringWidth = fmFont.stringWidth(tmpString);
-							barXCoord = barXCoord + stringWidth;
-						}
-						else if((tDWindow.units()).equals("Milliseconds"))
-						{
-							tmpString = new String((Double.toString((tmpDataValue / 1000))));
-							stringWidth = fmFont.stringWidth(tmpString);
-							barXCoord = barXCoord + stringWidth;
-						}
-						else
-						{
-							tmpString = new String(Double.toString(tmpDataValue));
-							stringWidth = fmFont.stringWidth(tmpString);
-							barXCoord = barXCoord + stringWidth;
-						}
-						
-						for(Enumeration e2 = tmpThreadDataElementList.elements(); e2.hasMoreElements() ;)
-						{
-							
-							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
-							yCoord = yCoord + (barSpacing);
-							
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e2.nextElement();
-							tmpDataValue = tmpSMWThreadDataElement.getInclusivePercentValue();
-							
-							int xLength;
-							double tmpDouble;
-							tmpDouble = (tmpDataValue / 100.00);
-							xLength = (int) (tmpDouble * defaultBarLength);
-							if(xLength == 0)
-								xLength = 1;
-							
-							//Now set the color values for drawing!
-							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getMappingColor();
-							g.setColor(tmpColor);
-							
-							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
-							{
-								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-								
-								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-								{
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-								}
-								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-								{
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-								}
-								else
-								{
-									g.setColor(Color.black);
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-								}
-							}
-							else
-							{
-								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-								else
-								{
-									tmpColor = tmpSMWThreadDataElement.getMappingColor();
-									g.setColor(tmpColor);
-								}
-								
-								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
-							}
-							
-							//Now print the percentage to the left of the bar.
-							g.setColor(Color.black);
-							
-							//Now get the raw values for printing at the end of the bars.
-							tmpDataValue = tmpSMWThreadDataElement.getInclusiveValue();
-							//Check to see what the units are.
-							if((tDWindow.units()).equals("Seconds"))
-							{
-								tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
-								stringWidth = fmFont.stringWidth(tmpString);
-								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
-							}
-							else if((tDWindow.units()).equals("Milliseconds"))
-							{
-								tmpString = new String((Double.toString((tmpDataValue / 1000))));
-								stringWidth = fmFont.stringWidth(tmpString);
-								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
-							}
-							else
-							{
-								tmpString = new String(Double.toString(tmpDataValue));
-								stringWidth = fmFont.stringWidth(tmpString);
-								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
-							}				
-							
-							//Now print the name of the mapping to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getMappingName();
-							g.drawString(tmpString, (barXCoord + 5), yCoord);
-							
-							//Figure out how wide that string was for x coord reasons.
-							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
-							if(tmpXWidthCalc < stringWidth)
-							{
-								tmpXWidthCalc = stringWidth + 15;
-							}
-							
-							//Update the drawing coordinates.
-							tmpSMWThreadDataElement.setTDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
-						}
-					}
-				}
-				else	//Case of exclusive selection.
-				{
-					
-					//Get the maximum on this thread, and set the draw positions appropriately.
-					double maxValue = tmpGT.getMaxExclusivePercentValue();
-					int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
-					barXCoord = tmpValue + 60;
-					
-					if(tDWindow.isPercent())
-					{	
-						
-						//Need to figure out how long the percentage string will be.
-						tmpString = new String(maxValue + "%");
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-						
-						
-						for(Enumeration e3 = tmpThreadDataElementList.elements(); e3.hasMoreElements() ;)
-						{
-							
-							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
-							yCoord = yCoord + (barSpacing);
-							
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e3.nextElement();
-							tmpDataValue = tmpSMWThreadDataElement.getExclusivePercentValue();
-							
-							int xLength;
-							double tmpDouble;
-							tmpDouble = (tmpDataValue / 100.00);
-							xLength = (int) (tmpDouble * defaultBarLength);
-							if(xLength == 0)
-								xLength = 1;
-							
-							//Now set the color values for drawing!
-							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getMappingColor();
-							g.setColor(tmpColor);
-							
-							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
-							{
-								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-								
-								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-								{
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-								}
-								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-								{
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-								}
-								else
-								{
-									g.setColor(Color.black);
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-								}
-							}
-							else
-							{
-								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-								else
-								{
-									tmpColor = tmpSMWThreadDataElement.getMappingColor();
-									g.setColor(tmpColor);
-								}
-								
-								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
-							}
-							
-							//Now print the percentage to the left of the bar.
-							g.setColor(Color.black);
-							//Need to figure out how long the percentage string will be.
-							tmpString = new String(tmpDataValue + "%");
-							stringWidth = fmFont.stringWidth(tmpString);
-							stringStart = barXCoord - xLength - stringWidth - 5;
-							//Now draw the percent value to the left of the bar.
-							g.drawString(tmpDataValue + "%", stringStart, yCoord);
-							
-							//Now print the name of the mapping to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getMappingName();
-							g.drawString(tmpString, (barXCoord + 5), yCoord);
-							
-							//Figure out how wide that string was for x coord reasons.
-							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
-							if(tmpXWidthCalc < stringWidth)
-							{
-								tmpXWidthCalc = stringWidth + 15;
-							}
-							
-							//Update the drawing coordinates.
-							tmpSMWThreadDataElement.setTDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
-						}
-					}
-					else
-					{
-						//Add the correct amount to barXCoord.
-						tmpDataValue = tmpGT.getMaxExclusiveValue();
-						
-						if((tDWindow.units()).equals("Seconds"))
-						{
-							tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
-							stringWidth = fmFont.stringWidth(tmpString);
-							barXCoord = barXCoord + stringWidth;
-						}
-						else if((tDWindow.units()).equals("Milliseconds"))
-						{
-							tmpString = new String((Double.toString((tmpDataValue / 1000))));
-							stringWidth = fmFont.stringWidth(tmpString);
-							barXCoord = barXCoord + stringWidth;
-						}
-						else
-						{
-							tmpString = new String(Double.toString(tmpDataValue));
-							stringWidth = fmFont.stringWidth(tmpString);
-							barXCoord = barXCoord + stringWidth;
-						}
-						
-						
-						
-						for(Enumeration e5 = tmpThreadDataElementList.elements(); e5.hasMoreElements() ;)
-						{
-							
-							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
-							yCoord = yCoord + (barSpacing);
-							
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
-							tmpDataValue = tmpSMWThreadDataElement.getExclusivePercentValue();
-							
-							int xLength;
-							double tmpDouble;
-							tmpDouble = (tmpDataValue / 100.00);
-							xLength = (int) (tmpDouble * defaultBarLength);
-							if(xLength == 0)
-								xLength = 1;
-							
-							//Now set the color values for drawing!
-							//Get the appropriate color.
-							tmpColor = tmpSMWThreadDataElement.getMappingColor();
-							g.setColor(tmpColor);
-							
-							if((xLength > 2) && (barHeight > 2)) //Otherwise, do not use boxes ... not enough room.
-							{
-								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-								
-								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-								{
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-								}
-								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-								{
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-								}
-								else
-								{
-									g.setColor(Color.black);
-									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-								}
-							}
-							else
-							{
-								if((tmpSMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
-									g.setColor(jRacy.clrChooser.getHighlightColor());
-								else if((tmpSMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
-									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
-								else
-								{
-									tmpColor = tmpSMWThreadDataElement.getMappingColor();
-									g.setColor(tmpColor);
-								}
-								
-								g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
-							}
-							
-							//Now print the percentage to the left of the bar.
-							g.setColor(Color.black);
-							
-							//Now get the raw values for printing at the end of the bars.
-							tmpDataValue = tmpSMWThreadDataElement.getExclusiveValue();
-							
-							//Check to see what the units are.
-							if((tDWindow.units()).equals("Seconds"))
-							{
-								tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
-								stringWidth = fmFont.stringWidth(tmpString);
-								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
-							}
-							else if((tDWindow.units()).equals("Milliseconds"))
-							{
-								tmpString = new String((Double.toString((tmpDataValue / 1000))));
-								stringWidth = fmFont.stringWidth(tmpString);
-								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
-							}
-							else
-							{
-								tmpString = new String(Double.toString(tmpDataValue));
-								stringWidth = fmFont.stringWidth(tmpString);
-								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
-							}				
-							
-							//Now print the name of the mapping to the right of the bar.
-							tmpString = tmpSMWThreadDataElement.getMappingName();
-							g.drawString(tmpString, (barXCoord + 5), yCoord);
-							
-							//Figure out how wide that string was for x coord reasons.
-							stringWidth =  (barXCoord + fmFont.stringWidth(tmpString) + 5); 
-							if(tmpXWidthCalc < stringWidth)
-							{
-								tmpXWidthCalc = stringWidth + 15;
-							}
-							
-							//Update the drawing coordinates.
-							tmpSMWThreadDataElement.setTDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
-						}
-					}
-				}
-			}
-				
-				
 			boolean sizeChange = false;		
 			//Resize the panel if needed.
 			if(tmpXWidthCalc > 550){
@@ -1153,17 +680,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			
 			if(sizeChange)
 				revalidate();
-			
-			/*
-			//Resize the panel if needed.
-			if((newYPanelSize >= yPanelSize) || (tmpXWidthCalc  >= xPanelSize))
-			{
-				yPanelSize = newYPanelSize + 1;
-				xPanelSize = tmpXWidthCalc + 1;
-				
-				revalidate();
-			}
-			*/
 		}
 		catch(Exception e)
 		{
@@ -1353,8 +869,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	//******************************
 	//Instance data.
 	//******************************
-	private Vector staticNodeList;
-	
 	private int newXPanelSize = 0;
 	private int newYPanelSize = 0;
 	
@@ -1370,15 +884,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	private int	contextNumber = -1;
 	private int	threadNumber = -1;
 	
+	private StaticMainWindowData sMWData = null;
 	private ThreadDataWindow tDWindow = null;
- 	
- 	private GlobalServer tmpGS = null;
-	private Vector tmpGlobalContextList = null;
-	private GlobalContext tmpGC = null;
-	private Vector tmpGlobalThreadList = null;
 	private GlobalThread tmpGT = null;	
- 	
- 	private StaticMainWindowData sMWData = null;
  	private Vector tmpThreadDataElementList = null;
  	private SMWThreadDataElement tmpSMWThreadDataElement = null;
  	

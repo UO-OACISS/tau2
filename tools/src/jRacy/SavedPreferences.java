@@ -19,8 +19,10 @@ public class SavedPreferences implements Serializable
 	//Instance data.
 	//******************************
 	Vector globalColors = null;
+	Vector mappingGroupColors = null;
 	
 	private Color highlightColor = null;
+	private Color groupHighlightColor = null;
 	private Color miscMappingsColor = null;
 	private int barSpacing = -1;
 	private int barHeight = -1;
@@ -50,6 +52,16 @@ public class SavedPreferences implements Serializable
 		return globalColors;
 	}
 	
+	public void setMappingGroupColors(Vector inVector)
+	{
+		mappingGroupColors = inVector;
+	}
+	
+	public Vector getMappingGroupColors()
+	{
+		return mappingGroupColors;
+	}
+	
 	public void setHighlightColor(Color inhighlightColor)
 	{
 		highlightColor = inhighlightColor;
@@ -58,6 +70,16 @@ public class SavedPreferences implements Serializable
 	public Color getHighlightColor()
 	{
 		return highlightColor;
+	}
+	
+	public void setGroupHighlightColor(Color inGrouphighlightColor)
+	{
+		groupHighlightColor = inGrouphighlightColor;
+	}
+	
+	public Color getGroupHighlightColor()
+	{
+		return groupHighlightColor;
 	}
 	
 	public void setMiscMappingsColor(Color inMiscMappingsColor)

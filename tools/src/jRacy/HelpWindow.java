@@ -195,7 +195,9 @@ public class HelpWindow extends JFrame implements ActionListener, Observer
 					+ " giving a multiple of this length.  This has proved useful in tailoring the exact lengths of"
 					+ " bars needed.");
 					writeText("");
-					writeText("4) A number of other minor changes and bug fixes.  As always, this is an ongoing project" 
+					writeText("4) Added more color selections for mapping group colors.");
+					writeText("");
+					writeText("5) A number of other minor changes and bug fixes.  As always, this is an ongoing project" 
 					+ " as such, ANY suggestions are welcome.  There will also be a clean up of the code to provide" 
 					+ " more effective searching as some things have been implimented just to get it working.");
 				}
