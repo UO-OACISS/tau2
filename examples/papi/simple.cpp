@@ -1,6 +1,6 @@
 #include <Profile/Profiler.h>
 
-#define SIZE 1024
+#define SIZE 512
 #define CACHE 64
 
 double A[SIZE][SIZE], B[SIZE][SIZE], C[SIZE][SIZE];
