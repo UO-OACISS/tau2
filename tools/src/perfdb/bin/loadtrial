@@ -1,0 +1,8 @@
+#!/bin/sh
+
+PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
+XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
+JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
+
+#store pprof.xml into Postgresql
+java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} com.perfdb.loadxml.Main loadxml ${PERFDB_HOME}/data/pprof.xml
