@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.3 2004/03/30 18:14:16 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.4 2004/03/31 00:47:06 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -24,6 +24,15 @@ public abstract class DataSession {
 	protected Vector userEventData = null;
 
 	public static int PERFDB_NONE = -1;
+
+    //######
+    //Object structure representation of data mirrored on ParaProf's usage.
+    //######
+    private GlobalMapping globalMapping = null;
+    private NCT nct = null;
+    //######
+    //End - Object structure representation of data mirrored on ParaProf's usage.
+    //######
 
 	public DataSession () {
 		super();
@@ -293,6 +302,44 @@ public abstract class DataSession {
 	}
 
 /**
+ * Get the metric name corresponding to the given id.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
+ *
+ * @return	The metric name as a String.
+ */
+	public String getMetricName(int metricID) {
+		if (this.metrics == null) {
+			if (this.trial != null) {
+				this.metrics = this.trial.getMetrics();
+			}
+		}
+		
+		//Try getting the matric name.
+		if((this.metrics!=null) && (metricID<this.metrics.size()))
+		    return ((Metric)this.metrics.elementAt(metricID)).getName();
+		else
+		    return null;
+	}
+
+/**
+ * Get the number of metrics.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
+ *
+ * @return	Returns the number of metrics as an int.
+ */
+	public int getNumberOfMetrics() {
+		if (this.metrics == null) {
+			if (this.trial != null) {
+				this.metrics = this.trial.getMetrics();
+			}
+		}
+		
+		//Try getting the matric name.
+		if(this.metrics!=null)
+		    return metrics.size();
+		else
+		    return -1;
+	}
+
+/**
  * Returns a ListIterator of Function objects.
  *
  * @return	DataSessionIterator object of all Functions.  If there is an Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) saved in the DataSession, then only the Functions for that Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) are returned.
@@ -496,5 +543,26 @@ public abstract class DataSession {
  */
 	abstract public void saveUserEventData(UserEventDataObject userEventData, int newUserEventID) ;
 
-};
+    //######
+    //Functions interfacing to object structure representation of data mirrored on ParaProf's usage.
+    //######
+ /**
+  * Gets this data session's NCT object.
+  *
+  * @return An NCT object.
+  */
+    public NCT getNCT(){
+	return nct;}
+/**
+  * Gets this data session's GlobalMapping object.
+  *
+  * @return A GlobalMapping object.
+  */
+    public GlobalMapping getGlobalMapping(){
+	return globalMapping;}
 
+    //######
+    //End - Functions interfacing to object structure representation of data mirrored on ParaProf's usage.
+    //######
+
+};

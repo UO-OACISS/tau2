@@ -24,7 +24,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.3 2004/03/31 00:47:07 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -59,128 +59,128 @@ public class FunctionDataObject extends Object {
  * Alternative constructor.
  *
  * @param metricCount specifies how many metrics are expected for this trial.
- */
-	public FunctionDataObject(int metricCount) {
-		super();
-		int trueSize = metricCount * fieldCount;
-		doubleList = new double[trueSize];
-	}
+  */
+	 public FunctionDataObject(int metricCount) {
+		 super();
+		 int trueSize = metricCount * fieldCount;
+		 doubleList = new double[trueSize];
+	 }
 
-/**
- * Returns the node for this data location.
- *
- * @return the node index.
- */
-	public int getNode () {
-		return this.node;
-	}
+ /**
+  * Returns the node for this data location.
+  *
+  * @return the node index.
+  */
+	 public int getNode () {
+		 return this.node;
+	 }
 
-/**
- * Returns the context for this data location.
- *
- * @return the context index.
- */
-	public int getContext () {
-		return this.context;
-	}
+ /**
+  * Returns the context for this data location.
+  *
+  * @return the context index.
+  */
+	 public int getContext () {
+		 return this.context;
+	 }
 
-/**
- * Returns the thread for this data location.
- *
- * @return the thread index.
- */
-	public int getThread () {
-		return this.thread;
-	}
+ /**
+  * Returns the thread for this data location.
+  *
+  * @return the thread index.
+  */
+	 public int getThread () {
+		 return this.thread;
+	 }
 
-/**
- * Returns the unique ID for the function that owns this data
- *
- * @return the functionID.
- * @see		Function
- */
-	public int getFunctionIndexID () {
-		return this.functionID;
-	}
+ /**
+  * Returns the unique ID for the function that owns this data
+  *
+  * @return the functionID.
+  * @see		Function
+  */
+	 public int getFunctionIndexID () {
+		 return this.functionID;
+	 }
 
-/**
- * Returns the inclusive percentage value for the specified metric at this location.
- *
- * @param	metricIndex the index of the metric desired.
- * @return	the inclusive percentage.
- */
-	public double getInclusivePercentage (int metricIndex) {
-		return getDouble(metricIndex, 0);
-	}
+ /**
+  * Returns the inclusive percentage value for the specified metric at this location.
+  *
+  * @param	metricIndex the index of the metric desired.
+  * @return	the inclusive percentage.
+  */
+	 public double getInclusivePercentage (int metricIndex) {
+		 return getDouble(metricIndex, 0);
+	 }
 
-/**
- * Returns the inclusive percentage value for the first (or only) metric at this location.
- *
- * @return	the inclusive percentage.
- */
-	public double getInclusivePercentage () {
-		return getDouble(0, 0);
-	}
+ /**
+  * Returns the inclusive percentage value for the first (or only) metric at this location.
+  *
+  * @return	the inclusive percentage.
+  */
+	 public double getInclusivePercentage () {
+		 return getDouble(0, 0);
+	 }
 
-/**
- * Returns the inclusive value for the specified metric at this location.
- *
- * @param	metricIndex the index of the metric desired.
- * @return	the inclusive percentage.
- */
-	public double getInclusive (int metricIndex) {
-		return getDouble(metricIndex, 1);
-	}
+ /**
+  * Returns the inclusive value for the specified metric at this location.
+  *
+  * @param	metricIndex the index of the metric desired.
+  * @return	the inclusive percentage.
+  */
+	 public double getInclusive (int metricIndex) {
+		 return getDouble(metricIndex, 1);
+	 }
 
-/**
- * Returns the inclusive value for the first (or only) metric at this location.
- *
- * @return	the inclusive percentage.
- */
-	public double getInclusive () {
-		return getDouble(0, 1);
-	}
+ /**
+  * Returns the inclusive value for the first (or only) metric at this location.
+  *
+  * @return	the inclusive percentage.
+  */
+	 public double getInclusive () {
+		 return getDouble(0, 1);
+	 }
 
-/**
- * Returns the exclusive percentage value for the specified metric at this location.
- *
- * @param	metricIndex the index of the metric desired.
- * @return	the exclusive percentage.
- */
-	public double getExclusivePercentage (int metricIndex) {
-		return getDouble(metricIndex, 2);
-	}
+ /**
+  * Returns the exclusive percentage value for the specified metric at this location.
+  *
+  * @param	metricIndex the index of the metric desired.
+  * @return	the exclusive percentage.
+  */
+	 public double getExclusivePercentage (int metricIndex) {
+		 return getDouble(metricIndex, 2);
+	 }
 
-/**
- * Returns the exclusive percentage value for the first (or only) metric at this location.
- *
- * @return	the exclusive percentage.
- */
-	public double getExclusivePercentage () {
-		return getDouble(0, 2);
-	}
+ /**
+  * Returns the exclusive percentage value for the first (or only) metric at this location.
+  *
+  * @return	the exclusive percentage.
+  */
+	 public double getExclusivePercentage () {
+		 return getDouble(0, 2);
+	 }
 
-/**
- * Returns the exclusive value for the specified metric at this location.
- *
- * @param	metricIndex the index of the metric desired.
- * @return	the exclusive percentage.
- */
-	public double getExclusive (int metricIndex) {
-		return getDouble(metricIndex, 3);
-	}
+ /**
+  * Returns the exclusive value for the specified metric at this location.
+  *
+  * @param	metricIndex the index of the metric desired.
+  * @return	the exclusive percentage.
+  */
+	 public double getExclusive (int metricIndex) {
+		 return getDouble(metricIndex, 3);
+	 }
 
-/**
- * Returns the exclusive value for the first (or only) metric at this location.
- *
- * @return	the exclusive percentage.
- */
-	public double getExclusive () {
-		return getDouble(0, 3);
-	}
+ /**
+  * Returns the exclusive value for the first (or only) metric at this location.
+  *
+  * @return	the exclusive percentage.
+  */
+	 public double getExclusive () {
+		 return getDouble(0, 3);
+	 }
 
-/**
- * Returns the inclusive value per call for the specified metric at this location.
+ /**
+  * Returns the inclusive value per call for the specified metric at this location.
  *
  * @param	metricIndex the index of the metric desired.
  * @return	the inclusive percentage.
