@@ -23,6 +23,10 @@
 //////////////////////////////////////////////////////////////////////
 #include "Profile/Profiler.h"
 #include "Profile/TauAPI.h"
+#ifdef DEBUG_PROF
+#include <iostream>
+using namespace std;
+#endif /* DEBUG_PROF */
 
 double& TheTauNullTimerOverhead()
 {
@@ -59,10 +63,10 @@ int TauCalibrateNullTimer(void)
   /* n*(a+b+c+d) + b+c = tone */
   /* a+b+c+d = Toverhead = (tone - tnull) / n */
   TheTauFullTimerOverhead() = (tonefi.GetInclTime(tid) - TheTauNullTimerOverhead() ) / n; 
-//#ifdef DEBUG_PROF
+#ifdef DEBUG_PROF
   cout <<"Calibrate: Tnull time "<< TheTauNullTimerOverhead() <<endl;
   cout <<"Calibrate: Toverhead time = "<<TheTauFullTimerOverhead() <<endl;
-//#endif /* DEBUG_PROF */
+#endif /* DEBUG_PROF */
   return 0;
 }
 
