@@ -1,3 +1,6 @@
+/* This demonstrates how data cache misses can affect the performance of an 
+application. We show how the time/counts for a simple matrix multiplication
+algorithm dramatically reduce when we employ a strip mining optimization. */
 #include <Profile/Profiler.h>
 
 #define SIZE 512
