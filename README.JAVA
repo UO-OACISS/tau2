@@ -8,7 +8,7 @@
 **    Research Center Juelich, ZAM Germany                                 **
 *****************************************************************************
 
-To use TAU with JAVA, you'll need Java 2 (jdk1.2).
+To use TAU with JAVA, you'll need Java 2 (jdk1.2+).
 
 1) Configuration
 For profiling
