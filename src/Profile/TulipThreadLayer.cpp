@@ -33,6 +33,7 @@
 //////////////////////////////////////////////////////////////////////
 
 //#define DEBUG_PROF
+#include "Profile/Profiler.h"
 #ifdef SMARTS
 #include <Context.h>
 #include <Thread.h>
@@ -43,7 +44,6 @@ using namespace NAMESPACE;
 #include <Tulip_Thread.h>
 #include <Tulip_Mutex.h>
 #endif // SMARTS
-#include "Profile/Profiler.h"
 
 
 
@@ -159,8 +159,8 @@ int TulipThreadLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: TulipThreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/08/27 19:23:52 $
- * POOMA_VERSION_ID: $Id: TulipThreadLayer.cpp,v 1.1 1998/08/27 19:23:52 sameer Exp $
+ * $Revision: 1.2 $   $Date: 1998/09/22 01:11:40 $
+ * POOMA_VERSION_ID: $Id: TulipThreadLayer.cpp,v 1.2 1998/09/22 01:11:40 sameer Exp $
  ***************************************************************************/
 
 
