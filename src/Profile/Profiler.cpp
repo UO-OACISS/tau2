@@ -328,6 +328,9 @@ void Profiler::Stop(int tid)
 	    << this<<endl;);
 
         if (ParentProfiler == (Profiler *) NULL) {
+	  // For Dyninst. tcf gets called after main and all the data structures may not be accessible
+	  // after main exits. 
+	  if (strcmp(ThisFunction->GetName(), "__tcf_0") == 0) TheSafeToDumpData() = 0;
   	  if (TheSafeToDumpData()) {
             if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
             // Not a destructor of a static object - its a function like main
@@ -337,12 +340,6 @@ void Profiler::Stop(int tid)
               << ThisFunction->GetName() <<endl;);
   
               StoreData(tid);
-	      if (strstr(ThisFunction->GetName(), "main") != NULL) 
-	      { 
-		DEBUGPROFMSG(ThisFunction->GetName() 
-		  << " contains a main - exiting..."<<endl;);
-	        exit(0); // TURN THE LIGHTS OUT!! 
-	      }
             }
         // dump data here. Dump it only at the exit of top level profiler.
 	  }
@@ -717,8 +714,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.33 $   $Date: 2000/02/05 00:00:05 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.33 2000/02/05 00:00:05 sameer Exp $ 
+ * $Revision: 1.34 $   $Date: 2000/02/08 21:55:55 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.34 2000/02/08 21:55:55 sameer Exp $ 
  ***************************************************************************/
 
 	
