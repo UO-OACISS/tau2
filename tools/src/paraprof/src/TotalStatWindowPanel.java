@@ -247,13 +247,12 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			}
             
 		    //Resize the panel if needed.
-		    if((newYPanelSize >= yPanelSize) || (tmpXWidthCalc  >= xPanelSize))
-			{
-			    yPanelSize = newYPanelSize + 1;
-			    xPanelSize = tmpXWidthCalc + 1;
-          
-			    revalidate();
-			} 
+		    if((newYPanelSize >= yPanelSize) || (tmpXWidthCalc  >= xPanelSize)){
+			yPanelSize = newYPanelSize + 1;
+			xPanelSize = tmpXWidthCalc + 1;
+			
+			revalidate();
+		    } 
           
 		}
 	}
