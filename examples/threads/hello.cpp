@@ -1,13 +1,26 @@
+
+//Example code showing TAU monitoring a threaded application.
+
+//Threading example code updated to include Windows Threads.
+//October 1999 ... Robert Ansell-Bell.
+//Original code by Sameer Shende.
+
+
 #ifdef TAU_DOT_H_LESS_HEADERS 
 #include <iostream> 
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
+#if (!defined(TAU_WINDOWS))
 #include <pthread.h>
 #include <sys/time.h>
-#include <stdio.h>
 #include <unistd.h>
+#endif	//TAU_WINDOWS
+#include <stdio.h>
+#ifdef TAU_WINDOWS
+#include <windows.h>
+#endif	//TAU_WINDOWS
 #include <Profile/Profiler.h>
 
 TAU_REGISTER_EVENT(iters, "Number of Iterates");
@@ -56,10 +69,61 @@ int work (void)
   cout << " Hello this is thread "<< endl;
   TAU_EVENT(iters, 1);
   TAU_EVENT(mem, 4096);
+#ifdef TAU_WINDOWS
+  Sleep(5000);	//Win32 Sleep ... 5000milliseconds(5seconds).
+#else
   sleep(5);
+#endif
   first(); 
   return 0;
 }
+
+#ifdef TAU_WINDOWS
+DWORD WINAPI threaded_func(LPVOID lpvThreadParm)
+{
+  TAU_REGISTER_THREAD();
+  TAU_PROFILE("threaded_func()", "int ()", TAU_DEFAULT);
+  TAU_EVENT(iters, 1);
+  work(); // work done by this thread 
+  return NULL;
+}
+
+int main (int argc, char **argv)
+{
+  TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
+  TAU_PROFILE_INIT(argc, argv);
+  TAU_PROFILE_SET_NODE(0);
+
+  HANDLE	  hThread;
+  DWORD		  ThreadID;
+  
+  cout <<"Started Main..." <<endl;
+
+  hThread = CreateThread(NULL, 0, threaded_func, NULL, 0, &ThreadID);
+  if(!hThread)
+  { 
+    cerr << " CreateThread failed " << endl;
+    exit(1);
+  }
+  TAU_EVENT(iters, 1);
+
+  TAU_EVENT(mem, 2048);
+  //first();
+
+
+  WaitForSingleObject(hThread, INFINITE);
+
+
+  //TAU_REPORT_THREAD_STATISTICS();
+  TAU_REPORT_STATISTICS();
+
+  cout <<"Exiting main ..."<<endl;
+  return 0;
+}
+
+#else	//End of Windows Threading Section!  Now everybody
+		//else.
+
 void * threaded_func(void *data)
 {
   TAU_REGISTER_THREAD();
@@ -103,3 +167,5 @@ int main (int argc, char **argv)
   cout <<"Exiting main ..."<<endl;
   return 0;
 }
+
+#endif	//TAU_WINDOWS
