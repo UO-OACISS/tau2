@@ -198,27 +198,27 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		    panel.repaint();
 		}
 		else if(arg.equals("Exclusive")){
-		    metric = 2;
+		    valueType = 2;
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Inclusive")){
-		    metric = 4;
+		    valueType = 4;
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
-		    metric = 6;
+		    valueType = 6;
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
-		    metric = 8;
+		    valueType = 8;
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
-		    metric = 10;
+		    valueType = 10;
 		    sortLocalData();
 		    panel.repaint();
 		}
@@ -271,7 +271,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //######
     public void menuSelected(MenuEvent evt){
 	try{
-	    if(metric > 4){
+	    if(valueType > 4){
 		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(false);
 		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
 	    else if(percent){
@@ -394,13 +394,13 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    else{
 		switch(windowType){
 		case 0:
-		    list = sMWData.getMeanData(18+metric+order);
+		    list = sMWData.getMeanData(18+valueType+order);
 		    break;
 		case 1:
-		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, metric+order);
+		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, valueType+order);
 		    break;
 		case 2:
-		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, metric+order);
+		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, valueType+order);
 		    break;
 		default:
 		    ParaProf.systemError(null, null, "Unexpected window type - SW value: " + windowType);
@@ -421,8 +421,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public boolean isPercent(){
 	return percent;}
     
-    public int getMetric(){
-	return metric;}
+    public int getValueType(){
+	return valueType;}
     
     public int units(){
 	return units;}
@@ -466,10 +466,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     Vector list = null;
   
-    private boolean name = false; //true: sort by name,false: sort by metric.
+    private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.
     private boolean percent = true; //true: show values as percent,false: show actual values.
-    private int metric = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
+    private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
     //####################################
     //End - Instance data.

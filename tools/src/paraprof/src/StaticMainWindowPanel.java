@@ -1,3 +1,4 @@
+
 /* 
   
 StaticMainWindowPanel.java
@@ -657,18 +658,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 
 	    //######
-	    //Draw the counter name if required.
-	    //######
-	    counterName = trial.getCounterName();
-	    if(counterName != null){
-		g2D.drawString("COUNTER NAME: " + counterName, 5, yCoord);
-		yCoord = yCoord + (barSpacing);
-	    }
-	    //######
-	    //End - Draw the counter name if required.
-	    //######
-	
-	    //######
 	    //Set clipping.
 	    //######
 	    //Only do clipping when this is a display call.
@@ -691,7 +680,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //######
 	    //Drawing the mean bar.
 	    //######
-	    yCoord = yCoord + (barSpacing);
 	    String meanString = "Mean";
 	    int tmpMeanStringWidth = fmFont.stringWidth(meanString);
 	    g2D.drawString(meanString, (barXStart - tmpMeanStringWidth - 5), yCoord);

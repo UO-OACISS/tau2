@@ -128,8 +128,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    //######
 	    panel = new MappingDataWindowPanel(trial, mappingID, this);
 	    sp = new JScrollPane(panel);
-	    //label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName);
-            //sp.setColumnHeaderView(label);
 	    this.setHeader();
 	    //######
 	    //End - Panel and ScrollPane definition.
@@ -226,27 +224,32 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		    panel.repaint();
 		}
 		else if(arg.equals("Exclusive")){
-		    metric = 2;
+		    valueType = 2;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Inclusive")){
-		    metric = 4;
+		    valueType = 4;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
-		    metric = 6;
+		    valueType = 6;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
-		    metric = 8;
+		    valueType = 8;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
-		    metric = 10;
+		    valueType = 10;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
@@ -321,7 +324,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //######
     public void menuSelected(MenuEvent evt){
 	try{
-	    if(metric > 4){
+	    if(valueType > 4){
 		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(false);
 		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
 	    else if(percent){
@@ -415,7 +418,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
       
     public void sortLocalData(){
 	try{
-	    list = sMWData.getMappingData(mappingID, 1, metric+order);
+	    list = sMWData.getMappingData(mappingID, 1, valueType+order);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDW06");
@@ -425,8 +428,8 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     public Vector getData(){
 	return list;}
     
-    public int getMetric(){
-	return metric;}
+    public int getValueType(){
+	return valueType;}
     
     public boolean isPercent(){
 	return percent;}
@@ -434,16 +437,31 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     public int units(){
 	return units;}
 
+    //######
+    //Panel header.
+    //######
+    //This process is separated into two functions to provide the option
+    //of obtaining the current header string being used for the panel
+    //without resetting the actual header. Printing and image generation
+    //use this functionality for example.
     public void setHeader(){
 	JTextArea jTextArea = new JTextArea();
 	jTextArea.setLineWrap(true);
 	jTextArea.setWrapStyleWord(true);
-	//Set the text.
-	jTextArea.append("Metric Name: " + (trial.getCounterName())+"\n");
-	jTextArea.append("Name: " + mappingName+"\n");
-	jTextArea.append("Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n");
+	jTextArea.setEditable(false);
+	jTextArea.append(this.getHeaderString());
 	sp.setColumnHeaderView(jTextArea);
     }
+
+    public String getHeaderString(){
+	return "Metric Name: " + (trial.getCounterName())+"\n" +
+	    "Name: " + mappingName+"\n" +
+	    "Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n"+
+	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n";
+    }
+    //######
+    //End - Panel header.
+    //######
   
     public int getSliderValue(){
 	int tmpInt = -1;
@@ -581,10 +599,10 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 
     private Vector list = null;
   
-    private boolean name = false; //true: sort by name,false: sort by metric.
+    private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.
     private boolean percent = true; //true: show values as percent,false: show actual values.
-    private int metric = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
+    private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
     //####################################
     //End - Instance data.

@@ -119,7 +119,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    //***
 	    //Set the max values for this mapping.
 	    //***
-	    switch(uEWindow.getMetric()){
+	    switch(uEWindow.getValueType()){
 	    case 12:
 		maxValue = gME.getMaxUserEventNumberValue();
 		break;
@@ -133,7 +133,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 		maxValue = gME.getMaxUserEventMeanValue();
 		break;
 	    default:
-		ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getMetric());
+		ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
 	    }
 
 	    stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0,maxValue)); //No units required in this window.  Thus pass in 0 for type.
@@ -180,7 +180,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    //######
 	    for(Enumeration e = (uEWindow.getData()).elements(); e.hasMoreElements() ;){
 		tmpSMWThreadDataElement = (SMWThreadDataElement) e.nextElement();
-		switch(uEWindow.getMetric()){
+		switch(uEWindow.getValueType()){
 		case 12:
 			value = tmpSMWThreadDataElement.getUserEventNumberValue();
 		    break;
@@ -194,7 +194,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 		    value = tmpSMWThreadDataElement.getUserEventMeanValue();
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getMetric());
+		    ParaProf.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
 		}
 		
 		//For consistancy in drawing, the y coord is updated at the beginning of the loop.

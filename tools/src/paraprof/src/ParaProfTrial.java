@@ -125,21 +125,6 @@ public class ParaProfTrial extends Trial{
     public Node getNode(int nodeID){
 	return (Node) nodes.elementAt(nodeID);}
 
-    //Returns the total number of contexts in this trial.
-    public int getTotalNumberOfContexts(){
-	if(totalNumberOfContexts==-1){
-	    for(Enumeration e = this.getNodes().elements(); e.hasMoreElements() ;){
-	     Node node = (Node) e.nextElement();
-	     totalNumberOfContexts+=(node.getNumberOfContexts());
-	    }
-	}
-	return totalNumberOfContexts;
-    }
-
-    //Returns the number of contexts on the specified node.
-    public int getNumberOfContexts(int nodeID){
-	return ((Node) nodes.elementAt(nodeID)).getNumberOfContexts();}
-
     public Vector getContexts(int nodeID){
 	return (this.getNode(nodeID)).getContexts();}
 

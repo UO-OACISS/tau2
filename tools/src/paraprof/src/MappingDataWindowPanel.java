@@ -119,7 +119,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //***
 	    //Set the max and mean values for this mapping.
 	    //***
-	    switch(mDWindow.getMetric()){
+	    switch(mDWindow.getValueType()){
 	    case 2:
 		if(mDWindow.isPercent()){
 		    maxValue = gME.getMaxExclusivePercentValue(trial.getCurValLoc());
@@ -153,7 +153,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		value = gME.getMeanUserSecPerCall(trial.getCurValLoc());
 		break;
 	    default:
-		ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
+		ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
 	    }
 
 	    if(mDWindow.isPercent()){
@@ -220,7 +220,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //######
 	    for(Enumeration e = (mDWindow.getData()).elements(); e.hasMoreElements() ;){
 		tmpSMWThreadDataElement = (SMWThreadDataElement) e.nextElement();
-		switch(mDWindow.getMetric()){
+		switch(mDWindow.getValueType()){
 		case 2:
 		    if(mDWindow.isPercent())
 			value = tmpSMWThreadDataElement.getExclusivePercentValue();
@@ -243,7 +243,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		    value = tmpSMWThreadDataElement.getUserSecPerCall();
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
+		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getValueType());
 		}
 		
 		//For consistancy in drawing, the y coord is updated at the beginning of the loop.
@@ -313,7 +313,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	//Draw the value next to the bar.
 	g2D.setColor(Color.black);
 	//Do not want to put a percent sign after the bar if we are not exclusive or inclusive.
-	if((mDWindow.isPercent()) && ((mDWindow.getMetric())<=4))					
+	if((mDWindow.isPercent()) && ((mDWindow.getValueType())<=4))					
 	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
 	else
 	    s = UtilFncs.getOutputString(mDWindow.units(),value);

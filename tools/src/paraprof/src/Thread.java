@@ -11,7 +11,7 @@ package paraprof;
 import java.util.*;
 import java.io.*;
 
-public class Thread{
+public class Thread implements Comparable{
 
     //####################################
     //Contructor(s).
@@ -280,6 +280,12 @@ public class Thread{
     public boolean trimmed(){
 	return trimmed;}
 
+    public int compareTo(Object obj){
+	if(obj instanceof Integer)
+	    return threadID - ((Integer)obj).intValue();
+	else
+	    return threadID - ((Thread)obj).getThreadID();
+    }
     //####################################
     //End - Public section.
     //####################################

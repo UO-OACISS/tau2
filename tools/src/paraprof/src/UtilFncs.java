@@ -102,7 +102,33 @@ public class UtilFncs{
 	case 3:
 	    return "hour:minute:seconds";
 	default:
-	    ParaProf.systemError(null, null, "Unexpected string type - UF02 value: " + type);
+	    ParaProf.systemError(null, null, "Unexpected string type - UF03 value: " + type);
+	}
+	return null;
+    }
+
+    public static String getValueTypeString(int type){
+	switch(type){
+	case 2:
+	    return "exclusive";
+	case 4:
+	    return "inclusive";
+	case 6:
+	    return "number of calls";
+	case 8:
+	    return "number of subroutines";
+	case 10:
+	    return "per call value";
+	case 12:
+	    return "number of userevents";
+	case 14:
+	    return "min";
+	case 16:
+	    return "max";
+	case 18:
+	    return "mean";
+	default:
+	    ParaProf.systemError(null, null, "Unexpected string type - UF04 value: " + type);
 	}
 	return null;
     }
@@ -239,9 +265,9 @@ public class UtilFncs{
 	//######
 
 	//######
-	//Set the metric options.
+	//Set the value type options.
 	//######
-	subMenu = new JMenu("Select Metric");
+	subMenu = new JMenu("Select Value Type");
 	group = new ButtonGroup();
 
 	button = new JRadioButtonMenuItem("Exclusive", true);
@@ -271,7 +297,7 @@ public class UtilFncs{
 
 	jMenu.add(subMenu);
 	//######
-	//End - Set the metric options.
+	//End - Set the value type options.
 	//######
 
 	box = new JCheckBoxMenuItem("Display Sliders", false);
@@ -290,9 +316,9 @@ public class UtilFncs{
 	jMenu.add(box);
 
 	//######
-	//Set the metric options.
+	//Set the value type options.
 	//######
-	subMenu = new JMenu("Select Metric");
+	subMenu = new JMenu("Select Value Type");
 	group = new ButtonGroup();
 
 	button = new JRadioButtonMenuItem("Number of Userevents", true);
@@ -316,7 +342,7 @@ public class UtilFncs{
 	subMenu.add(button);
 	jMenu.add(subMenu);
 	//######
-	//End - Set the metric options.
+	//End - Set the value type options.
 	//######
 
 	box = new JCheckBoxMenuItem("Display Sliders", false);

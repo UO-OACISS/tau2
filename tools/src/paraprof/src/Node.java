@@ -10,7 +10,7 @@ package paraprof;
 
 import java.util.*;
 
-public class Node{
+public class Node implements Comparable{
     public Node(){
 	contexts = new Vector();}
 
@@ -25,32 +25,77 @@ public class Node{
     public int getNodeID(){
 	return nodeID;}
     
-    //Adds a context to this nodes list of contexts.
+    //Adds the specified context to the list of contexts. 
     public void addContext(Context context){
 	try{
-	    contexts.addElement(context);
+	    if(context.getContextID()<0){
+		System.out.println("Error - Invalid context id (id less than zero). Context not added!");
+		return;
+	    }
+
+	    int pos = this.getContextPosition(context);
+	    if(pos>=0)
+		System.out.println("Error - Context already present. Context not added!");
+	    else
+		contexts.insertElementAt(context, (-(pos+1)));
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "N1");
+	}
+    }
+
+    //Creates a context with the specified context id and adds it to the list of contexts.
+    public void addContext(int nodeID, int contextID){
+	try{
+	    if(contextID<0){
+		System.out.println("Error - Invalid context id (id less than zero). Context not added!");
+		return;
+	    }
+
+	    int pos = this.getContextPosition(new Integer(contextID));
+	    if(pos>=0)
+		System.out.println("Error - Context already present. Context not added!");
+	    else
+		contexts.insertElementAt(new Context(nodeID, contextID), (-(pos+1)));
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "N2");
 	}
     }
     
     public Vector getContexts(){
 	return contexts;}
 
-    public Context getContext(int id){
+    //Gets the context with the specified context id.  If the context is not found, the function returns
+    //null.
+    public Context getContext(int contextID){
 	Context context = null;
 	try{
-	    context = (Context) contexts.elementAt(id);
+	    int pos = getContextPosition(new Integer(contextID));
+	    if(pos>=0)
+		context = (Context) contexts.elementAt(pos);
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "N2");
+	    ParaProf.systemError(e, null, "N3");
 	}
 	return context;
     }
 
     public int getNumberOfContexts(){
 	return contexts.size();}
+
+    private int getContextPosition(Integer integer){
+	return Collections.binarySearch(contexts, integer);}
+
+    private int getContextPosition(Context context){
+	return Collections.binarySearch(contexts, context);}
+
+    public int compareTo(Object obj){
+	if(obj instanceof Integer)
+	    return nodeID - ((Integer)obj).intValue();
+	else
+	    return nodeID - ((Node)obj).getNodeID();
+    }
     
     //Instance data.
     int nodeID = -1;

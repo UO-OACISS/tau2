@@ -124,10 +124,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  //Panel and ScrollPane definition.
 	  //######
 	  panel = new StaticMainWindowPanel(trial, this);
-	  panel.setPreferredSize(new Dimension(600,300));
-	  //The scroll panes into which the list shall be placed.
-	  scrollPane = new JScrollPane(panel);
-	  scrollPane.setPreferredSize(new Dimension(600, 300));
+	  sp = new JScrollPane(panel);
+	  this.setHeader();
 	  //######
 	  //End - Panel and ScrollPane definition.
 	  //######
@@ -155,7 +153,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  gbc.anchor = GridBagConstraints.CENTER;
 	  gbc.weightx = 1;
 	  gbc.weighty = 1;
-	  addCompItem(scrollPane, gbc, 0, 0, 1, 1);
+	  addCompItem(sp, gbc, 0, 0, 1, 1);
 	  //####################################
 	  //End - Create and add the components.
 	  //####################################
@@ -355,6 +353,28 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     //End - Interface code.
     //####################################
     
+    //######
+    //Panel header.
+    //######
+    //This process is separated into two functions to provide the option
+    //of obtaining the current header string being used for the panel
+    //without resetting the actual header. Printing and image generation
+    //use this functionality for example.
+    public void setHeader(){
+	JTextArea jTextArea = new JTextArea();
+	jTextArea.setLineWrap(true);
+	jTextArea.setWrapStyleWord(true);
+	jTextArea.setEditable(false);
+	jTextArea.append(this.getHeaderString());
+	sp.setColumnHeaderView(jTextArea);
+    }
+
+    public String getHeaderString(){
+	return "Metric Name: " + (trial.getCounterName())+"\n";}
+    //######
+    //End - Panel header.
+    //######
+
     public int getSliderValue(){
 	int tmpInt = -1;
 	try{
@@ -381,11 +401,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     
     private void displaySiders(boolean displaySliders){
 	if(displaySliders){
-	    //Since the menu option is a toggle, the only component that needs to be
-	    //removed is that scrollPane.  We then add back in with new parameters.
-	    //This might not be required as it seems to adjust well if left in, but just
-	    //to be sure.
-	    contentPane.remove(scrollPane);
+	     contentPane.remove(sp);
 	    
 	    gbc.fill = GridBagConstraints.NONE;
 	    gbc.anchor = GridBagConstraints.EAST;
@@ -415,20 +431,20 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    gbc.anchor = GridBagConstraints.CENTER;
 	    gbc.weightx = 1.0;
 	    gbc.weighty = 0.99;
-	    addCompItem(scrollPane, gbc, 0, 1, 4, 1);
+	    addCompItem(sp, gbc, 0, 1, 4, 1);
 	}
 	else{
 	    contentPane.remove(sliderMultipleLabel);
 	    contentPane.remove(sliderMultiple);
 	    contentPane.remove(barLengthLabel);
 	    contentPane.remove(barLengthSlider);
-	    contentPane.remove(scrollPane);
+	    contentPane.remove(sp);
 	    
 	    gbc.fill = GridBagConstraints.BOTH;
 	    gbc.anchor = GridBagConstraints.CENTER;
 	    gbc.weightx = 1;
 	    gbc.weighty = 1;
-	    addCompItem(scrollPane, gbc, 0, 0, 1, 1);
+	    addCompItem(sp, gbc, 0, 0, 1, 1);
 	}
     
 	//Now call validate so that these component changes are displayed.
@@ -526,9 +542,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     private Container contentPane = null;
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;
-    private JScrollPane scrollPane;
+    private JScrollPane sp;
     
-    private boolean name = false; //true: sort by name,false: sort by metric.
+    private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.
 
     boolean displaySliders = false;

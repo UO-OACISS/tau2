@@ -155,7 +155,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    //Set max values.
 	    //######
 	    if(windowType==0){
-		switch(tDWindow.getMetric()){
+		switch(tDWindow.getValueType()){
 		case 2: 
 		    if(tDWindow.isPercent())
 			maxValue = trial.getMaxMeanExclusivePercentValue(trial.getCurValLoc());
@@ -178,11 +178,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    maxValue = trial.getMaxMeanUserSecPerCall(trial.getCurValLoc());
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		}
 	    }
 	    else{
-		switch(tDWindow.getMetric()){
+		switch(tDWindow.getValueType()){
 		case 2: 
 		    if(tDWindow.isPercent())
 			maxValue = thread.getMaxExclusivePercentValue(trial.getCurValLoc());
@@ -205,7 +205,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    maxValue = thread.getMaxUserSecPerCall(trial.getCurValLoc());
 		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		}
 	    }
 	    
@@ -267,7 +267,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
 	    
 		if(windowType==0){
-		    switch(tDWindow.getMetric()){
+		    switch(tDWindow.getValueType()){
 		    case 2:
 			if(tDWindow.isPercent())
 			    value = sMWThreadDataElement.getMeanExclusivePercentValue();
@@ -290,11 +290,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			value = sMWThreadDataElement.getMeanUserSecPerCall();
 			break;
 		    default:
-			ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+			ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		    }
 		}
 		else{
-		    switch(tDWindow.getMetric()){
+		    switch(tDWindow.getValueType()){
 		    case 2:
 			if(tDWindow.isPercent())
 			    value = sMWThreadDataElement.getExclusivePercentValue();
@@ -317,7 +317,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			value = sMWThreadDataElement.getUserSecPerCall();
 			break;
 		    default:
-			ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getMetric());
+			ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());
 		    }
 		}
 
@@ -380,7 +380,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	//Draw the value next to the bar.
 	g2D.setColor(Color.black);
 	//Do not want to put a percent sign after the bar if we are not exclusive or inclusive.
-	if((tDWindow.isPercent()) && ((tDWindow.getMetric())<=4))					
+	if((tDWindow.isPercent()) && ((tDWindow.getValueType())<=4))					
 	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
 	else
 	    s = UtilFncs.getOutputString(tDWindow.units(),value);

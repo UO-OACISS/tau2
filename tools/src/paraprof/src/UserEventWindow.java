@@ -128,9 +128,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	    panel = new UserEventWindowPanel(trial, mappingID, this);
 	    //The scroll panes into which the list shall be placed.
 	    sp = new JScrollPane(panel);
-	    sp = new JScrollPane(panel);
-	    label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) +  "  EVENT NAME: " + mappingName);
-            sp.setColumnHeaderView(label);
+	    this.setHeader();
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
@@ -204,19 +202,23 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		    System.exit(0);
 		}
 		else if(arg.equals("Number of Userevents")){
-		    metric = 12;
+		    valueType = 12;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Min. Value")){
-		    metric = 14;
+		    valueType = 14;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Max. Value")){
-		    metric = 16;
+		    valueType = 16;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Mean Value")){
-		    metric = 18;
+		    valueType = 18;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Decending Order")){
@@ -350,7 +352,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 
     public void sortLocalData(){
 	try{
-	    list = sMWData.getMappingData(mappingID, 2, metric+order);
+	    list = sMWData.getMappingData(mappingID, 2, valueType+order);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDW06");
@@ -360,8 +362,32 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     public Vector getData(){
 	return list;}
     
-    public int getMetric(){
-	return metric;}
+    public int getValueType(){
+	return valueType;}
+
+    //######
+    //Panel header.
+    //######
+    //This process is separated into two functions to provide the option
+    //of obtaining the current header string being used for the panel
+    //without resetting the actual header. Printing and image generation
+    //use this functionality for example.
+    public void setHeader(){
+	JTextArea jTextArea = new JTextArea();
+	jTextArea.setLineWrap(true);
+	jTextArea.setWrapStyleWord(true);
+	jTextArea.setEditable(false);
+	jTextArea.append(this.getHeaderString());
+	sp.setColumnHeaderView(jTextArea);
+    }
+
+    public String getHeaderString(){
+	return "Metric Name: " + (trial.getCounterName())+"\n" +
+	    "Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n";
+    }
+    //######
+    //End - Panel header.
+    //######
 
     public int getSliderValue(){
 	int tmpInt = -1;
@@ -388,11 +414,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         
     private void displaySiders(boolean displaySliders){
 	if(displaySliders){
-	    //Since the menu option is a toggle, the only component that needs to be
-	    //removed is that scrollPane.  We then add back in with new parameters.
-	    //This might not be required as it seems to adjust well if left in, but just
-	    //to be sure.
-	    contentPane.remove(sp);
+	     contentPane.remove(sp);
 	    
 	    gbc.fill = GridBagConstraints.NONE;
 	    gbc.anchor = GridBagConstraints.EAST;
@@ -504,7 +526,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     private Vector list = null;
     
     private int order = 0; //0: descending order,1: ascending order.
-    private int metric = 12; //12-number of userevents,14-min,16-max,18-mean.
+    private int valueType = 12; //12-number of userevents,14-min,16-max,18-mean.
     //####################################
     //End - Instance data.
     //####################################

@@ -122,8 +122,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    //######
 	    panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this, sMWData, windowType);
 	    sp = new JScrollPane(panel);
-	    JLabel label = new JLabel("COUNTER NAME: " + (trial.getCounterName()) + UtilFncs.getUnitsString(units, trial.isTimeMetric()));
-            sp.setColumnHeaderView(label);
+	    this.setHeader();
 	    //######
 	    //End - Panel and ScrollPane definition.
 	    //######
@@ -227,44 +226,53 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		    panel.repaint();
 		}
 		else if(arg.equals("Exclusive")){
-		    metric = 2;
+		    valueType = 2;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Inclusive")){
-		    metric = 4;
+		    valueType = 4;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
-		    metric = 6;
+		    valueType = 6;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
-		    metric = 8;
+		    valueType = 8;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
-		    metric = 10;
+		    valueType = 10;
+		    this.setHeader();
 		    sortLocalData();
 		    panel.repaint();
 		}
 		else if(arg.equals("Microseconds")){
 		    units = 0;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Milliseconds")){
 		    units = 1;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Seconds")){
 		    units = 2;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("hr:min:sec")){
 		    units = 3;
+		    this.setHeader();
 		    panel.repaint();
 		}
 		else if(arg.equals("Display Sliders")){
@@ -318,7 +326,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     //######
     public void menuSelected(MenuEvent evt){
 	try{
-	    if(metric > 4){
+	    if(valueType > 4){
 		((JCheckBoxMenuItem)optionsMenu.getItem(2)).setEnabled(false);
 		((JMenu)optionsMenu.getItem(3)).setEnabled(false);}
 	    else if(percent){
@@ -415,9 +423,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    }
 	    else{
 		if(windowType==0)
-		    list = sMWData.getMeanData(18+metric+order);
+		    list = sMWData.getMeanData(18+valueType+order);
 		else
-		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, metric+order);
+		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, valueType+order);
 	    }
 	}
 	catch(Exception e){
@@ -434,11 +442,37 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     public boolean isPercent(){
 	return percent;}
     
-    public int getMetric(){
-	return metric;}
+    public int getValueType(){
+	return valueType;}
     
     public int units(){
 	return units;}
+
+    //######
+    //Panel header.
+    //######
+    //This process is separated into two functions to provide the option
+    //of obtaining the current header string being used for the panel
+    //without resetting the actual header. Printing and image generation
+    //use this functionality for example.
+    public void setHeader(){
+	JTextArea jTextArea = new JTextArea();
+	jTextArea.setLineWrap(true);
+	jTextArea.setWrapStyleWord(true);
+	jTextArea.setEditable(false);
+	jTextArea.append(this.getHeaderString());
+	sp.setColumnHeaderView(jTextArea);
+    }
+
+    public String getHeaderString(){
+	return "Metric Name: " + (trial.getCounterName())+"\n" +
+	    "Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n"+
+	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n";
+    }
+    //######
+    //End - Panel header.
+    //######
+
     
     public int getSliderValue(){
 	int tmpInt = -1;
@@ -468,10 +502,6 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     
     private void displaySiders(boolean displaySliders){
 	if(displaySliders){
-	    //Since the menu option is a toggle, the only component that needs to be
-	    //removed is that scrollPane.  We then add back in with new parameters.
-	    //This might not be required as it seems to adjust well if left in, but just
-	    //to be sure.
 	    contentPane.remove(sp);
 	    
 	    gbc.fill = GridBagConstraints.NONE;
@@ -593,10 +623,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
  
     private Vector list = null;
   
-    private boolean name = false; //true: sort by name,false: sort by metric.
+    private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.
     private boolean percent = true; //true: show values as percent,false: show actual values.
-    private int metric = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
+    private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
     //####################################
     //End - Instance data.
