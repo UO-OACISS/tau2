@@ -556,7 +556,7 @@ void TAU_REPORT_THREAD_STATISTICS(void)
   Tau_report_thread_statistics();
 }
 
-#if (defined (TAU_XLC) || defined(TAU_AIX) || defined(HP_FORTRAN))
+//#if (defined (TAU_XLC) || defined(TAU_AIX) || defined(HP_FORTRAN))
 void tau_profile_timer(int **profiler, char *fname, int len)
 {
   if (*profiler == 0)
@@ -605,7 +605,7 @@ void tau_profile_stop(int **profiler)
   Tau_stop_timer((void *)*profiler);
 }
 
-void tau_profile_init()
+void tau_profile_init(void)
 {
 #ifdef HP_FORTRAN
   _main();
@@ -682,7 +682,7 @@ void tau_event(int **ptr, double *data)
   Tau_userevent((void *)*ptr, *data);
 }
 
-#endif /* TAU_XLC || TAU_AIX || HP_FORTRAN */
+//#endif /* TAU_XLC || TAU_AIX || HP_FORTRAN */
 
 
 #ifdef TAU_GNU
@@ -855,6 +855,6 @@ void tau_disable_group_name__(char * group_name, int len)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2003/07/18 18:48:18 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.27 2003/07/18 18:48:18 sameer Exp $ 
+ * $Revision: 1.28 $   $Date: 2003/10/21 22:27:08 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.28 2003/10/21 22:27:08 sameer Exp $ 
  ***************************************************************************/
