@@ -140,6 +140,10 @@ Usage: configure [OPTIONS]
 -smarts .................. Use SMARTS API for threads (use with above).
 -pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
+-mpiinc=<dir> ............. Specify location of MPI include dir and use
+                           the TAU MPI Profiling and Tracing Interface.
+-mpilib=<dir> ............. Specify location of MPI library dir and use
+                           the TAU MPI Profiling and Tracing Interface.
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILESTATS .................. Enable standard deviation calculation.
