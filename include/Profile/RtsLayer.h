@@ -100,6 +100,8 @@ class RtsLayer
 	static int myThread(void);
 
 	static void RegisterThread();
+	
+  	static void RegisterFork(int nodeid, enum TauFork_t opcode);
 
 	// This ensure that the FunctionDB (global) is locked while updating
 	static void LockDB(void);
@@ -111,6 +113,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1999/08/20 22:55:22 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.7 1999/08/20 22:55:22 sameer Exp $ 
+ * $Revision: 1.8 $   $Date: 2000/10/11 18:42:18 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.8 2000/10/11 18:42:18 sameer Exp $ 
  ***************************************************************************/
