@@ -18,3 +18,16 @@ void mytimer_(int* arg) {
     gettimeofday(&t1, 0);
   }
 }
+
+void mytimer(int* arg) {
+  mytimer_(arg);
+}
+
+void mytimer__(int* arg) {
+  mytimer_(arg);
+}
+
+void MYTIMER(int* arg) {
+  mytimer_(arg);
+}
+
