@@ -59,10 +59,11 @@ bool& TheIsTauTrackingMuseEvents(void)
 //////////////////////////////////////////////////////////////////////
 // Start tracking memory 
 //////////////////////////////////////////////////////////////////////
-void TauEnableTrackingMemory(void)
+int TauEnableTrackingMemory(void)
 {
   // Set tracking to true
   TheIsTauTrackingMemory() = true;
+  return 1; 
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -79,9 +80,10 @@ void TauEnableTrackingMuseEvents(void)
 //////////////////////////////////////////////////////////////////////
 // Stop tracking memory 
 //////////////////////////////////////////////////////////////////////
-void TauDisableTrackingMemory(void)
+int TauDisableTrackingMemory(void)
 {
   TheIsTauTrackingMemory() = false;
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -218,6 +220,22 @@ void TauTrackMemoryUtilization(void)
   /* activate alarm */
   alarm(TheTauInterruptInterval());
 }
+//////////////////////////////////////////////////////////////////////
+// Track Memory events at this location in the source code
+//////////////////////////////////////////////////////////////////////
+void TauTrackMemoryHere(void)
+{
+  /* Enable tracking memory by default */
+  static int flag = TauEnableTrackingMemory();
+ 
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingMemory())
+  {
+    /* trigger an event with the memory used */
+    TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
+  }
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // Track MUSE events
@@ -245,8 +263,8 @@ void TauTrackMuseEvents(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2004/03/03 18:44:14 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.4 2004/03/03 18:44:14 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 2004/06/10 18:07:26 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.5 2004/06/10 18:07:26 sameer Exp $ 
  ***************************************************************************/
 
 	

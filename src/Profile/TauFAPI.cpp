@@ -66,6 +66,7 @@ TauGroup_t Tau_disable_all_groups(void);
 TauGroup_t Tau_enable_group_name(char *group_name);
 TauGroup_t Tau_disable_group_name(char *group_name);
 void Tau_track_memory(void);
+void Tau_track_memory_here(void);
 void Tau_track_muse_events(void);
 void Tau_enable_tracking_memory(void);
 void Tau_disable_tracking_memory(void);
@@ -268,6 +269,11 @@ void tau_track_memory(void)
   Tau_track_memory();
 } 
 
+void tau_track_memory_here(void)
+{
+  Tau_track_memory_here();
+} 
+
 void tau_track_muse_events(void)
 {
   Tau_track_muse_events();
@@ -432,6 +438,11 @@ void tau_report_thread_statistics_(void)
 void tau_track_memory_(void)
 {
   Tau_track_memory();
+} 
+
+void tau_track_memory_here_(void)
+{
+  Tau_track_memory_here();
 } 
 
 void tau_track_muse_events_(void)
@@ -686,6 +697,11 @@ void tau_profile_timer(int **profiler, char *fname, int len)
 void TAU_TRACK_MEMORY(void)
 {
   Tau_track_memory();
+} 
+
+void TAU_TRACK_MEMORY_HERE(void)
+{
+  Tau_track_memory_here();
 } 
 
 void TAU_TRACK_MUSE_EVENTS(void)
@@ -980,6 +996,11 @@ void tau_track_memory__(void)
   Tau_track_memory();
 } 
 
+void tau_track_memory_here__(void)
+{
+  Tau_track_memory_here();
+} 
+
 void tau_track_muse_events__(void)
 {
   Tau_track_muse_events();
@@ -1016,6 +1037,6 @@ void tau_set_interrupt_interval__(int value)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 2004/03/03 18:44:14 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.29 2004/03/03 18:44:14 sameer Exp $ 
+ * $Revision: 1.30 $   $Date: 2004/06/10 18:07:27 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.30 2004/06/10 18:07:27 sameer Exp $ 
  ***************************************************************************/

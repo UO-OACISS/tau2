@@ -538,6 +538,12 @@ extern "C" void Tau_track_memory(void)
 } 
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_memory_here(void)
+{
+  TAU_TRACK_MEMORY_HERE();
+} 
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_track_muse_events(void)
 {
   TAU_TRACK_MUSE_EVENTS();
@@ -576,7 +582,7 @@ extern "C" void Tau_set_interrupt_interval(int value)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.41 $   $Date: 2004/03/03 18:44:14 $
- * VERSION: $Id: TauCAPI.cpp,v 1.41 2004/03/03 18:44:14 sameer Exp $
+ * $Revision: 1.42 $   $Date: 2004/06/10 18:07:27 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.42 2004/06/10 18:07:27 sameer Exp $
  ***************************************************************************/
 
