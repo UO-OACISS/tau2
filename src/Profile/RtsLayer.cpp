@@ -108,6 +108,14 @@ TauGroup_t& RtsLayer::TheProfileMask(void)
 }
 
 /////////////////////////////////////////////////////////////////////////
+bool& RtsLayer::TheEnableInstrumentation(void)
+{ // to avoid initialization problems of non-local static variables
+  static bool EnableInstrumentation = true;
+
+  return EnableInstrumentation;
+}
+
+/////////////////////////////////////////////////////////////////////////
 int& RtsLayer::TheNode(void)
 {
   static int Node = -1;
@@ -741,6 +749,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 2000/08/18 17:26:54 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.22 2000/08/18 17:26:54 sameer Exp $ 
+ * $Revision: 1.23 $   $Date: 2000/10/12 19:05:49 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.23 2000/10/12 19:05:49 sameer Exp $ 
  ***************************************************************************/
