@@ -2516,7 +2516,7 @@ int main (int argc, char *argv[]){
 	else{ /*  not hardware counters  */
 	  if(multipleCounters){ /*  output headings for multiple Counters  */ 
 	    printf ("default.dep\n%d %s\n", numfunc, counterName);
-	    printf ("%%time       counts total counts       #call      #subrs count/call name\n");
+	    printf ("%%time         msec   total msec       #call      #subrs  usec/call name\n");
 	  }//if
 	  else{  /*  output headings for templated functions with timing measurements  */
 	    printf ("default.dep\n%d templated_functions\n", numfunc);
@@ -2598,6 +2598,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.38 $   $Date: 2002/08/14 01:23:03 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.38 2002/08/14 01:23:03 sameer Exp $                                
+ * $Revision: 1.39 $   $Date: 2002/10/04 18:25:41 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.39 2002/10/04 18:25:41 sameer Exp $                                
  ***************************************************************************/
