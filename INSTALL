@@ -167,6 +167,9 @@ The following  command-line options are available to configure:
    The use of Opari source-to-source instrumentor in conjunction with
    TAU exposes OpenMP events for instrumentation. See examples/opari directory.
    [ Ref: http://www.fz-juelich.de/zam/kojak/opari/ ]
+   Note: There are two versions of Opari: standalone - (opari-pomp-1.1.tar.gz) and
+   the newer KOJAK - kojak-<ver>.tar.gz opari/ directory. Please upgrade to the 
+   KOJAK version (especially if you're using IBM xlf90).
    
 -opari_region 
    Report performance data for only OpenMP regions and not constructs. 
