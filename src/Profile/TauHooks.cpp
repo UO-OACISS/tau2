@@ -135,3 +135,8 @@ void TauRoutineExitTest(int id)
   TAU_MONITOR_EXIT(tid);
 }
 // EOF TauHooks.cpp
+/***************************************************************************
+ * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
+ * $Revision: 1.4 $   $Date: 2000/02/07 02:08:22 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.4 2000/02/07 02:08:22 sameer Exp $ 
+ ***************************************************************************/
