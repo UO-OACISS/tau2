@@ -120,6 +120,17 @@ extern "C" void tau_callstack(void)
   TAU_PROFILE_CALLSTACK();
 }
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" int tau_dump(void)
+{
+  return TAU_DB_DUMP();
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_purge(void)
+{
+  TAU_DB_PURGE();
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void tau_register_thread(void)
@@ -256,8 +267,8 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2001/01/05 22:22:39 $
- * VERSION: $Id: TauCAPI.cpp,v 1.16 2001/01/05 22:22:39 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: tjaqua $
+ * $Revision: 1.17 $   $Date: 2001/02/16 23:54:17 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.17 2001/02/16 23:54:17 tjaqua Exp $
  ***************************************************************************/
 

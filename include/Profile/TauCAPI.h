@@ -57,6 +57,9 @@
 #define TAU_PROFILE_SET_NODE(node) 		tau_set_node(node);
 #define TAU_PROFILE_SET_CONTEXT(context)	tau_set_context(context);
 #define TAU_PROFILE_CALLSTACK()			tau_callstack();
+#define TAU_DB_DUMP()                           tau_dump();
+#define TAU_DB_PURGE()                          tau_purge();
+
 /*
 #define TAU_REGISTER_EVENT(event, name)	static int tauuser##event = 1;\
 				        static void *event; \ 
@@ -98,6 +101,8 @@ extern void tau_init(int argc, char **argv);
 extern void tau_set_node(int node);
 extern void tau_set_context(int context);
 extern void tau_callstack(void);
+extern int tau_dump(void);
+extern void tau_purge(void);
 extern void tau_register_thread();
 extern void tau_register_fork(int nodeid, enum TauFork_t opcode);
 extern void * tau_get_userevent(char *name);
@@ -128,6 +133,8 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 #define TAU_PROFILE_SET_NODE(node)
 #define TAU_PROFILE_SET_CONTEXT(context)
 #define TAU_PROFILE_CALLSTACK()
+#define TAU_DB_DUMP()
+#define TAU_DB_PURGE()
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
@@ -165,8 +172,8 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2001/01/05 22:30:49 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.9 2001/01/05 22:30:49 sameer Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: tjaqua $
+ * $Revision: 1.10 $   $Date: 2001/02/16 23:54:16 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.10 2001/02/16 23:54:16 tjaqua Exp $
  ***************************************************************************/
 

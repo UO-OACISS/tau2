@@ -176,10 +176,10 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
     TauJavaLayer::ShutDown(event);
     break;
   case JVMPI_EVENT_DATA_DUMP_REQUEST:
-    TauJavaLayer::ShutDown(event);
+    TauJavaLayer::DataDump(event);
     break;
   case JVMPI_EVENT_DATA_RESET_REQUEST:
-    TauJavaLayer::ShutDown(event);
+    TauJavaLayer::DataPurge(event);
     break;
   case JVMPI_EVENT_GC_START:
 #ifdef DEBUG_PROF
@@ -361,7 +361,7 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
   CALL(RawMonitorEnter)(shutdown_lock);
   for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++)
   {
-    TAU_MAPPING_PROFILE_EXIT("Forcing Disk Dump of Performance Data",i);
+    TAU_MAPPING_PROFILE_EXIT("Forcing Shutdown of Performance Data",i);
   }
   CALL(RawMonitorExit)(shutdown_lock);
 
@@ -369,12 +369,50 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
 }
 
 
+void TauJavaLayer::DataDump(JVMPI_Event *event)
+{
+  int tid = JavaThreadLayer::GetThreadId(event->env_id);
+  JVMPI_RawMonitor dump_lock = CALL(RawMonitorCreate)("Dump lock");
+
+#ifdef DEBUG_PROF
+  fprintf(stdout, "TAU> JVM DUMP : id = %d \n", tid);
+#endif 
+
+  CALL(RawMonitorEnter)(dump_lock);
+  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++)
+  {
+    TAU_MAPPING_DB_DUMP(i);
+  }
+  CALL(RawMonitorExit)(dump_lock);
+  
+}
+
+void TauJavaLayer::DataPurge(JVMPI_Event *event)
+{
+  int tid = JavaThreadLayer::GetThreadId(event->env_id);
+  JVMPI_RawMonitor purge_lock = CALL(RawMonitorCreate)("Purge lock");
+
+#ifdef DEBUG_PROF
+  fprintf(stdout, "TAU> JVM PURGE : id = %d \n", tid);
+#endif 
+
+  CALL(RawMonitorEnter)(purge_lock);
+  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++)
+  {
+/* Disabled to retain profile DB integrity on Ctrl-\ (DUMP/PURGE)
+    TAU_MAPPING_DB_PURGE(i);
+*/
+  }
+  CALL(RawMonitorExit)(purge_lock);
+  
+}
+
 /* EOF : TauJava.cpp */
 
 
 /***************************************************************************
- * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 2000/12/04 19:22:04 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.20 2000/12/04 19:22:04 sameer Exp $
+ * $RCSfile: TauJava.cpp,v $   $Author: tjaqua $
+ * $Revision: 1.21 $   $Date: 2001/02/16 23:54:17 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.21 2001/02/16 23:54:17 tjaqua Exp $
  ***************************************************************************/
 

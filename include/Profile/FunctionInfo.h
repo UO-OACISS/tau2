@@ -89,6 +89,8 @@ public:
         inline void IncrNumSubrs(int tid);
 	inline bool GetAlreadyOnStack(int tid);
 	inline void SetAlreadyOnStack(bool value, int tid);  
+	inline bool IsWritten(int tid);
+	inline void SetWritten(bool val, int tid);
 
 	// A container of all of these.
 	// The ctor registers with this.
@@ -122,6 +124,7 @@ private:
 	STORAGE(double, ExclTime);
 	STORAGE(double, InclTime);
 	STORAGE(bool, AlreadyOnStack);
+	STORAGE(bool, Written);
 #ifdef PROFILE_STATS
 	STORAGE(double, SumExclSqr);
 #endif //PROFILE_STATS 
@@ -131,6 +134,7 @@ private:
 	NOTHREADSTORAGE(double, ExclTime);
 	NOTHREADSTORAGE(double, InclTime);
 	NOTHREADSTORAGE(bool, AlreadyOnStack);
+	NOTHREADSTORAGE(bool, Written);
 #ifdef PROFILE_STATS
 	NOTHREADSTORAGE(double, SumExclSqr);
 #endif //PROFILE_STATS 
@@ -217,9 +221,22 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 {
 	return AlreadyOnStack[tid];
 }
+
+inline void
+FunctionInfo::SetWritten(bool val, int tid)
+{
+	Written[tid] = val;
+}
+
+inline bool
+FunctionInfo::IsWritten(int tid)
+{
+	return Written[tid];
+}
+
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2000/10/11 18:41:20 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.11 2000/10/11 18:41:20 sameer Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: tjaqua $
+ * $Revision: 1.12 $   $Date: 2001/02/16 23:54:15 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.12 2001/02/16 23:54:15 tjaqua Exp $ 
  ***************************************************************************/

@@ -110,6 +110,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	  SetAlreadyOnStack(false, tid);
       	  for (int i=0; i < TAU_MAX_THREADS; i++)
    	  {
+            Written[i] = 0;
 // don't initialize NumCalls and AlreadyOnStack as there could be 
 // data corruption. Inspite of the lock, while one thread is being 
 // initialized, other thread may have started executing and setting 
@@ -249,7 +250,7 @@ long FunctionInfo::GetFunctionId(void)
 //////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 2001/01/05 22:22:38 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.22 2001/01/05 22:22:38 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: tjaqua $
+ * $Revision: 1.23 $   $Date: 2001/02/16 23:54:17 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.23 2001/02/16 23:54:17 tjaqua Exp $ 
  ***************************************************************************/

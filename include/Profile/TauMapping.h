@@ -111,6 +111,8 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
 */
 #define TAU_MAPPING_PROFILE_STOP(tid) Profiler::CurrentProfiler[tid]->Stop(tid);
 #define TAU_MAPPING_PROFILE_EXIT(msg, tid)  Profiler::ProfileExit(msg, tid); 
+#define TAU_MAPPING_DB_DUMP(tid)  Profiler::DumpData(tid); 
+#define TAU_MAPPING_DB_PURGE(tid)  Profiler::PurgeData(tid); 
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  RtsLayer::setMyNode(node, tid); 
 #else
 /* Create null , except the main statement which should be executed as it is*/
@@ -123,6 +125,8 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
 #define TAU_MAPPING_PROFILE_START(Timer, tid) 
 #define TAU_MAPPING_PROFILE_STOP(tid) 
 #define TAU_MAPPING_PROFILE_EXIT(msg, tid)  
+#define TAU_MAPPING_DB_DUMP(tid)
+#define TAU_MAPPING_DB_PURGE(tid)
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  
 
 #endif /* PROFILING_ON or TRACING_ON  */

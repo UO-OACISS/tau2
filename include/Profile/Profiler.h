@@ -93,7 +93,9 @@ public:
 	~Profiler();
   	static void ProfileExit(const char *message=0, 
 	  int tid = RtsLayer::myThread());
-	static int StoreData(int tid); 
+	static int StoreData(int tid = RtsLayer::myThread()); 
+	static int DumpData(int tid = RtsLayer::myThread()); 
+	static void PurgeData(int tid = RtsLayer::myThread());
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
@@ -110,7 +112,7 @@ public:
 #ifdef PROFILE_CALLSTACK
   	double InclTime_cs;
   	double ExclTime_cs;
-  	static void CallStackTrace();
+  	static void CallStackTrace(int tid = RtsLayer::myThread());
 #endif /* PROFILE_CALLSTACK  */
 
 private:
@@ -133,7 +135,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 2000/12/01 19:29:38 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.29 2000/12/01 19:29:38 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: tjaqua $
+ * $Revision: 1.30 $   $Date: 2001/02/16 23:54:15 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.30 2001/02/16 23:54:15 tjaqua Exp $ 
  ***************************************************************************/

@@ -54,12 +54,14 @@
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
 #define TAU_PROFILE_SET_CONTEXT(context) RtsLayer::setMyContext(context);
 
-
 #ifdef PROFILE_CALLSTACK
 #define TAU_PROFILE_CALLSTACK()    Profiler::CallStackTrace();
 #else
 #define TAU_PROFILE_CALLSTACK() 
 #endif /* PROFILE_CALLSTACK */
+
+#define TAU_DB_DUMP() Profiler::DumpData();
+#define TAU_DB_PURGE() Profiler::PurgeData();
 
 // UserEvents
 #define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
@@ -100,6 +102,8 @@
 #define TAU_PROFILE_SET_NODE(node)
 #define TAU_PROFILE_SET_CONTEXT(context)
 #define TAU_PROFILE_CALLSTACK()    
+#define TAU_DB_DUMP()
+#define TAU_DB_PURGE()
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
@@ -140,7 +144,7 @@
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2001/01/05 22:23:58 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.7 2001/01/05 22:23:58 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: tjaqua $
+ * $Revision: 1.8 $   $Date: 2001/02/16 23:54:16 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.8 2001/02/16 23:54:16 tjaqua Exp $ 
  ***************************************************************************/
