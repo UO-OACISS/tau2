@@ -24,7 +24,7 @@ extern "C" {
 #endif /* TAU_PAPI */
 
 
-#define SIZE_OF_INIT_ARRAY 5 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 6 //!!Change this if functions are added to the system!!
 
 
 //Some useful typedefs
@@ -60,22 +60,35 @@ class MultipleCounterLayer
 
   static bool papiVirtualMCLInit(int functionPosition);
   static void papiVirtualMCL(int tid, double values[]);
+
+  static bool pclMCLInit(int functionPosition);
+  static void pclMCL(int tid, double values[]);
   //*********************
   //End - List of counter and init. functions.
   //*********************
 
   //Other class stuff.
   static char environment[25][10];
+
   static int gettimeofdayMCL_CP[1];
+  
+#ifdef TAU_PAPI
   static int papiMCL_CP[MAX_TAU_COUNTERS];
   static int papiWallClockMCL_CP[1];
   static int papiVirtualMCL_CP[1];
-  static int linuxTimerMCL_CP[1];
-
   //Data specific to the papiMCL function.
   static int numberOfPapiHWCounters;
   static int PAPI_CounterCodeList[MAX_TAU_COUNTERS];
+#endif//TAU_PAPI
 
+#ifdef TAU_PCL
+  static int pclMCL_CP[MAX_TAU_COUNTERS];
+  //Data specific to the pclMCL function.
+  static int numberOfPCLHWCounters;
+  static int PCL_CounterCodeList[MAX_TAU_COUNTERS];
+#endif//TAU_PCL
+
+  static int linuxTimerMCL_CP[1];
 
   static firstListType initArray[SIZE_OF_INIT_ARRAY];
   static secondListType functionArray[MAX_TAU_COUNTERS];

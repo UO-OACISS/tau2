@@ -26,18 +26,25 @@ char MultipleCounterLayer::environment[25][10] = {
   {"COUNTER21"},{"COUNTER22"},{"COUNTER23"},{"COUNTER24"},{"COUNTER25"}};
 
 int MultipleCounterLayer::gettimeofdayMCL_CP[1];
+#ifdef TAU_PAPI
 int MultipleCounterLayer::papiMCL_CP[MAX_TAU_COUNTERS];
 int MultipleCounterLayer::papiWallClockMCL_CP[1];
 int MultipleCounterLayer::papiVirtualMCL_CP[1];
-int MultipleCounterLayer::linuxTimerMCL_CP[1];
-
 int MultipleCounterLayer::numberOfPapiHWCounters;
 int MultipleCounterLayer::PAPI_CounterCodeList[MAX_TAU_COUNTERS];
+#endif//TAU_PAPI
+#ifdef TAU_PCL
+int MultipleCounterLayer::pclMCL_CP[MAX_TAU_COUNTERS];
+int MultipleCounterLayer::numberOfPCLHWCounters;
+int MultipleCounterLayer::PCL_CounterCodeList[MAX_TAU_COUNTERS];
+#endif//TAU_PCL
+int MultipleCounterLayer::linuxTimerMCL_CP[1];
 
 firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   papiMCLInit,
 						   papiWallClockMCLInit,
 						   papiVirtualMCLInit,
+						   pclMCLInit,
 						   linuxTimerMCLInit};
 
 int MultipleCounterLayer::numberOfActiveFunctions = 0;
@@ -56,27 +63,26 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
       functionArray[a] = NULL;
       MultipleCounterLayer::names[a] = NULL;
       MultipleCounterLayer::counterUsed[a] = false;
+#ifdef TAU_PAPI 
       MultipleCounterLayer::papiMCL_CP[a] = -1;
       MultipleCounterLayer::PAPI_CounterCodeList[a] = -1;
+#endif//TAU_PAPI
+#ifdef TAU_PCL
+      MultipleCounterLayer::pclMCL_CP[a] = -1;
+      MultipleCounterLayer::PCL_CounterCodeList[a] = -1;
+#endif//TAU_PCL
     }
 
   MultipleCounterLayer::gettimeofdayMCL_CP[0] = -1;
+#ifdef TAU_PAPI
   MultipleCounterLayer::papiWallClockMCL_CP[0] = -1;
   MultipleCounterLayer::papiVirtualMCL_CP[0] = -1;
-  MultipleCounterLayer::linuxTimerMCL_CP[0] = -1;
-
   MultipleCounterLayer::numberOfPapiHWCounters = 0;
-  
-  //Initialize the names array to NULL.
-  //  for(int b=0; b<MAX_TAU_COUNTERS; b++){
-  //  MultipleCounterLayer::names[b] = NULL;
-  //}
-  //Initialize the counter used array to false.
-  //  for(int c=0; c<MAX_TAU_COUNTERS; c++){
-  //  MultipleCounterLayer::counterUsed[c] = false;
-  //}
-
-
+#endif//TAU_PAPI
+#ifdef TAU_PCL
+  MultipleCounterLayer::numberOfPCLHWCounters = 0;
+#endif//TAU_PCL
+  MultipleCounterLayer::linuxTimerMCL_CP[0] = -1;
 
   //Get the counter names from the environment.
   for(int c=0; c<MAX_TAU_COUNTERS; c++)
@@ -113,6 +119,12 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 	//	cout << "Not adding function specified by in init function in position: " << e << " of the init array." << endl;
       }
     }
+
+  //Check to see that we have at least one counter defined.
+  //Give a warning of not.  It should not break the system,
+  //but it is nice to give a warning.
+  if(numberOfActiveFunctions == 0)
+    cout << "Warning: No functions active ... no profiles will be created!" << endl;
   return returnValue;
 }
 
@@ -145,7 +157,7 @@ bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition)
       if(MultipleCounterLayer::names[i] != NULL){
 	if(strcmp(MultipleCounterLayer::names[i], "GET_TIME_OF_DAY") == 0){
 	
-	  cout << "gettimeofdayMCL is active." << endl;
+	  //	  cout << "gettimeofdayMCL is active." << endl;
 
 	  //Set the counter position.
 	  gettimeofdayMCL_CP[0] = i;
@@ -163,13 +175,14 @@ bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition)
     }
 
   //If we are here, then this function is not active.
-  cout << "gettimeofdayMCL is not active." << endl;
+  //cout << "gettimeofdayMCL is not active." << endl;
   return false;
 }
 
 bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){return false;}
 
 bool MultipleCounterLayer::papiMCLInit(int functionPosition){
+#ifdef TAU_PAPI
   //This function uses the papi layer counters.
   
   bool returnValue = false;
@@ -219,6 +232,9 @@ bool MultipleCounterLayer::papiMCLInit(int functionPosition){
   if(!returnValue)
     cout << "papiMCL is not active." << endl;
   return returnValue;
+#else //TAU_PAPI
+  return false;
+#endif//TAU_PAPI
 }
 
 bool MultipleCounterLayer::papiWallClockMCLInit(int functionPosition)
@@ -295,11 +311,19 @@ bool MultipleCounterLayer::papiVirtualMCLInit(int functionPosition)
 #endif // TAU_PAPI
 }
 
+bool MultipleCounterLayer::pclMCLInit(int functionPosition){
+#ifdef  TAU_PCL
+  return false;
+#else //TAU_PCL
+  return false;
+#endif//TAU_PCL
+}
+
 void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
 
-  cout << endl;
-  cout << "gettimeofdayMCL" << endl;
-  cout << "Storing value in position: " << gettimeofdayMCL_CP[0] << endl;
+  //cout << endl;
+  //cout << "gettimeofdayMCL" << endl;
+  //cout << "Storing value in position: " << gettimeofdayMCL_CP[0] << endl;
 
   struct timeval tp;
   gettimeofday (&tp, 0);
@@ -311,7 +335,7 @@ void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){}
 
 
 void MultipleCounterLayer::papiMCL(int tid, double values[]){
-
+#ifdef TAU_PAPI
   static ThreadValue * ThreadList[TAU_MAX_THREADS];
 
   static int PAPI_CounterList[];
@@ -374,25 +398,31 @@ void MultipleCounterLayer::papiMCL(int tid, double values[]){
 	values[papiMCL_CP[i]] = ThreadList[tid]->CounterValues[i];
       }
   }
+#endif//TAU_PAPI
 }
 
 void MultipleCounterLayer::papiWallClockMCL(int tid, double values[]){
 #ifdef TAU_PAPI
-  cout << endl;
-  cout << "PapiWallClockMCL" << endl;
-  cout << "Storing value in position: " << papiWallClockMCL_CP[0] << endl;
+  //cout << endl;
+  //cout << "PapiWallClockMCL" << endl;
+  //cout << "Storing value in position: " << papiWallClockMCL_CP[0] << endl;
 
   values[papiWallClockMCL_CP[0]] = PAPI_get_real_usec();
 #endif // TAU_PAPI
 }
 void MultipleCounterLayer::papiVirtualMCL(int tid, double values[]){
 #ifdef TAU_PAPI
-  cout << endl;
-  cout << "PapiVirtualMCL" << endl;
-  cout << "Storing value in position: " << papiVirtualMCL_CP[0] << endl;
+  //cout << endl;
+  //cout << "PapiVirtualMCL" << endl;
+  //cout << "Storing value in position: " << papiVirtualMCL_CP[0] << endl;
 
   values[papiVirtualMCL_CP[0]] = PAPI_get_virt_usec();
 #endif // TAU_PAPI
+}
+
+void MultipleCounterLayer::pclMCL(int tid, double values[]){
+#ifdef  TAU_PCL
+#endif//TAU_PCL
 }
 
 /////////////////////////////////////////////////
