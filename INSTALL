@@ -374,11 +374,11 @@ III) Software Requirements :
     % ./configure --arch SGI64KCC --suite PP --parallel --profile --opt --ex
     [FOR LINUX PCs]
     % ./configure --arch LINUXKCC --suite PP --parallel --profile --opt --ex
-    % setenv SUITE PP
+    % setenv POOMASUITE PP
     % make
     % cd examples/Solvers/SimpleJacobi
     % make
-    % cd $SUITE
+    % cd $POOMASUITE
     % SimpleJacobi --pooma-threads <n>
     % pprof
     % racy 
