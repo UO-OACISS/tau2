@@ -19,7 +19,7 @@ public class SimpleExample {
 		session.initialize(args[0]);
 
 		// select the application
-		Application myApp = session.setApplication("example", null);
+		Application myApp = session.setApplication("example test", null);
 		if (myApp != null)
 			System.out.println("Got application: " + myApp.getName() + ", version " + myApp.getVersion());
 
