@@ -25,29 +25,11 @@ public class GlobalContext implements Serializable
   //Constructors.
   public GlobalContext()
   {
-    contextName = null;
-    threadList = new Vector();
-    numberOfThreads = 0;
-  }
-  
-  public GlobalContext(String inContextName)
-  {
-    contextName = inContextName;
-    threadList = new Vector();
+    threadList = new Vector(10,10);
     numberOfThreads = 0;
   }
   
   //Rest of the public functions.
-  public void setContextName(String inContextName)
-  {
-    contextName = inContextName;
-  }
-  
-  public String getContextName()
-  {
-    return contextName;
-  }
-  
   public void addThread(GlobalThread inGlobalThread)
   {
     //When a thread is added, since threads do not vanish
@@ -69,7 +51,4 @@ public class GlobalContext implements Serializable
   //Instance data.
   Vector threadList;
   int numberOfThreads;
-  
-  String contextName;
-  
 }

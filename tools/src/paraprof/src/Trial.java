@@ -363,7 +363,7 @@ public class Trial extends Thread{
 			tmpThreadList = tmpGlobalContext.getThreadList();
 			for(Enumeration e5 = tmpThreadList.elements(); e5.hasMoreElements() ;){
 			    tmpGlobalThread = (GlobalThread) e5.nextElement();
-			    tmpGlobalThread.addDefaultToVectors();
+			    tmpGlobalThread.incrementStorage();
 		      
 			    tmpThreadDataList = tmpGlobalThread.getThreadDataList();
 			    for(Enumeration e6 = tmpThreadDataList.elements(); e6.hasMoreElements() ;){
@@ -414,8 +414,9 @@ public class Trial extends Thread{
 	    while((inputString = br.readLine()) != null){
 	  
 		//Allow other threads in the system a chance.
-		if((bSDCounter % 100) == 0){
-		    sleep(5);
+		if((bSDCounter % 10000) == 0){
+		    System.out.println(inputString);
+		    Thread.yield();
 		}
 	  
 		genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
@@ -578,12 +579,12 @@ public class Trial extends Thread{
 				    //Check to see if the context is zero.
 				    if(context == 0){
 					//Create a new context ... and set it to be the current context.
-					currentGlobalContext = new GlobalContext("Context Name Not Set!");
+					currentGlobalContext = new GlobalContext();
 					//Add the current thread
 					currentGlobalContext.addThread(currentGlobalThread);
 					
 					//Create a new server ... and set it to be the current server.
-					currentGlobalServer = new GlobalServer("Server Name Not Set!");
+					currentGlobalServer = new GlobalServer();
 					//Add the current context.
 					currentGlobalServer.addContext(currentGlobalContext);
 					//Add the current server.
@@ -595,7 +596,7 @@ public class Trial extends Thread{
 				    }
 				    else{
 					//Context number is not zero.  Create a new context ... and set it to be current.
-					currentGlobalContext = new GlobalContext("Context Name Not Set!");
+					currentGlobalContext = new GlobalContext();
 					//Add the current thread
 					currentGlobalContext.addThread(currentGlobalThread);
 					
@@ -850,7 +851,7 @@ public class Trial extends Thread{
 	    
 	    //Close the file.
 	    br.close();
-	    
+
 	    if(ParaProf.debugIsOn){
 		System.out.println("The total number of threads is: " + this.getTotalNumberOfThreads());
 		System.out.println("The number of mappings is: " + this.getNumberOfMappings());
@@ -1508,7 +1509,7 @@ public class Trial extends Thread{
 		tmpThreadList = tmpGlobalContext.getThreadList();
 		for(Enumeration e5 = tmpThreadList.elements(); e5.hasMoreElements() ;){
 		    tmpGlobalThread = (GlobalThread) e5.nextElement();
-		    tmpGlobalThread.addDefaultToVectors();
+		    tmpGlobalThread.incrementStorage();
           
 		    tmpThreadDataList = tmpGlobalThread.getThreadDataList();
 		    for(Enumeration e6 = tmpThreadDataList.elements(); e6.hasMoreElements() ;){
@@ -1947,3 +1948,7 @@ public class Trial extends Thread{
     //******************************
 
 }
+
+
+
+
