@@ -24,7 +24,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/home/grads/sameer/gar/rs/tau2cray
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -76,10 +76,8 @@ AR	      = ar
 
 ARFLAGS	      = rcv 
 ############# For KAI KCC compiler, replace AR accordingly #######
-AR			= $(CXX) 		   	   #ENDIF##KAI#
-ARFLAGS			= --one_per -o		 	   #ENDIF##KAI#
-#CRAYKAI#ARFLAGS        = -o		 	   	   #ENDIF#
-# Ancient 3.2b2 compiler on Cray T3E doesn't support --one_per. Remove later
+#KAI#AR			= $(CXX) 		   	   #ENDIF#
+#KAI#ARFLAGS			= --one_per -o		 	   #ENDIF#
 ##################################################################
 
 ############# For SGI CC compiler, replace AR accordingly #######
@@ -91,10 +89,15 @@ RM 	      = /bin/rm -f
 
 TARGET	      = libtau$(TAU_OPTIONS)$(LSX)
 
-all:		$(TARGET)	
+TAU_DISABLE   = libTauDisable$(LSX)
+
+all:		$(TARGET) $(TAU_DISABLE)	
 
 $(TARGET):	$(OBJS)
 		$(AR) $(ARFLAGS) $(TARGET) $(OBJS) $(EXTRAOBJS)
+
+$(TAU_DISABLE): TauDisable.o
+		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
 
 $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
@@ -103,8 +106,13 @@ $(INSTALLDEST)/$(TARGET): $(TARGET)
 		$(INSTALL) $? $(INSTALLDEST)
 		$(INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_OPTIONS)
 
-install:	$(INSTALLDEST)/$(TARGET) 
+$(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(INSTALL) $? $(INSTALLDEST)
 
+install:	$(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) 
 
 Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -145,6 +153,9 @@ TauFAPI.o   : TauFAPI.cpp $(HDRS)
 TauMapping.o   : TauMapping.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauDisable.o 	: TauDisable.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(EXTRAOBJS)
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(EXTRAOBJS)
 
