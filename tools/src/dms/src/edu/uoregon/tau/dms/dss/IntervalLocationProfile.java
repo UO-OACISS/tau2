@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.util.Date;
 import java.util.Vector;
 import java.util.Hashtable;
+import java.util.Enumeration;
 
 /**
  * Holds all the data for a interval location profile in the database.
@@ -25,7 +26,7 @@ import java.util.Hashtable;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.2 2004/05/27 17:24:35 khuck Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.3 2004/08/17 18:09:59 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -560,6 +561,49 @@ public class IntervalLocationProfile extends Object {
 				}
 				newMetricID = (Integer)newMetHash.get(new Integer(++i));
 			}
+		} catch (SQLException e) {
+			System.out.println("An error occurred while saving the interval_event data.");
+			e.printStackTrace();
+			System.exit(0);
+		}
+	}
+
+	static public void saveIntervalEventData(DB db, Hashtable newFunHash, Enumeration enum, Hashtable newMetHash, int saveMetricIndex) {
+		System.out.print("Saving the intervalEvent data: ");
+		try {
+			PreparedStatement statement = null;
+			statement = db.prepareStatement("INSERT INTO interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			IntervalLocationProfile fdo;
+			int count = 0;
+			int i = 0;
+			Integer newMetricID = null;
+			while (enum.hasMoreElements()) {
+	    		fdo = (IntervalLocationProfile)enum.nextElement();
+	    		Integer newIntervalEventID = (Integer)newFunHash.get(new Integer(fdo.getIntervalEventID()));
+				// get the interval_event details
+				i = 0;
+				newMetricID = (Integer)newMetHash.get(new Integer(i));
+				while (newMetricID != null) {
+					if (saveMetricIndex < 0 || i == saveMetricIndex) {
+						statement.setInt(1, newIntervalEventID.intValue());
+						statement.setInt(2, fdo.getNode());
+						statement.setInt(3, fdo.getContext());
+						statement.setInt(4, fdo.getThread());
+						statement.setInt(5, newMetricID.intValue());
+						statement.setDouble(6, fdo.getInclusivePercentage(i));
+						statement.setDouble(7, fdo.getInclusive(i));
+						statement.setDouble(8, fdo.getExclusivePercentage(i));
+						statement.setDouble(9, fdo.getExclusive(i));
+						statement.setDouble(10, fdo.getNumCalls());
+						statement.setDouble(11, fdo.getNumSubroutines());
+						statement.setDouble(12, fdo.getInclusivePerCall(i));
+						statement.executeUpdate();
+					}
+					newMetricID = (Integer)newMetHash.get(new Integer(++i));
+				}
+	    		System.out.print("\rSaving the intervalEvent data: " + ++count + " records saved...");
+			}
+			System.out.print("\n");
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the interval_event data.");
 			e.printStackTrace();
