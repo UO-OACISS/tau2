@@ -893,31 +893,8 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
 bool RtsLayer::isCtorDtor(const char *name)
 {
   return false;
-  // If the destructor a static object is called, it could have a null name
-  // after main is over. Treat it like a Dtor and return true.
-  if (name[0] == 0) {
-    DEBUGPROFMSG("isCtorDtor name is NULL" << endl;);
-    return true; 
-  }
-  DEBUGPROFMSG("RtsLayer::isCtorDtor("<< name <<")" <<endl;);
-#ifdef JAVA
-      /* In Java : is allowed, as the top level thread name could be something 
-	 like THREAD=RMI ConnectionExpiration-[192.168.180.1:1871]; */
-      DEBUGPROFMSG("JAVA RtsLayer::isCtorDtor("<<name<<") returns false! "<<endl;);
-      return false;
-#endif /* JAVA */
-  if (myThread() == 0) 
-  {
-    if (strchr(name,'~') == NULL) // a destructor 
-      if (strchr(name,':') == NULL) // could be a constructor 
-        return false;
-      else  
-        return true; /* in C++ a : in a name could signify a ctor/dtor */
-    else  
-      return true;
-  }
-  else 
-    return false; /* in C++, on other threads don't check for this */
+  // For now, we always return false. So, no matter what, the profile file
+  // is always created! 
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1105,6 +1082,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.53 $   $Date: 2004/02/07 01:58:21 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.53 2004/02/07 01:58:21 sameer Exp $ 
+ * $Revision: 1.54 $   $Date: 2004/02/27 20:07:47 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.54 2004/02/27 20:07:47 sameer Exp $ 
  ***************************************************************************/
