@@ -310,7 +310,7 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
           cout <<" Stop Locations : "<< (*slit)->line() << " col "
              << (*slit)->col() <<endl;
 #endif /* DEBUG */
-          itemvec.push_back(new itemRef(*rit, RETURN,
+          itemvec.push_back(new itemRef(*rit, EXIT,
                 (*slit)->line(), (*slit)->col()));
         }
     }
@@ -1095,9 +1095,10 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 		instrumented = true;
 		break;
+	  case EXIT:
 	  case RETURN:
 #ifdef DEBUG
-	        cout <<"RETURN statement "<<endl;
+	        cout <<"RETURN/EXIT statement "<<endl;
 		cout <<"inbuf = "<<inbuf<<endl;
 	        cout <<"line ="<<(*it)->line<<" col = "<<(*it)->col<<endl;
 #endif /* DEBUG */
@@ -1181,7 +1182,15 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
 	
 		WRITE_TAB(ostr,(*it)->col);
-		ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
+		/* before writing stop/exit examine the kind */
+		if ((*it)->kind == EXIT)
+		{ /* Turn off the timers. This is similar to abort/exit in C */
+		  ostr <<"call TAU_PROFILE_EXIT('exit')"<<endl;
+		}
+		else
+		{
+		  ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
+		}
 
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space])
@@ -1476,8 +1485,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.55 $   $Date: 2003/11/26 21:24:46 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.55 2003/11/26 21:24:46 sameer Exp $
+ * $Revision: 1.56 $   $Date: 2003/12/11 22:47:56 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.56 2003/12/11 22:47:56 sameer Exp $
  ***************************************************************************/
 
 
