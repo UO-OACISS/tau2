@@ -198,6 +198,22 @@ extern "C" void Tau_get_function_values(const char **inFuncs, int numOfFuncs,
 		    *numOfCalls,*numOfSubRoutines,*counterNames,*numOfCounters);
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_event_names(const char ***eventList, int *num) {
+  TAU_GET_EVENT_NAMES(*eventList, *num);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_event_vals(const char **inUserEvents, int numUserEvents,
+				  int **numEvents, double **max, double **min,
+				  double **mean, double **sumSqr) {
+  TAU_GET_EVENT_VALS(inUserEvents, numUserEvents, *numEvents, *max, *min,
+		     *mean, *sumSqr);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_dump_function_values(const char **functionList, int num)
 {
@@ -582,8 +598,8 @@ extern "C" void Tau_set_interrupt_interval(int value)
 } 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.43 $   $Date: 2004/09/08 21:55:40 $
- * VERSION: $Id: TauCAPI.cpp,v 1.43 2004/09/08 21:55:40 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.44 $   $Date: 2004/10/04 23:32:15 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.44 2004/10/04 23:32:15 amorris Exp $
  ***************************************************************************/
 

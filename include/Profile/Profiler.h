@@ -141,6 +141,13 @@ public:
 				      int tid = RtsLayer::myThread(), 
 				      char *prefix = "dump");
 
+	static void getUserEventList(const char ***inPtr, int *numUserEvents);
+
+	static void getUserEventValues(const char **inUserEvents, int numUserEvents,
+				       int **numEvents, double **max, double **min,
+				       double **mean, double **sumSqr, 
+				       int tid = RtsLayer::myThread());
+
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
 	double ExclTimeThisCall; // for this invocation of the function
@@ -197,7 +204,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.50 $   $Date: 2004/02/26 22:28:35 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.50 2004/02/26 22:28:35 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.51 $   $Date: 2004/10/04 23:32:14 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.51 2004/10/04 23:32:14 amorris Exp $ 
  ***************************************************************************/

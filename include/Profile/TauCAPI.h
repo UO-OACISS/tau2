@@ -74,6 +74,10 @@
 #define TAU_DUMP_FUNC_VALS(functionList, num)   Tau_dump_function_values(functionList, num);
 #define TAU_DUMP_FUNC_VALS_incr(functionList, num)  Tau_dump_function_values_incr(functionList, num);
 
+
+#define TAU_GET_EVENT_NAMES(eventList, num)     Tau_get_event_names(&eventList, &num);
+#define TAU_GET_EVENT_VALS(v1,v2,v3,v4,v5,v6)   Tau_get_event_vals(v1,v2,&v3,&v4,&v5,&v6);
+
 /*
 #define TAU_REGISTER_EVENT(event, name)	static int tauuser##event = 1;\
 				        static void *event; \ 
@@ -279,8 +283,8 @@ extern void Tau_set_interrupt_interval(int value);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2004/08/17 21:08:45 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.31 2004/08/17 21:08:45 sameer Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: amorris $
+ * $Revision: 1.32 $   $Date: 2004/10/04 23:32:14 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.32 2004/10/04 23:32:14 amorris Exp $
  ***************************************************************************/
 

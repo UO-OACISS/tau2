@@ -105,7 +105,13 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_DUMP_FUNC_VALS_INCR(v1,v2) \
                                Profiler::dumpFunctionValues(v1,v2,true);
 
+
 // UserEvents
+
+#define TAU_GET_EVENT_NAMES(eventList, num) Profiler::getUserEventList(&eventList, &num);
+#define TAU_GET_EVENT_VALS(v1,v2,v3,v4,v5,v6,v7) \
+                               Profiler::getUserEventValues(v1,v2,&v3,&v4,&v5,&v6,&v7);
+
 #define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
 #define TAU_EVENT(event, data) 		 	(event).TriggerEvent(data);
 #define TAU_EVENT_SET_NAME(event, name) 	(event).SetEventName(name);
@@ -229,7 +235,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.33 $   $Date: 2004/08/17 21:08:45 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.33 2004/08/17 21:08:45 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.34 $   $Date: 2004/10/04 23:32:14 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.34 2004/10/04 23:32:14 amorris Exp $ 
  ***************************************************************************/

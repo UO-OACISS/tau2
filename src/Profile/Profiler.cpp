@@ -718,6 +718,63 @@ void Profiler::dumpFunctionNames()
   rename(filename, dumpfile);
 }
 
+void Profiler::getUserEventList(const char ***inPtr, int *numUserEvents) {
+
+  *numUserEvents = 0;
+
+  vector<TauUserEvent*>::iterator eit;
+  
+  for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
+    (*numUserEvents)++;
+  }
+  
+  *inPtr = (char const **) malloc(sizeof(char*) * *numUserEvents);
+
+  for(int i=0;i<*numUserEvents;i++) {
+    (*inPtr)[i] = TheEventDB()[i]->GetEventName();
+  }
+}
+
+
+void Profiler::getUserEventValues(const char **inUserEvents, int numUserEvents,
+				  int **numEvents, double **max, double **min,
+				  double **mean, double **sumSqr, int tid) {
+
+  TAU_PROFILE("TAU_GET_EVENT_VALUES()", " ", TAU_IO);
+
+#ifdef PROFILING_ON
+
+  *numEvents = (int*) malloc (sizeof(int) * numUserEvents);
+  *max = (double *) malloc (sizeof(double) * numUserEvents);
+  *min = (double *) malloc (sizeof(double) * numUserEvents);
+  *mean = (double *) malloc (sizeof(double) * numUserEvents);
+  *sumSqr = (double *) malloc (sizeof(double) * numUserEvents);
+
+  RtsLayer::LockDB();
+
+  int idx = 0;
+  vector<TauUserEvent*>::iterator eit;
+
+  for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
+    for (int i=0;i<numUserEvents;i++) {
+      if ((inUserEvents != 0) && (strcmp(inUserEvents[i], (*eit)->GetEventName()) == 0)){
+	(*numEvents)[idx] = (*eit)->GetNumEvents(tid);
+	(*max)[idx] = (*eit)->GetMax(tid);
+	(*min)[idx] = (*eit)->GetMin(tid);
+	(*mean)[idx] = (*eit)->GetMean(tid);
+	(*sumSqr)[idx] = (*eit)->GetSumSqr(tid);
+	idx++;
+	break;
+      }
+    }
+  }
+
+  RtsLayer::UnLockDB();
+#endif //PROFILING_ON
+  
+}
+
+
 #ifndef TAU_MULTIPLE_COUNTERS
 void Profiler::theCounterList(const char ***inPtr, int *numOfCounters)
 {
@@ -2032,6 +2089,9 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
   return 1;
 }
 
+
+
+
 int Profiler::StoreData(int tid){
 #ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
@@ -2654,8 +2714,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.103 $   $Date: 2004/09/01 18:52:35 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.103 2004/09/01 18:52:35 amorris Exp $ 
+ * $Revision: 1.104 $   $Date: 2004/10/04 23:32:15 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.104 2004/10/04 23:32:15 amorris Exp $ 
  ***************************************************************************/
 
 	
