@@ -126,7 +126,11 @@ bool& RtsLayer::TheEnableInstrumentation(void)
 /////////////////////////////////////////////////////////////////////////
 int& RtsLayer::TheNode(void)
 {
+#ifdef TAU_SETNODE0
+  static int Node = 0;
+#else /* TAU_SETNODE0  */
   static int Node =-1;
+#endif /* TAU_SETNODE0 */
  
   return Node;
 }
@@ -826,6 +830,11 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
   int i;
   int ret_argc;
   char **ret_argv;
+
+#ifdef TAU_COMPENSATE
+  double tover = TauGetTimerOverhead(TauNullTimerOverhead);
+  if (tover < 0) tover = 0;
+#endif /* TAU_COMPENSATE */
   
   ret_argc = 1;
   ret_argv = new char *[argc];
@@ -1067,6 +1076,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.50 $   $Date: 2003/12/18 00:56:37 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.50 2003/12/18 00:56:37 sameer Exp $ 
+ * $Revision: 1.51 $   $Date: 2004/01/09 01:15:51 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.51 2004/01/09 01:15:51 sameer Exp $ 
  ***************************************************************************/
