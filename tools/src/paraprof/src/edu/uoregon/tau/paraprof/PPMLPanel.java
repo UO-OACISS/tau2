@@ -33,6 +33,15 @@ public class PPMLPanel extends JPanel implements ActionListener{
 	//####################################
 
 	//####################################
+	//Set component properties.
+	//####################################
+	arg1Field.setEditable(false);
+	arg2Field.setEditable(false);
+	//####################################
+	//End - Set component properties.
+	//####################################
+
+	//####################################
 	//Create and add the components.
 	//####################################
 	//Setting up the layout system for the main window.
@@ -158,8 +167,8 @@ public class PPMLPanel extends JPanel implements ActionListener{
     //Instance data.
     //####################################
     ParaProfManager paraProfManager = null;
-    JTextField arg1Field = new JTextField("Argument 1 (x:x:x:x)", 15);
-    JTextField arg2Field = new JTextField("Argument 2 (x:x:x:x)", 15);
+    JTextField arg1Field = new JTextField("Argument 1 (x:x:x:x)", 30);
+    JTextField arg2Field = new JTextField("Argument 2 (x:x:x:x)", 30);
     String operationStrings[] = {"Add", "Subtract", "Multiply", "Divide"};
     JComboBox operation = new JComboBox(operationStrings);
     //####################################
