@@ -61,15 +61,6 @@ public class ParaProfTrial extends Trial{
 	numberOfMappings = dataSession.getNumberOfMappings();
 	numberOfUserEvents = dataSession.getNumberOfUserEvents();
 	
-	//Max mean values.
-	maxMeanExclusiveValueList = dataSession.getMaxMeanExclusiveList();
-	maxMeanInclusiveValueList = dataSession.getMaxMeanInclusiveList();
-	maxMeanInclusivePercentValueList = dataSession.getMaxMeanInclusivePercentList();
-	maxMeanExclusivePercentValueList = dataSession.getMaxMeanExclusivePercentList();
-	maxMeanNumberOfCalls = dataSession.getMaxMeanNumberOfCalls();
-	maxMeanNumberOfSubRoutines = dataSession.getMaxMeanNumberOfSubRoutines();
-	maxMeanUserSecPerCallList = dataSession.getMaxMeanUserSecPerCallList();
-
 	globalMapping.setColors(clrChooser, -1);
 
     }
@@ -222,15 +213,6 @@ public class ParaProfTrial extends Trial{
     public int getCurValLoc(){
 	return currentValueLocation;}
   
-  
-    public void addDefaultToVectors(){
-	maxMeanInclusiveValueList.add(new Double(0));
-	maxMeanExclusiveValueList.add(new Double(0));
-	maxMeanInclusivePercentValueList.add(new Double(0));
-	maxMeanExclusivePercentValueList.add(new Double(0));
-	maxMeanUserSecPerCallList.add(new Double(0));
-    }
-  
     //The following funtion initializes the GlobalMapping object.
     //Since we are in the static mode, the number of mappings is known,
     //therefore, the appropriate number of GlobalMappingElements are created.
@@ -294,58 +276,6 @@ public class ParaProfTrial extends Trial{
   
     public boolean callPathDataPresent(){
 	return callPathDataPresent;}
-
-    public void setMaxMeanInclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    public double getMaxMeanInclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanInclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-  
-    public void setMaxMeanExclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    public double getMaxMeanExclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanExclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-  
-    public void setMaxMeanInclusivePercentValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusivePercentValueList.add(dataValueLocation, tmpDouble);}
-  
-    public double getMaxMeanInclusivePercentValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanInclusivePercentValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-  
-    public void setMaxMeanExclusivePercentValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusivePercentValueList.add(dataValueLocation, tmpDouble);}
-  
-    public double getMaxMeanExclusivePercentValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanExclusivePercentValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-  
-    public void setMaxMeanNumberOfCalls(double inDouble){
-	maxMeanNumberOfCalls = inDouble;}
-  
-    public double getMaxMeanNumberOfCalls(){
-	return maxMeanNumberOfCalls;}
-  
-    public void setMaxMeanNumberOfSubRoutines(double inDouble){
-	maxMeanNumberOfSubRoutines = inDouble;}
-  
-    public double getMaxMeanNumberOfSubRoutines(){
-	return maxMeanNumberOfSubRoutines;}
-  
-    public void setMaxMeanUserSecPerCall(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanUserSecPerCallList.add(dataValueLocation, tmpDouble);}
-  
-    public double getMaxMeanUserSecPerCall(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanUserSecPerCallList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
     //####################################
     //End - Useful functions to help the drawing windows.
     //####################################
@@ -380,15 +310,6 @@ public class ParaProfTrial extends Trial{
     private int totalNumberOfContexts = -1;
     private int totalNumberOfThreads = -1;
     private int[] maxNCT = null;
-  
-    //Max mean values.
-    private Vector maxMeanInclusiveValueList = new Vector();
-    private Vector maxMeanExclusiveValueList = new Vector();
-    private Vector maxMeanInclusivePercentValueList = new Vector();
-    private Vector maxMeanExclusivePercentValueList = new Vector();
-    private double maxMeanNumberOfCalls = 0;
-    private double maxMeanNumberOfSubRoutines = 0;
-    private Vector maxMeanUserSecPerCallList = new Vector();
     //####################################
     //Instance data.
     //####################################

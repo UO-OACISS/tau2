@@ -220,47 +220,6 @@ public abstract class ParaProfDataSession  extends DataSession{
     public GlobalMapping getGlobalMapping(){
 	return globalMapping;}
 
-    public Vector getMaxMeanExclusiveList(){
-	return maxMeanExclusiveValueList;}
-
-    public Vector getMaxMeanInclusiveList(){
-	return maxMeanInclusiveValueList;}
-
-    public Vector getMaxMeanInclusivePercentList(){
-	return maxMeanInclusivePercentValueList;}
-
-    public Vector getMaxMeanExclusivePercentList(){
-	return maxMeanExclusivePercentValueList;}
-  
-    public Vector getMaxMeanUserSecPerCallList(){
-	return maxMeanUserSecPerCallList;}
-
-    public double getMaxMeanExclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanExclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanInclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanInclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanInclusivePercentValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanInclusivePercentValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanExclusivePercentValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanExclusivePercentValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanNumberOfCalls(){
-	return maxMeanNumberOfCalls;}
-  
-    public double getMaxMeanNumberOfSubRoutines(){
-	return maxMeanNumberOfSubRoutines;}
-  
-    public double getMaxMeanUserSecPerCall(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanUserSecPerCallList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
     public int getNumberOfMappings(){
 	return globalMapping.getNumberOfMappings(0);}
 
@@ -298,46 +257,12 @@ public abstract class ParaProfDataSession  extends DataSession{
     //####################################
     //Protected Section.
     //####################################
-    protected void increaseVectorStorage(){
-	maxMeanInclusiveValueList.add(new Double(0));
-	maxMeanExclusiveValueList.add(new Double(0));
-	maxMeanInclusivePercentValueList.add(new Double(0));
-	maxMeanExclusivePercentValueList.add(new Double(0));
-	maxMeanUserSecPerCallList.add(new Double(0));
-    }
-
     protected Metric addMetric(){
 	Metric newMetric = new Metric();
 	newMetric.setID((metrics.size()));
 	metrics.add(newMetric);
 	return newMetric;
     }
-
-    protected void setMaxMeanInclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    protected void setMaxMeanExclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    protected void setMaxMeanInclusivePercentValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusivePercentValueList.add(dataValueLocation, tmpDouble);}
-  
-    protected void setMaxMeanExclusivePercentValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusivePercentValueList.add(dataValueLocation, tmpDouble);}
-
-    protected void setMaxMeanNumberOfCalls(double inDouble){
-	maxMeanNumberOfCalls = inDouble;}
-  
-    protected void setMaxMeanNumberOfSubRoutines(double inDouble){
-	maxMeanNumberOfSubRoutines = inDouble;}
-
-    protected void setMaxMeanUserSecPerCall(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanUserSecPerCallList.add(dataValueLocation, tmpDouble);}
 
     protected void setProfileStatsPresent(boolean profileStatsPresent){
 	this.profileStatsPresent = profileStatsPresent;}
@@ -394,14 +319,6 @@ public abstract class ParaProfDataSession  extends DataSession{
     private GlobalMapping globalMapping = new GlobalMapping();
     private NCT nct = new NCT();
     private Vector metrics = new Vector();
-
-    private Vector maxMeanInclusiveValueList = new Vector();
-    private Vector maxMeanExclusiveValueList = new Vector();
-    private Vector maxMeanInclusivePercentValueList = new Vector();
-    private Vector maxMeanExclusivePercentValueList = new Vector();
-    private double maxMeanNumberOfCalls = 0;
-    private double maxMeanNumberOfSubRoutines = 0;
-    private Vector maxMeanUserSecPerCallList = new Vector();
 
     private boolean debug = false;
     //######

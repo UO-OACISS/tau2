@@ -102,35 +102,38 @@ public class CallPathUtilFuncs{
 	l1 = gm.getMappingIterator(0);
 	while(l1.hasNext()){
 	    gme1 = (GlobalMappingElement) l1.next();
-	    gtde = (GlobalThreadDataElement) functionList.elementAt(gme1.getGlobalID());
-	    if((!(gme1.isCallPathObject())) && (gtde!=null)){
-		l2 = gme1.getParentsIterator();
-		while(l2.hasNext()){
-		    listValue = (Integer)l2.next();
-		    if(functionList.elementAt(listValue.intValue())!=null){
-			int location = gtde.addParent(listValue.intValue());
-			l3 = gme1.getCallPathIDParents(listValue.intValue());
-			while(l3.hasNext()){
-			    int pathID = ((Integer)l3.next()).intValue();
-			    if(functionList.elementAt(pathID)!=null)
-				gtde.addParentCallPathID(location, pathID);
+	    if((gme1.getGlobalID())<(functionList.size())){ 
+		gtde = (GlobalThreadDataElement) functionList.elementAt(gme1.getGlobalID());
+		if((!(gme1.isCallPathObject())) && (gtde!=null)){
+		    l2 = gme1.getParentsIterator();
+		    while(l2.hasNext()){
+			listValue = (Integer)l2.next();
+			if(((listValue.intValue())<(functionList.size()))&&(functionList.elementAt(listValue.intValue())!=null)){
+			    int location = gtde.addParent(listValue.intValue());
+			    l3 = gme1.getCallPathIDParents(listValue.intValue());
+			    while(l3.hasNext()){
+				int pathID = ((Integer)l3.next()).intValue();
+				if(functionList.elementAt(pathID)!=null)
+				    gtde.addParentCallPathID(location, pathID);
+			    }
 			}
 		    }
-		}
-		l2 = gme1.getChildrenIterator();
-		while(l2.hasNext()){
-		    listValue = (Integer)l2.next();
-		    if(functionList.elementAt(listValue.intValue())!=null){
-			int location = gtde.addChild(listValue.intValue());
-			l3 = gme1.getCallPathIDChildren(listValue.intValue());
-			while(l3.hasNext()){
-			    int pathID = ((Integer)l3.next()).intValue();
-			    if(functionList.elementAt(pathID)!=null)
-					gtde.addChildCallPathID(location, pathID);
+		    l2 = gme1.getChildrenIterator();
+		    while(l2.hasNext()){
+			listValue = (Integer)l2.next();
+			if(((listValue.intValue())<(functionList.size()))&&(functionList.elementAt(listValue.intValue())!=null)){
+			    int location = gtde.addChild(listValue.intValue());
+			    l3 = gme1.getCallPathIDChildren(listValue.intValue());
+			    while(l3.hasNext()){
+				int pathID = ((Integer)l3.next()).intValue();
+				if(functionList.elementAt(pathID)!=null)
+				    gtde.addChildCallPathID(location, pathID);
+			    }
 			}
 		    }
 		}
 	    }
+
 	}
 
 	//Set this thread to indicate that it has been trimmed.

@@ -753,12 +753,14 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    else if(s.equals("other-2"))
 		type = 3;
 
+	    System.out.println("trial type: " + type);
+
 	    //Create the trial.
 	    trial = new ParaProfTrial(type);
 	    trial.setName(trialName);
 	    
 	    FileList fl = new FileList();
-	    Vector v = fl.getFileList(null, this, type,ParaProf.debugIsOn);
+	    Vector v = fl.getFileList(null, this, type,null,ParaProf.debugIsOn);
 
 	    trial.initialize(v);
 	    

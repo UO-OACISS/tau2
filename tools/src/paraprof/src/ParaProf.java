@@ -37,6 +37,9 @@ public class ParaProf implements ActionListener{
     static Runtime runtime;
     static boolean runHasBeenOpened = false;
     //**********
+
+    private int type = -1;
+    String filePrefix = null;
     
     public ParaProf(){
 	try {
@@ -81,28 +84,72 @@ public class ParaProf implements ActionListener{
 	    ParaProfTrial trial = new ParaProfTrial(0);
 	    trial.setName("Default Trial");
 	    FileList fl = new FileList();
-	    Vector v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 ,ParaProf.debugIsOn);
-	    if(v.size()>0){
-		trial.initialize(v);
-		experiment.addTrial(trial);
-		trial.showMainWindow();
+	    Vector v = null;
+	    if(type!=-1){
+		//Try finding dynaprof files.
+		trial = new ParaProfTrial(type);
+		trial.setName("Default Trial");
+		switch(type){
+		case 0:
+		    if(filePrefix==null)
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "pprof", ParaProf.debugIsOn);
+		    else
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, ParaProf.debugIsOn);
+		    break;
+		case 1:
+		    if(filePrefix==null)
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, "profile", ParaProf.debugIsOn);
+		    else
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, ParaProf.debugIsOn);
+		    break;
+		case 2:
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, type, filePrefix, ParaProf.debugIsOn);
+		    break;
+		default:
+		    v = new Vector();
+		    System.out.println("Unrecognized file type.");
+		    System.out.println("Use ParaProf's manager window to load them manually.");
+		    break;
+		}
+		if(v.size()>0){
+		    trial.initialize(v);
+		    experiment.addTrial(trial);
+		    trial.showMainWindow();
+		}
+		else{
+		    System.out.println("No profile files found in the current directory.");
+		    System.out.println("Use ParaProf's manager window to load them manually.");
+		}
 	    }
 	    else{
-		//Try finding profile.*.*.* files.
-		trial = new ParaProfTrial(1);
-		trial.setName("Default Trial");
-		 v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 ,ParaProf.debugIsOn);
-		 if(v.size()>0){
-		     trial.initialize(v);
-		     experiment.addTrial(trial);
-		     trial.showMainWindow();
-		 }
-		 else{
-		     System.out.println("No profile files found in the current directory.");
-		     System.out.println("Use ParaProf's manager window to load them manually.");
-		 }
-	    }
-
+		if(filePrefix==null)
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", ParaProf.debugIsOn);
+		else
+		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, ParaProf.debugIsOn);
+		if(v.size()>0){
+		    trial.initialize(v);
+		    experiment.addTrial(trial);
+		    trial.showMainWindow();
+		}
+		else{
+		    //Try finding profile.*.*.* files.
+		    trial = new ParaProfTrial(1);
+		    trial.setName("Default Trial");
+		    if(filePrefix==null) 
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", ParaProf.debugIsOn);
+		    else
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", ParaProf.debugIsOn);
+		    if(v.size()>0){
+		    trial.initialize(v);
+		    experiment.addTrial(trial);
+		    trial.showMainWindow();
+		    }
+		    else{
+			System.out.println("No profile files found in the current directory.");
+			System.out.println("Use ParaProf's manager window to load them manually.");
+		    }
+		}
+	    }		
 	    ParaProfManager paraProfManager = new ParaProfManager();
 	    paraProfManager.expandDefaultParaProfTrialNode();
 	}
@@ -191,26 +238,49 @@ public class ParaProf implements ActionListener{
 
     // Main entry point
     static public void main(String[] args){
-	int numberOfArguments = 0;
-	String argument;
-	
-	while (numberOfArguments < args.length) {
-	    argument = args[numberOfArguments++];
+
+	ParaProf paraProf = new ParaProf();
+
+	int position = 0;
+	String argument = null;
+	//Deal with help and debug individually, then the rest.
+	//Help
+	while (position < args.length) {
+	    argument = args[position++];
 	    if (argument.equalsIgnoreCase("HELP")) {
-		System.err.println(USAGE);
-		System.exit(-1);
-	    }
-	    if (argument.equalsIgnoreCase("DEBUG")) {
-		ParaProf.debugIsOn = true;
-		continue;
+		System.out.println("paraprof/FileList filetype [pprof|profile|dynaprof] | prefix [filename prefix] | help | debug");
+		System.exit(0);
 	    }
 	}
-    
+	//Debug
+	position = 0;
+	while (position < args.length) {
+	    argument = args[position++];
+	    if (argument.equalsIgnoreCase("DEBUG")) {
+		debugIsOn = true;
+	    }
+	}
+	//Now the rest.
+	position = 0;
+	while (position < args.length) {
+	    argument = args[position++];
+	    if (argument.equalsIgnoreCase("FILETYPE")){
+		argument = args[position++];
+		if(argument.equalsIgnoreCase("pprof"))
+		    paraProf.type = 0;
+		else if(argument.equalsIgnoreCase("profile"))
+		    paraProf.type = 1;
+		else if(argument.equalsIgnoreCase("dynaprof"))
+		    paraProf.type = 2;
+	    }
+	    else if (argument.equalsIgnoreCase("PREFIX")){
+		argument = args[position++];
+		paraProf.filePrefix = argument;
+	    }
+	}
+	
 	ParaProf.runtime = Runtime.getRuntime();
-    
-	//Start Racy.
-	ParaProf paraProf = new ParaProf();
-    
+	
 	if(debugIsOn){
 	    //Create and start the a timer, and then add racy to it.
 	    javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);

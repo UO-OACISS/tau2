@@ -158,24 +158,24 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		switch(tDWindow.getValueType()){
 		case 2: 
 		    if(tDWindow.isPercent())
-			maxValue = trial.getMaxMeanExclusivePercentValue(trial.getCurValLoc());
+			maxValue = trial.getGlobalMapping().getMaxMeanExclusivePercentValue(trial.getCurValLoc());
 		    else
-			maxValue = trial.getMaxMeanExclusiveValue(trial.getCurValLoc());
+			maxValue = trial.getGlobalMapping().getMaxMeanExclusiveValue(trial.getCurValLoc());
 		    break;			    
 		case 4:
 		    if(tDWindow.isPercent())
-			maxValue = trial.getMaxMeanInclusivePercentValue(trial.getCurValLoc());
+			maxValue = trial.getGlobalMapping().getMaxMeanInclusivePercentValue(trial.getCurValLoc());
 		    else
-			maxValue = trial.getMaxMeanInclusiveValue(trial.getCurValLoc());
+			maxValue = trial.getGlobalMapping().getMaxMeanInclusiveValue(trial.getCurValLoc());
 		    break;
 		case 6:
-		    maxValue = trial.getMaxMeanNumberOfCalls();
+		    maxValue = trial.getGlobalMapping().getMaxMeanNumberOfCalls();
 		    break;
 		case 8:
-		    maxValue = trial.getMaxMeanNumberOfSubRoutines();
+		    maxValue = trial.getGlobalMapping().getMaxMeanNumberOfSubRoutines();
 		    break;
 		case 10:
-		    maxValue = trial.getMaxMeanUserSecPerCall(trial.getCurValLoc());
+		    maxValue = trial.getGlobalMapping().getMaxMeanUserSecPerCall(trial.getCurValLoc());
 		    break;
 		default:
 		    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + tDWindow.getValueType());

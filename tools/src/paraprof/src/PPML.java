@@ -63,7 +63,7 @@ public class PPML{
 	    globalMappingElement.incrementStorage();
 	}
 
-	trial.addDefaultToVectors();
+	trial.getGlobalMapping().increaseVectorStorage();
     
 	//######
 	//Calculate the raw values.
@@ -129,47 +129,8 @@ public class PPML{
 		}
 	    }
 	}
-	
-	l = trial.getGlobalMapping().getMappingIterator(0);
-	double exclusiveTotal = 0.0;
-	while(l.hasNext()){
-	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    if((globalMappingElement.getCounter()) != 0){
-		double d = (globalMappingElement.getTotalExclusiveValue())/(globalMappingElement.getCounter());
-		//Increment the total values.
-		exclusiveTotal+=d;
-		globalMappingElement.setMeanExclusiveValue(trial.getCurValLoc(), d);
-		if((trial.getMaxMeanExclusiveValue(trial.getCurValLoc()) < d))
-		    trial.setMaxMeanExclusiveValue(trial.getCurValLoc(), d);
-		
-		d = (globalMappingElement.getTotalInclusiveValue())/(globalMappingElement.getCounter());
-		globalMappingElement.setMeanInclusiveValue(trial.getCurValLoc(), d);
-		if((trial.getMaxMeanInclusiveValue(trial.getCurValLoc()) < d))
-		    trial.setMaxMeanInclusiveValue(trial.getCurValLoc(), d);
-	    }
-	}
-		
-	double inclusiveMax = trial.getMaxMeanInclusiveValue(trial.getCurValLoc());
-
-	l = trial.getGlobalMapping().getMappingIterator(0);
-	while(l.hasNext()){
-	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    
-	    if(exclusiveTotal!=0){
-		double tmpDouble = ((globalMappingElement.getMeanExclusiveValue(trial.getCurValLoc()))/exclusiveTotal) * 100;
-		globalMappingElement.setMeanExclusivePercentValue(trial.getCurValLoc(), tmpDouble);
-		if((trial.getMaxMeanExclusivePercentValue(trial.getCurValLoc()) < tmpDouble))
-		    trial.setMaxMeanExclusivePercentValue(trial.getCurValLoc(), tmpDouble);
-	    }
-      
-	    if(inclusiveMax!=0){
-		double tmpDouble = ((globalMappingElement.getMeanInclusiveValue(trial.getCurValLoc()))/inclusiveMax) * 100;
-		globalMappingElement.setMeanInclusivePercentValue(trial.getCurValLoc(), tmpDouble);
-		if((trial.getMaxMeanInclusivePercentValue(trial.getCurValLoc()) < tmpDouble))
-		    trial.setMaxMeanInclusivePercentValue(trial.getCurValLoc(), tmpDouble);
-	    }
-	    
-	}
+	//Done with this metric, let the global mapping compute the mean values.
+	trial.getGlobalMapping().computeMeanData(0,metric);
 	return newMetric;
     }
 

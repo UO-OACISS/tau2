@@ -76,7 +76,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		System.out.println("Processing data, please wait ......");
 		long time = System.currentTimeMillis();
 		//Need to call increaseVectorStorage() on all objects that require it.
-		this.increaseVectorStorage();
+		this.getGlobalMapping().increaseVectorStorage();
 		    
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(this.firstMetric())){
@@ -433,47 +433,9 @@ public class TauOutputSession extends ParaProfDataSession{
 		    //it can fill in all the summary data.
 		    thread.setThreadSummaryData(metric);
 		}
+		//Done with this metric, let the global mapping compute the mean values.
+		this.getGlobalMapping().computeMeanData(0,metric);
 		
-		ListIterator l = this.getGlobalMapping().getMappingIterator(0);
-		double exclusiveTotal = 0.0;
-		while(l.hasNext()){
-		    globalMappingElement = (GlobalMappingElement) l.next();
-		    if((globalMappingElement.getCounter()) != 0){
-			double d = (globalMappingElement.getTotalExclusiveValue())/(globalMappingElement.getCounter());
-			//Increment the total values.
-			exclusiveTotal+=d;
-			globalMappingElement.setMeanExclusiveValue(metric, d);
-			if((this.getMaxMeanExclusiveValue(metric) < d))
-			    this.setMaxMeanExclusiveValue(metric, d);
-		
-			d = (globalMappingElement.getTotalInclusiveValue())/(globalMappingElement.getCounter());
-			globalMappingElement.setMeanInclusiveValue(metric, d);
-			if((this.getMaxMeanInclusiveValue(metric) < d))
-			    this.setMaxMeanInclusiveValue(metric, d);
-		    }
-		}
-		
-		double inclusiveMax = this.getMaxMeanInclusiveValue(metric);
-
-		l = this.getGlobalMapping().getMappingIterator(0);
-		while(l.hasNext()){
-		    globalMappingElement = (GlobalMappingElement) l.next();
-	    
-		    if(exclusiveTotal!=0){
-			double tmpDouble = ((globalMappingElement.getMeanExclusiveValue(metric))/exclusiveTotal) * 100;
-			globalMappingElement.setMeanExclusivePercentValue(metric, tmpDouble);
-			if((this.getMaxMeanExclusivePercentValue(metric) < tmpDouble))
-			    this.setMaxMeanExclusivePercentValue(metric, tmpDouble);
-		    }
-      
-		    if(inclusiveMax!=0){
-			double tmpDouble = ((globalMappingElement.getMeanInclusiveValue(metric))/inclusiveMax) * 100;
-			globalMappingElement.setMeanInclusivePercentValue(metric, tmpDouble);
-			if((this.getMaxMeanInclusivePercentValue(metric) < tmpDouble))
-			    this.setMaxMeanInclusivePercentValue(metric, tmpDouble);
-		    }
-		    globalMappingElement.setMeanValuesSet(true);
-		}
 		time = (System.currentTimeMillis()) - time;
 		System.out.println("Done processing data!");
 		System.out.println("Time to process (in milliseconds): " + time);

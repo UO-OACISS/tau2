@@ -34,6 +34,14 @@ public class GlobalMapping{
 	sortedMappings[1] = new Vector();
 	sortedMappings[2] = new Vector();
     }
+
+    protected void increaseVectorStorage(){
+	maxMeanInclusiveValueList.add(new Double(0));
+	maxMeanExclusiveValueList.add(new Double(0));
+	maxMeanInclusivePercentValueList.add(new Double(0));
+	maxMeanExclusivePercentValueList.add(new Double(0));
+	maxMeanUserSecPerCallList.add(new Double(0));
+    }
     
     public int addGlobalMapping(String mappingName, int mappingSelection){
 	int mappingID = -1;
@@ -160,6 +168,114 @@ public class GlobalMapping{
     //######
     //End - Functions setting max and total values.
     //######
+    
+    //######
+    //Function to compute mean values.
+    //######
+    public void computeMeanData(int mappingSelection, int metric){
+	ListIterator l = this.getMappingIterator(mappingSelection);
+	double exclusiveTotal = 0.0;
+	GlobalMappingElement globalMappingElement = null;
+	while(l.hasNext()){
+	    globalMappingElement = (GlobalMappingElement) l.next();
+	    if((globalMappingElement.getCounter()) != 0){
+		double d = (globalMappingElement.getTotalExclusiveValue())/(globalMappingElement.getCounter());
+		//Increment the total values.
+		exclusiveTotal+=d;
+		globalMappingElement.setMeanExclusiveValue(metric, d);
+		if((this.getMaxMeanExclusiveValue(metric) < d))
+		    this.setMaxMeanExclusiveValue(metric, d);
+					
+		d = (globalMappingElement.getTotalInclusiveValue())/(globalMappingElement.getCounter());
+		globalMappingElement.setMeanInclusiveValue(metric, d);
+		if((this.getMaxMeanInclusiveValue(metric) < d))
+		    this.setMaxMeanInclusiveValue(metric, d);
+	    }
+	}
+				
+	double inclusiveMax = this.getMaxMeanInclusiveValue(metric);
+				
+	l = this.getMappingIterator(mappingSelection);
+	while(l.hasNext()){
+	    globalMappingElement = (GlobalMappingElement) l.next();
+				    
+	    if(exclusiveTotal!=0){
+		double tmpDouble = ((globalMappingElement.getMeanExclusiveValue(metric))/exclusiveTotal) * 100;
+		globalMappingElement.setMeanExclusivePercentValue(metric, tmpDouble);
+		if((this.getMaxMeanExclusivePercentValue(metric) < tmpDouble))
+		    this.setMaxMeanExclusivePercentValue(metric, tmpDouble);
+	    }
+				    
+	    if(inclusiveMax!=0){
+		double tmpDouble = ((globalMappingElement.getMeanInclusiveValue(metric))/inclusiveMax) * 100;
+		globalMappingElement.setMeanInclusivePercentValue(metric, tmpDouble);
+		if((this.getMaxMeanInclusivePercentValue(metric) < tmpDouble))
+		    this.setMaxMeanInclusivePercentValue(metric, tmpDouble);
+	    }
+	    globalMappingElement.setMeanValuesSet(true);
+	}
+    }
+    //######
+    //End - Function to compute mean values.
+    //######
+
+    //######
+    //Functions for max mean values.
+    //######
+    public void setMaxMeanInclusiveValue(int dataValueLocation, double inDouble){
+	Double tmpDouble = new Double(inDouble);
+	maxMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
+  
+    public void setMaxMeanExclusiveValue(int dataValueLocation, double inDouble){
+	Double tmpDouble = new Double(inDouble);
+	maxMeanExclusiveValueList.add(dataValueLocation, tmpDouble);}
+  
+    public void setMaxMeanInclusivePercentValue(int dataValueLocation, double inDouble){
+	Double tmpDouble = new Double(inDouble);
+	maxMeanInclusivePercentValueList.add(dataValueLocation, tmpDouble);}
+  
+    public void setMaxMeanExclusivePercentValue(int dataValueLocation, double inDouble){
+	Double tmpDouble = new Double(inDouble);
+	maxMeanExclusivePercentValueList.add(dataValueLocation, tmpDouble);}
+
+    public void setMaxMeanNumberOfCalls(double inDouble){
+	maxMeanNumberOfCalls = inDouble;}
+  
+    public void setMaxMeanNumberOfSubRoutines(double inDouble){
+	maxMeanNumberOfSubRoutines = inDouble;}
+
+    public void setMaxMeanUserSecPerCall(int dataValueLocation, double inDouble){
+	Double tmpDouble = new Double(inDouble);
+	maxMeanUserSecPerCallList.add(dataValueLocation, tmpDouble);}
+
+    public double getMaxMeanExclusiveValue(int dataValueLocation){
+	Double tmpDouble = (Double) maxMeanExclusiveValueList.elementAt(dataValueLocation);
+	return tmpDouble.doubleValue();}
+
+    public double getMaxMeanInclusiveValue(int dataValueLocation){
+	Double tmpDouble = (Double) maxMeanInclusiveValueList.elementAt(dataValueLocation);
+	return tmpDouble.doubleValue();}
+
+    public double getMaxMeanInclusivePercentValue(int dataValueLocation){
+	Double tmpDouble = (Double) maxMeanInclusivePercentValueList.elementAt(dataValueLocation);
+	return tmpDouble.doubleValue();}
+
+    public double getMaxMeanExclusivePercentValue(int dataValueLocation){
+	Double tmpDouble = (Double) maxMeanExclusivePercentValueList.elementAt(dataValueLocation);
+	return tmpDouble.doubleValue();}
+
+    public double getMaxMeanNumberOfCalls(){
+	return maxMeanNumberOfCalls;}
+  
+    public double getMaxMeanNumberOfSubRoutines(){
+	return maxMeanNumberOfSubRoutines;}
+  
+    public double getMaxMeanUserSecPerCall(int dataValueLocation){
+	Double tmpDouble = (Double) maxMeanUserSecPerCallList.elementAt(dataValueLocation);
+	return tmpDouble.doubleValue();}
+    //######
+    //End - Function to set max mean values.
+    //######
 
     //######
     //Functions managing the sortedMapppings.
@@ -220,6 +336,14 @@ public class GlobalMapping{
     private Vector[] mappings = new Vector[3];
     //An array of Vectors each of which holds GlobalSortedMappingElements.
     private Vector[] sortedMappings = new Vector[3];
+
+    private Vector maxMeanInclusiveValueList = new Vector();
+    private Vector maxMeanExclusiveValueList = new Vector();
+    private Vector maxMeanInclusivePercentValueList = new Vector();
+    private Vector maxMeanExclusivePercentValueList = new Vector();
+    private double maxMeanNumberOfCalls = 0;
+    private double maxMeanNumberOfSubRoutines = 0;
+    private Vector maxMeanUserSecPerCallList = new Vector();
     
     private boolean isSelectedGroupOn = false;
     private boolean isAllExceptGroupOn = false;

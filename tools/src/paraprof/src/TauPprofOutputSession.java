@@ -123,7 +123,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		//good place to initialize a few things.
       
 		//Need to call increaseVectorStorage() on all objects that require it.
-		this.increaseVectorStorage();
+		this.getGlobalMapping().increaseVectorStorage();
 
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(this.firstMetric())){
@@ -260,20 +260,20 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			break;
 		    case 2:
 			//Now set the values correctly.
-			if((this.getMaxMeanExclusiveValue(metric)) < functionDataLine1.d0){
-			    this.setMaxMeanExclusiveValue(metric, functionDataLine1.d0);}
-			if((this.getMaxMeanExclusivePercentValue(metric)) < functionDataLine1.d1){
-			    this.setMaxMeanExclusivePercentValue(metric, functionDataLine1.d1);}
+			if((this.getGlobalMapping().getMaxMeanExclusiveValue(metric)) < functionDataLine1.d0){
+			    this.getGlobalMapping().setMaxMeanExclusiveValue(metric, functionDataLine1.d0);}
+			if((this.getGlobalMapping().getMaxMeanExclusivePercentValue(metric)) < functionDataLine1.d1){
+			    this.getGlobalMapping().setMaxMeanExclusivePercentValue(metric, functionDataLine1.d1);}
 		    
 			globalMappingElement.setMeanExclusiveValue(metric, functionDataLine1.d0);
 			globalMappingElement.setMeanExclusivePercentValue(metric, functionDataLine1.d1);
 			break;
 		    case 3:
 			//Now set the values correctly.
-			if((this.getMaxMeanInclusiveValue(metric)) < functionDataLine1.d0){
-			    this.setMaxMeanInclusiveValue(metric, functionDataLine1.d0);}
-			if((this.getMaxMeanInclusivePercentValue(metric)) < functionDataLine1.d1){
-			    this.setMaxMeanInclusivePercentValue(metric, functionDataLine1.d1);}
+			if((this.getGlobalMapping().getMaxMeanInclusiveValue(metric)) < functionDataLine1.d0){
+			    this.getGlobalMapping().setMaxMeanInclusiveValue(metric, functionDataLine1.d0);}
+			if((this.getGlobalMapping().getMaxMeanInclusivePercentValue(metric)) < functionDataLine1.d1){
+			    this.getGlobalMapping().setMaxMeanInclusivePercentValue(metric, functionDataLine1.d1);}
 		    
 			globalMappingElement.setMeanInclusiveValue(metric, functionDataLine1.d0);
 			globalMappingElement.setMeanInclusivePercentValue(metric, functionDataLine1.d1);
@@ -289,14 +289,14 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			globalMappingElement.setMeanUserSecPerCall(metric, functionDataLine2.d0);
 
 			//Set the max values.
-			if((this.getMaxMeanNumberOfCalls()) < functionDataLine2.i0)
-			    this.setMaxMeanNumberOfCalls(functionDataLine2.i0);
+			if((this.getGlobalMapping().getMaxMeanNumberOfCalls()) < functionDataLine2.i0)
+			    this.getGlobalMapping().setMaxMeanNumberOfCalls(functionDataLine2.i0);
 
-			if((this.getMaxMeanNumberOfSubRoutines()) < functionDataLine2.i1)
-			    this.setMaxMeanNumberOfSubRoutines(functionDataLine2.i1);
+			if((this.getGlobalMapping().getMaxMeanNumberOfSubRoutines()) < functionDataLine2.i1)
+			    this.getGlobalMapping().setMaxMeanNumberOfSubRoutines(functionDataLine2.i1);
 
-			if((this.getMaxMeanUserSecPerCall(metric)) < functionDataLine2.d0)
-			    this.setMaxMeanUserSecPerCall(metric, functionDataLine2.d0);
+			if((this.getGlobalMapping().getMaxMeanUserSecPerCall(metric)) < functionDataLine2.d0)
+			    this.getGlobalMapping().setMaxMeanUserSecPerCall(metric, functionDataLine2.d0);
 
 			globalMappingElement.setMeanValuesSet(true);
 			break;

@@ -23,7 +23,7 @@ public class FileList{
     //be chosen. Thus, if files.length > 1, it must contain only files.  If files.length == 1 then
     //it can be a file or a directory.
     //Returns a MetricFileList array of length 0 if no files are obtained.
-    public Vector getFileList(File f, Component component, int type, boolean debug){
+    public Vector getFileList(File f, Component component, int type, String filePrefix, boolean debug){
 	Vector result = new Vector();
 
 	//Check to see if type is valid.
@@ -70,13 +70,45 @@ public class FileList{
 		selection = new File[1];
 		selection[0] = f;
 	    }
-	    
+
 	    //If hear, selection is valid.
 	    if(selection.length == 1){
 		if(selection[0].isDirectory()){
+		    if(filePrefix==null){
+			//Get prefix.
+			switch(type){
+			case 0:
+			    filePrefix = JOptionPane.showInputDialog("Enter file prefix", "pprof");
+			    if((filePrefix == null) || "".equals(filePrefix))
+				filePrefix = "pprof";
+			    break;
+			case 1:
+			    filePrefix = JOptionPane.showInputDialog("Enter file prefix", "profile");
+			    if((filePrefix == null) || "".equals(filePrefix))
+				filePrefix = "profile";
+			    break;
+			case 2:
+			    filePrefix = JOptionPane.showInputDialog("Enter file prefix");
+			    if((filePrefix == null) || "".equals(filePrefix)){
+				System.out.println("No prefix given!");
+				return new Vector();
+			    }
+			    break;
+			case 3:
+			    filePrefix = JOptionPane.showInputDialog("Enter file prefix");
+			    if((filePrefix == null) || "".equals(filePrefix)){
+				System.out.println("No prefix given!");
+				return new Vector();
+			    }
+			    break;
+			default:
+			    break;
+			}
+		    }
+
 		    if(type==0 || type==1){
-			//First try and find a pprof.dat file in the selected directory.
-			files = this.helperGetFileList(selection[0], type, debug);
+			//First try and find a .dat file in the selected directory.
+			files = this.helperGetFileList(selection[0], type, filePrefix, debug);
 			if(files.length > 0)
 			    result.add(files);
 			else{
@@ -92,22 +124,25 @@ public class FileList{
 			    if(length!=0){
 				for(int i=0;i<length;i++){
 				    file = (File)(v.elementAt(i));
-				    files = this.helperGetFileList(file, type, debug);
+				    files = this.helperGetFileList(file, type, filePrefix, debug);
 				    if(files!=null)
 					result.add(files);
 				}
 			    }
 			}
 		    }
+		    else if(type==2){
+			files = this.helperGetFileList(selection[0], type, filePrefix, debug);
+			if(files.length > 0)
+			    result.add(files);
+		    }
 		}
 		else{
-		    if(type==0 || type==1)
-			result.add(selection);
+		    result.add(selection);
 		}
 	    }
 	    else{ //More than one file in selection (already checked for zero).
-		if(type==1)
-		    result.add(selection);
+		result.add(selection);
 	    }
 	    return result;
 	}
@@ -152,7 +187,7 @@ public class FileList{
     //Currently, It looks in the given directory for a pprof.dat file,
     //or for a list of profile.*.*.* files (switching based on the type argument).
     //If nothing is found, it returns an empty File[].
-    public File[] helperGetFileList(File directory, int type, boolean debug){
+    public File[] helperGetFileList(File directory, int type, String filePrefix, boolean debug){
 	File[] files = new File[0];
 
 	if(directory.isDirectory()){
@@ -174,20 +209,19 @@ public class FileList{
 		    System.out.println("####################################");
 		}
 
-		switch(type){
-		case 0:
-		    file = new File(directoryPath + fileSeparator + "pprof.dat");
+		if(type==0){
+		    file = new File(directoryPath + fileSeparator + filePrefix + ".dat");
 		    if(file.exists()){
 			files = new File[1];
 			files[0] = file;
 		    }
-		    break;
-		case 1:
+		}
+		else if(type==1||type==2){
 		    files = directory.listFiles();
 		    Vector v = new Vector();
 		    for(int i = 0;i<files.length;i++){
 			if(files[i] != null){
-			    if(files[i].getName().indexOf("profile.") == 0)
+			    if(files[i].getName().indexOf(filePrefix + ".") == 0)
 				v.add(files[i]);
 			}
 		    }
@@ -198,8 +232,8 @@ public class FileList{
 			    files[i] = (File) v.elementAt(i);
 			}
 		    }
-		    break;
-		default:
+		}
+		else{
 		    System.out.println("Unexpected Type -  " + type + ":");
 		    System.out.println("Location - ParaProfManager.helperGetFileList(...)");
 		}
@@ -289,6 +323,7 @@ public class FileList{
     public static void main(String args[]){
 	boolean debug = false;
 	int type = 0; //Pass in a valid type by default. This type represents: "Pprof -d File".
+	String filePrefix = null;
 
 	//Process command line arguments.
 	try{
@@ -299,7 +334,7 @@ public class FileList{
 	    while (position < args.length) {
 		argument = args[position++];
 		if (argument.equalsIgnoreCase("HELP")) {
-                    System.out.println("paraprof/FileList filetype [0-9]+ | help | debug");
+                    System.out.println("paraprof/FileList filetype [0-9]+ | prefix \"filename prefix\" | help | debug");
                     System.exit(0);
                 }
 	    }
@@ -318,6 +353,10 @@ public class FileList{
 		if (argument.equalsIgnoreCase("FILETYPE")){
 			argument = args[position++];
 			type = Integer.parseInt(argument);
+		}
+		else if (argument.equalsIgnoreCase("PREFIX")){
+			argument = args[position++];
+			filePrefix = argument;
 		}
 	    }
 	}
@@ -349,7 +388,7 @@ public class FileList{
 	try{
 	    FileList fl = new FileList();
 	    File[] files = null;
-	    Vector v = fl.getFileList(null, null,type,debug);
+	    Vector v = fl.getFileList(null, null,type,filePrefix,debug);
 	    System.out.println("####################################");
 	    System.out.println("Files found:");
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
