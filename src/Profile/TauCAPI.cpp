@@ -338,7 +338,7 @@ extern "C" void Tau_userevent(void *ue, double data)
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void * Tau_set_event_name(void *ue, char *name)
+extern "C" void Tau_set_event_name(void *ue, char *name)
 {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetEventName(name);
@@ -416,7 +416,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 2002/11/08 02:26:56 $
- * VERSION: $Id: TauCAPI.cpp,v 1.29 2002/11/08 02:26:56 sameer Exp $
+ * $Revision: 1.30 $   $Date: 2002/11/12 19:35:45 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.30 2002/11/12 19:35:45 sameer Exp $
  ***************************************************************************/
 
