@@ -39,27 +39,31 @@
 #define VALID_NAME_CHAR(x) (isprint(x))
 
 extern "C" {
-void * tau_get_profiler(char *, char *, TauGroup_t, char *gr_name);
-void tau_start_timer(void *);
-void tau_stop_timer(void *);
-void tau_exit(char *);
-void tau_init(int, char **);
-void tau_enable_group(TauGroup_t group);
-void tau_disable_group(TauGroup_t group);
-void tau_set_node(int);
-void tau_set_context(int);
-void tau_register_thread(void);
-void tau_enable_instrumentation(void);
-void tau_disable_instrumentation(void);
-void tau_trace_sendmsg(int type, int destination, int length);
-void tau_trace_recvmsg(int type, int source, int length);
-void * tau_get_userevent(char *name);
-void tau_userevent(void *ue, double data);
-void tau_report_statistics(void);
-void tau_report_thread_statistics(void);
-void tau_dump(void);
+void * Tau_get_profiler(char *, char *, TauGroup_t, char *gr_name);
+void Tau_start_timer(void *);
+void Tau_stop_timer(void *);
+void Tau_exit(char *);
+void Tau_init(int, char **);
+void Tau_enable_group(TauGroup_t group);
+void Tau_disable_group(TauGroup_t group);
+void Tau_set_node(int);
+void Tau_set_context(int);
+void Tau_register_thread(void);
+void Tau_enable_instrumentation(void);
+void Tau_disable_instrumentation(void);
+void Tau_trace_sendmsg(int type, int destination, int length);
+void Tau_trace_recvmsg(int type, int source, int length);
+void * Tau_get_userevent(char *name);
+void Tau_userevent(void *ue, double data);
+void Tau_report_statistics(void);
+void Tau_report_thread_statistics(void);
+void Tau_dump(void);
 void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name);
-extern "C" { TauGroup_t tau_get_profile_group(char * group) ; }
+TauGroup_t Tau_get_profile_group(char * group) ; 
+TauGroup_t Tau_enable_all_groups(void);
+TauGroup_t Tau_disable_all_groups(void);
+TauGroup_t Tau_enable_group_name(char *group_name);
+TauGroup_t Tau_disable_group_name(char *group_name);
 
 #define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = (char *) malloc(l+1); tau_extract_groupinfo(n, gr, gr_name); 
 
@@ -76,12 +80,12 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
   fname[slen] = '\0';  
   
 #ifdef DEBUG_PROF
-  printf("Inside tau_profile_timer_ fname=%s\n", fname);
+  printf("Inside tau_profile_timer_group_ fname=%s\n", fname);
 #endif /* DEBUG_PROF */
   
   if (*ptr == 0) 
   {
-    *ptr = tau_get_profiler(fname, (char *)" ", *group, fname);
+    *ptr = Tau_get_profiler(fname, (char *)" ", *group, fname);
   }
 
 #ifdef DEBUG_PROF 
@@ -89,6 +93,26 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
 #endif /* DEBUG_PROF */
 
   return;
+}
+
+void tau_enable_group_name_local(char *& group_name, int len)
+{
+  char *name = (char *) malloc(len+1);
+  strncpy(name, group_name, len);
+  name[len]='\0';
+
+  Tau_enable_group_name(name);
+
+}
+
+void tau_disable_group_name_local(char *& group_name, int len)
+{
+  char *name = (char *) malloc(len+1);
+  strncpy(name, group_name, len);
+  name[len]='\0';
+
+  Tau_disable_group_name(name);
+
 }
 
 void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
@@ -108,7 +132,7 @@ void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
     }
     else
     {
-      gr = tau_get_profile_group(first); 
+      gr = Tau_get_profile_group(first); 
       gr_name = first;
       fname = second;
     }
@@ -132,7 +156,7 @@ void tau_profile_timer_(void **ptr, char *infname, int slen)
   {  // remove garbage characters from the end of name
     
     EXTRACT_GROUP(fname, slen, gr, gr_name)
-    *ptr = tau_get_profiler(fname, (char *)" ", gr, gr_name);
+    *ptr = Tau_get_profiler(fname, (char *)" ", gr, gr_name);
   }
 
 #ifdef DEBUG_PROF 
@@ -149,25 +173,25 @@ void tau_profile_start_(void **profiler)
   printf("start_timer gets %x\n", *profiler);
 #endif /* DEBUG_PROF */
 
-  tau_start_timer(*profiler);
+  Tau_start_timer(*profiler);
   return;
 }
 
 void tau_profile_stop_(void **profiler)
 {
-  tau_stop_timer(*profiler);
+  Tau_stop_timer(*profiler);
   return;
 }
 
 void tau_profile_exit_(char *msg)
 {
-  tau_exit(msg);
+  Tau_exit(msg);
   return;
 }
 
 void tau_db_dump_(void)
 {
-  tau_dump();
+  Tau_dump();
   return;
 }
 
@@ -175,66 +199,141 @@ void tau_profile_init_(int *argc, char ***argv)
 {
   /* tau_init(*argc, *argv); */
 #ifndef TAU_MPI
-  tau_set_node(0); 
+  Tau_set_node(0); 
 #endif /* TAU_MPI */
   return;
 }
 
+void tau_enable_instrumentation(void)
+{
+  Tau_enable_instrumentation();
+  return;
+}
+
+void tau_disable_instrumentation(void)
+{
+  Tau_disable_instrumentation();
+  return;
+}
+
+void tau_enable_group(TauGroup_t *group)
+{
+  Tau_enable_group(*group);
+}
+
+void tau_disable_group(TauGroup_t *group)
+{
+  Tau_disable_group(*group);
+}
+
+void tau_enable_all_groups(void)
+{
+  Tau_enable_all_groups();
+}
+
+void tau_disable_all_groups(void)
+{
+  Tau_disable_all_groups();
+}
+
+void tau_enable_group_name(char * group_name, int len)
+{
+  tau_enable_group_name_local(group_name, len);
+}
+
+void tau_disable_group_name(char * group_name, int len)
+{
+  tau_disable_group_name_local(group_name, len);
+}
+
 void tau_enable_group_(TauGroup_t *group)
 {
-  tau_enable_group(*group);
+  Tau_enable_group(*group);
 }
 
 void tau_disable_group_(TauGroup_t *group)
 {
-  tau_disable_group(*group);
+  Tau_disable_group(*group);
+}
+
+void tau_enable_all_groups_(void)
+{
+  Tau_enable_all_groups();
+}
+
+void tau_disable_all_groups_(void)
+{
+  Tau_disable_all_groups();
 }
 
 void tau_profile_set_node_(int *node)
 {
-  tau_set_node(*node);
+  Tau_set_node(*node);
   return;
 } 
 
 void tau_profile_set_context_(int *context)
 {
-  tau_set_context(*context);
+  Tau_set_context(*context);
   return;
 }
 
+
 void tau_enable_instrumentation_(void)
 {
-  tau_enable_instrumentation();
+  Tau_enable_instrumentation();
   return;
 }
 
 void tau_disable_instrumentation_(void)
 {
-  tau_disable_instrumentation();
+  Tau_disable_instrumentation();
   return;
+}
+
+void tau_enable_group_name_(char * group_name, int len)
+{
+  tau_enable_group_name_local(group_name, len);
+}
+
+void tau_disable_group_name_(char * group_name, int len)
+{
+  tau_disable_group_name_local(group_name, len);
 }
 
 #if (defined (PTHREADS) || defined (TULIPTHREADS))
 void tau_register_thread_(void)
 {
-  tau_register_thread();
+  Tau_register_thread();
+  return;
+}
+
+void tau_register_thread__(void)
+{
+  Tau_register_thread();
+  return;
+}
+
+void tau_register_thread(void)
+{
+  Tau_register_thread();
   return;
 }
 
 void TAU_REGISTER_THREAD(void)
 {
-  tau_register_thread();
+  Tau_register_thread();
 }
 #endif /* PTHREADS || TULIPTHREADS */
 
 void tau_trace_sendmsg_(int *type, int *destination, int *length)
 {
-  tau_trace_sendmsg(*type, *destination, *length);
+  Tau_trace_sendmsg(*type, *destination, *length);
 }
 
 void tau_trace_recvmsg_(int *type, int *source, int *length)
 {
-  tau_trace_recvmsg(*type, *source, *length);
+  Tau_trace_recvmsg(*type, *source, *length);
 }
 
 void tau_register_event_(void **ptr, char *event_name, int *flen)
@@ -251,9 +350,9 @@ void tau_register_event_(void **ptr, char *event_name, int *flen)
       }
     }
 #ifdef DEBUG_PROF
-    printf("tau_get_userevent() \n");
+    printf("Tau_get_userevent() \n");
 #endif /* DEBUG_PROF */
-    *ptr = tau_get_userevent(event_name);
+    *ptr = Tau_get_userevent(event_name);
   }
   return;
 
@@ -261,17 +360,17 @@ void tau_register_event_(void **ptr, char *event_name, int *flen)
 
 void tau_event_(void **ptr, double *data)
 {
-  tau_userevent(*ptr, *data);
+  Tau_userevent(*ptr, *data);
 }
 
 void tau_report_statistics_(void)
 {
-  tau_report_statistics();
+  Tau_report_statistics();
 }
 
 void tau_report_thread_statistics_(void)
 {
-  tau_report_thread_statistics();
+  Tau_report_thread_statistics();
 }
 
 /* Cray F90 specific extensions */
@@ -302,10 +401,10 @@ void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
     }
 
 #ifdef DEBUG_PROF
-    printf("tau_get_profiler() \n");
+    printf("Tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
     EXTRACT_GROUP(fname, flen, gr, gr_name)
-    *ptr = tau_get_profiler(fname, (char *)" ", gr, gr_name);
+    *ptr = Tau_get_profiler(fname, (char *)" ", gr, gr_name);
   }
 
 #ifdef DEBUG_PROF 
@@ -332,7 +431,7 @@ void TAU_PROFILE_EXIT(char *msg)
 
 void TAU_DB_DUMP(void)
 {
-  tau_dump();
+  Tau_dump();
   return;
 }
 
@@ -343,7 +442,7 @@ void TAU_PROFILE_INIT()
 #endif /* CRAYKAI */
   // tau_profile_init_(argc, argv);
 #ifndef TAU_MPI
-  tau_set_node(0); 
+  Tau_set_node(0); 
 #endif /* TAU_MPI */
 }
 
@@ -359,24 +458,53 @@ void TAU_PROFILE_SET_CONTEXT(int *context)
 
 void TAU_TRACE_SENDMSG(int *type, int *destination, int *length)
 {
-  tau_trace_sendmsg(*type, *destination, *length);
+  Tau_trace_sendmsg(*type, *destination, *length);
 }
 
 void TAU_TRACE_RECVMSG(int *type, int *source, int *length)
 {
-  tau_trace_recvmsg(*type, *source, *length);
+  Tau_trace_recvmsg(*type, *source, *length);
 }
 
 void TAU_ENABLE_INSTRUMENTATION(void)
 {
-  tau_enable_instrumentation();
+  Tau_enable_instrumentation();
 }
 
 void TAU_DISABLE_INSTRUMENTATION(void)
 {
-  tau_disable_instrumentation();
+  Tau_disable_instrumentation();
 }
 
+void TAU_ENABLE_ALL_GROUPS(void)
+{
+  Tau_enable_all_groups();
+}
+
+void TAU_DISABLE_ALL_GROUPS(void)
+{
+  Tau_disable_all_groups();
+}
+
+void TAU_ENABLE_GROUP(TauGroup_t *group)
+{
+  Tau_enable_group(*group);
+}
+
+void TAU_DISABLE_GROUP(TauGroup_t *group)
+{
+  Tau_disable_group(*group);
+}
+
+void TAU_ENABLE_GROUP_NAME(char * group_name, int len)
+{
+  tau_enable_group_name_local(group_name, len);
+}
+
+void TAU_DISABLE_GROUP_NAME(char * group_name, int len)
+{
+  tau_disable_group_name_local(group_name, len);
+}
 void TAU_REGISTER_EVENT(void **ptr, char *event_name, int flen)
 {
 
@@ -393,9 +521,9 @@ void TAU_REGISTER_EVENT(void **ptr, char *event_name, int flen)
       }
     }
 #ifdef DEBUG_PROF
-    printf("tau_get_userevent() \n");
+    printf("Tau_get_userevent() \n");
 #endif /* DEBUG_PROF */
-    *ptr = tau_get_userevent(event_name);
+    *ptr = Tau_get_userevent(event_name);
   }
   return;
 
@@ -403,17 +531,17 @@ void TAU_REGISTER_EVENT(void **ptr, char *event_name, int flen)
 
 void TAU_EVENT(void **ptr, double *data)
 {
-  tau_userevent(*ptr, *data);
+  Tau_userevent(*ptr, *data);
 }
 
 void TAU_REPORT_STATISTICS(void)
 {
-  tau_report_statistics();
+  Tau_report_statistics();
 }
 
 void TAU_REPORT_THREAD_STATISTICS(void)
 {
-  tau_report_thread_statistics();
+  Tau_report_thread_statistics();
 }
 
 #if (defined (TAU_XLC) || defined(TAU_AIX) || defined(HP_FORTRAN))
@@ -440,29 +568,29 @@ void tau_profile_timer(int **profiler, char *fname, int len)
     }
 #ifdef DEBUG_PROF
     printf("len = %d\n", len);
-    printf("tau_get_profiler() \n");
+    printf("Tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
 #ifdef HP_FORTRAN
     char *name = (char *) malloc(len+1); 
     strncpy(name, fname, len);
     name[len]='\0';
     EXTRACT_GROUP(name, len, gr, gr_name)
-    *profiler = (int *) tau_get_profiler(name, (char *)" ", gr, gr_name);
+    *profiler = (int *) Tau_get_profiler(name, (char *)" ", gr, gr_name);
 #else 
     EXTRACT_GROUP(fname, len, gr, gr_name)
-    *profiler = (int *) tau_get_profiler(fname, (char *)" ", gr, gr_name);
+    *profiler = (int *) Tau_get_profiler(fname, (char *)" ", gr, gr_name);
 #endif /* HP_FORTRAN */
   }
 }
 
 void tau_profile_start(int **profiler)
 {
-  tau_start_timer((void *)*profiler);
+  Tau_start_timer((void *)*profiler);
 }
 
 void tau_profile_stop(int **profiler)
 {
-  tau_stop_timer((void *)*profiler);
+  Tau_stop_timer((void *)*profiler);
 }
 
 void tau_profile_init()
@@ -472,41 +600,41 @@ void tau_profile_init()
 #endif /* HP_FORTRAN */
 
 #ifndef TAU_MPI
-  tau_set_node(0); 
+  Tau_set_node(0); 
 #endif /* TAU_MPI */
   
 }
 
 void tau_profile_set_node(int *node)
 {
-  tau_set_node(*node);
+  Tau_set_node(*node);
 }
 
 void tau_profile_exit(char *msg)
 {
-  tau_exit(msg);
+  Tau_exit(msg);
 }
 
 void tau_db_dump(void)
 {
-  tau_dump();
+  Tau_dump();
 }
 
 void tau_profile_set_context(int *context)
 {
-  tau_set_context(*context);
+  Tau_set_context(*context);
 }
 
 void tau_trace_sendmessage(int *type, int *destination, int *length)
 /* FOR IBM use TAU_TRACE_SENDMESSAGE instead of TAU_TRACE_SENDMSG in Fortran*/
 { 
-  tau_trace_sendmsg(*type, *destination, *length);
+  Tau_trace_sendmsg(*type, *destination, *length);
 }
 
 void tau_trace_recvmessage(int *type, int *source, int *length)
 /* FOR IBM use TAU_TRACE_RECVMESSAGE instead of TAU_TRACE_RECVMSG in Fortran*/
 {
-  tau_trace_recvmsg(*type, *source, *length);
+  Tau_trace_recvmsg(*type, *source, *length);
 }
 
 void tau_register_event(int **ptr, char *event_name, int flen)
@@ -523,9 +651,9 @@ void tau_register_event(int **ptr, char *event_name, int flen)
       }
     }
 #ifdef DEBUG_PROF
-    printf("tau_get_userevent() \n");
+    printf("Tau_get_userevent() \n");
 #endif /* DEBUG_PROF */
-    *ptr = (int *)tau_get_userevent(event_name);
+    *ptr = (int *)Tau_get_userevent(event_name);
   }
   return;
 
@@ -533,7 +661,7 @@ void tau_register_event(int **ptr, char *event_name, int flen)
 
 void tau_event(int **ptr, double *data)
 {
-  tau_userevent((void *)*ptr, *data);
+  Tau_userevent((void *)*ptr, *data);
 }
 
 #endif /* TAU_XLC || TAU_AIX || HP_FORTRAN */
@@ -555,10 +683,10 @@ void tau_profile_timer__(void **ptr, char *fname, int flen)
     }
 
 #ifdef DEBUG_PROF
-    printf("tau_get_profiler() \n");
+    printf("Tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
     EXTRACT_GROUP(fname, flen, gr, gr_name)
-    *ptr = tau_get_profiler(fname, " ", gr, gr_name);
+    *ptr = Tau_get_profiler(fname, " ", gr, gr_name);
   }
 
 #ifdef DEBUG_PROF 
@@ -585,7 +713,7 @@ void tau_profile_exit__(char *msg)
 
 void tau_db_dump__(void)
 {
-  tau_dump();
+  Tau_dump();
   return;
 }
 
@@ -594,7 +722,7 @@ void tau_profile_init__()
   //_main();
   // tau_profile_init_(argc, argv);
 #ifndef TAU_MPI
-  tau_set_node(0); 
+  Tau_set_node(0); 
 #endif /* TAU_MPI */
 }
 
@@ -610,12 +738,12 @@ void tau_profile_set_context__(int *context)
 
 void tau_trace_sendmsg__(int *type, int *destination, int *length)
 {
-  tau_trace_sendmsg(*type, *destination, *length);
+  Tau_trace_sendmsg(*type, *destination, *length);
 }
 
 void tau_trace_recvmsg__(int *type, int *source, int *length)
 {
-  tau_trace_recvmsg(*type, *source, *length);
+  Tau_trace_recvmsg(*type, *source, *length);
 }
 
 void tau_register_event__(void **ptr, char *event_name, int *flen)
@@ -634,7 +762,7 @@ void tau_register_event__(void **ptr, char *event_name, int *flen)
 #ifdef DEBUG_PROF
     printf("tau_get_userevent() \n");
 #endif /* DEBUG_PROF */
-    *ptr = tau_get_userevent(event_name);
+    *ptr = Tau_get_userevent(event_name);
   }
   return;
 
@@ -642,24 +770,67 @@ void tau_register_event__(void **ptr, char *event_name, int *flen)
 
 void tau_event__(void **ptr, double *data)
 {
-  tau_userevent(*ptr, *data);
+  Tau_userevent(*ptr, *data);
 }
 
 void tau_report_statistics__(void)
 {
-  tau_report_statistics();
+  Tau_report_statistics();
 }
 
 void tau_report_thread_statistics__(void)
 {
-  tau_report_thread_statistics();
+  Tau_report_thread_statistics();
 }
+
+void tau_enable_group__(TauGroup_t *group)
+{
+  Tau_enable_group(*group);
+}
+
+void tau_disable_group__(TauGroup_t *group)
+{
+  Tau_disable_group(*group);
+}
+
+void tau_enable_all_groups__(void)
+{
+  Tau_enable_all_groups();
+}
+
+void tau_disable_all_groups__(void)
+{
+  Tau_disable_all_groups();
+}
+
+void tau_enable_instrumentation__(void)
+{
+  Tau_enable_instrumentation();
+  return;
+}
+
+void tau_disable_instrumentation__(void)
+{
+  Tau_disable_instrumentation();
+  return;
+}
+
+void tau_enable_group_name__(char * group_name, int len)
+{
+  tau_enable_group_name_local(group_name, len);
+}
+
+void tau_disable_group_name__(char * group_name, int len)
+{
+  tau_disable_group_name_local(group_name, len);
+}
+
 
 #endif /* TAU_GNU */
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2002/01/10 02:54:40 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.24 2002/01/10 02:54:40 sameer Exp $ 
+ * $Revision: 1.25 $   $Date: 2002/01/15 22:25:35 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.25 2002/01/15 22:25:35 sameer Exp $ 
  ***************************************************************************/
