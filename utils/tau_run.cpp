@@ -138,7 +138,28 @@ void Initialize(BPatch_thread *appThread, BPatch_image *appImage,
 
   BPatch_funcCallExpr call_Expr(*call_func, initArgs);
   // checkCost(call_Expr);
-  appThread->oneTimeCode(call_Expr);
+  // locate the entry point for main 
+  BPatch_function *main_entry = tauFindFunction(appImage, "main");
+  if (main_entry == NULL) {
+    fprintf(stderr, "tau_run: Unable to find function main\n");
+    exit(1);
+  }
+  const BPatch_Vector<BPatch_point *> *points = main_entry->findPoint(BPatch_entry);
+  const BPatch_snippet *snippet = new BPatch_funcCallExpr(*call_func, initArgs);
+  // We invoke the Init snippet before any other call in main! 
+  if((points!=NULL) && (snippet != NULL)){
+    // Insert the given snippet at the given point
+    appThread->insertSnippet(*snippet, *points, BPatch_callBefore, BPatch_firstSnippet);
+  }
+  else 
+  {
+    fprintf(stderr, "tau_run: entry points for main or snippet for TauInit are null\n");
+    exit(1);
+  }
+  /* Originall, we used:
+    appThread->oneTimeCode(call_Expr);
+    But this does not work for binary rewriting, so we just call the routine 
+    explicitly before main. Works for F90 as well. */
 }//Initialize()
 
 // FROM TEST3
@@ -376,7 +397,7 @@ int main(int argc, char **argv){
   // Load the TAU library that has entry and exit routines.
   if (loadlib == true){
     //try and load the library
-    if (appThread->loadLibrary(libname) == true){  
+    if (appThread->loadLibrary(libname, true) == true){  
       //now, check to see if the library is listed as a module in the
       //application image
       char name[FUNCNAMELEN];
@@ -402,10 +423,16 @@ int main(int argc, char **argv){
       exit(1);
     }//else
   }//loadlib == true
-
+ 
   BPatch_function *inFunc;
+#define TAU_TEST 1 
+#ifdef TAU_TEST
+  BPatch_function *enterstub = tauFindFunction(appImage, "TauRoutineEntryTest");
+  BPatch_function *exitstub = tauFindFunction(appImage, "TauRoutineExitTest");
+#else /* TAU_TEST */
   BPatch_function *enterstub = tauFindFunction(appImage, "TauRoutineEntry");
   BPatch_function *exitstub = tauFindFunction(appImage, "TauRoutineExit");
+#endif /* TAU_TEST */
   BPatch_function *terminationstub = tauFindFunction(appImage, "TauProgramTermination");
   BPatch_Vector<BPatch_snippet *> initArgs;
   
@@ -490,6 +517,7 @@ int main(int argc, char **argv){
       }//for -- procedures 
     }//if -- module constraint
   }//for -- modules
+
 
   BPatch_function *exitpoint = tauFindFunction(appImage, "_exit");
 
