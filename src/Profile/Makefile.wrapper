@@ -1,0 +1,55 @@
+#****************************************************************************
+#*			TAU Portable Profiling Package			   **
+#*			http://www.acl.lanl.gov/tau		           **
+#****************************************************************************
+#*    Copyright 1997  						   	   **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+#######################################################################
+##                  pC++/Sage++  Copyright (C) 1993,1995             ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
+
+TAUROOTDIR	= ../..
+
+include $(TAUROOTDIR)/include/Makefile
+
+CXX		= $(TAU_CXX)
+
+CC		= $(TAU_CC)
+#CC		= cc 
+
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)
+
+RM		= /bin/rm -f
+
+#AR		= $(TAU_CXX)
+AR		= ar
+
+#ARFLAGS		= -ar -o
+ARFLAGS		= rcv
+
+INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
+
+TARGET		= libTauMpi.a
+##############################################
+
+all : 		$(TARGET)
+
+install:	$(INSTALLDEST)/$(TARGET) 
+
+$(TARGET) : 	TauMpi.o
+	$(AR) $(ARFLAGS) $(TARGET) TauMpi.o
+
+TauMpi.o :	TauMpi.c
+	$(CC) $(CFLAGS) -c TauMpi.c
+
+$(INSTALLDEST)/$(TARGET): $(TARGET)
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(INSTALL) $? $(INSTALLDEST)
+clean: 	
+	$(RM) core TauMpi.o $(TARGET)
+##############################################

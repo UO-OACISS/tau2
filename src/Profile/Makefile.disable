@@ -1,0 +1,47 @@
+#****************************************************************************
+#*			TAU Portable Profiling Package			   **
+#*			http://www.acl.lanl.gov/tau		           **
+#****************************************************************************
+#*    Copyright 1997  						   	   **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+#######################################################################
+##                  pC++/Sage++  Copyright (C) 1993,1995             ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
+
+############################################################################
+# This produces a library that contains null versions of all TAU instrumentation
+# routines. Link with this library when you wish to disable TAU instrumentation
+############################################################################
+
+TAUROOTDIR	= ../..
+
+include $(TAUROOTDIR)/include/Makefile
+
+CXX		= $(TAU_CXX)
+
+CC		= $(TAU_CC)
+
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)
+
+RM		= /bin/rm -f
+
+AR		= $(CXX)
+
+ARFLAGS		= -o
+
+##############################################
+
+all : 		libTauDisable.a
+
+libTauDisable.a : 	TauDisable.o
+	$(AR) $(ARFLAGS) libTauDisable.a TauDisable.o
+
+TauDisable.o :	TauDisable.c
+	$(CXX) $(CFLAGS) -c TauDisable.c
+
+clean: 	
+	$(RM) core TauDisable.o libTauDisable.a
+##############################################
