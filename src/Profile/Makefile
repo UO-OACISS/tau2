@@ -47,7 +47,7 @@ CEXTRA =
 
 TAUINC	      = -I$(TAUROOT)/include 
 
-CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)
+CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC) 
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
@@ -64,19 +64,20 @@ LDFLAGS	      = $(PCXX_OPT)
 MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
-		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o $(EVENTS_O) $(THR_O) 
+		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
+		$(EVENTS_O) $(THR_O) 
 
 PRINT	      = pr
 
 SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp \
-		TauCAPI.cpp TauFAPI.cpp
+		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp
 
 AR	      = ar
 
 ARFLAGS	      = rcv 
 ############# For KAI KCC compiler, replace AR accordingly #######
-#KAI#AR			= $(CXX) 		   	   #ENDIF#
-#KAI#ARFLAGS			= --one_per -o		 	   #ENDIF#
+AR			= $(CXX) 		   	   #ENDIF##KAI#
+ARFLAGS			= --one_per -o		 	   #ENDIF##KAI#
 #CRAYKAI#ARFLAGS        = -o		 	   	   #ENDIF#
 # Ancient 3.2b2 compiler on Cray T3E doesn't support --one_per. Remove later
 ##################################################################
@@ -139,6 +140,9 @@ TauCAPI.o   : TauCAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauFAPI.o   : TauFAPI.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauMapping.o   : TauMapping.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 clean : 
