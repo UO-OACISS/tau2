@@ -34,6 +34,7 @@ public class FileList{
 	}
 
 	try{
+	    File[] selection = null;
 	    File[] files = new File[0];
 	    File  file = null;
 
@@ -42,16 +43,16 @@ public class FileList{
 	    jFileChooser.setMultiSelectionEnabled(true);
 	    if((jFileChooser.showOpenDialog(component)) == JFileChooser.APPROVE_OPTION){
 		//User clicked the approve option.  Grab the selection.
-		files = jFileChooser.getSelectedFiles(); //Note that multiple selection must have been enabled.
+		selection = jFileChooser.getSelectedFiles(); //Note that multiple selection must have been enabled.
 		//Validate the selection.  See above method description for an explanation.
-		if(files.length == 0){
+		if(selection.length == 0){
 		    System.out.println("No files selected!");
 		    return result;
 		}
-		else if(files.length > 1){
-		    for(int i=0;i<files.length;i++){
-			if(files[i].isDirectory()){
-			    JOptionPane.showMessageDialog(component,"Chose one or more files OR a single directory",
+		else if(selection.length > 1){
+		    for(int i=0;i<selection.length;i++){
+			if(selection[i].isDirectory()){
+			    JOptionPane.showMessageDialog(component,"Choose one or more files OR a single directory",
 							  "File Selection Error",
 							  JOptionPane.ERROR_MESSAGE);
 			    return result;
@@ -60,67 +61,42 @@ public class FileList{
 		}
 		
 		//If hear, selection is valid.
-		if(files.length == 1){
-		    if(files[0].isDirectory()){
-			//First try to find a pprof.dat file or profile.*.*.* files in this directory.
-			switch(type){
-			case 0:
-			    files = this.helperGetFileList(files[0], type, debug);
-			    if(files!=null)
+		if(selection.length == 1){
+		    if(selection[0].isDirectory()){
+			if(type==0 || type==1){
+			    //First try and find a pprof.dat file in the selected directory.
+			    files = this.helperGetFileList(selection[0], type, debug);
+			    if(files.length > 0)
 				result.add(files);
-			    break;
-			case 1:
-			    files = files[0].listFiles();
-			    Vector v = new Vector();
-			    for(int i = 0;i<files.length;i++){
-				if(files[i] != null){
-				    if((files[i].isDirectory())&&(files[i].getName().indexOf("MULTI__") != -1))
-					v.add(files[i]);
+			    else{
+				files = selection[0].listFiles();
+				Vector v = new Vector();
+				for(int i = 0;i<files.length;i++){
+				    if(files[i] != null){
+					if((files[i].isDirectory())&&(files[i].getName().indexOf("MULTI__") != -1))
+					    v.add(files[i]);
+				    }
+				}
+				int length = v.size();
+				if(length!=0){
+				    for(int i=0;i<length;i++){
+					file = (File)(v.elementAt(i));
+					files = this.helperGetFileList(file, type, debug);
+					if(files!=null)
+					    result.add(files);
+				    }
 				}
 			    }
-			    int length = v.size();
-			    if(length!=0){
-				for(int i=0;i<length;i++){
-				    file = (File)(v.elementAt(i));
-				    files = this.helperGetFileList(file, type, debug);
-				    if(files!=null)
-					result.add(files);
-				}
-			    }
-			    break;
-			default:
-			    System.out.println("Unexpected Type -  " + type + ":");
-			    System.out.println("Location - ParaProfManager.getFileList(...) 1");
-			    break;
 			}
 		    }
 		    else{
-			switch(type){
-			case 0:
-			    result.add(files);
-			    break;
-			case 1:
-			    result.add(files);
-			    break;
-			default:
-			    System.out.println("Unexpected Type -  " + type + ":");
-			    System.out.println("Location - ParaProfManager.getFileList(...) 2");
-			    break;
-			}
+			if(type==0 || type==1)
+			    result.add(selection);
 		    }
 		}
 		else{ //More than one file in selection (already checked for zero).
-		    switch(type){
-		    case 0:
-			break;
-		    case 1:
-			result.add(files);
-			break;
-		    default:
-			System.out.println("Unexpected Type -  " + type + ":");
-			System.out.println("Location - ParaProfManager.getFileList(...) 3");
-			break;
-		    }
+		    if(type==1)
+			result.add(selection);
 		}
 	    }
 	    else
@@ -164,9 +140,10 @@ public class FileList{
 	}
     }
 
-    //This function helps the getFileList function above. It looks in the given directory
-    //for a pprof.dat file, or for a list of profile.*.*.* files (in that order).
-    //If nothing is found, it returns null.
+    //This function helps the getFileList function above. 
+    //Currently, It looks in the given directory for a pprof.dat file,
+    //or for a list of profile.*.*.* files (switching based on the type argument).
+    //If nothing is found, it returns an empty File[].
     public File[] helperGetFileList(File directory, int type, boolean debug){
 	File[] files = new File[0];
 
@@ -178,6 +155,17 @@ public class FileList{
 	    try{
 		fileSeparator = System.getProperty("file.separator");
 		directoryPath = directory.getCanonicalPath();
+
+		if(debug){
+		    System.out.println("####################################");
+		    System.out.println("DEBUG MESSAGE");
+		    System.out.println("FileList.helperGetFileList(...):");
+		    System.out.println("type: " + type);
+		    System.out.println("directry:" + directoryPath);
+		    System.out.println("End - DEBUG MESSAGE");
+		    System.out.println("####################################");
+		}
+
 		switch(type){
 		case 0:
 		    file = new File(directoryPath + fileSeparator + "pprof.dat");
@@ -196,8 +184,8 @@ public class FileList{
 			}
 		    }
 		    int length = v.size();
+		    files = new File[length]; //Important to reset files here.
 		    if(length!=0){
-			files = new File[length];
 			for(int i=0;i<length;i++){
 			    files[i] = (File) v.elementAt(i);
 			}
@@ -303,16 +291,51 @@ public class FileList{
             System.exit(-1);
         }
 	    
-	
-	FileList fl = new FileList();
-	File[] files = null;
-	Vector v = fl.getFileList(null,type,debug);
-	for(Enumeration e = v.elements(); e.hasMoreElements() ;){
-            files = (File[]) e.nextElement();
-	    for(int i=0;i<files.length;i++){
-		System.out.println(files[i].getName());
+	try{
+	    FileList fl = new FileList();
+	    File[] files = null;
+	    Vector v = fl.getFileList(null,type,debug);
+	    System.out.println("####################################");
+	    System.out.println("Files found:");
+	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
+		files = (File[]) e.nextElement();
+		for(int i=0;i<files.length;i++){
+		    System.out.println(files[i].getCanonicalPath());
+		}
 	    }
+	    System.out.println("####################################");
 	}
+	catch(NullPointerException e){
+	    System.out.println("An error occurred getting file list:");
+	    System.out.println("Location - FileList.main(...)");	    
+	    if(debug)
+		e.printStackTrace();
+	}
+	catch(SecurityException e){
+	    System.out.println("An error occurred getting file list:");
+	    System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+	    if(debug)
+		e.printStackTrace();
+	}
+	catch(ArrayIndexOutOfBoundsException e){
+	    System.out.println("An error occurred getting file list:");
+            System.out.println("Location - FileList.main(...)");
+            if(debug)
+                e.printStackTrace();
+        }
+	catch(IllegalArgumentException e){
+	    System.out.println("An error occurred getting file list:");
+	    System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+	    if(debug)
+		e.printStackTrace();
+	}
+	catch(IOException e){
+	    System.out.println("An error occurred getting file list:");
+	    System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+	    if(debug)
+		e.printStackTrace();
+	}
+
 	System.exit(0);
     }
 }
