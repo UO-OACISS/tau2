@@ -24,7 +24,7 @@
 #
 # A debugging framework, for installing scaffolding.
 #
-set DEBUG_SET 1
+set DEBUG_SET 0
 proc DEBUG {} {
     global DEBUG_SET
 
