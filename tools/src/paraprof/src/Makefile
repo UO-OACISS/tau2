@@ -4,7 +4,7 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-BASE_SOURCES=ApplicationManager.java GlobalMappingElement.java PPMLWindow.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
+BASE_SOURCES=ApplicationManager.java GlobalMappingElement.java PPMLPanel.java PPMLWindow.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
              BinWindow.java GlobalSortedMappingElement.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
              BinWindowPanel.java GlobalThreadDataElement.java ParaProfApplication.java PrefColorPanel.java SystemEvents.java \
              CallPathTextWindow.java HelpWindow.java ParaProfDBSession.java PrefSpacingPanel.java TauOutputSession.java \
