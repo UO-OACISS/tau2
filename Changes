@@ -19,6 +19,8 @@ Version 2.11 changes (from 2.9):
 7. Added support for selective instrumentation [CACR]. 
 8. Added support for multiple counters [CACR]. 
 9. Added support for Paraver trace visualizer (CEPBA) in tau_convert. 
+10. Opari and PDT related changes (examples/opari/pdt_f90) [FZJ].
+11. Added support for online access to performance data [CACR]. 
 
 Version 2.10 changes (from 2.9):
 1. Better support for C instrumentation [HDF5].
