@@ -1,7 +1,7 @@
 /******************************************************************* 
  *                                                                 *
  *       	Tuning and Analysis Utilities Credits  		   *
- *                           Version 2.13                          *
+ *                           Version 2.14                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -20,6 +20,7 @@
 TAU Portable Profiling:
 -----------------------
 Sameer Shende, University of Oregon
+Alan Morris, University of Oregon
 Robert Michael Ansell-Bell, University of Oregon
 Kevin Huck, University of Oregon
 Nicholas Trebon, University of Oregon
@@ -40,6 +41,7 @@ Thanks to:
 ----------
 Susan Post
 Rod Oldehoeft
+Brian Miller
 Matt Sottile
 Craig Rasmussen
 Todd Veldhuizen
@@ -57,6 +59,6 @@ Timothy Williams
 NAS Parallel Benchmarks Group for allowing us to use their code as an example
 of TAU instrumentation with Fortran and MPI (http://www.nas.nasa.gov/NAS/NPB/).
 
-The TAU project is directed by Allen Malony at the University of Orgeon.
+The TAU project is directed by Prof. Allen D. Malony at the University of Orgeon.
 
 
