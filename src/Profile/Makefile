@@ -49,23 +49,25 @@ CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
-HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h  \
-		$(INCDIR)/TauAPI.h 	 $(INCDIR)/ProfileHeaders.h \
-		$(INCDIR)/PthreadLayer.h $(INCDIR)/RtsLayer.h       \
-		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h      \
-		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h    \
-	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h   
+HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
+		$(INCDIR)/TauAPI.h 	 $(INCDIR)/ProfileHeaders.h   \
+		$(INCDIR)/PthreadLayer.h $(INCDIR)/RtsLayer.h         \
+		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
+		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h      \
+	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
+		$(INCDIR)/TauFAPI.h
 
 LDFLAGS	      = $(PCXX_OPT)
 
 MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
-		RtsLayer.o RtsThread.o TauCAPI.o $(EVENTS_O) $(THR_O) 
+		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o $(EVENTS_O) $(THR_O) 
 
 PRINT	      = pr
 
-SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp TauCAPI.cpp
+SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp \
+		TauCAPI.cpp TauFAPI.cpp
 
 AR	      = ar
 
@@ -128,6 +130,10 @@ TulipThreadLayer.o   : TulipThreadLayer.cpp $(HDRS)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauFAPI.o   : TauFAPI.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 clean : 
 		$(RM) $(OBJS) $(TARGET) $(EXTRAOBJS)
 
