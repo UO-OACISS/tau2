@@ -1272,7 +1272,7 @@ void UserEventSummaryInfo(int node, int ctx, int thr)
         // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
         stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents)
                  - ( (*it).second.meanvalue * (*it).second.meanvalue )));
-	printf("userevent %d,%d,%d %d \"%s\" %.16G %.16G %.16G %.16G %.16G\n", 
+	printf("userevent %d,%d,%d %d \"%s\" %#.16G %#.16G %#.16G %#.16G %#.16G\n", 
 	  node, ctx, thr, i,
 	  (*it).first, 
 	  (*it).second.numevents, 
@@ -2886,7 +2886,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1998/05/27 19:50:40 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.7 1998/05/27 19:50:40 sameer Exp $                                                   
+ * $Revision: 1.8 $   $Date: 1998/05/28 18:42:35 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.8 1998/05/28 18:42:35 sameer Exp $                                                   
  ***************************************************************************/
 
