@@ -190,13 +190,10 @@ void tau_register_thread_(void)
   return;
 }
 
-#ifdef CRAYKAI
-/* Cray F90 specific extensions */
 void TAU_REGISTER_THREAD(void)
 {
   tau_register_thread();
 }
-#endif /* CRAYKAI */
 #endif /* PTHREADS || TULIPTHREADS */
 
 void tau_trace_sendmsg_(int *type, int *destination, int *length)
@@ -249,6 +246,7 @@ void tau_report_thread_statistics_(void)
 /* Cray F90 specific extensions */
 #ifdef CRAYKAI
 void _main();
+#endif /* CRAYKAI */
 void TAU_PROFILE_TIMER(void **ptr, char *fname, int *flen)
 {
 //#ifdef DEBUG_PROF
@@ -302,7 +300,9 @@ void TAU_DB_DUMP(void)
 
 void TAU_PROFILE_INIT()
 {
+#ifdef CRAYKAI
   _main();
+#endif /* CRAYKAI */
   // tau_profile_init_(argc, argv);
 #ifndef TAU_MPI
   tau_set_node(0); 
@@ -375,7 +375,6 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 {
   tau_report_thread_statistics();
 }
-#endif /* CRAYKAI */
 
 #if (defined (TAU_XLC) || defined(TAU_AIX))
 void tau_profile_timer(int **profiler, char *fname)
@@ -598,6 +597,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2001/10/23 22:43:13 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.18 2001/10/23 22:43:13 sameer Exp $ 
+ * $Revision: 1.19 $   $Date: 2001/11/09 20:08:29 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.19 2001/11/09 20:08:29 sameer Exp $ 
  ***************************************************************************/
