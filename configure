@@ -120,6 +120,7 @@ noex=no
 tulipthread=no
 smarts=no
 pcl=no
+papi=no
 task=no
 lwp=no
 tcltk=yes
@@ -256,6 +257,12 @@ do
   -pcl=*)
       pcl=yes
       pcldir=`echo $arg | sed -e 's/-pcl=//'`
+    shift
+    ;;
+
+  -papi=*)
+      papi=yes
+      papidir=`echo $arg | sed -e 's/-papi=//'`
     shift
     ;;
 
@@ -420,6 +427,7 @@ do
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
+    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+)."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
@@ -1291,6 +1299,12 @@ if [ $pcl = yes ]
     tauoptions="${tauoptions}-pcl"
 fi
 
+if [ $papi = yes ]
+  then
+    fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
+    tauoptions="${tauoptions}-papi"
+fi
+
 if [ $pdt = yes ]
   then
     fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
@@ -1311,6 +1325,14 @@ if [ $pcl = yes ]
     if [ $pthread = yes ]
     then 
       fixmakeargs="$fixmakeargs PCLPTHREAD"
+    fi
+fi
+
+if [ $papi = yes ]
+  then
+    if [ $pthread = yes ]
+    then
+      fixmakeargs="$fixmakeargs PAPIPTHREAD"
     fi
 fi
 
@@ -1721,3 +1743,11 @@ fi
 echo '   Type "make install" to begin compilation'
 
 exit 0
+
+
+
+
+
+
+
+
