@@ -72,11 +72,16 @@ TAU System Requirements :
 I) The Profiling Library needs a recent C++ compiler. Recommended :
 	a) Kuck and Associates' (http://www.kai.com) KCC compiler
 	b) SGI (http://www.sgi.com) MipsPro 7.1 or 7.2 CC compiler
+	c) PGI (http://www.pgroup.com) 3.0 pgCC compiler
 
 II) Platforms :
    TAU has been tested on 
 	a) SGI R10000 based systems.  SGI Power Challenge/ Origin series.
-	b) LINUX PCs. Tested with KAI compiler, g++ (-useropt=-fguiding-decls) 
+	b) LINUX PCs. Tested with 
+		i) 	KAI KCC compiler, 
+		ii) 	GNU g++/egcs compiler,
+		iii)	PGI pgCC, pgcc, pgf90 compiler suite,
+	        iv) 	Fujitsu C++/f90 compiler suite.
 	c) Sun Solaris2. Tested with g++ (./configure -useropt=-fguiding-decls)
 	d) HP PA-RISC. Tested with g++. 
 	e) Cray T3E. Tested with Cray C++ compiler, and KAI KCC.
