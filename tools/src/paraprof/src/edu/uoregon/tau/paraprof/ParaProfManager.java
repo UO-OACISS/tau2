@@ -605,32 +605,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			}
 		    }
 		}
-		else if(arg.equals("Upload Metric to DB")){
-		    if(clickedOnObject instanceof Metric){
-			Metric metric = (Metric) clickedOnObject;
-			int[] array = this.getSelectedDBTrial();
-			if(array!=null){
-			    PerfDMFSession perfDMFSession = this.getDBSession();
-			    if(perfDMFSession!=null){
-				Trial trial = new Trial();
-				trial.setDataSession(metric.getTrial().getDataSession());
-				trial.setID(array[2]);
-				perfDMFSession.saveParaProfTrial(trial, metric.getID());
-				perfDMFSession.terminate();
-				
-				//Now need to make sure this metric's trial is reloaded when
-				//clicked upon.
-				for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
-				    ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-				    if((trial.getID()==array[2])&&(trial.getExperimentID()==array[1])
-				       &&(trial.getApplicationID()==array[0])){
-					loadedTrials.remove(loadedTrial);
-				    }
-				}
-			    }
-			}
-		    }
-		}
 	    }
 	}
 	catch(Exception e){
@@ -912,6 +886,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		if(!loadedExists){
 		    //Need to load the trial in from the db.
 		    System.out.println("Loading trial ...");
+		    trial.setLoading(true);
 		    PerfDMFSession perfDMFSession = this.getDBSession();
 		    if(perfDMFSession!=null){
 			perfDMFSession.setApplication(trial.getApplicationID());
