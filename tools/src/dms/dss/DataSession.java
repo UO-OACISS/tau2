@@ -6,7 +6,7 @@ import dms.dss.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.15 2003/09/02 16:25:31 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.16 2003/11/17 21:57:56 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -51,6 +51,16 @@ public abstract class DataSession {
  * @see	Application
  */
 	abstract public ListIterator getApplicationList() ;
+	
+/**
+ * Returns the Application object.
+ *
+ * @return	Application object, if one is set.
+ * @see	Application
+ */
+	public Application getApplication() {
+		return this.application;
+	}
 
 /**
  * Returns a ListIterator of Experiment objects
@@ -63,6 +73,16 @@ public abstract class DataSession {
 	abstract public ListIterator getExperimentList() ;
 
 /**
+ * Returns the Experiment object.
+ *
+ * @return	Experiment object, if one is set.
+ * @see	Experiment
+ */
+	public Experiment getExperiment() {
+		return this.experiment;
+	}
+
+/**
  * Returns a ListIterator of Trial objects
  *
  * @return	DataSessionIterator object of all Trials.  If there is an Application and/or Experiment saved in the DataSession, then only the Trials for that Application and/or Experiment are returned.
@@ -72,6 +92,16 @@ public abstract class DataSession {
  * @see	DataSession#setExperiment
  */
 	abstract public ListIterator getTrialList() ;
+
+/**
+ * Returns the Trial object.
+ *
+ * @return	Trial object, if one is set.
+ * @see	Trial
+ */
+	public Trial getTrial() {
+		return this.trial;
+	}
 
 /**
  * Set the Application for this DataSession.  The DataSession object will maintain a reference to the Application object.  To clear this reference, call setApplication(Application) with a null reference.
@@ -250,6 +280,15 @@ public abstract class DataSession {
 	}
 
 /**
+ * Get a Vector of metric values for this DataSession.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
+ *
+ * @returns	Vector of metric values
+ */
+	public Vector getMetrics() {
+		return this.metrics;
+	}
+
+/**
  * Returns a ListIterator of Function objects.
  *
  * @return	DataSessionIterator object of all Functions.  If there is an Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) saved in the DataSession, then only the Functions for that Application, Experiment, Trial(s), node(s), context(s) and/or thread(s) are returned.
@@ -400,5 +439,7 @@ public abstract class DataSession {
  * @see	DataSession#setUserEvent
  */
 	abstract public ListIterator getUserEventData();
+
+	abstract public void getFunctionDetail(Function function) ;
 };
 

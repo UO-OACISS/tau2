@@ -18,7 +18,7 @@ import java.util.Vector;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.8 2003/09/02 19:11:04 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.9 2003/11/17 21:57:56 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -37,8 +37,13 @@ public class Function {
 	private int trialID;
 	private int experimentID;
 	private int applicationID;
-	private Vector meanSummary;
-	private Vector totalSummary;
+	private Vector meanSummary = null;
+	private Vector totalSummary = null;
+	private DataSession dataSession;
+
+	public Function (DataSession dataSession) {
+		this.dataSession = dataSession;
+	}
 
 /**
  * Gets the unique identifier of this function object.
@@ -120,6 +125,13 @@ public class Function {
  * @see		FunctionDataObject
  */
 	public FunctionDataObject getMeanSummary (int metricIndex) {
+		if (this.meanSummary == null && dataSession != null) {
+			Vector metrics = dataSession.getMetrics();
+			Vector tmpMetric = null;
+			dataSession.setMetric(tmpMetric);
+			dataSession.getFunctionDetail(this);
+			dataSession.setMetric(metrics);
+		}
 		return (FunctionDataObject)(this.meanSummary.elementAt(metricIndex));
 	}
 
@@ -141,6 +153,8 @@ public class Function {
  * @see		DataSession#setMetric(String)
  */
 	public FunctionDataObject getMeanSummary () {
+		if (this.meanSummary == null && dataSession != null)
+			dataSession.getFunctionDetail(this);
 		return (FunctionDataObject)(this.meanSummary.elementAt(0));
 	}
 
@@ -160,6 +174,13 @@ public class Function {
  * @see		FunctionDataObject
  */
 	public FunctionDataObject getTotalSummary (int metricIndex) {
+		if (this.totalSummary == null && dataSession != null) {
+			Vector metrics = dataSession.getMetrics();
+			Vector tmpMetric = null;
+			dataSession.setMetric(tmpMetric);
+			dataSession.getFunctionDetail(this);
+			dataSession.setMetric(metrics);
+		}
 		return (FunctionDataObject)(this.totalSummary.elementAt(metricIndex));
 	}
 
@@ -181,6 +202,8 @@ public class Function {
  * @see		DataSession#setMetric(String)
  */
 	public FunctionDataObject getTotalSummary () {
+		if (this.totalSummary == null && dataSession != null)
+			dataSession.getFunctionDetail(this);
 		return (FunctionDataObject)(this.totalSummary.elementAt(0));
 	}
 

@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.28 2003/10/17 23:03:28 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.29 2003/11/17 21:57:56 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -372,7 +372,7 @@ public class PerfDBSession extends DataSession {
 	}
 
 	// returns a Vector of Functions
-	private void getFunctionDetail(Function function) {
+	public void getFunctionDetail(Function function) {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		buf.append("select ");
@@ -449,8 +449,8 @@ public class PerfDBSession extends DataSession {
 		buf.append("f.group_name, f.trial, t.experiment, e.application ");
 		buf.append("from function f inner join trial t on f.trial = t.id ");
 		buf.append("inner join experiment e on t.experiment = e.id ");
-		buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
-		buf.append("inner join interval_total_summary ts on f.id = ts.function ");
+		// buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
+		// buf.append("inner join interval_total_summary ts on f.id = ts.function ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
 
@@ -459,7 +459,7 @@ public class PerfDBSession extends DataSession {
 	    	ResultSet resultSet = db.executeQuery(buf.toString());	
 			Function tmpFunction = null;
 	    	while (resultSet.next() != false) {
-				Function fun = new Function();
+				Function fun = new Function(this);
 				fun.setIndexID(resultSet.getInt(1));
 				fun.setFunctionID(resultSet.getInt(2));
 				fun.setName(resultSet.getString(3));
@@ -480,12 +480,14 @@ public class PerfDBSession extends DataSession {
 		}
 		
 		// get the function details
+		/*
 		Enumeration enum = funs.elements();
 		Function fun;
 		while (enum.hasMoreElements()) {
 			fun = (Function)enum.nextElement();
 			getFunctionDetail(fun);
 		}
+		*/
 
 		return funs;
 	}
@@ -625,6 +627,7 @@ public class PerfDBSession extends DataSession {
 			gotWhile = true;
 		}
 		try {
+			// System.out.println(buf2.toString());
 	    	ResultSet resultSet = db.executeQuery(buf2.toString());	
 	    	if (resultSet.next() != false) {
 				metricCount = resultSet.getInt(1);
