@@ -71,6 +71,10 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		    
 		globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(id, 0);
 		IntervalLocationProfile fdo = f.getMeanSummary();
+
+		int groupID = this.getGlobalMapping().addGlobalMapping(f.getGroup(), 1, 1);
+		globalMappingElement.addGroup(groupID);
+
 		for(int i=0;i<numberOfMetrics;i++){
 		    globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusive(i));
 		    globalMappingElement.setMeanExclusivePercentValue(i, fdo.getExclusivePercentage(i));
