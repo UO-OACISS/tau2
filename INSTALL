@@ -159,7 +159,14 @@ Usage: configure [OPTIONS]
    By default if 
    % ./configure 
    is invoked, configure uses time based profiling. This can be overriden
-   by -PROFILECOUNTERS option which configures it for using CPU counters.
+   by -PROFILECOUNTERS or the -pcl=<dir> option which configures it for 
+   using CPU performance counters.
+   -pcl=<dir> uses Performance Counter Library for uniform access to 
+   hardware performance counters on Cray T3E, SGI MIPS R10000, SUN UltraSparc,
+   IBM Power3, Linux Intel Pentium +, etc. Set environment variable 
+   PCL_Counter to counter values specified by PCL (in pcl.h).
+   (See http://www.fz-juelich.de/zam/PT/ReDec/SoftTools/PCL/PCL.html)
+
    -PROFILESTATS is used to configure TAU Profiling Package to generate
    statistics such as standard deviation of exclusive time/counts for 
    each function. This can be viewed using `pprof'.
@@ -175,11 +182,6 @@ Usage: configure [OPTIONS]
    only be used when compiling in -64 bit mode. It requires T5_EVENT0 env
    variable to be set. See man perfex for values. 
   
-   -pcl=<dir> uses Performance Counter Library for uniform access to 
-   hardware performance counters on Cray T3E, SGI MIPS R10000, SUN UltraSparc,
-   IBM Power3, Linux Intel Pentium +, etc. Set environment variable 
-   PCL_Counter to counter values specified by PCL (in pcl.h).
-   (See http://www.fz-juelich.de/zam/PT/ReDec/SoftTools/PCL/PCL.html)
    
    -pdt=<dir> uses Program Database Toolkit to build a C++ source code
    instrumentor (tau_instrumentor). (See http://www.acl.lanl.gov/pdtoolkit)
@@ -198,11 +200,12 @@ Usage: configure [OPTIONS]
    % ./configure -c++=CC -useropt='-64 -I/local/apps/STL/'
    or
    % ./configure -TRACE -PROFILE 
-   or with g++ 2.8.1+
-   % ./configure -useropt=-fguiding-decls
    or 
    % ./configure -c++=KCC -SGITIMERS -tulipthread=/home/smarts/build/smarts-1.0
      -smarts -arch=sgin32 -prefix=/usr/local/packages/tau
+   or
+   % ./configure -c++=KCC -cc=cc -arch=sgi64 -mpiinc=/local/apps/mpich/include
+     -mpilib=/local/apps/mpich/lib/IRIX64/ch_p4 -SGITIMERS -pdt=/local/apps/pdt
 
 2. Compilation.
 
