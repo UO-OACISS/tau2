@@ -219,7 +219,7 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     //Give a warning of not.  It should not break the system,
     //but it is nice to give a warning.
     if(numberOfActiveFunctions == 0)
-      cout << "Warning: No functions active ... no profiles will be created!" << endl;
+      cout << "Warning: No multi counter fncts active ... are the env variables COUNTER<1-N> set?" << endl;
   }
   RtsLayer::UnLockDB(); // mutual exclusion primitive
    
