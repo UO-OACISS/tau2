@@ -367,12 +367,13 @@ The following  command-line options are available to configure:
    Vampir, a commercial trace visualization tool. [ Ref http://www.pallas.de ]
 
 -muse
-   
+  
    Specifies the use of MAGNET/MUSE to extract low-level information from the
-   kernel. While installing MAGNET and MUSE, a handler needs to be installed.
-   The name of the handler routine is set by the user using the environment 
-   variable TAU_MUSE_HANDLER. By default, it uses the "count" handler which 
-   counts the number of MAGNET events executed in the kernel. 
+   kernel. To use this configuration, Linux kernel has to be patched with MAGNET
+   and MUSE has to be install on the executing machine.  Also, magnetd has to be
+   running with the appropriate handlers and filters installed. User can specify 
+   package by setting the environment variable TAU_MUSE_PACKAGE.  By default, 
+   it uses the "count". Please refer to README.MUSE for more information.
    
 -noex
    
