@@ -1,4 +1,4 @@
-package com.perfdb.api;
+package dms.dss;
 
 public class Trial {
 	private int trialID;

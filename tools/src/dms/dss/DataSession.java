@@ -1,12 +1,6 @@
-package com.perfdb.api;
+package dms.dss;
 
-import com.perfdb.util.dbinterface.*;
-import com.perfdb.util.io.*;
-import com.perfdb.dbmanager.*;
-import java.io.*;
 import java.util.*;
-import java.net.*;
-import java.sql.*;
 
 public abstract class DataSession {
 	protected Application application = null;

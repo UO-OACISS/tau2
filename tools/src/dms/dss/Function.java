@@ -1,12 +1,4 @@
-package com.perfdb.api;
-
-import com.perfdb.util.dbinterface.*;
-import com.perfdb.util.io.*;
-import com.perfdb.dbmanager.*;
-import java.io.*;
-import java.net.*;
-import java.sql.*;
-
+package dms.dss;
 
 public class Function {
 	private int functionIndexID;

@@ -1,8 +1,8 @@
-package com.perfdb.api;
+package dms.dss
 
-import com.perfdb.util.dbinterface.*;
-import com.perfdb.util.io.*;
-import com.perfdb.dbmanager.*;
+import perfdb.util.dbinterface.*;
+import perfdb.util.io.*;
+import perfdb.dbmanager.*;
 import java.io.*;
 import java.util.*;
 import java.net.*;
