@@ -27,7 +27,11 @@
 --------------------------------------------------------------------*/  
 
 
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #include <stdlib.h>
 #include <stdio.h>
 #include <mpi.h>
