@@ -34,16 +34,17 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=
 TULIPDIR=
 PCLDIR=
+PAPIDIR=
 PDTDIR=
 DYNINSTDIR=
 JDKDIR=
 TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
-TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=
 TAU_OPTIONS=
 #######################################################################
  
@@ -89,7 +90,9 @@ DYNINST_PLATFORM = i386-unknown-linux2.0
 #SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS          #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS     #ENDIF#
 #PCL#PROFILEOPT3       	       = -DTAU_PCL -D$(TARGET_SYSTEM) -I$(PCLDIR) #ENDIF#
+#PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/src #ENDIF#
 #PCL#PCL_O       	       = PclLayer.o 	       #ENDIF#
+#PAPI#PAPI_O       	       = PapiLayer.o 	       #ENDIF#
 #PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS       #ENDIF#
 #PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS       #ENDIF#
 #DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF          #ENDIF#
@@ -120,11 +123,13 @@ DYNINST_PLATFORM = i386-unknown-linux2.0
 #SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
 #SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -D_XOPEN_SOURCE -DTAU_AIX #ENDIF#
 #PCLPTHREAD#PROFILEOPT22	       = -DPCL_MUTEX_LOCK #ENDIF#
+#PAPIPTHREAD#PROFILEOPT22	       = -DPAPI_MUTEX_LOCK #ENDIF#
 #JAVA#PROFILEOPT23	       = -DJAVA 		#ENDIF#
 #MONITOR#PROFILEOPT24	       = -DMONITORING_ON 	#ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
+#PAPI#LEXTRA	       	       = -L$(PAPIDIR)/src -lpapi #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
