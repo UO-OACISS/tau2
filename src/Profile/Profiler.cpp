@@ -56,7 +56,7 @@ using namespace std;
 
 #ifdef TRACING_ON
 #define PCXX_EVENT_SRC
-#include "pcxx_events.h"
+#include "Profile/pcxx_events.h"
 #endif // TRACING_ON 
 
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
@@ -246,7 +246,7 @@ void Profiler::Stop(void)
 #endif // PROFILE_CALLS
 
 #ifdef PROFILE_STATS
-	ThisFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall);
+	ThisFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
 #endif // PROFILE_STATS
 
 	if (ParentProfiler != 0) {
@@ -257,7 +257,7 @@ void Profiler::Stop(void)
 
 	  ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
-	  ParentProfiler->ExcludeTimeThisCall(TotalTime, tid);
+	  ParentProfiler->ExcludeTimeThisCall(TotalTime);
 #endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 
 	}
@@ -630,8 +630,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 1998/07/10 20:13:04 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.12 1998/07/10 20:13:04 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 1998/08/10 16:48:47 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.13 1998/08/10 16:48:47 sameer Exp $ 
  ***************************************************************************/
 
 	

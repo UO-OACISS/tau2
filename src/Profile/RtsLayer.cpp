@@ -58,7 +58,7 @@ using namespace std;
 
 #ifdef TRACING_ON
 #define PCXX_EVENT_SRC
-#include "pcxx_events.h"
+#include "Profile/pcxx_events.h"
 #endif // TRACING_ON 
 
 
@@ -579,6 +579,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1998/07/10 20:13:05 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.3 1998/07/10 20:13:05 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 1998/08/10 16:48:48 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.4 1998/08/10 16:48:48 sameer Exp $ 
  ***************************************************************************/

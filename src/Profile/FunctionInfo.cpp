@@ -56,7 +56,7 @@ using namespace std;
 
 #ifdef TRACING_ON
 #define PCXX_EVENT_SRC
-#include "pcxx_events.h"
+#include "Profile/pcxx_events.h"
 #endif // TRACING_ON 
 
 
@@ -215,6 +215,6 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 1998/08/09 23:04:00 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.5 1998/08/09 23:04:00 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 1998/08/10 16:48:49 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.6 1998/08/10 16:48:49 sameer Exp $ 
  ***************************************************************************/
