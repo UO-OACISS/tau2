@@ -26,11 +26,21 @@ mpishlib        - Demonstrates the use of MPI wrapper library in instrumenting
                   instrumented as well. TAU needs to be configured with 
                   -mpiinc=<dir> and -mpilib=<dir> flags. 
 
-python          - Instrumentation of a python application can be done automatically
-                  or manually using the TAU Python bindings. Two examples, auto.py
-                  and manual.py demonstrate this respectively. TAU needs to be configured
-                  with -pythoninc=<dir that contains Python.h> option and the user 
-                  needs to set PYTHONPATH to <taudir>/<arch>/lib to use this feature. 
+python          - Instrumentation of a python application can be done 
+                  automatically or manually using the TAU Python bindings. Two 
+                  examples, auto.py and manual.py demonstrate this respectively.
+                  TAU needs to be configured with 
+                  -pythoninc=<dir that contains Python.h> 
+                  option and the user needs to set PYTHONPATH to 
+                  <taudir>/<arch>/lib to use this feature. 
+
+traceinput      - To build a trace converter/trace reader application, we 
+                  provide the TAU trace input library. This directory contains
+                  two examples (in c and c++ subdirectories) that illustrate 
+                  how an application can use the trace input API to read online
+                  or post-mortem TAU binary traces. It shows how the user can 
+                  register routines with the callback interface and how TAU 
+                  invokes these routines when events take place. 
 
 papi		- A matrix multiply example that shows how to use TAU statement
 		  level timers for comparing the performance of two algorithms 
@@ -51,11 +61,9 @@ autoinstrument  - Shows the use of Program Database Toolkit (PDT) for
 		  Makefile is modified to illustrate the use of a source to 
 		  source translator (tau_instrumentor). 
 
-reduce          - Shows the use of tau_reduce, a utility that can read profiles and
-                  a set of rules and determine which routines should not be instrumented
-                  (for frequently called light-weight routines). See <tau>/utils/TAU_REDUCE.README
-                  file for further details. It requires configuring TAU with -pdt=<dir> option.
-
+reduce          - Shows the use of tau_reduce, a utility that can read profiles                   and a set of rules and determine which routines should not 
+                  be instrumented (for frequently called light-weight routines).                  See <tau>/utils/TAU_REDUCE.README file for further details. 
+                  It requires configuring TAU with -pdt=<dir> option.
 
 cinstrument     - Shows the use of PDT for C. Requires configuring TAU with 
                   -pdt=<dir> option.
@@ -66,12 +74,10 @@ mixedmode	- This example illustrates the use of PDT, hand-instrumentation
 		  with -mpiinc=<dir> -mpilib=<dir> -pdt=<dir> -pthread options.
 
 pdt_mpi         - This directory contains C, C++ and F90 examples that 
-		  illustrate how TAU/PDT can be used with MPI. You may need to 
-		  edit the Makefiles to remove the machine specific -lgm option
-		  that is added to the LIBS definition. Requires configuring TAU
-		  with -pdt=<dir> -mpiinc=<dir> -mpilib=<dir> options. You may 
-		  also try this with the -TRACE -epilog=<dir> options to use the
-		  EPILOG tracing package (from FZJ). 
+		  illustrate how TAU/PDT can be used with MPI. Requires 
+                  configuring TAU with -pdt=<dir> -mpiinc=<dir> -mpilib=<dir> 
+                  options. You may also try this with the -TRACE -epilog=<dir> 
+                  options to use the EPILOG tracing package (from FZJ). 
 
 selective	- This example illustrates the use of PDT, and selective 
 		  profiling using profile groups in the tau_instrumentor. 
