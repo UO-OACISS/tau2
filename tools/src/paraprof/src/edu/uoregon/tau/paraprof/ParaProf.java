@@ -334,8 +334,10 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    experiment.addTrial(trial);
 		    trial.setLoading(true);
 		    dataSession.setDebug(UtilFncs.debug);
-		    dataSession.addObserver(this);
-		    dataSession.initialize(v);
+		    DataSessionThreadControl dataSessionThreadControl = new DataSessionThreadControl();
+		    dataSessionThreadControl.setDebug(UtilFncs.debug);
+		    dataSessionThreadControl.addObserver(this);
+		    dataSessionThreadControl.initialize(dataSession,v,true);
 		}
 		else{
 		    System.out.println("No profile files found in the current directory.");
@@ -372,8 +374,10 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    experiment.addTrial(trial);
 		    trial.setLoading(true);
 		    dataSession.setDebug(UtilFncs.debug);
-		    dataSession.addObserver(this);
-		    dataSession.initialize(v);
+		    DataSessionThreadControl dataSessionThreadControl = new DataSessionThreadControl();
+		    dataSessionThreadControl.setDebug(UtilFncs.debug);
+		    dataSessionThreadControl.addObserver(this);
+		    dataSessionThreadControl.initialize(dataSession,v,true);
 		}
 		else{
 		    //Try finding profile.*.*.* files.
@@ -406,8 +410,10 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 			experiment.addTrial(trial);
 			trial.setLoading(true);
 			dataSession.setDebug(UtilFncs.debug);
-			dataSession.addObserver(this);
-			dataSession.initialize(v);
+			DataSessionThreadControl dataSessionThreadControl = new DataSessionThreadControl();
+			dataSessionThreadControl.setDebug(UtilFncs.debug);
+			dataSessionThreadControl.addObserver(this);
+			dataSessionThreadControl.initialize(dataSession,v,true);
 		    }
 		    else{
 			System.out.println("No profile files found in the current directory.");

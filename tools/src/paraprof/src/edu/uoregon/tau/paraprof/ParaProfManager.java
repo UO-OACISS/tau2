@@ -917,7 +917,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			perfDMFSession.setApplication(trial.getApplicationID());
 			perfDMFSession.setExperiment(trial.getExperimentID());
 			perfDMFSession.setTrial(trial.getID());
-			trial.initialize(perfDMFSession);
+
+			ParaProfDBSession paraProfDBSession = new ParaProfDBSession();
+			paraProfDBSession.setDebug(UtilFncs.debug);
+
+			DataSessionThreadControl dataSessionThreadControl = new DataSessionThreadControl();
+			dataSessionThreadControl.setDebug(UtilFncs.debug);
+			dataSessionThreadControl.addObserver(trial);
+			dataSessionThreadControl.initialize(paraProfDBSession,perfDMFSession,true);
 			//Add to the list of loaded trials.
 			loadedTrials.add(trial);
 		    }
@@ -1200,41 +1207,46 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     }
 
     public void addTrial(ParaProfApplication application, ParaProfExperiment experiment,
-			 File location, String filePrefix, int type){
+			 File location, String filePrefix, int fileType){
     	try{
 	    ParaProfTrial trial = null;
+	    ParaProfDataSession dataSession = null;
 	    FileList fl = new FileList();
 	    Vector v = null;
-	    //Note that type 0 and type 1 are switched. Need to move pprof type to be 1
+	    //Note that fileType 0 and fileType 1 are switched. Need to move pprof type to be 1
 	    //as the default everywhere.  This is a temporary fix to allow tau profiles
 	    //to be the first string in LoadTrialPanel combo box.
-	    if(type==0)
-		    type=1;
-	    else if(type==1)
-		type=0;
+	    if(fileType==0)
+		    fileType=1;
+	    else if(fileType==1)
+		fileType=0;
 
-	    if(type!=-1){
-		switch(type){
+	    if(fileType!=-1){
+		switch(fileType){
 		case 0:
+		    dataSession = new TauPprofOutputSession();
 		    if(filePrefix==null)
-			v = fl.getFileList(location, null, type, "pprof", UtilFncs.debug);
+			v = fl.getFileList(location, null, fileType, "pprof", UtilFncs.debug);
 		    else
-			v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
+			v = fl.getFileList(location, null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		case 1:
+		    dataSession = new TauOutputSession();
 		    if(filePrefix==null)
-			v = fl.getFileList(location, null, type, "profile", UtilFncs.debug);
+			v = fl.getFileList(location, null, fileType, "profile", UtilFncs.debug);
 		    else
-			v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
+			v = fl.getFileList(location, null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		case 2:
-		    v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
+		    dataSession = new DynaprofOutputSession();
+		    v = fl.getFileList(location, null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		case 5:
+		    dataSession = new GprofOutputSession(false);
 		    if(filePrefix==null)
-			v = fl.getFileList(location, null, type, "gprof", UtilFncs.debug);
+			v = fl.getFileList(location, null, fileType, "gprof", UtilFncs.debug);
 		    else
-			v = fl.getFileList(location, null, type, filePrefix, UtilFncs.debug);
+			v = fl.getFileList(location, null, fileType, filePrefix, UtilFncs.debug);
 		    break;
 		default:
 		    v = new Vector();
@@ -1242,21 +1254,24 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    break;
 		}
 		if(v.size()>0){
-		    trial = new ParaProfTrial(null, type);
-		    if(experiment.dBExperiment()){
-			trial.setUpload(true); //This trial is not set to a db trial until after it has finished loading.
-		    }
-		    else
-			experiment.addTrial(trial);
+		    trial = new ParaProfTrial(fileType);
 		    trial.setExperiment(experiment);
 		    trial.setApplicationID(experiment.getApplicationID());
 		    trial.setExperimentID(experiment.getID());
 		    trial.setPaths(fl.getPath());
 		    trial.setName(trial.getPathReverse());
 		    trial.setLoading(true);
-		    trial.initialize(v);
+		    if(experiment.dBExperiment()){
+			trial.setUpload(true); //This trial is not set to a db trial until after it has finished loading.
+		    }
+		    else
+			experiment.addTrial(trial);
+		    dataSession.setDebug(UtilFncs.debug);
+		    DataSessionThreadControl dataSessionThreadControl = new DataSessionThreadControl();
+		    dataSessionThreadControl.setDebug(UtilFncs.debug);
+		    dataSessionThreadControl.addObserver(trial);
+		    dataSessionThreadControl.initialize(dataSession,v,true);
 
-		    
 		    if(experiment.dBExperiment()) //Check need to occur on the experiment as trial not yet a recognized db trial.
 			this.expandTrial(2,trial.getApplicationID(),trial.getExperimentID(),trial.getID(),
 					 application,experiment,trial);
