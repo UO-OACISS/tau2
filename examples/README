@@ -85,6 +85,10 @@ callpath        - Shows the use of callpath profiling. Requires configuring
                   TAU with the -PROFILECALLPATH option. Setting the environment
                   variable TAU_CALLPATH_DEPTH changes the depth of the callpath
                   recorded by TAU. The default value of this variable is 2. 
+                  The name of the routine "a => b => c" represents the time 
+                  spent in routine c when it was called by b when b was called 
+                  by a. See the README file in the callpath directory for an 
+                  example.
 
 selective	- This example illustrates the use of PDT, and selective 
 		  profiling using profile groups in the tau_instrumentor. 
