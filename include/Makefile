@@ -74,6 +74,11 @@ JDKARCH                 = linux
 #JAVA#TAU_JAVA_O 	= TauJava.o  #ENDIF#
 
 #############################################
+# OpenMP OBJECTS
+#############################################
+#OPENMP#OPENMP_O 	= OpenMPLayer.o #ENDIF#
+
+#############################################
 # DYNINST DEFAULT ARCH
 #############################################
 DYNINST_PLATFORM 	= $(PLATFORM) 
@@ -129,6 +134,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #MONITOR#PROFILEOPT24	       = -DMONITORING_ON 	#ENDIF#
 #JAVA#PROFILEOPT25 = -I$(JDKDIR)/include -I$(JDKDIR)/include/$(JDKARCH) #ENDIF#
 #MPI#PROFILEOPT26 = -DTAU_MPI #ENDIF#
+#OPENMP#PROFILEOPT27 = -D_OPENMP #ENDIF#
+
 
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
@@ -157,7 +164,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(PROFILEOPT16) \
 	      $(PROFILEOPT17) $(PROFILEOPT18) $(PROFILEOPT19) $(PROFILEOPT20) \
 	      $(PROFILEOPT21) $(PROFILEOPT22) $(PROFILEOPT23) $(PROFILEOPT24) \
-	      $(PROFILEOPT25) $(PROFILEOPT26) $(TRACEOPT)
+	      $(PROFILEOPT25) $(PROFILEOPT26) $(PROFILEOPT27) $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
