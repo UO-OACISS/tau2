@@ -65,6 +65,8 @@ int someC()
 	 // If we'd used the TAU_INCLUDE_PARENT_DATA, we'd get the performance 
 	 // data from the parent in this process as well. 
 		TAU_REGISTER_FORK(pID, TAU_EXCLUDE_PARENT_DATA);
+	 // Aliter:
+	 //     TAU_REGISTER_FORK(pID, TAU_INCLUDE_PARENT_DATA);
 		printf("Child : pid = %d - sleeping for 2 secs\n", pID);
 		sleep(2);
 		someD();
@@ -82,7 +84,7 @@ int someD()
 
 /***************************************************************************
  * $RCSfile: fork.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2000/10/11 18:58:50 $
- * VERSION: $Id: fork.cpp,v 1.1 2000/10/11 18:58:50 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2000/10/26 19:25:00 $
+ * VERSION: $Id: fork.cpp,v 1.2 2000/10/26 19:25:00 sameer Exp $
  ***************************************************************************/
 
