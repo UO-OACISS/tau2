@@ -4,12 +4,12 @@ import dms.perfdb.*;
 import java.util.*;
 import java.sql.*;
 import java.util.Date;
-import paraprof.*;
+import paraprof.ParaProfTrial;
 
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.8 2004/03/31 18:08:16 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.9 2004/03/31 18:32:08 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -545,8 +545,8 @@ public class PerfDBSession extends DataSession {
  * @return the database index ID of the saved trial record
  */
 
-	public int saveParaProfTrial(ParaProfTrial paraProfTrial) {
-		GlobalMapping mapping = paraProfTrial.getGlobalMapping();
+	public int saveParaProfTrial(DataSession dataSession, Trial paraProfTrial) {
+		GlobalMapping mapping = dataSession.getGlobalMapping();
 	
 		//Build an array of group names.  This speeds lookup of group names.
 		Vector groups = mapping.getMapping(1);
@@ -556,14 +556,6 @@ public class PerfDBSession extends DataSession {
 	    	GlobalMappingElement group = (GlobalMappingElement) e.nextElement();
 	    	groupNames[position++] = group.getMappingName();
 		}
-
-		//Get max node,context, and thread numbers.
-		int[] maxNCT = paraProfTrial.getMaxNCTNumbers();
-	
-		// fix up some trial data
-		paraProfTrial.setNodeCount(maxNCT[0]+1);
-		paraProfTrial.setNumContextsPerNode(maxNCT[1]+1);
-		paraProfTrial.setNumThreadsPerContext(maxNCT[2]+1);
 
 		// get the metric count
 		metrics = paraProfTrial.getMetrics();
@@ -646,7 +638,7 @@ public class PerfDBSession extends DataSession {
 	    }
 
 	    StringBuffer groupsStringBuffer = new StringBuffer(10);
-	    Vector nodes = paraProfTrial.getNCT().getNodes();
+	    Vector nodes = dataSession.getNCT().getNodes();
 	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
 		Node node = (Node) e1.nextElement();
 		Vector contexts = node.getContexts();
@@ -654,7 +646,7 @@ public class PerfDBSession extends DataSession {
 		    Context context = (Context) e2.nextElement();
 		    Vector threads = context.getThreads();
 		    for(Enumeration e3 = threads.elements(); e3.hasMoreElements() ;){
-			paraprof.Thread thread = (paraprof.Thread) e3.nextElement();
+			dms.dss.Thread thread = (dms.dss.Thread) e3.nextElement();
 			Vector functions = thread.getFunctionList();
 			Vector userevents = thread.getUsereventList();
 			//Write out function data for this thread.

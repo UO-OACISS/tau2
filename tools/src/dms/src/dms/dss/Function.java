@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.2 2004/03/31 09:39:08 bertie Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.3 2004/03/31 18:32:07 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -390,20 +390,25 @@ public class Function {
 			System.exit(0);
 		}
 		// save the function mean summaries
-		Enumeration enum = meanSummary.elements();
-		FunctionDataObject fdo;
-		while (enum.hasMoreElements()) {
-			fdo = (FunctionDataObject)enum.nextElement();
-			fdo.saveMeanSummary(db, newFunctionIndexID, metricID);
+		if (meanSummary != null) {
+			Enumeration enum = meanSummary.elements();
+			FunctionDataObject fdo;
+			while (enum.hasMoreElements()) {
+				fdo = (FunctionDataObject)enum.nextElement();
+				fdo.saveMeanSummary(db, newFunctionIndexID, metricID);
+			}
 		}
 
 		// save the function total summaries
-		enum = totalSummary.elements();
-		while (enum.hasMoreElements()) {
-			fdo = (FunctionDataObject)enum.nextElement();
-			fdo.saveTotalSummary(db, newFunctionIndexID, metricID);
+		if (totalSummary != null) {
+			Enumeration enum = totalSummary.elements();
+			FunctionDataObject fdo;
+			while (enum.hasMoreElements()) {
+				fdo = (FunctionDataObject)enum.nextElement();
+				fdo.saveTotalSummary(db, newFunctionIndexID, metricID);
+			}
 		}
-		return newFunctionIndexID;
+			return newFunctionIndexID;
 	}
 }
 

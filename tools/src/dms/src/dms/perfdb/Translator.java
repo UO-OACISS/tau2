@@ -30,7 +30,7 @@ public class Translator implements Serializable {
 
     /* This variable connects translator to DB in order to check whether
        the app. and exp. associated with the trial data do exist there. */
-	DataSession dbSession = null;
+	PerfDBSession dbSession = null;
 	ParaProfTrial trial = null;
 
     //constructor
@@ -110,10 +110,6 @@ public class Translator implements Serializable {
 	    trial.initialize(v);
 
 		// finish setting up the trial
-		int[] maxNCT = trial.getMaxNCTNumbers();
-		trial.setNodeCount(maxNCT[0]+1);
-		trial.setNumContextsPerNode(maxNCT[1]+1);
-		trial.setNumThreadsPerContext(maxNCT[2]+1);
 		trial.setProblemDefinition(getProblemString(problemFile));
 		trial.setExperimentID(expID);
 	}
@@ -127,7 +123,13 @@ public class Translator implements Serializable {
 		DataSession session = trial.getParaProfDataSession();
 		dms.dss.Metric metric = (dms.dss.Metric)session.getMetrics().elementAt(0);
 		trial.addMetric(metric);
-		dbSession.saveTrial(trial);
+		session.setTrial(trial);
+		// set some things in the trial
+		int[] maxNCT = trial.getMaxNCTNumbers();
+		trial.setNodeCount(maxNCT[0]+1);
+		trial.setNumContextsPerNode(maxNCT[1]+1);
+		trial.setNumThreadsPerContext(maxNCT[2]+1);
+		dbSession.saveParaProfTrial(session, trial);
 	}
 
 	public String getProblemString(String problemFile) {

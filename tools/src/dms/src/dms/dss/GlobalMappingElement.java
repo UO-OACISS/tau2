@@ -91,6 +91,8 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	return false;
     }
 
+	public int getNumberOfGroups() { return numberOfGroups; }
+
     public int[] getGroups(){
 	int[] groups = new int[numberOfGroups];
 	for(int i=0;i<numberOfGroups;i++)
