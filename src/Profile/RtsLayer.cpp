@@ -534,6 +534,11 @@ double RtsLayer::getUSecD (int tid) {
   long long tick = _rtc();
   return (double) tick/HZ;
 #endif // CRAY_TIMERS
+#ifdef TAU_ALPHA_TIMERS
+  struct timespec currenttime;
+  clock_gettime(CLOCK_REALTIME, &currenttime);
+  return (currenttime.tv_sec * 1e6 + (currenttime.tv_nsec * 1e-3));
+#endif /* TAU_ALPHA_TIMERS */
 #ifdef TAU_LINUX_TIMERS
   return (double) getLinuxHighResolutionTscCounter()/TauGetMHz();
 #else /* TAU_LINUX_TIMERS */
@@ -1076,6 +1081,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.51 $   $Date: 2004/01/09 01:15:51 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.51 2004/01/09 01:15:51 sameer Exp $ 
+ * $Revision: 1.52 $   $Date: 2004/01/28 20:38:40 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.52 2004/01/28 20:38:40 sameer Exp $ 
  ***************************************************************************/

@@ -164,6 +164,7 @@ debugprof=no
 sgitimers=no
 craytimers=no
 linuxtimers=no
+alphatimers=no
 cputime=no
 papiwallclock=no
 papivirtual=no
@@ -636,6 +637,11 @@ do
     shift
     ;;
 
+  -ALPHATIMERS)
+    alphatimers=yes
+    shift
+    ;;
+
   -CPUTIME)
     cputime=yes
     shift
@@ -1076,6 +1082,12 @@ if [ $linuxtimers = yes ]
 then
   fixmakeargs="$fixmakeargs LINUXTIMERS"
   tauoptions="${tauoptions}-linuxtimers"
+fi
+
+if [ $alphatimers = yes ]
+then
+  fixmakeargs="$fixmakeargs ALPHATIMERS"
+  tauoptions="${tauoptions}-alphatimers"
 fi
 
 if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 

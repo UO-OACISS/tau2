@@ -47,11 +47,23 @@ int TauCalibrateNullTimer(void)
   TAU_PROFILE_TIMER(tone,  ".TAU 100 null timers overhead", " ", TAU_DEFAULT);
   int i, tid;
   double tnull, toverhead; 
+  char *iter;
+  int iterations;
+
+  if ((iter = getenv("TAU_COMPENSATE_ITERATIONS")) == 0)
+  {
+    iterations = 1000;
+  }
+  else
+  {
+    iterations = atoi(iter);
+  }
+    
 
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tone);
     /* nested */
-  for(i=0; i< 1000; i++)
+  for(i=0; i< iterations; i++)
   {
     TAU_PROFILE_START(tnull);
     TAU_PROFILE_STOP(tnull);
