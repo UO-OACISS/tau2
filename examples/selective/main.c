@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-void F1(void);
+void f1_(void);
 int other_c_routine(void)
 {
 	printf("Inside other_c_routine\n");
@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 	{ 
 		printf("Argv[%d] = %s\n", i, argv[i]);
 	}
-	 F1();
+	 f1_();
 	 printf("Inside main: after calling f1()\n");
 	 other_c_routine();
 	 return 0;
