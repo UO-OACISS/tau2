@@ -54,12 +54,12 @@
 #
 # Options for Configure :
 #   ./configure -cc=<C Compiler> -c++=<C++ Compiler> -useropt=<User options>
-#   -gnu   
+#   -gnu  -PROFILE -TRACE  
 # 
 # Recommended configuration for testing on SGI:
-#   ./configure -useropt=-64
+#   ./configure -useropt=-64 -PROFILE
 # For testing with KAI's KCC compiler 
-#   ./configure -cc=cc -c++=KCC 
+#   ./configure -cc=cc -c++=KCC -PROFILE 
 # If your C++ compiler does not support STL, you could use something like:
 #   ./configure -useropt='-I/usr/local/packages/SGI-STL/' 
 # after downloading the Standard Templates Library.
@@ -362,6 +362,7 @@ echo "  or"
 echo "    * run configure again and recompile"
 echo "-----------------------------------------------------------------"
 
+fixmakeargs="$fixmakeargs tauroot=$tauroot"
 # Try and figure out architecture
 detectarch=unknown
 detectarch=`utils/archfind`
@@ -599,6 +600,12 @@ esac
 
 ######################################################################
 # Set default Profiling Options in Makefiles
+if [ $profile = no -a $trace = no  -a $machine != default ]
+  then
+    echo "-PROFILE and/or -TRACE should be specified. Choosing -PROFILE as the default"
+    profile=yes 
+fi
+ 
 if [ $profile = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILE"
