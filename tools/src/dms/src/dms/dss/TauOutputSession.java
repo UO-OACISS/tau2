@@ -455,6 +455,7 @@ public class TauOutputSession extends ParaProfDataSession{
 			thread.setThreadData(metric);
 		    }
 		}
+		metric++;
 	    }
 	    //Generate mean data.
 	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
