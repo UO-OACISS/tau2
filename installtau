@@ -3,6 +3,7 @@
 #Variables
 pdt=no
 pdtcomp=no
+dyninst=no
 arch=no
 cc=no
 cxx=no
@@ -53,6 +54,12 @@ do
   -papi=*)
     papi=yes
     papidir=`echo $arg | sed -e 's/-papi=//'`
+    shift
+    ;;
+
+  -dyninst=*)
+    dyninst=yes
+    dyninstdir=`echo $arg | sed -e 's/-dyninst=//'`
     shift
     ;;
 
@@ -112,6 +119,7 @@ do
     echo "-pdt=<pdtdir>  "
     echo "-pdtcompdir=<compdir>  "
     echo "-papi=<papidir>  "
+    echo "-dyninst=<dyninstdir>  "
     echo "-mpiinc=<mpiincdir>  "
     echo "-mpilib=<mpilibdir>  "
     echo "-mpilibrary=<mpilibrary>  "
@@ -245,6 +253,13 @@ echo " " > wishver
       make clean install
     fi
   fi
+  if [ $dyninst = yes ] 
+  then
+    echo "Configuring with $fortrancompiler $useropts $ccompiler $archopt -dyninst=$dyninstdir "
+    ./configure $fortrancompiler $useropts $ccompiler $archopt -dyninst=$dyninstdir < wishver
+    make clean install
+  fi
+   
 
 # Set file permissions
   chmod -R go+rX *
