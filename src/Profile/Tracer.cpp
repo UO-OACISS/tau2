@@ -51,14 +51,14 @@ static int TraceInitialized[PCXX_MAXPROCS] = {0};
 
 
 /* -- Use Profiling interface for time -- */
-unsigned long pcxx_GetUSecLong(void)
-{ /* Return no. of usecs from 1 Jan 1998 instead. To avoid overflow */
-  return (unsigned long) (RtsLayer::getUSecD() - 8.83008e+14); 
+unsigned long long pcxx_GetUSecLong(void)
+{ 
+  return (unsigned long long) RtsLayer::getUSecD(); 
 }
 
 /* -- write event to buffer only [without overflow check] ---- */
 /*
-static void TraceEventOnly(long int ev,long int par, int tid)
+static void TraceEventOnly(long int ev,long long par, int tid)
 {
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
   pcxx_ev_ptr->ev   = ev;
@@ -203,7 +203,7 @@ void pcxx_EvInit(char *name)
 } 
 
 /* -- write event to buffer ---------------------------------- */
-void TraceEvent(long int ev, long int par, int tid)
+void TraceEvent(long int ev, long long par, int tid)
 {
   TraceEvInit(tid);
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
@@ -235,7 +235,7 @@ void TraceEvent(long int ev, long int par, int tid)
   if ( TauCurrentEvent[tid] >= TAU_MAX_RECORDS - 1 ) TraceEvFlush(tid); 
 }
 
-void pcxx_Event(long int ev, long int par)
+void pcxx_Event(long int ev, long long par)
 {
   TraceEvent(ev, par, RtsLayer::myThread());
 }
@@ -259,18 +259,18 @@ void pcxx_EvClose(void)
 
 #if defined( TRACING_ON ) && defined( ARIADNE_SUPPORT )
 /* Function to trace the events of Ariadne. */
-void pcxx_AriadneTrace (long int event_class, long int event, int pid, int oid, int rwtype, int mtag, int par)
+void pcxx_AriadneTrace (long int event_class, long int event, int pid, int oid, int rwtype, int mtag, long long par)
 {
 /* This routine writes the ariadne events to the trace file */
-long int trace_value = 0L; /* the first parameter to be traced */
-long int parameter = 0L; /* dummy to shift the par by 32 bits */ 
+long long trace_value = 0L; /* the first parameter to be traced */
+long long parameter = 0L; /* dummy to shift the par by 32 bits */ 
 /* Even for pC++ events we use U as the event rwtype and PCXX_... as the utag */
 /* This way we can keep the old format for tracing :
 	parameter (32), pid (10), oid (10), rwtype (4) , utag (8) 
 for 64 bit long int */ 
-  parameter = (long int) par; 
+  parameter = (long long) par; 
 
-  if (sizeof (long int) == 8) 
+  if (sizeof (long long) == 8) 
   { /* This is true of SGI8K  */
 
     /* care has to be taken to ensure that mtag is 8 bits long */

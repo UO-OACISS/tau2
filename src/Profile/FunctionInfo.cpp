@@ -112,8 +112,8 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 // these values? 
 //     	  NumCalls[i] = 0;
      	  NumSubrs[i] = 0;
-//     	  ExclTime[i] = 0;
-//     	  InclTime[i] = 0;
+     	  ExclTime[i] = 0;
+     	  InclTime[i] = 0;
  	}
 
 #ifdef PROFILE_STATS
@@ -248,6 +248,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 1998/09/26 15:39:54 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.11 1998/09/26 15:39:54 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 1999/03/17 23:49:09 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.12 1999/03/17 23:49:09 sameer Exp $ 
  ***************************************************************************/
