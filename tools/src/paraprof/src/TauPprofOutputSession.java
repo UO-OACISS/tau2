@@ -17,8 +17,6 @@
 
 package paraprof;
 
-
-
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -422,16 +420,6 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		    System.out.println("The number of mappings is: " + this.getNumberOfMappings());
 		    System.out.println("The number of user events is: " + this.getNumberOfUserEvents());
 		}
-
-		System.out.println("Processing callpath data ...");
-		if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
-		    setCallPathDataPresent(true);
-		    CallPathUtilFuncs.buildRelations(getGlobalMapping());
-		}
-		else{
-		    System.out.println("No callpath data found.");
-		}
-		System.out.println("Done - Processing callpath data!");
 
 		//Set firstRead to false.
 		this.setFirstMetric(false);

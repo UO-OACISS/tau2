@@ -125,8 +125,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //Call path section.
     //######
     public void addParent(int id,int pathID){
-	//Check to see if this parent is already present,
-	//if so, add only the callpath to the system.
+	//Check to see if this parent is already present.
 	int location = UtilFncs.exists(parents,id);
 	if(location == -1){
 	    if(parents==null){
@@ -135,14 +134,24 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	    }
 	    
 	    parents.add(new Integer(id));
-	    Vector tmpVector = new Vector();
-	    tmpVector.add(new Integer(pathID));
-	    callPathIDSParents.add(tmpVector);
+	    Vector v = new Vector();
+	    v.add(new Integer(pathID));
+	    callPathIDSParents.add(v);
 
 	}
 	else{
-	    Vector tmpVector = (Vector) callPathIDSParents.elementAt(location);
-	    tmpVector.add(new Integer(pathID));
+	    //Since we are here, the parent is present, but the callpath might not be.
+	    //Check, and add if not.
+	    Vector v = (Vector) callPathIDSParents.elementAt(location);
+	    location = UtilFncs.exists(v,pathID);
+	    if(location == -1)
+		v.add(new Integer(pathID));
+	    else{
+		UtilFncs.systemError(new ParaProfError("addParent(int id,int pathID)",
+						       "Duplicate entry attempt!", null), null, null);
+		
+	    }
+		
 	}
     }
 
@@ -185,13 +194,22 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	    }
 	    
 	    children.add(new Integer(id));
-	    Vector tmpVector = new Vector();
-	    tmpVector.add(new Integer(pathID));
-	    callPathIDSChildren.add(tmpVector);
+	    Vector v = new Vector();
+	    v.add(new Integer(pathID));
+	    callPathIDSChildren.add(v);
 	}
 	else{
-	    Vector tmpVector = (Vector) callPathIDSChildren.elementAt(location);
-	    tmpVector.add(new Integer(pathID));
+	    //Since we are here, the parent is present, but the callpath might not be.
+	    //Check, and add if not.
+	    Vector v = (Vector) callPathIDSChildren.elementAt(location);
+	    location = UtilFncs.exists(v,pathID);
+	    if(location == -1)
+		v.add(new Integer(pathID));
+	    else{
+		UtilFncs.systemError(new ParaProfError("addChild(int id,int pathID)",
+						       "Duplicate entry attempt!", null), null, null);
+	    }
+		
 	}
     }
 
@@ -232,29 +250,29 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     //Max values section.
     //######
-    public void setMaxInclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,0,inDouble);}
+    public void setMaxInclusiveValue(int location, double d){
+	this.insertDouble(location,0,d);}
   
-    public double getMaxInclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,0);}
+    public double getMaxInclusiveValue(int location){
+	return this.getDouble(location,0);}
   
-    public void setMaxExclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,1,inDouble);}
+    public void setMaxExclusiveValue(int location, double d){
+	this.insertDouble(location,1,d);}
   
-    public double getMaxExclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,1);}
+    public double getMaxExclusiveValue(int location){
+	return this.getDouble(location,1);}
   
-    public void setMaxInclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,2,inDouble);}
+    public void setMaxInclusivePercentValue(int location, double d){
+	this.insertDouble(location,2,d);}
   
-    public double getMaxInclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,2);}
+    public double getMaxInclusivePercentValue(int location){
+	return this.getDouble(location,2);}
   
-    public void setMaxExclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,3,inDouble);}
+    public void setMaxExclusivePercentValue(int location, double d){
+	this.insertDouble(location,3,d);}
   
-    public double getMaxExclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,3);}
+    public double getMaxExclusivePercentValue(int location){
+	return this.getDouble(location,3);}
   
     public void setMaxNumberOfCalls(int inInt){
 	maxNumberOfCalls = inInt;}
@@ -268,11 +286,11 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     public int getMaxNumberOfSubRoutines(){
 	return maxNumberOfSubRoutines;}
   
-    public void setMaxUserSecPerCall(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,4,inDouble);}
+    public void setMaxUserSecPerCall(int location, double d){
+	this.insertDouble(location,4,d);}
   
-    public double getMaxUserSecPerCall(int dataValueLocation){
-	return this.getDouble(dataValueLocation,4);}
+    public double getMaxUserSecPerCall(int location){
+	return this.getDouble(location,4);}
     //######
     //End - Max values section.
     //######
@@ -311,49 +329,49 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     //Mean section.
     //######
-    public void setMeanInclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,5,inDouble);}
+    public void setMeanInclusiveValue(int location, double d){
+	this.insertDouble(location,5,d);}
   
-    public double getMeanInclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,5);}
+    public double getMeanInclusiveValue(int location){
+	return this.getDouble(location,5);}
   
-    public void setMeanExclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,6,inDouble);}
+    public void setMeanExclusiveValue(int location, double d){
+	this.insertDouble(location,6,d);}
   
-    public double getMeanExclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,6);}
+    public double getMeanExclusiveValue(int location){
+	return this.getDouble(location,6);}
   
-    public void setMeanInclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,7,inDouble);}
+    public void setMeanInclusivePercentValue(int location, double d){
+	this.insertDouble(location,7,d);}
   
-    public double getMeanInclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,7);}
+    public double getMeanInclusivePercentValue(int location){
+	return this.getDouble(location,7);}
   
-    public void setMeanExclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,8,inDouble);}
+    public void setMeanExclusivePercentValue(int location, double d){
+	this.insertDouble(location,8,d);}
   
-    public double getMeanExclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,8);}
+    public double getMeanExclusivePercentValue(int location){
+	return this.getDouble(location,8);}
   
-    public void setMeanNumberOfCalls(double inDouble){
-	meanNumberOfCalls = inDouble;}
+    public void setMeanNumberOfCalls(double d){
+	meanNumberOfCalls = d;}
   
     public double getMeanNumberOfCalls(){
 	return meanNumberOfCalls;}
   
-    public void setMeanNumberOfSubRoutines(double inDouble){
-	meanNumberOfSubRoutines = inDouble;}
+    public void setMeanNumberOfSubRoutines(double d){
+	meanNumberOfSubRoutines = d;}
   
     public double getMeanNumberOfSubRoutines(){
 	return meanNumberOfSubRoutines;}
   
-    public void setMeanUserSecPerCall(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,9,inDouble);}
+    public void setMeanUserSecPerCall(int location, double d){
+	this.insertDouble(location,9,d);}
   
-    public double getMeanUserSecPerCall(int dataValueLocation){
-  	return this.getDouble(dataValueLocation,9);}
+    public double getMeanUserSecPerCall(int location){
+  	return this.getDouble(location,9);}
 
-    public String getMeanTotalStatString(int type, int dataValueLocation, int precision){
+    public String getMeanTotalStatString(int type, int location, int precision){
   	try{
 	    int initialBufferLength = 99;
 	    int position = 0;
@@ -365,7 +383,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
       
 	    DecimalFormat dF = new DecimalFormat();
 	    dF.applyPattern("##0.0");
-	    tmpArray = (dF.format(this.getMeanInclusivePercentValue(dataValueLocation))).toCharArray();
+	    tmpArray = (dF.format(this.getMeanInclusivePercentValue(location))).toCharArray();
       
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -373,7 +391,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	    }
       
 	    position = 9;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanExclusiveValue(dataValueLocation),precision);
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanExclusiveValue(location),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -382,7 +400,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	    }
       
 	    position = 27;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanInclusiveValue(dataValueLocation),precision);
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanInclusiveValue(location),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -411,7 +429,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	    }
       
 	    position = 81;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanUserSecPerCall(dataValueLocation),precision);
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanUserSecPerCall(location),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -440,29 +458,29 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     //Total section.
     //######
-    public void setTotalInclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,10,inDouble);}
+    public void setTotalInclusiveValue(int location, double d){
+	this.insertDouble(location,10,d);}
   
-    public double getTotalInclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,10);}
+    public double getTotalInclusiveValue(int location){
+	return this.getDouble(location,10);}
   
-    public void setTotalExclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,11,inDouble);}
+    public void setTotalExclusiveValue(int location, double d){
+	this.insertDouble(location,11,d);}
   
-    public double getTotalExclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,11);}
+    public double getTotalExclusiveValue(int location){
+	return this.getDouble(location,11);}
   
-    public void setTotalInclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,12,inDouble);}
+    public void setTotalInclusivePercentValue(int location, double d){
+	this.insertDouble(location,12,d);}
   
-    public double getTotalInclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,12);}
+    public double getTotalInclusivePercentValue(int location){
+	return this.getDouble(location,12);}
   
-    public void setTotalExclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,13,inDouble);}
+    public void setTotalExclusivePercentValue(int location, double d){
+	this.insertDouble(location,13,d);}
   
-    public double getTotalExclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,13);}
+    public double getTotalExclusivePercentValue(int location){
+	return this.getDouble(location,13);}
     //######
     //End - Total section.
     //######
@@ -495,20 +513,20 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     //Usage?
     //######
-    public void setTotalExclusiveValue(double inDouble){
-	totalExclusiveValue = inDouble;}
+    public void setTotalExclusiveValue(double d){
+	totalExclusiveValue = d;}
     
-    public void incrementTotalExclusiveValue(double inDouble){
-	totalExclusiveValue = totalExclusiveValue + inDouble;}
+    public void incrementTotalExclusiveValue(double d){
+	totalExclusiveValue = totalExclusiveValue + d;}
     
     public double getTotalExclusiveValue(){
 	return totalExclusiveValue;}
     
-    public void setTotalInclusiveValue(double inDouble){
-	totalInclusiveValue = inDouble;}
+    public void setTotalInclusiveValue(double d){
+	totalInclusiveValue = d;}
     
-    public void incrementTotalInclusiveValue(double inDouble){
-	totalInclusiveValue = totalInclusiveValue + inDouble;}
+    public void incrementTotalInclusiveValue(double d){
+	totalInclusiveValue = totalInclusiveValue + d;}
     
     public double getTotalInclusiveValue(){
 	return totalInclusiveValue;}
@@ -545,18 +563,18 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     //Private section.
     //######
-    private void insertDouble(int dataValueLocation, int offset, double inDouble){
-	int actualLocation = (dataValueLocation*14)+offset;
+    private void insertDouble(int location, int offset, double d){
+	int actualLocation = (location*14)+offset;
 	try{
-	    doubleList[actualLocation] = inDouble;
+	    doubleList[actualLocation] = d;
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GME01");
 	}
     }
   
-    private double getDouble(int dataValueLocation, int offset){
-	int actualLocation = (dataValueLocation*14)+offset;
+    private double getDouble(int location, int offset){
+	int actualLocation = (location*14)+offset;
 	try{
 	    return doubleList[actualLocation];
 	}
@@ -621,6 +639,11 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     private double totalInclusiveValue = 0;
 
     private Vector members = null;
+
+    //For errors writing to the xml file.
+    private ParaProfError error = new ParaProfError("", "XML Write Error: See console for details.",
+						    "An error occured whilst writing XML file. Operation aborted!", 
+						    "Note: Dependent operations also aborted.", null, false);
     //####################################
     //End - Instance data.
     //####################################
