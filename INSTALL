@@ -118,8 +118,7 @@ Usage: configure [OPTIONS]
    % ./configure -useropt=-fguiding-decls
    or 
    % ./configure -c++=KCC -SGITIMERS -tulipthread=/home/smarts/build/smarts-1.0
-     -smarts -useropt=-I/home/smarts/build/smarts-1.0/machine-specific/iris4d 
-     -arch=sgin32 -prefix=/usr/local/packages/tau
+     -smarts -arch=sgin32 -prefix=/usr/local/packages/tau
 
 2. Compilation.
 
