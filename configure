@@ -103,6 +103,9 @@
 # If a file name is given, it must contain all these definitions.
 # No checking is done to ensure that it does so.
 
+rm -f .last_config
+echo $* > .last_config
+
 # Record all the arguments
 arguments=$*
 
@@ -117,6 +120,7 @@ mpilib=
 extradir=
 awe=no
 pthread=no
+sproc=no
 noex=no
 tulipthread=no
 smarts=no
@@ -246,6 +250,11 @@ do
  
   -pthread)
       pthread=yes
+    shift
+    ;;
+
+  -sproc)
+      sproc=yes
     shift
     ;;
 
@@ -450,6 +459,7 @@ do
     echo "-cc=<compiler> ................................ specify the C compiler."
     echo "-useropt='<parameters>' ............... list of commandline parameters."
     echo "-pthread .................................. Use pthread thread package."
+    echo "-sproc .................................. Use SGI sproc thread package."
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-openmp ........................................... Use OpenMP threads."
@@ -1361,6 +1371,12 @@ if [ $pthread = yes ]
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
     echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
     tauoptions="${tauoptions}-pthread"
+fi
+
+if [ $sproc = yes ]
+  then
+    fixmakeargs="$fixmakeargs TAU_SPROC"
+    tauoptions="${tauoptions}-sproc"
 fi
 
 if [ $pcl = yes ]
