@@ -32,6 +32,7 @@ Version 2.13 changes (from 2.12):
 20. Added support for TAU_TRACK_MEMORY_HERE() [LLNL].
 21. Improvements in PerfDMF and ParaProf's ability to connect to database [LLNL].
 22. Added support for native PAPI events (setenv COUNTER1 PAPI_NATIVE_<nm>) [LLNL].
+23. Added support for DyninstAPI v4.1 [UMD]. 
   
  
 
