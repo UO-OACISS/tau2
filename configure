@@ -598,7 +598,7 @@ do
     shift
     ;;
 
-  -*)
+  *)
     echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
     exit 1
     ;;
