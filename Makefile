@@ -17,12 +17,15 @@ CONFIG_ARCH=sgi8k
 CONFIG_CC=cc
 CONFIG_CXX=CC
 PCXX_OPT=-g
-USER_OPT=-64
+USER_OPT=-g
 #######################################################################
  
+ABI 	     = -64		  #ENDIF##MIPSR8K#
+ISA          = -mips4             #ENDIF##MIPSR8K#
+
 ############# Standard Defines ##############
-CC = $(CONFIG_CC)
-CXX = $(CONFIG_CXX)
+CC = $(CONFIG_CC) $(ABI) $(ISA)
+CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 INSTALL = /bin/cp
 SHELL = /bin/sh
 LSX = .a
@@ -57,7 +60,12 @@ SUBDIR  = $(BASIC) $(PCXX) $(HPCXX) $(ANSIC)
 all:
 	@echo "At the installation root, use \"make install\" "
 
-examples : 
+tests: 
+	@echo "Determining Configuration..."
+	@if [ x`utils/ConfigQuery -arch` = xdefault ] ; then \
+          (echo Run the configure script before attempting to compile ; \
+           exit 1) ; \
+         else echo System previously configured as a `utils/ConfigQuery -arch` ; fi
 	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
 	@for i in ${EXAMPLES}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" ); done
