@@ -43,8 +43,45 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
     TauMapProf->Stop(); \
   } 
 
+/* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
+   object that is used to relate a lower level layer with a higher level layer 
+*/
+
+#define TAU_MAPPING_OBJECT(FuncInfoVar) FunctionInfo * FuncInfoVar;
+
+/* TAU_MAPPING_LINK gets in a var the function info object associated with the 
+   given key (Group) 
+*/
+#define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); 
+
+/* TAU_MAPPING_PROFILE profiles the entire routine by creating a profiler objeca
+   and this behaves pretty much like TAU_PROFILE macro, except this gives in the
+   FunctionInfo object pointer instead of name and type strings. 
+*/
+#define TAU_MAPPING_PROFILE(FuncInfoVar) Profiler FuncInfoVar##Prof(FuncInfoVar, FuncInfoVar->GetProfileGroup(), false);
+
+/* TAU_MAPPING_PROFILE_TIMER acts like TAU_PROFILE_TIMER by creating a profiler
+   object that can be subsequently used with TAU_PROFILE_START and 
+   TAU_PROFILE_STOP
+*/
+#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar) Profiler Timer(FuncInfoVar, FuncInfoVar->GetProfileGroup(), true);
+
+/* TAU_MAPPING_PROFILE_START acts like TAU_PROFILE_START by starting the timer 
+*/
+#define TAU_MAPPING_PROFILE_START(Timer) Timer.Start();
+
+/* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer 
+*/
+#define TAU_MAPPING_PROFILE_STOP(Timer) Timer.Stop();
 #else
+/* Create null , except the main statement which should be executed as it is*/
 #define TAU_MAPPING(stmt, group) stmt
+#define TAU_MAPPING_OBJECT(FuncInfoVar) 
+#define TAU_MAPPING_LINK (FuncInfoVar, Group) 
+#define TAU_MAPPING_PROFILE (FuncInfoVar) 
+#define TAU_MAPPING_PROFILE_TIMER (Timer, FuncInfoVar)
+#define TAU_MAPPING_PROFILE_START(Timer) 
+#define TAU_MAPPING_PROFILE_STOP(Timer) 
 
 #endif /* PROFILING_ON or TRACING_ON  */
 #endif /* _TAU_MAPPING_H_ */
