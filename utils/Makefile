@@ -18,7 +18,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=/u1/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=
 PDTDIR=
 DYNINSTDIR=
 #######################################################################
@@ -62,6 +62,7 @@ CWARNING	= $(WARNINGSOPT)
 #DYNINST#TAURUN 	= tau_run #ENDIF#
 #DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h #ENDIF#
 #DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -lpdutil -liberty -lelf #ENDIF#
+#SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -lpdutil -ldwarf -lelf#ENDIF#
 # -lelf is for Solaris only
 
 #SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
