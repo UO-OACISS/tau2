@@ -227,9 +227,27 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 #endif //PROFILE_CALLS
 //////////////////////////////////////////////////////////////////////
+long FunctionInfo::GetFunctionId(void) 
+{
+   // To avoid data races, we use a lock if the id has not been created
+  	if (FunctionId == 0)
+	{
+#ifdef DEBUG_PROF
+  	  printf("Fid = 0! tid = %d\n", RtsLayer::myThread());
+#endif // DEBUG_PROF
+	  while (FunctionId ==0)
+	  {
+	    RtsLayer::LockDB();
+	    RtsLayer::UnLockDB();
+	  }
+	}
+	return FunctionId;
+}
+	    
+//////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 1998/09/23 14:45:25 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.10 1998/09/23 14:45:25 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 1998/09/26 15:39:54 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.11 1998/09/26 15:39:54 sameer Exp $ 
  ***************************************************************************/
