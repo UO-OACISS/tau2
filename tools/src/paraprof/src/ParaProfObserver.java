@@ -10,7 +10,7 @@
 
 package paraprof;
 
-interface ParaProfObserver{
+public interface ParaProfObserver{
 
     void update();
     void update(Object obj);
