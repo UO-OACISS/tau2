@@ -1,0 +1,16 @@
+# Selective instrumentation: Specify an exclude/include list.
+
+BEGIN_EXCLUDE_LIST
+void quicksort(int *, int, int)
+void sort_5elements(int *)
+void interchange(int *, int *)
+END_EXCLUDE_LIST
+
+# If an include list is specified, the routines in the list will be the only
+# routines that are instrumented. 
+# To specify an include list (a list of routines that will be instrumented)
+# remove the leading # to uncomment the following lines
+#BEGIN_INCLUDE_LIST
+#int main(int, char **)
+#int select_
+#END_INCLUDE_LIST

@@ -73,7 +73,7 @@ $(TARGET).o : $(TARGET).inst.cpp
 
 # Generate the instrumented source from the original source and the pdb file
 $(TARGET).inst.cpp : $(TARGET).pdb $(TARGET).cpp $(TAUINSTR) 
-	$(TAUINSTR) $(TARGET).pdb $(TARGET).cpp -o $(TARGET).inst.cpp
+	$(TAUINSTR) $(TARGET).pdb $(TARGET).cpp -o $(TARGET).inst.cpp -f select 
 
 # Parse the source file to generate the pdb file
 $(TARGET).pdb : $(PDTPARSE) $(TARGET).cpp 
