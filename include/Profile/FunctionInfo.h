@@ -55,19 +55,19 @@ public:
 	// Construct with the name of the function and its type.
 	FunctionInfo(const char* name, const char * type, 
           TauGroup_t ProfileGroup = TAU_DEFAULT, 
-	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false,
+	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	  int tid = RtsLayer::myThread());
 	FunctionInfo(const char* name, const string& type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
-	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false,
+	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	  int tid = RtsLayer::myThread());
 	FunctionInfo(const string& name, const string& type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
-	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false,
+	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	  int tid = RtsLayer::myThread());
 	FunctionInfo(const string& name, const char * type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
-	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false,
+	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	  int tid = RtsLayer::myThread());
 
 	FunctionInfo(const FunctionInfo& X) ;
@@ -303,7 +303,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.29 $   $Date: 2005/01/05 21:29:01 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.29 2005/01/05 21:29:01 amorris Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
+ * $Revision: 1.30 $   $Date: 2005/01/05 22:57:10 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.30 2005/01/05 22:57:10 sameer Exp $ 
  ***************************************************************************/
