@@ -5,17 +5,15 @@ declare -i TRUE=1
 
 declare -i groupType=0
 declare -i group_f_F=1
-declare -i group_F90=2
-declare -i group_F95=3
-declare -i group_c=4
-declare -i group_C=5
+declare -i group_c=2
+declare -i group_C=3
 
-declare -i hasRecursiveFreeOption=$FALSE
 declare -i hasAnOutputFile=$FALSE
 declare -i fortranParserDefined=$FALSE
 declare -i isForCompilation=$FALSE
 declare -i hasAnObjectOutputFile=$FALSE
 declare -i hasMpi=$TRUE
+declare -i needToCleanPdbInstFiles=$TRUE
 
 declare -i isVerbose=$FALSE
 declare -i isDebug=$FALSE
@@ -37,7 +35,6 @@ printUsage () {
 	echo -e "Usage: tau_compiler.sh"
 	echo -e "  -optVerbose\t\t[For Verbose]"
 	echo -e "  -optPdtDir=\"\"\t\tDirectory of PDT Parser. Often equals \$(PDTDIR)/\${PDTARCHDIR}"
-	echo -e "  -optPdtF90=\"\"\t\tSpecific Options needed while Parsing .F90 files. Example \${FFLAGS} \${FCPPFLAGS}"
 	echo -e "  -optPdtF95=\"\"\t\tSpecific Options needed while Parsing .F95 files. Example \${FFLAGS} \${FCPPFLAGS}"
 	echo -e "  -optPdtCOpts=\"\"\tSpecific Options needed while Parsing .c files. Example \${CFLAGS}"
 	echo -e "  -optPdtCxxOpts=\"\"\tSpecific Options needed while Parsing .cxx files. Example \${CPPFLAGS}"
@@ -49,6 +46,7 @@ printUsage () {
 	echo -e "  -optCompile=\"\"\tOptions required during Compilation"
 	echo -e "  -optLinking=\"\"\tOptions required during Linking"
 	echo -e "  -optNoMpi\t\tRemoves -l*mpi* from the Linking stage"
+	echo -e "  -optKeepFiles\t\tDoes not remove intermediate .pdb and .inst.* files" 
 	if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 		exit
 	fi
@@ -158,7 +156,7 @@ for arg in "$@"
 			groupType=$group_c
 			;;
 
-		*.f|*.F)
+		*.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
 			fileName=$arg
 			arrFileName[$numFiles]=$arg
 			numFiles=numFiles+1
@@ -167,29 +165,6 @@ for arg in "$@"
 				pdtParserF="$optPdtDir""/f95parse"
 			fi
 			groupType=$group_f_F
-			hasRecursiveFreeOption=$TRUE
-			;;
-
-		*.f90)
-			fileName=$arg
-			arrFileName[$numFiles]=$arg
-			numFiles=numFiles+1
-			if [ $fortranParserDefined == $FALSE ]; then
-				#If it is not passed EXPLICITY, use the default f95parse.
-				pdtParserF="$optPdtDir""/f95parse"
-			fi
-			groupType=$group_f_F
-			;;
-
-		*.F90)
-			fileName=$arg
-			arrFileName[$numFiles]=$arg
-			numFiles=numFiles+1
-			if [ $fortranParserDefined == $FALSE ]; then
-				#If it is not passed EXPLICITY, use the default.
-				pdtParserF="$optPdtDir""/f95parse"
-			fi
-			groupType=$group_F90
 			;;
 
 		-c)
@@ -247,19 +222,6 @@ for arg in "$@"
 			-optPdtDir*)
 				optPdtDir=${arg#"-optPdtDir="}"/bin"
 				echoIfDebug "\tpdtDir read is: $optPdtDir"
-				;;
-
-			-optPdtF90*)
-				#reads all the options needed for Parsing a Fortran file
-				#e.g ${FFLAGS}, ${FCPPFLAGS}. If one needs to pass any
-				#additional files for parsing, it can simply be appended before 
-				#the flags. 
-				#e.g.  -optPdtF90="${APP_DEFAULT_DIR}/{APP_LOCATION}/*.F90 ${FFLAGS}, ${FCPPFLAGS}. 
-				#It is imperative that the additional files for parsing be kept 
-				#before the flags.
-
-				optPdtF90=${arg#"-optPdtF90="}
-				echoIfDebug "\tPDT Option for F90 is: $optPdtF90"
 				;;
 
 			-optPdtF95*)
@@ -337,12 +299,21 @@ for arg in "$@"
 				isVerbose=$TRUE
 				;;
 
+
 			-optNoMpi*)
 				#By default this is true. When set to false, This option 
 				#removes -l*mpi* options at the linking stage.
 				echoIfDebug "\tNo MPI Option is being passed"
 				hasMpi=$FALSE
 				;;
+
+			-optKeepFiles*)
+				#By default this is False. 
+				#removes *.inst.* and *.pdb
+				echoIfDebug "\tOption to remove *.inst.* and *.pdb files being passed"
+				needToCleanPdbInstFiles=$FALSE
+				;;
+
 
 			esac #end case for parsing script Options
 			;;
@@ -445,27 +416,11 @@ if [ $gotoNextStep == $TRUE ]; then
 	while [ $tempCounter -lt $numFiles ]; do
 
 		#Now all the types of all the flags, cFlags, fFlags.
+		#optPdtF95 is a generic opt for all fortran files
+		#and hence is appended for .f, .F, .F90 and .F95
+			
 		case $groupType in
 			$group_f_F)
-				pdtCmd="$pdtParserF"
-				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]}"
-				pdtCmd="$pdtCmd $optPdtUser"
-				if [ $hasRecursiveFreeOption == $TRUE ]; then
-					pdtCmd="$pdtCmd "" -R free "
-				fi
-				;;
-
-			$group_F90)
-				pdtCmd="$pdtParserF "
-				tempPdbDirName=${arrPdb[$tempCounter]%/*}
-				echoIfDebug "Directory1 is " "$tempPdbDirName"
-				tempPdbFileName=${arrPdb[$tempCounter]##*/}
-				pdtCmd="$pdtCmd ${tempPdbDirName}""/*.F90 "
-				pdtCmd="$pdtCmd ${optPdtF90} "
-				pdtCmd="$pdtCmd -o${tempPdbFileName} $optPdtUser"
-				;;
-
-			$group_F95)
 				pdtCmd="$pdtParserF"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]}"
 				pdtCmd="$pdtCmd $optPdtUser"
@@ -627,7 +582,14 @@ if [ $gotoNextStep == $TRUE ]; then
 
 fi
 
-
+if [ $needToCleanPdbInstFiles == $TRUE ]; then
+	tempCounter=0
+	while [ $tempCounter -lt $numFiles ]; do
+		eval "rm ${arrTau[$tempCounter]}"
+		eval "rm ${arrPdb[$tempCounter]}"
+		tempCounter=tempCounter+1
+	done
+fi
 
 
 ####################################################################
