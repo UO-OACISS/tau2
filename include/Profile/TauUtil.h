@@ -25,7 +25,7 @@
    of malloc */
    
 
-#if (defined(sgi)  || defined (TAU_WRAPPER_BLANK))
+#if (defined(sgi)  || defined (TAU_WRAPPER_BLANK) || defined(__blrts__))
 #define TAU_DECL_LOCAL(mtype, l) MPI_Fint * l
 #define TAU_ALLOC_LOCAL(mtype, l, size) 
 #define TAU_DECL_ALLOC_LOCAL(mtype, l, size) MPI_Fint * l
