@@ -4700,7 +4700,7 @@ int mpi_file_iwrite_at__( MPI_File fh, MPI_Offset offset, void * buf, int count,
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Request * request)
+int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_iread_at()", "", TAU_MESSAGE); 
@@ -4713,7 +4713,7 @@ int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MP
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-int MPI_FILE_IREAD_AT( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Request * request)
+int MPI_FILE_IREAD_AT( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_iread_at()", "", TAU_MESSAGE); 
@@ -5870,7 +5870,7 @@ int mpi_file_iwrite_shared__( MPI_File fh, void * buf, int count, MPI_Datatype d
 
 /******************************************************/
 /******************************************************/
-#else (! defined TAU_MPIOREQUEST )
+#else /* ! defined TAU_MPIOREQUEST */
 
 /******************************************************
 ***      MPI_File_iread wrapper function 
