@@ -125,11 +125,15 @@ TAU_DISABLE   = libTauDisable$(LSX)
 ##############################################
 TAU_SHLIBX		= .so 		  
 #HP#TAU_SHLIBX		= .sl			#ENDIF#
-#APPLECXX#TAU_SHLIBX    = .dylib		#ENDIF#
+#APPLECXX#TAU_APPLE_SHLIBX  = .dylib		#ENDIF#
+#PYTHON#TAU_APPLE_SHLIBX    = .so		#ENDIF#
+#APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF#
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
-#APPLECXX#AR_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
+#APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
+#PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
+#APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)     #ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 #USE_IBMXLC#AR_SHFLAGS          = -G 		#ENDIF#
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
@@ -222,7 +226,7 @@ $(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@if [ -d $(TAUPYTHON_BINDINGSDIR) ] ; then true; \
 		    else mkdir $(TAUPYTHON_BINDINGSDIR); fi
 		$(RM) $(TAUPYTHON_BINDINGSDIR)/tau.py $(TAUPYTHON_BINDINGSDIR)/$(TAUPYTHON)
-		cd $(TAUPYTHON_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../$(TAU_SHLIB) $(TAUPYTHON)
+		cd $(TAUPYTHON_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../$(TAUPYTHON) $(TAUPYTHON)
 
 install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL)
 
