@@ -27,7 +27,7 @@ public class FileList{
 	Vector result = new Vector();
 
 	//Check to see if type is valid.
-	if(type>6){
+	if(type>6 && (type <= 100 || type > 101)){
 	    System.out.println("Unexpected Type -  " + type + ":");
 	    System.out.println("Location - ParaProfManager.getFileList(...) 0");
 	    return new Vector();
@@ -98,7 +98,9 @@ public class FileList{
 			    break;
 			case 3:
 			case 4:
+			case 5:
 			case 6:
+			case 101:
 			    filePrefix = JOptionPane.showInputDialog("Enter file prefix");
 			    if((filePrefix == null) || "".equals(filePrefix)){
 				System.out.println("No prefix given!");
@@ -135,7 +137,7 @@ public class FileList{
 			    }
 			}
 		    }
-		    else if(type==2 || type==3 || type==4 || type==6){
+		    else if(type==2 || type==3 || type==4 || type== 5 || type==6 || type==101){
 			files = this.helperGetFileList(selection[0], type, filePrefix, debug);
 			if(files.length > 0)
 			    result.add(files);
@@ -220,13 +222,14 @@ public class FileList{
 			files[0] = file;
 		    }
 		}
-		else if(type==1||type==2||type==3||type==4||type==6){
+		else if(type==1||type==2||type==3||type==4||type==5||type==6){
 		    files = directory.listFiles();
 		    Vector v = new Vector();
 		    for(int i = 0;i<files.length;i++){
 			if(files[i] != null){
-			    if(files[i].getName().indexOf(filePrefix) == 0)
-				v.add(files[i]);
+				if(files[i].getName().indexOf(filePrefix) == 0) {
+					v.add(files[i]);
+				}
 			}
 		    }
 		    int length = v.size();
@@ -235,6 +238,23 @@ public class FileList{
 			for(int i=0;i<length;i++){
 			    files[i] = (File) v.elementAt(i);
 			}
+		    }
+		}
+		else if(type==101){
+			int index = 0;
+		    Vector v = new Vector();
+			file = new File (directoryPath + fileSeparator + filePrefix + fileSeparator + index + fileSeparator + "output");
+			while (file.exists()) {
+				v.add(file);
+				index++;
+				file = new File (directoryPath + fileSeparator + filePrefix + fileSeparator + index + fileSeparator + "output");
+			}
+		    int length = v.size();
+		    files = new File[length]; //Important to reset files here.
+		    if(length!=0){
+				for(int i=0;i<length;i++){
+			    	files[i] = (File) v.elementAt(i);
+				}
 		    }
 		}
 		else{

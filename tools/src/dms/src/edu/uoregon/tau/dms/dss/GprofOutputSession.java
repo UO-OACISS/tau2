@@ -25,9 +25,10 @@ import java.lang.reflect.Array;
 
 public class GprofOutputSession extends ParaProfDataSession{
 
-    public GprofOutputSession(){
+    public GprofOutputSession(boolean fixNames){
 	super();
 	this.setMetrics(new Vector());
+	this.fixNames = fixNames;
     }
 
     public void run(){
@@ -352,6 +353,7 @@ index  % time   self    children  called         name       index
 			if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
 	    		lineData.s0 += " " + tmp; //Name
 		}
+		lineData.s0 = fix(lineData.s0);
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GOS02");
@@ -439,6 +441,7 @@ index  % time    self  children called     name
 			int end = string.lastIndexOf("[") - 1;
 	    	lineData.s0 = string.substring(nameStart,end).trim();
 		}
+		lineData.s0 = fix(lineData.s0);
 	}
 	catch(Exception e){
 		System.out.println("***\n" + string + "\n***");
@@ -530,6 +533,7 @@ index  % time    self  children called     name
 			if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
 	    		lineData.s0 += " " + tmp; //Name
 		}
+		lineData.s0 = fix(lineData.s0);
 	}
 	catch(Exception e){
 		System.out.println(string);
@@ -538,6 +542,21 @@ index  % time    self  children called     name
 	return lineData;
     }
 
+/* 
+   when C and Fortran code are mixed, the C routines have to be mapped to
+   either .function or function_ .  Strip the leading period or trailing 
+   underscore, if it is there.
+ */
+	private String fix(String inString) {
+		String outString = inString;
+		if (fixNames) {
+			if (inString.indexOf(".") == 0)
+				outString = inString.substring(1,inString.length());
+			else if (inString.endsWith("_"))
+				outString = inString.substring(0,inString.length() - 1);
+		}
+		return outString;
+	}
     
     //######
     //End - Gprof.dat string processing methods.
@@ -549,6 +568,7 @@ index  % time    self  children called     name
 	private int descendantsStart = 0;
 	private int calledStart = 0;
 	private int nameStart = 0;
+	private boolean fixNames = false;
 
     //####################################
     //End - Private Section.

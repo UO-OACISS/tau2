@@ -14,13 +14,14 @@ import java.io.*;
 
 public class LoadTrial implements ParaProfObserver {
 
-	public static String USAGE = "USAGE: perfdmf_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n";
+	public static String USAGE = "USAGE: perfdmf_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file] [{-i --fixnames}]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n";
     private File readPprof;
     private File writeXml;
     private String trialTime;
     private String sourceFile;
     private Application app;
     private Experiment exp;
+	private boolean fixNames = false;
     private int expID = 0;
 	public int trialID = 0;
 	private int fileType = 0;
@@ -110,6 +111,21 @@ public class LoadTrial implements ParaProfObserver {
 			}
 			dataSession = new HPMToolkitDataSession();
 			break;
+		case 5:
+			if (fileExists()) {
+				inFile[0] = new File (sourceFile);
+				v = new Vector();
+				v.add(inFile);
+			} else {
+				fl = new FileList();
+				String[] sourcePath = extractSourcePath();
+				if (sourcePath[0] != null)
+					v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
+				else
+					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+			}
+			dataSession = new GprofOutputSession(fixNames);
+			break;
 		case 6:
 			if (fileExists()) {
 				inFile[0] = new File (sourceFile);
@@ -125,8 +141,24 @@ public class LoadTrial implements ParaProfObserver {
 			}
 			dataSession = new PSRunDataSession();
 			break;
+			/*
+		case 101:
+			if (fileExists()) {
+				inFile[0] = new File (sourceFile);
+				v = new Vector();
+				v.add(inFile);
+			} else {
+				fl = new FileList();
+				String[] sourcePath = extractSourcePath();
+				if (sourcePath[0] != null)
+					v = fl.getFileList(new File(sourcePath[0]), null, fileType, sourcePath[1], false);
+				else
+					v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, false);
+			}
+			dataSession = new SPPMOutputDataSession();
+			break;
+			*/
 		default:
-		case 5:
 			break;
 	}
 
@@ -142,7 +174,7 @@ public class LoadTrial implements ParaProfObserver {
     }
 
     public void saveTrial() {
-	//if (fileType == 4) return;
+	// if (fileType == 101) return;
 	// set some things in the trial
 	int[] maxNCT = dataSession.getMaxNCTNumbers();
 	trial.setNodeCount(maxNCT[0]+1);
@@ -257,6 +289,7 @@ public class LoadTrial implements ParaProfObserver {
         CmdLineParser.Option problemOpt = parser.addStringOption('p', "problemfile");
         CmdLineParser.Option trialOpt = parser.addStringOption('t', "trialid");
         CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
+        CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
 
         try {
             parser.parse(args);
@@ -275,6 +308,7 @@ public class LoadTrial implements ParaProfObserver {
         String problemFile = (String)parser.getOptionValue(problemOpt);
         String trialID = (String)parser.getOptionValue(trialOpt);
         String fileTypeString = (String)parser.getOptionValue(typeOpt);
+        Boolean fixNames = (Boolean)parser.getOptionValue(fixOpt);
 
     	if (help != null && help.booleanValue()) {
 	    System.err.println(LoadTrial.USAGE);
@@ -308,11 +342,13 @@ public class LoadTrial implements ParaProfObserver {
 			fileType = 3;
 		} else if (fileTypeString.equals("hpm")) {
 			fileType = 4;
+		} else if (fileTypeString.equals("gprof")) {
+			fileType = 5;
 		} else if (fileTypeString.equals("psrun")) {
 			fileType = 6;
 /*
-		} else if (fileTypeString.equals("gprof")) {
-			fileType = 0;
+		} else if (fileTypeString.equals("sppm")) {
+			fileType = 101;
 		} else if (fileTypeString.equals("xprof")) {
 			fileType = 0;
 		} else if (fileTypeString.equals("sddf")) {
@@ -337,6 +373,7 @@ public class LoadTrial implements ParaProfObserver {
 	}
 	trans.trialName = trialName;
 	trans.problemFile = problemFile;
+	trans.fixNames = fixNames.booleanValue();
 	trans.loadTrial(fileType);
 	// the trial will be saved when the load is finished (update is called)
     }
