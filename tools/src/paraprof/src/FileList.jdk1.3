@@ -80,12 +80,12 @@ public class FileList{
 			//Get prefix.
 			switch(type){
 			case 0:
-			    filePrefix = JOptionPane.showInputDialog("Enter file prefix", "pprof");
+			    filePrefix = JOptionPane.showInputDialog("Enter file prefix");
 			    if((filePrefix == null) || "".equals(filePrefix))
 				filePrefix = "pprof";
 			    break;
 			case 1:
-			    filePrefix = JOptionPane.showInputDialog("Enter file prefix", "profile");
+			    filePrefix = JOptionPane.showInputDialog("Enter file prefix");
 			    if((filePrefix == null) || "".equals(filePrefix))
 				filePrefix = "profile";
 			    break;
