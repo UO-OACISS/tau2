@@ -2,6 +2,7 @@
 CONFIG_ARCH=@TAUARCH@
 TAUROOT=@TAUROOT@
 
+
 # these are classpaths for the build.  The second classpath is for the 
 # src/edu/uoregon/tau/dms/loader directory.  The first is for everything else.
 CLASSPATH=./classes
@@ -10,38 +11,50 @@ LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar
 # These are class and source targets.
 DOC_PATH=./doc
 SRC_PATH=./src/edu/uoregon/tau
-DATABASE_SOURCES=$(SRC_PATH)/dms/database/*.java
-DATABASE_CLASSES=classes/edu/uoregon/tau/dms/database/*.class
-LOADER_CLASSES=classes/edu/uoregon/tau/dms/loader/*.class
-LOADER_SOURCES=$(SRC_PATH)/dms/loader/*.java
-DSS_CLASSES=classes/edu/uoregon/tau/dms/dss/*.class
-DSS_SOURCES=$(SRC_PATH)/dms/dss/*.java
-ANALYSIS_CLASSES=classes/edu/uoregon/tau/dms/analysis/*.class
-ANALYSIS_SOURCES=$(SRC_PATH)/dms/analysis/*.java
+DATABASE_SOURCES=$(wildcard $(SRC_PATH)/dms/database/*.java)
+LOADER_SOURCES=$(wildcard $(SRC_PATH)/dms/loader/*.java)
+DSS_SOURCES=$(wildcard $(SRC_PATH)/dms/dss/*.java)
+ANALYSIS_SOURCES=$(wildcard $(SRC_PATH)/dms/analysis/*.java)
 EXAMPLE_CLASSES=./src/examples/*.class
 EXAMPLE_SOURCES=./src/examples/*.java
 
+
+SOURCES = $(DATABASE_SOURCES) $(DSS_SOURCES) $(LOADER_SOURCES) $(ANALYSIS_SOURCES)
+CLASSES = $(subst ./src/, ./classes/, $(patsubst %.java, %.class, $(SOURCES)))
+
+
+
 default: dms.jar 
+
 
 all: dms.jar javadoc rebuilddb buildtest simple
 
-dms.jar: $(DATABASE_CLASSES) $(DSS_CLASSES) $(LOADER_CLASSES) $(ANALYSIS_CLASSES)
+#./classes/%.class : ./src/%.java
+#	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $<
+
+dms.jar: $(SOURCES)
+	javac -d $(CLASSPATH) -classpath $(LOADER_CLASSPATH) $(SOURCES)
 	jar -cvf dms.jar -C classes .
+	cp dms.jar $(TAUROOT)/$(CONFIG_ARCH)/lib/dms.jar
+
+#dms.jar: $(DATABASE_CLASSES) $(DSS_CLASSES) $(LOADER_CLASSES) $(ANALYSIS_CLASSES)
+#	jar -cvf dms.jar -C classes .
 
 install:
 	cp dms.jar $(TAUROOT)/$(CONFIG_ARCH)/lib/dms.jar
 
-$(DATABASE_CLASSES): $(DATABASE_SOURCES)
-	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(DATABASE_SOURCES)
+# $(DATABASE_CLASSES): $(DATABASE_SOURCES)
+# 	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(DATABASE_SOURCES)
 
-$(LOADER_CLASSES): $(LOADER_SOURCES) $(DSS_CLASSES)
-	javac -d $(CLASSPATH) -classpath $(LOADER_CLASSPATH) $(LOADER_SOURCES)
+# $(LOADER_CLASSES): $(LOADER_SOURCES) $(DSS_CLASSES)
+# 	javac -d $(CLASSPATH) -classpath $(LOADER_CLASSPATH) $(LOADER_SOURCES)
 
-$(DSS_CLASSES): $(DSS_SOURCES) $(DATABASE_CLASSES)
-	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(DSS_SOURCES)
+# $(DSS_CLASSES): $(DSS_SOURCES) $(DATABASE_CLASSES)
+# 	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(DSS_SOURCES)
 
-$(ANALYSIS_CLASSES): $(ANALYSIS_SOURCES) $(DSS_CLASSES)
-	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(ANALYSIS_SOURCES)
+# $(ANALYSIS_CLASSES): $(ANALYSIS_SOURCES) $(DSS_CLASSES)
+# 	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(ANALYSIS_SOURCES)
+
 
 $(EXAMPLE_CLASSES): dms.jar $(EXAMPLE_SOURCES)
 	javac -d $(CLASSPATH) -classpath dms.jar $(EXAMPLE_SOURCES)
