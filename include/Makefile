@@ -535,6 +535,10 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTAU_trace
 #############################################
 #SHMEM#TAU_SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
 #SP1#TAU_SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
+
+TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC)
+
+TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB)
 #############################################
 # These options could be included in the application Makefile as 
 #CFLAGS        	= $(TAUDEFS) $(TAUINC)
