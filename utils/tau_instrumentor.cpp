@@ -526,40 +526,55 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
   ostr<< "#include <Profile/Profiler.h>"<<endl;
 
   int inputLineNo = 0;
-  int lastInstrumentedLineNo = 0;
-  for(vector<itemRef *>::iterator it = itemvec.begin(); it != itemvec.end();
-        ++it)
+  vector<itemRef *>::iterator lit = itemvec.begin();
+  while (lit != itemvec.end())
   {
     // Read one line each till we reach the desired line no.
 #ifdef DEBUG
-    cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
+    cout <<"S: "<< (*lit)->item->fullName() << " line "<< (*lit)->line << " col " << (*lit)->col << endl;
 #endif
     bool instrumented = false;
     while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
     {
       inputLineNo ++;
-      if (inputLineNo < (*it)->line)
+#ifdef DEBUG
+        cout <<"In while: inbuf: "<<inbuf<<" inputline no "
+	<<inputLineNo<< endl;
+#endif /* DEBUG */
+      if (inputLineNo < (*lit)->line)
       {
+#ifdef DEBUG
+	cout <<"Writing(3): "<<inbuf<<endl;
+#endif /* DEBUG */
         // write the input line in the output stream
         ostr << inbuf <<endl;
       }
       else
-      {
-        int inbufLength = strlen(inbuf);
-#ifdef DEBUG 
-	cout <<"Line " <<(*it)->line <<" Col " <<(*it)->col <<endl;
-#endif /* DEBUG */
-        for(int i=0; i< ((*it)->col)-1; i++)
+      { /* We're at the desired line no. */
+        for(int i=0; i< ((*lit)->col)-1; i++)
 	{ 
+#ifdef DEBUG
+	  cout <<"Writing(1): "<<inbuf[i]<<endl;
+#endif /* DEBUG */
 	  ostr << inbuf[i];
 	}
-	/* set instrumented = true after inserting instrumentation */
-	string return_string; 
-	int write_from, write_upto;
-	int k;
-	write_from = ((*it)->col)-1; 
-	switch ((*it)->kind) {
-	  case BODY_BEGIN: 
+        vector<itemRef *>::iterator it;
+        for (it = lit; ((it != itemvec.end()) && ((*it)->line == (*lit)->line)); ++it) 
+        { /* it/lit */
+          int inbufLength = strlen(inbuf);
+
+#ifdef DEBUG 
+	  cout <<"Line " <<(*it)->line <<" Col " <<(*it)->col <<endl;
+#endif /* DEBUG */
+	  /* set instrumented = true after inserting instrumentation */
+	  string return_string; 
+	  int write_from, write_upto;
+	  int k;
+	  write_from = ((*it)->col)-1; 
+
+        /* Examine the instrumentation request */
+	  switch ((*it)->kind) {
+	    case BODY_BEGIN: 
 #ifdef DEBUG 
 		cout <<"Body Begin" <<endl;
 #endif /* DEBUG */
@@ -575,9 +590,9 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 		{
 		  processNonVoidRoutine(ostr, return_string, *it);
 		}
-		instrumented = true; lastInstrumentedLineNo = inputLineNo; 
+		instrumented = true; 
 		break;
-	  case RETURN: 
+	    case RETURN: 
 #ifdef DEBUG 
 		cout <<"Return "<<endl;
 #endif /* DEBUG */
@@ -655,16 +670,16 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 #endif /* DEBUG */
 		}
 
-		instrumented = true; lastInstrumentedLineNo = inputLineNo;
+		instrumented = true; 
 		break;
-	  case BODY_END: 
+	    case BODY_END: 
 #ifdef DEBUG 
 		cout <<"Body End "<<endl;
 #endif /* DEBUG */
 		ostr<<"\n}\n\tTAU_PROFILE_STOP(tautimer);\n"<<endl; 
-		instrumented = true; lastInstrumentedLineNo = inputLineNo;
+		instrumented = true; 
 		break;
-	  case EXIT:
+	    case EXIT:
 #ifdef DEBUG 
 		cout <<"Exit" <<endl;
 #endif /* DEBUG */
@@ -672,41 +687,43 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 		for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
 		  ostr<<inbuf[k]; 
 		ostr <<"; }";
-		instrumented = true; lastInstrumentedLineNo = inputLineNo;
+		instrumented = true; 
 		write_from = k+1;
 		break; 
-	  default:
+	    default:
 		cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
-		instrumented = true; lastInstrumentedLineNo = inputLineNo;
+		instrumented = true; 
 		break;
-	}
-	if (it+1 != itemvec.end())
- 	{
-	  write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col : inbufLength; 
+	  } /* Switch statement */
+	  if (it+1 != itemvec.end())
+ 	  {
+	    write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col-1 : inbufLength; 
 #ifdef DEBUG
-          cout <<"CHECKING write_upto = "<<write_upto<<endl;
-	  cout <<"it = ("<<(*it)->line<<", "<<(*it)->col<<") ;";
-	  cout <<"it+1 = ("<<(*(it+1))->line<<", "<<(*(it+1))->col<<") ;"<<endl;
+            cout <<"CHECKING write_from "<<write_from <<" write_upto = "<<write_upto<<endl;
+	    cout <<"it = ("<<(*it)->line<<", "<<(*it)->col<<") ;";
+	    cout <<"it+1 = ("<<(*(it+1))->line<<", "<<(*(it+1))->col<<") ;"<<endl;
 #endif /* DEBUG */
-	}
-	else
-	  write_upto = inbufLength; 
+	  }
+	  else
+	    write_upto = inbufLength; 
 
 #ifdef DEBUG
-   	cout <<"inbuf: "<<inbuf<<endl;
+   	  cout <<"inbuf: "<<inbuf<<endl;
 #endif /* DEBUG */
-	for (int j=write_from; j < write_upto; j++)
-	{
-#ifdef DEBUG2 
-   	  cout <<"Writing: "<<inbuf[j]<<endl;
-#endif /* DEBUG2 */
-	  ostr <<inbuf[j];
-	}
-	ostr <<endl;
+	  for (int j=write_from; j < write_upto; j++)
+	  {
+#ifdef DEBUG 
+   	    cout <<"Writing(4): "<<inbuf[j]<<endl;
+#endif /* DEBUG */
+	    ostr <<inbuf[j];
+	  }
+	  ostr <<endl;
 	
-      } /* line no. */
+          } /* for it/lit */
+        lit=it; 
+      } /* else line no*/
     } /* while */
-  } /* for all items */
+  } /* while lit != end */
   // For loop is over now flush out the remaining lines to the output file
   while (istr.getline(inbuf, INBUF_SIZE) )
   {
@@ -716,7 +733,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
   ostr.close();
 
 
-}
+} /* End of instrumentCFile */ 
 
 
 
@@ -778,8 +795,8 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
       }
       else
       { /* reached line */
-        // we're at the desired line no. go to the specified col
         int inbufLength = strlen(inbuf);
+        // we're at the desired line no. go to the specified col
 #ifdef DEBUG 
 	cout <<"Line " <<(*it)->line <<" Col " <<(*it)->col <<endl;
 #endif /* DEBUG */
