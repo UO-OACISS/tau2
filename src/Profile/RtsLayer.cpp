@@ -126,7 +126,7 @@ bool& RtsLayer::TheEnableInstrumentation(void)
 /////////////////////////////////////////////////////////////////////////
 int& RtsLayer::TheNode(void)
 {
-  static int Node = -1;
+  static int Node = 0;
  
   return Node;
 }
@@ -854,7 +854,7 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
 //////////////////////////////////////////////////////////////////////
 bool RtsLayer::isCtorDtor(const char *name)
 {
-
+  return false;
   // If the destructor a static object is called, it could have a null name
   // after main is over. Treat it like a Dtor and return true.
   if (name[0] == 0) {
@@ -1043,6 +1043,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.46 $   $Date: 2003/10/10 00:38:37 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.46 2003/10/10 00:38:37 sameer Exp $ 
+ * $Revision: 1.47 $   $Date: 2003/12/11 19:54:49 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.47 2003/12/11 19:54:49 sameer Exp $ 
  ***************************************************************************/
