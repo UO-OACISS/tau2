@@ -82,8 +82,10 @@ string * TauFormulateComparisonString(Profiler *p)
 string * TauFormulateNameString(Profiler *p)
 {
   DEBUGPROFMSG("Inside TauFormulateNameString()"<<endl;);
-  string *s = new  string( string(p->ParentProfiler->ThisFunction->GetName() + 
-			   string (" => ") + p->ThisFunction->GetName() ));
+  string *s = new  string( string(p->ParentProfiler->ThisFunction->GetName()) + 
+		string (" ") + string(p->ParentProfiler->ThisFunction->GetType()) +
+		string (" => ") + string(p->ThisFunction->GetName()) +
+		string (" ") + string(p->ThisFunction->GetType()) );
   return s;
 }
 
@@ -185,6 +187,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2002/08/20 11:18:56 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.6 2002/08/20 11:18:56 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 2003/04/17 05:13:07 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.7 2003/04/17 05:13:07 sameer Exp $ 
  ***************************************************************************/
