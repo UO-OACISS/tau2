@@ -1142,8 +1142,6 @@ void Profiler::CallStackTrace()
     // set profiler's inclusive time
     curr->InclTime_cs = totalTime;
 
-
-    // WE NEED TO #define PROFILE_CALLS or PROFILE_CALLSTACK or something
     // calc Profiler's exclusive time
     curr->ExclTime_cs = totalTime + curr->ExclTimeThisCall
                       - prevTotalTime;
@@ -1214,8 +1212,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: mikek $
- * $Revision: 1.5 $   $Date: 1998/01/06 00:35:51 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.5 1998/01/06 00:35:51 mikek Exp $ 
+ * $Revision: 1.6 $   $Date: 1998/02/22 23:41:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.6 1998/02/22 23:41:35 mikek Exp $ 
  ***************************************************************************/
 
 	
