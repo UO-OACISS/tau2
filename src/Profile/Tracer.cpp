@@ -263,7 +263,9 @@ void TraceEvClose(int tid)
       TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
     }
     TraceEvFlush (tid);
-    close (TraceFd[tid]);
+    //close (TraceFd[tid]); 
+    // Just in case the same thread writes to this file again, don't close it.
+    // for OpenMP.
 }
 
 void pcxx_EvClose(void)
