@@ -64,14 +64,14 @@ LSX = .a
 #GNU#PROFILEOPT10              = -DNO_RTTI             #ENDIF#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI#PROFILEOPT12	       = 		       #ENDIF#
-#CRAYCC#PROFILEOPT13	       = -h instantiate=used #ENDIF#
+#CRAYCC#PROFILEOPT13	       = -h instantiate=used   #ENDIF#
 #SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
 #PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS           #ENDIF#
-#TULIPTHREADS#PROFILEOPT16 = -DTULIPTHREADS           #ENDIF#
+#TULIPTHREADS#PROFILEOPT16 = -DTULIPTHREADS            #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
-#TRACE#EVENTS_O                = pcxx_events.o         #ENDIF#
-#PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o           #ENDIF#
-#TULIPTHREADS#THR_O       = TulipThreadLayer.o           #ENDIF#
+#TRACE#EVENTS_O                = Tracer.o              #ENDIF#
+#PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o        #ENDIF#
+#TULIPTHREADS#THR_O       = TulipThreadLayer.o         #ENDIF#
 #TULIPTHREADS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/Tuliplib   #ENDIF#
 #SMARTS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/lib   #ENDIF#
 #SMARTS#PROFILEOPT18  = -DSMARTS   #ENDIF#
