@@ -101,6 +101,7 @@ public:
 	~Profiler();
   	static void ProfileExit(const char *message=0, 
 	  int tid = RtsLayer::myThread());
+	static bool createDirectories();
 	static int StoreData(int tid = RtsLayer::myThread()); 
 	static int DumpData(int tid = RtsLayer::myThread()); 
 	static void PurgeData(int tid = RtsLayer::myThread());
@@ -148,6 +149,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.36 $   $Date: 2002/03/10 23:50:43 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.36 2002/03/10 23:50:43 bertie Exp $ 
+ * $Revision: 1.37 $   $Date: 2002/03/11 19:41:04 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.37 2002/03/11 19:41:04 bertie Exp $ 
  ***************************************************************************/

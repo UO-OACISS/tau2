@@ -924,8 +924,37 @@ void Profiler::PurgeData(int tid)
 	RtsLayer::UnLockDB();
 }
 //////////////////////////////////////////////////////////////////////
-
 #else //TAU_MULTIPLE_COUNTERS
+
+bool Profiler::createDirectories(){
+  
+  char *dirname;
+  
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
+    
+    if(tmpChar != NULL){
+      char *newdirname = new char[1024];
+      char *rmdircommand = new char[1024];
+      char *mkdircommand = new char[1024];
+      
+      if ((dirname = getenv("PROFILEDIR")) == NULL) {
+	// Use default directory name .
+	dirname  = new char[8];
+	strcpy (dirname,".");
+      }
+      
+      sprintf(newdirname,"%s/%s",dirname,tmpChar);
+      sprintf(rmdircommand,"rm -rf %s",newdirname);
+      sprintf(mkdircommand,"mkdir %s",newdirname);
+    
+      system(rmdircommand);
+      system(mkdircommand);
+    }
+  }
+  return true;
+}
+
 int Profiler::StoreData(int tid){
   
 #ifdef PROFILING_ON
@@ -944,6 +973,9 @@ int Profiler::StoreData(int tid){
 
 #ifdef PROFILING_ON
   
+  //Create directories for storage.
+  static bool createFlag = Profiler::createDirectories();
+
   if ((dirname = getenv("PROFILEDIR")) == NULL) {
     // Use default directory name .
     dirname  = new char[8];
@@ -957,22 +989,16 @@ int Profiler::StoreData(int tid){
       RtsLayer::LockDB();
       
       char *newdirname = new char[1024];
-      char *rmdircommand = new char[1024];
-      char *mkdircommand = new char[1024];
       char *filename = new char[1024];
       char *errormsg = new char[1024];
       char *header = new char[1024];
       
 
       sprintf(newdirname,"%s/%s",dirname,tmpChar);
-      sprintf(rmdircommand,"rm -rf %s",newdirname);
-      sprintf(mkdircommand,"mkdir %s",newdirname);
-
-      system(rmdircommand);
-      system(mkdircommand);
 
       sprintf(filename,"%s/profile.%d.%d.%d",newdirname, RtsLayer::myNode(),
             RtsLayer::myContext(), tid);
+
       DEBUGPROFMSG("Creating " << filename << endl;);
       if ((fp = fopen (filename, "w+")) == NULL) {
       errormsg = new char[1024];
@@ -1057,7 +1083,6 @@ int Profiler::StoreData(int tid){
       // End of userevents data
 
       fclose(fp);
-
     }
   }
 #endif //PROFILING_ON
@@ -1208,8 +1233,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.58 $   $Date: 2002/03/11 09:55:38 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.58 2002/03/11 09:55:38 bertie Exp $ 
+ * $Revision: 1.59 $   $Date: 2002/03/11 19:39:53 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.59 2002/03/11 19:39:53 bertie Exp $ 
  ***************************************************************************/
 
 	
