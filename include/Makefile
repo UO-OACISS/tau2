@@ -71,6 +71,11 @@ TAU_PREFIX_INSTALL_DIR=
 #GNU#IBM_ABI	     	     = $(IBM_GNU_ABI) 	  #ENDIF#
 #SP1# ABI		     = $(IBM_ABI)	  #ENDIF#
 #PPC64# ABI		     = $(IBM_ABI)	  #ENDIF#
+#SOLARIS64#SUN_GNU_ABI	     = -mcpu=v9 -m64	  #ENDIF#
+#SOLARIS64#SUN_CC_ABI	     = -xarch=v9	  #ENDIF#
+#SOL2CC#SUN_ABI	     	     = $(SUN_CC_ABI)	  #ENDIF#
+#GNU#SUN_ABI	     	     = $(SUN_GNU_ABI)	  #ENDIF#
+#SOL2#ABI	     	     = $(SUN_ABI)	  #ENDIF#
 #######################################################################
 F90_ABI	= $(ABI) 
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#

@@ -2463,9 +2463,14 @@ case $machine in
 
 # Currently cm5 cross-development environments are NOT supported
 # for solaris2 machines....
-     solaris2)
+     solaris2*)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine SOL2 $fixmakeargs"
+        if [ "$tauarch" = "solaris2-64" ] 
+        then
+	    fixmakeargs="$fixmakeargs SOLARIS64"
+        fi
+     
 	if [ $papi = yes ]
  	  then
 	    fixmakeargs="$fixmakeargs SOL2PAPI"
@@ -2971,7 +2976,7 @@ fi
 
 echo "TAU: installing TAU's ParaProf profile browser" 
 taushell=sh
-if [ $machine = solaris2 -o $machine = alpha ]
+if [ $machine = solaris2* -o $machine = alpha ]
 then
   taushell=ksh
 fi
