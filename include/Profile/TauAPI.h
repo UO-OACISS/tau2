@@ -85,7 +85,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
                                 Tau_stop_timer(var##finfo);
 #else /* TAU_PROFILEPHASE */
 #define TAU_PHASE_CREATE_STATIC TAU_PROFILE_TIMER
-#define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER
+#define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER_DYNAMIC
 #define TAU_PHASE_START TAU_PROFILE_START
 #define TAU_PHASE_STOP  TAU_PROFILE_STOP
 #endif /* TAU_PROFILEPHASE */
@@ -138,7 +138,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #else
 #define TAU_PHASE_CREATE_STATIC TAU_PROFILE_TIMER
-#define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER
+#define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER_DYNAMIC
 #endif /* TAU_PROFILEPHASE */
 
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
@@ -393,7 +393,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.48 $   $Date: 2005/01/14 18:39:31 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.48 2005/01/14 18:39:31 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.49 $   $Date: 2005/01/18 23:57:20 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.49 2005/01/18 23:57:20 sameer Exp $ 
  ***************************************************************************/
