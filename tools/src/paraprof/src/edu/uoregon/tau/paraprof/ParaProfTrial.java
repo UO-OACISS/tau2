@@ -84,7 +84,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	case 3:
 	    break;
 	case 5:
-	    dataSession = new GprofOutputSession();
+	    dataSession = new GprofOutputSession(false);
 	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
 	    break;
 	default:
