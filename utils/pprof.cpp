@@ -212,6 +212,64 @@ bool IsDynamicProfiling(char *filename) {
   }//else
 }//IsDynamicProfiling()
 
+
+/* ExtractName() routine examines line and extracts function name from it 
+   by examining the number of quotes. It returns the index in line where the 
+   function ends and the other data begins. maxquotes is the maximum no. of
+   quotes that you'd expect in a line. For userevents it is 2, for function 
+   line (with GROUP information) it is 4 */
+int ExtractName(char* func, char *line, int maxquotes)
+{
+
+    /* CHECK IF name has " in it. How many quotes are there? */
+    int numquotes = 0;
+    int idx, j = 0;
+    int stringlength = strlen(line);
+    
+    for (idx = 0; idx < stringlength; idx++)
+      if (line[idx] == '"') numquotes++;
+
+    if (numquotes <= maxquotes)
+    {
+      for (j=1; line[j] != '"'; j++) {
+        func[j-1] = line[j];
+      }//for
+      func[j-1] = '\0'; // null terminate the string
+    // At this point line[j] is '"' and the has a blank after that, so
+    // line[j+1] corresponds to the beginning of other data.
+    }
+    else 
+    { /* numquotes is >maxquotes */
+#ifdef DEBUG
+      printf("numquotes for line = %d [%s]\n", numquotes, line);
+#endif /* DEBUG */
+      /* start with 3 less:  1 for " in the beg & 2 for groups */
+      if (maxquotes == 4) numquotes -= 3;  /* for groups */
+      if (maxquotes == 2) numquotes -= 1;  /* for userevents */
+      for (j = 1; numquotes != 0; j ++)
+      { 
+#ifdef DEBUG
+	printf("idx = %d\n", j);
+#endif /* DEBUG */
+        func[j-1] = line [j]; 
+        if (line [j] == '"') numquotes--; 
+        if (j == stringlength) break;
+      }
+      func[j -2 ] = '\0'; /* get rid of the trailing " in func name */
+#ifdef DEBUG
+      printf("idx = %d, line [idx] = %s, func = %s\n", j, &line[j], func);
+#endif /* DEBUG */
+      
+    }
+
+#ifdef DEBUG
+    printf("INHERE: line[j+1] = %s\n", &line[j+1]);
+#endif /* DEBUG */
+
+    return j;
+  
+}
+
 int InitFuncNameBuf(void){
   //Initializes funcnamebuf and functagbuf.
   //This function now also sets the group information.
@@ -346,52 +404,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
       }//if
     }//else
     // line[0] has '"' - start loop from 1 to get the entire function name
-    /* CHECK IF name has " in it. How many quotes are there? */
-    int numquotes = 0;
-    int idx = 0;
-    int stringlength = strlen(line);
-    
-    for (idx = 0; idx < stringlength; idx++)
-      if (line[idx] == '"') numquotes++;
-
-    if (numquotes <= 4)
-    {
-      for (j=1; line[j] != '"'; j++) {
-        func[j-1] = line[j];
-      }//for
-      func[j-1] = '\0'; // null terminate the string
-    // At this point line[j] is '"' and the has a blank after that, so
-    // line[j+1] corresponds to the beginning of other data.
-    }
-    else 
-    { /* numquotes is >4 */
-
-#ifdef DEBUG
-      printf("numquotes for line = %d [%s]\n", numquotes, line);
-#endif /* DEBUG */
-
-      /* start with 3 less:  1 for " in the beg & 2 for groups */
-      numquotes -= 3; /* for groups */
-      for (j = 1; numquotes != 0; j ++)
-      { 
-#ifdef DEBUG
-	printf("idx = %d\n", j);
-#endif /* DEBUG */
-        func[j-1] = line [j]; 
-        if (line [j] == '"') numquotes--; 
-        if (j == stringlength) break;
-      }
-      func[j -2 ] = '\0'; /* don't use the last " in the name */
-#ifdef DEBUG
-      printf("idx = %d, line [idx] = %s, func = %s\n", j, &line[j], func);
-#endif /* DEBUG */
-      
-    }
-
-#ifdef DEBUG
-    printf("INHERE: line[j+1] = %s\n", &line[j+1]);
-#endif /* DEBUG */
-
+    j = ExtractName(func, line, 4);
     //Now find the groups that this function is a member of.
     //Note that older files might not have this, so don't
     //crash if we do not find it.
@@ -534,11 +547,14 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
 	    perror("Error in fgets: Cannot read user event table");
 	    return 0;
 	  }//if
+          j = ExtractName(func, line, 2); 
+#ifdef OLDCODE
 	  // line[0] has '"' - start loop from 1 to get the entire function name
 	  for (j=1; line[j] != '"'; j++) {
 	    func[j-1] = line[j];
 	  }//for
 	  func[j-1] = '\0'; // null terminate the string
+#endif /* OLDCODE */
 	  // At this point line[j] is '"' and the has a blank after that, so
 	  // line[j+1] corresponds to the beginning of other data.
 	  userEventName = new char[strlen(func)+1]; // create a new storage - STL req.
@@ -683,50 +699,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     }//else
     // the function name is enclosed in "", so begin at index 1 and continue until we
 
-    /* CHECK IF name has " in it. How many quotes are there? */
-    int numquotes = 0;
-    int idx = 0;
-    int stringlength = strlen(line);
-    
-    for (idx = 0; idx < stringlength; idx++)
-      if (line[idx] == '"') numquotes++;
-
-    if (numquotes <= 4)
-    {
-      for (j=1; line[j] != '"'; j++) {
-        func[j-1] = line[j];
-      }//for
-      func[j-1] = '\0'; // null terminate the string
-    // At this point line[j] is '"' and the has a blank after that, so
-    // line[j+1] corresponds to the beginning of other data.
-    }
-    else 
-    { /* numquotes is >4 */
-#ifdef DEBUG
-  printf("numquotes for line = %d [%s]\n", numquotes, line);
-#endif /* DEBUG */
-      /* start with 3 less:  1 for " in the beg & 2 for groups */
-      numquotes -= 3; /* for groups */
-      for (j = 1; numquotes != 0; j ++)
-      { 
-#ifdef DEBUG
-	printf("idx = %d\n", j);
-#endif /* DEBUG */
-        func[j-1] = line [j]; 
-        if (line [j] == '"') numquotes--; 
-        if (j == stringlength) break;
-      }
-      func[j -2 ] = '\0'; /* don't use the last " in the name */
-#ifdef DEBUG
-      printf("idx = %d, line [idx] = %s, func = %s\n", j, &line[j], func);
-#endif /* DEBUG */
-      
-    }
-
-#ifdef DEBUG
-    printf("INHERE: line[j+1] = %s\n", &line[j+1]);
-#endif /* DEBUG */
-
+    j = ExtractName(func, line, 4);
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
     if (!profilestats) { // SumExclSqr is not there 
@@ -1199,11 +1172,14 @@ void  Processuser_event_data(FILE *fp, int node, int ctx, int thr, int numberOfU
       perror("Error in fgets: Cannot read event table");
       return ;
     }//if
+#ifdef OLDCODE 
     // line[0] has '"' - start loop from 1 to get the entire function name
     for (j=1; line[j] != '"'; j++) {
       func[j-1] = line[j];
     }//for
     func[j-1] = '\0'; // null terminate the string
+#endif /* OLDCODE */
+    j = ExtractName(func, line, 2); /* max quotes is 2 for userevent line */
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
 #ifdef APPLECXX
@@ -2719,6 +2695,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.44 $   $Date: 2004/10/14 22:42:14 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.44 2004/10/14 22:42:14 sameer Exp $                                
+ * $Revision: 1.45 $   $Date: 2004/10/15 00:23:16 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.45 2004/10/15 00:23:16 sameer Exp $                                
  ***************************************************************************/
