@@ -615,7 +615,7 @@ void processCommand(int more){
     }//else
   }//else if
   else{ //unrecognized field
-    printf("Error:  unrecognized field: '%s' in rule: '%s'\n", field,rule);
+    printf("Error:  unrecognized field: '%s' in rule: '%s'\n", field.c_str(),rule);
   }//else
   if(!more){
     for(int i=0;i<number_of_functions;i++){
@@ -926,7 +926,7 @@ int main (int argc, char *argv[]){
   //first open up the dumpfile to read in.  fp is now associated with
   //the dump file.
   if((fp=fopen(dumpfilename.c_str(), "r"))==NULL){
-    printf("Error: Could not open %s",dumpfilename);
+    printf("Error: Could not open %s",dumpfilename.c_str());
     exit(0);
   }//if
 
@@ -971,8 +971,8 @@ int main (int argc, char *argv[]){
 }//main
 
 /***************************************************************************
- * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
- * $Revision: 1.10 $   $Date: 2002/08/08 23:27:09 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.10 2002/08/08 23:27:09 ntrebon Exp $
+ * $RCSfile: tau_reduce.cpp,v $   $Author: sameer $
+ * $Revision: 1.11 $   $Date: 2002/12/20 20:09:42 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.11 2002/12/20 20:09:42 sameer Exp $
  ***************************************************************************/
 
