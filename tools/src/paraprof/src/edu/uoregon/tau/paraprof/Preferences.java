@@ -14,103 +14,34 @@ import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.colorchooser.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class Preferences extends JFrame implements ActionListener, Observer{ 
-    //******************************
-    //Instance data.
-    //******************************
-    private ParaProfTrial trial = null;
     
-    //References for some of the components for this frame.
-    private PrefSpacingPanel pSPanel;
-    
-    private JCheckBox loadPprofDat;
-  
-  
-    private JRadioButton normal;
-    private JRadioButton bold;
-    private JRadioButton italic;
-  
-    private ButtonGroup buttonGroup;
-  
-    private JLabel fontLabel = new JLabel("Font Selection");
-  
-    private JComboBox fontComboBox;
-  
-    private JLabel barSpacingLabel = new JLabel("Adjust Bar Spacing");
-    private JLabel barHeightLabel = new JLabel("Adjust Bar Height");
-  
-    private JSlider barSpacingSlider = new JSlider(SwingConstants.VERTICAL, 0, 100, 0);
-    private JSlider barHeightSlider = new JSlider(SwingConstants.VERTICAL, 0, 100, 0);
-  
-    private JButton colorButton;
-  
-    int fontStyle;
-  
-    private boolean barDetailsSet = false;
-    private int barSpacing = -1;
-    private int barHeight = -1;
-  
-    String paraProfFont;
-  
-    //Whether we are doing inclusive or exclusive.
-    String inExValue;
-  
-    //Variable to determine which sorting paradigm has been chosen.
-    String sortBy;  //Possible values are:
-    //mappingID
-    //millDes
-    //millAsc
-  
-    //******************************
-    //End - Instance data.
-    //******************************
-    public Preferences(ParaProfTrial inParaProfTrial, SavedPreferences inSavedPreferences){ 
-	trial = inParaProfTrial;
-	if(inSavedPreferences != null){ 
-	    //******************************
+    public Preferences(ParaProfTrial trial, SavedPreferences savedPreferences){ 
+	this.trial = trial;
+	if(savedPreferences != null){
+	    //######
 	    //Set the saved values.
-	    //******************************
-	    paraProfFont = inSavedPreferences.getParaProfFont();
-	    barSpacing = inSavedPreferences.getBarSpacing();
-	    barHeight = inSavedPreferences.getBarHeight();
-	    inExValue = inSavedPreferences.getInclusiveOrExclusive();
-	    sortBy = inSavedPreferences.getSortBy();
+	    //######
+	    paraProfFont = savedPreferences.getParaProfFont();
+	    barSpacing = savedPreferences.getBarSpacing();
+	    barHeight = savedPreferences.getBarHeight();
+	    inExValue = savedPreferences.getInclusiveOrExclusive();
+	    sortBy = savedPreferences.getSortBy();
 	    
-	    fontStyle = inSavedPreferences.getFontStyle();
+	    fontStyle = savedPreferences.getFontStyle();
 	    
-	    barDetailsSet = inSavedPreferences.getBarDetailsSet();
-	    //******************************
+	    barDetailsSet = savedPreferences.getBarDetailsSet();
+	    //######
 	    //End - Set the saved values.
-	    //******************************
+	    //######
 	}
-	else{
 	    
-	    //******************************
-	    //Set the default values.
-	    //******************************  
-	    //Set inExValue ... exclusive by default.
-	    inExValue = new String("Exclusive");
-	    //Set sortBy ... mappingID by default.
-	    String sortBy = new String("mappingID");
-	    
-	    
-	    paraProfFont = "SansSerif";
-	    barHeight = 0;
-	    barSpacing =  0;
-	    
-	    fontStyle = Font.PLAIN;
-	    //******************************
-	    //End - Set the default values.
-	    //******************************
-	}
-    
 	//Add some window listener code
-	addWindowListener(new java.awt.event.WindowAdapter() {
+	addWindowListener(new java.awt.event.WindowAdapter(){
 		public void windowClosing(java.awt.event.WindowEvent evt) {
 		    thisWindowClosing(evt);
 		}
@@ -139,8 +70,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	}
 	
 	//Set the sliders.
-	barHeightSlider.setValue(barHeight);
-	barSpacingSlider.setValue(barSpacing);
+	barHeightSlider.setValue(fontSize);
 	
 	fontComboBox.addActionListener(this);
 	
@@ -150,12 +80,12 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	//Window Stuff.
 	setTitle("ParaProf Preferences: No Data Loaded");
 	
-	int windowWidth = 900;
+	int windowWidth = 650;
 	int windowHeight = 350;
 	setSize(new java.awt.Dimension(windowWidth, windowHeight));
 	
 	//There is really no need to resize this window.
-	setResizable(false);
+	setResizable(true);
 	
 	
 	//Grab the screen size.
@@ -172,16 +102,15 @@ public class Preferences extends JFrame implements ActionListener, Observer{
     
 	//End - Window Stuff.
 
-	//******************************
+
+	//####################################
 	//Code to generate the menus.
-	//******************************
-    
-    
+	//####################################
 	JMenuBar mainMenu = new JMenuBar();
     
-	//******************************
+	//######
 	//File menu.
-	//******************************
+	//######
 	JMenu fileMenu = new JMenu("File");
     
 	//Add a menu item.
@@ -208,13 +137,13 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
 	exitItem.addActionListener(this);
 	fileMenu.add(exitItem);
-	//******************************
+	//######
 	//End - File menu.
-	//******************************
+	//######
     
-	//******************************
+	//######
 	//Help menu.
-	//******************************
+	//######
 	/*JMenu helpMenu = new JMenu("Help");
     
 	//Add a menu item.
@@ -225,9 +154,9 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	JMenuItem showHelpWindowItem = new JMenuItem("Show Help Window");
 	showHelpWindowItem.addActionListener(this);
 	helpMenu.add(showHelpWindowItem);*/
-	//******************************
+	//######
 	//End - Help menu.
-	//******************************
+	//######
     
     
 	//Now, add all the menus to the main menu.
@@ -235,58 +164,45 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	//mainMenu.add(helpMenu);
     
 	setJMenuBar(mainMenu);
-    
-	//******************************
-	//End - Code to generate the menus.
-	//******************************
-    
-    
-	//******************************
-	//Create and add the componants.
-	//******************************
-	//Setting up the layout system for the main window.
+	//####################################
+	//Code to generate the menus.
+	//####################################
+
+	//####################################
+	//Create and add the components
+	//####################################
+	
+	//Setup the layout system for the main window.
 	Container contentPane = getContentPane();
 	GridBagLayout gbl = new GridBagLayout();
 	contentPane.setLayout(gbl);
 	GridBagConstraints gbc = new GridBagConstraints();
 	gbc.insets = new Insets(5, 5, 5, 5);
     
-	//Create some borders.
-	Border mainloweredbev = BorderFactory.createLoweredBevelBorder();
-	Border mainraisedbev = BorderFactory.createRaisedBevelBorder();
-	Border mainempty = BorderFactory.createEmptyBorder();
-    
-	//**********
+	//######
 	//Panel and ScrollPane definition.
-	//**********
+	//######
 	JScrollPane scrollPaneS = new JScrollPane(pSPanel);
-	scrollPaneS.setBorder(mainloweredbev);
 	scrollPaneS.setPreferredSize(new Dimension(200, 200));
-	//**********
+	//######
 	//End - Panel and ScrollPane definition.
-	//**********
+	//######
     
-	//**********
+	//######
 	//Slider Setup
-	//**********
-	barSpacingSlider.setPaintTicks(true);
-	barSpacingSlider.setMajorTickSpacing(20);
-	barSpacingSlider.setMinorTickSpacing(5);
-	barSpacingSlider.setPaintLabels(true);
-	barSpacingSlider.addChangeListener(pSPanel);
-    
+	//######
 	barHeightSlider.setPaintTicks(true);
 	barHeightSlider.setMajorTickSpacing(20);
 	barHeightSlider.setMinorTickSpacing(5);
 	barHeightSlider.setPaintLabels(true);
 	barHeightSlider.addChangeListener(pSPanel);
-	//**********
+	//######
 	//End - Slider Setup
-	//**********
+	//######
     
-	//**********
+	//######
 	//RadioButton and ButtonGroup Setup
-	//**********
+	//######
 	normal = new JRadioButton("Plain Font", ((fontStyle == Font.PLAIN) || (fontStyle == (Font.PLAIN|Font.ITALIC))));
 	normal.addActionListener(this);
 	bold = new JRadioButton("Bold Font", ((fontStyle == Font.BOLD) || (fontStyle == (Font.BOLD|Font.ITALIC))));
@@ -297,27 +213,10 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	buttonGroup = new ButtonGroup();
 	buttonGroup.add(normal);
 	buttonGroup.add(bold);
-	//**********
+	//######
 	//End - RadioButton and ButtonGroup Setup
-	//**********
-	//gbc.fill = GridBagConstraints.NONE;
-	//gbc.anchor = GridBagConstraints.EAST;
-	//gbc.weightx = 1;
-	//gbc.weighty = 1;
-	//addCompItem(fontLabel, gbc, 2, 0, 1, 1);
-    
-	//gbc.fill = GridBagConstraints.BOTH;
-	//gbc.anchor = GridBagConstraints.CENTER;
-	//gbc.weightx = 1;
-	//gbc.weighty = 1;
-	//addCompItem(fontComboBox, gbc, 3, 0, 1, 1);
-    
-	//gbc.fill = GridBagConstraints.NONE;
-	//gbc.anchor = GridBagConstraints.CENTER;
-	//gbc.weightx = 1;
-	//gbc.weighty = 1;
-	//addCompItem(colorButton, gbc, 0, 1, 1, 1);
-    
+	//######
+	    
 	gbc.fill = GridBagConstraints.NONE;
 	gbc.anchor = GridBagConstraints.EAST;
 	gbc.weightx = 1;
@@ -358,39 +257,25 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	gbc.anchor = GridBagConstraints.NORTH;
 	gbc.weightx = 1;
 	gbc.weighty = 1;
-	addCompItem(barSpacingLabel, gbc, 2, 2, 1, 1);
+	addCompItem(barHeightLabel, gbc, 2, 2, 1, 1);
     
 	gbc.fill = GridBagConstraints.BOTH;
 	gbc.anchor = GridBagConstraints.NORTH;
 	gbc.weightx = 1;
 	gbc.weighty = 1;
-	addCompItem(barSpacingSlider, gbc, 2, 3, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.NORTH;
-	gbc.weightx = 1;
-	gbc.weighty = 1;
-	addCompItem(barHeightLabel, gbc, 3, 2, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.NORTH;
-	gbc.weightx = 1;
-	gbc.weighty = 1;
-	addCompItem(barHeightSlider, gbc, 3, 3, 1, 1);
-	//******************************
-	//End - Create and add the componants.
-	//******************************
+	addCompItem(barHeightSlider, gbc, 2, 3, 1, 1);
+	//####################################
+	//Code to generate the menus.
+	//####################################
     }
   
-    public void showPreferencesWindow()
-    {
+    public void showPreferencesWindow(){
 	//The path to data might have changed, therefore, reset the title.
 	this.setTitle("ParaProf Preferences: " + ParaProf.profilePathName);
 	this.show();
     }
   
-    public void setSavedPreferences()
-    {
+    public void setSavedPreferences(){
 	ParaProf.savedPreferences.setParaProfFont(paraProfFont);
 	ParaProf.savedPreferences.setBarSpacing(barSpacing);
 	ParaProf.savedPreferences.setBarHeight(barHeight);
@@ -409,29 +294,31 @@ public class Preferences extends JFrame implements ActionListener, Observer{
   
     public int getFontStyle(){
 	return fontStyle;}
+
+    public int getFontSize(){
+	return fontSize;}
   
     public void setBarDetails(Graphics2D g2D){
 	if(!barDetailsSet){
-	    Font font = new Font(paraProfFont, fontStyle, 12);
+	    Font font = new Font(paraProfFont, fontStyle, fontSize);
 	    g2D.setFont(font);
 	    FontMetrics fmFont = g2D.getFontMetrics(font);
 	    int maxFontAscent = fmFont.getAscent();
 	    int maxFontDescent = fmFont.getMaxDescent();
-	    int tmpInt = maxFontAscent + maxFontDescent;
-	    this.setBarDetails(maxFontAscent, (tmpInt + 5));
-	    this.setSliders(maxFontAscent, (tmpInt + 5));
+	    this.barHeight = maxFontAscent;
+	    this.barSpacing = maxFontAscent + maxFontDescent + 2;
+	    barDetailsSet = true;
 	}
     }
 
-    public void setBarDetails(int inBarHeight, int inBarSpacing){
-	barHeight = inBarHeight;
-	barSpacing = inBarSpacing;
-	barDetailsSet = true;
+    public void setFontSize(int fontSize){
+	this.fontSize = fontSize;
+	barDetailsSet = false;
     }
-  
-    public void setSliders(int inBarHeight, int inBarSpacing){
-	barHeightSlider.setValue(inBarHeight);
-	barSpacingSlider.setValue(inBarSpacing);
+
+    public void updateFontSize(){
+	fontSize = barHeightSlider.getValue();
+	barDetailsSet = false;
     }
   
     public int getBarSpacing(){
@@ -440,33 +327,25 @@ public class Preferences extends JFrame implements ActionListener, Observer{
     public int getBarHeight(){
 	return barHeight;}
   
-    public void setInExValue(String inString){
-	inExValue = inString;}
+    public void setInExValue(String inExValue){
+	this.inExValue = inExValue;}
   
     public String getInExValue(){
 	return inExValue;}
   
-    //Setting and returning sortBy.
-    public void setSortBy(String inString){
-	sortBy = inString;}
+    public void setSortBy(String sortBy){
+	this.sortBy = sortBy;}
   
     public String getSortBy(){
 	return sortBy;}
   
-    //******************************
-    //Event listener code!!
-    //******************************
-  
-    //Observer functions.
-    public void update(Observable o, Object arg){
-	String tmpString = (String) arg;
-	if(tmpString.equals("colorEvent")){     
-	    //Just need to call a repaint.
-	    pSPanel.repaint();
-	}
-    }
-  
-    //ActionListener code.
+    //####################################
+    //Interface code.
+    //####################################
+    
+    //######
+    //ActionListener.
+    //######
     public void actionPerformed(ActionEvent evt){
 	Object EventSrc = evt.getSource();
 	String arg = evt.getActionCommand();
@@ -626,12 +505,28 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	    pSPanel.repaint();
 	}
     }
-    
-    public void updateBarDetails(){
-	barHeight = barHeightSlider.getValue();
-	barSpacing = barSpacingSlider.getValue();
+    //######
+    //End - ActionListener.
+    //######
+
+    //######
+    //Observer.
+    //######
+    public void update(Observable o, Object arg){
+	String tmpString = (String) arg;
+	if(tmpString.equals("colorEvent")){     
+	    //Just need to call a repaint.
+	    pSPanel.repaint();
+	}
     }
-    
+    //######
+    //End - Observer.
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
+
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h){
 	gbc.gridx = x;
 	gbc.gridy = y;
@@ -640,10 +535,6 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	getContentPane().add(c, gbc);
     }
     
-    //******************************
-    //End - Event listener code!!
-    //******************************
-  
     public void loadColorMap(File inFile){
 	try{
 	    //First, get the file stuff.
@@ -725,8 +616,6 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	}
     }
     
-    private boolean mShown = false;
-    
     public void addNotify(){
 	super.addNotify();
 	
@@ -749,4 +638,52 @@ public class Preferences extends JFrame implements ActionListener, Observer{
     void thisWindowClosing(java.awt.event.WindowEvent e){
 	setVisible(false);
     }
+    
+    //####################################
+    //Instance data.
+    //####################################
+    private ParaProfTrial trial = null;
+    
+    private boolean mShown = false;
+
+    //References for some of the components for this frame.
+    private PrefSpacingPanel pSPanel;
+    
+    private JCheckBox loadPprofDat;
+  
+  
+    private JRadioButton normal;
+    private JRadioButton bold;
+    private JRadioButton italic;
+  
+    private ButtonGroup buttonGroup;
+  
+    private JLabel fontLabel = new JLabel("Font Selection");
+  
+    private JComboBox fontComboBox;
+  
+    private JLabel barHeightLabel = new JLabel("Adjust Bar Height");
+    private JSlider barHeightSlider = new JSlider(SwingConstants.VERTICAL, 0, 100, 0);
+    
+    int fontStyle = Font.PLAIN;
+    int fontSize = 12;
+  
+    private boolean barDetailsSet = false;
+    private int barSpacing = 0;
+    private int barHeight = 0;
+  
+    String paraProfFont = "SansSerif";
+  
+    //Whether we are doing inclusive or exclusive.
+    String inExValue = "Exclusive";
+  
+    //Variable to determine which sorting paradigm has been chosen.
+    String sortBy = "mappingID";  //Possible values are:
+    //mappingID
+    //millDes
+    //millAsc
+
+    //####################################
+    //End - Instance data.
+    //####################################
 }

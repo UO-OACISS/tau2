@@ -155,9 +155,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
 
-	    jMenuItem = new JMenuItem("Add Trial");
-	    jMenuItem.addActionListener(this);
-	    popup1.add(jMenuItem);
+	    addTrialMI1 = new JMenuItem("Add Trial");
+	    addTrialMI1.addActionListener(this);
+	    popup1.add(addTrialMI1);
 	    //######
 	    //End - Add items to the first popup menu.
 	    //######
@@ -165,7 +165,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add items to the second popup menu.
 	    //######
-	    updateApplicationMetaDataMenuItem = new JMenuItem("Update Data in DB");
+	    updateApplicationMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
 	    updateApplicationMetaDataMenuItem.addActionListener(this);
 	    popup2.add(updateApplicationMetaDataMenuItem);
 
@@ -173,9 +173,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 
-	    jMenuItem = new JMenuItem("Add Trial");
+	    jMenuItem = new JMenuItem("Delete");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
+
+	    addTrialMI2 = new JMenuItem("Add Trial");
+	    addTrialMI2.addActionListener(this);
+	    popup2.add(addTrialMI2);
+
 	    //######
 	    //End - Add items to the second popup menu.
 	    //######
@@ -187,9 +192,13 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    updateExperimentMetaDataMenuItem.addActionListener(this);
 	    popup3.add(updateExperimentMetaDataMenuItem);
 
-	    jMenuItem = new JMenuItem("Add Trial");
+	    jMenuItem = new JMenuItem("Delete");
 	    jMenuItem.addActionListener(this);
 	    popup3.add(jMenuItem);
+
+	    addTrialMI3 = new JMenuItem("Add Trial");
+	    addTrialMI3.addActionListener(this);
+	    popup3.add(addTrialMI3);
 	    //######
 	    //End - Add items to the third popup menu.
 	    //######
@@ -200,6 +209,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    updateTrialMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
 	    updateTrialMetaDataMenuItem.addActionListener(this);
 	    popup4.add(updateTrialMetaDataMenuItem);
+
+	    jMenuItem = new JMenuItem("Delete");
+	    jMenuItem.addActionListener(this);
+	    popup4.add(jMenuItem);
 	    
 	    jMenuItem = new JMenuItem("Upload Trial to DB");
 	    jMenuItem.addActionListener(this);
@@ -255,29 +268,43 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				Object userObject = selectedNode.getUserObject();
 				if((selectedNode==standard)||(selectedNode==dbApps)){
 				   clickedOnObject = selectedNode;
-				    popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
+				   if(selectedNode==dbApps)
+				       addTrialMI1.setEnabled(false);
+				   else
+				       addTrialMI1.setEnabled(true);
+				   popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 				else if(userObject instanceof ParaProfApplication){
-				    if(((ParaProfApplication)userObject).dBApplication())
+				    if(((ParaProfApplication)userObject).dBApplication()){
 					updateApplicationMetaDataMenuItem.setEnabled(true);
-				    else
+					addTrialMI2.setEnabled(false);
+				    }
+				    else{
 					updateApplicationMetaDataMenuItem.setEnabled(false);
+					addTrialMI2.setEnabled(true);
+				    }
 				    clickedOnObject = userObject;
 				    popup2.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 				else if(userObject instanceof ParaProfExperiment){
-				    if(((ParaProfExperiment)userObject).dBExperiment())
+				    if(((ParaProfExperiment)userObject).dBExperiment()){
 					updateExperimentMetaDataMenuItem.setEnabled(true);
-				    else
+					addTrialMI3.setEnabled(false);
+				    }
+				    else{
 					updateExperimentMetaDataMenuItem.setEnabled(false);
+					addTrialMI3.setEnabled(true);
+				    }
 				    clickedOnObject = userObject;
 				    popup3.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 				else if(userObject instanceof ParaProfTrial){
-				    if(((ParaProfTrial)userObject).dBTrial())
+				    if(((ParaProfTrial)userObject).dBTrial()){
 					updateTrialMetaDataMenuItem.setEnabled(true);
-				    else
+				    }
+				    else{
 					updateTrialMetaDataMenuItem.setEnabled(false);
+				    }
 				    clickedOnObject = userObject;
 				    popup4.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
@@ -416,22 +443,83 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    ParaProf.helpWindow.writeText("");
 		    ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
 		}
+		else if(arg.equals("Update Meta Data in DB")){
+		    if(clickedOnObject instanceof ParaProfApplication){
+			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
+			PerfDMFSession perfDMFSession = new PerfDMFSession();
+			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			perfDMFSession.saveApplication(application);
+			perfDMFSession.terminate();
+			System.out.println("Application meta data updated!");
+		    }
+		    else if(clickedOnObject instanceof ParaProfExperiment){
+			ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
+			PerfDMFSession perfDMFSession = new PerfDMFSession();
+			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			perfDMFSession.saveExperiment(experiment);
+			perfDMFSession.terminate();
+			System.out.println("Experiment meta data updated!");
+		    }
+		    else if(clickedOnObject instanceof ParaProfTrial){
+			ParaProfTrial trial = (ParaProfTrial) clickedOnObject;
+			PerfDMFSession perfDMFSession = new PerfDMFSession();
+			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			perfDMFSession.saveTrial(trial);
+			perfDMFSession.terminate();
+			System.out.println("Trial meta data updated!");
+		    }
+		}
+		else if(arg.equals("Delete")){
+		    if(clickedOnObject instanceof ParaProfApplication){
+			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
+			if(application.dBApplication()){
+			    PerfDMFSession perfDMFSession = new PerfDMFSession();
+			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			    perfDMFSession.deleteApplication(application.getID());
+			    perfDMFSession.terminate();
+			    System.out.println("Deleted application!");
+			}
+		    }
+		    else if(clickedOnObject instanceof ParaProfExperiment){
+			ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
+			if(experiment.dBExperiment()){
+			    PerfDMFSession perfDMFSession = new PerfDMFSession();
+			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			    perfDMFSession.deleteExperiment(experiment.getID());
+			    perfDMFSession.terminate();
+			    System.out.println("Experiment deleted!");
+			}
+		    }
+		    else if(clickedOnObject instanceof ParaProfTrial){
+			ParaProfTrial trial = (ParaProfTrial) clickedOnObject;
+			if(trial.dBTrial()){
+			    PerfDMFSession perfDMFSession = new PerfDMFSession();
+			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			    perfDMFSession.deleteTrial(trial.getID());
+			    perfDMFSession.terminate();
+			    System.out.println("Trial deleted!");
+			}
+		    }
+		}
 		else if(arg.equals("Add Application")){
 		    if(clickedOnObject == standard){
 			ParaProfApplication application  = ParaProf.applicationManager.addApplication();
 			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
 			application.setDMTN(applicationNode);
-			application.setName("New Application");
+			application.setName("Application - LocalID: "+ application.getID());
 			treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
 		    }
 		    else if(clickedOnObject == dbApps){
 			ParaProfApplication application  = new ParaProfApplication();
+			application.setDBApplication(true);
 			application.setName("New Application");
 			PerfDMFSession perfDMFSession = new PerfDMFSession(); 
 			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			perfDMFSession.setApplication(application);
-			perfDMFSession.saveApplication();
+			application.setID(perfDMFSession.saveApplication(application));
 			perfDMFSession.terminate();
+			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+			application.setDMTN(applicationNode);
+			treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
 		    }
 		}
 		else if(arg.equals("Add Experiment")){
@@ -449,26 +537,37 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			treeModel.insertNodeInto(experimentNode, application.getDMTN(), application.getDMTN().getChildCount());
 		    }
 		    else if(clickedOnObject == dbApps){
-			/*ParaProfApplication application  = new ParaProfApplication();
+			ParaProfApplication application  = new ParaProfApplication();
+			application.setDBApplication(true);
 			application.setName("New Application");
 			PerfDMFSession perfDMFSession = new PerfDMFSession(); 
 			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			perfDMFSession.setApplication(application);
-			perfDMFSession.saveApplication();
-			perfDMFSession.terminate();*/
+			application.setID(perfDMFSession.saveApplication(application));
+			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+			application.setDMTN(applicationNode);
+			treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
+			//Now add the experiment.
+			ParaProfExperiment experiment  = new ParaProfExperiment();
+			experiment.setDBExperiment(true);
+			experiment.setApplicationID(application.getID());
+			experiment.setName("New Experiment");
+			experiment.setID(perfDMFSession.saveExperiment(experiment));
+			perfDMFSession.terminate();
 		    }
 		    if(clickedOnObject instanceof ParaProfApplication){
 			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
 			if(application.dBApplication()){
-			    /*ParaProfExperiment experiment  = new ParaProfExperiment();
-			      DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
-			      experiment.setDMTN(experimentNode);
-			      experiment.setName("New Experiment");
-			      PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-			      perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			      perfDMFSession.setExperiment(application);
-			      perfDMFSession.saveApplication();
-			      perfDMFSession.terminate();*/
+			    ParaProfExperiment experiment  = new ParaProfExperiment();
+			    experiment.setDBExperiment(true);
+			    experiment.setApplicationID(application.getID());
+			    experiment.setName("New Experiment");
+			    PerfDMFSession perfDMFSession = new PerfDMFSession(); 
+			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			    experiment.setID(perfDMFSession.saveExperiment(experiment));
+			    perfDMFSession.terminate();
+			    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			    experiment.setDMTN(experimentNode);
+			    treeModel.insertNodeInto(experimentNode, application.getDMTN(), application.getDMTN().getChildCount());
 			}
 			else{
 			    ParaProfExperiment experiment = application.addExperiment();
@@ -502,6 +601,23 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
 			perfDMFSession.setApplication(application);
 			perfDMFSession.saveApplication();
+			//Now add the experiment.
+			ParaProfExperiment experiment  = new ParaProfExperiment();
+			experiment.setApplicationID(application.getID());
+			experiment.setName("New Experiment");
+			perfDMFSession.setExperiment(experiment);
+			perfDMFSession.saveExperiment();
+
+			Trial trial = new Trial();
+			trial.setDataSession(paraProfTrial.getDataSession());
+			trial.setName(paraProfTrial.getName());
+			trial.setExperimentID(array[1]);
+			int[] maxNCT = paraProfTrial.getMaxNCTNumbers();
+			trial.setNodeCount(maxNCT[0]+1);
+			trial.setNumContextsPerNode(maxNCT[1]+1);
+			trial.setNumThreadsPerContext(maxNCT[2]+1);
+			perfDMFSession.saveParaProfTrial(trial, -1);
+
 			perfDMFSession.terminate();*/
 		    }
 		    else if(clickedOnObject instanceof ParaProfApplication){
@@ -526,28 +642,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			}
 			else
 			    (new LoadTrialPanel(this, experiment, false)).show();
-		    }
-		}
-		else if(arg.equals("Update Meta Data in DB")){
-		    //A few things to check here.
-		    if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null||ParaProf.savedPreferences.getDatabasePassword()==null){//Check to see if the user has set configuration information.
-			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
-						      "DB Configuration Error!",
-						      JOptionPane.ERROR_MESSAGE);
-			return;
-		    }
-
-		    if(clickedOnObject instanceof ParaProfApplication){
-			System.out.println("Update Meta Data request received from a ParaProfApplication!");
-		    }
-		    else if(clickedOnObject instanceof ParaProfExperiment){
-			System.out.println("Update Meta Data request received from a ParaProfExperiment!");
-		    }
-		    else if(clickedOnObject instanceof ParaProfTrial){
-			System.out.println("Update Meta Data request received from a ParaProfTrial!");
-		    }
-		    else if(clickedOnObject instanceof Metric){
-			System.out.println("Update Meta Data request received from a ParaProfMetric!");
 		    }
 		}
 		else if(arg.equals("Upload Trial to DB")){
@@ -950,8 +1044,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	Metric metric = (Metric) userObject;
 	jSplitInnerPane.setRightComponent(getTable(userObject));
 	jSplitInnerPane.setDividerLocation(0.5);
-	pPMLPanel.setArg2Field(pPMLPanel.getArg1Field());
-	pPMLPanel.setArg1Field(metric.getApplicationID()+":"+metric.getExperimentID()+":"+metric.getTrialID()+":"+metric.getID());
+	if(!paraProfTrial.dBTrial()){
+	    pPMLPanel.setArg2Field(pPMLPanel.getArg1Field());
+	    pPMLPanel.setArg1Field(metric.getApplicationID()+":"+metric.getExperimentID()+":"+metric.getTrialID()+":"+metric.getID());
+	}
 	this.showMetric(paraProfTrial, metric);
     }
 
@@ -1167,8 +1263,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		if(v.size()>0){
 		    trial = new ParaProfTrial(null, type);
 		    experiment.addTrial(trial);
-		    trial.setName("New Trial");
+		    trial.setExperiment(experiment);
+		    trial.setApplicationID(experiment.getApplicationID());
+		    trial.setExperimentID(experiment.getID());
 		    trial.setPaths(fl.getPath());
+		    trial.setName(trial.getPathReverse());
 		    trial.setLoading(true);
 		    trial.initialize(v);
 
@@ -1284,6 +1383,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     private JPopupMenu popup3 = new JPopupMenu();
     private JPopupMenu popup4 = new JPopupMenu();
     private JPopupMenu popup5 = new JPopupMenu();
+
+    JMenuItem addTrialMI1 = null;
+    JMenuItem addTrialMI2 = null;
+    JMenuItem addTrialMI3 = null;
 
     JMenuItem updateApplicationMetaDataMenuItem = null;
     JMenuItem updateExperimentMetaDataMenuItem = null;

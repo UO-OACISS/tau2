@@ -70,6 +70,7 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
     public ParaProfExperiment addExperiment(){
 	ParaProfExperiment experiment = new ParaProfExperiment();
 	experiment.setApplication(this);
+	experiment.setApplicationID(this.getID());
 	experiment.setID((experiments.size()));
 	experiments.add(experiment);
 	return experiment;

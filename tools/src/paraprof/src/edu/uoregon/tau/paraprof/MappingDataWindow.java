@@ -559,11 +559,10 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	try{
 	    String tmpString = (String) arg;
 	    if(tmpString.equals("prefEvent")){
-		//Just need to call a repaint on the ThreadDataWindowPanel.
+		this.setHeader();
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("colorEvent")){
-		//Just need to call a repaint on the ThreadDataWindowPanel.
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("dataEvent")){
@@ -658,6 +657,8 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    jTextArea.setLineWrap(true);
 	    jTextArea.setWrapStyleWord(true);
 	    jTextArea.setEditable(false);
+	    Preferences p = trial.getPreferences();
+	    jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
 	    jTextArea.append(this.getHeaderString());
 	    sp.setColumnHeaderView(jTextArea);
 	}

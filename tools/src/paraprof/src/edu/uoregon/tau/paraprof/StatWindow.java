@@ -496,7 +496,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	try{
 	    String tmpString = (String) arg;
 	    if(tmpString.equals("prefEvent")){
-		//Just need to call a repaint on the ThreadDataWindowPanel.
+		this.setHeader();
 		panel.repaint();
 	    }
 	    if(tmpString.equals("colorEvent")){
@@ -506,7 +506,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    else if(tmpString.equals("dataEvent")){
 		if(!(trial.isTimeMetric()))
 		    units = 0;
-		
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){ 
@@ -633,6 +632,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    jTextArea.setLineWrap(true);
 	    jTextArea.setWrapStyleWord(true);
 	    jTextArea.setEditable(false);
+	    Preferences p = trial.getPreferences();
+	    jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
 	    jTextArea.append(this.getHeaderString());
 	    sp.setColumnHeaderView(jTextArea);
 	}

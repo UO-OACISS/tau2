@@ -29,8 +29,12 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	   passwordField = new JPasswordField(20);
 
 	String configFile = ParaProf.savedPreferences.getDatabaseConfigurationFile();
-	if(configFile == null)
-	    configFileField = new JTextField(System.getProperty("user.dir"), 30);
+	if(configFile == null){
+	    if(ParaProf.paraProfHomeDirectory.exists())
+		configFileField = new JTextField(ParaProf.paraProfHomeDirectory.getPath()+"/perfdmf.cfg", 30);
+	    else
+		configFileField = new JTextField(System.getProperty("user.dir"), 30);
+	}
 	else
 	    configFileField = new JTextField(configFile, 30);
 	
@@ -135,10 +139,16 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	    Object EventSrc = evt.getSource();
 	    String arg = evt.getActionCommand();
 	    if(arg.equals("Config File")){
-		JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
+		JFileChooser jFileChooser = null;
+		if(ParaProf.paraProfHomeDirectory.exists())
+		    jFileChooser = new JFileChooser(ParaProf.paraProfHomeDirectory.getPath());
+		else
+		    jFileChooser = new JFileChooser(System.getProperty("user.dir"));
 		jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		jFileChooser.setMultiSelectionEnabled(false);
-		if((jFileChooser.showDialog(this, "Select")) != JFileChooser.APPROVE_OPTION){
+		jFileChooser.setDialogTitle("Select");
+		jFileChooser.setApproveButtonText("Select");
+		if((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION){
 		    System.out.println("File selection cancelled by user!");
 		    return;
 		}

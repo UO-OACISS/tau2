@@ -19,6 +19,8 @@ import edu.uoregon.tau.dms.dss.*;
 public class ParaProf implements ParaProfObserver, ActionListener{
     //**********
     //Some system wide state variables.
+    static String homeDirectory = null;
+    static File paraProfHomeDirectory = null;
     static String profilePathName = null;       //This contains the path to the currently loaded profile data.
     static int defaultNumberPrecision = 4;
     static boolean dbSupport = false;
@@ -56,6 +58,22 @@ public class ParaProf implements ParaProfObserver, ActionListener{
   
     public void startSystem(){
 	try{
+
+	    //Establish the presence of a .ParaProf directory.  This is located by default in the user's home
+	    //directory.
+	    ParaProf.paraProfHomeDirectory = new File(homeDirectory+"/.ParaProf");
+	    if(paraProfHomeDirectory.exists()){
+		System.out.println("Found ParaProf home directory!");
+		System.out.println("Looking for preferences ...");
+	    }
+	    else{
+		System.out.println("Did not find ParaProf home directory ... creating ...");
+		paraProfHomeDirectory.mkdir();
+		System.out.println("Done creating ParaProf home directory!");
+	    }
+		
+
+
 	    //Try and load a preference file ... ParaProfPreferences.dat
 	    try{
 		FileInputStream savedPreferenceFIS = new FileInputStream("pref.dat");
@@ -237,6 +255,21 @@ public class ParaProf implements ParaProfObserver, ActionListener{
   
     // Main entry point
     static public void main(String[] args){
+	
+	//Make sure we drop a line before beginning any output.
+	System.out.println("");
+
+	/*
+	System.out.println("------");
+	System.out.println("Available properties:");
+	Properties p = System.getProperties();
+	for(Enumeration e = p.propertyNames();e.hasMoreElements();){
+	    System.out.println(e.nextElement());
+	}
+	System.out.println("------");
+	*/
+
+	ParaProf.homeDirectory = System.getProperty("user.home");
 
 	/*
 	if(System.getProperty("user.name").equals("sameer")){

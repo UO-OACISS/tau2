@@ -39,10 +39,12 @@ public class PPML{
 	int opB = metricID;
 
 	//We do not support metric from different trials yet.  Check for this.
-	if(trialOpA!=trialOpB)
+	if(trialOpA!=trialOpB){
 	    JOptionPane.showMessageDialog(ParaProf.paraProfManager,
-					  "ParaProf Error", "Sorry, please select metrics from the same trial!",
+					  "Sorry, please select metrics from the same trial!", "ParaProf Error",
 					  JOptionPane.ERROR_MESSAGE);
+	    return null;
+	}
 
 	String newMetricName = null;
   	int operation = -1;

@@ -12,6 +12,7 @@ package edu.uoregon.tau.paraprof;
 
 import java.util.*;
 import java.text.*;
+import java.awt.font.*;
 import java.awt.font.TextAttribute;
 import java.awt.*;
 import java.awt.event.*;
@@ -149,12 +150,13 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    int fontSize = trial.getPreferences().getBarHeight();
 	    spacing = trial.getPreferences().getBarSpacing();
  	    //Create font.
-	    MonoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
+	    monoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
 	    //Compute the font metrics.
-	    fmMonoFont = g2D.getFontMetrics(MonoFont);
+	    fmMonoFont = g2D.getFontMetrics(monoFont);
 	    maxFontAscent = fmMonoFont.getMaxAscent();
 	    maxFontDescent = fmMonoFont.getMaxDescent();
-	    g2D.setFont(MonoFont);
+	    g2D.setFont(monoFont);
+	    FontRenderContext frc = g2D.getFontRenderContext();
       
 	    if(spacing <= (maxFontAscent + maxFontDescent)){
 		spacing = spacing + 1;
@@ -306,20 +308,26 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		
 		if((sMWThreadDataElement.getMappingID()) == highLightColor){
 		    g2D.setColor(trial.getColorChooser().getHighlightColor());
-		    g2D.drawString(tmpString, 20, yCoord);
+		    (new TextLayout(tmpString, monoFont, frc)).draw(g2D, 20, yCoord);
+		    //g2D.drawString(tmpString, 20, yCoord);
 		    g2D.setColor(sMWThreadDataElement.getColor());
-		    g2D.drawString(sMWThreadDataElement.getMappingName(), namePosition, yCoord);
+		    (new TextLayout(sMWThreadDataElement.getMappingName(), monoFont, frc)).draw(g2D, namePosition, yCoord);
+		    //g2D.drawString(sMWThreadDataElement.getMappingName(), namePosition, yCoord);
 		}
 		else if((windowType!=2)&&(sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
 		    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
-		    g2D.drawString(tmpString, 20, yCoord);
+		    (new TextLayout(tmpString, monoFont, frc)).draw(g2D, 20, yCoord);
+		    //g2D.drawString(tmpString, 20, yCoord);
 		    g2D.setColor(sMWThreadDataElement.getColor());
-		    g2D.drawString(sMWThreadDataElement.getMappingName(), namePosition, yCoord);
+		    (new TextLayout(sMWThreadDataElement.getMappingName(), monoFont, frc)).draw(g2D, namePosition, yCoord);
+		    //g2D.drawString(sMWThreadDataElement.getMappingName(), namePosition, yCoord);
 		}
 		else{
-		    g2D.drawString(tmpString, 20, yCoord);
+		    (new TextLayout(tmpString, monoFont, frc)).draw(g2D, 20, yCoord);
+		    //g2D.drawString(tmpString, 20, yCoord);
 		    g2D.setColor(sMWThreadDataElement.getColor());
-		    g2D.drawString(sMWThreadDataElement.getMappingName(), namePosition, yCoord);
+		    (new TextLayout(sMWThreadDataElement.getMappingName(), monoFont, frc)).draw(g2D, namePosition, yCoord);
+		    //g2D.drawString(sMWThreadDataElement.getMappingName(), namePosition, yCoord);
 		}
 		
 		
@@ -569,7 +577,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     private int windowType = -1;
     private Vector list = null;
 
-    private Font MonoFont = null;
+    private Font monoFont = null;
     private FontMetrics fmMonoFont = null;
   
     private JPopupMenu popup = new JPopupMenu();

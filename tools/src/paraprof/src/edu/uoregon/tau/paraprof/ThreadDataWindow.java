@@ -568,6 +568,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	try{
 	    String tmpString = (String) arg;
 	    if(tmpString.equals("prefEvent")){
+		this.setHeader();
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("colorEvent")){
@@ -678,6 +679,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    jTextArea.setLineWrap(true);
 	    jTextArea.setWrapStyleWord(true);
 	    jTextArea.setEditable(false);
+	    Preferences p = trial.getPreferences();
+	    jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
 	    jTextArea.append(this.getHeaderString());
 	    sp.setColumnHeaderView(jTextArea);
 	}
