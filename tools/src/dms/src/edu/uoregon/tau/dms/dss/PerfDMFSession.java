@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.10 2004/06/17 19:08:58 bertie Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.11 2004/07/13 23:00:19 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -935,6 +935,33 @@ public class PerfDMFSession extends DataSession {
 		}
 		Application.deleteApplication(db, applicationID);
 	}
+
+    //This method has been added to let applications get the number of metrics
+    //after the setApplition, setExperiment, setTrial have been called.
+    //It does not affect the state of this object in any way.
+    public int getNumberOfMetrics(){
+	StringBuffer buf = new StringBuffer();
+	buf.append("select id, name ");
+	buf.append("from metric ");
+	buf.append("where trial = ");
+	buf.append(this.trial.getID());
+	buf.append(" order by id ");
+	// System.out.println(buf.toString());
+
+	// get the results
+	try {
+	    ResultSet resultSet = db.executeQuery(buf.toString());	
+	    int counter = 0;
+	    while (resultSet.next() != false) {
+		counter++;
+	    }
+	    resultSet.close();
+	    return counter;
+	}catch (Exception ex) {
+	    ex.printStackTrace();
+	    return -1;
+	}
+    }
 
 };
 
