@@ -2339,7 +2339,7 @@ if ( xrdb -query ) 1>/dev/null 2>&1
 #    exit
 fi
 
-echo "TAU: installing TAU's jracy profile browser" 
+echo "TAU: installing TAU's ParaProf profile browser" 
 taushell=sh
 if [ $machine = solaris2 -o $machine = alpha ]
 then
@@ -2349,13 +2349,13 @@ fi
 
 if [ $tauprefix = unknown ]
 then
-  cat ${tauroot}/tools/src/jRacy/jracy.skel | 
+  cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-	> ${tauroot}/${architecture}/bin/jracy
-  chmod a+rx ${tauroot}/${architecture}/bin/jracy
-  echo "TAU: installed jracy in ${tauroot}/${architecture}/bin"
-  cp ${tauroot}/tools/src/jRacy/jRacy.jar ${tauroot}/${architecture}/lib
-  echo "TAU: installed jRacy.jar in ${tauroot}/${architecture}/lib"
+	> ${tauroot}/${architecture}/bin/paraprof
+  chmod a+rx ${tauroot}/${architecture}/bin/paraprof
+  echo "TAU: installed paraprof in ${tauroot}/${architecture}/bin"
+  cp ${tauroot}/tools/src/ParaProf/bin/ParaProf.jar ${tauroot}/${architecture}/bin
+  echo "TAU: installed ParaProf.jar in ${tauroot}/${architecture}/bin"
 else
   if [ ! -d ${tauprefix} ]
   then
@@ -2383,13 +2383,13 @@ else
     fi
   fi
 
-  cat ${tauroot}/tools/src/jRacy/jracy.skel | 
+  cat ${tauroot}/tools/src/ParaProf/bin/paraprof.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-	> ${tauprefix}/${architecture}/bin/jracy
-  chmod a+rx ${tauprefix}/${architecture}/bin/jracy
-  echo "TAU: installed jracy in ${tauprefix}/${architecture}/bin"
-  cp ${tauroot}/tools/src/jRacy/jRacy.jar ${tauprefix}/${architecture}/lib
-  echo "TAU: installed jRacy.jar in ${tauprefix}/${architecture}/lib"
+	> ${tauprefix}/${architecture}/bin/paraprof
+  chmod a+rx ${tauprefix}/${architecture}/bin/paraprof
+  echo "TAU: installed paraprof in ${tauprefix}/${architecture}/bin"
+  cp ${tauroot}/tools/src/ParaProf/bin/ParaProf.jar ${tauprefix}/${architecture}/bin
+  echo "TAU: installed ParaProf.jar in ${tauprefix}/${architecture}/bin"
 fi
 
 # -- determine Tcl/Tk version
