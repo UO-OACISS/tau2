@@ -60,6 +60,8 @@ class RtsLayer
   
 	static int& TheContext(void);
 
+	static long GenerateUniqueId(void);
+
  	static ProfileMap_t& TheProfileMap(void);
 
  	static TauGroup_t  getProfileGroup(char *  ProfileGroup) ;
@@ -139,6 +141,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2003/12/11 21:59:02 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.18 2003/12/11 21:59:02 sameer Exp $ 
+ * $Revision: 1.19 $   $Date: 2004/07/26 23:53:45 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.19 2004/07/26 23:53:45 sameer Exp $ 
  ***************************************************************************/
