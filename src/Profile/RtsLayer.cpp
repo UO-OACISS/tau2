@@ -42,8 +42,13 @@
 #include "Profile/hitachi.h"
 #endif /* HITACHI */
 #include "Profile/Profiler.h"
-#include "tauroot.h"
-#include "tauarch.h"
+#ifdef TAU_WINDOWS
+ #define TAUROOT "root"
+ #define TAU_ARCH "win32"
+#else
+ #include "tauroot.h"
+ #include "tauarch.h"
+#endif
 
 #ifdef CRAY_TIMERS
 #include <intrinsics.h>
@@ -1208,7 +1213,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.59 $   $Date: 2004/08/21 21:57:16 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.59 2004/08/21 21:57:16 sameer Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.60 $   $Date: 2004/09/01 20:53:42 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.60 2004/09/01 20:53:42 amorris Exp $ 
  ***************************************************************************/
