@@ -98,7 +98,7 @@ ARCHaix370
 ARCHaixESA
 # endif /* _IBMESA */
 
-# ifdef _IBMR2
+# if (defined( _IBMR2) || defined( _AIX ))
 #  define _havehosttype_
 ARCHrs6000
 # endif /* _IBMR2 */
