@@ -83,7 +83,7 @@ fi
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 500m (500MB).
 if [ "$OLDJDK" = "yes" ]
 then
-java -Xmx500m -cp ${LIBDIR}/ParaProf-Old.jar:${LIBDIR}/dms.jar:${LIBDIR}/jatha.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
+java -Xmx500m -cp ${LIBDIR}/ParaProf-Old.jar:${LIBDIR}/dms.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
 else
-java -Xmx500m -cp ${LIBDIR}/ParaProf.jar:${LIBDIR}/dms.jar:${LIBDIR}/jatha.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
+java -Xmx500m -cp ${LIBDIR}/ParaProf.jar:${LIBDIR}/dms.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*
 fi
