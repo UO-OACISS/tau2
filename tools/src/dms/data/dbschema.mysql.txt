@@ -1,88 +1,99 @@
+
+CREATE TABLE version (
+    version		    VARCHAR(100) DEFAULT	'2.13.7'     
+);
+
+
 CREATE TABLE application (
-    id                      INT          NOT NULL    PRIMARY KEY AUTO_INCREMENT,
-    name                    VARCHAR(100),
-    version                 VARCHAR(100)    DEFAULT '1.0',
+    id                      INT		NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    name                    TEXT,
+    version                 TEXT,
     description             TEXT, 
-    language                VARCHAR(100),
-    paradigm                VARCHAR(100),
+    language                TEXT,
+    paradigm                TEXT,
     usage_text              TEXT,
     execution_options       TEXT,
     userdata                TEXT
 );
 
 CREATE TABLE experiment (
-    id                      INT          NOT NULL    PRIMARY KEY AUTO_INCREMENT,
-    application             INT             NOT NULL,
-    name                    VARCHAR(100),
-	system_name             VARCHAR(100),
-	system_machine_type     VARCHAR(100),
-	system_arch             VARCHAR(100),
-	system_os               VARCHAR(100),
-	system_memory_size      VARCHAR(100),
-	system_processor_amt    VARCHAR(100),
-	system_l1_cache_size    VARCHAR(100),
-	system_l2_cache_size    VARCHAR(100),
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    application             INT         NOT NULL,
+    name                    TEXT,
+    system_name             TEXT,
+    system_machine_type     TEXT,
+    system_arch             TEXT,
+    system_os               TEXT,
+    system_memory_size      TEXT,
+    system_processor_amt    TEXT,
+    system_l1_cache_size    TEXT,
+    system_l2_cache_size    TEXT,
     system_userdata         TEXT,
-	compiler_cpp_name       VARCHAR(100),
-	compiler_cpp_version    VARCHAR(100),
-	compiler_cc_name        VARCHAR(100),
-	compiler_cc_version     VARCHAR(100),
-	compiler_java_dirpath   VARCHAR(100),
-	compiler_java_version   VARCHAR(100),
+    compiler_cpp_name       TEXT,
+    compiler_cpp_version    TEXT,
+    compiler_cc_name        TEXT,
+    compiler_cc_version     TEXT,
+    compiler_java_dirpath   TEXT,
+    compiler_java_version   TEXT,
     compiler_userdata       TEXT,
-	configure_prefix        VARCHAR(100),
-	configure_arch          VARCHAR(100),
-	configure_cpp           VARCHAR(100),
-	configure_cc            VARCHAR(100),
-	configure_jdk           VARCHAR(100),
-	configure_profile       VARCHAR(3),
+    configure_prefix        TEXT,
+    configure_arch          TEXT,
+    configure_cpp           TEXT,
+    configure_cc            TEXT,
+    configure_jdk           TEXT,
+    configure_profile       TEXT,
     configure_userdata      TEXT,
     userdata                TEXT,
-	CONSTRAINT eafkey FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    CONSTRAINT eafkey FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE trial (
-    id                      INT          NOT NULL    PRIMARY KEY AUTO_INCREMENT,
-    name                    VARCHAR(100),
-    experiment              INT             NOT NULL,
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    name                    TEXT,
+    experiment              INT         NOT NULL,
     time                    TIMESTAMP,
     problem_definition      TEXT,
     node_count              INT,
     contexts_per_node       INT,
     threads_per_context     INT,
     userdata                TEXT,
-	CONSTRAINT tefkey FOREIGN KEY(experiment) REFERENCES experiment(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    CONSTRAINT tefkey FOREIGN KEY(experiment) REFERENCES experiment(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE metric (
-    id                      INT          NOT NULL     PRIMARY KEY AUTO_INCREMENT,
-    name                    TEXT            NOT NULL,
-    trial                   INT				NOT NULL,
-	CONSTRAINT mtfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    name                    TEXT        NOT NULL,
+    trial                   INT		NOT NULL,
+    CONSTRAINT mtfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_event (
-    id                      INT          NOT NULL    PRIMARY KEY AUTO_INCREMENT,
-    trial                   INT             NOT NULL,
-    name                    TEXT            NOT NULL,
-    group_name              VARCHAR(50),
-	CONSTRAINT itfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    trial                   INT         NOT NULL,
+    name                    TEXT        NOT NULL,
+    group_name              TEXT,
+    source_file		    TEXT,
+    line_number		    INT,
+    line_number_end	    INT,
+    CONSTRAINT itfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE atomic_event (
-    id                      INT           NOT NULL    PRIMARY KEY AUTO_INCREMENT,
-    trial                   INT              NOT NULL,
-    name                    TEXT             NOT NULL,
-    group_name              VARCHAR(50),
-	CONSTRAINT atfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    trial                   INT         NOT NULL,
+    name                    TEXT        NOT NULL,
+    group_name              TEXT,
+    source_file		    TEXT,
+    line_number		    INT,
+    CONSTRAINT atfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_location_profile (
-    interval_event          INT              NOT NULL,
-    node                    INT              NOT NULL,             
-    context                 INT              NOT NULL,
-    thread                  INT              NOT NULL,
-    metric                  INT				 NOT NULL,
+    interval_event          INT	        NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    metric                  INT		NOT NULL,
     inclusive_percentage    DECIMAL,
     inclusive               DECIMAL,
     exclusive_percentage    DECIMAL,
@@ -90,26 +101,27 @@ CREATE TABLE interval_location_profile (
     call                    DECIMAL,
     subroutines             DECIMAL,
     inclusive_per_call      DECIMAL,
-	CONSTRAINT iifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
-	CONSTRAINT imfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    sum_exclusive_squared   DECIMAL,
+    CONSTRAINT iifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT imfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE atomic_location_profile (
-    atomic_event            INT              NOT NULL,
-    node                    INT              NOT NULL,             
-    context                 INT              NOT NULL,
-    thread                  INT              NOT NULL,
-    sample_count            INT    ,         
+    atomic_event            INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    sample_count            INT,         
     maximum_value           DECIMAL,
     minimum_value           DECIMAL,
     mean_value              DECIMAL,
-    standard_deviation      DECIMAL,
-	CONSTRAINT aafkey FOREIGN KEY(atomic_event) REFERENCES atomic_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    standard_deviation	    DECIMAL,
+    CONSTRAINT aafkey FOREIGN KEY(atomic_event) REFERENCES atomic_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_total_summary (
-    interval_event          INT              NOT NULL,
-    metric                  INT				 NOT NULL,
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
     inclusive_percentage    DECIMAL,
     inclusive               DECIMAL,
     exclusive_percentage    DECIMAL,
@@ -117,13 +129,14 @@ CREATE TABLE interval_total_summary (
     call                    DECIMAL,
     subroutines             DECIMAL,
     inclusive_per_call      DECIMAL,
-	CONSTRAINT tifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
-	CONSTRAINT tmfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    sum_exclusive_squared   DECIMAL,
+    CONSTRAINT tifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT tmfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_mean_summary (
-    interval_event          INT              NOT NULL,
-    metric                  INT				 NOT NULL,
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
     inclusive_percentage    DECIMAL,
     inclusive               DECIMAL,
     exclusive_percentage    DECIMAL,
@@ -131,8 +144,8 @@ CREATE TABLE interval_mean_summary (
     call                    DECIMAL,
     subroutines             DECIMAL,
     inclusive_per_call      DECIMAL,
-	CONSTRAINT mifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
-	CONSTRAINT mmfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    CONSTRAINT mifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT mmfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE INDEX experiment_application_index on experiment (application);
