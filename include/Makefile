@@ -126,7 +126,7 @@ TAULIBS		= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TA
 
 TAUMPILIBS	= $(TAU_MPI_LIB)
 
-TAUFMPILIBS	= $(TAU_MPI_FLIB)
+TAUMPIFLIBS	= $(TAU_MPI_FLIB)
 
 ### ACL S/W requirement
 TAU_DEFS	= $(TAUDEFS)
@@ -137,9 +137,11 @@ TAU_LIBS	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TA
 
 TAU_DISABLE	= $(TAUHELPER) -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauDisable
 
+TAU_MPI_INCLUDE	= $(TAU_MPI_INC)
+
 TAU_MPI_LIBS	= $(TAU_MPI_LIB)
 
-TAU_FMPI_LIBS	= $(TAU_MPI_FLIB)
+TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 # These options could be included in the application Makefile as 
