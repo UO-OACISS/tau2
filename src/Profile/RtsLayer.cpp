@@ -555,25 +555,55 @@ double RtsLayer::getUSecD (int tid) {
   char msg[200];
   if(queryValue < lastQueryValue){
         if(queryValue < 0){
-        DEBUGPROFMSG("TauMuseQuery() came out negative!!!!!."<<endl;);
+		DEBUGPROFMSG("TauMuseQuery() came out negative!!!!!."<<endl;);
         }else{
-        DEBUGPROFMSG("TauMuseQuery() less than lastQueryValue.!!!!!"<<endl;);
-        sprintf(msg,"TauMuseQuery() lastQueryValue=%f\n",lastQueryValue);
-        DEBUGPROFMSG(msg);
-        sprintf(msg,"TauMuseQuery() queryValue=%f\n",queryValue);
-        DEBUGPROFMSG(msg);
+		DEBUGPROFMSG("TauMuseQuery() less than lastQueryValue.!!!!!"<<endl;);
+		sprintf(msg,"TauMuseQuery() lastQueryValue=%f\n",lastQueryValue);
+		DEBUGPROFMSG(msg);
+		sprintf(msg,"TauMuseQuery() queryValue=%f\n",queryValue);
+		DEBUGPROFMSG(msg);
         }
         queryValue = lastQueryValue;
   }
   lastQueryValue = queryValue;
   return queryValue;
 #else //DEBUG_PROF
-
+  
   return TauMuseQuery();
 
 #endif //DEBUG_PROF
 #else /* TAU_MUSE */
+#ifdef TAU_MUSE_MULTIPLE
+#ifdef DEBUG_PROF
+  // TO CHECK IF THE VALUE IS MONOTONICALLY INCREASING
+  double queryValue = 0.0;
+  static double lastQueryValue = 0.0;
+  char msg[200];
+  double data[10];
+  int size = 10;
+  queryValue = TauMuseMultipleQuery(data,size);
+  if(queryValue < lastQueryValue){
+        if(queryValue < 0){
+		DEBUGPROFMSG("TauMuseQuery() came out negative!!!!!."<<endl;);
+        }else{
+		DEBUGPROFMSG("TauMuseQuery() less than lastQueryValue.!!!!!"<<endl;);
+		sprintf(msg,"TauMuseQuery() lastQueryValue=%f\n",lastQueryValue);
+		DEBUGPROFMSG(msg);
+		sprintf(msg,"TauMuseQuery() queryValue=%f\n",queryValue);
+		DEBUGPROFMSG(msg);
+        }
+        queryValue = lastQueryValue;
+  }
+  lastQueryValue = queryValue;
+  return queryValue;
+#else //DEBUG_PROF
+ 
+  double data[10];
+  int size=10; 
+  return TauMuseMultipleQuery(data,size);
 
+#endif //DEBUG_PROF
+#else //TAU_MUSE_MULTIPLE
   struct timeval tp;
   static double last_timestamp = 0.0;
   double timestamp;
@@ -586,6 +616,7 @@ double RtsLayer::getUSecD (int tid) {
   }
   last_timestamp = timestamp;
   return timestamp;
+#endif // TAU_MUSE_EVENT
 #endif /* TAU_MUSE */
 #endif // TAU_WINDOWS
 #else  // TULIP_TIMERS by default.  
@@ -1091,6 +1122,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.55 $   $Date: 2004/03/02 03:07:00 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.55 2004/03/02 03:07:00 sameer Exp $ 
+ * $Revision: 1.56 $   $Date: 2004/03/03 01:07:49 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.56 2004/03/03 01:07:49 sameer Exp $ 
  ***************************************************************************/

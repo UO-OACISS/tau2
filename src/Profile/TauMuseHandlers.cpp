@@ -186,6 +186,7 @@ double QueryTauCountDecode(const char *binary_command,
  * From		: translator.c <modified>
  * NOTE		: To be used with process_scheduling handler
  *********************/
+#if 0
 int CreateProcessSchedulingEncode(char *ascii_command, int size, char *binary_command)
 {
 	char *arg, temp[MAX_ARGLEN];
@@ -234,6 +235,109 @@ int CreateProcessSchedulingEncode(char *ascii_command, int size, char *binary_co
 			printf("Internal error: No command given??");
 			return 0;
 		}
+}
+#endif
+// A new one from JEREMY
+int CreateProcessSchedulingEncode(char *ascii_command, int size, char *binary_command)
+{
+	//*********************************************************
+	//ENCODING: 	byte 0  <1>
+	//		byte 1  <18>
+	//		byte 3+ <process_scheduling>
+	//		byte 21 <null>
+	//		byte 22 <options_size>
+	//		byte 26 <option_flags>
+	//		byte 30 <pid>
+	//		byte 34 <null>
+	//*********************************************************
+        char *arg, *val, temp[MAX_ARGLEN];
+        unsigned int event, id, pid, sid;
+        int *intptr, *options_size;
+        unsigned char *byteptr;
+        char *option_flags;
+        strncpy(temp, ascii_command, MAX_ARGLEN);
+        arg = strtok(temp, " ");
+        if (arg)
+        {
+                if (strcasecmp(arg, "create")==0)
+                {
+                        binary_command[0] = 1;
+                        arg = strtok(NULL, " ");
+                        if (arg)
+                        {
+                                if ((!arg)||(strncasecmp(arg, "process_scheduling",18)!=0))
+                                {
+                                        printf("Internal error arg=%s",arg);
+                                        return 0;
+                                }
+                                else
+                                {
+					binary_command[1] = strlen(arg);
+                                        strncpy(&binary_command[2], arg, binary_command[1]+1);
+                                        arg = strtok(NULL, "=");
+                                        val = strtok(NULL, " ");
+                                        if (arg)
+                                        {
+                                                intptr=(int *) &binary_command[binary_command[1] + 3];
+                                                options_size = intptr++;
+                                                *options_size = sizeof(int);
+                                                option_flags = (char *)intptr;
+						printf("DEBUG: addr of intptr = %x\n",intptr);
+                                                intptr++;
+						printf("DEBUG: addr of intptr = %x\n",intptr);
+                                                *option_flags = 0;
+                                                while (arg && val)
+                                                {
+							if (strcasecmp(arg, "pid")==0) {
+								*option_flags = *option_flags|0x20;
+								pid = strtoul(val, NULL, 10);
+							} else {
+								printf("Unknown option: \"%s\"\n", arg);
+								return 0;
+							}
+                                                        *options_size += sizeof(int);
+                                                        arg = strtok(NULL, "=");
+                                                        val = strtok(NULL, " ");
+                                                }
+                                                if (arg)
+                                                {
+                                                        printf("Could not parse option.  Ignoring option %s", arg);
+
+                                                        if (*option_flags == 0)
+                                                        {
+                                                                printf("No options specified");
+                                                                return 0;
+                                                        }
+                                                }
+
+                                                *options_size = htonl(*options_size);
+                                                if (*option_flags&0x20)
+                                                        *intptr++ = htonl(pid);
+                                                return (4+binary_command[1]+sizeof(int) + ntohl(*options_size));
+                                        } else {
+                                                intptr=(int *) &binary_command[binary_command[1] + 3];
+                                                options_size = intptr++;
+                                                *options_size = htonl(0);
+                                                //*options_size = 2*sizeof(int);
+                                                //option_flags = (char *)intptr;
+                                                //intptr++;
+                                                //*option_flags = 0;
+                                                //*options_size = htonl(*options_size);
+						//*intptr++ = htonl(pid);
+                                                return (4+binary_command[2]+sizeof(int) + ntohl(*options_size));
+		
+                                        }
+                                }
+                        } else {
+                                printf("No handler specified");
+                        }
+                } else {
+                                printf("This is not create command.\n");
+                }
+        } else {
+                printf("Internal error.  No command received in encode_command");
+        }
+        return 0;
 }
 
 /*********************
@@ -351,6 +455,11 @@ double QueryProcessSchedulingDecode(const char *binary_command,
 #endif //DEBUG
 	
 	}else if(!strcmp(package,"total_time")){
+		// Returning total time in msec
+		data[0]=total_time_sec*1000; 
+		return data[0];
+	
+	}else if(!strcmp(package,"total_time_debug")){
 		// Returning total time in msec
 		data[0]=total_time_sec*1000; 
 		return data[0];
@@ -508,6 +617,7 @@ double QueryBandwidthDecode(const char *binary_command,
                 return 0;
         }
         data[0]=ntohd(bhrd->recv_average_bandwidth);
+        data[1]=ntohd(bhrd->send_average_bandwidth);
         return data[0];
 
 }
@@ -630,6 +740,7 @@ double QueryTcpBandwidthDecode(const char *binary_command,
                 return 0;
         }
         data[0]=ntohd(bhrd->recv_average_bandwidth);
+        data[1]=ntohd(bhrd->send_average_bandwidth);
         return data[0];
 }
 
@@ -725,7 +836,7 @@ double QueryAccumulatorDecode(const char *binary_command,
         if(binary_command[0]==3)
         {
                 ahrd = (struct accumulator_handler_return_data *) (errorptr+1);
-                snprintf(ascii_reply, size, "Accumulated: %u\n",(unsigned long long) ntohll(ahrd->sum));
+                snprintf(ascii_reply, size, "Accumulated: %llu\n",(unsigned long long) ntohll(ahrd->sum));
 		
 		result=(unsigned long long)ntohll(ahrd->sum);
 		data[0]=result;

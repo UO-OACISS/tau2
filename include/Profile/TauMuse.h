@@ -4,6 +4,8 @@
 /* The TAU MAGNET/MUSE API */
 #if (defined(TAU_MUSE) || defined(TAU_MUSE_EVENT) || defined(TAU_MUSE_MULTIPLE))
 
+#include <Profile/Profiler.h>
+
 #define MAX_ARGLEN 		255
 #define MAX_REPLY_LENGTH 	1024 
 #define MAXNUMOFCPU		2 
@@ -12,9 +14,14 @@
 #define MAXNUMOF_ADDFILTERS	4	
 #define MAX_HANDLER_NAME_LEN	30	
 #define MAX_ADDFILTERS_ARGS_LEN	100	
-#define MAXNUMOF_COUNTERS	10	
+#define MAXNUMOF_COUNTERS	10
+#define MAXNUMOF_PACKAGES	10
+#define MAXNUMOF_METRICS	100
+#define MAX_METRIC_LEN		100
 
 #define AF_UNIX_MODE
+//#define VAR_LOCK_DIRECTORY 	"/tmp"
+#define VAR_LOCK_DIRECTORY 	"/var/lock"
 
 
 struct filter_info{
@@ -22,25 +29,43 @@ struct filter_info{
 	char args[MAXNUMOF_ADDFILTERS][MAX_ADDFILTERS_ARGS_LEN];		
 					//Actual addfilter command
 };
+
+struct metric_info{
+	char info[MAX_METRIC_LEN];
+};
+
 struct handler_info{
 	int handlerID;					//handlerID
 	char handler_name[MAX_HANDLER_NAME_LEN];	//handler names
 	int numoffilters;				//Number of filters.
 	struct filter_info filters[MAXNUMOF_FILTERS];	//filters	
+	struct metric_info metrics[MAXNUMOF_METRICS];
 	int numofcounters;
-
 };
 
 struct package_info{
 	int numofhandlers;			//Number of handlers.
+	int totalcounters;
+	char package_name[MAX_HANDLER_NAME_LEN];	//handler names
 	struct handler_info handlers[MAXNUMOF_HANDLERS];	//handlers
+};
+
+struct package_list_info{
+	int numofpackages;
+	int initialized;
+	struct package_info packages[MAXNUMOF_PACKAGES];
 };
 
 /* TheMuseSockId() is a global variable now */
 int& TheMuseSockId(void);
 
-/* TheMusePackage() is a global variable now */
-struct package_info& TheMusePackage(void);
+#if (defined(TAU_MUSE) || defined(TAU_MUSE_MULTIPLE))
+struct package_list_info& Mono_PkgList(void);
+#endif // (defined(TAU_MUSE) || defined(TAU_MUSE_MULTIPLE))
+
+#ifdef TAU_MUSE_EVENT
+struct package_list_info& NonMono_PkgList(void);
+#endif //TAU_MUSE_EVENT
 
 /***************************************************************************************
 * This is for handlers stuff
@@ -186,22 +211,31 @@ int create_encode_selector(char *handler_name,char *ascii_command,int size, char
 double query_decode_selector(char *handler_name, const char *binary_command, 
 		const char *binary_reply, int size, char *ascii_reply, double data[]);
 int addfilter_encode_selector(char *filter_name,char *ascii_command,int size, char *binary_command);
-int package_selector(int *data);
+int monotonic_package_selector(struct package_info *pkg);
+int nonmonotonic_package_selector(struct package_info *pkg);
+//int report_user_defined_events(double data[]);
 
 /***************************************************************************************
 * This is for TauMuse stuff
 * *************************************************************************************/
 int TauMuseInit(void);
-int TauMuseCreate(void);
+int TauMuseCreate(struct package_info *pkg);
+
 #ifdef TAU_MUSE
 double TauMuseQuery(void);
-#endif /* TAU_MUSE */
+#endif //TAU_MUSE
+
 #ifdef TAU_MUSE_EVENT
-double TauMuseEventQuery(int data);
-#endif /* TAU_MUSE_EVENT */
+int TauMuseEventQuery(double data[],int size);
+int TauMuseGetMetricsNonMono(char *data[],int size);
+//int TauMuseGetSizeNonMono(void);
+#endif //TAU_MUSE_EVENT
+
 #ifdef TAU_MUSE_MULTIPLE
-int TauMuseMultipleQuery(double data[],int array_size);
-#endif /* TAU_MUSE_MULTIPLE */
+int TauMuseMultipleQuery(double data[],int size);
+int TauMuseGetMetricsMono(char *data[],int size);
+//int TauMuseGetSizeMono(void);
+#endif //TAU_MUSE_MULTIPLE
 
 void TauMuseDestroy(void);
 #endif /* (defined(TAU_MUSE) || defined(TAU_MUSE_EVENT) || defined(TAU_MUSE_MULTIPLE))*/ 
