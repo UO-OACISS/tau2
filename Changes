@@ -30,6 +30,8 @@ Version 2.12 changes (from 2.11):
 18. Added support for DyninstAPI under AIX. [NERSC]
 19. Added support for Cray X1 and AMD Opteron (ASCI Red Storm). [Cray]
 20. Added support for MAGNET/MUSE. [LANL]
+21. Added support for Performance Database [ASCI]. 
+22. Added support for Multiplecounters with CRAY_TIMERS, MUSE and message size [CCA]. 
 
 
 Version 2.11 changes (from 2.10):
