@@ -98,7 +98,7 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
        rit!=routines.end(); ++rit) 
   {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
-	 ((*rit)->kind() != pdbItem::RO_EXT) && 
+	 (((*rit)->bodyBegin().line() != 0) && (*rit)->kind() != pdbItem::RO_EXT) && 
 	 (instrumentEntity((*rit)->fullName())) ) 
     {
 #ifdef DEBUG
@@ -1461,8 +1461,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.53 $   $Date: 2003/11/14 21:58:32 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.53 2003/11/14 21:58:32 sameer Exp $
+ * $Revision: 1.54 $   $Date: 2003/11/18 18:28:30 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.54 2003/11/18 18:28:30 sameer Exp $
  ***************************************************************************/
 
 
