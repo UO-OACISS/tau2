@@ -105,8 +105,10 @@ public:
 	static int StoreData(int tid = RtsLayer::myThread()); 
 	static int DumpData(int tid = RtsLayer::myThread()); 
 	static void PurgeData(int tid = RtsLayer::myThread());
-	static void theFunctionList(const char ***inPtr, int *numOfFunctions, bool addName = false, const char * inString = NULL);
+	static void theFunctionList(const char ***inPtr, int *numOfFunctions,
+				    bool addName = false, const char * inString = NULL);
 	static void dumpFunctionNames();
+
 	static void getFunctionValues(const char **inFuncs,
 				      int numOfFuncs,
 				      double ***counterExclusiveValues,
@@ -116,6 +118,7 @@ public:
 				      char ***counterNames,
 				      int *numOfCounters,
 				      int tid = RtsLayer::myThread());
+
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
 	double ExclTimeThisCall; // for this invocation of the function
@@ -159,6 +162,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.39 $   $Date: 2002/03/27 10:20:20 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.39 2002/03/27 10:20:20 bertie Exp $ 
+ * $Revision: 1.40 $   $Date: 2002/03/27 23:45:18 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.40 2002/03/27 23:45:18 bertie Exp $ 
  ***************************************************************************/
