@@ -110,6 +110,31 @@ FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
 #endif /* PGI */
 
 //////////////////////////////////////////////////////////////////////
+// TAU_PROFILE_DEPTH 
+//////////////////////////////////////////////////////////////////////
+int& TauGetProfileDepth(void)
+{
+  static int depth = 0;
+  char *depthvar; 
+
+  if (depth == 0)
+  {
+    depthvar = getenv("TAU_DEPTH"); 
+    if (depthvar == (char *) NULL)
+    {
+      depth = INT_MAX; 
+    }
+    else
+    {
+      depth = atoi(depthvar);
+    }
+  } 
+	
+  return depth; 
+}
+
+
+//////////////////////////////////////////////////////////////////////
 // Shutdown routine which calls TAU's shutdown
 //////////////////////////////////////////////////////////////////////
 void TauAppShutdown(void)
@@ -170,6 +195,24 @@ char * TauGetCounterString(void)
 void Profiler::Start(int tid)
 { 
       ParentProfiler = CurrentProfiler[tid]; // Timers
+#ifdef TAU_PROFILE_DEPTH
+      int userspecifieddepth = TauGetProfileDepth();
+      if (ParentProfiler)
+      {
+	SetProfileDepth(ParentProfiler->GetProfileDepth()+1);
+      }
+      else
+      {
+	SetProfileDepth(1);
+      }
+      int mydepth = GetProfileDepth();
+      DEBUGPROFMSG("Start: Name: "<< ThisFunction->GetName()<<" mydepth = "<<mydepth<<", userspecifieddepth = "<<userspecifieddepth<<endl;);
+      if (mydepth > userspecifieddepth) 
+      { /* set the profiler */
+	CurrentProfiler[tid] = this;
+	return; 
+      }
+#endif /* TAU_PROFILE_DEPTH */
 
       x_uint64 TimeStamp = 0L;
 
@@ -362,6 +405,18 @@ void Profiler::Stop(int tid)
 {
       x_uint64 TimeStamp = 0L; 
       if (CurrentProfiler[tid] == NULL) return;
+
+#ifdef TAU_PROFILE_DEPTH
+      int userspecifieddepth = TauGetProfileDepth();
+      int mydepth = GetProfileDepth(); 
+      if (mydepth > userspecifieddepth) 
+      {
+	CurrentProfiler[tid] = ParentProfiler; 
+	DEBUGPROFMSG("Stop: mydepth = "<<mydepth<<", userspecifieddepth = "<<userspecifieddepth<<endl;);
+	return;
+      }
+#endif /* TAU_PROFILE_DEPTH */
+
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
@@ -2749,11 +2804,23 @@ void Profiler::SetPhase(bool flag)
 
 #endif /* TAU_PROFILEPHASE */
 
+#ifdef TAU_PROFILE_DEPTH 
+int Profiler::GetProfileDepth(void)
+{
+  return profiledepth;
+}
+
+void Profiler::SetProfileDepth(int value)
+{
+  profiledepth = value;
+}
+#endif /* TAU_PROFILE_DEPTH */ 
+
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.108 $   $Date: 2005/01/27 17:06:15 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.108 2005/01/27 17:06:15 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.109 $   $Date: 2005/03/11 19:15:11 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.109 2005/03/11 19:15:11 sameer Exp $ 
  ***************************************************************************/
 
 	
