@@ -19,10 +19,9 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-#FFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
-FFLAGS        	= $(TAU_INCLUDE) -DPROFILING_ON 
+FFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) 
 
-LIBS            = $(TAU_LIBS)  -lfortran -lftn
+LIBS            = $(TAU_LIBS) $(LEXTRA1) $(TAU_FORTRANLIBS)
 
 LDFLAGS	      	= $(USER_OPT) 
 
@@ -32,7 +31,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-F77		= f90 -64
+F77		= f90 
 
 TARGET	      	= cubes
 
