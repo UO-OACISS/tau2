@@ -121,6 +121,7 @@ mpi=no
 mpiinc=
 mpilib=
 mpilibrary=no
+threadsafe=no
 additional_mpiincs=
 additional_mpilibs=
 pythoninc=
@@ -129,6 +130,7 @@ python=no
 extradir=
 awe=no
 pthread=no
+comm=yes
 sproc=no
 noex=no
 tulipthread=no
@@ -314,6 +316,11 @@ do
  
   -pthread)
       pthread=yes
+    shift
+    ;;
+
+  -nocomm)
+      comm=no
     shift
     ;;
 
@@ -611,6 +618,7 @@ do
     echo "                           the TAU MPI Profiling and Tracing Interface."
     echo "-mpilibrary=<library> ................ Specify a different MPI library."
     echo "            e.g., -mpilibrary=-lmpi_r                                  "
+    echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -934,6 +942,12 @@ if [ $callpath = yes ]
     tauoptions="${tauoptions}-callpath"
 fi
 
+if [ $comm = no ]
+  then
+    fixmakeargs="$fixmakeargs NOCOMM"
+    tauoptions="${tauoptions}-nocomm"
+fi
+
 if [ $profilecallstack = yes ]
   then
       fixmakeargs="$fixmakeargs CALLSTACK"
@@ -1098,7 +1112,9 @@ case $cxx_compiler in
 	echo "Not using the thread-safe version of the IBM compiler"
       else
 	ibmxlc_r=yes
+        fixmakeargs="$fixmakeargs THREADSAFE_COMPILERS"
 	echo "Using thread-safe version of the IBM compiler"
+        threadsafe=yes
       fi
       ;;
 
@@ -1358,6 +1374,11 @@ if [ $mpi = yes -a $machine = ibm64 ]
 then
   ibmxlc_r=yes
   echo "Enabling threaded MPI libraries for IBM64"
+  if [ $threadsafe = no ]
+  then
+    fixmakeargs="$fixmakeargs THREADSAFE_COMPILERS"
+    threadsafe=yes
+  fi
 fi
 
 if [ $mpi = yes -a "x$mpiinc" = "x" ] 
@@ -2333,16 +2354,16 @@ fi
 # Set up TAU-specific configuration options
 
 # -- first, make sure the display is set - wish won't work otherwise
-if ( xrdb -query ) 1>/dev/null 2>&1
-  then
-    echo "The display is okay."
-  else
-    echo "ERROR: You do not have permission to use the display ${DISPLAY}."
-    echo "       Make sure the DISPLAY environment variable is set correctly."
-    echo "       xrdb fails. If DISPLAY is ok, try "
-    echo "       % unsetenv LD_LIBRARY_PATH "
-#    exit
-fi
+#if ( xrdb -query ) 1>/dev/null 2>&1
+#  then
+#    echo "The display is okay."
+#  else
+#    echo "ERROR: You do not have permission to use the display ${DISPLAY}."
+#    echo "       Make sure the DISPLAY environment variable is set correctly."
+#    echo "       xrdb fails. If DISPLAY is ok, try "
+#    echo "       % unsetenv LD_LIBRARY_PATH "
+##    exit
+#fi
 
 echo "TAU: installing TAU's ParaProf profile browser" 
 taushell=sh
@@ -2406,56 +2427,58 @@ else
 fi
 
 # -- determine Tcl/Tk version
-cat << EOF > /tmp/tau$$
-
-  wm withdraw .
-  puts [info tclversion]/\$tk_version
-  if { ([info tclversion] >= 7.4) && (\$tk_version >= 4.0) } {
-    exit 0
-  } else {
-    exit 1
-  }
+#cat << EOF > /tmp/tau$$
+#
+#  wm withdraw .
+#  puts [info tclversion]/\$tk_version
+#  if { ([info tclversion] >= 7.4) && (\$tk_version >= 4.0) } {
+#    exit 0
+#  } else {
+#    exit 1
+#  }
 	
-EOF
+#EOF
 
-if tversion=`( wish8.3 -f /tmp/tau$$ ) 2>/dev/null`
-then
-  wishname=wish8.3
-  echo "Found Tcl/Tk wish $tversion"
-else
-  if tversion=`( wish8.2 -f /tmp/tau$$ ) 2>/dev/null`
-  then
-    wishname=wish8.2
-    echo "Found Tcl/Tk wish $tversion"
-  else
-    if tversion=`( wish8.0 -f /tmp/tau$$ ) 2>/dev/null`
-    then
-      wishname=wish8.0
-      echo "Found Tcl/Tk wish $tversion"
-    else
-      if tversion=`( wish -f /tmp/tau$$ ) 2>/dev/null`
-      then
-        wishname=wish
-        echo "Found Tcl/Tk wish $tversion"
-      else
-        echo "ERROR: No working wish found - need Tcl 7.4/Tk 4.0 or higher for TAU"
-        wishname=wish
-        if tversion=`( $wishname -f /tmp/tau$$ ) 2>/dev/null`
-        then
-          echo "Found Tcl/Tk wish $tversion"
-        else
-          echo "Using $wishname as the wish interpreter in racy"
-          #rm /tmp/tau$$
-          #exit
-        fi    
-      fi
-    fi
-  fi
-fi
-rm /tmp/tau$$
+#if tversion=`( wish8.3 -f /tmp/tau$$ ) 2>/dev/null`
+#then
+#  wishname=wish8.3
+#  echo "Found Tcl/Tk wish $tversion"
+#else
+#  if tversion=`( wish8.2 -f /tmp/tau$$ ) 2>/dev/null`
+#  then
+#    wishname=wish8.2
+#    echo "Found Tcl/Tk wish $tversion"
+#  else
+#    if tversion=`( wish8.0 -f /tmp/tau$$ ) 2>/dev/null`
+#    then
+#      wishname=wish8.0
+#      echo "Found Tcl/Tk wish $tversion"
+#    else
+#      if tversion=`( wish -f /tmp/tau$$ ) 2>/dev/null`
+#      then
+#        wishname=wish
+#        echo "Found Tcl/Tk wish $tversion"
+#      else
+#        echo "ERROR: No working wish found - need Tcl 7.4/Tk 4.0 or higher for TAU"
+#        wishname=wish
+#        if tversion=`( $wishname -f /tmp/tau$$ ) 2>/dev/null`
+#        then
+#          echo "Found Tcl/Tk wish $tversion"
+#        else
+#          echo "Using $wishname as the wish interpreter in racy"
+#          #rm /tmp/tau$$
+#          #exit
+#        fi    
+#      fi
+#    fi
+#  fi
+#fi
+wishname=wish
 
-echo "Using wish command: $wishname"
-echo " "
+#rm /tmp/tau$$
+
+#echo "Using wish command: $wishname"
+#echo " "
 
 # We do not need any tkman for RACY. 
 # -- find out where tkman is installed
