@@ -16,7 +16,11 @@
 #include "Profile/Profiler.h"
 #include <sys/types.h>
 #include <unistd.h>
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */ 
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 
 TAU_REGISTER_EVENT(getdata, "Get Data values");
 
