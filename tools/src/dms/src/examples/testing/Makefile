@@ -21,11 +21,11 @@ default: run
 
 all: $(TARGET).class
 
-$(TARGET).class: 
+$(TARGET).class: $(TARGET).java
 	javac -classpath $(CLASSPATH) *.java
 
 run: all
-	java -classpath $(CLASSPATH) $(TARGET) $(CONFIG_FILE)
+	java -classpath $(CLASSPATH) $(TARGET) $(CONFIG_FILE) 55 0
 
 clean:
 	rm -f *.class

@@ -12,7 +12,7 @@ public class DrawImage extends JPanel {
    
    private Image img = null;
    
-   public DrawImage(String config) {
+   public DrawImage(String config, String trialID, String metricID) {
 
       try {
          // Create a PerfDMFSession object
@@ -27,10 +27,13 @@ public class DrawImage extends JPanel {
          // Trial trial = session.setTrial(68); // pprof.dat example
          // Trial trial = session.setTrial(69); // sphot, 4 nodes 2 threads
          // Trial trial = session.setTrial(72); // sppm, openmp, 8 threads
-         Trial trial = session.setTrial(77); // sppm, 32 threads on mcr
+         // Trial trial = session.setTrial(75); // sppm, openmp, 8 threads
+         // Trial trial = session.setTrial(77); // sppm, 32 threads on mcr
+         Trial trial = session.setTrial(Integer.parseInt(trialID));
          Vector metrics = session.getMetrics();
          // Metric metric = (Metric)(metrics.elementAt(0));
-         Metric metric = (Metric)(metrics.elementAt(7));
+         // Metric metric = (Metric)(metrics.elementAt(7));
+         Metric metric = (Metric)(metrics.elementAt(Integer.parseInt(metricID)));
 
          DistanceAnalysis distance = 
 			new ThreadDistance((PerfDMFSession)session, trial, metric);  
@@ -65,7 +68,7 @@ public class DrawImage extends JPanel {
    public static void main(String[] args) {
       try {
          // create the panel
-         DrawImage dimg = new DrawImage(args[0]);
+         DrawImage dimg = new DrawImage(args[0], args[1], args[2]);
          // create the window
          final JFrame f = new PlotDrawingWindow("TEST");
          // create and add an event handler for window closing event

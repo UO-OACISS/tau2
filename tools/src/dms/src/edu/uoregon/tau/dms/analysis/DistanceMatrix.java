@@ -68,7 +68,8 @@ public class DistanceMatrix {
 		StringBuffer buf = new StringBuffer();
 		buf.append("# Matrix Size: " + matrixSize + "\n");
 		buf.append("# Dimension Count: " + dimensionCount + "\n");
-        buf.append("# Normalized Values:\n");
+        /*
+		buf.append("# Normalized Values:\n");
 		double total = 0.0;
         for (int i = 0 ; i < matrixSize; i++ ) {
 			total = 0.0;
@@ -83,6 +84,7 @@ public class DistanceMatrix {
             }
 			buf.append("# Total: " + total + "\n");
         }
+		*/
         buf.append("# Distance Matrix:\n");
         for (int i = 0 ; i < matrixSize; i++ ) {
             buf.append("# row " + i + ":\n");
