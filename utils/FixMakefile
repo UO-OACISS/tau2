@@ -270,6 +270,10 @@ fi
 	echo NOTE: Using special switches for PGI 1.7 compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PGICC) 
+	echo NOTE: Using --prelink_objects for PGI 3.0+ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      NEXT_CLIB)
 	echo NOTE: The NeXTs do not have a libc.a
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -450,11 +454,19 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SOL2CC)
-	echo "NOTE: Solaris2 CC doesn't support RTTI yet, using -DNO_RTTI"
+	echo "NOTE: Solaris2 CC compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      GNU)
-	echo "NOTE: g++ doesn't support RTTI yet, using -DNO_RTTI"
+	echo "NOTE: GNU g++ options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     RTTI)
+	echo "NOTE: <typeinfo.h> available"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     NORTTI)
+	echo "NOTE: No Runtime Type Information available"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KAINOEX)
