@@ -1320,6 +1320,9 @@ void UserEventSummaryInfo(int node, int ctx, int thr)
 	if ((*it).second.numevents == 0) 
 	{ 
 	  stddev = 0;
+	  (*it).second.maxvalue = 0;
+	  (*it).second.minvalue = 0;
+	  (*it).second.meanvalue = 0;
 	} else
  	{
           stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents)
@@ -1357,6 +1360,9 @@ void UserEventSummaryInfo(int node, int ctx, int thr)
 	if ((*it).second.numevents == 0) 
 	{ 
 	  stddev = 0;
+	  (*it).second.maxvalue = 0;
+	  (*it).second.minvalue = 0;
+	  (*it).second.meanvalue = 0;
 	} else
  	{
           stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents) 
@@ -3090,7 +3096,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 2000/02/04 23:56:54 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.22 2000/02/04 23:56:54 sameer Exp $                                                   
+ * $Revision: 1.23 $   $Date: 2000/10/19 22:28:05 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.23 2000/10/19 22:28:05 sameer Exp $                                                   
  ***************************************************************************/
 
