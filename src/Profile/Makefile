@@ -43,7 +43,7 @@ CEXTRA =
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
 #############################################
 
-
+DEFINES = -DTAU_LIBRARY_SOURCE
 
 LINKER	= $(TAU_CC)
 
@@ -51,7 +51,7 @@ INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAUINC	      = -I$(TAUROOT)/include 
 
-CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)
+CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC) 
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
