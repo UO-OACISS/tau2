@@ -9,8 +9,8 @@ BASE_SOURCES=ApplicationManager.java GlobalMappingElement.java PPMLPanel.java Pa
              BinWindowPanel.java GlobalThreadDataElement.java ParaProfApplication.java PrefColorPanel.java SystemEvents.java \
              CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java ParaProfDBSession.java PrefSpacingPanel.java TauOutputSession.java \
              CallPathTextWindowPanel.java LineData.java ParaProfDataSession.java Preferences.java TauPprofOutputSession.java \
-             CallPathUtilFuncs.java MappingDataWindow.java ParaProfError.java SMWContext.java Thread.java \
-             ColorChooser.java MappingDataWindowPanel.java ParaProfExperiment.java SMWServer.java ThreadDataWindow.java \
+             CallPathUtilFuncs.java MappingDataWindow.java ParaProfError.java Thread.java \
+             ColorChooser.java MappingDataWindowPanel.java ParaProfExperiment.java ThreadDataWindow.java \
              ColorPair.java MappingLedgerWindow.java ParaProfImageInterface.java ParaProfImageOptionsPanel.java ParaProfImageFormatFileFilter.java \
              SMWThread.java ThreadDataWindowPanel.java Context.java MappingLedgerWindowPanel.java SMWThreadDataElement.java \
              UserEventWindow.java DBConfiguration.java Metric.java ParaProfIterator.java SavedPreferences.java UserEventWindowPanel.java \
