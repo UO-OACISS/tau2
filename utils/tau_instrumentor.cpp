@@ -1148,7 +1148,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname] [-i headerfile] [-c|-c++|-fortran]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] "<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -1309,8 +1309,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.38 $   $Date: 2002/03/11 22:47:22 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.38 2002/03/11 22:47:22 sameer Exp $
+ * $Revision: 1.39 $   $Date: 2002/03/11 23:49:37 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.39 2002/03/11 23:49:37 sameer Exp $
  ***************************************************************************/
 
 
