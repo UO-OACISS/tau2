@@ -179,6 +179,8 @@ public class TauOutputSession extends ParaProfDataSession{
 			if(i==0){
 			    //Set the metric name.
 			    String metricName = getMetricName(inputString);
+			    if(metricName == null)
+				metricName = new String("Time");
 			    this.addMetric(metricName);
 			}
 			//####################################
