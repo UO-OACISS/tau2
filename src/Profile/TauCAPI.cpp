@@ -296,26 +296,27 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 }
 
 #ifdef TAU_MPI
-TAU_REGISTER_EVENT(sendevent,"Message size sent to all nodes");
-TAU_REGISTER_EVENT(recvevent,"Message size received from all nodes");
-TAU_REGISTER_EVENT(bcastevent,"Message size for broadcast");
-TAU_REGISTER_EVENT(reduceevent,"Message size for reduce");
-TAU_REGISTER_EVENT(reducescatterevent,"Message size for reduce-scatter");
-TAU_REGISTER_EVENT(scanevent,"Message size for scan");
-TAU_REGISTER_EVENT(allreduceevent,"Message size for all-reduce");
-TAU_REGISTER_EVENT(alltoallevent,"Message size for all-to-all");
-TAU_REGISTER_EVENT(scatterevent,"Message size for scatter");
-TAU_REGISTER_EVENT(gatherevent,"Message size for gather");
-TAU_REGISTER_EVENT(allgatherevent,"Message size for all-gather");
+#define TAU_GEN_EVENT(e, msg) TauUserEvent& e () { \
+	static TauUserEvent u(msg); return u; } 
+
+TAU_GEN_EVENT(TheSendEvent,"Message size sent to all nodes")
+TAU_GEN_EVENT(TheRecvEvent,"Message size received from all nodes")
+TAU_GEN_EVENT(TheBcastEvent,"Message size for broadcast")
+TAU_GEN_EVENT(TheReduceEvent,"Message size for reduce")
+TAU_GEN_EVENT(TheReduceScatterEvent,"Message size for reduce-scatter")
+TAU_GEN_EVENT(TheScanEvent,"Message size for scan")
+TAU_GEN_EVENT(TheAllReduceEvent,"Message size for all-reduce")
+TAU_GEN_EVENT(TheAlltoallEvent,"Message size for all-to-all")
+TAU_GEN_EVENT(TheScatterEvent,"Message size for scatter")
+TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
+TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
 
 TauUserEvent**& TheMsgVolEvent()
 {
   static TauUserEvent **u = 0; 
   return u;
 }
-/* OLD 
-TauUserEvent **u;
-*/
+
 int register_events(void)
 {
 #ifdef TAU_EACH_SEND
@@ -339,7 +340,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
   printf("Node %d: Tau_trace_sendmsg: type %d dest %d len %d\n", 
         RtsLayer::myNode(), type, destination, length);
 #endif /* DEBUG_PROF */
-  TAU_EVENT(sendevent, length);
+  TAU_EVENT(TheSendEvent(), length);
 #ifdef TAU_EACH_SEND
   TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
 #endif /* TAU_EACH_SEND */
@@ -348,53 +349,53 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 {
-  TAU_EVENT(recvevent, length);
+  TAU_EVENT(TheRecvEvent(), length);
   TAU_TRACE_RECVMSG(type, source, length);
 }
 
 extern "C" void Tau_bcast_data(int data)
 {
-  TAU_EVENT(bcastevent, data);
+  TAU_EVENT(TheBcastEvent(), data);
 }
 
 extern "C" void Tau_reduce_data(int data)
 {
-  TAU_EVENT(reduceevent, data);
+  TAU_EVENT(TheReduceEvent(), data);
 }
 
 extern "C" void Tau_alltoall_data(int data)
 {
-  TAU_EVENT(alltoallevent, data);
+  TAU_EVENT(TheAlltoallEvent(), data);
 }
 
 extern "C" void Tau_scatter_data(int data)
 {
-  TAU_EVENT(scatterevent, data);
+  TAU_EVENT(TheScatterEvent(), data);
 }
 
 extern "C" void Tau_gather_data(int data)
 {
-  TAU_EVENT(gatherevent, data);
+  TAU_EVENT(TheGatherEvent(), data);
 }
 
 extern "C" void Tau_allgather_data(int data)
 {
-  TAU_EVENT(allgatherevent, data);
+  TAU_EVENT(TheAllgatherEvent(), data);
 }
 
 extern "C" void Tau_allreduce_data(int data)
 {
-  TAU_EVENT(gatherevent, data);
+  TAU_EVENT(TheGatherEvent(), data);
 }
 
 extern "C" void Tau_scan_data(int data)
 {
-  TAU_EVENT(scanevent, data);
+  TAU_EVENT(TheScanEvent(), data);
 }
 
 extern "C" void Tau_reducescatter_data(int data)
 {
-  TAU_EVENT(reducescatterevent, data);
+  TAU_EVENT(TheReduceScatterEvent(), data);
 }
 #else /* !TAU_MPI */
 ///////////////////////////////////////////////////////////////////////////
@@ -582,7 +583,7 @@ extern "C" void Tau_set_interrupt_interval(int value)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.42 $   $Date: 2004/06/10 18:07:27 $
- * VERSION: $Id: TauCAPI.cpp,v 1.42 2004/06/10 18:07:27 sameer Exp $
+ * $Revision: 1.43 $   $Date: 2004/09/08 21:55:40 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.43 2004/09/08 21:55:40 sameer Exp $
  ***************************************************************************/
 
