@@ -121,6 +121,8 @@ mpi=no
 mpiinc=
 mpilib=
 mpilibrary=no
+pythoninc=
+python=no
 extradir=
 awe=no
 pthread=no
@@ -396,6 +398,12 @@ do
     shift
     ;;
 
+  -pythoninc=*)
+    pythoninc=`echo $arg | sed -e 's/-pythoninc=//' -e 's/ /#/g'`
+    python=yes
+    shift
+    ;;
+
   -opt=*)
     pcxxopt=`echo $arg | sed -e 's/-opt=//' -e 's/ /_/g'`
     useropt="$pcxxopt"
@@ -574,6 +582,7 @@ do
     echo "-mpilibrary=<library> ................ Specify a different MPI library."
     echo "            e.g., -mpilibrary=-lmpi_r                                  "
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
+    echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
@@ -1941,6 +1950,12 @@ if [ $papi = yes ]
     else
 	fixmakeargs="$fixmakeargs papisubdir=src"
     fi
+fi
+
+if [ $python = yes ]
+  then
+    fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc"
+    tauoptions="${tauoptions}-python"
 fi
 
 if [ $pdt = yes ]
