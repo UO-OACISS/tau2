@@ -36,6 +36,9 @@
 // To ensure that Profiling does not add any runtime overhead when it 
 // is turned off, these macros expand to null.
 //////////////////////////////////////////////////////////////////////
+extern "C" void Tau_start_timer(void * function_info);
+extern "C" void Tau_stop_timer(void * function_info); 
+
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 #define TAU_PROFILE(name, type, group) \
 	static TauGroup_t tau_gr = group; \
@@ -43,13 +46,16 @@
 	Profiler tauFP(&tauFI, tau_gr); 
 #define TAU_PROFILE_TIMER(var, name, type, group) \
 	static TauGroup_t var##tau_gr = group; \
-	static FunctionInfo var##fi(name, type, var##tau_gr, #group); \
-	Profiler var(&var##fi, var##tau_gr, true); 
+	static FunctionInfo var##fi(name, type, var##tau_gr, #group); 
+
+//	Profiler var(&var##fi, var##tau_gr, true); 
 
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
 // e.g., FunctionInfo loop1fi(); Profiler loop1(); 
-#define TAU_PROFILE_START(var) var.Start();
-#define TAU_PROFILE_STOP(var)  var.Stop();
+#define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
+ 				Tau_start_timer(&var##fi);
+#define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
+				Tau_stop_timer(&var##fi);
 #define TAU_PROFILE_STMT(stmt) stmt;
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
@@ -173,6 +179,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2002/01/15 21:30:12 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.16 2002/01/15 21:30:12 sameer Exp $ 
+ * $Revision: 1.17 $   $Date: 2002/01/30 22:27:46 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.17 2002/01/30 22:27:46 sameer Exp $ 
  ***************************************************************************/
