@@ -13,7 +13,8 @@
 //   using std::exit;
 #include <stdlib.h>
 #include <Profile/Profiler.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 
 
 extern "C" void mytimer_(int *);
