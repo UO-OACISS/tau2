@@ -40,6 +40,11 @@
 #endif /* FUJITSU */
 #include "Profile/Profiler.h"
 
+#ifdef TAU_XLC
+#define strcasecmp strcmp
+#define strncasecmp strncmp 
+#endif /* TAU_XLC */
+
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -705,6 +710,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2000/03/01 02:20:43 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.18 2000/03/01 02:20:43 sameer Exp $ 
+ * $Revision: 1.19 $   $Date: 2000/04/03 18:21:58 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.19 2000/04/03 18:21:58 sameer Exp $ 
  ***************************************************************************/
