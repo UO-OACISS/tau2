@@ -278,6 +278,18 @@ public class ParaProfDBSession extends ParaProfDataSession {
 		    globalMappingElement.setMaxUserEventSumSquared(alp.getSumSquared());
 	    }
 
+
+
+	    System.out.println("Processing callpath data ...");
+	    if (CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))) {
+		setCallPathDataPresent(true);
+		CallPathUtilFuncs.buildRelations(getGlobalMapping());
+	    }
+
+
+
+
+
 	    time = (System.currentTimeMillis()) - time;
 	    System.out.println("Done processing data file!");
 	    System.out.println("Time to process file (in milliseconds): " + time);
