@@ -892,8 +892,20 @@ void MultipleCounterLayer::papiMCL(int tid, double values[]){
 }
 
 void MultipleCounterLayer::papiWallClockMCL(int tid, double values[]){
+static long long oldvalue = 0L;
+static double offset = 0;
+long long newvalue = 0L;
 #ifdef TAU_PAPI
-  values[papiWallClockMCL_CP[0]] = PAPI_get_real_usec();
+  newvalue = PAPI_get_real_usec();
+  if (newvalue < oldvalue) 
+  {
+    offset += UINT_MAX;
+    DEBUGPROFMSG("WARNING: papi counter overflow. Fixed in TAU! new = "
+	 <<newvalue <<" old = " <<oldvalue<<" offset = "<<offset <<endl;);
+    DEBUGPROFMSG("Returning "<<newvalue + offset<<endl;);
+  }
+  oldvalue = newvalue;
+  values[papiWallClockMCL_CP[0]] = newvalue + offset; 
 #endif // TAU_PAPI
 }
 void MultipleCounterLayer::papiVirtualMCL(int tid, double values[]){

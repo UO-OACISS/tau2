@@ -214,8 +214,24 @@ void PapiLayer::multiCounterPapiInit(void)
 long long PapiLayer::getWallClockTime(void)
 { // Returns the wall clock time from PAPI interface
   static int initflag = PapiLayerInit();
+  static long long oldvalue = 0L;
+  static double offset = 0;
+  long long newvalue = 0L;
+#ifdef TAU_PAPI
+  newvalue = PAPI_get_real_usec();
+  if (newvalue < oldvalue)
+  {
+    offset += UINT_MAX;
+    DEBUGPROFMSG("WARNING: papi counter overflow. Fixed in TAU! new = "
+         <<newvalue <<" old = " <<oldvalue<<" offset = "<<offset <<endl;);
+    DEBUGPROFMSG("Returning "<<newvalue + offset<<endl;);
+  }
+  oldvalue = newvalue;
+  return (newvalue + offset);
+#endif // TAU_PAPI
 
-  return PAPI_get_real_usec();
+
+  // OLD code: return PAPI_get_real_usec();
 }
 
 /////////////////////////////////////////////////
