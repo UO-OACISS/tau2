@@ -18,7 +18,7 @@ using namespace std;
 #include <stdlib.h>
 #include "decl.h"
 
-#define DEFAULT_SIZE 10000
+#define DEFAULT_SIZE 100000
 #define DEFAULT_K    4 /* fourth largest element from the array */
 #define middle(i)	5*i+2
 /* the large array is partitioned into 5 elements each 2, 7, 12 etc. are 
@@ -252,9 +252,22 @@ int i, j;
 void sort_5elements(int *arr)
 {
   TAU_PROFILE("void sort_5elements(int *)", " ", TAU_USER);
+
+  //Dump this function's values every time we reach 10000 calls.
+  static int counter = 0;
+  counter++;
+  if(counter == 10000){
+    const char **inFuncs = (const char **) malloc(sizeof(const char *) * 2);
+    inFuncs[0] = "void sort_5elements(int *)";
+    TAU_DUMP_FUNC_VALS_INCR(inFuncs, 1);
+    counter = 0;
+  }
+    
+
  /* sort the first five elements of the array arr */
   quicksort(arr, 0, 4); /* could be done by if statements too - but this way
 	 		its easier to extend it for 7 element based select */
+   
 }
 
 /**************************************************************************
@@ -346,6 +359,7 @@ int main(int argc, char **argv)
     cout << "This function names so far are: " << functionList[i] << endl;
   }
 
+  TAU_DB_DUMP_INCR();
   TAU_DUMP_FUNC_NAMES();
 
   int numOfCounters;
@@ -463,6 +477,9 @@ int *A;
 		      numOfSubRoutines,
 		      counterNames,
 		      numOfCouns);
+
+    TAU_DUMP_FUNC_VALS_INCR(inFuncs, 2);
+    
     
   cout << "@@@@@@@@@@@@@@@" << endl;
   
@@ -485,6 +502,9 @@ int *A;
 
   cout << "@@@@@@@@@@@@@@@" << endl;
   }
+
+  TAU_DB_DUMP_INCR();
+
 }
 
 

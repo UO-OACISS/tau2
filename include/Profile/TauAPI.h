@@ -83,12 +83,21 @@ extern "C" void Tau_stop_timer(void * function_info);
 #endif /* PROFILE_CALLSTACK */
 
 #define TAU_DB_DUMP() Profiler::DumpData();
+#define TAU_DB_DUMP_INCR() Profiler::DumpData(true);
 #define TAU_DB_PURGE() Profiler::PurgeData();
 #define TAU_GET_FUNC_NAMES(functionList, num) Profiler::theFunctionList(&functionList, &num);
 #define TAU_DUMP_FUNC_NAMES() Profiler::dumpFunctionNames();
+#ifdef TAU_MULTIPLE_COUNTERS
 #define TAU_GET_COUNTER_NAMES(counterList, num) MultipleCounterLayer::theCounterList(&counterList, &num);
+#else //TAU_MULTIPLE_COUNTERS
+#define TAU_GET_COUNTER_NAMES(counterList, num) Profiler::theCounterList(&counterList, &num);
+#endif //TAU_MULTIPLE_COUNTERS
 #define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8) \
                                Profiler::getFunctionValues(v1,v2,&v3,&v4,&v5,&v6,&v7,&v8);
+#define TAU_DUMP_FUNC_VALS(v1,v2) \
+                               Profiler::dumpFunctionValues(v1,v2);
+#define TAU_DUMP_FUNC_VALS_INCR(v1,v2) \
+                               Profiler::dumpFunctionValues(v1,v2,true);
 
 // UserEvents
 #define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
@@ -138,11 +147,14 @@ extern "C" void Tau_stop_timer(void * function_info);
 #define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname)
 #define TAU_PROFILE_CALLSTACK()    
 #define TAU_DB_DUMP()
+#define TAU_DB_DUMP_INCR()
 #define TAU_DB_PURGE()
 #define TAU_GET_FUNC_NAMES(functionList, num)
 #define TAU_DUMP_FUNC_NAMES()
 #define TAU_GET_COUNTER_NAMES(counterList, num)
 #define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8)
+#define TAU_DUMP_FUNC_VALS(v1,v2)
+#define TAU_DUMP_FUNC_VALS_INCR(v1,v2)
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
@@ -188,6 +200,6 @@ extern "C" void Tau_stop_timer(void * function_info);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: bertie $
- * $Revision: 1.20 $   $Date: 2002/03/27 23:43:35 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.20 2002/03/27 23:43:35 bertie Exp $ 
+ * $Revision: 1.21 $   $Date: 2002/03/29 00:36:30 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.21 2002/03/29 00:36:30 bertie Exp $ 
  ***************************************************************************/

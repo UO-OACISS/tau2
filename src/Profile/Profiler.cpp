@@ -676,6 +676,253 @@ void Profiler::getFunctionValues(const char **inFuncs,
 #endif //PROFILING_ON
 }
 
+int Profiler::dumpFunctionValues(const char **inFuncs,
+				 int numOfFuncs,
+				 bool increment,
+				 int tid){
+  
+  TAU_PROFILE("GET_FUNC_VALS()", " ", TAU_IO);
+#ifdef PROFILING_ON
+	vector<FunctionInfo*>::iterator it;
+  	vector<TauUserEvent*>::iterator eit;
+	char *filename, *dumpfile, *errormsg, *header;
+	char *dirname;
+	FILE* fp;
+ 	int numFunc, numEvents;
+
+	bool functionCheck = false;
+	const char *tmpFunctionName = NULL;
+
+#endif //PROFILING_ON
+#ifdef PROFILE_CALLS
+	long listSize, numCalls;
+	list<pair<double,double> >::iterator iter;
+#endif // PROFILE_CALLS
+ 	double excltime, incltime; 
+	double currenttime, prevtime, total;
+
+	DEBUGPROFMSG("Profiler::DumpData( tid = "<<tid <<" ) "<<endl;);
+
+#ifdef TRACING_ON
+	TraceEvClose(tid);
+	RtsLayer::DumpEDF(tid);
+#endif // TRACING_ON 
+
+#ifdef PROFILING_ON 
+	currenttime = RtsLayer::getUSecD(tid); 
+	RtsLayer::LockDB();
+	if ((dirname = getenv("PROFILEDIR")) == NULL) {
+	// Use default directory name .
+	   dirname  = new char[8];
+	   strcpy (dirname,".");
+	}
+	 
+	filename = new char[1024];
+	sprintf(filename,"%s/temp.%d.%d.%d",dirname, RtsLayer::myNode(),
+		RtsLayer::myContext(), tid);
+	DEBUGPROFMSG("Creating " << filename << endl;);
+	/* Changed: TRUNCATE dump file */ 
+	if ((fp = fopen (filename, "w+")) == NULL) {
+	 	errormsg = new char[1024];
+		sprintf(errormsg,"Error: Could not create %s",filename);
+		perror(errormsg);
+		return 0;
+	}
+
+	// Data format :
+	// %d templated_functions
+	// "%s %s" %ld %G %G  
+	//  funcname type numcalls Excl Incl
+	// %d aggregates
+	// <aggregate info>
+       
+	// Recalculate number of funcs using ProfileGroup. Static objects 
+        // constructed before setting Profile Groups have entries in FuncDB 
+	// (TAU_DEFAULT) even if they are not supposed to be there.
+	/*
+	numFunc = 0;
+ 	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
+	{
+          if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) { 
+	    numFunc++;
+	  }
+	}
+	*/
+	numFunc = TheFunctionDB().size();
+	header = new char[256];
+
+#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
+	|| (defined (TAU_PAPI) && \
+         (!(defined(TAU_PAPI_WALLCLOCKTIME) || (defined (TAU_PAPI_VIRTUAL))))))
+	sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
+#else  // SGI_TIMERS, TULIP_TIMERS 
+	sprintf(header,"%d templated_functions\n", numFunc);
+#endif // SGI_HW_COUNTERS 
+
+#ifdef TAU_PAPI
+	static const char * papi_env_var = getenv("PAPI_EVENT");
+	if (papi_env_var != NULL)
+	  sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
+#endif // TAU_PAPI 
+
+	// Send out the format string
+	strcat(header,"# Name Calls Subrs Excl Incl ");
+#ifdef PROFILE_STATS
+	strcat(header,"SumExclSqr ");
+#endif //PROFILE_STATS
+	strcat(header,"ProfileCalls\n");
+	int sz = strlen(header);
+	int ret = fprintf(fp, "%s",header);	
+	ret = fflush(fp);
+	/*
+	if (ret != sz) {
+	  cout <<"ret not equal to strlen "<<endl;
+ 	}
+        cout <<"Header: "<< tid << " : bytes " <<ret <<":"<<header ;
+	*/
+ 	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
+          /* if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask())
+	     { 
+	  */
+	  
+	  //Check to see that it is one of the requested functions.
+	  functionCheck = false;
+	  tmpFunctionName = (*it)->GetName();
+	  for(int fc=0;fc<numOfFuncs;fc++){
+	    if(strcmp(inFuncs[fc], tmpFunctionName) == 0){
+	      functionCheck = true;
+	      break;
+	    }
+	  }
+	  if(functionCheck){
+	    if ((*it)->GetAlreadyOnStack(tid)) { 
+	      /* it is on the callstack. We need to do some processing. */
+	      /* Calculate excltime, incltime */
+	      Profiler *current; 
+	      /* Traverse the Callstack */
+	      current = CurrentProfiler[tid];
+	      
+	      if (current == 0){ /* current is null */
+		DEBUGPROFMSG("Current is NULL when it should be on the stack! TID = " << tid << endl;);
+	      }
+	      else{ /* current is not null */
+		incltime = (*it)->GetInclTime(tid); 
+		excltime = (*it)->GetExclTime(tid); 
+		total = 0;  /* Initialize what gets added */
+		prevtime = 0; /* for reducing from the parent profiler */
+		while (current != 0){
+		  /* Traverse the stack */ 
+		  if ((*it) == current->ThisFunction){ /* Match! */
+		    DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
+				 <<endl;);
+		    total = currenttime - current->StartTime; 
+		    excltime += total - prevtime; 
+		    /* prevtime is the inclusive time of the subroutine that should
+		       be subtracted from the current exclusive time */ 
+		    /* If there is no instance of this function higher on the 	
+		       callstack, we should add the total to the inclusive time */
+		  }
+		  prevtime = currenttime - current->StartTime;  
+		  /* to calculate exclusive time */
+		  
+		  current = current->ParentProfiler; 
+		} /* We've reached the top! */
+		incltime += total; /* add this to the inclusive time */ 
+		/* prevtime and incltime are calculated */
+	      } /* Current is not null */
+	    } /* On call stack */
+	    else{ /* it is not on the callstack. */ 
+	      excltime = (*it)->GetExclTime(tid);
+	      incltime = (*it)->GetInclTime(tid); 
+	    } // Not on the Callstack
+	    
+	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping " 
+			 << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : " 
+			 << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid) 
+			 << " Excl : " << excltime << " Incl : " << incltime << endl;);
+	    
+	    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
+		    (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
+		    excltime, incltime); 
+	    
+	    fprintf(fp,"0 \n"); // Indicating - profile calls is turned off 
+	    /*
+	      } // ProfileGroup test 
+	    */
+	  }
+	} // for loop. End of FunctionInfo data
+	fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
+	// Change this when aggregate profiling in introduced in Pooma 
+	
+	// Print UserEvent Data if any
+	
+	numEvents = 0;
+ 	for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++)
+	  {
+	    if ((*eit)->GetNumEvents(tid)) { 
+	      numEvents++;
+	    }
+	  }
+	
+	if (numEvents > 0) {
+	  // Data format 
+	  // # % userevents
+	  // # name numsamples max min mean sumsqr 
+    	  fprintf(fp, "%d userevents\n", numEvents);
+    	  fprintf(fp, "# eventname numevents max min mean sumsqr\n");
+	  
+    	  vector<TauUserEvent*>::iterator it;
+    	  for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
+	    {
+	      
+	      DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+			   (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid) 
+			   << "\n Max " << (*it)->GetMax(tid) << "\n Mean " 
+			   << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid) 
+			   << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
+	      
+	      fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
+		      (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+		      (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+	    }
+	}
+	// End of userevents data 
+	
+	RtsLayer::UnLockDB();
+	fclose(fp);
+	dumpfile = new char[1024];
+	if(increment){
+	  //Place the date and time to the dumpfile name:
+	  time_t theTime = time(NULL);
+	  char *stringTime = ctime(&theTime);
+	  tm *structTime = localtime(&theTime);
+	  char *day = strtok(stringTime," ");
+	  char *month = strtok(NULL," ");
+	  char *dayInt = strtok(NULL," ");
+	  char *time = strtok(NULL," ");
+	  char *year = strtok(NULL," ");
+	  //Get rid of the mewline.
+	  year[4] = '\0';
+	  char *newStringTime = new char[1024];
+	  sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
+	  
+	  sprintf(dumpfile,"%s/sel_dump__%s__.%d.%d.%d",dirname,
+		  newStringTime,
+		  RtsLayer::myNode(),
+		  RtsLayer::myContext(), tid);
+	  rename(filename, dumpfile);
+	}
+	else{
+	  sprintf(dumpfile,"%s/dump.%d.%d.%d",dirname, RtsLayer::myNode(),
+		  RtsLayer::myContext(), tid);
+	  rename(filename, dumpfile);
+	} 
+	
+	
+#endif //PROFILING_ON
+	return 1;
+}
+
 int Profiler::StoreData(int tid)
 {
 #ifdef PROFILING_ON 
@@ -862,10 +1109,10 @@ int Profiler::StoreData(int tid)
 	return 1;
 }
 
-int Profiler::DumpData(int tid)
+int Profiler::DumpData(bool increment, int tid)
 {
   	TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
-#ifdef PROFILING_ON 
+#ifdef PROFILING_ON
 	vector<FunctionInfo*>::iterator it;
   	vector<TauUserEvent*>::iterator eit;
 	char *filename, *dumpfile, *errormsg, *header;
@@ -1066,9 +1313,32 @@ int Profiler::DumpData(int tid)
 	RtsLayer::UnLockDB();
 	fclose(fp);
 	dumpfile = new char[1024];
-        sprintf(dumpfile,"%s/dump.%d.%d.%d",dirname, RtsLayer::myNode(),
-                RtsLayer::myContext(), tid);
-	rename(filename, dumpfile); 
+	if(increment){
+	  //Place the date and time to the dumpfile name:
+	  time_t theTime = time(NULL);
+	  char *stringTime = ctime(&theTime);
+	  tm *structTime = localtime(&theTime);
+	  char *day = strtok(stringTime," ");
+	  char *month = strtok(NULL," ");
+	  char *dayInt = strtok(NULL," ");
+	  char *time = strtok(NULL," ");
+	  char *year = strtok(NULL," ");
+	  //Get rid of the mewline.
+	  year[4] = '\0';
+	  char *newStringTime = new char[1024];
+	  sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
+	  
+	  sprintf(dumpfile,"%s/dump__%s__.%d.%d.%d",dirname,
+		  newStringTime,
+		  RtsLayer::myNode(),
+		  RtsLayer::myContext(), tid);
+	  rename(filename, dumpfile);
+	}
+	else{
+	  sprintf(dumpfile,"%s/dump.%d.%d.%d",dirname, RtsLayer::myNode(),
+		  RtsLayer::myContext(), tid);
+	  rename(filename, dumpfile);
+	} 
 
 
 #endif //PROFILING_ON
@@ -1325,6 +1595,277 @@ void Profiler::getFunctionValues(const char **inFuncs,
 #endif //PROFILING_ON
 }
 
+int Profiler::dumpFunctionValues(const char **inFuncs,
+				 int numOfFuncs,
+				 bool increment,
+				 int tid){
+  
+  TAU_PROFILE("GET_FUNC_VALS()", " ", TAU_IO);
+
+#ifdef PROFILING_ON
+  vector<FunctionInfo*>::iterator it;
+  vector<TauUserEvent*>::iterator eit;
+
+  bool functionCheck = false;
+  const char *tmpFunctionName = NULL;
+
+  FILE* fp;
+  char *dirname, *dumpfile;
+  int numFunc, numEvents;
+
+  bool memAllocated = false; //Used to help with memory cleanup.
+  double * tmpDoubleExcl;
+  double * tmpDoubleIncl;
+
+  double currenttime[MAX_TAU_COUNTERS];
+  double prevtime[MAX_TAU_COUNTERS];
+  double total[MAX_TAU_COUNTERS];
+
+  for(int a=0;a<MAX_TAU_COUNTERS;a++){
+    currenttime[a]=0;
+    prevtime[a]=0;
+    total[a]=0;
+  }
+
+  RtsLayer::getUSecD(tid, currenttime);
+
+  DEBUGPROFMSG("Profiler::DumpData( tid = "<<tid <<" ) "<<endl;);
+
+
+  //Create directories for storage.
+  static bool createFlag = createDirectories();
+
+  if ((dirname = getenv("PROFILEDIR")) == NULL) {
+    // Use default directory name .
+    dirname  = new char[8];
+    strcpy (dirname,".");
+  }
+
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    if(MultipleCounterLayer::getCounterUsed(i)){
+      char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
+      RtsLayer::LockDB();
+
+      char *newdirname = new char[1024];
+      char *filename = new char[1024];
+      char *errormsg = new char[1024];
+      char *header = new char[1024];
+
+      sprintf(newdirname,"%s/%s",dirname,tmpChar);
+
+      sprintf(filename,"%s/temp.%d.%d.%d",newdirname, RtsLayer::myNode(),
+	      RtsLayer::myContext(), tid);
+
+      DEBUGPROFMSG("Creating " << filename << endl;);
+      if ((fp = fopen (filename, "w+")) == NULL) {
+      errormsg = new char[1024];
+      sprintf(errormsg,"Error: Could not create %s",filename);
+      perror(errormsg);
+      return 0;
+      }
+
+      // Data format :
+      // %d templated_functions
+      // "%s %s" %ld %G %G  
+      //  funcname type numcalls Excl Incl
+      // %d aggregates
+      // <aggregate info>
+      
+      // Recalculate number of funcs using ProfileGroup. Static objects 
+      // constructed before setting Profile Groups have entries in FuncDB 
+      // (TAU_DEFAULT) even if they are not supposed to be there.
+      /*
+	numFunc = 0;
+ 	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
+	{
+	if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) { 
+	numFunc++;
+	}
+	}
+      */
+
+      numFunc = TheFunctionDB().size();
+
+      //Setting the header to the correct name.
+      sprintf(header,"%d templated_functions_MULTI_%s\n", numFunc, tmpChar);
+  
+      strcat(header,"# Name Calls Subrs Excl Incl ");
+
+      strcat(header,"ProfileCalls\n");
+      int sz = strlen(header);
+      int ret = fprintf(fp, "%s",header);
+      ret = fflush(fp);
+
+      for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
+	//Check to see that it is one of the requested functions.
+	functionCheck = false;
+	tmpFunctionName = (*it)->GetName();
+	for(int fc=0;fc<numOfFuncs;fc++){
+	  if(strcmp(inFuncs[fc], tmpFunctionName) == 0){
+	    functionCheck = true;
+	    break;
+	  }
+	}
+	if(functionCheck){
+	  if ((*it)->GetAlreadyOnStack(tid)){
+	    /* it is on the callstack. We need to do some processing. */
+	    /* Calculate excltime, incltime */
+	    Profiler *current;
+	    /* Traverse the Callstack */
+	    current = CurrentProfiler[tid];
+	    
+	    if (current == 0){ /* current is null */
+	      DEBUGPROFMSG("Current is NULL when it should be on the stack! TID = " << tid << endl;);
+	    }
+	    else{ /* current is not null */
+	      //These calls return pointers to new memory.
+	      //Remember to free this memory after use!!!
+	      tmpDoubleExcl = (*it)->GetExclTime(tid);
+	      tmpDoubleIncl = (*it)->GetInclTime(tid);
+	      memAllocated = true;
+	      
+	      //Initialize what gets added for
+	      //reducing from the parent profile
+	      for(int j=0;j<MAX_TAU_COUNTERS;j++){
+		prevtime[j]=0;
+		total[j]=0;
+	      }
+	      
+	      while (current != 0){
+		/* Traverse the stack */ 
+		if ((*it) == current->ThisFunction){ /* Match! */
+		  DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
+			       <<endl;);
+		  
+		  for(int k=0;k<MAX_TAU_COUNTERS;k++){
+		    total[k] = currenttime[k] - current->StartTime[k];
+		    tmpDoubleExcl[k] += total[k] - prevtime[k];
+		  }
+		  /* prevtime is the inclusive time of the subroutine that should
+		     be subtracted from the current exclusive time */ 
+		  /* If there is no instance of this function higher on the 	
+		     callstack, we should add the total to the inclusive time */
+		}
+		for(int l=0;l<MAX_TAU_COUNTERS;l++){
+		  prevtime[l] = currenttime[l] - current->StartTime[l];  
+		}
+		/* to calculate exclusive time */
+		current = current->ParentProfiler; 
+	      } /* We've reached the top! */
+	      for(int m=0;m<MAX_TAU_COUNTERS;m++){
+		tmpDoubleIncl[m] += total[m];//add this to the inclusive time
+		//prevtime and incltime are calculated
+	      }
+	    } /* Current is not null */
+	  } /* On call stack */
+	  else{ /* it is not on the callstack. */
+	    //These calls return pointers to new memory.
+	    //Remember to free this memory after use!!!
+	    tmpDoubleExcl = (*it)->GetExclTime(tid);
+	    tmpDoubleIncl = (*it)->GetInclTime(tid);
+	    memAllocated = true;
+	  } // Not on the Callstack
+	  
+	  if(memAllocated){
+	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping "
+			 << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : "
+			 << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid)
+			 << " Excl : " << tmpDoubleExcl[i] << " Incl : "
+			 << tmpDoubleIncl[i] << endl;);
+	    
+	    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(),
+		    (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
+		    tmpDoubleExcl[i], tmpDoubleIncl[i]);
+	  }
+	  else{
+	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping "
+			 << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : "
+			 << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid)
+			 << " Excl : " << 0 << " Incl : "
+			 << 0 << endl;);
+	    
+	    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(),
+		    (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
+		    0, 0);
+	  }
+	  fprintf(fp,"0 \n"); // Indicating - profile calls is turned off
+	  //Free up the memory if it was allocated.
+	  if(memAllocated){
+	    free(tmpDoubleIncl);
+	    free(tmpDoubleExcl);
+	  }
+	}
+      }
+      fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
+      
+      numEvents = 0;
+      for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++)
+	{
+	  if ((*eit)->GetNumEvents(tid)) {
+	    numEvents++;
+	  }
+	}
+      
+      if (numEvents > 0) {
+	// Data format
+	// # % userevents
+	// # name numsamples max min mean sumsqr
+	fprintf(fp, "%d userevents\n", numEvents);
+	fprintf(fp, "# eventname numevents max min mean sumsqr\n");
+	
+	vector<TauUserEvent*>::iterator it;
+	for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++){
+	  
+	  DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+		       (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid)
+		       << "\n Max " << (*it)->GetMax(tid) << "\n Mean "
+		       << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid)
+		       << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
+	  
+	  fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n",
+		  (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+		  (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+	}
+      }
+      
+      // End of userevents data
+      RtsLayer::UnLockDB();
+      fclose(fp);
+      
+      dumpfile = new char[1024];
+      if(increment){
+	//Place the date and time to the dumpfile name:
+	time_t theTime = time(NULL);
+	char *stringTime = ctime(&theTime);
+	tm *structTime = localtime(&theTime);
+	char *day = strtok(stringTime," ");
+	char *month = strtok(NULL," ");
+	char *dayInt = strtok(NULL," ");
+	char *time = strtok(NULL," ");
+	char *year = strtok(NULL," ");
+	//Get rid of the mewline.
+	year[4] = '\0';
+	char *newStringTime = new char[1024];
+	sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
+	
+	sprintf(dumpfile,"%s/sel_dump__%s__.%d.%d.%d",newdirname,
+		newStringTime,
+		RtsLayer::myNode(),
+		RtsLayer::myContext(), tid);
+	
+	rename(filename, dumpfile);
+      }
+      else{
+	sprintf(dumpfile,"%s/sel_dump.%d.%d.%d",newdirname, RtsLayer::myNode(),
+		RtsLayer::myContext(), tid);
+	rename(filename, dumpfile);
+      }
+    }
+  }
+#endif //PROFILING_ON
+  return 1;
+}
+
 int Profiler::StoreData(int tid){
 #ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
@@ -1463,7 +2004,7 @@ int Profiler::StoreData(int tid){
  
   return 1;
 }
-int Profiler::DumpData(int tid){
+int Profiler::DumpData(bool increment, int tid){
   
   TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
 
@@ -1684,10 +2225,33 @@ int Profiler::DumpData(int tid){
       fclose(fp);
 
       dumpfile = new char[1024];
-      sprintf(dumpfile,"%s/dump.%d.%d.%d",newdirname, RtsLayer::myNode(),
-	      RtsLayer::myContext(), tid);
+      	if(increment){
+	  //Place the date and time to the dumpfile name:
+	  time_t theTime = time(NULL);
+	  char *stringTime = ctime(&theTime);
+	  tm *structTime = localtime(&theTime);
+	  char *day = strtok(stringTime," ");
+	  char *month = strtok(NULL," ");
+	  char *dayInt = strtok(NULL," ");
+	  char *time = strtok(NULL," ");
+	  char *year = strtok(NULL," ");
+	  //Get rid of the mewline.
+	  year[4] = '\0';
+	  char *newStringTime = new char[1024];
+	  sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
+	  
+	  sprintf(dumpfile,"%s/dump__%s__.%d.%d.%d",newdirname,
+		  newStringTime,
+		  RtsLayer::myNode(),
+		  RtsLayer::myContext(), tid);
 
-      rename(filename, dumpfile);
+	  rename(filename, dumpfile);
+	}
+	else{
+	  sprintf(dumpfile,"%s/dump.%d.%d.%d",newdirname, RtsLayer::myNode(),
+		  RtsLayer::myContext(), tid);
+	  rename(filename, dumpfile);
+	}
     }
   }
 #endif //PROFILING_ON
@@ -1874,9 +2438,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.69 $   $Date: 2002/03/28 02:06:39 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.69 2002/03/28 02:06:39 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: bertie $
+ * $Revision: 1.70 $   $Date: 2002/03/29 00:34:50 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.70 2002/03/29 00:34:50 bertie Exp $ 
  ***************************************************************************/
 
 	
