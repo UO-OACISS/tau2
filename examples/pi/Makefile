@@ -19,9 +19,13 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)
+#CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) -I/usr/local/packages/mpich/include 
 
-LIBS            = $(TAU_LIBS) -lmpi -lm
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) 
+
+#LIBS            =  -L$(TAUROOTDIR)/$(CONFIG_ARCH)/lib -lTauMpi -lpmpich -L/usr/local/packages/mpich/lib/LINUX/ch_p4 -lmpich -lm $(TAU_LIBS) $(LEXTRA1)
+
+LIBS            =  $(TAU_LIBS) -lmpi -lm
 
 LDFLAGS	      	= $(USER_OPT)
 
