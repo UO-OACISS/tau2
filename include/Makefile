@@ -192,6 +192,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SUN_FORTRAN#TAU_FORTRANLIBS	       = -lfui -lfai -lfai2 -lfsumai -lfprodai -lfminlai -lfmaxlai -lfminvai -lfmaxvai -lfsu -lsunmath        #ENDIF#
 #SOL2#EXTRALIBS = -lsocket -lnsl      #ENDIF#
 #COMPAQ_FORTRAN#TAU_FORTRANLIBS =  $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -L$(EXTRADIR)/lib -L$(EXTRADIR)/lib/cmplrs/fort90 -L$(EXTRADIR)/lib/cmplrs/fort90 -lUfor -lfor -lFutil -lm -lmld -lexc -lc #ENDIF#
+#ABSOFT_FORTRAN#TAU_FORTRANLIBS =  -lfio -lf90math -lU77 -lf77math -lfio #ENDIF#
 
 #MPI#TAU_MPI_WRAPPER_LIB= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauMpi$(TAU_OPTIONS) #ENDIF#
 
