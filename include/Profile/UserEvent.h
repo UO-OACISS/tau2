@@ -71,7 +71,7 @@ class TauUserEvent {
 };
 
 
-vector<TauUserEvent*>& TheEventDB(void);
+TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
 /*    
 #ifdef PROFILING_ON
 #define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
@@ -100,6 +100,6 @@ vector<TauUserEvent*>& TheEventDB(void);
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 1999/08/19 22:27:58 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.5 1999/08/19 22:27:58 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 2002/01/24 23:27:47 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.6 2002/01/24 23:27:47 sameer Exp $ 
  ***************************************************************************/

@@ -89,7 +89,7 @@ public:
 	// A container of all of these.
 	// The ctor registers with this.
         
-	//static vector<FunctionInfo*> FunctionDB[TAU_MAX_THREADS];
+	//static TAU_STD_NAMESPACE vector<FunctionInfo*> FunctionDB[TAU_MAX_THREADS];
 
 #ifdef PROFILE_CALLS
 	list < pair<double,double> > *ExclInclCallList; 
@@ -155,7 +155,7 @@ private:
 };
 
 // Global variables
-vector<FunctionInfo*>& TheFunctionDB(void); 
+TAU_STD_NAMESPACE vector<FunctionInfo*>& TheFunctionDB(void); 
 int& TheSafeToDumpData(void);
 
 //
@@ -207,7 +207,7 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
- * $Revision: 1.16 $   $Date: 2002/01/16 23:38:21 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.16 2002/01/16 23:38:21 bertie Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
+ * $Revision: 1.17 $   $Date: 2002/01/24 23:27:47 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.17 2002/01/24 23:27:47 sameer Exp $ 
  ***************************************************************************/
