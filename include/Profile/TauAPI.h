@@ -75,7 +75,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 	return timer##fi; }
 
 #define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
-	int tau_tid = RtsLayer::myThread(); \ 
+	int tau_tid = RtsLayer::myThread(); \
 	Profiler *t = new Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
         t->Start(tau_tid); }
 
@@ -240,6 +240,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.36 $   $Date: 2005/01/05 02:26:59 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.36 2005/01/05 02:26:59 sameer Exp $ 
+ * $Revision: 1.37 $   $Date: 2005/01/05 02:37:55 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.37 2005/01/05 02:37:55 sameer Exp $ 
  ***************************************************************************/
