@@ -119,8 +119,15 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	    SetAlreadyOnStack(false, i);
 #endif /* JAVA  */
      	    NumSubrs[i] = 0;
-       	    ExclTime[i] = 0;
+#ifndef TAU_MULTIPLE_COUNTERS
+	    ExclTime[i] = 0;
        	    InclTime[i] = 0;
+#else //TAU_MULTIPLE_COUNTERS
+	    for(int j=0;j<MAX_TAU_COUNTERS;j++){
+	      ExclTime[i][j] = 0;
+	      InclTime[i][j] = 0;
+	    } 
+#endif//TAU_MULTIPLE_COUNTERS
  	  }
 	}
 
@@ -250,7 +257,7 @@ long FunctionInfo::GetFunctionId(void)
 //////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2002/01/15 04:21:08 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.26 2002/01/15 04:21:08 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: bertie $
+ * $Revision: 1.27 $   $Date: 2002/03/08 20:58:03 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.27 2002/03/08 20:58:03 bertie Exp $ 
  ***************************************************************************/
