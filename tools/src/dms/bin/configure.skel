@@ -6,7 +6,7 @@ PERFDMF_HOME=${TAUROOT}/tools/src/dms
 PERFDMF_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/dms.jar
 XMLSAX_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
 JARGS_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
-CONFIG_FILE=~/.ParaProf/perfdmf.cfg
+CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
 
 if [ "x$TAUROOT" = "x" ] 
 then
@@ -39,14 +39,12 @@ then
 	exit
 fi
 
-if [ ! -r ~/.ParaProf ]
+if [ ! -r ${HOME}/.ParaProf ]
 then
-	mkdir ~/.ParaProf
+	mkdir ${HOME}/.ParaProf
 fi
 
 java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR} edu.uoregon.tau.dms.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE} $@
-
-
 
 
 JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} | sed s/jdbc_db_jarfile://`
@@ -70,7 +68,7 @@ if [ ! -r ${JDBC_JAR} ]; then
         exit 1;;
 	esac
 
-	while [ -z $RESPONSE ]; do
+	while [ "x$RESPONSE" = "x" ]; do
 	    $echo "Would you like to attempt to automatically download a JDBC driver? (y/n) ${nnl}"
 	    read RESPONSE
 	    case $RESPONSE in
@@ -81,12 +79,12 @@ if [ ! -r ${JDBC_JAR} ]; then
 	done
 
 
-	if [ ${RESPONSE} == "y" ]; then 
+	if [ "${RESPONSE}" == "y" ]; then 
 	    JDBC_ROOT=`basename ${JDBC_JAR}`
 
 	    WGET=`which wget 2>/dev/null`
 	    
-	    if [ -z $WGET ]; then
+	    if [ ! -r "$WGET" ]; then
 		echo "\nCouldn't find wget, you'll have to manually download your JDBC driver"
 		exit 1
 	    fi
