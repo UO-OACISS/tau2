@@ -13,7 +13,7 @@ import java.awt.Component;
 
 public class LoadTrial implements ParaProfObserver {
 
-	public static String USAGE = "USAGE: perfdmf_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, gprof, xprof, sddf (svpablo)\n";
+	public static String USAGE = "USAGE: perfdmf_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, xprof, sddf (svpablo)\n";
     private File readPprof;
     private File writeXml;
     private String trialTime;
@@ -22,6 +22,7 @@ public class LoadTrial implements ParaProfObserver {
     private Experiment exp;
     private int expID = 0;
 	public int trialID = 0;
+	private int fileType = 0;
 	private ParaProfDataSession dataSession = null;
 	public String trialName = new String();
 	public String problemFile = new String();
@@ -64,6 +65,7 @@ public class LoadTrial implements ParaProfObserver {
 
     public void loadTrial(int fileType) {
 	trial = null;
+	this.fileType = fileType;
 
 	Vector v = null;
 	File[] inFile = new File[1];
@@ -85,6 +87,12 @@ public class LoadTrial implements ParaProfObserver {
 			v.add(inFile);
 			dataSession = new DynaprofOutputSession();
 			break;
+		case 3:
+			inFile[0] = new File (sourceFile);
+			v = new Vector();
+			v.add(inFile);
+			dataSession = new MpiPOutputSession();
+			break;
 	}
 
 	trial = new Trial();
@@ -99,6 +107,7 @@ public class LoadTrial implements ParaProfObserver {
     }
 
     public void saveTrial() {
+	// if (fileType == 3) return;
 	// set some things in the trial
 	int[] maxNCT = dataSession.getMaxNCTNumbers();
 	trial.setNodeCount(maxNCT[0]+1);
@@ -229,6 +238,8 @@ public class LoadTrial implements ParaProfObserver {
 			fileType = 1;
 		} else if (fileTypeString.equals("dynaprof")) {
 			fileType = 2;
+		} else if (fileTypeString.equals("mpip")) {
+			fileType = 3;
 /*
 		} else if (fileTypeString.equals("gprof")) {
 			fileType = 0;

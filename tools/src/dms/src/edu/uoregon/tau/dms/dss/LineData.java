@@ -17,6 +17,8 @@ public class LineData{
     //####################################
     public String s0 = null;
     public String s1 = null;
+    public String s2 = null;
+    public String s3 = null;
 
     public double d0 = 0.0;
     public double d1 = 0.0;

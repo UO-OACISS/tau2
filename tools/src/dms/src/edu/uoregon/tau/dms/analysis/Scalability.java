@@ -34,7 +34,7 @@ public class Scalability {
 		ListIterator trials = new DataSessionIterator(inTrials);
 
 		StringBuffer buf = new StringBuffer();
-		buf.append("select e.name, e.trial, e.node_count * ");
+		buf.append("select e.name, e.trial, t.node_count * ");
 		buf.append("t.contexts_per_node * t.threads_per_context as threads, ");
 		buf.append("min(i.");
 		buf.append(measurement);
