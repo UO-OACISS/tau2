@@ -110,6 +110,12 @@ void SetFlushEvents(int tid)
   FlushEvents[tid] = 1;
 } 
 
+/* -- Get the flag to flush the EDF file. 1 means flush edf file. ------ */
+int GetFlushEvents(int tid)
+{
+  return FlushEvents[tid];
+}
+
 /* -- write event buffer to file ----------------------------- */
 void TraceEvFlush(int tid)
 {
@@ -308,9 +314,10 @@ void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts)
     the timestamps of those records to the current timestamp. */
     if (use_ts)
     { /* we're asked to use the timestamp. Initialize with this ts */
+      /* Initialize only records just above the current record! */
       for (i = 0; i < records_created; i++)
       { /* set the timestamp accordingly */
-        TraceBuffer[tid][i].ti = ts; 
+        TraceBuffer[tid][TauCurrentEvent[tid]-1-i].ti = ts; 
       }
     }
   }
