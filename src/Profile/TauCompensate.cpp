@@ -28,6 +28,7 @@
 using namespace std;
 #endif /* DEBUG_PROF */
 
+#ifndef TAU_MULTIPLE_COUNTERS
 double& TheTauNullTimerOverhead()
 {
   static double over = 0.0;
@@ -41,10 +42,25 @@ double& TheTauFullTimerOverhead()
 
   return full;
 }
+#else /* TAU_MULTIPLE_COUNTERS */
+double*& TheTauNullTimerOverhead()
+{
+  static double *over = new double[MAX_TAU_COUNTERS](0.0);
+
+  return over;
+}
+
+double*& TheTauFullTimerOverhead()
+{
+  static double *full = new double[MAX_TAU_COUNTERS](0.0);
+
+  return full;
+}
+#endif /* TAU_MULTIPLE_COUNTERS */
 int TauCalibrateNullTimer(void)
 {
   TAU_PROFILE_TIMER(tnull, ".TAU null timer overhead", " ", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(tone,  ".TAU 100 null timers overhead", " ", TAU_DEFAULT);
+  TAU_PROFILE_TIMER(tone,  ".TAU 1000 null timers overhead", " ", TAU_DEFAULT);
   int i, tid;
   double tnull, toverhead; 
   char *iter;
@@ -74,10 +90,23 @@ int TauCalibrateNullTimer(void)
   /* Get thread id */
   tid = RtsLayer::myThread();
   int n = tnullfi.GetCalls(tid);
+#ifndef TAU_MULTIPLE_COUNTERS 
   TheTauNullTimerOverhead() = tnullfi.GetInclTime(tid)/n;
   /* n*(a+b+c+d) + b+c = tone */
   /* a+b+c+d = Toverhead = (tone - tnull) / n */
   TheTauFullTimerOverhead() = (tonefi.GetInclTime(tid) - TheTauNullTimerOverhead() ) / n; 
+#else /* TAU_MULTIPLE_COUNTERS */
+  double *nullincltime = tnullfi.GetInclTime(tid);
+  double *oneincltime  = tonefi.GetInclTime(tid);
+  for (i=0; i < MAX_TAU_COUNTERS; i++) 
+  {
+    /* n*(a+b+c+d) + b+c = tone */
+    TheTauNullTimerOverhead()[i] = nullincltime[i]/n;
+
+    /* a+b+c+d = Toverhead = (tone - tnull) / n */
+    TheTauFullTimerOverhead()[i] = (oneincltime[i] - TheTauNullTimerOverhead()[i]) / n; 
+  }
+#endif /* TAU_MULTIPLE_COUNTERS */
 #ifdef DEBUG_PROF
   cout <<"Calibrate: Tnull time "<< TheTauNullTimerOverhead() <<endl;
   cout <<"Calibrate: Toverhead time = "<<TheTauFullTimerOverhead() <<endl;
@@ -85,7 +114,11 @@ int TauCalibrateNullTimer(void)
   return 0;
 }
 
+#ifndef TAU_MULTIPLE_COUNTERS 
 double TauGetTimerOverhead(enum TauOverhead type)
+#else /* TAU_MULTIPLE_COUNTERS */
+double* TauGetTimerOverhead(enum TauOverhead type)
+#endif /* TAU_MULTIPLE_COUNTERS */
 {
   static int flag = 0;
   if (flag == 0)
@@ -95,20 +128,23 @@ double TauGetTimerOverhead(enum TauOverhead type)
   }
  
   /* What kind of overhead are we looking for here? */
-  switch (type)
-  { 
-    case TauNullTimerOverhead: 
-      return TheTauNullTimerOverhead();
-      break;
-    case TauFullTimerOverhead: 
-      return TheTauFullTimerOverhead();
-      break;
-    default:
-      return 0.0;
-      break;
+  if (type == TauNullTimerOverhead)
+  {
+    return TheTauNullTimerOverhead();
   }
-	
-  return 0.0;
+  else 
+  {
+    if (type == TauFullTimerOverhead)
+      return TheTauFullTimerOverhead();
+    else
+#ifndef TAU_MULTIPLE_COUNTERS 
+      return 0.0;
+#else /* TAU_MULTIPLE_COUNTERS */
+      return (double *) NULL;
+#endif /* TAU_MULTIPLE_COUNTERS */
+ 
+  }
+
 }
 
 
