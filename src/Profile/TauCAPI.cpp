@@ -142,6 +142,12 @@ extern "C" int Tau_dump(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_dump_prefix(char *prefix)
+{
+  return TAU_DB_DUMP_PREFIX(prefix);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_incr(void)
 {
   return TAU_DB_DUMP_INCR();
@@ -416,7 +422,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.32 $   $Date: 2003/05/06 21:47:19 $
- * VERSION: $Id: TauCAPI.cpp,v 1.32 2003/05/06 21:47:19 sameer Exp $
+ * $Revision: 1.33 $   $Date: 2003/07/18 18:48:17 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.33 2003/07/18 18:48:17 sameer Exp $
  ***************************************************************************/
 

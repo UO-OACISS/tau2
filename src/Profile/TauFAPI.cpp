@@ -58,6 +58,7 @@ void Tau_userevent(void *ue, double data);
 void Tau_report_statistics(void);
 void Tau_report_thread_statistics(void);
 void Tau_dump(void);
+void Tau_dump_prefix(char *prefix);
 void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name);
 TauGroup_t Tau_get_profile_group(char * group) ; 
 TauGroup_t Tau_enable_all_groups(void);
@@ -192,6 +193,12 @@ void tau_profile_exit_(char *msg)
 void tau_db_dump_(void)
 {
   Tau_dump();
+  return;
+}
+
+void tau_db_dump_prefix_(char *prefix)
+{
+  Tau_dump_prefix(prefix);
   return;
 }
 
@@ -434,6 +441,12 @@ void TAU_DB_DUMP(void)
   return;
 }
 
+void TAU_DB_DUMP_PREFIX(char *prefix)
+{
+  Tau_dump_prefix(prefix);
+  return;
+}
+
 void TAU_PROFILE_INIT()
 {
 #ifdef CRAYKAI 
@@ -619,6 +632,12 @@ void tau_db_dump(void)
   Tau_dump();
 }
 
+void tau_db_dump_prefix(char *prefix)
+{
+  Tau_dump_prefix(prefix);
+  return;
+}
+
 void tau_profile_set_context(int *context)
 {
   Tau_set_context(*context);
@@ -713,6 +732,12 @@ void tau_profile_exit__(char *msg)
 void tau_db_dump__(void)
 {
   Tau_dump();
+  return;
+}
+
+void tau_db_dump_prefix__(char *prefix)
+{
+  Tau_dump_prefix(prefix);
   return;
 }
 
@@ -830,6 +855,6 @@ void tau_disable_group_name__(char * group_name, int len)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2002/03/27 22:18:10 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.26 2002/03/27 22:18:10 sameer Exp $ 
+ * $Revision: 1.27 $   $Date: 2003/07/18 18:48:18 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.27 2003/07/18 18:48:18 sameer Exp $ 
  ***************************************************************************/

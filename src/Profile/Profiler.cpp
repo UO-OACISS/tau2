@@ -704,7 +704,7 @@ void Profiler::getFunctionValues(const char **inFuncs,
 int Profiler::dumpFunctionValues(const char **inFuncs,
 				 int numOfFuncs,
 				 bool increment,
-				 int tid){
+				 int tid, char *prefix){
   
   TAU_PROFILE("GET_FUNC_VALS()", " ", TAU_IO);
 #ifdef PROFILING_ON
@@ -942,14 +942,14 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	  char *newStringTime = new char[1024];
 	  sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
 	  
-	  sprintf(dumpfile,"%s/sel_dump__%s__.%d.%d.%d",dirname,
+	  sprintf(dumpfile,"%s/sel_%s__%s__.%d.%d.%d",dirname, prefix,
 		  newStringTime,
 		  RtsLayer::myNode(),
 		  RtsLayer::myContext(), tid);
 	  rename(filename, dumpfile);
 	}
 	else{
-	  sprintf(dumpfile,"%s/dump.%d.%d.%d",dirname, RtsLayer::myNode(),
+	  sprintf(dumpfile,"%s/%s.%d.%d.%d",dirname, prefix, RtsLayer::myNode(),
 		  RtsLayer::myContext(), tid);
 	  rename(filename, dumpfile);
 	} 
@@ -1155,7 +1155,7 @@ int Profiler::StoreData(int tid)
 	return 1;
 }
 
-int Profiler::DumpData(bool increment, int tid)
+int Profiler::DumpData(bool increment, int tid, char *prefix)
 {
   	TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
 #ifdef PROFILING_ON
@@ -1382,14 +1382,14 @@ int Profiler::DumpData(bool increment, int tid)
 	  char *newStringTime = new char[1024];
 	  sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
 	  
-	  sprintf(dumpfile,"%s/dump__%s__.%d.%d.%d",dirname,
+	  sprintf(dumpfile,"%s/%s__%s__.%d.%d.%d",dirname, prefix, 
 		  newStringTime,
 		  RtsLayer::myNode(),
 		  RtsLayer::myContext(), tid);
 	  rename(filename, dumpfile);
 	}
 	else{
-	  sprintf(dumpfile,"%s/dump.%d.%d.%d",dirname, RtsLayer::myNode(),
+	  sprintf(dumpfile,"%s/%s.%d.%d.%d",dirname, prefix, RtsLayer::myNode(),
 		  RtsLayer::myContext(), tid);
 	  rename(filename, dumpfile);
 	} 
@@ -1652,7 +1652,7 @@ void Profiler::getFunctionValues(const char **inFuncs,
 int Profiler::dumpFunctionValues(const char **inFuncs,
 				 int numOfFuncs,
 				 bool increment,
-				 int tid){
+				 int tid, char *prefix){
   
   TAU_PROFILE("GET_FUNC_VALS()", " ", TAU_IO);
 
@@ -1906,7 +1906,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	char *newStringTime = new char[1024];
 	sprintf(newStringTime,"%s-%s-%s-%s-%s",day,month,dayInt,time,year);
 	
-	sprintf(dumpfile,"%s/sel_dump__%s__.%d.%d.%d",newdirname,
+	sprintf(dumpfile,"%s/sel_%s__%s__.%d.%d.%d",newdirname, prefix,
 		newStringTime,
 		RtsLayer::myNode(),
 		RtsLayer::myContext(), tid);
@@ -1914,7 +1914,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	rename(filename, dumpfile);
       }
       else{
-	sprintf(dumpfile,"%s/sel_dump.%d.%d.%d",newdirname, RtsLayer::myNode(),
+	sprintf(dumpfile,"%s/sel_%s.%d.%d.%d",newdirname, prefix, RtsLayer::myNode(),
 		RtsLayer::myContext(), tid);
 	rename(filename, dumpfile);
       }
@@ -2076,7 +2076,7 @@ int Profiler::StoreData(int tid){
  
   return 1;
 }
-int Profiler::DumpData(bool increment, int tid){
+int Profiler::DumpData(bool increment, int tid, char *prefix){
   
   TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
 
@@ -2323,7 +2323,7 @@ int Profiler::DumpData(bool increment, int tid){
 	  rename(filename, dumpfile);
 	}
 	else{
-	  sprintf(dumpfile,"%s/dump.%d.%d.%d",newdirname, RtsLayer::myNode(),
+	  sprintf(dumpfile,"%s/%s.%d.%d.%d",newdirname, prefix, RtsLayer::myNode(),
 		  RtsLayer::myContext(), tid);
 	  rename(filename, dumpfile);
 	}
@@ -2515,9 +2515,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.82 $   $Date: 2003/07/14 23:47:07 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.82 2003/07/14 23:47:07 bertie Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.83 $   $Date: 2003/07/18 18:48:16 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.83 2003/07/18 18:48:16 sameer Exp $ 
  ***************************************************************************/
 
 	

@@ -11,6 +11,15 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.4  2003/07/18 18:48:19  sameer
+// Added support for TAU_DB_DUMP(prefix). In python you can optionally specify
+// an argument:
+// tau.dbDump() --> Calls TAU_DB_DUMP();
+// or
+// tau.dbDump("prefix") --> Calls TAU_DB_DUMP_PREFIX("prefix") (Kathleen wanted
+// prefix to be profile so it'd dump performance data for an application that
+// didn't terminate right and she'd use jracy directly). [LLNL]
+//
 // Revision 1.3  2003/03/20 18:41:05  sameer
 // Added TAU_HPUX guards for <limit> header.
 //
@@ -48,10 +57,26 @@
 
 char pytau_dbDump__name__[] = "dbDump";
 char pytau_dbDump__doc__[] = "dump the Tau Profiler statistics";
-PyObject * pytau_dbDump(PyObject *, PyObject *)
-{
-    // call Tau function to dump statistics
-    TAU_DB_DUMP();
+PyObject * pytau_dbDump(PyObject *self, PyObject *args)
+{ 
+    char *prefix = "dump";
+    int len = 4;
+
+    // Check to see if a prefix is specified
+    if (!PyArg_ParseTuple(args, "s#", &prefix, &len))
+    {
+      // No arguments are specified. Call Dump routine
+      TAU_DB_DUMP(); 
+    }
+    else 
+    {
+      // extracted the prefix, call dump routine
+#ifdef DEBUG
+      printf("dbDump: extracted prefix = %s, len = %d\n", prefix, len);
+#endif /* DEBUG */
+      TAU_DB_DUMP_PREFIX(prefix);
+    }
+
 
     // return
     Py_INCREF(Py_None);
@@ -281,7 +306,7 @@ PyObject * pytau_dumpFuncValsIncr(PyObject *, PyObject * args)
 
 
 // version
-// $Id: PyDatabase.cpp,v 1.3 2003/03/20 18:41:05 sameer Exp $
+// $Id: PyDatabase.cpp,v 1.4 2003/07/18 18:48:19 sameer Exp $
 
 // End of file
   
