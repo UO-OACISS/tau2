@@ -531,15 +531,52 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void)
 }
 
     
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_memory(void)
+{
+  TAU_TRACK_MEMORY();
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_muse_events(void)
+{
+  TAU_TRACK_MUSE_EVENTS();
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_enable_tracking_memory(void)
+{
+  TAU_ENABLE_TRACKING_MEMORY();
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_disable_tracking_memory(void)
+{
+  TAU_DISABLE_TRACKING_MEMORY();
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_enable_tracking_muse_events(void)
+{
+  TAU_ENABLE_TRACKING_MUSE_EVENTS();
+} 
 
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_disable_tracking_muse_events(void)
+{
+  TAU_DISABLE_TRACKING_MUSE_EVENTS();
+} 
 
-
-
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_interrupt_interval(int value)
+{
+  TAU_SET_INTERRUPT_INTERVAL(value);
+} 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.40 $   $Date: 2004/01/05 19:10:00 $
- * VERSION: $Id: TauCAPI.cpp,v 1.40 2004/01/05 19:10:00 sameer Exp $
+ * $Revision: 1.41 $   $Date: 2004/03/03 18:44:14 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.41 2004/03/03 18:44:14 sameer Exp $
  ***************************************************************************/
 

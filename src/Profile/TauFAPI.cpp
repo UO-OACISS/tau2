@@ -65,6 +65,14 @@ TauGroup_t Tau_enable_all_groups(void);
 TauGroup_t Tau_disable_all_groups(void);
 TauGroup_t Tau_enable_group_name(char *group_name);
 TauGroup_t Tau_disable_group_name(char *group_name);
+void Tau_track_memory(void);
+void Tau_track_muse_events(void);
+void Tau_enable_tracking_memory(void);
+void Tau_disable_tracking_memory(void);
+void Tau_enable_tracking_muse_events(void);
+void Tau_disable_tracking_muse_events(void);
+void Tau_set_interrupt_interval(int value);
+
 
 #define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = (char *) malloc(l+1); tau_extract_groupinfo(n, gr, gr_name); 
 
@@ -252,6 +260,45 @@ void tau_disable_group_name(char * group_name, int len)
   tau_disable_group_name_local(group_name, len);
 }
 
+//////////////////////////////////////////////////////
+// MEMORY, MUSE events API
+//////////////////////////////////////////////////////
+void tau_track_memory(void)
+{
+  Tau_track_memory();
+} 
+
+void tau_track_muse_events(void)
+{
+  Tau_track_muse_events();
+} 
+
+void tau_enable_tracking_memory(void)
+{
+  Tau_enable_tracking_memory();
+} 
+
+void tau_disable_tracking_memory(void)
+{
+  Tau_disable_tracking_memory();
+} 
+
+void tau_enable_tracking_muse_events(void)
+{
+  Tau_enable_tracking_muse_events();
+} 
+
+void tau_disable_tracking_muse_events(void)
+{
+  Tau_disable_tracking_muse_events();
+} 
+
+void tau_set_interrupt_interval(int value)
+{
+  Tau_set_interrupt_interval(value);
+} 
+
+////////////////////////////////////////////////////
 void tau_enable_group_(TauGroup_t *group)
 {
   Tau_enable_group(*group);
@@ -378,6 +425,44 @@ void tau_report_thread_statistics_(void)
 {
   Tau_report_thread_statistics();
 }
+
+//////////////////////////////////////////////////////
+// MEMORY, MUSE events API
+//////////////////////////////////////////////////////
+void tau_track_memory_(void)
+{
+  Tau_track_memory();
+} 
+
+void tau_track_muse_events_(void)
+{
+  Tau_track_muse_events();
+} 
+
+void tau_enable_tracking_memory_(void)
+{
+  Tau_enable_tracking_memory();
+} 
+
+void tau_disable_tracking_memory_(void)
+{
+  Tau_disable_tracking_memory();
+} 
+
+void tau_enable_tracking_muse_events_(void)
+{
+  Tau_enable_tracking_muse_events();
+} 
+
+void tau_disable_tracking_muse_events_(void)
+{
+  Tau_disable_tracking_muse_events();
+} 
+
+void tau_set_interrupt_interval_(int value)
+{
+  Tau_set_interrupt_interval(value);
+} 
 
 /* Cray F90 specific extensions */
 #if (defined(CRAYKAI) || defined(HP_FORTRAN))
@@ -594,6 +679,44 @@ void tau_profile_timer(int **profiler, char *fname, int len)
 #endif /* HP_FORTRAN */
   }
 }
+
+//////////////////////////////////////////////////////
+// MEMORY, MUSE events API
+//////////////////////////////////////////////////////
+void TAU_TRACK_MEMORY(void)
+{
+  Tau_track_memory();
+} 
+
+void TAU_TRACK_MUSE_EVENTS(void)
+{
+  Tau_track_muse_events();
+} 
+
+void TAU_ENABLE_TRACKING_MEMORY(void)
+{
+  Tau_enable_tracking_memory();
+} 
+
+void TAU_DISABLE_TRACKING_MEMORY(void)
+{
+  Tau_disable_tracking_memory();
+} 
+
+void TAU_ENABLE_TRACKING_MUSE_EVENTS(void)
+{
+  Tau_enable_tracking_muse_events();
+} 
+
+void TAU_DISABLE_TRACKING_MUSE_EVENTS(void)
+{
+  Tau_disable_tracking_muse_events();
+} 
+
+void TAU_SET_INTERRUPT_INTERVAL(int value)
+{
+  Tau_set_interrupt_interval(value);
+} 
 
 void tau_profile_start(int **profiler)
 {
@@ -849,12 +972,50 @@ void tau_disable_group_name__(char * group_name, int len)
   tau_disable_group_name_local(group_name, len);
 }
 
+//////////////////////////////////////////////////////
+// MEMORY, MUSE events API
+//////////////////////////////////////////////////////
+void tau_track_memory__(void)
+{
+  Tau_track_memory();
+} 
+
+void tau_track_muse_events__(void)
+{
+  Tau_track_muse_events();
+} 
+
+void tau_enable_tracking_memory__(void)
+{
+  Tau_enable_tracking_memory();
+} 
+
+void tau_disable_tracking_memory__(void)
+{
+  Tau_disable_tracking_memory();
+} 
+
+void tau_enable_tracking_muse_events__(void)
+{
+  Tau_enable_tracking_muse_events();
+} 
+
+void tau_disable_tracking_muse_events__(void)
+{
+  Tau_disable_tracking_muse_events();
+} 
+
+void tau_set_interrupt_interval__(int value)
+{
+  Tau_set_interrupt_interval(value);
+} 
+
 
 #endif /* TAU_GNU */
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 2003/10/21 22:27:08 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.28 2003/10/21 22:27:08 sameer Exp $ 
+ * $Revision: 1.29 $   $Date: 2004/03/03 18:44:14 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.29 2004/03/03 18:44:14 sameer Exp $ 
  ***************************************************************************/

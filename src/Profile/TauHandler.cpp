@@ -136,7 +136,7 @@ void TauSetInterruptInterval(int interval)
 //////////////////////////////////////////////////////////////////////
 TauUserEvent& TheTauMemoryEvent(void)
 {
-  static TauUserEvent mem("Memory Utilization (in KB)");
+  static TauUserEvent mem("Memory Utilization (heap, in KB)");
   return mem;
 }
 
@@ -245,8 +245,8 @@ void TauTrackMuseEvents(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2004/03/03 02:24:11 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.3 2004/03/03 02:24:11 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 2004/03/03 18:44:14 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.4 2004/03/03 18:44:14 sameer Exp $ 
  ***************************************************************************/
 
 	
