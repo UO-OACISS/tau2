@@ -48,7 +48,9 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	
 	if ((*rit)->isStatic()) 
 	{
+#ifdef DEBUG
 	  cout <<" STATIC "<< (*rit)->fullName() <<endl;
+#endif /* DEBUG */
 	}
 	if ((((*rit)->parentClass()) == 0) || (*rit)->isStatic())
 	{ // If it is a static function or if 
@@ -79,7 +81,9 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
       { 
   	// templates need some processing. Give it a false for isTarget arg.
 	// target helps identify if we need to put a CT(*this) in the type
-	if ((((*te)->parentClass()) == 0) && (tekind != pdbItem::TE_STATMEM)) 
+	// old: 
+        //if ((((*te)->parentClass()) == 0) && (tekind != pdbItem::TE_STATMEM)) 
+        if ((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_STATMEM))
 	{ 
 	  // There's no parent class. No need to add CT(*this)
           itemvec.push_back(new itemRef(*te, true)); // False puts CT(*this)
