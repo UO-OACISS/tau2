@@ -818,6 +818,7 @@ case $cxx_compiler in
       echo "Default C++ compiler will be KAI KAP/Pro OpenMP guidec++ Compiler"
       kai=yes
       fixmakeargs="$fixmakeargs KAI GUIDE OPENMP"
+      openmp=yes
       tauoptions="${tauoptions}-guide"
       ;;
 
