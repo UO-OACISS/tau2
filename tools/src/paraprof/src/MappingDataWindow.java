@@ -15,41 +15,44 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class MappingDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, AdjustmentListener
-{
+public class MappingDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, AdjustmentListener{
   
-    public MappingDataWindow()
-    {
+    public MappingDataWindow(){
 	try{
-	    setLocation(new java.awt.Point(300, 200));
-	    setSize(new java.awt.Dimension(550, 550));
+	    setLocation(new java.awt.Point(0, 0));
+	    setSize(new java.awt.Dimension(100, 100));
       
 	    //Set the title indicating that there was a problem.
 	    this.setTitle("Wrong constructor used");
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW01");
-	    }
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW01");
+	}
     }
   
     public MappingDataWindow(Trial inTrial, int inMappingID, StaticMainWindowData inSMWData)
     {
 	try{
-      
-      
 	    mappingID = inMappingID;
 	    trial = inTrial;
 	    sMWData = inSMWData;
-      
-      
-	    setLocation(new java.awt.Point(300, 200));
-	    setSize(new java.awt.Dimension(550, 550));
-      
-	    inclusive = false;
-	    percent = true;
-	    unitsString = "milliseconds";
-      
+
+	    int windowWidth = 650;
+	    int windowHeight = 550;
+	    //Grab the screen size.
+	    Toolkit tk = Toolkit.getDefaultToolkit();
+	    Dimension screenDimension = tk.getScreenSize();
+	    int screenHeight = screenDimension.height;
+	    int screenWidth = screenDimension.width;
+	    if(windowWidth>screenWidth)
+		windowWidth = screenWidth;
+	    if(windowHeight>screenHeight)
+		windowHeight = screenHeight;
+	    //Set the window to come up in the center of the screen.
+	    int xPosition = (screenWidth - windowWidth) / 2;
+	    int yPosition = (screenHeight - windowHeight) / 2;
+	    setSize(new java.awt.Dimension(windowWidth, windowHeight));
+	    setLocation(xPosition, yPosition);
       
 	    //Grab the appropriate global mapping element.
 	    GlobalMapping tmpGM = trial.getGlobalMapping();
@@ -69,22 +72,21 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
       
       
 	    //Set the help window text if required.
-	    if(ParaProf.helpWindow.isVisible())
-		{
-		    ParaProf.helpWindow.clearText();
-		    //Since the data must have been loaded.  Tell them someting about
-		    //where they are.
-		    ParaProf.helpWindow.writeText("This is the function data window for:");
-		    ParaProf.helpWindow.writeText(mappingName);
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-		    ParaProf.helpWindow.writeText("");
-		    ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-		    ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-		    ParaProf.helpWindow.writeText("for this function.");
-		}
+	    if(ParaProf.helpWindow.isVisible()){
+		ParaProf.helpWindow.clearText();
+		//Since the data must have been loaded.  Tell them someting about
+		//where they are.
+		ParaProf.helpWindow.writeText("This is the function data window for:");
+		ParaProf.helpWindow.writeText(mappingName);
+		ParaProf.helpWindow.writeText("");
+		ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
+		ParaProf.helpWindow.writeText("");
+		ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
+		ParaProf.helpWindow.writeText("");
+		ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
+		ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
+		ParaProf.helpWindow.writeText("for this function.");
+	    }
       
       
 	    //******************************
@@ -108,7 +110,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    fileMenu.add(closeItem);
       
 	    //Add a menu item.
-	    JMenuItem exitItem = new JMenuItem("Exit Racy!");
+	    JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
 	    exitItem.addActionListener(this);
 	    fileMenu.add(exitItem);
 	    //******************************
@@ -237,7 +239,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    JMenu helpMenu = new JMenu("Help");
       
 	    //Add a menu item.
-	    JMenuItem aboutItem = new JMenuItem("About Racy");
+	    JMenuItem aboutItem = new JMenuItem("About ParaProf");
 	    aboutItem.addActionListener(this);
 	    helpMenu.add(aboutItem);
       
@@ -279,18 +281,30 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
       
       
 	    //**********
-	    //Panel and ScrollPane definition.
+	    //Panel and scroll bar definitions.
 	    //**********
-	    mappingDataWinPanelRef = new MappingDataWindowPanel(trial, inMappingID, this);
-	    //The scroll panes into which the list shall be placed.
-	    mappingDataWinPanelScrollPane = new JScrollPane(mappingDataWinPanelRef);
-	    mappingDataWinPanelScrollPane.setBorder(mainloweredbev);
-	    mappingDataWinPanelScrollPane.setPreferredSize(new Dimension(500, 450));
+	    //panel = new MappingDataWindowPanel(trial, inMappingID, this);
+	    //hsb = new JScrollBar(JScrollBar.HORIZONTAL);
+	    //hsb.addAdjustmentListener(this);
+	    //vsb = new JScrollBar(JScrollBar.VERTICAL);
+	    //vsb.addAdjustmentListener(this);
 	    //**********
-	    //End - Panel and ScrollPane definition.
+	    //End - Panel and scroll bar definitions.
+	    //**********
+
+	    //**********
+	    //Panel and scroll bar definitions.
+	    //**********
+	    panel = new MappingDataWindowPanel(trial, inMappingID, this);
+	    JScrollPane sp = new JScrollPane(panel);
+	    //**********
+	    //End - Panel and scroll bar definitions.
 	    //**********
       
+	    //**********
+	    //Slider setup.
 	    //Do the slider stuff, but don't add.  By default, sliders are off.
+	    //**********
 	    String sliderMultipleStrings[] = {"1.00", "0.75", "0.50", "0.25", "0.10"};
 	    sliderMultiple = new JComboBox(sliderMultipleStrings);
 	    sliderMultiple.addActionListener(this);
@@ -301,29 +315,33 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    barLengthSlider.setPaintLabels(true);
 	    barLengthSlider.setSnapToTicks(true);
 	    barLengthSlider.addChangeListener(this);
+	    //**********
+	    //End - Slider setup.
+	    //**********
       
 	    gbc.fill = GridBagConstraints.BOTH;
 	    gbc.anchor = GridBagConstraints.CENTER;
-	    gbc.weightx = 0.95;
-	    gbc.weighty = 0.98;
-	    addCompItem(mappingDataWinPanelScrollPane, gbc, 0, 0, 1, 1);
-	    //addCompItem(mappingDataWinPanelRef, gbc, 0, 0, 1, 1);
-      
-	    //hsb.addAdjustmentListener(this);
-      
-	    //gbc.fill = GridBagConstraints.BOTH;
-	    //gbc.anchor = GridBagConstraints.CENTER;
-	    //gbc.weightx = 0.95;
-	    //gbc.weighty = 0.02;
-	    //addCompItem(mappingDataWinPanelScrollPane, gbc, 0, 0, 1, 1);
-	    //addCompItem(hsb, gbc, 0, 1, 1, 1);
+	    gbc.weightx = 100;
+	    gbc.weighty = 100;
+	    addCompItem(sp, gbc, 0, 0, 1, 1);
+            
+	    /*
+	    gbc.fill = GridBagConstraints.BOTH;
+	    gbc.anchor = GridBagConstraints.CENTER;
+	    gbc.weightx = 100;
+	    gbc.weighty = 0;
+	    addCompItem(hsb, gbc, 0, 1, 1, 1);
+
+	    gbc.fill = GridBagConstraints.BOTH;
+	    gbc.anchor = GridBagConstraints.CENTER;
+	    gbc.weightx = 0;
+	    gbc.weighty = 100;
+	    addCompItem(vsb, gbc, 1, 0, 1, 1);
+	    */
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW02");
-	    }
-    
-    
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW02");
+	}
     }
   
     //******************************
@@ -344,175 +362,128 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		{
 		    String arg = evt.getActionCommand();
         
-		    if(arg.equals("Close This Window"))
-			{
-			    closeThisWindow();
+		    if(arg.equals("Close This Window")){
+			closeThisWindow();
+		    }
+		    else if(arg.equals("Exit ParaProf!")){
+			setVisible(false);
+			dispose();
+			System.exit(0);
+		    }
+		    else if(arg.equals("Bin Window")){
+			System.out.println("Mapping is in MDW is: " + mappingID);
+			BinWindow bW = new BinWindow(trial, sMWData, false, mappingID);
+			bW.show();
+		    }
+		    else if(arg.equals("Inclusive")){
+			if(inclusiveRadioButton.isSelected()){
+			    metric = 0;
+			    //Call repaint.
+			    panel.repaint();
 			}
-		    else if(arg.equals("Exit Racy!"))
-			{
-			    setVisible(false);
-			    dispose();
-			    System.exit(0);
+		    }
+		    else if(arg.equals("Exclusive")){
+			if(exclusiveRadioButton.isSelected()){
+			    metric = 1;
+			    //Call repaint.
+			    panel.repaint();
 			}
-		    else if(arg.equals("Bin Window"))
-			{
-			    System.out.println("Mapping is in MDW is: " + mappingID);
-			    BinWindow bW = new BinWindow(trial, sMWData, false, mappingID);
-			    bW.show();
+		    }
+		    else if(arg.equals("Number of Calls")){
+			if(numOfCallsRadioButton.isSelected()){
+			    metric = 2;
+			    panel.repaint();
 			}
-		    else if(arg.equals("Inclusive"))
-			{
-			    if(inclusiveRadioButton.isSelected())
-				{
-				    metric = "Inclusive";
-				    //Call repaint.
-				    mappingDataWinPanelRef.repaint();
-				}
+		    }
+		    else if(arg.equals("Number of Subroutines")){
+			if(numOfSubRoutinesRadioButton.isSelected()){
+			    metric = 3;
+			    panel.repaint();
 			}
-		    else if(arg.equals("Exclusive"))
-			{
-			    if(exclusiveRadioButton.isSelected())
-				{
-				    metric = "Exclusive";
-				    //Call repaint.
-				    mappingDataWinPanelRef.repaint();
-				}
+		    }
+		    else if(arg.equals("Per Call Value")){
+			if(userSecPerCallRadioButton.isSelected()){
+			    metric = 4;
+			    panel.repaint();
 			}
-		    else if(arg.equals("Number of Calls"))
-			{
-			    if(numOfCallsRadioButton.isSelected())
-				{
-				    metric = "Number of Calls";
-				    mappingDataWinPanelRef.repaint();
-				}
+		    }
+		    else if(arg.equals("Percent")){
+			if(percentButton.isSelected()){
+			    percent = true;
+			    //Call repaint.
+			    panel.repaint();
 			}
-		    else if(arg.equals("Number of Subroutines"))
-			{
-			    if(numOfSubRoutinesRadioButton.isSelected())
-				{
-				    metric = "Number of Subroutines";
-				    mappingDataWinPanelRef.repaint();
-				}
+		    }
+		    else if(arg.equals("Value")){
+			if(valueButton.isSelected()){
+			    percent = false;
+			    //Call repaint.
+			    panel.repaint();
 			}
-		    else if(arg.equals("Per Call Value"))
-			{
-			    if(userSecPerCallRadioButton.isSelected())
-				{
-				    metric = "Per Call Value";
-				    mappingDataWinPanelRef.repaint();
-				}
+		    }
+		    else if(arg.equals("Microseconds")){
+			if(microsecondsButton.isSelected()){
+			    units = 0;
+			    //Call repaint.
+			    panel.repaint();
 			}
-		    else if(arg.equals("Percent"))
-			{
-			    if(percentButton.isSelected())
-				{
-				    percent = true;
-				    //Call repaint.
-				    mappingDataWinPanelRef.repaint();
-				}
+		    }
+		    else if(arg.equals("Milliseconds")){
+			if(millisecondsButton.isSelected()){
+			    units = 1;
+			    //Call repaint.
+			    panel.repaint();
 			}
-		    else if(arg.equals("Value"))
-			{
-			    if(valueButton.isSelected())
-				{
-				    percent = false;
-				    //Call repaint.
-				    mappingDataWinPanelRef.repaint();
-				}
+		    }
+		    else if(arg.equals("Seconds")){
+			if(secondsButton.isSelected()){
+			    units = 2;
+			    //Call repaint.
+			    panel.repaint();
 			}
-		    else if(arg.equals("Seconds"))
-			{
-			    if(secondsButton.isSelected())
-				{
-				    unitsString = "Seconds";
-				    //Call repaint.
-				    mappingDataWinPanelRef.repaint();
-				}
+		    }
+		    else if(arg.equals("Display Sliders")){
+			if(displaySlidersButton.isSelected()){ 
+			    displaySiders(true);
 			}
-		    else if(arg.equals("Microseconds"))
-			{
-			    if(microsecondsButton.isSelected())
-				{
-				    unitsString = "Microseconds";
-				    //Call repaint.
-				    mappingDataWinPanelRef.repaint();
-				}
+			else{
+			    displaySiders(false);
 			}
-		    else if(arg.equals("Milliseconds"))
-			{
-			    if(millisecondsButton.isSelected())
-				{
-				    unitsString = "Milliseconds";
-				    //Call repaint.
-				    mappingDataWinPanelRef.repaint();
-				}
-			}
-		    else if(arg.equals("Display Sliders"))
-			{
-			    if(displaySlidersButton.isSelected())
-				{ 
-				    displaySiders(true);
-				}
-			    else
-				{
-				    displaySiders(false);
-				}
-			}
-		    else if(arg.equals("Show Function Ledger"))
-			{
-			    //In order to be in this window, I must have loaded the data. So,
-			    //just show the mapping ledger window.
-			    (trial.getGlobalMapping()).displayMappingLedger(0);
-			}
-		    else if(arg.equals("Show Group Ledger"))
-			{
-			    //In order to be in this window, I must have loaded the data. So,
-			    //just show the mapping ledger window.
-			    (trial.getGlobalMapping()).displayMappingLedger(1);
-			}
-		    else if(arg.equals("Show User Event Ledger"))
-			{
-			    //In order to be in this window, I must have loaded the data. So,
-			    //just show the mapping ledger window.
-			    (trial.getGlobalMapping()).displayMappingLedger(2);
-			}
-		    else if(arg.equals("Close All Sub-Windows"))
-			{
-			    //Close the all subwindows.
-			    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-			}
-		    else if(arg.equals("About Racy"))
-			{
-			    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-			}
-		    else if(arg.equals("Show Help Window"))
-			{
-			    //Show the racy help window.
-			    ParaProf.helpWindow.clearText();
-			    ParaProf.helpWindow.show();
-			    //Since the data must have been loaded.  Tell them someting about
-			    //where they are.
-			    ParaProf.helpWindow.writeText("This is the mapping data window for:");
-			    ParaProf.helpWindow.writeText(mappingName);
-			    ParaProf.helpWindow.writeText("");
-			    ParaProf.helpWindow.writeText("This window shows you this mapping's statistics across all the threads.");
-			    ParaProf.helpWindow.writeText("");
-			    ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
-			    ParaProf.helpWindow.writeText("");
-			    ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
-			    ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-			    ParaProf.helpWindow.writeText("for this mapping.");
-			}
+		    }
+		    else if(arg.equals("Show Function Ledger")){
+			    (trial.getGlobalMapping()).displayMappingLedger(0);}
+		    else if(arg.equals("Show Group Ledger")){
+			    (trial.getGlobalMapping()).displayMappingLedger(1);}
+		    else if(arg.equals("Show User Event Ledger")){
+			    (trial.getGlobalMapping()).displayMappingLedger(2);}
+		    else if(arg.equals("Close All Sub-Windows")){
+			    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");}
+		    else if(arg.equals("About ParaProf")){
+			JOptionPane.showMessageDialog(this, ParaProf.getInfoString());}
+		    else if(arg.equals("Show Help Window")){
+			ParaProf.helpWindow.clearText();
+			ParaProf.helpWindow.show();
+			//Since the data must have been loaded.  Tell them someting about
+			//where they are.
+			ParaProf.helpWindow.writeText("This is the mapping data window for:");
+			ParaProf.helpWindow.writeText(mappingName);
+			ParaProf.helpWindow.writeText("");
+			ParaProf.helpWindow.writeText("This window shows you this mapping's statistics across all the threads.");
+			ParaProf.helpWindow.writeText("");
+			ParaProf.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
+			ParaProf.helpWindow.writeText("");
+			ParaProf.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
+			ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
+			ParaProf.helpWindow.writeText("for this mapping.");
+		    }
 		}
-	    else if(EventSrc == sliderMultiple)
-		{
-		    mappingDataWinPanelRef.changeInMultiples();
-		}
-	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW03");
+	    else if(EventSrc == sliderMultiple){
+		panel.changeInMultiples();
 	    }
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW03");
+	}
     }
     //******************************
     //End - ActionListener code.
@@ -522,10 +493,8 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //******************************
     //Change listener code.
     //******************************
-    public void stateChanged(ChangeEvent event)
-    {
-	mappingDataWinPanelRef.changeInMultiples();
-    }
+    public void stateChanged(ChangeEvent event){
+	panel.changeInMultiples();}
     //******************************
     //End - Change listener code.
     //******************************
@@ -545,7 +514,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
                 
 	    hsbValue = hsb.getValue();
                 
-	    mappingDataWinPanelRef.repaint();
+	    panel.repaint();
 	}
     }
     //******************************
@@ -555,273 +524,250 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //******************************
     //MenuListener code.
     //******************************
-    public void menuSelected(MenuEvent evt)
-    {
-	try
-	    {
-		String trialName = trial.getCounterName();
-		trialName = trialName.toUpperCase();
-		boolean isDefault = false;
-		boolean isTimeMetric = false;
-      
-		if(trialName.equals("DEFAULT")) 
-		    isDefault = true;
-		else if(trialName.indexOf("TIME") != -1)
-		    isTimeMetric = true;
-      
-		if(trial.groupNamesPresent())
-		    mappingGroupLedgerItem.setEnabled(true);
-		else
-		    mappingGroupLedgerItem.setEnabled(false);
-        
-		if(trial.userEventsPresent())
-		    userEventLedgerItem.setEnabled(true);
-		else
-		    userEventLedgerItem.setEnabled(false);
-        
-        
-      
-		if((metric.equals("Number of Calls")) || (metric.equals("Number of Subroutines")) || (metric.equals("Per Call Value"))){
-		    valuePercentMenu.setEnabled(false);
-		    unitsMenu.setEnabled(false);}
-		else if(percent){
-		    valuePercentMenu.setEnabled(true);
-		    unitsMenu.setEnabled(false);}
-		else{
-		    valuePercentMenu.setEnabled(true);
-		    unitsMenu.setEnabled(true);}
-	    }
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "TDW04");
-	    }
+    public void menuSelected(MenuEvent evt){
+	try{
+	    String trialName = trial.getCounterName();
+	    trialName = trialName.toUpperCase();
+	    boolean isDefault = false;
+	    boolean isTimeMetric = false;
+	    
+	    if(trialName.equals("DEFAULT")) 
+		isDefault = true;
+	    else if(trialName.indexOf("TIME") != -1)
+		isTimeMetric = true;
+	    
+	    if(trial.groupNamesPresent())
+		mappingGroupLedgerItem.setEnabled(true);
+	    else
+		mappingGroupLedgerItem.setEnabled(false);
+	    
+	    if(trial.userEventsPresent())
+		userEventLedgerItem.setEnabled(true);
+	    else
+		userEventLedgerItem.setEnabled(false);
+	    
+	    
+	    
+	    if(metric > 1){
+		valuePercentMenu.setEnabled(false);
+		unitsMenu.setEnabled(false);}
+	    else if(percent){
+		valuePercentMenu.setEnabled(true);
+		unitsMenu.setEnabled(false);}
+	    else{
+		valuePercentMenu.setEnabled(true);
+		unitsMenu.setEnabled(true);}
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "TDW04");
+	}
     }
-  
-    public void menuDeselected(MenuEvent evt)
-    {
-    }
-  
-    public void menuCanceled(MenuEvent evt)
-    {
-    }
-  
+    
+    public void menuDeselected(MenuEvent evt){}
+    public void menuCanceled(MenuEvent evt){}
     //******************************
     //End - MenuListener code.
     //******************************
   
   
     //Observer functions.
-    public void update(Observable o, Object arg)
-    {
+    public void update(Observable o, Object arg){
 	try{
 	    String tmpString = (String) arg;
-	    if(tmpString.equals("prefEvent"))
-		{
-		    //Just need to call a repaint on the ThreadDataWindowPanel.
-		    mappingDataWinPanelRef.repaint();
-		}
-	    else if(tmpString.equals("colorEvent"))
-		{
-		    //Just need to call a repaint on the ThreadDataWindowPanel.
-		    mappingDataWinPanelRef.repaint();
-		}
-	    else if(tmpString.equals("dataSetChangeEvent"))
-		{
-		    //Clear any locally saved data.
-		    sMWGeneralData = null;
-		}
-	    else if(tmpString.equals("subWindowCloseEvent"))
-		{
-		    closeThisWindow();
-		}
-	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW05");
+	    if(tmpString.equals("prefEvent")){
+		//Just need to call a repaint on the ThreadDataWindowPanel.
+		panel.repaint();
 	    }
+	    else if(tmpString.equals("colorEvent")){
+		//Just need to call a repaint on the ThreadDataWindowPanel.
+		panel.repaint();
+	    }
+	    else if(tmpString.equals("dataSetChangeEvent")){
+		//Clear any locally saved data.
+		sMWGeneralData = null;
+	    }
+	    else if(tmpString.equals("subWindowCloseEvent")){
+		closeThisWindow();
+	    }
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW05");
+	}
     }
   
     //MappingDataWindowPanel call back functions.
-    public Vector getStaticMainWindowSystemData()
-    {
+    public Vector getStaticMainWindowSystemData(){
 	try{
-	    if(sMWGeneralData == null)
-		{
-		    sMWGeneralData = sMWData.getSMWMappingData(mappingID);
-		    return sMWGeneralData;
-		}
-	    else
-		{
-		    return sMWGeneralData;
-		}
-	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW06");
+	    if(sMWGeneralData == null){
+		sMWGeneralData = sMWData.getSMWMappingData(mappingID);
+		return sMWGeneralData;
 	    }
-    
+	    else{
+		return sMWGeneralData;
+	    }
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW06");
+	}
+	
 	return null;
     }
-  
-    public String getMetric(){
-	return metric;
-    }
     
-    public boolean isInclusive()
-    {
-	return inclusive;
-    }
+    public int getMetric(){
+	return metric;}
+    
+    public boolean isInclusive(){
+	return inclusive;}
   
-    public boolean isPercent()
-    {
-	return percent;
-    }
+    public boolean isPercent(){
+	return percent;}
   
-    public String units()
-    {
-	return unitsString;
-    }
+    public int units(){
+	return units;}
   
-    public int getSliderValue()
-    {
+    public int getSliderValue(){
 	int tmpInt = -1;
-    
-	try
-	    {
-		tmpInt = barLengthSlider.getValue();
-	    }
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW07");
-	    }
-    
+    	try{
+	    tmpInt = barLengthSlider.getValue();
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW07");
+	}
 	return tmpInt;
     }
   
-    public double getSliderMultiple()
-    {
+    public double getSliderMultiple(){
 	String tmpString = null;
-	try
-	    {
-		tmpString = (String) sliderMultiple.getSelectedItem();
-		return Double.parseDouble(tmpString);
-	    }
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW08");
-	    }
-    
+	try{
+	    tmpString = (String) sliderMultiple.getSelectedItem();
+	    return Double.parseDouble(tmpString);
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW08");
+	}
 	return 0;
     }
 
-    public Rectangle getViewRectangle(){
-	return mappingDataWinPanelScrollPane.getViewport().getViewRect();}
-      
-    private void displaySiders(boolean displaySliders)
-    {
-	if(displaySliders)
-	    {
-		//Since the menu option is a toggle, the only component that needs to be
-		//removed is that scrollPane.  We then add back in with new parameters.
-		//This might not be required as it seems to adjust well if left in, but just
-		//to be sure.
-		contentPane.remove(mappingDataWinPanelScrollPane);
-      
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.EAST;
-		gbc.weightx = 0.10;
-		gbc.weighty = 0.01;
-		addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
-      
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.weightx = 0.10;
-		gbc.weighty = 0.01;
-		addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
-      
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.EAST;
-		gbc.weightx = 0.10;
-		gbc.weighty = 0.01;
-		addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
-      
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.weightx = 0.70;
-		gbc.weighty = 0.01;
-		addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
-      
-		gbc.fill = GridBagConstraints.BOTH;
-		gbc.anchor = GridBagConstraints.CENTER;
-		gbc.weightx = 0.95;
-		gbc.weighty = 0.98;
-		addCompItem(mappingDataWinPanelScrollPane, gbc, 0, 1, 4, 1);
-	    }
-	else
-	    {
-		contentPane.remove(sliderMultipleLabel);
-		contentPane.remove(sliderMultiple);
-		contentPane.remove(barLengthLabel);
-		contentPane.remove(barLengthSlider);
-		contentPane.remove(mappingDataWinPanelScrollPane);
-      
-		gbc.fill = GridBagConstraints.BOTH;
-		gbc.anchor = GridBagConstraints.CENTER;
-		gbc.weightx = 0.95;
-		gbc.weighty = 0.98;
-		addCompItem(mappingDataWinPanelScrollPane, gbc, 0, 0, 1, 1);
-	    }
-    
+    private void displaySiders(boolean displaySliders){
+	if(displaySliders){
+	    contentPane.remove(panel);
+	    contentPane.remove(hsb);
+	    contentPane.remove(vsb);
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.EAST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 100;
+	    gbc.weighty = 0;
+	    addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.EAST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
+	    
+	    gbc.fill = GridBagConstraints.HORIZONTAL;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 100;
+	    gbc.weighty = 0;
+	    addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
+	    
+	    gbc.fill = GridBagConstraints.BOTH;
+	    gbc.anchor = GridBagConstraints.CENTER;
+	    gbc.weightx = 100;
+	    gbc.weighty = 100;
+	    addCompItem(panel, gbc, 0, 1, 4, 1);
+
+	    gbc.fill = GridBagConstraints.HORIZONTAL;
+	    gbc.anchor = GridBagConstraints.NORTH;
+	    gbc.weightx = 100;
+	    gbc.weighty = 0;
+	    addCompItem(hsb, gbc, 0, 2, 4, 1);
+
+	    gbc.fill = GridBagConstraints.VERTICAL;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 100;
+	    addCompItem(vsb, gbc, 4, 1, 1, 1);
+	}
+	else{
+	    contentPane.remove(sliderMultipleLabel);
+	    contentPane.remove(sliderMultiple);
+	    contentPane.remove(barLengthLabel);
+	    contentPane.remove(barLengthSlider);
+	    contentPane.remove(panel);
+	    contentPane.remove(hsb);
+	    contentPane.remove(vsb);
+
+	    gbc.fill = GridBagConstraints.BOTH;
+	    gbc.anchor = GridBagConstraints.CENTER;
+	    gbc.weightx = 100;
+	    gbc.weighty = 100;
+	    addCompItem(panel, gbc, 0, 0, 1, 1);
+            
+	    gbc.fill = GridBagConstraints.BOTH;
+	    gbc.anchor = GridBagConstraints.CENTER;
+	    gbc.weightx = 100;
+	    gbc.weighty = 0;
+	    addCompItem(hsb, gbc, 0, 1, 1, 1);
+
+	    gbc.fill = GridBagConstraints.BOTH;
+	    gbc.anchor = GridBagConstraints.CENTER;
+	    gbc.weightx = 0;
+	    gbc.weighty = 100;
+	    addCompItem(vsb, gbc, 1, 0, 1, 1);
+	}
+	
 	//Now call validate so that these componant changes are displayed.
 	validate();
     }
         
-    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h)
-    {
+    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h){
 	try{
 	    gbc.gridx = x;
 	    gbc.gridy = y;
 	    gbc.gridwidth = w;
 	    gbc.gridheight = h;
-      
+	    
 	    getContentPane().add(c, gbc);
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW09");
-	    }
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW09");
+	}
     }
-  
+    
     //Respond correctly when this window is closed.
-    void thisWindowClosing(java.awt.event.WindowEvent e)
-    {
-	closeThisWindow();
-    }
+    void thisWindowClosing(java.awt.event.WindowEvent e){
+	closeThisWindow();}
   
-    void closeThisWindow()
-    {
+    void closeThisWindow(){
 	try{
-	    if(ParaProf.debugIsOn)
-		{
-		    System.out.println("------------------------");
-		    System.out.println("A mapping window for: \"" + mappingName + "\" is closing");
-		    System.out.println("Clearing resourses for that window.");
-		}
+	    if(ParaProf.debugIsOn){
+		System.out.println("------------------------");
+		System.out.println("A mapping window for: \"" + mappingName + "\" is closing");
+		System.out.println("Clearing resourses for that window.");
+	    }
 	    setVisible(false);
 	    trial.getSystemEvents().deleteObserver(this);
 	    dispose();
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "MDW10");
-	    }
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "MDW10");
+	}
     }
-
-    
-  
+      
     //******************************
     //Instance data.
     //******************************
+    private Trial trial = null;
+    private StaticMainWindowData sMWData = null;
+    Vector sMWGeneralData = null;
     private int mappingID = -1;
     private String mappingName = null;
   
@@ -836,22 +782,18 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     private ButtonGroup metricGroup = null;
   
     private JRadioButtonMenuItem metricButton =  new JRadioButtonMenuItem("Selected Metric", true);
-  
     private JRadioButtonMenuItem inclusiveRadioButton =  new JRadioButtonMenuItem("Inclusive", false);
     private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
     private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
     private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
     private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
-  
     private JRadioButtonMenuItem valueButton = null;
     private JRadioButtonMenuItem percentButton = null;
-  
     private JRadioButtonMenuItem secondsButton = null;
     private JRadioButtonMenuItem millisecondsButton = null;
     private JRadioButtonMenuItem microsecondsButton = null;
   
     private JRadioButtonMenuItem displaySlidersButton;
-  
     private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
     private JComboBox sliderMultiple;
   
@@ -861,26 +803,17 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     private Container contentPane = null;
     private GridBagLayout gbl = null;
     private GridBagConstraints gbc = null;
-  
-    private JScrollPane mappingDataWinPanelScrollPane;
-  
-    //private ThreadDataWindowPanel threadDataWindowPanelRef = null;
-    int hsbValue = 0;
-  
-    private Trial trial = null;
-    StaticMainWindowData sMWData = null;
-  
-    Vector sMWGeneralData = null;
     
-    MappingDataWindowPanel mappingDataWinPanelRef = null;
-    private JScrollBar hsb = new JScrollBar(JScrollBar.HORIZONTAL);
-  
-    private String metric = "Exclusive";
-  
+    MappingDataWindowPanel panel = null;
+    private JScrollBar hsb = null;
+    private JScrollBar vsb = null;
+    int hsbValue = 0;
+    int vsbValue = 0;
+
+    private int metric = 1; //0-inclusive,1-exclusive,2-number of calls,3-number of subroutines,4-per call value.
     boolean inclusive = false;
     boolean percent = true;
-    private String unitsString = null;
-  
+    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
     //******************************
     //End - Instance data.
     //******************************

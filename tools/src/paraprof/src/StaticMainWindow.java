@@ -52,6 +52,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  Dimension screenDimension = tk.getScreenSize();
 	  int screenHeight = screenDimension.height;
 	  int screenWidth = screenDimension.width;
+
 	  
 	  //Set the window to come up in the center of the screen.
 	  int xPosition = (screenWidth - windowWidth) / 2;
