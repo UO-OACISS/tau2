@@ -3,8 +3,8 @@
 
 #Makefile creates the ParaProf jar file.
 ##########################
-CONFIG_ARCH=apple
-TAUROOT=/Users/bertie/Robert/Code/apple/tau2
+CONFIG_ARCH=@TAUARCH@
+TAUROOT=@TAUROOT@
 
 BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
              BinWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
@@ -32,7 +32,7 @@ new: ../bin/ParaProf.jar
 
 old: ../bin/ParaProf-Old.jar
 
-../bin/ParaProf.jar: $(NEW_SOURCES)
+$(TOOLS_SRC)/paraprof/bin/ParaProf.jar: $(NEW_SOURCES)
 	rm -f ./paraprof/*.class
 	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(NEW_SOURCES)
 	cp ./resources/*.gif ./classes/edu/uoregon/tau/paraprof
