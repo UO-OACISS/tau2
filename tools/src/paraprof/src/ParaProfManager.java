@@ -400,6 +400,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    ParaProf.helpWindow.writeText("");
 		    ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
 		}
+		else if(arg.equals("Add Application")){
+		    if(clickedOnObject ){
+			ParaProfTrial paraProfTrial = (ParaProfTrial) clickedOnObject;
+		}
 		else if(arg.equals("Update Meta Data in DB")){
 		    //A few things to check here.
 		    if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null||ParaProf.savedPreferences.getDatabasePassword()==null){//Check to see if the user has set configuration information.
@@ -423,7 +427,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    }
 		}
 		else if(arg.equals("Upload Trial to DB")){
-		    System.out.println("Here!");
 		    if(clickedOnObject instanceof ParaProfTrial){
 			ParaProfTrial paraProfTrial = (ParaProfTrial) clickedOnObject;
 			int[] array = this.getSelectedDBExperiment();
@@ -995,10 +998,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //End - Component functions.
     //####################################
 
-    private void addExperiment(){
-	JOptionPane.showMessageDialog(this, "Only the default experiment allowed in this release!", "Warning!"
-                                      ,JOptionPane.ERROR_MESSAGE);
-	return;
+    public void addApplication(){
+    }
+
+    public void addExperiment(){
     }
 
     //Adds a trial to the given experiment. If the given experiment is null it tries to determine if
