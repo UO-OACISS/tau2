@@ -1085,7 +1085,7 @@ then
   linux) 
 	mpilib=/usr/local/packages/mpich
    	;;
-  sgin32) 
+  sgin32 | sgi8k) 
 	mpilib=/usr/lib32
  	;;
   sgi64) 
