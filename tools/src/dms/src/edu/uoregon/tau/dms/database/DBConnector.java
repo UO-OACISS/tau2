@@ -203,10 +203,15 @@ public class DBConnector implements DB {
     }
 
     public String getSchemaPrefix(){
-	if (this.parseConfig.getDBSchemaPrefix() != null && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
-	    return new String(this.parseConfig.getDBSchemaPrefix() + ".");
-	else
+	if (db.getDBType().compareTo("oracle") == 0) {
+	    
+	    if (this.parseConfig.getDBSchemaPrefix() != null && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
+		return new String(this.parseConfig.getDBSchemaPrefix() + ".");
+	    else
+		return "";
+	} else {
 	    return "";
+	}
     }
 
     public PreparedStatement prepareStatement(String statement) throws SQLException {
