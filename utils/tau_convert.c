@@ -1391,8 +1391,11 @@ int main (int argc, char *argv[])
   /* print idle records */
   for (i=0; i<=intrc.numproc; i++)
   {
+    if (outFormat == pv)
+    {
       fprintf (outfp, "0 EXCHANGE ON CPUID %d DOWNTO IDLE -99 CLUSTER 1\n",
 		      i+1);
+    }
   }
 
   /* ------------------------------------------------------------------------ */
