@@ -64,6 +64,7 @@
 #define TAU_PROFILE_SET_CONTEXT(context)	Tau_set_context(context);
 #define TAU_PROFILE_CALLSTACK()			Tau_callstack();
 #define TAU_DB_DUMP()                           Tau_dump();
+#define TAU_DB_DUMP_PREFIX(prefix)              Tau_dump_prefix(prefix);
 #define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
 #define TAU_DB_PURGE()                          Tau_purge();
 #define TAU_GET_FUNC_NAMES(functionList, num)   Tau_the_function_list(&functionList, &num);
@@ -175,6 +176,7 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 #define TAU_PROFILE_SET_CONTEXT(context)
 #define TAU_PROFILE_CALLSTACK()
 #define TAU_DB_DUMP()
+#define TAU_DB_DUMP_PREFIX()              
 #define TAU_DB_DUMP_INCR()
 #define TAU_DB_PURGE()
 #define TAU_GET_FUNC_NAMES(functionList, num)
@@ -227,7 +229,7 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2003/05/08 17:48:06 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.23 2003/05/08 17:48:06 sameer Exp $
+ * $Revision: 1.24 $   $Date: 2003/07/18 18:49:51 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.24 2003/07/18 18:49:51 sameer Exp $
  ***************************************************************************/
 

@@ -112,7 +112,7 @@ public:
 	static bool createDirectories();
 	static int StoreData(int tid = RtsLayer::myThread()); 
 	static int DumpData(bool increment = false,
-			    int tid = RtsLayer::myThread()); 
+			    int tid = RtsLayer::myThread(), char *prefix = "dump"); 
 	static void PurgeData(int tid = RtsLayer::myThread());
 	static void theFunctionList(const char ***inPtr, int *numOfFunctions,
 				    bool addName = false, const char * inString = NULL);
@@ -133,7 +133,8 @@ public:
 	static int dumpFunctionValues(const char **inFuncs,
 				      int numOfFuncs,
 				      bool increment = false,
-				      int tid = RtsLayer::myThread());
+				      int tid = RtsLayer::myThread(), 
+				      char *prefix = "dump");
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
@@ -182,6 +183,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.45 $   $Date: 2003/05/22 00:52:46 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.45 2003/05/22 00:52:46 sameer Exp $ 
+ * $Revision: 1.46 $   $Date: 2003/07/18 18:49:49 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.46 2003/07/18 18:49:49 sameer Exp $ 
  ***************************************************************************/
