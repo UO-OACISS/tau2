@@ -87,6 +87,10 @@ extern int optind, opterr, optopt;
 #endif /* FUJITSU */
 
 
+/* Macros for min/max. To avoid <algobase> and gcc-3.0 problems, we define: */
+#define TAU_MIN(a,b) (((a)<(b))?(a):(b))
+#define TAU_MAX(a,b) (((a)>(b))?(a):(b))
+
 
 # ifndef TRUE
 #   define FALSE 0
@@ -293,13 +297,8 @@ class UserEventData {
     return *this;
   }
   UserEventData& operator+= (const UserEventData& X) {
-#ifdef TAU_WINDOWS
-	maxvalue	= __max (maxvalue, X.maxvalue);
-    minvalue	= __min (minvalue, X.minvalue);
-#else
-	maxvalue	= max (maxvalue, X.maxvalue);
-    minvalue	= min (minvalue, X.minvalue);
-#endif	//TAU_WINDOWS
+  maxvalue	= TAU_MAX (maxvalue, X.maxvalue);
+  minvalue	= TAU_MIN (minvalue, X.minvalue);
     if (numevents+X.numevents != 0) 
     {
       meanvalue 	= (meanvalue*numevents + X.meanvalue * X.numevents)/(numevents+X.numevents); 
@@ -3096,7 +3095,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2001/03/08 23:58:24 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.24 2001/03/08 23:58:24 sameer Exp $                                                   
+ * $Revision: 1.25 $   $Date: 2001/07/19 01:18:10 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.25 2001/07/19 01:18:10 sameer Exp $                                                   
  ***************************************************************************/
 
