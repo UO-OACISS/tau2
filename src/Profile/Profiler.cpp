@@ -101,6 +101,13 @@ FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
 //std::basic_ostream<char, std::char_traits<char> > & std::operator<< (std::basic_ostream<char, std::char_traits<char> > &, const char * );
 #endif /* PGI */
 
+//////////////////////////////////////////////////////////////////////
+// Shutdown routine which calls TAU's shutdown
+//////////////////////////////////////////////////////////////////////
+void TauAppShutdown(void)
+{
+  Tau_shutdown();
+}
  
 //////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class Profiler
@@ -420,7 +427,7 @@ void Profiler::Stop(int tid)
 	  // after main exits. Still needed on Linux - we use TauProgramTermination()
 	  if (strcmp(ThisFunction->GetName(), "_fini") == 0) TheSafeToDumpData() = 0;
 	  #ifndef TAU_WINDOWS
-	  atexit(Tau_shutdown);
+	  atexit(TauAppShutdown);
 	  #endif //TAU_WINDOWS
   	  if (TheSafeToDumpData()) {
             if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
@@ -2508,8 +2515,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.79 $   $Date: 2002/11/12 19:42:35 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.79 2002/11/12 19:42:35 sameer Exp $ 
+ * $Revision: 1.80 $   $Date: 2002/12/26 22:51:13 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.80 2002/12/26 22:51:13 sameer Exp $ 
  ***************************************************************************/
 
 	
