@@ -21,6 +21,7 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
 import java.beans.*;
+import dms.dss.*;
 
 public class ParaProfImageOutput{
 

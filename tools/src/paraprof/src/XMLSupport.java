@@ -117,7 +117,7 @@ public class XMLSupport{
 		    Context context = (Context) e2.nextElement();
 		    Vector threads = context.getThreads();
 		    for(Enumeration e3 = threads.elements(); e3.hasMoreElements() ;){
-			dms.dss.Thread thread = (Thread) e3.nextElement();
+			dms.dss.Thread thread = (dms.dss.Thread) e3.nextElement();
 			Vector functions = thread.getFunctionList();
 			Vector userevents = thread.getUsereventList();
 			//Write out the node,context and thread ids.

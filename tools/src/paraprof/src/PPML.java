@@ -103,7 +103,7 @@ public class PPML{
  	    for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		context = (Context) e2.nextElement();
  		for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
-		    thread = (Thread) e3.nextElement();
+		    thread = (dms.dss.Thread) e3.nextElement();
 		    thread.incrementStorage();
 		    l = thread.getFunctionListIterator();
 		    while(l.hasNext()){

@@ -424,7 +424,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		double d2 = 0.0;
 		int d3 = 0;
 
-		thread = (Thread) trial.getNCT().getThread(nodeID,contextID,threadID); 
+		thread = (dms.dss.Thread) trial.getNCT().getThread(nodeID,contextID,threadID); 
 		functionList = thread.getFunctionList();
 
 		//######

@@ -21,6 +21,7 @@ import org.jatha.Jatha;
 import org.jatha.dynatype.*;
 import org.jatha.compile.*;
 import org.jatha.machine.*;
+import dms.dss.*;
 
 public class ParaProfLisp{
     public ParaProfLisp(boolean debug){

@@ -32,7 +32,7 @@ public class StaticMainWindowData{
 		    //It is possible (because of selection criteria - groups for example) to filter
 		    //out all mappings on a particular thread.  The default at present is not to add.
 		    int counter = 0; //Counts the number of SMWThreadDataElements that are actually added.
-		    dms.dss.Thread thread = (Thread) e3.nextElement();
+		    dms.dss.Thread thread = (dms.dss.Thread) e3.nextElement();
 		    SMWThread sMWThread = new SMWThread(thread);
 		    //Do not add thread to the context until we have verified counter is not zero (done after next loop).
 		    //Now enter the thread data loops for this thread.
@@ -69,10 +69,10 @@ public class StaticMainWindowData{
 
 	switch(listType){
 	case 1:
-	    list = ((Thread)trial.getNCT().getThread(nodeID,contextID,threadID)).getFunctionList();
+	    list = ((dms.dss.Thread)trial.getNCT().getThread(nodeID,contextID,threadID)).getFunctionList();
 	    break;
 	case 2:
-	    list = ((Thread)trial.getNCT().getThread(nodeID,contextID,threadID)).getUsereventList();
+	    list = ((dms.dss.Thread)trial.getNCT().getThread(nodeID,contextID,threadID)).getUsereventList();
 	    break;
 	default:
 	    UtilFncs.systemError(null, null, "Unexpected list type - SMWD value: " + listType);
@@ -111,7 +111,7 @@ public class StaticMainWindowData{
 		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		    context = (Context) e2.nextElement();
 		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
-			thread = (Thread) e3.nextElement();
+			thread = (dms.dss.Thread) e3.nextElement();
 			//Only want to add an the element with the correct mapping id.
 			if(listType==1)
 			    globalThreadDataElement = thread.getFunction(mappingID);

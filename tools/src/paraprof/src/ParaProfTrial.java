@@ -288,11 +288,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public GlobalMapping getGlobalMapping(){
 	return dataSession.getGlobalMapping();}
 
-    public int getNumberOfMappings(){
-	return dataSession.getNumberOfMappings();}
-
-    public int getNumberOfUserEvents(){
-	return dataSession.getNumberOfUserEvents();}
+    public NCT getNCT(){
+	return dataSession.getNCT();}
 
     public boolean groupNamesPresent(){
 	return dataSession.groupNamesPresent();}
@@ -302,9 +299,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 
     public boolean callPathDataPresent(){
 	return dataSession.callPathDataPresent();}
-
-    public NCT getNCT(){
-	return dataSession.getNCT();}
 
     public int[] getMaxNCTNumbers(){
 	return dataSession.getMaxNCTNumbers();}
