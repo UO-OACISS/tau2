@@ -10,6 +10,7 @@
 package paraprof;
 
 import java.util.*;
+import java.io.*;
 import dms.dss.*;
 
 public abstract class ParaProfDataSession  extends DataSession{
@@ -245,7 +246,15 @@ public abstract class ParaProfDataSession  extends DataSession{
 	return callPathDataPresent;}
 
     public void setDebug(boolean debug){
-	this.debug = debug;}
+	try{
+	    this.debug = debug;
+	    Class c = this.getClass();
+	    out = new PrintWriter(new FileWriter(new File(c.getName()+".out")));
+	}
+	catch(IOException exception){
+	    exception.printStackTrace();
+	}
+    }
     
     public boolean debug(){
 	return debug;}
@@ -296,6 +305,9 @@ public abstract class ParaProfDataSession  extends DataSession{
 
     protected boolean groupCheck(){
 	return groupCheck;}
+
+    protected void outputToFile(String s){
+	out.println(s);}
     //####################################
     //End - Protected Section.
     //####################################
@@ -324,6 +336,9 @@ public abstract class ParaProfDataSession  extends DataSession{
     private Vector metrics = new Vector();
 
     private boolean debug = false;
+    //When in debugging mode, this class can print a lot of data.
+    //Initialized in this.setDebug(...).
+    private PrintWriter out = null;
     //######
     //End - Private Section.
     //######

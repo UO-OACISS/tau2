@@ -125,7 +125,7 @@ public class FileList{
 				for(int i=0;i<length;i++){
 				    file = (File)(v.elementAt(i));
 				    files = this.helperGetFileList(file, type, filePrefix, debug);
-				    if(files!=null)
+				    if(files.length > 0)
 					result.add(files);
 				}
 			    }

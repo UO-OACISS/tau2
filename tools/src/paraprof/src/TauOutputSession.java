@@ -78,8 +78,11 @@ public class TauOutputSession extends ParaProfDataSession{
 		//Need to call increaseVectorStorage() on all objects that require it.
 		this.getGlobalMapping().increaseVectorStorage();
 		    
+		Metric metricRef = this.addMetric();
+		metric = metricRef.getID();
+
 		//Only need to call addDefaultToVectors() if not the first run.
-		if(!(this.firstMetric())){
+		if(!(metric==0)){
 		    if(this.debug())
 			System.out.println("Increasing the storage for the new counter.");
 		    
@@ -115,15 +118,15 @@ public class TauOutputSession extends ParaProfDataSession{
 			System.out.println("Done increasing the storage for the new counter.");
 		}
 
-		Metric metricRef = this.addMetric();
-		metric = metricRef.getID();
-
 		files = (File[]) e.nextElement();
 		for(int i=0;i<files.length;i++){
 		    if(this.debug()){
 			System.out.println("######");
 			System.out.println("Processing file: " + files[i].getName());
 			System.out.println("######");
+			this.outputToFile("######");
+			this.outputToFile("Processing file: " + files[i].getName());
+			this.outputToFile("######");
 		    }
 
 		    FileInputStream fileIn = new FileInputStream(files[i]);
@@ -196,15 +199,15 @@ public class TauOutputSession extends ParaProfDataSession{
 
 		    //Process the appropriate number of function lines.
 		    if(this.debug()){
-			System.out.println("######");
-			System.out.println("processing functions");
+			this.outputToFile("######");
+			this.outputToFile("processing functions");
 		    }
 		    numberOfLines = Integer.parseInt(tokenString);
 		    for(int j=0;j<numberOfLines;j++){
 			//On the off chance that we start supporting profiles with no functions in them
 			//(for example only userevents), don't initialize the function list until now.
 			//Just as for userevents, this will cut down on storage.
-			if(j==0&&(this.firstMetric()))
+			if(j==0&&(metric==0))
 			    thread.initializeFunctionList(this.getNumberOfMappings());
 
 			inputString = br.readLine();
@@ -218,15 +221,15 @@ public class TauOutputSession extends ParaProfDataSession{
 			//Calculate usec/call
 			double usecCall = functionDataLine.d0/functionDataLine.i0;
 			if(this.debug()){
-			    System.out.println("function line: " + inputString);
-			    System.out.println("Name:"+functionDataLine.s0);
-			    System.out.println("Calls:"+functionDataLine.i0);
-			    System.out.println("Subrs:"+functionDataLine.i1);
-			    System.out.println("Excl:"+functionDataLine.d0);
-			    System.out.println("Incl:"+functionDataLine.d1);
-			    System.out.println("SumExclSqr:"+functionDataLine.d2);
-			    System.out.println("ProfileCalls:"+functionDataLine.i2);
-			    System.out.println("groupNames:"+groupNames);
+			    this.outputToFile("function line: " + inputString);
+			    this.outputToFile("Name:"+functionDataLine.s0);
+			    this.outputToFile("Calls:"+functionDataLine.i0+
+					       " Subrs:"+functionDataLine.i1+
+					       " Excl:"+functionDataLine.d0+
+					       " Incl:"+functionDataLine.d1+
+					       " SumExclSqr:"+functionDataLine.d2+
+					       " ProfileCalls:"+functionDataLine.i2);
+			    this.outputToFile("groupNames:"+groupNames);
 			}
 			if(functionDataLine.i0 !=0){
 			    mappingID = this.getGlobalMapping().addGlobalMapping(functionDataLine.s0, 0);
@@ -262,7 +265,7 @@ public class TauOutputSession extends ParaProfDataSession{
 				globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
 			    
 			    if(!(globalMappingElement.groupsSet())){
-				if(this.firstMetric()){ 
+				if(metric==0){ 
 				    if(groupNames != null){
 					StringTokenizer st = new StringTokenizer(groupNames, " |");
 					while (st.hasMoreTokens()){
@@ -272,9 +275,9 @@ public class TauOutputSession extends ParaProfDataSession{
 						//function will just return the already existing group id.  See the GlobalMapping class for more details.
 						int groupID = this.getGlobalMapping().addGlobalMapping(group, 1);
 						if((groupID != -1) && (this.debug())){
-						    System.out.println("######");
-						    System.out.println("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
-						    System.out.println("######");
+						    this.outputToFile("######");
+						    this.outputToFile("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
+						    this.outputToFile("######");
 						}
 						globalMappingElement.addGroup(groupID);
 					    }    
@@ -286,33 +289,33 @@ public class TauOutputSession extends ParaProfDataSession{
 			}
 			
 			if(this.debug()){
-			    System.out.println("######");
-			    System.out.println("processing profile calls for function: " + functionDataLine.s0);
+			    this.outputToFile("######");
+			    this.outputToFile("processing profile calls for function: " + functionDataLine.s0);
 			}
 			//Process the appropriate number of profile call lines.
 			for(int k=0;k<functionDataLine.i2;k++){
 			    this.setProfileCallsPresent(true);
 			    inputString = br.readLine();
 			    if(this.debug())
-				System.out.println("Profile Calls line: " + inputString);
+				this.outputToFile("Profile Calls line: " + inputString);
 			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 			    //Arguments are evaluated left to right.
 			    globalThreadDataElement.addCall(Double.parseDouble(genericTokenizer.nextToken()),
 							    Double.parseDouble(genericTokenizer.nextToken()));
 			}
 			if(this.debug()){
-			    System.out.println("######");
-			    System.out.println("done processing profile calls for function: " + functionDataLine.s0);
+			    this.outputToFile("######");
+			    this.outputToFile("done processing profile calls for function: " + functionDataLine.s0);
 			}
 		    }
 		    if(this.debug()){
-			System.out.println("done processing functions");
-			System.out.println("######");
+			this.outputToFile("done processing functions");
+			this.outputToFile("######");
 		    }
 		    
 		    if(this.debug()){
-			System.out.println("######");
-			System.out.println("processing aggregates");
+			this.outputToFile("######");
+			this.outputToFile("processing aggregates");
 		    }
 		    //Process the appropriate number of aggregate lines.
 		    inputString = br.readLine();
@@ -331,23 +334,23 @@ public class TauOutputSession extends ParaProfDataSession{
 			this.setAggregatesPresent(true);
 			inputString = br.readLine();
 			if(this.debug())
-			    System.out.println("Aggregates line: " + inputString);
+			    this.outputToFile("Aggregates line: " + inputString);
 		    }
 		    if(this.debug()){
-			System.out.println("done processing aggregates");
-			System.out.println("######");
+			this.outputToFile("done processing aggregates");
+			this.outputToFile("######");
 		    }
 
-		    if(this.firstMetric()){
+		    if(metric==0){
 			//Process the appropriate number of userevent lines.
 			if(this.debug()){
-			    System.out.println("######");
-			    System.out.println("processing userevents");
+			    this.outputToFile("######");
+			    this.outputToFile("processing userevents");
 			}
 			inputString = br.readLine();
 			if(inputString==null){
 			    if(this.debug())
-				System.out.println("No userevent data in this file.");
+				this.outputToFile("No userevent data in this file.");
 			}
 			else{
 			    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
@@ -370,13 +373,13 @@ public class TauOutputSession extends ParaProfDataSession{
 				}
 				this.getUserEventData(inputString);
 				if(this.debug()){
-				    System.out.println("userevent line: " + inputString);
-				    System.out.println("eventname:"+usereventDataLine.s0);
-				    System.out.println("numevents:"+usereventDataLine.i0);
-				    System.out.println("max:"+usereventDataLine.d0);
-				    System.out.println("min:"+usereventDataLine.d1);
-				    System.out.println("mean:"+usereventDataLine.d2);
-				    System.out.println("sumsqr:"+usereventDataLine.d3);
+				    this.outputToFile("userevent line: " + inputString);
+				    this.outputToFile("eventname:"+usereventDataLine.s0);
+				    this.outputToFile("numevents:"+usereventDataLine.i0+
+						       " max:"+usereventDataLine.d0+
+						       " min:"+usereventDataLine.d1+
+						       " mean:"+usereventDataLine.d2+
+						       " sumsqr:"+usereventDataLine.d3);
 				}
 				if(usereventDataLine.i0 !=0){
 				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2);
@@ -406,8 +409,8 @@ public class TauOutputSession extends ParaProfDataSession{
 			    }
 			}
 			if(this.debug()){
-			    System.out.println("done processing userevents");
-			    System.out.println("######");
+			    this.outputToFile("done processing userevents");
+			    this.outputToFile("######");
 			}
 		    }
 		    thread.setThreadData(metric);

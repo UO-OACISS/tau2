@@ -38,7 +38,7 @@ public class ParaProf implements ActionListener{
     private static String USAGE = "ParaProf/ParaProf (help | debug)";
     static Runtime runtime;
     static boolean runHasBeenOpened = false;
-    //**********
+     //**********
 
     private int type = -1;
     String filePrefix = null;
