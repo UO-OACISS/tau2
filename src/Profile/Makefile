@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/home/users/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -73,7 +73,7 @@ MAKEFILE      = Makefile
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O) \
-		$(TAU_JAVA_O) $(OPENMP_O)
+		$(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O)
 
 PRINT	      = pr
 
@@ -260,6 +260,9 @@ TauDisable.o 	: TauDisable.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 OpenMPLayer.o 	: OpenMPLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauOpari.o 	: TauOpari.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)

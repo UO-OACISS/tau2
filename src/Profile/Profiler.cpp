@@ -319,7 +319,9 @@ void Profiler::Stop(int tid)
 #endif /* TAU_OPENMP */
 	      cout << "Overlapping function = "
                  << CurrentProfiler[tid]->ThisFunction->GetName () << " " 
-		 << CurrentProfiler[tid]->ThisFunction->GetType() <<endl;
+		 << CurrentProfiler[tid]->ThisFunction->GetType() 
+		 << " Other function " << this->ThisFunction->GetName()
+	 	 << this->ThisFunction->GetType()<< " Tid = "<<tid<<endl;
 	    } else {
 	      cout <<"CurrentProfiler is not Null but its FunctionInfo is"<<endl;
 	    }
@@ -973,8 +975,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.46 $   $Date: 2001/07/02 18:07:19 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.46 2001/07/02 18:07:19 sameer Exp $ 
+ * $Revision: 1.47 $   $Date: 2001/07/05 17:37:20 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.47 2001/07/05 17:37:20 sameer Exp $ 
  ***************************************************************************/
 
 	
