@@ -1,14 +1,3 @@
-/*
- * CallPathTextWindowPanel.java
- * 
- * Title: ParaProf 
- * Author: Robert Bell 
- * Description: Things to do: 1)Add printing
- * support. 2)Need to do quite a bit of work in the renderIt function, such as
- * adding clipping support, and bringing it more inline with the rest of the
- * system.
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -24,9 +13,9 @@ import java.text.*;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.10 2004/12/29 00:09:48 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.11 2005/01/04 01:16:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -34,20 +23,21 @@ import java.text.*;
  *          2) Need to do quite a bit of work in the renderIt function, such as
  *             adding clipping support, and bringing it more inline with the rest of the
  *             system.
+ *          3) (Alan) Actually, renderIt needs to be completely rewritten
  */
 public class CallPathTextWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
         ParaProfImageInterface {
 
-    public CallPathTextWindowPanel(ParaProfTrial trial, int nodeID, int contextID, int threadID,
+    public CallPathTextWindowPanel(ParaProfTrial trial, edu.uoregon.tau.dms.dss.Thread thread,
             CallPathTextWindow cPTWindow, int windowType) {
 
-        this.threadID = threadID;
+        this.thread = thread;
         this.trial = trial;
         this.window = cPTWindow;
         this.windowType = windowType;
-        this.repaint();
 
-        //Add this object as a mouse listener.
+        setBackground(Color.white);
+
         addMouseListener(this);
 
         //Add items to the popu menu.
@@ -95,17 +85,18 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
         }
     }
 
+    
+    
+    
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
         int yCoord = 0;
 
         //In this window, a Monospaced font has to be used. This will
-        // probably not be the same
-        //font as the rest of ParaProf. As a result, some extra work will
-        // have to be done to calculate
-
-        //spacing.
+        // probably not be the same font as the rest of ParaProf. As a result, some extra work will
+        // have to be done to calculate spacing.
+        
         int fontSize = trial.getPreferences().getBarHeight();
         spacing = trial.getPreferences().getBarSpacing();
 
@@ -121,7 +112,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             spacing = spacing + 1;
         }
 
-        //TODO: rewrite this shit
+        //TODO: rewrite this crap
 
         if (windowType == 0) {
             Iterator l1 = null;
@@ -130,7 +121,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             TrialData gm = trial.getTrialData();
 
             String s = null;
-            edu.uoregon.tau.dms.dss.Thread thread = null;
             Vector functionList = null;
             FunctionProfile gtde = null;
             PPFunctionProfile smwtde = null;
@@ -316,14 +306,14 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 base = 20;
                 startPosition = fmMonoFont.stringWidth("--> ") + base;
                 stringWidth = (fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(), max,
-                        defaultNumberPrecision))) + 10;
+                        defaultNumberPrecision))) + 30;
                 check = fmMonoFont.stringWidth("Exclusive");
                 if (stringWidth < check)
-                    stringWidth = check + 5;
-                numCallsWidth = (fmMonoFont.stringWidth(Double.toString(gm.getMaxMeanNumberOfCalls()))) + 10;
+                    stringWidth = check + 35;
+                numCallsWidth = (fmMonoFont.stringWidth(Double.toString(gm.getMaxMeanNumberOfCalls()))) + 30;
                 check = fmMonoFont.stringWidth("Calls/Tot.Calls");
                 if (numCallsWidth < check)
-                    numCallsWidth = check + 5;
+                    numCallsWidth = check + 35;
                 excPos = startPosition;
                 incPos = excPos + stringWidth;
                 callsPos1 = incPos + stringWidth;
@@ -401,9 +391,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
              */
 
             g2D.setColor(Color.black);
-            //######
             //Draw the header if required.
-            //######
             if (drawHeader) {
                 yCoord = yCoord + (spacing);
                 String headerString = window.getHeaderString();
@@ -415,9 +403,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 }
                 lastHeaderEndPosition = yCoord;
             }
-            //######
-            //End - Draw the header if required.
-            //######
+         
+            
             for (int i = startElement; i <= endElement; i++) {
                 callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
                 if (i == 1) {
@@ -479,7 +466,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             Iterator l3 = null;
             TrialData gm = trial.getTrialData();
             String s = null;
-            edu.uoregon.tau.dms.dss.Thread thread = null;
             Vector functionList = null;
             FunctionProfile gtde = null;
             PPFunctionProfile smwtde = null;
@@ -488,7 +474,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             double d2 = 0.0;
             double d3 = 0;
 
-            thread = (edu.uoregon.tau.dms.dss.Thread) trial.getNCT().getThread(nodeID, contextID, threadID);
+           
             functionList = thread.getFunctionList();
 
             //######
@@ -675,17 +661,17 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 
                 base = 20;
                 startPosition = fmMonoFont.stringWidth("--> ") + base;
-                //stringWidth =
-                // (fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(),max,defaultNumberPrecision)))+10;
-                stringWidth = (int) max + 10;
+                stringWidth =
+                 (fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(),max,defaultNumberPrecision)))+50;
+                //stringWidth = (int) max + 10;
 
                 check = fmMonoFont.stringWidth("Exclusive");
                 if (stringWidth < check)
-                    stringWidth = check + 5;
-                numCallsWidth = (fmMonoFont.stringWidth(Integer.toString((int) thread.getMaxNumCalls()))) + 10;
+                    stringWidth = check + 25;
+                numCallsWidth = (fmMonoFont.stringWidth(Integer.toString((int) thread.getMaxNumCalls()))) + 25;
                 check = fmMonoFont.stringWidth("Calls/Tot.Calls");
                 if (numCallsWidth < check)
-                    numCallsWidth = check + 5;
+                    numCallsWidth = check + 25;
                 excPos = startPosition;
                 incPos = excPos + stringWidth;
                 callsPos1 = incPos + stringWidth;
@@ -1272,16 +1258,15 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
         return new Dimension(xPanelSize, (yPanelSize + 10));
     }
 
-    //####################################
+    
+    
     //Instance data.
-    //####################################
     int xPanelSize = 800;
     int yPanelSize = 600;
     boolean calculatePanelSize = true;
 
-    int nodeID = -1;
-    int contextID = -1;
-    int threadID = -1;
+    edu.uoregon.tau.dms.dss.Thread thread;
+    
     private ParaProfTrial trial = null;
     CallPathTextWindow window = null;
     int windowType = 0; //0: mean data,1: function data, 2: global relations.

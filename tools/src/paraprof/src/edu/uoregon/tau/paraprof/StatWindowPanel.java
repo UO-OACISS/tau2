@@ -45,6 +45,8 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             JMenuItem changeColorItem = new JMenuItem("Change User Event Color");
             changeColorItem.addActionListener(this);
             popup.add(changeColorItem);
+
+
         } else {
             JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
             functionDetailsItem.addActionListener(this);
@@ -57,6 +59,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             JMenuItem changeColorItem = new JMenuItem("Change Function Color");
             changeColorItem.addActionListener(this);
             popup.add(changeColorItem);
+
         }
 
         JMenuItem maskColorItem = new JMenuItem("Reset to Generic Color");
@@ -397,9 +400,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                             trial.getSystemEvents().updateRegisteredObjects("colorEvent");
                         }
                     }
-                } else if (arg.equals("Change Userevent Color")) {
-
-                    //TODO: I don't think this ever happens, does it?
+                } else if (arg.equals("Change User Event Color")) {
                     UserEvent userEvent = null;
                     if (clickedOnObject instanceof PPUserEventProfile)
                         userEvent = ((PPUserEventProfile) clickedOnObject).getUserEvent();

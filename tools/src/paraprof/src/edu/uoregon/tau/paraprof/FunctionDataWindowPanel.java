@@ -1,13 +1,3 @@
-/**
- * FunctionDataWindowPanel
- * This is the panel for the FunctionDataWindow.
- *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.5 2005/01/03 20:40:33 amorris Exp $</P>
- * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
- * @see		FunctionDataWindow
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -20,6 +10,15 @@ import java.text.*;
 import java.awt.font.*;
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * FunctionDataWindowPanel
+ * This is the panel for the FunctionDataWindow.
+ *  
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.6 2005/01/04 01:16:26 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.6 $
+ * @see		FunctionDataWindow
+ */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
         ParaProfImageInterface {
 
@@ -30,10 +29,8 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         this.function = function;
         barLength = baseBarLength;
 
-        //Want the background to be white.
         setBackground(Color.white);
 
-        //Add this object as a mouse listener.
         addMouseListener(this);
 
         //Add items to the first popup menu.

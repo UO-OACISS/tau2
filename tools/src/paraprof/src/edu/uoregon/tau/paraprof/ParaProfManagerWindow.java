@@ -9,9 +9,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.2 2005/01/03 20:40:33 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.3 2005/01/04 01:16:27 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -280,13 +280,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                             (new LoadTrialWindow(this, application, experiment, false)).show();
                     }
                 } else if (arg.equals("Close This Window")) {
-                    if (!(ParaProf.runHasBeenOpened)) {
-                        setVisible(false);
-                        dispose();
-                        ParaProf.exitParaProf(0);
-                    } else {
-                        dispose();
-                    }
+                    closeThisWindow();
                 } else if (arg.equals("Database Configuration")) {
                     (new DBConfiguration(this)).show();
 
@@ -761,7 +755,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
                     if (!loadedExists) {
                         //Need to load the trial in from the db.
-                        System.out.println("Loading trial ...");
+                        //System.out.println("Loading trial ...");
                         ppTrial.setLoading(true);
 
                         DatabaseAPI databaseAPI = this.getDBSession();

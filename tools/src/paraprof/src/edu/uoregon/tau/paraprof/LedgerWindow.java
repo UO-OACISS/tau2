@@ -1,14 +1,3 @@
-/**
- * LedgerWindow
- * This object represents the ledger window.
- *  
- * <P>CVS $Id: LedgerWindow.java,v 1.4 2004/12/29 00:09:48 amorris Exp $</P>
- * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
- * @see		LedgerDataElement
- * @see		LedgerWindowPanel
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -19,6 +8,16 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * LedgerWindow
+ * This object represents the ledger window.
+ *  
+ * <P>CVS $Id: LedgerWindow.java,v 1.5 2005/01/04 01:16:26 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.5 $
+ * @see		LedgerDataElement
+ * @see		LedgerWindowPanel
+ */
 public class LedgerWindow extends JFrame implements ActionListener, MenuListener, Observer {
 
     public static final int FUNCTION_LEDGER = 0;
@@ -35,10 +34,6 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
 
         //Save menu.
         subMenu = new JMenu("Save ...");
-
-        menuItem = new JMenuItem("ParaProf Preferences");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
 
         menuItem = new JMenuItem("Save Image");
         menuItem.addActionListener(this);
@@ -193,12 +188,18 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
                     setVisible(false);
                     dispose();
                     ParaProf.exitParaProf(0);
+                } else if (arg.equals("Show ParaProf Manager")) {
+                    (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Show Function Ledger")) {
                     (new LedgerWindow(trial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
                     (new LedgerWindow(trial, 1)).show();
                 } else if (arg.equals("Show User Event Ledger")) {
                     (new LedgerWindow(trial, 2)).show();
+                } else if (arg.equals("Show Call Path Relations")) {
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, new DataSorter(trial), 2);
+                    trial.getSystemEvents().addObserver(tmpRef);
+                    tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
                     trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                 } else if (arg.equals("About ParaProf")) {

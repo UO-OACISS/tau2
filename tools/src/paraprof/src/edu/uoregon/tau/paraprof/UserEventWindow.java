@@ -329,12 +329,14 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                         displaySiders(true);
                     else
                         displaySiders(false);
-                } else if (arg.equals("Show Path Title in Reverse"))
+                } else if (arg.equals("Show Path Title in Reverse")) {
                     this.setTitle("User Event Window: "
                             + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
-                else if (arg.equals("Show Meta Data in Panel"))
+                } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
-                else if (arg.equals("Show Function Ledger")) {
+                } else if (arg.equals("Show ParaProf Manager")) {
+                    (new ParaProfManagerWindow()).show();
+                } else if (arg.equals("Show Function Ledger")) {
                     (new LedgerWindow(trial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
                     (new LedgerWindow(trial, 1)).show();
@@ -472,8 +474,6 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
         return "Name: " + userEvent.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
                 + "\n";
     }
-
-    //######
 
     public int getSliderValue() {
         int tmpInt = -1;

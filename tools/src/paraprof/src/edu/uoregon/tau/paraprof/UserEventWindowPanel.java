@@ -297,7 +297,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
-                if (arg.equals("Change Function Color")) {
+                if (arg.equals("Change User Event Color")) {
                     Color tmpCol = userEvent.getColor();
 
                     //		    JColorChooser tmpJColorChooser = new JColorChooser();
@@ -365,7 +365,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     public void computeBarLength() {
             double sliderValue = (double) window.getSliderValue();
             double sliderMultiple = window.getSliderMultiple();
-            barLength = baseBarLength * ((int) (sliderValue * sliderMultiple));
+            barLength = (int)(baseBarLength * (sliderValue * sliderMultiple));
     }
 
     //This method sets both xPanelSize and yPanelSize.

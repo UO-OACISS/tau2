@@ -1,13 +1,3 @@
-/**
- * FunctionDataWindow
- * This is FunctionDataWindow.
- *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.5 2005/01/03 20:40:33 amorris Exp $</P>
- * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
- * @see		FunctionDataWindowPanel
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -18,6 +8,15 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * FunctionDataWindow
+ * This is the FunctionDataWindow.
+ *  
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.6 2005/01/04 01:16:26 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.6 $
+ * @see		FunctionDataWindowPanel
+ */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
         ChangeListener {
 
@@ -361,6 +360,9 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                         displaySliders(true);
                     else
                         displaySliders(false);
+                    
+                } else if (arg.equals("Show ParaProf Manager")) {
+                    (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Show Path Title in Reverse"))
                     this.setTitle("Function Data Window: "
                             + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));

@@ -1,13 +1,3 @@
-/**
- * ParaProf This is the 'main' for paraprof
- * 
- * <P>
- * CVS $Id: ParaProf.java,v 1.24 2005/01/03 20:40:33 amorris Exp $
- * </P>
- * 
- * @author Robert Bell, Alan Morris
- * @version $Revision: 1.24 $
- */
 
 package edu.uoregon.tau.paraprof;
 
@@ -18,6 +8,16 @@ import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.dms.dss.*;
 import javax.swing.*;
 
+/**
+ * ParaProf This is the 'main' for paraprof
+ * 
+ * <P>
+ * CVS $Id: ParaProf.java,v 1.25 2005/01/04 01:16:27 amorris Exp $
+ * </P>
+ * 
+ * @author Robert Bell, Alan Morris
+ * @version $Revision: 1.25 $
+ */
 public class ParaProf implements ActionListener {
 
     //System wide stuff.
@@ -33,7 +33,6 @@ public class ParaProf implements ActionListener {
     static ApplicationManager applicationManager = null;
     static HelpWindow helpWindow = null;
     static Runtime runtime = null;
-    static boolean runHasBeenOpened = false;
     static private int numWindowsOpen = 0;
     //End - System wide stuff.
 
@@ -105,35 +104,10 @@ public class ParaProf implements ActionListener {
 
         paraProfManager.addTrial(app, experiment, sourceFiles, fileType, fixNames);
     }
-
-    //    public static void error(JComponent component, Object obj) {
-    //        
-    //        String errorString = null;
-    //        
-    //        if (obj instanceof Exception) {
-    //            Exception e = (Exception) obj;
-    //            
-    //            e.printStackTrace();
-    //            System.out.println(ParaProfError.contactString);
-    //
-    //            StringWriter sw = new StringWriter();
-    //            PrintWriter pw = new PrintWriter(sw);
-    //            e.printStackTrace(pw);
-    //            pw.close();
-    //            errorString = sw.toString();
-    //        }
-    //        
-    //        JOptionPane.showMessageDialog(component, errorString,
-    //                "ParaProf Error", JOptionPane.ERROR_MESSAGE);
-    //
-    //        
-    //        
-    //    }
-    //    
+ 
 
     public void startSystem() {
         try {
-
             // Initialization of static objects takes place on a need basis.
             // This helps prevent the creation of a graphical system unless it is absolutely
             // necessary. Static initializations are marked with "Static Initialization" 
@@ -142,8 +116,7 @@ public class ParaProf implements ActionListener {
             ParaProf.savedPreferences = new SavedPreferences();
 
             //Establish the presence of a .ParaProf directory. This is located
-            // by default in the user's home
-            //directory.
+            // by default in the user's home directory.
             ParaProf.paraProfHomeDirectory = new File(homeDirectory + "/.ParaProf");
             if (paraProfHomeDirectory.exists()) {
                 //Try and load a preference file ... ParaProfPreferences.dat
@@ -151,15 +124,14 @@ public class ParaProf implements ActionListener {
                     FileInputStream savedPreferenceFIS = new FileInputStream(
                             ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
 
-                    //If here, means that no exception was thrown, and there is
-                    // a preference file present.
+                    //If here, means that no exception was thrown, and there is a preference file present.
                     //Create ObjectInputStream and try to read it in.
                     ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
                     ParaProf.savedPreferences = (SavedPreferences) inSavedPreferencesOIS.readObject();
                     ParaProf.savedPreferences.setLoaded(true);
                 } catch (Exception e) {
                     if (e instanceof FileNotFoundException) {
-                        System.out.println("No preference file present, using defaults!");
+                        //System.out.println("No preference file present, using defaults!");
                     } else {
                         //Print some kind of error message, and quit the system.
                         System.out.println("There was an error while trying to read the ParaProf preferences file.");
@@ -182,37 +154,6 @@ public class ParaProf implements ActionListener {
                 paraProfHomeDirectory.mkdir();
                 System.out.println("Done creating ParaProf home directory!");
             }
-
-            //######
-            //Static Initialization
-            //######
-            //ParaProf.paraProfLisp = new ParaProfLisp(UtilFncs.debug);
-            //######
-            //End - Static Initialization
-            //######
-            //Register lisp primatives in ParaProfLisp.
-            //ParaProf.paraProfLisp.registerParaProfPrimitives();
-
-            /*
-             * //See if the user has defined any lisp code to run. try{
-             * FileInputStream file = new FileInputStream("ParaProfLisp.lp");
-             * //If here, means that no exception was thrown, and there is a
-             * lisp file present. InputStreamReader isr = new
-             * InputStreamReader(file); BufferedReader br = new
-             * BufferedReader(isr);
-             * 
-             * String inputString = null;
-             * 
-             * while((inputString = br.readLine()) != null){
-             * System.out.println("Expression: " + inputString);
-             * System.out.println(ParaProf.paraProfLisp.eval(inputString)); } }
-             * catch(Exception e){ if(e instanceof FileNotFoundException){
-             * System.out.println("No ParaProfLisp.lp file present!"); } else{
-             * //Print some kind of error message, and quit the system.
-             * System.out.println("There was an internal error while trying to
-             * read the ParaProfLisp.pl"); System.out.println("Please delete
-             * this file, or replace it with a valid one!"); } }
-             */
 
             loadDefaultTrial();
 
@@ -238,13 +179,11 @@ public class ParaProf implements ActionListener {
     // This method is reponsible for any cleanup required in ParaProf 
     // before an exit takes place.
     public static void exitParaProf(int exitValue) {
-
         //try {
         //   throw new Exception();
         //} catch (Exception e) {
         //   e.printStackTrace();
         //}
-
         System.exit(exitValue);
     }
 
@@ -309,12 +248,6 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = 5;
             } else if (fileTypeString.equals("psrun")) {
                 ParaProf.fileType = 6;
-                /*
-                 * } else if (fileTypeString.equals("sppm")) { ParaProf.fileType =
-                 * 101; } else if (fileTypeString.equals("xprof")) {
-                 * ParaProf.fileType = 0; } else if
-                 * (fileTypeString.equals("sddf")) { ParaProf.fileType = 0;
-                 */
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
@@ -324,11 +257,11 @@ public class ParaProf implements ActionListener {
 
         ParaProf.runtime = Runtime.getRuntime();
 
-        if (UtilFncs.debug) {
-            //Create and start the a timer, and then add paraprof to it.
-            //javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);
-            //jTimer.start();
-        }
+//        if (UtilFncs.debug) {
+//            //Create and start the a timer, and then add paraprof to it.
+//            javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);
+//            jTimer.start();
+//        }
 
         paraProf.startSystem();
     }

@@ -1,13 +1,3 @@
-/**
- * HistogramWindowPanel
- * This is the panel for the HistogramWindow.
- *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.5 2005/01/03 20:40:33 amorris Exp $</P>
- * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
- * @see		HistogramWindow
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -23,6 +13,15 @@ import java.awt.geom.*;
 import edu.uoregon.tau.dms.dss.*;
 import java.text.*;
 
+/**
+ * HistogramWindowPanel
+ * This is the panel for the HistogramWindow.
+ *  
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.6 2005/01/04 01:16:26 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.6 $
+ * @see		HistogramWindow
+ */
 public class HistogramWindowPanel extends JPanel implements Printable, ParaProfImageInterface {
 
     public HistogramWindowPanel(ParaProfTrial ppTrial, HistogramWindow window, Function function) {

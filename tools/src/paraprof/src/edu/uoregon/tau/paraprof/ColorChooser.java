@@ -338,7 +338,7 @@ public class ColorChooser implements WindowListener {
     //####################################
 }
 
-class ColorChooserFrame extends JFrame implements ActionListener {
+class ColorChooserFrame extends JFrame implements ActionListener, MouseListener {
     public ColorChooserFrame(ParaProfTrial trial, ColorChooser colorChooser) {
         this.trial = trial;
         this.colorChooser = colorChooser;
@@ -346,16 +346,15 @@ class ColorChooserFrame extends JFrame implements ActionListener {
 
         //Window Stuff.
         setLocation(new Point(100, 100));
-        setSize(new Dimension(850, 450));
+        setSize(new Dimension(855, 450));
+        setTitle("ParaProf: Edit Color Map");
 
         //####################################
         //Code to generate the menus.
         //####################################
         JMenuBar mainMenu = new JMenuBar();
 
-        //######
         //File menu.
-        //######
         JMenu fileMenu = new JMenu("File");
 
         JMenuItem closeItem = new JMenuItem("Close This Window");
@@ -365,9 +364,6 @@ class ColorChooserFrame extends JFrame implements ActionListener {
         JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
         exitItem.addActionListener(this);
         fileMenu.add(exitItem);
-        //######
-        //File menu.
-        //######
 
         //######
         //Help menu.
@@ -390,17 +386,13 @@ class ColorChooserFrame extends JFrame implements ActionListener {
         mainMenu.add(fileMenu);
         //mainMenu.add(helpMenu);
         setJMenuBar(mainMenu);
-        //####################################
-        //Code to generate the menus.
-        //####################################
 
         //####################################
         //Create and add the components.
         //####################################
         //Setting up the layout system for the main window.
         Container contentPane = getContentPane();
-        GridBagLayout gbl = new GridBagLayout();
-        contentPane.setLayout(gbl);
+        contentPane.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
@@ -414,20 +406,22 @@ class ColorChooserFrame extends JFrame implements ActionListener {
         gbc.weighty = 0;
 
         //First add the label.
-        JLabel titleLabel = new JLabel("ParaProf Color Set.");
-        titleLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
+        JLabel titleLabel = new JLabel("ParaProf Color Set");
+        titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         addCompItem(titleLabel, gbc, 0, 0, 1, 1);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
+        gbc.weightx = 0.1;
+        gbc.weighty = 0.1;
 
         //Create and add color list.
         listModel = new DefaultListModel();
         colorList = new JList(listModel);
         colorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         colorList.setCellRenderer(new CustomCellRenderer(trial));
+        colorList.setSize(500, 300);
+        colorList.addMouseListener(this);
         JScrollPane sp = new JScrollPane(colorList);
         addCompItem(sp, gbc, 0, 1, 1, 5);
 
@@ -435,7 +429,7 @@ class ColorChooserFrame extends JFrame implements ActionListener {
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        addColorButton = new JButton("Add Color");
+        addColorButton = new JButton("Add Function Color");
         addColorButton.addActionListener(this);
         addCompItem(addColorButton, gbc, 1, 1, 1, 1);
 
@@ -495,7 +489,7 @@ class ColorChooserFrame extends JFrame implements ActionListener {
                     setVisible(false);
                 }
             } else if (EventSrc instanceof JButton) {
-                if (arg.equals("Add Color")) {
+                if (arg.equals("Add Function Color")) {
                     Color color = clrModel.getSelectedColor();
                     (colorChooser.getColors()).add(color);
                     listModel.clear();
@@ -518,19 +512,21 @@ class ColorChooserFrame extends JFrame implements ActionListener {
                     int[] values = colorList.getSelectedIndices();
                     for (int i = 0; i < values.length; i++) {
                         if ((values[i]) < trial.getColorChooser().getNumberOfColors()) {
-                            System.out.println("The value being deleted is: " + values[i]);
-                            listModel.removeElementAt(values[i]);
-                            (colorChooser.getColors()).removeElementAt(values[i]);
-                            //Update the TrialData.
-                            colorChooser.setColors(trial, 0);
+                            if (trial.getColorChooser().getNumberOfColors() > 2) {
+                                listModel.removeElementAt(values[i]);
+                                (colorChooser.getColors()).removeElementAt(values[i]);
+                                //Update the TrialData.
+                                colorChooser.setColors(trial, 0);
+                            }
                         } else if ((values[i]) < (trial.getColorChooser().getNumberOfColors())
                                 + (trial.getColorChooser().getNumberOfGroupColors())) {
-                            System.out.println("The value being deleted is: " + values[i]);
-                            listModel.removeElementAt(values[i]);
-                            (colorChooser.getGroupColors()).removeElementAt(values[i]
-                                    - (trial.getColorChooser().getNumberOfColors()));
-                            //Update the TrialData.
-                            colorChooser.setColors(trial, 1);
+                            if (trial.getColorChooser().getNumberOfGroupColors() > 2) {
+                                listModel.removeElementAt(values[i]);
+                                (colorChooser.getGroupColors()).removeElementAt(values[i]
+                                        - (trial.getColorChooser().getNumberOfColors()));
+                                //Update the TrialData.
+                                colorChooser.setColors(trial, 1);
+                            }
                         }
                     }
 
@@ -588,6 +584,40 @@ class ColorChooserFrame extends JFrame implements ActionListener {
 
     }
 
+    
+    public void mouseClicked(MouseEvent evt) {
+        try {
+            JList jList = (JList) evt.getSource();
+        
+            int index = jList.locationToIndex(evt.getPoint());
+
+            Color color = (Color) listModel.getElementAt(index);
+            
+            clrModel.setSelectedColor(color);
+            
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
+        }
+    }
+
+    public void mousePressed(MouseEvent evt) {
+    }
+
+    public void mouseReleased(MouseEvent evt) {
+    }
+
+    public void mouseEntered(MouseEvent evt) {
+    }
+
+    public void mouseExited(MouseEvent evt) {
+    }
+    
+    
+    
+    
+    
+    
+    
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
         gbc.gridx = x;
         gbc.gridy = y;
@@ -621,9 +651,7 @@ class ColorChooserFrame extends JFrame implements ActionListener {
         listModel.addElement(color);
     }
 
-    //####################################
     //Instance data.
-    //####################################
     private ParaProfTrial trial = null;
     private ColorChooser colorChooser;
     private ColorSelectionModel clrModel;
@@ -636,9 +664,6 @@ class ColorChooserFrame extends JFrame implements ActionListener {
     private JButton updateColorButton;
     private JButton restoreDefaultsButton;
     private int numberOfColors = -1;
-    //####################################
-    //End - Instance data.
-    //####################################
 }
 
 class CustomCellRenderer implements ListCellRenderer {
@@ -670,8 +695,8 @@ class CustomCellRenderer implements ListCellRenderer {
                 g.setFont(font);
                 FontMetrics fmFont = g.getFontMetrics(font);
 
-                maxXFontSize = fmFont.getAscent();
-                maxYFontSize = fmFont.stringWidth("0000,0000,0000");
+                maxYFontSize = fmFont.getAscent();
+                maxXFontSize = fmFont.stringWidth("0000,0000,0000");
 
                 xSize = getWidth();
                 ySize = getHeight();
@@ -685,32 +710,10 @@ class CustomCellRenderer implements ListCellRenderer {
                 thisYFontSize = maxYFontSize;
 
                 g.setColor(isSelected ? list.getSelectionBackground() : list.getBackground());
-                g.fillRect(0, 0, (5 + maxXNumFontSize + 5), ySize);
-
-                int xStringPos1 = 5;
-                int yStringPos1 = (ySize - 5);
-                g.setColor(isSelected ? list.getSelectionForeground() : list.getForeground());
-
-                int totalNumberOfColors = (trial.getColorChooser().getNumberOfColors())
-                        + (trial.getColorChooser().getNumberOfGroupColors());
-
-                if (index == totalNumberOfColors) {
-                    g.drawString(("" + ("MHC")), xStringPos1, yStringPos1);
-                } else if (index == (totalNumberOfColors + 1)) {
-                    g.drawString(("" + ("GHC")), xStringPos1, yStringPos1);
-                } else if (index == (totalNumberOfColors + 2)) {
-                    g.drawString(("" + ("UHC")), xStringPos1, yStringPos1);
-                } else if (index == (totalNumberOfColors + 3)) {
-                    g.drawString(("" + ("MPC")), xStringPos1, yStringPos1);
-                } else if (index < (trial.getColorChooser().getNumberOfColors())) {
-                    g.drawString(("" + (index + 1)), xStringPos1, yStringPos1);
-                } else {
-                    g.drawString(("G" + (index - (trial.getColorChooser().getNumberOfColors()) + 1)),
-                            xStringPos1, yStringPos1);
-                }
+                g.fillRect(0, 0, xSize, ySize);
 
                 g.setColor(inColor);
-                g.fillRect((5 + maxXNumFontSize + 5), 0, 50, ySize);
+                g.fillRect(5, 1, 50, ySize - 1);
 
                 //Just a sanity check.
                 if ((xSize - 50) > 0) {
@@ -718,11 +721,39 @@ class CustomCellRenderer implements ListCellRenderer {
                     g.fillRect((5 + maxXNumFontSize + 5 + 50), 0, (xSize - 50), ySize);
                 }
 
-                int xStringPos2 = 50 + (((xSize - 50) - thisXFontSize) / 2);
-                int yStringPos2 = (ySize - 5);
+                int xStringPos1 = 60;
+                int yStringPos1 = (ySize - 5);
 
+                //int xStringPos1 = 5;
+                //int yStringPos1 = (ySize - 5);
                 g.setColor(isSelected ? list.getSelectionForeground() : list.getForeground());
-                g.drawString(tmpString2, xStringPos2, yStringPos2);
+
+                int totalNumberOfColors = (trial.getColorChooser().getNumberOfColors())
+                        + (trial.getColorChooser().getNumberOfGroupColors());
+
+                String id = null;
+
+                if (index == totalNumberOfColors) {
+                    id = "Func. Highlight";
+                } else if (index == (totalNumberOfColors + 1)) {
+                    id = "Group Highlight";
+                } else if (index == (totalNumberOfColors + 2)) {
+                    id = "User Event Highlight";
+                } else if (index == (totalNumberOfColors + 3)) {
+                    id = "Misc. Func. Color";
+                } else if (index < (trial.getColorChooser().getNumberOfColors())) {
+                    id = "Function " + (index + 1);
+                } else {
+                    id = "Group " + (index - (trial.getColorChooser().getNumberOfColors()) + 1);
+                }
+
+                g.drawString(id, xStringPos1, yStringPos1);
+
+                //               int xStringPos2 = 50 + (((xSize - 50) - thisXFontSize) / 2);
+                //               int yStringPos2 = (ySize - 5);
+
+                //                g.setColor(isSelected ? list.getSelectionForeground() : list.getForeground());
+                //                g.drawString(tmpString2, xStringPos2, yStringPos2);
             }
 
             public Dimension getPreferredSize() {

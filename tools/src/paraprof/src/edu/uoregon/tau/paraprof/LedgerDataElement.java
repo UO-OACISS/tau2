@@ -1,25 +1,22 @@
-/**
- * LedgerDataElement
- * This object is holds a group, user event, or function for purposes of the ledger window.
- * This provides the ledger window classes a uniform interface to dealing with these objects.
- * It also holds draw coordinates for mouse events.
- * 
- * <P>CVS $Id: LedgerDataElement.java,v 1.3 2004/12/29 00:09:48 amorris Exp $</P>
- * @author	Alan Morris
- * @version	$Revision: 1.3 $
- * @see		LedgerWindow
- * @see		LedgerWindowPanel
- */
-
-
 package edu.uoregon.tau.paraprof;
 
 
 import edu.uoregon.tau.dms.dss.*;
 import java.awt.*;
 
+/**
+ * LedgerDataElement
+ * This object is holds a group, user event, or function for purposes of the ledger window.
+ * This provides the ledger window classes a uniform interface to dealing with these objects.
+ * It also holds draw coordinates for mouse events.
+ * 
+ * <P>CVS $Id: LedgerDataElement.java,v 1.4 2005/01/04 01:16:26 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.4 $
+ * @see		LedgerWindow
+ * @see		LedgerWindowPanel
+ */
 public class LedgerDataElement {
-
     
     public LedgerDataElement(Function function) {
         this.function = function;

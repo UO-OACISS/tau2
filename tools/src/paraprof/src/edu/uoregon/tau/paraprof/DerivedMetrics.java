@@ -76,7 +76,7 @@ public class DerivedMetrics {
                 newMetricName = ((ParaProfMetric) trialOpA.getMetrics().elementAt(opA)).getName()
                         + newMetricName + ((ParaProfMetric) trialOpA.getMetrics().elementAt(opB)).getName();
 
-            System.out.println("Metric name is: " + newMetricName);
+            //System.out.println("Metric name is: " + newMetricName);
 
             ParaProfMetric newMetric = trialOpA.addMetric();
             newMetric.setTrial(trialOpA);

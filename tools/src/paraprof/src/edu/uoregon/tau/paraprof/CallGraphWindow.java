@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.9 2005/01/03 20:40:32 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.10 2005/01/04 01:16:26 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -1913,8 +1913,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 if (EventSrc instanceof JRadioButtonMenuItem) {
                     JRadioButtonMenuItem jrbmi = (JRadioButtonMenuItem) EventSrc;
 
-                    System.out.println("Action: " + jrbmi.getActionCommand());
-
                     if (jrbmi.getActionCommand().startsWith("Box Width")) {
 
                         if (jrbmi.getActionCommand().equals("Box Width Static")) {
@@ -1972,6 +1970,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
+                } else if (arg.equals("Show ParaProf Manager")) {
+                    (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Show Function Ledger")) {
                     (new LedgerWindow(trial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {

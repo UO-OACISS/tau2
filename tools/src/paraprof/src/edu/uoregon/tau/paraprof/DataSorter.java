@@ -3,6 +3,16 @@ package edu.uoregon.tau.paraprof;
 import java.util.*;
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * DataSorter.java
+ * This object manages data for the various windows giving them the capability to show only
+ * functions that are in groups supposed to be shown. 
+ *  
+ * 
+ * <P>CVS $Id: DataSorter.java,v 1.4 2005/01/04 01:16:26 amorris Exp $</P>
+ * @author	Alan Morris, Robert Bell
+ * @version	$Revision: 1.4 $
+ */
 public class DataSorter {
 
     public DataSorter(ParaProfTrial trial) {

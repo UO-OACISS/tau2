@@ -1,7 +1,9 @@
 /*
  * StaticMainWindow.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 package edu.uoregon.tau.paraprof;
@@ -18,34 +20,17 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
     
     private void setupMenus() {
-        //####################################
-        //Code to generate the menus.
-        //####################################
         JMenuBar mainMenu = new JMenuBar();
 
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        //######
         //File menu.
-        //######
         JMenu fileMenu = new JMenu("File");
 
         //Save menu.
         subMenu = new JMenu("Save ...");
 
-        /*
-         * menuItem = new JMenuItem("ParaProf Preferences");
-         * menuItem.addActionListener(this); subMenu.add(menuItem);
-         */
-
-        //	  menuItem = new JMenuItem("Save to XML File");
-        //	  menuItem.addActionListener(this);
-        //	  subMenu.add(menuItem);
-        //
-        //	  menuItem = new JMenuItem("Save to txt File");
-        //	  menuItem.addActionListener(this);
-        //	  subMenu.add(menuItem);
         menuItem = new JMenuItem("Save Image");
         menuItem.addActionListener(this);
         subMenu.add(menuItem);
@@ -70,13 +55,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         fileMenu.add(menuItem);
 
         fileMenu.addMenuListener(this);
-        //######
-        //End - File menu.
-        //######
 
-        //######
         //Options menu.
-        //######
         optionsMenu = new JMenu("Options");
 
         nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
@@ -111,13 +91,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         metaDataCheckBox.addActionListener(this);
         optionsMenu.add(metaDataCheckBox);
 
-        //######
-        //End - Options menu.
-        //######
-
-        //######
         //Windows menu
-        //######
         windowsMenu = new JMenu("Windows");
 
         menuItem = new JMenuItem("Show ParaProf Manager");
@@ -149,13 +123,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         windowsMenu.add(menuItem);
 
         windowsMenu.addMenuListener(this);
-        //######
-        //End - Windows menu
-        //######
 
-        //######
         //Help menu.
-        //######
         JMenu helpMenu = new JMenu("Help");
 
         menuItem = new JMenuItem("Show Help Window");
@@ -167,9 +136,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         helpMenu.add(menuItem);
 
         helpMenu.addMenuListener(this);
-        //######
-        //End - Help menu.
-        //######
 
         //Now, add all the menus to the main menu.
         mainMenu.add(fileMenu);
@@ -178,10 +144,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         mainMenu.add(helpMenu);
 
         setJMenuBar(mainMenu);
-        //####################################
-        //End - Code to generate the menus.
-        //####################################
-
     }
     
     public StaticMainWindow(ParaProfTrial ppTrial, boolean debug) {
@@ -210,21 +172,15 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         int screenHeight = screenDimension.height;
         int screenWidth = screenDimension.width;
 
-        //Set the window to come up in the center of the screen.
         int xPosition = (screenWidth - windowWidth) / 2;
+        //Set the window to come up in the center of the screen.
         int yPosition = (screenHeight - windowHeight) / 2;
 
         setLocation(xPosition, yPosition);
-        //####################################
-        //End -Window Stuff.
-        //####################################
 
 
         setupMenus();
         
-        //####################################
-        //Create and add the components.
-        //####################################
 
         //Setting up the layout system for the main window.
         contentPane = getContentPane();
@@ -233,20 +189,13 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        //######
         //Panel and ScrollPane definition.
-        //######
         panel = new StaticMainWindowPanel(ppTrial, this);
         sp = new JScrollPane(panel);
         this.setHeader();
-        //######
-        //End - Panel and ScrollPane definition.
-        //######
 
-        //######
         //Slider setup.
         //Do the slider stuff, but don't add. By default, sliders are off.
-        //######
         String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
         sliderMultiple = new JComboBox(sliderMultipleStrings);
         sliderMultiple.addActionListener(this);
@@ -257,27 +206,15 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         barLengthSlider.setPaintLabels(true);
         barLengthSlider.setSnapToTicks(true);
         barLengthSlider.addChangeListener(this);
-        //######
         //End - Slider setup.
-        //Do the slider stuff, but don't add. By default, sliders are off.
-        //######
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1;
         gbc.weighty = 1;
         addCompItem(sp, gbc, 0, 0, 1, 1);
-        //####################################
-        //End - Create and add the components.
-        //####################################
 
-        //####################################
-        //Setup the static main window data lists.
-        //####################################
         dataSorter = new DataSorter(ppTrial);
-        //####################################
-        //End - Setup the static main window data lists.
-        //####################################
 
         //Sort the data for the main window.
         sortLocalData();
@@ -299,12 +236,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                     ParaProfUtils.print(panel);
 
                 } else if (arg.equals("Show ParaProf Manager")) {
-                    ParaProfManagerWindow jRM = new ParaProfManagerWindow();
-                    jRM.show();
-                } else if (arg.equals("Bin Window")) {
-                    //HistogramWindow bW = new HistogramWindow(trial, dataSorter,
-                    // true, 0, false);
-                    //bW.show();
+                    (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 }

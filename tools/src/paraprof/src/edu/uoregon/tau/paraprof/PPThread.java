@@ -56,7 +56,7 @@ public class PPThread {
         return new DssIterator(userevents);
     }
 
-    //Rest of the public functionProfiles.
+    //Rest of the public functions
     public void setYDrawCoord(int yDrawCoord) {
         yDrawCoord = this.yDrawCoord;
     }

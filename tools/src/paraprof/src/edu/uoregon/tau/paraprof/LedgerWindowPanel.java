@@ -1,17 +1,3 @@
-/**
- * LedgerWindowPanel This object represents the ledger window panel.
- * 
- * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.3 2004/12/29 00:09:49 amorris Exp $
- * </P>
- * 
- * @author Robert Bell, Alan Morris
- * @version $Revision: 1.3 $
- * @see LedgerDataElement
- * @see LedgerWindow
- * 
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -22,6 +8,18 @@ import java.awt.geom.*;
 import javax.swing.*;
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * LedgerWindowPanel This object represents the ledger window panel.
+ * 
+ * <P>
+ * CVS $Id: LedgerWindowPanel.java,v 1.4 2005/01/04 01:16:27 amorris Exp $
+ * </P>
+ * 
+ * @author Robert Bell, Alan Morris
+ * @version $Revision: 1.4 $
+ * @see LedgerDataElement
+ * @see LedgerWindow
+ */
 public class LedgerWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
         ParaProfImageInterface {
 

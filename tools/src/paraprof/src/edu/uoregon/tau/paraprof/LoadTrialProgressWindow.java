@@ -1,7 +1,9 @@
 /*
  * LoadTrialWindow.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 package edu.uoregon.tau.paraprof;

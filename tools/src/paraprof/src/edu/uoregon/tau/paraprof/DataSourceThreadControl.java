@@ -5,6 +5,15 @@ import edu.uoregon.tau.dms.dss.*;
 import java.awt.*;
 import java.util.*;
 
+/**
+ * DataSourceThreadControl.java
+ * This object runs a datasource's load method, then notify's the observers when done 
+ *  
+ * 
+ * <P>CVS $Id: DataSourceThreadControl.java,v 1.3 2005/01/04 01:16:26 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.3 $
+ */
 public class DataSourceThreadControl implements Runnable {
     public DataSourceThreadControl() {
         super();

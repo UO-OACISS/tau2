@@ -11,9 +11,9 @@ import edu.uoregon.tau.dms.dss.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.11 2004/12/29 00:09:47 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.12 2005/01/04 01:16:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -281,7 +281,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         //######
         //Panel and ScrollPane definition.
         //######
-        panel = new CallPathTextWindowPanel(trial, nodeID, contextID, threadID, this, windowType);
+
+        edu.uoregon.tau.dms.dss.Thread thread = trial.getNCT().getThread(nodeID, contextID, threadID);
+
+        panel = new CallPathTextWindowPanel(trial, thread, this, windowType);
         //The scroll panes into which the list shall be placed.
         sp = new JScrollPane(panel);
         JScrollBar vScollBar = sp.getVerticalScrollBar();
@@ -405,9 +408,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                     else
                         this.setTitle("Call Path Data Relations - "
                                 + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
-                } else if (arg.equals("Show Meta Data in Panel"))
+                } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
-                else if (arg.equals("Show Function Ledger")) {
+                } else if (arg.equals("Show ParaProf Manager")) {
+                    (new ParaProfManagerWindow()).show();
+
+                } else if (arg.equals("Show Function Ledger")) {
                     (new LedgerWindow(trial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
                     (new LedgerWindow(trial, 1)).show();
@@ -475,8 +481,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             closeThisWindow();
         }
     }
-
-
 
     private void help(boolean display) {
         //Show the ParaProf help window.
@@ -636,7 +640,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private JCheckBoxMenuItem collapsedView = null;
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
-    
+
     private JScrollPane sp = null;
     private CallPathTextWindowPanel panel = null;
 

@@ -1,16 +1,3 @@
-/**
- * HistogramWindow
- * This is the histogram window
- *  
- * <P>CVS $Id: HistogramWindow.java,v 1.5 2005/01/03 20:40:33 amorris Exp $</P>
- * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
- * @see		HistogramWindowPanel
- *
- *
- * TODO:  implement the save image interface
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -21,6 +8,15 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * HistogramWindow
+ * This is the histogram window
+ *  
+ * <P>CVS $Id: HistogramWindow.java,v 1.6 2005/01/04 01:16:26 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.6 $
+ * @see		HistogramWindowPanel
+ */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
 
     private void setupMenus() {
@@ -302,6 +298,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                         displaySliders(true);
                     else
                         displaySliders(false);
+                } else if (arg.equals("Show ParaProf Manager")) {
+                    (new ParaProfManagerWindow()).show();
                 } else if (arg.equals("Show Function Ledger")) {
                     (new LedgerWindow(ppTrial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
@@ -312,7 +310,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, this.dataSorter, 2);
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
-
                 } else if (arg.equals("Close All Sub-Windows")) {
                     ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                 } else if (arg.equals("About ParaProf")) {
