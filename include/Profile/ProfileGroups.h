@@ -29,7 +29,7 @@
 #ifndef _PROFILE_GROUPS_H_
 #define _PROFILE_GROUPS_H_
 
-typedef unsigned int TauGroup_t;
+typedef unsigned long TauGroup_t;
 enum TauFork_t { TAU_EXCLUDE_PARENT_DATA, TAU_INCLUDE_PARENT_DATA};
 
 /* TAU PROFILING GROUPS. More will be added later.  */
@@ -107,6 +107,6 @@ SPACE for 			0x00080000
 #endif /* _PROFILE_GROUPS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileGroups.h,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2001/01/05 22:23:58 $
- * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.5 2001/01/05 22:23:58 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 2001/02/28 00:03:58 $
+ * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.6 2001/02/28 00:03:58 sameer Exp $ 
  ***************************************************************************/
