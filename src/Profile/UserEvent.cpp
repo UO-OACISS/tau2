@@ -45,7 +45,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#include <math.h>
+//#include <math.h>
 #include <iostream.h>
 
 #ifndef TAU_STDCXXLIB // It'd be better to use #ifdef SGICC 
@@ -62,9 +62,11 @@ vector<TauUserEvent*>& TheEventDB(int threadid)
 // Add User Event to the EventDB
 void TauUserEvent::AddEventToDB()
 {
+  RtsLayer::LockDB();
   TheEventDB().push_back(this);
   DEBUGPROFMSG("Successfully registered event " << GetEventName() << endl;);
   DEBUGPROFMSG("Size of eventDB is " << TheEventDB().size() <<endl);
+  RtsLayer::UnLockDB();
   return;
 }
 
@@ -80,12 +82,15 @@ TauUserEvent::TauUserEvent(const char * EName)
   DisableMean 	= false; 	// Mean     is calculated 
   DisableStdDev = false; 	// StdDev   is calculated
 
-  LastValueRecorded = 0;  	// null to start with
-  NumEvents = 0L; 		// initialize
-  MinValue  = 9999999;  	// Least -ve value? limits.h
-  MaxValue  = -9999999;		// Greatest  +ve value?    "
-  SumSqrValue  = 0;		// initialize
-  SumValue     = 0; 		// initialize
+  for(int i=0; i < TAU_MAX_THREADS; i++) 
+  {
+    LastValueRecorded[i] = 0;  	// null to start with
+    NumEvents[i] = 0L; 		// initialize
+    MinValue[i]  = 9999999;  	// Least -ve value? limits.h
+    MaxValue[i]  = -9999999;		// Greatest  +ve value?    "
+    SumSqrValue[i]  = 0;		// initialize
+    SumValue[i]     = 0; 		// initialize
+  }
 
   AddEventToDB();
   // Register this event in the main event database 
@@ -101,12 +106,14 @@ TauUserEvent::TauUserEvent(TauUserEvent& X)
   DisableMax 	= X.DisableMax;
   DisableMean	= X.DisableMean;
   DisableStdDev = X.DisableStdDev;
+/* Do we really need these? 
   LastValueRecorded = X.LastValueRecorded;
   NumEvents	= X.NumEvents;
   MinValue	= X.MinValue;
   MaxValue	= X.MaxValue;
   SumSqrValue	= X.SumSqrValue;
   SumValue	= X.SumValue;
+ */
 
   AddEventToDB(); 
   //Register this event
@@ -121,12 +128,15 @@ TauUserEvent::TauUserEvent()
   DisableMean 	= false; 	// Mean     is calculated 
   DisableStdDev = false; 	// StdDev   is calculated
 
-  LastValueRecorded = 0;  	// null to start with
-  NumEvents = 0L; 		// initialize
-  MinValue  = 9999999;  	// Least -ve value? limits.h
-  MaxValue  = -9999999;		// Greatest  +ve value?    "
-  SumSqrValue  = 0;		// initialize
-  SumValue     = 0; 		// initialize
+  for (int i=0; i < TAU_MAX_THREADS; i++)
+  {
+    LastValueRecorded[i] = 0;  	// null to start with
+    NumEvents[i] = 0L; 		// initialize
+    MinValue[i]  = 9999999;  	// Least -ve value? limits.h
+    MaxValue[i]  = -9999999;		// Greatest  +ve value?    "
+    SumSqrValue[i]  = 0;		// initialize
+    SumValue[i]     = 0; 		// initialize
+  } 
 
   AddEventToDB();
   // Register this event in the main event database 
@@ -143,12 +153,14 @@ TauUserEvent& TauUserEvent::operator= (const TauUserEvent& X)
   DisableMax 	= X.DisableMax;
   DisableMean	= X.DisableMean;
   DisableStdDev = X.DisableStdDev;
+/* do we really need these? 
   LastValueRecorded = X.LastValueRecorded;
   NumEvents	= X.NumEvents;
   MinValue	= X.MinValue;
   MaxValue	= X.MaxValue;
   SumSqrValue	= X.SumSqrValue;
   SumValue	= X.SumValue;
+*/
 
   return *this;
 }
@@ -157,68 +169,83 @@ TauUserEvent& TauUserEvent::operator= (const TauUserEvent& X)
 // TriggerEvent records the value of data in the UserEvent
 ///////////////////////////////////////////////////////////
 
-void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data)
+void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid)
 { 
   // Record this value  
-  LastValueRecorded = data;
+  LastValueRecorded[tid] = data;
 
   // Increment number of events
-  NumEvents ++;
+  NumEvents[tid] ++;
 
   // Compute relevant statistics for the data 
   if (!GetDisableMin()) 
   {  // Min is not disabled
-     if (NumEvents > 1) {
-     	MinValue = data < MinValue ? data : MinValue;
+     if (NumEvents[tid] > 1) {
+     	MinValue[tid] = data < MinValue[tid] ? data : MinValue[tid];
      } else
-	MinValue = data;
+	MinValue[tid] = data;
   }
   
   if (!GetDisableMax())
   {  // Max is not disabled
-     if (NumEvents > 1) {
-       MaxValue = MaxValue < data ? data : MaxValue;
+     if (NumEvents[tid] > 1) {
+       MaxValue[tid] = MaxValue[tid] < data ? data : MaxValue[tid];
      } else
-       MaxValue = data;
+       MaxValue[tid] = data;
   }
 
   if (!GetDisableMean())
   {  // Mean is not disabled 
-     SumValue += data; 
+     SumValue[tid] += data; 
   }
      
   if (!GetDisableStdDev())
   {  // Standard Deviation is not disabled
-     SumSqrValue += data*data; 
+     SumSqrValue[tid] += data*data; 
   }
 
   return; // completed calculating statistics for this event
 }
 
 // Return the data stored in the class
-TAU_EVENT_DATATYPE TauUserEvent::GetMin(void)
+TAU_EVENT_DATATYPE TauUserEvent::GetMin(int tid)
 { 
-  return MinValue;
+  if (NumEvents[tid] != 0L)
+  { 
+    return MinValue[tid];
+  }
+  else
+    return 0;
 }
 
-TAU_EVENT_DATATYPE TauUserEvent::GetMax(void)
+TAU_EVENT_DATATYPE TauUserEvent::GetMax(int tid)
 {
-  return MaxValue;
+  if (NumEvents[tid] != 0L)
+  {
+    return MaxValue[tid];
+  }
+  else
+    return 0;
 }
 
-TAU_EVENT_DATATYPE TauUserEvent::GetMean(void)
+TAU_EVENT_DATATYPE TauUserEvent::GetMean(int tid)
 {
-  return (SumValue/NumEvents);
+  if (NumEvents[tid] != 0L) 
+  {
+    return (SumValue[tid]/NumEvents[tid]);
+  } 
+  else
+    return 0;
 }
 
-double TauUserEvent::GetSumSqr(void)
+double TauUserEvent::GetSumSqr(int tid)
 {
-  return (SumSqrValue);
+  return (SumSqrValue[tid]);
 }
 
-long TauUserEvent::GetNumEvents(void)
+long TauUserEvent::GetNumEvents(int tid)
 {
-  return NumEvents;
+  return NumEvents[tid];
 }
 
 // Get the event name
@@ -305,6 +332,6 @@ vector::size_type numevents;
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1998/07/10 20:13:06 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.4 1998/07/10 20:13:06 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 1998/09/22 01:12:36 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.5 1998/09/22 01:12:36 sameer Exp $ 
  ***************************************************************************/
