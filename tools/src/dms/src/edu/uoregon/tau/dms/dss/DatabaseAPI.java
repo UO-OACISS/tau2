@@ -208,6 +208,8 @@ public class DatabaseAPI{
 	return new DataSessionIterator(metrics);
     }
 
+    //This version just does the usual ... build a list of objects as the old api did.
+    //We'll try and integrate later.
     public DataSessionIterator getIntervalEvents() throws DatabaseAPIException{
 	ResultSet resultSet = null;
 	Vector intervalEvents = new Vector();
