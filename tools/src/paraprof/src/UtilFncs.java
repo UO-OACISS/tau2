@@ -35,7 +35,7 @@ public class UtilFncs{
 	    result = dF.format(d);
 	}
 	catch(Exception e){
-		UtilFncs.systemError(e, null, "UF01");
+		ParaProf.systemError(e, null, "UF01");
 	}
 	return Double.parseDouble(result);
     }
@@ -63,14 +63,14 @@ public class UtilFncs{
     //2 - seconds
     //3 - hr:min:sec
     //At present, the passed in double value is assumed to be in microseconds.
-    public static String getOutputString(int type, double d, int precision){
+    public static String getOutputString(int type, double d){
 	switch(type){
 	case 0:
-	    return (Double.toString(UtilFncs.adjustDoublePresision(d, precision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision(d, ParaProf.defaultNumberPrecision)));
 	case 1:
-	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000), precision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000), ParaProf.defaultNumberPrecision)));
 	case 2:
-	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000000), precision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
 	case 3:
 	    int hr = 0;
 	    int min = 0;
@@ -80,9 +80,9 @@ public class UtilFncs{
 	    min = (int) (d/60000000.00);
 	    //Calculate the number of microseconds left after minutess are subtracted.
 	    d = d-min*60000000.00;
-	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), precision)));
+	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
 	default:
-	    UtilFncs.systemError(null, null, "Unexpected string type - UF02 value: " + type);
+	    ParaProf.systemError(null, null, "Unexpected string type - UF02 value: " + type);
 	}
 	return null;
     }
@@ -102,7 +102,7 @@ public class UtilFncs{
 	case 3:
 	    return "hour:minute:seconds";
 	default:
-	    UtilFncs.systemError(null, null, "Unexpected string type - UF03 value: " + type);
+	    ParaProf.systemError(null, null, "Unexpected string type - UF03 value: " + type);
 	}
 	return null;
     }
@@ -128,7 +128,7 @@ public class UtilFncs{
 	case 18:
 	    return "mean";
 	default:
-	    UtilFncs.systemError(null, null, "Unexpected string type - UF04 value: " + type);
+	    ParaProf.systemError(null, null, "Unexpected string type - UF04 value: " + type);
 	}
 	return null;
     }

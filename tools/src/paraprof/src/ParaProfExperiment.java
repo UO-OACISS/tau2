@@ -32,8 +32,7 @@ public class ParaProfExperiment extends Experiment{
     public Vector getTrials(){
 	return trials;}
   
-    public ParaProfTrial addTrial(){
-	ParaProfTrial trial = new ParaProfTrial();
+    public void addTrial(ParaProfTrial trial){
 	trial.setExperiment(this);
 	trial.setID((trials.size()));
 	trials.add(trial);

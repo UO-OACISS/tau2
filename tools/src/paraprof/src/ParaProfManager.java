@@ -718,26 +718,31 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    TreePath path = tree.getSelectionPath();
 	    if(path == null){
 		System.out.println("Error adding trial ... aborted.");
-		return;}
+		return;
+	    }
 	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 	    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
 	    if(parentNode == null){
 		System.out.println("Error adding trial ... aborted.");
-		return;}
+		return;
+	    }
 	    Object userObject = parentNode.getUserObject();
 	    if(!(userObject instanceof ParaProfExperiment)){
 		System.out.println("Error adding trial ... aborted.");
-		return;}
+		return;
+	    }
         
 	    ParaProfExperiment exp = (ParaProfExperiment) userObject;
       
-	    //First get the name of the new run.
-	    String newTrailName = JOptionPane.showInputDialog(this, "Please enter a new trial name, click ok, and then select a pprof dump file!");
-	    if((newTrailName == null) || "".equals(newTrailName)){
+	    //First get the name of the new trial.
+	    String trailName = JOptionPane.showInputDialog(this, "Enter trial name, then make your selection.");
+	    if((trailName == null) || "".equals(trailName)){
 		JOptionPane.showMessageDialog(this, "You must enter a name!", "Error!"
 					      ,JOptionPane.ERROR_MESSAGE);
 		return;
 	    }
+
+	    ParaProfTrial trial = new Trial();
 	    
 	    int type = -1;
 	    String s = (String) trialType.getSelectedItem();
@@ -749,119 +754,36 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		type = 2;
 	    else if(s.equals("other-2"))
 		type = 3;
-
-	    MetricFileList[] metricFileList = UtilFuncs.getFileList(this, type);
 	    
+	    FileList fl = new FileList();
+	    Vector v = fl.getFileList(this, type,ParaProf.debugIsOn);
+	    File[] files = null;
 
-
-
-
-
-	    for(int i=0;i<files.length;i++){
-
-		File file = jFileChooser.getSelectedFile();
-		if(file != null){
-		    if(file.isDirectory()){
-		    }
-		    else{
-			string1 = file.getCanonicalPath();
+	    switch(type){
+	    case 0:
+		boolean duplicate = false;
+		for(Enumeration e1 = v.elements(); e1.hasMoreElements() ;){
+		    files = (File[]) e1.nextElement();
+		    for(int i=0;i<files.length;i++){
+			string1 = files[i].getCanonicalPath();
 			string2 = ParaProf.applicationManager.getPathReverse(string1);
-			string3 = newTrailName + " : " + string2;
-			
-			//Pop up the dialog if there is already an experiment with this name.
-			if(exp.isTrialPresent(string3)){
-			    JOptionPane.showMessageDialog(this, "A metric already exists with that name!", "Warning!"
-							  ,JOptionPane.ERROR_MESSAGE);
-			    return;
-			}
-			
-			trial = exp.addTrial();
-			DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
-			trial.setDMTN(trialNode);
-			trial.setProfilePathName(string1);
-			trial.setName(string3);
-			trial.initialize(file);
-			
-			//Update the tree.
-			for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
-			    Metric metric = (Metric) e.nextElement();
-			    DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
-			    metric.setDMTN(metricNode);
-			    metricNode.setAllowsChildren(false);
-			    trialNode.add(metricNode);
-			}
-			treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
-		    }
-		}
-		else{
-		    System.out.println("There was some sort of internal error!");
-		    return;
-		}
-	    }
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "ELM01");
-	}
-    }
-  
-    void addParaProfTrialMVTButtonFunction()
-    {
-    
-	try{
+			string3 = trailName + " : " + string2;
 
-	    if(resultValue == JFileChooser.APPROVE_OPTION)
-		{
-		    boolean foundSomething = false;
-		    //Try and get the file name.
-		    File file = pprofDumpDirectoryChooser.getSelectedFile();
-        
-		    //Test to see if valid.
-		    if(file != null)
-			{ 
-			    String filePath = file.getCanonicalPath();
-			    File [] list = file.listFiles();
-			    for(int i = 0; i < list.length; i++)
-				{
-				    File tmpFile = (File) list[i];
-				    if(tmpFile != null){
-					String tmpString = tmpFile.getName();
-              
-					if(tmpString.indexOf("MULTI__") != -1){
-					    String newString = filePath + "/" + tmpString + "/pprof.dat";
-					    File testFile = new File(newString);
-                
-					    if(testFile.exists()){
-						if(!foundSomething){
-						    System.out.println("Found pprof.dat ... loading");
-                    
-						    tmpString1 = filePath;
-						    tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
-						    tmpString3 = newTrailName + " : " + tmpString2;
-                                                
-						    trial = exp.addTrial();
-						    trialNode = new DefaultMutableTreeNode(trial);
-						    trial.setDMTN(trialNode);
-                        
-						    trial.setProfilePathName(tmpString1);
-						    trial.setName(tmpString3);
-						    trial.initialize(testFile);
-                    
-						    System.out.println("Found: " + newString);
-                    
-						    foundSomething = true;
-						}
-						else{
-						    trial.initialize(testFile);
-						} 
-					    }
-					}
-				    }
-				}
-          
-			    //Now update the tree.
-			    //Populate the metrics list for this trial.
-			    for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
-				Metric metric = (Metric) e.nextElement();
+			if(exp.isTrialPresent(string3)){
+			    System.out.println("Metric with name: " + string3 + "exists. Not adding.");
+			    duplicate = true;
+			}
+			else{
+			    trial = exp.addTrial();
+			    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+			    trial.setDMTN(trialNode);
+			    trial.setProfilePathName(string1);
+			    trial.setName(string3);
+			    trial.initialize(files[i]);
+
+			    //Update the tree.
+			    for(Enumeration e2 = (trial.getMetrics()).elements(); e2.hasMoreElements() ;){
+				Metric metric = (Metric) e2.nextElement();
 				DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
 				metric.setDMTN(metricNode);
 				metricNode.setAllowsChildren(false);
@@ -869,18 +791,25 @@ public class ParaProfManager extends JFrame implements ActionListener{
 			    }
 			    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 			}
-		    else
-			{
-			    System.out.println("There was some sort of internal error!");
-			    return;
-			}
+		    }
+		    if(duplicate)
+			    JOptionPane.showMessageDialog(this, "Found duplicates ... see console!", "Warning!"
+							  ,JOptionPane.ERROR_MESSAGE);
 		}
-	}
-	catch(Exception e)
-	    {
-      
-		ParaProf.systemError(e, null, "ELM01");
+		break;
+	    case 1:
+		break;
+	    case 2:
+		break;
+	    case 3:
+		break;
+	    default:
+		break;
 	    }
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "ELM01");
+	}
     }
   
     public void connectDisconnectButtonFunction(){
