@@ -156,11 +156,6 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 	}
 
 	private void processHeaderLine1(String string) {
-	String oldLabel;
-	if (header1.s0 == null)
-		oldLabel = new String("");
-	else
-		oldLabel = new String(header1.s0);
 	// System.out.println("Header line 1");
 	try{
 		StringTokenizer st1 = new StringTokenizer(string, "-");
@@ -191,10 +186,15 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 
 		// if this label is the same as the previous, increment the thread ID
 		// otherwise, reset the thread ID to 0.
-		if (oldLabel.equals(header1.s0))
+		if (eventNames.containsKey(header1.s0)) {
+			Integer tmpID = (Integer)eventNames.get(header1.s0);
+			threadID = tmpID.intValue();
 			threadID++;
-		else 
+			eventNames.put(header1.s0, new Integer(threadID));
+		} else {
 			threadID = 0;
+			eventNames.put(header1.s0, new Integer(threadID));
+		}
 		initialized = false;
 	} catch(Exception e) {
 		System.out.println("An error occured while parsing the header!");
@@ -422,6 +422,7 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 	private File[] files = null;
 	private BufferedReader br = null;
 	boolean initialized = false;
+	Hashtable eventNames = new Hashtable();
 	//######
 	//End - Frequently used items.
 	//######
