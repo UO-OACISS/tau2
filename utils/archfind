@@ -26,7 +26,7 @@ if ( ${?CCOM} == "0" ) then
   setenv CCOM cc
 endif
 
-set ARCH=`$CCOM -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'`
+set ARCH=`$CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'`
 
 # I HATE THIS CRAP!!!!
 # The !@!^&*% SUN Solaris compiler (slumpro) does not seem to define any
