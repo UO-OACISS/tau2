@@ -155,6 +155,33 @@ fi
         ;;
 
 ###############################################################
+# Set up MPI stuff if possible
+###############################################################
+     MPI)
+        echo NOTE: Using the TAU MPI Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     mpiincargs=*)
+        mpiinc=`echo $1 | sed -e 's/^mpiincargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_MPI_INC=\(.*\)@TAU_MPI_INC=$mpiinc@g" >> $sedout
+        #echo "MPIINC=$mpiinc"
+        ;;
+
+     mpilibargs=*)
+        mpilib=`echo $1 | sed -e 's/^mpilibargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_MPI_LIB=\(.*\)@TAU_MPI_LIB=$mpilib@g" >> $sedout
+        #echo "MPILIB=$mpilib" 
+        ;;
+
+     mpiflibargs=*)
+        mpiflib=`echo $1 | sed -e 's/^mpiflibargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_MPI_FLIB=\(.*\)@TAU_MPI_FLIB=$mpiflib@g" >> $sedout
+        #echo "MPIFLIB=$mpiflib" 
+        ;;
+     
+
+###############################################################
 # Set the CONFIG_ARCH=<machine-name> in the Makefiles.
 ###############################################################
      arch=*)
