@@ -46,7 +46,7 @@ RM		= /bin/rm -f
 
 ##############################################
 ifdef USE_TAU
-COMP_RULE = $(PDTF90PARSE) $< $(FFLAGS); \
+COMP_RULE = $(PDTF90PARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) ; \
 	$(TAUINSTR) $*.pdb $< -o $*.inst.f90 ; \
 	$(F90) $(FFLAGS) -c $*.inst.f90 -o $@ ; \
 	rm -f $*.pdb ;      
