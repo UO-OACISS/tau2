@@ -175,11 +175,11 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc ]
       then
         c_compiler=$myarg
       else
-      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec' and 'pgcc' "
+      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', 'xlc' and 'pgcc' "
 #      exit 1
     fi
     shift
