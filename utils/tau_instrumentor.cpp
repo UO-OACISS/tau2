@@ -2,6 +2,10 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#if (!defined(TAU_WINDOWS))
+#include <unistd.h>
+#endif //TAU_WINDOWS
+
 #ifdef _OLD_HEADER_
 # include <fstream.h>
 # include <set.h>
@@ -823,7 +827,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
-int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile) 
+int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name) 
 { 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
@@ -946,9 +950,21 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
 		  /* put spaces on the next line */
      		  for (int space = 0; space < (*it)->col-1 ; space++) 
 		    WRITE_SPACE(ostr, inbuf[space]) 
+		  ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
+		    (*it)->item->fullName()<< "')"<<endl;
 		}
-		ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
-		  (*it)->item->fullName()<< "')"<<endl;
+		else { /* For all routines */
+		  if (strcmp(group_name.c_str(), "TAU_USER") != 0)
+  		  { /* Write the following lines only when -DTAU_GROUP=string is defined */
+		    ostr<<"call TAU_PROFILE_TIMER(profiler,'" <<
+    		       group_name.substr(10)<<">"<< (*it)->item->fullName()<< "')"<<endl;
+		  }
+		  else 
+		  { /* group_name is not defined, write the default fullName of the routine */
+		    ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
+		      (*it)->item->fullName()<< "')"<<endl;
+		  }
+  		}
 		/* spaces */
      		for (int space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -1089,44 +1105,60 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-g groupname]"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
+  char *gr_name;
   setGroupName(p, group_name);
-
-  const char * filename = argv[2];  
-
-  if ((argc == 5) || (argc == 6))
+  bool outFileNameSpecified = false;
+  int i; 
+  const char *filename; 
+  for(i=0; i < argc; i++)
   {
+    switch(i) {
+      case 0:
 #ifdef DEBUG
-    cout <<"5 argc "<<endl;
-#endif
-    if (strcmp(argv[3], "-o") == 0) 
-    { 
-#ifdef DEBUG
-      cout <<"checks out... -o option"<<endl;
-#endif 
-      outFileName = string(argv[4]);
-    }
-    else 
-    {
-      cout<<"Hey! 5/6 args but -o doesn't show up as 4th arg." <<endl;
-      cout <<"argv[4] is "<<argv[4] <<endl;
-    }
-    if (argc == 6) 
-    {
-      if (strcmp(argv[5], "-noinline") == 0)	
-      {
-        noinline_flag = true;
-#ifdef DEBUG
-        cout <<"Setting noinline_flag to true "<<endl;
+        printf("Name of pdb file = %s\n", argv[1]);
 #endif /* DEBUG */
+        break;
+      case 1:
+#ifdef DEBUG
+        printf("Name of source file = %s\n", argv[2]);
+#endif /* DEBUG */
+        filename = argv[2];  
+        break;
+      default:
+        if (strcmp(argv[i], "-o")== 0)
+ 	{
+	  ++i;
+#ifdef DEBUG
+          printf("output file = %s\n", argv[i]);
+#endif /* DEBUG */
+          outFileName = string(argv[i]);
+	  outFileNameSpecified = true;
+	}
+        if (strcmp(argv[i], "-noinline")==0)
+ 	{
+#ifdef DEBUG
+          printf("Noinline flag\n");
+#endif /* DEBUG */
+          noinline_flag = true;
+        }
+        if (strcmp(argv[i], "-g") == 0)
+	{
+	  ++i;
+	  group_name = string("TAU_GROUP_")+string(argv[i]);
+#ifdef DEBUG
+          printf("Group %s\n", group_name.c_str());
+#endif /* DEBUG */
+  	}
+        break;
       }
-    }
-  }
-  else 
-  {
+
+   }
+  if (!outFileNameSpecified)
+  { /* if name is not specified on the command line */
     outFileName = string(filename + string(".ins"));
   }
 
@@ -1147,7 +1179,7 @@ int main(int argc, char **argv)
        if (l == PDB::LA_C)
          instrumentCFile(p, *it, outFileName, group_name);
        if (l == PDB::LA_FORTRAN)
-         instrumentFFile(p, *it, outFileName);
+         instrumentFFile(p, *it, outFileName, group_name);
      }
   }
 
@@ -1174,8 +1206,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 2002/01/09 22:53:43 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.29 2002/01/09 22:53:43 sameer Exp $
+ * $Revision: 1.30 $   $Date: 2002/01/10 02:55:53 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.30 2002/01/10 02:55:53 sameer Exp $
  ***************************************************************************/
 
 
