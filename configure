@@ -2922,16 +2922,13 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
 chmod a+rx ${targetdir}/${architecture}/bin/tau_analyze
 echo "TAU: installed tau_analyze in ${targetdir}/${architecture}/bin"
 
-if [ ${tauprefix} = unknown ] 
-then 
-  cat ${tauroot}/tools/src/TauIL/Makefile.inc.skel |
-  sed -e 's,@TAUROOTDIR@,'$targetdir',' \
-  > ${targetdir}/tools/src/TauIL/Makefile.inc
-  echo "TAU: installed Makefile.inc in ${targetdir}/tools/src/TauIL"
-fi
+cat ${tauroot}/tools/src/TauIL/Makefile.inc.skel |
+sed -e 's,@TAUROOTDIR@,'$tauroot',' \
+> ${tauroot}/tools/src/TauIL/Makefile.inc
+echo "TAU: installed Makefile.inc in ${tauroot}/tools/src/TauIL"
 
-cp ${tauroot}/tools/src/TauIL/bin/*.jar ${tauroot}/${architecture}/lib
-echo "TAU: installed TauIL and supporting jars in ${tauroot}/${architecture}/lib"
+cp ${tauroot}/tools/src/TauIL/bin/*.jar ${targetdir}/${architecture}/lib
+echo "TAU: installed TauIL and supporting jars in ${targetdir}/${architecture}/lib"
 
 # -- determine Tcl/Tk version
 #cat << EOF > /tmp/tau$$
