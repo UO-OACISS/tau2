@@ -289,6 +289,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
+#CRAYX1CC#MPI2EXTENSIONS	       =        #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #ALPHATIMERS#LEXTRA	       = -lrt 	       #ENDIF#
