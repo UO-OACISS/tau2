@@ -215,9 +215,10 @@ public class GprofOutputSession extends ParaProfDataSession{
 		    }
 		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 		} // while lines in file
+		thread.setThreadData(0);
 	    } // for files in File[]
 	    } // for elements in vector v
-	    thread.setThreadData(0);
+	    //thread.setThreadData(0);
 	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
 
 	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
