@@ -121,7 +121,7 @@ extern int aa_poll_count; /* For Ariadne - defined in tulip/mpi/src/KernelCom.c 
  	void TraceReinitialize(int oldid, int newid, int tid);
         void TraceEventOnly(long int ev,long long par, int tid);
         void TraceEvFlush(int tid);
- 	void TraceEvent(long int ev, long long par, int tid);
+ 	void TraceEvent(long int ev, long long par, int tid, unsigned long long ts = 0L, int use_ts = 0);
 	void TraceEvClose(int tid);
 	void SetFlushEvents(int tid);
 
