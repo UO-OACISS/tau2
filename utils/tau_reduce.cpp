@@ -103,7 +103,9 @@ void select(){
   //write header, and close file.
   if(output){
     if((fp=fopen(outputfilename.c_str(), "w"))==NULL){
-      printf("Error: Could not open %s",outputfilename.c_str());
+      string errormessage="Error: Could not open outputfile: ";
+      errormessage+=outputfilename+"\n";
+      perror(errormessage.c_str());
       exit(0);
     }//if    
     putLine("# Selective instrumentation: Specify an exclude/include list.\n\n");
@@ -750,7 +752,9 @@ void acceptRules(){
     //now open the file up and start reading
     //all lines that begin with a # are a comment
     if((fp=fopen(rulefilename.c_str(), "r"))==NULL){
-      printf("Error: Could not open %s\n",rulefilename);
+      string errormessage="Error: Could not open rulefile: ";
+      errormessage+=rulefilename+"\n";
+      perror(errormessage.c_str());
       exit(0);
     }//if    
     
@@ -910,7 +914,7 @@ int main (int argc, char *argv[]){
 
   //if there was an error, print out the usage and exit
   if(errflag){
-    fprintf(stderr, "usage: %s -f filename [-n] [-r filename] [-s filename] [-v]\n", argv[0]);
+    fprintf(stderr, "usage: %s -f filename [-n] [-r filename] [-o filename] [-v]\n", argv[0]);
     fprintf(stderr," -f filename : specify filename of pprof dump file\n");
     fprintf(stderr," -p : print out all functions with their attributes\n");
     fprintf(stderr," -o filename : specify filename for select file output (default: print to screen\n");
@@ -968,7 +972,7 @@ int main (int argc, char *argv[]){
 
 /***************************************************************************
  * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
- * $Revision: 1.9 $   $Date: 2002/08/05 22:53:49 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.9 2002/08/05 22:53:49 ntrebon Exp $
+ * $Revision: 1.10 $   $Date: 2002/08/08 23:27:09 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.10 2002/08/08 23:27:09 ntrebon Exp $
  ***************************************************************************/
 
