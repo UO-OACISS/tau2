@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://www.acl.lanl.gov/tau                        **
 *****************************************************************************
-**    Copyright 1997-2002						   **
+**    Copyright 1997-2003						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
@@ -14,6 +14,8 @@ Version 2.12 changes (from 2.11):
 2. Improved memory handling and drawing speeds in jracy [LLNL].
 3. Configuration changes for LAM MPI, PAPI, Tru64 [Utah, NCSA, LANL].
 4. Added support for Python bindings [CACR, LLNL]. 
+5. Added MPI shared library examples [CACR]. 
+6. Added support for building multiple configurations (installtau) [LANL, LLNL].
 
 Version 2.11 changes (from 2.10):
 1. Added -i header option for tau_instrumentor [CASC]. 

@@ -3,7 +3,7 @@
 #*			TAU Portable Profiling Package			   **
 #*			http://www.acl.lanl.gov/tau		           **
 #****************************************************************************
-#*    Copyright 1997-2000						   **
+#*    Copyright 1997-2003						   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #*    Research Center Juelich, ZAM Germany                                 **
@@ -575,11 +575,11 @@ do
     echo "Usage: configure [OPTIONS]"
     echo "  where [OPTIONS] are:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
-    echo "  options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc]."
+    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc]."
     echo "-cc=<compiler> ................................ specify the C compiler."
-    echo "                              options [cc|gcc|KCC|pgcc|guidec|xlc|ecc]."
+    echo "                            options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc]."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
-    echo " options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc]."
+    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "  	                                         kai|nec|hitachi|intel]"
