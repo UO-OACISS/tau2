@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 
 ###############################################################
 #						Assumptions Made
@@ -22,6 +22,7 @@ declare -i hasAnOutputFile=$FALSE
 declare -i fortranParserDefined=$FALSE
 declare -i isForCompilation=$FALSE
 declare -i hasAnObjectOutputFile=$FALSE
+declare -i hasMpi=$TRUE
 
 declare -i isVerbose=$FALSE
 declare -i isDebug=$FALSE
@@ -41,17 +42,17 @@ printUsage () {
 	echo -e "Usage: tau_compiler.sh"
 	echo -e "\t-optVerbose\t\t[For Verbose]"
 	echo -e "\t-optPdtDir=\"\"\t\tDirectory of PDT Parser. Often equals \$(PDTDIR)/\${PDTARCHDIR}"
-	echo -e "\t-optPdtF90Opts=\"\"\tSpecific Options needed while Parsing .F90 files. Example \${FFLAGS} \${FCPPFLAGS}"
-	echo -e "\t-optPdtF95Opts=\"\"\tSpecific Options needed while Parsing .F95 files. Example \${FFLAGS} \${FCPPFLAGS}"
-	echo -e "\t-optPdtCOpts=\"\"\t\tSpecific Options needed while Parsing .c files. Example \${CFLAGS}"
-	echo -e "\t-optPdtCxxOpts=\"\"\tSpecific Options needed while Parsing .cxx files. Example \${CPPFLAGS}"
+	echo -e "\t-optPdtF90=\"\"\tSpecific Options needed while Parsing .F90 files. Example \${FFLAGS} \${FCPPFLAGS}"
+	echo -e "\t-optPdtF95=\"\"\tSpecific Options needed while Parsing .F95 files. Example \${FFLAGS} \${FCPPFLAGS}"
+	echo -e "\t-optPdtC=\"\"\t\tSpecific Options needed while Parsing .c files. Example \${CFLAGS}"
+	echo -e "\t-optPdtCxx=\"\"\tSpecific Options needed while Parsing .cxx files. Example \${CPPFLAGS}"
 	echo -e "\t-optPdtF90Parser=\"\"\tA Different Fortran Parser. By Default f95parse is invoked"
-	echo -e "\t-optPdtUserOpts=\"\"\tAdditional source type indepdent options during parsing"
+	echo -e "\t-optPdtUser=\"\"\tAdditional source type indepdent options during parsing"
 	echo -e "\t-optTauInstr=\"\"\t\tTAU Instrumentor. Example \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor "
 	echo -e "\t-optTauSelectFile=\"\"\tSelect File for Instrumentation. No need to add -f before the file"
-	echo -e "\t-optTauOpts=\"\"\t\tOptions required during Instrumentation"
-	echo -e "\t-optCompileOpts=\"\"\tOptions required during Compilation"
-	echo -e "\t-optLinkingOpts=\"\"\tOptions required during Linking"
+	echo -e "\t-optTau=\"\"\t\tOptions required during Instrumentation"
+	echo -e "\t-optCompile=\"\"\tOptions required during Compilation"
+	echo -e "\t-optLinking=\"\"\tOptions required during Linking"
 	if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 		exit
 	fi
@@ -89,7 +90,7 @@ evalWithDebugMessage() {
 	echoIfVerbose "Debug: Command is -- $1"
 	echoIfVerbose "....."
 	echoIfVerbose " "
-	echo "Command passed is --  $1"
+	echo "Executing>  $1"
 	eval $1
 }
 
@@ -210,7 +211,16 @@ for arg in "$@"
 		*.o)
 			objectOutputFile="$arg"
 			hasAnObjectOutputFile=$TRUE
-			ARGS_REMAINING="$ARGS_REMAINING $arg"
+			if [ $hasAnOutputFile == $FALSE ]; then
+				ARGS_REMAINING="$ARGS_REMAINING $arg"
+			fi
+			temp=$counterForOutput+1
+
+			if [ $temp == $tempCounter ]; then
+				#Assumption: Executable/outputFile would appear immediately after -o option
+				passedOutputFile="$arg"
+				echoIfDebug "Output file is $passedOutputFile"
+			fi
 			;;
 
 		-o)
@@ -252,7 +262,7 @@ for arg in "$@"
 				echoIfDebug "pdtDir is: "$OPT_PDT_DIR
 				;;
 
-			-optPdtF90Opts*)
+			-optPdtF90*)
 				#reads all the options needed for Parsing a Fortran file
 				#e.g ${FFLAGS}, ${FCPPFLAGS}. If one needs to pass any
 				#additional files for parsing, it can simply be appended before 
@@ -261,11 +271,11 @@ for arg in "$@"
 				#It is imperative that the additional files for parsing be kept 
 				#before the flags.
 
-				OPT_PDT_F90_OPTS=${arg#"-optPdtF90Opts="}
-				echoIfDebug "PDT Option for F90 is : "$OPT_PDT_F90_OPTS
+				OPT_PDT_F90=${arg#"-optPdtF90="}
+				echoIfDebug "PDT Option for F90 is : "$OPT_PDT_F90
 				;;
 
-			-optPdtF95Opts*)
+			-optPdtF95*)
 				#reads all the options needed for Parsing a Fortran file
 				#e.g ${FFLAGS}, ${FCPPFLAGS}. If one needs to pass any
 				#additional files for parsing, it can simply be appended before 
@@ -274,8 +284,8 @@ for arg in "$@"
 				#It is imperative that the additional files for parsing be kept
 				#before the flags.
 
-				OPT_PDT_F95_OPTS=${arg#"-optPdtF95Opts="}
-				echoIfDebug "PDT Option for F90 is : "$OPT_PDT_F95_OPTS
+				OPT_PDT_F95=${arg#"-optPdtF95"}
+				echoIfDebug "PDT Option for F90 is : "$OPT_PDT_F95
 				;;
 
 			-optTauInstr*)
@@ -283,26 +293,26 @@ for arg in "$@"
 				echoIfDebug " Tau_instrumentor is: "$OPT_TAU_INSTR
 				;;
 
-			-optPdtCOpts*)
+			-optPdtCOpt*)
 				#Assumption: This reads ${CFLAGS} 
-				OPT_PDT_CFLAGS=${arg#"-optPdtCOpts="}
+				OPT_PDT_CFLAGS=${arg#"-optPdtCOpt="}
 				echoIfDebug "CFLAGS is: "$OPT_PDT_CFLAGS
 				;;
 
-			-optPdtCxxOpts*)
+			-optPdtCxxOpt*)
 				#Assumption: This reads both ${CPPFLAGS} 
-				OPT_PDT_CxxFLAGS=${arg#"-optPdtCxxOpts="}
+				OPT_PDT_CxxFLAGS=${arg#"-optPdtCxxOpt="}
 				echoIfDebug "CxxFLAGS is: "$OPT_PDT_CxxFLAGS
 				;;
 
 
-			-optPdtUserOpts*)
-				#Assumption: This reads $TAU_APP_INCLUDE and $TAU_APP_OPTS. .c 
-				#uses $TAU_APP_INCLUDE and .C uses in addition $TAU_APP_OPTS.
-				#Both of them are being passed since $TAU_APP_OPTS would not affect .c files 
+			-optPdtUser*)
+				#Assumption: This reads $TAU_APP_INCLUDE and $TAU_APP. .c 
+				#uses $TAU_APP_INCLUDE and .C uses in addition $TAU_APP.
+				#Both of them are being passed since $TAU_APPwould not affect .c files 
 				#in anyways.
-				OPT_PDT_USEROPTS=${arg#"-optPdtUserOpts="}
-				echoIfDebug " TauESMC is: "$OPT_PDT_USEROPTS
+				OPT_PDT_USER=${arg#"-optPdtUser="}
+				echoIfDebug " TauESMC is: "$OPT_PDT_USER
 				;;
 
 			-optTauSelectFile*)
@@ -311,7 +321,7 @@ for arg in "$@"
 				echoIfDebug "Length is: "${#OPT_TAU_SELECTFILE}
 				#Passsing a blank file name with -f option would cause ERROR 
 				#And so if it is blank, do not append -f option at the start.
-				#This is the reason, one cannot pass it as a generic optTauOpts
+				#This is the reason, one cannot pass it as a generic optTau
 				#with -f selectFile. The reason I have kept 3 is becuase,
 				#it allows the users to pass 2 blank spaces and the name
 				#of a selectFile would hopefully be more than 2 characters.
@@ -323,26 +333,37 @@ for arg in "$@"
 					
 				;;
 
-			-optTauOpts*)
-				OPT_TAU_OPTS=${arg#"-optTauOpts="}
+			-optTau*)
+				OPT_TAU=${arg#"-optTau="}
 				echoIfDebug "Tau Options are : "$arg
 				;;
 
-			-optLinkingOpts*)
-				OPT_LINKING_OPTS=${arg#"-optLinkingOpts="}
-				echoIfDebug "OPT_LINKING_OPTS Options are : "$OPT_LINKING_OPTS
+			-optLinking*)
+				OPT_LINKING=${arg#"-optLinking="}
+				echoIfDebug "OPT_LINKING Options are : "$OPT_LINKING
 				;;
 
-			-optCompileOpts*)
-				OPT_COMPILE_OPTS=${arg#"-optCompileOpts="}
-				echoIfDebug "OPT_COMPILE_OPTS Options are : "$OPT_COMPILE_OPTS
+			-optCompile*)
+				OPT_COMPILE=${arg#"-optCompile="}
+				echoIfDebug "OPT_COMPILE Options are : "$OPT_COMPILE
 				;;
 
 
-			-optVerbose)
+			-optVerbose*)
 				echoIfDebug "Verbose Option is being passed"
 				isVerbose=$TRUE
 				;;
+
+			-optNoMpi*)
+				#What name should we give it to this. By default
+				#this is true. When set to false, This option removes -l*mpi* options
+				#at the linking stage.
+				echoIfDebug "No MPI Option is being passed"
+				hasMpi=$FALSE
+				;;
+
+					
+
 
 			esac #end case for parsing script Options
 			;;
@@ -352,12 +373,13 @@ for arg in "$@"
 
 		*)
 			ARGS_REMAINING="$ARGS_REMAINING ""$arg"
+
 			temp=$counterForOutput+1
 
 			if [ $temp == $tempCounter ]; then
 				#Assumption: Executable/outputFile would appear immediately after -o option
-				OUTPUTFILE="$arg"
-				echoIfDebug "Output file is $OUTPUTFILE"
+				passedOutputFile="$arg"
+				echoIfDebug "Output file is $passedOutputFile"
 			fi
 				
 			;;
@@ -387,7 +409,6 @@ done
 
 if [ $numFiles == 0 ]; then
 	echoIfDebug "The number of source files is zero"
-	linkCmd="$regularCmd  $OPT_LINKING_OPTS "
 		#The reason why regularCmd is modified is becuase sometimes, we have cases
 		#like linking of instrumented object files, which require
 		#TAU_LIBS. Now, since object files have no files of types
@@ -402,15 +423,25 @@ if [ $numFiles == 0 ]; then
 		#$(TARGET).o : $(TARGET).cpp
 		#	$(CXXNEW) $(CFLAGS) -c $(TARGET).cpp
 
-	evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
-	if [ $hasAnOutputFile == $FALSE ]; then
-		OUTPUTFILE="a.out"
+	if [ $hasMpi == $FALSE ]; then
+		echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
+		regularCmd=`echo $regularCmd | sed -e 's/-l.*mpi[^-/ ]\{1,\}//g'`
+		echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
 	fi
-	echoIfVerbose "Looking for file: $OUTPUTFILE"
-	if [  ! -e $OUTPUTFILE ]; then
-		echoIfVerbose "Error: Tried Looking for file: $OUTPUTFILE"
+
+	linkCmd="$regularCmd  $OPT_LINKING "
+
+	evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
+
+	if [ $hasAnOutputFile == $FALSE ]; then
+		passedOutputFile="a.out"
+	fi
+	echoIfVerbose "Looking for file: $passedOutputFile"
+	if [  ! -e $passedOutputFile ]; then
+		echoIfVerbose "Error: Tried Looking for file: $passedOutputFile"
 		printError "$CMD" "$linkCmd"
 	fi
+	gotoNextStep=$FALSE
 fi
 
 ####################################################################
@@ -426,7 +457,7 @@ if [ $gotoNextStep == $TRUE ]; then
 			$group_f_F)
 				pdtCmd="$PDTPARSER_F"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]}"
-				pdtCmd="$pdtCmd $OPT_PDT_USEROPTS"
+				pdtCmd="$pdtCmd $OPT_PDT_USER"
 				if [ $hasRecursiveFreeOption == $TRUE ]; then
 					pdtCmd="$pdtCmd "" -R free "
 				fi
@@ -437,18 +468,20 @@ if [ $gotoNextStep == $TRUE ]; then
 				echoIfDebug "Directory1 is " "$tempPdbDirName"
 				tempPdbFileName=${arrPdb[$tempCounter]##*/}
 				pdtCmd="$pdtCmd ${tempPdbDirName}""/*.F90 "
-				pdtCmd="$pdtCmd ${OPT_PDT_F90_OPTS} "
-				pdtCmd="$pdtCmd -o${tempPdbFileName} $OPT_PDT_USEROPTS"
+				pdtCmd="$pdtCmd ${OPT_PDT_F90} "
+				pdtCmd="$pdtCmd -o${tempPdbFileName} $OPT_PDT_USER"
 				;;
 			$group_c)
 				pdtCmd="$OPT_PDT_DIR""/$PDTPARSER_TYPE"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-				pdtCmd="$pdtCmd $OPT_PDT_CFLAGS $OPT_PDT_USEROPTS "
+				pdtCmd="$pdtCmd $OPT_PDT_CFLAGS $OPT_PDT_USER "
 				;;
 			$group_C)
 				pdtCmd="$OPT_PDT_DIR""/$PDTPARSER_TYPE"
 				pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-				pdtCmd="$pdtCmd $OPT_PDT_CxxFLAGS $OPT_PDT_USEROPTS "
+				echoIfDebug "Inside C group: the pdt_cxxFlag is ""$OPT_PDT_CxxFLAGS"
+				pdtCmd="$pdtCmd $OPT_PDT_CxxFLAGS $OPT_PDT_USER "
+				echoIfDebug "Inside C group: Before executing cmd is ""$pdtCmd"
 				;;
 		esac
 
@@ -479,7 +512,7 @@ if [ $gotoNextStep == $TRUE ]; then
 		tempPdbFileName=${arrPdb[$tempCounter]##*/}
 		tempInstFileName=${arrTau[$tempCounter]##*/}
 		tauCmd="$OPT_TAU_INSTR $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
-		tauCmd="$tauCmd $OPT_TAU_OPTS $OPT_TAU_SELECTFILE"
+		tauCmd="$tauCmd $OPT_TAU $OPT_TAU_SELECTFILE"
 		evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
 
 		echoIfDebug "Looking of tau file ""$tempInstFileName"
@@ -507,11 +540,14 @@ if [ $gotoNextStep == $TRUE ]; then
 	done
 
 
+	echoIfDebug "newCmd at 1 is $newCmd"
 	newCmd="$CMD  $instrumentedFilesForCompilation  $OUTPUTARGSFORTAU  $DEFINEARGS  $INCLUDEARGS "
+	echoIfDebug "newCmd at 2 is $newCmd"
 	#TAU_OPT_TAU = $TAU_DEFS + $TAU_INCLUDE + $TAU_MPI_INCLUDE + $TAU_ALL_LIBS. 
 	#Usually only .c/.C need $TAU_DEFS, $TAU_INCLUDE and $TAU_MPI_INCLUDE. But putting them
 	#with others doesnot hurt. It reduces the number of arguments being passed to the script.
-	newCmd="$newCmd $OPT_COMPILE_OPTS $ARGS_REMAINING"
+	newCmd="$newCmd $OPT_COMPILE $ARGS_REMAINING"
+	echoIfDebug "newCmd at 3 is $newCmd"
 	
 	#Assumption: If -o option is not specified for compilation, then simply produce
 	#an output -o with firstFileBaseName.o as the output. This is because, in the
@@ -528,12 +564,17 @@ if [ $gotoNextStep == $TRUE ]; then
 			BASE=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'`
 			SUF=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 			outputFile=${BASE##*/}.o	#strip it off the directory
+				
+			echoIfDebug "The output file passed is $passedOutputFile"
+			echoIfDebug "The output file generated locally is $outputFile"
 
+			echoIfDebug "cmd before appending the .o file is $newCmd"
 			if [ $hasAnOutputFile == $TRUE ]; then
-				newCmd="$newCmd -o $OUTPUTFILE" 
+				newCmd="$newCmd -o $passedOutputFile" 
 			else
 				newCmd="$newCmd -o $outputFile" 
 			fi
+			echoIfDebug "cmd after appending the .o file is $newCmd"
 
 			evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
 			echoIfVerbose "Looking for file: $outputFile"
@@ -562,3 +603,4 @@ fi
 if [ $errorStatus == $TRUE ] ; then
 	evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
 fi
+
