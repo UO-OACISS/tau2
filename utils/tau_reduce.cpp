@@ -86,12 +86,12 @@ string getFunctionName(){
 //getGroupNamesFromLine() finds the GROUP="g1 | g2 ..." string in the line
 //and will return a string containing only the names of the groups.  
 string getGroupNamesFromLine(){
-  string l = line;
-  l=l.substr(l.find("\"")+1);
-  l=l.substr(0,l.find("\""));
+  string gnames = line;
+  gnames=gnames.substr(gnames.find("\"")+1);
+  gnames=gnames.substr(0,gnames.find("\""));
   //now string l is the string contained between the starting and ending 
   //quotation marks.
-  return l;  
+  return gnames;  
 }//getGroupNamesFromLine()
 
 
@@ -968,7 +968,7 @@ int main (int argc, char *argv[]){
 
 /***************************************************************************
  * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
- * $Revision: 1.8 $   $Date: 2002/08/05 22:19:26 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.8 2002/08/05 22:19:26 ntrebon Exp $
+ * $Revision: 1.9 $   $Date: 2002/08/05 22:53:49 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.9 2002/08/05 22:53:49 ntrebon Exp $
  ***************************************************************************/
 
