@@ -812,8 +812,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     //When in debugging mode, this class can print a lot of data.
     //Initialized in this.setDebug(...).
     private PrintWriter out = null;
-    //PrintWriter out2 = new PrintWriter(new FileWriter("Hello.test"));
-
+    
     private Vector observers = new Vector();
     //######
     //End - Private Section.
