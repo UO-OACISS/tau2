@@ -34,7 +34,7 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
-TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2 
+TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2
 TULIPDIR=
 PCLDIR=
 PDTDIR=
@@ -132,6 +132,7 @@ JDKARCH                 = linux
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
 #PGI1.7#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
 #FUJITSU#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/fj90rt0.o -L$(EXTRADIR)/lib -lfj9i6 -lfj9f6 -lfj9e6        #ENDIF#
+#SOL2CC#TAU_FORTRANLIBS	       = -lfui -lfai -lfai2 -lfsumai -lfprodai -lfminlai -lfmaxlai -lfminvai -lfmaxvai -lfsu -lsunmath        #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
