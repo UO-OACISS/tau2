@@ -1181,8 +1181,7 @@ int Profiler::DumpData(bool increment, int tid)
  	if (RtsLayer::myThread() == 0)
 	  elg_close();
 #else /* TAU_EPILOG */
-	TraceEvClose(tid);
-	RtsLayer::DumpEDF(tid);
+	TraceEvFlush(tid);
 #endif /* TAU_EPILOG */
 #endif // TRACING_ON 
 
@@ -2330,6 +2329,8 @@ int Profiler::DumpData(bool increment, int tid){
 	}
     }
   }
+#elif TRACING_ON
+  TraceEvFlush();
 #endif //PROFILING_ON
   return 1;
 }
@@ -2515,8 +2516,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.80 $   $Date: 2002/12/26 22:51:13 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.80 2002/12/26 22:51:13 sameer Exp $ 
+ * $Revision: 1.81 $   $Date: 2003/05/20 18:44:28 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.81 2003/05/20 18:44:28 sameer Exp $ 
  ***************************************************************************/
 
 	

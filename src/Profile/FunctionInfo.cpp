@@ -182,6 +182,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	// and size operations are done (this should be atomic). 
 	// Function Id is the index into the DB vector
 	FunctionId = TheFunctionDB().size();
+	SetFlushEvents(tid);
 #endif /* TAU_EPILOG */
 #endif //TRACING_ON
 	RtsLayer::UnLockDB();
@@ -307,6 +308,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2002/05/06 12:23:34 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.31 2002/05/06 12:23:34 sameer Exp $ 
+ * $Revision: 1.32 $   $Date: 2003/05/20 18:44:28 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.32 2003/05/20 18:44:28 sameer Exp $ 
  ***************************************************************************/
