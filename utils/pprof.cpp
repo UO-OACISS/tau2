@@ -69,9 +69,9 @@ using namespace std;
 # include <float.h>
 #endif //TAU_WINDOWS
 
-#ifdef DEC_ALPHA 
+#ifdef COMPAQ_ALPHA 
 # include <float.h>
-#endif /* DEC_ALPHA */
+#endif /* COMPAQ_ALPHA */
 #ifdef KAI
 # include <algobase>
 using namespace std;
@@ -3096,7 +3096,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2000/10/19 22:28:05 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.23 2000/10/19 22:28:05 sameer Exp $                                                   
+ * $Revision: 1.24 $   $Date: 2001/03/08 23:58:24 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.24 2001/03/08 23:58:24 sameer Exp $                                                   
  ***************************************************************************/
 

@@ -275,11 +275,11 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      USE_DECCXX)
-	echo NOTE: Using the DEC cxx C++ compiler
+	echo NOTE: Using the Compaq cxx C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     DEC_ALPHA)
-	echo NOTE: Using configuration for DEC Alpha      
+     COMPAQ_ALPHA)
+	echo NOTE: Using configuration for Compaq Alpha      
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      USE_IBMXLC)
@@ -288,6 +288,10 @@ fi
 	;;
      IBMXLC_OPENMP)
 	echo NOTE: Using the IBM xlC OpenMP options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     COMPAQCXX_OPENMP)
+	echo NOTE: Using the Compaq cxx OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      USE_SGINCC)
