@@ -33,9 +33,9 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/gar/rs/demo/tau2
+TAUROOT=/home/grads/sameer/gar/rs/tau2cray
 TULIPDIR=/users/sameer/s
-TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/gar/rs/demo/tau2
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/gar/rs/tau2cray
 TAU_OPTIONS=
 #######################################################################
  
@@ -88,6 +88,8 @@ LSX = .a
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
+#SGIMP#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
+#CRAYKAI#TAU_FORTRANLIBS	       =        #ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
@@ -110,6 +112,8 @@ TAU_DEFS	= $(TAUDEFS)
 TAU_INCLUDE 	= -I$(TAUROOT)/include
 
 TAU_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -ltau$(TAU_OPTIONS) $(LEXTRA)
+
+TAU_DISABLE	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTauDisable
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 # These options could be included in the application Makefile as 
