@@ -44,11 +44,11 @@ extern "C" {
   JNIEXPORT jint JNICALL JVM_OnLoad(JavaVM *jvm, char *options, void *reserved)
 {
 #ifdef DEBUG_PROF
-    fprintf(stderr, "TAU> initializing ..... \n");
+    fprintf(stdout, "TAU> initializing ..... \n");
 #endif /* DEBUG_PROF */
     // get jvmpi interface pointer
     if ((jvm->GetEnv((void **)&tau_jvmpi_interface, JVMPI_VERSION_1)) < 0) {
-      fprintf(stderr, "TAU> error in obtaining jvmpi interface pointer\n"
+      fprintf(stdout, "TAU> error in obtaining jvmpi interface pointer\n"
 );
       return JNI_ERR;
     }
@@ -62,12 +62,14 @@ extern "C" {
     tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_THREAD_START, NULL);
     tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_THREAD_END, NULL);
 
+
     if ((sbrk(1024*1024*4)) == (void *) -1) {
-      fprintf(stderr, "TAU>ERROR: sbrk failed\n");
+      fprintf(stdout, "TAU>ERROR: sbrk failed\n");
       exit(1);
     }
+
 #ifdef DEBUG_PROF 
-    fprintf(stderr, "TAU> .... ok \n\n");
+    fprintf(stdout, "TAU> .... ok \n\n");
 #endif /* DEBUG_PROF */
     return JNI_OK;
   }
@@ -94,7 +96,7 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
     break;
   /* Use Monitor contended enter, entered and exit events as well */
   default:
-    fprintf(stderr, "TAU> Event not registered\n");
+    fprintf(stdout, "TAU> Event not registered\n");
     break;
   }
 }
@@ -102,8 +104,9 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
 void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 {
   int i;
+  char funcname[2048], funcsig[1024];
 #ifdef DEBUG_PROF
-    fprintf(stderr, "TAU> Class Load : %s\n", event->u.class_load.class_name);
+    fprintf(stdout, "TAU> Class Load : %s\n", event->u.class_load.class_name);
 #endif /* DEBUG_PROF */
   static int j = TAU_PROFILE_SET_NODE(0);
 
@@ -111,16 +114,17 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
   {
     /* Create FunctionInfo objects for each of these methods */
 
-    TAU_MAPPING_CREATE(event->u.class_load.methods[i].method_name, 
-		       event->u.class_load.methods[i].method_signature,
+    sprintf(funcname, "%s  %s", event->u.class_load.class_name, 
+	event->u.class_load.methods[i].method_name); 
+/*
+    sprintf(funcsig,"%s", event->u.class_load.methods[i].method_signature);
+*/
+    TAU_MAPPING_CREATE(funcname, " ",
 	  (long)  event->u.class_load.methods[i].method_id, 
-		     event->u.class_load.class_name); 
+		     funcname); 
 #ifdef DEBUG_PROF 
-    printf("TAU> method: %s, sig: %s, id: %ld, class: %s\n",
-		event->u.class_load.methods[i].method_name,
-        	event->u.class_load.methods[i].method_signature,
-           		event->u.class_load.methods[i].method_id,
-                       event->u.class_load.class_name);
+    printf("TAU> %s, id: %ld\n", funcname,
+		event->u.class_load.methods[i].method_id);
 #endif /* DEBUG_PROF */
     /* name, type, key, group name  are the four arguments above */
   }
@@ -136,7 +140,7 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event)
   TAU_MAPPING_PROFILE_START(TauTimer);
 
 #ifdef DEBUG_PROF 
-  fprintf(stderr, "TAU> Method Entry %s %s:%ld \n", 
+  fprintf(stdout, "TAU> Method Entry %s %s:%ld \n", 
   		TauMethodName->GetName(), TauMethodName->GetType(), 
 	 	(long) event->u.method.method_id);
 #endif /* DEBUG_PROF */
@@ -148,7 +152,7 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event)
   TAU_MAPPING_PROFILE_STOP();
 
 #ifdef DEBUG_PROF
-  fprintf(stderr, "TAU> Method Exit : %ld\n",
+  fprintf(stdout, "TAU> Method Exit : %ld\n",
 	 	(long) event->u.method.method_id);
 #endif /* DEBUG_PROF */
 }
@@ -156,7 +160,7 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event)
 void TauJavaLayer::ThreadStart(JVMPI_Event *event)
 {
 #ifdef DEBUG_PROF
-    fprintf(stderr, "TAU> Thread Start : \n");
+    fprintf(stdout, "TAU> Thread Start : \n");
 #endif /* DEBUG_PROF */
 
 }
@@ -164,9 +168,9 @@ void TauJavaLayer::ThreadStart(JVMPI_Event *event)
 void TauJavaLayer::ThreadEnd(JVMPI_Event *event)
 {
 #ifdef DEBUG_PROF
-    fprintf(stderr, "TAU> Thread End : \n");
+    fprintf(stdout, "TAU> Thread End : \n");
 #endif /* DEBUG_PROF */
-//    TAU_PROFILE_EXIT("END...");
+    TAU_PROFILE_EXIT("END...");
 }
 
 /* EOF : TauJava.cpp */

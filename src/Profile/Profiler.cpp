@@ -368,6 +368,12 @@ void Profiler::ProfileExit(const char *message)
 
   DEBUGPROFMSG("nct "<< RtsLayer::myNode() << " RtsLayer::ProfileExit called :"
     << message << endl;);
+  if (current == 0) 
+  {   
+     DEBUGPROFMSG("Current is NULL, Storing data "<<endl;);
+     StoreData(tid);
+  }
+    
 
   while (current != 0) {
     DEBUGPROFMSG("Thr "<< RtsLayer::myNode() << " ProfileExit() calling Stop :" 
@@ -382,7 +388,7 @@ void Profiler::ProfileExit(const char *message)
            << " ProfileExit() : Reached top level function - dumping data"
            << endl;);
 
-          current->StoreData(tid);
+          StoreData(tid); // static now. Don't need current. 
       }
     }
 
@@ -489,7 +495,7 @@ int Profiler::StoreData(int tid)
   	    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
   	      (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
   	      (*it)->GetExclTime(tid), (*it)->GetInclTime(tid));
-  
+
 #ifdef PROFILE_STATS 
   	    fprintf(fp,"%.16G ", (*it)->GetSumExclSqr(tid));
 #endif //PROFILE_STATS
@@ -708,8 +714,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 1999/07/20 21:50:36 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.26 1999/07/20 21:50:36 sameer Exp $ 
+ * $Revision: 1.27 $   $Date: 1999/08/11 23:59:45 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.27 1999/08/11 23:59:45 sameer Exp $ 
  ***************************************************************************/
 
 	
