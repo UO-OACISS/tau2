@@ -217,10 +217,15 @@ void Profiler::Stop(void)
         DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
   	  << RtsLayer::myContext() << "," << tid 
 	  << " Profiler::Stop() : Name : "<< ThisFunction->GetName() 
-	  << " Start : " <<StartTime <<" TotalTime : " << TotalTime<< endl;);
+	  << " Start : " <<StartTime <<" TotalTime : " << TotalTime
+	  << " AddInclFlag : " << AddInclFlag << endl;);
 
 	if (AddInclFlag == true) { // The first time it came on call stack
 	  ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
+
+          DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
+  	    << RtsLayer::myContext() << "," << tid  << " "  
+	    << "STOP: After SetAlreadyOnStack Going for AddInclTime" <<endl; );
 
 	  // And its ok to add both excl and incl times
 	  ThisFunction->AddInclTime(TotalTime, tid);
@@ -235,7 +240,9 @@ void Profiler::Stop(void)
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS)|| defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall += TotalTime;
-	DEBUGPROFMSG("Thr "<< RtsLayer::myNode() << "Profiler::Stop() : Name " 
+	DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
+          << RtsLayer::myContext() << "," << tid  << " " 
+  	  << "Profiler::Stop() : Name " 
 	  << ThisFunction->GetName() << " ExclTimeThisCall = "
 	  << ExclTimeThisCall << " InclTimeThisCall " << TotalTime << endl;);
 
@@ -251,7 +258,8 @@ void Profiler::Stop(void)
 
 	if (ParentProfiler != 0) {
 
-	  DEBUGPROFMSG("Thr " << RtsLayer::myNode() 
+	  DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
+            << RtsLayer::myContext() << "," << tid  
 	    << " Profiler::Stop(): ParentProfiler Function Name : " 
 	    << ParentProfiler->ThisFunction->GetName() << endl;);
 
@@ -630,8 +638,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 1998/08/10 16:48:47 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.13 1998/08/10 16:48:47 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 1998/08/14 15:35:43 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.14 1998/08/14 15:35:43 sameer Exp $ 
  ***************************************************************************/
 
 	
