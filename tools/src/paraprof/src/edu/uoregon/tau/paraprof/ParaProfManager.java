@@ -245,10 +245,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			int selRow = tree.getRowForLocation(evt.getX(), evt.getY());
 			TreePath path = tree.getPathForLocation(evt.getX(), evt.getY());
 			if(path!=null) {
+			    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+			    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+			    Object userObject = selectedNode.getUserObject();
 			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
-				Object userObject = selectedNode.getUserObject();
 				if((selectedNode==standard)||(selectedNode==dbApps)){
 				   clickedOnObject = selectedNode;
 				   popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
@@ -271,8 +271,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				}
 			    }
 			    else{
-				if(evt.getClickCount()==2)
-				    metric(path,true);
+				if(evt.getClickCount()==2){
+				    if(userObject instanceof Metric)
+					metric(path,true);
+				}
 			    }
 			    
 			}
