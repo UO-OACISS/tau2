@@ -1488,9 +1488,13 @@ case $machine in
  	  then
 	    fixmakeargs="$fixmakeargs SOL2PAPI"
 	fi
-	if [ $cxx_compiler = CC -a $fortran_compiler = no ]  
+	if [ $cxx_compiler = CC ]  
 	  then
-	    fixmakeargs="$fixmakeargs SUN_FORTRAN"
+	    fixmakeargs="$fixmakeargs SOL2CC"
+	    if [ $fortran_compiler = no ]  
+	    then
+	      fixmakeargs="$fixmakeargs SUN_FORTRAN"
+            fi
         fi
 	 
 		
