@@ -17,10 +17,19 @@ public class ParaProfError{
     //####################################
     //Instance Data.
     //####################################
-    public String s0 = null; //Being used as a code location string.
-    public String s1 = null; //Being used as the primary descriptor.
-    public String s2 = null;
-    public String s3 = null;
+    public String location = null; //code location string.
+    public String popupString = null;
+    public static String contactString =
+	"@@@@@@@@@\n"+
+	"@@@ Please email us at: tau-bugs@cs.uoregon.edu\n"+
+	"@@@ If possible, include the profile files that caused this error,\n"+
+	"@@@ and a brief desciption your sequence of operation.\n"+
+	"@@@ Also email this error message,as it will tell us where the error occured.\n"+
+	"@@@ Thank you for your help!\n"+
+	"@@@@@@@@@";
+
+    public String s0 = null;
+    public String s1 = null;
 
     public Exception exp  = null;
     public Component component = null;
@@ -31,7 +40,8 @@ public class ParaProfError{
     public boolean showPopup = false; //Indicates whether it is safe to show a popup window.
                                       //Some methods do not seem to like being interupted - 
                                       //paintComponent methods for example.
-    public boolean quit = false; //Indicates whether this error is serious
+    public boolean showContactString = false; //Indicates whether the contact string is printed.
+    public boolean quit = true; //Indicates whether this error is serious
                                  //enough to quit the system or not.
     //####################################
     //End - Instance Data.

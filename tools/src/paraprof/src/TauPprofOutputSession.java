@@ -219,6 +219,18 @@ public class TauPprofOutputSession extends DataSession{
 	try{
 	    if(obj instanceof File)
 		file = (File) obj;
+	    else{
+		ParaProfError paraProfError = new ParaProfError();
+		paraProfError.location = "TPOS1";
+		paraProfError.popupString = "File Read Error!";
+		paraProfError.s0 = 
+		    "Pprof data session file read error.\n"+
+		    "If this problem persists, please use the contact info. below!";
+		paraProfError.showPopup = true;
+		paraProfError.showContactString = true;
+		paraProfError.quit = false;
+		ParaProf.systemError(paraProfError, null, null);
+	    }
 
 	    System.out.println("Processing data file, please wait ......");
 	    long time = System.currentTimeMillis();

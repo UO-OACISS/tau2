@@ -201,33 +201,53 @@ public class ParaProf implements ActionListener{
   
     //Handles system errors.
     public static void systemError(Object obj, Component component, String string){ 
+	System.out.println("####################################");
+	boolean quit = true; //Quit by default.
 	if(obj != null){
 	    if(obj instanceof Exception){
+		Exception exception = (Exception) obj;
 		if(ParaProf.debugIsOn){
-		    System.out.println(((Exception) obj).toString());
-		    ((Exception) obj).printStackTrace();
-		    System.out.println("");
-		    System.out.println("");
+		    System.out.println(exception.toString());
+		    exception.printStackTrace();
+		    System.out.println("\n");
 		}
 		System.out.println("An error was detected: " + string);
+		System.out.println(ParaProfError.contactString);
 	    }
 	    if(obj instanceof ParaProfError){
 		ParaProfError paraProfError = (ParaProfError) obj;
 		if(ParaProf.debugIsOn){
-		    if(paraProfError.showPopup)
+		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
 			JOptionPane.showMessageDialog(paraProfError.component,
-						      "ParaProf Error", paraProfError.s0, JOptionPane.ERROR_MESSAGE);
+						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
 		    if(paraProfError.exp!=null){
 			System.out.println(paraProfError.exp.toString());
 			paraProfError.exp.printStackTrace();
-			System.out.println("");
-			System.out.println("");
+			System.out.println("\n");
 		    }
-			
+		    if(paraProfError.location!=null)
+			System.out.println("Location: " + paraProfError.location);
+		    if(paraProfError.s0!=null)
+			System.out.println(paraProfError.s0);
+		    if(paraProfError.s1!=null)
+			System.out.println(paraProfError.s1);
+		    if(paraProfError.showContactString)
+			System.out.println(ParaProfError.contactString);
 		}
 		else{
+		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
+			JOptionPane.showMessageDialog(paraProfError.component,
+						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
+		    if(paraProfError.location!=null)
+			System.out.println("Location: " + paraProfError.location);
+		    if(paraProfError.s0!=null)
+			System.out.println(paraProfError.s0);
+		    if(paraProfError.s1!=null)
+			System.out.println(paraProfError.s1);
+		    if(paraProfError.showContactString)
+			System.out.println(ParaProfError.contactString);
 		}
-		System.out.println("An error was detected: " + string);
+		quit = paraProfError.quit;
 	    }
 	    else{
 		System.out.println("An error has been detected: " + string);
@@ -236,16 +256,9 @@ public class ParaProf implements ActionListener{
 	else{
 	    System.out.println("An error was detected at " + string);
 	}
-	System.out.println("Please email us at: tau-bugs@cs.uoregon.edu");
-	System.out.println("");
-	System.out.println("If possible, include the profile files that caused this error,");
-	System.out.println("and a brief desciption your sequence of operation.");
-	System.out.println("");
-	System.out.println("Also email this error message,as it will tell us where the error occured.");
-	System.out.println("");
-	System.out.println("Thank you for your help!");
-    
-	System.exit(0);
+	System.out.println("####################################");
+	if(quit)
+	    System.exit(0);
     }
 
     // Main entry point
