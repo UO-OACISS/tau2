@@ -83,6 +83,13 @@ if [ ! -r ${JDBC_JAR} ]; then
 
 	if [ ${RESPONSE} == "y" ]; then 
 	    JDBC_ROOT=`basename ${JDBC_JAR}`
+
+	    WGET=`which wget 2>/dev/null`
+	    
+	    if [ -z $WGET ]; then
+		echo "\nCouldn't find wget, you'll have to manually download your JDBC driver"
+		exit 1
+	    fi
 	    
 	    if [ ${JDBC_ROOT} == "mysql.jar" ]; then
 		wget http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-3.0.14-production.tar.gz/from/http://mysql.247available.com/
