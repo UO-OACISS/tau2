@@ -39,6 +39,7 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
+#include "Profile/OpenMPLayer.h"
 
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
@@ -71,6 +72,8 @@ int RtsLayer::myThread(void)
 #elif JAVA
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
+#elif _OPENMP
+  return OpenMPLayer::GetThreadId();
 #else  // if no other thread package is available 
   return 0;
 #endif // PTHREADS
@@ -89,6 +92,8 @@ void RtsLayer::RegisterThread()
   WindowsThreadLayer::RegisterThread();
 #elif  TULIPTHREADS
   TulipThreadLayer::RegisterThread();
+#elif _OPENMP
+  OpenMPLayer::RegisterThread();
 #endif // PTHREADS
 // Note: Java thread registration is done at the VM layer in TauJava.cpp
   return;
@@ -108,6 +113,8 @@ void RtsLayer::LockDB(void)
   TulipThreadLayer::LockDB();
 #elif  JAVA
   JavaThreadLayer::LockDB();
+#elif _OPENMP
+  OpenMPLayer::LockDB();
 #endif // PTHREADS
   return ; // do nothing if threads are not used
 }
@@ -126,6 +133,8 @@ void RtsLayer::UnLockDB(void)
   TulipThreadLayer::UnLockDB();
 #elif JAVA
   JavaThreadLayer::UnLockDB();
+#elif _OPENMP
+  OpenMPLayer::UnLockDB();
 #endif // PTHREADS
   return;
 }
@@ -134,8 +143,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2000/03/20 20:03:09 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.9 2000/03/20 20:03:09 sameer Exp $
+ * $Revision: 1.10 $   $Date: 2000/06/09 22:10:26 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.10 2000/06/09 22:10:26 sameer Exp $
  ***************************************************************************/
 
 
