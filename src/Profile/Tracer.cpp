@@ -29,11 +29,12 @@ extern "C" time_t time(time_t * t);
 unsigned long int pcxx_ev_class = PCXX_EC_TRACER | PCXX_EC_TIMER;
 
 /* -- event record buffer ------------------------------------ */
-#define TAU_MAX_RECORDS 1024
+#define TAU_MAX_RECORDS 64*1024
 #define TAU_BUFFER_SIZE sizeof(PCXX_EV)*TAU_MAX_RECORDS
 
 /* -- buffer that holds the events before they are flushed to disk -- */
-static PCXX_EV TraceBuffer[TAU_MAX_THREADS][TAU_BUFFER_SIZE]; 
+static PCXX_EV TraceBuffer[TAU_MAX_THREADS][TAU_MAX_RECORDS]; 
+/* The second dimension shouldn't be TAU_BUFFER_SIZE ! */
 
 /* -- id of the last record for each thread --- */
 /* -- pointer to last available element of event record buffer */
@@ -195,6 +196,20 @@ void TraceEvInit(int tid)
     if ( pcxx_ev_class & PCXX_EC_TRACER )
       TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
   }
+}
+
+ /* This routine is typically invoked when multiple SET_NODE calls are 
+    encountered for a multi-threaded program */ 
+void TraceReinitialize(int oldid, int newid, int tid)
+{
+  printf("Inside TraceReinitialize : oldid = %d, newid = %d, tid = %d\n",
+	oldid, newid, tid);
+  /* We should put a record in the trace that says that oldid is mapped to newid this 
+     way and have an offline program clean and transform it. Otherwise if we do it 
+     online, we'd have to lock the multithreaded execution, and do if for all threads
+     and this may perturb the application */
+
+  return ;
 }
 
 void pcxx_EvInit(char *name)
