@@ -162,7 +162,7 @@ proc vectorsum {vector} {
   if [DEBUG] {
       puts "vectorsum:"
       puts "  vector: $vector"
-      puts "  v: $v"
+      #puts "  v: $v"
   }
 
   set r 0.0
@@ -601,7 +601,7 @@ proc UserEbargraph {win bgtitle labels numval maxval minval  tags {unodes {}} {m
 
     # -- display bars and right labels according to mode
 
-    if { [llength $numval] != 1 } {
+    if { [llength $numval] != 0 } {
       switch -exact $mode {
 	  num { set p [format "%4.0f" [expr [lindex $numval $i] / $totalnum * 100]] }
 	  max { set p [ expr [lindex $maxval $i] / $totalmax * 100 ] }
@@ -676,7 +676,7 @@ proc UserEbargraph {win bgtitle labels numval maxval minval  tags {unodes {}} {m
   
   for {set i 0} {$i<$num} {incr i} {
     # -- display left labels according to mode
-    if { [llength $numval] != 1 } {
+    if { [llength $numval] != 0 } {
       switch -exact $mode {
 	  num { set p [format "%4.0f" [expr [lindex $numval $i] / $totalnum * 100]] }
 	  max { set p [ expr [lindex $maxval $i] / $totalmax * 100 ] }
