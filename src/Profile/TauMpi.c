@@ -1707,7 +1707,6 @@ MPI_Request * request;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
-  request_list *newrq;
   int typesize;
 #endif /* TAU_TRACK_MSG */
 
@@ -1817,7 +1816,6 @@ MPI_Request * request;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
-  request_list *newrq;
   int typesize3;
 #endif /* TAU_TRACK_MSG */
 
@@ -1853,7 +1851,6 @@ MPI_Request * request;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
-  request_list *newrq;
   int typesize3;
 #endif /* TAU_TRACK_MSG */
 
@@ -1889,7 +1886,6 @@ MPI_Request * request;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
-  request_list *newrq;
   int typesize3;
 #endif /* TAU_TRACK_MSG */
 
@@ -2049,7 +2045,6 @@ MPI_Request * request;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
-  request_list *newrq;
   int typesize3;
 #endif /* TAU_TRACK_MSG */
 
@@ -2253,7 +2248,6 @@ MPI_Request * request;
 {
   int  returnVal;
 #ifdef TAU_TRACK_MSG
-  request_list *newrq;
   int typesize3;
 #endif /* TAU_TRACK_MSG */
 
