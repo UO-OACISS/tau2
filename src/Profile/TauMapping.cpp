@@ -32,6 +32,15 @@
 
 #include "Profile/Profiler.h"
 
+struct lTauGroup
+{
+  bool operator()(const TauGroup_t s1, const TauGroup_t s2) const
+  {
+    return s1 < s2;
+  }
+};
+
+
 //////////////////////////////////////////////////////////////////////
 // This global variable is used to keep the function information for
 // mapping. It is passed to the Profiler. It takes the key and returns
@@ -41,7 +50,7 @@
 FunctionInfo *& TheTauMapFI(TauGroup_t Pgroup )
 { 
   //static FunctionInfo *TauMapFI = (FunctionInfo *) NULL;
-  static map<TauGroup_t, FunctionInfo *> TauMapGroups;
+  static map<TauGroup_t, FunctionInfo *, lTauGroup > TauMapGroups;
 
   return TauMapGroups[Pgroup];
 }
