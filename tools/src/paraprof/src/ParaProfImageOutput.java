@@ -79,7 +79,7 @@ public class ParaProfImageOutput{
 	    }
 	}
 	catch(Exception e){
-	    UtilFncs.systemError(null, null, "PPII02");
+	    UtilFncs.systemError(e, null, "PPIO01");
 	}
     }
 }
