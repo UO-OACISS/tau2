@@ -669,7 +669,7 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
   return 0;
 }
 
-int GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
+long long GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
     int myid, int otherid, int msglen, int *other_tid, int *other_nodeid)
 /* parameters: trcdes:    input trace file descriptor.
 	       msgtag:     message tag that we're searching for
@@ -733,7 +733,7 @@ int GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
 #endif /* DEBUG */
        /* Reset trace file */
        lseek(trcdes.fd, last_position, SEEK_SET);
-       return 1;
+       return phRecv;
      }
      /* This only applies to Send! */
    }
@@ -918,7 +918,7 @@ int main (int argc, char *argv[])
     intrc.last      = (PCXX_EV *) NULL;
     intrc.overflows = 0;
 
-    if(threads)
+    if((threads) || (outFormat == paraver))
       tmpbuffer = (PCXX_EV *) malloc (INMAX * sizeof(PCXX_EV));
 
     /* -- read first event record ------------------------------------------- */
@@ -1514,33 +1514,10 @@ int main (int argc, char *argv[])
 	      otherid 	= ((erec->par>>24) & 0x000000FF) + 1;
 	      msglen  	= erec->par & 0x0000FFFF;
 	      
-	      if (threads)
-		{
-		  phRecv = GetMatchingRecv(intrc, msgtag, GetNodeId(erec),
-					   otherid -1 , msglen, &other_tid, &other_nodeid);
-		  if(phRecv > 0)
-		    { /* call was successful, we've the other_tid and other_nodeid */
-		      otherid = offset[other_nodeid] + other_tid + 1;
-#ifdef DEBUG
-		      printf("Calculated otherid = %d\n", otherid);
-#endif /* DEBUG */
-		      
-		    }
-		  else
-		    { /* call was unsuccessful, we couldn't locate a matching ipc call */
-		      printf("Matching IPC call not found. Assumption in place...\n");
-		      
-		      /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
-			 node. True for MPI+JAVA. In future, do a matching algo. */
-		      otherid	= offset[otherid-1] + erec->tid + 1;
-		      /* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
-#ifdef DEBUG
-		      printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
-		      printf("SEND: OTHER %d, myid %d len %d tag %d: PAR: %lx\n",
-			     otherid, myid, msglen, msgtag, erec->par);
-#endif /* DEBUG */
-		    }
-		}
+	      phRecv = GetMatchingRecvPRV(intrc, msgtag, GetNodeId(erec),
+					  otherid -1 , msglen, &other_tid, &other_nodeid);
+
+	      
 	      
 #ifdef DEBUG
 	      printf ("\n\n%llu SENDMSG %d FROM %d TO %d LEN %d\n\n\n",
@@ -1548,7 +1525,13 @@ int main (int argc, char *argv[])
 		      msgtag, myid , otherid , msglen);
 #endif /* DEBUG */
 	      
-	      fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%lld:%lld\n",myid+1,myid+1,erec->tid+1,erec->ti-intrc.firsttime,erec->ti - intrc.firsttime,otherid+1,otherid+1,other_tid+1,phRecv,phRecv,msglen,msgtag);
+	      /*Print the record in the form:
+		RecordType(3)for Communication:SendNodeId:SendPTaskID:
+		SendTaskID:SendThreadID:logicalSendTime:PhysicalSendTime:
+		RecvNodeID:RecvPTaskID:RecvTaskID:RecvThreadID:
+		:LogicalRecvTime:PhysicalRecvTime:MessageLength:MessageTag
+	      */
+	      fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%lld:%lld\n",myid,myid,erec->tid+1,erec->ti-intrc.firsttime,erec->ti - intrc.firsttime,otherid,otherid,other_tid+1,phRecv,phRecv,msglen,msgtag);
 	   
 	    }
 	  else if ( (ev->tag == RECV_EVENT ) && pvComm )
@@ -1566,31 +1549,17 @@ int main (int argc, char *argv[])
 	      otherid       = ((erec->par>>24) & 0x000000FF) + 1;
 	      msglen	= erec->par & 0x0000FFFF;
 	      
-	      if (threads)
-		{
+	      
 		  if (GetMatchingSend(intrc, msgtag, GetNodeId(erec),
 				      otherid - 1 , msglen, &other_tid, &other_nodeid))
 		    { /* call was successful, we've the other_tid and other_nodeid */
-		      otherid = offset[other_nodeid] + other_tid + 1;
+		   
 #ifdef DEBUG
 		      printf("Calculated senderid = %d\n", otherid);
 #endif /* DEBUG */
 		      
 		    }
-		  else
-		    { /* call was unsuccessful, we couldn't locate a matching ipc call */
-		      printf("Matching IPC call not found. Assumption in place...\n");
-		      /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
-			 node. True for MPI+JAVA. In future, do a matching algo. */
-		      otherid	= offset[otherid-1] + erec->tid + 1;
-		      /* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
-#ifdef DEBUG
-		      printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
-		      printf("RECV: OTHER %d, myid %d len %d tag %d: PAR: %lx\n",
-			     otherid, myid, msglen, msgtag, erec->par);
-#endif /* DEBUG */
-		    }
-		}
+
 	      
 #ifdef DEBUG
 	      printf ("%llu RECVMSG %d BY %d FROM %d LEN %d\n",
@@ -1610,7 +1579,20 @@ int main (int argc, char *argv[])
 		  fprintf (stderr, "       event %s at %llu\n", ev->name, erec->ti);
 		  exit (1);
 		}
+
+	      /*Print the record in the form:
+		RecordType(2)for event:NodeID:PTaskID:TaskID:ThreadID:
+		:event time:eventType(5) for method entry/exit:event tag(to
+		distinguish between events of the same type, 0 for exit and
+		erec->ev for entry
+	      */
+	 
 	      fprintf (outfp, "2:%d:1:%d:%d:%llu:5:0\n",(erec->nid)+1,(erec->nid)+1,erec->tid+1,erec->ti-intrc.firsttime);
+	      
+	      /*Upon exit of a method, write another record indicating
+		entry into the previous method on the stack for that
+		particular node and thread
+	      */
 	      if(stkptr[GetNodeId(erec)]->tag != -99)
 		fprintf(outfp,"2:%d:1:%d:%d:%llu:5:%d\n",(erec->nid)+1,(erec->nid)+1,erec->tid+1,erec->ti-intrc.firsttime,stkptr[GetNodeId(erec)]->tag);
 	      if(prvPCF[erec->ev-1] == 0){
@@ -1629,6 +1611,13 @@ int main (int argc, char *argv[])
 		  exit (1);
 		}
 	      stkptr[GetNodeId(erec)]->tag = erec->ev;
+
+	      /*Print the record in the form:
+		/RecordType(2)for event:NodeID:PTaskID:TaskID:ThreadID:
+		:event time:eventType(5) for method entry/exit:event tag(to
+		distinguish between events of the same type, 0 for exit and
+		erec->ev for entry
+	      */
 
 	      fprintf (outfp, "2:%d:1:%d:%d:%llu:5:%d\n",(erec->nid)+1,(erec->nid)+1,erec->tid+1,erec->ti-intrc.firsttime,erec->ev);
 	      if(prvPCF[erec->ev-1] == 0){
