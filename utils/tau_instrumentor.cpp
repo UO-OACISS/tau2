@@ -933,6 +933,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
+  int space, i, j, k;
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
     return false;
@@ -1027,7 +1028,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #ifdef DEBUG
 	    cout <<"Body Begin: Routine " <<(*it)->item->fullName()<<endl;
 #endif /* DEBUG */
-             	for(int i=0; i< ((*it)->col)-1; i++)
+             	for(i=0; i< ((*it)->col)-1; i++)
 		{ 
 #ifdef DEBUG
 	  	  cout << "Writing (1): "<<inbuf[i]<<endl;
@@ -1044,7 +1045,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		WRITE_TAB(ostr,(*it)->col);
 		ostr <<"save profiler"<<endl<<endl;
 
-     		for (int space = 0; space < (*it)->col-1 ; space++) 
+     		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG)
 		{
@@ -1077,14 +1078,14 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  }
   		}
 		/* spaces */
-     		for (int space = 0; space < (*it)->col-1 ; space++) 
+     		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
 
 		WRITE_TAB(ostr,(*it)->col);
 		ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
 
 		/* write the original statement */
-     		for (int k = 0; k < write_upto ; k++) 
+     		for (k = 0; k < write_upto ; k++) 
 		  ostr<< inbuf[k];
 
 		/* should we write the carriage return? */
@@ -1167,12 +1168,12 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		WRITE_TAB(ostr,(*it)->col);
 		ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
 
-     		for (int space = 0; space < (*it)->col-1 ; space++) 
+     		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space])
 
 		instrumented = true;
 	
-        	for(int j= ((*it)->col)-1; j <write_upto; j++)
+        	for(j= ((*it)->col)-1; j <write_upto; j++)
 		{ 
 #ifdef DEBUG
 	  	  cout <<"Writing(2): "<<inbuf[j]<<endl;
@@ -1460,8 +1461,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.51 $   $Date: 2003/10/24 22:27:52 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.51 2003/10/24 22:27:52 sameer Exp $
+ * $Revision: 1.52 $   $Date: 2003/11/14 21:54:49 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.52 2003/11/14 21:54:49 sameer Exp $
  ***************************************************************************/
 
 
