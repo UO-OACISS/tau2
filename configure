@@ -2744,51 +2744,56 @@ fi
 
 echo "TAU: installing TAU's PerfDB database utilities" 
 
-cat ${tauroot}/tools/src/perfdb/bin/configure.skel | 
+cat ${tauroot}/tools/src/dms/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${tauroot}/${architecture}/bin/perfdb_configure
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_configure
 echo "TAU: installed perfdb_configure in ${tauroot}/${architecture}/bin"
 
-cat ${tauroot}/tools/src/perfdb/bin/loadapp.skel | 
+cat ${tauroot}/tools/src/dms/bin/loadapp.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${tauroot}/${architecture}/bin/perfdb_loadapp
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadapp
 echo "TAU: installed perfdb_loadapp in ${tauroot}/${architecture}/bin"
 
-cat ${tauroot}/tools/src/perfdb/bin/loadexp.skel | 
+cat ${tauroot}/tools/src/dms/bin/loadexp.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${tauroot}/${architecture}/bin/perfdb_loadexp
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadexp
 echo "TAU: installed perfdb_loadexp in ${tauroot}/${architecture}/bin"
 
-cat ${tauroot}/tools/src/perfdb/bin/loadschema.skel | 
+cat ${tauroot}/tools/src/dms/bin/loadschema.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${tauroot}/${architecture}/bin/perfdb_loadschema
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadschema
 echo "TAU: installed perfdb_loadschema in ${tauroot}/${architecture}/bin"
 
-cat ${tauroot}/tools/src/perfdb/bin/loadtrial.skel | 
+cat ${tauroot}/tools/src/dms/bin/loadtrial.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${tauroot}/${architecture}/bin/perfdb_loadtrial
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_loadtrial
 echo "TAU: installed perfdb_loadtrial in ${tauroot}/${architecture}/bin"
 
-cat ${tauroot}/tools/src/perfdb/bin/translate.skel | 
+cat ${tauroot}/tools/src/dms/bin/translate.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${tauroot}/${architecture}/bin/perfdb_translate
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_translate
 echo "TAU: installed perfdb_translate in ${tauroot}/${architecture}/bin"
 
-cat ${tauroot}/tools/src/dms/examples/testBuild.skel | 
+cat ${tauroot}/tools/src/dms/src/examples/testBuild.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${tauroot}/tools/src/dms/examples/testBuild
-chmod a+rx ${tauroot}/tools/src/dms/examples/testBuild
+ > ${tauroot}/tools/src/dms/src/examples/testBuild
+chmod a+rx ${tauroot}/tools/src/dms/src/examples/testBuild
 
-cat ${tauroot}/tools/src/dms/examples/testSimpleExample.skel | 
+cat ${tauroot}/tools/src/dms/src/examples/testSimpleExample.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${tauroot}/tools/src/dms/examples/testSimpleExample
-chmod a+rx ${tauroot}/tools/src/dms/examples/testSimpleExample
+ > ${tauroot}/tools/src/dms/src/examples/testSimpleExample
+chmod a+rx ${tauroot}/tools/src/dms/src/examples/testSimpleExample
+
+cat ${tauroot}/tools/src/dms/src/examples/testCopy.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/tools/src/dms/src/examples/testCopy
+chmod a+rx ${tauroot}/tools/src/dms/src/examples/testCopy
 
 
 
