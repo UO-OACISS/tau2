@@ -44,7 +44,12 @@
 # include <string.h>
 # include <fcntl.h>
 # include <map.h>
+# include <limits.h>
 
+#ifdef KAI
+# include <algobase>
+using namespace std;
+#endif
 #ifdef POOMA_TFLOP
 extern "C" int getopt(int, char *const *, const char *);
 extern char *optarg;
@@ -148,6 +153,7 @@ static char lbuf[256];        /* -- temporary line buffer for reads -- */
 static char sbuf[128];        /* -- temporary string buffer -- */
 static int  hpcxx_flag = FALSE;
 static int  hwcounters = false;
+static int  userevents = false;
 static int  profilestats = false; /* for SumExclSqr */
 static int  files_processed = 0; /* -- used for printing summary -- */
 
@@ -162,6 +168,8 @@ static int CallCmp (const void *left, const void *right);
 static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
                          int max, char *order); 
 static void PrintFuncTab (struct p_prof_elem *tab, double total, int max);
+static void ProcessUserEventData(FILE *fp, int no, int ctx, int thr, int max);
+static void UserEventSummaryInfo(int node, int ctx, int thr);
 /**************** static var ******************************************/
 static int (* compar)(const void *, const void *) = CumMsecCmp;
 /********************** Dynamic Profiling Data Structures **************/
@@ -224,6 +232,50 @@ class FunctionData {
 };
 /* GLOBAL database of function names */
 map<const char*, FunctionData, ltstr> funcDB;
+
+
+class UserEventData {
+  public :
+    double     numevents;
+    double     maxvalue;
+    double     minvalue;
+    double     meanvalue;
+    double     sumsqr;
+  UserEventData(double ne, double maxv, double minv, double meanv, 
+	double sumsqrv) 
+    : numevents(ne), maxvalue(maxv), minvalue(minv), meanvalue(meanv),
+      sumsqr(sumsqrv) { }
+  UserEventData() {
+    numevents = meanvalue = sumsqr = 0;
+    maxvalue  = DBL_MIN;
+    minvalue  = DBL_MAX;
+  }
+  UserEventData(const UserEventData& X) 
+    : numevents(X.numevents), maxvalue(X.maxvalue), minvalue(X.minvalue),
+      meanvalue(X.meanvalue), sumsqr(X.sumsqr) { }
+  UserEventData& operator= (const UserEventData& X)  
+  {
+    numevents 	= X.numevents;
+    maxvalue 	= X.maxvalue;
+    minvalue 	= X.minvalue;
+    meanvalue	= X.meanvalue;
+    sumsqr	= X.sumsqr;
+    return *this;
+  }
+  UserEventData& operator+= (const UserEventData& X) {
+    maxvalue	= max (maxvalue, X.maxvalue);
+    minvalue	= min (minvalue, X.minvalue);
+    meanvalue 	= (meanvalue*numevents + X.meanvalue * X.numevents)/(numevents+X.numevents); 
+    numevents 	+= X.numevents;
+    sumsqr	+= X.sumsqr;
+
+    return *this;
+  }
+ ~UserEventData() { }
+};
+/* GLOBAL database of user event names */
+map<const char*, UserEventData, ltstr> userEventDB;
+
 
 bool IsDynamicProfiling(char *filename) 
 {
@@ -304,9 +356,12 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
 #endif // USE_LONG
   double excl, incl, exclthiscall, inclthiscall, sumexclsqr;
   bool dontread = false;
+  int numberOfUserEvents;
   FILE *fp;
   char *functionName; //need a separate string otherwise it stores only one ptr.
+  char *userEventName; //need a separate string otherwise it stores only one ptr
   map<const char*, FunctionData, ltstr>::iterator it;
+  map<const char*, UserEventData, ltstr>::iterator uit;
 
 
   
@@ -442,6 +497,88 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
 #endif /* DEBUG */
     }
   }
+/* Now look at filling the userEventDB */
+  if ( fgets (line, 256, fp) == NULL ) {
+    fprintf (stderr,
+                  "invalid proftablefile: cannot read number of collections\n");
+    exit (1);
+  }
+  sscanf(line, "%d %s", &numcoll, version);
+   // WRITE CODE TO SUPPORT AGGREGATES HERE
+  if ( fgets (line, 256, fp) != NULL) {
+      // If userevent data is available, process it.
+      sscanf(line, "%d %s", &numberOfUserEvents, version);
+      if (strcmp(version, "userevents") == 0) /* User events */
+      {
+        userevents = true;
+      }
+      else
+      { // Hey! What data did we read?
+        printf("Unable to process data read: %s\n", line);
+        printf("You're probably using an older version of this tool. \
+          Please upgrade\n");
+        fclose(fp);
+        return 0;
+      }
+      // First read the comment line 
+      // Read the user events
+    if ( fgets (line, 256, fp) != NULL) {
+      if (line[0] != '#')
+      { // everything is fine  read # eventname numevents max min mean sumsqr
+        // line contains the data for user events at this stage 
+        printf("Possible error in data format read: %s\n", line);
+        fclose(fp);
+        return 0;
+      }
+  
+      // Got the # line and now for the real user data 
+      for (i =0; i < numberOfUserEvents; i++) {
+        if (fgets(line, SIZE_OF_LINE, fp) == NULL) {
+          perror("Error in fgets: Cannot read user event table");
+          return 0;
+        }
+        // line[0] has '"' - start loop from 1 to get the entire function name
+        for (j=1; line[j] != '"'; j++) {
+          func[j-1] = line[j];
+        }
+        func[j-1] = '\0'; // null terminate the string
+        // At this point line[j] is '"' and the has a blank after that, so
+        // line[j+1] corresponds to the beginning of other data.
+  
+        userEventName = new char[strlen(func)+1]; // create a new storage - STL req.
+        strcpy(userEventName,func);
+  
+        if ((uit = userEventDB.find((const char *)userEventName)) != userEventDB.end()) {
+  #ifdef DEBUG
+          cout << "FOUND the name " << userEventName << endl;
+  #endif /* DEBUG */
+          delete userEventName; // don't need this if its already there.
+        }
+        else
+        {
+          userEventDB[(const char *)userEventName] = UserEventData();
+          // adds  a null record and creates the name key in the map
+          // Note: don't delete userEventName - STL needs it
+  #ifdef DEBUG
+  	printf("ADDED UserEventName %s to the userEventDB\n", userEventName);
+  #endif /* DEBUG */
+        }
+  
+  #ifdef DEBUG
+      printf("User Events read %s \n", line);
+  #endif /* DEBUG */
+  /* at this stage, the user event data should be read and userEventDB should 
+  be filled in */    
+      } /* All n user event data lines have been processed */
+    } /* read the first line after n userevents. It contains # event... */ 
+    else 
+    { /* EOF encountered */
+      fclose(fp);
+      return 0;
+    } /* data processed */ 
+  } /* userevent data not found */
+
+
   fclose(fp);
   return 1;
 }
@@ -531,6 +668,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
   bool dontread = false;
   FILE *fp;
   map<const char*, FunctionData, ltstr>::iterator it;
+  int numberOfUserEvents;
 
 
   sprintf(filename,"%s.%d.%d.%d",prefix, node, ctx, thr);
@@ -583,7 +721,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
   /* Before reading the data, initialize the map for the function */
   for(it = funcDB.begin(); it != funcDB.end(); it++) {
     (*it).second = FunctionData(); /* initialized to null values */
-  } /* This ensures that data from two files don't interfere */
+  } /* This ensures that data from two files doesn't interfere */
   
   /* Main loop of reading the function information, line by line */
   for (i =0; i < numberOfFunctions; i++) {
@@ -685,6 +823,25 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
     } // numcoll > 0 
   } // "aggregates" 
 
+  if ( fgets (line, 256, fp) != NULL) {
+    // If userevent data is available, process it.
+    sscanf(line, "%d %s", &numberOfUserEvents, version);
+    if (strcmp(version, "userevents") == 0) /* User events */
+    {
+      userevents = true;
+    } 
+    else
+    { // Hey! What data did we read? 
+      printf("Unable to process data read: %s\n", line);
+      printf("You're probably using an older version of this tool. \
+	Please upgrade\n");
+    }
+#ifdef DEBUG
+    printf("User Events read %s \n", line);
+#endif /* DEBUG */
+    ProcessUserEventData(fp, node, ctx, thr, numberOfUserEvents);
+
+  } /* user event data was there */
      
   fclose(fp);
 #ifdef DEBUG
@@ -693,6 +850,10 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
 
   // FUNCTION SUMMARY INFO 
   FunctionSummaryInfo(node, ctx, thr, max);
+  if (userevents) 
+  { /* user events were defined for this file */
+    UserEventSummaryInfo(node, ctx, thr);
+  }
 
   return 1;
 
@@ -1013,6 +1174,150 @@ int ProcessFileDynamicInNode (int node, int ctx, int thr, int maxfuncs, char *pr
   /* Iterations over 0.0.0 0.0.1 0.1.0 1.0.0 etc. */
 }
 
+/******************* user events profiling code ***************************/
+void  ProcessUserEventData(FILE *fp, int node, int ctx, int thr, 
+	int numberOfUserEvents)
+{
+  char line[SIZE_OF_LINE]; // In case function name is *really* long - templ. args
+  char func[SIZE_OF_LINE]; // - do - 
+  double userNumEvents, userMax, userMin, userMean, userSumSqr;
+  map<const char*, UserEventData, ltstr>::iterator it;
+  int i, j;
+
+  
+  // New Data format contains a string like
+  // "# Name Calls Subrs Excl Incl SumExclSqr ProfileCalls"
+  // "# eventname numevents max min mean sumsqr
+  if (fgets(line, sizeof(line), fp) == NULL) {
+    perror("Error: fgets returns NULL in format string ");
+    return ;
+  }
+  if (strncmp (line, "# eventname numevents max min mean sumsqr", 
+	strlen("# eventname numevents max min mean sumsqr")) == 0)
+  { 
+#ifdef DEBUG
+    cout << "ProcessUserEventData: Read line :" << line << " AS EXPECTED " << endl;
+#endif /* DEBUG */
+  } 
+  else 
+  {
+    cout << "Unexpected format string :"<< line <<": Currently not supported"
+      << endl;
+    return;
+  }
+  
+
+  /* Before reading the data, initialize the map for the function */
+  for(it = userEventDB.begin(); it != userEventDB.end(); it++) {
+    (*it).second = UserEventData(); /* initialized to null values */
+#ifdef DEBUG 
+     cout << "userEventDB entries name :"<< (*it).first <<endl;
+#endif /* DEBUG */
+  } /* This ensures that data from two files doesn't interfere */
+
+  /* Main loop of reading the function information, line by line */
+  for (i =0; i < numberOfUserEvents; i++) {
+    if (fgets(line, SIZE_OF_LINE, fp) == NULL) {
+      perror("Error in fgets: Cannot read event table");
+      return ;
+    }
+    // line[0] has '"' - start loop from 1 to get the entire function name
+    for (j=1; line[j] != '"'; j++) {
+        func[j-1] = line[j];
+    }
+    func[j-1] = '\0'; // null terminate the string
+    // At this point line[j] is '"' and the has a blank after that, so
+    // line[j+1] corresponds to the beginning of other data.
+    sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &userNumEvents, &userMax, 
+	&userMin, &userMean, &userSumSqr);
+
+    if ((it = userEventDB.find((const char *)func)) == userEventDB.end()) {
+      cout << "ERROR : In second pass ProcessUserEventData didn't find name " 
+	<< func << " on node " << node << " context " << ctx << " thread " 
+	<< thr << endl;
+      return;
+    }
+    userEventDB[func] += UserEventData(userNumEvents, userMax, userMin, 
+	userMean, userSumSqr);
+    /* In case a function appears twice in the same file (templated function
+    the user didn't specify exactly unique type - then add the data. Defaults
+    to assignment as initialization cleans it up. */
+#ifdef DEBUG 
+    cout << "Added userEvent entry to DB " << func << " : num " 
+      << userNumEvents << " max " << userMax << " mean " << userMean 
+      << " sumsqr " << userSumSqr << endl;
+#endif /* DEBUG */
+  } /* processed all userevent lines */
+  return;
+} 
+
+
+
+void UserEventSummaryInfo(int node, int ctx, int thr)
+{
+  // Generate a report of user events 
+  double stddev;
+  int i;
+  map<const char*, UserEventData, ltstr>::iterator it;
+ 
+  /* -- print user event profile data table ------------------------------ */
+  if ( nodeprint ) {
+    if ( dump ) 
+    {
+    //Code for racy 
+      printf("%d userevents\n", userEventDB.size());
+      printf("NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name\n");
+      for(it = userEventDB.begin(), i=0; it != userEventDB.end(); it++, i++ ) 
+      {
+        // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
+        stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents)
+                 - ( (*it).second.meanvalue * (*it).second.meanvalue )));
+	printf("userevent %d,%d,%d %d \"%s\" %.16G %.16G %.16G %.16G %.16G\n", 
+	  node, ctx, thr, i,
+	  (*it).first, 
+	  (*it).second.numevents, 
+	  (*it).second.maxvalue, 
+	  (*it).second.minvalue, 
+	  (*it).second.meanvalue, 
+	  stddev);
+
+        printf("%10.4G %10.4G %10.4G %10.4G %10.4G  %s\n",
+          (*it).second.numevents,
+          (*it).second.maxvalue,
+          (*it).second.minvalue,
+          (*it).second.meanvalue,
+          stddev,
+          (*it).first);
+      }
+ 
+    }
+    else 
+    {
+      printf("---------------------------------------------------------------------------------------\n");
+      printf("\nUSER EVENTS Profile :NODE %d, CONTEXT %d, THREAD %d\n", 
+	node, ctx, thr);
+      printf("---------------------------------------------------------------------------------------\n");
+      printf("NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name\n");
+      printf("---------------------------------------------------------------------------------------\n");
+      for(it = userEventDB.begin(); it != userEventDB.end(); it++ ) {
+        // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
+        stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents) 
+		 - ( (*it).second.meanvalue * (*it).second.meanvalue )));
+	printf("%10.4G %10.4G %10.4G %10.4G %10.4G  %s\n",
+	  (*it).second.numevents,
+	  (*it).second.maxvalue,
+	  (*it).second.minvalue,
+	  (*it).second.meanvalue,
+	  stddev,
+	  (*it).first);
+      } /* for loop */
+      printf("---------------------------------------------------------------------------------------\n");
+	
+    } /* not dump */
+ 
+  } /* node print */	  
+   
+} 
 
 
 
@@ -1038,10 +1343,10 @@ static char *ToTimeStr (double ti, char timbuf[])
   long msec, sec, min, hour;
 
   if (hwcounters == false) { /* time */
-    msec = fmod (ti / 1.0e3, 1.0e3);
-    sec  = fmod (ti / 1.0e6, 60.0);
-    min  = fmod (ti / 60.0e6, 60.0);
-    hour = ti / 36.0e8;
+    msec = (long) fmod (ti / 1.0e3, 1.0e3);
+    sec  = (long) fmod (ti / 1.0e6, 60.0);
+    min  = (long) fmod (ti / 60.0e6, 60.0);
+    hour = (long) (ti / 36.0e8);
   
     if ( hour )
       sprintf (timbuf, "%2d:%02d:%02d.%03d", hour, min, sec, msec);
@@ -1100,8 +1405,8 @@ static int CumMsecCmp (const void *left, const void *right)
 
 static int CallCmp (const void *left, const void *right)
 {
-  int l = ((struct p_prof_elem *) left)->numcalls;
-  int r = ((struct p_prof_elem *) right)->numcalls;
+  double l = ((struct p_prof_elem *) left)->numcalls;
+  double r = ((struct p_prof_elem *) right)->numcalls;
 
   if ( l < r )
     return sign;
@@ -1152,8 +1457,8 @@ static int StdDevCmp (const void *left, const void *right)
 
 static int SubrCmp (const void *left, const void *right)
 {
-  int l = ((struct p_prof_elem *) left)->numsubrs;
-  int r = ((struct p_prof_elem *) right)->numsubrs;
+  double l = ((struct p_prof_elem *) left)->numsubrs;
+  double r = ((struct p_prof_elem *) right)->numsubrs;
 
   if ( l < r )
     return sign;
@@ -2580,8 +2885,8 @@ int main (int argc, char *argv[])
   exit (0);
 }
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: ariyal $
- * $Revision: 1.6 $   $Date: 1998/04/28 00:23:19 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.6 1998/04/28 00:23:19 ariyal Exp $                                                   
+ * $RCSfile: pprof.cpp,v $   $Author: sameer $
+ * $Revision: 1.7 $   $Date: 1998/05/27 19:50:40 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.7 1998/05/27 19:50:40 sameer Exp $                                                   
  ***************************************************************************/
 
