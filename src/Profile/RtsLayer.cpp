@@ -52,6 +52,11 @@ using namespace std;
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
+#ifdef CPU_TIME
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+#endif // CPU_TIME
 
 
 #ifdef TAU_WINDOWS
@@ -225,6 +230,23 @@ double RtsLayer::GetEventCounter()
 #endif //SGI_HW_COUNTERS
 
 ///////////////////////////////////////////////////////////////////////////
+double getUserTimeInSec(void)
+{
+  double current_time;
+  struct rusage current_usage;
+
+  getrusage (RUSAGE_SELF, &current_usage);
+  
+/* user time
+  current_time = current_usage.ru_utime.tv_sec * 1e6 
+	       + current_usage.ru_utime.tv_usec;
+*/
+  current_time = (current_usage.ru_utime.tv_sec + current_usage.ru_stime.tv_sec)* 1e6 
+  + (current_usage.ru_utime.tv_usec + current_usage.ru_stime.tv_usec);
+  return current_time; 
+}
+
+///////////////////////////////////////////////////////////////////////////
 
 double RtsLayer::getUSecD (int tid) {
 
@@ -234,6 +256,9 @@ double RtsLayer::getUSecD (int tid) {
 #ifdef TAU_PAPI
   return PapiLayer::getCounters(tid);
 #else  // TAU_PAPI
+#ifdef CPU_TIME
+  return getUserTimeInSec();
+#else // CPU_TIME
 #ifdef SGI_HW_COUNTERS
   return RtsLayer::GetEventCounter();
 #else  //SGI_HW_COUNTERS
@@ -326,6 +351,7 @@ double RtsLayer::getUSecD (int tid) {
 #endif 	//SGI_TIMERS
 
 #endif  // SGI_HW_COUNTERS
+#endif // CPU_TIME
 #endif // TAU_PAPI
 #endif  // TAU_PCL
         }
@@ -676,7 +702,7 @@ int RtsLayer::DumpEDF(int tid)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: bertie $
- * $Revision: 1.16 $   $Date: 2000/02/22 22:58:25 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.16 2000/02/22 22:58:25 bertie Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.17 $   $Date: 2000/03/01 01:56:44 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.17 2000/03/01 01:56:44 sameer Exp $ 
  ***************************************************************************/
