@@ -1228,6 +1228,10 @@ case $machine in
      solaris2)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine SOL2 $fixmakeargs"
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs SOL2PAPI"
+	fi
 	if [ $cxx_compiler = CC ]  
 	  then
 	    fixmakeargs="$fixmakeargs SOL2CC"

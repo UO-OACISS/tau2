@@ -585,6 +585,10 @@ fi
 	echo "NOTE: Solaris2 CC compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SOL2PAPI)
+	echo "NOTE: Using PAPI on Solaris (static library) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      GNU)
 	echo "NOTE: GNU g++ options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
