@@ -283,6 +283,26 @@ fi
 	echo "s@^TAU_MPILIB_DIR=\(.*\)@TAU_MPILIB_DIR=$mpilibdir@g" >> $sedout
         #echo "TAU_MPILIB_DIR=$mpilibdir" 
         ;;
+
+###############################################################
+# Set up SHMEM stuff if possible
+###############################################################
+     SHMEM)
+        echo NOTE: Using the TAU SHMEM Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     shmemincargs=*)
+        shmeminc=`echo $1 | sed -e 's/^shmemincargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_SHMEM_INC=\(.*\)@TAU_SHMEM_INC=$shmeminc@g" >> $sedout
+        #echo "SHMEMINC=$shmeminc"
+        ;;
+
+     shmemlibargs=*)
+        shmemlib=`echo $1 | sed -e 's/^shmemlibargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_SHMEM_LIB=\(.*\)@TAU_SHMEM_LIB=$shmemlib@g" >> $sedout
+        #echo "SHMEMLIB=$shmemlib" 
+        ;;
      
 
 ###############################################################

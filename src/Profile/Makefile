@@ -120,6 +120,11 @@ TAU_DISABLE   = libTauDisable$(LSX)
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX)  #ENDIF#
 ##############################################
 
+##############################################
+#SHMEM#SHMEM_WRAPPER   = libTauShmem$(TAU_OPTIONS)$(LSX)  #ENDIF#
+#SHMEM#SHMEM_INSTALL   = $(INSTALLDEST)/libTauShmem$(TAU_OPTIONS)$(LSX)  #ENDIF#
+##############################################
+
 
 ##############################################
 # For making libTAU.so Dynamic Shared Object
@@ -170,7 +175,7 @@ TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
 #APPLECXX#TAU_SHLIB_INSTALL= $(TAU_DSO) #ENDIF#
 
 
-all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON)
+all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER)
 
 $(TAU_TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
@@ -188,6 +193,9 @@ $(TAU_DISABLE): TauDisable.o
 
 libTauMpi$(TAU_OPTIONS)$(LSX): 
 		$(MAKE) -f Makefile.wrapper  
+
+libTauShmem$(TAU_OPTIONS)$(LSX): 
+		$(MAKE) -f Makefile.shmem  
 
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)
@@ -213,6 +221,9 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX): libTauMpi$(TAU_OPTIONS)$(LSX)
 		$(MAKE) -f Makefile.wrapper install 
 
+$(INSTALLDEST)/libTauShmem$(TAU_OPTIONS)$(LSX): libTauShmem$(TAU_OPTIONS)$(LSX)
+		$(MAKE) -f Makefile.shmem install 
+
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
 		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
@@ -232,7 +243,7 @@ $(INSTALLDEST)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		$(RM) $(TAUPYTHON_BINDINGSDIR)/tau.py $(TAUPYTHON_BINDINGSDIR)/$(TAUPYTHON)
 		cd $(TAUPYTHON_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../$(TAUPYTHON) $(TAUPYTHON)
 
-install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL)
+install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL)
 
 # Rules
 Profile.class	: Profile.java

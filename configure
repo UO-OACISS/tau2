@@ -124,6 +124,10 @@ mpi2=no
 mpiinc=
 mpilib=
 mpilibrary=no
+shmem=no
+shmeminc=
+shmemlib=
+shmemlibrary=no
 threadsafe=no
 additional_mpiincs=
 additional_mpilibs=
@@ -531,6 +535,39 @@ do
     shift
     ;;
 
+  -shmem)
+    shmem=yes
+    shift
+    ;;
+
+  -shmeminc=*)
+    shmeminc=`echo $arg | sed -e 's/-shmeminc=//' -e 's/ /#/g'`
+    if [ ! -d $shmeminc ]
+    then
+      echo "Error: Cannot access SHMEM include directory $shmeminc"
+      exit 1
+    fi
+    shmem=yes
+    shift
+    ;;
+
+  -shmemlib=*)
+    shmemlib=`echo $arg | sed -e 's/-shmemlib=//' -e 's/ /#/g'`
+    if [ ! -d $shmemlib ]
+    then
+      echo "Error: Cannot access SHMEM lib directory $shmemlib"
+      exit 1
+    fi
+    shmem=yes
+    shift
+    ;;
+
+  -shmemlibrary=*)
+    shmemlibrary=`echo $arg | sed -e 's/-shmemlibrary=//' -e 's/ /#/g'`
+    shmem=yes
+    shift
+    ;;
+
   -pythoninc=*)
     pythoninc=`echo $arg | sed -e 's/-pythoninc=//' -e 's/ /#/g'`
     if [ ! -d $pythoninc ]
@@ -756,6 +793,13 @@ do
     echo "                           the TAU MPI Profiling and Tracing Interface."
     echo "-mpilibrary=<library> ................ Specify a different MPI library."
     echo "            e.g., -mpilibrary=-lmpi_r                                  "
+    echo "-shmem ...................... Specify use of TAU SHMEM wrapper library."
+    echo "-shmeminc=<dir> ......... Specify location of SHMEM include dir and use"
+    echo "                         the TAU SHMEM Profiling and Tracing Interface."
+    echo "-shmemlib=<dir> ......... Specify location of SHMEM library dir and use"
+    echo "                           the TAU MPI Profiling and Tracing Interface."
+    echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
+    echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
@@ -1816,6 +1860,7 @@ then
   esac
 fi
   
+
 if [ $tauprefix != unknown ]
   then
     tautoplevel=$tauprefix
@@ -1973,6 +2018,36 @@ then
   echo "----------------------------------------------------------------"
 fi
 
+# Now check for SHMEM options
+if [ $shmem = yes ] 
+then
+  if [ "x$shmeminc" != "x" ]
+  then 
+    if [ -d $shmeminc ]
+    then
+    #echo "Include dir found. adding -I$mpiinc to INC"
+      shmemincargs="-I$shmeminc"
+    fi
+  fi
+  if [ $shmemlibrary = no ]
+  then 
+    shmemlibrary=-lsma
+  fi
+  if [ "x$shmemlib" != "x" ]
+  then 
+    if [ -d $shmemlib ]
+    then
+    #echo "Lib dir found. adding -L$shmemlib to LIB"
+      shmemlibargs="$shmemlibargs -L$shmemlib"
+    fi
+  fi
+
+  shmemlibargs="$shmemlibargs $shmemlibrary"
+  shmemlibargs=`echo $shmemlibargs | sed  -e 's/ /#/g'`
+  fixmakeargs="$fixmakeargs SHMEM"
+  tauoptions="${tauoptions}-shmem"
+  fixmakeargs="$fixmakeargs shmemlibargs=$shmemlibargs shmemincargs=$shmemincargs"
+fi
 
 gcclibdir=unknown
 if [ $c_compiler != gcc ]

@@ -48,6 +48,8 @@ OPARIDIR=
 EPILOGDIR=
 PYTHON_INCDIR=
 PYTHON_LIBDIR=
+TAU_SHMEM_INC=
+TAU_SHMEM_LIB=
 TAU_OPTIONS=
 TAU_MPI_INC=
 TAU_MPI_LIB=
@@ -531,6 +533,9 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTAU_trace
 #SP1#TAUMPILIBS      = $(TAU_MPI_LIBS) 	#ENDIF#
 #SP1#TAUMPIFLIBS     = $(TAU_MPI_FLIBS)	#ENDIF#
 #############################################
+#SHMEM#TAU_SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
+#SP1#TAU_SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
+#############################################
 # These options could be included in the application Makefile as 
 #CFLAGS        	= $(TAUDEFS) $(TAUINC)
 #
@@ -541,3 +546,4 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib -lTAU_trace
 # Don't use TAUDEFS but do include TAUINC
 # Also ignore TAULIBS when Profiling/Tracing is not used.
 #############################################
+
