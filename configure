@@ -2744,6 +2744,8 @@ else
   then
     echo "making directory $tauprefix "
     mkdir -p ${tauprefix}
+    # Copy INSTALL README LICENSE files over there 
+    cp README LICENSE CREDITS ${tauprefix}
   fi
   if [ ! -d ${tauprefix}/${architecture} ]
   then
