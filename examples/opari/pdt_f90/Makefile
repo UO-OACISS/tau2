@@ -1,0 +1,116 @@
+#****************************************************************************
+#*			TAU Portable Profiling Package			   **
+#*			http://www.acl.lanl.gov/tau		           **
+#****************************************************************************
+#*    Copyright 1997  						   	   **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+#######################################################################
+##                  pC++/Sage++  Copyright (C) 1993,1995             ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
+ 
+TAUROOTDIR	= ../../..
+
+include $(TAUROOTDIR)/include/Makefile
+
+# NOTE: For PGI compilers, we need to add the -mp OpenMP option
+
+CXX		= $(TAU_CXX) -mp
+
+CC		= $(TAU_CC) -mp
+
+PDTCPARSE       = $(PDTDIR)/$(CONFIG_ARCH)/bin/cparse
+
+PDTF90PARSE     = $(PDTDIR)/$(CONFIG_ARCH)/bin/f90parse
+
+TAUINSTR        = $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
+
+OPARI_TOOL	= $(OPARIDIR)/tool/opari
+
+CFLAGS 		= $(TAU_INCLUDE) $(TAU_DEFS) 
+
+FFLAGS        	= 
+
+LIBS            =  $(TAU_LIBS)  $(TAU_FORTRANLIBS)  $(LEXTRA1)
+#LIBS            = $(TAU_DISABLE)  $(TAU_FORTRANLIBS)
+
+LDFLAGS	      	= $(USER_OPT) 
+
+MAKEFILE      	= Makefile
+
+PRINT	      	= pr
+
+RM 	      	= /bin/rm -f
+
+F90		= $(TAU_F90) -mp
+
+TARGET	      	= mandel
+
+EXTRAOBJS     	= 
+
+##############################################
+
+all:		$(TARGET) $(PDTF90PARSE) $(TAUINSTR) $(OPARI_TOOL)
+
+install: 	$(TARGET)
+
+$(TARGET):	ppm.o $(TARGET).o mytimer.o opari.tab.o
+	@echo "*********************************************************"
+	@echo "LINKING: "
+	$(CXX) $(LDFLAGS) $(TARGET).o ppm.o mytimer.o opari.tab.o -o $@ $(LIBS)
+
+$(TARGET).o : $(TARGET).f90 ppm.o 
+	@echo "*********************************************************"
+	@echo "Creating $(TARGET).o:"
+	$(PDTF90PARSE) $<
+	$(TAUINSTR) $*.pdb $< -o $*.inst.f90
+	$(RM) opari.rc
+	$(OPARI_TOOL) -nosrc -table opari.tab.c $*.inst.f90 $*.pomp.f90
+	$(F90) $(FFLAGS) -c $*.pomp.f90 -o $@
+
+ppm.o : ppm.f90
+	@echo "*********************************************************"
+	@echo "Creating ppm.o: "
+	$(PDTF90PARSE) $<
+	$(TAUINSTR) $*.pdb $< -o $*.inst.f90
+	$(F90) $(FFLAGS) -c $*.inst.f90 -o $@
+
+opari.tab.o: $(TARGET).o
+	@echo "*********************************************************"
+	@echo "Creating opari.tab.o:"
+	$(CC) $(CFLAGS) -c opari.tab.c
+
+mytimer.o : mytimer.c
+	@echo "*********************************************************"
+	@echo "Creating mytimer.o:"
+	$(PDTCPARSE) $<
+	$(TAUINSTR) $*.pdb $< -o $*.inst.c
+	$(CC) $(CFLAGS) -c $*.inst.c -o $@
+
+clean: 	
+	@echo "*********************************************************"
+	@echo "Cleaning... :"
+	$(RM) $(TARGET).o $(TARGET) mytimer.o ppm.o *.mod* *.pdb *.tab.* *.pomp.f90 *.inst.* opari.rc *.inc
+##############################################
+
+$(PDTF90PARSE):
+	@echo "*********************************************************"
+	@echo "Download and Install Program Database Toolkit "
+	@echo "ERROR: Cannot find $(PDTPARSE)"
+	@echo "*********************************************************"
+
+$(TAUINSTR):
+	@echo "*********************************************************"
+	@echo "Configure TAU with -pdt=<dir> configuration option to use"
+	@echo "C++ instrumentation with PDT"
+	@echo "ERROR: Cannot find $(TAUINSTR)"
+	@echo "*********************************************************"
+
+$(OPARITOOL):
+	@echo "*********************************************************"
+	@echo "Configure TAU with -opari=<dir> configuration option to use"
+	@echo "Opari OpenMP directive rewriting tool"
+	@echo "ERROR: Cannot find $(OPARITOOL)"
+	@echo "*********************************************************"
