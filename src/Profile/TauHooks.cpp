@@ -145,6 +145,7 @@ void TauRoutineExitTest(int id)
 void TauProgramTermination(char *name)
 {
   dprintf("TauProgramTermination %s\n", name);
+  TheSafeToDumpData() = false;
   if (TheSafeToDumpData())
   {
     dprintf("Dumping data...\n");
@@ -166,9 +167,17 @@ void HookExit(char *name)
   return;
 }
 
+void TauMPIInitStub(int *rank)
+{
+  dprintf("INSIDE TauMPIInitStub() \n");
+
+  TAU_PROFILE_SET_NODE(*rank);
+  dprintf("Setting rank = %d\n", *rank);
+}
+
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 2000/07/22 21:07:29 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.8 2000/07/22 21:07:29 sameer Exp $ 
+ * $Revision: 1.9 $   $Date: 2000/11/17 00:30:56 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.9 2000/11/17 00:30:56 sameer Exp $ 
  ***************************************************************************/
