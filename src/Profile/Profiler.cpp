@@ -926,7 +926,123 @@ void Profiler::PurgeData(int tid)
 //////////////////////////////////////////////////////////////////////
 
 #else //TAU_MULTIPLE_COUNTERS
-int Profiler::StoreData(int tid){return 0;}
+int Profiler::StoreData(int tid){
+  
+#ifdef PROFILING_ON
+  vector<FunctionInfo*>::iterator it;
+  vector<TauUserEvent*>::iterator eit;
+  FILE* fp;
+  char *dirname;
+  int numFunc, numEvents;
+#endif //PROFILING_ON
+
+  DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
+
+#ifdef PROFILING_ON
+  
+  if ((dirname = getenv("PROFILEDIR")) == NULL) {
+    // Use default directory name .
+    dirname  = new char[8];
+    strcpy (dirname,".");
+  }
+
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
+    
+    if(tmpChar != NULL){
+      RtsLayer::LockDB();
+      
+      char *newdirname = new char[1024];
+      char *rmdircommand = new char[1024];
+      char *mkdircommand = new char[1024];
+      char *filename = new char[1024];
+      char *errormsg = new char[1024];
+      char *header = new char[1024];
+      
+
+      sprintf(newdirname,"%s/%s",dirname,tmpChar);
+      sprintf(rmdircommand,"rm -rf %s",newdirname);
+      sprintf(mkdircommand,"mkdir %s",newdirname);
+
+      system(rmdircommand);
+      system(mkdircommand);
+
+      sprintf(filename,"%s/profile.%d.%d.%d",newdirname, RtsLayer::myNode(),
+            RtsLayer::myContext(), tid);
+      DEBUGPROFMSG("Creating " << filename << endl;);
+      if ((fp = fopen (filename, "w+")) == NULL) {
+      errormsg = new char[1024];
+      sprintf(errormsg,"Error: Could not create %s",filename);
+      perror(errormsg);
+      return 0;
+      }
+      
+      // Data format :
+      // %d templated_functions
+      // "%s %s" %ld %G %G
+      //  funcname type numcalls Excl Incl
+      // %d aggregates
+      // <aggregate info>
+      
+      numFunc = TheFunctionDB().size();
+      
+      //Setting the header to the correct name.
+      sprintf(header,"%d %s_templated_functions\n", numFunc, tmpChar);
+  
+      strcat(header,"# Name Calls Subrs Excl Incl ");
+
+      strcat(header,"ProfileCalls\n");
+      int sz = strlen(header);
+      int ret = fprintf(fp, "%s",header);
+      ret = fflush(fp);
+
+      
+
+
+
+
+      RtsLayer::UnLockDB();
+      
+      numEvents = 0;
+      for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++)
+	{
+	  if ((*eit)->GetNumEvents(tid)) {
+	    numEvents++;
+	  }
+	}
+      
+      if (numEvents > 0) {
+	// Data format
+	// # % userevents
+	// # name numsamples max min mean sumsqr
+	fprintf(fp, "%d userevents\n", numEvents);
+	fprintf(fp, "# eventname numevents max min mean sumsqr\n");
+	
+	vector<TauUserEvent*>::iterator it;
+	for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++){
+	  
+	  DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+		       (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid)
+		       << "\n Max " << (*it)->GetMax(tid) << "\n Mean "
+		       << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid)
+		       << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
+	  
+	  fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n",
+		  (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+		  (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+	}
+      }
+      
+      // End of userevents data
+
+      fclose(fp);
+
+    }
+  }
+#endif //PROFILING_ON
+ 
+  return 1;
+}
 int Profiler::DumpData(int tid){return 0;}
 void Profiler::PurgeData(int tid){}
 #endif//TAU_MULTIPLE_COUNTERS
@@ -1071,8 +1187,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.56 $   $Date: 2002/03/10 23:57:02 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.56 2002/03/10 23:57:02 bertie Exp $ 
+ * $Revision: 1.57 $   $Date: 2002/03/11 08:31:34 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.57 2002/03/11 08:31:34 bertie Exp $ 
  ***************************************************************************/
 
 	
