@@ -137,7 +137,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add items to the first popup menu.
 	    //######
-	    JMenuItem jMenuItem = new JMenuItem("Update Meta Data");
+	    JMenuItem jMenuItem = new JMenuItem("Add Application");
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
 	    //######
@@ -145,13 +145,13 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 
 	    //######
-	    //Add items to the seccond popup menu.
+	    //Add items to the second popup menu.
 	    //######
-	    jMenuItem = new JMenuItem("Update Meta Data");
+	    updateApplicationMetaDataMenuItem = new JMenuItem("Update Data in DB");
 	    jMenuItem.addActionListener(this);
-	    popup2.add(jMenuItem);
-      
-	    jMenuItem = new JMenuItem("Upload Trial");
+	    popup2.add(updateApplicationMetaDataMenuItem);
+
+	    jMenuItem = new JMenuItem("Add Experiment");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 	    //######
@@ -161,15 +161,43 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add items to the third popup menu.
 	    //######
-	    jMenuItem = new JMenuItem("Update Meta Data");
+	    updateExperimentMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
 	    jMenuItem.addActionListener(this);
-	    popup3.add(jMenuItem);
-	    
-	    jMenuItem = new JMenuItem("Upload Metric");
+	    popup3.add(updateExperimentMetaDataMenuItem);
+
+	    jMenuItem = new JMenuItem("Add Trial");
 	    jMenuItem.addActionListener(this);
 	    popup3.add(jMenuItem);
 	    //######
 	    //End - Add items to the third popup menu.
+	    //######
+
+	    //######
+	    //Add items to the fourth popup menu.
+	    //######
+	    updateTrialMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
+	    jMenuItem.addActionListener(this);
+	    popup4.add(updateTrialMetaDataMenuItem);
+	    
+	    jMenuItem = new JMenuItem("Upload Trial to DB");
+	    jMenuItem.addActionListener(this);
+	    popup4.add(jMenuItem);
+	    //######
+	    //End - Add items to the fourth popup menu.
+	    //######
+
+	    //######
+	    //Add items to the fifth popup menu.
+	    //######
+	    updateMetricMetaDataMenuItem = new JMenuItem("Update Meta Data in DB");
+	    jMenuItem.addActionListener(this);
+	    popup5.add(updateMetricMetaDataMenuItem);
+	    
+	    jMenuItem = new JMenuItem("Upload Metric to DB");
+	    jMenuItem.addActionListener(this);
+	    popup5.add(jMenuItem);
+	    //######
+	    //End - Add items to the fifth popup menu.
 	    //######
    
 	    //####################################
@@ -204,20 +232,36 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
 				Object userObject = selectedNode.getUserObject();
 				if(userObject instanceof ParaProfApplication){
-				    clickedOnObject = userObject;
-				    popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
-				}
-				else if(userObject instanceof ParaProfExperiment){
-				    clickedOnObject = userObject;
-				    popup1.show(ParaProfManager.this, evt.getX(), evt.getY());
-				}
-				else if(userObject instanceof ParaProfTrial){
+				    if(((ParaProfApplication)userObject).dBApplication())
+					updateApplicationMetaDataMenuItem.setEnabled(true);
+				    else
+					updateApplicationMetaDataMenuItem.setEnabled(false);
 				    clickedOnObject = userObject;
 				    popup2.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
-				else if(userObject instanceof Metric){
+				else if(userObject instanceof ParaProfExperiment){
+				    if(((ParaProfExperiment)userObject).dBExperiment())
+					updateExperimentMetaDataMenuItem.setEnabled(true);
+				    else
+					updateExperimentMetaDataMenuItem.setEnabled(false);
 				    clickedOnObject = userObject;
 				    popup3.show(ParaProfManager.this, evt.getX(), evt.getY());
+				}
+				else if(userObject instanceof ParaProfTrial){
+				    if(((ParaProfTrial)userObject).dBTrial())
+					updateTrialMetaDataMenuItem.setEnabled(true);
+				    else
+					updateTrialMetaDataMenuItem.setEnabled(false);
+				    clickedOnObject = userObject;
+				    popup4.show(ParaProfManager.this, evt.getX(), evt.getY());
+				}
+				else if(userObject instanceof Metric){
+				    if(((Metric)userObject).dBMetric())
+					updateMetricMetaDataMenuItem.setEnabled(true);
+				    else
+					updateMetricMetaDataMenuItem.setEnabled(false);
+				    clickedOnObject = userObject;
+				    popup5.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 			    }
 			}
@@ -315,7 +359,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    ParaProf.helpWindow.writeText("");
 		    ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
 		}
-		else if(arg.equals("Update Meta Data")){
+		else if(arg.equals("Update Meta Data in DB")){
 		    //A few things to check here.
 		    if(configFile==null||password==null){//Check to see if the user has set configuration information.
 			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
@@ -1099,6 +1143,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     private JPopupMenu popup1 = new JPopupMenu();
     private JPopupMenu popup2 = new JPopupMenu();
     private JPopupMenu popup3 = new JPopupMenu();
+    private JPopupMenu popup4 = new JPopupMenu();
+    private JPopupMenu popup5 = new JPopupMenu();
+
+    JMenuItem updateApplicationMetaDataMenuItem = null;
+    JMenuItem updateExperimentMetaDataMenuItem = null;
+    JMenuItem updateTrialMetaDataMenuItem = null;
+    JMenuItem updateMetricMetaDataMenuItem = null;
+
     private Object clickedOnObject = null;
     //######
     //End - Popup menu stuff.
