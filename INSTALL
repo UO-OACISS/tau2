@@ -285,6 +285,8 @@ The following  command-line options are available to configure:
    routine when it is called by another routine in the calling path. "a => b"
    stands for the time spent in routine "b" when it is invoked by routine "a".
    This option is an extension of -PROFILE, the default profiling option. 
+   Specifying TAU_CALLPATH_DEPTH environment variable, the user can vary the 
+   depth of the callpath. See examples/calltree for further information.
 
 -PROFILESTATS
    
