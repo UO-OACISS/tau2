@@ -15,13 +15,13 @@ public class TestPerfDBSession {
     public static void main(java.lang.String[] args) {
 
 		// Create a PerfDBSession object
-		DataSession session = new PerfDBSession(args[0]);
-		session.open();
+		DataSession session = new PerfDBSession();
+		session.initialize(args[0]);
 		System.out.println ("API loaded...");
 
 		// Get the list of applications
 		ListIterator applications;
-		applications = session.getAppList();
+		applications = session.getApplicationList();
 		Application app = null;
 
 		// loop through all the applications, and print out some info
@@ -45,7 +45,7 @@ public class TestPerfDBSession {
 
 		// Get the list of experiments
 		ListIterator experiments;
-		experiments = session.getExpList();
+		experiments = session.getExperimentList();
 		Experiment exp = null;
 
         while(experiments.hasNext())
@@ -58,18 +58,6 @@ public class TestPerfDBSession {
 			// select an experiment, another way
 			session.setExperiment(exp.getID());
 		}
-
-		// Get the number of nodes, without selecting a trial
-		int numNodes = session.getNumberOfNodes();
-		System.out.println ("NumNodes = " + numNodes);
-
-		// Get the number of contexts, without selecting a trial
-		int numContexts = session.getNumberOfContexts();
-		System.out.println ("NumContexts = " + numContexts);
-
-		// Get the number of threads, without selecting a trial
-		int numThreads = session.getNumberOfThreads();
-		System.out.println ("NumThreads = " + numThreads);
 
 		// Get the list of trials
 		ListIterator trials;
@@ -90,18 +78,6 @@ public class TestPerfDBSession {
 		}
 		// select all trials
 		session.setTrial(tmpTrials);
-
-		// Get the number of nodes
-		numNodes = session.getNumberOfNodes();
-		System.out.println ("NumNodes = " + numNodes);
-
-		// Get the number of contexts
-		numContexts = session.getNumberOfContexts();
-		System.out.println ("NumContexts = " + numContexts);
-
-		// Get the number of threads
-		numThreads = session.getNumberOfThreads();
-		System.out.println ("NumThreads = " + numThreads);
 
 		// Get the list of functions
 		ListIterator functions;
@@ -152,7 +128,7 @@ public class TestPerfDBSession {
 		session.getFunctionData();
 
 		// disconnect and exit.
-		session.close();
+		session.terminate();
 		System.out.println ("Exiting.");
 		return;
     }

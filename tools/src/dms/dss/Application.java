@@ -32,7 +32,7 @@ public class Application {
 		return language;
 	}
 
-	public String getParadiag() {
+	public String getParaDiag() {
 		return paraDiag;
 	}
 
@@ -40,11 +40,11 @@ public class Application {
 		return usage;
 	}
 
-	public String getExecuteOptions() {
+	public String getExecutableOptions() {
 		return executableOptions;
 	}
 
-	public String getExecuteTableName() {
+	public String getExperimentTableName() {
 		return experimentTableName;
 	}
 
@@ -68,7 +68,7 @@ public class Application {
 		this.language = language;
 	}
 
-	public void setParadiag(String paraDiag) {
+	public void setParaDiag(String paraDiag) {
 		this.paraDiag = paraDiag;
 	}
 
@@ -76,11 +76,11 @@ public class Application {
 		this.usage = usage;
 	}
 
-	public void setExecuteOptions(String executableOptions) {
+	public void setExecutableOptions(String executableOptions) {
 		this.executableOptions = executableOptions;
 	}
 
-	public void setExecuteTableName(String experimentTableName) {
+	public void setExperimentTableName(String experimentTableName) {
 		this.experimentTableName = experimentTableName;
 	}
 }

@@ -15,8 +15,8 @@ public class SimpleExample {
     public static void main(java.lang.String[] args) {
 
 		// Create a PerfDBSession object
-		DataSession session = new PerfDBSession(args[0]);
-		session.open();
+		DataSession session = new PerfDBSession();
+		session.initialize(args[0]);
 
 		// select the application
 		Application myApp = session.setApplication("application", null);
@@ -72,7 +72,7 @@ public class SimpleExample {
 		}
 
 		// disconnect and exit.
-		session.close();
+		session.terminate();
 		System.out.println ("Exiting.");
 		return;
     }

@@ -49,7 +49,7 @@ public class Experiment {
 		this.systemInfo = systemInfo;
 	}
 
-	public void setConfigInfo (String configurationInfo) {
+	public void setConfigurationInfo (String configurationInfo) {
 		this.configurationInfo = configurationInfo;
 	}
 
