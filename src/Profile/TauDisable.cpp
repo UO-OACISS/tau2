@@ -324,10 +324,150 @@ void tau_register_thread__(void)
 {
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Memory, MAGNET/MUSE event stubs
+///////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////
+void tau_track_memory(void)
+{
+} 
+
+void tau_track_memory_here(void)
+{
+} 
+
+void tau_track_muse_events(void)
+{
+} 
+
+void tau_enable_tracking_memory(void)
+{
+} 
+
+void tau_disable_tracking_memory(void)
+{
+} 
+
+void tau_enable_tracking_muse_events(void)
+{
+} 
+
+void tau_disable_tracking_muse_events(void)
+{
+} 
+
+void tau_set_interrupt_interval(int value)
+{
+} 
+
+
+//////////////////////////////////////////////////////
+void tau_track_memory_(void)
+{
+} 
+
+void tau_track_memory_here_(void)
+{
+} 
+
+void tau_track_muse_events_(void)
+{
+} 
+
+void tau_enable_tracking_memory_(void)
+{
+} 
+
+void tau_disable_tracking_memory_(void)
+{
+} 
+
+void tau_enable_tracking_muse_events_(void)
+{
+} 
+
+void tau_disable_tracking_muse_events_(void)
+{
+} 
+
+void tau_set_interrupt_interval_(int value)
+{
+} 
+
+////////////////////////////////////////////////////////////////////////
+void tau_track_memory__(void)
+{
+} 
+
+void tau_track_memory_here__(void)
+{
+} 
+
+void tau_track_muse_events__(void)
+{
+} 
+
+void tau_enable_tracking_memory__(void)
+{
+} 
+
+void tau_disable_tracking_memory__(void)
+{
+} 
+
+void tau_enable_tracking_muse_events__(void)
+{
+} 
+
+void tau_disable_tracking_muse_events__(void)
+{
+} 
+
+void tau_set_interrupt_interval__(int value)
+{
+}
+
+//////////////////////////////////////////////////////
+// MEMORY, MUSE events API
+//////////////////////////////////////////////////////
+void TAU_TRACK_MEMORY(void)
+{
+} 
+
+void TAU_TRACK_MEMORY_HERE(void)
+{
+} 
+
+void TAU_TRACK_MUSE_EVENTS(void)
+{
+} 
+
+void TAU_ENABLE_TRACKING_MEMORY(void)
+{
+} 
+
+void TAU_DISABLE_TRACKING_MEMORY(void)
+{
+} 
+
+void TAU_ENABLE_TRACKING_MUSE_EVENTS(void)
+{
+} 
+
+void TAU_DISABLE_TRACKING_MUSE_EVENTS(void)
+{
+} 
+
+void TAU_SET_INTERRUPT_INTERVAL(int value)
+{
+} 
+
+////////////////////////////////////////////////////////////////////////////
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauDisable.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2003/11/16 00:13:11 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.3 2003/11/16 00:13:11 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 2004/06/11 21:46:32 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.4 2004/06/11 21:46:32 sameer Exp $ 
  ***************************************************************************/
