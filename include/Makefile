@@ -34,14 +34,15 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/home/users/sameer/tau2
 TULIPDIR=
 PCLDIR=
 PDTDIR=
+JDKDIR=
 TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
-TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
 TAU_OPTIONS=
 #######################################################################
  
