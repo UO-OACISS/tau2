@@ -109,9 +109,10 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
 
 void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 {
-  int i, k;
   char funcname[2048], groupname[1024];
+  int i;
 #ifdef DEBUG_PROF
+  int k;
     fprintf(stdout, "TAU> Class Load : %s\n", event->u.class_load.class_name);
 #endif /* DEBUG_PROF */
   static int j = TAU_PROFILE_SET_NODE(0);

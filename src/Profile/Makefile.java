@@ -12,7 +12,7 @@
 #######################################################################
 
 TAUROOTDIR	= ../..
-JDKROOT		= /research/paraducks/apps/jdk1.2.2
+JDKDIR		= /usr/local/packages/jdk1.2
 
 include $(TAUROOTDIR)/include/Makefile
 
@@ -20,13 +20,18 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CFLAGS          = $(TAU_INCLUDE) -I$(JDKROOT)/include -I$(JDKROOT)/include/solaris $(TAU_DEFS) 
+CEXTRA		= 
+
+CFLAGS          = $(TAU_INCLUDE) -I$(JDKDIR)/include -I$(JDKDIR)/include/linux $(TAU_DEFS) $(CEXTRA)
 
 RM		= /bin/rm -f
 
 AR		= $(TAU_CXX)
 
-ARFLAGS		= -G -o
+#ARFLAGS		= -shared -o 
+# On Solaris, use -G, on linux, use -shared
+ARFLAGS		= -o 
+# KCC doesn't need any special -G or -shared flag to build a .so
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
@@ -38,6 +43,7 @@ all : 		$(TARGET)
 install:	$(INSTALLDEST)/$(TARGET) 
 
 $(TARGET) : 	TauJava.o 
+	$(PRELINK_PHASE)
 	$(AR) $(ARFLAGS) $(TARGET) TauJava.o $(TAU_LIBS)
 
 TauJava.o :	TauJava.cpp

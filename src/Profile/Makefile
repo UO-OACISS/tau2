@@ -24,7 +24,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+TAUROOT=/home/users/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -107,7 +107,17 @@ TAU_DISABLE   = libTauDisable$(LSX)
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(LSX)  #ENDIF#
 ##############################################
 
-all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER)
+##############################################
+TAU_SHLIBX		= .so 		  
+#JAVA#TAU_JAVALIB   		= libTAU$(TAU_SHLIBX)  #ENDIF#
+#JAVA#TAU_JAVA_O 		= TauJava.o  	   #ENDIF#
+#JAVA#TAU_JAVA_INSTALL  		= $(INSTALLDEST)/$(TAU_JAVALIB)  #ENDIF#
+#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+#SOL2#AR_SHFLAGS  		= -G	        #ENDIF#
+TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
+##############################################
+
+all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_JAVALIB)
 
 $(TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
@@ -118,6 +128,10 @@ $(TAU_DISABLE): TauDisable.o
 
 libTauMpi$(LSX): 
 		$(MAKE) -f Makefile.wrapper 
+
+libTAU$(TAU_SHLIBX):  
+		$(MAKE) -f Makefile.java ARFLAGS='$(TAU_ARFLAGS)' PRELINK_PHASE='$(PRELINK_PHASE)'
+ 
 
 $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
@@ -132,12 +146,16 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 
+		
 $(INSTALLDEST)/libTauMpi$(LSX): libTauMpi$(LSX)
 		$(MAKE) -f Makefile.wrapper install
 
-install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL)
-		
+$(INSTALLDEST)/libTAU$(TAU_SHLIBX): libTAU$(TAU_SHLIBX)
+		$(MAKE) -f Makefile.java ARFLAGS='$(TAU_ARFLAGS)' PRELINK_PHASE='$(PRELINK_PHASE)' install
 
+install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_JAVA_INSTALL)
+
+# Rules
 Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -188,5 +206,5 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 
 
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(EXTRAOBJS) *.ii *.ti ti_files/*
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(TAU_JAVALIB) $(EXTRAOBJS) *.ii *.ti ti_files/*
 
