@@ -768,6 +768,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     public void refreshTrials(){
 	try{
 	    DefaultMutableTreeNode trialNode = null;
+	    DefaultMutableTreeNode metricNode = null;
 
 	    TreePath path = tree.getSelectionPath();
 	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
@@ -787,6 +788,15 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		trial.setExperiment(experiment);
 		trialNode = new DefaultMutableTreeNode(trial);
 		trial.setDMTN(trialNode);
+		//Populate the metrics list for this trial.
+		for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
+		    Metric metric = (Metric) e.nextElement();
+		    metricNode = new DefaultMutableTreeNode(metric);
+		    metric.setDMTN(metricNode);
+		    metric.setDBMetric(true);
+		    metricNode.setAllowsChildren(false);
+		    trialNode.add(metricNode);
+		}
 		treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 	    }
 	    return;
@@ -849,9 +859,34 @@ public class ParaProfManager extends JFrame implements ActionListener{
   
     void showMetric(ParaProfTrial trial, Metric metric){
 	try{
-	    trial.setCurValLoc(metric.getID());
+	    if(metric.getDBMetric()){
+		perfDBSession.setApplication(trial.getExperiment().getApplication().getID());
+		perfDBSession.setExperiment(trial.getExperiment().getID());
+		perfDBSession.setTrial(trial.getID());
+		ListIterator l = perfDBSession.getFunctionData();
+		int metricID = metric.getID();
+		while(l.hasNext()){
+		    FunctionDataObject f = (FunctionDataObject) l.next();
+		    System.out.println("###############################");
+		    System.out.println("getNode: "+f.getNode());
+		    System.out.println("getContext: "+f.getContext());
+		    System.out.println("getThread: "+f.getThread());
+		    System.out.println("getFunctionIndexID: "+f.getFunctionIndexID());
+		    System.out.println("getInclusivePercentage: "+f.getInclusivePercentage(metricID));
+		    System.out.println("getInclusive: "+f.getInclusive(metricID));
+		    System.out.println("getExclusivePercentage: "+f.getExclusivePercentage(metricID));
+		    System.out.println("getExclusive: "+f.getExclusive(metricID));
+		    System.out.println("getInclusivePerCall: "+f.getInclusivePerCall(metricID));
+		    System.out.println("getNumCalls: "+f.getNumCalls());
+		    System.out.println("getNumSubroutines: "+f.getNumSubroutines());
+		    System.out.println("###############################");
+		}
+	    }
+	    else{
+		trial.setCurValLoc(metric.getID());
 	    trial.getSystemEvents().updateRegisteredObjects("dataEvent");
 	    trial.showMainWindow();
+	    }
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "jRM04");
