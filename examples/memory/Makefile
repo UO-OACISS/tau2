@@ -19,9 +19,9 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -UTAU_MPI -I/usr/include/malloc
+CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -UTAU_MPI 
 
-LIBS 	      	= $(TAU_LIBS) $(LEXTRA1)
+LIBS 	      	= $(TAU_LIBS) 
 
 LDFLAGS	      	= $(USER_OPT)
 
@@ -45,7 +45,7 @@ $(TARGET):	$(TARGET).o
 	$(CXX) $(LDFLAGS) $(TARGET).o -o $@ $(LIBS)
 
 $(TARGET).o : $(TARGET).cpp
-	$(CC) $(CFLAGS) -c $(TARGET).cpp
+	$(CXX) $(CFLAGS) -c $(TARGET).cpp
 
 clean: 	
 	$(RM) $(TARGET).o $(TARGET)
