@@ -1,18 +1,15 @@
 
 Windows Readme.
-Author: Robert Ansell-Bell
+Author: Robert Bell
 Contact: bertie@cs.uoregon.edu
-October 1999.
+Date: 20th December 2001
 
-Supported Systems: Windows9x/NT.
-Compiler:  Microsoft Visual C++ Version 5.0 - Service Pack 3, or above.
-NOTE:  Service Pack 3 MUST be installed ... it contains required bug fixes.
-
-
+Supported Systems: Windows9x/NT/2000/XP.
+Compiler:  Microsoft Visual C++ Version 6.0.
 
 Section1.
 
-The following steps detail how to build TAU libraries on Windows9x/NT.
+The following steps detail how to build TAU libraries on Windows9x/NT/2000/XP.
 
 For illustrative purposes, we assmue that the TAU root directory is:
 "C:\TAU-SOURCE-DIR". 
@@ -67,6 +64,7 @@ For illustrative purposes, we assmue that the TAU root directory is:
       files: (holding down the control key whilst clicking so that you can select more than one file)
 
 		FunctionInfo.cpp
+		JavaThreadLayer.cpp
 		Profiler.cpp
 		RtsLayer.cpp
 		RtsThread.cpp
@@ -79,8 +77,11 @@ For illustrative purposes, we assmue that the TAU root directory is:
 
 20) From the "Project" again, select "Settings" and then click on the "C/C++" tab.
 
-21) Make sure that the Category in "General" and in the "Preprocessor definitions:"
-      box, add the following defines: (separated by commas)
+8) Make sure the "Catagory" is "General".
+
+9) Set the warning level to none.
+
+21) Under "Preprocessor definitions" add: (separated by commas)
 
 		TAU_WINDOWS
 		TAU_DOT_H_LESS_HEADERS
@@ -92,13 +93,13 @@ For illustrative purposes, we assmue that the TAU root directory is:
 
 	   Click "OK"
 
-22) From the "Tools" menu, select "Options".  Click on the "Directories" tab.  Make 
-      sure that the "Show directories for:" field has "Include files" selected.  Now add a 
-      new include directory named "C:\YOUR_PROJECT_DIRECTORY\include".
-      Thus, our above example would be: "C:\Program Files\DevStudio\MyProjects
-      \NewTauLib\include".  Also add the include directories for jvmpi.h and jni_md.h.
-      These are typically in "C:\JAVA_ROOT_DIR\include" and "C:\JAVA_ROOT_DIR\include\win32".
-      Thus, when done, you should have three new include directories listed.  Now click "OK".
+22) Under "Additional include directories", set the include directory from
+    the copied over include directory, ie .\include. Also add the include directories for jvmpi.h
+    and jni_md.h.  These are typically in "C:\JAVA_ROOT_DIR\include" and "C:\JAVA_ROOT_DIR\include\win32".
+    This is a comma separated list.
+    Thus, when done, you should have three new include directories listed.
+    For example: .\include,C:\jdk1.3.1_01\include,C:\jdk1.3.1_01\include\win32
+    Now click "OK".
 
 
 23)  Now, from the "Build" menu, select "Build PROJECT_NAME.dll (or .lib)"
@@ -107,10 +108,10 @@ For illustrative purposes, we assmue that the TAU root directory is:
 
 25)  If you created a dll for use with Java, you only need to make sure that the dll is
      in a location that can be found by Java when it is running.  The command to profile
-     your Java application is: java -XrunTAU "Java Application Name" "Application parameters".
-     The default TAU.dll for use with a Java app. is provided in: "C:\TAU-SOURCE-DIR\windows\lib".
-     If, when building your dll from the source, you named it something other than TAU.dll, you can
-     either rename it, or replace "TAU" in "java -XrunTAU" with your dll name.
+     your Java application is: java -Xrunlibtau "Java Application Name" "Application parameters".
+     The default libtau.dll for use with a Java app. is provided in: "C:\TAU-SOURCE-DIR\windows\lib".
+     If, when building your dll from the source, you named it something other than libtau.dll, you can
+     either rename it, or replace "libtau" in "java -Xrunlibtau" with your dll name.
 
 26) If you created a static library, you will need to include a reference to it in when you
       build your application.  You can do this by adding the library file to you list of
@@ -123,12 +124,10 @@ Section 2.
 
 The Windows port ships with a prebuilt version of pprof which can be used to view your profiling data
 (See the TAU documentation for more details).  Make sure that pprof.exe is in your current path.  It can
-be found in C:\TAU-SOURCE-DIR\windows\bin.  Currently, there is no version of Racy for Windows, however,
-we are re-writing Racy in Java and will soon have it running on the Windows platform.
+be found in C:\TAU-SOURCE-DIR\windows\bin.  In addition, there is also a java version of Racy called jRacy
+which can also be found in C:\TAU-SOURCE-DIR\windows\bin.  For instructions as to how to run jRacy, please
+see the Readme-jRacy.txt in said directory.
 
 For information on how to profile your C/C++ and Java code, please see the TAU documentation.
 
-
-
-Robert Ansell-Bell.
-October 1999.
+NOTE:  Please read the README.JAVA file for important information regarding the use of java -Xrun.
