@@ -312,7 +312,6 @@ public class ColorChooser implements WindowListener {
             int numberOfColors = this.getNumberOfColors();
             
             DataSorter dataSorter = new DataSorter(ppTrial, false);
-
             Vector list = dataSorter.getFunctionProfiles(-1,-1,-1,20);
             
             for (int i = 0; i < list.size(); i++) {
