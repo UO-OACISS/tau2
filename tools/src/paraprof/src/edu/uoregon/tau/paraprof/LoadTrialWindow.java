@@ -16,6 +16,23 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
+    
+    static String lastDirectory;
+
+    private ParaProfManagerWindow paraProfManagerWindow = null;
+    private ParaProfApplication application = null;
+    private ParaProfExperiment experiment = null;
+    private JTextField dirLocationField = new JTextField(lastDirectory, 30);
+    //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun.
+    //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP",
+    // "hpmtoolkit", "gprof", "psrun"};
+    private String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
+            "PSRun" };
+    private JComboBox trialTypes = null;
+    private File selectedFiles[];
+    private JButton selectButton = null;
+
+    
     public LoadTrialWindow(ParaProfManagerWindow paraProfManager, ParaProfApplication application,
             ParaProfExperiment experiment) {
         this.paraProfManagerWindow = paraProfManager;
@@ -122,7 +139,8 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
             Object EventSrc = evt.getSource();
             String arg = evt.getActionCommand();
             if (arg.equals("Select Directory")) {
-                JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
+                JFileChooser jFileChooser = new JFileChooser(lastDirectory);
+                //JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
                 jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 jFileChooser.setMultiSelectionEnabled(false);
                 jFileChooser.setDialogTitle("Select Directory");
@@ -130,11 +148,12 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
                     return;
                 }
+                lastDirectory = jFileChooser.getSelectedFile().getParent();
                 //User clicked the approve option.
-                dirLocationField.setText((jFileChooser.getSelectedFile()).getCanonicalPath());
+                dirLocationField.setText(jFileChooser.getSelectedFile().getCanonicalPath());
 
             } else if (arg.equals("  Select File(s)  ")) {
-                JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
+                JFileChooser jFileChooser = new JFileChooser(lastDirectory);
                 jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 jFileChooser.setMultiSelectionEnabled(true);
                 jFileChooser.setDialogTitle("Select File(s)");
@@ -145,6 +164,8 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 //User clicked the approve option.
                 selectedFiles = jFileChooser.getSelectedFiles();
 
+                lastDirectory = jFileChooser.getSelectedFile().getParent();
+                
                 if (selectedFiles.length > 1) {
                     dirLocationField.setText("<Multiple Files Selected>");
                     dirLocationField.setEditable(false);
@@ -210,16 +231,4 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         dispose();
     }
 
-    private ParaProfManagerWindow paraProfManagerWindow = null;
-    private ParaProfApplication application = null;
-    private ParaProfExperiment experiment = null;
-    private JTextField dirLocationField = new JTextField(System.getProperty("user.dir"), 30);
-    //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun.
-    //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP",
-    // "hpmtoolkit", "gprof", "psrun"};
-    private String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
-            "PSRun" };
-    private JComboBox trialTypes = null;
-    private File selectedFiles[];
-    private JButton selectButton = null;
 }

@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.11 2005/01/31 23:11:08 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.12 2005/02/28 21:35:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -493,19 +493,13 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             list = dataSorter.getFunctionData(function, 30 + order, true);
         else
             list = dataSorter.getFunctionData(function, valueType + order, true);
-        
     
         maxValue = 0;
         for (Iterator it = list.iterator(); it.hasNext(); ) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
-            
-            
             double value = ParaProfUtils.getValue(ppFunctionProfile, this.getValueType(), this.isPercent());
-
             maxValue = Math.max(maxValue,value);
-            
         }
-        
     }
 
     

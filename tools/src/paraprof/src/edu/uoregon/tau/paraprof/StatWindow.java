@@ -294,9 +294,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //Panel and ScrollPane definition.
         //######
         panel = new StatWindowPanel(trial, nodeID, contextID, threadID, this, userEventWindow);
-        sp = new JScrollPane(panel);
+        jScrollpane = new JScrollPane(panel);
         
-        JScrollBar jScrollBar = sp.getVerticalScrollBar();
+        JScrollBar jScrollBar = jScrollpane.getVerticalScrollBar();
         jScrollBar.setUnitIncrement(35);
 
         this.setHeader();
@@ -309,7 +309,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        addCompItem(sp, gbc, 0, 0, 1, 1);
+        addCompItem(jScrollpane, gbc, 0, 0, 1, 1);
         //####################################
         //End - Create and add the components.
         //####################################
@@ -554,15 +554,15 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     public Dimension getViewportSize() {
-        return sp.getViewport().getExtentSize();
+        return jScrollpane.getViewport().getExtentSize();
     }
 
     public Rectangle getViewRect() {
-        return sp.getViewport().getViewRect();
+        return jScrollpane.getViewport().getViewRect();
     }
 
     public void setVerticalScrollBarPosition(int position) {
-        JScrollBar scrollBar = sp.getVerticalScrollBar();
+        JScrollBar scrollBar = jScrollpane.getVerticalScrollBar();
         scrollBar.setValue(position);
     }
 
@@ -582,9 +582,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             Preferences p = trial.getPreferences();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
-            sp.setColumnHeaderView(jTextArea);
+            jScrollpane.setColumnHeaderView(jTextArea);
         } else
-            sp.setColumnHeaderView(null);
+            jScrollpane.setColumnHeaderView(null);
     }
 
     public String getHeaderString() {
@@ -633,7 +633,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
 
-    private JScrollPane sp = null;
+    private JScrollPane jScrollpane = null;
     private StatWindowPanel panel = null;
 
     Vector list = null;

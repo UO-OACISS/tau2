@@ -313,4 +313,8 @@ public class PPFunctionProfile implements Comparable {
     }
 
     
+    public String toString() {
+        return functionProfile.toString();
+    }
+    
 }
