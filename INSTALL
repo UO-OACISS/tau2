@@ -1,8 +1,8 @@
 *****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
+**			http://www.cs.uoregon.edu/research/paracomp/tau    **
 *****************************************************************************
-**    Copyright 1997-2003				   	   	   **
+**    Copyright 1997-2004				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.12                          *
+ *                           Version 2.13                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -20,7 +20,7 @@
  *    For a tutorial on using TAU, open html/index.html in your    *
  *        web browser.                                             *
  *    For more information, including updates and new releases,    *
- *        see http://www.acl.lanl.gov/tau                          *
+ *        see http://www.cs.uoregon.edu/research/paracomp/tau      *
  *    For help, reporting bugs, and making suggestions, please     *
  *        send e-mail to tau-bugs@cs.uoregon.edu                   *
  *******************************************************************/
