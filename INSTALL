@@ -290,9 +290,14 @@ The following  command-line options are available to configure:
    
 -SGITIMERS
    
-   Specifies use of the free running nano-second resolution on-chip timer on 
+   Specifies use of the free running nanosecond resolution on-chip timer on 
    the MIPS R10000. This timer has a lower overhead than the default timer on 
    SGI, and is recommended for SGIs. 
+
+-LINUXTIMERS
+   Specifies the use of the free running nanosecond resolution time stamp 
+   counter (TSC) on Pentium III+ and Itanium family of processors under Linux.
+   This timer has a lower overhead than the default time and is recommended.
 
 -CPUTIME
    Uses usertime + system time instead of wallclock time. It gives the CPU
