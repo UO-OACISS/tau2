@@ -1,7 +1,9 @@
 /*
  * CallPathTextWindowPanel.java
  * 
- * Title: ParaProf Author: Robert Bell Description: Things to do: 1)Add printing
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description: Things to do: 1)Add printing
  * support. 2)Need to do quite a bit of work in the renderIt function, such as
  * adding clipping support, and bringing it more inline with the rest of the
  * system.
@@ -19,47 +21,52 @@ import edu.uoregon.tau.dms.dss.*;
 import java.awt.font.*;
 import java.text.*;
 
-public class CallPathTextWindowPanel extends JPanel implements ActionListener, MouseListener,
-        Printable, ParaProfImageInterface {
+/**
+ * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
+ *   
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.10 2004/12/29 00:09:48 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.10 $
+ * @see		CallPathDrawObject
+ * @see		CallPathTextWindow
+ * 
+ * TODO:    1) Add printing support. 
+ *          2) Need to do quite a bit of work in the renderIt function, such as
+ *             adding clipping support, and bringing it more inline with the rest of the
+ *             system.
+ */
+public class CallPathTextWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
+        ParaProfImageInterface {
 
     public CallPathTextWindowPanel(ParaProfTrial trial, int nodeID, int contextID, int threadID,
-            CallPathTextWindow cPTWindow, int windowType, boolean debug) {
-        try {
-            setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
-            setBackground(Color.white);
+            CallPathTextWindow cPTWindow, int windowType) {
 
-            this.nodeID = nodeID;
-            this.contextID = contextID;
-            this.threadID = threadID;
-            this.trial = trial;
-            this.cPTWindow = cPTWindow;
-            this.windowType = windowType;
-            this.debug = debug;
-            this.repaint();
+        this.threadID = threadID;
+        this.trial = trial;
+        this.window = cPTWindow;
+        this.windowType = windowType;
+        this.repaint();
 
-            //Add this object as a mouse listener.
-            addMouseListener(this);
+        //Add this object as a mouse listener.
+        addMouseListener(this);
 
-            //Add items to the popu menu.
-            JMenuItem jMenuItem = new JMenuItem("Show Function Details");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
+        //Add items to the popu menu.
+        JMenuItem jMenuItem = new JMenuItem("Show Function Details");
+        jMenuItem.addActionListener(this);
+        popup.add(jMenuItem);
 
-            jMenuItem = new JMenuItem("Find Function");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Find Function");
+        jMenuItem.addActionListener(this);
+        popup.add(jMenuItem);
 
-            jMenuItem = new JMenuItem("Change Function Color");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Change Function Color");
+        jMenuItem.addActionListener(this);
+        popup.add(jMenuItem);
 
-            jMenuItem = new JMenuItem("Reset to Generic Color");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Reset to Generic Color");
+        jMenuItem.addActionListener(this);
+        popup.add(jMenuItem);
 
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CPTWP01");
-        }
     }
 
     public void paintComponent(Graphics g) {
@@ -67,576 +74,558 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
             super.paintComponent(g);
             renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDWP03");
+            ParaProfUtils.handleException(e);
+            window.closeThisWindow();
         }
     }
 
     public int print(Graphics g, PageFormat pageFormat, int page) {
-        if (page >= 1) {
+        try {
+            if (page >= 1) {
+                return NO_SUCH_PAGE;
+            }
+
+            ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
+            renderIt((Graphics2D) g, false, true, false);
+
+            return Printable.PAGE_EXISTS;
+        } catch (Exception e) {
+            new ParaProfErrorDialog(e);
             return NO_SUCH_PAGE;
         }
-        
-        double pageWidth = pageFormat.getImageableWidth();
-        double pageHeight = pageFormat.getImageableHeight();
-        int cols = (int) (xPanelSize / pageWidth) + 1;
-        int rows = (int) (yPanelSize / pageHeight) + 1;
-        double xScale = pageWidth / xPanelSize;
-        double yScale = pageHeight / yPanelSize;
-        double scale = Math.min(xScale, yScale);
-        
-        double tx = 0.0;
-        double ty = 0.0;
-        if (xScale > scale) {
-            tx = 0.5 * (xScale - scale) * xPanelSize;
-        } else {
-            ty = 0.5 * (yScale - scale) * yPanelSize;
-        }
-
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.translate((int) pageFormat.getImageableX(),
-                (int) pageFormat.getImageableY());
-        g2.translate(tx, ty);
-        g2.scale(scale, scale);
-
-        renderIt(g2, false, true, false);
-
-        return Printable.PAGE_EXISTS;
-
     }
 
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
-        try {
-            int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
-            int yCoord = 0;
+        int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
+        int yCoord = 0;
 
-            //In this window, a Monospaced font has to be used. This will
-            // probably not be the same
-            //font as the rest of ParaProf. As a result, some extra work will
-            // have to be done to calculate
+        //In this window, a Monospaced font has to be used. This will
+        // probably not be the same
+        //font as the rest of ParaProf. As a result, some extra work will
+        // have to be done to calculate
 
-            //spacing.
-            int fontSize = trial.getPreferences().getBarHeight();
-            spacing = trial.getPreferences().getBarSpacing();
+        //spacing.
+        int fontSize = trial.getPreferences().getBarHeight();
+        spacing = trial.getPreferences().getBarSpacing();
 
-            //Create font.
-            monoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
-            //Compute the font metrics.
-            fmMonoFont = g2D.getFontMetrics(monoFont);
-            maxFontAscent = fmMonoFont.getMaxAscent();
-            maxFontDescent = fmMonoFont.getMaxDescent();
-            g2D.setFont(monoFont);
+        //Create font.
+        monoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
+        //Compute the font metrics.
+        fmMonoFont = g2D.getFontMetrics(monoFont);
+        maxFontAscent = fmMonoFont.getMaxAscent();
+        maxFontDescent = fmMonoFont.getMaxDescent();
+        g2D.setFont(monoFont);
 
-            if (spacing <= (maxFontAscent + maxFontDescent)) {
-                spacing = spacing + 1;
+        if (spacing <= (maxFontAscent + maxFontDescent)) {
+            spacing = spacing + 1;
+        }
+
+        //TODO: rewrite this shit
+
+        if (windowType == 0) {
+            Iterator l1 = null;
+            Iterator l2 = null;
+            Iterator l3 = null;
+            TrialData gm = trial.getTrialData();
+
+            String s = null;
+            edu.uoregon.tau.dms.dss.Thread thread = null;
+            Vector functionList = null;
+            FunctionProfile gtde = null;
+            PPFunctionProfile smwtde = null;
+            CallPathDrawObject callPathDrawObject = null;
+            double d1 = 0.0;
+            double d2 = 0.0;
+            double d3 = 0;
+
+            //######
+            //Populate drawObjectsComplete vector.
+            //This should only happen once.
+            //######
+            if (drawObjectsComplete == null) {
+                drawObjectsComplete = new Vector();
+                //Add five spacer objects representing the column headings.
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+
+                l1 = window.getDataIterator();
+                while (l1.hasNext()) {
+                    smwtde = (PPFunctionProfile) l1.next();
+                    //Don't draw callpath mapping objects.
+                    if (!(smwtde.isCallPathObject())) {
+                        l2 = smwtde.getParents();
+                        while (l2.hasNext()) {
+                            Function parent = (Function) l2.next();
+                            l3 = smwtde.getParentCallPathIterator(parent);
+                            d1 = 0.0;
+                            d2 = 0.0;
+                            d3 = 0;
+                            while (l3.hasNext()) {
+                                Function parentCallPathID = (Function) l3.next();
+                                d1 = d1 + parentCallPathID.getMeanExclusive(trial.getSelectedMetricID());
+                                d2 = d2 + parentCallPathID.getMeanInclusive(trial.getSelectedMetricID());
+                                d3 = d3 + parentCallPathID.getMeanNumCalls();
+                            }
+                            callPathDrawObject = new CallPathDrawObject(parent, true, false, false);
+                            callPathDrawObject.setExclusiveValue(d1);
+                            callPathDrawObject.setInclusiveValue(d2);
+                            callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
+                            callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
+                            drawObjectsComplete.add(callPathDrawObject);
+                        }
+                        callPathDrawObject = new CallPathDrawObject(smwtde.getFunction(), false, false, false);
+                        callPathDrawObject.setExclusiveValue(smwtde.getExclusiveValue());
+                        callPathDrawObject.setInclusiveValue(smwtde.getInclusiveValue());
+                        callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
+                        drawObjectsComplete.add(callPathDrawObject);
+                        l2 = smwtde.getChildren();
+                        while (l2.hasNext()) {
+                            Function child = (Function) l2.next();
+                            l3 = smwtde.getChildCallPathIterator(child);
+                            d1 = 0.0;
+                            d2 = 0.0;
+                            d3 = 0;
+                            while (l3.hasNext()) {
+                                Function childCallPathID = (Function) l3.next();
+                                d1 = d1 + childCallPathID.getMeanExclusive(trial.getSelectedMetricID());
+                                d2 = d2 + childCallPathID.getMeanInclusive(trial.getSelectedMetricID());
+                                d3 = d3 + childCallPathID.getMeanNumCalls();
+                            }
+                            callPathDrawObject = new CallPathDrawObject(child, false, true, false);
+                            callPathDrawObject.setExclusiveValue(d1);
+                            callPathDrawObject.setInclusiveValue(d2);
+                            callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
+                            callPathDrawObject.setNumberOfCalls(child.getMeanNumCalls());
+                            drawObjectsComplete.add(callPathDrawObject);
+                        }
+                        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                    }
+                }
+            }
+            //######
+            //End - Populate drawObjectsComplete vector.
+            //######
+
+            //######
+            //Populate drawObjects vector.
+            //######
+            if (drawObjects == null) {
+                drawObjects = new Vector();
+                Vector holdingPattern = new Vector();
+                boolean adding = false;
+                int state = -1;
+                int size = -1;
+                if (window.showCollapsedView()) {
+                    for (Enumeration e = drawObjectsComplete.elements(); e.hasMoreElements();) {
+                        callPathDrawObject = (CallPathDrawObject) e.nextElement();
+                        if (callPathDrawObject.isSpacer())
+                            state = 0;
+                        else if (callPathDrawObject.isParent()) {
+                            if (adding)
+                                state = 1;
+                            else
+                                state = 2;
+                        } else if (callPathDrawObject.isChild()) {
+                            if (adding)
+                                state = 3;
+                            else
+                                state = 4;
+                        } else {
+                            if (adding)
+                                state = 5;
+                            else
+                                state = 6;
+                        }
+
+                        switch (state) {
+                        case 0:
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        case 1:
+                            adding = false;
+                            holdingPattern.add(callPathDrawObject);
+                            break;
+                        case 2:
+                            holdingPattern.add(callPathDrawObject);
+                            break;
+                        case 3:
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        case 5:
+                            //Transfer holdingPattern elements to
+                            // drawObjects, then add this function
+                            //to drawObjects.
+                            size = holdingPattern.size();
+                            for (int i = 0; i < size; i++)
+                                drawObjects.add(holdingPattern.elementAt(i));
+                            holdingPattern.clear();
+                            drawObjects.add(callPathDrawObject);
+                            //Now check to see if this object is expanded.
+                            if (callPathDrawObject.isExpanded())
+                                adding = true;
+                            else
+                                adding = false;
+                            break;
+                        case 6:
+                            if (callPathDrawObject.isExpanded()) {
+                                //Transfer holdingPattern elements to
+                                // drawObjects, then add this function
+                                //to drawObjects.
+                                size = holdingPattern.size();
+                                for (int i = 0; i < size; i++)
+                                    drawObjects.add(holdingPattern.elementAt(i));
+                                holdingPattern.clear();
+                                adding = true;
+                            } else {
+                                holdingPattern.clear();
+                            }
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        default:
+                        }
+                    }
+                } else
+                    drawObjects = drawObjectsComplete;
+            }
+            //######
+            //End - Populate drawObjects vector.
+            //######
+
+            //######
+            //Set panel size.
+            //######
+
+            if (this.calculatePanelSize()) {
+                for (Enumeration e = drawObjects.elements(); e.hasMoreElements();) {
+                    callPathDrawObject = (CallPathDrawObject) e.nextElement();
+                    yHeightNeeded = yHeightNeeded + (spacing);
+                    max = setMax(max, callPathDrawObject.getExclusiveValue(),
+                            callPathDrawObject.getInclusiveValue());
+
+                    if (!callPathDrawObject.isSpacer()) {
+                        length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
+                        if (xWidthNeeded < length)
+                            xWidthNeeded = length;
+                    }
+                }
+
+                base = 20;
+                startPosition = fmMonoFont.stringWidth("--> ") + base;
+                stringWidth = (fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(), max,
+                        defaultNumberPrecision))) + 10;
+                check = fmMonoFont.stringWidth("Exclusive");
+                if (stringWidth < check)
+                    stringWidth = check + 5;
+                numCallsWidth = (fmMonoFont.stringWidth(Double.toString(gm.getMaxMeanNumberOfCalls()))) + 10;
+                check = fmMonoFont.stringWidth("Calls/Tot.Calls");
+                if (numCallsWidth < check)
+                    numCallsWidth = check + 5;
+                excPos = startPosition;
+                incPos = excPos + stringWidth;
+                callsPos1 = incPos + stringWidth;
+                callsPos2 = callsPos1 + numCallsWidth;
+                namePos = callsPos2 + numCallsWidth;
+                //Add this to the positon of the name plus a little extra.
+                xWidthNeeded = xWidthNeeded + namePos + 20;
+
+                boolean sizeChange = false;
+                //Resize the panel if needed.
+                if (xWidthNeeded > xPanelSize) {
+                    xPanelSize = xWidthNeeded + 10;
+                    sizeChange = true;
+                }
+                if (yHeightNeeded > yPanelSize) {
+                    yPanelSize = yHeightNeeded + 10;
+                    sizeChange = true;
+                }
+                if (sizeChange && toScreen)
+                    revalidate();
+                this.setCalculatePanelSize(false);
+            }
+            //######
+            //End - Set panel size.
+            //######
+
+            int yBeg = 0;
+            int yEnd = 0;
+            int startElement = 0;
+            int endElement = 0;
+            Rectangle clipRect = null;
+            Rectangle viewRect = null;
+
+            if (!fullWindow) {
+                if (toScreen) {
+                    clipRect = g2D.getClipBounds();
+                    yBeg = (int) clipRect.getY();
+                    yEnd = (int) (yBeg + clipRect.getHeight());
+                } else {
+                    viewRect = window.getViewRect();
+                    yBeg = (int) viewRect.getY();
+                    yEnd = (int) (yBeg + viewRect.getHeight());
+                }
+
+                startElement = ((yBeg - yCoord) / spacing) - 1;
+                endElement = ((yEnd - yCoord) / spacing) + 1;
+
+                if (startElement < 0)
+                    startElement = 0;
+
+                if (endElement < 0)
+                    endElement = 0;
+
+                if (startElement > (drawObjects.size() - 1))
+                    startElement = (drawObjects.size() - 1);
+
+                if (endElement > (drawObjects.size() - 1))
+                    endElement = (drawObjects.size() - 1);
+
+                if (toScreen)
+                    yCoord = yCoord + (startElement * spacing);
+            } else {
+                startElement = 0;
+                endElement = ((drawObjects.size()) - 1);
             }
 
-            //TODO: rewrite this shit
-            
-            if (windowType == 0) {
-                Iterator l1 = null;
-                Iterator l2 = null;
-                Iterator l3 = null;
-                TrialData gm = trial.getTrialData();
+            /*
+             * //At this point we can determine the size this panel will
+             * //require. If we need to resize, don't do any more drawing,
+             * //just call revalidate. Make sure we check the instruction
+             * value as we only want to //revalidate if we are drawing to
+             * the screen. if(resizePanel(fmFont, barXCoord, list,
+             * startElement, endElement) && instruction==0){
+             * this.revalidate(); return; }
+             */
 
-                String s = null;
-                edu.uoregon.tau.dms.dss.Thread thread = null;
-                Vector functionList = null;
-                FunctionProfile gtde = null;
-                PPFunctionProfile smwtde = null;
-                CallPathDrawObject callPathDrawObject = null;
-                double d1 = 0.0;
-                double d2 = 0.0;
-                double d3 = 0;
+            g2D.setColor(Color.black);
+            //######
+            //Draw the header if required.
+            //######
+            if (drawHeader) {
+                yCoord = yCoord + (spacing);
+                String headerString = window.getHeaderString();
+                //Need to split the string up into its separate lines.
+                StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+                while (st.hasMoreTokens()) {
+                    g2D.drawString(st.nextToken(), 15, yCoord);
+                    yCoord = yCoord + (spacing);
+                }
+                lastHeaderEndPosition = yCoord;
+            }
+            //######
+            //End - Draw the header if required.
+            //######
+            for (int i = startElement; i <= endElement; i++) {
+                callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
+                if (i == 1) {
+                    g2D.drawString("Exclusive", excPos, yCoord);
+                    g2D.drawString("Inclusive", incPos, yCoord);
+                    g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
+                    g2D.drawString("Name[id]", namePos, yCoord);
+                    yCoord = yCoord + spacing;
+                } else if (i == 2) {
+                    g2D.drawString(
+                            "--------------------------------------------------------------------------------",
+                            excPos, yCoord);
+                    yCoord = yCoord + spacing;
+                } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
+                    g2D.drawString("--> ", base, yCoord);
+                    g2D.drawString(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getExclusiveValue(), ParaProf.defaultNumberPrecision), excPos,
+                            yCoord);
+                    g2D.drawString(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getInclusiveValue(), ParaProf.defaultNumberPrecision), incPos,
+                            yCoord);
+                    g2D.drawString(Double.toString(callPathDrawObject.getNumberOfCalls()), callsPos1, yCoord);
+                    Function function = callPathDrawObject.getFunction();
+                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                        g2D.setColor(Color.red);
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
+                                yCoord);
+                        g2D.setColor(Color.black);
+                    } else
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
+                                yCoord);
+                    yCoord = yCoord + (spacing);
+                } else if (callPathDrawObject.isSpacer())
+                    yCoord = yCoord + spacing;
+                else {
+                    g2D.drawString(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getExclusiveValue(), ParaProf.defaultNumberPrecision), excPos,
+                            yCoord);
+                    g2D.drawString(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getInclusiveValue(), ParaProf.defaultNumberPrecision), incPos,
+                            yCoord);
+                    g2D.drawString(callPathDrawObject.getNumberOfCallsFromCallPathObjects() + "/"
+                            + callPathDrawObject.getNumberOfCalls(), callsPos1, yCoord);
+                    Function function = callPathDrawObject.getFunction();
+                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                        g2D.setColor(Color.red);
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
+                                yCoord);
+                        g2D.setColor(Color.black);
+                    } else
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
+                                yCoord);
+                    yCoord = yCoord + (spacing);
+                }
+            }
+        } else if (windowType == 1) {
+            Iterator l1 = null;
+            Iterator l2 = null;
+            Iterator l3 = null;
+            TrialData gm = trial.getTrialData();
+            String s = null;
+            edu.uoregon.tau.dms.dss.Thread thread = null;
+            Vector functionList = null;
+            FunctionProfile gtde = null;
+            PPFunctionProfile smwtde = null;
+            CallPathDrawObject callPathDrawObject = null;
+            double d1 = 0.0;
+            double d2 = 0.0;
+            double d3 = 0;
 
-                //######
-                //Populate drawObjectsComplete vector.
-                //This should only happen once.
-                //######
-                if (drawObjectsComplete == null) {
-                    drawObjectsComplete = new Vector();
-                    //Add five spacer objects representing the column headings.
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+            thread = (edu.uoregon.tau.dms.dss.Thread) trial.getNCT().getThread(nodeID, contextID, threadID);
+            functionList = thread.getFunctionList();
 
-                    l1 = cPTWindow.getDataIterator();
-                    while (l1.hasNext()) {
-                        smwtde = (PPFunctionProfile) l1.next();
-                        //Don't draw callpath mapping objects.
-                        if (!(smwtde.isCallPathObject())) {
-                            l2 = smwtde.getParents();
-                            while (l2.hasNext()) {
-                                Function parent = (Function) l2.next();
-                                l3 = smwtde.getParentCallPathIterator(parent);
-                                d1 = 0.0;
-                                d2 = 0.0;
-                                d3 = 0;
-                                while (l3.hasNext()) {
-                                    Function parentCallPathID = (Function) l3.next();
-                                    d1 = d1
-                                            + parentCallPathID.getMeanExclusive(trial.getSelectedMetricID());
-                                    d2 = d2
-                                            + parentCallPathID.getMeanInclusive(trial.getSelectedMetricID());
-                                    d3 = d3 + parentCallPathID.getMeanNumCalls();
-                                }
-                                callPathDrawObject = new CallPathDrawObject(parent, true, false,
-                                        false);
-                                callPathDrawObject.setExclusiveValue(d1);
-                                callPathDrawObject.setInclusiveValue(d2);
-                                callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
-                                callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
-                                drawObjectsComplete.add(callPathDrawObject);
+            //######
+            //Populate drawObjectsComplete vector.
+            //This should only happen once.
+            //######
+            if (drawObjectsComplete == null) {
+                drawObjectsComplete = new Vector();
+                //Add five spacer objects representing the column headings.
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+
+                l1 = window.getDataIterator();
+                while (l1.hasNext()) {
+                    smwtde = (PPFunctionProfile) l1.next();
+                    //Don't draw callpath mapping objects.
+                    if (!(smwtde.isCallPathObject())) {
+                        l2 = smwtde.getParents();
+                        while (l2.hasNext()) {
+                            Function parent = (Function) l2.next();
+                            l3 = smwtde.getParentCallPathIterator(parent);
+                            d1 = 0.0;
+                            d2 = 0.0;
+                            d3 = 0;
+                            while (l3.hasNext()) {
+                                Function callPath = (Function) l3.next();
+                                gtde = (FunctionProfile) functionList.elementAt(callPath.getID());
+                                d1 = d1 + gtde.getExclusive(trial.getSelectedMetricID());
+                                d2 = d2 + gtde.getInclusive(trial.getSelectedMetricID());
+                                d3 = d3 + gtde.getNumCalls();
                             }
-                            callPathDrawObject = new CallPathDrawObject(smwtde.getFunction(),
-                                    false, false, false);
-                            callPathDrawObject.setExclusiveValue(smwtde.getExclusiveValue());
-                            callPathDrawObject.setInclusiveValue(smwtde.getInclusiveValue());
+                            callPathDrawObject = new CallPathDrawObject(parent, true, false, false);
+                            callPathDrawObject.setExclusiveValue(d1);
+                            callPathDrawObject.setInclusiveValue(d2);
+                            callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
                             callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
                             drawObjectsComplete.add(callPathDrawObject);
-                            l2 = smwtde.getChildren();
-                            while (l2.hasNext()) {
-                                Function child = (Function) l2.next();
-                                l3 = smwtde.getChildCallPathIterator(child);
-                                d1 = 0.0;
-                                d2 = 0.0;
-                                d3 = 0;
-                                while (l3.hasNext()) {
-                                    Function childCallPathID = (Function) l3.next();
-                                    d1 = d1
-                                            + childCallPathID.getMeanExclusive(trial.getSelectedMetricID());
-                                    d2 = d2
-                                            + childCallPathID.getMeanInclusive(trial.getSelectedMetricID());
-                                    d3 = d3 + childCallPathID.getMeanNumCalls();
-                                }
-                                callPathDrawObject = new CallPathDrawObject(child, false, true,
-                                        false);
-                                callPathDrawObject.setExclusiveValue(d1);
-                                callPathDrawObject.setInclusiveValue(d2);
-                                callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
-                                callPathDrawObject.setNumberOfCalls(child.getMeanNumCalls());
-                                drawObjectsComplete.add(callPathDrawObject);
-                            }
-                            drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                            drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
                         }
-                    }
-                }
-                //######
-                //End - Populate drawObjectsComplete vector.
-                //######
-
-                //######
-                //Populate drawObjects vector.
-                //######
-                if (drawObjects == null) {
-                    drawObjects = new Vector();
-                    Vector holdingPattern = new Vector();
-                    boolean adding = false;
-                    int state = -1;
-                    int size = -1;
-                    if (cPTWindow.showCollapsedView()) {
-                        for (Enumeration e = drawObjectsComplete.elements(); e.hasMoreElements();) {
-                            callPathDrawObject = (CallPathDrawObject) e.nextElement();
-                            if (callPathDrawObject.isSpacer())
-                                state = 0;
-                            else if (callPathDrawObject.isParent()) {
-                                if (adding)
-                                    state = 1;
-                                else
-                                    state = 2;
-                            } else if (callPathDrawObject.isChild()) {
-                                if (adding)
-                                    state = 3;
-                                else
-                                    state = 4;
-                            } else {
-                                if (adding)
-                                    state = 5;
-                                else
-                                    state = 6;
+                        callPathDrawObject = new CallPathDrawObject(smwtde.getFunction(), false, false, false);
+                        callPathDrawObject.setExclusiveValue(smwtde.getExclusiveValue());
+                        callPathDrawObject.setInclusiveValue(smwtde.getInclusiveValue());
+                        callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
+                        drawObjectsComplete.add(callPathDrawObject);
+                        l2 = smwtde.getChildren();
+                        while (l2.hasNext()) {
+                            Function child = (Function) l2.next();
+                            l3 = smwtde.getChildCallPathIterator(child);
+                            d1 = 0.0;
+                            d2 = 0.0;
+                            d3 = 0;
+                            while (l3.hasNext()) {
+                                Function callPath = (Function) l3.next();
+                                gtde = (FunctionProfile) functionList.elementAt(callPath.getID());
+                                d1 = d1 + gtde.getExclusive(trial.getSelectedMetricID());
+                                d2 = d2 + gtde.getInclusive(trial.getSelectedMetricID());
+                                d3 = d3 + gtde.getNumCalls();
                             }
-
-                            switch (state) {
-                            case 0:
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            case 1:
-                                adding = false;
-                                holdingPattern.add(callPathDrawObject);
-                                break;
-                            case 2:
-                                holdingPattern.add(callPathDrawObject);
-                                break;
-                            case 3:
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            case 5:
-                                //Transfer holdingPattern elements to
-                                // drawObjects, then add this function
-                                //to drawObjects.
-                                size = holdingPattern.size();
-                                for (int i = 0; i < size; i++)
-                                    drawObjects.add(holdingPattern.elementAt(i));
-                                holdingPattern.clear();
-                                drawObjects.add(callPathDrawObject);
-                                //Now check to see if this object is expanded.
-                                if (callPathDrawObject.isExpanded())
-                                    adding = true;
-                                else
-                                    adding = false;
-                                break;
-                            case 6:
-                                if (callPathDrawObject.isExpanded()) {
-                                    //Transfer holdingPattern elements to
-                                    // drawObjects, then add this function
-                                    //to drawObjects.
-                                    size = holdingPattern.size();
-                                    for (int i = 0; i < size; i++)
-                                        drawObjects.add(holdingPattern.elementAt(i));
-                                    holdingPattern.clear();
-                                    adding = true;
-                                } else {
-                                    holdingPattern.clear();
-                                }
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            default:
-                                if (this.debug())
-                                    System.out.println("In default state (CPTWP). State is: "
-                                            + state);
-                            }
-                        }
-                    } else
-                        drawObjects = drawObjectsComplete;
-                }
-                //######
-                //End - Populate drawObjects vector.
-                //######
-
-                //######
-                //Set panel size.
-                //######
-
-                if (this.calculatePanelSize()) {
-                    for (Enumeration e = drawObjects.elements(); e.hasMoreElements();) {
-                        callPathDrawObject = (CallPathDrawObject) e.nextElement();
-                        yHeightNeeded = yHeightNeeded + (spacing);
-                        max = setMax(max, callPathDrawObject.getExclusiveValue(),
-                                callPathDrawObject.getInclusiveValue());
-
-                        if (!callPathDrawObject.isSpacer()) {
-                            length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
-                            if (xWidthNeeded < length)
-                                xWidthNeeded = length;
-                        }
-                    }
-
-                    base = 20;
-                    startPosition = fmMonoFont.stringWidth("--> ") + base;
-                    stringWidth = (fmMonoFont.stringWidth(UtilFncs.getOutputString(
-                            cPTWindow.units(), max, defaultNumberPrecision))) + 10;
-                    check = fmMonoFont.stringWidth("Exclusive");
-                    if (stringWidth < check)
-                        stringWidth = check + 5;
-                    numCallsWidth = (fmMonoFont.stringWidth(Double.toString(gm.getMaxMeanNumberOfCalls()))) + 10;
-                    check = fmMonoFont.stringWidth("Calls/Tot.Calls");
-                    if (numCallsWidth < check)
-                        numCallsWidth = check + 5;
-                    excPos = startPosition;
-                    incPos = excPos + stringWidth;
-                    callsPos1 = incPos + stringWidth;
-                    callsPos2 = callsPos1 + numCallsWidth;
-                    namePos = callsPos2 + numCallsWidth;
-                    //Add this to the positon of the name plus a little extra.
-                    xWidthNeeded = xWidthNeeded + namePos + 20;
-
-                    boolean sizeChange = false;
-                    //Resize the panel if needed.
-                    if (xWidthNeeded > xPanelSize) {
-                        xPanelSize = xWidthNeeded + 10;
-                        sizeChange = true;
-                    }
-                    if (yHeightNeeded > yPanelSize) {
-                        yPanelSize = yHeightNeeded + 10;
-                        sizeChange = true;
-                    }
-                    if (sizeChange && toScreen)
-                        revalidate();
-                    this.setCalculatePanelSize(false);
-                }
-                //######
-                //End - Set panel size.
-                //######
-
-                int yBeg = 0;
-                int yEnd = 0;
-                int startElement = 0;
-                int endElement = 0;
-                Rectangle clipRect = null;
-                Rectangle viewRect = null;
-
-                if (!fullWindow) {
-                    if (toScreen) {
-                        clipRect = g2D.getClipBounds();
-                        yBeg = (int) clipRect.getY();
-                        yEnd = (int) (yBeg + clipRect.getHeight());
-                    } else {
-                        viewRect = cPTWindow.getViewRect();
-                        yBeg = (int) viewRect.getY();
-                        yEnd = (int) (yBeg + viewRect.getHeight());
-                    }
-
-                    startElement = ((yBeg - yCoord) / spacing) - 1;
-                    endElement = ((yEnd - yCoord) / spacing) + 1;
-
-                    if (startElement < 0)
-                        startElement = 0;
-
-                    if (endElement < 0)
-                        endElement = 0;
-
-                    if (startElement > (drawObjects.size() - 1))
-                        startElement = (drawObjects.size() - 1);
-
-                    if (endElement > (drawObjects.size() - 1))
-                        endElement = (drawObjects.size() - 1);
-
-                    if (toScreen)
-                        yCoord = yCoord + (startElement * spacing);
-                } else {
-                    startElement = 0;
-                    endElement = ((drawObjects.size()) - 1);
-                }
-
-                /*
-                 * //At this point we can determine the size this panel will
-                 * //require. If we need to resize, don't do any more drawing,
-                 * //just call revalidate. Make sure we check the instruction
-                 * value as we only want to //revalidate if we are drawing to
-                 * the screen. if(resizePanel(fmFont, barXCoord, list,
-                 * startElement, endElement) && instruction==0){
-                 * this.revalidate(); return; }
-                 */
-
-                g2D.setColor(Color.black);
-                //######
-                //Draw the header if required.
-                //######
-                if (drawHeader) {
-                    yCoord = yCoord + (spacing);
-                    String headerString = cPTWindow.getHeaderString();
-                    //Need to split the string up into its separate lines.
-                    StringTokenizer st = new StringTokenizer(headerString, "'\n'");
-                    while (st.hasMoreTokens()) {
-                        g2D.drawString(st.nextToken(), 15, yCoord);
-                        yCoord = yCoord + (spacing);
-                    }
-                    lastHeaderEndPosition = yCoord;
-                }
-                //######
-                //End - Draw the header if required.
-                //######
-                for (int i = startElement; i <= endElement; i++) {
-                    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
-                    if (i == 1) {
-                        g2D.drawString("Exclusive", excPos, yCoord);
-                        g2D.drawString("Inclusive", incPos, yCoord);
-                        g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
-                        g2D.drawString("Name[id]", namePos, yCoord);
-                        yCoord = yCoord + spacing;
-                    } else if (i == 2) {
-                        g2D.drawString(
-                                "--------------------------------------------------------------------------------",
-                                excPos, yCoord);
-                        yCoord = yCoord + spacing;
-                    } else if (!callPathDrawObject.isParentChild()
-                            && !callPathDrawObject.isSpacer()) {
-                        g2D.drawString("--> ", base, yCoord);
-                        g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),
-                                callPathDrawObject.getExclusiveValue(),
-                                ParaProf.defaultNumberPrecision), excPos, yCoord);
-                        g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),
-                                callPathDrawObject.getInclusiveValue(),
-                                ParaProf.defaultNumberPrecision), incPos, yCoord);
-                        g2D.drawString(Double.toString(callPathDrawObject.getNumberOfCalls()),
-                                callsPos1, yCoord);
-                        Function function = callPathDrawObject.getFunction();
-                        if (trial.getColorChooser().getHighlightedFunction() == function) {
-                            g2D.setColor(Color.red);
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", namePos, yCoord);
-                            g2D.setColor(Color.black);
-                        } else
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", namePos, yCoord);
-                        yCoord = yCoord + (spacing);
-                    } else if (callPathDrawObject.isSpacer())
-                        yCoord = yCoord + spacing;
-                    else {
-                        g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),
-                                callPathDrawObject.getExclusiveValue(),
-                                ParaProf.defaultNumberPrecision), excPos, yCoord);
-                        g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),
-                                callPathDrawObject.getInclusiveValue(),
-                                ParaProf.defaultNumberPrecision), incPos, yCoord);
-                        g2D.drawString(callPathDrawObject.getNumberOfCallsFromCallPathObjects()
-                                + "/" + callPathDrawObject.getNumberOfCalls(), callsPos1, yCoord);
-                        Function function = callPathDrawObject.getFunction();
-                        if (trial.getColorChooser().getHighlightedFunction() == function) {
-                            g2D.setColor(Color.red);
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", namePos, yCoord);
-                            g2D.setColor(Color.black);
-                        } else
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", namePos, yCoord);
-                        yCoord = yCoord + (spacing);
-                    }
-                }
-            } else if (windowType == 1) {
-                Iterator l1 = null;
-                Iterator l2 = null;
-                Iterator l3 = null;
-                TrialData gm = trial.getTrialData();
-                String s = null;
-                edu.uoregon.tau.dms.dss.Thread thread = null;
-                Vector functionList = null;
-                FunctionProfile gtde = null;
-                PPFunctionProfile smwtde = null;
-                CallPathDrawObject callPathDrawObject = null;
-                double d1 = 0.0;
-                double d2 = 0.0;
-                double d3 = 0;
-
-                thread = (edu.uoregon.tau.dms.dss.Thread) trial.getNCT().getThread(nodeID,
-                        contextID, threadID);
-                functionList = thread.getFunctionList();
-
-                //######
-                //Populate drawObjectsComplete vector.
-                //This should only happen once.
-                //######
-                if (drawObjectsComplete == null) {
-                    drawObjectsComplete = new Vector();
-                    //Add five spacer objects representing the column headings.
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-
-                    l1 = cPTWindow.getDataIterator();
-                    while (l1.hasNext()) {
-                        smwtde = (PPFunctionProfile) l1.next();
-                        //Don't draw callpath mapping objects.
-                        if (!(smwtde.isCallPathObject())) {
-                            l2 = smwtde.getParents();
-                            while (l2.hasNext()) {
-                                Function parent = (Function) l2.next();
-                                l3 = smwtde.getParentCallPathIterator(parent);
-                                d1 = 0.0;
-                                d2 = 0.0;
-                                d3 = 0;
-                                while (l3.hasNext()) {
-                                    Function callPath = (Function) l3.next();
-                                    gtde = (FunctionProfile) functionList.elementAt(callPath.getID());
-                                    d1 = d1 + gtde.getExclusive(trial.getSelectedMetricID());
-                                    d2 = d2 + gtde.getInclusive(trial.getSelectedMetricID());
-                                    d3 = d3 + gtde.getNumCalls();
-                                }
-                                callPathDrawObject = new CallPathDrawObject(parent, true, false,
-                                        false);
-                                callPathDrawObject.setExclusiveValue(d1);
-                                callPathDrawObject.setInclusiveValue(d2);
-                                callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
-                                callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
-                                drawObjectsComplete.add(callPathDrawObject);
-                            }
-                            callPathDrawObject = new CallPathDrawObject(smwtde.getFunction(),
-                                    false, false, false);
-                            callPathDrawObject.setExclusiveValue(smwtde.getExclusiveValue());
-                            callPathDrawObject.setInclusiveValue(smwtde.getInclusiveValue());
-                            callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
+                            callPathDrawObject = new CallPathDrawObject(child, false, true, false);
+                            callPathDrawObject.setExclusiveValue(d1);
+                            callPathDrawObject.setInclusiveValue(d2);
+                            callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
+                            callPathDrawObject.setNumberOfCalls(thread.getFunctionProfile(child).getNumCalls());
                             drawObjectsComplete.add(callPathDrawObject);
-                            l2 = smwtde.getChildren();
-                            while (l2.hasNext()) {
-                                Function child = (Function) l2.next();
-                                l3 = smwtde.getChildCallPathIterator(child);
-                                d1 = 0.0;
-                                d2 = 0.0;
-                                d3 = 0;
-                                while (l3.hasNext()) {
-                                    Function callPath = (Function) l3.next();
-                                    gtde = (FunctionProfile) functionList.elementAt(callPath.getID());
-                                    d1 = d1 + gtde.getExclusive(trial.getSelectedMetricID());
-                                    d2 = d2 + gtde.getInclusive(trial.getSelectedMetricID());
-                                    d3 = d3 + gtde.getNumCalls();
-                                }
-                                callPathDrawObject = new CallPathDrawObject(child, false, true,
-                                        false);
-                                callPathDrawObject.setExclusiveValue(d1);
-                                callPathDrawObject.setInclusiveValue(d2);
-                                callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
-                                callPathDrawObject.setNumberOfCalls(thread.getFunctionProfile(child).getNumCalls());
-                                drawObjectsComplete.add(callPathDrawObject);
-                            }
-                            drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                            drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
                         }
+                        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
                     }
                 }
-                //######
-                //End - Populate drawObjectsComplete vector.
-                //######
+            }
+            //######
+            //End - Populate drawObjectsComplete vector.
+            //######
 
-                //######
-                //Populate drawObjects vector.
-                //######
-                if (drawObjects == null) {
-                    drawObjects = new Vector();
-                    Vector holdingPattern = new Vector();
-                    boolean adding = false;
-                    int state = -1;
-                    int size = -1;
-                    if (cPTWindow.showCollapsedView()) {
-                        for (Enumeration e = drawObjectsComplete.elements(); e.hasMoreElements();) {
-                            callPathDrawObject = (CallPathDrawObject) e.nextElement();
-                            if (callPathDrawObject.isSpacer())
-                                state = 0;
-                            else if (callPathDrawObject.isParent()) {
-                                if (adding)
-                                    state = 1;
-                                else
-                                    state = 2;
-                            } else if (callPathDrawObject.isChild()) {
-                                if (adding)
-                                    state = 3;
-                                else
-                                    state = 4;
-                            } else {
-                                if (adding)
-                                    state = 5;
-                                else
-                                    state = 6;
-                            }
+            //######
+            //Populate drawObjects vector.
+            //######
+            if (drawObjects == null) {
+                drawObjects = new Vector();
+                Vector holdingPattern = new Vector();
+                boolean adding = false;
+                int state = -1;
+                int size = -1;
+                if (window.showCollapsedView()) {
+                    for (Enumeration e = drawObjectsComplete.elements(); e.hasMoreElements();) {
+                        callPathDrawObject = (CallPathDrawObject) e.nextElement();
+                        if (callPathDrawObject.isSpacer())
+                            state = 0;
+                        else if (callPathDrawObject.isParent()) {
+                            if (adding)
+                                state = 1;
+                            else
+                                state = 2;
+                        } else if (callPathDrawObject.isChild()) {
+                            if (adding)
+                                state = 3;
+                            else
+                                state = 4;
+                        } else {
+                            if (adding)
+                                state = 5;
+                            else
+                                state = 6;
+                        }
 
-                            switch (state) {
-                            case 0:
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            case 1:
+                        switch (state) {
+                        case 0:
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        case 1:
+                            adding = false;
+                            holdingPattern.add(callPathDrawObject);
+                            break;
+                        case 2:
+                            holdingPattern.add(callPathDrawObject);
+                            break;
+                        case 3:
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        case 5:
+                            //Transfer holdingPattern elements to
+                            // drawObjects, then add this function
+                            //to drawObjects.
+                            size = holdingPattern.size();
+                            for (int i = 0; i < size; i++)
+                                drawObjects.add(holdingPattern.elementAt(i));
+                            holdingPattern.clear();
+                            drawObjects.add(callPathDrawObject);
+                            //Now check to see if this object is expanded.
+                            if (callPathDrawObject.isExpanded())
+                                adding = true;
+                            else
                                 adding = false;
-                                holdingPattern.add(callPathDrawObject);
-                                break;
-                            case 2:
-                                holdingPattern.add(callPathDrawObject);
-                                break;
-                            case 3:
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            case 5:
+                            break;
+                        case 6:
+                            if (callPathDrawObject.isExpanded()) {
                                 //Transfer holdingPattern elements to
                                 // drawObjects, then add this function
                                 //to drawObjects.
@@ -644,331 +633,321 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                                 for (int i = 0; i < size; i++)
                                     drawObjects.add(holdingPattern.elementAt(i));
                                 holdingPattern.clear();
-                                drawObjects.add(callPathDrawObject);
-                                //Now check to see if this object is expanded.
-                                if (callPathDrawObject.isExpanded())
-                                    adding = true;
-                                else
-                                    adding = false;
-                                break;
-                            case 6:
-                                if (callPathDrawObject.isExpanded()) {
-                                    //Transfer holdingPattern elements to
-                                    // drawObjects, then add this function
-                                    //to drawObjects.
-                                    size = holdingPattern.size();
-                                    for (int i = 0; i < size; i++)
-                                        drawObjects.add(holdingPattern.elementAt(i));
-                                    holdingPattern.clear();
-                                    adding = true;
-                                } else {
-                                    holdingPattern.clear();
-                                }
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            default:
-                                if (this.debug())
-                                    System.out.println("In default state (CPTWP). State is: "
-                                            + state);
+                                adding = true;
+                            } else {
+                                holdingPattern.clear();
                             }
-                        }
-                    } else
-                        drawObjects = drawObjectsComplete;
-                }
-                //######
-                //End - Populate drawObjects vector.
-                //######
-
-                //######
-                //Set panel size.
-                //######
-
-                if (this.calculatePanelSize()) {
-                    for (Enumeration e = drawObjects.elements(); e.hasMoreElements();) {
-                        callPathDrawObject = (CallPathDrawObject) e.nextElement();
-                        yHeightNeeded = yHeightNeeded + (spacing);
-
-                        max = setMax(max, fmMonoFont.stringWidth(UtilFncs.getOutputString(
-                                cPTWindow.units(), callPathDrawObject.getExclusiveValue(),
-                                defaultNumberPrecision)),
-                                fmMonoFont.stringWidth(UtilFncs.getOutputString(cPTWindow.units(),
-                                        callPathDrawObject.getInclusiveValue(),
-                                        defaultNumberPrecision)));
-
-                        //			max =
-                        // setMax(max,callPathDrawObject.getExclusiveValue(),callPathDrawObject.getInclusiveValue());
-
-                        if (!callPathDrawObject.isSpacer()) {
-                            length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
-                            if (xWidthNeeded < length)
-                                xWidthNeeded = length;
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        default:
                         }
                     }
+                } else
+                    drawObjects = drawObjectsComplete;
+            }
+            //######
+            //End - Populate drawObjects vector.
+            //######
 
-                    base = 20;
-                    startPosition = fmMonoFont.stringWidth("--> ") + base;
-                    //stringWidth =
-                    // (fmMonoFont.stringWidth(UtilFncs.getOutputString(cPTWindow.units(),max,defaultNumberPrecision)))+10;
-                    stringWidth = (int) max + 10;
+            //######
+            //Set panel size.
+            //######
 
-                    check = fmMonoFont.stringWidth("Exclusive");
-                    if (stringWidth < check)
-                        stringWidth = check + 5;
-                    numCallsWidth = (fmMonoFont.stringWidth(Integer.toString((int)thread.getMaxNumCalls()))) + 10;
-                    check = fmMonoFont.stringWidth("Calls/Tot.Calls");
-                    if (numCallsWidth < check)
-                        numCallsWidth = check + 5;
-                    excPos = startPosition;
-                    incPos = excPos + stringWidth;
-                    callsPos1 = incPos + stringWidth;
-                    callsPos2 = callsPos1 + numCallsWidth;
-                    namePos = callsPos2 + numCallsWidth;
-                    //Add this to the positon of the name plus a little extra.
-                    xWidthNeeded = xWidthNeeded + namePos + 20;
+            if (this.calculatePanelSize()) {
+                for (Enumeration e = drawObjects.elements(); e.hasMoreElements();) {
+                    callPathDrawObject = (CallPathDrawObject) e.nextElement();
+                    yHeightNeeded = yHeightNeeded + (spacing);
 
-                    boolean sizeChange = false;
-                    //Resize the panel if needed.
-                    if (xWidthNeeded > xPanelSize) {
-                        xPanelSize = xWidthNeeded + 10;
-                        sizeChange = true;
+                    max = setMax(max, fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getExclusiveValue(), defaultNumberPrecision)),
+                            fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(),
+                                    callPathDrawObject.getInclusiveValue(), defaultNumberPrecision)));
+
+                    //			max =
+                    // setMax(max,callPathDrawObject.getExclusiveValue(),callPathDrawObject.getInclusiveValue());
+
+                    if (!callPathDrawObject.isSpacer()) {
+                        length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
+                        if (xWidthNeeded < length)
+                            xWidthNeeded = length;
                     }
-                    if (yHeightNeeded > yPanelSize) {
-                        yPanelSize = yHeightNeeded + 10;
-                        sizeChange = true;
-                    }
-                    if (sizeChange && toScreen)
-                        revalidate();
-                    this.setCalculatePanelSize(false);
                 }
-                //######
-                //End - Set panel size.
-                //######
 
-                int yBeg = 0;
-                int yEnd = 0;
-                int startElement = 0;
-                int endElement = 0;
-                Rectangle clipRect = null;
-                Rectangle viewRect = null;
+                base = 20;
+                startPosition = fmMonoFont.stringWidth("--> ") + base;
+                //stringWidth =
+                // (fmMonoFont.stringWidth(UtilFncs.getOutputString(window.units(),max,defaultNumberPrecision)))+10;
+                stringWidth = (int) max + 10;
 
-                if (!fullWindow) {
-                    if (toScreen) {
-                        clipRect = g2D.getClipBounds();
-                        yBeg = (int) clipRect.getY();
-                        yEnd = (int) (yBeg + clipRect.getHeight());
-                    } else {
-                        viewRect = cPTWindow.getViewRect();
-                        yBeg = (int) viewRect.getY();
-                        yEnd = (int) (yBeg + viewRect.getHeight());
-                    }
+                check = fmMonoFont.stringWidth("Exclusive");
+                if (stringWidth < check)
+                    stringWidth = check + 5;
+                numCallsWidth = (fmMonoFont.stringWidth(Integer.toString((int) thread.getMaxNumCalls()))) + 10;
+                check = fmMonoFont.stringWidth("Calls/Tot.Calls");
+                if (numCallsWidth < check)
+                    numCallsWidth = check + 5;
+                excPos = startPosition;
+                incPos = excPos + stringWidth;
+                callsPos1 = incPos + stringWidth;
+                callsPos2 = callsPos1 + numCallsWidth;
+                namePos = callsPos2 + numCallsWidth;
+                //Add this to the positon of the name plus a little extra.
+                xWidthNeeded = xWidthNeeded + namePos + 20;
 
-                    startElement = ((yBeg - yCoord) / spacing) - 1;
-                    endElement = ((yEnd - yCoord) / spacing) + 1;
+                boolean sizeChange = false;
+                //Resize the panel if needed.
+                if (xWidthNeeded > xPanelSize) {
+                    xPanelSize = xWidthNeeded + 10;
+                    sizeChange = true;
+                }
+                if (yHeightNeeded > yPanelSize) {
+                    yPanelSize = yHeightNeeded + 10;
+                    sizeChange = true;
+                }
+                if (sizeChange && toScreen)
+                    revalidate();
+                this.setCalculatePanelSize(false);
+            }
+            //######
+            //End - Set panel size.
+            //######
 
-                    if (startElement < 0)
-                        startElement = 0;
+            int yBeg = 0;
+            int yEnd = 0;
+            int startElement = 0;
+            int endElement = 0;
+            Rectangle clipRect = null;
+            Rectangle viewRect = null;
 
-                    if (endElement < 0)
-                        endElement = 0;
-
-                    if (startElement > (drawObjects.size() - 1))
-                        startElement = (drawObjects.size() - 1);
-
-                    if (endElement > (drawObjects.size() - 1))
-                        endElement = (drawObjects.size() - 1);
-
-                    if (toScreen)
-                        yCoord = yCoord + (startElement * spacing);
+            if (!fullWindow) {
+                if (toScreen) {
+                    clipRect = g2D.getClipBounds();
+                    yBeg = (int) clipRect.getY();
+                    yEnd = (int) (yBeg + clipRect.getHeight());
                 } else {
+                    viewRect = window.getViewRect();
+                    yBeg = (int) viewRect.getY();
+                    yEnd = (int) (yBeg + viewRect.getHeight());
+                }
+
+                startElement = ((yBeg - yCoord) / spacing) - 1;
+                endElement = ((yEnd - yCoord) / spacing) + 1;
+
+                if (startElement < 0)
                     startElement = 0;
-                    endElement = ((drawObjects.size()) - 1);
-                }
 
-                /*
-                 * //At this point we can determine the size this panel will
-                 * //require. If we need to resize, don't do any more drawing,
-                 * //just call revalidate. Make sure we check the instruction
-                 * value as we only want to //revalidate if we are drawing to
-                 * the screen. if(resizePanel(fmFont, barXCoord, list,
-                 * startElement, endElement) && instruction==0){
-                 * this.revalidate(); return; }
-                 */
+                if (endElement < 0)
+                    endElement = 0;
 
-                g2D.setColor(Color.black);
-                //######
-                //Draw the header if required.
-                //######
-                if (drawHeader) {
+                if (startElement > (drawObjects.size() - 1))
+                    startElement = (drawObjects.size() - 1);
+
+                if (endElement > (drawObjects.size() - 1))
+                    endElement = (drawObjects.size() - 1);
+
+                if (toScreen)
+                    yCoord = yCoord + (startElement * spacing);
+            } else {
+                startElement = 0;
+                endElement = ((drawObjects.size()) - 1);
+            }
+
+            /*
+             * //At this point we can determine the size this panel will
+             * //require. If we need to resize, don't do any more drawing,
+             * //just call revalidate. Make sure we check the instruction
+             * value as we only want to //revalidate if we are drawing to
+             * the screen. if(resizePanel(fmFont, barXCoord, list,
+             * startElement, endElement) && instruction==0){
+             * this.revalidate(); return; }
+             */
+
+            g2D.setColor(Color.black);
+            //######
+            //Draw the header if required.
+            //######
+            if (drawHeader) {
+                yCoord = yCoord + (spacing);
+                String headerString = window.getHeaderString();
+                //Need to split the string up into its separate lines.
+                StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+                while (st.hasMoreTokens()) {
+                    g2D.drawString(st.nextToken(), 15, yCoord);
                     yCoord = yCoord + (spacing);
-                    String headerString = cPTWindow.getHeaderString();
-                    //Need to split the string up into its separate lines.
-                    StringTokenizer st = new StringTokenizer(headerString, "'\n'");
-                    while (st.hasMoreTokens()) {
-                        g2D.drawString(st.nextToken(), 15, yCoord);
-                        yCoord = yCoord + (spacing);
-                    }
-                    lastHeaderEndPosition = yCoord;
                 }
-                //######
-                //End - Draw the header if required.
-                //######
-                for (int i = startElement; i <= endElement; i++) {
-                    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
-                    if (i == 1) {
-                        g2D.drawString("Exclusive", excPos, yCoord);
-                        g2D.drawString("Inclusive", incPos, yCoord);
-                        g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
-                        g2D.drawString("Name[id]", namePos, yCoord);
-                        yCoord = yCoord + spacing;
-                    } else if (i == 2) {
-                        g2D.drawString(
-                                "--------------------------------------------------------------------------------",
-                                excPos, yCoord);
-                        yCoord = yCoord + spacing;
-                    } else if (!callPathDrawObject.isParentChild()
-                            && !callPathDrawObject.isSpacer()) {
-                        g2D.drawString("--> ", base, yCoord);
-                        g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),
-                                callPathDrawObject.getExclusiveValue(),
-                                ParaProf.defaultNumberPrecision), excPos, yCoord);
-                        g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),
-                                callPathDrawObject.getInclusiveValue(),
-                                ParaProf.defaultNumberPrecision), incPos, yCoord);
-                        g2D.drawString(Double.toString(callPathDrawObject.getNumberOfCalls()),
-                                callsPos1, yCoord);
-                        Function function = callPathDrawObject.getFunction();
-                        if (trial.getColorChooser().getHighlightedFunction() == function) {
-                            g2D.setColor(Color.red);
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", namePos, yCoord);
-                            g2D.setColor(Color.black);
-                        } else
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", namePos, yCoord);
-                        yCoord = yCoord + (spacing);
-                    } else if (callPathDrawObject.isSpacer())
-                        yCoord = yCoord + spacing;
-                    else {
-                        g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),
-                                callPathDrawObject.getExclusiveValue(),
-                                ParaProf.defaultNumberPrecision), excPos, yCoord);
-                        g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),
-                                callPathDrawObject.getInclusiveValue(),
-                                ParaProf.defaultNumberPrecision), incPos, yCoord);
-                        g2D.drawString(callPathDrawObject.getNumberOfCallsFromCallPathObjects()
-                                + "/" + callPathDrawObject.getNumberOfCalls(), callsPos1, yCoord);
-                        Function function = callPathDrawObject.getFunction();
-                        if (trial.getColorChooser().getHighlightedFunction() == function) {
-                            g2D.setColor(Color.red);
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", namePos, yCoord);
-                            g2D.setColor(Color.black);
-                        } else
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", namePos, yCoord);
-                        yCoord = yCoord + (spacing);
-                    }
+                lastHeaderEndPosition = yCoord;
+            }
+            //######
+            //End - Draw the header if required.
+            //######
+            for (int i = startElement; i <= endElement; i++) {
+                callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
+                if (i == 1) {
+                    g2D.drawString("Exclusive", excPos, yCoord);
+                    g2D.drawString("Inclusive", incPos, yCoord);
+                    g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
+                    g2D.drawString("Name[id]", namePos, yCoord);
+                    yCoord = yCoord + spacing;
+                } else if (i == 2) {
+                    g2D.drawString(
+                            "--------------------------------------------------------------------------------",
+                            excPos, yCoord);
+                    yCoord = yCoord + spacing;
+                } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
+                    g2D.drawString("--> ", base, yCoord);
+                    g2D.drawString(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getExclusiveValue(), ParaProf.defaultNumberPrecision), excPos,
+                            yCoord);
+                    g2D.drawString(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getInclusiveValue(), ParaProf.defaultNumberPrecision), incPos,
+                            yCoord);
+                    g2D.drawString(Double.toString(callPathDrawObject.getNumberOfCalls()), callsPos1, yCoord);
+                    Function function = callPathDrawObject.getFunction();
+                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                        g2D.setColor(Color.red);
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
+                                yCoord);
+                        g2D.setColor(Color.black);
+                    } else
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
+                                yCoord);
+                    yCoord = yCoord + (spacing);
+                } else if (callPathDrawObject.isSpacer())
+                    yCoord = yCoord + spacing;
+                else {
+                    g2D.drawString(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getExclusiveValue(), ParaProf.defaultNumberPrecision), excPos,
+                            yCoord);
+                    g2D.drawString(UtilFncs.getOutputString(window.units(),
+                            callPathDrawObject.getInclusiveValue(), ParaProf.defaultNumberPrecision), incPos,
+                            yCoord);
+                    g2D.drawString(callPathDrawObject.getNumberOfCallsFromCallPathObjects() + "/"
+                            + callPathDrawObject.getNumberOfCalls(), callsPos1, yCoord);
+                    Function function = callPathDrawObject.getFunction();
+                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                        g2D.setColor(Color.red);
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
+                                yCoord);
+                        g2D.setColor(Color.black);
+                    } else
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]", namePos,
+                                yCoord);
+                    yCoord = yCoord + (spacing);
                 }
-            } else if (windowType == 2) {
-                Iterator l1 = null;
-                Iterator l2 = null;
-                Iterator l3 = null;
-                TrialData gm = trial.getTrialData();
-                CallPathDrawObject callPathDrawObject = null;
-                String s = null;
+            }
+        } else if (windowType == 2) {
+            Iterator l1 = null;
+            Iterator l2 = null;
+            Iterator l3 = null;
+            TrialData gm = trial.getTrialData();
+            CallPathDrawObject callPathDrawObject = null;
+            String s = null;
 
-                //######
-                //Populate drawObjectsComplete vector.
-                //This should only happen once.
-                //######
+            //######
+            //Populate drawObjectsComplete vector.
+            //This should only happen once.
+            //######
 
-                if (drawObjectsComplete == null) {
-                    drawObjectsComplete = new Vector(); //Add five spacer
-                    // objects representing
-                    // the column headings.
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+            if (drawObjectsComplete == null) {
+                drawObjectsComplete = new Vector(); //Add five spacer
+                // objects representing
+                // the column headings.
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
 
-                    l1 = cPTWindow.getDataIterator();
-                    while (l1.hasNext()) {
-                        Function function = (Function) l1.next(); //Don't draw
-                        // callpath
-                        // mapping objects.
-                        if (!(function.isCallPathObject())) {
-                            l2 = function.getParents();
-                            while (l2.hasNext()) {
-                                Function parent = (Function) l2.next();
-                                callPathDrawObject = new CallPathDrawObject(parent, true, false,
-                                        false);
-                                drawObjectsComplete.add(callPathDrawObject);
-                            }
-                            callPathDrawObject = new CallPathDrawObject(function, false, false,
-                                    false);
+                l1 = window.getDataIterator();
+                while (l1.hasNext()) {
+                    Function function = (Function) l1.next(); //Don't draw
+                    // callpath
+                    // mapping objects.
+                    if (!(function.isCallPathObject())) {
+                        l2 = function.getParents();
+                        while (l2.hasNext()) {
+                            Function parent = (Function) l2.next();
+                            callPathDrawObject = new CallPathDrawObject(parent, true, false, false);
                             drawObjectsComplete.add(callPathDrawObject);
-                            l2 = function.getChildren();
-                            while (l2.hasNext()) {
-                                Function child = (Function) l2.next();
-                                callPathDrawObject = new CallPathDrawObject(child, false, true,
-                                        false);
-                                drawObjectsComplete.add(callPathDrawObject);
-                            }
-                            drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
-                            drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
                         }
+                        callPathDrawObject = new CallPathDrawObject(function, false, false, false);
+                        drawObjectsComplete.add(callPathDrawObject);
+                        l2 = function.getChildren();
+                        while (l2.hasNext()) {
+                            Function child = (Function) l2.next();
+                            callPathDrawObject = new CallPathDrawObject(child, false, true, false);
+                            drawObjectsComplete.add(callPathDrawObject);
+                        }
+                        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+                        drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
                     }
                 }
+            }
 
-                //######
-                //End - Populate drawObjectsComplete vector.
-                //######
-                //######
-                //Populate drawObjects vector.
-                //######
-                if (drawObjects == null) {
-                    drawObjects = new Vector();
-                    Vector holdingPattern = new Vector();
-                    boolean adding = false;
-                    int state = -1;
-                    int size = -1;
-                    if (cPTWindow.showCollapsedView()) {
-                        for (Enumeration e = drawObjectsComplete.elements(); e.hasMoreElements();) {
-                            callPathDrawObject = (CallPathDrawObject) e.nextElement();
-                            if (callPathDrawObject.isSpacer())
-                                state = 0;
-                            else if (callPathDrawObject.isParent()) {
-                                if (adding)
-                                    state = 1;
-                                else
-                                    state = 2;
-                            } else if (callPathDrawObject.isChild()) {
-                                if (adding)
-                                    state = 3;
-                                else
-                                    state = 4;
-                            } else {
-                                if (adding)
-                                    state = 5;
-                                else
-                                    state = 6;
-                            }
+            //######
+            //End - Populate drawObjectsComplete vector.
+            //######
+            //######
+            //Populate drawObjects vector.
+            //######
+            if (drawObjects == null) {
+                drawObjects = new Vector();
+                Vector holdingPattern = new Vector();
+                boolean adding = false;
+                int state = -1;
+                int size = -1;
+                if (window.showCollapsedView()) {
+                    for (Enumeration e = drawObjectsComplete.elements(); e.hasMoreElements();) {
+                        callPathDrawObject = (CallPathDrawObject) e.nextElement();
+                        if (callPathDrawObject.isSpacer())
+                            state = 0;
+                        else if (callPathDrawObject.isParent()) {
+                            if (adding)
+                                state = 1;
+                            else
+                                state = 2;
+                        } else if (callPathDrawObject.isChild()) {
+                            if (adding)
+                                state = 3;
+                            else
+                                state = 4;
+                        } else {
+                            if (adding)
+                                state = 5;
+                            else
+                                state = 6;
+                        }
 
-                            switch (state) {
-                            case 0:
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            case 1:
+                        switch (state) {
+                        case 0:
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        case 1:
+                            adding = false;
+                            holdingPattern.add(callPathDrawObject);
+                            break;
+                        case 2:
+                            holdingPattern.add(callPathDrawObject);
+                            break;
+                        case 3:
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        case 5:
+                            //Transfer holdingPattern elements to
+                            // drawObjects, then add this function
+                            //to drawObjects.
+                            size = holdingPattern.size();
+                            for (int i = 0; i < size; i++)
+                                drawObjects.add(holdingPattern.elementAt(i));
+                            holdingPattern.clear();
+                            drawObjects.add(callPathDrawObject);
+                            //Now check to see if this object is expanded.
+                            if (callPathDrawObject.isExpanded())
+                                adding = true;
+                            else
                                 adding = false;
-                                holdingPattern.add(callPathDrawObject);
-                                break;
-                            case 2:
-                                holdingPattern.add(callPathDrawObject);
-                                break;
-                            case 3:
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            case 5:
+                            break;
+                        case 6:
+                            if (callPathDrawObject.isExpanded()) {
                                 //Transfer holdingPattern elements to
                                 // drawObjects, then add this function
                                 //to drawObjects.
@@ -976,192 +955,168 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                                 for (int i = 0; i < size; i++)
                                     drawObjects.add(holdingPattern.elementAt(i));
                                 holdingPattern.clear();
-                                drawObjects.add(callPathDrawObject);
-                                //Now check to see if this object is expanded.
-                                if (callPathDrawObject.isExpanded())
-                                    adding = true;
-                                else
-                                    adding = false;
-                                break;
-                            case 6:
-                                if (callPathDrawObject.isExpanded()) {
-                                    //Transfer holdingPattern elements to
-                                    // drawObjects, then add this function
-                                    //to drawObjects.
-                                    size = holdingPattern.size();
-                                    for (int i = 0; i < size; i++)
-                                        drawObjects.add(holdingPattern.elementAt(i));
-                                    holdingPattern.clear();
-                                    adding = true;
-                                } else {
-                                    holdingPattern.clear();
-                                }
-                                drawObjects.add(callPathDrawObject);
-                                break;
-                            default:
-                                if (this.debug())
-                                    System.out.println("In default state (CPTWP). State is: "
-                                            + state);
+                                adding = true;
+                            } else {
+                                holdingPattern.clear();
                             }
-                        }
-                    } else
-                        drawObjects = drawObjectsComplete;
-                }
-                //######
-                //End - Populate drawObjects vector.
-                //######
-
-                //######
-                //Set panel size.
-                //######
-                if (this.calculatePanelSize()) {
-                    for (Enumeration e = drawObjects.elements(); e.hasMoreElements();) {
-                        callPathDrawObject = (CallPathDrawObject) e.nextElement();
-                        yHeightNeeded = yHeightNeeded + (spacing);
-                        if (!callPathDrawObject.isSpacer()) {
-                            length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
-                            if (xWidthNeeded < length)
-                                xWidthNeeded = length;
+                            drawObjects.add(callPathDrawObject);
+                            break;
+                        default:
                         }
                     }
+                } else
+                    drawObjects = drawObjectsComplete;
+            }
+            //######
+            //End - Populate drawObjects vector.
+            //######
 
-                    base = 20;
-                    startPosition = fmMonoFont.stringWidth("--> ") + base;
-
-                    xWidthNeeded = xWidthNeeded + 20;
-
-                    boolean sizeChange = false;
-                    //Resize the panel if needed.
-                    if (xWidthNeeded > xPanelSize) {
-                        xPanelSize = xWidthNeeded + 10;
-                        sizeChange = true;
+            //######
+            //Set panel size.
+            //######
+            if (this.calculatePanelSize()) {
+                for (Enumeration e = drawObjects.elements(); e.hasMoreElements();) {
+                    callPathDrawObject = (CallPathDrawObject) e.nextElement();
+                    yHeightNeeded = yHeightNeeded + (spacing);
+                    if (!callPathDrawObject.isSpacer()) {
+                        length = fmMonoFont.stringWidth(callPathDrawObject.getName()) + 10;
+                        if (xWidthNeeded < length)
+                            xWidthNeeded = length;
                     }
-                    if (yHeightNeeded > yPanelSize) {
-                        yPanelSize = yHeightNeeded + 10;
-                        sizeChange = true;
-                    }
-                    if (sizeChange && toScreen)
-                        revalidate();
-                    this.setCalculatePanelSize(false);
                 }
-                //######
-                //End - Set panel size.
-                //######
 
-                int yBeg = 0;
-                int yEnd = 0;
-                int startElement = 0;
-                int endElement = 0;
-                Rectangle clipRect = null;
-                Rectangle viewRect = null;
+                base = 20;
+                startPosition = fmMonoFont.stringWidth("--> ") + base;
 
-                if (!fullWindow) {
-                    if (toScreen) {
-                        clipRect = g2D.getClipBounds();
-                        yBeg = (int) clipRect.getY();
-                        yEnd = (int) (yBeg + clipRect.getHeight());
-                    } else {
-                        viewRect = cPTWindow.getViewRect();
-                        yBeg = (int) viewRect.getY();
-                        yEnd = (int) (yBeg + viewRect.getHeight());
-                    }
-                    startElement = ((yBeg - yCoord) / spacing) - 1;
-                    endElement = ((yEnd - yCoord) / spacing) + 1;
+                xWidthNeeded = xWidthNeeded + 20;
 
-                    if (startElement < 0)
-                        startElement = 0;
+                boolean sizeChange = false;
+                //Resize the panel if needed.
+                if (xWidthNeeded > xPanelSize) {
+                    xPanelSize = xWidthNeeded + 10;
+                    sizeChange = true;
+                }
+                if (yHeightNeeded > yPanelSize) {
+                    yPanelSize = yHeightNeeded + 10;
+                    sizeChange = true;
+                }
+                if (sizeChange && toScreen)
+                    revalidate();
+                this.setCalculatePanelSize(false);
+            }
+            //######
+            //End - Set panel size.
+            //######
 
-                    if (endElement < 0)
-                        endElement = 0;
+            int yBeg = 0;
+            int yEnd = 0;
+            int startElement = 0;
+            int endElement = 0;
+            Rectangle clipRect = null;
+            Rectangle viewRect = null;
 
-                    if (startElement > (drawObjects.size() - 1))
-                        startElement = (drawObjects.size() - 1);
-
-                    if (endElement > (drawObjects.size() - 1))
-                        endElement = (drawObjects.size() - 1);
-
-                    if (toScreen)
-                        yCoord = yCoord + (startElement * spacing);
+            if (!fullWindow) {
+                if (toScreen) {
+                    clipRect = g2D.getClipBounds();
+                    yBeg = (int) clipRect.getY();
+                    yEnd = (int) (yBeg + clipRect.getHeight());
                 } else {
-                    startElement = 0;
-                    endElement = ((drawObjects.size()) - 1);
+                    viewRect = window.getViewRect();
+                    yBeg = (int) viewRect.getY();
+                    yEnd = (int) (yBeg + viewRect.getHeight());
                 }
+                startElement = ((yBeg - yCoord) / spacing) - 1;
+                endElement = ((yEnd - yCoord) / spacing) + 1;
 
-                g2D.setColor(Color.black);
-                //######
-                //Draw the header if required.
-                //######
-                if (drawHeader) {
-                    FontRenderContext frc = g2D.getFontRenderContext();
-                    Insets insets = this.getInsets();
-                    yCoord = yCoord + (spacing);
-                    String headerString = cPTWindow.getHeaderString();
-                    //Need to split the string up into its separate lines.
-                    StringTokenizer st = new StringTokenizer(headerString, "'\n'");
-                    while (st.hasMoreTokens()) {
-                        AttributedString as = new AttributedString(st.nextToken());
-                        as.addAttribute(TextAttribute.FONT, monoFont);
-                        AttributedCharacterIterator aci = as.getIterator();
-                        LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
-                        float wrappingWidth = this.getSize().width - insets.left - insets.right;
-                        float x = insets.left;
-                        float y = insets.right;
-                        while (lbm.getPosition() < aci.getEndIndex()) {
-                            TextLayout textLayout = lbm.nextLayout(wrappingWidth);
-                            yCoord += spacing;
-                            textLayout.draw(g2D, x, yCoord);
-                            x = insets.left;
-                        }
+                if (startElement < 0)
+                    startElement = 0;
+
+                if (endElement < 0)
+                    endElement = 0;
+
+                if (startElement > (drawObjects.size() - 1))
+                    startElement = (drawObjects.size() - 1);
+
+                if (endElement > (drawObjects.size() - 1))
+                    endElement = (drawObjects.size() - 1);
+
+                if (toScreen)
+                    yCoord = yCoord + (startElement * spacing);
+            } else {
+                startElement = 0;
+                endElement = ((drawObjects.size()) - 1);
+            }
+
+            g2D.setColor(Color.black);
+            //######
+            //Draw the header if required.
+            //######
+            if (drawHeader) {
+                FontRenderContext frc = g2D.getFontRenderContext();
+                Insets insets = this.getInsets();
+                yCoord = yCoord + (spacing);
+                String headerString = window.getHeaderString();
+                //Need to split the string up into its separate lines.
+                StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+                while (st.hasMoreTokens()) {
+                    AttributedString as = new AttributedString(st.nextToken());
+                    as.addAttribute(TextAttribute.FONT, monoFont);
+                    AttributedCharacterIterator aci = as.getIterator();
+                    LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
+                    float wrappingWidth = this.getSize().width - insets.left - insets.right;
+                    float x = insets.left;
+                    float y = insets.right;
+                    while (lbm.getPosition() < aci.getEndIndex()) {
+                        TextLayout textLayout = lbm.nextLayout(wrappingWidth);
+                        yCoord += spacing;
+                        textLayout.draw(g2D, x, yCoord);
+                        x = insets.left;
                     }
-                    lastHeaderEndPosition = yCoord;
                 }
-                //######
-                //End - Draw the header if required.
-                //######
-                for (int i = startElement; i <= endElement; i++) {
-                    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
-                    if (i == 1) {
-                        g2D.drawString("Name[id]", startPosition, yCoord);
-                        yCoord = yCoord + spacing;
-                    } else if (i == 2) {
-                        g2D.drawString(
-                                "--------------------------------------------------------------------------------",
+                lastHeaderEndPosition = yCoord;
+            }
+            //######
+            //End - Draw the header if required.
+            //######
+            for (int i = startElement; i <= endElement; i++) {
+                callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
+                if (i == 1) {
+                    g2D.drawString("Name[id]", startPosition, yCoord);
+                    yCoord = yCoord + spacing;
+                } else if (i == 2) {
+                    g2D.drawString(
+                            "--------------------------------------------------------------------------------",
+                            startPosition, yCoord);
+                    yCoord = yCoord + spacing;
+                } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
+                    g2D.drawString("--> ", base, yCoord);
+
+                    Function function = callPathDrawObject.getFunction();
+                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                        g2D.setColor(Color.red);
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]",
                                 startPosition, yCoord);
-                        yCoord = yCoord + spacing;
-                    } else if (!callPathDrawObject.isParentChild()
-                            && !callPathDrawObject.isSpacer()) {
-                        g2D.drawString("--> ", base, yCoord);
+                        g2D.setColor(Color.black);
+                    } else
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]",
+                                startPosition, yCoord);
+                    yCoord = yCoord + (spacing);
+                } else if (callPathDrawObject.isSpacer())
+                    yCoord = yCoord + spacing;
+                else {
 
-                        Function function = callPathDrawObject.getFunction();
-                        if (trial.getColorChooser().getHighlightedFunction() == function) {
-                            g2D.setColor(Color.red);
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", startPosition, yCoord);
-                            g2D.setColor(Color.black);
-                        } else
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", startPosition, yCoord);
-                        yCoord = yCoord + (spacing);
-                    } else if (callPathDrawObject.isSpacer())
-                        yCoord = yCoord + spacing;
-                    else {
-
-                        Function function = callPathDrawObject.getFunction();
-                        if (trial.getColorChooser().getHighlightedFunction() == function) {
-                            g2D.setColor(Color.red);
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", startPosition, yCoord);
-                            g2D.setColor(Color.black);
-                        } else
-                            g2D.drawString(callPathDrawObject.getName() + "[" + function.getID()
-                                    + "]", startPosition, yCoord);
-                        yCoord = yCoord + (spacing);
-                    }
+                    Function function = callPathDrawObject.getFunction();
+                    if (trial.getColorChooser().getHighlightedFunction() == function) {
+                        g2D.setColor(Color.red);
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]",
+                                startPosition, yCoord);
+                        g2D.setColor(Color.black);
+                    } else
+                        g2D.drawString(callPathDrawObject.getName() + "[" + function.getID() + "]",
+                                startPosition, yCoord);
+                    yCoord = yCoord + (spacing);
                 }
             }
-
-        } catch (Exception e) {
-            UtilFncs.systemError(e, this, "CPTWP02");
         }
     }
 
@@ -1173,13 +1128,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
         return max;
     }
 
-    //####################################
-    //Interface code.
-    //####################################
 
-    //######
-    //ActionListener.
-    //######
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
@@ -1193,13 +1142,11 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                         callPathDrawObject = (CallPathDrawObject) clickedOnObject;
                         //Bring up an expanded data window for this mapping,
                         // and set this mapping as highlighted.
-                        trial.getColorChooser().setHighlightedFunction(
-                                callPathDrawObject.getFunction());
-                        FunctionDataWindow mappingDataWindow = new FunctionDataWindow(trial,
-                                callPathDrawObject.getFunction(),
-                                trial.getStaticMainWindow().getDataSorter(), this.debug());
-                        trial.getSystemEvents().addObserver(mappingDataWindow);
-                        mappingDataWindow.show();
+                        trial.getColorChooser().setHighlightedFunction(callPathDrawObject.getFunction());
+                        FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial,
+                                callPathDrawObject.getFunction(), trial.getStaticMainWindow().getDataSorter());
+                        trial.getSystemEvents().addObserver(functionDataWindow);
+                        functionDataWindow.show();
                     }
                 } else if (arg.equals("Find Function")) {
                     if (clickedOnObject instanceof CallPathDrawObject) {
@@ -1209,8 +1156,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                             callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
                             if ((callPathDrawObject.getFunction() == function)
                                     && (!callPathDrawObject.isParentChild())) {
-                                Dimension dimension = cPTWindow.getViewportSize();
-                                cPTWindow.setVerticalScrollBarPosition((i * (trial.getPreferences().getBarSpacing()))
+                                Dimension dimension = window.getViewportSize();
+                                window.setVerticalScrollBarPosition((i * (trial.getPreferences().getBarSpacing()))
                                         - ((int) dimension.getHeight() / 2));
                                 trial.getColorChooser().setHighlightedFunction(function);
                                 return;
@@ -1237,17 +1184,10 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 }
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TSWP04");
+            ParaProfUtils.handleException(e);
         }
     }
 
-    //######
-    //End - ActionListener
-    //######
-
-    //######
-    //MouseListener
-    //######
     public void mouseClicked(MouseEvent evt) {
         try {
             //Get the location of the mouse.
@@ -1286,7 +1226,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
                 }
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDWP05");
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -1302,30 +1242,16 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     public void mouseExited(MouseEvent evt) {
     }
 
-    //######
-    //End - MouseListener
-    //######
-
-    //######
-    //ParaProfImageInterface
-    //######
     public Dimension getImageSize(boolean fullScreen, boolean header) {
         Dimension d = null;
         if (fullScreen)
             d = this.getSize();
         else
-            d = cPTWindow.getSize();
+            d = window.getSize();
         d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);
         return d;
     }
 
-    //######
-    //End - ParaProfImageInterface
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
 
     public void resetAllDrawObjects() {
         drawObjectsComplete.clear();
@@ -1346,14 +1272,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
         return new Dimension(xPanelSize, (yPanelSize + 10));
     }
 
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    public boolean debug() {
-        return debug;
-    }
-
     //####################################
     //Instance data.
     //####################################
@@ -1365,7 +1283,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     int contextID = -1;
     int threadID = -1;
     private ParaProfTrial trial = null;
-    CallPathTextWindow cPTWindow = null;
+    CallPathTextWindow window = null;
     int windowType = 0; //0: mean data,1: function data, 2: global relations.
     Font monoFont = null;
     FontMetrics fmMonoFont = null;
@@ -1397,9 +1315,4 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     private Object clickedOnObject = null;
 
     private int lastHeaderEndPosition = 0;
-
-    private boolean debug = false; //Off by default.
-    //####################################
-    //End - Instance data.
-    //####################################
 }

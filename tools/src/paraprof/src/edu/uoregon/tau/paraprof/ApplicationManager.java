@@ -1,22 +1,20 @@
-/*
- * ApplicationManager.java
- * 
- * Title: ParaProf 
- * Author: Robert Bell 
- * Description: This controls the adding of
- * applications to the system.
- */
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * ApplicationManager
+ * This controls the adding of applications to the system.
+ *  
+ * 
+ * <P>CVS $Id: ApplicationManager.java,v 1.4 2004/12/29 00:09:47 amorris Exp $</P>
+ * @author	Robert Bell
+ * @version	$Revision: 1.4 $
+ */
 public class ApplicationManager extends Observable {
     public ApplicationManager() {
     }
-
-    //Public methods.
     public ParaProfApplication addApplication() {
         ParaProfApplication application = new ParaProfApplication();
         application.setID((applications.size()));
@@ -64,6 +62,5 @@ public class ApplicationManager extends Observable {
         return false;
     }
 
-    //Instance data.
     Vector applications = new Vector();
 }

@@ -2,11 +2,11 @@
  * LedgerDataElement
  * This object is holds a group, user event, or function for purposes of the ledger window.
  * This provides the ledger window classes a uniform interface to dealing with these objects.
- * It also provides draw coordinates for mouse events.
+ * It also holds draw coordinates for mouse events.
  * 
- * <P>CVS $Id: LedgerDataElement.java,v 1.2 2004/12/21 20:52:57 amorris Exp $</P>
+ * <P>CVS $Id: LedgerDataElement.java,v 1.3 2004/12/29 00:09:48 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see		LedgerWindow
  * @see		LedgerWindowPanel
  */
@@ -20,9 +20,6 @@ import java.awt.*;
 
 public class LedgerDataElement {
 
-    private static final int FUNCTION = 0;
-    private static final int GROUP = 1;
-    private static final int USEREVENT = 2;
     
     public LedgerDataElement(Function function) {
         this.function = function;
@@ -60,7 +57,6 @@ public class LedgerDataElement {
         } else if (elementType == USEREVENT) {
             return userEvent.getName();
         }
-        
         return null;
     }
     
@@ -87,9 +83,6 @@ public class LedgerDataElement {
         return Color.black;
     }
     
-    //######
-    //Draw section.
-    //######
     public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd) {
         this.xBeg = xBeg;
         this.xEnd = xEnd;
@@ -161,10 +154,14 @@ public class LedgerDataElement {
     private int yBeg;
     private int yEnd;
     
+    private Function function;
+    private UserEvent userEvent;
+    private Group group;
     
-    Function function;
-    UserEvent userEvent;
-    Group group;
+
+    private static final int FUNCTION = 0;
+    private static final int GROUP = 1;
+    private static final int USEREVENT = 2;
     
     int elementType;
 }

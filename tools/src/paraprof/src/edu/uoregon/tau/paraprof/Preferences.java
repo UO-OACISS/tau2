@@ -1,7 +1,9 @@
 /*
  * Preferences.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 package edu.uoregon.tau.paraprof;
@@ -203,8 +205,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
         bold = new JRadioButton("Bold Font",
                 ((fontStyle == Font.BOLD) || (fontStyle == (Font.BOLD | Font.ITALIC))));
         bold.addActionListener(this);
-        italic = new JRadioButton(
-                "Italic Font",
+        italic = new JRadioButton("Italic Font",
                 ((fontStyle == (Font.PLAIN | Font.ITALIC)) || (fontStyle == (Font.BOLD | Font.ITALIC))));
         italic.addActionListener(this);
 
@@ -355,160 +356,164 @@ public class Preferences extends JFrame implements ActionListener, Observer {
     //ActionListener.
     //######
     public void actionPerformed(ActionEvent evt) {
-        Object EventSrc = evt.getSource();
-        String arg = evt.getActionCommand();
-        if (EventSrc instanceof JMenuItem) {
+        try {
+            Object EventSrc = evt.getSource();
+            String arg = evt.getActionCommand();
+            if (EventSrc instanceof JMenuItem) {
 
-            if (arg.equals("Edit Color Map")) {
-                trial.getColorChooser().showColorChooser();
-            } else if (arg.equals("Load Color Map")) {
-                JFileChooser fileChooser = new JFileChooser();
+                if (arg.equals("Edit Color Map")) {
+                    trial.getColorChooser().showColorChooser();
+                } else if (arg.equals("Load Color Map")) {
+                    JFileChooser fileChooser = new JFileChooser();
 
-                //Set the directory to the current directory.
-                fileChooser.setCurrentDirectory(new File("."));
+                    //Set the directory to the current directory.
+                    fileChooser.setCurrentDirectory(new File("."));
 
-                //Bring up the file chooser.
-                int resultValue = fileChooser.showOpenDialog(this);
+                    //Bring up the file chooser.
+                    int resultValue = fileChooser.showOpenDialog(this);
 
-                if (resultValue == JFileChooser.APPROVE_OPTION) {
-                    //Try and get the file name.
-                    File file = fileChooser.getSelectedFile();
+                    if (resultValue == JFileChooser.APPROVE_OPTION) {
+                        //Try and get the file name.
+                        File file = fileChooser.getSelectedFile();
 
-                    //Test to see if valid.
-                    if (file != null) {
-                        System.out.println("Loading color map ...");
-                        loadColorMap(file);
-                        trial.getSystemEvents().updateRegisteredObjects("prefEvent");
-                        System.out.println("Done loading color map ...");
-                    } else {
-                        System.out.println("There was some sort of internal error!");
-                    }
-                }
-
-            } else if (arg.equals("Save Color Map")) {
-                JFileChooser fileChooser = new JFileChooser();
-
-                //Set the directory to the current directory.
-                fileChooser.setCurrentDirectory(new File("."));
-                fileChooser.setSelectedFile(new File("colorMap.dat"));
-
-                //Display the save file chooser.
-                int resultValue = fileChooser.showSaveDialog(this);
-
-                if (resultValue == JFileChooser.APPROVE_OPTION) {
-                    //Get the file.
-                    File file = fileChooser.getSelectedFile();
-
-                    //Check to make sure that something was obtained.
-                    if (file != null) {
-                        try {
-                            //Just output the data for the moment to have a
-                            // look at it.
-                            Vector nameColorVector = new Vector();
-                            TrialData trialData = trial.getTrialData();
-
-                            for (Iterator i = trial.getTrialData().getFunctions(); i.hasNext();) {
-                                Function f = (Function) i.next();
-                                if (f.getName() != null) {
-                                    ColorPair tmpCP = new ColorPair(f.getName(), f.getColor());
-                                    nameColorVector.add(tmpCP);
-                                }
-                            }
-                            Collections.sort(nameColorVector);
-
-                            PrintWriter out = new PrintWriter(new FileWriter(file));
-
-                            System.out.println("Saving color map ...");
-                            if (UtilFncs.debug) {
-                                System.out.println("**********************");
-                                System.out.println("Color values loaded were:");
-                            }
-                            for (Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements();) {
-                                ColorPair tmpCP = (ColorPair) e1.nextElement();
-                                Color tmpColor = tmpCP.getColor();
-                                if (UtilFncs.debug) {
-                                    System.out.println("MAPPING_NAME=\"" + (tmpCP.getMappingName())
-                                            + "\"" + " RGB=\"" + tmpColor.getRed() + ","
-                                            + tmpColor.getGreen() + "," + tmpColor.getBlue() + "\"");
-                                }
-                                out.println("MAPPING_NAME=\"" + (tmpCP.getMappingName()) + "\""
-                                        + " RGB=\"" + tmpColor.getRed() + "," + tmpColor.getGreen()
-                                        + "," + tmpColor.getBlue() + "\"");
-                            }
-                            if (UtilFncs.debug) {
-                                System.out.println("**********************");
-                            }
-                            System.out.println("Done saving color map!");
-                            out.close();
-                        } catch (Exception e) {
-                            //Display an error
-                            JOptionPane.showMessageDialog(this,
-                                    "An error occured while trying to save the color map.",
-                                    "Error!", JOptionPane.ERROR_MESSAGE);
+                        //Test to see if valid.
+                        if (file != null) {
+                            System.out.println("Loading color map ...");
+                            loadColorMap(file);
+                            trial.getSystemEvents().updateRegisteredObjects("prefEvent");
+                            System.out.println("Done loading color map ...");
+                        } else {
+                            System.out.println("There was some sort of internal error!");
                         }
-                    } else {
+                    }
+
+                } else if (arg.equals("Save Color Map")) {
+                    JFileChooser fileChooser = new JFileChooser();
+
+                    //Set the directory to the current directory.
+                    fileChooser.setCurrentDirectory(new File("."));
+                    fileChooser.setSelectedFile(new File("colorMap.dat"));
+
+                    //Display the save file chooser.
+                    int resultValue = fileChooser.showSaveDialog(this);
+
+                    if (resultValue == JFileChooser.APPROVE_OPTION) {
+                        //Get the file.
+                        File file = fileChooser.getSelectedFile();
+
+                        //Check to make sure that something was obtained.
+                        if (file != null) {
+                            try {
+                                //Just output the data for the moment to have a
+                                // look at it.
+                                Vector nameColorVector = new Vector();
+                                TrialData trialData = trial.getTrialData();
+
+                                for (Iterator i = trial.getTrialData().getFunctions(); i.hasNext();) {
+                                    Function f = (Function) i.next();
+                                    if (f.getName() != null) {
+                                        ColorPair tmpCP = new ColorPair(f.getName(), f.getColor());
+                                        nameColorVector.add(tmpCP);
+                                    }
+                                }
+                                Collections.sort(nameColorVector);
+
+                                PrintWriter out = new PrintWriter(new FileWriter(file));
+
+                                System.out.println("Saving color map ...");
+                                if (UtilFncs.debug) {
+                                    System.out.println("**********************");
+                                    System.out.println("Color values loaded were:");
+                                }
+                                for (Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements();) {
+                                    ColorPair tmpCP = (ColorPair) e1.nextElement();
+                                    Color tmpColor = tmpCP.getColor();
+                                    if (UtilFncs.debug) {
+                                        System.out.println("MAPPING_NAME=\"" + (tmpCP.getName()) + "\""
+                                                + " RGB=\"" + tmpColor.getRed() + "," + tmpColor.getGreen()
+                                                + "," + tmpColor.getBlue() + "\"");
+                                    }
+                                    out.println("MAPPING_NAME=\"" + (tmpCP.getName()) + "\"" + " RGB=\""
+                                            + tmpColor.getRed() + "," + tmpColor.getGreen() + ","
+                                            + tmpColor.getBlue() + "\"");
+                                }
+                                if (UtilFncs.debug) {
+                                    System.out.println("**********************");
+                                }
+                                System.out.println("Done saving color map!");
+                                out.close();
+                            } catch (Exception e) {
+                                //Display an error
+                                JOptionPane.showMessageDialog(this,
+                                        "An error occured while trying to save the color map.", "Error!",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
+                        } else {
+                            //Display an error
+                            JOptionPane.showMessageDialog(this, "No filename was given!", "Error!",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else if (arg.equals("Exit ParaProf!")) {
+                    setVisible(false);
+                    dispose();
+                    ParaProf.exitParaProf(0);
+                } else if (arg.equals("Save Preferences")) {
+
+                    File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
+
+                    try {
+                        ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
+                        this.setSavedPreferences();
+                        prefsOut.writeObject(ParaProf.savedPreferences);
+                        prefsOut.close();
+                    } catch (Exception e) {
                         //Display an error
-                        JOptionPane.showMessageDialog(this, "No filename was given!", "Error!",
+                        JOptionPane.showMessageDialog(this,
+                                "An error occured while trying to save ParaProf preferences.", "Error!",
                                 JOptionPane.ERROR_MESSAGE);
                     }
+                } else if (arg.equals("Apply and Close Window")) {
+                    setVisible(false);
+                    trial.getSystemEvents().updateRegisteredObjects("prefEvent");
                 }
-            } else if (arg.equals("Exit ParaProf!")) {
-                setVisible(false);
-                dispose();
-                ParaProf.exitParaProf(0);
-            } else if (arg.equals("Save Preferences")) {
 
-                File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
-
-                try {
-                    ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
-                    this.setSavedPreferences();
-                    prefsOut.writeObject(ParaProf.savedPreferences);
-                    prefsOut.close();
-                } catch (Exception e) {
-                    //Display an error
-                    JOptionPane.showMessageDialog(this,
-                            "An error occured while trying to save ParaProf preferences.",
-                            "Error!", JOptionPane.ERROR_MESSAGE);
-                }
-            } else if (arg.equals("Apply and Close Window")) {
-                setVisible(false);
-                trial.getSystemEvents().updateRegisteredObjects("prefEvent");
-            }
-
-        } else if (EventSrc instanceof JRadioButton) {
-            if (arg.equals("Plain Font")) {
-                if (italic.isSelected())
-                    fontStyle = Font.PLAIN | Font.ITALIC;
-                else
-                    fontStyle = Font.PLAIN;
-
-                pSPanel.repaint();
-            } else if (arg.equals("Bold Font")) {
-                if (italic.isSelected())
-                    fontStyle = Font.BOLD | Font.ITALIC;
-                else
-                    fontStyle = Font.BOLD;
-
-                pSPanel.repaint();
-            } else if (arg.equals("Italic Font")) {
-                if (italic.isSelected()) {
-                    if (normal.isSelected())
+            } else if (EventSrc instanceof JRadioButton) {
+                if (arg.equals("Plain Font")) {
+                    if (italic.isSelected())
                         fontStyle = Font.PLAIN | Font.ITALIC;
                     else
-                        fontStyle = Font.BOLD | Font.ITALIC;
-                } else {
-                    if (normal.isSelected())
                         fontStyle = Font.PLAIN;
+
+                    pSPanel.repaint();
+                } else if (arg.equals("Bold Font")) {
+                    if (italic.isSelected())
+                        fontStyle = Font.BOLD | Font.ITALIC;
                     else
                         fontStyle = Font.BOLD;
-                }
 
+                    pSPanel.repaint();
+                } else if (arg.equals("Italic Font")) {
+                    if (italic.isSelected()) {
+                        if (normal.isSelected())
+                            fontStyle = Font.PLAIN | Font.ITALIC;
+                        else
+                            fontStyle = Font.BOLD | Font.ITALIC;
+                    } else {
+                        if (normal.isSelected())
+                            fontStyle = Font.PLAIN;
+                        else
+                            fontStyle = Font.BOLD;
+                    }
+
+                    pSPanel.repaint();
+                }
+            } else if (EventSrc == fontComboBox) {
+                paraProfFont = (String) fontComboBox.getSelectedItem();
                 pSPanel.repaint();
             }
-        } else if (EventSrc == fontComboBox) {
-            paraProfFont = (String) fontComboBox.getSelectedItem();
-            pSPanel.repaint();
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -543,8 +548,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
         getContentPane().add(c, gbc);
     }
 
-    public void loadColorMap(File inFile) {
-        try {
+    public void loadColorMap(File inFile) throws FileNotFoundException, IOException {
             //First, get the file stuff.
             BufferedReader br = new BufferedReader(new FileReader(inFile));
 
@@ -559,7 +563,6 @@ public class Preferences extends JFrame implements ActionListener, Observer {
             //Read in the file line by line!
             while ((tmpString = br.readLine()) != null) {
                 StringTokenizer getMappingNameTokenizer = new StringTokenizer(tmpString, "\"");
-                ColorPair tmpCP = new ColorPair();
 
                 //The mapping name will be within the first set of quotes.
                 //Grab the first token.
@@ -567,7 +570,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
                 //Grab the second token.
                 tmpString = getMappingNameTokenizer.nextToken();
 
-                tmpCP.setMappingName(tmpString);
+                String name = tmpString;
 
                 //The RGB values will be within the next set of quotes.
                 //Grab the third token.
@@ -587,9 +590,10 @@ public class Preferences extends JFrame implements ActionListener, Observer {
                 blue = Integer.parseInt(tmpString);
 
                 Color tmpColor = new Color(red, green, blue);
-                tmpCP.setMappingColor(tmpColor);
 
-                nameColorVector.add(tmpCP);
+                ColorPair colorPair = new ColorPair(name, tmpColor);
+
+                nameColorVector.add(colorPair);
             }
 
             if (UtilFncs.debug) {
@@ -599,7 +603,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
             for (Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements();) {
                 ColorPair tmpCP = (ColorPair) e1.nextElement();
 
-                Function f = trialData.getFunction(tmpCP.getMappingName());
+                Function f = trialData.getFunction(tmpCP.getName());
                 if (f != null) {
                     Color tmpColor = tmpCP.getColor();
                     f.setSpecificColor(tmpColor);
@@ -609,9 +613,6 @@ public class Preferences extends JFrame implements ActionListener, Observer {
             if (UtilFncs.debug) {
                 System.out.println("**********************");
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "P01");
-        }
     }
 
     public void addNotify() {

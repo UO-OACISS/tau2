@@ -144,9 +144,6 @@ public class SavedPreferences implements Serializable {
         return databaseConfigurationFile;
     }
 
-    //####################################
-    //Instance data.
-    //####################################
     private Vector colors = null;
     private Vector groupColors = null;
     private Color highlightColor = null;
@@ -162,7 +159,4 @@ public class SavedPreferences implements Serializable {
     private int fontStyle = -1;
     private String databasePassword = null;
     private String databaseConfigurationFile = null;
-    //####################################
-    //End - Instance data.
-    //####################################
 }

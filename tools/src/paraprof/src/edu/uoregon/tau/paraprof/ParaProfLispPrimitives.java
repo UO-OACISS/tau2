@@ -83,7 +83,7 @@ class showThreadDataWindow extends LispPrimitive {
                 Integer.parseInt(arg4.toString()),
                 Integer.parseInt(arg5.toString()),
                 Integer.parseInt(arg6.toString()), new DataSorter(
-                        trial, this.debug()), this.debug());
+                        trial));
 
         trial.getSystemEvents().addObserver(threadDataWindow);
         threadDataWindow.show();
@@ -138,7 +138,7 @@ class showMeanDataWindow extends LispPrimitive {
                                                                    Integer.parseInt(arg3.toString()));
 
         ThreadDataWindow threadDataWindow = new ThreadDataWindow(trial, -1, -1,
-                -1, new DataSorter(trial, this.debug()), this.debug());
+                -1, new DataSorter(trial));
 
         trial.getSystemEvents().addObserver(threadDataWindow);
         threadDataWindow.show();
@@ -195,8 +195,7 @@ class showMeanCallPathWindow extends LispPrimitive {
 
         if (trial.callPathDataPresent()) {
             CallPathTextWindow callPathTextWindow = new CallPathTextWindow(
-                    trial, -1, -1, -1, new DataSorter(trial,
-                            this.debug()), 0, this.debug());
+                    trial, -1, -1, -1, new DataSorter(trial), 0);
             trial.getSystemEvents().addObserver(callPathTextWindow);
             callPathTextWindow.show();
         } else
@@ -252,7 +251,7 @@ class showGroupLedgerWindow extends LispPrimitive {
                                                                    Integer.parseInt(arg2.toString()),
                                                                    Integer.parseInt(arg3.toString()));
         if (trial.groupNamesPresent()) {
-            (new LedgerWindow(trial, 1, this.debug())).show();
+            //(new LedgerWindow(trial, 1)).show();
         } else {
             System.out.println("Lisp interface (SHOWGROUPSLEDGERWINDOW): No group data present!");
         }

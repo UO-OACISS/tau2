@@ -2,9 +2,9 @@
  * FunctionDataWindow
  * This is FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.3 2004/12/24 00:25:08 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.4 2004/12/29 00:09:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		FunctionDataWindowPanel
  */
 
@@ -200,89 +200,79 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         setJMenuBar(mainMenu);
     }
 
-    public FunctionDataWindow(ParaProfTrial trial, Function function, DataSorter dataSorter, boolean debug) {
-        try {
-            this.trial = trial;
-            this.dataSorter = dataSorter;
-            this.debug = debug;
-            this.function = function;
-            int windowWidth = 650;
-            int windowHeight = 550;
-            
-            //Grab the screen size.
-            Toolkit tk = Toolkit.getDefaultToolkit();
-            Dimension screenDimension = tk.getScreenSize();
-            int screenHeight = screenDimension.height;
-            int screenWidth = screenDimension.width;
-            if (windowWidth > screenWidth)
-                windowWidth = screenWidth;
-            if (windowHeight > screenHeight)
-                windowHeight = screenHeight;
-            //Set the window to come up in the center of the screen.
-            int xPosition = (screenWidth - windowWidth) / 2;
-            int yPosition = (screenHeight - windowHeight) / 2;
-            setSize(new java.awt.Dimension(windowWidth, windowHeight));
-            setLocation(xPosition, yPosition);
+    public FunctionDataWindow(ParaProfTrial trial, Function function, DataSorter dataSorter) {
+        this.ppTrial = trial;
+        this.dataSorter = dataSorter;
+        this.function = function;
+        int windowWidth = 650;
+        int windowHeight = 550;
 
-            functionName = function.getName();
+        //Grab the screen size.
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        Dimension screenDimension = tk.getScreenSize();
+        int screenHeight = screenDimension.height;
+        int screenWidth = screenDimension.width;
+        if (windowWidth > screenWidth)
+            windowWidth = screenWidth;
+        if (windowHeight > screenHeight)
+            windowHeight = screenHeight;
+        //Set the window to come up in the center of the screen.
+        int xPosition = (screenWidth - windowWidth) / 2;
+        int yPosition = (screenHeight - windowHeight) / 2;
+        setSize(new java.awt.Dimension(windowWidth, windowHeight));
+        setLocation(xPosition, yPosition);
 
-            //Now set the title.
-            this.setTitle("Function Data Window: " + trial.getTrialIdentifier(true));
+        //Now set the title.
+        this.setTitle("Function Data Window: " + trial.getTrialIdentifier(true));
 
-            //Add some window listener code
-            addWindowListener(new java.awt.event.WindowAdapter() {
-                public void windowClosing(java.awt.event.WindowEvent evt) {
-                    thisWindowClosing(evt);
-                }
-            });
-
-            //Set the help window text if required.
-            if (ParaProf.helpWindow.isVisible()) {
-                this.help(false);
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
             }
+        });
 
-            //Sort the local data.
-            sortLocalData();
-
-            setupMenus();
-
-            //Setting up the layout system for the main window.
-            contentPane = getContentPane();
-            gbl = new GridBagLayout();
-            contentPane.setLayout(gbl);
-            gbc = new GridBagConstraints();
-            gbc.insets = new Insets(5, 5, 5, 5);
-
-            //Panel and ScrollPane definition.
-            panel = new FunctionDataWindowPanel(trial, function, this, this.debug());
-            sp = new JScrollPane(panel);
-            this.setHeader();
-
-            //Slider setup.
-            //Do the slider stuff, but don't add. By default, sliders are off.
-            String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
-            sliderMultiple = new JComboBox(sliderMultipleStrings);
-            sliderMultiple.addActionListener(this);
-
-            barLengthSlider.setPaintTicks(true);
-            barLengthSlider.setMajorTickSpacing(5);
-            barLengthSlider.setMinorTickSpacing(1);
-            barLengthSlider.setPaintLabels(true);
-            barLengthSlider.setSnapToTicks(true);
-            barLengthSlider.addChangeListener(this);
-
-            // add the scrollpane
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 100;
-            gbc.weighty = 100;
-            addCompItem(sp, gbc, 0, 0, 1, 1);
-            ParaProf.incrementNumWindows();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDW02");
+        //Set the help window text if required.
+        if (ParaProf.helpWindow.isVisible()) {
+            this.help(false);
         }
-    }
 
+        //Sort the local data.
+        sortLocalData();
+
+        setupMenus();
+
+        //Setting up the layout system for the main window.
+        getContentPane().setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        //Panel and ScrollPane definition.
+        panel = new FunctionDataWindowPanel(trial, function, this);
+        sp = new JScrollPane(panel);
+        this.setHeader();
+
+        //Slider setup.
+        //Do the slider stuff, but don't add. By default, sliders are off.
+        String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
+        sliderMultiple = new JComboBox(sliderMultipleStrings);
+        sliderMultiple.addActionListener(this);
+
+        barLengthSlider.setPaintTicks(true);
+        barLengthSlider.setMajorTickSpacing(5);
+        barLengthSlider.setMinorTickSpacing(1);
+        barLengthSlider.setPaintLabels(true);
+        barLengthSlider.setSnapToTicks(true);
+        barLengthSlider.addChangeListener(this);
+
+        // add the scrollpane
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 100;
+        gbc.weighty = 100;
+        addCompItem(sp, gbc, 0, 0, 1, 1);
+        ParaProf.incrementNumWindows();
+    }
 
     public void actionPerformed(ActionEvent evt) {
         try {
@@ -291,9 +281,9 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Print")) {
-                    UtilFncs.print(panel);
+                    ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
-                    trial.getPreferences().showPreferencesWindow();
+                    ppTrial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();
                     imageOutput.saveImage((ParaProfImageInterface) panel);
@@ -373,28 +363,27 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                         displaySliders(false);
                 } else if (arg.equals("Show Path Title in Reverse"))
                     this.setTitle("Function Data Window: "
-                            + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+                            + ppTrial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
                 else if (arg.equals("Show Meta Data in Panel"))
                     this.setHeader();
                 else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0, this.debug())).show();
+                    (new LedgerWindow(ppTrial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1, this.debug())).show();
+                    (new LedgerWindow(ppTrial, 1)).show();
                 } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2, this.debug())).show();
+                    (new LedgerWindow(ppTrial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(),
-                            2, this.debug());
-                    trial.getSystemEvents().addObserver(tmpRef);
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1,
+                            this.getDataSorter(), 2);
+                    ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Show Histogram")) {
 
-                    HistogramWindow tmpRef = new HistogramWindow(trial, this.getDataSorter(), false, function,
-                            this.debug());
-                    trial.getSystemEvents().addObserver(tmpRef);
+                    HistogramWindow tmpRef = new HistogramWindow(ppTrial, this.getDataSorter(), false, function);
+                    ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
-                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+                    ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                 } else if (arg.equals("About ParaProf")) {
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
                 } else if (arg.equals("Show Help Window")) {
@@ -404,12 +393,16 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                 panel.changeInMultiples();
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW03");
+            ParaProfUtils.handleException(e);
         }
     }
 
     public void stateChanged(ChangeEvent event) {
-        panel.changeInMultiples();
+        try {
+            panel.changeInMultiples();
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
+        }
     }
 
     public void menuSelected(MenuEvent evt) {
@@ -420,7 +413,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             } else if (percent) {
                 showValuesAsPercent.setEnabled(true);
                 unitsSubMenu.setEnabled(false);
-            } else if (trial.isTimeMetric()) {
+            } else if (ppTrial.isTimeMetric()) {
                 showValuesAsPercent.setEnabled(true);
                 unitsSubMenu.setEnabled(true);
             } else {
@@ -428,18 +421,18 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                 unitsSubMenu.setEnabled(false);
             }
 
-            if (trial.groupNamesPresent())
+            if (ppTrial.groupNamesPresent())
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
 
-            if (trial.userEventsPresent())
+            if (ppTrial.userEventsPresent())
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
 
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW04");
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -450,27 +443,22 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public void update(Observable o, Object arg) {
-        try {
-            String tmpString = (String) arg;
-            if (tmpString.equals("prefEvent")) {
-                this.setHeader();
-                panel.repaint();
-            } else if (tmpString.equals("colorEvent")) {
-                panel.repaint();
-            } else if (tmpString.equals("dataEvent")) {
-                sortLocalData();
-                if (!(trial.isTimeMetric()))
-                    units = 0;
-                this.setHeader();
-                panel.repaint();
-            } else if (tmpString.equals("subWindowCloseEvent")) {
-                closeThisWindow();
-            }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDW05");
+        String tmpString = (String) arg;
+        if (tmpString.equals("prefEvent")) {
+            this.setHeader();
+            panel.repaint();
+        } else if (tmpString.equals("colorEvent")) {
+            panel.repaint();
+        } else if (tmpString.equals("dataEvent")) {
+            sortLocalData();
+            if (!(ppTrial.isTimeMetric()))
+                units = 0;
+            this.setHeader();
+            panel.repaint();
+        } else if (tmpString.equals("subWindowCloseEvent")) {
+            closeThisWindow();
         }
     }
-
 
     private void help(boolean display) {
         //Show the ParaProf help window.
@@ -478,7 +466,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         if (display)
             ParaProf.helpWindow.show();
         ParaProf.helpWindow.writeText("This is the function data window for:");
-        ParaProf.helpWindow.writeText(functionName);
+        ParaProf.helpWindow.writeText(function.getName());
         ParaProf.helpWindow.writeText("");
         ParaProf.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
         ParaProf.helpWindow.writeText("");
@@ -494,14 +482,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public void sortLocalData() {
-        try {
-            if (nct)
-                list = dataSorter.getFunctionData(function, 30 + order);
-            else
-                list = dataSorter.getFunctionData(function, valueType + order);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDW06");
-        }
+        if (nct)
+            list = dataSorter.getFunctionData(function, 30 + order);
+        else
+            list = dataSorter.getFunctionData(function, valueType + order);
     }
 
     public Vector getData() {
@@ -519,11 +503,10 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     public int units() {
         if (percent)
             return 0;
-        
+
         if (valueType > 5)
             return 0;
-        
-        
+
         return units;
     }
 
@@ -542,14 +525,14 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
     // This process is separated into two functions to provide the option of obtaining the current 
     // header string being used for the panel without resetting the actual header. 
-    // Printing and image generation use this functionality for example.
+    // Printing and image generation use this functionality.
     public void setHeader() {
         if (showMetaData.isSelected()) {
             JTextArea jTextArea = new JTextArea();
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
             jTextArea.setEditable(false);
-            Preferences p = trial.getPreferences();
+            Preferences p = ppTrial.getPreferences();
             jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
             jTextArea.append(this.getHeaderString());
             sp.setColumnHeaderView(jTextArea);
@@ -559,40 +542,32 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
     public String getHeaderString() {
         if ((valueType > 5) || percent)
-            return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Name: "
-                    + functionName + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType) + "\n";
-        else
-            return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Name: "
-                    + functionName + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType) + "\n"
-                    + "Units: " + UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())
+            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getSelectedMetricID())) + "\n" + "Name: "
+                    + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
                     + "\n";
+        else
+            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getSelectedMetricID())) + "\n" + "Name: "
+                    + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
+                    + "\n" + "Units: "
+                    + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
     }
 
-  
     public int getSliderValue() {
         int tmpInt = -1;
-        try {
-            tmpInt = barLengthSlider.getValue();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDW07");
-        }
+        tmpInt = barLengthSlider.getValue();
         return tmpInt;
     }
 
     public double getSliderMultiple() {
         String tmpString = null;
-        try {
-            tmpString = (String) sliderMultiple.getSelectedItem();
-            return Double.parseDouble(tmpString);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDW08");
-        }
-        return 0;
+        tmpString = (String) sliderMultiple.getSelectedItem();
+        return Double.parseDouble(tmpString);
     }
 
     private void displaySliders(boolean displaySliders) {
+        GridBagConstraints gbc = new GridBagConstraints();
         if (displaySliders) {
-            contentPane.remove(sp);
+            getContentPane().remove(sp);
 
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.EAST;
@@ -624,11 +599,11 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             gbc.weighty = 100;
             addCompItem(sp, gbc, 0, 1, 4, 1);
         } else {
-            contentPane.remove(sliderMultipleLabel);
-            contentPane.remove(sliderMultiple);
-            contentPane.remove(barLengthLabel);
-            contentPane.remove(barLengthSlider);
-            contentPane.remove(sp);
+            getContentPane().remove(sliderMultipleLabel);
+            getContentPane().remove(sliderMultiple);
+            getContentPane().remove(barLengthLabel);
+            getContentPane().remove(barLengthSlider);
+            getContentPane().remove(sp);
 
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
@@ -642,16 +617,11 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        try {
-            gbc.gridx = x;
-            gbc.gridy = y;
-            gbc.gridwidth = w;
-            gbc.gridheight = h;
-
-            getContentPane().add(c, gbc);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDW09");
-        }
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        getContentPane().add(c, gbc);
     }
 
     //Respond correctly when this window is closed.
@@ -659,55 +629,37 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         closeThisWindow();
     }
 
-    void closeThisWindow() {
+    public void closeThisWindow() {
         try {
             setVisible(false);
-            trial.getSystemEvents().deleteObserver(this);
+            ppTrial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
-            dispose();
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDW10");
+            // do nothing
         }
+        dispose();
     }
 
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    public boolean debug() {
-        return debug;
-    }
-
-    //Instance data.
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter = null;
 
     private Function function = null;
-    private String functionName = null;
 
     private JMenu optionsMenu = null;
     private JMenu windowsMenu = null;
     private JMenu unitsSubMenu = null;
 
-    private JCheckBoxMenuItem sortByName = null;
     private JCheckBoxMenuItem sortByNCT = null;
     private JCheckBoxMenuItem descendingOrder = null;
     private JCheckBoxMenuItem showValuesAsPercent = null;
     private JCheckBoxMenuItem displaySliders = null;
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
-    private JMenuItem groupLedger = null;
-    private JMenuItem usereventLedger = null;
-    private JMenuItem callPathRelations = null;
 
     private JLabel sliderMultipleLabel = new JLabel("Slider Multiple");
     private JComboBox sliderMultiple;
     private JLabel barLengthLabel = new JLabel("Bar Multiple");
     private JSlider barLengthSlider = new JSlider(0, 40, 1);
-
-    private Container contentPane = null;
-    private GridBagLayout gbl = null;
-    private GridBagConstraints gbc = null;
 
     FunctionDataWindowPanel panel = null;
     JScrollPane sp = null;
@@ -719,9 +671,4 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     private boolean percent = true; //true: show values as percent,false: show actual values.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
-
-    private boolean debug = false; //Off by default.
-    //####################################
-    //End - Instance data.
-    //####################################
 }

@@ -17,99 +17,67 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class ColorChooser implements WindowListener {
     public ColorChooser(ParaProfTrial trial, SavedPreferences savedPreferences) {
-        try {
-            this.trial = trial;
+        this.trial = trial;
 
-            if (savedPreferences != null) {
-                colors = savedPreferences.getColors();
-                groupColors = savedPreferences.getGroupColors();
-                functionHighlightColor = savedPreferences.getHighlightColor();
-                groupHighlightColor = savedPreferences.getGroupHighlightColor();
-                userEventHighlightColor = savedPreferences.getUserEventHightlightColor();
-                miscFunctionColor = savedPreferences.getMiscFunctionColor();
-            } else {
-                //Set the default colours.
-                this.setDefaultColors();
-                this.setDefaultGroupColors();
-            }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC01");
+        if (savedPreferences != null) {
+            colors = savedPreferences.getColors();
+            groupColors = savedPreferences.getGroupColors();
+            functionHighlightColor = savedPreferences.getHighlightColor();
+            groupHighlightColor = savedPreferences.getGroupHighlightColor();
+            userEventHighlightColor = savedPreferences.getUserEventHightlightColor();
+            miscFunctionColor = savedPreferences.getMiscFunctionColor();
+        } else {
+            //Set the default colours.
+            this.setDefaultColors();
+            this.setDefaultGroupColors();
         }
     }
 
     public void showColorChooser() {
-        try {
-            if (!clrChooserFrameShowing) {
-                //Bring up the color chooser frame.
-                clrChooserFrame = new ColorChooserFrame(trial, this);
-                clrChooserFrame.addWindowListener(this);
-                clrChooserFrame.show();
-                clrChooserFrameShowing = true;
-            } else {
-                //Just bring it to the foreground.
-                clrChooserFrame.show();
-            }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC02");
+        if (!clrChooserFrameShowing) {
+            //Bring up the color chooser frame.
+            clrChooserFrame = new ColorChooserFrame(trial, this);
+            clrChooserFrame.addWindowListener(this);
+            clrChooserFrame.show();
+            clrChooserFrameShowing = true;
+        } else {
+            //Just bring it to the foreground.
+            clrChooserFrame.show();
         }
     }
 
     public void setSavedColors() {
-        try {
-            ParaProf.savedPreferences.setColors(colors);
-            ParaProf.savedPreferences.setGroupColors(groupColors);
-            ParaProf.savedPreferences.setHighlightColor(functionHighlightColor);
-            ParaProf.savedPreferences.setGroupHighlightColor(groupHighlightColor);
-            ParaProf.savedPreferences.setMiscFunctionColor(miscFunctionColor);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC03");
-        }
+        ParaProf.savedPreferences.setColors(colors);
+        ParaProf.savedPreferences.setGroupColors(groupColors);
+        ParaProf.savedPreferences.setHighlightColor(functionHighlightColor);
+        ParaProf.savedPreferences.setGroupHighlightColor(groupHighlightColor);
+        ParaProf.savedPreferences.setMiscFunctionColor(miscFunctionColor);
     }
 
     public int getNumberOfColors() {
         int tmpInt = -1;
-        try {
-            tmpInt = colors.size();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC04");
-        }
+        tmpInt = colors.size();
 
         return tmpInt;
     }
 
     public int getNumberOfGroupColors() {
         int tmpInt = -1;
-        try {
-            tmpInt = groupColors.size();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC05");
-        }
+        tmpInt = groupColors.size();
         return tmpInt;
     }
 
     public void addColor(Color color) {
-        try {
-            colors.add(color);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC10");
-        }
+        colors.add(color);
     }
 
     public void setColor(Color color, int location) {
-        try {
-            colors.setElementAt(color, location);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC06");
-        }
+        colors.setElementAt(color, location);
     }
 
     public Color getColor(int location) {
         Color color = null;
-        try {
-            color = (Color) colors.elementAt(location);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC08");
-        }
+        color = (Color) colors.elementAt(location);
 
         return color;
     }
@@ -119,30 +87,15 @@ public class ColorChooser implements WindowListener {
     }
 
     public void addGroupColor(Color color) {
-        try {
-            groupColors.add(color);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC11");
-        }
+        groupColors.add(color);
     }
 
     public void setGroupColor(Color color, int location) {
-        try {
-            groupColors.setElementAt(color, location);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC07");
-        }
+        groupColors.setElementAt(color, location);
     }
 
     public Color getGroupColor(int location) {
-        Color color = null;
-        try {
-            color = (Color) groupColors.elementAt(location);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC09");
-        }
-
-        return color;
+        return (Color) groupColors.elementAt(location);
     }
 
     public Vector getGroupColors() {
@@ -174,8 +127,6 @@ public class ColorChooser implements WindowListener {
         trial.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
 
-    
-    
     public void setGroupHighlightColor(Color groupHighlightColor) {
         this.groupHighlightColor = groupHighlightColor;
     }
@@ -192,7 +143,7 @@ public class ColorChooser implements WindowListener {
     public Group getHighlightedGroup() {
         return highlightedGroup;
     }
-    
+
     public void toggleHighlightedGroup(Group group) {
         if (highlightedGroup == group)
             highlightedGroup = null;
@@ -201,8 +152,6 @@ public class ColorChooser implements WindowListener {
         trial.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
 
-
-    
     // User Event Colors
     public void setUserEventHightlightColor(Color userEventHighlightColor) {
         this.userEventHighlightColor = userEventHighlightColor;
@@ -211,7 +160,7 @@ public class ColorChooser implements WindowListener {
     public Color getUserEventHighlightColor() {
         return userEventHighlightColor;
     }
-    
+
     public void setHighlightedUserEvent(UserEvent userEvent) {
         this.highlightedUserEvent = userEvent;
         trial.getSystemEvents().updateRegisteredObjects("colorEvent");
@@ -220,7 +169,7 @@ public class ColorChooser implements WindowListener {
     public UserEvent getHighlightedUserEvent() {
         return highlightedUserEvent;
     }
-    
+
     public void toggleHighlightedUserEvent(UserEvent userEvent) {
         if (highlightedUserEvent == userEvent)
             highlightedUserEvent = null;
@@ -228,10 +177,9 @@ public class ColorChooser implements WindowListener {
             highlightedUserEvent = userEvent;
         trial.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
+
     // User Event Colors
 
-    
-    
     public void setMiscFunctionColor(Color miscFunctionColor) {
         this.miscFunctionColor = miscFunctionColor;
     }
@@ -242,67 +190,57 @@ public class ColorChooser implements WindowListener {
 
     //A function which sets the colors vector to be the default set.
     public void setDefaultColors() {
-        try {
-            //Clear the colors vector.
-            colors.clear();
+        //Clear the colors vector.
+        colors.clear();
 
-            //Add the default colours.
-            addColor(new Color(70, 156, 168));
-            addColor(new Color(255, 153, 0));
+        //Add the default colours.
+        addColor(new Color(70, 156, 168));
+        addColor(new Color(255, 153, 0));
 
-            
-            addColor(new Color(0, 51, 255));
-            
-            
-            addColor(new Color(102, 0, 51));
-            addColor(new Color(221, 232, 30));
-            addColor(new Color(0, 255, 0));
-            addColor(new Color(121, 196, 144));
-            addColor(new Color(86, 88, 112));
+        addColor(new Color(0, 51, 255));
 
-            addColor(new Color(151, 204, 255));
-            addColor(new Color(102, 102, 255));
-            addColor(new Color(0, 102, 102));
-            addColor(new Color(204, 255, 51));
-            addColor(new Color(102, 132, 25));
-            addColor(new Color(255, 204, 153));
-            addColor(new Color(204, 0, 204));
-            addColor(new Color(0, 102, 102));
-            addColor(new Color(204, 204, 255));
-            addColor(new Color(61, 104, 63));
-            addColor(new Color(102, 255, 255));
-            addColor(new Color(255, 102, 102));
-            addColor(new Color(119, 71, 145));
-            addColor(new Color(255, 204, 204));
-            addColor(new Color(240, 97, 159));
-            addColor(new Color(0, 102, 153));
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC12");
-        }
+        addColor(new Color(102, 0, 51));
+        addColor(new Color(221, 232, 30));
+        addColor(new Color(0, 255, 0));
+        addColor(new Color(121, 196, 144));
+        addColor(new Color(86, 88, 112));
+
+        addColor(new Color(151, 204, 255));
+        addColor(new Color(102, 102, 255));
+        addColor(new Color(0, 102, 102));
+        addColor(new Color(204, 255, 51));
+        addColor(new Color(102, 132, 25));
+        addColor(new Color(255, 204, 153));
+        addColor(new Color(204, 0, 204));
+        addColor(new Color(0, 102, 102));
+        addColor(new Color(204, 204, 255));
+        addColor(new Color(61, 104, 63));
+        addColor(new Color(102, 255, 255));
+        addColor(new Color(255, 102, 102));
+        addColor(new Color(119, 71, 145));
+        addColor(new Color(255, 204, 204));
+        addColor(new Color(240, 97, 159));
+        addColor(new Color(0, 102, 153));
     }
 
     //A function which sets the groupColors vector to be the default set.
     public void setDefaultGroupColors() {
-        try {
-            //Clear the globalColors vector.
-            groupColors.clear();
+        //Clear the globalColors vector.
+        groupColors.clear();
 
-            //Add the default colours.
-            addGroupColor(new Color(102, 0, 102));
-            addGroupColor(new Color(51, 51, 0));
-            addGroupColor(new Color(204, 0, 51));
-            addGroupColor(new Color(0, 102, 102));
-            addGroupColor(new Color(255, 255, 102));
-            addGroupColor(new Color(0, 0, 102));
-            addGroupColor(new Color(153, 153, 255));
-            addGroupColor(new Color(255, 51, 0));
-            addGroupColor(new Color(255, 153, 0));
-            addGroupColor(new Color(255, 102, 102));
-            addGroupColor(new Color(51, 0, 51));
-            addGroupColor(new Color(255, 255, 102));
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CC13");
-        }
+        //Add the default colours.
+        addGroupColor(new Color(102, 0, 102));
+        addGroupColor(new Color(51, 51, 0));
+        addGroupColor(new Color(204, 0, 51));
+        addGroupColor(new Color(0, 102, 102));
+        addGroupColor(new Color(255, 255, 102));
+        addGroupColor(new Color(0, 0, 102));
+        addGroupColor(new Color(153, 153, 255));
+        addGroupColor(new Color(255, 51, 0));
+        addGroupColor(new Color(255, 153, 0));
+        addGroupColor(new Color(255, 102, 102));
+        addGroupColor(new Color(51, 0, 51));
+        addGroupColor(new Color(255, 255, 102));
     }
 
     //Sets the colors of the given TrialData.
@@ -314,10 +252,10 @@ public class ColorChooser implements WindowListener {
         TrialData trialData = ppTrial.getTrialData();
         if ((selection == -1) || (selection == 0)) {
             int numberOfColors = this.getNumberOfColors();
-            
-            DataSorter dataSorter = new DataSorter(ppTrial, false);
-            Vector list = dataSorter.getFunctionProfiles(-1,-1,-1,20);
-            
+
+            DataSorter dataSorter = new DataSorter(ppTrial);
+            Vector list = dataSorter.getFunctionProfiles(-1, -1, -1, 20);
+
             for (int i = 0; i < list.size(); i++) {
                 Function func = ((PPFunctionProfile) list.get(i)).getFunction();
                 func.setColor(this.getColor(i % numberOfColors));
@@ -402,257 +340,252 @@ public class ColorChooser implements WindowListener {
 
 class ColorChooserFrame extends JFrame implements ActionListener {
     public ColorChooserFrame(ParaProfTrial trial, ColorChooser colorChooser) {
-        try {
-            this.trial = trial;
-            this.colorChooser = colorChooser;
-            numberOfColors = trial.getColorChooser().getNumberOfColors();
+        this.trial = trial;
+        this.colorChooser = colorChooser;
+        numberOfColors = trial.getColorChooser().getNumberOfColors();
 
-            //Window Stuff.
-            setLocation(new Point(100, 100));
-            setSize(new Dimension(850, 450));
+        //Window Stuff.
+        setLocation(new Point(100, 100));
+        setSize(new Dimension(850, 450));
 
-            //####################################
-            //Code to generate the menus.
-            //####################################
-            JMenuBar mainMenu = new JMenuBar();
+        //####################################
+        //Code to generate the menus.
+        //####################################
+        JMenuBar mainMenu = new JMenuBar();
 
-            //######
-            //File menu.
-            //######
-            JMenu fileMenu = new JMenu("File");
+        //######
+        //File menu.
+        //######
+        JMenu fileMenu = new JMenu("File");
 
-            JMenuItem closeItem = new JMenuItem("Close This Window");
-            closeItem.addActionListener(this);
-            fileMenu.add(closeItem);
+        JMenuItem closeItem = new JMenuItem("Close This Window");
+        closeItem.addActionListener(this);
+        fileMenu.add(closeItem);
 
-            JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
-            exitItem.addActionListener(this);
-            fileMenu.add(exitItem);
-            //######
-            //File menu.
-            //######
+        JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
+        exitItem.addActionListener(this);
+        fileMenu.add(exitItem);
+        //######
+        //File menu.
+        //######
 
-            //######
-            //Help menu.
-            //######
-            /*
-             * JMenu helpMenu = new JMenu("Help");
-             * 
-             * //Add a menu item. JMenuItem aboutItem = new JMenuItem("About
-             * Racy"); helpMenu.add(aboutItem);
-             * 
-             * //Add a menu item. JMenuItem showHelpWindowItem = new
-             * JMenuItem("Show Help Window");
-             * showHelpWindowItem.addActionListener(this);
-             * helpMenu.add(showHelpWindowItem);
-             */
-            //######
-            //Help menu.
-            //######
-            //Now, add all the menus to the main menu.
-            mainMenu.add(fileMenu);
-            //mainMenu.add(helpMenu);
-            setJMenuBar(mainMenu);
-            //####################################
-            //Code to generate the menus.
-            //####################################
+        //######
+        //Help menu.
+        //######
+        /*
+         * JMenu helpMenu = new JMenu("Help");
+         * 
+         * //Add a menu item. JMenuItem aboutItem = new JMenuItem("About
+         * Racy"); helpMenu.add(aboutItem);
+         * 
+         * //Add a menu item. JMenuItem showHelpWindowItem = new
+         * JMenuItem("Show Help Window");
+         * showHelpWindowItem.addActionListener(this);
+         * helpMenu.add(showHelpWindowItem);
+         */
+        //######
+        //Help menu.
+        //######
+        //Now, add all the menus to the main menu.
+        mainMenu.add(fileMenu);
+        //mainMenu.add(helpMenu);
+        setJMenuBar(mainMenu);
+        //####################################
+        //Code to generate the menus.
+        //####################################
 
-            //####################################
-            //Create and add the components.
-            //####################################
-            //Setting up the layout system for the main window.
-            Container contentPane = getContentPane();
-            GridBagLayout gbl = new GridBagLayout();
-            contentPane.setLayout(gbl);
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(5, 5, 5, 5);
+        //####################################
+        //Create and add the components.
+        //####################################
+        //Setting up the layout system for the main window.
+        Container contentPane = getContentPane();
+        GridBagLayout gbl = new GridBagLayout();
+        contentPane.setLayout(gbl);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
 
-            //Create a new ColorChooser.
-            clrChooser = new JColorChooser();
-            clrModel = clrChooser.getSelectionModel();
+        //Create a new ColorChooser.
+        clrChooser = new JColorChooser();
+        clrModel = clrChooser.getSelectionModel();
 
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
 
-            //First add the label.
-            JLabel titleLabel = new JLabel("ParaProf Color Set.");
-            titleLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
-            addCompItem(titleLabel, gbc, 0, 0, 1, 1);
+        //First add the label.
+        JLabel titleLabel = new JLabel("ParaProf Color Set.");
+        titleLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
+        addCompItem(titleLabel, gbc, 0, 0, 1, 1);
 
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.WEST;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
 
-            //Create and add color list.
-            listModel = new DefaultListModel();
-            colorList = new JList(listModel);
-            colorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            colorList.setCellRenderer(new CustomCellRenderer(trial));
-            JScrollPane sp = new JScrollPane(colorList);
-            addCompItem(sp, gbc, 0, 1, 1, 5);
+        //Create and add color list.
+        listModel = new DefaultListModel();
+        colorList = new JList(listModel);
+        colorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        colorList.setCellRenderer(new CustomCellRenderer(trial));
+        JScrollPane sp = new JScrollPane(colorList);
+        addCompItem(sp, gbc, 0, 1, 1, 5);
 
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
-            addColorButton = new JButton("Add Color");
-            addColorButton.addActionListener(this);
-            addCompItem(addColorButton, gbc, 1, 1, 1, 1);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        addColorButton = new JButton("Add Color");
+        addColorButton.addActionListener(this);
+        addCompItem(addColorButton, gbc, 1, 1, 1, 1);
 
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
-            addGroupColorButton = new JButton("Add Group Color");
-            addGroupColorButton.addActionListener(this);
-            addCompItem(addGroupColorButton, gbc, 1, 2, 1, 1);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        addGroupColorButton = new JButton("Add Group Color");
+        addGroupColorButton.addActionListener(this);
+        addCompItem(addGroupColorButton, gbc, 1, 2, 1, 1);
 
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.anchor = GridBagConstraints.NORTH;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
-            deleteColorButton = new JButton("Delete Selected Color");
-            deleteColorButton.addActionListener(this);
-            addCompItem(deleteColorButton, gbc, 1, 3, 1, 1);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        deleteColorButton = new JButton("Delete Selected Color");
+        deleteColorButton.addActionListener(this);
+        addCompItem(deleteColorButton, gbc, 1, 3, 1, 1);
 
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.anchor = GridBagConstraints.NORTH;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
-            updateColorButton = new JButton("Update Selected Color");
-            updateColorButton.addActionListener(this);
-            addCompItem(updateColorButton, gbc, 1, 4, 1, 1);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        updateColorButton = new JButton("Update Selected Color");
+        updateColorButton.addActionListener(this);
+        addCompItem(updateColorButton, gbc, 1, 4, 1, 1);
 
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.anchor = GridBagConstraints.NORTH;
-            gbc.weightx = 0;
-            gbc.weighty = 0;
-            restoreDefaultsButton = new JButton("Restore Defaults");
-            restoreDefaultsButton.addActionListener(this);
-            addCompItem(restoreDefaultsButton, gbc, 1, 5, 1, 1);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        restoreDefaultsButton = new JButton("Restore Defaults");
+        restoreDefaultsButton.addActionListener(this);
+        addCompItem(restoreDefaultsButton, gbc, 1, 5, 1, 1);
 
-            //Add the JColorChooser.
-            addCompItem(clrChooser, gbc, 2, 0, 1, 6);
-            //####################################
-            //End - Create and add the components.
-            //####################################
+        //Add the JColorChooser.
+        addCompItem(clrChooser, gbc, 2, 0, 1, 6);
+        //####################################
+        //End - Create and add the components.
+        //####################################
 
-            //Now populate the colour list.
-            populateColorList();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CCF01");
-        }
+        //Now populate the colour list.
+        populateColorList();
     }
 
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ActionListener.
-    //######
     public void actionPerformed(ActionEvent evt) {
-        Object EventSrc = evt.getSource();
-        String arg = evt.getActionCommand();
+        try {
+            Object EventSrc = evt.getSource();
+            String arg = evt.getActionCommand();
 
-        if (EventSrc instanceof JMenuItem) {
-            if (arg.equals("Exit ParaProf!")) {
-                setVisible(false);
-                dispose();
-                ParaProf.exitParaProf(0);
-            } else if (arg.equals("Close This Window")) {
-                setVisible(false);
-            }
-        } else if (EventSrc instanceof JButton) {
-            if (arg.equals("Add Color")) {
-                Color color = clrModel.getSelectedColor();
-                (colorChooser.getColors()).add(color);
-                listModel.clear();
-                populateColorList();
-                //Update the TrialData.
-                colorChooser.setColors(trial, 0);
-                //Update the listeners.
-                trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-            } else if (arg.equals("Add Group Color")) {
-                Color color = clrModel.getSelectedColor();
-                (colorChooser.getGroupColors()).add(color);
-                listModel.clear();
-                populateColorList();
-                //Update the TrialData.
-                colorChooser.setColors(trial, 1);
-                //Update the listeners.
-                trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-            } else if (arg.equals("Delete Selected Color")) {
-                //Get the currently selected items and cycle through them.
-                int[] values = colorList.getSelectedIndices();
-                for (int i = 0; i < values.length; i++) {
-                    if ((values[i]) < trial.getColorChooser().getNumberOfColors()) {
-                        System.out.println("The value being deleted is: " + values[i]);
-                        listModel.removeElementAt(values[i]);
-                        (colorChooser.getColors()).removeElementAt(values[i]);
-                        //Update the TrialData.
-                        colorChooser.setColors(trial, 0);
-                    } else if ((values[i]) < (trial.getColorChooser().getNumberOfColors())
-                            + (trial.getColorChooser().getNumberOfGroupColors())) {
-                        System.out.println("The value being deleted is: " + values[i]);
-                        listModel.removeElementAt(values[i]);
-                        (colorChooser.getGroupColors()).removeElementAt(values[i]
-                                - (trial.getColorChooser().getNumberOfColors()));
-                        //Update the TrialData.
-                        colorChooser.setColors(trial, 1);
-                    }
+            if (EventSrc instanceof JMenuItem) {
+                if (arg.equals("Exit ParaProf!")) {
+                    setVisible(false);
+                    dispose();
+                    ParaProf.exitParaProf(0);
+                } else if (arg.equals("Close This Window")) {
+                    setVisible(false);
                 }
+            } else if (EventSrc instanceof JButton) {
+                if (arg.equals("Add Color")) {
+                    Color color = clrModel.getSelectedColor();
+                    (colorChooser.getColors()).add(color);
+                    listModel.clear();
+                    populateColorList();
+                    //Update the TrialData.
+                    colorChooser.setColors(trial, 0);
+                    //Update the listeners.
+                    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                } else if (arg.equals("Add Group Color")) {
+                    Color color = clrModel.getSelectedColor();
+                    (colorChooser.getGroupColors()).add(color);
+                    listModel.clear();
+                    populateColorList();
+                    //Update the TrialData.
+                    colorChooser.setColors(trial, 1);
+                    //Update the listeners.
+                    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                } else if (arg.equals("Delete Selected Color")) {
+                    //Get the currently selected items and cycle through them.
+                    int[] values = colorList.getSelectedIndices();
+                    for (int i = 0; i < values.length; i++) {
+                        if ((values[i]) < trial.getColorChooser().getNumberOfColors()) {
+                            System.out.println("The value being deleted is: " + values[i]);
+                            listModel.removeElementAt(values[i]);
+                            (colorChooser.getColors()).removeElementAt(values[i]);
+                            //Update the TrialData.
+                            colorChooser.setColors(trial, 0);
+                        } else if ((values[i]) < (trial.getColorChooser().getNumberOfColors())
+                                + (trial.getColorChooser().getNumberOfGroupColors())) {
+                            System.out.println("The value being deleted is: " + values[i]);
+                            listModel.removeElementAt(values[i]);
+                            (colorChooser.getGroupColors()).removeElementAt(values[i]
+                                    - (trial.getColorChooser().getNumberOfColors()));
+                            //Update the TrialData.
+                            colorChooser.setColors(trial, 1);
+                        }
+                    }
 
-                //Update the listeners.
-                trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-            } else if (arg.equals("Update Selected Color")) {
-                Color color = clrModel.getSelectedColor();
-                //Get the currently selected items and cycle through them.
-                int[] values = colorList.getSelectedIndices();
-                for (int i = 0; i < values.length; i++) {
-                    listModel.setElementAt(color, values[i]);
-                    int totalNumberOfColors = (trial.getColorChooser().getNumberOfColors())
-                            + (trial.getColorChooser().getNumberOfGroupColors());
-                    if ((values[i]) == (totalNumberOfColors)) {
-                        trial.getColorChooser().setHighlightColor(color);
-                    } else if ((values[i]) == (totalNumberOfColors + 1)) {
-                        trial.getColorChooser().setGroupHighlightColor(color);
-                    } else if ((values[i]) == (totalNumberOfColors + 2)) {
-                        trial.getColorChooser().setUserEventHightlightColor(color);
-                    } else if ((values[i]) == (totalNumberOfColors + 3)) {
-                        trial.getColorChooser().setMiscFunctionColor(color);
-                    } else if ((values[i]) < trial.getColorChooser().getNumberOfColors()) {
-                        colorChooser.setColor(color, values[i]);
-                        //Update the TrialData.
-                        colorChooser.setColors(trial, 0);
-                    } else {
-                        colorChooser.setGroupColor(color,
-                                (values[i] - trial.getColorChooser().getNumberOfColors()));
-                        //Update the TrialData.
-                        colorChooser.setColors(trial, 1);
+                    //Update the listeners.
+                    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                } else if (arg.equals("Update Selected Color")) {
+                    Color color = clrModel.getSelectedColor();
+                    //Get the currently selected items and cycle through them.
+                    int[] values = colorList.getSelectedIndices();
+                    for (int i = 0; i < values.length; i++) {
+                        listModel.setElementAt(color, values[i]);
+                        int totalNumberOfColors = (trial.getColorChooser().getNumberOfColors())
+                                + (trial.getColorChooser().getNumberOfGroupColors());
+                        if ((values[i]) == (totalNumberOfColors)) {
+                            trial.getColorChooser().setHighlightColor(color);
+                        } else if ((values[i]) == (totalNumberOfColors + 1)) {
+                            trial.getColorChooser().setGroupHighlightColor(color);
+                        } else if ((values[i]) == (totalNumberOfColors + 2)) {
+                            trial.getColorChooser().setUserEventHightlightColor(color);
+                        } else if ((values[i]) == (totalNumberOfColors + 3)) {
+                            trial.getColorChooser().setMiscFunctionColor(color);
+                        } else if ((values[i]) < trial.getColorChooser().getNumberOfColors()) {
+                            colorChooser.setColor(color, values[i]);
+                            //Update the TrialData.
+                            colorChooser.setColors(trial, 0);
+                        } else {
+                            colorChooser.setGroupColor(color,
+                                    (values[i] - trial.getColorChooser().getNumberOfColors()));
+                            //Update the TrialData.
+                            colorChooser.setColors(trial, 1);
+                        }
                     }
+                    //Update the listeners.
+                    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+                } else if (arg.equals("Restore Defaults")) {
+                    colorChooser.setDefaultColors();
+                    colorChooser.setDefaultGroupColors();
+                    colorChooser.setHighlightColor(Color.red);
+                    colorChooser.setGroupHighlightColor(new Color(0, 255, 255));
+                    colorChooser.setUserEventHightlightColor(new Color(255, 255, 0));
+                    colorChooser.setMiscFunctionColor(Color.black);
+                    listModel.clear();
+                    populateColorList();
+                    //Update the TrialData.
+                    colorChooser.setColors(trial, 0);
+                    colorChooser.setColors(trial, 1);
+                    //Update the listeners.
+                    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
                 }
-                //Update the listeners.
-                trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-            } else if (arg.equals("Restore Defaults")) {
-                colorChooser.setDefaultColors();
-                colorChooser.setDefaultGroupColors();
-                colorChooser.setHighlightColor(Color.red);
-                colorChooser.setGroupHighlightColor(new Color(0, 255, 255));
-                colorChooser.setUserEventHightlightColor(new Color(255, 255, 0));
-                colorChooser.setMiscFunctionColor(Color.black);
-                listModel.clear();
-                populateColorList();
-                //Update the TrialData.
-                colorChooser.setColors(trial, 0);
-                colorChooser.setColors(trial, 1);
-                //Update the listeners.
-                trial.getSystemEvents().updateRegisteredObjects("colorEvent");
             }
+
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
         }
+
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
@@ -660,7 +593,6 @@ class ColorChooserFrame extends JFrame implements ActionListener {
         gbc.gridy = y;
         gbc.gridwidth = w;
         gbc.gridheight = h;
-
         getContentPane().add(c, gbc);
     }
 
@@ -714,8 +646,8 @@ class CustomCellRenderer implements ListCellRenderer {
         this.trial = trial;
     }
 
-    public Component getListCellRendererComponent(final JList list, final Object value,
-            final int index, final boolean isSelected, final boolean cellHasFocus) {
+    public Component getListCellRendererComponent(final JList list, final Object value, final int index,
+            final boolean isSelected, final boolean cellHasFocus) {
         return new JPanel() {
             public void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -734,8 +666,7 @@ class CustomCellRenderer implements ListCellRenderer {
                 barHeight = 12;
 
                 //Create font.
-                Font font = new Font(trial.getPreferences().getParaProfFont(), Font.PLAIN,
-                        barHeight);
+                Font font = new Font(trial.getPreferences().getParaProfFont(), Font.PLAIN, barHeight);
                 g.setFont(font);
                 FontMetrics fmFont = g.getFontMetrics(font);
 
@@ -774,8 +705,7 @@ class CustomCellRenderer implements ListCellRenderer {
                 } else if (index < (trial.getColorChooser().getNumberOfColors())) {
                     g.drawString(("" + (index + 1)), xStringPos1, yStringPos1);
                 } else {
-                    g.drawString(
-                            ("G" + (index - (trial.getColorChooser().getNumberOfColors()) + 1)),
+                    g.drawString(("G" + (index - (trial.getColorChooser().getNumberOfColors()) + 1)),
                             xStringPos1, yStringPos1);
                 }
 
@@ -804,8 +734,7 @@ class CustomCellRenderer implements ListCellRenderer {
                 int barHeight = 12;
 
                 //Create font.
-                Font font = new Font(trial.getPreferences().getParaProfFont(), Font.PLAIN,
-                        barHeight);
+                Font font = new Font(trial.getPreferences().getParaProfFont(), Font.PLAIN, barHeight);
                 Graphics g = getGraphics();
                 FontMetrics fmFont = g.getFontMetrics(font);
 
@@ -823,11 +752,6 @@ class CustomCellRenderer implements ListCellRenderer {
         };
     }
 
-    //####################################
     //Instance data.
-    //####################################
     private ParaProfTrial trial = null;
-    //####################################
-    //End - Instance data.
-    //####################################
 }

@@ -3,7 +3,7 @@
  * 
  * Title: ParaProf 
  * Author: Robert Bell 
- * Description: The primary functionProfiles of
+ * Description: The primary function of
  * this class are: 1)Pass data calls onto the objects which contain function
  * userevent, mean, and other data. 2)Implement the Comparable interface to
  * allow it to be sorted. 3)Hold drawing information.
@@ -25,8 +25,7 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class PPFunctionProfile implements Comparable {
 
-    public PPFunctionProfile(ParaProfTrial trial, int nodeID, int contextID, int threadID,
-            FunctionProfile fp) {
+    public PPFunctionProfile(ParaProfTrial trial, int nodeID, int contextID, int threadID, FunctionProfile fp) {
 
         this.trial = trial;
         this.nodeID = nodeID;
@@ -77,7 +76,6 @@ public class PPFunctionProfile implements Comparable {
         return function.isCallPathObject();
     }
 
-   
     public double getInclusiveValue() {
         return functionProfile.getInclusive(trial.getSelectedMetricID());
     }
@@ -106,16 +104,7 @@ public class PPFunctionProfile implements Comparable {
         return functionProfile.getInclusivePerCall(trial.getSelectedMetricID());
     }
 
-    
-    
-    
-    
-    
-
-
-    //####################################
     //Parent/child interface.
-    //####################################
     public Iterator getParents() {
         if (nodeID != -1)
             return functionProfile.getParents();
@@ -143,10 +132,6 @@ public class PPFunctionProfile implements Comparable {
         else
             return function.getChildCallPathIterator(child);
     }
-
-    //####################################
-    //Parent/child interface.
-    //####################################
 
     /*
      * (0) name 
@@ -178,23 +163,17 @@ public class PPFunctionProfile implements Comparable {
         case 1:
             return (this.getFunctionName()).compareTo(((PPFunctionProfile) inObject).getFunctionName());
         case 2:
-            return compareToHelper(((PPFunctionProfile) inObject).getExclusiveValue(),
-                    this.getExclusiveValue());
+            return compareToHelper(((PPFunctionProfile) inObject).getExclusiveValue(), this.getExclusiveValue());
         case 3:
-            return compareToHelper(this.getExclusiveValue(),
-                    ((PPFunctionProfile) inObject).getExclusiveValue());
+            return compareToHelper(this.getExclusiveValue(), ((PPFunctionProfile) inObject).getExclusiveValue());
         case 4:
-            return compareToHelper(((PPFunctionProfile) inObject).getInclusiveValue(),
-                    this.getInclusiveValue());
+            return compareToHelper(((PPFunctionProfile) inObject).getInclusiveValue(), this.getInclusiveValue());
         case 5:
-            return compareToHelper(this.getInclusiveValue(),
-                    ((PPFunctionProfile) inObject).getInclusiveValue());
+            return compareToHelper(this.getInclusiveValue(), ((PPFunctionProfile) inObject).getInclusiveValue());
         case 6:
-            return compareToHelper(((PPFunctionProfile) inObject).getNumberOfCalls(),
-                    this.getNumberOfCalls());
+            return compareToHelper(((PPFunctionProfile) inObject).getNumberOfCalls(), this.getNumberOfCalls());
         case 7:
-            return compareToHelper(this.getNumberOfCalls(),
-                    ((PPFunctionProfile) inObject).getNumberOfCalls());
+            return compareToHelper(this.getNumberOfCalls(), ((PPFunctionProfile) inObject).getNumberOfCalls());
         case 8:
             return compareToHelper(((PPFunctionProfile) inObject).getNumberOfSubRoutines(),
                     this.getNumberOfSubRoutines());
@@ -208,13 +187,17 @@ public class PPFunctionProfile implements Comparable {
             return compareToHelper(this.getInclusivePerCall(),
                     ((PPFunctionProfile) inObject).getInclusivePerCall());
         case 20:
-            return compareToHelper(((PPFunctionProfile) inObject).meanProfile.getExclusive(trial.getSelectedMetricID()),
-                    this.meanProfile.getExclusive(trial.getSelectedMetricID()), this, (PPFunctionProfile) inObject);
+            return compareToHelper(
+                    ((PPFunctionProfile) inObject).meanProfile.getExclusive(trial.getSelectedMetricID()),
+                    this.meanProfile.getExclusive(trial.getSelectedMetricID()), this,
+                    (PPFunctionProfile) inObject);
         case 21:
             return compareToHelper(this.meanProfile.getExclusive(trial.getSelectedMetricID()),
-                    ((PPFunctionProfile) inObject).meanProfile.getExclusive(trial.getSelectedMetricID()), this, (PPFunctionProfile) inObject);
+                    ((PPFunctionProfile) inObject).meanProfile.getExclusive(trial.getSelectedMetricID()), this,
+                    (PPFunctionProfile) inObject);
         case 22:
-            return compareToHelper(((PPFunctionProfile) inObject).meanProfile.getInclusive(trial.getSelectedMetricID()),
+            return compareToHelper(
+                    ((PPFunctionProfile) inObject).meanProfile.getInclusive(trial.getSelectedMetricID()),
                     this.meanProfile.getInclusive(trial.getSelectedMetricID()));
         case 23:
             return compareToHelper(this.meanProfile.getInclusive(trial.getSelectedMetricID()),
@@ -232,7 +215,8 @@ public class PPFunctionProfile implements Comparable {
             return compareToHelper(this.meanProfile.getNumSubr(),
                     ((PPFunctionProfile) inObject).meanProfile.getNumSubr());
         case 28:
-            return compareToHelper(((PPFunctionProfile) inObject).meanProfile.getInclusivePerCall(trial.getSelectedMetricID()),
+            return compareToHelper(
+                    ((PPFunctionProfile) inObject).meanProfile.getInclusivePerCall(trial.getSelectedMetricID()),
                     this.meanProfile.getInclusivePerCall(trial.getSelectedMetricID()));
         case 29:
             return compareToHelper(this.meanProfile.getInclusivePerCall(trial.getSelectedMetricID()),
@@ -254,9 +238,9 @@ public class PPFunctionProfile implements Comparable {
             else
                 return this.getThreadID() - ppFunctionProfile.getThreadID();
         default:
-            UtilFncs.systemError(null, null, "Unexpected sort type - SMWTDE value: " + sortType);
+            //throw new ParaProfException("Unexpected sort type: " + sortType);
+            throw new RuntimeException("Unexpected sort type: " + sortType);
         }
-        return 0;
     }
 
     private int compareToHelper(double d1, double d2) {
@@ -282,7 +266,6 @@ public class PPFunctionProfile implements Comparable {
             return 1;
     }
 
-    
     public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd) {
         //	System.out.println ("xBeg = " + xBeg + ", xEnd = " + xEnd);
         this.xBeg = xBeg;
@@ -307,7 +290,6 @@ public class PPFunctionProfile implements Comparable {
         return yEnd;
     }
 
-
     public void setSortType(int sortType) {
         this.sortType = sortType;
     }
@@ -316,52 +298,35 @@ public class PPFunctionProfile implements Comparable {
         return trial;
     }
 
-    
-    
     public String getStatString(int type) {
-        try {
 
-            int metric = trial.getSelectedMetricID();
-            String tmpString;
+        int metric = trial.getSelectedMetricID();
+        String tmpString;
 
-            DecimalFormat dF = new DecimalFormat("##0.0");
-            tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(metric)), 13);
+        DecimalFormat dF = new DecimalFormat("##0.0");
+        tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(metric)), 13);
 
-            tmpString = tmpString + "  "
-                    + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);
-            tmpString = tmpString + "  "
-                    + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 16);
-            tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12);
-            tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12);
-            tmpString = tmpString + "  "
-                    + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(metric), 19);
+        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getExclusive(metric), 14);
+        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(metric), 16);
+        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(), 12);
+        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(), 12);
+        tmpString = tmpString + "  "
+                + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(metric), 19);
 
-            //Everything should be added now except the function name.
-            return tmpString;
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "GTDE01");
-        }
-
-        return "An error occurred processing this string!";
+        //Everything should be added now except the function name.
+        return tmpString;
     }
-    
+
     // Static Functions
-    
+
     public static String getStatStringHeading(String metricType) {
-        try {
-            return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad(metricType, 16)
-                    + UtilFncs.lpad("Total " + metricType, 18) + UtilFncs.lpad("#Calls", 14)
-                    + UtilFncs.lpad("#Subrs", 14)
-                    + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "GTDE01");
-        }
-        return "An error occurred processing this string!";
+        return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad(metricType, 16)
+                + UtilFncs.lpad("Total " + metricType, 18) + UtilFncs.lpad("#Calls", 14)
+                + UtilFncs.lpad("#Subrs", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
     }
 
-    
     //Instance data.
-    
+
     private ParaProfTrial trial = null;
     private int nodeID = -1;
     private int contextID = -1;
@@ -379,7 +344,6 @@ public class PPFunctionProfile implements Comparable {
     int yBeg = 0;
     int yEnd = 0;
 
-
     int sortType;
-    
+
 }

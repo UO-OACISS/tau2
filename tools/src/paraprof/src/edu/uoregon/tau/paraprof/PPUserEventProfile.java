@@ -20,11 +20,9 @@ import java.awt.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class PPUserEventProfile implements Comparable {
-    //Constructor.
     public PPUserEventProfile(ParaProfTrial trial, int nodeID, int contextID, int threadID,
             UserEventProfile userEventProfile) {
 
-        this.trial = trial;
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;
@@ -34,7 +32,6 @@ public class PPUserEventProfile implements Comparable {
         this.userEvent = userEventProfile.getUserEvent();
     }
 
-    //Rest of the public functionProfiles.
     public int getNodeID() {
         return nodeID;
     }
@@ -59,9 +56,6 @@ public class PPUserEventProfile implements Comparable {
         return userEvent.getColor();
     }
 
-    //####################################
-    //Userevent interface.
-    //####################################
     public int getUserEventNumberValue() {
         return userEventProfile.getUserEventNumberValue();
     }
@@ -83,7 +77,6 @@ public class PPUserEventProfile implements Comparable {
     }
 
     public String getUserEventStatString(int precision) {
-        try {
             int initialBufferLength = 90;
             int position = 0;
             char[] statStringArray = new char[initialBufferLength];
@@ -133,11 +126,6 @@ public class PPUserEventProfile implements Comparable {
 
             //Everything should be added now except the function name.
             return new String(statStringArray);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "GTDE01");
-        }
-
-        return "An error occurred processing this string!";
     }
 
     private static int insertSpaces(char[] inArray, int position, int number) {
@@ -217,9 +205,8 @@ public class PPUserEventProfile implements Comparable {
             else
                 return this.getThreadID() - ppUserEventProfile.getThreadID();
         default:
-            UtilFncs.systemError(null, null, "Unexpected sort type - SMWTDE value: " + sortType);
+            throw new RuntimeException("Unexpected sort type: " + sortType);
         }
-        return 0;
     }
 
     private int compareToHelper(double d1, double d2) {
@@ -276,11 +263,8 @@ public class PPUserEventProfile implements Comparable {
         this.sortType = sortType;
     }
 
-    //####################################
     //Instance data.
-    //####################################
 
-    private ParaProfTrial trial = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
@@ -305,8 +289,4 @@ public class PPUserEventProfile implements Comparable {
 
     int sortType;
 
-    boolean objType = true; //false: GME type,true: GTDE type.
-    //####################################
-    //End - Instance data.
-    //####################################
 }

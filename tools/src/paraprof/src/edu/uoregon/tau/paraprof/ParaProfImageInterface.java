@@ -20,7 +20,7 @@ interface ParaProfImageInterface{
     
 //    public void renderIt(Graphics2D g, int instruction, boolean header);
     
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader);
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) throws ParaProfException;
 
     public Dimension getImageSize(boolean fullScreen, boolean header);
 }

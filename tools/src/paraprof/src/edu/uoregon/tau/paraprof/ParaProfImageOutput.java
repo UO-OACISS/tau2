@@ -23,8 +23,7 @@ public class ParaProfImageOutput {
     public ParaProfImageOutput() {
     }
 
-    public void saveImage(ParaProfImageInterface ref) {
-        try {
+    public void saveImage(ParaProfImageInterface ref) throws ParaProfException, IOException {
 
             //Ask the user for a filename and location.
             JFileChooser fileChooser = new JFileChooser();
@@ -117,8 +116,5 @@ public class ParaProfImageOutput {
                     System.out.println("Did not get a file name to save image to.");
                 return;
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "PPIO01");
-        }
     }
 }

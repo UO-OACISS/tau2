@@ -1,7 +1,9 @@
 /*
- * LoadTrialPanel.java
+ * LoadTrialWindow.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 package edu.uoregon.tau.paraprof;
@@ -12,18 +14,16 @@ import java.awt.event.*;
 import javax.swing.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class LoadTrialPanel extends JFrame implements ActionListener {
+public class LoadTrialWindow extends JFrame implements ActionListener {
 
-    public LoadTrialPanel(ParaProfManager paraProfManager, ParaProfApplication application,
+    public LoadTrialWindow(ParaProfManagerWindow paraProfManager, ParaProfApplication application,
             ParaProfExperiment experiment, boolean dBTrial) {
         this.paraProfManager = paraProfManager;
         this.application = application;
         this.experiment = experiment;
         this.dBTrial = dBTrial;
 
-        //####################################
         //Window Stuff.
-        //####################################
         int windowWidth = 400;
         int windowHeight = 200;
 
@@ -43,9 +43,6 @@ public class LoadTrialPanel extends JFrame implements ActionListener {
         this.setLocation(xPosition, yPosition);
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
         setTitle("Load Trial");
-        //####################################
-        //End -Window Stuff.
-        //####################################
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -54,8 +51,6 @@ public class LoadTrialPanel extends JFrame implements ActionListener {
             }
         });
 
-        
-        
         //####################################
         //Create and add the components.
         //####################################
@@ -164,9 +159,25 @@ public class LoadTrialPanel extends JFrame implements ActionListener {
                 if (trialTypes.getSelectedIndex() == 0) {
                     File files[] = new File[1];
                     files[0] = new File(dirLocationField.getText().trim());
-                    paraProfManager.addTrial(application, experiment, files, trialTypes.getSelectedIndex(), false);
+                    if (!files[0].exists()) {
+                        JOptionPane.showMessageDialog(this, dirLocationField.getText().trim()
+                                + " does not exist");
+                        return;
+                    }
+                    paraProfManager.addTrial(application, experiment, files, trialTypes.getSelectedIndex(),
+                            false);
                 } else {
-                    paraProfManager.addTrial(application, experiment, selectedFiles, trialTypes.getSelectedIndex(), false);
+                    if (selectedFiles == null) {
+                        selectedFiles = new File[1];
+                        selectedFiles[0] = new File(dirLocationField.getText().trim());
+                        if (!selectedFiles[0].exists()) {
+                            JOptionPane.showMessageDialog(this, dirLocationField.getText().trim()
+                                    + " does not exist");
+                            return;
+                        }
+                    }
+                    paraProfManager.addTrial(application, experiment, selectedFiles,
+                            trialTypes.getSelectedIndex(), false);
                 }
                 closeThisWindow();
             } else if (arg.equals("comboBoxChanged")) {
@@ -178,29 +189,16 @@ public class LoadTrialPanel extends JFrame implements ActionListener {
                 }
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "LTP02");
+            ParaProfUtils.handleException(e);
         }
     }
 
-    //######
-    //End - ActionListener.
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
-
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        try {
-            gbc.gridx = x;
-            gbc.gridy = y;
-            gbc.gridwidth = w;
-            gbc.gridheight = h;
-
-            getContentPane().add(c, gbc);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "LTP03");
-        }
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        getContentPane().add(c, gbc);
     }
 
     //Close the window when the close box is clicked
@@ -213,10 +211,8 @@ public class LoadTrialPanel extends JFrame implements ActionListener {
         dispose();
     }
 
-    //####################################
     //Instance data.
-    //####################################
-    ParaProfManager paraProfManager = null;
+    ParaProfManagerWindow paraProfManager = null;
     ParaProfApplication application = null;
     ParaProfExperiment experiment = null;
     boolean dBTrial = false;
@@ -224,11 +220,11 @@ public class LoadTrialPanel extends JFrame implements ActionListener {
     //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun.
     //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP",
     // "hpmtoolkit", "gprof", "psrun"};
-    String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof", "PSRun" };
+    String trialTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
+            "PSRun" };
     JComboBox trialTypes = null;
 
-    
     File selectedFiles[];
     JButton selectButton = null;
-    
+
 }

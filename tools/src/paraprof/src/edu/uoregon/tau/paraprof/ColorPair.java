@@ -1,68 +1,36 @@
 /* 
-  ColorPair.java
+ ColorPair.java
 
-  Title:      ParaProf
-  Author:     Robert Bell
-  Description:  
-*/
+ Title:      ParaProf
+ Author:     Robert Bell
+ Description:  
+ */
 
 package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class ColorPair implements Comparable
-{
-  //Constructors. 
-  public ColorPair(){}
-  
-  public ColorPair(String inMappingName, Color inColor)
-  {
-    mappingName = inMappingName;
-    color = inColor;
-  }
-  
-  
-  public void setMappingName(String inMappingName)
-  {
-    mappingName = inMappingName;
-  }
-  
-  public void setMappingColor(Color inColor)
-  {
-    color = inColor;
-  }
-  
-  public String getMappingName()
-  {
-    return mappingName;
-  }
-  
-  public Color getColor()
-  {
-    return color;
-  }
-  
-  public int compareTo(Object inObject)
-  {
-    
-    try
-    {
-      String tmpString = ((ColorPair) inObject).getMappingName();
-      return mappingName.compareTo(tmpString);
+public class ColorPair implements Comparable {
+
+    public ColorPair(String name, Color color) {
+        this.name = name;
+        this.color = color;
     }
-    catch(Exception e)
-    {
-      UtilFncs.systemError(e, null, "CP01");
+
+    public String getName() {
+        return name;
     }
-    
-    return 0;
-    
-  }
-  
-  
-  //Data section.
-  private String mappingName = null;
-  private Color color = null;
-  
+
+    public Color getColor() {
+        return color;
+    }
+
+    public int compareTo(Object inObject) {
+        String tmpString = ((ColorPair) inObject).getName();
+        return name.compareTo(tmpString);
+    }
+
+    private String name = null;
+    private Color color = null;
 }

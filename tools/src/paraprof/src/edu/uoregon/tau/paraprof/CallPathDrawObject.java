@@ -1,18 +1,16 @@
-/*
- * CallPathDrawObject.java
- * 
- * Title: ParaProf Author: Robert Bell
- * 
- * Used in the CallPathTextWindowPanel class to keep track of what is currently
- * being drawn.
- * 
- * Things to do: Class is complete.
- */
-
 package edu.uoregon.tau.paraprof;
 
 import edu.uoregon.tau.dms.dss.*;
 
+/**
+ * CallPathDrawObject: This object is used to hold data for the CallPathTextWindowPanel
+ *   
+ * <P>CVS $Id: CallPathDrawObject.java,v 1.4 2004/12/29 00:09:47 amorris Exp $</P>
+ * @author	Robert Bell, Alan Morris
+ * @version	$Revision: 1.4 $
+ * @see		CallPathTextWindow
+ * @see		CallPathTextWindowPanel
+ */
 public class CallPathDrawObject {
 
     public CallPathDrawObject(Function func, boolean parent, boolean child, boolean spacer) {
@@ -90,9 +88,7 @@ public class CallPathDrawObject {
         return this.expanded;
     }
 
-    //####################################
     //Instance Data.
-    //####################################
     Function function = null;
     boolean parent = false;
     boolean child = false;
@@ -103,7 +99,4 @@ public class CallPathDrawObject {
     private double inclusiveValue = 0.0;
     private double numberOfCallsFromCallPathObjects = 0;
     private double numberOfCalls = 0;
-    //####################################
-    //End - Instance Data.
-    //####################################
 }

@@ -2,9 +2,9 @@
  * HistogramWindowPanel
  * This is the panel for the HistogramWindow.
  *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.3 2004/12/24 00:25:08 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.4 2004/12/29 00:09:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		HistogramWindow
  */
 
@@ -20,92 +20,24 @@ import java.awt.geom.*;
 //import javax.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class HistogramWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener,
-        Printable, ParaProfImageInterface {
+public class HistogramWindowPanel extends JPanel implements Printable, ParaProfImageInterface {
 
-    public HistogramWindowPanel() {
-        try {
-            //Set the default tool tip for this panel.
-            this.setToolTipText("Incorrect Constructor!!!");
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMWP01");
-        }
-    }
+    public HistogramWindowPanel(ParaProfTrial trial, HistogramWindow window, Function function) {
+        //Set the default tool tip for this panel.
+        this.setToolTipText("ParaProf bar graph draw window!");
+        setBackground(Color.white);
 
-    public HistogramWindowPanel(ParaProfTrial trial, HistogramWindow bWindow, Function function) {
-        try {
-            //Set the default tool tip for this panel.
-            this.setToolTipText("ParaProf bar graph draw window!");
-            setBackground(Color.white);
+        this.trial = trial;
+        this.window = window;
+        this.function = function;
 
-            this.trial = trial;
-            this.bWindow = bWindow;
-            this.function = function;
-
-            //Add this object as a mouse listener.
-            addMouseListener(this);
-
-            barXStart = 100;
-
-            //Add items to the first popup menu.
-            JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
-            mappingDetailsItem.addActionListener(this);
-            popup.add(mappingDetailsItem);
-
-            JMenuItem changeColorItem = new JMenuItem("Change Function Color");
-            changeColorItem.addActionListener(this);
-            popup.add(changeColorItem);
-
-            JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
-            maskMappingItem.addActionListener(this);
-            popup.add(maskMappingItem);
-
-            JMenuItem highlightMappingItem = new JMenuItem("Highlight this Function");
-            highlightMappingItem.addActionListener(this);
-            popup.add(highlightMappingItem);
-
-            JMenuItem unHighlightMappingItem = new JMenuItem("Un-Highlight this Function");
-            unHighlightMappingItem.addActionListener(this);
-            popup.add(unHighlightMappingItem);
-
-            //Add items to the second popup menu.
-            popup2.addPopupMenuListener(this);
-
-            JMenuItem tSWItem = new JMenuItem("Show Statistics Window");
-            tSWItem.addActionListener(this);
-            popup2.add(tSWItem);
-
-            if (trial.userEventsPresent()) {
-                tUESWItem = new JMenuItem("Show User Event Statistics Window");
-                tUESWItem.addActionListener(this);
-            }
-
-            popup2.add(tUESWItem);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMWP02");
-        }
+        //Add this object as a mouse listener.
+        //addMouseListener(this);
+        barXStart = 100;
     }
 
     public String getToolTipText(MouseEvent evt) {
         return null;
-    }
-
-    public void actionPerformed(ActionEvent evt) {
-    }
-
-    public void mouseClicked(MouseEvent evt) {
-    }
-
-    public void mousePressed(MouseEvent evt) {
-    }
-
-    public void mouseReleased(MouseEvent evt) {
-    }
-
-    public void mouseEntered(MouseEvent evt) {
-    }
-
-    public void mouseExited(MouseEvent evt) {
     }
 
     public void paintComponent(Graphics g) {
@@ -113,106 +45,42 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
             super.paintComponent(g);
             renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
-            System.out.println(e);
-            UtilFncs.systemError(e, null, "TDWP03");
+            ParaProfUtils.handleException(e);
+            window.closeThisWindow();
         }
     }
 
     public int print(Graphics g, PageFormat pageFormat, int page) {
-        if (page >= 1) {
+        try {
+            if (page >= 1) {
+                return NO_SUCH_PAGE;
+            }
+
+            ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
+            renderIt((Graphics2D) g, false, true, false);
+
+            return Printable.PAGE_EXISTS;
+        } catch (Exception e) {
+            new ParaProfErrorDialog(e);
             return NO_SUCH_PAGE;
         }
-
-        double pageWidth = pageFormat.getImageableWidth();
-        double pageHeight = pageFormat.getImageableHeight();
-        int cols = (int) (xPanelSize / pageWidth) + 1;
-        int rows = (int) (yPanelSize / pageHeight) + 1;
-        double xScale = pageWidth / xPanelSize;
-        double yScale = pageHeight / yPanelSize;
-        double scale = Math.min(xScale, yScale);
-
-        double tx = 0.0;
-        double ty = 0.0;
-        if (xScale > scale) {
-            tx = 0.5 * (xScale - scale) * xPanelSize;
-        } else {
-            ty = 0.5 * (yScale - scale) * yPanelSize;
-        }
-
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.translate((int) pageFormat.getImageableX(), (int) pageFormat.getImageableY());
-        g2.translate(tx, ty);
-        g2.scale(scale, scale);
-
-        renderIt(g2, false, true, false);
-
-        return Printable.PAGE_EXISTS;
     }
 
     public Dimension getImageSize(boolean fullScreen, boolean header) {
         return this.getSize();
     }
 
-    private double getMaxValue(Function function) {
-        double maxValue = 0;
-        switch (bWindow.getValueType()) {
-        case 2:
-            maxValue = function.getMaxExclusive(trial.getSelectedMetricID());
-            break;
-        case 4:
-            maxValue = function.getMaxInclusive(trial.getSelectedMetricID());
-            break;
-        case 6:
-            maxValue = function.getMaxNumCalls();
-            break;
-        case 8:
-            maxValue = function.getMaxNumSubr();
-            break;
-        case 10:
-            maxValue = function.getMaxInclusivePerCall(trial.getSelectedMetricID());
-            break;
-        default:
-            UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + bWindow.getValueType());
-        }
-        return maxValue;
-    }
+   
 
-    private double getValue(PPFunctionProfile ppFunctionProfile) {
-        double value = 0;
-        switch (bWindow.getValueType()) {
-        case 2:
-            value = ppFunctionProfile.getExclusiveValue();
-            break;
-        case 4:
-            value = ppFunctionProfile.getInclusiveValue();
-            break;
-        case 6:
-            value = ppFunctionProfile.getNumberOfCalls();
-            break;
-        case 8:
-            value = ppFunctionProfile.getNumberOfSubRoutines();
-            break;
-        case 10:
-            value = ppFunctionProfile.getInclusivePerCall();
-            break;
-        default:
-            UtilFncs.systemError(null, null, "Unexpected type - MDWP value: " + bWindow.getValueType());
-        }
-        return value;
-    }
-
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        try {
-
-            list = bWindow.getData();
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) throws ParaProfException {
+    
+            list = window.getData();
 
             //Check to see if selected groups only are being displayed.
             TrialData td = trial.getTrialData();
 
             //**********
             //Other initializations.
-            highlighted = false;
             xCoord = yCoord = 0;
             //End - Other initializations.
             //**********
@@ -291,7 +159,7 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
                 ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
 
                 if (ppFunctionProfile.getFunction() == function) {
-                    double tmpDataValue = getValue(ppFunctionProfile);
+                    double tmpDataValue = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), false);
                     if (start) {
                         minValue = tmpDataValue;
                         start = false;
@@ -314,11 +182,8 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
                 g2D.drawLine(35 + i * 55, 430, 35 + i * 55, 435);
             }
 
-            
-            
-            
-            g2D.drawString("Min Value = " + UtilFncs.getOutputString(bWindow.units(), minValue, 6), 35, 450);
-            g2D.drawString("Max Value = " + UtilFncs.getOutputString(bWindow.units(), maxValue, 6), 552, 450);
+            g2D.drawString("Min Value = " + UtilFncs.getOutputString(window.units(), minValue, 6), 35, 450);
+            g2D.drawString("Max Value = " + UtilFncs.getOutputString(window.units(), maxValue, 6), 552, 450);
 
             xPanelSize = 552 + fmFont.stringWidth("Max Value = " + maxValue);
 
@@ -337,7 +202,7 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
             for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
                 ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
                 if (ppFunctionProfile.getFunction() == function) {
-                    double tmpDataValue = getValue(ppFunctionProfile);
+                    double tmpDataValue = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), false);
                     for (int j = 0; j < 10; j++) {
                         if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
                             intArray[j]++;
@@ -377,38 +242,16 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
 
             if (sizeChange)
                 revalidate();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMWP06");
-        }
     }
 
-    public void popupMenuWillBecomeVisible(PopupMenuEvent evt) {
-        try {
-            if (trial.userEventsPresent()) {
-                tUESWItem.setEnabled(true);
-            } else {
-                tUESWItem.setEnabled(false);
-            }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMW03");
-        }
-    }
-
-    public void popupMenuWillBecomeInvisible(PopupMenuEvent evt) {
-    }
-
-    public void popupMenuCanceled(PopupMenuEvent evt) {
-    }
 
     public Dimension getPreferredSize() {
         return new Dimension(xPanelSize + 10, (yPanelSize + 10));
     }
 
-    //####################################
     //Instance data.
-    //####################################
     private ParaProfTrial trial = null;
-    HistogramWindow bWindow = null;
+    HistogramWindow window = null;
     int xPanelSize = 600;
     int yPanelSize = 400;
 
@@ -416,47 +259,10 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
 
     private Vector list = null;
 
-    //**********
-    //Popup menu definitions.
-    private JPopupMenu popup = new JPopupMenu();
-    private JPopupMenu popup2 = new JPopupMenu();
 
-    JMenuItem tUESWItem = new JMenuItem("Show Total User Event Statistics Windows");
-
-    //**********
-
-    //**********
-    //Some place holder definitions - used for cycling through data lists.
-    Vector contextList = null;
-    Vector threadList = null;
-    Vector threadDataList = null;
-    PPThread ppThread = null;
-    PPFunctionProfile ppFunctionProfile = null;
-    //End - Place holder definitions.
-    //**********
-
-    //**********
-    //Other useful variables for getToolTipText, mouseEvents, and
-    // paintComponent.
     int xCoord = -1;
     int yCoord = -1;
-    Object clickedOnObject = null;
-    //End - Other useful variables for getToolTipText, mouseEvents, and
-    // paintComponent.
-    //**********
 
-    //**********
-    //Some misc stuff for the paintComponent function.
-    String counterName = null;
     private int defaultBarLength = 500;
-    String tmpString = null;
-    double tmpSum = -1;
-    double tmpDataValue = -1;
-    Color tmpColor = null;
-    boolean highlighted = false;
     int barXStart = -1;
-    int numberOfColors = 0;
-    //End - Some misc stuff for the paintComponent function.
-    //**********
-
 }

@@ -31,7 +31,14 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.Point2D;
 import java.awt.print.*;
 
-
+/**
+ * CallGraphWindow.java
+ * This window displays the callpath data as a graph.
+ *   
+ * <P>CVS $Id: CallGraphWindow.java,v 1.7 2004/12/29 00:09:47 amorris Exp $</P>
+ * @author	Alan Morris
+ * @version	$Revision: 1.7 $
+ */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
 
@@ -45,7 +52,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             super(graph);
         }
 
-        
         // this getSelectables has been subclassed from DefaultGraphSelectionModel 
         // so that edges never get selected
         /**
@@ -214,111 +220,106 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public Vector pathEdges = new Vector();
 
     }
-    
 
     public CallGraphWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, DataSorter dataSorter) {
-        try {
-            this.trial = trial;
-            this.nodeID = nodeID;
-            this.contextID = contextID;
-            this.threadID = threadID;
+        this.trial = trial;
+        this.nodeID = nodeID;
+        this.contextID = contextID;
+        this.threadID = threadID;
 
-            this.dataSorter = dataSorter;
+        this.dataSorter = dataSorter;
 
-            if (nodeID == -1)
-                this.meanWindow = true;
+        if (nodeID == -1)
+            this.meanWindow = true;
 
-            if (meanWindow) {
-                thread = trial.getDataSource().getMeanData();
-            } else {
-                thread = trial.getNCT().getThread(nodeID, contextID, threadID);
-            }
-
-            if (trial.callPathDataPresent())
-                CallPathUtilFuncs.buildThreadRelations(trial.getTrialData(), thread);
-
-            functionProfileList = thread.getFunctionList();
-
-            // create the right-click popup
-            JMenuItem jMenuItem = null;
-            jMenuItem = new JMenuItem("Show Function Details");
-            jMenuItem.addActionListener(this);
-            popup.add(jMenuItem);
-
-            //Now set the title.
-            if (meanWindow)
-                this.setTitle("Full Call Graph (all threads) - " + trial.getTrialIdentifier(true));
-            else
-                this.setTitle("Call Graph " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                        + trial.getTrialIdentifier(true));
-
-            //Add some window listener code
-            addWindowListener(new java.awt.event.WindowAdapter() {
-                public void windowClosing(java.awt.event.WindowEvent evt) {
-                    thisWindowClosing(evt);
-                }
-            });
-
-            //Set the help window text if required.
-            if (ParaProf.helpWindow.isVisible()) {
-                this.help(false);
-            }
-
-            setupMenus();
-
-            boxWidthSlider.setPaintTicks(true);
-            boxWidthSlider.setMajorTickSpacing(50);
-            boxWidthSlider.setMinorTickSpacing(10);
-            boxWidthSlider.setPaintLabels(true);
-            boxWidthSlider.setSnapToTicks(false);
-            boxWidthSlider.addChangeListener(this);
-            boxWidthSlider.addKeyListener(this);
-
-            GridBagLayout gbl = new GridBagLayout();
-            this.getContentPane().setLayout(gbl);
-
-            // obtain the font and its metrics
-            font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
-                    trial.getPreferences().getBarHeight());
-            FontMetrics fm = getFontMetrics(font);
-
-            // set the box height to the font height + 5
-            boxHeight = fm.getHeight() + 5;
-
-            // Create the colorbar
-            ColorBar cb = new ColorBar();
-
-            GridBagConstraints gbc = new GridBagConstraints();
-
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.anchor = GridBagConstraints.NORTH;
-            gbc.weightx = 1.0;
-            gbc.weighty = 0.0;
-            addCompItem(cb, gbc, 0, 0, 2, 1);
-
-            // create the graph
-            createGraph();
-
-            // sizing, get the preferred size of the graph and cut it down if necessary
-            Dimension prefSize = jGraphPane.getPreferredSize();
-
-            prefSize.width += 25;
-            prefSize.height += 75 + 20;
-
-            if (prefSize.width > 1000)
-                prefSize.width = 1000;
-
-            if (prefSize.height > 1000)
-                prefSize.height = 1000;
-
-            setSize(prefSize);
-
-            this.setVisible(true);
-
-            ParaProf.incrementNumWindows();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CPTW02");
+        if (meanWindow) {
+            thread = trial.getDataSource().getMeanData();
+        } else {
+            thread = trial.getNCT().getThread(nodeID, contextID, threadID);
         }
+
+        if (trial.callPathDataPresent())
+            CallPathUtilFuncs.buildThreadRelations(trial.getTrialData(), thread);
+
+        functionProfileList = thread.getFunctionList();
+
+        // create the right-click popup
+        JMenuItem jMenuItem = null;
+        jMenuItem = new JMenuItem("Show Function Details");
+        jMenuItem.addActionListener(this);
+        popup.add(jMenuItem);
+
+        //Now set the title.
+        if (meanWindow)
+            this.setTitle("Full Call Graph (all threads) - " + trial.getTrialIdentifier(true));
+        else
+            this.setTitle("Call Graph " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
+                    + trial.getTrialIdentifier(true));
+
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
+            }
+        });
+
+        //Set the help window text if required.
+        if (ParaProf.helpWindow.isVisible()) {
+            this.help(false);
+        }
+
+        setupMenus();
+
+        boxWidthSlider.setPaintTicks(true);
+        boxWidthSlider.setMajorTickSpacing(50);
+        boxWidthSlider.setMinorTickSpacing(10);
+        boxWidthSlider.setPaintLabels(true);
+        boxWidthSlider.setSnapToTicks(false);
+        boxWidthSlider.addChangeListener(this);
+        boxWidthSlider.addKeyListener(this);
+
+        GridBagLayout gbl = new GridBagLayout();
+        this.getContentPane().setLayout(gbl);
+
+        // obtain the font and its metrics
+        font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+                trial.getPreferences().getBarHeight());
+        FontMetrics fm = getFontMetrics(font);
+
+        // set the box height to the font height + 5
+        boxHeight = fm.getHeight() + 5;
+
+        // Create the colorbar
+        ColorBar cb = new ColorBar();
+
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.0;
+        addCompItem(cb, gbc, 0, 0, 2, 1);
+
+        // create the graph
+        createGraph();
+
+        // sizing, get the preferred size of the graph and cut it down if necessary
+        Dimension prefSize = jGraphPane.getPreferredSize();
+
+        prefSize.width += 25;
+        prefSize.height += 75 + 20;
+
+        if (prefSize.width > 1000)
+            prefSize.width = 1000;
+
+        if (prefSize.height > 1000)
+            prefSize.height = 1000;
+
+        setSize(prefSize);
+
+        this.setVisible(true);
+
+        ParaProf.incrementNumWindows();
     }
 
     private void helperAddRadioMenuItem(String name, String command, boolean on, ButtonGroup group, JMenu menu) {
@@ -811,7 +812,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                             // follow the chain of vertices whose functions are null to find the real
                             // child vertex.  All of these inbetween vertices are "dummy nodes"
                             ArrayList points = new ArrayList();
-                            int l = 1;  // how many levels down this dummy node is
+                            int l = 1; // how many levels down this dummy node is
 
                             points.add(new Point(3000, 3000)); // this point's position doesn't matter because of the connect call
 
@@ -1503,7 +1504,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     public void menuSelected(MenuEvent evt) {
         try {
-
             if (trial.groupNamesPresent())
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
             else
@@ -1515,7 +1515,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
 
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW04");
+            new ParaProfErrorDialog(e);
         }
     }
 
@@ -1702,7 +1702,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
     }
 
-    
     private void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.helpWindow.clearText();
@@ -1735,16 +1734,11 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        try {
-            gbc.gridx = x;
-            gbc.gridy = y;
-            gbc.gridwidth = w;
-            gbc.gridheight = h;
-
-            getContentPane().add(c, gbc);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CPTW05");
-        }
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        getContentPane().add(c, gbc);
     }
 
     //Respond correctly when this window is closed.
@@ -1773,29 +1767,39 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void mouseClicked(MouseEvent evt) {
-        // Get Cell under Mousepointer
-        int x = evt.getX(), y = evt.getY();
+        try {
+            // Get Cell under Mousepointer
+            int x = evt.getX(), y = evt.getY();
 
-        GraphCell gc = getGraphCellForLocation(evt.getX(), evt.getY());
+            GraphCell gc = getGraphCellForLocation(evt.getX(), evt.getY());
 
-        if (gc != null) {
-            Function f = ((Function) gc.getFunction());
+            if (gc != null) {
+                Function f = ((Function) gc.getFunction());
 
-            if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
-                clickedOnObject = f;
-                popup.show(this, evt.getX(), evt.getY());
-                return;
+                if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0) {
+                    clickedOnObject = f;
+                    popup.show(this, evt.getX(), evt.getY());
+                    return;
 
-            } else {
-                trial.getColorChooser().toggleHighlightedFunction(f);
+                } else {
+                    trial.getColorChooser().toggleHighlightedFunction(f);
+                }
             }
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
         }
+
     }
 
     // listener for the boxWidthSlider
     public void stateChanged(ChangeEvent event) {
-        boxWidth = boxWidthSlider.getValue();
-        recreateGraph();
+        try {
+            boxWidth = boxWidthSlider.getValue();
+            recreateGraph();
+        } catch (Exception e) {
+            new ParaProfErrorDialog(e);
+        }
+
     }
 
     public void mousePressed(MouseEvent evt) {
@@ -1811,17 +1815,21 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void keyTyped(KeyEvent evt) {
-        // zoom in and out on +/-
-        if (evt.getKeyChar() == '+') {
-            scale = scale + 0.10;
-            if (scale > 5.0)
-                scale = 5.0;
-            graph.setScale(scale);
-        } else if (evt.getKeyChar() == '-') {
-            scale = scale - 0.10;
-            if (scale < 0.10)
-                scale = 0.10;
-            graph.setScale(scale);
+        try {
+            // zoom in and out on +/-
+            if (evt.getKeyChar() == '+') {
+                scale = scale + 0.10;
+                if (scale > 5.0)
+                    scale = 5.0;
+                graph.setScale(scale);
+            } else if (evt.getKeyChar() == '-') {
+                scale = scale - 0.10;
+                if (scale < 0.10)
+                    scale = 0.10;
+                graph.setScale(scale);
+            }
+        } catch (Exception e) {
+            new ParaProfErrorDialog(e);
         }
 
     }
@@ -1856,28 +1864,11 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             // turn off double buffering of graph so we don't get bitmap printed
             graph.setDoubleBuffered(false);
 
-            double pageWidth = pageFormat.getImageableWidth();
-            double pageHeight = pageFormat.getImageableHeight();
-            int cols = (int) (graph.getWidth() / pageWidth) + 1;
-            int rows = (int) (graph.getHeight() / pageHeight) + 1;
-            double xScale = pageWidth / graph.getWidth();
-            double yScale = pageHeight / graph.getHeight();
-            double scale = Math.min(xScale, yScale);
-
-            double tx = 0.0;
-            double ty = 0.0;
-            if (xScale > scale) {
-                tx = 0.5 * (xScale - scale) * graph.getWidth();
-            } else {
-                ty = 0.5 * (yScale - scale) * graph.getHeight();
-            }
-            ((Graphics2D) g).translate((int) pageFormat.getImageableX(), (int) pageFormat.getImageableY());
-            ((Graphics2D) g).translate(tx, ty);
-            ((Graphics2D) g).scale(scale, scale);
-
             if (page >= 1) {
                 return NO_SUCH_PAGE;
             }
+
+            ParaProfUtils.scaleForPrint(g, pageFormat, graph.getWidth(), graph.getHeight());
 
             graph.paint(g);
         } finally {
@@ -1915,122 +1906,123 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     //        }
 
     public void actionPerformed(ActionEvent evt) {
-        Object EventSrc = evt.getSource();
+        try {
+            Object EventSrc = evt.getSource();
 
-        if (EventSrc instanceof JMenuItem) {
+            if (EventSrc instanceof JMenuItem) {
 
-            if (EventSrc instanceof JRadioButtonMenuItem) {
-                JRadioButtonMenuItem jrbmi = (JRadioButtonMenuItem) EventSrc;
+                if (EventSrc instanceof JRadioButtonMenuItem) {
+                    JRadioButtonMenuItem jrbmi = (JRadioButtonMenuItem) EventSrc;
 
-                System.out.println("Action: " + jrbmi.getActionCommand());
+                    System.out.println("Action: " + jrbmi.getActionCommand());
 
-                if (jrbmi.getActionCommand().startsWith("Box Width")) {
+                    if (jrbmi.getActionCommand().startsWith("Box Width")) {
 
-                    if (jrbmi.getActionCommand().equals("Box Width Static")) {
-                        this.widthOption = OPTION_STATIC;
-                    } else if (jrbmi.getActionCommand().equals("Box Width Name Length")) {
-                        this.widthOption = OPTION_NAME;
-                    } else if (jrbmi.getActionCommand().equals("Box Width Exclusive")) {
-                        this.widthOption = OPTION_EXCLUSIVE;
-                    } else if (jrbmi.getActionCommand().equals("Box Width Inclusive")) {
-                        this.widthOption = OPTION_INCLUSIVE;
-                    } else if (jrbmi.getActionCommand().equals("Box Width NumCalls")) {
-                        this.widthOption = OPTION_NUMCALLS;
-                    } else if (jrbmi.getActionCommand().equals("Box Width NumSubr")) {
-                        this.widthOption = OPTION_NUMSUBR;
-                    } else if (jrbmi.getActionCommand().equals("Box Width InclPerCall")) {
-                        this.widthOption = OPTION_INCLPERCALL;
+                        if (jrbmi.getActionCommand().equals("Box Width Static")) {
+                            this.widthOption = OPTION_STATIC;
+                        } else if (jrbmi.getActionCommand().equals("Box Width Name Length")) {
+                            this.widthOption = OPTION_NAME;
+                        } else if (jrbmi.getActionCommand().equals("Box Width Exclusive")) {
+                            this.widthOption = OPTION_EXCLUSIVE;
+                        } else if (jrbmi.getActionCommand().equals("Box Width Inclusive")) {
+                            this.widthOption = OPTION_INCLUSIVE;
+                        } else if (jrbmi.getActionCommand().equals("Box Width NumCalls")) {
+                            this.widthOption = OPTION_NUMCALLS;
+                        } else if (jrbmi.getActionCommand().equals("Box Width NumSubr")) {
+                            this.widthOption = OPTION_NUMSUBR;
+                        } else if (jrbmi.getActionCommand().equals("Box Width InclPerCall")) {
+                            this.widthOption = OPTION_INCLPERCALL;
+                        }
+                        recreateGraph();
                     }
-                    recreateGraph();
+
+                    if (jrbmi.getActionCommand().startsWith("Box Color")) {
+
+                        if (jrbmi.getActionCommand().equals("Box Color Static")) {
+                            this.colorOption = OPTION_STATIC;
+                        } else if (jrbmi.getActionCommand().equals("Box Color Exclusive")) {
+                            this.colorOption = OPTION_EXCLUSIVE;
+                        } else if (jrbmi.getActionCommand().equals("Box Color Inclusive")) {
+                            this.colorOption = OPTION_INCLUSIVE;
+                        } else if (jrbmi.getActionCommand().equals("Box Color NumCalls")) {
+                            this.colorOption = OPTION_NUMCALLS;
+                        } else if (jrbmi.getActionCommand().equals("Box Color NumSubr")) {
+                            this.colorOption = OPTION_NUMSUBR;
+                        } else if (jrbmi.getActionCommand().equals("Box Color InclPerCall")) {
+                            this.colorOption = OPTION_INCLPERCALL;
+                        }
+                        recreateGraph();
+                    }
                 }
 
-                if (jrbmi.getActionCommand().startsWith("Box Color")) {
+                String arg = evt.getActionCommand();
 
-                    if (jrbmi.getActionCommand().equals("Box Color Static")) {
-                        this.colorOption = OPTION_STATIC;
-                    } else if (jrbmi.getActionCommand().equals("Box Color Exclusive")) {
-                        this.colorOption = OPTION_EXCLUSIVE;
-                    } else if (jrbmi.getActionCommand().equals("Box Color Inclusive")) {
-                        this.colorOption = OPTION_INCLUSIVE;
-                    } else if (jrbmi.getActionCommand().equals("Box Color NumCalls")) {
-                        this.colorOption = OPTION_NUMCALLS;
-                    } else if (jrbmi.getActionCommand().equals("Box Color NumSubr")) {
-                        this.colorOption = OPTION_NUMSUBR;
-                    } else if (jrbmi.getActionCommand().equals("Box Color InclPerCall")) {
-                        this.colorOption = OPTION_INCLPERCALL;
-                    }
+                if (arg.equals("Show Function Details")) {
+                    FunctionDataWindow tmpRef = new FunctionDataWindow(trial, (Function) clickedOnObject,
+                            trial.getStaticMainWindow().getDataSorter());
+
+                    trial.getSystemEvents().addObserver(tmpRef);
+                    tmpRef.show();
+
+                } else if (arg.equals("Exit ParaProf!")) {
+                    setVisible(false);
+                    dispose();
+                    ParaProf.exitParaProf(0);
+
+                } else if (arg.equals("Preferences...")) {
+                    trial.getPreferences().showPreferencesWindow();
+                } else if (arg.equals("Close This Window")) {
+                    closeThisWindow();
+                } else if (arg.equals("Show Function Ledger")) {
+                    (new LedgerWindow(trial, 0)).show();
+                } else if (arg.equals("Show Group Ledger")) {
+                    (new LedgerWindow(trial, 1)).show();
+                } else if (arg.equals("Show User Event Ledger")) {
+                    (new LedgerWindow(trial, 2)).show();
+                } else if (arg.equals("Show Call Path Relations")) {
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(),
+                            2);
+                    trial.getSystemEvents().addObserver(tmpRef);
+                    tmpRef.show();
+                } else if (arg.equals("Close All Sub-Windows")) {
+                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+
+                } else if (arg.equals("Print")) {
+                    ParaProfUtils.print(this);
+                } else if (arg.equals("Save Image")) {
+                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+                    imageOutput.saveImage((ParaProfImageInterface) this);
+                } else if (arg.equals("Static Width")) {
+                    this.widthOption = OPTION_STATIC;
                     recreateGraph();
+                } else if (arg.equals("Width by Name Length")) {
+                    this.widthOption = OPTION_NAME;
+                    recreateGraph();
+
+                } else if (arg.equals("Width by Exclusive Value")) {
+                    this.widthOption = OPTION_EXCLUSIVE;
+                    recreateGraph();
+
+                } else if (arg.equals("Display Width Slider")) {
+                    if (slidersCheckBox.isSelected())
+                        displaySliders(true);
+                    else
+                        displaySliders(false);
+                } else if (arg.equals("Close All Sub-Windows")) {
+                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+                } else if (arg.equals("About ParaProf")) {
+                    JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
+                } else if (arg.equals("Show Help Window")) {
+                    this.help(true);
                 }
+
             }
-
-            String arg = evt.getActionCommand();
-
-            if (arg.equals("Show Function Details")) {
-                FunctionDataWindow tmpRef = new FunctionDataWindow(trial, (Function) clickedOnObject,
-                        trial.getStaticMainWindow().getDataSorter(), false);
-
-                trial.getSystemEvents().addObserver(tmpRef);
-                tmpRef.show();
-
-            } else if (arg.equals("Exit ParaProf!")) {
-                setVisible(false);
-                dispose();
-                ParaProf.exitParaProf(0);
-
-            } else if (arg.equals("Preferences...")) {
-                trial.getPreferences().showPreferencesWindow();
-            } else if (arg.equals("Close This Window")) {
-                closeThisWindow();
-            } else if (arg.equals("Show Function Ledger")) {
-                (new LedgerWindow(trial, 0, false)).show();
-            } else if (arg.equals("Show Group Ledger")) {
-                (new LedgerWindow(trial, 1, false)).show();
-            } else if (arg.equals("Show User Event Ledger")) {
-                (new LedgerWindow(trial, 2, false)).show();
-            } else if (arg.equals("Show Call Path Relations")) {
-                CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(), 2,
-                        false);
-                trial.getSystemEvents().addObserver(tmpRef);
-                tmpRef.show();
-            } else if (arg.equals("Close All Sub-Windows")) {
-                trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-
-            } else if (arg.equals("Print")) {
-                UtilFncs.print(this);
-            } else if (arg.equals("Save Image")) {
-                ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-                imageOutput.saveImage((ParaProfImageInterface) this);
-            } else if (arg.equals("Static Width")) {
-                this.widthOption = OPTION_STATIC;
-                recreateGraph();
-            } else if (arg.equals("Width by Name Length")) {
-                this.widthOption = OPTION_NAME;
-                recreateGraph();
-
-            } else if (arg.equals("Width by Exclusive Value")) {
-                this.widthOption = OPTION_EXCLUSIVE;
-                recreateGraph();
-
-            } else if (arg.equals("Display Width Slider")) {
-                if (slidersCheckBox.isSelected())
-                    displaySliders(true);
-                else
-                    displaySliders(false);
-            } else if (arg.equals("Close All Sub-Windows")) {
-                trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
-            } else if (arg.equals("About ParaProf")) {
-                JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-            } else if (arg.equals("Show Help Window")) {
-                this.help(true);
-            }
-
+        } catch (Exception e) {
+            new ParaProfErrorDialog(e);
         }
-
     }
 
-    //####################################
     //Instance data.
-    //####################################
     private ParaProfTrial trial = null;
     private int nodeID = -1;
     private int contextID = -1;
@@ -2060,13 +2052,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private int widthOption = OPTION_EXCLUSIVE;
     private int colorOption = OPTION_EXCLUSIVE;
 
-
     private edu.uoregon.tau.dms.dss.Thread thread;
     private int boxWidth = 120;
 
     private JLabel boxWidthLabel = new JLabel("Box width");
     private JSlider boxWidthSlider = new JSlider(0, 500, boxWidth);
-    
+
     Vector functionProfileList;
     DefaultGraphModel model;
     Vector graphCellVector;

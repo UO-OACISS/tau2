@@ -14,288 +14,272 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer,
-        ChangeListener {
+public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
 
     public StaticMainWindow(ParaProfTrial pptrial, boolean debug) {
-        try {
-            //This window needs to maintain a reference to its trial.
-            this.trial = pptrial;
-            this.debug = debug;
+        //This window needs to maintain a reference to its trial.
+        this.trial = pptrial;
 
-            //####################################
-            //Window Stuff.
-            //####################################
-            setTitle("ParaProf: " + pptrial.getTrialIdentifier(true));
+        //Window Stuff.
+        setTitle("ParaProf: " + pptrial.getTrialIdentifier(true));
 
-            int windowWidth = 750;
-            int windowHeight = 400;
-            setSize(new java.awt.Dimension(windowWidth, windowHeight));
+        int windowWidth = 750;
+        int windowHeight = 400;
+        setSize(new java.awt.Dimension(windowWidth, windowHeight));
 
-            dataSorter = new DataSorter(pptrial, this.debug());
+        dataSorter = new DataSorter(pptrial);
 
-            //Add some window listener code
-            addWindowListener(new java.awt.event.WindowAdapter() {
-                public void windowClosing(java.awt.event.WindowEvent evt) {
-                    thisWindowClosing(evt);
-                }
-            });
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
+            }
+        });
 
-            //Grab the screen size.
-            Toolkit tk = Toolkit.getDefaultToolkit();
-            Dimension screenDimension = tk.getScreenSize();
-            int screenHeight = screenDimension.height;
-            int screenWidth = screenDimension.width;
+        //Grab the screen size.
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        Dimension screenDimension = tk.getScreenSize();
+        int screenHeight = screenDimension.height;
+        int screenWidth = screenDimension.width;
 
-            //Set the window to come up in the center of the screen.
-            int xPosition = (screenWidth - windowWidth) / 2;
-            int yPosition = (screenHeight - windowHeight) / 2;
+        //Set the window to come up in the center of the screen.
+        int xPosition = (screenWidth - windowWidth) / 2;
+        int yPosition = (screenHeight - windowHeight) / 2;
 
-            setLocation(xPosition, yPosition);
-            //####################################
-            //End -Window Stuff.
-            //####################################
+        setLocation(xPosition, yPosition);
+        //####################################
+        //End -Window Stuff.
+        //####################################
 
-            //####################################
-            //Code to generate the menus.
-            //####################################
-            JMenuBar mainMenu = new JMenuBar();
+        //####################################
+        //Code to generate the menus.
+        //####################################
+        JMenuBar mainMenu = new JMenuBar();
 
-            JMenu subMenu = null;
-            JMenuItem menuItem = null;
+        JMenu subMenu = null;
+        JMenuItem menuItem = null;
 
-            //######
-            //File menu.
-            //######
-            JMenu fileMenu = new JMenu("File");
+        //######
+        //File menu.
+        //######
+        JMenu fileMenu = new JMenu("File");
 
-            //Save menu.
-            subMenu = new JMenu("Save ...");
+        //Save menu.
+        subMenu = new JMenu("Save ...");
 
-            /*
-             * menuItem = new JMenuItem("ParaProf Preferences");
-             * menuItem.addActionListener(this); subMenu.add(menuItem);
-             */
+        /*
+         * menuItem = new JMenuItem("ParaProf Preferences");
+         * menuItem.addActionListener(this); subMenu.add(menuItem);
+         */
 
-            //	  menuItem = new JMenuItem("Save to XML File");
-            //	  menuItem.addActionListener(this);
-            //	  subMenu.add(menuItem);
-            //
-            //	  menuItem = new JMenuItem("Save to txt File");
-            //	  menuItem.addActionListener(this);
-            //	  subMenu.add(menuItem);
-            menuItem = new JMenuItem("Save Image");
-            menuItem.addActionListener(this);
-            subMenu.add(menuItem);
+        //	  menuItem = new JMenuItem("Save to XML File");
+        //	  menuItem.addActionListener(this);
+        //	  subMenu.add(menuItem);
+        //
+        //	  menuItem = new JMenuItem("Save to txt File");
+        //	  menuItem.addActionListener(this);
+        //	  subMenu.add(menuItem);
+        menuItem = new JMenuItem("Save Image");
+        menuItem.addActionListener(this);
+        subMenu.add(menuItem);
 
-            fileMenu.add(subMenu);
-            //End - Save menu.
+        fileMenu.add(subMenu);
+        //End - Save menu.
 
-            menuItem = new JMenuItem("Preferences...");
-            menuItem.addActionListener(this);
-            fileMenu.add(menuItem);
+        menuItem = new JMenuItem("Preferences...");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Print");
-            menuItem.addActionListener(this);
-            fileMenu.add(menuItem);
+        menuItem = new JMenuItem("Print");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Close This Window");
-            menuItem.addActionListener(this);
-            fileMenu.add(menuItem);
+        menuItem = new JMenuItem("Close This Window");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Exit ParaProf!");
-            menuItem.addActionListener(this);
-            fileMenu.add(menuItem);
+        menuItem = new JMenuItem("Exit ParaProf!");
+        menuItem.addActionListener(this);
+        fileMenu.add(menuItem);
 
-            fileMenu.addMenuListener(this);
-            //######
-            //End - File menu.
-            //######
+        fileMenu.addMenuListener(this);
+        //######
+        //End - File menu.
+        //######
 
-            //######
-            //Options menu.
-            //######
-            optionsMenu = new JMenu("Options");
+        //######
+        //Options menu.
+        //######
+        optionsMenu = new JMenu("Options");
 
-            nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
-            nameCheckBox.addActionListener(this);
-            optionsMenu.add(nameCheckBox);
+        nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
+        nameCheckBox.addActionListener(this);
+        optionsMenu.add(nameCheckBox);
 
-            normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
-            normalizeCheckBox.addActionListener(this);
-            optionsMenu.add(normalizeCheckBox);
+        normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
+        normalizeCheckBox.addActionListener(this);
+        optionsMenu.add(normalizeCheckBox);
 
-            orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
-            orderByMeanCheckBox.addActionListener(this);
-            optionsMenu.add(orderByMeanCheckBox);
+        orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
+        orderByMeanCheckBox.addActionListener(this);
+        optionsMenu.add(orderByMeanCheckBox);
 
-            orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
-            orderCheckBox.addActionListener(this);
-            optionsMenu.add(orderCheckBox);
+        orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
+        orderCheckBox.addActionListener(this);
+        optionsMenu.add(orderCheckBox);
 
-            stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
-            stackBarsCheckBox.addActionListener(this);
-            optionsMenu.add(stackBarsCheckBox);
+        stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
+        stackBarsCheckBox.addActionListener(this);
+        optionsMenu.add(stackBarsCheckBox);
 
-            slidersCheckBox = new JCheckBoxMenuItem("Display Sliders", false);
-            slidersCheckBox.addActionListener(this);
-            optionsMenu.add(slidersCheckBox);
+        slidersCheckBox = new JCheckBoxMenuItem("Display Sliders", false);
+        slidersCheckBox.addActionListener(this);
+        optionsMenu.add(slidersCheckBox);
 
-            pathTitleCheckBox = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-            pathTitleCheckBox.addActionListener(this);
-            optionsMenu.add(pathTitleCheckBox);
+        pathTitleCheckBox = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+        pathTitleCheckBox.addActionListener(this);
+        optionsMenu.add(pathTitleCheckBox);
 
-            metaDataCheckBox = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-            metaDataCheckBox.addActionListener(this);
-            optionsMenu.add(metaDataCheckBox);
+        metaDataCheckBox = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+        metaDataCheckBox.addActionListener(this);
+        optionsMenu.add(metaDataCheckBox);
 
-            //######
-            //End - Options menu.
-            //######
+        //######
+        //End - Options menu.
+        //######
 
-            //######
-            //Windows menu
-            //######
-            windowsMenu = new JMenu("Windows");
+        //######
+        //Windows menu
+        //######
+        windowsMenu = new JMenu("Windows");
 
-            menuItem = new JMenuItem("Show ParaProf Manager");
-            menuItem.addActionListener(this);
-            windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("Show ParaProf Manager");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Show Function Ledger");
-            menuItem.addActionListener(this);
-            windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("Show Function Ledger");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Show Group Ledger");
-            menuItem.addActionListener(this);
-            windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("Show Group Ledger");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Show User Event Ledger");
-            menuItem.addActionListener(this);
-            windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("Show User Event Ledger");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Show Call Path Relations");
-            menuItem.addActionListener(this);
-            windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("Show Call Path Relations");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Show Full Call Graph");
-            menuItem.addActionListener(this);
-            windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("Show Full Call Graph");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
 
-            menuItem = new JMenuItem("Close All Sub-Windows");
-            menuItem.addActionListener(this);
-            windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("Close All Sub-Windows");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
 
-            windowsMenu.addMenuListener(this);
-            //######
-            //End - Windows menu
-            //######
+        windowsMenu.addMenuListener(this);
+        //######
+        //End - Windows menu
+        //######
 
-            //######
-            //Help menu.
-            //######
-            JMenu helpMenu = new JMenu("Help");
+        //######
+        //Help menu.
+        //######
+        JMenu helpMenu = new JMenu("Help");
 
-            menuItem = new JMenuItem("Show Help Window");
-            menuItem.addActionListener(this);
-            helpMenu.add(menuItem);
+        menuItem = new JMenuItem("Show Help Window");
+        menuItem.addActionListener(this);
+        helpMenu.add(menuItem);
 
-            menuItem = new JMenuItem("About ParaProf");
-            menuItem.addActionListener(this);
-            helpMenu.add(menuItem);
+        menuItem = new JMenuItem("About ParaProf");
+        menuItem.addActionListener(this);
+        helpMenu.add(menuItem);
 
-            helpMenu.addMenuListener(this);
-            //######
-            //End - Help menu.
-            //######
+        helpMenu.addMenuListener(this);
+        //######
+        //End - Help menu.
+        //######
 
-            //Now, add all the menus to the main menu.
-            mainMenu.add(fileMenu);
-            mainMenu.add(optionsMenu);
-            mainMenu.add(windowsMenu);
-            mainMenu.add(helpMenu);
+        //Now, add all the menus to the main menu.
+        mainMenu.add(fileMenu);
+        mainMenu.add(optionsMenu);
+        mainMenu.add(windowsMenu);
+        mainMenu.add(helpMenu);
 
-            setJMenuBar(mainMenu);
-            //####################################
-            //End - Code to generate the menus.
-            //####################################
+        setJMenuBar(mainMenu);
+        //####################################
+        //End - Code to generate the menus.
+        //####################################
 
-            //####################################
-            //Create and add the components.
-            //####################################
+        //####################################
+        //Create and add the components.
+        //####################################
 
-            //Setting up the layout system for the main window.
-            contentPane = getContentPane();
-            gbl = new GridBagLayout();
-            contentPane.setLayout(gbl);
-            gbc = new GridBagConstraints();
-            gbc.insets = new Insets(5, 5, 5, 5);
+        //Setting up the layout system for the main window.
+        contentPane = getContentPane();
+        gbl = new GridBagLayout();
+        contentPane.setLayout(gbl);
+        gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
 
-            //######
-            //Panel and ScrollPane definition.
-            //######
-            panel = new StaticMainWindowPanel(pptrial, this, this.debug());
-            sp = new JScrollPane(panel);
-            this.setHeader();
-            //######
-            //End - Panel and ScrollPane definition.
-            //######
+        //######
+        //Panel and ScrollPane definition.
+        //######
+        panel = new StaticMainWindowPanel(pptrial, this);
+        sp = new JScrollPane(panel);
+        this.setHeader();
+        //######
+        //End - Panel and ScrollPane definition.
+        //######
 
-            //######
-            //Slider setup.
-            //Do the slider stuff, but don't add. By default, sliders are off.
-            //######
-            String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
-            sliderMultiple = new JComboBox(sliderMultipleStrings);
-            sliderMultiple.addActionListener(this);
+        //######
+        //Slider setup.
+        //Do the slider stuff, but don't add. By default, sliders are off.
+        //######
+        String sliderMultipleStrings[] = { "1.00", "0.75", "0.50", "0.25", "0.10" };
+        sliderMultiple = new JComboBox(sliderMultipleStrings);
+        sliderMultiple.addActionListener(this);
 
-            barLengthSlider.setPaintTicks(true);
-            barLengthSlider.setMajorTickSpacing(5);
-            barLengthSlider.setMinorTickSpacing(1);
-            barLengthSlider.setPaintLabels(true);
-            barLengthSlider.setSnapToTicks(true);
-            barLengthSlider.addChangeListener(this);
-            //######
-            //End - Slider setup.
-            //Do the slider stuff, but don't add. By default, sliders are off.
-            //######
+        barLengthSlider.setPaintTicks(true);
+        barLengthSlider.setMajorTickSpacing(5);
+        barLengthSlider.setMinorTickSpacing(1);
+        barLengthSlider.setPaintLabels(true);
+        barLengthSlider.setSnapToTicks(true);
+        barLengthSlider.addChangeListener(this);
+        //######
+        //End - Slider setup.
+        //Do the slider stuff, but don't add. By default, sliders are off.
+        //######
 
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 1;
-            gbc.weighty = 1;
-            addCompItem(sp, gbc, 0, 0, 1, 1);
-            //####################################
-            //End - Create and add the components.
-            //####################################
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        addCompItem(sp, gbc, 0, 0, 1, 1);
+        //####################################
+        //End - Create and add the components.
+        //####################################
 
-            //####################################
-            //Setup the static main window data lists.
-            //####################################
-            dataSorter = new DataSorter(pptrial, this.debug());
-            //####################################
-            //End - Setup the static main window data lists.
-            //####################################
+        //####################################
+        //Setup the static main window data lists.
+        //####################################
+        dataSorter = new DataSorter(pptrial);
+        //####################################
+        //End - Setup the static main window data lists.
+        //####################################
 
-            //Sort the data for the main window.
-            sortLocalData();
+        //Sort the data for the main window.
+        sortLocalData();
 
-            //Call a repaint of the panel
-            panel.repaint();
-
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMW01");
-        }
+        //Call a repaint of the panel
+        panel.repaint();
 
     }
 
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ActionListener.
-    //######
     public void actionPerformed(ActionEvent evt) {
 
         try {
@@ -305,10 +289,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                 String arg = evt.getActionCommand();
 
                 if (arg.equals("Print")) {
-                    UtilFncs.print(panel);
+                    ParaProfUtils.print(panel);
 
                 } else if (arg.equals("Show ParaProf Manager")) {
-                    ParaProfManager jRM = new ParaProfManager();
+                    ParaProfManagerWindow jRM = new ParaProfManagerWindow();
                     jRM.show();
                 } else if (arg.equals("Bin Window")) {
                     //HistogramWindow bW = new HistogramWindow(trial, dataSorter,
@@ -416,24 +400,22 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                     else
                         displaySliders(false);
                 } else if (arg.equals("Show Path Title in Reverse"))
-                    this.setTitle("ParaProf: "
-                            + trial.getTrialIdentifier(pathTitleCheckBox.isSelected()));
+                    this.setTitle("ParaProf: " + trial.getTrialIdentifier(pathTitleCheckBox.isSelected()));
                 else if (arg.equals("Show Meta Data in Panel"))
                     this.setHeader();
                 else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0, this.debug())).show();
+                    (new LedgerWindow(trial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1, this.debug())).show();
+                    (new LedgerWindow(trial, 1)).show();
                 } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2, this.debug())).show();
+                    (new LedgerWindow(trial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1,
-                            this.getDataSorter(), 2, this.debug());
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getDataSorter(),
+                            2);
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Show Full Call Graph")) {
-                    CallGraphWindow tmpRef = new CallGraphWindow(trial, -1, -1, -1,
-                            this.getDataSorter());
+                    CallGraphWindow tmpRef = new CallGraphWindow(trial, -1, -1, -1, this.getDataSorter());
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
@@ -448,29 +430,18 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                 panel.changeInMultiples();
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMW02");
+            ParaProfUtils.handleException(e);
         }
     }
 
-    //######
-    //End - ActionListener.
-    //######
-
-    //######
-    //ChangeListener.
-    //######
-
     public void stateChanged(ChangeEvent event) {
-        panel.changeInMultiples();
+        try {
+            panel.changeInMultiples();
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
+        }
     }
 
-    //######
-    //End - ChangeListener.
-    //######
-
-    //######
-    //MenuListener.
-    //######
     public void menuSelected(MenuEvent evt) {
         try {
             if (trial.groupNamesPresent())
@@ -483,9 +454,8 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
             else
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMW03");
+            ParaProfUtils.handleException(e);
         }
-
     }
 
     public void menuDeselected(MenuEvent evt) {
@@ -494,38 +464,19 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     public void menuCanceled(MenuEvent evt) {
     }
 
-    //######
-    //End - MenuListener.
-    //######
-
-    //######
-    //Observer.
-    //######
     public void update(Observable o, Object arg) {
-        try {
-            String tmpString = (String) arg;
-            if (tmpString.equals("prefEvent")) {
-                this.setHeader();
-                panel.repaint();
-            } else if (tmpString.equals("colorEvent")) {
-                panel.repaint();
-            } else if (tmpString.equals("dataEvent")) {
-                sortLocalData();
-                this.setHeader();
-                panel.repaint();
-            }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMW04");
+        String tmpString = (String) arg;
+        if (tmpString.equals("prefEvent")) {
+            this.setHeader();
+            panel.repaint();
+        } else if (tmpString.equals("colorEvent")) {
+            panel.repaint();
+        } else if (tmpString.equals("dataEvent")) {
+            sortLocalData();
+            this.setHeader();
+            panel.repaint();
         }
     }
-
-    //######
-    //End - Observer.
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
 
     public Dimension getViewportSize() {
         return sp.getViewport().getExtentSize();
@@ -562,38 +513,20 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     }
 
     public String getHeaderString() {
-        return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n"
-                + "Value Type: " + UtilFncs.getValueTypeString(2) + "\n";
+        return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Value Type: "
+                + UtilFncs.getValueTypeString(2) + "\n";
     }
 
-    //######
-    //End - Panel header.
-    //######
 
     public double getSliderValue() {
-
         return (double) barLengthSlider.getValue();
-
-        // 	int tmpInt = -1;
-        // 	try{
-        // 	    tmpInt = barLengthSlider.getValue();
-        // 	}
-        // 	catch(Exception e){
-        // 	    UtilFncs.systemError(e, null, "SMW05");
-        // 	}
-        // 	return tmpInt;
     }
 
     public double getSliderMultiple() {
         String tmpString = null;
-        try {
-            tmpString = (String) sliderMultiple.getSelectedItem();
-            return Double.parseDouble(tmpString);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMW06");
-        }
+        tmpString = (String) sliderMultiple.getSelectedItem();
+        return Double.parseDouble(tmpString);
 
-        return 0;
     }
 
     private void displaySliders(boolean displaySliders) {
@@ -648,16 +581,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        try {
-            gbc.gridx = x;
-            gbc.gridy = y;
-            gbc.gridwidth = w;
-            gbc.gridheight = h;
-
-            contentPane.add(c, gbc);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMW07");
-        }
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        contentPane.add(c, gbc);
     }
 
     public DataSorter getDataSorter() {
@@ -666,35 +594,17 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
     //Updates the sorted lists after a change of sorting method takes place.
     private void sortLocalData() {
-        try {
 
-            if (name) {
-                list = dataSorter.getAllFunctionProfiles(0 + order);
+        if (name) {
+            list = dataSorter.getAllFunctionProfiles(0 + order);
+        } else {
+
+            if (orderByMean) {
+                list = dataSorter.getAllFunctionProfiles(20 + order);
+
             } else {
-
-                if (orderByMean) {
-                    list = dataSorter.getAllFunctionProfiles(20 + order);
-
-                } else {
-                    list = dataSorter.getAllFunctionProfiles(2 + order);
-                }
+                list = dataSorter.getAllFunctionProfiles(2 + order);
             }
-
-            //            if (name) { // if sort by name
-            //                list[0] = dataSorter.getAllThreadData(0 + order); 
-            //                list[1] = dataSorter.getMeanData(0 + order);
-            //            } else {
-            //
-            //                if (orderByMean) {
-            //                    list[0] = dataSorter.getAllThreadData(20 + order);
-            //                    list[1] = dataSorter.getMeanData(20 + order);
-            //                } else {
-            //                    list[0] = dataSorter.getAllThreadData(2 + order);
-            //                    list[1] = dataSorter.getMeanData(20 + order);
-            //                }
-            //            }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMW08");
         }
 
     }
@@ -730,11 +640,13 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
     void closeThisWindow() {
         try {
-            this.setVisible(false);
+            setVisible(false);
+            trial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW10");
+            // do nothing
         }
+        dispose();
     }
 
     public boolean getNormalizeBars() {
@@ -745,17 +657,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         return this.stackBars;
     }
 
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    public boolean debug() {
-        return debug;
-    }
-
-    //####################################
     //Instance data.
-    //####################################
     ParaProfTrial trial = null;
 
     //Create a file chooser to allow the user to select files for loading data.
@@ -801,8 +703,4 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
     private Vector list;
 
-    private boolean debug = false; //Off by default.
-    //####################################
-    //End - Instance data.
-    //####################################
 }

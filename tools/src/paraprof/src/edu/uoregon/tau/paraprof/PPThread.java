@@ -93,15 +93,10 @@ public class PPThread {
     int miscYBeg;
     int miscYEnd;
 
-    //####################################
     //Instance data.
-    //####################################
     edu.uoregon.tau.dms.dss.Thread thread = null;
     Vector functions = new Vector();
     Vector userevents = new Vector();
     //To aid with drawing searches.
     int yDrawCoord = -1;
-    //####################################
-    //End - Instance data.
-    //####################################
 }

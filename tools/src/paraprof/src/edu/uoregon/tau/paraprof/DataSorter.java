@@ -6,17 +6,12 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class DataSorter {
 
-    public DataSorter(ParaProfTrial trial, boolean debug) {
+    public DataSorter(ParaProfTrial trial) {
         this.trial = trial;
-        this.debug = debug;
     }
-
-
 
     
     public Vector getUserEventProfiles(int nodeID, int contextID, int threadID, int sortType) {
-
-        // what the heck?
 
         UserEventProfile userEventProfile = null;
         Vector list = ((edu.uoregon.tau.dms.dss.Thread) trial.getNCT().getThread(nodeID, contextID,
@@ -146,8 +141,6 @@ public class DataSorter {
     
     public Vector getFunctionData(Function function, int sortType) {
         Vector newList = new Vector();
-
-        try {
             
             
             Node node;
@@ -185,9 +178,6 @@ public class DataSorter {
                     }
                 }
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMWD01");
-        }
         Collections.sort(newList);
         return newList;
     }
@@ -195,7 +185,6 @@ public class DataSorter {
     public Vector getUserEventData(UserEvent userEvent, int sortType) {
         Vector newList = new Vector();
 
-        try {
             Node node;
             Context context;
             edu.uoregon.tau.dms.dss.Thread thread;
@@ -221,35 +210,16 @@ public class DataSorter {
                     }
                 }
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SMWD01");
-        }
         Collections.sort(newList);
         return newList;
     }
 
-
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    public boolean debug() {
-        return debug;
-    }
 
     // returns the maximum exclusive sum over all threads
     public double getMaxExclusiveSum() {
         return maxExclusiveSum;
     }
 
-    //####################################
-    //Instance Data.
-    //####################################
     private ParaProfTrial trial = null;
-    private boolean debug = false; //Off by default.
     private double maxExclusiveSum = 0;
-    //####################################
-    //End - Instance Data.
-    //####################################
-
 }

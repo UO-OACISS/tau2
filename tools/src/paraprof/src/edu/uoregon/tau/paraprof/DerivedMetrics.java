@@ -189,10 +189,7 @@ public class DerivedMetrics {
                         "Did not recognize arguments! Note: DB apply not supported.",
                         "Argument Error!", JOptionPane.ERROR_MESSAGE);
             } else {
-                UtilFncs.systemError(new ParaProfError(DerivedMetrics.staticToString()
-                        + ": applyOperation(...)", "An error occurred ... please see console!",
-                        "An error occured while trying to apply this operation!", null, e,
-                        ParaProf.paraProfManager, null, null, true, false, false), null, null);
+                ParaProfUtils.handleException(e);
             }
             return null;
         }
@@ -218,7 +215,7 @@ public class DerivedMetrics {
             }
             break;
         default:
-            UtilFncs.systemError(null, null, "Unexpected opertion - PPML01 value: " + op);
+            throw new RuntimeException("Unexpected operation type: " + op);
         }
         return d;
     }

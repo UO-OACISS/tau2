@@ -18,8 +18,7 @@ import java.util.*;
 import javax.swing.tree.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class ParaProfTrial extends Trial implements ParaProfObserver,
-        ParaProfTreeNodeUserObject {
+public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTreeNodeUserObject {
 
     public ParaProfTrial(int type) {
         super(0);
@@ -120,8 +119,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
             else
                 return path;
         } else
-            return "Application " + this.getApplicationID() + ", Experiment "
-                    + this.getExperimentID() + ", Trial " + this.getID() + ".";
+            return "Application " + this.getApplicationID() + ", Experiment " + this.getExperimentID()
+                    + ", Trial " + this.getID() + ".";
     }
 
     //Sets both the path and the path reverse.
@@ -142,9 +141,9 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
         return super.getName();
     }
 
-//    public ParaProfDataSession getParaProfDataSession() {
-  //      return (ParaProfDataSession) dataSession;
-  //  }
+    //    public ParaProfDataSession getParaProfDataSession() {
+    //      return (ParaProfDataSession) dataSession;
+    //  }
 
     //####################################
     //Interface code.
@@ -247,7 +246,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
         return dataSource.getNumberOfMetrics();
     }
 
-
     public ParaProfMetric getMetric(int metricID) {
         return (ParaProfMetric) dataSource.getMetric(metricID);
     }
@@ -298,7 +296,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
 
         //dataSource.setMeanDataOLD(metricID);
 
-        dataSource.setMeanData(metricID,metricID);
+        dataSource.setMeanData(metricID, metricID);
         dataSource.getMeanData().setThreadDataAllMetrics();
 
     }
@@ -310,73 +308,61 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
     //######
     //ParaProfObserver interface.
     //######
-    public void update(Object obj) {
-        try {
+    public void update(Object obj) throws DatabaseException {
 
-            DataSource dataSource = (DataSource) obj;
+        DataSource dataSource = (DataSource) obj;
 
-            //Data session has finished loading. Call its terminate method to
-            //ensure proper cleanup.
-            //dataSession.terminate();
+        //Data session has finished loading. Call its terminate method to
+        //ensure proper cleanup.
+        //dataSession.terminate();
 
-
-            //The dataSource has accumulated edu.uoregon.tau.dms.dss.Metrics.
-            // Inside ParaProf,
-            //these need to be paraprof.Metrics.
-            int numberOfMetrics = dataSource.getNumberOfMetrics();
-            Vector metrics = new Vector();
-            for (int i = 0; i < numberOfMetrics; i++) {
-                ParaProfMetric metric = new ParaProfMetric();
-                metric.setName(dataSource.getMetricName(i));
-                metric.setID(i);
-                metric.setTrial(this);
-                metrics.add(metric);
-            }
-
-            //Now set the data session metrics.
-            dataSource.setMetrics(metrics);
-
-            //Now set the trial's dataSource object to be this one.
-            this.setDataSource(dataSource);
-
-            
-            // set the colors
-            clrChooser.setColors(this, -1);
-
-            
-            //Set this trial's loading flag to false.
-            this.setLoading(false);
-           
-            //upload to database if necessary
-            
-            //Check to see if this trial needs to be uploaded to the database.
-            if (this.upload()) {
-                DatabaseAPI databaseAPI = ParaProf.paraProfManager.getDBSession();
-                if (databaseAPI != null) {
-                    this.setID(databaseAPI.saveParaProfTrial(this, -1));
-                    databaseAPI.terminate();
-                }
-           
-               
-                //Now safe to set this to be a dbTrial.
-                this.setDBTrial(true);
-            } else {
-                
-                ParaProf.paraProfManager.populateTrialMetrics(this);
-   
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        // The dataSource has accumulated edu.uoregon.tau.dms.dss.Metrics.
+        // Inside ParaProf, these need to be paraprof.Metrics.
+        
+        int numberOfMetrics = dataSource.getNumberOfMetrics();
+        Vector metrics = new Vector();
+        for (int i = 0; i < numberOfMetrics; i++) {
+            ParaProfMetric metric = new ParaProfMetric();
+            metric.setName(dataSource.getMetricName(i));
+            metric.setID(i);
+            metric.setTrial(this);
+            metrics.add(metric);
         }
+
+        //Now set the dataSource's metrics.
+        dataSource.setMetrics(metrics);
+
+        //Now set the trial's dataSource object to be this one.
+        this.setDataSource(dataSource);
+
+        // set the colors
+        clrChooser.setColors(this, -1);
+
+        //Set this trial's loading flag to false.
+        this.setLoading(false);
+
+        //upload to database if necessary
+
+        //Check to see if this trial needs to be uploaded to the database.
+        if (this.upload()) {
+            DatabaseAPI databaseAPI = ParaProf.paraProfManager.getDBSession();
+            if (databaseAPI != null) {
+                this.setID(databaseAPI.saveParaProfTrial(this, -1));
+                databaseAPI.terminate();
+            }
+
+            //Now safe to set this to be a dbTrial.
+            this.setDBTrial(true);
+        } else {
+
+            ParaProf.paraProfManager.populateTrialMetrics(this);
+
+        }
+
     }
 
     public void update() {
     }
-
-    //######
-    //End - Observer.
-    //######
 
     public void setDebug(boolean debug) {
         this.debug = debug;

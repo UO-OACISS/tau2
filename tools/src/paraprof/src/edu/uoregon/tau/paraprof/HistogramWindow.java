@@ -2,9 +2,9 @@
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.3 2004/12/24 00:25:08 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.4 2004/12/29 00:09:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		HistogramWindowPanel
  *
  *
@@ -31,15 +31,15 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         //File menu.
         JMenu fileMenu = new JMenu("File");
 
-//        //Save menu.
-//        subMenu = new JMenu("Save ...");
-//
-//        menuItem = new JMenuItem("Save Image");
-//        menuItem.addActionListener(this);
-//        subMenu.add(menuItem);
-//
-//        fileMenu.add(subMenu);
-//        //End - Save menu.
+        //        //Save menu.
+        //        subMenu = new JMenu("Save ...");
+        //
+        //        menuItem = new JMenuItem("Save Image");
+        //        menuItem.addActionListener(this);
+        //        subMenu.add(menuItem);
+        //
+        //        fileMenu.add(subMenu);
+        //        //End - Save menu.
 
         menuItem = new JMenuItem("Preferences...");
         menuItem.addActionListener(this);
@@ -59,7 +59,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         fileMenu.addMenuListener(this);
 
-        
         // options menu
         optionsMenu = new JMenu("Options");
 
@@ -126,7 +125,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         optionsMenu.addMenuListener(this);
 
-        
         //Windows menu
         windowsMenu = new JMenu("Windows");
 
@@ -179,58 +177,52 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         setJMenuBar(mainMenu);
     }
 
-    public HistogramWindow(ParaProfTrial trial, DataSorter dataSorter, boolean normal, Function function,
-            boolean debug) {
-        try {
-            this.trial = trial;
-            this.dataSorter = dataSorter;
-            this.function = function;
-            this.debug = debug;
+    public HistogramWindow(ParaProfTrial trial, DataSorter dataSorter, boolean normal, Function function) {
+        this.trial = trial;
+        this.dataSorter = dataSorter;
+        this.function = function;
 
-            setLocation(new java.awt.Point(300, 200));
-            setSize(new java.awt.Dimension(750, 622));
-            //Now set the title.
-            setTitle("Histogram: " + trial.getTrialIdentifier(true));
+        setLocation(new java.awt.Point(300, 200));
+        setSize(new java.awt.Dimension(750, 622));
+        //Now set the title.
+        setTitle("Histogram: " + trial.getTrialIdentifier(true));
 
-            //Add some window listener code
-            addWindowListener(new java.awt.event.WindowAdapter() {
-                public void windowClosing(java.awt.event.WindowEvent evt) {
-                    thisWindowClosing(evt);
-                }
-            });
-
-            //Set the help window text if required.
-            if (ParaProf.helpWindow.isVisible()) {
-                this.help(false);
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
             }
+        });
 
-            //Sort the local data.
-            sortLocalData();
-
-            setupMenus();
-
-            //Setting up the layout system for the main window.
-            contentPane = getContentPane();
-            gbl = new GridBagLayout();
-            contentPane.setLayout(gbl);
-            gbc = new GridBagConstraints();
-            gbc.insets = new Insets(5, 5, 5, 5);
-
-            //Panel and ScrollPane definition.
-            panel = new HistogramWindowPanel(trial, this, function);
-            sp = new JScrollPane(panel);
-            this.setHeader();
-
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.CENTER;
-            gbc.weightx = 0.95;
-            gbc.weighty = 0.98;
-            addCompItem(sp, gbc, 0, 0, 1, 1);
-
-            ParaProf.incrementNumWindows();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW02");
+        //Set the help window text if required.
+        if (ParaProf.helpWindow.isVisible()) {
+            this.help(false);
         }
+
+        //Sort the local data.
+        sortLocalData();
+
+        setupMenus();
+
+        //Setting up the layout system for the main window.
+        contentPane = getContentPane();
+        gbl = new GridBagLayout();
+        contentPane.setLayout(gbl);
+        gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        //Panel and ScrollPane definition.
+        panel = new HistogramWindowPanel(trial, this, function);
+        sp = new JScrollPane(panel);
+        this.setHeader();
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0.95;
+        gbc.weighty = 0.98;
+        addCompItem(sp, gbc, 0, 0, 1, 1);
+
+        ParaProf.incrementNumWindows();
     }
 
     public void actionPerformed(ActionEvent evt) {
@@ -240,7 +232,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Print")) {
-                    UtilFncs.print(panel);
+                    ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Close This Window")) {
@@ -249,7 +241,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     setVisible(false);
                     dispose();
                     ParaProf.exitParaProf(0);
-             
+
                 } else if (arg.equals("Exclusive")) {
                     valueType = 2;
                     this.setHeader();
@@ -279,7 +271,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     units = 0;
                     this.setHeader();
                     panel.repaint();
-                } else if (arg.equals("Milliseconds")) {	
+                } else if (arg.equals("Milliseconds")) {
                     units = 1;
                     this.setHeader();
                     panel.repaint();
@@ -292,16 +284,14 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     this.setHeader();
                     panel.repaint();
 
-                
                 } else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0, false)).show();
+                    (new LedgerWindow(trial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1, false)).show();
+                    (new LedgerWindow(trial, 1)).show();
                 } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2, false)).show();
+                    (new LedgerWindow(trial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.dataSorter,
-                            2, false);
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.dataSorter, 2);
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
 
@@ -314,7 +304,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                 }
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW03");
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -330,7 +320,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             else
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW04");
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -341,7 +331,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void update(Observable o, Object arg) {
-        try {
             String tmpString = (String) arg;
             if (tmpString.equals("prefEvent")) {
                 //Just need to call a repaint on the ThreadDataWindowPanel.
@@ -355,9 +344,6 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             } else if (tmpString.equals("subWindowCloseEvent")) {
                 closeThisWindow();
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW05");
-        }
     }
 
     private void help(boolean display) {
@@ -375,12 +361,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     //Updates this window's data copy.
     private void sortLocalData() {
-        try {
-            list = null;
             list = dataSorter.getFunctionData(function, 0);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW06");
-        }
     }
 
     // This process is separated into two functions to provide the option of obtaining the current 
@@ -400,12 +381,13 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     public String getHeaderString() {
         if (valueType > 5)
             return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Name: "
-                    + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType) + "\n";
+                    + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
+                    + "\n";
         else
             return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Name: "
-                    + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType) + "\n"
-                    + "Units: " + UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())
-                    + "\n";
+                    + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
+                    + "\n" + "Units: "
+                    + UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric()) + "\n";
     }
 
     public Vector getData() {
@@ -413,16 +395,11 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        try {
             gbc.gridx = x;
             gbc.gridy = y;
             gbc.gridwidth = w;
             gbc.gridheight = h;
-
             getContentPane().add(c, gbc);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW09");
-        }
     }
 
     //Respond correctly when this window is closed.
@@ -432,24 +409,15 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     void closeThisWindow() {
         try {
-            if (UtilFncs.debug) {
-                System.out.println("------------------------");
-                System.out.println("A thread window for: \"" + "n,c,t, " + nodeID + "," + contextID + ","
-                        + threadID + "\" is closing");
-                System.out.println("Clearing resourses for that window.");
-            }
-
             setVisible(false);
             trial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
-            dispose();
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW10");
+            // do nothing
         }
+        dispose();
     }
 
-
-    
     public int getValueType() {
         return valueType;
     }
@@ -458,16 +426,12 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         if (valueType > 5)
             return 0;
         return units;
-    }    
-    //####################################
+    }
+
     //Instance data.
-    //####################################
     private ParaProfTrial trial = null;
     private DataSorter dataSorter = null;
     private Function function = null;
-    private int nodeID = -1;
-    private int contextID = -1;
-    private int threadID = -1;
 
     private JMenu optionsMenu = null;
     private JMenu windowsMenu = null;
@@ -484,10 +448,4 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
-
-    
-    private boolean debug = false; //Off by default.private boolean debug = false; //Off by default.
-    //####################################
-    //End - Instance data.
-    //####################################
 }

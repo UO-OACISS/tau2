@@ -2,11 +2,11 @@
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.22 2004/12/24 00:25:08 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.23 2004/12/29 00:09:49 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  */
 
 package edu.uoregon.tau.paraprof;
@@ -16,6 +16,9 @@ import java.io.*;
 import java.awt.event.*;
 import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.dms.dss.*;
+import javax.swing.*;
+
+
 
 public class ParaProf implements ActionListener {
 
@@ -28,7 +31,7 @@ public class ParaProf implements ActionListener {
     static boolean dbSupport = false;
     static ParaProfLisp paraProfLisp = null;
     static SavedPreferences savedPreferences = null;
-    static ParaProfManager paraProfManager = null;
+    static ParaProfManagerWindow paraProfManager = null;
     static ApplicationManager applicationManager = null;
     static HelpWindow helpWindow = null;
     static Runtime runtime = null;
@@ -94,23 +97,48 @@ public class ParaProf implements ActionListener {
     public void loadDefaultTrial() {
         ParaProf.applicationManager = new ApplicationManager();
 
-        //Create a default application.
+        // Create a default application.
         ParaProfApplication app = ParaProf.applicationManager.addApplication();
         app.setName("Default App");
 
-        //Create a default experiment.
+        // Create a default experiment.
         ParaProfExperiment experiment = app.addExperiment();
         experiment.setName("Default Exp");
-        DataSource dataSource = null;
-        FileList fl = new FileList();
-        Vector v = null;
 
-        ParaProf.helpWindow = new HelpWindow(UtilFncs.debug);
-        ParaProf.paraProfManager = new ParaProfManager();
+        ParaProf.helpWindow = new HelpWindow();
+        ParaProf.paraProfManager = new ParaProfManagerWindow();
 
         paraProfManager.addTrial(app, experiment, sourceFiles, fileType, fixNames);
     }
 
+//    public static void error(JComponent component, Object obj) {
+//        
+//        String errorString = null;
+//        
+//        if (obj instanceof Exception) {
+//            Exception e = (Exception) obj;
+//            
+//            e.printStackTrace();
+//            System.out.println(ParaProfError.contactString);
+//
+//            StringWriter sw = new StringWriter();
+//            PrintWriter pw = new PrintWriter(sw);
+//            e.printStackTrace(pw);
+//            pw.close();
+//            errorString = sw.toString();
+//        }
+//        
+//        JOptionPane.showMessageDialog(component, errorString,
+//                "ParaProf Error", JOptionPane.ERROR_MESSAGE);
+//
+//        
+//        
+//    }
+//    
+    
+    
+   
+    
     public void startSystem() {
         try {
 
@@ -200,7 +228,7 @@ public class ParaProf implements ActionListener {
             loadDefaultTrial();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -231,11 +259,6 @@ public class ParaProf implements ActionListener {
         //   e.printStackTrace();
         //}
 
-        if (UtilFncs.objectDebug != null) {
-            UtilFncs.objectDebug.outputToFile("ParaProf exiting!!");
-            UtilFncs.objectDebug.flushDebugFileBuffer();
-            UtilFncs.objectDebug.closeDebugFile();
-        }
         System.exit(exitValue);
     }
 
@@ -287,18 +310,6 @@ public class ParaProf implements ActionListener {
         if (fixNames != null)
             ParaProf.fixNames = fixNames.booleanValue();
 
-        if (debug != null) {
-            //######
-            //Static Initialization
-            //######
-            UtilFncs.objectDebug = new Debug();
-            //######
-            //End - Static Initialization
-            //######
-
-            UtilFncs.debug = debug.booleanValue();
-            Debug.debug = debug.booleanValue();
-        }
 
         if (fileTypeString != null) {
             if (fileTypeString.equals("profiles")) {

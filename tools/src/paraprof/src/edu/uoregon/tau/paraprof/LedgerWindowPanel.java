@@ -2,11 +2,11 @@
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.2 2004/12/21 20:52:57 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.3 2004/12/29 00:09:49 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see LedgerDataElement
  * @see LedgerWindow
  * 
@@ -25,21 +25,6 @@ import edu.uoregon.tau.dms.dss.*;
 public class LedgerWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
         ParaProfImageInterface {
 
-    public static final int FUNCTION_LEDGER = 0;
-    public static final int GROUP_LEDGER = 1;
-    public static final int USEREVENT_LEDGER = 2;
-
-    public LedgerWindowPanel() {
-        try {
-            setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
-
-            //Schedule a repaint of this panel.
-            this.repaint();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MLWP01");
-        }
-
-    }
 
     public void setupMenus() {
         JMenuItem jMenuItem = null;
@@ -99,27 +84,23 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
     }
 
-    public LedgerWindowPanel(ParaProfTrial trial, LedgerWindow lWindow, int windowType,
-            boolean debug) {
-        try {
-            setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
-            setBackground(Color.white);
+    public LedgerWindowPanel(ParaProfTrial trial, LedgerWindow window, int windowType) {
 
-            this.trial = trial;
-            this.lWindow = lWindow;
-            this.windowType = windowType;
-            this.debug = debug;
+        setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+        setBackground(Color.white);
 
-            //Add this object as a mouse listener.
-            addMouseListener(this);
+        this.trial = trial;
+        this.window = window;
+        this.windowType = windowType;
 
-            setupMenus();
+        //Add this object as a mouse listener.
+        addMouseListener(this);
 
-            //Schedule a repaint of this panel.
-            this.repaint();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MLWP02");
-        }
+        setupMenus();
+
+        //Schedule a repaint of this panel.
+        this.repaint();
+
     }
 
     public void paintComponent(Graphics g) {
@@ -127,225 +108,182 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             super.paintComponent(g);
             renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
-            System.out.println(e);
-            UtilFncs.systemError(e, null, "TDWP03");
+            ParaProfUtils.handleException(e);
+            window.closeThisWindow();
         }
     }
 
     public int print(Graphics g, PageFormat pageFormat, int page) {
+        try {
+            if (page >= 1) {
+                return NO_SUCH_PAGE;
+            }
 
-        if (page >= 1) {
+            ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
+            renderIt((Graphics2D) g, false, true, false);
+
+            return Printable.PAGE_EXISTS;
+        } catch (Exception e) {
+            new ParaProfErrorDialog(e);
             return NO_SUCH_PAGE;
         }
-        
-        double pageWidth = pageFormat.getImageableWidth();
-        double pageHeight = pageFormat.getImageableHeight();
-        int cols = (int) (xPanelSize / pageWidth) + 1;
-        int rows = (int) (yPanelSize / pageHeight) + 1;
-        double xScale = pageWidth / xPanelSize;
-        double yScale = pageHeight / yPanelSize;
-        double scale = Math.min(xScale, yScale);
-        
-        double tx = 0.0;
-        double ty = 0.0;
-        if (xScale > scale) {
-            tx = 0.5 * (xScale - scale) * xPanelSize;
-        } else {
-            ty = 0.5 * (yScale - scale) * yPanelSize;
-        }
-
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.translate((int) pageFormat.getImageableX(),
-                (int) pageFormat.getImageableY());
-        g2.translate(tx, ty);
-        g2.scale(scale, scale);
-
-        
-
-        renderIt(g2, false, true, false);
-
-        return Printable.PAGE_EXISTS;
     }
 
-    
     public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        try {
-            list = lWindow.getData();
+        list = window.getData();
 
-            int xCoord = 0;
-            int yCoord = 0;
-            int barXCoord = 0;
-            int tmpXWidthCalc = 0;
+        int xCoord = 0;
+        int yCoord = 0;
+        int barXCoord = 0;
+        int tmpXWidthCalc = 0;
 
-            //To make sure the bar details are set, this
-            //method must be called.
-            trial.getPreferences().setBarDetails(g2D);
+        //To make sure the bar details are set, this
+        //method must be called.
+        trial.getPreferences().setBarDetails(g2D);
 
-            //Now safe to grab spacing and bar heights.
-            barSpacing = trial.getPreferences().getBarSpacing();
-            barHeight = trial.getPreferences().getBarHeight();
+        //Now safe to grab spacing and bar heights.
+        barSpacing = trial.getPreferences().getBarSpacing();
+        barHeight = trial.getPreferences().getBarHeight();
 
-            //Obtain the font and its metrics.
-            Font font = new Font(trial.getPreferences().getParaProfFont(),
-                    trial.getPreferences().getFontStyle(), barHeight);
-            g2D.setFont(font);
-            FontMetrics fmFont = g2D.getFontMetrics(font);
+        //Obtain the font and its metrics.
+        Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+                barHeight);
+        g2D.setFont(font);
+        FontMetrics fmFont = g2D.getFontMetrics(font);
 
-            if (!widthSet) {
-
-                for (int i = 0; i < list.size(); i++) {
-                    LedgerDataElement lde = (LedgerDataElement) list.get(i);
-
-                    if (lde.getName() != null) {
-
-                        int tmpWidth = 5 + barHeight + (fmFont.stringWidth(lde.getName()));
-
-                        //Figure out how wide that string was for x coord
-                        // reasons.
-                        if (xPanelSize < tmpWidth) {
-                            xPanelSize = (tmpWidth + 11);
-                        }
-
-                    }
-                }
-                widthSet = true;
-                //this.revalidate();
-
-            }
-            
-            
-            if (resizePanel(fmFont, barXCoord) && toScreen) {
-                this.revalidate();
-                return;
-            }
-            
-            int yBeg = 0;
-            int yEnd = 0;
-            int startElement = 0;
-            int endElement = 0;
-            Rectangle clipRect = null;
-            Rectangle viewRect = null;
-
-            if (!fullWindow) {
-                if (toScreen) {
-                    clipRect = g2D.getClipBounds();
-                    yBeg = (int) clipRect.getY();
-                    yEnd = (int) (yBeg + clipRect.getHeight());
-                } else {
-                    viewRect = lWindow.getViewRect();
-                    yBeg = (int) viewRect.getY();
-                    yEnd = (int) (yBeg + viewRect.getHeight());
-                }
-                startElement = ((yBeg - yCoord) / barSpacing) - 1;
-                endElement = ((yEnd - yCoord) / barSpacing) + 1;
-
-                if (startElement < 0)
-                    startElement = 0;
-
-                if (endElement < 0)
-                    endElement = 0;
-
-                if (startElement > (list.size() - 1))
-                    startElement = (list.size() - 1);
-
-                if (endElement > (list.size() - 1))
-                    endElement = (list.size() - 1);
-
-                if (toScreen)
-                    yCoord = yCoord + ((startElement-1) * barSpacing);
-            } else {
-                startElement = 0;
-                endElement = ((list.size()) - 1);
-            }
-            
-            
-            
-            
-            
-            xCoord = 5;
-            yCoord = yCoord + (barSpacing);
-
-            for (int i = startElement; i <= endElement; i++) {
+        
+        if (!widthSet) {  // only do this once
+            for (int i = 0; i < list.size(); i++) {
                 LedgerDataElement lde = (LedgerDataElement) list.get(i);
-
                 if (lde.getName() != null) {
-
-                    //For consistency in drawing, the y coord is updated at the
-                    // beginning of the loop.
-                    yCoord = yCoord + (barSpacing);
-
-                    //First draw the color box.
-                    g2D.setColor(lde.getColor());
-                    g2D.fillRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
-
-                    if (lde.isHighlighted(trial.getColorChooser())) {
-                        g2D.setColor(lde.getHighlightColor(trial.getColorChooser()));
-                        g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
-                        g2D.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2,
-                                barHeight - 2);
-                    } else {
-                        g2D.setColor(Color.black);
-                        g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
-                    }
-
-                    //Update the xCoord to draw the name.
-                    xCoord = xCoord + (barHeight + 10);
-                    //Reset the drawing color to the text color ... in this
-                    // case, black.
-                    g2D.setColor(Color.black);
-
-                    //Draw the name.
-                    String s = lde.getName();
-
-                    g2D.drawString(s, xCoord, yCoord);
-
-                    //Figure out how wide that string was for x coord
-                    // reasons.
-                    int tmpWidth = 5 + barHeight + (fmFont.stringWidth(s));
+                    int tmpWidth = 5 + barHeight + (fmFont.stringWidth(lde.getName()));
 
                     //Figure out how wide that string was for x coord reasons.
-                    if (tmpXWidthCalc < tmpWidth) {
-                        tmpXWidthCalc = (tmpWidth + 11);
+                    if (xPanelSize < tmpWidth) {
+                        xPanelSize = (tmpWidth + 11);
                     }
-
-                    // only set the boundaries (for clicking) if we are drawing to the screen
-                    if (toScreen)
-                        lde.setDrawCoords(0, tmpWidth, (yCoord - barHeight), yCoord);
-
-                    //Reset the xCoord.
-                    xCoord = xCoord - (barHeight + 10);
-
                 }
             }
-
-//            //Resize the panel if needed.
-//            if (((yCoord >= yPanelSize) || (tmpXWidthCalc >= xPanelSize)) && instruction == 0) {
-//                yPanelSize = yCoord + 1;
-//                xPanelSize = tmpXWidthCalc + 1;
-//
-//                revalidate();
-//            }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MLWP03");
+            widthSet = true;
         }
+
+        if (resizePanel(fmFont, barXCoord) && toScreen) {
+            this.revalidate();
+            return;
+        }
+
+        int yBeg = 0;
+        int yEnd = 0;
+        int startElement = 0;
+        int endElement = 0;
+        Rectangle clipRect = null;
+        Rectangle viewRect = null;
+
+        if (!fullWindow) {
+            if (toScreen) {
+                clipRect = g2D.getClipBounds();
+                yBeg = (int) clipRect.getY();
+                yEnd = (int) (yBeg + clipRect.getHeight());
+            } else {
+                viewRect = window.getViewRect();
+                yBeg = (int) viewRect.getY();
+                yEnd = (int) (yBeg + viewRect.getHeight());
+            }
+            startElement = ((yBeg - yCoord) / barSpacing) - 1;
+            endElement = ((yEnd - yCoord) / barSpacing) + 1;
+
+            if (startElement < 0)
+                startElement = 0;
+
+            if (endElement < 0)
+                endElement = 0;
+
+            if (startElement > (list.size() - 1))
+                startElement = (list.size() - 1);
+
+            if (endElement > (list.size() - 1))
+                endElement = (list.size() - 1);
+
+            if (toScreen)
+                yCoord = yCoord + ((startElement - 1) * barSpacing);
+        } else {
+            startElement = 0;
+            endElement = ((list.size()) - 1);
+        }
+
+        xCoord = 5;
+        yCoord = yCoord + (barSpacing);
+
+        for (int i = startElement; i <= endElement; i++) {
+            LedgerDataElement lde = (LedgerDataElement) list.get(i);
+
+            if (lde.getName() != null) {
+
+                //For consistency in drawing, the y coord is updated at the
+                // beginning of the loop.
+                yCoord = yCoord + (barSpacing);
+
+                //First draw the color box.
+                g2D.setColor(lde.getColor());
+                g2D.fillRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
+
+                if (lde.isHighlighted(trial.getColorChooser())) {
+                    g2D.setColor(lde.getHighlightColor(trial.getColorChooser()));
+                    g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
+                    g2D.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
+                } else {
+                    g2D.setColor(Color.black);
+                    g2D.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
+                }
+
+                //Update the xCoord to draw the name.
+                xCoord = xCoord + (barHeight + 10);
+                //Reset the drawing color to the text color ... in this
+                // case, black.
+                g2D.setColor(Color.black);
+
+                //Draw the name.
+                String s = lde.getName();
+
+                g2D.drawString(s, xCoord, yCoord);
+
+                //Figure out how wide that string was for x coord
+                // reasons.
+                int tmpWidth = 5 + barHeight + (fmFont.stringWidth(s));
+
+                //Figure out how wide that string was for x coord reasons.
+                if (tmpXWidthCalc < tmpWidth) {
+                    tmpXWidthCalc = (tmpWidth + 11);
+                }
+
+                // only set the boundaries (for clicking) if we are drawing to the screen
+                if (toScreen)
+                    lde.setDrawCoords(0, tmpWidth, (yCoord - barHeight), yCoord);
+
+                //Reset the xCoord.
+                xCoord = xCoord - (barHeight + 10);
+
+            }
+        }
+
+        //            //Resize the panel if needed.
+        //            if (((yCoord >= yPanelSize) || (tmpXWidthCalc >= xPanelSize)) && instruction == 0) {
+        //                yPanelSize = yCoord + 1;
+        //                xPanelSize = tmpXWidthCalc + 1;
+        //
+        //                revalidate();
+        //            }
     }
-    
-    
-    
+
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int barXCoord) {
         boolean resized = false;
-        try {
-            int newYPanelSize = ((lWindow.getData().size())) * barSpacing;
-            
-            if ((newYPanelSize != yPanelSize)) {
-                yPanelSize = newYPanelSize;
-                this.setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
-                resized = false;
-            }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDWP07");
+        int newYPanelSize = ((window.getData().size())) * barSpacing;
+
+        if ((newYPanelSize != yPanelSize)) {
+            yPanelSize = newYPanelSize;
+            this.setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+            resized = false;
         }
         return resized;
     }
@@ -365,9 +303,8 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                         // Highlight the function and bring up the Function Data
                         // Window
                         trial.getColorChooser().setHighlightedFunction(lde.getFunction());
-                        FunctionDataWindow tmpRef = new FunctionDataWindow(trial,
-                                lde.getFunction(), trial.getStaticMainWindow().getDataSorter(),
-                                this.debug());
+                        FunctionDataWindow tmpRef = new FunctionDataWindow(trial, lde.getFunction(),
+                                trial.getStaticMainWindow().getDataSorter());
                         trial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
 
@@ -376,11 +313,10 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                         // Window
                         trial.getColorChooser().setHighlightedUserEvent(lde.getUserEvent());
                         UserEventWindow tmpRef = new UserEventWindow(trial, lde.getUserEvent(),
-                                trial.getStaticMainWindow().getDataSorter(), this.debug());
+                                trial.getStaticMainWindow().getDataSorter());
                         trial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
-                    } else if ((arg.equals("Change Function Color"))
-                            || (arg.equals("Change User Event Color"))
+                    } else if ((arg.equals("Change Function Color")) || (arg.equals("Change User Event Color"))
                             || (arg.equals("Change Group Color"))) {
 
                         Color color = lde.getColor();
@@ -413,7 +349,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                 }
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MLWP04");
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -442,13 +378,12 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                             return;
                         } else { // left click
                             if (windowType == USEREVENT_LEDGER) {
-                                trial.getColorChooser().toggleHighlightedUserEvent(
-                                        lde.getUserEvent());
+                                trial.getColorChooser().toggleHighlightedUserEvent(lde.getUserEvent());
                             } else if (windowType == GROUP_LEDGER) {
                                 trial.getColorChooser().toggleHighlightedGroup(lde.getGroup());
                             } else {
                                 trial.getColorChooser().toggleHighlightedFunction(lde.getFunction());
-                                                       }
+                            }
                         }
                         //Nothing more to do ... return.
                         return;
@@ -467,7 +402,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                 }
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MLWP05");
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -483,30 +418,16 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     public void mouseExited(MouseEvent evt) {
     }
 
-    //######
-    //ParaProfImageInterface
-    //######
     public Dimension getImageSize(boolean fullScreen, boolean prependHeader) {
         if (fullScreen)
             return this.getPreferredSize();
         else
-            return lWindow.getSize();
+            return window.getSize();
     }
 
-    //######
-    //End - ParaProfImageInterface
-    //######
 
     public Dimension getPreferredSize() {
         return new Dimension((xPanelSize + 10), (yPanelSize + 10));
-    }
-
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    public boolean debug() {
-        return debug;
     }
 
     //Instance data.
@@ -517,13 +438,23 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     private int barSpacing = -1;
 
     private ParaProfTrial trial = null;
-    private LedgerWindow lWindow = null;
-    private int windowType = -1;
+    private LedgerWindow window = null;
+
+    
 
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
 
     Vector list = null;
-    private boolean debug = false; //Off by default.
+
     private boolean widthSet = false;
+
+
+    
+    public static final int FUNCTION_LEDGER = 0;
+    public static final int GROUP_LEDGER = 1;
+    public static final int USEREVENT_LEDGER = 2;
+    private int windowType = -1;
+
+
 }

@@ -20,46 +20,29 @@ import java.text.*;
 import java.awt.font.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class UserEventWindowPanel extends JPanel implements ActionListener, MouseListener,
-        Printable, ParaProfImageInterface {
-    public UserEventWindowPanel() {
-        try {
-            setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
+public class UserEventWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
+        ParaProfImageInterface {
 
-            //Schedule a repaint of this panel.
-            this.repaint();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDWP01");
-        }
-    }
+    public UserEventWindowPanel(ParaProfTrial trial, UserEvent userEvent, UserEventWindow uEWindow) {
+        this.trial = trial;
+        this.window = uEWindow;
+        this.userEvent = userEvent;
+        barLength = baseBarLength;
 
-    public UserEventWindowPanel(ParaProfTrial trial, UserEvent userEvent, UserEventWindow uEWindow,
-            boolean debug) {
-        try {
-            this.trial = trial;
-            this.uEWindow = uEWindow;
-            this.userEvent = userEvent;
-            this.debug = debug;
-            barLength = baseBarLength;
+        //Want the background to be white.
+        setBackground(Color.white);
 
-            //Want the background to be white.
-            setBackground(Color.white);
+        //Add this object as a mouse listener.
+        addMouseListener(this);
 
-            //Add this object as a mouse listener.
-            addMouseListener(this);
+        //Add items to the popu menu.
+        JMenuItem changeColorItem = new JMenuItem("Change User Event Color");
+        changeColorItem.addActionListener(this);
+        popup.add(changeColorItem);
 
-            //Add items to the popu menu.
-            JMenuItem changeColorItem = new JMenuItem("Change User Event Color");
-            changeColorItem.addActionListener(this);
-            popup.add(changeColorItem);
-
-            JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
-            maskMappingItem.addActionListener(this);
-            popup.add(maskMappingItem);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDWP02");
-        }
-
+        JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
+        maskMappingItem.addActionListener(this);
+        popup.add(maskMappingItem);
     }
 
     public void paintComponent(Graphics g) {
@@ -67,237 +50,200 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             super.paintComponent(g);
             renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
-            System.out.println(e);
-            UtilFncs.systemError(e, null, "TDWP03");
+            ParaProfUtils.handleException(e);
+            window.closeThisWindow();
         }
     }
 
     public int print(Graphics g, PageFormat pageFormat, int page) {
-        if (page >= 1) {
+        try {
+            if (page >= 1) {
+                return NO_SUCH_PAGE;
+            }
+
+            ParaProfUtils.scaleForPrint(g, pageFormat, xPanelSize, yPanelSize);
+            renderIt((Graphics2D) g, false, true, false);
+
+            return Printable.PAGE_EXISTS;
+        } catch (Exception e) {
+            new ParaProfErrorDialog(e);
             return NO_SUCH_PAGE;
         }
-        
-        double pageWidth = pageFormat.getImageableWidth();
-        double pageHeight = pageFormat.getImageableHeight();
-        int cols = (int) (xPanelSize / pageWidth) + 1;
-        int rows = (int) (yPanelSize / pageHeight) + 1;
-        double xScale = pageWidth / xPanelSize;
-        double yScale = pageHeight / yPanelSize;
-        double scale = Math.min(xScale, yScale);
-        
-        double tx = 0.0;
-        double ty = 0.0;
-        if (xScale > scale) {
-            tx = 0.5 * (xScale - scale) * xPanelSize;
-        } else {
-            ty = 0.5 * (yScale - scale) * yPanelSize;
+    }
+    
+    
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) throws ParaProfException {
+
+        list = window.getData();
+
+        //Some declarations.
+        double value = 0.0;
+        double maxValue = 0.0;
+        int stringWidth = 0;
+        int yCoord = 0;
+        int barXCoord = barLength + textOffset;
+        PPUserEventProfile ppUserEventProfile = null;
+
+        //To make sure the bar details are set, this
+        //method must be called.
+        trial.getPreferences().setBarDetails(g2D);
+
+        //Now safe to grab spacing and bar heights.
+        barSpacing = trial.getPreferences().getBarSpacing();
+        barHeight = trial.getPreferences().getBarHeight();
+
+        //Obtain the font and its metrics.
+        Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(),
+                barHeight);
+        g2D.setFont(font);
+        FontMetrics fmFont = g2D.getFontMetrics(font);
+
+        //***
+        //Set the max values for this mapping.
+        //***
+        switch (window.getValueType()) {
+        case 12:
+            maxValue = userEvent.getMaxUserEventNumberValue();
+            break;
+        case 14:
+            maxValue = userEvent.getMaxUserEventMinValue();
+            break;
+        case 16:
+            maxValue = userEvent.getMaxUserEventMaxValue();
+            break;
+        case 18:
+            maxValue = userEvent.getMaxUserEventMeanValue();
+            break;
+        case 20:
+            maxValue = userEvent.getMaxUserEventStdDev();
+            break;
+        default:
+            throw new ParaProfException("Unexpected type: " + window.getValueType());
         }
 
-        Graphics2D g2 = (Graphics2D) g;
+        stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue, ParaProf.defaultNumberPrecision)); //No units required in
+        // this window. Thus pass
+        // in 0 for type.
+        barXCoord = barXCoord + stringWidth;
+        //***
+        //End - Set the max values for this mapping.
+        //***
 
-        g2.translate((int) pageFormat.getImageableX(),
-                (int) pageFormat.getImageableY());
-        g2.translate(tx, ty);
-        g2.scale(scale, scale);
+        //At this point we can determine the size this panel will
+        //require. If we need to resize, don't do any more drawing,
+        //just call revalidate.
+        if (resizePanel(fmFont, barXCoord) && toScreen) {
+            this.revalidate();
+            return;
+        }
 
-        renderIt(g2, false, true, false);
+        int yBeg = 0;
+        int yEnd = 0;
+        int startElement = 0;
+        int endElement = 0;
+        Rectangle clipRect = null;
+        Rectangle viewRect = null;
 
-        return Printable.PAGE_EXISTS;
-    }
+        if (!fullWindow) {
+            if (toScreen) {
+                clipRect = g2D.getClipBounds();
+                yBeg = (int) clipRect.getY();
+                yEnd = (int) (yBeg + clipRect.getHeight());
+            } else {
+                viewRect = window.getViewRect();
+                yBeg = (int) viewRect.getY();
+                yEnd = (int) (yBeg + viewRect.getHeight());
+            }
+            startElement = ((yBeg - yCoord) / barSpacing) - 1;
+            endElement = ((yEnd - yCoord) / barSpacing) + 1;
 
-    
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        try {
+            if (startElement < 0)
+                startElement = 0;
 
-            list = uEWindow.getData();
+            if (endElement < 0)
+                endElement = 0;
 
-            //######
-            //Some declarations.
-            //######
-            double value = 0.0;
-            double maxValue = 0.0;
-            int stringWidth = 0;
-            int yCoord = 0;
-            int barXCoord = barLength + textOffset;
-            PPUserEventProfile ppUserEventProfile = null;
+            if (startElement > (list.size() - 1))
+                startElement = (list.size() - 1);
 
-            //######
-            //Some declarations.
-            //######
+            if (endElement > (list.size() - 1))
+                endElement = (list.size() - 1);
 
-            //To make sure the bar details are set, this
-            //method must be called.
-            trial.getPreferences().setBarDetails(g2D);
+            if (toScreen)
+                yCoord = yCoord + (startElement * barSpacing);
+        } else {
+            startElement = 0;
+            endElement = ((list.size()) - 1);
+        }
 
-            //Now safe to grab spacing and bar heights.
-            barSpacing = trial.getPreferences().getBarSpacing();
-            barHeight = trial.getPreferences().getBarHeight();
+        //######
+        //Draw the header if required.
+        //######
+        if (drawHeader) {
+            FontRenderContext frc = g2D.getFontRenderContext();
+            Insets insets = this.getInsets();
+            yCoord = yCoord + (barSpacing);
+            String headerString = window.getHeaderString();
+            //Need to split the string up into its separate lines.
+            StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+            while (st.hasMoreTokens()) {
+                AttributedString as = new AttributedString(st.nextToken());
+                as.addAttribute(TextAttribute.FONT, font);
+                AttributedCharacterIterator aci = as.getIterator();
+                LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
+                float wrappingWidth = this.getSize().width - insets.left - insets.right;
+                float x = insets.left;
+                float y = insets.right;
+                while (lbm.getPosition() < aci.getEndIndex()) {
+                    TextLayout textLayout = lbm.nextLayout(wrappingWidth);
+                    yCoord += barSpacing;
+                    textLayout.draw(g2D, x, yCoord);
+                    x = insets.left;
+                }
+            }
+            lastHeaderEndPosition = yCoord;
+        }
+        //######
+        //End - Draw the header if required.
+        //######
 
-            //Obtain the font and its metrics.
-            Font font = new Font(trial.getPreferences().getParaProfFont(),
-                    trial.getPreferences().getFontStyle(), barHeight);
-            g2D.setFont(font);
-            FontMetrics fmFont = g2D.getFontMetrics(font);
-
-            //***
-            //Set the max values for this mapping.
-            //***
-            switch (uEWindow.getValueType()) {
+        //######
+        //Draw thread information for this mapping.
+        //######
+        for (int i = startElement; i <= endElement; i++) {
+            ppUserEventProfile = (PPUserEventProfile) list.elementAt(i);
+            switch (window.getValueType()) {
             case 12:
-                maxValue = userEvent.getMaxUserEventNumberValue();
+                value = ppUserEventProfile.getUserEventNumberValue();
                 break;
             case 14:
-                maxValue = userEvent.getMaxUserEventMinValue();
+                value = ppUserEventProfile.getUserEventMinValue();
                 break;
             case 16:
-                maxValue = userEvent.getMaxUserEventMaxValue();
+                value = ppUserEventProfile.getUserEventMaxValue();
                 break;
             case 18:
-                maxValue = userEvent.getMaxUserEventMeanValue();
+                value = ppUserEventProfile.getUserEventMeanValue();
                 break;
             case 20:
-                maxValue = userEvent.getMaxUserEventStdDev();
+                value = ppUserEventProfile.getStdDev();
                 break;
             default:
-                UtilFncs.systemError(null, null, "Unexpected type - UEWP value: "
-                        + uEWindow.getValueType());
-            }
-            if (this.debug())
-                System.out.println("Max value: " + maxValue);
-
-            stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue,
-                    ParaProf.defaultNumberPrecision)); //No units required in
-            // this window. Thus pass
-            // in 0 for type.
-            barXCoord = barXCoord + stringWidth;
-            //***
-            //End - Set the max values for this mapping.
-            //***
-
-            //At this point we can determine the size this panel will
-            //require. If we need to resize, don't do any more drawing,
-            //just call revalidate.
-            if (resizePanel(fmFont, barXCoord) && toScreen) {
-                this.revalidate();
-                return;
+                throw new ParaProfException("Unexpected type: " + window.getValueType());
             }
 
-            int yBeg = 0;
-            int yEnd = 0;
-            int startElement = 0;
-            int endElement = 0;
-            Rectangle clipRect = null;
-            Rectangle viewRect = null;
-
-            if (!fullWindow) {
-                if (toScreen) {
-                    clipRect = g2D.getClipBounds();
-                    yBeg = (int) clipRect.getY();
-                    yEnd = (int) (yBeg + clipRect.getHeight());
-                } else {
-                    viewRect = uEWindow.getViewRect();
-                    yBeg = (int) viewRect.getY();
-                    yEnd = (int) (yBeg + viewRect.getHeight());
-                }
-                startElement = ((yBeg - yCoord) / barSpacing) - 1;
-                endElement = ((yEnd - yCoord) / barSpacing) + 1;
-
-                if (startElement < 0)
-                    startElement = 0;
-
-                if (endElement < 0)
-                    endElement = 0;
-
-                if (startElement > (list.size() - 1))
-                    startElement = (list.size() - 1);
-
-                if (endElement > (list.size() - 1))
-                    endElement = (list.size() - 1);
-
-                if (toScreen)
-                    yCoord = yCoord + (startElement * barSpacing);
-            } else {
-                startElement = 0;
-                endElement = ((list.size()) - 1);
-            }
-
-            //######
-            //Draw the header if required.
-            //######
-            if (drawHeader) {
-                FontRenderContext frc = g2D.getFontRenderContext();
-                Insets insets = this.getInsets();
-                yCoord = yCoord + (barSpacing);
-                String headerString = uEWindow.getHeaderString();
-                //Need to split the string up into its separate lines.
-                StringTokenizer st = new StringTokenizer(headerString, "'\n'");
-                while (st.hasMoreTokens()) {
-                    AttributedString as = new AttributedString(st.nextToken());
-                    as.addAttribute(TextAttribute.FONT, font);
-                    AttributedCharacterIterator aci = as.getIterator();
-                    LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
-                    float wrappingWidth = this.getSize().width - insets.left - insets.right;
-                    float x = insets.left;
-                    float y = insets.right;
-                    while (lbm.getPosition() < aci.getEndIndex()) {
-                        TextLayout textLayout = lbm.nextLayout(wrappingWidth);
-                        yCoord += barSpacing;
-                        textLayout.draw(g2D, x, yCoord);
-                        x = insets.left;
-                    }
-                }
-                lastHeaderEndPosition = yCoord;
-            }
-            //######
-            //End - Draw the header if required.
-            //######
-
-            //######
-            //Draw thread information for this mapping.
-            //######
-            for (int i = startElement; i <= endElement; i++) {
-                ppUserEventProfile = (PPUserEventProfile) list.elementAt(i);
-                switch (uEWindow.getValueType()) {
-                case 12:
-                    value = ppUserEventProfile.getUserEventNumberValue();
-                    break;
-                case 14:
-                    value = ppUserEventProfile.getUserEventMinValue();
-                    break;
-                case 16:
-                    value = ppUserEventProfile.getUserEventMaxValue();
-                    break;
-                case 18:
-                    value = ppUserEventProfile.getUserEventMeanValue();
-                    break;
-                case 20:
-                    value = ppUserEventProfile.getStdDev();
-                    break;
-                default:
-                    UtilFncs.systemError(null, null, "Unexpected type - UEWP value: "
-                            + uEWindow.getValueType());
-                }
-                if (this.debug())
-                    System.out.println("Value: " + value);
-
-                //For consistancy in drawing, the y coord is updated at the
-                // beginning of the loop.
-                yCoord = yCoord + (barSpacing);
-                drawBar(g2D, fmFont, value, maxValue, "n,c,t " + (ppUserEventProfile.getNodeID())
-                        + "," + (ppUserEventProfile.getContextID()) + ","
-                        + (ppUserEventProfile.getThreadID()), barXCoord, yCoord, barHeight,
-                        groupMember);
-            }
-            //######
-            //End - Draw thread information for this mapping.
-            //######
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "UEWP03");
+            //For consistancy in drawing, the y coord is updated at the
+            // beginning of the loop.
+            yCoord = yCoord + (barSpacing);
+            drawBar(g2D, fmFont, value, maxValue, "n,c,t " + (ppUserEventProfile.getNodeID()) + ","
+                    + (ppUserEventProfile.getContextID()) + "," + (ppUserEventProfile.getThreadID()),
+                    barXCoord, yCoord, barHeight, groupMember);
         }
+
     }
 
-    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue,
-            String text, int barXCoord, int yCoord, int barHeight, boolean groupMember) {
+    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
+            int barXCoord, int yCoord, int barHeight, boolean groupMember) {
 
         int xLength = 0;
         double d = 0.0;
@@ -312,14 +258,12 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 
         if ((xLength > 2) && (barHeight > 2)) {
             g2D.setColor(userEvent.getColor());
-            g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1,
-                    barHeight - 1);
+            g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 
             if (userEvent == (trial.getColorChooser().getHighlightedUserEvent())) {
                 g2D.setColor(trial.getColorChooser().getUserEventHighlightColor());
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-                g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2,
-                        barHeight - 2);
+                g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
             } else {
                 g2D.setColor(Color.black);
                 g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
@@ -347,9 +291,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         g2D.drawString(text, (barXCoord + 5), yCoord);
     }
 
-    //######
-    //ActionListener.
-    //######
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
@@ -372,7 +313,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                 }
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDWP04");
+            ParaProfUtils.handleException(e);
         }
     }
 
@@ -385,17 +326,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                 popup.show(this, evt.getX(), evt.getY());
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDWP05");
+            ParaProfUtils.handleException(e);
         }
     }
 
-    //######
-    //End - ActionListener.
-    //######
 
-    //######
-    //MouseListener
-    //######
 
     public void mousePressed(MouseEvent evt) {
     }
@@ -409,47 +344,34 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     public void mouseExited(MouseEvent evt) {
     }
 
-    //######
-    //ParaProfImageInterface
-    //######
+  
     public Dimension getImageSize(boolean fullScreen, boolean header) {
         Dimension d = null;
         if (fullScreen)
             d = this.getSize();
         else
-            d = uEWindow.getSize();
+            d = window.getSize();
         d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);
         return d;
     }
 
-    //######
-    //End - ParaProfImageInterface
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
-
+    
+   
     public void changeInMultiples() {
         computeBarLength();
         this.repaint();
     }
 
     public void computeBarLength() {
-        try {
-            double sliderValue = (double) uEWindow.getSliderValue();
-            double sliderMultiple = uEWindow.getSliderMultiple();
+            double sliderValue = (double) window.getSliderValue();
+            double sliderMultiple = window.getSliderMultiple();
             barLength = baseBarLength * ((int) (sliderValue * sliderMultiple));
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDWP06");
-        }
     }
 
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int barXCoord) {
         boolean resized = false;
-        try {
-            int newYPanelSize = ((uEWindow.getData().size()) + 2) * barSpacing + 10;
+            int newYPanelSize = ((window.getData().size()) + 2) * barSpacing + 10;
             int[] nct = trial.getMaxNCTNumbers();
             String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];
             ;
@@ -460,9 +382,6 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                 this.setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
                 resized = false;
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "MDWP07");
-        }
         return resized;
     }
 
@@ -470,17 +389,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
         return new Dimension(xPanelSize, yPanelSize);
     }
 
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
 
-    public boolean debug() {
-        return debug;
-    }
-
-    //####################################
-    //Instance data.
-    //####################################
     private String counterName = null;
 
     private UserEvent userEvent = null;
@@ -492,7 +401,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private int maxXLength = 0;
     private boolean groupMember = false;
     private ParaProfTrial trial = null;
-    private UserEventWindow uEWindow = null;
+    private UserEventWindow window = null;
     private Vector list = null;
     int xPanelSize = 0;
     int yPanelSize = 0;
@@ -500,9 +409,4 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private JPopupMenu popup = new JPopupMenu();
 
     private int lastHeaderEndPosition = 0;
-
-    private boolean debug = false; //Off by default.
-    //####################################
-    //Instance data.
-    //####################################
 }

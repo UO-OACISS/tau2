@@ -19,22 +19,20 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
    
 
     public StatWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
-            DataSorter dataSorter, boolean userEventWindow, boolean debug) {
-        try {
+            DataSorter dataSorter, boolean userEventWindow) {
             this.trial = trial;
             this.dataSorter = dataSorter;
             this.nodeID = nodeID;
             this.contextID = contextID;
             this.threadID = threadID;
             this.userEventWindow = userEventWindow;
-            this.debug = debug;
 
             setLocation(new java.awt.Point(0, 0));
             setSize(new java.awt.Dimension(1000, 600));
 
             if (nodeID == -1 && userEventWindow) {
                 // There is no User Event data for mean
-                UtilFncs.systemError(new Exception(), null, "SW02");
+                throw new RuntimeException("There is no User Event data for mean");
             }
 
             //Now set the title.
@@ -297,8 +295,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             //######
             //Panel and ScrollPane definition.
             //######
-            panel = new StatWindowPanel(trial, nodeID, contextID, threadID, this, userEventWindow,
-                    this.debug());
+            panel = new StatWindowPanel(trial, nodeID, contextID, threadID, this, userEventWindow);
             sp = new JScrollPane(panel);
             this.setHeader();
             //######
@@ -315,18 +312,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             //End - Create and add the components.
             //####################################
             ParaProf.incrementNumWindows();
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW02");
-        }
     }
 
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ActionListener.
-    //######
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
@@ -334,7 +321,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
                 if (arg.equals("Print")) {
-                    UtilFncs.print(panel);
+                    ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
@@ -432,14 +419,14 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 } else if (arg.equals("Show Meta Data in Panel"))
                     this.setHeader();
                 else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0, this.debug())).show();
+                    (new LedgerWindow(trial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1, this.debug())).show();
+                    (new LedgerWindow(trial, 1)).show();
                 } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2, this.debug())).show();
+                    (new LedgerWindow(trial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
                     CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1,
-                            this.getDataSorter(), 2, this.debug());
+                            this.getDataSorter(), 2);
                     trial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
@@ -451,17 +438,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 }
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW03");
-        }
+            ParaProfUtils.handleException(e);
+         }
     }
 
-    //######
-    //End - ActionListener
-    //######
-
-    //######
-    //MenuListener.
-    //######
     public void menuSelected(MenuEvent evt) {
         try {
             if (trial.isTimeMetric() && !userEventWindow)
@@ -480,8 +460,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
 
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "TDW04");
-        }
+            ParaProfUtils.handleException(e);
+         }
     }
 
     public void menuDeselected(MenuEvent evt) {
@@ -490,15 +470,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public void menuCanceled(MenuEvent evt) {
     }
 
-    //######
-    //End - MenuListener.
-    //######
 
-    //######
-    //Observer.
-    //######
     public void update(Observable o, Object arg) {
-        try {
             String tmpString = (String) arg;
             if (tmpString.equals("prefEvent")) {
                 this.setHeader();
@@ -516,18 +489,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             } else if (tmpString.equals("subWindowCloseEvent")) {
                 closeThisWindow();
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW05");
-        }
     }
 
-    //######
-    //End - Observer.
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
 
     private void help(boolean display) {
         //Show the ParaProf help window.
@@ -548,16 +511,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     //Helper functionProfiles.
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        try {
             gbc.gridx = x;
             gbc.gridy = y;
             gbc.gridwidth = w;
             gbc.gridheight = h;
-
             getContentPane().add(c, gbc);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW06");
-        }
     }
 
     public DataSorter getDataSorter() {
@@ -649,33 +607,17 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     void closeThisWindow() {
         try {
-            if (UtilFncs.debug) {
-                System.out.println("------------------------");
-                System.out.println("A stat window for: \"" + "n,c,t, " + nodeID + "," + contextID
-                        + "," + threadID + "\" is closing");
-                System.out.println("Clearing resourses for this window.");
-            }
-
             setVisible(false);
             trial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
-            dispose();
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SW07");
+            // do nothing
         }
+        dispose();
     }
 
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
 
-    public boolean debug() {
-        return debug;
-    }
-
-    //####################################
     //Instance data.
-    //####################################
     private ParaProfTrial trial = null;
     private DataSorter dataSorter;
     private int nodeID = -1;
@@ -691,9 +633,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private JCheckBoxMenuItem descendingOrder = null;
     private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
-    private JMenuItem groupLedger = null;
-    private JMenuItem usereventLedger = null;
-    private JMenuItem callPathRelations = null;
 
     private JScrollPane sp = null;
     private StatWindowPanel panel = null;
@@ -706,9 +645,4 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     // calls,8-number of subroutines,10-per call
     // value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
-
-    private boolean debug = false; //Off by default.
-    //####################################
-    //End - Instance data.
-    //####################################
 }

@@ -15,31 +15,19 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class DerivedMetricPanel extends JPanel implements ActionListener {
 
-    public DerivedMetricPanel(ParaProfManager paraProfManager) {
+    public DerivedMetricPanel(ParaProfManagerWindow paraProfManager) {
         this.paraProfManager = paraProfManager;
 
-        //####################################
-        //Window Stuff.
-        //####################################
         int windowWidth = 800;
         int windowHeight = 200;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
-        //####################################
-        //End - Window Stuff.
-        //####################################
 
-        //####################################
         //Set component properties.
-        //####################################
         arg1Field.setEditable(false);
         arg2Field.setEditable(true);
-        //####################################
-        //End - Set component properties.
-        //####################################
 
-        //####################################
         //Create and add the components.
-        //####################################
+
         //Setting up the layout system for the main window.
         GridBagLayout gbl = new GridBagLayout();
         this.setLayout(gbl);
@@ -83,9 +71,6 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
         gbc.weightx = 0;
         gbc.weighty = 0;
         addCompItem(jButton, gbc, 2, 2, 1, 1);
-        //####################################
-        //End - Create and add the components.
-        //####################################
     }
 
     public void setArg1Field(String arg1) {
@@ -120,62 +105,30 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
         }
     }
 
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ActionListener.
-    //######
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
             String arg = evt.getActionCommand();
             if (arg.equals("Apply operation")) {
-                this.applyOperation();
+                applyOperation();
             }
         } catch (Exception e) {
-            UtilFncs.systemError(e, null, "DBC02");
+            ParaProfUtils.handleException(e);
         }
     }
 
-    //######
-    //End - ActionListener.
-    //######
-
-    //####################################
-    //End - Interface code.
-    //####################################
-
-    //####################################
-    //Private Section.
-    //####################################
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        try {
-            gbc.gridx = x;
-            gbc.gridy = y;
-            gbc.gridwidth = w;
-            gbc.gridheight = h;
-
-            this.add(c, gbc);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "DBC03");
-        }
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        this.add(c, gbc);
     }
 
-    //####################################
-    //End - Private Section.
-    //####################################
-
-    //####################################
     //Instance data.
-    //####################################
-    ParaProfManager paraProfManager = null;
+    ParaProfManagerWindow paraProfManager = null;
     JTextField arg1Field = new JTextField("Argument 1 (x:x:x:x)", 30);
     JTextField arg2Field = new JTextField("Argument 2 (x:x:x:x)", 30);
     String operationStrings[] = { "Add", "Subtract", "Multiply", "Divide" };
     JComboBox operation = new JComboBox(operationStrings);
-    //####################################
-    //End - Instance data.
-    //#################################### 
 }
