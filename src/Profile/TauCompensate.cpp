@@ -48,6 +48,7 @@ int TauCalibrateNullTimer(void)
   int i, tid;
   double tnull, toverhead; 
 
+  Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tone);
     /* nested */
   for(i=0; i< 1000; i++)
@@ -56,6 +57,8 @@ int TauCalibrateNullTimer(void)
     TAU_PROFILE_STOP(tnull);
   }
   TAU_PROFILE_STOP(tone);
+  Tau_stop_top_level_timer_if_necessary();
+
   /* Get thread id */
   tid = RtsLayer::myThread();
   int n = tnullfi.GetCalls(tid);
