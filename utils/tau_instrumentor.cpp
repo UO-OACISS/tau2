@@ -578,32 +578,42 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 #ifdef DEBUG 
 		cout <<"Return "<<endl;
 #endif /* DEBUG */
-		if (isVoidRoutine(*it))
-		{	
-#ifdef DEBUG 
-		  cout <<" Return for a void routine" <<endl;
-#endif /* DEBUG */
-		  /* instrumentation code here */
-		  ostr << "{ TAU_PROFILE_STOP(tautimer); return; }" <<endl;
-		  for (k=((*it)->col)-1; inbuf[k] !=';'; k++)
-		   ;
-		  write_from = k+1;
-		}
-		else
+		if (strncmp((const char *)&inbuf[((*it)->col)-1], "return", 6)==0)
 		{
-		  string ret_expression; 
+		/* currently, the return statement cannot be a macro. It *has* 
+		   to contain "return <...> ;" syntax. */
+		  if (isVoidRoutine(*it))
+		  {	
 #ifdef DEBUG 
-		  cout <<"Return for a non void routine "<<endl;
+		    cout <<" Return for a void routine" <<endl;
 #endif /* DEBUG */
-		  for (k = (*it)->col+5; inbuf[k] != ';' ; k++)
-		    ret_expression.push_back(inbuf[k]);
+		    /* instrumentation code here */
+		    ostr << "{ TAU_PROFILE_STOP(tautimer); return; }" <<endl;
+		    for (k=((*it)->col)-1; inbuf[k] !=';'; k++)
+		     ;
+		    write_from = k+1;
+		  }
+		  else
+		  {
+		    string ret_expression; 
+#ifdef DEBUG 
+		    cout <<"Return for a non void routine "<<endl;
+#endif /* DEBUG */
+		    for (k = (*it)->col+5; inbuf[k] != ';' ; k++)
+		      ret_expression.append(&inbuf[k], 1);
 		
 #ifdef DEBUG 
-		  cout <<"ret_expression = "<<ret_expression<<endl;
+		    cout <<"ret_expression = "<<ret_expression<<endl;
 #endif /* DEBUG */
-		  processReturnExpression(ostr, ret_expression); 
-		  /* instrumentation code here */
-		  write_from = k+1; 
+		    processReturnExpression(ostr, ret_expression); 
+		    /* instrumentation code here */
+		    write_from = k+1; 
+		  }
+		}
+		else 
+		{ 
+		  /* if there was no return */
+		  write_from =  (*it)->col - 1;
 		}
 
 		instrumented = true;
