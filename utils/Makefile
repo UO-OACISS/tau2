@@ -217,7 +217,7 @@ user_event_data.o:	user_event_data.cpp
 		$(CXX) $(CFLAGS) -c user_event_data.cpp
 
 clean:
-		/bin/rm -rf $(OBJS) $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files
+		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 
 index:
 		ctags -wx $(HDRS) $(SRCS)
