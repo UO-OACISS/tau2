@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1997  						   	   **
+**    Copyright 1999  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
@@ -708,8 +708,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.30 $   $Date: 1999/08/20 22:58:40 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.30 1999/08/20 22:58:40 sameer Exp $ 
+ * $Revision: 1.31 $   $Date: 1999/08/20 22:59:34 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.31 1999/08/20 22:59:34 sameer Exp $ 
  ***************************************************************************/
 
 	
