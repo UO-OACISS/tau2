@@ -158,11 +158,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' and 'NCC'"
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC' and 'pgCC'"
 #      exit 1
     fi
     shift
@@ -606,6 +606,18 @@ esac
 
 
 ######################################################################
+# For template instantiations in the library -ptused for CC compilers
+if [ $machine = sgi8k -a $cxx_compiler = CC ]
+  then
+    fixmakeargs="$fixmakeargs SGICC"
+fi
+
+if [ $machine = t3e -a $cxx_compiler = CC ] 
+  then
+    fixmakeargs="$fixmakeargs CRAYCC"
+fi
+
+######################################################################
 # Set default Profiling Options in Makefiles
 if [ $profile = no -a $trace = no  -a $machine != default ]
   then
@@ -694,6 +706,11 @@ case $cxx_compiler in
       echo "Default C++ compiler will be KAI KCC C++ Compiler"
       kai=yes
       fixmakeargs="$fixmakeargs KAI"
+      ;;
+
+   pgCC)
+      echo "Default C++ compiler will be PGI pgCC C++ Compiler"
+      fixmakeargs="$fixmakeargs PGI"
       ;;
 
    *)
