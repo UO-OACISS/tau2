@@ -9,16 +9,6 @@
 #include "Profile/Profiler.h"
 #include <iostream.h>
 
-/////////////////////////
-//If mutex locking of resourses is desired
-//define PCL_MUTEX_LOCK and the following version
-//of getCounters will be used.
-/////////////////////////
-#ifdef PCL_MUTEX_LOCK
-
-#include <pthread.h>
-
-
 //Helper function used to determine the counter value
 //from the event name.
 int map_eventnames(char *name)
@@ -33,6 +23,16 @@ int map_eventnames(char *name)
   /* not found */
   return -1;
 }
+/////////////////////////
+//If mutex locking of resourses is desired
+//define PCL_MUTEX_LOCK and the following version
+//of getCounters will be used.
+/////////////////////////
+#ifdef PCL_MUTEX_LOCK
+
+#include <pthread.h>
+
+
 
 
 PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
