@@ -19,7 +19,10 @@ echo
 echo '# Set PATH to the shared library of the TRACE-API implementation'
 echo TRACE_LIBDIR=$2/$4/lib
 
+if [ $4 != solaris2 ]
+then
 echo 'export LD_LIBRARY_PATH=$TRACE_LIBDIR:$LD_LIBRARY_PATH'
+fi
 
 echo '# Set PATH to the jar needed by the program'
 echo GUI_LIBDIR=$3/lib
