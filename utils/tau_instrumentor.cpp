@@ -607,15 +607,47 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 #ifdef DEBUG 
 		    cout <<"Return for a non void routine "<<endl;
 #endif /* DEBUG */
-		    for (k = (*it)->col+5; inbuf[k] != ';' ; k++)
+		    for (k = (*it)->col+5; (inbuf[k] != ';') && (k<inbufLength) ; k++)
 		      ret_expression.append(&inbuf[k], 1);
-		
+#ifdef DEBUG
+		    cout <<"k = "<<k<<" inbuf = "<<inbuf[k]<<endl;
+#endif /* DEBUG */
+		    if (inbuf[k] == ';')
+		    { /* Got the semicolon. Return expression is in one line. */
+#ifdef DEBUG
+		      cout <<"No need to read in another line"<<endl;
+#endif /* DEBUG */
+	              write_from = k+1;
+		    }
+ 		    else	
+		    {
+		      int l;   
+		      do {
+#ifdef DEBUG
+ 		        cout <<"Need to read in another line to get ';' "<<endl;
+#endif /* DEBUG */
+			if(istr.getline(inbuf, INBUF_SIZE)==NULL)
+			{   
+			  perror("ERROR in reading file: looking for ;"); 
+			  exit(1); 
+			}
+			inbufLength = strlen(inbuf);
+                        inputLineNo ++;
+			/* Now search for ; in the string */
+			for(l=0; (inbuf[l] != ';') && (l < inbufLength); l++)
+			{
+			  ret_expression.append(&inbuf[l], 1);
+			}
+		      } while(inbuf[l] != ';');
+			/* copy the buffer into inbuf */
+		      write_from = l+1; 
+		    }
+			 
 #ifdef DEBUG 
 		    cout <<"ret_expression = "<<ret_expression<<endl;
 #endif /* DEBUG */
 		    processReturnExpression(ostr, ret_expression); 
 		    /* instrumentation code here */
-		    write_from = k+1; 
 		  }
 		}
 		else 
@@ -714,6 +746,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
 
   int inputLineNo = 0;
   int lastInstrumentedLineNo = 0;
+  bool is_if_stmt;
   for(vector<itemRef *>::iterator it = itemvec.begin(); it != itemvec.end();
         ++it)
   {
@@ -736,6 +769,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
     while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
     {
       inputLineNo ++;
+      is_if_stmt = false; /* initialize variable now. Check for it later */
       if (inputLineNo < (*it)->line)
       {
         // write the input line in the output stream
@@ -803,13 +837,20 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
 #ifdef DEBUG
 	        cout <<"RETURN statement "<<endl;
 #endif /* DEBUG */
+		if (strstr(inbuf,"if") != NULL)
+		{ 
+		  is_if_stmt = true;
+		  ostr << "then"<<endl;
+		  ostr << "          ";
+		}
+	
 		ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
      		for (int space = 0; space < (*it)->col-1 ; space++) 
 		{
  		  char c = inbuf[space]; 
 		  if (!((c == ' ') || (c == '\t')))
 		    c = ' ';
-		  ostr << inbuf[space]; 
+		  ostr << c; 
 		}
 		instrumented = true;
 		break;
@@ -825,6 +866,10 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile)
 	  ostr << inbuf[j];
 	}
 	ostr<<endl;
+	if (is_if_stmt) 
+	{
+	  ostr <<"         endif"<<endl;
+	}      
       } /* reached line */
     } /* while */
   } /* for */
