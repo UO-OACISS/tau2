@@ -175,6 +175,15 @@ void FSUB(pomp_end)(int* id) {
   if ( omp_tracing ) pomp_end(pomp_rd_table[*id]);
 }
 
+void FSUB(pomp_flush_enter)(int* id) {
+  if ( omp_tracing ) pomp_flush_enter(pomp_rd_table[*id]);
+}
+
+void FSUB(pomp_flush_exit)(int* id) {
+  if ( omp_tracing ) pomp_flush_exit(pomp_rd_table[*id]);
+}
+
+
 /*
  * C pomp function library
  */
@@ -744,6 +753,44 @@ void pomp_end(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
+
+void pomp_flush_enter(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_START(tregion);
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStartOpenMPRegionTimer(r);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef DEBUG_PROF
+  if ( omp_tracing ) {
+    fprintf(stderr, "%3d: flush enter region %s\n",
+            omp_get_thread_num(), r->sub_name);
+  }
+#endif /* DEBUG_PROF */
+}
+
+void pomp_flush_exit(struct ompregdescr* r) {
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+ 
+#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_GLOBAL_TIMER_STOP(); /* region timer stop */
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef DEBUG_PROF
+  if ( omp_tracing ) {
+    fprintf(stderr, "%3d: flush exit   region %s\n",
+            omp_get_thread_num(), r->sub_name);
+  }
+#endif /* DEBUG_PROF */
+}
+
+
 void pomp_init_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_init_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
@@ -847,8 +894,8 @@ int  pomp_test_nest_lock(omp_nest_lock_t *s) {
 
 /***************************************************************************
  * $RCSfile: TauOpari.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2001/08/21 17:35:10 $
- * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.5 2001/08/21 17:35:10 sameer Exp $
+ * $Revision: 1.6 $   $Date: 2001/10/22 17:57:54 $
+ * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.6 2001/10/22 17:57:54 sameer Exp $
  ***************************************************************************/
 
 
