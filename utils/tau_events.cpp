@@ -100,7 +100,7 @@ map<const char*, EventDescr, ltstr> eventNameMap;
 
 int globalEventId = 1; /* numbers start from 1 */
 
-map<long, int> nodeEventTable[MAX_OPEN_FILES];
+map<long, int, less<long> > nodeEventTable[MAX_OPEN_FILES];
 /* nodeEventTable stores nodeid, localevent ->globaleventid mapping */
 /* e.g., nodeEventTable[0] gives event map for node 0, emap[60000] 
 gives global id say 105 of event 60000 */
