@@ -256,6 +256,13 @@ echo " " > wishver
     ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
     make clean install
 
+# PAPI with -pdt 
+    if [ $pdt = yes ]
+    then
+      echo "Configuring with $fortrancompiler $useropts $ccompiler $archopt $pdtopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
+      ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt  -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
+      make clean install
+    fi
   fi
 
 # Set file permissions
