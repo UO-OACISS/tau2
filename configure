@@ -152,6 +152,7 @@ fujitsu=no
 guidef90=no
 stdcxxlib=no
 inteltflop=no
+intelifort=no
 intel=no
 profile=no
 monitor=no
@@ -1766,6 +1767,14 @@ then
         mpiflibargs="$mpiflibargs -lutil"
       fi
     fi 
+    # Special check for ChaMPIon/Pro 
+    if [ -r $mpilib/libcmpi.a ]
+    then
+      echo "This looks like a ChaMPIon/Pro installation."
+      mpiextraargs=`cmpicc -v -echo | cut -c8- `
+      mpilibargs="$mpilibargs $mpiextraargs"
+      mpiflibargs="$mpiflibargs $mpiextraargs -lcmpi_fort"
+    fi
     # Special check for VMI [NCSA] MPICH
     if [ -r $mpilib/libvmi.a ]
     then
@@ -1836,7 +1845,7 @@ fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt 
 ######################################################################
 # discover the paths for standard system include directories
 
-if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = icpc ] 
 then
 cat << EOF > get_stdinc.C
 #include <stddef.h>
@@ -2544,7 +2553,19 @@ if [ $intel = yes ]
     then
       fixmakeargs="$fixmakeargs INTELOPENMP"
     fi
+    
 fi 
+
+# CHECK if Intel 8.0 compilers are available. 
+if [ $fortran_compiler = intel ]
+then
+  intelifort=`which ifort`
+  if [ -x $intelifort ]
+  then
+    echo "Using Intel ifort as the Fortran Compiler"
+    fixmakeargs="$fixmakeargs INTELIFORT"
+  fi
+fi
 
 if [ $ibmxlc = yes ]
 then
