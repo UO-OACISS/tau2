@@ -32,7 +32,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-F77		= f90 
+F77		= f90 $(ABI)
 
 TARGET	      	= hello
 
