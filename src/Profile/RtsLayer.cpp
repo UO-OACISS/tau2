@@ -579,11 +579,17 @@ bool RtsLayer::isCtorDtor(const char *name)
     return true; 
   }
   DEBUGPROFMSG("RtsLayer::isCtorDtor("<< name <<")" <<endl;);
+#ifdef JAVA
+      /* In Java : is allowed, as the top level thread name could be something 
+	 like THREAD=RMI ConnectionExpiration-[192.168.180.1:1871]; */
+      DEBUGPROFMSG("JAVA RtsLayer::isCtorDtor("<<name<<") returns false! "<<endl;);
+      return false;
+#endif /* JAVA */
   if (strchr(name,'~') == NULL) // a destructor 
     if (strchr(name,':') == NULL) // could be a constructor 
       return false;
     else  
-      return true;
+      return true; /* in C++ a : in a name could signify a ctor/dtor */
   else  
     return true;
 }
@@ -749,6 +755,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2000/10/12 19:05:49 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.23 2000/10/12 19:05:49 sameer Exp $ 
+ * $Revision: 1.24 $   $Date: 2000/12/01 19:27:21 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.24 2000/12/01 19:27:21 sameer Exp $ 
  ***************************************************************************/
