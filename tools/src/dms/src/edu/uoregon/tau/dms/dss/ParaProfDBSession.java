@@ -53,8 +53,8 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    System.out.println("Processing data, please wait ......");
 	    long time = System.currentTimeMillis();
 	    
-	    int numberOfMetrics = this.getNumberOfMetrics();
-		System.out.println("Found " + numberOfMetrics + " metrics.");
+	    int numberOfMetrics = perfDMFSession.getNumberOfMetrics();
+	    System.out.println("Found " + numberOfMetrics + " metrics.");
 	    for(int i=0;i<numberOfMetrics;i++)
 		this.getGlobalMapping().increaseVectorStorage();
 
@@ -198,7 +198,7 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    UtilFncs.systemError(e, null, "SSD01");
 	}
     }
-    
+
     //####################################
     //Instance data.
     //####################################
