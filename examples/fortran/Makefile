@@ -19,7 +19,7 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-FFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) 
+FFLAGS        	= $(TAU_INCLUDE) 
 
 LIBS            =  $(TAU_LIBS)  $(TAU_FORTRANLIBS)  $(LEXTRA1)
 #LIBS            = $(TAU_DISABLE)  $(TAU_FORTRANLIBS)
