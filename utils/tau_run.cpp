@@ -94,7 +94,7 @@ BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
     // Insert the given snippet at the given point 
     if (loc == BPatch_entry)
     { 
-      appThread->insertSnippet(*snippet, *points, BPatch_callAfter);
+      appThread->insertSnippet(*snippet, *points, BPatch_callBefore, BPatch_lastSnippet);
     }
     else
     { // the default is BPatch_callBefore which is used for exit
@@ -182,9 +182,11 @@ void errorFunc1(BPatchErrorLevel level, int num, const char **params)
 // Constraints for instrumentation 
 int moduleConstraint(char *fname)
 { // fname is the name of module/file 
+  int len = strlen(fname);
 
   if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
-      (strcmp(fname, "LIBRARY_MODULE") == 0))
+     /* ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
+ */     (strcmp(fname, "LIBRARY_MODULE") == 0))
   {
     return true;
   }
@@ -252,7 +254,7 @@ int main(int argc, char **argv)
   dprintf("Before createProcess\n");
   /* Specially added to disable Dyninst 2.0 feature of debug parsing. We were
      getting an assertion failure under Linux otherwise */
-  bpatch->setDebugParsing(false);
+  bpatch->setDebugParsing(false); 
   appThread = bpatch->createProcess(argv[1], &argv[1] , NULL);
   dprintf("After createProcess\n");
   if (!appThread)
