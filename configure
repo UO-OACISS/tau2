@@ -158,6 +158,7 @@ tauprefix=unknown
 tauoptions=
 pdt_root_dir="."
 pdt=no
+opari=no
 dyninst=no
 java=no
 openmp=no
@@ -278,6 +279,12 @@ do
   -papi=*)
       papi=yes
       papidir=`echo $arg | sed -e 's/-papi=//'`
+    shift
+    ;;
+
+  -opari=*)
+      opari=yes
+      oparidir=`echo $arg | sed -e 's/-opari=//'`
     shift
     ;;
 
@@ -463,6 +470,7 @@ do
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-openmp ........................................... Use OpenMP threads."
+    echo "-opari=<dir>... Specify location of Opari OpenMP tool (use with above)."
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
@@ -1405,6 +1413,12 @@ if [ $openmp = yes ]
   then
     fixmakeargs="$fixmakeargs OPENMP"
     tauoptions="${tauoptions}-openmp"
+fi
+
+if [ $opari = yes ]
+  then
+    fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
+    tauoptions="${tauoptions}-opari"
 fi
 
 if [ $dyninst = yes ]
