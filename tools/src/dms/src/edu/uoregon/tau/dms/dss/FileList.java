@@ -153,13 +153,13 @@ public class FileList{
                 e.printStackTrace();
             return new Vector();
         }
-	catch(HeadlessException e){
-	    System.out.println("An error occurred getting file list:");
-            System.out.println("Location - ParaProfManager.getFileList(...)");
-	    if(debug)
-                e.printStackTrace();
-	    return new Vector();
-	}
+// 	catch(HeadlessException e){
+// 	    System.out.println("An error occurred getting file list:");
+//             System.out.println("Location - ParaProfManager.getFileList(...)");
+// 	    if(debug)
+//                 e.printStackTrace();
+// 	    return new Vector();
+// 	}
     }
 
     //This function helps the getFileList function above. 
