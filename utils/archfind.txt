@@ -68,7 +68,7 @@ rs6000		an IBM RS6000, running aix
 rt		an IBM PC/RT, running BSD (AOS 4.3) or mach
 rtpc		an IBM PC/RT, running aix
 sco386		an Intel 386, running SCO
-solaris2	a Sun Workstation running SVR4 Solaris (YUK!!!!)
+solaris2	a Sun Workstation running SVR4 Solaris 
 stellar		a stellar running stellix
 sun		a Sun workstation of none of the above types
 sun2		a Sun Microsystems series 2 workstation (68010 based)
