@@ -331,8 +331,9 @@ int main(int argc, char **argv){
 
   //has an error occured in the command line arguments?
   if(errflag){
-    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> ] [-f <inst_req> ] <application> [args]\n", argv[0]);
+    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> ] [-v] [-f <inst_req> ] <application> [args]\n", argv[0]);
     fprintf (stderr, "%s instruments and executes <application> to generate performance data\n", argv[0]);
+    fprintf (stderr, "-v is an optional verbose option\n");
     fprintf (stderr, "e.g., \n");
     fprintf (stderr, "%%%s -XrunTAU -f sel.dat a.out 100 \n", argv[0]);
     fprintf (stderr, "Loads libTAU.so from $LD_LIBRARY_PATH, loads selective instrumentation requests from file sel.dat and executes a.out \n"); 
