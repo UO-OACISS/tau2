@@ -21,6 +21,7 @@ Version 2.11 changes (from 2.9):
 9. Added support for Paraver trace visualizer (CEPBA) in tau_convert. 
 10. Opari and PDT related changes (examples/opari/pdt_f90) [FZJ].
 11. Added support for online access to performance data [CACR]. 
+12. Added support for LINUXTIMERS for PGI and other Linux compilers [FZJ].
 
 Version 2.10 changes (from 2.9):
 1. Better support for C instrumentation [HDF5].
