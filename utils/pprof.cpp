@@ -1508,13 +1508,13 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
       printf ("%d \"%s\" %s ", tab[i].tag, tab[i].name, order);
       if(groupNamesUsed){
 	if ( order[0] == 'e' )
-	  printf ("%.16G %4.2f GROUP=\"%s\"\n", tab[i].usec, tab[i].usec / t * 100.0, tab[i].groupnames);
+	  printf ("%.16G %4.2f GROUP=\"%s\"\n", tab[i].usec, tab[i].usec / total * 100.0, tab[i].groupnames);
 	else if ( order[0] == 'i' )
 	  printf ("%.16G %4.2f GROUP=\"%s\"\n", tab[i].cumusec, tab[i].cumusec/total*100.0, tab[i].groupnames);
       }
       else{
 	if ( order[0] == 'e' )
-	  printf ("%.16G %4.2f\n", tab[i].usec, tab[i].usec / t * 100.0);
+	  printf ("%.16G %4.2f\n", tab[i].usec, tab[i].usec / total * 100.0);
 	else if ( order[0] == 'i' )
 	  printf ("%.16G %4.2f\n", tab[i].cumusec, tab[i].cumusec/total*100.0);
       }//else
@@ -1553,7 +1553,7 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
     printf("%s ",id_str);
     printf (" -1 -others- %s ", order);
     if ( order[0] == 'e' )
-      printf ("%.16G %4.2f\n", o_usec, o_usec / t * 100.0);
+      printf ("%.16G %4.2f\n", o_usec, o_usec / total * 100.0);
     else if ( order[0] == 'i' )
       printf ("%.16G %4.2f\n", o_cumusec, o_cumusec / total * 100.0);
     if ( o_cumusec > 0.0 ) {
@@ -1587,7 +1587,7 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
  
     if ( order[0] == 'e' )
       if (t > 0.0) {
-        printf ("%.16G %4.2f\n", o_usec, o_usec / t * 100.0);
+        printf ("%.16G %4.2f\n", o_usec, o_usec / total * 100.0);
       }
       else { 
         printf ("%.16G %4.2f\n", o_usec, o_usec ); /* will print 0 0 */
@@ -2597,7 +2597,7 @@ int main (int argc, char *argv[]){
   exit (0);
 }//main()
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: ntrebon $
- * $Revision: 1.37 $   $Date: 2002/07/25 20:50:00 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.37 2002/07/25 20:50:00 ntrebon Exp $                                
+ * $RCSfile: pprof.cpp,v $   $Author: sameer $
+ * $Revision: 1.38 $   $Date: 2002/08/14 01:23:03 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.38 2002/08/14 01:23:03 sameer Exp $                                
  ***************************************************************************/
