@@ -1388,6 +1388,12 @@ int main (int argc, char *argv[])
 
   PrintEventDescr (outfp);
 
+  /* print idle records */
+  for (i=0; i<=intrc.numproc; i++)
+  {
+      fprintf (outfp, "0 EXCHANGE ON CPUID %d DOWNTO IDLE -99 CLUSTER 1\n",
+		      i+1);
+  }
 
   /* ------------------------------------------------------------------------ */
   /* -- re-open input trace                                                -- */
@@ -1753,7 +1759,7 @@ int main (int argc, char *argv[])
 			   erec->ti - intrc.firsttime, GetNodeId(erec)+1,
 			   stkptr[GetNodeId(erec)]->state, stkptr[GetNodeId(erec)]->tag);
 		else
-		  fprintf (outfp, "%llu EXCHANGE ON CPUID %d TO %s %d CLUSTER 1\n",
+		  fprintf (outfp, "%llu EXCHANGE ON CPUID %d UPTO %s %d CLUSTER 1\n",
 			   erec->ti - intrc.firsttime, GetNodeId(erec)+1,
 			   stkptr[GetNodeId(erec)]->state, stkptr[GetNodeId(erec)]->tag);
 	      }
@@ -1772,7 +1778,7 @@ int main (int argc, char *argv[])
 			   /*???erec->ti, GetNodeId(erec)+1, ev->state, ev->tag);*/
 			   erec->ti - intrc.firsttime, GetNodeId(erec)+1, ev->state, ev->no);
 		else
-		  fprintf (outfp, "%llu EXCHANGE ON CPUID %d TO %s %d CLUSTER 1\n",
+		  fprintf (outfp, "%llu EXCHANGE ON CPUID %d DOWNTO %s %d CLUSTER 1\n",
 			   /*???erec->ti, GetNodeId(erec)+1, ev->state, ev->tag);*/
 			   erec->ti - intrc.firsttime, GetNodeId(erec)+1, ev->state, ev->no);
 		stkptr[GetNodeId(erec)]->state = ev->state;
