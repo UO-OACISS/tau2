@@ -114,6 +114,7 @@ useropt=-g
 awe=no
 pthread=no
 tulipthread=no
+smarts=no
 task=no
 lwp=no
 tcltk=yes
@@ -223,6 +224,11 @@ do
  
   -pthread)
       pthread=yes
+    shift
+    ;;
+
+  -smarts)
+      smarts=yes
     shift
     ;;
 
@@ -1077,6 +1083,11 @@ if [ $tulipthread = yes ]
   then
     fixmakeargs="$fixmakeargs TULIPTHREADS tulipdir=$tulipdir"
     echo "$machine: TULIPDIR = $tulipdir" >> ./build/Config.info
+fi
+
+if [ $smarts = yes ]
+  then
+    fixmakeargs="$fixmakeargs SMARTS"
 fi
 
 if [ $lwp = yes ]
