@@ -1,4 +1,6 @@
 #!/bin/sh
+TAUROOT=
+PERFDB_HOME=${TAUROOT}/tools/src/perfdb
 
 PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
 XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
@@ -13,9 +15,6 @@ perfdb.loadxml.Main \
 -g ${PERFDB_HOME}/data/perfdb.cfg \
 -c loadtrial \
 -x ${PERFDB_HOME}/data/pprof.xml \
+-p ${PERFDB_HOME}/data/input.ups \
 -t 0
 date
-# java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} perfdb.loadxml.Main -g ${PERFDB_HOME}/data/perfdb.cfg -c loadtrial -x ${PERFDB_HOME}/data/pprof_2.xml -t 1
-# date
-# java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} perfdb.loadxml.Main -g ${PERFDB_HOME}/data/perfdb.cfg -c loadtrial -x ${PERFDB_HOME}/data/pprof_3.xml -t 1
-# date

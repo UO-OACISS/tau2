@@ -1,4 +1,6 @@
 #!/bin/sh
+TAUROOT=
+PERFDB_HOME=${TAUROOT}/tools/src/perfdb
 
 PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
 XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
@@ -11,7 +13,4 @@ perfdb.loadxml.Main \
 -g ${PERFDB_HOME}/data/perfdb.cfg \
 -c loadexp \
 -a 1 \
--y ${PERFDB_HOME}/data/Sys_Info.xml  \
--f ${PERFDB_HOME}/data/Config_Info.xml  \
--m ${PERFDB_HOME}/data/Compiler_Info.xml  \
--i ${PERFDB_HOME}/data/Instru_Info.xml 
+-x ${PERFDB_HOME}/data/Exp_Info.xml
