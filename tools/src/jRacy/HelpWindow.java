@@ -197,7 +197,9 @@ public class HelpWindow extends JFrame implements ActionListener, Observer
 					writeText("");
 					writeText("4) Added more color selections for mapping group colors.");
 					writeText("");
-					writeText("5) A number of other minor changes and bug fixes.  As always, this is an ongoing project" 
+					writeText("5) Added full masking of groups.");
+					writeText("");
+					writeText("6) A number of other minor changes and bug fixes.  As always, this is an ongoing project" 
 					+ " as such, ANY suggestions are welcome.  There will also be a clean up of the code to provide" 
 					+ " more effective searching as some things have been implimented just to get it working.");
 				}
