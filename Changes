@@ -11,8 +11,15 @@ Change log:
 ------------
 Version 2.6 changes (from 2.5):
 1. TAU Mapping API introduced.
-2. More platforms: Cray T3E with F90, Linux PGI and Fujitsu compilers
-3. Support for threadsafety in Fortran/C. 
+2. More platforms: Cray T3E with F90, Alpha/Linux, Intel/Linux 
+   with PGI and Fujitsu compilers (C++/C/F90)
+3. Added support for threadsafety in Fortran/C. 
+4. Added support for Program Database Toolkit for instrumenting C++ 
+   sources using tau_instrumentor 
+5. Added support for Performance Counter Library for accessing Hardware
+   Performance Counters on Cray, Intel, Alpha, UltraSparcs, MIPS, and 
+   IBM Power platforms
+6. TAU MPI wrapper library introduced for profiling MPI routines. 
 
 Version 2.5 changes (from 2.4):
 1. Automatic instrumentation support using DUCTAPE.
