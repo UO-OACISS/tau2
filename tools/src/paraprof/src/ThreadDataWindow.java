@@ -183,8 +183,16 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			job.print();
 		    }
 		}
+		if(arg.equals("ParaProf Manager")){
+		    ParaProfManager jRM = new ParaProfManager();
+		    jRM.show();
+		}
 		else if(arg.equals("Edit ParaProf Preferences!")){
 		    trial.getPreferences().showPreferencesWindow();
+		}
+		else if(arg.equals("Save Image")){
+		    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+		    imageOutput.saveImage((ParaProfImageInterface) panel);
 		}
 		else if(arg.equals("Close This Window")){
 		    closeThisWindow();
@@ -266,13 +274,13 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			displaySiders(false);
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(0);
+		    (new MappingLedgerWindow(trial, 0)).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(1);
+		    (new MappingLedgerWindow(trial, 1)).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(2);
+		    (new MappingLedgerWindow(trial, 2)).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -351,11 +359,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	try{
 	    String tmpString = (String) arg;
 	    if(tmpString.equals("prefEvent")){
-		//Just need to call a repaint on the ThreadDataWindowPanel.
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("colorEvent")){
-		//Just need to call a repaint on the ThreadDataWindowPanel.
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("dataEvent")){

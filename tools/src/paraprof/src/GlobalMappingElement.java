@@ -18,10 +18,10 @@ import java.text.*;
 
 public class GlobalMappingElement implements Serializable, Comparable{
     //Constructors.
-    public GlobalMappingElement(Trial inTrial){
-	trial = inTrial;
+    public GlobalMappingElement(Trial trial){
+	this.trial = trial;
     }
-
+    
     public void incrementStorage(){
 	int currentLength = doubleList.length;
 	double[] newArray = new double[currentLength+14];
@@ -184,6 +184,10 @@ public class GlobalMappingElement implements Serializable, Comparable{
   
     public Color getGenericColor(){
 	return genericMappingColor;
+    }
+
+    public void setMaxValues(){
+	System.out.println("MUST FILL IN THIS METHOD - GlobalMappingElement.setMaxValues");
     }
 
     public void setMaxInclusiveValue(int dataValueLocation, double inDouble){

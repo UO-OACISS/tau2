@@ -224,13 +224,13 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 			displaySiders(false);
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(0);
+		    (new MappingLedgerWindow(trial, 0)).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(1);
+		    (new MappingLedgerWindow(trial, 1)).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(2);
+		    (new MappingLedgerWindow(trial, 2)).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");

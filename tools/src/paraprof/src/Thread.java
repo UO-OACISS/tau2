@@ -19,6 +19,13 @@ public class Thread{
     public Thread(){
 	doubleList = new double[7];
     }
+    
+    public Thread(int nodeID, int contextID, int threadID){
+	this.nodeID = nodeID;
+	this.contextID = contextID;
+	this.threadID = threadID;
+	doubleList = new double[7];
+    }
     //####################################
     //End - Contructor(s).
     //####################################
@@ -26,11 +33,23 @@ public class Thread{
     //####################################
     //Public section.
     //####################################
-    public void setID(int id){
-	this.id = id;}
+    public void setNodeId(int nodeID){
+	this.nodeID = nodeID;}
 
-    public int getID(){
-	return id;}
+    public int getNodeID(){
+	return nodeID;}
+
+    public void setContextID(int contextID){
+	this.contextID = contextID;}
+
+    public int getContextID(){
+	return contextID;}
+
+    public void setThreadID(int threadID){
+	this.threadID = threadID;}
+
+    public int getThreadID(){
+	return threadID;}
 
     public void initializeFunctionList(int size){
 	functions = new Vector(size);
@@ -174,6 +193,28 @@ public class Thread{
 	this.setTotalExclusiveValue(metric, totalExclusiveValue);
     }
 
+    public void setPercentData(int dataValueLocation){
+	ListIterator l = this.getFunctionListIterator();
+	while(l.hasNext()){
+	    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
+	    double exclusiveTotal = this.getTotalExclusiveValue(dataValueLocation);
+	    double inclusiveMax = this.getMaxInclusiveValue(dataValueLocation);
+	    
+	    double d1 = globalThreadDataElement.getExclusiveValue(dataValueLocation);
+	    double d2 = globalThreadDataElement.getInclusiveValue(dataValueLocation);
+		
+	    if(exclusiveTotal!=0){
+		double result = (d1/exclusiveTotal)*100.00;
+		globalThreadDataElement.setExclusivePercentValue(dataValueLocation, result);
+	    }
+
+	    if(inclusiveMax!=0){
+		double result = (d2/inclusiveMax) * 100;
+		globalThreadDataElement.setInclusivePercentValue(dataValueLocation, result);
+	    }
+	}
+    }
+    
     public void setMaxInclusiveValue(int dataValueLocation, double inDouble){
 	this.insertDouble(dataValueLocation,0,inDouble);}
   
@@ -274,7 +315,9 @@ public class Thread{
     //####################################
     //Instance data.
     //####################################
-    int id = -1;
+    int nodeID = -1;
+    int contextID = -1;
+    int threadID = -1;
     Vector functions = null;
     Vector userevents = null;
     private double[] doubleList;

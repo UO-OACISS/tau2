@@ -22,7 +22,7 @@ import javax.swing.event.*;
 import java.awt.geom.*;
 
 
-public class MappingDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable{
+public class MappingDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
     public MappingDataWindowPanel(){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -69,7 +69,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    drawPage((Graphics2D) g, false);
+	    renderIt((Graphics2D) g, 0);
 	}
 	catch(Exception e){
 	    System.out.println(e);
@@ -90,12 +90,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	drawPage(g2, true);
+	renderIt(g2, 2);
     
 	return Printable.PAGE_EXISTS;
     }
 
-    public void drawPage(Graphics2D g2D, boolean print){
+    public void renderIt(Graphics2D g2D, int instruction){
 	try{
 	    double value = 0.0;
 	    double maxValue = 0.0;
@@ -115,12 +115,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    Font font = new Font(trial.getPreferences().getParaProfFont(), trial.getPreferences().getFontStyle(), barHeight);
 	    g2D.setFont(font);
 	    FontMetrics fmFont = g2D.getFontMetrics(font);
-
-	    //Determine clipping information.
-	    Rectangle clipRect = g2D.getClipBounds();
-	    int yBeg = (int) clipRect.getY();
-	    int yEnd = (int) (yBeg + clipRect.getHeight());
-	    yEnd = yEnd + barSpacing;
 	    
 	    //***
 	    //Set the max and mean values for this mapping.
@@ -177,11 +171,26 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //At this point we can determine the size this panel will
 	    //require. If we need to resize, don't do any more drawing,
 	    //just call revalidate.
-	    if(resizePanel(fmFont, barXCoord)){
+	    if(resizePanel(fmFont, barXCoord) && instruction==0){
 		this.revalidate();
 		return;
 	    }
-	    
+
+	    int yBeg = 0;
+	    int yEnd = 0;
+	    Rectangle clipRect = null;
+
+	    if(instruction==1 || instruction==2){
+		yBeg = 0;
+		yEnd = yPanelSize;
+	    }
+	    else{
+		clipRect = g2D.getClipBounds();
+		yBeg = (int) clipRect.getY();
+		yEnd = (int) (yBeg + clipRect.getHeight());
+		yEnd = yEnd + barSpacing;
+	    }
+
 	    //Check for group membership.
 	    groupMember = gME.isGroupMember(trial.getColorChooser().getGHCMID());
 
@@ -200,7 +209,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    yCoord = yCoord + (barSpacing); //Comment this
 	    if((yCoord >= yBeg) && (yCoord <= yEnd)){
 		//yCoord = yCoord + (barSpacing);//Uncomment this.
-		drawBar(g2D, fmFont, value, maxValue, "mean", barXCoord, yCoord, barHeight, groupMember);
+		drawBar(g2D, fmFont, value, maxValue, "mean", barXCoord, yCoord, barHeight, groupMember, instruction);
 	    }
 	    //else{//Uncomment this.
 	    //yCoord = yCoord + (barSpacing);//Uncomment this.
@@ -246,7 +255,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			    "n,c,t " + (tmpSMWThreadDataElement.getNodeID()) +
 			    "," + (tmpSMWThreadDataElement.getContextID()) +
 			    "," + (tmpSMWThreadDataElement.getThreadID()),
-			    barXCoord, yCoord, barHeight, groupMember);
+			    barXCoord, yCoord, barHeight, groupMember, instruction);
 		}
 	    }
 	    //######
@@ -259,7 +268,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     }
 
     private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
-			 int barXCoord, int yCoord, int barHeight, boolean groupMember){
+			 int barXCoord, int yCoord, int barHeight, boolean groupMember, int instruction){
 	int xLength = 0;
 	double d = 0.0;
 	String s = null;
@@ -315,10 +324,13 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	g2D.drawString(text, (barXCoord + 5), yCoord);
     }
 
-    //******************************
-    //Event listener code!!
-    //******************************
-    //ActionListener code.
+    //####################################
+    //Interface code.
+    //####################################
+
+    //######
+    //ActionListener.
+    //######
     public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
@@ -346,8 +358,13 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    ParaProf.systemError(e, null, "MDWP04");
 	}
     }
+    //######
+    //End - ActionListener.
+    //######
     
-    //Ok, now the mouse listeners for this panel.
+    //######
+    //MouseListener
+    //######
     public void mouseClicked(MouseEvent evt){
 	try{
 	    //For the moment, I am just showing the popup menu anywhere.
@@ -365,7 +382,24 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     public void mouseReleased(MouseEvent evt) {}
     public void mouseEntered(MouseEvent evt) {}
     public void mouseExited(MouseEvent evt) {}
-    
+    //######
+    //End - MouseListener
+    //######
+
+     //######
+    //ParaProfImageInterface
+    //######
+    public Dimension getImageSize(){
+	return this.getPreferredSize();
+    }
+    //######
+    //End - ParaProfImageInterface
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
+
     public void changeInMultiples(){
 	computeBarLength();
 	this.repaint();
@@ -406,9 +440,9 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     public Dimension getPreferredSize(){
 	return new Dimension(xPanelSize, yPanelSize);}
 
-    //******************************
+    //####################################
     //Instance data.
-    //******************************
+    //####################################
     private String counterName = null;
     private int mappingID = -1;
     private String mappingName;
@@ -426,12 +460,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     int xPanelSize = 0;
     int yPanelSize = 0;
   
-    //**********
-    //Popup menu definitions.
     private JPopupMenu popup = new JPopupMenu();
-    //**********
-  
-    //******************************
-    //End - Instance data.
-    //******************************
+    //####################################
+    //Instance data.
+    //####################################
 }

@@ -31,24 +31,21 @@ public class StaticMainWindowData{
 	//Clear the sMWGeneralData list for safety.
 	sMWGeneralData.removeAllElements();
     
-	int nodeCounter = 0;
 	for(Enumeration e1 = trial.getNodes().elements(); e1.hasMoreElements() ;){
 	    node = (Node) e1.nextElement();
 	    //Create a new sMWServer object and set the name properly.
-	    sMWServer = new SMWServer(nodeCounter);
+	    sMWServer = new SMWServer(node.getNodeID());
 	    //Add the server.
 	    sMWGeneralData.addElement(sMWServer);
-	    int contextCounter = 0;
  	    for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		context = (Context) e2.nextElement();
 		//Create a new context object and set the name properly.
-		sMWContext = new SMWContext(sMWServer, contextCounter);
+		sMWContext = new SMWContext(sMWServer, context.getContextID());
 		sMWServer.addContext(sMWContext);
-		int threadCounter = 0;
 		for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
 		    thread = (Thread) e3.nextElement();
 		    //Create a new thread object.
-		    sMWThread = new SMWThread(sMWContext, threadCounter);
+		    sMWThread = new SMWThread(sMWContext, thread.getThreadID());
 		    //Add to the context.
 		    sMWContext.addThread(sMWThread);
 		    //Now enter the thread data loops for this thread.
@@ -58,16 +55,13 @@ public class StaticMainWindowData{
 			//Check for this.
 			if(globalThreadDataElement != null){
 			    //Create a new thread data object.
-			    sMWThreadDataElement = new SMWThreadDataElement(trial, nodeCounter, contextCounter, threadCounter, globalThreadDataElement);
+			    sMWThreadDataElement = new SMWThreadDataElement(trial, node.getNodeID(), context.getContextID(), thread.getThreadID(), globalThreadDataElement);
 			    //Add to the thread data object.
 			    sMWThread.addFunction(sMWThreadDataElement);
 			}
 		    }
-		    threadCounter++;
 		}
-		contextCounter++;
 	    }
-	    nodeCounter++;
 	}
     }
 
@@ -106,13 +100,10 @@ public class StaticMainWindowData{
 	    SMWThreadDataElement sMWThreadDataElement;
 	    SMWThreadDataElement sMWUserThreadDataElement;
  
-	    int nodeCounter = 0;
 	    for(Enumeration e1 = trial.getNodes().elements(); e1.hasMoreElements() ;){
 		node = (Node) e1.nextElement();
-		int contextCounter = 0;
 		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		    context = (Context) e2.nextElement();
-		    int threadCounter = 0;
 		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
 			thread = (Thread) e3.nextElement();
 			//Only want to add an the element with the correct mapping id.
@@ -122,16 +113,13 @@ public class StaticMainWindowData{
 			    globalThreadDataElement = (GlobalThreadDataElement) thread.getUsereventList().elementAt(mappingID);
 			if(globalThreadDataElement != null){
 			    //Create a new thread data object.
-			    sMWThreadDataElement = new SMWThreadDataElement(trial, nodeCounter, contextCounter, threadCounter, globalThreadDataElement);
+			    sMWThreadDataElement = new SMWThreadDataElement(trial, node.getNodeID(), context.getContextID(), thread.getThreadID(), globalThreadDataElement);
 			    sMWThreadDataElement.setSortType(sortType);
 			    
 			    newList.add(sMWThreadDataElement);
 			}
-			threadCounter++;
 		    }
-		    contextCounter++;
 		}
-		nodeCounter++;
 	    }
 	}
 	catch(Exception e){

@@ -15,11 +15,23 @@ public class Context{
     public Context(){
 	threads = new Vector();}
 
-    public void setID(int id){
-	this.id = id;}
+    public Context(int nodeID, int contextID){
+	this.nodeID = nodeID;
+	this.contextID = contextID;
+	threads = new Vector();
+    }
 
-    public int getID(){
-	return id;}
+    public void setNodeId(int nodeID){
+	this.nodeID = nodeID;}
+
+    public int getNodeID(){
+	return nodeID;}
+
+    public void setContextID(int contextID){
+	this.contextID = contextID;}
+
+    public int getContextID(){
+	return contextID;}
     
     //Adds a thread to this context's list of threads.
     public void addThread(Thread thread){
@@ -49,6 +61,7 @@ public class Context{
 	return threads.size();}
     
     //Instance data.
-    int id = -1;
+    int nodeID = -1;
+    int contextID = -1;
     Vector threads;
 }

@@ -699,7 +699,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	    }
 	    for(Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements() ;){
 		ColorPair tmpCP = (ColorPair) e1.nextElement();
-		int mappingID = tmpGlobalMapping.getMappingId(tmpCP.getMappingName(), 0);
+		int mappingID = tmpGlobalMapping.getMappingID(tmpCP.getMappingName(), 0);
 		if(mappingID != -1){
 		    GlobalMappingElement tmpGME = tmpGlobalMapping.getGlobalMappingElement(mappingID, 0);
 		    

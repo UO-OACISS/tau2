@@ -26,10 +26,8 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
-//import javax.print.*;
 
-
-public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener, ParaProfImageInterface{
+public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener, Printable, ParaProfImageInterface{
   
     public StaticMainWindowPanel(){
 	try{
@@ -550,15 +548,30 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    
 	    renderIt((Graphics2D) g, 0);
 	}
 	catch(Exception e){
-	    System.out.println(e);
 	    ParaProf.systemError(e, null, "SMWP06");
 	}
     }
-  
+
+    public int print(Graphics g, PageFormat pf, int page){
+	
+	if(pf.getOrientation() == PageFormat.PORTRAIT)
+	    System.out.println("PORTRAIT");
+	else if(pf.getOrientation() == PageFormat.LANDSCAPE)
+	    System.out.println("LANDSCAPE");
+	
+	if(page >=3)
+	    return Printable.NO_SUCH_PAGE;
+	Graphics2D g2 = (Graphics2D)g;
+	g2.translate(pf.getImageableX(), pf.getImageableY());
+	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
+    
+	renderIt(g2, 2);
+    
+	return Printable.PAGE_EXISTS;
+    }
   
     public void renderIt(Graphics2D g2D, int instruction){
 	try{

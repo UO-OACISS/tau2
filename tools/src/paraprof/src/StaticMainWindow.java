@@ -8,17 +8,13 @@
 
 package paraprof;
 
-//import ParaProf.dss.*;
 import java.util.*;
-import java.lang.*;
-import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.print.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
-import javax.swing.colorchooser.*;
+import java.awt.print.*;
 
 public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener{ 
   
@@ -198,56 +194,23 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	    
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
-
-		if(arg.equals("ParaProf Manager")){
+		
+		if(arg.equals("Print")){
+		    PrinterJob job = PrinterJob.getPrinterJob();
+		    PageFormat defaultFormat = job.defaultPage();
+		    PageFormat selectedFormat = job.pageDialog(defaultFormat);
+		    job.setPrintable(panel, selectedFormat);
+		    if(job.printDialog()){
+			job.print();
+		    }
+		}
+		else if(arg.equals("ParaProf Manager")){
 		    ParaProfManager jRM = new ParaProfManager();
 		    jRM.show();
 		}
 		else if(arg.equals("Bin Window")){
 		    //BinWindow bW = new BinWindow(trial, sMWData, true, -1);
 		    //bW.show();
-		}
-		else if(arg.equals("ParaProf Preferrences")){
-		    
-		    /*
-		    //Set the directory to the current directory.
-		    fileChooser.setCurrentDirectory(new File("."));
-		    fileChooser.setSelectedFile(new File("ParaProfPreferences.dat"));
-		    
-		    //Bring up the save file chooser.
-		    int resultValue = fileChooser.showSaveDialog(this);
-		    
-		    if(resultValue == JFileChooser.APPROVE_OPTION){
-		    //Get the file.
-		    File file = fileChooser.getSelectedFile();
-		    
-		    
-		    //Check to make sure that something was obtained.
-		    if(file != null){
-		    try{
-		    //Write to the savedPreferences object.
-		    ParaProf.clrChooser.setSavedColors();
-		    trial.getPreferences().setSavedPreferences();
-		    
-		    ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
-		    prefsOut.writeObject(ParaProf.savedPreferences);
-		    prefsOut.close();
-		    
-		    }
-		    catch(Exception e){
-		    //Display an error
-		    JOptionPane.showMessageDialog(this, "An error occured whilst trying to save ParaProf preferences.", "Error!"
-		    ,JOptionPane.ERROR_MESSAGE);
-		    }
-		    }
-		    else
-		    {
-		    //Display an error
-		    JOptionPane.showMessageDialog(this, "No filename was given!", "Error!"
-		    ,JOptionPane.ERROR_MESSAGE);
-		    }
-		    }
-		    */
 		}
 		else if(arg.equals("Edit ParaProf Preferences!")){
 		    trial.getPreferences().showPreferencesWindow();
@@ -286,13 +249,13 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		    }
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(0);
+		    (new MappingLedgerWindow(trial, 0)).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(1);
+		    (new MappingLedgerWindow(trial, 1)).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(2);
+		    (new MappingLedgerWindow(trial, 2)).show();
 		}
 		else if(arg.equals("Show Call Path Relations")){
 		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true);

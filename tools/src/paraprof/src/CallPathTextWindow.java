@@ -241,13 +241,13 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    panel.repaint();
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(0);
+		    (new MappingLedgerWindow(trial, 0)).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(1);
+		    (new MappingLedgerWindow(trial, 1)).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(2);
+		    (new MappingLedgerWindow(trial, 2)).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
@@ -365,12 +365,17 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //Updates this window's data copy.
     private void sortLocalData(){ 
 	try{
-	    //The name selection behaves slightly differently. Thus the check for it.
-	    if(name){
-		list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, order);
+	    if(global){
+		list = (trial.getGlobalMapping()).getMapping(0);
 	    }
 	    else{
-		list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, metric+order);
+		//The name selection behaves slightly differently. Thus the check for it.
+		if(name){
+		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, order);
+		}
+		else{
+		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, metric+order);
+		}
 	    }
 	}
 	catch(Exception e){

@@ -14,11 +14,16 @@ public class Node{
     public Node(){
 	contexts = new Vector();}
 
-    public void setID(int id){
-	this.id = id;}
+    public Node(int nodeID){
+	this.nodeID = nodeID;
+	contexts = new Vector();
+    }
 
-    public int getID(){
-	return id;}
+    public void setNodeID(int nodeID){
+	this.nodeID = nodeID;}
+
+    public int getNodeID(){
+	return nodeID;}
     
     //Adds a context to this nodes list of contexts.
     public void addContext(Context context){
@@ -48,6 +53,6 @@ public class Node{
 	return contexts.size();}
     
     //Instance data.
-    int id = -1;
+    int nodeID = -1;
     Vector contexts;   
 }

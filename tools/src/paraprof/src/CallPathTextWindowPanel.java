@@ -3,7 +3,12 @@
 
   Title:      ParaProf
   Author:     Robert Bell
-  Description:  
+  Description: 
+  Things to do:
+  1)Add printing support.
+  2)Need to do quite a bit of work in the renderIt function,
+    such as adding clipping support, and bringing it more inline
+    with the rest of the system.
 */
 
 package paraprof;
@@ -50,7 +55,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 	    renderIt((Graphics2D) g, 0);
 	}
 	catch(Exception e){
-	    System.out.println(e);
 	    ParaProf.systemError(e, null, "TDWP03");
 	}
     }
@@ -68,7 +72,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	renderIt(g2, 1);
+	renderIt(g2, 2);
     
 	return Printable.PAGE_EXISTS;
     }  
@@ -120,7 +124,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		int yHeightNeeded = 0;
 		int xWidthNeeded = 0;
 		yHeightNeeded = yHeightNeeded + (spacing);
-		l1 = gm.getMappingIterator(0);
+		l1 = cPTWindow.getDataIterator(); 
 		while(l1.hasNext()){
 		    gme1 = (GlobalMappingElement) l1.next();
 		    //Don't draw callpath mapping objects.
@@ -145,7 +149,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		
 		if(ParaProf.debugIsOn){
 		    yHeightNeeded = yHeightNeeded + (spacing);
-		    l1 = gm.getMappingIterator(0);
+		    l1 = cPTWindow.getDataIterator();
 		    while(l1.hasNext()){
 			gme1 = (GlobalMappingElement) l1.next();
 			yHeightNeeded = yHeightNeeded + (spacing);
@@ -162,7 +166,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		    yPanelSize = yHeightNeeded+10;
 		    sizeChange = true;
 		}
-		if(sizeChange)
+		if(sizeChange && instruction==0)
 		    revalidate();
 		//End - Set panel size. 
 		//**********
@@ -170,7 +174,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		
 		yCoord = yCoord + (spacing);
 		g2D.setColor(Color.black);
-		l1 = gm.getMappingIterator(0);
+		l1 = cPTWindow.getDataIterator();
 		while(l1.hasNext()){
 		    gme1 = (GlobalMappingElement) l1.next();
 		    //Don't draw callpath mapping objects.
@@ -210,7 +214,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		if(ParaProf.debugIsOn){
 		    g2D.drawString("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", 20, yCoord);
 		    yCoord = yCoord + (spacing);
-		    l1 = gm.getMappingIterator(0);
+		    l1 = cPTWindow.getDataIterator();
 		    while(l1.hasNext()){
 			gme1 = (GlobalMappingElement) l1.next();
 			g2D.drawString("["+gme1.getGlobalID()+"] - "+gme1.getMappingName(), 20, yCoord);
@@ -332,7 +336,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		    yPanelSize = yHeightNeeded+10;
 		    sizeChange = true;
 		}
-		if(sizeChange)
+		if(sizeChange && instruction==0)
 		    revalidate();
 		//End - Set panel size. 
 		//**********

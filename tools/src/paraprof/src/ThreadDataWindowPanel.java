@@ -15,12 +15,9 @@ import java.awt.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
 import javax.swing.*;
-import javax.swing.border.*;
 import javax.swing.event.*;
-import java.text.*;
 
-
-public class ThreadDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable{
+public class ThreadDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
 
     public ThreadDataWindowPanel(){
     
@@ -62,8 +59,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    if(windowType==1)
 		thread = trial.getThread(nodeID,contextID,threadID);
 
-	    //**********
+	    //######
 	    //Add items to the popu menu.
+	    //######
 	    JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
 	    mappingDetailsItem.addActionListener(this);
 	    popup.add(mappingDetailsItem);
@@ -75,8 +73,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
 	    maskMappingItem.addActionListener(this);
 	    popup.add(maskMappingItem);
+	    //######
 	    //End - Add items to the popu menu.
-	    //**********
+	    //######
 	    
 	    //Schedule a repaint of this panel.
 	    this.repaint();
@@ -90,7 +89,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
-	    drawPage((Graphics2D) g, false);
+	    renderIt((Graphics2D) g, 0);
 	}
 	catch(Exception e){
 	    System.out.println(e);
@@ -111,63 +110,34 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	drawPage(g2, true);
+	renderIt(g2, 2);
     
 	return Printable.PAGE_EXISTS;
     }
   
-    public void drawPage(Graphics2D g2D, boolean print){
+    public void renderIt(Graphics2D g2D, int instruction){
   	try{ 
 	    list = tDWindow.getData();
 
-	    //**********
+	    //######
 	    //Some declarations.
+	    //######
 	    double value = 0.0;
 	    double maxValue = 0.0;
 	    int stringWidth = 0;
 	    int yCoord = 0;
 	    int barXCoord = barLength + textOffset;
 	    SMWThreadDataElement sMWThreadDataElement = null;
+	    //######
 	    //End - Some declarations.
-	    //**********
+	    //######
       	    
 	    //With group support present, it is possible that the number of mappings in
 	    //our data list is zero.  This can occur when the user's selected groups to display are
-	    //not present on this thread ... for examaple. If so, just return.
+	    //not present on this thread ... for example. If so, just return.
 	    if((list.size()) == 0)
 		return;
-	    
-	    Rectangle clipRect = g2D.getClipBounds();
-	    
-	    int yBeg = (int) clipRect.getY();
-	    int yEnd = (int) (yBeg + clipRect.getHeight());
-	    int startElement = 0;
-	    int endElement = 0;
-	    
-	    if(print){
-		startElement = 0;
-		endElement = 100; //((list.size()) - 1);
-	    }
-	    else{
-		
-		startElement = ((yBeg - yCoord) / barSpacing) - 1;
-		endElement  = ((yEnd - yCoord) / barSpacing) + 1;
-		
-		if(startElement < 0)
-		    startElement = 0;
-		
-		if(endElement < 0)
-		    endElement = 0;
-		
-		if(startElement > (list.size() - 1))
-		    startElement = (list.size() - 1);
-		
-		if(endElement > (list.size() - 1))
-		    endElement = (list.size() - 1);
-		
-		yCoord = yCoord + (startElement * barSpacing);
-	    }
-	    
+	    	    
 	    //To make sure the bar details are set, this
 	    //method must be called.
 	    trial.getPreferences().setBarDetails(g2D);	    
@@ -181,9 +151,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    g2D.setFont(font);
 	    FontMetrics fmFont = g2D.getFontMetrics(font);
 	    
-	    //***
+	    //######
 	    //Set max values.
-	    //***
+	    //######
 	    if(windowType==0){
 		switch(tDWindow.getMetric()){
 		case 2: 
@@ -247,15 +217,48 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(tDWindow.units(),maxValue));
 		barXCoord = barXCoord + stringWidth;
 	    }
-	    //***
+	    //######
 	    //End - Set max values.
-	    //***
+	    //######
+
+	    int yBeg = 0;
+	    int yEnd = 0;
+	    int startElement = 0;
+	    int endElement = 0;
+	    Rectangle clipRect = null;
 	    
+	    if(instruction==1 || instruction==2){
+		startElement = 0;
+		endElement = ((list.size()) - 1);
+	    }
+	    else{
+		clipRect = g2D.getClipBounds();
+		yBeg = (int) clipRect.getY();
+		yEnd = (int) (yBeg + clipRect.getHeight());
+
+		startElement = ((yBeg - yCoord) / barSpacing) - 1;
+		endElement  = ((yEnd - yCoord) / barSpacing) + 1;
+		
+		if(startElement < 0)
+		    startElement = 0;
+		
+		if(endElement < 0)
+		    endElement = 0;
+		
+		if(startElement > (list.size() - 1))
+		    startElement = (list.size() - 1);
+		
+		if(endElement > (list.size() - 1))
+		    endElement = (list.size() - 1);
+		
+		yCoord = yCoord + (startElement * barSpacing);
+	    }
 
 	    //At this point we can determine the size this panel will
 	    //require. If we need to resize, don't do any more drawing,
-	    //just call revalidate.
-	    if(resizePanel(fmFont, barXCoord, list, startElement, endElement)){
+	    //just call revalidate. Make sure we check the instruction value as we only want to
+	    //revalidate if we are drawing to the screen.
+	    if(resizePanel(fmFont, barXCoord, list, startElement, endElement) && instruction==0){
 		this.revalidate();
 		return;
 	    }
@@ -319,7 +322,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		}
 
 		yCoord = yCoord + (barSpacing);
-		drawBar(g2D, fmFont, value, maxValue, barXCoord, yCoord, barHeight, sMWThreadDataElement);
+		drawBar(g2D, fmFont, value, maxValue, barXCoord, yCoord, barHeight, sMWThreadDataElement, instruction);
 	    }
 	}
 	catch(Exception e){
@@ -328,7 +331,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     }
 
     private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, int barXCoord, 
-			 int yCoord, int barHeight, SMWThreadDataElement sMWThreadDataElement){
+			 int yCoord, int barHeight, SMWThreadDataElement sMWThreadDataElement, int instruction){
 	int xLength = 0;
 	double d = 0.0;
 	String s = null;
@@ -391,8 +394,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	
 	//Grab the width of the mappingName.
 	stringWidth = fmFont.stringWidth(mappingName);	
-	//Update the drawing coordinates.
-	sMWThreadDataElement.setDrawCoords(stringStart, (barXCoord+5+stringWidth), (yCoord - barHeight), yCoord);
+	//Update the drawing coordinates if we are drawing to the screen.
+	if(instruction==0)
+	    sMWThreadDataElement.setDrawCoords(stringStart, (barXCoord+5+stringWidth), (yCoord - barHeight), yCoord);
     }
 
     public void changeInMultiples(){
@@ -411,13 +415,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }
   
-    //************************************
-    //Event listener code!!
-    //************************************
+    //####################################
+    //Interface code.
+    //####################################
 
-    //******
-    //ActionListener
-    //******
+    //######
+    //ActionListener.
+    //######
     public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
@@ -472,13 +476,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    ParaProf.systemError(e, null, "TDWP04");
 	}
     }
-    //******
-    //End - ActionListener
-    //******
-    
-    //******
+    //######
+    //End - ActionListener.
+    //######
+
+    //######
     //MouseListener
-    //******
+    //######
     public void mouseClicked(MouseEvent evt){
 	try{
 	    SMWThreadDataElement sMWThreadDataElement = null;
@@ -538,13 +542,23 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     public void mouseReleased(MouseEvent evt) {}
     public void mouseEntered(MouseEvent evt) {}
     public void mouseExited(MouseEvent evt) {}
-    //******
+    //######
     //End - MouseListener
-    //******
+    //######
 
-    //************************************
-    //End - Event listener code!!
-    //************************************
+    //######
+    //ParaProfImageInterface
+    //######
+    public Dimension getImageSize(){
+	return this.getPreferredSize();
+    }
+    //######
+    //End - ParaProfImageInterface
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
     
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int barXCoord, Vector list, int startElement, int endElement){
@@ -581,9 +595,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     public Dimension getPreferredSize(){
 	return new Dimension(xPanelSize, (yPanelSize + 10));}
   
-    //************************************
+    //####################################
     //Instance data.
-    //************************************
+    //####################################
     private int xPanelSize = 640;
     private int yPanelSize = 480;
   
@@ -607,8 +621,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
   
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
-  
-    //************************************
-    //End - Instance data.
-    //************************************
+    //####################################
+    //Instance data.
+    //####################################
 }

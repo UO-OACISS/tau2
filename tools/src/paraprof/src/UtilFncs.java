@@ -175,6 +175,10 @@ public class UtilFncs{
 	menuItem = new JMenuItem("Edit ParaProf Preferences!");
 	menuItem.addActionListener(actionListener);
 	jMenu.add(menuItem);
+
+	menuItem = new JMenuItem("Print");
+	menuItem.addActionListener(actionListener);
+	jMenu.add(menuItem);
 	
 	menuItem = new JMenuItem("Close This Window");
 	menuItem.addActionListener(actionListener);

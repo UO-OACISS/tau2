@@ -189,6 +189,10 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		else if(arg.equals("Edit ParaProf Preferences!")){
 		    trial.getPreferences().showPreferencesWindow();
 		}
+		else if(arg.equals("Save Image")){
+		    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+		    imageOutput.saveImage((ParaProfImageInterface) panel);
+		}
 		else if(arg.equals("Close This Window")){
 		    closeThisWindow();}
 		else if(arg.equals("Exit ParaProf!")){
@@ -268,13 +272,13 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			displaySiders(false);
 		}
 		else if(arg.equals("Show Function Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(0);
+		    (new MappingLedgerWindow(trial, 0)).show();
 		}
 		else if(arg.equals("Show Group Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(1);
+		    (new MappingLedgerWindow(trial, 1)).show();
 		}
 		else if(arg.equals("Show User Event Ledger")){
-		    (trial.getGlobalMapping()).displayMappingLedger(2);
+		    (new MappingLedgerWindow(trial, 2)).show();
 		}
 		else if(arg.equals("Close All Sub-Windows")){
 		    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
