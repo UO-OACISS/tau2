@@ -110,7 +110,6 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 // data corruption. Inspite of the lock, while one thread is being 
 // initialized, other thread may have started executing and setting 
 // these values? 
-//     	  NumCalls[i] = 0;
      	  NumCalls[i] = 0;
 	  SetAlreadyOnStack(false, i);
      	  NumSubrs[i] = 0;
@@ -250,6 +249,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 1999/04/24 20:57:50 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.13 1999/04/24 20:57:50 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 1999/04/24 20:58:45 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.14 1999/04/24 20:58:45 sameer Exp $ 
  ***************************************************************************/
