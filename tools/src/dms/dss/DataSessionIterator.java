@@ -14,7 +14,7 @@ import dms.dss.*;
  * AFTER decrementing index. Thus, alternating calls to next and previous
  * return the same element. As required by the ListIterator specification.
  *
- * <P>CVS $Id: DataSessionIterator.java,v 1.6 2004/01/16 23:16:37 khuck Exp $</P>
+ * <P>CVS $Id: DataSessionIterator.java,v 1.7 2004/01/30 21:21:41 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -26,6 +26,7 @@ public class DataSessionIterator implements ListIterator{
  * @param	inVector Vector object to be converted to an Iterator
  */
 		public DataSessionIterator(Vector inVector){
+				structureType = VECTOR;
 				
 				//Check to make sure that the Vector is not null.
 				if(inVector == null)
@@ -34,6 +35,23 @@ public class DataSessionIterator implements ListIterator{
 				//Safe to continue.				
 				listData = inVector;
 				size = listData.size();
+		}
+
+/**
+ * Optional Constructor for the DataSessionIterator class.
+ *
+ * @param	inArray Array of objects to be converted to an Iterator
+ */
+		public DataSessionIterator(Object[] inArray){
+				structureType = ARRAY;
+				
+				//Check to make sure that the Vector is not null.
+				if(inArray == null)
+						throw new IllegalArgumentException();
+				
+				//Safe to continue.				
+				arrayData = inArray;
+				size = java.lang.reflect.Array.getLength(arrayData);
 		}
 
 
@@ -69,7 +87,11 @@ public class DataSessionIterator implements ListIterator{
 						//Since, by the specification, alternating calls to next and previous
 						//return the same element. We get the element first, and then increment
 						//the index.  The reverse of previous(). See instance notes below.
-						nextObject = listData.elementAt(index);
+						if (structureType == VECTOR) {
+							nextObject = listData.elementAt(index);
+						} else {
+							nextObject = arrayData[index];
+						}
 						
 						//Increment the index.
 						index++;
@@ -94,7 +116,11 @@ public class DataSessionIterator implements ListIterator{
 						//return the same element. We decrement first, and then return.  The
 						//reverse of next(). See instance notes below.
 						index--;
-						previousObject =  listData.elementAt(index);
+						if (structureType == VECTOR) {
+							previousObject =  listData.elementAt(index);
+						} else {
+							previousObject =  arrayData[index];
+						}
 				}
 
 				return previousObject;
@@ -142,8 +168,21 @@ public class DataSessionIterator implements ListIterator{
 				return listData;
 		}
 
+/**
+ * Returns the full array of elements
+ *
+ * @return data array of elements in the iterator.
+ */
+		public Object[] array(){
+				return arrayData;
+		}
+
 
 		private Vector listData = null;
+		private Object[] arrayData = null;
 		private int size = 0;
 		private int index = 0;
+		private int structureType;
+		private static int ARRAY = 0;
+		private static int VECTOR = 1;
 }

@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.31 2004/01/29 23:02:04 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.32 2004/01/30 21:21:40 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -628,7 +628,6 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 
-		Vector functionData = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		buf.append("select trial, function, metric, node, context, thread, ");
@@ -711,13 +710,20 @@ public class PerfDBSession extends DataSession {
 		buf.append(" order by trial, function, metric, node, context, thread ");
 		// System.out.println(buf.toString());
 
+		// Vector functionData = new Vector();
+		FunctionDataObject[] functionData = null;
 		// get the results
 		try {
-			Date start = new Date();
-	    	ResultSet resultSet = db.executeQuery(buf.toString());	
-			Date end = new Date();
-			long interval = end.getTime() - start.getTime();
-			System.out.print(interval);
+            Date start = new Date();
+            ResultSet resultSet = db.executeQuery(buf.toString());
+            Date end = new Date();
+            long interval = end.getTime() - start.getTime();
+            System.out.print(interval);
+			resultSet.last();
+			int size = resultSet.getRow();
+			resultSet.first();
+			functionData = new FunctionDataObject[size];
+			int index = 0;
 	    	while (resultSet.next() != false) {
 				int metricIndex = 0;
 				FunctionDataObject funDO = new FunctionDataObject();
@@ -742,7 +748,9 @@ public class PerfDBSession extends DataSession {
 					funDO.setExclusive(metricIndex, resultSet.getDouble(10));
 					funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(13));
 				}
-				functionData.addElement(funDO);
+				// functionData.addElement(funDO);
+				functionData[index] = funDO;
+				index++;
 	    	}
 			resultSet.close(); 
 		}catch (Exception ex) {
