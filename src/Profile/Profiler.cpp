@@ -538,12 +538,151 @@ void Profiler::dumpFunctionNames()
     fprintf(fp, "%s\n", functionList[i]);
   }
   fclose(fp);
-
   
   //Rename from the temp filename.
+  dumpfile = new char[1024];
   sprintf(dumpfile,"%s/dump_filenames_n,c-.%d.%d",dirname, RtsLayer::myNode(),
                 RtsLayer::myContext());
   rename(filename, dumpfile);
+}
+
+void Profiler::getFunctionValues(const char **inFuncs,
+				 int numOfFuncs,
+				 double ***counterExclusiveValues,
+				 double ***counterInclusiveValues,
+				 int **numOfCalls,
+				 int **numOfSubRoutines,
+				 char ***counterNames,
+				 int *numOfCounters,
+				 int tid)
+{
+  
+  TAU_PROFILE("Test", " ", TAU_IO);
+
+  vector<FunctionInfo*>::iterator it;
+
+  bool functionCheck = false;
+  int currentFuncPos = -1;
+  const char *tmpFunctionName = NULL;
+
+  int tmpNumberOfCounters;
+  bool * tmpCounterUsedList;
+  const char ** tmpCounterList;
+
+  MultipleCounterLayer::theCounterListInternal(&tmpCounterList,
+					       &tmpNumberOfCounters,
+					       &tmpCounterUsedList);
+
+  //Allocate memory for the lists.
+  *counterExclusiveValues = ( double **) malloc( sizeof(double *) * numOfFuncs);
+  *counterInclusiveValues = ( double **) malloc( sizeof(double *) * numOfFuncs);
+  for(int memAlloc=0;memAlloc<numOfFuncs;memAlloc++){
+    (*counterExclusiveValues)[memAlloc] = ( double *) malloc( sizeof(double) * tmpNumberOfCounters);
+    (*counterInclusiveValues)[memAlloc] = ( double *) malloc( sizeof(double) * tmpNumberOfCounters);
+  }
+  *numOfCalls = (int *) malloc(sizeof(int) * numOfFuncs);
+  *numOfSubRoutines = (int *) malloc(sizeof(int) * numOfFuncs);
+
+  double * tmpDoubleExcl;
+  double * tmpDoubleIncl;
+
+  double currenttime[MAX_TAU_COUNTERS];
+  double prevtime[MAX_TAU_COUNTERS];
+  double total[MAX_TAU_COUNTERS];
+
+  for(int a=0;a<MAX_TAU_COUNTERS;a++){
+    currenttime[a]=0;
+    prevtime[a]=0;
+    total[a]=0;
+  }
+
+  RtsLayer::getUSecD(tid, currenttime);
+
+  RtsLayer::LockDB();
+  
+  for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++){
+    //Check to see that it is one of the requested functions.
+    functionCheck = false;
+    currentFuncPos = -1;
+    tmpFunctionName = (*it)->GetName();
+    for(int fc=0;fc<numOfFuncs;fc++){
+      if(strcmp(inFuncs[fc], tmpFunctionName) == 0){
+	functionCheck = true;
+	currentFuncPos = fc;
+	break;
+      }
+    }
+    if(functionCheck){
+      if ((*it)->GetAlreadyOnStack(tid)){
+	/* it is on the callstack. We need to do some processing. */
+	/* Calculate excltime, incltime */
+	Profiler *current;
+	/* Traverse the Callstack */
+	current = CurrentProfiler[tid];
+	
+	if (current == 0){ /* current is null */
+	  DEBUGPROFMSG("Current is NULL when it should be on the stack! TID = " << tid << endl;);
+	}
+	else{ /* current is not null */
+	  tmpDoubleExcl = (*it)->GetExclTime(tid);
+	  tmpDoubleIncl = (*it)->GetInclTime(tid);
+	  
+	  //Initialize what gets added for
+	  //reducing from the parent profile
+	  for(int j=0;j<MAX_TAU_COUNTERS;j++){
+	    prevtime[j]=0;
+	    total[j]=0;
+	  }
+	  
+	  while (current != 0){
+	    /* Traverse the stack */ 
+	    if ((*it) == current->ThisFunction){ /* Match! */
+	      DEBUGPROFMSG("MATCH! Name :"<<current->ThisFunction->GetName()
+			   <<endl;);
+	      
+	      for(int k=0;k<MAX_TAU_COUNTERS;k++){
+		total[k] = currenttime[k] - current->StartTime[k];
+		tmpDoubleExcl[k] += total[k] - prevtime[k];
+	      }
+	      /* prevtime is the inclusive time of the subroutine that should
+		 be subtracted from the current exclusive time */ 
+	      /* If there is no instance of this function higher on the 	
+		 callstack, we should add the total to the inclusive time */
+	    }
+	    for(int l=0;l<MAX_TAU_COUNTERS;l++){
+	      prevtime[l] = currenttime[l] - current->StartTime[l];  
+	    }
+	    /* to calculate exclusive time */
+	    current = current->ParentProfiler; 
+	  } /* We've reached the top! */
+	  for(int m=0;m<MAX_TAU_COUNTERS;m++){
+	    tmpDoubleIncl[m] += total[m];//add this to the inclusive time
+	    //prevtime and incltime are calculated
+	  }
+	} /* Current is not null */
+      } /* On call stack */
+      else{ /* it is not on the callstack. */ 
+	tmpDoubleExcl = (*it)->GetExclTime(tid);
+	tmpDoubleIncl = (*it)->GetInclTime(tid);
+
+
+      }// Not on the Callstack
+
+      //Copy the data.
+      (*numOfCalls)[currentFuncPos] = (*it)->GetCalls(tid);
+      (*numOfSubRoutines)[currentFuncPos] = (*it)->GetSubrs(tid);
+      
+      int posCounter = 0;
+      for(int copyData=0;copyData<MAX_TAU_COUNTERS;copyData++){
+	if(tmpCounterUsedList[copyData]){
+	  (*counterInclusiveValues)[currentFuncPos][posCounter] = tmpDoubleIncl[copyData];
+	  (*counterExclusiveValues)[currentFuncPos][posCounter] = tmpDoubleExcl[copyData];
+	  posCounter++;
+	}
+      }
+    }
+  }
+  RtsLayer::UnLockDB();
 }
 
 
@@ -1551,8 +1690,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.65 $   $Date: 2002/03/22 19:20:52 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.65 2002/03/22 19:20:52 bertie Exp $ 
+ * $Revision: 1.66 $   $Date: 2002/03/27 10:08:24 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.66 2002/03/27 10:08:24 bertie Exp $ 
  ***************************************************************************/
 
 	
