@@ -253,14 +253,14 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
      * @param function
      * @return ID of the saved function
      */
-    public int saveFunction(Function function, int newTrialID, Vector metrics){return -1;}
+    public int saveFunction(Function function, int newTrialID, Hashtable newMetHash){return -1;}
     
     /**
      * Saves the FunctionDataObject.
      *
      * @param functionData
      */
-    public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Vector metrics){}
+    public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Hashtable newMetHash){}
     
     /**
      * Saves the UserEvent object.

@@ -1,7 +1,7 @@
 package dms.dss;
 
 import java.util.Vector;
-import java.util.Enumeration;
+import java.util.Hashtable;
 import dms.perfdb.DB;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.7 2004/04/07 17:36:57 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.8 2004/04/09 19:42:49 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -225,7 +225,7 @@ public class Function {
 		return funs;
 	}
 
-	public int saveFunction(DB db, int newTrialID, Vector metricID, int saveMetricIndex) {
+	public int saveFunction(DB db, int newTrialID, Hashtable newMetHash, int saveMetricIndex) {
 		int newFunctionID = 0;
 		try {
 			PreparedStatement statement = null;
@@ -260,12 +260,12 @@ public class Function {
 
 		// save the function mean summaries
 		if (meanSummary != null) {
-			meanSummary.saveMeanSummary(db, newFunctionID, metricID, saveMetricIndex);
+			meanSummary.saveMeanSummary(db, newFunctionID, newMetHash, saveMetricIndex);
 		}
 
 		// save the function total summaries
 		if (totalSummary != null) {
-			totalSummary.saveTotalSummary(db, newFunctionID, metricID, saveMetricIndex);
+			totalSummary.saveTotalSummary(db, newFunctionID, newMetHash, saveMetricIndex);
 		}
 		return newFunctionID;
 	}

@@ -1,9 +1,14 @@
 package dms.dss;
 
+import dms.perfdb.DB;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.1 2004/03/27 01:02:56 khuck Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.2 2004/04/09 19:42:49 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -71,5 +76,29 @@ public class Metric {
  */
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public int saveMetric(DB db, int newTrialID) {
+		int newMetricID = 0;
+		try {
+	    	PreparedStatement stmt1 = null;
+	    	stmt1 = db.prepareStatement("INSERT INTO metric (name, trial) VALUES (?, ?)");
+			stmt1.setString(1, getName());
+			stmt1.setInt(2, newTrialID);
+			stmt1.executeUpdate();
+			String tmpStr = new String();
+			if (db.getDBType().compareTo("mysql") == 0)
+				tmpStr = "select LAST_INSERT_ID();";
+			if (db.getDBType().compareTo("db2") == 0)
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+			else
+				tmpStr = "select currval('metric_id_seq');";
+			newMetricID = Integer.parseInt(db.getDataItem(tmpStr));
+		} catch (SQLException e) {
+	    	System.out.println("An error occurred while saving the trial.");
+	    	e.printStackTrace();
+	    	System.exit(0);
+		}
+		return newMetricID;
 	}
 }

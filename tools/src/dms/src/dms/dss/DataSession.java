@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.8 2004/04/05 20:35:53 bertie Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.9 2004/04/09 19:42:49 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -593,14 +593,14 @@ public abstract class DataSession {
  * @param function
  * @return ID of the saved function
  */
-	abstract public int saveFunction(Function function, int newTrialID, Vector metrics) ;
+	abstract public int saveFunction(Function function, int newTrialID, Hashtable newMetHash) ;
 
 /**
  * Saves the FunctionDataObject.
  *
  * @param functionData
  */
-	abstract public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Vector metrics) ;
+	abstract public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Hashtable newMetHash) ;
 
 /**
  * Saves the UserEvent object.

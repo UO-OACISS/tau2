@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.19 2004/04/08 19:54:17 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.20 2004/04/09 19:42:50 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -438,15 +438,36 @@ public class PerfDBSession extends DataSession {
 	// override the saveTrial method
 	public int saveTrial () {
 		int newTrialID = trial.saveTrial(db);
-		Hashtable newFunHash = saveFunctions(newTrialID, -1);
-		saveFunctionData(newFunHash, metrics, -1);
+		Hashtable newMetHash = saveMetrics(newTrialID, trial, -1);
+		Hashtable newFunHash = saveFunctions(newTrialID, newMetHash, -1);
+		saveFunctionData(newFunHash, newMetHash, -1);
 		Hashtable newUEHash = saveUserEvents(newTrialID);
 		saveUserEventData(newUEHash);
 		return newTrialID;
 	}
 
+	// save the metrics
+	private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) {
+		System.out.print("Saving the metrics: ");
+		Hashtable newMetHash = new Hashtable();
+	    Enumeration enum = trial.getDataSession().getMetrics().elements();
+	    Metric metric;
+		int i = 0;
+	    while (enum.hasMoreElements()) {
+			metric = (Metric)enum.nextElement();
+			int newMetricID = 0;
+			if (saveMetricIndex < 0 || saveMetricIndex == i) {
+				newMetricID = metric.saveMetric(db, newTrialID);
+				newMetHash.put(new Integer(i), new Integer(newMetricID));
+				System.out.print("\rSaving the metrics: " + ++i + " records saved...");
+			}
+	    }
+		System.out.print("\n");
+		return newMetHash;
+	}
+
 	// save the functions
-	private Hashtable saveFunctions(int newTrialID, int saveMetricIndex) {
+	private Hashtable saveFunctions(int newTrialID, Hashtable newMetHash, int saveMetricIndex) {
 		System.out.print("Saving the functions: ");
 		Hashtable newFunHash = new Hashtable();
 		Enumeration enum = functions.elements();
@@ -454,7 +475,7 @@ public class PerfDBSession extends DataSession {
 		int count = 0;
 		while (enum.hasMoreElements()) {
 			function = (Function)enum.nextElement();
-			int newFunctionID = function.saveFunction(db, newTrialID, metrics, saveMetricIndex);
+			int newFunctionID = function.saveFunction(db, newTrialID, newMetHash, saveMetricIndex);
 			newFunHash.put (new Integer(function.getID()), new Integer(newFunctionID));
 			System.out.print("\rSaving the functions: " + ++count + " records saved...");
 		}
@@ -463,7 +484,7 @@ public class PerfDBSession extends DataSession {
 	}
 
 	// save the function data
-	private void saveFunctionData(Hashtable newFunHash, Vector metrics, int saveMetricIndex) {
+	private void saveFunctionData(Hashtable newFunHash, Hashtable newMetHash, int saveMetricIndex) {
 		System.out.print("Saving the function data: ");
 		Enumeration enum = functionData.elements();
 		FunctionDataObject fdo;
@@ -471,7 +492,7 @@ public class PerfDBSession extends DataSession {
 		while (enum.hasMoreElements()) {
 			fdo = (FunctionDataObject)enum.nextElement();
 			Integer newFunctionID = (Integer)newFunHash.get(new Integer(fdo.getFunctionIndexID()));
-			fdo.saveFunctionData(db, newFunctionID.intValue(), metrics, saveMetricIndex);
+			fdo.saveFunctionData(db, newFunctionID.intValue(), newMetHash, saveMetricIndex);
 			System.out.print("\rSaving the function data: " + ++count + " records saved...");
 		}
 		System.out.print("\n");
@@ -525,8 +546,8 @@ public class PerfDBSession extends DataSession {
  * @param function
  * @return database index ID of the saved function record
  */
-	public int saveFunction(Function function, int newTrialID, Vector metrics) {
-		return function.saveFunction(db, newTrialID, metrics, -1);
+	public int saveFunction(Function function, int newTrialID, Hashtable newMetHash) {
+		return function.saveFunction(db, newTrialID, newMetHash, -1);
 	}
 
 /**
@@ -535,8 +556,8 @@ public class PerfDBSession extends DataSession {
  * @param functionData
  * @return database index ID of the saved interval_location_profile record
  */
-	public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Vector metrics) {
-		functionData.saveFunctionData(db, newFunctionID, metrics, -1);
+	public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Hashtable newMetHash) {
+		functionData.saveFunctionData(db, newFunctionID, newMetHash, -1);
 		return;
 	}
 
@@ -735,16 +756,11 @@ public class PerfDBSession extends DataSession {
 
 			// save the old metric ID so that we can restore it...
 			newTrialID = trial.saveTrial(db);
-			Vector metids = new Vector();
-			Metric tmp = null;
-			for (int i = 0 ; i < trial.getDataSession().getMetrics().size() ; i++) {
-				tmp = (Metric)trial.getDataSession().getMetric(saveMetricIndex);
-				metids.add(new Integer(tmp.getID()));
-			}
+			Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 
 			if (functions != null && functions.size() > 0) {
-				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
-				saveFunctionData(newFunHash, metrics, saveMetricIndex);
+				Hashtable newFunHash = saveFunctions(newTrialID, newMetHash, saveMetricIndex);
+				saveFunctionData(newFunHash, newMetHash, saveMetricIndex);
 			}
 			if (userEvents != null && userEvents.size() > 0) {
 				Hashtable newUEHash = saveUserEvents(newTrialID);
@@ -753,30 +769,16 @@ public class PerfDBSession extends DataSession {
 				}
 			}
 
-			// set the metric ID back to what paraprof wants...
-			for (int i = 0 ; i < trial.getDataSession().getMetrics().size() ; i++) {
-				tmp = (Metric)trial.getDataSession().getMetric(saveMetricIndex);
-				Integer tmpI = (Integer)metids.elementAt(i);
-				tmp.setID(tmpI.intValue());
-			}
-
 			System.out.println("New Trial ID: " + newTrialID);
 		} else {
 			newTrialID = trial.getID();
 			System.out.println("\nSaving the metric...");
 
-			// save the old metric ID so that we can restore it...
-			Metric tmp = (Metric)trial.getDataSession().getMetric(saveMetricIndex);
-			int oldID = tmp.getID();
-
-			trial.saveMetric(db, saveMetricIndex);
+			Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 			if (functions != null && functions.size() > 0) {
-				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
-				saveFunctionData(newFunHash, metrics, saveMetricIndex);
+				Hashtable newFunHash = saveFunctions(newTrialID, newMetHash, saveMetricIndex);
+				saveFunctionData(newFunHash, newMetHash, saveMetricIndex);
 			}
-
-			// set the metric ID back to what paraprof wants...
-			tmp.setID(oldID);
 
 			System.out.println("Modified Trial ID: " + newTrialID);
 		}
