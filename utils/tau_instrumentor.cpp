@@ -374,9 +374,9 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
 	    // keep track of which line was instrumented last
  	    // and then finish writing the rest of the line 
 	    // this will be used for templates and instantiated functions
-	  }
+	  } // if open brace
 	  else 
-	  { 
+	  {  // if not open brace
 	    // ok to write to ostr 
 	    ostr << inbuf[i]; 
 	    if (inbuf[i] == ';')
@@ -387,7 +387,7 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
 	      // by setting instrumented as true, it won't look for an open
 	      // brace on this line 
 	    }
-          } 
+          } // if open brace 
 	} // for i loop
 	ostr <<endl;
  	// if we didn't find the open brace on the desired line, if its in the 
