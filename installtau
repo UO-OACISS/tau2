@@ -185,8 +185,19 @@ echo " " > wishver
     then
       echo "Configuring with ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -nocomm"
       ./configure $fortrancompiler $ccompiler $useropts $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -nocomm <wishver
+      make clean install
     fi
+
+# Add callpath profiling 
+    echo "Configuring with ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -PROFILECALLPATH"
+    ./configure $fortrancompiler $ccompiler $useropts $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -PROFILECALLPATH <wishver
+    make clean install
   
+# Add COMPENSATE
+    echo "Configuring with ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -COMPENSATE"
+    ./configure $fortrancompiler $ccompiler $useropts $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt -COMPENSATE <wishver
+    make clean install
+
 # Add TRACE
     echo "Configuring with ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE"
     ./configure $fortrancompiler $useropts $ccompiler $archopt $pdtopt -mpiinc=$mpiincdir -mpilib=$mpilibdir $mpiopt $commopt -TRACE <wishver
