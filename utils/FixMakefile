@@ -230,6 +230,10 @@ fi
 	echo NOTE: Using The Cray T3E CC C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     CRAYKAI)
+	echo NOTE: Using The Cray T3E KAI C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PGI) 
 	echo NOTE: Using Portland Group Inc. pgCC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
