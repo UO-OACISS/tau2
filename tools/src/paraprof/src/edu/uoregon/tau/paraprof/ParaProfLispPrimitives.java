@@ -8,6 +8,8 @@
 
 package edu.uoregon.tau.paraprof;
 
+import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.lang.*;
 import java.util.*;
@@ -25,7 +27,11 @@ public class ParaProfLispPrimitives{
     public static DataSessionIterator getPrimitiveList(Jatha lisp, boolean debug){
 	Vector primatives = new Vector();
 	primatives.add(new showThreadDataWindow(lisp, debug));
-	primatives.add(new GetExclusiveValues(lisp, debug));
+	primatives.add(new showMeanDataWindow(lisp, debug));
+	primatives.add(new showMeanCallPathWindow(lisp, debug));
+	primatives.add(new getExclusiveValues(lisp, debug));
+	primatives.add(new wait(lisp, debug));
+	primatives.add(new exitParaProf(lisp, debug));
 
 	return new DataSessionIterator(primatives);
     }
@@ -79,8 +85,58 @@ class showThreadDataWindow extends LispPrimitive{
 
 	trial.getSystemEvents().addObserver(threadDataWindow);
 	threadDataWindow.show();
+	/*
+	if(arg1.basic_integerp())
+	    System.out.println("Integer");
+	if(arg1.basic_numberp())
+	    System.out.println("Number");
+	*/
+	return lisp.makeInteger(0);
+    }
 
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
 
+    //####################################
+    //Instance data.
+    //####################################
+    Jatha lisp = null;
+
+    private boolean debug = false; //Off by default.
+    //####################################
+    //End - Instance data.
+    //####################################
+
+}
+
+class showMeanDataWindow extends LispPrimitive{
+    public showMeanDataWindow(Jatha lisp, boolean debug){
+	super(lisp, "SHOWMEANDATAWINDOW", 3);
+	this.lisp = lisp;
+    }
+
+    public void Execute(SECDMachine machine){
+	LispValue arg3 = machine.S.pop();
+	LispValue arg2 = machine.S.pop();
+	LispValue arg1 = machine.S.pop();
+
+	machine.S.push(result(arg1, arg2, arg3));
+	machine.C.pop();
+    }
+
+    LispValue result(LispValue arg1, LispValue arg2, LispValue arg3){
+	System.out.println("Applying showMeanDataWindow. Args: " + arg1 + "," + arg2 + "," + arg3);
+	ParaProfTrial trial = ParaProf.applicationManager.getTrial(Integer.parseInt(arg1.toString()),
+									   Integer.parseInt(arg2.toString()),
+									   Integer.parseInt(arg3.toString()));
+
+	ThreadDataWindow  threadDataWindow = new ThreadDataWindow(trial,-1,-1,-1,new StaticMainWindowData(trial, this.debug()),0, this.debug());
+
+	trial.getSystemEvents().addObserver(threadDataWindow);
+	threadDataWindow.show();
 
 	/*
 	if(arg1.basic_integerp())
@@ -88,10 +144,63 @@ class showThreadDataWindow extends LispPrimitive{
 	if(arg1.basic_numberp())
 	    System.out.println("Number");
 	*/
+	return lisp.makeInteger(0);
+    }
 
-	
+    public void setDebug(boolean debug){
+	this.debug = debug;}
     
-	return lisp.makeInteger(1);
+    public boolean debug(){
+	return debug;}
+
+    //####################################
+    //Instance data.
+    //####################################
+    Jatha lisp = null;
+
+    private boolean debug = false; //Off by default.
+    //####################################
+    //End - Instance data.
+    //####################################
+
+}
+
+class showMeanCallPathWindow extends LispPrimitive{
+    public showMeanCallPathWindow(Jatha lisp, boolean debug){
+	super(lisp, "SHOWMEANCALLPATHWINDOW", 3);
+	this.lisp = lisp;
+    }
+
+    public void Execute(SECDMachine machine){
+	LispValue arg3 = machine.S.pop();
+	LispValue arg2 = machine.S.pop();
+	LispValue arg1 = machine.S.pop();
+
+	machine.S.push(result(arg1, arg2, arg3));
+	machine.C.pop();
+    }
+
+    LispValue result(LispValue arg1, LispValue arg2, LispValue arg3){
+	System.out.println("Applying showMeanCallPathWindow. Args: " + arg1 + "," + arg2 + "," + arg3);
+	ParaProfTrial trial = ParaProf.applicationManager.getTrial(Integer.parseInt(arg1.toString()),
+									   Integer.parseInt(arg2.toString()),
+									   Integer.parseInt(arg3.toString()));
+
+	if(trial.callPathDataPresent()){
+	    CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial,-1,-1,-1,new StaticMainWindowData(trial, this.debug()),0, this.debug());
+	    trial.getSystemEvents().addObserver(callPathTextWindow);
+	    callPathTextWindow.show();
+	}
+	else
+	    System.out.println("Lisp interface (SHOWMEANCALLPATHWINDOW): No callpath data present!"); 
+
+	/*
+	if(arg1.basic_integerp())
+	    System.out.println("Integer");
+	if(arg1.basic_numberp())
+	    System.out.println("Number");
+	*/
+	return lisp.makeInteger(0);
     }
 
     public void setDebug(boolean debug){
@@ -112,8 +221,8 @@ class showThreadDataWindow extends LispPrimitive{
 
 }
  
-class GetExclusiveValues extends LispPrimitive{
-    public GetExclusiveValues(Jatha lisp, boolean debug){
+class getExclusiveValues extends LispPrimitive{
+    public getExclusiveValues(Jatha lisp, boolean debug){
 	super(lisp, "GETEXCLUSIVEVALUES", 4);
 	this.lisp = lisp;
     }
@@ -161,7 +270,7 @@ class GetExclusiveValues extends LispPrimitive{
 	    }
 	}
 	catch(Exception e){
-	    System.out.println("An exception was caught in: GetTrial(...)");
+	    System.out.println("An exception was caught in: getExclusiveValues(...)");
 	    e.printStackTrace();
 	}
 	return lisp.makeList(v);
@@ -183,5 +292,107 @@ class GetExclusiveValues extends LispPrimitive{
     //End - Instance data.
     //####################################
 
-}   
+}
+
+class wait extends LispPrimitive{
+    public wait(Jatha lisp, boolean debug){
+	super(lisp, "WAIT", 1);
+	this.lisp = lisp;
+    }
+
+    public void Execute(SECDMachine machine){
+	LispValue arg1 = machine.S.pop();
+
+	machine.S.push(result(arg1));
+	machine.C.pop();
+    }
+
+    LispValue result(LispValue arg1){
+	System.out.println("Applying wait. Args: " + arg1);
+	
+	try{
+	    System.out.println("Waiting ... ");
+	    java.lang.Thread.sleep(Integer.parseInt(arg1.toString()));
+	    System.out.println("Done waiting.");
+	}
+	catch(Exception e){
+	    if(e instanceof IllegalArgumentException)
+		System.out.println("An IllegalArgumentException exception was caught in: wait(...): Pleae use range: 0-999999");
+	    else{
+		e.printStackTrace();
+	    }
+	}
+	
+	/*
+	if(arg1.basic_integerp())
+	    System.out.println("Integer");
+	if(arg1.basic_numberp())
+	    System.out.println("Number");
+	*/
+	return lisp.makeInteger(0);
+    }
+
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
+
+    //####################################
+    //Instance data.
+    //####################################
+    Jatha lisp = null;
+
+    private boolean debug = false; //Off by default.
+    //####################################
+    //End - Instance data.
+    //####################################
+
+}
+
+class exitParaProf extends LispPrimitive{
+    public exitParaProf(Jatha lisp, boolean debug){
+	super(lisp, "EXITPARAPROF", 1);
+	this.lisp = lisp;
+    }
+
+    public void Execute(SECDMachine machine){
+	LispValue arg1 = machine.S.pop();
+
+	machine.S.push(result(arg1));
+	machine.C.pop();
+    }
+
+    LispValue result(LispValue arg1){
+	System.out.println("Applying exitParaProf. Args: " + arg1);
+
+	ParaProf.exitParaProf(Integer.parseInt(arg1.toString()));
+
+	/*
+	if(arg1.basic_integerp())
+	    System.out.println("Integer");
+	if(arg1.basic_numberp())
+	    System.out.println("Number");
+	*/
+	return lisp.makeInteger(0);
+    }
+
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
+
+    //####################################
+    //Instance data.
+    //####################################
+    Jatha lisp = null;
+
+    private boolean debug = false; //Off by default.
+    //####################################
+    //End - Instance data.
+    //####################################
+
+}
+  
     

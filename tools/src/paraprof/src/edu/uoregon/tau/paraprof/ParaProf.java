@@ -143,10 +143,10 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    //######
 	    //End - Static Initialization
 	    //######
-	    
-            //Register lisp primatives in ParaProfLisp.
+	    //Register lisp primatives in ParaProfLisp.
 	    ParaProf.paraProfLisp.registerParaProfPrimitives();
 
+	    /*
 	    //See if the user has defined any lisp code to run.
 	    try{
 		FileInputStream file = new FileInputStream("ParaProfLisp.lp");
@@ -172,6 +172,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    System.out.println("Please delete this file, or replace it with a valid one!");
 		}
 	    }
+	    */
 
 
 
@@ -484,12 +485,20 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    BufferedReader br = new BufferedReader(isr);
 	    
 	    String inputString = null;
-	    
+	    Vector expressions = new Vector();
 	    while((inputString = br.readLine()) != null){
-		System.out.println("Expression: " + inputString);
-		System.out.println(ParaProf.paraProfLisp.eval(inputString));
+		if(UtilFncs.debug)
+		    System.out.println("Expression: " + inputString);
+		expressions.add(inputString);
 	    }
-	    
+	    Interpreter interpreter = new Interpreter(expressions, true);
+	    java.lang.Thread thread = new java.lang.Thread(interpreter);
+	    thread.setName("interpreter");
+	    if(UtilFncs.debug)
+		System.out.println("Starting the interpreter ...");
+	    thread.start();
+	    if(UtilFncs.debug)
+		System.out.println("Done starting the interpreter!");
 	}
 	catch(Exception e){
 	    if(e instanceof FileNotFoundException){
@@ -499,6 +508,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		//Print some kind of error message, and quit the system.
 		System.out.println("There was an internal error whilst trying to read the ParaProfLisp.pl");
 		System.out.println("Please delete this file, or replace it with a valid one!");
+		e.printStackTrace();
 	    }
 	}
     }

@@ -86,7 +86,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "TDWP02");
 	}
-	
     }
     
     public void paintComponent(Graphics g){
@@ -119,7 +118,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     }
   
     public void renderIt(Graphics2D g2D, int instruction, boolean header){
-  	try{ 
+	try{
 	    list = tDWindow.getData();
 
 	    //######
