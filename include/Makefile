@@ -542,8 +542,8 @@ TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB)
 #############################################
 # TAU COMPILER SHELL SCRIPT OPTIONS
 TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
-        -optPdtCOpt="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
-        -optPdtCxxOpt="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
+        -optPdtCOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
+        -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
         -optTauInstr="$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_instrumentor" \
         -optNoMpi \
         -optCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
