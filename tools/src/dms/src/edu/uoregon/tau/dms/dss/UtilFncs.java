@@ -18,6 +18,19 @@ import java.text.*;
 public class UtilFncs{
 
 
+    // left pad : pad string 's' up to length plen, but put the whitespace on the left
+    public static String lpad (String s, int plen) {
+	int len = plen - s.length();
+	if (len <= 0) 
+	    return s;
+	char padchars[] = new char[len];
+	for (int i = 0; i < len; i++) 
+	    padchars[i] = ' ';
+	String str = new String (padchars, 0, len);
+	return str.concat(s);
+    }
+
+    // pad : pad string 's' up to length plen
     public static String pad (String s, int plen) {
 	int len = plen - s.length();
 	if (len <= 0) 
@@ -41,7 +54,9 @@ public class UtilFncs{
 		    formatString = formatString+"0";
 		}
 	    }
-        
+
+	    formatString = formatString + "E0";
+	    
 	    DecimalFormat dF = new DecimalFormat(formatString);
 	    result = dF.format(d);
 	}
@@ -50,7 +65,68 @@ public class UtilFncs{
 	}
 	return Double.parseDouble(result);
     }
-    
+
+
+    // format a double for display within 'width' chars, kind of like C-printf %G
+    public static String formatDouble(double d, int width) {
+
+	// first check if the regular toString is in exponential form
+	boolean exp = false;
+	String str = Double.toString(d);
+	for (int i=0; i<str.length(); i++) {
+	    if (str.charAt(i) == 'E') {
+		exp = true;
+		break;
+	    }
+	}
+
+	if (!exp) {
+	    // not exponential form
+	    String formatString = "";
+
+	    // create a format string of the same length, (e.g. ###.### for 123.456)
+	    for (int i=0; i<str.length(); i++) {
+		if (str.charAt(i) != '.')
+		    formatString = formatString + "#";
+		else 
+		    formatString = formatString + ".";
+	    }
+
+	    // now we reduce that format string as follows
+
+	    // first, do the least of 'width' or then length of the regular toString
+	    int min = width;
+	    if (formatString.length() < min)
+		min = formatString.length();
+
+	    // we don't want more than 5 digits past the decimal point
+	    // this "5" would be the old ParaProf.defaultNumberPrecision
+	    if (formatString.indexOf('.')+5 < min)
+		min = formatString.indexOf('.')+5;
+
+	    formatString = formatString.substring(0,min);
+
+	    DecimalFormat dF = new DecimalFormat(formatString);
+	    
+	    str = dF.format(d);
+
+	    return lpad(str,width);
+
+	}
+
+	// toString used exponential form, so we ought to also
+
+	// we want up to four significant digits
+	String formatString = "0.0###";
+
+	formatString = formatString + "E0";
+	DecimalFormat dF = new DecimalFormat(formatString);
+	
+	str = dF.format(d);
+	return lpad(str,width);
+    }
+
+
     //This method is used in a number of windows to determine the actual output string
     //displayed. Current types are:
     //0 - microseconds
@@ -58,14 +134,15 @@ public class UtilFncs{
     //2 - seconds
     //3 - hr:min:sec
     //At present, the passed in double value is assumed to be in microseconds.
-    public static String getOutputString(int type, double d, int precision){
+    public static String getOutputString(int type, double d, int width){
 	switch(type){
 	case 0:
-	    return (Double.toString(UtilFncs.adjustDoublePresision(d, precision)));
+	    //return (Double.toString(UtilFncs.adjustDoublePresision(d, width)));
+	    return (UtilFncs.formatDouble(d, width));
 	case 1:
-	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000), precision)));
+	    return (UtilFncs.formatDouble((d/1000), width));
 	case 2:
-	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000000), precision)));
+	    return (UtilFncs.formatDouble((d/1000000), width));
 	case 3:
 	    int hr = 0;
 	    int min = 0;
@@ -73,9 +150,26 @@ public class UtilFncs{
 	    //Calculate the number of microseconds left after hours are subtracted.
 	    d = d-hr*3600000000.00;
 	    min = (int) (d/60000000.00);
-	    //Calculate the number of microseconds left after minutess are subtracted.
+	    //Calculate the number of microseconds left after minutes are subtracted.
 	    d = d-min*60000000.00;
-	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), precision)));
+
+	    String hours = Integer.toString(hr);
+	    String mins = Integer.toString(min);
+
+	    String secs = formatDouble(d/1000000,7);
+
+	    // remove the whitespace
+	    int idx = 0;
+	    for (int i = 0; i < secs.length(); i++) {
+		if (secs.charAt(i) != ' ') {
+		    idx = i;
+		    break;
+		}
+	    }
+	    secs = secs.substring(idx);
+
+	    return lpad (hours + ":" + mins + ":" + secs, width);
+
 	default:
 	    UtilFncs.systemError(null, null, "Unexpected string type - UF02 value: " + type);
 	}
