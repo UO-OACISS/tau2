@@ -209,6 +209,13 @@ fortran_compiler=no
 # debug:
 # echo $arguments
 
+# Reset include/Makefile before starting anything else
+for i in include/Makefile
+do
+    sed -f utils/FixMakefile.sed.default < ${i} > ${i}~~0
+    mv ${i}~~0 ${i}
+done
+
 # PARSE COMMAND LINE SWITCHES
 ###############################################################
 for arg in "$@";
@@ -436,6 +443,7 @@ do
 
   -epilog=*)
       epilog=yes
+      trace=yes
       epilogdir=`echo $arg | sed -e 's/-epilog=//'`
       if [ ! -d $epilogdir ]
       then
@@ -1962,10 +1970,16 @@ then
   wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
   if [ $epilog = yes -a $mpi = yes ]
   then
-    wrapperlib="-L$epilogdir/lib -lelg.mpi"
+    if [ -f $epilogdir/lib/libelg.mpi.a ] 
+    then
+      epiloglibdir=lib
+    else
+      epiloglibdir=src
+    fi
+    wrapperlib="-L$epilogdir/$epiloglibdir -lelg.mpi"
     if [ $openmp = yes ] 
     then
-      wrapperlib="-L$epilogdir/lib -lelg.ompi"
+      wrapperlib="-L$epilogdir/$epiloglibdir -lelg.ompi"
     fi
   fi 
      
@@ -2798,13 +2812,33 @@ fi
 
 if [ $opari = yes ]
   then
-    kojakopari=`grep POMP_Finalize $oparidir/lib/pomp_lib.h | wc -l`
+    if [ -f $oparidir/lib/pomp_lib.h ] 
+    then
+      kojakincdir=lib
+    else
+      kojakincdir=include
+    fi
+
+    kojakopari=`grep POMP_Finalize $oparidir/$kojakincdir/pomp_lib.h | wc -l`
     if [ $kojakopari = 1 ] 
     then
       fixmakeargs="$fixmakeargs KOJAKOPARI"
     fi
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
+
+# Check if opari is in bin dir or in src dir
+    if [ -d $oparidir/tool -a -x $oparidir/tool/opari ]
+    then
+      fixmakeargs="$fixmakeargs oparitool=$oparidir/tool/opari"
+    else
+      if [ -d $oparidir/bin -a -x $oparidir/bin/opari ] 
+      then
+        fixmakeargs="$fixmakeargs oparitool=$oparidir/bin/opari"
+      else
+        echo "ERROR: Opari executable not found in $oparidir directory!"
+      fi
+    fi
 fi
 
 if [ $epilog = yes ]
