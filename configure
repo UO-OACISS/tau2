@@ -1016,6 +1016,7 @@ esac
 if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ]
 then
   #echo "MPI is specified"
+  mpi=yes
   fixmakeargs="$fixmakeargs MPI"
   cat <<EOF > mpi_thread_test.C
   #include <mpi.h>
@@ -1044,6 +1045,23 @@ else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
 fi
 
+if [ $mpi = yes -a "x$mpiinc" = "x" ] 
+then
+  case $machine in 
+  rs6000)
+	mpiinc=/usr/lpp/ppe.poe/include
+        ;;
+  linux) 
+	mpiinc=/usr/local/packages/mpich/include
+	;;
+  t3e)
+	mpiinc=/opt/ctl/mpt/mpt/include
+	;;
+  *)
+	;;
+  esac
+fi
+  
 
 if [ "x$mpiinc" != "x" ]
 then 
@@ -1056,7 +1074,38 @@ then
   fi
 fi
   
-if [ "x$mpilib" != "x" ]
+if [ $mpi = yes -a "x$mpilib" = "x" ]
+then
+  case $machine in 
+  rs6000) 
+	mpilib=/usr/lpp/ppe.poe/lib
+	;;
+  linux) 
+	mpilib=/usr/local/packages/mpich
+   	;;
+  sgin32) 
+	mpilib=/usr/lib32
+ 	;;
+  sgi64) 
+	mpilib=/usr/lib64
+	;;
+  sgio32) 
+	mpilib=/usr/lib
+	;;
+  t3e)  
+	mpilib=/opt/ctl/mpt/mpt/lib/
+	;;
+  alpha)  
+	mpilib=/usr/lib 
+    	;;
+  *)    
+	mpilib=/usr/lib 
+        ;;	
+  esac
+fi
+  
+
+if [ $mpi = yes ]
 then
   mpilibargs="-L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
   if [ -d $mpilib ]
