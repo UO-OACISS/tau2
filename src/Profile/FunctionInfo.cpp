@@ -92,7 +92,7 @@ int& TheSafeToDumpData()
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
 //////////////////////////////////////////////////////////////////////
 void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, 
-	const char *ProfileGroupName)
+	const char *ProfileGroupName, bool InitData)
 {
 #ifdef TRACING_ON
 	GroupName = RtsLayer::PrimaryGroup(ProfileGroupName);
@@ -103,19 +103,22 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 // we know that it couldn't be already on the call stack.
 	RtsLayer::LockDB();
 // Use LockDB to avoid a possible race condition.
-	//SetAlreadyOnStack(false, tid);
-    	for (int i=0; i < TAU_MAX_THREADS; i++)
-   	{
+        if (InitData) 
+        {
+	  SetAlreadyOnStack(false, tid);
+      	  for (int i=0; i < TAU_MAX_THREADS; i++)
+   	  {
 // don't initialize NumCalls and AlreadyOnStack as there could be 
 // data corruption. Inspite of the lock, while one thread is being 
 // initialized, other thread may have started executing and setting 
 // these values? 
-     	//  NumCalls[i] = 0;
+     	    NumCalls[i] = 0;
 	//  SetAlreadyOnStack(false, i);
-     	//  NumSubrs[i] = 0;
-     	//  ExclTime[i] = 0;
-     	//  InclTime[i] = 0;
- 	}
+     	    NumSubrs[i] = 0;
+       	    ExclTime[i] = 0;
+       	    InclTime[i] = 0;
+ 	  }
+	}
 
 #ifdef PROFILE_STATS
 	SumExclSqr[tid] = 0;
@@ -150,7 +153,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 }
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData)
 {
 
       DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << MyProfileGroup_ 
@@ -160,48 +163,48 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
         Name = name;
   	Type = type;
 
-	FunctionInfoInit(ProfileGroup, ProfileGroupName);
+	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
       }
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const char *name, string& type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
 
-	FunctionInfoInit(ProfileGroup, ProfileGroupName);
+	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
       }
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(string& name, const char * type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
 
-	FunctionInfoInit(ProfileGroup, ProfileGroupName);
+	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
       }
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(string& name, string& type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
-	FunctionInfoInit(ProfileGroup, ProfileGroupName);
+	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
       }
 }
 
@@ -249,6 +252,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 1999/05/04 22:33:08 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.15 1999/05/04 22:33:08 sameer Exp $ 
+ * $Revision: 1.16 $   $Date: 1999/06/18 17:41:54 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.16 1999/06/18 17:41:54 sameer Exp $ 
  ***************************************************************************/
