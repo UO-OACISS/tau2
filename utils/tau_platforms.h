@@ -1,3 +1,4 @@
+
 /**********************************************************************
  * tau_platforms.h
  *
@@ -26,10 +27,12 @@
 #ifdef TAU_DOT_H_LESS_HEADERS 
 # include <iostream>
 # include <map>
-using namespace std;
+# include <fstream>
+//using namespace std;
 #else 
 # include <iostream.h>
 # include <map.h>
+# include <fstream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 # include <stdlib.h>
 #if (!defined(TAU_WINDOWS))
@@ -42,6 +45,9 @@ using namespace std;
 #ifdef TAU_WINDOWS
 # include <float.h>
 #endif //TAU_WINDOWS
+
+#include <string>
+using namespace std;
 
 #ifdef COMPAQ_ALPHA 
 # include <float.h>
