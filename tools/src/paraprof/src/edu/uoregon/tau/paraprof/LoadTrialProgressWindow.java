@@ -64,7 +64,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
     }
 
     public LoadTrialProgressWindow(ParaProfManagerWindow paraProfManager, DataSource dataSource,
-            ParaProfTrial ppTrial) {
+            ParaProfTrial ppTrial, boolean justDB) {
 
         this.dataSource = dataSource;
         this.ppTrial = ppTrial;
@@ -132,9 +132,16 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener, P
         jTimer = new javax.swing.Timer(200, this);
         jTimer.start();
 
-        DataSourceThreadControl dataSourceThreadControl = new DataSourceThreadControl();
-        dataSourceThreadControl.addObserver(this);
-        dataSourceThreadControl.initialize(dataSource);
+        if (justDB) {
+            label.setText("Uploading Trial");
+            progressBar.setValue(0);
+            dbUpload = true;
+            new UpdateRunner(this);
+        } else {
+            DataSourceThreadControl dataSourceThreadControl = new DataSourceThreadControl();
+            dataSourceThreadControl.addObserver(this);
+            dataSourceThreadControl.initialize(dataSource);
+        }
     }
 
     public void actionPerformed(ActionEvent evt) {

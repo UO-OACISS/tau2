@@ -16,14 +16,14 @@ import edu.uoregon.tau.dms.database.*;
 public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUserObject {
 
     public ParaProfExperiment() {
-        super(0);
+        super();
         this.setID(-1);
         this.setApplicationID(-1);
         this.setName("");
     }
 
     public ParaProfExperiment(DB db) throws DatabaseException {
-        super(db);
+        super();
         this.setID(-1);
         this.setApplicationID(-1);
         this.setName("");

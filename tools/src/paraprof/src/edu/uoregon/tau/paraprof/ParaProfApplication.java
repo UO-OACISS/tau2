@@ -15,14 +15,13 @@ import edu.uoregon.tau.dms.database.*;
 
 public class ParaProfApplication extends Application implements ParaProfTreeNodeUserObject {
 
-    public ParaProfApplication(DB db) {
-        super(db);
-        this.setID(-1);
-        this.setName("");
-    }
+    private DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private TreePath treePath = null;
+    private boolean dBApplication = false;
+    private Vector experiments = new Vector();
 
     public ParaProfApplication() {
-        super(0);
+        super();
         this.setID(-1);
         this.setName("");
     }
@@ -102,8 +101,4 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
         this.setDMTN(null);
     }
 
-    private DefaultMutableTreeNode defaultMutableTreeNode = null;
-    private TreePath treePath = null;
-    private boolean dBApplication = false;
-    private Vector experiments = new Vector();
 }

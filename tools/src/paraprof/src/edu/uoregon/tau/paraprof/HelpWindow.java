@@ -26,7 +26,11 @@ public class HelpWindow extends JFrame implements ActionListener, Observer {
     //Text area stuff.
     JTextArea helpJTextArea;
     Document helpJTextAreaDocument;
+    private JScrollPane scrollPane;
 
+    public JScrollPane getScrollPane() {
+        return scrollPane;
+    }
 
     public HelpWindow() {
 
@@ -85,7 +89,7 @@ public class HelpWindow extends JFrame implements ActionListener, Observer {
         Border mainloweredbev = BorderFactory.createLoweredBevelBorder();
 
         //The scroll panes into which the list shall be placed.
-        JScrollPane scrollPane = new JScrollPane(helpJTextArea);
+        scrollPane = new JScrollPane(helpJTextArea);
         scrollPane.setBorder(mainloweredbev);
         scrollPane.setPreferredSize(new Dimension(windowWidth, windowHeight));
 

@@ -21,7 +21,7 @@ import edu.uoregon.tau.dms.dss.*;
 public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTreeNodeUserObject {
 
     public ParaProfTrial() {
-        super(0);
+        super();
         this.debug = UtilFncs.debug;
 
         this.setID(-1);
@@ -273,12 +273,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     }
 
     public void setMeanData(int metricID) {
-
-        //dataSource.setMeanDataOLD(metricID);
-
         dataSource.setMeanData(metricID, metricID);
-        //dataSource.getMeanData().setThreadDataAllMetrics();
-
     }
 
     
@@ -375,8 +370,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
             dbAPI = ParaProf.paraProfManager.getDatabaseAPI();
             if (dbAPI != null) {
                 // this call will block until the entire thing is uploaded (could be a while)
-                //this.setID(dbAPI.saveParaProfTrial(this, -1));
-
                 this.setID(dbAPI.uploadTrial(this, -1));
                 dbAPI.terminate();
             }

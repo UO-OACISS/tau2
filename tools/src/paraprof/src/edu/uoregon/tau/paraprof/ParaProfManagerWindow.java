@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.11 2005/03/08 01:11:19 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.12 2005/03/10 01:21:54 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -45,10 +45,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         int screenHeight = screenDimension.height;
         int screenWidth = screenDimension.width;
 
-        
         Point savedPosition = ParaProf.preferences.getManagerWindowPosition();
 
-        if (savedPosition == null || (savedPosition.x + windowWidth) > screenWidth || (savedPosition.y + windowHeight > screenHeight)) {
+        if (savedPosition == null || (savedPosition.x + windowWidth) > screenWidth
+                || (savedPosition.y + windowHeight > screenHeight)) {
 
             //Find the center position with respect to this window.
             int xPosition = (screenWidth - windowWidth) / 2;
@@ -65,7 +65,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         } else {
             this.setLocation(savedPosition);
         }
-        
+
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
         setTitle("ParaProf Manager");
 
@@ -195,6 +195,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         menuItem.addActionListener(this);
         fileMenu.add(menuItem);
 
+        //        menuItem = new JMenuItem("Retrieve Database Metadata");
+        //        menuItem.addActionListener(this);
+        //        fileMenu.add(menuItem);
+
         menuItem = new JMenuItem("Database Configuration");
         menuItem.addActionListener(this);
         fileMenu.add(menuItem);
@@ -235,11 +239,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         JMenuItem jMenuItem = new JMenuItem("Add Application");
         jMenuItem.addActionListener(this);
         popup1.add(jMenuItem);
-
         jMenuItem = new JMenuItem("Add Experiment");
         jMenuItem.addActionListener(this);
         popup1.add(jMenuItem);
-
         jMenuItem = new JMenuItem("Add Trial");
         jMenuItem.addActionListener(this);
         popup1.add(jMenuItem);
@@ -247,23 +249,29 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Add Experiment");
         jMenuItem.addActionListener(this);
         popup2.add(jMenuItem);
-
+        jMenuItem = new JMenuItem("Add Trial");
+        jMenuItem.addActionListener(this);
+        popup2.add(jMenuItem);
+        jMenuItem = new JMenuItem("Upload Application to DB");
+        jMenuItem.addActionListener(this);
+        popup2.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         popup2.add(jMenuItem);
 
+        jMenuItem = new JMenuItem("Upload Experiment to DB");
+        jMenuItem.addActionListener(this);
+        popup3.add(jMenuItem);
         jMenuItem = new JMenuItem("Add Trial");
         jMenuItem.addActionListener(this);
-        popup2.add(jMenuItem);
-
+        popup3.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         popup3.add(jMenuItem);
 
-        jMenuItem = new JMenuItem("Add Trial");
+        jMenuItem = new JMenuItem("Upload Trial to DB");
         jMenuItem.addActionListener(this);
-        popup3.add(jMenuItem);
-
+        popup4.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         popup4.add(jMenuItem);
@@ -290,6 +298,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     ParaProf.preferencesWindow.showPreferencesWindow();
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
+
+                    //                } else if (arg.equals("Retrieve Database Metadata")) {
+                    //                    closeThisWindow();
+
                 } else if (arg.equals("Database Configuration")) {
                     (new DBConfiguration(this)).show();
 
@@ -504,25 +516,17 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
                         (new LoadTrialWindow(this, null, experiment)).show();
                     }
+                } else if (arg.equals("Upload Application to DB")) {
+                    ParaProfApplication clickedOnApp = (ParaProfApplication) clickedOnObject;
+                    uploadApplication(clickedOnApp, true, true);
+
+                } else if (arg.equals("Upload Experiment to DB")) {
+                    ParaProfExperiment clickedOnExp = (ParaProfExperiment) clickedOnObject;
+                    uploadExperiment(null, clickedOnExp, true, true);
+
                 } else if (arg.equals("Upload Trial to DB")) {
                     if (clickedOnObject instanceof ParaProfTrial) {
-                        ParaProfTrial clickedOnTrial = (ParaProfTrial) clickedOnObject;
-                        int[] array = this.getSelectedDBExperiment();
-                        if (array != null) {
-                            DatabaseAPI databaseAPI = this.getDatabaseAPI();
-                            if (databaseAPI != null) {
-                                Trial trial = new Trial(0);
-                                trial.setDataSource(clickedOnTrial.getDataSource());
-                                trial.setName(clickedOnTrial.getName());
-                                trial.setExperimentID(array[1]);
-                                int[] maxNCT = clickedOnTrial.getMaxNCTNumbers();
-                                // 				trial.setNodeCount(maxNCT[0]+1);
-                                // 				trial.setNumContextsPerNode(maxNCT[1]+1);
-                                // 				trial.setNumThreadsPerContext(maxNCT[2]+1);
-                                databaseAPI.saveParaProfTrial(trial, -1);
-                                databaseAPI.terminate();
-                            }
-                        }
+                        uploadTrial(null, (ParaProfTrial) clickedOnObject);
                     }
                 }
             }
@@ -530,6 +534,170 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             ParaProfUtils.handleException(e);
         }
     }
+
+    private ParaProfApplication uploadApplication(ParaProfApplication ppApp, boolean allowOverwrite,
+            boolean uploadChildren) throws SQLException, DatabaseException {
+
+        DatabaseAPI databaseAPI = this.getDatabaseAPI();
+        if (databaseAPI != null) {
+
+            boolean found = false;
+            ListIterator l = databaseAPI.getApplicationList();
+            while (l.hasNext()) {
+                ParaProfApplication dbApp = new ParaProfApplication((Application) l.next());
+
+                if (dbApp.getName().equals(ppApp.getName())) {
+                    found = true;
+
+                    if (allowOverwrite) {
+                        String options[] = { "Overwrite", "Don't overwrite", "Cancel" };
+                        int value = JOptionPane.showOptionDialog(
+                                this,
+                                "An Application with the name \""
+                                        + ppApp.getName()
+                                        + "\" already exists, it will be updated new experiments/trials, should the metadata be overwritten?",
+                                "Upload Application", JOptionPane.YES_NO_OPTION, // Need something  
+                                JOptionPane.QUESTION_MESSAGE, null, // Use default icon for message type
+                                options, options[1]);
+                        if (value == JOptionPane.CLOSED_OPTION || value == 2) {
+                            return null;
+                        } else {
+                            if (value == 0) {
+                                // overwrite the metadata
+                                dbApp.setFields(ppApp.getFields());
+                                databaseAPI.saveApplication(dbApp);
+                            }
+
+                            if (uploadChildren) {
+                                for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
+                                    ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+                                    uploadExperiment(dbApp, ppExp, true, true);
+                                }
+                            }
+                        }
+                    }
+                    return dbApp;
+                }
+            }
+
+            if (!found) {
+                Application newApp = new Application(ppApp);
+                ParaProfApplication application = new ParaProfApplication(newApp);
+                application.setDBApplication(true);
+                application.setID(databaseAPI.saveApplication(application));
+
+                if (uploadChildren) {
+                    for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
+                        ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+                        uploadExperiment(application, ppExp, true, true);
+                    }
+                }
+
+                return application;
+            }
+        }
+        return null;
+    }
+
+ 
+    private ParaProfExperiment uploadExperiment(ParaProfApplication dbApp, ParaProfExperiment ppExp,
+            boolean allowOverwrite, boolean uploadChildren) throws SQLException, DatabaseException {
+        DatabaseAPI databaseAPI = this.getDatabaseAPI();
+        if (databaseAPI == null)
+            return null;
+
+        if (dbApp == null) {
+            dbApp = uploadApplication(ppExp.getApplication(), false, false);
+        }
+
+        // we now have a ParaProfApplication (dbApp) that is in the database
+
+        boolean found = false;
+        databaseAPI.setApplication(dbApp);
+        ListIterator l = databaseAPI.getExperimentList();
+        while (l.hasNext()) {
+            ParaProfExperiment dbExp = new ParaProfExperiment((Experiment) l.next());
+
+            if (dbExp.getName().equals(ppExp.getName())) {
+                found = true;
+
+                if (allowOverwrite) {
+
+                    String options[] = { "Overwrite", "Don't overwrite", "Cancel" };
+                    int value = JOptionPane.showOptionDialog(
+                            this,
+                            "An Experiment with the name \""
+                                    + ppExp.getName()
+                                    + "\" already exists, it will be updated new trials, should the metadata be overwritten?",
+                            "Upload Application", JOptionPane.YES_NO_OPTION, // Need something  
+                            JOptionPane.QUESTION_MESSAGE, null, // Use default icon for message type
+                            options, options[1]);
+                    if (value == JOptionPane.CLOSED_OPTION || value == 2) {
+                        return null;
+                    } else {
+                        if (value == 0) {
+                            // overwrite the metadata
+                            dbExp.setFields(ppExp.getFields());
+                            databaseAPI.saveExperiment(dbExp);
+                        }
+
+                        if (uploadChildren) {
+                            for (Iterator it2 = ppExp.getTrialList(); it2.hasNext();) {
+                                ParaProfTrial ppTrial = (ParaProfTrial) it2.next();
+                                uploadTrial(dbExp, ppTrial);
+                            }
+                        }
+                    }
+                }
+                return dbExp;
+            }
+        }
+
+        if (!found) {
+            Experiment newExp = new Experiment(ppExp);
+            ParaProfExperiment experiment = new ParaProfExperiment(newExp);
+            experiment.setDBExperiment(true);
+            experiment.setApplicationID(dbApp.getID());
+            experiment.setID(databaseAPI.saveExperiment(experiment));
+
+            if (uploadChildren) {
+                for (Iterator it2 = ppExp.getTrialList(); it2.hasNext();) {
+                    ParaProfTrial ppTrial = (ParaProfTrial) it2.next();
+                    uploadTrial(experiment, ppTrial);
+                }
+            }
+
+            return experiment;
+        }
+        return null;
+    }
+
+    private ParaProfTrial uploadTrial(ParaProfExperiment dbExp, ParaProfTrial ppTrial) throws SQLException,
+            DatabaseException {
+        DatabaseAPI databaseAPI = this.getDatabaseAPI();
+        if (databaseAPI == null)
+            return null;
+
+        if (dbExp == null) {
+            dbExp = uploadExperiment(null, ppTrial.getExperiment(), false, false);
+        }
+
+        ParaProfTrial dbTrial = new ParaProfTrial(ppTrial);
+        dbTrial.setExperimentID(dbExp.getID());
+        dbTrial.setApplicationID(dbExp.getApplicationID());
+        dbTrial.setDataSource(ppTrial.getDataSource());
+
+        dbTrial.setUpload(true); // This trial is not set to a db trial until after it has finished loading.
+
+        LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dbTrial.getDataSource(), dbTrial, true);
+        lpw.show();
+
+        // we now have a ParaProfExperiment (dbExp) that is in the database
+        return dbTrial;
+
+    }
+
+   
 
     public void valueChanged(TreeSelectionEvent event) {
         try {
@@ -1012,7 +1180,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
             DatabaseAPI databaseAPI = this.getDatabaseAPI();
             if (databaseAPI != null) {
-                application = new ParaProfApplication(databaseAPI.db());
+                application = new ParaProfApplication();
                 application.setDBApplication(true);
                 application.setName("New Application");
                 application.setID(databaseAPI.saveApplication(application));
@@ -1083,7 +1251,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             experiment.addTrial(ppTrial);
         }
 
-        LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dataSource, ppTrial);
+        LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dataSource, ppTrial, false);
         lpw.show();
 
         if (experiment.dBExperiment()) // Check needs to occur on the experiment as trial 
@@ -1123,9 +1291,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         null, trial);
             }
 
-            
             loadedTrials.add(trial);
-            
+
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -1300,11 +1467,29 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             else
                 databaseAPI.initialize(ParaProf.preferences.getDatabaseConfigurationFile(),
                         ParaProf.preferences.getDatabasePassword());
+
+            if (!metaDataRetrieved) {
+                metaDataRetrieved = true;
+                for (Iterator it = ParaProf.applicationManager.getApplicationList(); it.hasNext();) {
+                    ParaProfApplication ppApp = (ParaProfApplication) it.next();
+                    if (!ppApp.dBApplication()) {
+                        ppApp.reallocMetaData();
+                        for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
+                            ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+                            ppExp.reallocMetaData();
+                            for (Iterator it3 = ppExp.getTrialList(); it3.hasNext();) {
+                                ParaProfTrial ppTrial = (ParaProfTrial) it3.next();
+                                ppTrial.reallocMetaData();
+                            }
+                        }
+                    }
+                }
+            }
+
             return databaseAPI;
         } catch (Exception e) {
             //Try and determine what went wrong, and then popup the help window
-            // giving the user some idea
-            //what to do.
+            // giving the user some idea of what to do.
             ParaProf.helpWindow.show();
             //Clear the window first.
             ParaProf.helpWindow.clearText();
@@ -1350,6 +1535,12 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             pw.close();
             ParaProf.helpWindow.writeText(sw.toString());
 
+            EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    ParaProf.helpWindow.getScrollPane().getVerticalScrollBar().setValue(0);
+                }
+            });
+
             //Collapse the dBApps node ... makes more sense to the user.
             tree.collapsePath(new TreePath(dbApps));
 
@@ -1384,7 +1575,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     public Vector getLoadedTrials() {
         return loadedTrials;
     }
-    
+
     //Instance Data.
     private JTree tree = null;
     private DefaultTreeModel treeModel = null;
@@ -1404,6 +1595,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     private Vector loadedDBTrials = new Vector();
     private Vector loadedTrials = new Vector();
+
+    private boolean metaDataRetrieved;
 
     //Popup menu stuff.
     private JPopupMenu popup1 = new JPopupMenu();
