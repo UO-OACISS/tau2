@@ -56,6 +56,7 @@ void * tau_get_userevent(char *name);
 void tau_userevent(void *ue, double data);
 void tau_report_statistics(void);
 void tau_report_thread_statistics(void);
+void tau_dump(void);
 
 /*****************************************************************************
 * The following routines are called by the Fortran program and they in turn
@@ -130,6 +131,12 @@ void tau_profile_stop_(void **profiler)
 void tau_profile_exit_(char *msg)
 {
   tau_exit(msg);
+  return;
+}
+
+void tau_db_dump_(void)
+{
+  tau_dump();
   return;
 }
 
@@ -287,6 +294,12 @@ void TAU_PROFILE_EXIT(char *msg)
   tau_profile_exit_(msg);
 }
 
+void TAU_DB_DUMP(void)
+{
+  tau_dump();
+  return;
+}
+
 void TAU_PROFILE_INIT()
 {
   _main();
@@ -413,6 +426,11 @@ void tau_profile_exit(char *msg)
   tau_exit(msg);
 }
 
+void tau_db_dump(void)
+{
+  tau_dump();
+}
+
 void tau_profile_set_context(int *context)
 {
   tau_set_context(*context);
@@ -503,6 +521,12 @@ void tau_profile_exit__(char *msg)
   tau_profile_exit_(msg);
 }
 
+void tau_db_dump__(void)
+{
+  tau_dump();
+  return;
+}
+
 void tau_profile_init__()
 {
   //_main();
@@ -574,6 +598,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 2001/10/23 17:16:39 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.17 2001/10/23 17:16:39 sameer Exp $ 
+ * $Revision: 1.18 $   $Date: 2001/10/23 22:43:13 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.18 2001/10/23 22:43:13 sameer Exp $ 
  ***************************************************************************/
