@@ -8,6 +8,7 @@
 #
 # DO NOT CHANGE MANUALLY!!!!
 #
-default: cxx     = g++
-default: cc      = gcc
-default: useropt = -g
+default: cxx         = g++
+default: cc          = gcc
+default: useropt     = -g
+default: stdincludes = -I/usr/include -I/usr/include/CC
