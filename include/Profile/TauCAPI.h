@@ -31,6 +31,7 @@
 
 #ifndef __cplusplus
 /* For C */
+#include <stdio.h>
 #include <Profile/ProfileGroups.h>
 /* C API Definitions follow */
 #if (defined(PROFILING_ON) || defined(TRACING_ON) )
@@ -176,7 +177,7 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2001/02/28 00:03:28 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.11 2001/02/28 00:03:28 sameer Exp $
+ * $Revision: 1.12 $   $Date: 2001/11/27 21:22:34 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.12 2001/11/27 21:22:34 sameer Exp $
  ***************************************************************************/
 
