@@ -72,8 +72,6 @@ int PthreadLayer::tauThreadCount = 0;
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::RegisterThread(void)
 {
-  static int initflag = PthreadLayer::InitializeThreadData();
-  // if its in here the first time, setup mutexes etc.
 
   int *threadId = new int;
 
@@ -98,7 +96,10 @@ int PthreadLayer::RegisterThread(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::GetThreadId(void) 
 {
+
   int *id; 
+  static int initflag = PthreadLayer::InitializeThreadData();
+  // if its in here the first time, setup mutexes etc.
 
   id = (int *) pthread_getspecific(tauPthreadId);
   
@@ -169,8 +170,8 @@ int PthreadLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1999/06/22 22:33:12 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.4 1999/06/22 22:33:12 sameer Exp $
+ * $Revision: 1.5 $   $Date: 2000/05/18 22:23:16 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.5 2000/05/18 22:23:16 sameer Exp $
  ***************************************************************************/
 
 
