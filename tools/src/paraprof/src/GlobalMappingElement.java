@@ -21,7 +21,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //Constructors.
     //######
     public GlobalMappingElement(int capacity){
-	doubleList = new double[capacity*14];}
+	doubleList = new double[capacity*15];}
     //######
     //End - Constructors.
     //######
@@ -460,12 +460,18 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     public void setTotalInclusiveValue(int location, double d){
 	this.insertDouble(location,10,d);}
-  
+
+    public void incrementTotalInclusiveValue(int location, double d){
+	this.insertDouble(location,10,this.getDouble(location,10)+d);}
+	  
     public double getTotalInclusiveValue(int location){
 	return this.getDouble(location,10);}
   
     public void setTotalExclusiveValue(int location, double d){
 	this.insertDouble(location,11,d);}
+
+    public void incrementTotalExclusiveValue(int location, double d){
+	this.insertDouble(location,11,this.getDouble(location,11)+d);}
   
     public double getTotalExclusiveValue(int location){
 	return this.getDouble(location,11);}
@@ -481,6 +487,30 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
   
     public double getTotalExclusivePercentValue(int location){
 	return this.getDouble(location,13);}
+
+    public void setTotalNumberOfCalls(int i){
+	totalNumberOfCalls = i;}
+
+    public void incrementTotalNumberOfCalls(int i){
+	totalNumberOfCalls+=i;}
+  
+    public double getTotalNumberOfCalls(){
+	return totalNumberOfCalls;}
+  
+    public void setTotalNumberOfSubRoutines(int i){
+	totalNumberOfSubRoutines = i;}
+
+    public void incrementTotalNumberOfSubRoutines(int i){
+	totalNumberOfSubRoutines+=i;}
+  
+    public double getTotalNumberOfSubRoutines(){
+	return totalNumberOfSubRoutines;}
+  
+    public void setTotalUserSecPerCall(int location, double d){
+	this.insertDouble(location,14,d);}
+  
+    public double getTotalUserSecPerCall(int location){
+  	return this.getDouble(location,14);}
     //######
     //End - Total section.
     //######
@@ -505,44 +535,11 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	return yBeg;}
   
     public int getYEnd(){
-	return yEnd;}
+    return yEnd;}
     //######
     //End - Draw section.
     //######
   
-    //######
-    //Usage?
-    //######
-    public void setTotalExclusiveValue(double d){
-	totalExclusiveValue = d;}
-    
-    public void incrementTotalExclusiveValue(double d){
-	totalExclusiveValue = totalExclusiveValue + d;}
-    
-    public double getTotalExclusiveValue(){
-	return totalExclusiveValue;}
-    
-    public void setTotalInclusiveValue(double d){
-	totalInclusiveValue = d;}
-    
-    public void incrementTotalInclusiveValue(double d){
-	totalInclusiveValue = totalInclusiveValue + d;}
-    
-    public double getTotalInclusiveValue(){
-	return totalInclusiveValue;}
-    
-    public void setCounter(int inInt){
-	counter = inInt;}
-    
-    public void incrementCounter(){
-	counter++;}
-    
-    public int getCounter(){
-	return counter;}
-    //######
-    //End - Usage?
-    //######
-    
     //####################################
     //Interface code.
     //####################################
@@ -564,23 +561,17 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //Private section.
     //######
     private void insertDouble(int location, int offset, double d){
-	int actualLocation = (location*14)+offset;
 	try{
-	    doubleList[actualLocation] = d;
-	}
+	    doubleList[(location*15)+offset] = d;}
 	catch(Exception e){
-	    UtilFncs.systemError(e, null, "GME01");
-	}
+	    UtilFncs.systemError(e, null, "GME01");}
     }
   
     private double getDouble(int location, int offset){
-	int actualLocation = (location*14)+offset;
 	try{
-	    return doubleList[actualLocation];
-	}
+	    return doubleList[(location*15)+offset];}
 	catch(Exception e){
-	    UtilFncs.systemError(e, null, "GME02");
-	}
+	    UtilFncs.systemError(e, null, "GME02");}
 	return -1;
     }
 
@@ -623,6 +614,8 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     private double maxUserEventMeanValue = 0;
     private double meanNumberOfCalls = 0;
     private double meanNumberOfSubRoutines = 0;
+    private int totalNumberOfCalls = 0;
+    private int totalNumberOfSubRoutines = 0;
   
     //Drawing coordinates for this Global mapping element.
     private int xBeg;
