@@ -20,20 +20,21 @@
 
 #ifndef _TAU_HANDLER_H_
 #define _TAU_HANDLER_H_
-void TauEnableTrackingMemory(void);
-void TauDisableTrackingMemory(void);
+int  TauEnableTrackingMemory(void);
+int  TauDisableTrackingMemory(void);
 void TauEnableTrackingMuseEvents(void);
 void TauDisableTrackingMuseEvents(void);
 void TauSetInterruptInterval(int interval);
 void TauTrackMemoryUtilization(void);
 void TauTrackMuseEvents(void);
+void TauTrackMemoryHere(void);
 
 #endif /* _TAU_HANDLER_H_ */
   
 /***************************************************************************
  * $RCSfile: TauHandler.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2004/03/03 02:18:16 $
- * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.2 2004/03/03 02:18:16 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 2004/06/10 18:08:30 $
+ * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.3 2004/06/10 18:08:30 sameer Exp $ 
  ***************************************************************************/
 
 	

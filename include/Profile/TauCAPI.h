@@ -125,6 +125,7 @@
 #define TAU_ENABLE_TRACKING_MEMORY()	Tau_enable_tracking_memory()
 #define TAU_DISABLE_TRACKING_MEMORY()	Tau_disable_tracking_memory()
 #define TAU_TRACK_MEMORY()		Tau_track_memory()
+#define TAU_TRACK_MEMORY_HERE()		Tau_track_memory_here()
 #define TAU_ENABLE_TRACKING_MUSE_EVENTS()	Tau_enable_tracking_muse_events()	
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()	Tau_disable_tracking_muse_events()
 #define TAU_TRACK_MUSE_EVENTS()			Tau_track_muse_events()		
@@ -278,7 +279,7 @@ extern void Tau_set_interrupt_interval(int value);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.29 $   $Date: 2004/03/03 18:44:54 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.29 2004/03/03 18:44:54 sameer Exp $
+ * $Revision: 1.30 $   $Date: 2004/06/10 18:08:29 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.30 2004/06/10 18:08:29 sameer Exp $
  ***************************************************************************/
 
