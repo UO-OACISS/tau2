@@ -2504,15 +2504,17 @@ double  mpi_wtime(  )
 
 void  mpi_address_( location, address , ierr)
 void * location;
-MPI_Aint * address;
+MPI_Fint * address;
 MPI_Fint *ierr;
 {
-  *ierr = MPI_Address( location, address );
+  MPI_Aint c_address;
+  *ierr = MPI_Address( location, &c_address );
+  *address = c_address;
 }
 
 void  mpi_address__( location, address , ierr)
 void * location;
-MPI_Aint * address;
+MPI_Fint * address;
 MPI_Fint *ierr;
 {
   mpi_address_( location, address , ierr);
@@ -2520,7 +2522,7 @@ MPI_Fint *ierr;
 
 void  MPI_ADDRESS( location, address , ierr)
 void * location;
-MPI_Aint * address;
+MPI_Fint * address;
 MPI_Fint *ierr;
 {
   mpi_address_( location, address , ierr);
@@ -2528,7 +2530,7 @@ MPI_Fint *ierr;
 
 void  mpi_address( location, address , ierr)
 void * location;
-MPI_Aint * address;
+MPI_Fint * address;
 MPI_Fint *ierr;
 {
   mpi_address_( location, address , ierr);
@@ -4316,15 +4318,17 @@ MPI_Fint *ierr;
 
 void  mpi_type_extent_( datatype, extent, ierr )
 MPI_Fint *datatype;
-MPI_Aint * extent;
+MPI_Fint * extent;
 MPI_Fint *ierr;
 {
-  *ierr = MPI_Type_extent( MPI_Type_f2c(*datatype), extent );
+  MPI_Aint c_extent;
+  *ierr = MPI_Type_extent( MPI_Type_f2c(*datatype), &c_extent );
+  *extent = c_extent;
 }
 
 void  mpi_type_extent__( datatype, extent, ierr )
 MPI_Fint *datatype;
-MPI_Aint * extent;
+MPI_Fint * extent;
 MPI_Fint *ierr;
 {
   mpi_type_extent_( datatype, extent, ierr );
@@ -4332,7 +4336,7 @@ MPI_Fint *ierr;
 
 void  MPI_TYPE_EXTENT( datatype, extent, ierr )
 MPI_Fint *datatype;
-MPI_Aint * extent;
+MPI_Fint * extent;
 MPI_Fint *ierr;
 {
   mpi_type_extent_( datatype, extent, ierr );
@@ -4340,7 +4344,7 @@ MPI_Fint *ierr;
 
 void  mpi_type_extent( datatype, extent, ierr )
 MPI_Fint *datatype;
-MPI_Aint * extent;
+MPI_Fint * extent;
 MPI_Fint *ierr;
 {
   mpi_type_extent_( datatype, extent, ierr );
@@ -4384,20 +4388,34 @@ MPI_Fint *ierr;
 void  mpi_type_hindexed_( count, blocklens, indices, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
-MPI_Aint * indices;
+MPI_Fint * indices;
 MPI_Fint *old_type;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
 {
+  MPI_Aint *c_indices;
+  int i;
   MPI_Datatype local_new_type;
-  *ierr = MPI_Type_hindexed( *count, blocklens, indices, MPI_Type_f2c(*old_type), &local_new_type );
+
+  /* We allocate an array of MPI_Aint and copy the MPIFint's into it
+     We must do this because the C binding of MPI-1 uses MPI_Aint's which
+     are the size of pointers, whereas the Fortran binding always uses 32-bit
+     integers */
+  c_indices = (MPI_Aint *) malloc (*count * sizeof(MPI_Aint));
+  for (i=0; i < *count; i++) {
+    c_indices[i] = indices[i];
+  }
+
+  *ierr = MPI_Type_hindexed( *count, blocklens, c_indices, MPI_Type_f2c(*old_type), &local_new_type );
   *newtype = MPI_Type_c2f(local_new_type);
+
+  free (c_indices);
 }
 
 void  mpi_type_hindexed__( count, blocklens, indices, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
-MPI_Aint * indices;
+MPI_Fint * indices;
 MPI_Fint *old_type;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4408,7 +4426,7 @@ MPI_Fint *ierr;
 void  MPI_TYPE_HINDEXED( count, blocklens, indices, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
-MPI_Aint * indices;
+MPI_Fint * indices;
 MPI_Fint *old_type;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4419,7 +4437,7 @@ MPI_Fint *ierr;
 void  mpi_type_hindexed( count, blocklens, indices, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
-MPI_Aint * indices;
+MPI_Fint * indices;
 MPI_Fint *old_type;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4433,7 +4451,7 @@ MPI_Fint *ierr;
 void  mpi_type_hvector_( count, blocklen, stride, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint *blocklen;
-MPI_Aint *stride;
+MPI_Fint *stride;
 MPI_Fint *old_type;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4441,12 +4459,13 @@ MPI_Fint *ierr;
   MPI_Datatype local_new_type;
   *ierr = MPI_Type_hvector( *count, *blocklen, *stride, MPI_Type_f2c(*old_type), &local_new_type );
   *newtype = MPI_Type_c2f(local_new_type);
+
 }
 
 void  mpi_type_hvector__( count, blocklen, stride, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint *blocklen;
-MPI_Aint *stride;
+MPI_Fint *stride;
 MPI_Fint *old_type;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4457,7 +4476,7 @@ MPI_Fint *ierr;
 void  MPI_TYPE_HVECTOR( count, blocklen, stride, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint *blocklen;
-MPI_Aint *stride;
+MPI_Fint *stride;
 MPI_Fint *old_type;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4468,7 +4487,7 @@ MPI_Fint *ierr;
 void  mpi_type_hvector( count, blocklen, stride, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint *blocklen;
-MPI_Aint *stride;
+MPI_Fint *stride;
 MPI_Fint *old_type;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4530,15 +4549,17 @@ MPI_Fint *ierr;
 
 void   mpi_type_lb_( datatype, displacement, ierr )
 MPI_Fint *datatype;
-MPI_Aint * displacement;
+MPI_Fint *displacement;
 MPI_Fint *ierr;
 {
-  *ierr = MPI_Type_lb( MPI_Type_f2c(*datatype), displacement );
+  MPI_Aint c_displacement;
+  *ierr = MPI_Type_lb( MPI_Type_f2c(*datatype), &c_displacement );
+  *displacement = c_displacement;
 }
 
 void   mpi_type_lb__( datatype, displacement, ierr )
 MPI_Fint *datatype;
-MPI_Aint * displacement;
+MPI_Fint * displacement;
 MPI_Fint *ierr;
 {
   mpi_type_lb_( datatype, displacement, ierr );
@@ -4546,7 +4567,7 @@ MPI_Fint *ierr;
 
 void   MPI_TYPE_LB( datatype, displacement, ierr )
 MPI_Fint *datatype;
-MPI_Aint * displacement;
+MPI_Fint * displacement;
 MPI_Fint *ierr;
 {
   mpi_type_lb_( datatype, displacement, ierr );
@@ -4554,7 +4575,7 @@ MPI_Fint *ierr;
 
 void   mpi_type_lb( datatype, displacement, ierr )
 MPI_Fint *datatype;
-MPI_Aint * displacement;
+MPI_Fint * displacement;
 MPI_Fint *ierr;
 {
   mpi_type_lb_( datatype, displacement, ierr );
@@ -4601,24 +4622,37 @@ MPI_Fint *ierr;
 void  mpi_type_struct_( count, blocklens, indices, old_types, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
-MPI_Aint * indices;
+MPI_Fint * indices;
 MPI_Fint * old_types;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
 {
+  MPI_Aint *c_indices;
+  int i;
   MPI_Datatype local_new_type; 
   TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_types, *count);
   TAU_ASSIGN_VALUES(local_types, old_types, *count, MPI_Type_f2c);
-  
-  *ierr = MPI_Type_struct( *count, blocklens, indices, local_types, &local_new_type );
+
+  /* We allocate an array of MPI_Aint and copy the MPIFint's into it
+     We must do this because the C binding of MPI-1 uses MPI_Aint's which
+     are the size of pointers, whereas the Fortran binding always uses 32-bit
+     integers */
+  c_indices = (MPI_Aint *) malloc (*count * sizeof(MPI_Aint));
+  for (i=0; i < *count; i++) {
+    c_indices[i] = indices[i];
+  }
+
+  *ierr = MPI_Type_struct( *count, blocklens, c_indices, local_types, &local_new_type );
   TAU_FREE_LOCAL(local_types);
   *newtype = MPI_Type_c2f(local_new_type);
+
+  free (c_indices);
 }
 
 void  mpi_type_struct__( count, blocklens, indices, old_types, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
-MPI_Aint * indices;
+MPI_Fint * indices;
 MPI_Fint * old_types;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4629,7 +4663,7 @@ MPI_Fint *ierr;
 void  MPI_TYPE_STRUCT( count, blocklens, indices, old_types, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
-MPI_Aint * indices;
+MPI_Fint * indices;
 MPI_Fint * old_types;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4640,7 +4674,7 @@ MPI_Fint *ierr;
 void  mpi_type_struct( count, blocklens, indices, old_types, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
-MPI_Aint * indices;
+MPI_Fint * indices;
 MPI_Fint * old_types;
 MPI_Fint * newtype;
 MPI_Fint *ierr;
@@ -4653,15 +4687,17 @@ MPI_Fint *ierr;
 
 void   mpi_type_ub_( datatype, displacement, ierr )
 MPI_Fint *datatype;
-MPI_Aint * displacement;
+MPI_Fint *displacement;
 MPI_Fint *ierr;
 {
-  *ierr = MPI_Type_ub( MPI_Type_f2c(*datatype), displacement );
+  MPI_Aint c_displacement;
+  *ierr = MPI_Type_ub( MPI_Type_f2c(*datatype), &c_displacement );
+  *displacement = c_displacement;
 }
 
 void   mpi_type_ub__( datatype, displacement, ierr )
 MPI_Fint *datatype;
-MPI_Aint * displacement;
+MPI_Fint * displacement;
 MPI_Fint *ierr;
 {
   mpi_type_ub_( datatype, displacement, ierr );
@@ -4669,7 +4705,7 @@ MPI_Fint *ierr;
 
 void   MPI_TYPE_UB( datatype, displacement, ierr )
 MPI_Fint *datatype;
-MPI_Aint * displacement;
+MPI_Fint * displacement;
 MPI_Fint *ierr;
 {
   mpi_type_ub_( datatype, displacement, ierr );
@@ -4677,7 +4713,7 @@ MPI_Fint *ierr;
 
 void   mpi_type_ub( datatype, displacement, ierr )
 MPI_Fint *datatype;
-MPI_Aint * displacement;
+MPI_Fint * displacement;
 MPI_Fint *ierr;
 {
   mpi_type_ub_( datatype, displacement, ierr );
