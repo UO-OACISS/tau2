@@ -116,4 +116,9 @@ mapping		- Illustrates two examples in the embedded and external
                   address at each method invocation. Both these examples 
                   illustrate the use of the TAU Mapping API.
 
+multicounters   - Illustrates the use of multiple measurement options configured
+                  simultaneously in TAU. See README file for instructions on 
+                  setting the env. variables COUNTERS<1-25> for specifying 
+                  measurements. Requires configuring TAU with -MULTIPLECOUNTERS.
+
 
