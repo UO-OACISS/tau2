@@ -20,7 +20,7 @@ import javax.swing.tree.*;
 import javax.swing.table.*;
 import dms.dss.*;
 
-public class ParaProfManager extends JFrame implements ActionListener, TreeSelectionListener, TreeExpansionListener{
+public class ParaProfManager extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener{
     public ParaProfManager(){
 	
 	try{
@@ -145,7 +145,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    treeModel = new DefaultTreeModel(root);
 	    treeModel.setAsksAllowsChildren(true);
 	    tree = new JTree(treeModel);
-	    tree.setRootVisible(false);
 	    tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 	    ParaProfTreeCellRenderer renderer = new ParaProfTreeCellRenderer();
 	    tree.setCellRenderer(renderer);
@@ -153,7 +152,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add tree listeners.
 	    tree.addTreeSelectionListener(this);
-	    tree.addTreeExpansionListener(this);
+	    tree.addTreeWillExpandListener(this);
 	    //######
 	          
 	    //Bung it in a scroll pane.
@@ -254,7 +253,86 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
 	Object userObject = selectedNode.getUserObject();
 
-	if((parentNode.isRoot())){
+	if(selectedNode.isRoot()){
+	    jSplitPane.setRightComponent(getPanelHelpMessage(0));
+	    jSplitPane.setDividerLocation(0.5);
+	}
+	else if((parentNode.isRoot())){
+	    if(userObject.toString().equals("Standard Applications")){
+		jSplitPane.setRightComponent(getPanelHelpMessage(1));
+		jSplitPane.setDividerLocation(0.5);
+	    }
+	    else if(userObject.toString().equals("Runtime Applications")){
+		jSplitPane.setRightComponent(getPanelHelpMessage(2));
+		jSplitPane.setDividerLocation(0.5);		
+	    }
+	    else if(userObject.toString().equals("DB Applications")){
+		jSplitPane.setRightComponent(getPanelHelpMessage(3));
+		jSplitPane.setDividerLocation(0.5);
+	    }
+	}
+	else if(userObject instanceof ParaProfApplication){
+	    jSplitPane.setRightComponent(getTable(userObject));
+	    jSplitPane.setDividerLocation(0.5);
+	    tree.expandPath(path);
+	}
+	else if(userObject instanceof ParaProfExperiment){
+	    jSplitPane.setRightComponent(getTable(userObject));
+	    jSplitPane.setDividerLocation(0.5);
+	    tree.expandPath(path);
+	}
+	else if(userObject instanceof ParaProfTrial){
+	    jSplitPane.setRightComponent(getTable(userObject));
+	    jSplitPane.setDividerLocation(0.5);
+	    tree.expandPath(path);
+	}
+	else if(userObject instanceof Metric)
+	    this.metric(path);
+    }
+    //######
+    //End - TreeSelectionListener
+    //######
+
+    //######
+    //TreeWillExpandListener
+    //######
+    public void treeWillCollapse(TreeExpansionEvent event){
+	TreePath path = event.getPath();
+	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+	Object userObject = selectedNode.getUserObject();
+	
+	if(selectedNode.isRoot()){
+	    ParaProf.applicationManager.clearDefaultMutableTreeNodes();
+	}
+	else if(parentNode.isRoot()){
+	    if(userObject.toString().equals("Standard Applications")){
+		ParaProf.applicationManager.clearDefaultMutableTreeNodes();
+	    }
+	    else if(userObject.toString().equals("Runtime Applications")){
+		return;
+	    }
+	    else if(userObject.toString().equals("DB Applications")){
+		return;
+	    }
+	}
+	else if(userObject instanceof ParaProfTreeNodeUserObject){
+	    ((ParaProfTreeNodeUserObject) userObject).clearDefaultMutableTreeNodes();
+	}
+    }
+    public void treeWillExpand(TreeExpansionEvent event){
+	TreePath path = event.getPath();
+	if(path == null)
+	    return;
+	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
+	Object userObject = selectedNode.getUserObject();
+
+	if(selectedNode.isRoot()){
+	    //Do not need to do anything here.
+	    return;
+	}
+	else if((parentNode.isRoot())){
 	    if(userObject.toString().equals("Standard Applications")){
 		jSplitPane.setRightComponent(getPanelHelpMessage(1));
 		jSplitPane.setDividerLocation(0.5);
@@ -271,7 +349,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
 		}
 		System.out.println("Done loading application list.");
-		tree.expandPath(path);
 		return;
 	    }
 	    else if(userObject.toString().equals("Runtime Applications")){
@@ -282,7 +359,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		try{
 		    jSplitPane.setRightComponent(getPanelHelpMessage(3));
 		    jSplitPane.setDividerLocation(0.5);
-
+		    
 		    if(configFile==null||password==null){//Check to see if the user has set configuration information.
 			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
 						      "DB Configuration Error!",
@@ -316,7 +393,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    }
 		    perfDBSession.terminate();
 		    System.out.println("Done loading application list.");
-		    tree.expandPath(path);
 		    return;
 		}
 		catch(Exception e){
@@ -361,9 +437,18 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 			experiment.setDMTN(experimentNode);
 			treeModel.insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
 		    }
+		    
+		    //Some experimental code.
+		    ParaProfExperiment experiment = new ParaProfExperiment();
+		    experiment.setName("Default Exp");
+		    experiment.setApplicationID(1000);
+		    experiment.setID(1000);
+		    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+		    treeModel.insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
+		    //End - Some experimental code.
+		    
 		    System.out.println("Done loading experiment list.");
 		}
-		tree.expandPath(path);
 		jSplitPane.setRightComponent(getTable(userObject));
 		jSplitPane.setDividerLocation(0.5);
 	    }
@@ -391,6 +476,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    trial.setDBTrial(true);
 		    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
 		    trial.setDMTN(trialNode);
+		    trial.setTreePath(new TreePath(trialNode.getPath()));
 		    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 		}
 		perfDBSession.terminate();
@@ -406,12 +492,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    ParaProfTrial trial = (ParaProfTrial)l.next();
 		    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
 		    trial.setDMTN(trialNode);
+		    trial.setTreePath(new TreePath(trialNode.getPath()));
 		    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
 		}
 		System.out.println("Done loading trial list.");
 	    }
-
-	    tree.expandPath(path);
 	    jSplitPane.setRightComponent(getTable(userObject));
 	    jSplitPane.setDividerLocation(0.5);
 	}
@@ -443,7 +528,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    loadedTrials.add(trial);
 		}
 	    }
-
+	    
 	    //At this point, in both the db and non-db cases, the trial
 	    //is either loading or not.  Check this before displaying.
 	    if(!trial.loading()){
@@ -460,46 +545,40 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    treeModel.insertNodeInto(metricNode, selectedNode, selectedNode.getChildCount());
 		}
 		System.out.println("Done loading metric list.");
-
-		tree.expandPath(path);
+		
 		jSplitPane.setRightComponent(getTable(userObject));
 		jSplitPane.setDividerLocation(0.5);
 	    }
 	    else{
-		tree.expandPath(path);
 		jSplitPane.setRightComponent(new JScrollPane(this.getLoadingTrialPanel(userObject)));
 		jSplitPane.setDividerLocation(0.5);
-	    }	    
-	}
-	else if(userObject instanceof Metric){
-	    ParaProfTrial paraProfTrial  =  (ParaProfTrial) parentNode.getUserObject();
-	    Metric metric = (Metric) userObject;
-	    jSplitPane.setRightComponent(getTable(userObject));
-	    jSplitPane.setDividerLocation(0.5);
-	    this.showMetric(paraProfTrial, metric);
+	    }
 	}
     }
     //######
-    //End - TreeSelectionListener
-    //######
-
-    //######
-    //TreeExpansionListener
-    //######
-    public void treeCollapsed(TreeExpansionEvent event){
-	TreePath treePath = event.getPath();
-	System.out.println("Tree collapsed: " + treePath);
-    }
-    public void treeExpanded(TreeExpansionEvent event){
-	TreePath treePath = event.getPath();
-	System.out.println("Tree expanded: " + treePath);
-    }
-    //######
-    //End - TreeSelectionListener
+    //TreeWillExpandListener
     //######
 
     //####################################
     //End - Interface code.
+    //####################################
+
+    //####################################
+    //Tree selection helpers.
+    //####################################
+    private void metric(TreePath path){
+	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
+	Object userObject = selectedNode.getUserObject();
+
+	ParaProfTrial paraProfTrial  =  (ParaProfTrial) parentNode.getUserObject();
+	Metric metric = (Metric) userObject;
+	jSplitPane.setRightComponent(getTable(userObject));
+	jSplitPane.setDividerLocation(0.5);
+	this.showMetric(paraProfTrial, metric);
+    }
+    //####################################
+    //End - Tree selection helpers.
     //####################################
 
     public void addMetricTreeNodes(ParaProfTrial trial){
@@ -718,11 +797,18 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    trial.showMainWindow();
 	}
 	catch(Exception e){
-	    UtilFncs.systemError(e, null, "jRM04");
+	    UtilFncs.systemError(e, null, "PPM04");
 	}
     }
   
-    public void showTrialMetrics(ParaProfTrial trial){
+    public void populateTrialMetrics(ParaProfTrial trial, boolean showDefaultTrial){
+	DefaultMutableTreeNode defaultMutableTreeNode = trial.getDMTN();
+	if(defaultMutableTreeNode!=null){
+	    tree.expandPath(trial.getTreePath());
+	}
+	else if(showDefaultTrial){
+	}
+
 	/*
 	for(int i=standard.getChildCount(); i>0; i--){
 	    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) standard.getChildAt(i-1)));

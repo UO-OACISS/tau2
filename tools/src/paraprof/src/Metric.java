@@ -10,7 +10,7 @@ package paraprof;
 
 import javax.swing.tree.*;
 
-public class Metric{
+public class Metric implements ParaProfTreeNodeUserObject{
     public Metric(){}
     
     public void setTrial(ParaProfTrial trial){
@@ -67,6 +67,23 @@ public class Metric{
     
     public String toString(){
 	return this.getName();}
+
+    //####################################
+    //Interface code.
+    //####################################
+    
+    //######
+    //ParaProfTreeUserObject
+    //######
+    public void clearDefaultMutableTreeNodes(){
+	this.setDMTN(null);}
+    //######
+    //End - ParaProfTreeUserObject
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
     
     private ParaProfTrial trial = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;

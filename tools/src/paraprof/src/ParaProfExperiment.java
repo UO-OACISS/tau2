@@ -12,7 +12,7 @@ import java.util.*;
 import javax.swing.tree.*;
 import dms.dss.*;
 
-public class ParaProfExperiment extends Experiment{
+public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUserObject{
 
     public ParaProfExperiment(){
 	super();
@@ -103,7 +103,7 @@ public class ParaProfExperiment extends Experiment{
     public Vector getTrials(){
 	return trials;}
 
-    public ListIterator getTrialList(){
+    public ParaProfIterator getTrialList(){
 	return new ParaProfIterator(trials);}
 
     public ParaProfTrial getTrial(int trialID){
@@ -133,6 +133,27 @@ public class ParaProfExperiment extends Experiment{
   
     public String toString(){ 
 	return super.getName();}
+
+    //####################################
+    //Interface code.
+    //####################################
+    
+    //######
+    //ParaProfTreeUserObject
+    //######
+    public void clearDefaultMutableTreeNodes(){
+	this.setDMTN(null);
+	ListIterator l = this.getTrialList();
+	while(l.hasNext())
+	    ((ParaProfTrial)l.next()).clearDefaultMutableTreeNodes();
+    }
+    //######
+    //End - ParaProfTreeUserObject
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
     
     //####################################
     //Instance data.

@@ -178,7 +178,7 @@ public class ParaProf implements ActionListener, ParaProfObserver{
     public void update(Object obj){
 	//We are only ever watching an instance of ParaProfTrial.
 	ParaProfTrial trial = (ParaProfTrial) obj;
-	ParaProf.paraProfManager.showTrialMetrics(trial);
+	ParaProf.paraProfManager.populateTrialMetrics(trial, true);
 	trial.showMainWindow();
     }
     public void update(){}

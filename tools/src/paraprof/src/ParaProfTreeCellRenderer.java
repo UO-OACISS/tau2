@@ -31,10 +31,14 @@ public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer{
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
 	Object userObject = node.getUserObject();
 	
-	if(parentNode.isRoot()){
+	if(node.isRoot()){
 	    URL url = ParaProfTreeCellRenderer.class.getResource("red-ball.gif");
-	    this.setIcon(new ImageIcon(url));
+	    this.setIcon(new ImageIcon(url)); 
 	}
+	//else if(parentNode.isRoot()){
+	//URL url = ParaProfTreeCellRenderer.class.getResource("red-ball.gif");
+	//this.setIcon(new ImageIcon(url));
+	//}
 	else if(userObject instanceof Metric){
 	    URL url = ParaProfTreeCellRenderer.class.getResource("green-ball.gif");
 	    this.setIcon(new ImageIcon(url));

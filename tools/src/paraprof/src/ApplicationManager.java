@@ -10,7 +10,7 @@ package paraprof;
 
 import java.util.*;
 
-public class ApplicationManager extends Observable{
+public class ApplicationManager extends Observable implements ParaProfTreeNodeUserObject{
     public ApplicationManager(){}
   
     //Public methods.
@@ -27,7 +27,7 @@ public class ApplicationManager extends Observable{
     public Vector getApplications(){
 	return applications;}
 
-    public ListIterator getApplicationList(){
+    public ParaProfIterator getApplicationList(){
 	return new ParaProfIterator(applications);}
   
     public boolean isEmpty(){
@@ -55,6 +55,26 @@ public class ApplicationManager extends Observable{
 	    }
   	return false;
     }
+
+    //####################################
+    //Interface code.
+    //####################################
+    
+    //######
+    //ParaProfTreeUserObject
+    //######
+    public void clearDefaultMutableTreeNodes(){
+	ListIterator l = this.getApplicationList();
+	while(l.hasNext())
+	    ((ParaProfApplication)l.next()).clearDefaultMutableTreeNodes();
+    }
+    //######
+    //End - ParaProfTreeUserObject
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
 
     //Instance data.
     Vector applications = new Vector();

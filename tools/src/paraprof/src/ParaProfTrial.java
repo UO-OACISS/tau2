@@ -22,7 +22,7 @@ import javax.swing.event.*;
 import javax.swing.tree.*;
 import dms.dss.*;
 
-public class ParaProfTrial extends Trial implements ParaProfObserver{
+public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTreeNodeUserObject{
 
      public ParaProfTrial(int type){
 	super();
@@ -164,6 +164,27 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
 	return super.getName();}
 
     //####################################
+    //Interface code.
+    //####################################
+    
+    //######
+    //ParaProfTreeUserObject
+    //######
+    public void clearDefaultMutableTreeNodes(){
+	this.setDMTN(null);
+	ListIterator l = this.getMetricList();
+	while(l.hasNext())
+	    ((Metric)l.next()).clearDefaultMutableTreeNodes();
+    }
+    //######
+    //End - ParaProfTreeUserObject
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
+
+    //####################################
     //Functions that control the obtaining and the opening
     //and closing of the static main window for
     //this trial.
@@ -221,7 +242,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
     public Vector getMetrics(){
 	return metrics;}
 
-    public ListIterator getMetricList(){
+    public ParaProfIterator getMetricList(){
 	return new ParaProfIterator(metrics);}
 
     public int getNumberOfMetrics(){
