@@ -1,0 +1,250 @@
+For Fortran instrumentation, we'd need:
+
+1) The name of the subroutine/function.
+2) The location of the point where variable declaration starts (after any includes and implicit definitions) (To insert profiler variables).
+3) The location of the point where the variable declarations in the routine end 
+and the code begins (To insert TAU_PROFILE routines)
+4) The locations of points where the routine exits (end in program, return points in subroutines and functions ) (To insert TAU_PROFILE_STOP routine)
+5) If the routine is the program entry point, then a way to recognize this.
+(To insert TAU_PROFILE_INIT routine).
+
+Example: 
+1. instrumentation in main.
+
+
+!-------------------------------------------------------------------------!
+!                                                                         !
+!        N  A  S     P A R A L L E L     B E N C H M A R K S  2.3         !
+!                                                                         !
+!                                   L U                                   !
+!                                                                         !
+!-------------------------------------------------------------------------!
+!                                                                         !
+!    This benchmark is part of the NAS Parallel Benchmark 2.3 suite.      !
+!    It is described in NAS Technical Report 95-020.                      !
+!                                                                         !
+!    Permission to use, copy, distribute and modify this software         !
+!    for any purpose with or without fee is hereby granted.  We           !
+!    request, however, that all derived work reference the NAS            !
+!    Parallel Benchmarks 2.3. This software is provided "as is"           !
+!    without express or implied warranty.                                 !
+!                                                                         !
+!    Information on NPB 2.3, including the technical report, the          !
+!    original specifications, source code, results and information        !
+!    on how to submit new results, is available at:                       !
+!                                                                         !
+!           http://www.nas.nasa.gov/NAS/NPB/                              !
+!                                                                         !
+!    Send comments or suggestions to  npb@nas.nasa.gov                    !
+!    Send bug reports to              npb-bugs@nas.nasa.gov               !
+!                                                                         !
+!          NAS Parallel Benchmarks Group                                  !
+!          NASA Ames Research Center                                      !
+!          Mail Stop: T27A-1                                              !
+!          Moffett Field, CA   94035-1000                                 !
+!                                                                         !
+!          E-mail:  npb@nas.nasa.gov                                      !
+!          Fax:     (415) 604-3957                                        !
+!                                                                         !
+!-------------------------------------------------------------------------!
+
+c---------------------------------------------------------------------
+c
+c Authors: S. Weeratunga
+c          V. Venkatakrishnan
+c          E. Barszcz
+c          M. Yarrow
+c
+c---------------------------------------------------------------------
+
+c---------------------------------------------------------------------
+      program applu
+c---------------------------------------------------------------------
+
+c---------------------------------------------------------------------
+c
+c   driver for the performance evaluation of the solver for
+c   five coupled parabolic/elliptic partial differential equations.
+c
+c---------------------------------------------------------------------
+
+      implicit none
+      integer profiler(2)
+      save profiler
+
+      include 'applu.incl'
+      character class
+      logical verified
+      double precision mflops
+      integer ierr
+
+c---------------------------------------------------------------------
+c   initialize communications
+c---------------------------------------------------------------------
+      call TAU_PROFILE_INIT()
+      call TAU_PROFILE_TIMER(profiler, 'applu')
+      call TAU_PROFILE_START(profiler)
+      call init_comm()
+
+c---------------------------------------------------------------------
+c   read input data
+c---------------------------------------------------------------------
+      call read_input()
+
+c---------------------------------------------------------------------
+c   set up processor grid
+c---------------------------------------------------------------------
+      call proc_grid()
+
+c---------------------------------------------------------------------
+c   determine the neighbors
+c---------------------------------------------------------------------
+      call neighbors()
+
+c---------------------------------------------------------------------
+c   set up sub-domain sizes
+c---------------------------------------------------------------------
+      call subdomain()
+
+c---------------------------------------------------------------------
+c   set up coefficients
+c---------------------------------------------------------------------
+      call setcoeff()
+
+c---------------------------------------------------------------------
+c   set the masks required for comm
+c---------------------------------------------------------------------
+      call sethyper()
+
+c---------------------------------------------------------------------
+c   set the boundary values for dependent variables
+c---------------------------------------------------------------------
+      call setbv()
+
+c---------------------------------------------------------------------
+c   set the initial values for dependent variables
+c---------------------------------------------------------------------
+      call setiv()
+
+c---------------------------------------------------------------------
+c   compute the forcing term based on prescribed exact solution
+c---------------------------------------------------------------------
+      call erhs()
+
+c---------------------------------------------------------------------
+c   perform the SSOR iterations
+c---------------------------------------------------------------------
+      call ssor()
+
+c---------------------------------------------------------------------
+c   compute the solution error
+c---------------------------------------------------------------------
+      call error()
+
+c---------------------------------------------------------------------
+c   compute the surface integral
+c---------------------------------------------------------------------
+      call pintgr()
+
+c---------------------------------------------------------------------
+c   verification test
+c---------------------------------------------------------------------
+      IF (id.eq.0) THEN
+         call verify ( rsdnm, errnm, frc, class, verified )
+         mflops = float(itmax)*(1984.77*float( nx0 )
+     >        *float( ny0 )
+     >        *float( nz0 )
+     >        -10923.3*(float( nx0+ny0+nz0 )/3.)**2 
+     >        +27770.9* float( nx0+ny0+nz0 )/3.
+     >        -144010.)
+     >        / (maxtime*1000000.)
+
+         call print_results('LU', class, nx0,
+     >     ny0, nz0, itmax, nnodes_compiled,
+     >     num, maxtime, mflops, '          floating point', verified, 
+     >     npbversion, compiletime, cs1, cs2, cs3, cs4, cs5, cs6, 
+     >     '(none)')
+
+      END IF
+
+      call mpi_finalize(ierr)
+      call TAU_PROFILE_STOP(profiler)
+      end
+
+
+
+2. Instrumentation of any routine.
+
+
+
+c---------------------------------------------------------------------
+c---------------------------------------------------------------------
+      subroutine setiv
+
+c---------------------------------------------------------------------
+c---------------------------------------------------------------------
+
+c---------------------------------------------------------------------
+c
+c   set the initial values of independent variables based on tri-linear
+c   interpolation of boundary values in the computational space.
+c
+c---------------------------------------------------------------------
+
+      implicit none
+
+      include 'applu.incl'
+
+c---------------------------------------------------------------------
+c  local variables
+c---------------------------------------------------------------------
+      integer profiler(2)
+      save profiler
+      integer i, j, k, m
+      integer iglob, jglob
+      double precision  xi, eta, zeta
+      double precision  pxi, peta, pzeta
+      double precision  ue_1jk(5),ue_nx0jk(5),ue_i1k(5),
+     >        ue_iny0k(5),ue_ij1(5),ue_ijnz(5)
+
+      call TAU_PROFILE_TIMER(profiler, 'setiv');
+      call TAU_PROFILE_START(profiler);
+
+      do k = 2, nz - 1
+         zeta = ( dble (k-1) ) / (nz-1)
+         do j = 1, ny
+          jglob = jpt + j
+          IF (jglob.ne.1.and.jglob.ne.ny0) then
+            eta = ( dble (jglob-1) ) / (ny0-1)
+            do i = 1, nx
+              iglob = ipt + i
+              IF (iglob.ne.1.and.iglob.ne.nx0) then
+               xi = ( dble (iglob-1) ) / (nx0-1)
+               call exact (1,jglob,k,ue_1jk)
+               call exact (nx0,jglob,k,ue_nx0jk)
+               call exact (iglob,1,k,ue_i1k)
+               call exact (iglob,ny0,k,ue_iny0k)
+               call exact (iglob,jglob,1,ue_ij1)
+               call exact (iglob,jglob,nz,ue_ijnz)
+               do m = 1, 5
+                  pxi =   ( 1.0d+00 - xi ) * ue_1jk(m)
+     >                              + xi   * ue_nx0jk(m)
+                  peta =  ( 1.0d+00 - eta ) * ue_i1k(m)
+     >                              + eta   * ue_iny0k(m)
+                  pzeta = ( 1.0d+00 - zeta ) * ue_ij1(m)
+     >                              + zeta   * ue_ijnz(m)
+
+                  u( m, i, j, k ) = pxi + peta + pzeta
+     >                 - pxi * peta - peta * pzeta - pzeta * pxi
+     >                 + pxi * peta * pzeta
+
+               end do
+              END IF
+            end do
+          END IF
+         end do
+      end do
+
+      call TAU_PROFILE_STOP(profiler);
+      return
+      end
