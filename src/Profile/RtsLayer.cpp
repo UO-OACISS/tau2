@@ -232,7 +232,8 @@ double RtsLayer::GetEventCounter()
 ///////////////////////////////////////////////////////////////////////////
 double getUserTimeInSec(void)
 {
-  double current_time;
+  double current_time = 0;
+#ifdef CPU_TIME
   struct rusage current_usage;
 
   getrusage (RUSAGE_SELF, &current_usage);
@@ -243,6 +244,7 @@ double getUserTimeInSec(void)
 */
   current_time = (current_usage.ru_utime.tv_sec + current_usage.ru_stime.tv_sec)* 1e6 
   + (current_usage.ru_utime.tv_usec + current_usage.ru_stime.tv_usec);
+#endif // CPU_TIME
   return current_time; 
 }
 
@@ -703,6 +705,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 2000/03/01 01:56:44 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.17 2000/03/01 01:56:44 sameer Exp $ 
+ * $Revision: 1.18 $   $Date: 2000/03/01 02:20:43 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.18 2000/03/01 02:20:43 sameer Exp $ 
  ***************************************************************************/
