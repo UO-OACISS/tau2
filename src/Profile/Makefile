@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/users/sameer/tau2
+TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -34,7 +34,8 @@ CC  = $(TAU_CC)
 #This includes all profile options in $(PROFILEOPTS).
 
 
-CEXTRA = 
+CEXTRA =  
+#JAVA#CEXTRA =  -I$(JDKDIR)/include -I$(JDKDIR)/include/$(JDKARCH) #ENDIF#
 
 ##############################################
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
@@ -66,12 +67,12 @@ MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
-		$(EVENTS_O) $(THR_O) $(PCL_O)
+		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(TAU_JAVA_O)
 
 PRINT	      = pr
 
 SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp \
-		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp 
+		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp TauHooks.cpp
 
 AR	      = ar
 
@@ -108,32 +109,41 @@ TAU_DISABLE   = libTauDisable$(LSX)
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(LSX)  #ENDIF#
 ##############################################
 
+
+##############################################
+# For making libTAU.so Dynamic Shared Object
 ##############################################
 TAU_SHLIBX		= .so 		  
-#JAVA#TAU_JAVALIB   		= libTAU$(TAU_SHLIBX)  #ENDIF#
-#JAVA#TAU_JAVA_O 		= TauJava.o  	   #ENDIF#
-#JAVA#TAU_JAVA_INSTALL  		= $(INSTALLDEST)/$(TAU_JAVALIB)  #ENDIF#
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2#AR_SHFLAGS  		= -G	        #ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
+TAU_SHLIB	= libTAU$(TAUOPTIONS)$(TAU_SHLIBX)
+
+##############################################
+# If JAVA or DYNINST is defined, TAU_DSO is defined
+##############################################
+#JAVA#TAU_DSO   		= $(TAU_SHLIB)  #ENDIF#
+#DYNINST#TAU_DSO   		= $(TAU_SHLIB)  #ENDIF#
+#JAVA# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
+#DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 ##############################################
 
-all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_JAVALIB)
+all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO)
 
 $(TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TARGET) $(OBJS) $(EXTRAOBJS)
+
+$(TAU_SHLIB): 	$(OBJS)
+		$(PRELINK_PHASE)
+		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS)
 
 $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
 
 libTauMpi$(LSX): 
 		$(MAKE) -f Makefile.wrapper 
-
-libTAU$(TAU_SHLIBX): $(TARGET) 
-		$(MAKE) -f Makefile.java ARFLAGS='$(TAU_ARFLAGS)' PRELINK_PHASE='$(PRELINK_PHASE)'
- 
 
 $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
@@ -148,14 +158,16 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 
+$(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(INSTALL) $? $(INSTALLDEST)
 		
 $(INSTALLDEST)/libTauMpi$(LSX): libTauMpi$(LSX)
 		$(MAKE) -f Makefile.wrapper install
 
-$(INSTALLDEST)/libTAU$(TAU_SHLIBX): libTAU$(TAU_SHLIBX)
-		$(MAKE) -f Makefile.java ARFLAGS='$(TAU_ARFLAGS)' PRELINK_PHASE='$(PRELINK_PHASE)' install
-
-install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_JAVA_INSTALL)
+install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL)
 
 # Rules
 Profiler.o 	: Profiler.cpp $(HDRS)
@@ -197,6 +209,12 @@ TauFAPI.o   : TauFAPI.cpp $(HDRS)
 TauMapping.o   : TauMapping.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauHooks.o   : TauHooks.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauJava.o :	TauJava.cpp
+	$(CXX) $(CXXFLAGS) -c TauJava.cpp
+
 PclLayer.o 	: PclLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -208,5 +226,5 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 
 
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(TAU_JAVALIB) $(EXTRAOBJS) *.ii *.ti ti_files/*
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(MPI_WRAPPER_O) $(TAU_JAVA_O) $(TAU_DSO) $(EXTRAOBJS) *.ii *.ti ti_files/* 
 
