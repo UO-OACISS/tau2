@@ -28,9 +28,10 @@ grep "^#" $sedout > $sedout.~~0
 # Silly GOOFY Stupid /bin/sh on decstations gobble up the "\2" and make
 # it an ASCII 002.  That breaks the echo commands below, since I REALLY
 # want \2 to be output, not 002.  How in the world can DEC mess up /bin/sh?
+# BSD-derived ash does the same.
 bs=""
 
-if [ $1 = "arch=decstation" ]
+if test `echo "\2" | wc -c` = 2
   then
     bs="\\"
 fi
