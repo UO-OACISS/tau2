@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.5 2004/06/09 20:46:05 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.6 2004/07/21 15:54:21 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -416,7 +416,7 @@ public class Trial {
 	    		String tmpStr = new String();
 	    		if (db.getDBType().compareTo("mysql") == 0)
 					tmpStr = "select LAST_INSERT_ID();";
-				if (db.getDBType().compareTo("db2") == 0)
+				else if (db.getDBType().compareTo("db2") == 0)
 					tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
 	    		else
 					tmpStr = "select currval('trial_id_seq');";

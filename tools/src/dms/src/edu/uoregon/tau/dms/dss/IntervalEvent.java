@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.2 2004/05/05 23:16:28 khuck Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.3 2004/07/21 15:54:21 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -239,7 +239,7 @@ public class IntervalEvent {
 				String tmpStr = new String();
 				if (db.getDBType().compareTo("mysql") == 0)
 					tmpStr = "select LAST_INSERT_ID();";
-				if (db.getDBType().compareTo("db2") == 0)
+				else if (db.getDBType().compareTo("db2") == 0)
 					tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
 				else
 					tmpStr = "select currval('interval_event_id_seq');";

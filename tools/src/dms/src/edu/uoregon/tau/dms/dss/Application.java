@@ -13,7 +13,7 @@ import java.util.Vector;
  * an application from which the TAU performance data has been generated.
  * An application has one or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.1 2004/05/05 17:43:28 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.2 2004/07/21 15:54:20 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since 0.1
@@ -282,12 +282,13 @@ public class Application {
 				newApplicationID = applicationID;
 			} else {
 				String tmpStr = new String();
-				if (db.getDBType().compareTo("mysql") == 0)
+				if (db.getDBType().compareTo("mysql") == 0) {
 					tmpStr = "select LAST_INSERT_ID();";
-				if (db.getDBType().compareTo("db2") == 0)
+				} else if (db.getDBType().compareTo("db2") == 0) {
 					tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
-				else // postgresql
+				} else { // postgresql 
 					tmpStr = "select currval('application_id_seq');";
+				}
 				newApplicationID = Integer.parseInt(db.getDataItem(tmpStr));
 			}
 		} catch (SQLException e) {

@@ -17,7 +17,7 @@ import java.util.Vector;
  * A atomic event has particular information, including the name of the atomic event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: AtomicEvent.java,v 1.4 2004/05/27 20:25:42 khuck Exp $</P>
+ * <P>CVS $Id: AtomicEvent.java,v 1.5 2004/07/21 15:54:20 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -263,7 +263,7 @@ public class AtomicEvent {
 			String tmpStr = new String();
 			if (db.getDBType().compareTo("mysql") == 0)
 				tmpStr = "select LAST_INSERT_ID();";
-			if (db.getDBType().compareTo("db2") == 0)
+			else if (db.getDBType().compareTo("db2") == 0)
 				tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
 			else
 				tmpStr = "select currval('atomic_event_id_seq');";
