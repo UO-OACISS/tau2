@@ -40,6 +40,9 @@ struct TauJavaLayer {
   static void MethodExit(JVMPI_Event *event);
   static void ThreadStart(JVMPI_Event *event);
   static void ThreadEnd(JVMPI_Event *event);
+  static void ShutDown(JVMPI_Event *event);
+  static int *RegisterThread(JVMPI_Event *event);
+  static int  NumThreads;
 };
 
 
