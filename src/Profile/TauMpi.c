@@ -158,17 +158,7 @@ static int procid_0;
 
   
 
-int totalnodes(void)
-{
-  static int nodes = -1;
-  if (nodes == -1)
-  {
-    PMPI_Comm_size(MPI_COMM_WORLD, &nodes);
-  }
-  return nodes;
-}
-
-
+extern int totalnodes(void);
 
 
 void ProcessWaitTest_0 ( request, status, note )

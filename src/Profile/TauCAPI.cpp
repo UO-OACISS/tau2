@@ -36,6 +36,10 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef TAU_MPI
+#include <mpi.h>
+#endif /* TAU_MPI */
+
 ///////////////////////////////////////////////////////////////////////////
 // Wrappers for corresponding C++ functions follow
 
@@ -267,6 +271,21 @@ extern "C" TauGroup_t Tau_disable_all_groups(void)
   return TAU_DISABLE_ALL_GROUPS();
 }
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" int totalnodes(void)
+{
+#ifdef TAU_MPI
+  static int nodes = -1;
+  if (nodes == -1)
+  {
+    PMPI_Comm_size(MPI_COMM_WORLD, &nodes);
+  }
+  return nodes;
+#else  /* TAU_MPI */
+  return 1; 
+#endif /* TAU_MPI */
+}
+
 #ifdef TAU_MPI
 TAU_REGISTER_EVENT(sendevent,"Message size sent to all nodes");
 TauUserEvent **u;
@@ -398,7 +417,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2002/07/11 00:05:28 $
- * VERSION: $Id: TauCAPI.cpp,v 1.26 2002/07/11 00:05:28 sameer Exp $
+ * $Revision: 1.27 $   $Date: 2002/11/05 02:11:44 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.27 2002/11/05 02:11:44 sameer Exp $
  ***************************************************************************/
 
