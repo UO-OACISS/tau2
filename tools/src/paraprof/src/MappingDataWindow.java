@@ -482,7 +482,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     public void menuSelected(MenuEvent evt){
 	try{
 	    String trialName = trial.getCounterName();
-	    trialName = trialName.toUpperCase();
 	    boolean isDefault = false;
 	    boolean isTimeMetric = false;
 	    
@@ -509,15 +508,20 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    else if(percent){
 		valuePercentMenu.setEnabled(true);
 		unitsMenu.setEnabled(false);}
+	    else if(!(isDefault || isTimeMetric)){
+		valuePercentMenu.setEnabled(true);
+		unitsMenu.setEnabled(false);
+	    }
 	    else{
 		valuePercentMenu.setEnabled(true);
-		unitsMenu.setEnabled(true);}
+		unitsMenu.setEnabled(true);
+	    }
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "TDW04");
 	}
     }
-    
+
     public void menuDeselected(MenuEvent evt){}
     public void menuCanceled(MenuEvent evt){}
     //******************************

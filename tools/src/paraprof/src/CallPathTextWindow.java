@@ -114,6 +114,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //Options menu.
 	    //******************************
 	    JMenu optionsMenu = new JMenu("Options");
+	    optionsMenu.addMenuListener(this);
 	    
 	    //Add a submenu.
 	    sortGroup = new ButtonGroup();
@@ -154,6 +155,34 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    
 	    optionsMenu.add(sortOrderMenu);
 	    //End Submenu.
+
+	    //Add a submenu.
+	    unitsMenu = new JMenu("Select Units");
+	    unitsGroup = new ButtonGroup();
+      
+	    secondsButton = new JRadioButtonMenuItem("Seconds", false);
+	    //Add a listener for this radio button.
+	    secondsButton.addActionListener(this);
+      
+	    millisecondsButton = new JRadioButtonMenuItem("Milliseconds", false);
+	    //Add a listener for this radio button.
+	    millisecondsButton.addActionListener(this);
+      
+	    microsecondsButton = new JRadioButtonMenuItem("Microseconds", true);
+	    //Add a listener for this radio button.
+	    microsecondsButton.addActionListener(this);
+      
+	    unitsGroup.add(secondsButton);
+	    unitsGroup.add(millisecondsButton);
+	    unitsGroup.add(microsecondsButton);
+      
+	    unitsMenu.add(secondsButton);
+	    unitsMenu.add(millisecondsButton);
+	    unitsMenu.add(microsecondsButton);
+	    optionsMenu.add(unitsMenu);
+	    //End Submenu.
+
+
 	    //******************************
 	    //End - Options menu.
 	    //******************************
@@ -238,13 +267,13 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //**********
 	    //Panel and ScrollPane definition.
 	    //**********
-	    panelRef = new CallPathTextWindowPanel(trial,
+	    panel = new CallPathTextWindowPanel(trial,
 						   inServerNumber,
 						   inContextNumber,
 						   inThreadNumber, this, global);
       
 	    //The scroll panes into which the list shall be placed.
-	    JScrollPane sp = new JScrollPane(panelRef);
+	    JScrollPane sp = new JScrollPane(panel);
 	    JScrollBar vScollBar = sp.getVerticalScrollBar();
 	    vScollBar.setUnitIncrement(35);
 	    sp.setBorder(mainloweredbev);
@@ -288,51 +317,72 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		else if(arg.equals("Name")){
 		    if(nameButton.isSelected()){
 			metric = "Name";
-			panelRef.repaint();
+			panel.repaint();
 		    }
 		}
 		else if(arg.equals("Descending")){
 		    if(descendingButton.isSelected()){
 			descendingOrder = true;
-			panelRef.repaint();
+			panel.repaint();
 		    }
 		}
 		else if(arg.equals("Ascending")){
 		    if(ascendingButton.isSelected()){
 			descendingOrder = false;
-			panelRef.repaint();
+			panel.repaint();
 		    }
 		}
 		else if(arg.equals("Inclusive")){
 		    if(inclusiveRadioButton.isSelected()){
 			metric = "Inclusive";
-			panelRef.repaint();
+			panel.repaint();
 		    }
 		}
 		else if(arg.equals("Exclusive")){
 		    if(exclusiveRadioButton.isSelected()){
 			metric = "Exclusive";
-			panelRef.repaint();
+			panel.repaint();
 		    }
 		}
 		else if(arg.equals("Number of Calls")){
 		    if(numOfCallsRadioButton.isSelected()){
 			metric = "Number of Calls";
-			panelRef.repaint();
+			panel.repaint();
 		    }
 		}
 		else if(arg.equals("Number of Subroutines")){
 		    if(numOfSubRoutinesRadioButton.isSelected()){
 			metric = "Number of Subroutines";
-			panelRef.repaint();
+			panel.repaint();
 		    }
 		}
 		else if(arg.equals("Per Call Value")){
 		    if(userSecPerCallRadioButton.isSelected()){
 			metric = "Per Call Value";
-			panelRef.repaint();
+			panel.repaint();
 		    }
 		}
+		else if(arg.equals("Microseconds")){
+			if(microsecondsButton.isSelected()){
+			    units = 0;
+			    //Call repaint.
+			    panel.repaint();
+			}
+		    }
+		    else if(arg.equals("Milliseconds")){
+			if(millisecondsButton.isSelected()){
+			    units = 1;
+			    //Call repaint.
+			    panel.repaint();
+			}
+		    }
+		    else if(arg.equals("Seconds")){
+			if(secondsButton.isSelected()){
+			    units = 2;
+			    //Call repaint.
+			    panel.repaint();
+			}
+		    }
 		else if(arg.equals("Show Function Ledger")){
 		    //In order to be in this window, I must have loaded the data. So,
 		    //just show the mapping ledger window.
@@ -383,11 +433,23 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	}
     }
     
+    public int units(){
+	return units;}
+    
     //******************************
     //MenuListener code.
     //******************************
     public void menuSelected(MenuEvent evt){
 	try{
+	    String trialName = trial.getCounterName();
+	    boolean isDefault = false;
+	    boolean isTimeMetric = false;
+	    
+	    if(trialName.equals("Default")) 
+		isDefault = true;
+	    else if(trialName.indexOf("TIME") != -1)
+		isTimeMetric = true;
+
 	    if(trial.groupNamesPresent())
 		mappingGroupLedgerItem.setEnabled(true);
 	    else
@@ -398,6 +460,11 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    else{
 		userEventLedgerItem.setEnabled(false);
 	    }
+	    
+	    if((isDefault || isTimeMetric)&&(!global))
+		unitsMenu.setEnabled(true);
+	    else
+		unitsMenu.setEnabled(false);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "CPTW03");
@@ -415,13 +482,13 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	try{
 	    String tmpString = (String) arg;
 	    if(tmpString.equals("prefEvent")){
-		panelRef.repaint();
+		panel.repaint();
 	    }
 	    if(tmpString.equals("colorEvent")){
-		panelRef.repaint();
+		panel.repaint();
 	    }
 	    else if(tmpString.equals("dataEvent")){ 
-		panelRef.repaint();
+		panel.repaint();
 	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){ 
 		closeThisWindow();
@@ -524,15 +591,17 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //Instance data.
     //******************************
     private Trial trial = null;
-    private CallPathTextWindowPanel panelRef;
+    private CallPathTextWindowPanel panel;
     private StaticMainWindowData sMWData;
     private boolean global = false;
   
+    private JMenu unitsMenu;
     private JMenuItem mappingGroupLedgerItem;
     private JMenuItem userEventLedgerItem;
 
-    ButtonGroup sortGroup;
-    ButtonGroup sortOrderGroup;
+    private ButtonGroup sortGroup;
+    private ButtonGroup sortOrderGroup;
+    private ButtonGroup unitsGroup = null;
     private ButtonGroup metricGroup = null;
   
     JRadioButtonMenuItem ascendingButton = new JRadioButtonMenuItem("Ascending", false);
@@ -544,15 +613,19 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
     private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
     private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
+    private JRadioButtonMenuItem secondsButton = null;
+    private JRadioButtonMenuItem millisecondsButton = null;
+    private JRadioButtonMenuItem microsecondsButton = null;
     
     private String metric = "Exclusive";
     
     boolean sortByMappingID = false;
     boolean sortByName = false;
-    boolean sortByMillisecond = true;
-    
+    boolean sortByMillisecond = true;    
     boolean descendingOrder = true;
     boolean inclusive = false;
+    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+
 
     int server;
     int context;
