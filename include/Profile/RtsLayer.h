@@ -78,7 +78,7 @@ class RtsLayer
 
         static bool isEnabled(TauGroup_t  ProfileGroup) ; 
 
-        static void ProfileInit(int argc, char **argv);
+        static void ProfileInit(int& argc, char**& argv);
 
 	static string PrimaryGroup(const char *ProfileGroupName);
 
@@ -129,6 +129,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2002/01/09 22:49:22 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.11 2002/01/09 22:49:22 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 2002/01/15 04:17:51 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.12 2002/01/15 04:17:51 sameer Exp $ 
  ***************************************************************************/

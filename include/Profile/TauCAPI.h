@@ -58,6 +58,7 @@
 #define TAU_PROFILE_STMT(stmt) 			stmt;
 #define TAU_PROFILE_EXIT(msg)  			tau_exit(msg);
 #define TAU_PROFILE_INIT(argc, argv)		tau_init(argc, argv);
+#define TAU_INIT(argc, argv)			tau_init_ref(argc, argv);
 #define TAU_PROFILE_SET_NODE(node) 		tau_set_node(node);
 #define TAU_PROFILE_SET_CONTEXT(context)	tau_set_context(context);
 #define TAU_PROFILE_CALLSTACK()			tau_callstack();
@@ -106,6 +107,7 @@ extern void tau_start_timer(void *profiler);
 extern void tau_stop_timer(void *profiler);
 extern void tau_exit(char *msg);
 extern void tau_init(int argc, char **argv);
+extern void tau_init_ref(int* argc, char ***argv);
 extern void tau_set_node(int node);
 extern void tau_set_context(int context);
 extern void tau_callstack(void);
@@ -188,7 +190,7 @@ extern TauGroup_t tau_get_profile_group(char *group);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2002/01/09 22:49:23 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.13 2002/01/09 22:49:23 sameer Exp $
+ * $Revision: 1.14 $   $Date: 2002/01/15 04:17:50 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.14 2002/01/15 04:17:50 sameer Exp $
  ***************************************************************************/
 

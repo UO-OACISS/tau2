@@ -53,6 +53,7 @@
 #define TAU_PROFILE_STMT(stmt) stmt;
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
+#define TAU_INIT(argc, argv) RtsLayer::ProfileInit(*argc, *argv);
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
 #define TAU_PROFILE_SET_CONTEXT(context) RtsLayer::setMyContext(context);
 #define TAU_PROFILE_SET_GROUP_NAME(newname) tauFI.SetPrimaryGroupName(newname);
@@ -168,6 +169,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2002/01/09 22:49:23 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.14 2002/01/09 22:49:23 sameer Exp $ 
+ * $Revision: 1.15 $   $Date: 2002/01/15 04:17:51 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.15 2002/01/15 04:17:51 sameer Exp $ 
  ***************************************************************************/
