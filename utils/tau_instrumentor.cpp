@@ -55,8 +55,6 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
     return r1->line < r2->line;
 }
  
-static const char *toName(pdbItem::templ_t v) ;
-static const char *toName(pdbItem::rspec_t v) ;
 void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 /* get routines, templates and member templates of classes */
   PDB::croutinevec routines = pdb.getCRoutineVec();
@@ -131,7 +129,7 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
       else 
       {
 #ifdef DEBUG
-	cout <<"T: "<<(*te)->fullName()<<" Kind = "<<toName(tekind)<<endl;
+	cout <<"T: "<<(*te)->fullName()<<endl;
 #endif // DEBUG
       }
     }
@@ -204,176 +202,59 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
   sort(itemvec.begin(), itemvec.end(), locCmp);
 }
 
+void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
+/* get routines, templates and member templates of classes */
+  PDB::froutinevec routines = pdb.getFRoutineVec();
 
+  for (PDB::froutinevec::const_iterator rit=routines.begin();
+       rit!=routines.end(); ++rit) 
+  {
+    pdbRoutine::locvec retlocations = (*rit)->returnLocations();
+    pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
+    if ( (*rit)->location().file() == file &&  
+	 ((*rit)->firstExecStmtLocation().file()))
+    {
+#ifdef DEBUG
+	cout <<"Routine " << (*rit)->fullName() <<endl;
+#endif /* DEBUG */
+        itemvec.push_back(new itemRef(*rit, BODY_BEGIN,
+                (*rit)->firstExecStmtLocation().line(), 
+		(*rit)->firstExecStmtLocation().col()));
+#ifdef DEBUG
+        cout <<" firstExecStatement: "<< 
+		(*rit)->firstExecStmtLocation().line() << " col "
+             << (*rit)->firstExecStmtLocation().col() <<endl;
+#endif /* DEBUG */
+	/* First process the return locations */
+        for(pdbRoutine::locvec::iterator rlit = retlocations.begin();
+           rlit != retlocations.end(); rlit++)
+        {
+#ifdef DEBUG 
+          cout <<" Return Locations : "<< (*rlit)->line() << " col "
+             << (*rlit)->col() <<endl;
+#endif /* DEBUG */
+          itemvec.push_back(new itemRef(*rit, RETURN,
+                (*rlit)->line(), (*rlit)->col()));
+        }
+	/* Next process the stop locations */
+        for(pdbRoutine::locvec::iterator slit = stoplocations.begin();
+           slit != stoplocations.end(); slit++)
+        {
+#ifdef DEBUG 
+          cout <<" Stop Locations : "<< (*slit)->line() << " col "
+             << (*slit)->col() <<endl;
+#endif /* DEBUG */
+          itemvec.push_back(new itemRef(*rit, RETURN,
+                (*slit)->line(), (*slit)->col()));
+        }
+    }
 
-
-static char toUpper(const char ch) { return (ch - 'a' + 'A'); }
- 
-static const char *toName(pdbItem::access_t v) {
-  switch (v) {
-  case pdbItem::AC_PUB : return "public";
-  case pdbItem::AC_PRIV: return "private";
-  case pdbItem::AC_PROT: return "protected";
-  case pdbItem::AC_NA  :
-  default              : return "NA";
   }
+/* Now sort all these locations */
+  sort(itemvec.begin(), itemvec.end(), locCmp);
+
 }
 
-static const char *toName(pdbItem::rspec_t v) {
-  switch (v) {
-  case pdbItem::RO_ASM : return "assembler";
-  case pdbItem::RO_AUTO: return "automatic";
-  case pdbItem::RO_EXT : return "extern";
-  case pdbItem::RO_STAT: return "static";
-  case pdbItem::RO_NA  :
-  default              : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::routine_t v) {
-  switch (v) {
-  case pdbItem::RS_CONV: return "conversionOperator";
-  case pdbItem::RS_CTOR: return "constructor";
-  case pdbItem::RS_DTOR: return "destructor";
-  case pdbItem::RS_OP  : return "operator";
-  case pdbItem::RS_NA  :
-  default              : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::virt_t v) {
-  switch (v) {
-  case pdbItem::VI_PURE: return "pureVirtual";
-  case pdbItem::VI_VIRT: return "virtual";
-  case pdbItem::VI_NO  :
-  default              : return "no";
-  }
-}
-
-static const char *toName(pdbItem::macro_t v) {
-  switch (v) {
-  case pdbItem::MA_DEF  : return "define";
-  case pdbItem::MA_UNDEF: return "undef";
-  case pdbItem::MA_NA   :
-  default               : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::templ_t v) {
-  switch (v) {
-  case pdbItem::TE_CLASS   : return "class";
-  case pdbItem::TE_FUNC    : return "function";
-  case pdbItem::TE_MEMCLASS: return "memberClass";
-  case pdbItem::TE_MEMFUNC : return "memberFunction";
-  case pdbItem::TE_STATMEM : return "staticDataMember";
-  case pdbItem::TE_NA      :
-  default                  : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::float_t v) {
-  switch (v) {
-  case pdbItem::FL_FLOAT  : return "float";
-  case pdbItem::FL_DBL    : return "double";
-  case pdbItem::FL_LONGDBL: return "longDouble";
-  case pdbItem::FL_NA     :
-  default                 : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::int_t v) {
-  switch (v) {
-  case pdbItem::I_CHAR     : return "character";
-  case pdbItem::I_SCHAR    : return "signedCharacter";
-  case pdbItem::I_UCHAR    : return "unsignedCharacter";
-  case pdbItem::I_SHORT    : return "short";
-  case pdbItem::I_USHORT   : return "unsignedShort";
-  case pdbItem::I_INT      : return "integer";
-  case pdbItem::I_UINT     : return "unsignedInteger";
-  case pdbItem::I_LONG     : return "long";
-  case pdbItem::I_ULONG    : return "uunsignedLong";
-  case pdbItem::I_LONGLONG : return "longLong";
-  case pdbItem::I_ULONGLONG: return "unsignedLongLong";
-  case pdbItem::I_NA       :
-  default                  : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::type_t v) {
-  switch (v) {
-  case pdbItem::TY_BOOL  : return "boolean";
-  case pdbItem::TY_ENUM  : return "enumeration";
-  case pdbItem::TY_ERR   : return "error";
-  case pdbItem::TY_FUNC  : return "functionSignature";
-  case pdbItem::TY_VOID  : return "void";
-  case pdbItem::TY_INT   : return "integer";
-  case pdbItem::TY_FLOAT : return "float";
-  case pdbItem::TY_PTR   : return "pointerOrReference";
-  case pdbItem::TY_ARRAY : return "array";
-  case pdbItem::TY_TREF  : return "typeReference";
-  case pdbItem::TY_PTRMEM: return "pointerToMember";
-  case pdbItem::TY_TPARAM: return "templateParameter";
-  case pdbItem::TY_WCHAR : return "wideCharacter";
-  case pdbItem::TY_GROUP : return "groupType";
-  case pdbItem::TY_NA    :
-  default                : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::qual_t v) {
-  switch (v) {
-  case pdbItem::QL_CONST   : return "const";
-  case pdbItem::QL_VOLATILE: return "volatile";
-  case pdbItem::QL_RESTRICT: return "restrict";
-  default                  : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::group_t v) {
-  switch (v) {
-  case pdbItem::GR_CLASS : return "class";
-  case pdbItem::GR_STRUCT: return "struct";
-  case pdbItem::GR_UNION : return "union";
-  case pdbItem::GR_NA    :
-  default                : return "NA";
-  }
-}
-
-static const char *toName(pdbItem::mem_t v) {
-  switch (v) {
-  case pdbItem::M_VAR    : return "variable";
-  case pdbItem::M_STATVAR: return "staticVariable";
-  case pdbItem::M_TYPE   : return "type";
-  case pdbItem::M_NA     :
-  default                : return "NA";
-  }
-}
-
-void printLo(ostream& ostr, const pdbLoc& l) {
-  if ( l.file() ) {
-    ostr << "location:           SO#"
-         << l.file()->id() << " " << l.file()->name()
-         << " " << l.line() << " " << l.col() << "\n";
-  } else {
-    ostr << "location:           <UNKNOWN>\n";
-  }
-}
-
-void printItem(ostream& ostr, const pdbItem *i) {
-  ostr << toUpper(i->desc()[0]) << toUpper(i->desc()[1]) << "#" << i->id()
-       << " " << i->fullName() << "\n";
-  printLo(ostr, i->location());
-  if ( const pdbGroup* cptr = i->parentGroup() ) {
-    ostr << "class:              GR#"
-         << cptr->id() << " " << cptr->name() << "\n";
-    ostr << "access:             " << toName(i->access()) << "\n";
-  }
-  if ( const pdbNamespace* nptr = i->parentNSpace() ) {
-    ostr << "namespace:          NA#"
-         << nptr->id() << " " << nptr->name() << "\n";
-  }
-
-}
 
 const int INBUF_SIZE = 2048;
 
@@ -602,7 +483,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression)
 
 
 int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile) 
-{ /* To be implemented */
+{ 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
@@ -785,7 +666,147 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile)
 
 int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile) 
 { /* To be implemented */
+  string file(f->name());
+  static char inbuf[INBUF_SIZE]; // to read the line
+  // open outfile for instrumented version of source file
+  ofstream ostr(outfile.c_str());
+  if (!ostr) {
+    cerr << "Error: Cannot open '" << outfile << "'" << endl;
+    return false;
+  }
+  // open source file
+  ifstream istr(file.c_str());
+  if (!istr) {
+    cerr << "Error: Cannot open '" << file << "'" << endl;
+    return false;
+  }
+#ifdef DEBUG
+  cout << "Processing " << file << " in instrumentFFile..." << endl;
+#endif
 
+  // initialize reference vector
+  vector<itemRef *> itemvec;
+  getFReferences(itemvec, pdb, f);
+
+  int inputLineNo = 0;
+  int lastInstrumentedLineNo = 0;
+  for(vector<itemRef *>::iterator it = itemvec.begin(); it != itemvec.end();
+        ++it)
+  {
+    // Read one line each till we reach the desired line no.
+#ifdef DEBUG
+    cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
+#endif
+    bool instrumented = false;
+    bool isProgram = false;
+    if (lastInstrumentedLineNo >= (*it)->line )
+    {
+      // Hey! This line has already been instrumented. Go to the next
+      // entry in the func
+#ifdef DEBUG
+      cout <<"Entry already instrumented - reached next routine! line = "<<(*it)->line <<endl;
+#endif
+      continue; // takes you to the next iteration in the for loop
+    }
+
+    while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
+    {
+      inputLineNo ++;
+      if (inputLineNo < (*it)->line)
+      {
+        // write the input line in the output stream
+        ostr << inbuf <<endl;
+      }
+      else
+      { /* reached line */
+        // we're at the desired line no. go to the specified col
+        int inbufLength = strlen(inbuf);
+#ifdef DEBUG 
+	cout <<"Line " <<(*it)->line <<" Col " <<(*it)->col <<endl;
+#endif /* DEBUG */
+        for(int i=0; i< ((*it)->col)-1; i++)
+	{ 
+	  ostr << inbuf[i];
+	}
+	/* set instrumented = true after inserting instrumentation */
+	switch((*it)->kind)
+	{
+	  case BODY_BEGIN:
+
+#ifdef DEBUG
+	  cout <<"Body Begin: Routine " <<(*it)->item->fullName()<<endl;
+#endif /* DEBUG */
+		ostr <<"integer profiler(2)"<<endl;
+		/* spaces */
+     		for (int space = 0; space < (*it)->col-1 ; space++) 
+		  ostr << inbuf[space] ;
+		ostr <<"save profiler"<<endl<<endl;
+     		for (int space = 0; space < (*it)->col-1 ; space++) 
+		    ostr << inbuf[space]; 
+		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG)
+		{
+#ifdef DEBUG
+	  	  cout <<"Routine is main fortran program "<<endl;
+#endif /* DEBUG */
+		  ostr <<"call TAU_PROFILE_INIT()"<<endl;
+		  isProgram = true;
+		  /* put spaces on the next line */
+     		  for (int space = 0; space < (*it)->col-1 ; space++) 
+		    ostr << inbuf[space]; 
+		}
+		ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
+		  (*it)->item->fullName()<< "')"<<endl;
+		/* spaces */
+     		for (int space = 0; space < (*it)->col-1 ; space++) 
+		  ostr << inbuf[space]; 
+		ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
+		if (isProgram) 
+		{
+     		  for (int space = 0; space < (*it)->col-1 ; space++) 
+		    ostr << inbuf[space]; 
+		  ostr <<"call TAU_PROFILE_SET_NODE(0)"<<endl;
+		}
+		/* spaces */
+     		for (int space = 0; space < (*it)->col-1 ; space++) 
+		  ostr << inbuf[space]; 
+		instrumented = true;
+		break;
+	  case RETURN:
+#ifdef DEBUG
+	        cout <<"RETURN statement "<<endl;
+#endif /* DEBUG */
+		ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
+     		for (int space = 0; space < (*it)->col-1 ; space++) 
+		{
+ 		  char c = inbuf[space]; 
+		  if (!((c == ' ') || (c == '\t')))
+		    c = ' ';
+		  ostr << inbuf[space]; 
+		}
+		instrumented = true;
+		break;
+		 
+	  default:
+		cout <<"Unknown option in instrumentFFile:"<<(*it)->kind<<endl;
+		instrumented = true;
+		break;
+	}
+
+        for(int j= ((*it)->col)-1; j <inbufLength; j++)
+	{ 
+	  ostr << inbuf[j];
+	}
+	ostr<<endl;
+      } /* reached line */
+    } /* while */
+  } /* for */
+  // For loop is over now flush out the remaining lines to the output file
+  while (istr.getline(inbuf, INBUF_SIZE) )
+  {
+    ostr << inbuf <<endl;
+  }
+  // written everything. quit and debug!
+  ostr.close();
 }
 
 
