@@ -35,6 +35,7 @@ Version 2.9 changes (from 2.8):
 23. Added a bug fix for Vampir (tau_convert -pv -longsymbolbugfix) [SAMRAI].
 24. Changed Opari options (omperf to pomp name change).
 25. Added support for dynamically assigning group names [SAMRAI].
+26. Added support for evaluating perturbation of TAU_DB_DUMP() [Uintah].
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
