@@ -169,6 +169,8 @@ char * TauGetCounterString(void)
 
 void Profiler::Start(int tid)
 { 
+      ParentProfiler = CurrentProfiler[tid]; // Timers
+
       x_uint64 TimeStamp = 0L;
       DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
@@ -240,9 +242,6 @@ void Profiler::Start(int tid)
 	DEBUGPROFMSG("Start Time = "<< StartTime<<endl;);
 #endif // PROFILING_ON
   	
-	ParentProfiler = CurrentProfiler[tid] ;
-	  
-
 
 	DEBUGPROFMSG("nct "<< RtsLayer::myNode() << "," 
 	  << RtsLayer::myContext() << ","  << tid 
@@ -282,7 +281,6 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
       StartStopUsed_ = StartStop; // will need it later in ~Profiler
       MyProfileGroup_ = ProfileGroup ;
       ThisFunction = function ; 
-      ParentProfiler = CurrentProfiler[tid]; // Timers
       DEBUGPROFMSG("Profiler::Profiler: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       
@@ -2714,8 +2712,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.104 $   $Date: 2004/10/04 23:32:15 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.104 2004/10/04 23:32:15 amorris Exp $ 
+ * $Revision: 1.105 $   $Date: 2004/12/16 03:13:06 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.105 2004/12/16 03:13:06 amorris Exp $ 
  ***************************************************************************/
 
 	
