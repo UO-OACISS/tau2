@@ -35,9 +35,9 @@ int EndOfTrace = 0;  /* false */
 
 /* Define limits of sample data (user defined events) */
 struct {
-  unsigned long umin;
-  unsigned long umax;
-} taulongbounds = { 0, (unsigned long)~(unsigned long)0 };
+  unsigned long long umin;
+  unsigned long long umax;
+} taulongbounds = { 0, (unsigned long long)~(unsigned long long)0 };
 
 struct {
   double fmin;
@@ -176,8 +176,17 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
   dprintf("DefState stateid %d stateName %s stategroup id %d\n",
 		  stateToken, stateName, stateGroupToken);
 
+  /* We need to remove the backslash and quotes from "\"funcname\"" */
+  char *name = strdup(stateName);
+  int len = strlen(name);
+  if ((name[0] == '"' ) && (name[len-1] == '"'))
+  {
+     name += 1;
+     name[len-2] = '\0';
+  }
+
   /* create a state record */
-  VTF3_WriteDefstate(userData, stateGroupToken, stateToken, stateName, VTF3_SCLNONE);
+  VTF3_WriteDefstate(userData, stateGroupToken, stateToken, (const char *) name, VTF3_SCLNONE);
 
   return 0;
 }
@@ -189,7 +198,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
  * 		trace converter. 
  ***************************************************************************/
 int DefUserEvent( void *userData, unsigned int userEventToken,
-		const char *userEventName )
+		const char *userEventName , int monotonicallyIncreasing)
 {
 
   dprintf("DefUserEvent event id %d user event name %s\n", userEventToken,
@@ -197,11 +206,34 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
   /* VTF3_WriteDefsampclass(userData, userEventToken, userEventName);
   */
   int iscpugrpsamp = 1;
-  int dodifferentiation = 1; /* for hw counter data */
-  VTF3_WriteDefsamp(userData, userEventToken, TAU_SAMPLE_CLASS_TOKEN, 
+  int dodifferentiation;
+
+  /* We need to remove the backslash and quotes from "\"funcname\"" */
+  char *name = strdup(userEventName);
+  int len = strlen(name);
+  if ((name[0] == '"' ) && (name[len-1] == '"'))
+  {
+     name += 1;
+     name[len-2] = '\0';
+  }
+
+  /* create a state record */
+  if (monotonicallyIncreasing)
+  {
+    dodifferentiation = 1; /* for hw counter data */
+    VTF3_WriteDefsamp(userData, userEventToken, TAU_SAMPLE_CLASS_TOKEN, 
 	iscpugrpsamp, sampgroupid, VTF3_VALUETYPE_UINT, 
 	(void *) &taulongbounds, dodifferentiation, VTF3_DATAREPHINT_BEFORE, 
-	userEventName, "#/s");
+	(const char *) name, "#/s");
+  }
+  else
+  { /* for non monotonically increasing data */
+    dodifferentiation = 0; /* for TAU user defined events */
+    VTF3_WriteDefsamp(userData, userEventToken, TAU_SAMPLE_CLASS_TOKEN, 
+	iscpugrpsamp, sampgroupid, VTF3_VALUETYPE_UINT, 
+	(void *) &taulongbounds, dodifferentiation, VTF3_DATAREPHINT_BEFORE, 
+	(const char *) name, "#");
+  } 
 
   return 0;
 }
@@ -222,8 +254,10 @@ int EventTrigger( void *userData, double time,
   int type = VTF3_VALUETYPE_UINT;
   int cpuid = GlobalId (nodeToken, threadToken); /* GID */
   int samplearraydim = 1; 
+
+  /* write the sample data */
   VTF3_WriteSamp(userData, time, cpuid, samplearraydim, 
-		  (const int *) &userEventToken, &type, &userEventValue);
+    (const int *) &userEventToken, &type, &userEventValue);
 
   return 0;
 }
@@ -508,8 +542,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2vtf.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2004/08/06 23:09:06 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.3 2004/08/06 23:09:06 sameer Exp $
+ * $Revision: 1.4 $   $Date: 2004/08/13 16:32:46 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.4 2004/08/13 16:32:46 sameer Exp $
  ***************************************************************************/
 
 
