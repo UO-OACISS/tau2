@@ -110,7 +110,7 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 
 int MultipleCounterLayer::numberOfActiveFunctions = 0;
 secondListType MultipleCounterLayer::functionArray[] = { };
-char ** MultipleCounterLayer::names[] = { };
+char * MultipleCounterLayer::names[] = { };
 int MultipleCounterLayer::numberOfCounters[] = { };
 bool MultipleCounterLayer::counterUsed[] = { };
 
