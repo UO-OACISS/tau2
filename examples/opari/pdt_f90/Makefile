@@ -64,11 +64,11 @@ $(TARGET):	ppm.o $(TARGET).o mytimer.o opari.tab.o
 $(TARGET).o : $(TARGET).f90 ppm.o 
 	@echo "*********************************************************"
 	@echo "Creating $(TARGET).o:"
-	$(PDTF90PARSE) $<
-	$(TAUINSTR) $*.pdb $< -o $*.inst.f90
 	$(RM) opari.rc
-	$(OPARI_TOOL) -nosrc -table opari.tab.c $*.inst.f90 $*.pomp.f90
-	$(F90) $(FFLAGS) -c $*.pomp.f90 -o $@
+	$(OPARI_TOOL) -nosrc -table opari.tab.c $*.f90 $*.pomp.f90
+	$(PDTF90PARSE) $*.pomp.f90
+	$(TAUINSTR) $*.pomp.pdb $*.pomp.f90 -o $*.inst.f90
+	$(F90) $(FFLAGS) -c $*.inst.f90 -o $@
 
 ppm.o : ppm.f90
 	@echo "*********************************************************"
