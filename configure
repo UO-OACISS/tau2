@@ -879,8 +879,13 @@ fi
 
 echo "-------------------- TAU configure script ---------------"
 
+
 tauroot=`pwd | sed -e 's,^/tmp_mnt/nfs,,' -e 's,^/tmp_mnt,,'`
 echo \#define TAUROOT \"$tauroot\" > include/tauroot.h
+if [ $tauprefix != unknown ]
+then
+  echo \#define TAUROOT \"$tauprefix\" > include/tauroot.h
+fi
 
 echo "  The TAU source code has just been configured to use the"
 echo "  tau root directory $tauroot."
@@ -2535,7 +2540,7 @@ fi
 
 # write out .h file to define this architecture __easily__
 echo \#define TAU_$machine > ./include/tauarch.h
-echo \#define TAU_ARCH $machine >> ./include/tauarch.h
+echo \#define TAU_ARCH \"$machine\" >> ./include/tauarch.h
 
 if [ $tauprefix = unknown ] 
 then 
