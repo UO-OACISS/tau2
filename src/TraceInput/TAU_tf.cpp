@@ -210,6 +210,10 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 #endif /* DEBUG */
 
     currentPosition = lseek(tFile->Fid, 0, SEEK_SET);
+    if (currentPosition == -1)
+    {
+      perror("lseek failed in Ttf_ReadNumEvents");
+    }
 #ifdef DEBUG
     printf("Current position = %d\n", currentPosition);
 #endif /* DEBUG */
@@ -555,6 +559,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2003/11/13 00:09:28 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.1 2003/11/13 00:09:28 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 2003/12/05 23:50:40 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.2 2003/12/05 23:50:40 sameer Exp $ 
  ***************************************************************************/
