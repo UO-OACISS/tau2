@@ -59,40 +59,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	    this.setNumContextsPerNode(trial.getNumContextsPerNode());
 	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
 	    this.setUserData(trial.getUserData());
-	    this.dataSession = new ParaProfDBSession();
-	    ((ParaProfDataSession)this.dataSession).setDebug(UtilFncs.debug);
-	    this.dataSession.setMetrics(trial.getMetrics());
 	}
 	this.type = type;
-    }
-
-    public void initialize(Object obj){
-	switch(type){
-	case 0:
-	    dataSession = new TauPprofOutputSession();
-	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
-	    break;
-	case 1:
-	    dataSession = new TauOutputSession();
-	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
-	    break;
-	case 2:
-	    dataSession = new DynaprofOutputSession();
-	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
-	    break;
-	case 3:
-	    break;
-	case 5:
-	    dataSession = new GprofOutputSession(false);
-	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
-	    break;
-	default:
-	    break;
-	}
-	
-	this.setLoading(true);
-	((ParaProfDataSession)dataSession).addObserver(this);
-	dataSession.initialize(obj);
     }
 
     public void setExperiment(ParaProfExperiment experiment){
@@ -321,58 +289,46 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //ParaProfObserver interface.
     //######
     public void update(Object obj){
-	dataSession.terminate();
-	this.setLoading(false);
-
-	//Set the colours.
-	clrChooser.setColors(dataSession.getGlobalMapping(), -1);
-	
-	//The dataSession has accumulated edu.uoregon.tau.dms.dss.Metrics. Inside ParaProf,
-	//these need to be paraprof.Metrics.
-	int numberOfMetrics = dataSession.getNumberOfMetrics();
-	Vector metrics = new Vector();
-	for(int i=0;i<numberOfMetrics;i++){
-	    Metric metric = new Metric();
-	    metric.setName(dataSession.getMetricName(i));
-	    metric.setID(i);
-	    metric.setTrial(this);
-	    metrics.add(metric);
+	try{
+	    DataSession dataSession = (DataSession)obj;
+	    
+	    //Data session has finished loading. Call its terminate method to
+	    //ensure proper cleanup.
+	    dataSession.terminate();
+	    
+	    //Need to update setup the DataSession object for correct usage in
+	    //in a ParaProfTrial object.
+	    //Set the colours.
+	    clrChooser.setColors(dataSession.getGlobalMapping(), -1);
+	    
+	    //The dataSession has accumulated edu.uoregon.tau.dms.dss.Metrics. Inside ParaProf,
+	    //these need to be paraprof.Metrics.
+	    int numberOfMetrics = dataSession.getNumberOfMetrics();
+	    Vector metrics = new Vector();
+	    for(int i=0;i<numberOfMetrics;i++){
+		Metric metric = new Metric();
+		metric.setName(dataSession.getMetricName(i));
+		metric.setID(i);
+		metric.setTrial(this);
+		metrics.add(metric);
+	    }
+	    //Now set the data session metrics.
+	    dataSession.setMetrics(metrics);
+	    
+	    //Now set the trial's DataSession object to be this one.
+	    this.setDataSession(dataSession);
+	    
+            //Set this trial's loading flag to false.
+	    this.setLoading(false);
+	    
+	    ParaProf.paraProfManager.populateTrialMetrics(this);
 	}
-	//Now set the data session metrics.
-	dataSession.setMetrics(metrics);
-	ParaProf.paraProfManager.populateTrialMetrics(this);
-	
-	//Notify any observers of this trial that the Data Session is done.
-	this.notifyObservers();
+	catch(Exception e){
+	}
     }
     public void update(){}
     //######
     //End - Observer.
-    //######
-
-    //######
-    //Methods that manage the ParaProfObservers.
-    //######
-    public void addObserver(ParaProfObserver observer){
-	observers.add(observer);}
-
-    public void removeObserver(ParaProfObserver observer){
-	observers.remove(observer);}
-
-    public void notifyObservers(){
-	if(this.debug()){
-	    System.out.println("######");
-	    System.out.println("ParaProfTrial.notifyObservers()");
-	    System.out.println("Listening classes ...");
-	    for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
-		System.out.println(e.nextElement().getClass());
-	    System.out.println("######");
-	}
-	for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
-	    ((ParaProfObserver) e.nextElement()).update(this);
-    }
-    //######
-    //End - Methods that manage the ParaProfObservers.
     //######
 
     public void setDebug(boolean debug){
