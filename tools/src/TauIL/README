@@ -24,3 +24,8 @@ To compile and install TauIL:
 		make docs
 
 
+Documentation:
+
+	The TauIL/docs directory contains the TauIL users manual, instrumentation
+	language specification, and parser grammar. Further, the tau2/examples/analyze
+	directory contains an example setup and use of the "tau_analyze" tool.
