@@ -150,7 +150,6 @@ ProfileMap_t& RtsLayer::TheProfileMap(void) {
 /////////////////////////////////////////////////////////////////////////
 
 TauGroup_t RtsLayer::getProfileGroup(char * ProfileGroup) {
-  if (TheShutdown()) return 0;
   ProfileMap_t::iterator it = TheProfileMap().find(string(ProfileGroup));
   TauGroup_t gr;
   if (it == TheProfileMap().end())
@@ -966,6 +965,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.32 $   $Date: 2002/01/16 00:40:02 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.32 2002/01/16 00:40:02 sameer Exp $ 
+ * $Revision: 1.33 $   $Date: 2002/01/16 01:07:27 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.33 2002/01/16 01:07:27 sameer Exp $ 
  ***************************************************************************/
