@@ -595,17 +595,19 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
       delete functionName; // don't need this if its already there.
     }
     else 
+    {
       funcDB[(const char *)functionName] = FunctionData(); 
       // adds  a null record and creates the name key in the map
       // Note: don't delete functionName - STL needs it
 	/* PROCESS NO. OF Invocations Profiled */
     
-    //Just added functionName, therefore it will be there.
-    //Set the group names for this function.
-    if(groupNamesUsed){
-      char *createdGNSpace = new char[strlen(groupNames)+1];
-      strcpy(createdGNSpace, groupNames);
-      funcDB[functionName].groupNames = createdGNSpace;
+      //Just added functionName, therefore it will be there.
+      //Set the group names for this function.
+      if(groupNamesUsed){
+        char *createdGNSpace = new char[strlen(groupNames)+1];
+        strcpy(createdGNSpace, groupNames);
+        funcDB[functionName].groupNames = createdGNSpace;
+      }
     }
 
     for(k = 0; k < numinvocations; k++) {
@@ -3257,8 +3259,8 @@ int main (int argc, char *argv[])
   exit (0);
 }
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: bertie $
- * $Revision: 1.34 $   $Date: 2002/05/03 14:04:35 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.34 2002/05/03 14:04:35 bertie Exp $                                                   
+ * $RCSfile: pprof.cpp,v $   $Author: sameer $
+ * $Revision: 1.35 $   $Date: 2002/06/12 23:47:27 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.35 2002/06/12 23:47:27 sameer Exp $                                                   
  ***************************************************************************/
 
