@@ -13,13 +13,13 @@
  
 include ../include/Makefile
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=solaris2
-CONFIG_CC=cc
-CONFIG_CXX=CC
-PCXX_OPT=
-USER_OPT=
-TAU_PREFIX_INSTALL_DIR=/nfs/research/parallel/sameer/gar/rs/demo/tau2
-PDTDIR=/home/grads/sameer/pdt
+CONFIG_ARCH=default
+CONFIG_CC=gcc
+CONFIG_CXX=g++
+PCXX_OPT=-g
+USER_OPT=-g
+TAU_PREFIX_INSTALL_DIR=
+PDTDIR=
 DYNINSTDIR=
 #######################################################################
  
@@ -36,6 +36,7 @@ LSX = .a
 LINKER	= $(CC)
 
 LEXTRA = 
+#APPLECXX#CEXTRA = -DAPPLECXX #ENDIF#
 #HP_CFLAGS#CEXTRA = -AA -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #HPGNU#CEXTRA = -DTAU_HP_GNU #ENDIF#
 #HP_CFLAGS#LSX = .sl#ENDIF#
@@ -69,7 +70,7 @@ CWARNING	= $(WARNINGSOPT)
 #SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI -ldwarf -lelf#ENDIF#
 # -lelf is for Solaris only
 
-CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF##SOL2CC#
+#SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
 
 
 # Compiler specific flags
