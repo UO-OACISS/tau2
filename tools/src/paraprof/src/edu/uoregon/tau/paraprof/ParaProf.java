@@ -251,7 +251,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     //######
 
     public static String getInfoString(){
-	return new String("ParaProf Version 1.2 ... The Paraducks Group!");}
+	return new String("ParaProf Version 2.0 ... The Tau Group!");}
   
     // Main entry point
     static public void main(String[] args){
