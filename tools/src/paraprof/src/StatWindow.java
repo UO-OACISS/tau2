@@ -49,7 +49,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	    setSize(new java.awt.Dimension(800, 600));
 	    
 	    //Now set the title.
-	    this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getProfilePathName());
+	    this.setTitle("Total " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
       
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {

@@ -43,50 +43,6 @@ public class ApplicationManager extends Observable{
 	    }
   	return false;
     }
-  
-    public String getPathReverse(String inString){
-    
-	//Now set the reverse.
-	String tmpString1 = inString;
-	String tmpString2 = "";
-	String tmpString3 = "";
-    
-	boolean isForwardSlash = false; //Just to make the reverse string look nicer on
-	//Unix based systems.
-    
-	int length = tmpString1.length();
-                    
-	for(int i=(length-1); i>=0; i--){
-	    char tmpChar = tmpString1.charAt(i);
-      
-	    if(tmpChar == '/'){
-      
-		//This does not really need to get done more than once but ...
-		isForwardSlash = true;
-      
-		if(tmpString3.equals(""))
-		    tmpString3 = tmpString2;
-		else
-		    tmpString3 = tmpString3 + tmpChar + tmpString2;
-		tmpString2 = "";
-	    }
-	    else if(tmpChar == '\\'){
-		if(tmpString3.equals(""))
-		    tmpString3 = tmpString2;
-		else
-		    tmpString3 = tmpString3 + tmpChar + tmpString2;
-		tmpString2 = "";
-	    }
-	    else{
-		tmpString2 = tmpChar + tmpString2;
-	    }
-	}
-      
-	if(isForwardSlash)
-	    tmpString3 = tmpString3 + "/";
-    
-	return tmpString3;
-    }
 
     //Instance data.
     Vector applications = new Vector();

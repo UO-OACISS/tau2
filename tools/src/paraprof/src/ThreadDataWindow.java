@@ -54,9 +54,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    setSize(new java.awt.Dimension(700, 450));
 	    //Now set the title.
 	    if(windowType==0)
-		this.setTitle("Mean Data Window: " + trial.getProfilePathName());
+		this.setTitle("Mean Data Window: " + trial.getTrialIdentifier(true));
 	    else
-		this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getProfilePathName());
+		this.setTitle("n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
 	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {

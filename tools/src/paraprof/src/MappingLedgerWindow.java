@@ -43,13 +43,13 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	    //Now set the title.
 	    switch(windowType){
 	    case 0:
-		this.setTitle("Function Ledger Window: " + trial.getProfilePathName());
+		this.setTitle("Function Ledger Window: " + trial.getTrialIdentifier(true));
 		break;
 	    case 1:
-		this.setTitle("Group Ledger Window: " + trial.getProfilePathName());
+		this.setTitle("Group Ledger Window: " + trial.getTrialIdentifier(true));
 		break;
 	    case 2:
-		this.setTitle("User Event Window: " + trial.getProfilePathName());
+		this.setTitle("User Event Window: " + trial.getTrialIdentifier(true));
 		break;
 	    default:
 		ParaProf.systemError(null, null, "Unexpected window type - MLW02 value: " + windowType);

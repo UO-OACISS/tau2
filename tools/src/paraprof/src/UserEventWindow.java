@@ -61,7 +61,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	    mappingName = tmpGME.getMappingName();
       
 	    //Now set the title.
-	    this.setTitle("User Event Window: " + trial.getProfilePathName());
+	    this.setTitle("User Event Window: " + trial.getTrialIdentifier(true));
       
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {

@@ -28,7 +28,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  //####################################
 	  //Window Stuff.
 	  //####################################
-	  setTitle("ParaProf: " + trial.getProfilePathName());
+	  setTitle("ParaProf: " + trial.getTrialIdentifier(true));
 	  
 	  int windowWidth = 750;
 	  int windowHeight = 400;

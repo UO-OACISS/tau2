@@ -71,6 +71,8 @@ public class FileList{
 		selection[0] = f;
 	    }
 
+	    path = selection[0].getPath();
+
 	    //If hear, selection is valid.
 	    if(selection.length == 1){
 		if(selection[0].isDirectory()){
@@ -277,46 +279,15 @@ public class FileList{
     }
 
     public static String getPathReverse(String string){
-	String string1 = string;
-	String string2 = "";
-	String string3 = "";
+	String fileSeparator = System.getProperty("file.separator");
+	String reverse = "";
 
-    
-	boolean isForwardSlash = false; //Just to make the reverse string look nicer on
-	//Unix based systems.
-    
-	int length = string1.length();
-                    
-	for(int i=(length-1); i>=0; i--){
-	    char tmpChar = string1.charAt(i);
-      
-	    if(tmpChar == '/'){
-      
-		//This does not really need to get done more than once but ...
-		isForwardSlash = true;
-      
-		if(string3.equals(""))
-		    string3 = string2;
-		else
-		    string3 = string3 + tmpChar + string2;
-		string2 = "";
-	    }
-	    else if(tmpChar == '\\'){
-		if(string3.equals(""))
-		    string3 = string2;
-		else
-		    string3 = string3 + tmpChar + string2;
-		string2 = "";
-	    }
-	    else{
-		string2 = tmpChar + string2;
-	    }
+	StringTokenizer st = new StringTokenizer(string, fileSeparator);
+	while(st.hasMoreTokens()){
+	    String token = st.nextToken();
+	    reverse = token+fileSeparator+reverse;
 	}
-      
-	if(isForwardSlash)
-	    string3 = string3 + "/";
-    
-	return string3;
+	return reverse;
     }
 
     //For testing purposes.

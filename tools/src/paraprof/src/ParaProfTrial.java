@@ -137,18 +137,26 @@ public class ParaProfTrial extends Trial{
   
     public Preferences getPreferences(){
 	return preferences;}
+
+    //Used in many ParaProf windows for the title of the window.
+    public String getTrialIdentifier(boolean reverse){
+	if(path!=null){
+	    if(reverse)
+		return FileList.getPathReverse(path);
+	    else
+		return path;
+	}
+	else
+	    return "Application " + this.getApplicationID() +
+		", Experiment " + this.getExperimentID() +
+		", Trial " + this.getID() + ".";
+    }
   
-    public void setProfilePathName(String profilePathName){
-	this.profilePathName = profilePathName;}
-  
-    public void setProfilePathNameReverse(String profilePathNameReverse){
-	this.profilePathNameReverse = profilePathNameReverse;}
-  
-    public String getProfilePathName(){
-	return profilePathName;}
-  
-    public String getProfilePathNameReverse(){
-	return profilePathNameReverse;}
+    public void setPath(String path){
+	this.path = path;}
+    
+    public String getPath(){
+	return path;}
   
     public Vector getMetrics(){
 	return metrics;}
@@ -335,8 +343,7 @@ public class ParaProfTrial extends Trial{
     private ColorChooser clrChooser = new ColorChooser(this, null);
     private Preferences  preferences = new  Preferences(this, null);
   
-    private String profilePathName = null;
-    private String profilePathNameReverse = null;
+    private String path = null;
     private int currentValueLocation = 0;
   
     private GlobalMapping globalMapping;

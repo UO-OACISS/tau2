@@ -61,7 +61,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    mappingName = tmpGME.getMappingName();
       
 	    //Now set the title.
-	    this.setTitle("Function Data Window: " + trial.getProfilePathName());
+	    this.setTitle("Function Data Window: " + trial.getTrialIdentifier(true));
       
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {

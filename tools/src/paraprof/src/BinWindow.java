@@ -45,7 +45,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	    setLocation(new java.awt.Point(300, 200));
 	    setSize(new java.awt.Dimension(700, 450));
 	    //Now set the title.
-	    setTitle("ParaProf: " + trial.getProfilePathName());
+	    setTitle("ParaProf: " + trial.getTrialIdentifier(true));
 	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {

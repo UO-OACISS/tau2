@@ -47,9 +47,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
       
 	    //Now set the title.
 	    if(global)
-		this.setTitle("Call Path Data Relations - " + trial.getProfilePathName());
+		this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
 	    else
-		this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getProfilePathName());
+		this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
 	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {
