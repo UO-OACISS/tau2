@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.3 2004/03/30 18:14:16 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -482,5 +482,58 @@ public class PerfDBSession extends DataSession {
 			uedo.saveUserEventData(db, newUserEventID.intValue());
 		}
 	}
+
+/**
+ * Saves the Trial.
+ *
+ * @param function
+ * @return database index ID of the saved trial record
+ */
+	public int saveTrial(Trial trial) {
+		return trial.saveTrial(db);
+	}
+
+/**
+ * Saves the Function.
+ *
+ * @param function
+ * @return database index ID of the saved function record
+ */
+	public int saveFunction(Function function, int newTrialID, Vector metrics) {
+		return function.saveFunction(db, newTrialID, metrics);
+	}
+
+/**
+ * Saves the FunctionDataObject.
+ *
+ * @param functionData
+ * @return database index ID of the saved interval_location_profile record
+ */
+	public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Vector metrics) {
+		functionData.saveFunctionData(db, newFunctionID, metrics);
+		return;
+	}
+
+/**
+ * Saves the UserEvent object.
+ *
+ * @param userEvent
+ * @return database index ID of the saved user_event record
+ */
+	public int saveUserEvent(UserEvent userEvent, int newTrialID) {
+		return userEvent.saveUserEvent(db, newTrialID);
+	}
+
+/**
+ * Saves the userEventData object.
+ *
+ * @param userEventData
+ * @return database index ID of the saved atomic_location_profile record
+ */
+	public void saveUserEventData(UserEventDataObject userEventData, int newUserEventID) {
+		userEventData.saveUserEventData(db, newUserEventID);
+		return;
+	}
+
 };
 

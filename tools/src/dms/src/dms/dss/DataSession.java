@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.3 2004/03/30 18:14:16 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -444,17 +444,57 @@ public abstract class DataSession {
  */
 	abstract public ListIterator getUserEventData();
 
+/**
+ * Gets the interval record detail for this function.
+ *
+ * @param function
+ */
 	abstract public void getFunctionDetail(Function function) ;
 
 /**
- * Saves the trial.  If the session is a PerfDBSession, the trial is saved in the database.  Otherwise, it is saved to an XML file.
+ * Saves the trial.
  *
+ * @return database index ID of the saved trial
  */
+	abstract public int saveTrial() ;
 
-	public int saveTrial() {
-		System.out.println("Nothing saved.  Please override the DataSession::saveTrial() method.");
-		return 0;
-	}
+/**
+ * Saves the Trial.
+ *
+ * @param function
+ * @return ID of the saved trial
+ */
+	abstract public int saveTrial(Trial trial) ;
+
+/**
+ * Saves the Function.
+ *
+ * @param function
+ * @return ID of the saved function
+ */
+	abstract public int saveFunction(Function function, int newTrialID, Vector metrics) ;
+
+/**
+ * Saves the FunctionDataObject.
+ *
+ * @param functionData
+ */
+	abstract public void saveFunctionData(FunctionDataObject functionData, int newFunctionID, Vector metrics) ;
+
+/**
+ * Saves the UserEvent object.
+ *
+ * @param userEvent
+ * @return ID of the saved user event
+ */
+	abstract public int saveUserEvent(UserEvent userEvent, int newTrialID) ;
+
+/**
+ * Saves the userEventData object.
+ *
+ * @param userEventData
+ */
+	abstract public void saveUserEventData(UserEventDataObject userEventData, int newUserEventID) ;
 
 };
 
