@@ -7,7 +7,7 @@
 /*
  * To do: 1) Add some sanity checks to make sure that multiple metrics really do
  * belong together. For example, wrap the creation of nodes, contexts, threads,
- * global mapping elements, and the like so that they do not occur after the
+ * functions, and the like so that they do not occur after the
  * first metric has been loaded. This will not of course ensure 100% that the
  * data is consistent, but it will at least prevent the worst cases.
  */
@@ -465,8 +465,8 @@ public class TauDataSource extends DataSource {
             i++;
         }
 
-        StringTokenizer getMappingNameTokenizer = new StringTokenizer(string.substring(i + 1), "\"");
-        String str = getMappingNameTokenizer.nextToken();
+        StringTokenizer getNameTokenizer = new StringTokenizer(string.substring(i + 1), "\"");
+        String str = getNameTokenizer.nextToken();
 
         //Just do the group check once.
         if (!(this.getGroupCheck())) {
@@ -479,7 +479,7 @@ public class TauDataSource extends DataSource {
         }
 
         if (getGroupNamesPresent()) {
-            str = getMappingNameTokenizer.nextToken();
+            str = getNameTokenizer.nextToken();
             return str;
         }
         //If here, this profile file does not track the group names.

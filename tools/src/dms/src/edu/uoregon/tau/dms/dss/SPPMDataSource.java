@@ -102,20 +102,13 @@ public class SPPMDataSource extends DataSource {
                 //Close the file.
                 br.close();
 
-                saveMappings();
+                saveFunctions();
 
-                if (UtilFncs.debug) {
-                    System.out.println("The total number of threads is: "
-                            + this.getTotalNumberOfThreads());
-                    System.out.println("The number of mappings is: " + this.getNumFunctions());
-                    System.out.println("The number of user events is: "
-                            + this.getNumUserEvents());
-                }
-
+                
 
                 time = (System.currentTimeMillis()) - time;
-                System.out.println("Done processing data file!");
-                System.out.println("Time to process file (in milliseconds): " + time);
+                //System.out.println("Done processing data file!");
+                //System.out.println("Time to process file (in milliseconds): " + time);
             }
         }
 
@@ -131,7 +124,6 @@ public class SPPMDataSource extends DataSource {
     //####################################
 
     private void initializeThread() {
-        // create the mapping, if necessary
 
         function = this.addFunction(eventName, 1);
 
@@ -247,7 +239,7 @@ public class SPPMDataSource extends DataSource {
         }
     }
 
-    private void saveMappings() {
+    private void saveFunctions() {
         try {
             Enumeration e = methodIndexes.keys();
             while (e.hasMoreElements()) {
@@ -259,16 +251,15 @@ public class SPPMDataSource extends DataSource {
 
                 for (int i = 0; i < lineData.i1; i++) {
                     threadID = i;
-                    // make sure we have a mapping for this event
                     initializeThread();
                     // save the first metric
-                    saveMappingData("cpu", cpuTime[index.intValue()], inclusiveEqualsExclusive);
+                    saveFunctionData("cpu", cpuTime[index.intValue()], inclusiveEqualsExclusive);
                     // increment the storage to allow for second metric
                     thread.incrementStorage();
                     function.incrementStorage();
                     functionProfile.incrementStorage();
                     // save the second metric
-                    saveMappingData("wall", wallTime[index.intValue()], inclusiveEqualsExclusive);
+                    saveFunctionData("wall", wallTime[index.intValue()], inclusiveEqualsExclusive);
                     // save the data common to all metrics
                     functionProfile.setNumCalls(calls[index.intValue()]);
                     if (function.getMaxNumCalls() < calls[index.intValue()])
@@ -284,7 +275,7 @@ public class SPPMDataSource extends DataSource {
         }
     }
 
-    private void saveMappingData(String metricName, double value, boolean inclusiveEqualsExclusive) {
+    private void saveFunctionData(String metricName, double value, boolean inclusiveEqualsExclusive) {
         metric = this.getNumberOfMetrics();
         //Set the metric name.
         Metric newMetric = this.addMetric(metricName);

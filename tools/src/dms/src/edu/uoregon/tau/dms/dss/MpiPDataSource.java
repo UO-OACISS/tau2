@@ -314,8 +314,6 @@ public class MpiPDataSource extends DataSource {
                             functionProfile = new FunctionProfile(function);
 
                             thread.addFunctionProfile(functionProfile);
-                            //				functionProfile =
-                            // thread.getFunction(mappingID);
 
                             functionProfile.setInclusive(metric, inclusive);
                             functionProfile.setInclusivePercent(metric, 100);

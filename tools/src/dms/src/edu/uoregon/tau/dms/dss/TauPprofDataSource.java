@@ -4,13 +4,6 @@
  * Description:
  */
 
-/*
- * To do: 1) Add some sanity checks to make sure that multiple metrics really do
- * belong together. For example, wrap the creation of nodes, contexts, threads,
- * global mapping elements, and the like so that they do not occur after the
- * first metric has been loaded. This will not of course ensure 100% that the
- * data is consistent, but it will at least prevent the worst cases.
- */
 
 package edu.uoregon.tau.dms.dss;
 
@@ -431,11 +424,6 @@ public class TauPprofDataSource extends DataSource {
             //Close the file.
             br.close();
 
-            if (UtilFncs.debug) {
-                System.out.println("The total number of threads is: " + this.getTotalNumberOfThreads());
-                System.out.println("The number of mappings is: " + this.getNumFunctions());
-                System.out.println("The number of user events is: " + this.getNumUserEvents());
-            }
 
             //Set firstRead to false.
             this.setFirstMetric(false);
@@ -608,19 +596,19 @@ public class TauPprofDataSource extends DataSource {
     }
 
     private void getFunctionDataLine2(String string) {
-        StringTokenizer getMappingIDTokenizer = new StringTokenizer(string, " \t\n\r");
-        getMappingIDTokenizer.nextToken();
-        getMappingIDTokenizer.nextToken();
-        getMappingIDTokenizer.nextToken();
+        StringTokenizer tokenizer = new StringTokenizer(string, " \t\n\r");
+        tokenizer.nextToken();
+        tokenizer.nextToken();
+        tokenizer.nextToken();
 
         // number of calls
-        functionDataLine2.d0 = Double.parseDouble(getMappingIDTokenizer.nextToken());
+        functionDataLine2.d0 = Double.parseDouble(tokenizer.nextToken());
 
         // number of subroutines
-        functionDataLine2.d1 = Double.parseDouble(getMappingIDTokenizer.nextToken());
+        functionDataLine2.d1 = Double.parseDouble(tokenizer.nextToken());
 
         // inclusive per call
-        functionDataLine2.d2 = Double.parseDouble(getMappingIDTokenizer.nextToken());
+        functionDataLine2.d2 = Double.parseDouble(tokenizer.nextToken());
     }
 
     private void getUserEventData(String string) {
@@ -683,10 +671,10 @@ public class TauPprofDataSource extends DataSource {
     }
 
     private String getGroupNames(String string) {
-        StringTokenizer getMappingNameTokenizer = new StringTokenizer(string, "\"");
-        getMappingNameTokenizer.nextToken();
-        getMappingNameTokenizer.nextToken();
-        String str = getMappingNameTokenizer.nextToken();
+        StringTokenizer tokenizer = new StringTokenizer(string, "\"");
+        tokenizer.nextToken();
+        tokenizer.nextToken();
+        String str = tokenizer.nextToken();
 
         //Just do the group check once.
         if (!(this.getGroupCheck())) {
@@ -699,7 +687,7 @@ public class TauPprofDataSource extends DataSource {
         }
 
         if (getGroupNamesPresent()) {
-            str = getMappingNameTokenizer.nextToken();
+            str = tokenizer.nextToken();
             return str;
         }
         //If here, this profile file does not track the group names.

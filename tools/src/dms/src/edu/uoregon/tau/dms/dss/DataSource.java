@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.4 2005/01/06 22:46:56 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.5 2005/01/07 19:55:48 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		TrialData
  * @see		NCT
  */
@@ -79,6 +79,7 @@ public abstract class DataSource {
 
     
     public Function addFunction(String name, int numMetrics) {
+        name = name.trim();
         Object obj = functions.get(name);
 
         // return the function if found
@@ -92,7 +93,8 @@ public abstract class DataSource {
     }
 
     public Function getFunction(String name) {
-        return (Function) functions.get(name);
+        Function f = (Function) functions.get(name.trim());
+        return (Function) functions.get(name.trim());
     }
 
     public int getNumFunctions() {
@@ -208,7 +210,7 @@ public abstract class DataSource {
      *            Name of metric to be added
      */
     public Metric addMetric(String metricName) {
-
+        //System.out.println ("Adding Metric: " + metricName);
         if (metrics != null) {
             for (Iterator it = metrics.iterator(); it.hasNext(); ) {
                 Metric metric = (Metric) it.next();
@@ -273,7 +275,7 @@ public abstract class DataSource {
      * @return Returns the number of metrics as an int.
      */
     public int getNumberOfMetrics() {
-        //Try getting the matric name.
+        //Try getting the metric name.
         if (this.metrics != null)
             return metrics.size();
         else
@@ -597,6 +599,7 @@ public abstract class DataSource {
     }
     
     protected boolean debug() {
+        //return true;
         return UtilFncs.debug;
     }
 }

@@ -106,7 +106,6 @@ public class GprofDataSource extends DataSource {
 
                                 function = this.addFunction(self.s0, 1);
 
-                                // System.out.println("SELF:"+"["+gme1.getMappingID()+"] " +self.s0);
                                 functionProfile = new FunctionProfile(function);
                                 thread.addFunctionProfile(functionProfile);
 

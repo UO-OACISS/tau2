@@ -82,7 +82,6 @@ public class PSRunDataSource extends DataSource {
                     // initialize the thread/node
                     initializeThread();
 
-                    // get the data, and put it in the mapping
                     PSRunLoadHandler tmpHandler = (PSRunLoadHandler) handler;
                     Hashtable metricHash = tmpHandler.getMetricHash();
                     for (Enumeration keys = metricHash.keys(); keys.hasMoreElements();) {
@@ -91,11 +90,6 @@ public class PSRunDataSource extends DataSource {
                         processHardwareCounter(key, value);
                     }
 
-                    if (UtilFncs.debug) {
-                        System.out.println("The total number of threads is: " + this.getTotalNumberOfThreads());
-                        System.out.println("The number of mappings is: " + this.getNumFunctions());
-                        System.out.println("The number of user events is: " + this.getNumUserEvents());
-                    }
 
                     time = (System.currentTimeMillis()) - time;
                     //System.out.println("Done processing data file!");
@@ -114,7 +108,6 @@ public class PSRunDataSource extends DataSource {
     //####################################
 
     private void initializeThread() {
-        // create the mapping, if necessary
         function = this.addFunction("Entire application", 1);
 
         // make sure we start at zero for all counters

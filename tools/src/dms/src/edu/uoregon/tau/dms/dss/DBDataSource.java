@@ -1,10 +1,3 @@
-/*
- * To do: 1) Add some sanity checks to make sure that multiple metrics really do
- * belong together. For example, wrap the creation of nodes, contexts, threads,
- * global mapping elements, and the like so that they do not occur after the
- * first metric has been loaded. This will not of course ensure 100% that the
- * data is consistent, but it will at least prevent the worst cases.
- */
 
 package edu.uoregon.tau.dms.dss;
 
@@ -58,7 +51,6 @@ public class DBDataSource extends DataSource {
             int nodeID = -1;
             int contextID = -1;
             int threadID = -1;
-            int mappingID = -1;
 
             //Vector localMap = new Vector();
             //######
@@ -174,11 +166,6 @@ public class DBDataSource extends DataSource {
 
                 //Get Function and FunctionProfile.
 
-                //Obtain the mapping id from the local map.
-                //int pos = Collections.binarySearch(localMap, new
-                // FunIndexFunIDPair(fdo.getIntervalEventID(),0));
-                //mappingID =
-                // ((FunIndexFunIDPair)localMap.elementAt(pos)).paraProfId;
 
                 function = this.getFunction(databaseAPI.getIntervalEvent(fdo.getIntervalEventID()).getName());
                 functionProfile = thread.getFunctionProfile(function);

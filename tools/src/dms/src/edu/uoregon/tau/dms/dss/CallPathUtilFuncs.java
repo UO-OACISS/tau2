@@ -42,11 +42,11 @@ public class CallPathUtilFuncs {
             s = callPath.getName();
             location = s.lastIndexOf("=>");
             if (location > 0) {
-                childName = s.substring(location + 3, (s.length() - 2));
-                s = s.substring(0, location - 1);
+                childName = s.substring(location + 2, s.length());
+                s = s.substring(0, location);
                 location = s.lastIndexOf("=>");
                 if (location > 0) {
-                    parentName = s.substring(location + 3);
+                    parentName = s.substring(location + 2);
                 } else
                     parentName = s;
 
@@ -80,25 +80,35 @@ public class CallPathUtilFuncs {
                 int location = s.lastIndexOf("=>");
 
                 if (location > 0) {
-                    String childName = s.substring(location + 3, (s.length() - 2));
-                    s = s.substring(0, location - 1);
+                    String childName = s.substring(location + 2, s.length());
+                    s = s.substring(0, location);
                     location = s.lastIndexOf("=>");
 
                     String parentName = null;
 
                     if (location > 0)
-                        parentName = s.substring(location + 3);
+                        parentName = s.substring(location + 2);
                     else
                         parentName = s;
 
+                    
+                    Function parentFunction = dataSource.getFunction(parentName);
+                    Function childFunction = dataSource.getFunction(childName);
+
+                    if (parentFunction == null || childFunction == null) {
+                        System.err.println ("Warning: Callpath data not complete: " + parentName + " => " + childName);
+                        continue;
+
+                    }
                     //Update parent/child relationships.
                     FunctionProfile parent = thread.getFunctionProfile(dataSource.getFunction(parentName));
                     FunctionProfile child = thread.getFunctionProfile(dataSource.getFunction(childName));
 
                     if (parent == null || child == null) {
-                        
+                        System.err.println ("Warning: Callpath data not complete: " + parentName + " => " + childName);
+                        continue;
                         //System.out.println("Something has gone horribly wrong!");
-                        return;
+                        //return;
                     }
 
                     if (parent != null)
@@ -114,7 +124,7 @@ public class CallPathUtilFuncs {
 
         //Create a pruned list from the global list.
         //Want to grab a reference to the global list as
-        //this list contains null references for mappings
+        //this list contains null references for functions
         //which do not exist. Makes lookup much faster.
         Vector threadFunctionList = thread.getFunctionProfiles();
 

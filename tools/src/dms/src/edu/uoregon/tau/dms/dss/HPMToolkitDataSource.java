@@ -4,7 +4,6 @@
  * Description: Parse an HPMToolkit data file
  */
 
-
 package edu.uoregon.tau.dms.dss;
 
 import java.io.*;
@@ -148,7 +147,6 @@ public class HPMToolkitDataSource extends DataSource {
                 //Close the file.
                 br.close();
 
-
                 time = (System.currentTimeMillis()) - time;
                 //System.out.println("Time to process file (in milliseconds): " + time);
             }
@@ -162,12 +160,11 @@ public class HPMToolkitDataSource extends DataSource {
     //####################################
 
     private void initializeThread() {
-        // create the mapping, if necessary
+        // create the function, if necessary
         if (header2.s1 == null)
             function = this.addFunction(header1.s0 + ", " + header2.s0, 1);
         else
-            function = this.addFunction(header1.s0 + ", " + header2.s0 + " lines " + header2.s1,
-                    1);
+            function = this.addFunction(header1.s0 + ", " + header2.s0 + " lines " + header2.s1, 1);
 
         // System.out.println("**** " + header1.s0 + ", " + header2.s0 + " lines
         // " +header2.s1 + " " + threadID + " ****");
@@ -352,7 +349,6 @@ public class HPMToolkitDataSource extends DataSource {
         Metric newMetric = this.addMetric(metricName);
         metric = newMetric.getID();
         newMetricCount = this.getNumberOfMetrics();
-
 
         while (thread.getNumMetrics() < newMetricCount) {
             thread.incrementStorage();

@@ -662,8 +662,7 @@ public class UtilFncs {
             dataSource = new TauPprofDataSource(v);
             break;
         case 2:
-            v.add(sourceFiles[0]);
-            dataSource = new DynaprofDataSource(v);
+            dataSource = new DynaprofDataSource(sourceFiles);
             break;
         case 3:
 
