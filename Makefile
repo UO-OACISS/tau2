@@ -13,16 +13,15 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
-CONFIG_CC=gcc
-CONFIG_CXX=g++
+CONFIG_ARCH=sgi8k
+CONFIG_CC=cc
+CONFIG_CXX=CC
 PCXX_OPT=-g
-USER_OPT=-g
-TAUROOT=/users/sameer/rs/tau2
+USER_OPT=
+TAUROOT=/home/grads/sameer/tau2
 #######################################################################
  
-#MIPSR8K##ABI 	     = -64		  #ENDIF#
-#MIPSR8K#ISA          = -mips4             #ENDIF#
+include include/Makefile
 
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
