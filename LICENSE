@@ -1,24 +1,30 @@
-This software and ancillary information (herein called "SOFTWARE")
-called TAU is made available under the terms described
-here.  The SOFTWARE has been approved for release with associated
-LA-CC Number LA-CC-98-XX.
-
-This software is developed jointly by the University of Oregon, Los Alamos
-National Laboratory, and Research Centre Jülich, ZAM, Germany.
-
-Unless otherwise indicated, this SOFTWARE has been authored by an
-employee or employees of the University of California, operator of the
-Los Alamos National Laboratory under Contract No.  W-7405-ENG-36 with
-the U.S. Department of Energy.  The U.S. Government has rights to use,
-reproduce, and distribute this SOFTWARE, and to allow others to do so.
-The public may copy, distribute, prepare derivative works and publicly
-display this SOFTWARE without charge, provided that this Notice and
-any statement of authorship are reproduced on all copies.  Neither the
-Government nor the University makes any warranty, express or implied,
-or assumes any liability or responsibility for the use of this
-SOFTWARE.
-
-If SOFTWARE is modified to produce derivative works, such modified
-SOFTWARE should be clearly marked, so as not to confuse it with the
-version available from LANL.
-
+*****************************************************************************
+**			Tuning and Analysis Utilities			   **
+**			http://www.acl.lanl.gov/tau		           **
+*****************************************************************************
+**    Copyright 1998  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Research Center Juelich, ZAM Germany		  		   **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+*****************************************************************************
+**	
+**  Permission to use, copy, modify, and distribute this software and its
+**  documentation for any purpose and without fee is hereby granted,
+**  provided that the above copyright notice appear in all copies and that
+**  both that copyright notice and this permission notice appear in
+**  supporting documentation, and that the name of University of Oregon (UO)
+**  Research Center Juelich, (ZAM) and Los Alamos National Laboratory (LANL) 
+**  not be used in advertising or publicity pertaining to distribution of
+**  the software without specific, written prior permission.  The
+**  University of Oregon and LANL makes no representations about the
+**  suitability of this software for any purpose.  It is provided "as is"
+**  without express or implied warranty.
+**
+**  UO, ZAM AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
+**  INCLUDING , AND ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, 
+**  IN NO EVENT SHALL THE UNIVERSITY OF OREGON, ZAM OR LANL BE LIABLE FOR
+**  ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+**  RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+**  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+**  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*****************************************************************************
