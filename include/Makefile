@@ -34,9 +34,10 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
-TAUROOT=/home/ftg1/sameer/tau2
+TAUROOT=/home/grads/sameer/gar/rs/pcl-tau/tau2
 TULIPDIR=/users/sameer/s
-TAU_PREFIX_INSTALL_DIR=/home/ftg1/sameer/tau2
+PCLDIR=/home/grads/sameer/gar/rs/pcl
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/gar/rs/pcl-tau/tau2
 TAU_OPTIONS=
 #######################################################################
  
@@ -52,6 +53,7 @@ INSTALL = /bin/cp
 SHELL = /bin/sh
 LSX = .a
 #############################################
+#PCL#include $(TAUROOT)/include/makefiles/PCLMakefile.stub	  #ENDIF#
 
 
 
@@ -59,6 +61,8 @@ LSX = .a
 #PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
 #SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS          #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS     #ENDIF#
+#PCL#PROFILEOPT3       	       = -DTAU_PCL -D$(TARGET_SYSTEM) -I$(PCLDIR) #ENDIF#
+#PCL#PCL_O       	       = PclLayer.o 	       #ENDIF#
 #PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS       #ENDIF#
 #PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS       #ENDIF#
 #DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF          #ENDIF#
@@ -72,7 +76,7 @@ LSX = .a
 #PGI1.7#PROFILEOPT12	       = -DPGI 		       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used   #ENDIF#
 #SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
-#PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS           #ENDIF#
+#PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS  	       #ENDIF#
 #TULIPTHREADS#PROFILEOPT16 = -DTULIPTHREADS            #ENDIF#
 #TRACE#TRACEOPT		       = -DTRACING_ON	       #ENDIF#
 #TRACE#EVENTS_O                = Tracer.o              #ENDIF#
@@ -87,8 +91,10 @@ LSX = .a
 #KAINOEX#PROFILEOPT20  	       = --no_exceptions   #ENDIF#
 #SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
 #SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -D_XOPEN_SOURCE -DTAU_AIX #ENDIF#
+#PCLPTHREAD#PROFILEOPT22	       = -DPCL_MUTEX_LOCK #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
+#PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
@@ -105,7 +111,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
 	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(PROFILEOPT16) \
 	      $(PROFILEOPT17) $(PROFILEOPT18) $(PROFILEOPT19) $(PROFILEOPT20) \
-	      $(PROFILEOPT21) $(TRACEOPT)
+	      $(PROFILEOPT21) $(PROFILEOPT22) $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
