@@ -44,6 +44,8 @@ bool noinline_flag = false; /* instrument inlined functions by default */
 bool noinit_flag = false;   /* initialize using TAU_INIT(&argc, &argv) by default */
 bool lang_specified = false; /* implicit detection of source language using PDB file */
 bool process_this_return = false; /* for C instrumentation using a different return keyword */
+char exit_keyword[256] = "exit"; /* You can define your own exit keyword */
+bool using_exit_keyword = false; /* By default, we don't use the exit keyword */
 tau_language_t tau_language; /* language of the file */
 
 struct itemRef {
@@ -263,12 +265,25 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 #ifdef DEBUG 
 	   cout <<"Callee " << rr->name() << " location line " << (*cit)->line() << " col " << (*cit)->col() <<endl; 
 #endif /* DEBUG */
-	   if (strcmp(rr->name().c_str(), "exit")== 0)
+	   if (strcmp(rr->name().c_str(), exit_keyword)== 0)
 	   {
 	     /* routine calls exit */
+#ifdef DEBUG
+             cout <<"Exit keyword matched"<<endl;
+#endif /* DEBUG */
 	     itemvec.push_back(new itemRef(*rit, EXIT, (*cit)->line(), 
 		(*cit)->col()));
 	   } 
+	   else if (using_exit_keyword)
+	   { /* also check for "exit" where it occurs */
+	     if (strcmp(rr->name().c_str(), "exit")== 0)
+	     {
+	       /* routine calls exit */
+	       itemvec.push_back(new itemRef(*rit, EXIT, (*cit)->line(), 
+		(*cit)->col()));
+	     }
+	   } /* using exit keyword */
+
 	   if (strcmp(rr->name().c_str(), "abort") == 0)
 	   { /* routine calls abort */
 	     itemvec.push_back(new itemRef(*rit, EXIT, (*cit)->line(), 
@@ -879,10 +894,18 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 	    case EXIT:
 #ifdef DEBUG 
 		cout <<"Exit" <<endl;
+		cout <<"using_exit_keyword = "<<using_exit_keyword<<endl;
+		cout <<"exit_keyword = "<<exit_keyword<<endl;
+		cout <<"infbuf[(*it)->col-1] = "<<inbuf[(*it)->col-1]<<endl;
 #endif /* DEBUG */
 		if ((strncmp(&inbuf[(*it)->col-1], "abort", strlen("abort")) == 0) 
-		  ||(strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) )
+		  ||(strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) 
+		  ||(using_exit_keyword && (strncmp(&inbuf[(*it)->col-1], 
+				exit_keyword, strlen(exit_keyword)) == 0) ))
                 {
+#ifdef DEBUG
+		  cout <<"WRITING EXIT RECORD "<<endl;
+#endif /* DEBUG */
 		  ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
 		  for (k = (*it)->col-1; inbuf[k] != ';' ; k++)
 		    ostr<<inbuf[k]; 
@@ -1357,7 +1380,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>]"<<endl;
     return 1;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -1467,6 +1490,15 @@ int main(int argc, char **argv)
           printf("Using void return keyword: %s\n", return_void_string);
 #endif /* DEBUG */
   	}
+        if (strcmp(argv[i], "-e") == 0)
+	{
+	  ++i;
+	  strcpy(exit_keyword,argv[i]);
+	  using_exit_keyword = true;
+#ifdef DEBUG
+          printf("Using exit_keyword keyword: %s\n", exit_keyword);
+#endif /* DEBUG */
+  	}
         break;
       }
 
@@ -1573,8 +1605,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.62 $   $Date: 2004/06/21 17:13:09 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.62 2004/06/21 17:13:09 sameer Exp $
+ * $Revision: 1.63 $   $Date: 2004/07/27 00:01:56 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.63 2004/07/27 00:01:56 sameer Exp $
  ***************************************************************************/
 
 
