@@ -56,11 +56,11 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			addMouseListener(this);
 			
 			//Add items to the popu menu.
-			JMenuItem mappingDetailsItem = new JMenuItem("Show Mapping Details");
+			JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
 			mappingDetailsItem.addActionListener(this);
 			popup.add(mappingDetailsItem);
 			
-			JMenuItem changeColorItem = new JMenuItem("Change Mapping Color");
+			JMenuItem changeColorItem = new JMenuItem("Change Function Color");
 			changeColorItem.addActionListener(this);
 			popup.add(changeColorItem);
 			
@@ -343,7 +343,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Show Mapping Details"))
+				if(arg.equals("Show Munction Details"))
 				{
 					
 					if(clickedOnObject instanceof SMWThreadDataElement)
@@ -351,12 +351,12 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 						tmpSMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
-						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWThreadDataElement.getMappingName(), jRacy.staticMainWindow.getSMWData());
+						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWThreadDataElement.getMappingID(), jRacy.staticMainWindow.getSMWData());
 						jRacy.systemEvents.addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
-				else if(arg.equals("Change Mapping Color"))
+				else if(arg.equals("Change Function Color"))
 				{	
 					int mappingID = -1;
 					

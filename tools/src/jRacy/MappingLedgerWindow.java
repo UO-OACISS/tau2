@@ -30,7 +30,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLW01");
+			jRacy.systemError(null, "MLW01");
 		}
 	}
 	
@@ -41,10 +41,15 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 			setLocation(new java.awt.Point(300, 200));
 			setSize(new java.awt.Dimension(350, 450));
 			
-			//Now set the title.
-			this.setTitle("Mapping Ledger Window: " + jRacy.profilePathName);
-			
 			mappingSelection = inMappingSelection;
+			
+			//Now set the title.
+			if(mappingSelection == 0)
+				this.setTitle("Function Ledger Window: " + jRacy.profilePathName);
+			else if(mappingSelection == 1)
+				this.setTitle("Group Ledger Window: " + jRacy.profilePathName);
+			else
+				this.setTitle("User Event Window: " + jRacy.profilePathName);
 			
 			//Set the help window text if required.
 			if(jRacy.helpWindow.isVisible())
@@ -54,17 +59,25 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 				if(!((jRacy.staticMainWindow.getSMWData()).isDataLoaded()))
 					{
 						if(mappingSelection == 0){
-							jRacy.helpWindow.writeText("This is the mapping ledger window.");
+							jRacy.helpWindow.writeText("This is the function ledger window.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("This window shows all the functions tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window will be blank until you load data.");
+							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
+						}
+						else if(mappingSelection == 1){
+							jRacy.helpWindow.writeText("This is the group ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the groups tracked in this profile.");
 							jRacy.helpWindow.writeText("");
 							jRacy.helpWindow.writeText("This window will be blank until you load data.");
 							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
 						}
 						else{
-							jRacy.helpWindow.writeText("This is the group mapping ledger window.");
+							jRacy.helpWindow.writeText("This is the user event ledger window.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("This window shows all the user events tracked in this profile.");
 							jRacy.helpWindow.writeText("");
 							jRacy.helpWindow.writeText("This window will be blank until you load data.");
 							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
@@ -73,23 +86,31 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 					else
 					{
 						if(mappingSelection == 0){
-							jRacy.helpWindow.writeText("This is the mapping ledger window.");
+							jRacy.helpWindow.writeText("This is the function ledger window.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("This window shows all the functions tracked in this profile.");
 							jRacy.helpWindow.writeText("");
 							jRacy.helpWindow.writeText("To see more information about any of the mappings shown here,");
-							jRacy.helpWindow.writeText("right click on that mapping, and select from the popup menu.");
+							jRacy.helpWindow.writeText("right click on that function, and select from the popup menu.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
+							jRacy.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+						}
+						else if(mappingSelection == 1){
+							jRacy.helpWindow.writeText("This is the group ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the groups tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("Left click any group to hightlight it in the system.");
+							jRacy.helpWindow.writeText("Right click on any group, and select from the popup menu"
+							+ " to display more options for masking or displaying functions in a particular group.");
 						}
 						else{
-							jRacy.helpWindow.writeText("This is the group mapping ledger window.");
+							jRacy.helpWindow.writeText("This is the user event ledger window.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("This window shows all the user events tracked in this profile.");
 							jRacy.helpWindow.writeText("");
 							jRacy.helpWindow.writeText("Left click any mapping to hightlight it in the system.");
-							jRacy.helpWindow.writeText("Right click on any mapping, and select from the popup menu"
-							+ " to display more options for masking or displaying mappings in a particular group.");
+							jRacy.helpWindow.writeText("Right click on any user event, and select from the popup menu.");
 						}
 					}
 			}
@@ -140,7 +161,13 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 			fileMenu.add(editPrefItem);
 			
 			//Add a menu item.
-			JMenuItem closeItem = new JMenuItem("Close Mapping Ledger Window");
+			JMenuItem closeItem = null;
+			if(mappingSelection == 0)
+				closeItem = new JMenuItem("Close Function Ledger Window");
+			else if(mappingSelection == 1)
+				closeItem = new JMenuItem("Close Group Ledger Window");
+			else
+				closeItem = new JMenuItem("Close User Event Window");
 			closeItem.addActionListener(this);
 			fileMenu.add(closeItem);
 			
@@ -233,7 +260,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLW02");
+			jRacy.systemError(null, "MLW02");
 		}
 	}
 	
@@ -250,7 +277,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLW03");
+			jRacy.systemError(null, "MLW03");
 		}
 	}
 	
@@ -278,7 +305,15 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 					dispose();
 					System.exit(0);
 				}	
-				else if(arg.equals("Close Mapping Ledger Window"))
+				else if(arg.equals("Close Function Ledger Window"))
+				{
+					(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(mappingSelection);
+				}
+				else if(arg.equals("Close Group Ledger Window"))
+				{
+					(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(mappingSelection);
+				}
+				else if(arg.equals("Close User Event Window"))
 				{
 					(jRacy.staticSystemData.getGlobalMapping()).closeMappingLedger(mappingSelection);
 				}
@@ -301,17 +336,25 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 					if(!((jRacy.staticMainWindow.getSMWData()).isDataLoaded()))
 					{
 						if(mappingSelection == 0){
-							jRacy.helpWindow.writeText("This is the mapping ledger window.");
+							jRacy.helpWindow.writeText("This is the function ledger window.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("This window shows all the functions tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window will be blank until you load data.");
+							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
+						}
+						else if(mappingSelection == 1){
+							jRacy.helpWindow.writeText("This is the group ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the groups tracked in this profile.");
 							jRacy.helpWindow.writeText("");
 							jRacy.helpWindow.writeText("This window will be blank until you load data.");
 							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
 						}
 						else{
-							jRacy.helpWindow.writeText("This is the group mapping ledger window.");
+							jRacy.helpWindow.writeText("This is the user event ledger window.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("This window shows all the user events tracked in this profile.");
 							jRacy.helpWindow.writeText("");
 							jRacy.helpWindow.writeText("This window will be blank until you load data.");
 							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
@@ -320,23 +363,31 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 					else
 					{
 						if(mappingSelection == 0){
-							jRacy.helpWindow.writeText("This is the mapping ledger window.");
+							jRacy.helpWindow.writeText("This is the function ledger window.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("This window shows all the functions tracked in this profile.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("To see more information about any of the mappings shown here,");
-							jRacy.helpWindow.writeText("right click on that mapping, and select from the popup menu.");
+							jRacy.helpWindow.writeText("To see more information about any of the functions shown here,");
+							jRacy.helpWindow.writeText("right click on that function, and select from the popup menu.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
+							jRacy.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+						}
+						else if(mappingSelection == 1){
+							jRacy.helpWindow.writeText("This is the group ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the groups tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("Left click any group to hightlight it in the system.");
+							jRacy.helpWindow.writeText("Right click on any group, and select from the popup menu"
+							+ " to display more options for masking or displaying functions in a particular group.");
 						}
 						else{
-							jRacy.helpWindow.writeText("This is the group mapping ledger window.");
+							jRacy.helpWindow.writeText("This is the user event ledger window.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("This window shows all the user events tracked in this profile.");
 							jRacy.helpWindow.writeText("");
-							jRacy.helpWindow.writeText("Left click any mapping to hightlight it in the system.");
-							jRacy.helpWindow.writeText("Right click on any mapping, and select from the popup menu"
-							+ " to display more options for masking or displaying mappings in a particular group.");
+							jRacy.helpWindow.writeText("Left click any user event to hightlight it in the system.");
+							jRacy.helpWindow.writeText("Right click on any user event, and select from the popup menu.");
 						}
 					}
 				}
@@ -344,7 +395,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLW04");
+			jRacy.systemError(null, "MLW04");
 		}
 	}
 	
@@ -365,13 +416,12 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 			}
 			else if(tmpString.equals("subWindowCloseEvent"))
 			{
-				System.out.println("The mappingSelection is: " + mappingSelection);
 				jRacy.staticSystemData.getGlobalMapping().closeMappingLedger(mappingSelection);
 			}
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLW05");
+			jRacy.systemError(null, "MLW05");
 		}
 	}
 	

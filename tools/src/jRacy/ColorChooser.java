@@ -32,6 +32,7 @@ public class ColorChooser implements WindowListener
 			mappingGroupColors = inSavedPreferences.getMappingGroupColors();
 			highlightColor = inSavedPreferences.getHighlightColor();
 			groupHighlightColor = inSavedPreferences.getGroupHighlightColor();
+			uEHC = inSavedPreferences.getUEHC();
 			miscMappingsColor = inSavedPreferences.getMiscMappingsColor();
 		}
 		else
@@ -243,6 +244,34 @@ public class ColorChooser implements WindowListener
 	//End - Group highlight color functions.
 	//***
 	
+	//***
+	//User Event Highlight Color functions (UEHC functions).
+	//***
+	public void setUEHC(Color inColor)
+	{
+		uEHC = inColor;
+	}
+	
+	public Color getUEHC()
+	{
+		return uEHC;
+	}
+	
+	public void setUEHCMappingID(int inInt)
+	{
+		uEHCMappingID = inInt;
+		
+		jRacy.systemEvents.updateRegisteredObjects("colorEvent");
+	}
+	
+	public int getUEHCMappingID()
+	{
+		return uEHCMappingID;
+	}
+	//***
+	//End - User Event Highlight Color functions (UEHC functions).
+	//***
+	
 	
 	//***
 	//Misc. color functions.
@@ -326,6 +355,8 @@ public class ColorChooser implements WindowListener
 	int highlightColorMappingID = -1;
 	private Color groupHighlightColor = new Color(0,255,255);
 	int groupHighlightColorMappingID = -1;
+	private Color uEHC = new Color(255,255, 0);
+	private int uEHCMappingID = -1;
 	private Color miscMappingsColor = Color.black;
 	private boolean clrChooserFrameShowing = false;	//For determining whether the clrChooserFrame is showing.
 	private ColorChooserFrame clrChooserFrame;
@@ -333,7 +364,7 @@ public class ColorChooser implements WindowListener
 	
 	
 	
-class ColorChooserFrame extends JFrame implements ActionListener, MouseListener
+class ColorChooserFrame extends JFrame implements ActionListener
 {
 	//******************************
 	//Instance data!
@@ -614,6 +645,9 @@ class ColorChooserFrame extends JFrame implements ActionListener, MouseListener
 						jRacy.clrChooser.setGroupHighlightColor(tmpColor);
 					}
 					else if((values[i]) == (totalNumberOfColors+2)){
+						jRacy.clrChooser.setUEHC(tmpColor);
+					}
+					else if((values[i]) == (totalNumberOfColors+3)){
 						jRacy.clrChooser.setMiscMappingsColor(tmpColor);
 					}
 					else if((values[i]) < jRacy.clrChooser.getNumberOfColors())
@@ -643,6 +677,7 @@ class ColorChooserFrame extends JFrame implements ActionListener, MouseListener
 				colorChooserRef.setDefaultMappingGroupColors();
 				colorChooserRef.setHighlightColor(Color.red);
 				colorChooserRef.setGroupHighlightColor(new Color(0,255,255));
+				colorChooserRef.setUEHC(new Color(255,255,0));
 				colorChooserRef.setMiscMappingsColor(Color.black);
 				listModel.clear();
 				populateColorList();
@@ -657,28 +692,6 @@ class ColorChooserFrame extends JFrame implements ActionListener, MouseListener
 			}
 		}
 	}
-	
-	//Mouse Listener Stuff.
-	public void mousePressed(MouseEvent evt){}
-	public void mouseClicked(MouseEvent evt)
-	{
-		//Get the panel that fired the event.
-		//JPanel TmpPanelRef = (JPanel) evt.getSource();
-		//Set the background for that panel.
-		//TmpPanelRef.setBackground(clrModel.getSelectedColor());
-		
-		//if(highlightPanel == TmpPanelRef)
-			//jRacy.clrChooser.setHighlightColor(clrModel.getSelectedColor());
-			
-		//Repaint that panel.
-		//TmpPanelRef.repaint();
-		
-		//jRacy.systemEvents.updateRegisteredObjects("colorEvent");
-	}
-	public void mouseReleased(MouseEvent evt){}
-	public void mouseEntered(MouseEvent evt){}
-	public void mouseExited(MouseEvent evt){}
-	
 	
 	private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h)
 	{
@@ -710,6 +723,9 @@ class ColorChooserFrame extends JFrame implements ActionListener, MouseListener
 		listModel.addElement(tmpColor);
 		
 		tmpColor = jRacy.clrChooser.getGroupHighlightColor();
+		listModel.addElement(tmpColor);
+		
+		tmpColor = jRacy.clrChooser.getUEHC();
 		listModel.addElement(tmpColor);
 		
 		tmpColor = jRacy.clrChooser.getMiscMappingsColor();
@@ -782,6 +798,9 @@ class CustomCellRenderer implements ListCellRenderer
 						g.drawString(("" + ("GHC")), xStringPos1, yStringPos1);
 					}
 					else if(index == (totalNumberOfColors+2)){
+						g.drawString(("" + ("UHC")), xStringPos1, yStringPos1);
+					}
+					else if(index == (totalNumberOfColors+3)){
 						g.drawString(("" + ("MPC")), xStringPos1, yStringPos1);
 					}
 					else if(index < (jRacy.clrChooser.getNumberOfColors())){

@@ -157,23 +157,28 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			//End Submenu.
 			
 			//Add a submenu.
-			JMenu inclusiveExclusiveMenu = new JMenu("Select Inclusive or Exclusive");
-			inclusiveExclusiveGroup = new ButtonGroup();
-			inclusiveRadioButton = new JRadioButtonMenuItem("Inclusive", false);
-			//Add a listener for this radio button.
+			JMenu metricMenu = new JMenu("Select Metric");
+			metricGroup = new ButtonGroup();
+			
+			//Add listeners
 			inclusiveRadioButton.addActionListener(this);
-			exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
-			//Add a listener for this radio button.
 			exclusiveRadioButton.addActionListener(this);
-			inclusiveExclusiveGroup.add(inclusiveRadioButton);
-			inclusiveExclusiveGroup.add(exclusiveRadioButton);
-			inclusiveExclusiveMenu.add(inclusiveRadioButton);
-			inclusiveExclusiveMenu.add(exclusiveRadioButton);
-			optionsMenu.add(inclusiveExclusiveMenu);
+			numOfCallsRadioButton.addActionListener(this);
+			numOfSubRoutinesRadioButton.addActionListener(this);
+			
+			metricGroup.add(inclusiveRadioButton);
+			metricGroup.add(exclusiveRadioButton);
+			metricGroup.add(numOfCallsRadioButton);
+			metricGroup.add(numOfSubRoutinesRadioButton);
+			metricMenu.add(inclusiveRadioButton);
+			metricMenu.add(exclusiveRadioButton);
+			metricMenu.add(numOfCallsRadioButton);
+			metricMenu.add(numOfSubRoutinesRadioButton);
+			optionsMenu.add(metricMenu);
 			//End Submenu.
 			
 			//Add a submenu.
-			JMenu valuePercentMenu = new JMenu("Select Value or Percent");
+			valuePercentMenu = new JMenu("Select Value or Percent");
 			valuePercentGroup = new ButtonGroup();
 			
 			percentButton = new JRadioButtonMenuItem("Percent", true);
@@ -421,7 +426,8 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				{
 					if(inclusiveRadioButton.isSelected())
 					{
-						inclusive = true;
+						metric = "Inclusive";
+						//Sort the local data.
 						sortLocalData();
 						//Call repaint.
 						meanDataWindowPanelRef.repaint();
@@ -431,7 +437,30 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				{
 					if(exclusiveRadioButton.isSelected())
 					{
-						inclusive = false;
+						metric = "Exclusive";
+						//Sort the local data.
+						sortLocalData();
+						//Call repaint.
+						meanDataWindowPanelRef.repaint();
+					}
+				}
+				else if(arg.equals("Number of Calls"))
+				{
+					if(numOfCallsRadioButton.isSelected())
+					{
+						metric = "Number of Calls";
+						//Sort the local data.
+						sortLocalData();
+						//Call repaint.
+						meanDataWindowPanelRef.repaint();
+					}
+				}
+				else if(arg.equals("Number of Subroutines"))
+				{
+					if(numOfSubRoutinesRadioButton.isSelected())
+					{
+						metric = "Number of Subroutines";
+						//Sort the local data.
 						sortLocalData();
 						//Call repaint.
 						meanDataWindowPanelRef.repaint();
@@ -563,15 +592,22 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	{
 		try
 		{
-			if(percent)
-				unitsMenu.setEnabled(false);
-			else
-				unitsMenu.setEnabled(true);
-				
 			if(jRacy.staticSystemData.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
+				
+				
+			
+			if((metric.equals("Number of Calls")) || (metric.equals("Number of Subroutines"))){
+				valuePercentMenu.setEnabled(false);
+				unitsMenu.setEnabled(false);}
+			else if(percent){
+				valuePercentMenu.setEnabled(true);
+				unitsMenu.setEnabled(false);}
+			else{
+				valuePercentMenu.setEnabled(true);
+				unitsMenu.setEnabled(true);}
 		}
 		catch(Exception e)
 		{
@@ -623,6 +659,113 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 	}
 	
+	private void sortLocalData()
+	{	
+		try
+		{
+			if(sortByMappingID)
+			{
+				if(metric.equals("Inclusive"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdDI");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdAI");
+				}
+				else if(metric.equals("Exclusive"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdDE");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdAE");
+				}
+				else if(metric.equals("Number of Calls"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdDNC");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdANC");
+				}
+				else if(metric.equals("Number of Subroutines"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdDNS");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("FIdANS");
+				}
+			}
+			else if(sortByName)
+			{
+				
+				if(metric.equals("Inclusive"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("NDI");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("NAI");
+				}
+				else if(metric.equals("Exclusive"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("NDE");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("NAE");
+				}
+				else if(metric.equals("Number of Calls"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("NDNC");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("NANC");
+				}
+				else if(metric.equals("Number of Subroutines"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("NDNS");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("NANS");
+				}
+			}
+			else if(sortByMillisecond)
+			{
+				
+				if(metric.equals("Inclusive"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("MDI");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("MAI");
+				}
+				else if(metric.equals("Exclusive"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("MDE");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("MAE");
+				}
+				else if(metric.equals("Number of Calls"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("MDNC");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("MANC");
+				}
+				else if(metric.equals("Number of Subroutines"))
+				{
+					if(descendingOrder)
+						currentSMWMeanData = sMWData.getSMWMeanData("MDNS");
+					else
+						currentSMWMeanData = sMWData.getSMWMeanData("MANS");
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDW06");
+		}
+	}
+	
+	/*
 	//Updates the sorted lists after a change of sorting method takes place.
 	private void sortLocalData()
 	{
@@ -686,6 +829,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			jRacy.systemError(null, "MDW06");
 		}
 	}
+	*/
 	
 	//This function passes the correct data list to its panel when asked for.
 	//Note:  This is only meant to be called by the MeanDataWindowPanel.
@@ -697,6 +841,10 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	public boolean isInclusive()
 	{
 		return inclusive;
+	}
+	
+	public String getMetric(){
+		return metric;
 	}
 	
 	public boolean isPercent()
@@ -849,11 +997,12 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	//Instance data.
 	//******************************
 	private JMenu unitsMenu;
+	private JMenu valuePercentMenu;
 	private JMenuItem mappingGroupLedgerItem;
 	
 	private ButtonGroup sortGroup;
 	private ButtonGroup sortOrderGroup;
-	private ButtonGroup inclusiveExclusiveGroup;
+	private ButtonGroup metricGroup = null;
 	private ButtonGroup valuePercentGroup;
 	private ButtonGroup unitsGroup;
 	
@@ -864,8 +1013,10 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	private JRadioButtonMenuItem nameButton;
 	private JRadioButtonMenuItem millisecondButton;
 	
-	private JRadioButtonMenuItem inclusiveRadioButton;
-	private JRadioButtonMenuItem exclusiveRadioButton;
+	private JRadioButtonMenuItem inclusiveRadioButton =  new JRadioButtonMenuItem("Inclusive", false);
+	private JRadioButtonMenuItem exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
+	private JRadioButtonMenuItem numOfCallsRadioButton =  new JRadioButtonMenuItem("Number of Calls", false);
+	private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
 	
 	private JRadioButtonMenuItem valueButton;
 	private JRadioButtonMenuItem percentButton;
@@ -896,6 +1047,8 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
  	
  	//Local data.
  	Vector currentSMWMeanData = null;
+ 	
+ 	private String metric = "Exclusive";
  	
  	private boolean sortByMappingID = false;
 	private boolean sortByName = false;

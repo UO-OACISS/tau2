@@ -35,6 +35,7 @@ public class StaticSystemData implements Serializable
 		globalMapping = new GlobalMapping();
 		StaticServerList = new Vector();
 		positionOfName = -1;
+		positionOfUserEventName = -1;
 		counterName = null;
 		heading = null;
 		userEventHeading = null;
@@ -49,12 +50,12 @@ public class StaticSystemData implements Serializable
 	//The following funtion initializes the GlobalMapping object.
 	//Since we are in the static mode, the number of mappings is known,
 	//therefore, the appropriate number of GlobalMappingElements are created.
-	void initializeGlobalMapping(int inNumberOfMappings)
+	void initializeGlobalMapping(int inNumberOfMappings, int mappingSelection)
 	{
 		for(int i=0; i<inNumberOfMappings; i++)
 		{
 			//globalMapping.addGlobalMapping("Error ... the mapping name has not been set!");
-			globalMapping.addGlobalMapping(null, 0);
+			globalMapping.addGlobalMapping(null, mappingSelection);
 		}
 	}
 	
@@ -95,6 +96,7 @@ public class StaticSystemData implements Serializable
 			int context = -1;
 			int thread = -1;
 			int numberOfMappings = -1;
+			int numberOfUserEvents = -1;
 			
 			GlobalMappingElement tmpGlobalMappingElement;
 			
@@ -136,7 +138,7 @@ public class StaticSystemData implements Serializable
 							//and then action is taken depending on those lines.
 							
 							
-							//Check if line begins with the letter t.
+							//Check to See if the String begins with a t.
 							if(checkForBeginningT(inputString))
 							{
 								counter++;
@@ -157,7 +159,11 @@ public class StaticSystemData implements Serializable
 									    while (st.hasMoreTokens()){
 									         String tmpString = st.nextToken();
 									         if(tmpString != null){
+									         	//The potential new group is added here.  If the group is already present, the the addGlobalMapping
+									         	//function will just return the already existing group id.  See the GlobalMapping class for more details.
 									         	int tmpInt = globalMapping.addGlobalMapping(tmpString, 1);
+									         	//The group is either already present, or has just been added in the above line.  Now, using the addGroup
+									         	//function, update this mapping to be a member of this group.
 									         	globalMapping.addGroup(mappingID, tmpInt, 0);
 									         	if((tmpInt != -1) && (jRacy.debugIsOn))
 									         		System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + mappingNameString);
@@ -191,7 +197,8 @@ public class StaticSystemData implements Serializable
 									if(!(globalMapping.setTotalInclusiveValueAt(value, mappingID, 0)))
 										System.out.println("There was an error setting Exc/Inc total time");
 								}
-							}
+							} //End - Check to See if the String begins with a t.
+							//Check to See if the String begins with a mt.
 							else if(checkForBeginningM(inputString))
 							{
 								if(checkForExclusiveWithTOrM(inputString))
@@ -249,11 +256,30 @@ public class StaticSystemData implements Serializable
 									//If the file format changes, we are all screwed anyway.
 									inputString = br.readLine();
 									//Set the total stat string.
+									
+									double numberOfCalls = getNumberOfCalls(inputString);
+									double numberOfSubRoutines = getNumberOfSubRoutines(inputString);
+									
+									//Now set the values correctly.
+									if(maxMeanNumberOfCalls < numberOfCalls)
+									{
+										maxMeanNumberOfCalls = numberOfCalls;
+									}
+									
+									if(maxMeanNumberOfSubRoutines < numberOfSubRoutines)
+									{
+										maxMeanNumberOfSubRoutines = numberOfSubRoutines;
+									}
+										
+									tmpGlobalMappingElement.setMeanNumberOfCalls(numberOfCalls);
+									tmpGlobalMappingElement.setMeanNumberOfSubRoutines(numberOfSubRoutines);
+									
 									tmpGlobalMappingElement.setMeanTotalStatString(inputString);
 									tmpGlobalMappingElement.setMeanValuesSet(true);
 									//Now extract the other info from this string.
 								}
-							}
+							}//End - Check to See if the String begins with a m.
+							//String does not begin with either an m or a t, the rest of the checks go here.
 							else
 							{
 								if(checkForExclusive(inputString))
@@ -491,10 +517,28 @@ public class StaticSystemData implements Serializable
 									if((currentGlobalThread.getMaxInclusivePercentValue()) < percentValue)
 										currentGlobalThread.setMaxInclusivePercentValue(percentValue);
 									
-									//Set the total stat string.
+									//Get the number of calls and number of sub routines, and then set the total stat string.
 									//The next string in the file should be the correct one.  Assume it.
 									//If the file format changes, we are all screwed anyway.
 									inputString = br.readLine();
+									
+									int numberOfCalls = (int) getNumberOfCalls(inputString);
+									int numberOfSubRoutines = (int) getNumberOfSubRoutines(inputString);
+									
+									//Update max values.
+									if((tmpGlobalMappingElement.getMaxNumberOfCalls()) < numberOfCalls)
+										tmpGlobalMappingElement.setMaxNumberOfCalls(numberOfCalls);
+									if((tmpGlobalMappingElement.getMaxNumberOfSubRoutines()) < numberOfSubRoutines)
+										tmpGlobalMappingElement.setMaxNumberOfSubRoutines(numberOfSubRoutines);
+										
+									if((currentGlobalThread.getMaxNumberOfCalls()) < numberOfCalls)
+										currentGlobalThread.setMaxNumberOfCalls(numberOfCalls);
+									if((currentGlobalThread.getMaxNumberOfSubRoutines()) < numberOfSubRoutines)
+										currentGlobalThread.setMaxNumberOfSubRoutines(numberOfSubRoutines);
+										
+									tmpGTDE.setNumberOfCalls(numberOfCalls);
+									tmpGTDE.setNumberOfSubRoutines(numberOfSubRoutines);
+									
 									//Set the total stat string.
 									tmpGTDE.setTStatString(inputString);
 									//Now extract the other info from this string.
@@ -502,13 +546,24 @@ public class StaticSystemData implements Serializable
 								}
 								else if(checkForUserEvents(inputString))
 								{
-									//Get the number of user events.
-									int numberOfUserEvents = getNumberOfUserEvents(inputString);
-									//System.out.println("The number of user events defined is: " + numberOfUserEvents);
+									//The first time a user event string is encountered, get the number of user events and 
+									//initialize the global mapping for mapping position 2.
+									if(!(this.userEventsPresent())){
+										//Get the number of user events.
+										numberOfUserEvents = getNumberOfUserEvents(inputString);
+										initializeGlobalMapping(numberOfUserEvents, 2);
+										if(jRacy.debugIsOn){
+											System.out.println("The number of user events defined is: " + numberOfUserEvents);
+											System.out.println("Initializing mapping selection 2 (The loaction of the user event mapping) for " +
+																numberOfUserEvents + " mappings.");
+										}
+									} 
 									
 									//The first line will be the user event heading ... get it.
 									inputString = br.readLine();
 									userEventHeading = inputString;
+									
+									positionOfUserEventName = inputString.indexOf("Event Name");
 									
 									//Find the correct global thread data element.
 									GlobalServer tmpGSUE = null;
@@ -528,9 +583,10 @@ public class StaticSystemData implements Serializable
 										{
 											//Note that this works correctly because we process the user events in a different manner.
 											//ALL the user events for each THREAD NODE are processed in the above for-loop.  Therefore,
-											//the below for-loop is only run once on each THREAD NODE.  If you do not believe it, uncomment
-											//the output line below.
-											//System.out.println("Creating the list for node,context,thread: " +node+","+context+","+thread);
+											//the below for-loop is only run once on each THREAD NODE.  If you do not believe it, turn on
+											//debugging.
+											if(jRacy.debugIsOn)
+												System.out.println("Creating the list for node,context,thread: " +node+","+context+","+thread);
 											
 											//Get the node,context,thread.
 											node = getNode(inputString, true);
@@ -554,27 +610,62 @@ public class StaticSystemData implements Serializable
 										
 										
 										//Extract all the information out of the string that I need.
-										//Grab the mapping name.
-										userEventNameString = getUserEventName(inputString);
-										//System.out.println("The user event name is: " + userEventNameString);
+										
 										//Grab the mapping ID.
 										userEventID = getUserEventID(inputString);
-										//System.out.println("The user event ID: " + userEventID);
+										
+										//Only need to set the name in the global mapping once.
+										if(!(this.userEventsPresent())){
+											//Grab the mapping name.
+											userEventNameString = getUserEventName(inputString);
+											if(!(globalMapping.setMappingNameAt(userEventNameString, userEventID, 2)))
+												System.out.println("There was an error adding mapping to the global mapping");
+											if(jRacy.debugIsOn){
+												System.out.println("The user event ID: " + userEventID);
+												System.out.println("The user event name is: " + userEventNameString);
+											}
+										}
+										
+										int userEventNumberValue = getUENValue(inputString);
+										double userEventMinValue = getUEMinValue(inputString);
+										double userEventMaxValue = getUEMaxValue(inputString);
+										double userEventMeanValue = getUEMeanValue(inputString);
+										
+										//Update the max values if required.
+										//Grab the correct global mapping element.
+										tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(userEventID, 2);
+										
+										if((tmpGlobalMappingElement.getMaxUserEventNumberValue()) < userEventNumberValue)
+											tmpGlobalMappingElement.setMaxUserEventNumberValue(userEventNumberValue);
+											
+										if((tmpGlobalMappingElement.getMaxUserEventMinValue()) < userEventMinValue)
+											tmpGlobalMappingElement.setMaxUserEventMinValue(userEventMinValue);
+											
+										if((tmpGlobalMappingElement.getMaxUserEventMaxValue()) < userEventMaxValue)
+											tmpGlobalMappingElement.setMaxUserEventMaxValue(userEventMaxValue);
+										
+										if((tmpGlobalMappingElement.getMaxUserEventMeanValue()) < userEventMeanValue)
+											tmpGlobalMappingElement.setMaxUserEventMeanValue(userEventMeanValue);
+										
 										
 										GlobalThreadDataElement tmpGTDEUE = (GlobalThreadDataElement) tmpGlobalThreadDataElementListUE.elementAt(userEventID);
 										//Ok, now set the instance data elements.
 										tmpGTDEUE.setUserEventID(userEventID);
-										tmpGTDEUE.setUserEventNumberValue(getUENValue(inputString));
-										tmpGTDEUE.setUserEventMinValue(getUEMinValue(inputString));
-										tmpGTDEUE.setUserEventMaxValue(getUEMaxValue(inputString));
-										tmpGTDEUE.setUserEventMeanValue(getUEMeanValue(inputString));
+										tmpGTDEUE.setUserEventNumberValue(userEventNumberValue);
+										tmpGTDEUE.setUserEventMinValue(userEventMinValue);
+										tmpGTDEUE.setUserEventMaxValue(userEventMaxValue);
+										tmpGTDEUE.setUserEventMeanValue(userEventMeanValue);
 										
 										//Ok, now get the next string as that is the stat string for this event.
 										inputString = br.readLine();
 										tmpGTDEUE.setUserEventStatString(inputString);		
 										
 									}
+									
+									//Now set the userEvents flag.
+									this.setUserEventsPresent(true);
 								}
+							//End - String does not begin with either an m or a t, the rest of the checks go here.
 							}
 						}
 						else
@@ -593,8 +684,8 @@ public class StaticSystemData implements Serializable
 						//Set the number of mappings.
 						numberOfMappings = Integer.parseInt(tokenString);
 						
-						//Now initialize the global mapping with the correct number of mappings.
-						initializeGlobalMapping(Integer.parseInt(tokenString));
+						//Now initialize the global mapping with the correct number of mappings for mapping position 0.
+						initializeGlobalMapping(Integer.parseInt(tokenString), 0);
 						
 						//Set the counter name.
 						counterName = getCounterName(inputString);
@@ -897,6 +988,73 @@ public class StaticSystemData implements Serializable
 		return -1;
 	}
 	
+	double getNumberOfCalls(String inString)
+	{
+		try{
+			String tmpString;
+			
+			StringTokenizer getMappingIDTokenizer = new StringTokenizer(inString, " \t\n\r");
+			
+			//The number of calls will be the fourth token on its line.
+			
+			//Grab the first token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Grab the second token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Grab the third token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Grab the forth token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Now return the number of calls.
+			return Double.parseDouble(tmpString);
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "SSD10");
+		}
+		
+		return -1;
+	}
+	
+	double getNumberOfSubRoutines(String inString)
+	{
+		try{
+			String tmpString;
+			
+			StringTokenizer getMappingIDTokenizer = new StringTokenizer(inString, " \t\n\r");
+			
+			//The number of calls will be the fifth token on its line.
+			
+			//Grab the first token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Grab the second token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Grab the third token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Grab the forth token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Grab the fifth token.
+			tmpString = getMappingIDTokenizer.nextToken();
+			
+			//Now return the number of subroutines.
+			return Double.parseDouble(tmpString);
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "SSD11");
+		}
+		
+		return -1;
+	}
+	
 	String getGroupNames(String inString)
 	{
 		
@@ -941,7 +1099,7 @@ public class StaticSystemData implements Serializable
 			}
 			catch(Exception e)
 			{
-				jRacy.systemError(null, "SSD10");
+				jRacy.systemError(null, "SSD12");
 			}
 		
 		return null;
@@ -970,7 +1128,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD11");
+			jRacy.systemError(null, "SSD13");
 		}
 		
 		return -1;
@@ -1000,7 +1158,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD12");
+			jRacy.systemError(null, "SSD14");
 		}
 		
 		return -1;
@@ -1029,7 +1187,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD13");
+			jRacy.systemError(null, "SSD15");
 		}
 		
 		return false;	
@@ -1050,7 +1208,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD14");
+			jRacy.systemError(null, "SSD16");
 		}
 		
 		return -1;
@@ -1077,7 +1235,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD15");
+			jRacy.systemError(null, "SSD17");
 		}
 		
 		return null;
@@ -1105,7 +1263,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD16");
+			jRacy.systemError(null, "SSD18");
 		}
 		
 		return -1;
@@ -1134,7 +1292,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD17");
+			jRacy.systemError(null, "SSD19");
 		}
 		
 		return -1;
@@ -1164,7 +1322,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD18");
+			jRacy.systemError(null, "SSD20");
 		}
 		
 		return -1;
@@ -1193,7 +1351,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD19");
+			jRacy.systemError(null, "SSD21");
 		}
 		
 		return -1;
@@ -1224,7 +1382,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD20");
+			jRacy.systemError(null, "SSD22");
 		}
 		
 		return -1;
@@ -1253,7 +1411,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD21");
+			jRacy.systemError(null, "SSD23");
 		}
 		
 		return -1;
@@ -1286,7 +1444,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD22");
+			jRacy.systemError(null, "SSD24");
 		}
 		
 		return -1;
@@ -1321,7 +1479,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD23");
+			jRacy.systemError(null, "SSD25");
 		}
 		
 		return -1;
@@ -1347,7 +1505,7 @@ public class StaticSystemData implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SSD24");
+			jRacy.systemError(null, "SSD26");
 		}
 		
 		return null;
@@ -1372,9 +1530,19 @@ public class StaticSystemData implements Serializable
 		return positionOfName;
 	}
 	
+	public int getPositionOfUserEventName()
+	{
+		return positionOfUserEventName;
+	}
+	
 	public String getHeading()
 	{
 		return heading;
+	}
+	
+	public String getUserEventHeading()
+	{
+		return userEventHeading;
 	}
 	
 	public void setMaxMeanInclusiveValue(double inDouble)
@@ -1417,8 +1585,36 @@ public class StaticSystemData implements Serializable
 		return maxMeanExclusivePercentValue;
 	}
 	
+	public void setMaxMeanNumberOfCalls(double inDouble)
+	{
+		maxMeanNumberOfCalls = inDouble;
+	}
+	
+	public double getMaxMeanNumberOfCalls()
+	{
+		return maxMeanNumberOfCalls;
+	}
+	
+	public void setMaxMeanNumberOfSubRoutines(double inDouble)
+	{
+		maxMeanNumberOfSubRoutines = inDouble;
+	}
+	
+	public double getMaxMeanNumberOfSubRoutines()
+	{
+		return maxMeanNumberOfSubRoutines;
+	}
+	
 	public boolean groupNamesPresent(){
 		return groupNamesPresent;
+	}
+	
+	private void setUserEventsPresent(boolean inBoolean){
+		userEventsPresent = inBoolean;
+	}
+	
+	public boolean userEventsPresent(){
+		return userEventsPresent;
 	}
 	//******************************
 	//End - Useful functions to help the drawing windows.
@@ -1431,12 +1627,14 @@ public class StaticSystemData implements Serializable
 	GlobalMapping globalMapping;
 	private Vector StaticServerList;
 	private int positionOfName;
+	private int positionOfUserEventName;
 	private String counterName;
 	private String heading;
 	private String userEventHeading;
 	private boolean isUserEventHeadingSet;
 	boolean groupNamesCheck = false;
 	boolean groupNamesPresent = false;
+	boolean userEventsPresent = false;
 	int bSDCounter;
 	
 	//Max mean values.
@@ -1444,6 +1642,8 @@ public class StaticSystemData implements Serializable
 	double maxMeanExclusiveValue = 0;
 	double maxMeanInclusivePercentValue = 0;
 	double maxMeanExclusivePercentValue = 0;
+	double maxMeanNumberOfCalls = 0;
+	double maxMeanNumberOfSubRoutines = 0;
 	
 	//******************************
 	//End - Instance data.

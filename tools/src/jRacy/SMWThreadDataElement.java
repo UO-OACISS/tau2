@@ -36,10 +36,13 @@ public class SMWThreadDataElement implements Comparable
 		tDWYEndPosition = 0;
 		tDWYBegPosition = 0;
 		
-		fDWXEndPosition = 0;
-		fDWXBegPosition = 0;
-		fDWYEndPosition = 0;
-		fDWYBegPosition = 0;
+		mDWXEndPosition = 0;
+		mDWXBegPosition = 0;
+		mDWYEndPosition = 0;
+		mDWYBegPosition = 0;
+		
+		
+		int sortSetting = 0;
 		
 		sortByMappingID = false;
 		sortByName = true;
@@ -116,6 +119,14 @@ public class SMWThreadDataElement implements Comparable
 		return gTDEReference.getExclusivePercentValue();
 	}
 	
+	public int getNumberOfCalls(){
+		return gTDEReference.getNumberOfCalls();
+	}
+	
+	public int getNumberOfSubRoutines(){
+		return gTDEReference.getNumberOfSubRoutines();
+	}
+	
 	public String getTStatString()
 	{
 		return gTDEReference.getTStatString();
@@ -124,12 +135,20 @@ public class SMWThreadDataElement implements Comparable
 	//User event interface.
 	public String getUserEventName()
 	{
-		return gTDEReference.getUserEventName();
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
+		
+		return tmpGME.getMappingName();
 	}
 	
 	public int getUserEventID()
 	{
 		return gTDEReference.getUserEventID();
+	}
+	
+	public Color getUserEventMappingColor()
+	{
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
+		return tmpGME.getMappingColor();
 	}
 	
 	public int getUserEventNumberValue()
@@ -157,8 +176,52 @@ public class SMWThreadDataElement implements Comparable
 		return gTDEReference.getUserEventStatString();
 	}
 
+	/*
+	1 FIdD FunctionID
+	2 FIdA FunctionID
+	3 ND Name
+	4 NA Name
+	5 MD Millisec
+	6 MA Millisec
+	*/
 	
-	public int compareTo(Object inObject)
+	
+	public int compareTo(Object inObject){
+		
+		double tmpDouble = 0;
+		
+		switch(sortSetting){
+			case(1):
+				return ((((SMWThreadDataElement)inObject).getMappingID()) - mappingID);
+			case(2):
+				return (mappingID - (((SMWThreadDataElement)inObject).getMappingID()));
+			case(3):
+				return (((SMWThreadDataElement) inObject).getMappingName()).compareTo(this.getMappingName());
+			case(4):
+				return (this.getMappingName()).compareTo(((SMWThreadDataElement)inObject).getMappingName());
+			case(5):
+				tmpDouble = (value - (((SMWThreadDataElement)inObject).getValue()));
+				if(tmpDouble < 0.00)
+					return 1;
+				else if(tmpDouble == 0.00)
+					return 0;
+				else
+					return -1;
+			case(6):
+				tmpDouble = (value - (((SMWThreadDataElement)inObject).getValue()));
+				if(tmpDouble < 0.00)
+					return -1;
+				else if(tmpDouble == 0.00)
+					return 0;
+				else
+					return 1;
+					
+			default:
+				return 0;
+			}
+	}
+	
+	public int testCompareTo(Object inObject)
 	{
 		//Note that list will never call to compare against mapping id.  This
 		//is because all the mappings are already sorted on the system.
@@ -262,32 +325,61 @@ public class SMWThreadDataElement implements Comparable
 		return tDWXEndPosition;
 	}
 	
-	public void setFDWDrawCoords(int inFDWXBeg, int inFDWXEnd, int inFDWYBeg, int inFDWYEnd)
+	public void setMDWDrawCoords(int inMDWXBeg, int inMDWXEnd, int inMDWYBeg, int inMDWYEnd)
 	{
-		fDWXBegPosition = inFDWXBeg;
-		fDWXEndPosition = inFDWXEnd;
-		fDWYBegPosition = inFDWYBeg;
-		fDWYEndPosition = inFDWYEnd;
+		mDWXBegPosition = inMDWXBeg;
+		mDWXEndPosition = inMDWXEnd;
+		mDWYBegPosition = inMDWYBeg;
+		mDWYEndPosition = inMDWYEnd;
 	}
 		
-	public int getFDWYBeg()
+	public int getMDWYBeg()
 	{
-		return fDWYBegPosition;
+		return mDWYBegPosition;
 	}
 	
-	public int getFDWYEnd()
+	public int getMDWYEnd()
 	{
-		return fDWYEndPosition;
+		return mDWYEndPosition;
 	}
 	
-	public int getFDWXBeg()
+	public int getMDWXBeg()
 	{
-		return fDWXBegPosition;
+		return mDWXBegPosition;
 	}
 	
-	public int getFDWXEnd()
+	public int getMDWXEnd()
 	{
-		return fDWXEndPosition;
+		return mDWXEndPosition;
+	}
+	
+	//User Event Window.
+	public void setUEWDrawCoords(int inUEWXBeg, int inUEWXEnd, int inUEWYBeg, int inUEWYEnd)
+	{
+		uEWXBegPosition = inUEWXBeg;
+		uEWXEndPosition = inUEWXEnd;
+		uEWYBegPosition = inUEWYBeg;
+		uEWYEndPosition = inUEWYEnd;
+	}
+		
+	public int getUEWYBeg()
+	{
+		return uEWYBegPosition;
+	}
+	
+	public int getUEWYEnd()
+	{
+		return uEWYEndPosition;
+	}
+	
+	public int getUEWXBeg()
+	{
+		return uEWXBegPosition;
+	}
+	
+	public int getUEWXEnd()
+	{
+		return uEWXEndPosition;
 	}
 	
 	public boolean getStatDrawnTo()
@@ -308,6 +400,11 @@ public class SMWThreadDataElement implements Comparable
 	public boolean isHighlighted()
 	{
 		return highlighted;
+	}
+	
+	
+	public void setSortSetting(int inInt){
+		sortSetting = inInt;
 	}
 	
 	public void setSortByMappingID()
@@ -366,10 +463,16 @@ public class SMWThreadDataElement implements Comparable
 	int tDWYBegPosition;
 	
 	//Drawing coordinates the mapping data window.
-	int fDWXEndPosition;
-	int fDWXBegPosition;
-	int fDWYEndPosition;
-	int fDWYBegPosition;
+	int mDWXEndPosition;
+	int mDWXBegPosition;
+	int mDWYEndPosition;
+	int mDWYBegPosition;
+	
+	//Drawing coordinates the mapping data window.
+	int uEWXEndPosition;
+	int uEWXBegPosition;
+	int uEWYEndPosition;
+	int uEWYBegPosition;
 	
 	boolean statDrawnTo;
 	
@@ -377,6 +480,7 @@ public class SMWThreadDataElement implements Comparable
 	boolean highlighted = false;
 	
 	//
+	int sortSetting;
 	boolean sortByMappingID;
 	boolean sortByName;
 	boolean sortByValue;

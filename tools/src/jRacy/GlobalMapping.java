@@ -33,15 +33,17 @@ public class GlobalMapping implements WindowListener, Serializable
 	//Constructors.
 	public GlobalMapping()
 	{
-		mappings = new Vector[2];
-		numberOfMappings = new int[2];
-		mappingLedgerWindows = new MappingLedgerWindow[2];
+		mappings = new Vector[3];
+		numberOfMappings = new int[3];
+		mappingLedgerWindows = new MappingLedgerWindow[3];
 		
 		mappings[0] = new Vector();
 		mappings[1] = new Vector();
+		mappings[2] = new Vector();
 		
 		numberOfMappings[0] = 0;
 		numberOfMappings[1] = 0;
+		numberOfMappings[2] = 0;
 	}
 	
 	public int addGlobalMapping(String inMappingName, int mappingSelection)
@@ -54,7 +56,7 @@ public class GlobalMapping implements WindowListener, Serializable
 			GlobalMappingElement tmpGME = new GlobalMappingElement();
 			tmpGME.setMappingName(inMappingName);
 			tmpGME.setGlobalID(numberOfMappings[mappingSelection]);
-			if(mappingSelection == 0)
+			if((mappingSelection == 0) || (mappingSelection == 2))
 				tmpGME.setGenericColor(jRacy.clrChooser.getColorInLocation(numberOfMappings[mappingSelection] % (jRacy.clrChooser.getNumberOfColors())));
 			else
 				tmpGME.setGenericColor(jRacy.clrChooser.getMappingGroupColorInLocation(numberOfMappings[mappingSelection] % (jRacy.clrChooser.getNumberOfMappingGroupColors())));
@@ -332,31 +334,6 @@ public class GlobalMapping implements WindowListener, Serializable
 		}		
 	}
 	
-	public void setGroupMappingHighlight(int inGroupID, int mappingSelectionApply, int mappingSelectionSource)
-	{
-		GlobalMappingElement tmpGME1 = (GlobalMappingElement) mappings[mappingSelectionSource].elementAt(inGroupID);
-		Color tmpColor = tmpGME1.getGenericColor();
-		System.out.println("r,g,b: " + tmpColor.getRed() + "," + tmpColor.getGreen()+ "," + tmpColor.getBlue());
-		
-		for(Enumeration e = mappings[mappingSelectionApply].elements(); e.hasMoreElements() ;)
-		{
-			GlobalMappingElement tmpGME2 = (GlobalMappingElement) e.nextElement();
-			if(tmpGME2.isGroupMember(inGroupID)){
-				tmpGME2.setGroupColor(tmpColor);
-				tmpGME2.setGroupColorFlag(true);
-			}
-		}
-	}
-	
-	public void unsetGroupMappingHighlight(int mappingSelection)
-	{
-		for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
-		{
-			GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
-			tmpGME.setGroupColorFlag(false);
-		}
-	}
-	
 	public void setIsSelectedGroupOn(boolean inBool){
 		isSelectedGroupOn = inBool;
 	}
@@ -435,6 +412,11 @@ public class GlobalMapping implements WindowListener, Serializable
 		if(winevt.getSource() == mappingLedgerWindows[1])
 		{
 			mappingLedgerWindows[1] = null;
+		}
+		
+		if(winevt.getSource() == mappingLedgerWindows[2])
+		{
+			mappingLedgerWindows[2] = null;
 		}
 	}
 	

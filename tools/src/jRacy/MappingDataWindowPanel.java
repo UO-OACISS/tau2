@@ -4,7 +4,11 @@
 	
 	Title:			jRacy
 	Author:			Robert Bell
-	Description:	
+	Description:
+	
+	Things to do:
+	
+	1) Add clipping support to this window.	
 */
 
 package jRacy;
@@ -32,13 +36,13 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FDWP01");
+			jRacy.systemError(null, "MDWP01");
 		}
 	
 	}
 	
 	
-	public MappingDataWindowPanel(String inMappingName, MappingDataWindow inFDWindow)
+	public MappingDataWindowPanel(int inMappingID, MappingDataWindow inMDWindow)
 	{
 		try{
 			setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -47,11 +51,16 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			//Add this object as a mouse listener.
 			addMouseListener(this);
 			
-			mappingName = inMappingName;
-			fDWindow = inFDWindow;
+			
+			//Grab the appropriate global mapping element.
+			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(inMappingID, 0);
+			
+			mappingName = tmpGME.getMappingName();
+			mDWindow = inMDWindow;
 			
 			//Add items to the popu menu.
-			JMenuItem changeColorItem = new JMenuItem("Change Mapping Color");
+			JMenuItem changeColorItem = new JMenuItem("Change Function Color");
 			changeColorItem.addActionListener(this);
 			popup.add(changeColorItem);
 			
@@ -64,7 +73,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FDWP02");
+			jRacy.systemError(null, "MDWP02");
 		}
 	
 	}
@@ -122,7 +131,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			int tmpXWidthCalc = 0;
 			
 			//An XCoord used in drawing the bars.
-			int barXCoord = 0;
+			int barXCoord = defaultBarLength + 60;
 			yCoord = 0;
 			
 			//Grab the appropriate global mapping element.
@@ -152,12 +161,74 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			
 			//**********
 			//Draw the mapping name.
-			g.drawString("MAPPING NAME: " + mappingName, 5, yCoord);
+			g.drawString("FUNCTION NAME: " + mappingName, 5, yCoord);
 			//Calculate its width.
 			tmpXWidthCalc = fmFont.stringWidth(mappingName);
 			yCoord = yCoord + (barSpacing);
 			//End - Draw the mapping name.
 			//**********
+			
+			//Get some string lengths.
+			
+			if((mDWindow.isInclusive())){
+				if(mDWindow.isPercent()){
+					//Need to figure out how long the percentage string will be.
+					tmpString = new String(maxInclusivePercentValue + "%");
+					stringWidth = fmFont.stringWidth(tmpString);
+					barXCoord = barXCoord + stringWidth;
+				}
+				else{
+					//Check to see what the units are.
+					if((mDWindow.units()).equals("Seconds"))
+					{
+						tmpString = new String((Double.toString((maxInclusiveValue / 1000000.00))));
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+					}
+					else if((mDWindow.units()).equals("Milliseconds"))
+					{
+						tmpString = new String((Double.toString((maxInclusiveValue / 1000))));
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+					}
+					else
+					{
+						tmpString = new String(Double.toString(maxInclusiveValue));
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+					}
+				}
+			}
+			else{
+				if(mDWindow.isPercent()){
+					//Need to figure out how long the percentage string will be.
+					tmpString = new String(maxExclusivePercentValue + "%");
+					stringWidth = fmFont.stringWidth(tmpString);
+					barXCoord = barXCoord + stringWidth;
+				}
+				else{
+				
+					//Add the correct amount to barXCoord.
+					if((mDWindow.units()).equals("Seconds"))
+					{
+						tmpString = new String((Double.toString((maxExclusiveValue / 1000000.00))));
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+					}
+					else if((mDWindow.units()).equals("Milliseconds"))
+					{
+						tmpString = new String((Double.toString((maxExclusiveValue / 1000))));
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+					}
+					else
+					{
+						tmpString = new String(Double.toString(maxExclusiveValue));
+						stringWidth = fmFont.stringWidth(tmpString);
+						barXCoord = barXCoord + stringWidth;
+					}
+				}
+			}
 			
 			//******************************
 			//Do the mean bar.
@@ -167,28 +238,17 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			String s1 = "mean";
 			
 			//Test for the different menu options for this window.
-			if((fDWindow.isInclusive()))
-			{
-				//Get the maximum on this thread, and set the draw positions appropriately.
-				double maxValue = maxInclusivePercentValue;
-				int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
-				barXCoord = tmpValue + 60;
-				
-				if(fDWindow.isPercent())
+			if((mDWindow.isInclusive()))
+			{	
+				if(mDWindow.isPercent())
 				{		
-					
-					//Need to figure out how long the percentage string will be.
-					tmpString = new String(maxValue + "%");
-					stringWidth = fmFont.stringWidth(tmpString);
-					barXCoord = barXCoord + stringWidth;
-					
 					yCoord = yCoord + (barSpacing);
 					
 					tmpDataValue = tmpGME.getMeanInclusivePercentValue();
 					
 					int xLength;
 					double tmpDouble;
-					tmpDouble = (tmpDataValue / 100.00);
+					tmpDouble = (tmpDataValue / maxInclusivePercentValue);
 					xLength = (int) (tmpDouble * defaultBarLength);
 					if(xLength == 0)
 						xLength = 1;
@@ -256,37 +316,18 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					}
 				}
 				else
-				{//@@@
-					tmpDataValue = maxInclusiveValue;
-					
-					//Check to see what the units are.
-					if((fDWindow.units()).equals("Seconds"))
-					{
-						tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					else if((fDWindow.units()).equals("Milliseconds"))
-					{
-						tmpString = new String((Double.toString((tmpDataValue / 1000))));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					else
-					{
-						tmpString = new String(Double.toString(tmpDataValue));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					
+				{// End - mDWindow.isPercent()
+				
 					//For consistancy in drawing, the y coord is updated at the beggining of the loop.
 					yCoord = yCoord + (barSpacing);
 					
-					tmpDataValue = tmpGME.getMeanInclusivePercentValue();
+					//Set tmpDataValue to the correct value.
+					tmpDataValue = tmpGME.getMeanInclusiveValue();
 					
+					//Figure out how long the bar should be.
 					int xLength;
 					double tmpDouble;
-					tmpDouble = (tmpDataValue / 100.00);
+					tmpDouble = (tmpDataValue / maxInclusiveValue);
 					xLength = (int) (tmpDouble * defaultBarLength);
 					if(xLength == 0)
 						xLength = 1;
@@ -336,17 +377,15 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					//Now print the percentage to the left of the bar.
 					g.setColor(Color.black);
 					
-					//Now get the raw values for printing at the end of the bars.
-					tmpDataValue = tmpGME.getMeanInclusiveValue();
 					//Check to see what the units are.
-					if((fDWindow.units()).equals("Seconds"))
+					if((mDWindow.units()).equals("Seconds"))
 					{
 						tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
 						g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
 					}
-					else if((fDWindow.units()).equals("Milliseconds"))
+					else if((mDWindow.units()).equals("Milliseconds"))
 					{
 						tmpString = new String((Double.toString((tmpDataValue / 1000))));
 						stringWidth = fmFont.stringWidth(tmpString);
@@ -374,20 +413,9 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 				}
 			}
 			else	//Case of exclusive selection.
-			{
-				
-				//Get the maximum on this thread, and set the draw positions appropriately.
-				double maxValue = maxExclusivePercentValue;
-				int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
-				barXCoord = tmpValue + 60;
-				
-				if(fDWindow.isPercent())
+			{	
+				if(mDWindow.isPercent())
 				{
-					//Need to figure out how long the percentage string will be.
-					tmpString = new String(maxValue + "%");
-					stringWidth = fmFont.stringWidth(tmpString);
-					barXCoord = barXCoord + stringWidth;
-					
 					//For consistancy in drawing, the y coord is updated at the beggining of the loop.
 					yCoord = yCoord + (barSpacing);
 					
@@ -395,7 +423,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					
 					int xLength;
 					double tmpDouble;
-					tmpDouble = (tmpDataValue / 100.00);
+					tmpDouble = (tmpDataValue / maxExclusivePercentValue);
 					xLength = (int) (tmpDouble * defaultBarLength);
 					if(xLength == 0)
 						xLength = 1;
@@ -464,35 +492,15 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 				}
 				else
 				{
-					//Add the correct amount to barXCoord.
-					tmpDataValue = maxExclusiveValue;
-					
-					if((fDWindow.units()).equals("Seconds"))
-					{
-						tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					else if((fDWindow.units()).equals("Milliseconds"))
-					{
-						tmpString = new String((Double.toString((tmpDataValue / 1000))));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					else
-					{
-						tmpString = new String(Double.toString(tmpDataValue));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					
 					yCoord = yCoord + (barSpacing);
 					
-					tmpDataValue = tmpGME.getMeanExclusivePercentValue();
+					//Set tmpDataValue to the correct value.
+					tmpDataValue = tmpGME.getMeanExclusiveValue();
 					
+					//Figure out how long the bar should be.
 					int xLength;
 					double tmpDouble;
-					tmpDouble = (tmpDataValue / 100.00);
+					tmpDouble = (tmpDataValue / maxExclusiveValue);
 					xLength = (int) (tmpDouble * defaultBarLength);
 					if(xLength == 0)
 						xLength = 1;
@@ -542,18 +550,15 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					//Now print the percentage to the left of the bar.
 					g.setColor(Color.black);
 					
-					//Now get the raw values for printing at the end of the bars.
-					tmpDataValue = tmpGME.getMeanExclusiveValue();
-					
 					//Check to see what the units are.
-					if((fDWindow.units()).equals("Seconds"))
+					if((mDWindow.units()).equals("Seconds"))
 					{
 						tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
 						g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
 					}
-					else if((fDWindow.units()).equals("Milliseconds"))
+					else if((mDWindow.units()).equals("Milliseconds"))
 					{
 						tmpString = new String((Double.toString((tmpDataValue / 1000))));
 						stringWidth = fmFont.stringWidth(tmpString);
@@ -590,9 +595,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			//Now the rest.
 			//******************************
 			
+			
+			
 			serverNumber = 0;
 				
-			for(Enumeration e1 = (fDWindow.getStaticMainWindowSystemData()).elements(); e1.hasMoreElements() ;)
+			for(Enumeration e1 = (mDWindow.getStaticMainWindowSystemData()).elements(); e1.hasMoreElements() ;)
 			{
 				//Get the name of the server.
 				tmpSMWServer = (SMWServer) e1.nextElement();
@@ -619,21 +626,10 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 						tmpThreadDataElementList = tmpSMWThread.getThreadDataList();
 						
 						//Test for the different menu options for this window.
-						if((fDWindow.isInclusive()))
+						if((mDWindow.isInclusive()))
 						{
-							//Get the maximum on this thread, and set the draw positions appropriately.
-							double maxValue = maxInclusivePercentValue;
-							int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
-							barXCoord = tmpValue + 60;
-							
-							if(fDWindow.isPercent())
-							{		
-								
-								//Need to figure out how long the percentage string will be.
-								tmpString = new String(maxValue + "%");
-								stringWidth = fmFont.stringWidth(tmpString);
-								barXCoord = barXCoord + stringWidth;
-								
+							if(mDWindow.isPercent())
+							{
 								for(Enumeration e4 = tmpThreadDataElementList.elements(); e4.hasMoreElements() ;)
 								{
 									tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
@@ -647,7 +643,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										
 										int xLength;
 										double tmpDouble;
-										tmpDouble = (tmpDataValue / 100.00);
+										tmpDouble = (tmpDataValue / maxInclusivePercentValue);
 										xLength = (int) (tmpDouble * defaultBarLength);
 										if(xLength == 0)
 											xLength = 1;
@@ -715,35 +711,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										}
 										
 										//Update the drawing coordinates.
-										tmpSMWThreadDataElement.setFDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+										tmpSMWThreadDataElement.setMDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
 									}
 								}
 							}
 							else
 							{//@@@
-						
-								//Now get the raw values for printing at the end of the bars.
-								tmpDataValue = maxInclusiveValue;
-								//Check to see what the units are.
-								if((fDWindow.units()).equals("Seconds"))
-								{
-									tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
-									stringWidth = fmFont.stringWidth(tmpString);
-									barXCoord = barXCoord + stringWidth;
-								}
-								else if((fDWindow.units()).equals("Milliseconds"))
-								{
-									tmpString = new String((Double.toString((tmpDataValue / 1000))));
-									stringWidth = fmFont.stringWidth(tmpString);
-									barXCoord = barXCoord + stringWidth;
-								}
-								else
-								{
-									tmpString = new String(Double.toString(tmpDataValue));
-									stringWidth = fmFont.stringWidth(tmpString);
-									barXCoord = barXCoord + stringWidth;
-								}
-								
 								for(Enumeration e5 = tmpThreadDataElementList.elements(); e5.hasMoreElements() ;)
 								{
 									tmpSMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
@@ -753,11 +726,14 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										//For consistancy in drawing, the y coord is updated at the beggining of the loop.
 										yCoord = yCoord + (barSpacing);
 										
-										tmpDataValue = tmpSMWThreadDataElement.getInclusivePercentValue();
 										
+										//Set tmpDataValue to the correct value.
+										tmpDataValue = tmpSMWThreadDataElement.getInclusiveValue();
+										
+										//Figure out how long the bar should be.
 										int xLength;
 										double tmpDouble;
-										tmpDouble = (tmpDataValue / 100.00);
+										tmpDouble = (tmpDataValue / maxInclusiveValue);
 										xLength = (int) (tmpDouble * defaultBarLength);
 										if(xLength == 0)
 											xLength = 1;
@@ -807,17 +783,15 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										//Now print the percentage to the left of the bar.
 										g.setColor(Color.black);
 										
-										//Now get the raw values for printing at the end of the bars.
-										tmpDataValue = tmpSMWThreadDataElement.getInclusiveValue();
 										//Check to see what the units are.
-										if((fDWindow.units()).equals("Seconds"))
+										if((mDWindow.units()).equals("Seconds"))
 										{
 											tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
 											stringWidth = fmFont.stringWidth(tmpString);
 											stringStart = barXCoord - xLength - stringWidth - 5;
 											g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
 										}
-										else if((fDWindow.units()).equals("Milliseconds"))
+										else if((mDWindow.units()).equals("Milliseconds"))
 										{
 											tmpString = new String((Double.toString((tmpDataValue / 1000))));
 											stringWidth = fmFont.stringWidth(tmpString);
@@ -844,26 +818,15 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										}
 										
 										//Update the drawing coordinates.
-										tmpSMWThreadDataElement.setFDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+										tmpSMWThreadDataElement.setMDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
 									}
 								}
 							}
 						}
 						else	//Case of exclusive selection.
 						{
-							
-							//Get the maximum on this thread, and set the draw positions appropriately.
-							double maxValue = maxExclusivePercentValue;
-							int tmpValue = (int) ((maxValue / 100.00) * (defaultBarLength));
-							barXCoord = tmpValue + 60;
-							
-							if(fDWindow.isPercent())
+							if(mDWindow.isPercent())
 							{
-								//Need to figure out how long the percentage string will be.
-								tmpString = new String(maxValue + "%");
-								stringWidth = fmFont.stringWidth(tmpString);
-								barXCoord = barXCoord + stringWidth;
-								
 								for(Enumeration e6 = tmpThreadDataElementList.elements(); e6.hasMoreElements() ;)
 								{
 									tmpSMWThreadDataElement = (SMWThreadDataElement) e6.nextElement();
@@ -877,7 +840,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										
 										int xLength;
 										double tmpDouble;
-										tmpDouble = (tmpDataValue / 100.00);
+										tmpDouble = (tmpDataValue / maxExclusivePercentValue);
 										xLength = (int) (tmpDouble * defaultBarLength);
 										if(xLength == 0)
 											xLength = 1;
@@ -945,36 +908,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										}
 										
 										//Update the drawing coordinates.
-										tmpSMWThreadDataElement.setFDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+										tmpSMWThreadDataElement.setMDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
 									}
 								}
 							}
 							else
 							{
-								//Add the correct amount to barXCoord.
-								tmpDataValue = maxExclusiveValue;
-								
-								if((fDWindow.units()).equals("Seconds"))
-								{
-									tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
-									stringWidth = fmFont.stringWidth(tmpString);
-									barXCoord = barXCoord + stringWidth;
-								}
-								else if((fDWindow.units()).equals("Milliseconds"))
-								{
-									tmpString = new String((Double.toString((tmpDataValue / 1000))));
-									stringWidth = fmFont.stringWidth(tmpString);
-									barXCoord = barXCoord + stringWidth;
-								}
-								else
-								{
-									tmpString = new String(Double.toString(tmpDataValue));
-									stringWidth = fmFont.stringWidth(tmpString);
-									barXCoord = barXCoord + stringWidth;
-								}
-								
-								
-								
 								for(Enumeration e7 = tmpThreadDataElementList.elements(); e7.hasMoreElements() ;)
 								{
 									tmpSMWThreadDataElement = (SMWThreadDataElement) e7.nextElement();
@@ -984,11 +923,13 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										//For consistancy in drawing, the y coord is updated at the beggining of the loop.
 										yCoord = yCoord + (barSpacing);
 										
-										tmpDataValue = tmpSMWThreadDataElement.getExclusivePercentValue();
+										//Set tmpDataValue to the correct value.
+										tmpDataValue = tmpSMWThreadDataElement.getExclusiveValue();
 										
+										//Figure out how long the bar should be.
 										int xLength;
 										double tmpDouble;
-										tmpDouble = (tmpDataValue / 100.00);
+										tmpDouble = (tmpDataValue / maxExclusiveValue);
 										xLength = (int) (tmpDouble * defaultBarLength);
 										if(xLength == 0)
 											xLength = 1;
@@ -1038,18 +979,15 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										//Now print the percentage to the left of the bar.
 										g.setColor(Color.black);
 										
-										//Now get the raw values for printing at the end of the bars.
-										tmpDataValue = tmpSMWThreadDataElement.getExclusiveValue();
-										
 										//Check to see what the units are.
-										if((fDWindow.units()).equals("Seconds"))
+										if((mDWindow.units()).equals("Seconds"))
 										{
 											tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
 											stringWidth = fmFont.stringWidth(tmpString);
 											stringStart = barXCoord - xLength - stringWidth - 5;
 											g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
 										}
-										else if((fDWindow.units()).equals("Milliseconds"))
+										else if((mDWindow.units()).equals("Milliseconds"))
 										{
 											tmpString = new String((Double.toString((tmpDataValue / 1000))));
 											stringWidth = fmFont.stringWidth(tmpString);
@@ -1076,7 +1014,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										}
 										
 										//Update the drawing coordinates.
-										tmpSMWThreadDataElement.setFDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+										tmpSMWThreadDataElement.setMDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
 									}
 								}
 							}
@@ -1108,19 +1046,10 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			
 			if(sizeChange)
 				revalidate();
-			
-			
-			/*if((newYPanelSize >= yPanelSize) || (tmpXWidthCalc  >= xPanelSize))
-			{
-				yPanelSize = newYPanelSize + 1;
-				xPanelSize = tmpXWidthCalc + 1;
-				
-				revalidate();
-			}*/
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FDWP03");
+			jRacy.systemError(null, "MDWP03");
 		}
 		
 		
@@ -1141,7 +1070,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Change Mapping Color"))
+				if(arg.equals("Change Function Color"))
 				{	
 					GlobalMapping globalMappingReference = jRacy.staticSystemData.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
@@ -1171,7 +1100,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FDWP04");
+			jRacy.systemError(null, "MDWP04");
 		}
 	}
 	
@@ -1189,7 +1118,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FDWP05");
+			jRacy.systemError(null, "MDWP05");
 		}
 	}
 	
@@ -1213,15 +1142,15 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	{
 		try
 		{
-			double sliderValue = (double) fDWindow.getSliderValue();
-			double sliderMultiple = fDWindow.getSliderMultiple();
+			double sliderValue = (double) mDWindow.getSliderValue();
+			double sliderMultiple = mDWindow.getSliderMultiple();
 			double result = 250*sliderValue*sliderMultiple;
 			
 			defaultBarLength = (int) result;
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FDWP06");
+			jRacy.systemError(null, "MDWP06");
 		}
 	}
 	//******************************
@@ -1252,7 +1181,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	private int	contextNumber = -1;
 	private int	threadNumber = -1;
 	
-	private MappingDataWindow fDWindow = null;
+	private MappingDataWindow mDWindow = null;
  	
  	private StaticMainWindowData sMWData = null;
  	

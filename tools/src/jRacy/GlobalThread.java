@@ -91,6 +91,21 @@ public class GlobalThread implements Serializable
 		return maxExclusivePercentValue;
 	}
 	
+	public void setMaxNumberOfCalls(int inInt){
+		maxNumberOfCalls = inInt;
+	}
+	
+	public int getMaxNumberOfCalls(){
+		return maxNumberOfCalls;
+	}
+	
+	public void setMaxNumberOfSubRoutines(int inInt){
+		maxNumberOfSubRoutines = inInt;
+	}
+	
+	public int getMaxNumberOfSubRoutines(){
+		return maxNumberOfSubRoutines;
+	}
 	
 	//Instance data.
 	Vector threadDataList;
@@ -101,5 +116,7 @@ public class GlobalThread implements Serializable
 	double maxExclusiveValue = 0;
 	double maxInclusivePercentValue = 0;
 	double maxExclusivePercentValue = 0;
+	int maxNumberOfCalls = 0;
+	int maxNumberOfSubRoutines = 0;
 	
 }

@@ -23,6 +23,7 @@ public class SavedPreferences implements Serializable
 	
 	private Color highlightColor = null;
 	private Color groupHighlightColor = null;
+	private Color uEHC = null;
 	private Color miscMappingsColor = null;
 	private int barSpacing = -1;
 	private int barHeight = -1;
@@ -80,6 +81,16 @@ public class SavedPreferences implements Serializable
 	public Color getGroupHighlightColor()
 	{
 		return groupHighlightColor;
+	}
+	
+	public void setUEHC(Color inUEHC)
+	{
+		uEHC = inUEHC;
+	}
+	
+	public Color getUEHC()
+	{
+		return uEHC;
 	}
 	
 	public void setMiscMappingsColor(Color inMiscMappingsColor)

@@ -64,7 +64,42 @@ public class SMWMeanDataElement implements Comparable
 		return globalMappingReference.isGroupMember(mappingID, inGroupID, 0);
 	}
 	
-	public int compareTo(Object inObject)
+	public int compareTo(Object inObject){
+		
+		double tmpDouble = 0;
+		
+		switch(sortSetting){
+			case(1):
+				return ((((SMWMeanDataElement)inObject).getMappingID()) - mappingID);
+			case(2):
+				return (mappingID - (((SMWMeanDataElement)inObject).getMappingID()));
+			case(3):
+				return (((SMWMeanDataElement) inObject).getMappingName()).compareTo(this.getMappingName());
+			case(4):
+				return (this.getMappingName()).compareTo(((SMWThreadDataElement)inObject).getMappingName());
+			case(5):
+				tmpDouble = (value - (((SMWMeanDataElement)inObject).getValue()));
+				if(tmpDouble < 0.00)
+					return 1;
+				else if(tmpDouble == 0.00)
+					return 0;
+				else
+					return -1;
+			case(6):
+				tmpDouble = (value - (((SMWMeanDataElement)inObject).getValue()));
+				if(tmpDouble < 0.00)
+					return -1;
+				else if(tmpDouble == 0.00)
+					return 0;
+				else
+					return 1;
+					
+			default:
+				return 0;
+			}
+	}
+	
+	public int testCompareTo(Object inObject)
 	{
 		//Note that list will never call to compare against mapping id.  This
 		//is because all the mappings are already sorted on the system.
@@ -154,6 +189,16 @@ public class SMWMeanDataElement implements Comparable
 		return tmpGME.getMeanTotalStatString();
 	}
 	
+	public double getMeanNumberOfCalls(){
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		return tmpGME.getMeanNumberOfCalls();
+	}
+	
+	public double getMeanNumberOfSubRoutines(){
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		return tmpGME.getMeanNumberOfSubRoutines();
+	}
+	
 	public String getTotalTotalStatString()
 	{
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
@@ -197,6 +242,10 @@ public class SMWMeanDataElement implements Comparable
 	public boolean isHighlighted()
 	{
 		return highlighted;
+	}
+	
+	public void setSortSetting(int inInt){
+		sortSetting = inInt;
 	}
 	
 	public void setSortByMappingID()
@@ -247,6 +296,8 @@ public class SMWMeanDataElement implements Comparable
 	
 	//Boolean indicating whether or not this object is highlighted.
 	boolean highlighted = false;
+	
+	int sortSetting = 0;
 	
 	boolean sortByMappingID;
 	boolean sortByName;

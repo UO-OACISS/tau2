@@ -15,9 +15,13 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
+import java.awt.print.*;
+import java.awt.geom.*;
+//import javax.print.*;
 
 
-public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener
+public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, PopupMenuListener
+
 {
 	//******************************
 	//Instance data.
@@ -30,6 +34,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	//**********
 	//Popup menu definitions.
 	private JPopupMenu popup = new JPopupMenu();
+	private JPopupMenu popup2 = new JPopupMenu();
+	
+	JMenuItem tUESWItem = new JMenuItem("Show Total User Event Statistics Windows");
+	
 	//**********
 	
 	//**********
@@ -50,6 +58,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	int serverCounter = 0;
 	int contextCounter = 0;
 	int threadCounter = 0;
+	int serverNumber = 0;
+	int contextNumber = 0;
+	int threadNumber = 0;
 	int sMWThreadDataElementCounter = 0;
 	int colorCounter = 0;
 	//End - Convenient counters.
@@ -96,7 +107,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	{
 		try{
 			//Set the default tool tip for this panel.
-			this.setToolTipText("Racy bar graph draw window!");
+			this.setToolTipText("jRacy bar graph draw window!");
 			setBackground(Color.white);
 			
 			//Add this object as a mouse listener.
@@ -106,12 +117,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			sMWindow = inSMW;
 			barXStart = 100;
 			
-			//Add items to the popu menu.
-			JMenuItem mappingDetailsItem = new JMenuItem("Show Mapping Details");
+			//Add items to the first popup menu.
+			JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
 			mappingDetailsItem.addActionListener(this);
 			popup.add(mappingDetailsItem);
 			
-			JMenuItem changeColorItem = new JMenuItem("Change Mapping Color");
+			JMenuItem changeColorItem = new JMenuItem("Change Function Color");
 			changeColorItem.addActionListener(this);
 			popup.add(changeColorItem);
 			
@@ -119,13 +130,24 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			maskMappingItem.addActionListener(this);
 			popup.add(maskMappingItem);
 			
-			JMenuItem highlightMappingItem = new JMenuItem("Highlight this Mapping");
+			JMenuItem highlightMappingItem = new JMenuItem("Highlight this Function");
 			highlightMappingItem.addActionListener(this);
 			popup.add(highlightMappingItem);
 			
-			JMenuItem unHighlightMappingItem = new JMenuItem("Un-Highlight this Mapping");
+			JMenuItem unHighlightMappingItem = new JMenuItem("Un-Highlight this Function");
 			unHighlightMappingItem.addActionListener(this);
 			popup.add(unHighlightMappingItem);
+			
+			//Add items to the second popup menu.
+			popup2.addPopupMenuListener(this);
+			
+			JMenuItem tSWItem = new JMenuItem("Show Total Statistics Windows");
+			tSWItem.addActionListener(this);
+			popup2.add(tSWItem);
+			
+			tUESWItem = new JMenuItem("Show Total User Event Statistics Windows");
+			tUESWItem.addActionListener(this);
+			popup2.add(tUESWItem);
 		}
 		catch(Exception e)
 		{
@@ -178,7 +200,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 									jRacy.helpWindow.writeText("");
 									jRacy.helpWindow.writeText("Using either the right or left mouse buttons, click once" +
 															  " to display more detailed data about the" +
-															  " mean values for the mappings in the system.");
+															  " mean values for the functions in the system.");
 								}
 								
 								//Return a string indicating that clicking before the display bar
@@ -197,10 +219,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 									//Now send the help info.
 									jRacy.helpWindow.writeText("Your mouse is over the mean draw bar!");
 									jRacy.helpWindow.writeText("");
-									jRacy.helpWindow.writeText("Current mapping name is: " + sMWMeanDataElement.getMappingName());
+									jRacy.helpWindow.writeText("Current function name is: " + sMWMeanDataElement.getMappingName());
 									jRacy.helpWindow.writeText("");
 									jRacy.helpWindow.writeText("The mean draw bars give a visual representation of the" +
-															  " mean values for the mappings which have run in the system." +
+															  " mean values for the functions which have run in the system." +
 															  "  The funtions are assigned a color from the current" +
 															  " jRacy color set.  The colors are cycled through when the" +
 															  " number of funtions exceeds the number of available" +
@@ -225,17 +247,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 								jRacy.helpWindow.clearText();
 								
 								//Now send the help info.
-								jRacy.helpWindow.writeText("Your mouse is over the misc. mapping section!");
+								jRacy.helpWindow.writeText("Your mouse is over the misc. function section!");
 								jRacy.helpWindow.writeText("");
-								jRacy.helpWindow.writeText("These are mappings which have a non zero value," +
+								jRacy.helpWindow.writeText("These are functions which have a non zero value," +
 																					" but whose screen representation is less than a pixel.");
 								jRacy.helpWindow.writeText("");
-								jRacy.helpWindow.writeText("To view these mappings, right or left click to the left of" +
+								jRacy.helpWindow.writeText("To view these functions, right or left click to the left of" +
 																					" this bar to bring up windows which will show more detailed information.");
 							}
 							
 							//Return the name of the mapping in the current thread data object.
-							return "Misc mapping section ... see help window for details";
+							return "Misc function section ... see help window for details";
 						}
 					}
 				}
@@ -319,10 +341,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 																//Now send the help info.
 																jRacy.helpWindow.writeText("Your mouse is over one of the thread draw bars!");
 																jRacy.helpWindow.writeText("");
-																jRacy.helpWindow.writeText("Current mapping name is: " + sMWThreadDataElement.getMappingName());
+																jRacy.helpWindow.writeText("Current function name is: " + sMWThreadDataElement.getMappingName());
 																jRacy.helpWindow.writeText("");
 																jRacy.helpWindow.writeText("The thread draw bars give a visual representation" +
-																						  " mappings which have run on this thread." +
+																						  " functions which have run on this thread." +
 																						  "  The funtions are assigned a color from the current" +
 																						  " Racy color set.  The colors are cycled through when the" +
 																						  " number of funtions exceeds the number of available" +
@@ -360,17 +382,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 														jRacy.helpWindow.clearText();
 														
 														//Now send the help info.
-														jRacy.helpWindow.writeText("Your mouse is over the misc. mapping section!");
+														jRacy.helpWindow.writeText("Your mouse is over the misc. function section!");
 														jRacy.helpWindow.writeText("");
-														jRacy.helpWindow.writeText("These are mappings which have a non zero value," +
+														jRacy.helpWindow.writeText("These are functions which have a non zero value," +
 																											" but whose screen representation is less than a pixel.");
 														jRacy.helpWindow.writeText("");
-														jRacy.helpWindow.writeText("To view these mappings, right or left click to the left of" +
+														jRacy.helpWindow.writeText("To view these functions, right or left click to the left of" +
 																					" this bar to bring up windows which will show more detailed information.");
 													}
 													
 													//Return the name of the mapping in the current thread data object.
-													return "Misc mapping section ... see help window for details";
+													return "Misc function section ... see help window for details";
 												}
 											}
 											return S;
@@ -385,8 +407,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							return S;
 						}
 						//End if statement!
-					} 
-				
+					}
 				
 				//If here, means that we are not on one of the bars and so return the default string.
 				return S;
@@ -420,7 +441,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Show Mapping Details"))
+				if(arg.equals("Show Function Details"))
 				{
 					
 					if(clickedOnObject instanceof SMWThreadDataElement)
@@ -428,7 +449,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						tmpSMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWThreadDataElement.getMappingID());
-						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWThreadDataElement.getMappingName(), (sMWindow.getSMWData()));
+						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
 						jRacy.systemEvents.addObserver(tmpRef);
 						tmpRef.show();
 					}
@@ -437,12 +458,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						tmpSMWMeanDataElement = (SMWMeanDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 						jRacy.clrChooser.setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
-						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWMeanDataElement.getMappingName(), (sMWindow.getSMWData()));
+						MappingDataWindow tmpRef = new MappingDataWindow(tmpSMWMeanDataElement.getMappingID(), (sMWindow.getSMWData()));
 						jRacy.systemEvents.addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
-				else if(arg.equals("Change Mapping Color"))
+				else if(arg.equals("Change Function Color"))
 				{	
 					int mappingID = -1;
 					
@@ -485,7 +506,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					tmpGME.setColorFlag(false);
 					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
 				}
-				else if(arg.equals("Highlight this Mapping"))
+				else if(arg.equals("Highlight this Function"))
 				{		
 					int mappingID = -1;
 					
@@ -500,6 +521,20 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				else if(arg.equals("Un-Highlight this Mapping"))
 				{		
 					jRacy.clrChooser.setHighlightColorMappingID(-1);
+				}
+				else if(arg.equals("Show Total Statistics Windows"))
+				{
+					TotalStatWindow tmpRef = new TotalStatWindow(serverNumber, contextNumber,
+																 threadNumber, sMWindow.getSMWData());
+					jRacy.systemEvents.addObserver(tmpRef);
+					tmpRef.show();
+				}
+				else if(arg.equals("Show Total User Event Statistics Windows"))
+				{
+					TotalStatUEWindow tmpRef = new TotalStatUEWindow(serverNumber, contextNumber,
+																 threadNumber, sMWindow.getSMWData());
+					jRacy.systemEvents.addObserver(tmpRef);
+					tmpRef.show();
 				}
 			}
 		}
@@ -585,7 +620,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							{
 								
 								jRacy.clrChooser.setHighlightColorMappingID(sMWMeanDataElement.getMappingID());
-								MappingDataWindow tmpRef = new MappingDataWindow(sMWMeanDataElement.getMappingName(), (sMWindow.getSMWData()));
+								MappingDataWindow tmpRef = new MappingDataWindow(sMWMeanDataElement.getMappingID(), (sMWindow.getSMWData()));
 								jRacy.systemEvents.addObserver(tmpRef);
 								tmpRef.show();
 							}
@@ -647,10 +682,16 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 													}
 													else
 													{
-														TotalStatWindow tmpRef = new TotalStatWindow(serverCounter, contextCounter,
+														popup2.show(this, evt.getX(), evt.getY());
+														serverNumber = serverCounter;
+														contextNumber = contextCounter;
+														threadNumber = threadCounter;
+														return;
+														
+														/*TotalStatWindow tmpRef = new TotalStatWindow(serverCounter, contextCounter,
 																								   threadCounter, sMWindow.getSMWData());
 														jRacy.systemEvents.addObserver(tmpRef);
-														tmpRef.show();
+														tmpRef.show();*/
 													}
 											}
 											//Return from this function.
@@ -675,7 +716,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 													else
 													{
 														jRacy.clrChooser.setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
-														MappingDataWindow tmpRef = new MappingDataWindow(sMWThreadDataElement.getMappingName(), (sMWindow.getSMWData()));
+														MappingDataWindow tmpRef = new MappingDataWindow(sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
 														jRacy.systemEvents.addObserver(tmpRef);
 														tmpRef.show();
 													}
@@ -1251,20 +1292,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 								}
 							}
 							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-								
-							
 							//We have reached the end of the cycle for this thread.  However, we might be less
 							//than the max length of the bar.  Therefore, fill in the rest of the bar with the
 							//misc. mapping colour.
@@ -1327,6 +1354,635 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			jRacy.systemError(null, "SMWP06");
 		}
 	}
+	
+	public int print(Graphics g, PageFormat pf, int page){
+		
+		if(pf.getOrientation() == PageFormat.PORTRAIT)
+			System.out.println("PORTRAIT");
+		else if(pf.getOrientation() == PageFormat.LANDSCAPE)
+			System.out.println("LANDSCAPE");
+		
+		if(page >=1)
+			return Printable.NO_SUCH_PAGE;
+		Graphics2D g2 = (Graphics2D)g;
+		g2.translate(pf.getImageableX(), pf.getImageableY());
+		g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
+		
+		drawPage(g2);
+		
+		return Printable.PAGE_EXISTS;
+	}
+	
+	public void drawPage(Graphics2D g){
+	
+		try
+		{
+			//Set the numberOfColors variable.
+			numberOfColors = jRacy.clrChooser.getNumberOfColors();
+			
+			//Check to see if selected groups only are being displayed.
+			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+			
+			boolean isSelectedGroupOn = false;
+			int selectedGroupID = 0;
+			
+			if(tmpGM.getIsSelectedGroupOn()){
+				isSelectedGroupOn = true;
+				selectedGroupID = tmpGM.getSelectedGroupID();
+			} 
+			
+			if(sMWindow.isDataLoaded())
+			{	
+				//**********
+				//Reset the counters.
+				serverCounter = contextCounter = threadCounter = sMWThreadDataElementCounter = colorCounter = 0;
+				//End - Reset the counters.
+				//**********
+				
+				//**********
+				//Other initializations.
+				highlighted = false;
+				xCoord = yCoord = 0;
+				//End - Other initializations.
+				//**********
+				
+				//**********
+				//Do the standard font and spacing stuff.
+				if(!(jRacy.jRacyPreferences.areBarDetailsSet()))
+				{
+					
+					//Create font.
+					Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), 12);
+					g.setFont(font);
+					FontMetrics fmFont = g.getFontMetrics(font);
+					
+					//Set up the bar details.
+					
+					//Compute the font metrics.
+					int maxFontAscent = fmFont.getAscent();
+					int maxFontDescent = fmFont.getMaxDescent();
+					
+					int tmpInt = maxFontAscent + maxFontDescent;
+					
+					jRacy.jRacyPreferences.setBarDetails(maxFontAscent, (tmpInt + 5));
+					
+					jRacy.jRacyPreferences.setSliders(maxFontAscent, (tmpInt + 5));
+				}
+				//End - Do the standard font and spacing stuff.
+				//**********
+				
+				//Set local spacing and bar heights.
+				int barSpacing = jRacy.jRacyPreferences.getBarSpacing();
+				int barHeight = jRacy.jRacyPreferences.getBarHeight();
+				
+				//Create font.
+				Font font = new Font(jRacy.jRacyPreferences.getJRacyFont(), jRacy.jRacyPreferences.getFontStyle(), barHeight);
+				g.setFont(font);
+				FontMetrics fmFont = g.getFontMetrics(font);
+				
+				
+				//**********
+				//Calculating the starting positions of drawing.
+				String tmpString2 = new String("n,c,t 99,99,99");
+				int stringWidth = fmFont.stringWidth(tmpString2);
+				barXStart = stringWidth + 15;
+				int tmpXWidthCalc = barXStart + defaultBarLength;
+				int barXCoord = barXStart;
+				yCoord = yCoord + (barSpacing);
+				//End - Calculating the starting positions of drawing.
+				//**********
+				
+				//**********
+				//Draw the counter name if required.
+				counterName = jRacy.staticSystemData.getCounterName();
+				if(counterName != null){
+					g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
+					yCoord = yCoord + (barSpacing);
+				}
+				//End - Draw the counter name if required.
+				//**********
+				
+				yCoord = yCoord + (barSpacing);
+				
+				//**********
+				//Drawing the mean bar.
+				String meanString = "Mean";
+				int tmpMeanStringWidth = fmFont.stringWidth(meanString);
+				g.drawString(meanString, (barXStart - tmpMeanStringWidth - 5), yCoord);
+				
+				//Now draw the bar of values.
+				
+				//Cycle through the mean data values to get the total.
+				tmpSum = 0.0;
+				for(Enumeration gM1 = (sMWindow.getSMWMeanData()).elements(); gM1.hasMoreElements() ;)
+				{
+					sMWMeanDataElement = (SMWMeanDataElement) gM1.nextElement();
+					tmpSum = tmpSum + (sMWMeanDataElement.getValue());
+				}
+				
+				//Now that we have the total, can begin drawing.
+				colorCounter = 0;
+				barXCoord = barXStart;
+				for(Enumeration gM2 = (sMWindow.getSMWMeanData()).elements(); gM2.hasMoreElements() ;)
+				{
+					sMWMeanDataElement = (SMWMeanDataElement) gM2.nextElement();
+					
+					tmpDataValue = sMWMeanDataElement.getValue();
+					
+					if(tmpDataValue > 0.0)		//Don't want to draw a bar if the value is zero.
+					{
+						//Now compute the length of the bar for this object.
+						//The default length for the bar shall be 200.
+						int xLength;
+						double tmpDouble;
+						tmpDouble = (tmpDataValue / tmpSum);
+						xLength = (int) (tmpDouble * defaultBarLength);
+						
+						if(xLength > 2) 	//Only draw if there is something to draw.
+						{		
+							if(barHeight > 2)
+							{
+								tmpColor = sMWMeanDataElement.getMappingColor();
+								g.setColor(tmpColor);
+								g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+								
+								if((sMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+								{	
+									highlighted = true;
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+									g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else if((sMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									highlighted = true;
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+									g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+									g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+								}
+								else
+								{
+									g.setColor(Color.black);
+									if(highlighted)
+									{
+										//Manually draw in the lines for consistancy.
+										g.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
+										g.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
+										g.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
+										
+										//g.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
+										highlighted = false;
+									}
+									else
+									{
+										g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+									}
+								}
+								
+								//Set the draw coords.
+								sMWMeanDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+								
+								//Update barXCoord.
+								barXCoord = (barXCoord + xLength);
+							}
+							else
+							{
+								//Now set the color values for drawing!
+								//Get the appropriate color.
+								
+								if((sMWMeanDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+									g.setColor(jRacy.clrChooser.getHighlightColor());
+								else if((sMWMeanDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+								{
+									g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+								}
+								else
+								{
+									tmpColor = sMWMeanDataElement.getMappingColor();
+									g.setColor(tmpColor);
+								}
+								g.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+								g.setColor(Color.black);
+								g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+								
+								//Set the draw coords.
+								sMWMeanDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+								
+								//Update barXCoord.
+								barXCoord = (barXCoord + xLength);
+							}
+						}
+						
+						//Still want to set the draw coords for this mapping, were it to be none zero.
+						//This aids in mouse click and tool tip events.
+						sMWMeanDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+						
+					}
+					else
+					{
+						//Still want to set the draw coords for this mapping, were it to be none zero.
+						//This aids in mouse click and tool tip events.
+						sMWMeanDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+					}
+						
+						
+					
+					colorCounter = (colorCounter + 1) % numberOfColors;		//Want to cycle to the next color
+																//whether we have drawn or not.
+																
+				}
+				
+				//We have reached the end of the cycle for this thread.  However, we might be less
+				//than the max length of the bar.  Therefore, fill in the rest of the bar with the
+				//misc. mapping colour.
+				if(barXCoord < (defaultBarLength + barXStart))
+				{
+					g.setColor(jRacy.clrChooser.getMiscMappingsColor());
+					g.fillRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
+					g.setColor(Color.black);
+					g.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
+				}
+				//End - Drawing the mean bar.
+				//**********
+					
+				
+				//Set the drawing color to the text color ... in this case, black.
+				g.setColor(Color.black);
+				
+				
+				
+				
+				//**********
+				//Draw the thread data bars.
+				
+				//Setting the server counter to zero ... not that it is really required.
+				serverCounter = 0;
+				for(Enumeration e1 = (sMWindow.getSMWGeneralData()).elements(); e1.hasMoreElements() ;)
+				{
+					//Get the next server.
+					sMWServer = (SMWServer) e1.nextElement();
+					
+					//Get the context list for this server.
+					contextList = sMWServer.getContextList();
+					
+					//Setting the context counter to zero ... this is really required.
+					contextCounter = 0;
+					for(Enumeration e2 = contextList.elements(); e2.hasMoreElements() ;)
+					{
+						//Get the next context.
+						sMWContext = (SMWContext) e2.nextElement();
+						
+						//Get the thread list for this context.
+						threadList = sMWContext.getThreadList();
+						
+						//Setting the context counter to zero ... this is really required as well. :-)
+						threadCounter = 0;
+						for(Enumeration e3 = threadList.elements(); e3.hasMoreElements() ;)
+						{
+							//Reset the highlighted boolean.
+							highlighted = false;
+							
+							//For consistancy in drawing, the y coord is updated at the beggining of the loop.
+							yCoord = yCoord + (barSpacing);
+							
+							//Get the current thread object.
+							sMWThread = (SMWThread) e3.nextElement();
+							
+							//Draw the n,c,t string to the left of the bar start position.
+							String s1 = "n,c,t   " + serverCounter + "," + contextCounter + "," + threadCounter;
+							int tmpStringWidth = fmFont.stringWidth(s1);
+							g.drawString(s1, (barXStart - tmpStringWidth - 5), yCoord);
+							
+							//Now, at last, draw some data.getThreadDataList()
+							threadDataList = sMWThread.getThreadDataList();
+							//Cycle through the data values for this thread to get the total.
+							tmpSum = 0.00;
+							
+							if(!isSelectedGroupOn){
+								for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
+									sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+									tmpSum = tmpSum + (sMWThreadDataElement.getValue());
+								}
+							}
+							else{
+								for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
+									sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+									if(sMWThreadDataElement.isGroupMember(selectedGroupID))
+										tmpSum = tmpSum + (sMWThreadDataElement.getValue());
+								}
+							}
+							
+							//Now that we have the total, can begin drawing.
+							colorCounter = 0;
+							barXCoord = barXStart;
+							if(!isSelectedGroupOn){
+								for(Enumeration e5 = threadDataList.elements(); e5.hasMoreElements() ;)
+								{
+									//@@@@1
+									sMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
+									//@@@@2
+									tmpDataValue = sMWThreadDataElement.getValue();
+									if(tmpDataValue > 0.0)		//Don't want to draw a bar if the value is zero.
+									{
+										//Now compute the length of the bar for this object.
+										//The default length for the bar shall be 200.
+										int xLength;
+										double tmpDouble;
+										tmpDouble = (tmpDataValue / tmpSum);
+										xLength = (int) (tmpDouble * defaultBarLength);
+										if(xLength > 2) 	//Only draw if there is something to draw.
+										{		
+											if(barHeight > 2)
+											{
+												tmpColor = sMWThreadDataElement.getMappingColor();
+												g.setColor(tmpColor);
+												g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+												
+												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												{	
+													highlighted = true;
+													g.setColor(jRacy.clrChooser.getHighlightColor());
+													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+												}
+												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												{
+													highlighted = true;
+													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+												}
+												else
+												{
+													g.setColor(Color.black);
+													if(highlighted)
+													{
+														//Manually draw in the lines for consistancy.
+														g.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
+														g.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
+														g.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
+														
+														//g.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
+														highlighted = false;
+													}
+													else
+													{
+														g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													}
+												}
+												
+												//Set the draw coords.
+												sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+												
+												//Update barXCoord.
+												barXCoord = (barXCoord + xLength);
+											}
+											else
+											{
+												//Now set the color values for drawing!
+												//Get the appropriate color.
+												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+													g.setColor(jRacy.clrChooser.getHighlightColor());
+												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												{
+													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+												}
+												else
+												{
+													tmpColor = sMWThreadDataElement.getMappingColor();
+													g.setColor(tmpColor);
+												}
+												
+												g.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												g.setColor(Color.black);
+												g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												
+												//Set the draw coords.
+												sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+												
+												//Update barXCoord.
+												barXCoord = (barXCoord + xLength);
+											}
+												
+										}
+										
+										//Still want to set the draw coords for this mapping, were it to be none zero.
+										//This aids in mouse click and tool tip events.
+										sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+										
+									}
+									else
+									{
+										//Still want to set the draw coords for this mapping, were it to be none zero.
+										//This aids in mouse click and tool tip events.
+										sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+									}
+										
+										
+									
+									colorCounter = (colorCounter + 1) % numberOfColors;		//Want to cycle to the next color
+																				//whether we have drawn or not.
+																				
+								}
+							}
+							else{
+								for(Enumeration e5 = threadDataList.elements(); e5.hasMoreElements() ;)
+								{
+									sMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
+									tmpDataValue = sMWThreadDataElement.getValue();
+									if((tmpDataValue > 0.0) && (sMWThreadDataElement.isGroupMember(selectedGroupID)))		//Don't want to draw a bar if the
+																															//value is zero or this group is
+																															//not being displayed.
+									{
+										//Now compute the length of the bar for this object.
+										//The default length for the bar shall be 200.
+										int xLength;
+										double tmpDouble;
+										tmpDouble = (tmpDataValue / tmpSum);
+										xLength = (int) (tmpDouble * defaultBarLength);
+										if(xLength > 2) 	//Only draw if there is something to draw.
+										{		
+											if(barHeight > 2)
+											{
+												tmpColor = sMWThreadDataElement.getMappingColor();
+												g.setColor(tmpColor);
+												g.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+												
+												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+												{	
+													highlighted = true;
+													g.setColor(jRacy.clrChooser.getHighlightColor());
+													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+												}
+												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												{
+													highlighted = true;
+													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+													g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													g.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+												}
+												else
+												{
+													g.setColor(Color.black);
+													if(highlighted)
+													{
+														//Manually draw in the lines for consistancy.
+														g.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
+														g.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
+														g.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
+														
+														//g.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
+														highlighted = false;
+													}
+													else
+													{
+														g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+													}
+												}
+												
+												//Set the draw coords.
+												sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+												
+												//Update barXCoord.
+												barXCoord = (barXCoord + xLength);
+											}
+											else
+											{
+												//Now set the color values for drawing!
+												//Get the appropriate color.
+												if((sMWThreadDataElement.getMappingID()) == (jRacy.clrChooser.getHighlightColorMappingID()))
+													g.setColor(jRacy.clrChooser.getHighlightColor());
+												else if((sMWThreadDataElement.isGroupMember(jRacy.clrChooser.getGHCMID())))
+												{
+													g.setColor(jRacy.clrChooser.getGroupHighlightColor());
+												}
+												else
+												{
+													tmpColor = sMWThreadDataElement.getMappingColor();
+													g.setColor(tmpColor);
+												}
+												
+												g.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												g.setColor(Color.black);
+												g.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+												
+												//Set the draw coords.
+												sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+												
+												//Update barXCoord.
+												barXCoord = (barXCoord + xLength);
+											}
+												
+										}
+										
+										//Still want to set the draw coords for this mapping, were it to be none zero.
+										//This aids in mouse click and tool tip events.
+										sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+										
+									}
+									else
+									{
+										//Still want to set the draw coords for this mapping, were it to be none zero.
+										//This aids in mouse click and tool tip events.
+										sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+									}
+										
+										
+									
+									colorCounter = (colorCounter + 1) % numberOfColors;		//Want to cycle to the next color
+																				//whether we have drawn or not.
+																				
+								}
+							}
+							
+						
+							//We have reached the end of the cycle for this thread.  However, we might be less
+							//than the max length of the bar.  Therefore, fill in the rest of the bar with the
+							//misc. mapping colour.
+							if(barXCoord < (defaultBarLength + barXStart))
+							{
+								g.setColor(jRacy.clrChooser.getMiscMappingsColor());
+								g.fillRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
+								g.setColor(Color.black);
+								g.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
+							}
+							
+							//Reset the drawing color to the text color ... in this case, black.
+							g.setColor(Color.black);
+							
+							//We are about to move on to drawing the next thread.  Thus, record the
+							//max y draw value for this thread.
+							sMWThread.setYDrawCoord(yCoord);
+							
+							//Update the thread counter.
+							threadCounter++;
+							
+						}
+						//We are about to move on to drawing the next context.  Thus, record the
+						//max y draw value for this context.
+						sMWContext.setYDrawCoord(yCoord);
+						
+						//Update the context counter.
+						contextCounter++;
+					}
+					
+					//We are about to move on to drawing the next server.  Thus, record the
+					//max y draw value for this server.
+					sMWServer.setYDrawCoord(yCoord);
+					
+					//Update the server counter.
+					serverCounter++;
+				}
+				
+				
+				boolean sizeChange = false;		
+				//Resize the panel if needed.
+				if(tmpXWidthCalc > 600){
+					xPanelSize = tmpXWidthCalc + 1;
+					sizeChange = true;
+				}
+				
+				if(yCoord > 300){
+					yPanelSize = yCoord + 1;
+					sizeChange = true;
+				}
+				
+				if(sizeChange)
+					revalidate();
+			}
+			//End - Draw the thread data bars.
+			//**********
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "SMWP06");
+		}
+	}
+	
+	//******************************
+	//PopupMenuListener code.
+	//******************************
+	public void popupMenuWillBecomeVisible(PopupMenuEvent evt){
+		try
+		{
+			if(jRacy.staticSystemData.userEventsPresent()){
+				tUESWItem.setEnabled(true);
+			}
+			else{
+				tUESWItem.setEnabled(false);
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "SMW03");
+		}
+	}
+	public void popupMenuWillBecomeInvisible(PopupMenuEvent evt){}
+	public void popupMenuCanceled(PopupMenuEvent evt){}
+	//******************************
+	//End - PopupMenuListener code.
+	//****************************** 
 	
 	public void changeInMultiples()
 	{

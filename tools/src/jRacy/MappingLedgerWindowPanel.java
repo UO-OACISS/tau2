@@ -36,7 +36,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLWP01");
+			jRacy.systemError(null, "MLWP01");
 		}
 	
 	}
@@ -56,14 +56,26 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			if(mappingSelection == 0)
 			{
 				//Add items to the popu menu.
-				JMenuItem mappingDetailsItem = new JMenuItem("Show Mapping Details");
+				JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
 				mappingDetailsItem.addActionListener(this);
 				popup.add(mappingDetailsItem);
+				
+				JMenuItem changeColorItem = new JMenuItem("Change Function Color");
+				changeColorItem.addActionListener(this);
+				popup.add(changeColorItem);
 			}
 			
-			JMenuItem changeColorItem = new JMenuItem("Change Mapping Color");
-			changeColorItem.addActionListener(this);
-			popup.add(changeColorItem);
+			if(mappingSelection == 2)
+			{
+				//Add items to the popu menu.
+				JMenuItem mappingDetailsItem = new JMenuItem("Show User Event Details");
+				mappingDetailsItem.addActionListener(this);
+				popup.add(mappingDetailsItem);
+				
+				JMenuItem changeColorItem = new JMenuItem("Change User Event Color");
+				changeColorItem.addActionListener(this);
+				popup.add(changeColorItem);
+			}
 			
 			JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
 			maskMappingItem.addActionListener(this);
@@ -72,17 +84,17 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			if(mappingSelection == 1)
 			{
 				//Add items to the popu menu.
-				JMenuItem showThisMappingOnlyItem = new JMenuItem("Show This Group Mapping Only");
+				JMenuItem showThisMappingOnlyItem = new JMenuItem("Show This Group Only");
 				showThisMappingOnlyItem.addActionListener(this);
 				popup.add(showThisMappingOnlyItem);
 				
 				//Add items to the popu menu.
-				JMenuItem showAllButMappingsItem = new JMenuItem("Show All Groups Mappings Except This One");
+				JMenuItem showAllButMappingsItem = new JMenuItem("Show All Groupss Except This One");
 				showAllButMappingsItem.addActionListener(this);
 				popup.add(showAllButMappingsItem);
 				
 				//Add items to the popu menu.
-				JMenuItem showAllMappingsItem = new JMenuItem("Show All Group Mappings");
+				JMenuItem showAllMappingsItem = new JMenuItem("Show All Groups");
 				showAllMappingsItem.addActionListener(this);
 				popup.add(showAllMappingsItem);
 			}
@@ -97,7 +109,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLWP02");
+			jRacy.systemError(null, "MLWP02");
 		}
 		
 		
@@ -194,7 +206,21 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						g.fillRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 						
 						
-						if(mappingSelection == 1)
+						if(mappingSelection == 2)
+						{
+							if((globalMappingElement.getGlobalID()) == (jRacy.clrChooser.getUEHCMappingID()))
+							{
+								g.setColor(jRacy.clrChooser.getUEHC());
+								g.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
+								g.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
+							}
+							else
+							{
+								g.setColor(Color.black);
+								g.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
+							}
+						}
+						else if(mappingSelection == 1)
 						{
 							if((globalMappingElement.getGlobalID()) == (jRacy.clrChooser.getGHCMID()))
 							{
@@ -265,7 +291,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLWP03");
+			jRacy.systemError(null, "MLWP03");
 		}
 		
 	}
@@ -281,7 +307,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			if(EventSrc instanceof JMenuItem)
 			{
 				String arg = evt.getActionCommand();
-				if(arg.equals("Show Mapping Details"))
+				if(arg.equals("Show Function Details"))
 				{
 					
 					if(clickedOnObject instanceof GlobalMappingElement)
@@ -289,12 +315,25 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 						jRacy.clrChooser.setHighlightColorMappingID(tmpGlobalMappingElement.getGlobalID());
-						MappingDataWindow tmpRef = new MappingDataWindow(tmpGlobalMappingElement.getMappingName(), jRacy.staticMainWindow.getSMWData());
+						MappingDataWindow tmpRef = new MappingDataWindow(tmpGlobalMappingElement.getGlobalID(), jRacy.staticMainWindow.getSMWData());
 						jRacy.systemEvents.addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
-				else if(arg.equals("Change Mapping Color"))
+				else if(arg.equals("Show User Event Details"))
+				{
+					
+					if(clickedOnObject instanceof GlobalMappingElement)
+					{
+						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
+						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
+						jRacy.clrChooser.setUEHCMappingID(tmpGlobalMappingElement.getGlobalID());
+						UserEventWindow tmpRef = new UserEventWindow(tmpGlobalMappingElement.getGlobalID(), jRacy.staticMainWindow.getSMWData());
+						jRacy.systemEvents.addObserver(tmpRef);
+						tmpRef.show();
+					}
+				}
+				else if((arg.equals("Change Function Color")) || (arg.equals("Change User Event Color")))
 				{	
 					if(clickedOnObject instanceof GlobalMappingElement)
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
@@ -321,7 +360,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					
 					jRacy.systemEvents.updateRegisteredObjects("colorEvent");
 				}
-				else if(arg.equals("Show This Group Mapping Only"))
+				else if(arg.equals("Show This Group Only"))
 				{	
 					
 					if(clickedOnObject instanceof GlobalMappingElement)
@@ -334,7 +373,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					
 					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
 				}
-				else if(arg.equals("Show All Groups Mappings Except This One"))
+				else if(arg.equals("Show All Groups Except This One"))
 				{	
 					
 					if(clickedOnObject instanceof GlobalMappingElement)
@@ -347,7 +386,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					
 					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
 				}
-				else if(arg.equals("Show All Group Mappings"))
+				else if(arg.equals("Show All Groups"))
 				{	
 					
 					if(clickedOnObject instanceof GlobalMappingElement)
@@ -364,7 +403,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLWP04");
+			jRacy.systemError(null, "MLWP04");
 		}
 	}
 	
@@ -402,7 +441,24 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						}
 						else
 						{
-							if(mappingSelection == 1)
+							if(mappingSelection == 2)
+							{
+								
+								//Want to set the clicked on mapping to the current highlight color or, if the one
+								//clicked on is already the current highlighted one, set it back to normal.
+								if((jRacy.clrChooser.getUEHCMappingID()) == -1)
+								{
+									jRacy.clrChooser.setUEHCMappingID(globalMappingElement.getGlobalID());
+								}
+								else
+								{
+									if(!((jRacy.clrChooser.getUEHCMappingID()) == (globalMappingElement.getGlobalID())))
+										jRacy.clrChooser.setUEHCMappingID(globalMappingElement.getGlobalID());
+									else
+										jRacy.clrChooser.setUEHCMappingID(-1);
+								}
+							}
+							else if(mappingSelection == 1)
 							{
 								
 								//Want to set the clicked on mapping to the current highlight color or, if the one
@@ -453,7 +509,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FLWP05");
+			jRacy.systemError(null, "MLWP05");
 		}
 	}
 	

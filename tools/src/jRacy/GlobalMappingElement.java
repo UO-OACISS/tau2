@@ -25,10 +25,8 @@ public class GlobalMappingElement implements Serializable
 		groups = new int[10];
 		numberOfGroups = 0;
 		colorFlag = false;
-		groupColorFlag = false;
 		genericMappingColor = null;
 		specificMappingColor = null;
-		Color groupMappingColor = null;
 		
 		meanExclusiveValue = 0.0;
 		totalExclusiveValue = 0.0;
@@ -104,19 +102,9 @@ public class GlobalMappingElement implements Serializable
 		colorFlag = inBoolean;
 	}
 	
-	public void setGroupColorFlag(boolean inBoolean)
-	{
-		groupColorFlag = inBoolean;
-	}
-	
 	public boolean isColorFlagSet()
 	{
 		return colorFlag;
-	}
-	
-	public boolean isGroupColorFlagSet()
-	{
-		return groupColorFlag;
 	}
 	
 	public void setGenericColor(Color inColor)
@@ -129,17 +117,9 @@ public class GlobalMappingElement implements Serializable
 		specificMappingColor = inColor;
 	}
 	
-	public void setGroupColor(Color inColor)
-	{
-		groupMappingColor = inColor;
-	}
-	
 	public Color getMappingColor()
 	{
-		//Group coloring takes priority.
-		if(groupColorFlag)
-			return groupMappingColor;
-		else if(colorFlag)
+		if(colorFlag)
 			return specificMappingColor;
 		else
 			return genericMappingColor;
@@ -212,6 +192,22 @@ public class GlobalMappingElement implements Serializable
 	public double getMeanInclusivePercentValue()
 	{
 		return meanInclusivePercentValue;
+	}
+	
+	public void setMeanNumberOfCalls(double inDouble){
+		meanNumberOfCalls = inDouble;
+	}
+	
+	public double getMeanNumberOfCalls(){
+		return meanNumberOfCalls;
+	}
+	
+	public void setMeanNumberOfSubRoutines(double inDouble){
+		meanNumberOfSubRoutines = inDouble;
+	}
+	
+	public double getMeanNumberOfSubRoutines(){
+		return meanNumberOfSubRoutines;
 	}
 	
 	public void setTotalInclusiveValue(double inTotalInclusiveValue)
@@ -335,6 +331,62 @@ public class GlobalMappingElement implements Serializable
 		return maxExclusivePercentValue;
 	}
 	
+	public void setMaxNumberOfCalls(int inInt){
+		maxNumberOfCalls = inInt;
+	}
+	
+	public int getMaxNumberOfCalls(){
+		return maxNumberOfCalls;
+	}
+	
+	public void setMaxNumberOfSubRoutines(int inInt){
+		maxNumberOfSubRoutines = inInt;
+	}
+	
+	public int getMaxNumberOfSubRoutines(){
+		return maxNumberOfSubRoutines;
+	}
+	
+	public void setMaxUserEventNumberValue(int inInt)
+	{
+		maxUserEventNumberValue = inInt;
+	}
+	
+	public int getMaxUserEventNumberValue()
+	{
+		return maxUserEventNumberValue;
+	}
+	
+	public void setMaxUserEventMinValue(double inDouble)
+	{
+		maxUserEventMinValue = inDouble;
+	}
+	
+	public double getMaxUserEventMinValue()
+	{
+		return maxUserEventMinValue;
+	}
+	
+	public void setMaxUserEventMaxValue(double inDouble)
+	{
+		maxUserEventMaxValue = inDouble;
+	}
+	
+	public double getMaxUserEventMaxValue()
+	{
+		return maxUserEventMaxValue;
+	}
+	
+	public void setMaxUserEventMeanValue(double inDouble)
+	{
+		maxUserEventMeanValue = inDouble;
+	}
+	
+	public double getMaxUserEventMeanValue()
+	{
+		return maxUserEventMeanValue;
+	}
+	
 	
 	//Total stat strings.
 	
@@ -369,10 +421,8 @@ public class GlobalMappingElement implements Serializable
 	
 	//Color Settings.
 	boolean colorFlag;
-	boolean groupColorFlag;
 	Color genericMappingColor;
 	Color specificMappingColor;
-	Color groupMappingColor;
 	
 	double maxInclusiveValue = 0;
 	double maxExclusiveValue = 0;
@@ -380,11 +430,20 @@ public class GlobalMappingElement implements Serializable
 	double maxExclusiveMicroValue = 0;
 	double maxInclusivePercentValue = 0;
 	double maxExclusivePercentValue = 0;
+	int maxNumberOfCalls = 0;
+	int maxNumberOfSubRoutines = 0;
+	
+	int maxUserEventNumberValue = 0;
+	double maxUserEventMinValue = 0;
+	double maxUserEventMaxValue = 0;
+	double maxUserEventMeanValue = 0;
 	
 	double meanExclusiveValue;
 	double totalExclusiveValue;
 	double meanExclusivePercentValue;
 	double totalExclusivePercentValue;
+	double meanNumberOfCalls = 0;
+	double meanNumberOfSubRoutines = 0;
 	
 	double meanInclusiveValue;
 	double totalInclusiveValue;

@@ -131,6 +131,22 @@ public class GlobalThreadDataElement implements Serializable
 		return exclusivePercentValue;
 	}
 	
+	public void setNumberOfCalls(int inInt){
+		numberOfCalls = inInt;
+	}
+	
+	public int getNumberOfCalls(){
+		return numberOfCalls;
+	}
+	
+	public void setNumberOfSubRoutines(int inInt){
+		numberOfSubRoutines = inInt;
+	}
+	
+	public int getNumberOfSubRoutines(){
+		return numberOfSubRoutines;
+	}
+	
 	public void setTStatString(String inString)
 	{
 		tStatString = inString;
@@ -142,14 +158,11 @@ public class GlobalThreadDataElement implements Serializable
 	}
 	
 	//User event interface.
-	public void setUserEventName(String inUserEventName)
-	{
-		userEventName = inUserEventName;
-	}
-	
 	public String getUserEventName()
 	{
-		return userEventName;
+		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
+		
+		return tmpGME.getMappingName();
 	}
 	
 	public void setUserEventID(int inUserEventID)
@@ -233,6 +246,8 @@ public class GlobalThreadDataElement implements Serializable
 	private double exclusivePercentValue;
 	private double inclusiveMicroValue;
 	private double exclusiveMicroValue;
+	int numberOfCalls = 0;
+	int numberOfSubRoutines = 0;
 	
 	//The total statics string.
 	String tStatString;

@@ -204,10 +204,174 @@ public class StaticMainWindowData
 	//Functions that return various sorted version of the data lists.
 	//
 	//********************************
+	public Vector getSMWMappingData(int inMappingID)
+	{
+		Vector tmpVector = new Vector();
+		Vector rtnVector = new Vector();
+		
+		
+		GlobalServer tmpGlobalServer;
+		GlobalContext tmpGlobalContext;
+		GlobalThread tmpGlobalThread;
+		GlobalThreadDataElement tmpGlobalThreadDataElement;
+		
+		SMWServer tmpSMWServer;
+		SMWContext tmpSMWContext;
+		SMWThread tmpSMWThread;
+		SMWThreadDataElement tmpSMWThreadDataElement;
+		SMWThreadDataElement tmpSMWUserThreadDataElement;
+		
+		
+		Vector tmpContextList;
+		Vector tmpThreadList;
+		Vector tmpThreadDataList;
+		
+		
+		//Get a reference to the global data.
+		tmpVector = jRacy.staticSystemData.getStaticServerList();
+		
+		for(Enumeration e1 = tmpVector.elements(); e1.hasMoreElements() ;)
+		{
+			tmpGlobalServer = (GlobalServer) e1.nextElement();
+			//Create a new sMWServer object and set the name properly.
+			tmpSMWServer = new SMWServer();
+			//Add the server.
+			rtnVector.addElement(tmpSMWServer);
+			
+			//Enter the context loop for this server.
+			tmpContextList = tmpGlobalServer.getContextList();
+				
+			for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
+			{
+				tmpGlobalContext = (GlobalContext) e2.nextElement();
+				
+				//Create a new context object and set the name properly.
+				tmpSMWContext = new SMWContext();
+				//Add to the server.
+				tmpSMWServer.addContext(tmpSMWContext);
+				
+					
+				//Enter the thread loop for this context.
+				tmpThreadList = tmpGlobalContext.getThreadList();
+				for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
+				{
+					tmpGlobalThread = (GlobalThread) e3.nextElement();
+					
+					//Create a new thread object.
+					tmpSMWThread = new SMWThread();
+					//Add to the context.
+					tmpSMWContext.addThread(tmpSMWThread);
+					
+					//Now enter the thread loop for this thread.
+					tmpThreadDataList = tmpGlobalThread.getThreadDataList();
+					
+					//Only want to add an the element with the correct mapping id.
+					tmpGlobalThreadDataElement = (GlobalThreadDataElement) tmpThreadDataList.elementAt(inMappingID);
+					
+					if(tmpGlobalThreadDataElement != null)
+					{
+						//Create a new thread data object.
+						tmpSMWThreadDataElement = new SMWThreadDataElement(tmpGlobalThreadDataElement);
+						
+						tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getMappingID());
+						
+						//Add to the thread data object.
+						tmpSMWThread.addThreadDataElement(tmpSMWThreadDataElement);
+					}
+				}
+			}
+		}
+		
+		return rtnVector;
+	}
+	
+	public Vector getSMWUserEventData(int inMappingID)
+	{
+		Vector tmpVector = new Vector();
+		Vector rtnVector = new Vector();
+		
+		
+		GlobalServer tmpGlobalServer;
+		GlobalContext tmpGlobalContext;
+		GlobalThread tmpGlobalThread;
+		GlobalThreadDataElement tmpGlobalThreadDataElement;
+		
+		SMWServer tmpSMWServer;
+		SMWContext tmpSMWContext;
+		SMWThread tmpSMWThread;
+		SMWThreadDataElement tmpSMWThreadDataElement;
+		SMWThreadDataElement tmpSMWUserThreadDataElement;
+		
+		
+		Vector tmpContextList;
+		Vector tmpThreadList;
+		Vector tmpThreadDataList;
+		
+		
+		//Get a reference to the global data.
+		tmpVector = jRacy.staticSystemData.getStaticServerList();
+		
+		for(Enumeration e1 = tmpVector.elements(); e1.hasMoreElements() ;)
+		{
+			tmpGlobalServer = (GlobalServer) e1.nextElement();
+			//Create a new sMWServer object and set the name properly.
+			tmpSMWServer = new SMWServer();
+			//Add the server.
+			rtnVector.addElement(tmpSMWServer);
+			
+			//Enter the context loop for this server.
+			tmpContextList = tmpGlobalServer.getContextList();
+				
+			for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
+			{
+				tmpGlobalContext = (GlobalContext) e2.nextElement();
+				
+				//Create a new context object and set the name properly.
+				tmpSMWContext = new SMWContext();
+				//Add to the server.
+				tmpSMWServer.addContext(tmpSMWContext);
+				
+					
+				//Enter the thread loop for this context.
+				tmpThreadList = tmpGlobalContext.getThreadList();
+				for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
+				{
+					tmpGlobalThread = (GlobalThread) e3.nextElement();
+					
+					//Create a new thread object.
+					tmpSMWThread = new SMWThread();
+					//Add to the context.
+					tmpSMWContext.addThread(tmpSMWThread);
+					
+					//Now enter the thread loop for this thread.
+					tmpThreadDataList = tmpGlobalThread.getUserThreadDataList();
+					
+					//Only want to add an the element with the correct mapping id.
+					tmpGlobalThreadDataElement = (GlobalThreadDataElement) tmpThreadDataList.elementAt(inMappingID);
+					
+					if(tmpGlobalThreadDataElement != null)
+					{
+						//Create a new thread data object.
+						tmpSMWThreadDataElement = new SMWThreadDataElement(tmpGlobalThreadDataElement);
+						
+						tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getUserEventID());
+						
+						//Add to the thread data object.
+						tmpSMWThread.addThreadDataElement(tmpSMWThreadDataElement);
+					}
+				}
+			}
+		}
+		
+		return rtnVector;
+	}
+	
 	public Vector getSMWThreadData(int inServer, int inContext, int inThread, String inString)
 	{
 		//Return a copy of the requested data, sorted in the appropriate manner.
-		
+		int sortSetting = 0;
+		int metric = 0;
+		boolean isExclusive = true;
 		//Check to see if selected groups only are being displayed.
 		GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
 		
@@ -233,10 +397,82 @@ public class StaticMainWindowData
 		SMWThreadDataElement tmpSMWThreadDataElementCopy;
 		
 			
-		if(inString.equals("FIdDE"))
-		{
-			
-			if(!isSelectedGroupOn){
+		//This section needs some work!!  Should be able to find a better system.  Perhaps additive or something.
+		
+		if(inString.equals("FIdDE")){
+			sortSetting = 1;
+			metric = 1;}
+		else if(inString.equals("FIdDI")){
+			sortSetting = 1;
+			metric = 2;}
+		else if(inString.equals("FIdAE")){
+			sortSetting = 2;
+			metric = 1;}
+		else if(inString.equals("FIdAI")){
+			sortSetting = 2;
+			metric = 2;}
+		else if(inString.equals("NDE")){
+			sortSetting = 3;
+			metric = 1;}
+		else if(inString.equals("NDI")){
+			sortSetting = 3;
+			metric = 2;}
+		else if(inString.equals("NAE")){
+			sortSetting = 4;
+			metric = 1;}
+		else if(inString.equals("NAI")){
+			sortSetting = 4;
+			metric = 2;}
+		else if(inString.equals("MDE")){
+			sortSetting = 5;
+			metric = 1;}
+		else if((inString.equals("MDI"))){
+			sortSetting = 5;
+			metric = 2;}
+		else if((inString.equals("MAE"))){
+			sortSetting = 6;
+			metric = 1;}
+		else if((inString.equals("MAI"))){
+			sortSetting = 6;
+			metric = 2;}
+		else if(inString.equals("FIdDNC")){
+			sortSetting = 1;
+			metric = 3;}
+		else if(inString.equals("FIdDNS")){
+			sortSetting = 1;
+			metric = 4;}
+		else if(inString.equals("FIdANC")){
+			sortSetting = 2;
+			metric = 3;}
+		else if(inString.equals("FIdANS")){
+			sortSetting = 2;
+			metric = 4;}
+		else if(inString.equals("NDNC")){
+			sortSetting = 3;
+			metric = 3;}
+		else if(inString.equals("NDNS")){
+			sortSetting = 3;
+			metric = 4;}
+		else if(inString.equals("NANC")){
+			sortSetting = 4;
+			metric = 3;}
+		else if(inString.equals("NANS")){
+			sortSetting = 4;
+			metric = 4;}
+		else if(inString.equals("MDNC")){
+			sortSetting = 5;
+			metric = 3;}
+		else if((inString.equals("MDNS"))){
+			sortSetting = 5;
+			metric = 4;}
+		else if((inString.equals("MANC"))){
+			sortSetting = 6;
+			metric = 3;}
+		else{
+			sortSetting = 6;
+			metric = 4;}
+		
+		if(!isSelectedGroupOn){
 				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
 				{
 					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
@@ -244,248 +480,25 @@ public class StaticMainWindowData
 					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 					
 					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByMappingID();
-					tmpSMWThreadDataElementCopy.setSortByReverse(true);
 					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-						
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByMappingID();
-						tmpSMWThreadDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
+					switch(metric){
+						case(1):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+							break;
+						case(2):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+							break;
+						case(3):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getNumberOfCalls());
+							break;
+						case(4):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getNumberOfSubRoutines());
+							break;
+						default:
+							tmpSMWThreadDataElementCopy.setValue(0);
+							break;
 					}
-				}
-			}
-		}
-		else if(inString.equals("FIdDI"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByMappingID();
-					tmpSMWThreadDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-						
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByMappingID();
-						tmpSMWThreadDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
-		else if(inString.equals("FIdAE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByMappingID();
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-						
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByMappingID();
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
-		else if(inString.equals("FIdAI"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByMappingID();
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-						
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByMappingID();
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
-		else if(inString.equals("NDE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByName();
-					tmpSMWThreadDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);			
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByName();
-						tmpSMWThreadDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}			
-				}
-			}
-		}
-		else if(inString.equals("NDI"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByName();
-					tmpSMWThreadDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-						
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByName();
-						tmpSMWThreadDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
-		else if(inString.equals("NAE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByName();
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-						
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByName();
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
-		else if(inString.equals("NAI"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByName();
-					
+					tmpSMWThreadDataElementCopy.setSortSetting(sortSetting);
 					tmpVector.addElement(tmpSMWThreadDataElementCopy);
 				}
 			}
@@ -498,159 +511,82 @@ public class StaticMainWindowData
 						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
 					
 						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByName();
-						
+						switch(metric){
+						case(1):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
+							break;
+						case(2):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
+							break;
+						case(3):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getNumberOfCalls());
+							break;
+						case(4):
+							tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getNumberOfSubRoutines());
+							break;
+						default:
+							tmpSMWThreadDataElementCopy.setValue(0);
+							break;
+					}
+						tmpSMWThreadDataElementCopy.setSortSetting(sortSetting);
 						tmpVector.addElement(tmpSMWThreadDataElementCopy);
 					}
 				}
 			}
-		}
-		else if(inString.equals("MDE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByValue();
-					tmpSMWThreadDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByValue();
-						tmpSMWThreadDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
-		else if((inString.equals("MDI")))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByValue();
-					tmpSMWThreadDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByValue();
-						tmpSMWThreadDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
-		else if((inString.equals("MAE")))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByValue();
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByValue();
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
-		else
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-				
-				
-					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-					tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-					tmpSMWThreadDataElementCopy.setSortByValue();
-					
-					tmpVector.addElement(tmpSMWThreadDataElementCopy);
-				}
-			}
-			else{
-				for(Enumeration e1 = tmpThreadDataList.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
-						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(tmpSMWThreadDataElement.getGTDE());
-					
-					
-						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
-						tmpSMWThreadDataElementCopy.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-						tmpSMWThreadDataElementCopy.setSortByValue();
-						
-						tmpVector.addElement(tmpSMWThreadDataElementCopy);
-					}
-				}
-			}
-		}
 		
 		Collections.sort(tmpVector);
 		return tmpVector;
 	}
 	
-	public Vector getSMWGeneralData(String inString)
-	{	
+	public Vector getSMWUEThreadData(int inServer, int inContext, int inThread)
+	{
+		//First, obtain the appropriate server.
+		Vector tmpVector = jRacy.staticSystemData.getStaticServerList();
+		
+		//Find the correct global thread data element.
+		GlobalServer tmpGSUE = null;
+		Vector tmpGlobalContextListUE = null;
+		GlobalContext tmpGCUE = null;
+		Vector tmpGlobalThreadListUE = null;
+		GlobalThread tmpGTUE = null;
+		Vector tmpGlobalThreadDataElementListUE = null;
+		
+		//Find the correct global thread data element.
+		tmpGSUE = (GlobalServer) tmpVector.elementAt(inServer);
+		tmpGlobalContextListUE = tmpGSUE.getContextList();
+		tmpGCUE = (GlobalContext) tmpGlobalContextListUE.elementAt(inContext);
+		tmpGlobalThreadListUE = tmpGCUE.getThreadList();
+		tmpGTUE = (GlobalThread) tmpGlobalThreadListUE.elementAt(inThread);
+		
+		tmpGlobalThreadDataElementListUE = tmpGTUE.getUserThreadDataList();
+		
+		
+		//Ok, now that I have the appropriate thread, copy it and then sort the copy in the appropriate manner.
+		Vector returnVector = new Vector();
+		SMWThreadDataElement tmpSMWThreadDataElement;
+		GlobalThreadDataElement tmpGlobalThreadDataElement = null;
+		
+		for(Enumeration e1 = tmpGlobalThreadDataElementListUE.elements(); e1.hasMoreElements() ;)
+		{
+			tmpGlobalThreadDataElement = (GlobalThreadDataElement) e1.nextElement();
+			if(tmpGlobalThreadDataElement != null)
+			{
+				//Create a new thread data object.
+				tmpSMWThreadDataElement = new SMWThreadDataElement(tmpGlobalThreadDataElement);
+				tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getUserEventID());
+				//Add to the thread data object.
+				returnVector.add(tmpSMWThreadDataElement);
+			}
+		}
+		
+		return returnVector;
+	}
+	
+	public Vector getSMWGeneralData(String inString){
+		
+		int sortSetting = 0;
+		boolean isExclusive = true;
+		
 		SMWServer tmpSMWServer;
 		SMWContext tmpSMWContext;
 		SMWThread tmpSMWThread;
@@ -666,484 +602,84 @@ public class StaticMainWindowData
 			return sMWGeneralData;
 		}
 		
-		//In this function, the entire data structure is sorted according to
-		//the specified string.
-		if(inString.equals("FIdDE"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-							tmpSMWThreadDataElement.setSortByMappingID();
-							tmpSMWThreadDataElement.setSortByReverse(true);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-					
-			return sMWGeneralData;
-		}
-		else if(inString.equals("FIdDI"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-							tmpSMWThreadDataElement.setSortByMappingID();
-							tmpSMWThreadDataElement.setSortByReverse(true);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-				
-			return sMWGeneralData;
-		}
-		else if(inString.equals("FIdAE"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-							tmpSMWThreadDataElement.setSortByMappingID();
-							tmpSMWThreadDataElement.setSortByReverse(false);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
+		if(inString.equals("FIdDE")){
+			sortSetting = 1;}
+		else if(inString.equals("FIdDI")){
+			sortSetting = 1;
+			isExclusive = false;}
+		else if(inString.equals("FIdAE")){
+			sortSetting = 2;}
+		else if(inString.equals("FIdAI")){
+			sortSetting = 2;
+			isExclusive = false;}
+		else if(inString.equals("NDE")){
+			sortSetting = 3;}
+		else if(inString.equals("NDI")){
+			sortSetting = 3;
+			isExclusive = false;}
+		else if(inString.equals("NAE")){
+			sortSetting = 4;}
+		else if(inString.equals("NAI")){
+			sortSetting = 4;
+			isExclusive = false;}
+		else if(inString.equals("MDE")){
+			sortSetting = 5;}
+		else if((inString.equals("MDI"))){
+			sortSetting = 5;
+			isExclusive = false;}
+		else if((inString.equals("MAE"))){
+			sortSetting = 6;}
+		else{
+			sortSetting = 6;
+			isExclusive = false;}
+		
+		for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;){
+			tmpSMWServer = (SMWServer) e1.nextElement();
 			
-			return sMWGeneralData;
-		}
-		else if(inString.equals("FIdAI"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
+			//Enter the context loop for this server.
+			tmpContextList = tmpSMWServer.getContextList();
 				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-							tmpSMWThreadDataElement.setSortByMappingID();
-							tmpSMWThreadDataElement.setSortByReverse(false);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-			
-			return sMWGeneralData;
-		}
-		else if(inString.equals("NDE"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
+			for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
 			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
+				tmpSMWContext = (SMWContext) e2.nextElement();
+					
+				//Enter the thread loop for this context.
+				tmpThreadList = tmpSMWContext.getThreadList();
 				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
+				for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
 				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
+					 tmpSMWThread = (SMWThread) e3.nextElement();
+					 
+					//Now enter the thread loop for this thread.
+					tmpThreadDataList = tmpSMWThread.getThreadDataList();
 					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
+					for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
 					{
-						tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+						tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+						if(isExclusive)
 							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-							tmpSMWThreadDataElement.setSortByName();
-							tmpSMWThreadDataElement.setSortByReverse(true);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-				
-			return sMWGeneralData;
-		}
-		else if(inString.equals("NDI"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+						else
 							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-							tmpSMWThreadDataElement.setSortByName();
-							tmpSMWThreadDataElement.setSortByReverse(true);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
+						tmpSMWThreadDataElement.setSortSetting(sortSetting);
 					}
+					
+					//Now, sort this thread list.
+					Collections.sort(tmpThreadDataList);
 				}
 			}
-			
-			return sMWGeneralData;
 		}
-		else if(inString.equals("NAE"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
 					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-							tmpSMWThreadDataElement.setSortByName();
-							tmpSMWThreadDataElement.setSortByReverse(false);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-			
-			return sMWGeneralData;
-		}
-		else if(inString.equals("NAI"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-							tmpSMWThreadDataElement.setSortByName();
-							tmpSMWThreadDataElement.setSortByReverse(false);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-				
-			return sMWGeneralData;
-		}
-		else if(inString.equals("MDE"))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-							tmpSMWThreadDataElement.setSortByValue();
-							tmpSMWThreadDataElement.setSortByReverse(true);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-				
-			return sMWGeneralData;
-		}
-		else if((inString.equals("MDI")))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-							tmpSMWThreadDataElement.setSortByValue();
-							tmpSMWThreadDataElement.setSortByReverse(true);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-				
-			return sMWGeneralData;
-		}
-		else if((inString.equals("MAE")))
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						 tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getExclusiveValue());
-							tmpSMWThreadDataElement.setSortByValue();
-							tmpSMWThreadDataElement.setSortByReverse(false);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-			
-			return sMWGeneralData;
-		}
-		else
-		{
-			for(Enumeration e1 = sMWGeneralData.elements(); e1.hasMoreElements() ;)
-			{
-				tmpSMWServer = (SMWServer) e1.nextElement();
-				
-				//Enter the context loop for this server.
-				tmpContextList = tmpSMWServer.getContextList();
-					
-				for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;)
-				{
-					tmpSMWContext = (SMWContext) e2.nextElement();
-						
-					//Enter the thread loop for this context.
-					tmpThreadList = tmpSMWContext.getThreadList();
-					
-					for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;)
-					{
-						tmpSMWThread = (SMWThread) e3.nextElement();
-						 
-						//Now enter the thread loop for this thread.
-						tmpThreadDataList = tmpSMWThread.getThreadDataList();
-						
-						for(Enumeration e4 = tmpThreadDataList.elements(); e4.hasMoreElements() ;)
-						{
-							tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-							tmpSMWThreadDataElement.setValue(tmpSMWThreadDataElement.getInclusiveValue());
-							tmpSMWThreadDataElement.setSortByValue();
-							tmpSMWThreadDataElement.setSortByReverse(false);
-						}
-						
-						//Now, sort this thread list.
-						Collections.sort(tmpThreadDataList);
-					}
-				}
-			}
-			
-			return sMWGeneralData;
-		}
+		return sMWGeneralData;
 	}
-	
 	
 	public Vector getSMWMeanData(String inString)
 	{	
 		Vector tmpVector = new Vector();
 		SMWMeanDataElement tmpSMWMeanDataElement;
 		SMWMeanDataElement tmpSMWMeanDataElementCopy;
+		
+		int sortSetting = 0;
+		int metric = 0;
 		
 		//Check to see if selected groups only are being displayed.
 		GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
@@ -1162,494 +698,150 @@ public class StaticMainWindowData
 			return sMWMeanData;
 		}
 		
-		//In this function, the entire data structure is sorted according to
-		//the specified string.
-		if(inString.equals("FIdDE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByMappingID();
-					tmpSMWMeanDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
-						//Set the sorting method.
-						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByMappingID();
-						tmpSMWMeanDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-				}
-			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-			
-		}
-		else if(inString.equals("FIdDI"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByMappingID();
-					tmpSMWMeanDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
-						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByMappingID();
-						tmpSMWMeanDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
+		//This section needs some work!!  Should be able to find a better system.  Perhaps additive or something.
 		
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
-		else if(inString.equals("FIdAE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByMappingID();
-					tmpSMWMeanDataElementCopy.setSortByReverse(false);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
+		if(inString.equals("FIdDE")){
+			sortSetting = 1;
+			metric = 1;}
+		else if(inString.equals("FIdDI")){
+			sortSetting = 1;
+			metric = 2;}
+		else if(inString.equals("FIdAE")){
+			sortSetting = 2;
+			metric = 1;}
+		else if(inString.equals("FIdAI")){
+			sortSetting = 2;
+			metric = 2;}
+		else if(inString.equals("NDE")){
+			sortSetting = 3;
+			metric = 1;}
+		else if(inString.equals("NDI")){
+			sortSetting = 3;
+			metric = 2;}
+		else if(inString.equals("NAE")){
+			sortSetting = 4;
+			metric = 1;}
+		else if(inString.equals("NAI")){
+			sortSetting = 4;
+			metric = 2;}
+		else if(inString.equals("MDE")){
+			sortSetting = 5;
+			metric = 1;}
+		else if((inString.equals("MDI"))){
+			sortSetting = 5;
+			metric = 2;}
+		else if((inString.equals("MAE"))){
+			sortSetting = 6;
+			metric = 1;}
+		else if((inString.equals("MAI"))){
+			sortSetting = 6;
+			metric = 2;}
+		else if(inString.equals("FIdDNC")){
+			sortSetting = 1;
+			metric = 3;}
+		else if(inString.equals("FIdDNS")){
+			sortSetting = 1;
+			metric = 4;}
+		else if(inString.equals("FIdANC")){
+			sortSetting = 2;
+			metric = 3;}
+		else if(inString.equals("FIdANS")){
+			sortSetting = 2;
+			metric = 4;}
+		else if(inString.equals("NDNC")){
+			sortSetting = 3;
+			metric = 3;}
+		else if(inString.equals("NDNS")){
+			sortSetting = 3;
+			metric = 4;}
+		else if(inString.equals("NANC")){
+			sortSetting = 4;
+			metric = 3;}
+		else if(inString.equals("NANS")){
+			sortSetting = 4;
+			metric = 4;}
+		else if(inString.equals("MDNC")){
+			sortSetting = 5;
+			metric = 3;}
+		else if((inString.equals("MDNS"))){
+			sortSetting = 5;
+			metric = 4;}
+		else if((inString.equals("MANC"))){
+			sortSetting = 6;
+			metric = 3;}
+		else{
+			sortSetting = 6;
+			metric = 4;}
+			
+		if(!isSelectedGroupOn){
+			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+			{
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
+				//Set the sorting method.
+				switch(metric){
+					case(1):
 						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByMappingID();
-						tmpSMWMeanDataElementCopy.setSortByReverse(false);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
-		else if(inString.equals("FIdAI"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByMappingID();
-					tmpSMWMeanDataElementCopy.setSortByReverse(false);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
+						break;
+					case(2):
 						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByMappingID();
-						tmpSMWMeanDataElementCopy.setSortByReverse(false);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
+						break;
+					case(3):
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanNumberOfCalls());
+						break;
+					case(4):
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanNumberOfSubRoutines());
+						break;
+					default:
+						tmpSMWMeanDataElementCopy.setValue(0);
+						break;
 				}
+				tmpSMWMeanDataElementCopy.setSortSetting(sortSetting);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
+				
 			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
 		}
-		else if(inString.equals("NDE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByName();
-					tmpSMWMeanDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
+		else{
+			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
+			{
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
+				//Set the sorting method.
+				switch(metric){
+					case(1):
 						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByName();
-						tmpSMWMeanDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
-			
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
-		else if(inString.equals("NDI"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByName();
-					tmpSMWMeanDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
+						break;
+					case(2):
 						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByName();
-						tmpSMWMeanDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
+						break;
+					case(3):
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanNumberOfCalls());
+						break;
+					case(4):
+						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanNumberOfSubRoutines());
+						break;
+					default:
+						tmpSMWMeanDataElementCopy.setValue(0);
+						break;
 				}
+				tmpSMWMeanDataElementCopy.setSortSetting(sortSetting);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
 		}
-		else if(inString.equals("NAE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByName();
-					tmpSMWMeanDataElementCopy.setSortByReverse(false);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
-						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByName();
-						tmpSMWMeanDataElementCopy.setSortByReverse(false);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
-		else if(inString.equals("NAI"))
-		{
-			if(!isSelectedGroupOn){	
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByName();
-					tmpSMWMeanDataElementCopy.setSortByReverse(false);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
-						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByName();
-						tmpSMWMeanDataElementCopy.setSortByReverse(false);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
-		else if(inString.equals("MDE"))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByValue();
-					tmpSMWMeanDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
-						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByValue();
-						tmpSMWMeanDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
-		else if((inString.equals("MDI")))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByValue();
-					tmpSMWMeanDataElementCopy.setSortByReverse(true);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
-						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByValue();
-						tmpSMWMeanDataElementCopy.setSortByReverse(true);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
-		else if((inString.equals("MAE")))
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByValue();
-					tmpSMWMeanDataElementCopy.setSortByReverse(false);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
-						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByValue();
-						tmpSMWMeanDataElementCopy.setSortByReverse(false);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
-		else
-		{
-			if(!isSelectedGroupOn){
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-					tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-					//Set the sorting method.
-					tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-					tmpSMWMeanDataElementCopy.setSortByValue();
-					tmpSMWMeanDataElementCopy.setSortByReverse(false);
-					
-					tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					
-				}
-			}
-			else{
-				for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
-				{
-					tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
-					
-					if(tmpSMWMeanDataElement.isGroupMember(selectedGroupID)){
-						tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
-						tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());
-						//Set the sorting method.
-						tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
-						tmpSMWMeanDataElementCopy.setSortByValue();
-						tmpSMWMeanDataElementCopy.setSortByReverse(false);
-						
-						tmpVector.addElement(tmpSMWMeanDataElementCopy);
-					}
-					
-				}
-			}
-			
-			Collections.sort(tmpVector);
-			return tmpVector;
-		}
+		
+		Collections.sort(tmpVector);
+		return tmpVector;
 	}
-	
-	//********************************
-	//
-	//End - Functions that return various sorted version of the data lists.
-	//
-	//********************************
 }
+
+//********************************
+//
+//End - Functions that return various sorted version of the data lists.
+//
+//********************************

@@ -13,6 +13,7 @@ import java.lang.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.print.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
@@ -44,6 +45,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	private JRadioButtonMenuItem displaySlidersButton;
 	
 	private JMenuItem mappingGroupLedgerItem;
+	private JMenuItem userEventLedgerItem;
 	
 	private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
 	private JComboBox sliderMultiple;
@@ -152,6 +154,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 			fileMenu.add(saveMenu);
 			//End submenu.
 			
+			/*//Add a menu item.
+			JMenuItem printItem = new JMenuItem("Print");
+			printItem.addActionListener(this);
+			fileMenu.add(printItem);
+			*/
 			
 			//Add a menu item.
 			JMenuItem editPrefItem = new JMenuItem("Edit jRacy Preferences!");
@@ -176,7 +183,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 			JMenu sortMenu = new JMenu("Sort by ...");
 			sortGroup = new ButtonGroup();
 			
-			mappingIDButton = new JRadioButtonMenuItem("mapping ID", false);
+			mappingIDButton = new JRadioButtonMenuItem("function ID", false);
 			//Add a listener for this radio button.
 			mappingIDButton.addActionListener(this);
 			
@@ -234,14 +241,19 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 			windowsMenu.addMenuListener(this);
 			
 			//Add a submenu.
-			JMenuItem mappingLedgerItem = new JMenuItem("Show Mapping Ledger");
+			JMenuItem mappingLedgerItem = new JMenuItem("Show Function Ledger");
 			mappingLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingLedgerItem);
 			
 			//Add a submenu.
-			mappingGroupLedgerItem = new JMenuItem("Show Group Mapping Ledger");
+			mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
 			mappingGroupLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingGroupLedgerItem);
+			
+			//Add a submenu.
+			userEventLedgerItem = new JMenuItem("Show User Event Ledger");
+			userEventLedgerItem.addActionListener(this);
+			windowsMenu.add(userEventLedgerItem);
 			
 			//Add a submenu.
 			JMenuItem closeAllSubwindowsItem = new JMenuItem("Close All Sub-Windows");
@@ -618,18 +630,27 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 						}
 					}
 				}
+				else if(arg.equals("Print"))
+				{
+					PrinterJob job = PrinterJob.getPrinterJob();
+					PageFormat defaultFormat = job.defaultPage();
+					PageFormat selectedFormat = job.pageDialog(defaultFormat);
+					job.setPrintable(sMWPanel, selectedFormat);
+					if(job.printDialog()){
+						job.print();
+					}
+				}
 				else if(arg.equals("Edit jRacy Preferences!"))
 				{
 					jRacy.jRacyPreferences.showPreferencesWindow();
-				}
-					
+				}	
 				else if(arg.equals("Exit jRacy!"))
 				{
 					setVisible(false);
 					dispose();
 					System.exit(0);
 				}
-				else if(arg.equals("mapping ID"))
+				else if(arg.equals("function ID"))
 				{
 					if(mappingIDButton.isSelected())
 					{
@@ -701,7 +722,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 						displaySiders(false);
 					}
 				}
-				else if(arg.equals("Show Mapping Ledger"))
+				else if(arg.equals("Show Function Ledger"))
 				{
 					
 					//Check to make sure that the system data file has been loaded!
@@ -717,13 +738,28 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 																  ,JOptionPane.ERROR_MESSAGE);
 					}
 				}
-				else if(arg.equals("Show Group Mapping Ledger"))
+				else if(arg.equals("Show Group Ledger"))
 				{
 					//Check to make sure that the system data file has been loaded!
 					if(sMWData.isDataLoaded())
 					{
 						//Grab the global mapping and bring up the mapping ledger window.
 						(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(1);
+					}
+					else
+					{
+						//Pop up an error!
+						JOptionPane.showMessageDialog(this, "Sorry, but you must load a pprof data file first!", "Selection Error!"
+																  ,JOptionPane.ERROR_MESSAGE);
+					}
+				}
+				else if(arg.equals("Show User Event Ledger"))
+				{
+					//Check to make sure that the system data file has been loaded!
+					if(sMWData.isDataLoaded())
+					{
+						//Grab the global mapping and bring up the mapping ledger window.
+						(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(2);
 					}
 					else
 					{
@@ -781,6 +817,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
+				
+			if(jRacy.staticSystemData.userEventsPresent())
+				userEventLedgerItem.setEnabled(true);
+			else
+				userEventLedgerItem.setEnabled(false);
 		}
 		catch(Exception e)
 		{

@@ -38,6 +38,7 @@ public class jRacy implements ActionListener
 	//End start of persistant objects.
 	
 	//Useful in the system.
+	private static String USAGE = "jRacy/jRacy (help | debug)";
 	static Runtime runtime;
 	//**********
 
@@ -150,6 +151,28 @@ public class jRacy implements ActionListener
 	static public void main(String[] args) 
 	{
 	
+		//At the moment, command line arguments are optional.  Keep this here though if
+		//they become mandatory.
+		/*if (args.length == 0) {
+                System.err.println(USAGE);
+		System.exit(-1);
+        }*/
+
+		int numberOfArguments = 0;
+		String argument;
+
+		while (numberOfArguments < args.length) {
+           argument = args[numberOfArguments++];
+           if (argument.equalsIgnoreCase("HELP")) {
+                   System.err.println(USAGE);
+                   System.exit(-1);
+           }
+           if (argument.equalsIgnoreCase("DEBUG")) {
+                   jRacy.debugIsOn = true;
+                   continue;
+           }
+		}
+		
 		jRacy.runtime = Runtime.getRuntime();
 		
 		//Start Racy.

@@ -1,5 +1,5 @@
 /* 
-	TotalStatWindow.java
+	TotalStatUEWindow.java
 
 	Title:			jRacy
 	Author:			Robert Bell
@@ -15,10 +15,10 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class TotalStatWindow extends JFrame implements ActionListener, Observer 
+public class TotalStatUEWindow extends JFrame implements ActionListener, Observer 
 {
 	
-	public TotalStatWindow()
+	public TotalStatUEWindow()
 	{
 		try{
 			setLocation(new java.awt.Point(0, 0));
@@ -29,11 +29,11 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW01");
+			jRacy.systemError(null, "TSUEW01");
 		}
 	}
 	
-	public TotalStatWindow(int inServerNumber,
+	public TotalStatUEWindow(int inServerNumber,
 						   int inContextNumber,
 						   int inThreadNumber,
 						   StaticMainWindowData inSMWData)
@@ -76,16 +76,16 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 				jRacy.helpWindow.clearText();
 				//Since the data must have been loaded.  Tell them someting about
 				//where they are.
-				jRacy.helpWindow.writeText("This is the total function statistics window.");
+				jRacy.helpWindow.writeText("This is the total user event statistics window.");
 				jRacy.helpWindow.writeText("");
-				jRacy.helpWindow.writeText("This window shows you the total statistics for all functions on this thread.");
+				jRacy.helpWindow.writeText("This window shows you the total statistics for all user events on this thread.");
 				jRacy.helpWindow.writeText("");
 				jRacy.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
 				jRacy.helpWindow.writeText("");
-				jRacy.helpWindow.writeText("Right click on any function within this window to bring up a popup");
+				jRacy.helpWindow.writeText("Right click on any user event within this window to bring up a popup");
 				jRacy.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-				jRacy.helpWindow.writeText("for the function, or to show more details about the function.");
-				jRacy.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
+				jRacy.helpWindow.writeText("for the user event, or to show more details about the user event.");
+				jRacy.helpWindow.writeText("You can also left click any user event to hightlight it in the system.");
 			}
 			
 			
@@ -119,6 +119,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			//******************************
 			JMenu optionsMenu = new JMenu("Options");
 			
+			/*
 			//Add a submenu.
 			JMenu sortMenu = new JMenu("Sort by ...");
 			sortGroup = new ButtonGroup();
@@ -181,7 +182,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			optionsMenu.add(inclusiveExclusiveMenu);
 			//End Submenu.
 					
-			
+			*/
 			//Add a menu item.
 			JMenuItem colorItem = new JMenuItem("Adjust Racy Colors");
 			colorItem.addActionListener(this);
@@ -260,12 +261,12 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			totalStatWindowPanelRef = new TotalStatWindowPanel(inServerNumber,
+			totalStatUEWindowPanelRef = new TotalStatUEWindowPanel(inServerNumber,
 															   inContextNumber,
 															   inThreadNumber, this);
 			
 			//The scroll panes into which the list shall be placed.
-			JScrollPane totalStatWindowPanelScrollPane = new JScrollPane(totalStatWindowPanelRef);
+			JScrollPane totalStatWindowPanelScrollPane = new JScrollPane(totalStatUEWindowPanelRef);
 			JScrollBar vScollBar = totalStatWindowPanelScrollPane.getVerticalScrollBar();
 			vScollBar.setUnitIncrement(35);
 			totalStatWindowPanelScrollPane.setBorder(mainloweredbev);
@@ -283,7 +284,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW02");
+			jRacy.systemError(null, "TSUEW02");
 		}
 	}
 	
@@ -323,7 +324,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 						sortByName = false;
 						sortByMillisecond = false;
 						//Call repaint.
-						totalStatWindowPanelRef.repaint();
+						totalStatUEWindowPanelRef.repaint();
 					}
 				}
 				else if(arg.equals("name"))
@@ -334,7 +335,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 						sortByName = true;
 						sortByMillisecond = false;
 						//Call repaint.
-						totalStatWindowPanelRef.repaint();
+						totalStatUEWindowPanelRef.repaint();
 					}
 				}
 				else if(arg.equals("millisecond"))
@@ -345,7 +346,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 						sortByName = false;
 						sortByMillisecond = true;
 						//Call repaint.
-						totalStatWindowPanelRef.repaint();
+						totalStatUEWindowPanelRef.repaint();
 					}
 				}
 				else if(arg.equals("Descending"))
@@ -353,7 +354,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 					if(descendingButton.isSelected())
 					{
 						descendingOrder = true;
-						totalStatWindowPanelRef.repaint();
+						totalStatUEWindowPanelRef.repaint();
 					}
 				}
 				else if(arg.equals("Ascending"))
@@ -361,7 +362,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 					if(ascendingButton.isSelected())
 					{
 						descendingOrder = false;
-						totalStatWindowPanelRef.repaint();
+						totalStatUEWindowPanelRef.repaint();
 					}
 				}
 				else if(arg.equals("Inclusive"))
@@ -370,7 +371,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 					{
 						inclusive = true;
 						//Call repaint.
-						totalStatWindowPanelRef.repaint();
+						totalStatUEWindowPanelRef.repaint();
 					}
 				}
 				else if(arg.equals("Exclusive"))
@@ -379,7 +380,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 					{
 						inclusive = false;
 						//Call repaint.
-						totalStatWindowPanelRef.repaint();
+						totalStatUEWindowPanelRef.repaint();
 					}
 				}
 				else if(arg.equals("Show Function Ledger"))
@@ -419,7 +420,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW03");
+			jRacy.systemError(null, "TSUEW03");
 		}
 	}
 	
@@ -431,16 +432,16 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			if(tmpString.equals("prefEvent"))
 			{
 				//Just need to call a repaint on the ThreadDataWindowPanel.
-				totalStatWindowPanelRef.repaint();
+				totalStatUEWindowPanelRef.repaint();
 			}
 			if(tmpString.equals("colorEvent"))
 			{
 				//Just need to call a repaint on the ThreadDataWindowPanel.
-				totalStatWindowPanelRef.repaint();
+				totalStatUEWindowPanelRef.repaint();
 			}
 			else if(tmpString.equals("dataEvent"))
 			{ 
-				totalStatWindowPanelRef.repaint();
+				totalStatUEWindowPanelRef.repaint();
 			}
 			else if(tmpString.equals("subWindowCloseEvent"))
 			{ 
@@ -449,7 +450,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW04");
+			jRacy.systemError(null, "TSUEW04");
 		}
 	} 
 	
@@ -466,7 +467,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW05");
+			jRacy.systemError(null, "TSUEW05");
 		}
 	}
 	
@@ -474,7 +475,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 	//Note:  This is only meant to be called by the TotalStatWindowPanel.
 	public Vector getStaticMainWindowSystemData()
 	{
-		try{
+		/*try{
 			if(sortByMappingID)
 			{
 				if(descendingOrder)
@@ -513,10 +514,10 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW06");
-		}
+			jRacy.systemError(null, "TSUEW06");
+		}*/
 		
-		return null;
+		return sMWData.getSMWUEThreadData(server, context, thread);
 	}
 	
 	//Respond correctly when this window is closed.
@@ -542,14 +543,14 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW07");
+			jRacy.systemError(null, "TSUEW07");
 		}
 	}
 	
 	//******************************
 	//Instance data.
 	//******************************
- 	private TotalStatWindowPanel totalStatWindowPanelRef;
+ 	private TotalStatUEWindowPanel totalStatUEWindowPanelRef;
  	private StaticMainWindowData sMWData = new StaticMainWindowData();
  	
  	ButtonGroup sortGroup;

@@ -1,9 +1,9 @@
 /* 
-	MappingDataWindow.java
+	UserEventWindow.java
 
 	Title:			jRacy
 	Author:			Robert Bell
-	Description:	The container for the MappingDataWindowPanel.
+	Description:	The container for the UserEventWindowPanel.
 */
 
 package jRacy;
@@ -15,10 +15,10 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class MappingDataWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener
+public class UserEventWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener
 {
 	
-	public MappingDataWindow()
+	public UserEventWindow()
 	{
 		try{
 			setLocation(new java.awt.Point(300, 200));
@@ -29,11 +29,11 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW01");
+			jRacy.systemError(null, "UEW01");
 		}
 	}
 	
-	public MappingDataWindow(int inMappingID, StaticMainWindowData inSMWData)
+	public UserEventWindow(int inMappingID, StaticMainWindowData inSMWData)
 	{
 		try{
 			setLocation(new java.awt.Point(300, 200));
@@ -42,19 +42,17 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			mappingID = inMappingID;
 			sMWData = inSMWData;
 			
-			inclusive = false;
-	 		percent = true;
-	 		unitsString = "milliseconds";
+	 		userEventValuesString = "value";
 	 		
 	 		
 	 		//Grab the appropriate global mapping element.
 			GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
-			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(inMappingID, 0);
+			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(inMappingID, 2);
 			
 			mappingName = tmpGME.getMappingName();
 			
 			//Now set the title.
-			this.setTitle("Function Data Window: " + jRacy.profilePathName);
+			this.setTitle("User Event Window: " + jRacy.profilePathName);
 			
 			//Add some window listener code
 			addWindowListener(new java.awt.event.WindowAdapter() {
@@ -70,16 +68,16 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 				jRacy.helpWindow.clearText();
 				//Since the data must have been loaded.  Tell them someting about
 				//where they are.
-				jRacy.helpWindow.writeText("This is the function data window for:");
+				jRacy.helpWindow.writeText("This is the user event data window for:");
 				jRacy.helpWindow.writeText(mappingName);
 				jRacy.helpWindow.writeText("");
-				jRacy.helpWindow.writeText("This window shows you this function's statistics across all the threads.");
+				jRacy.helpWindow.writeText("This window shows you this user event's statistics across all the threads.");
 				jRacy.helpWindow.writeText("");
 				jRacy.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
 				jRacy.helpWindow.writeText("");
 				jRacy.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
 				jRacy.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-				jRacy.helpWindow.writeText("for this function.");
+				jRacy.helpWindow.writeText("for this user event.");
 			}
 			
 			
@@ -113,65 +111,35 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			optionsMenu.addMenuListener(this);
 			
 			//Add a submenu.
-			JMenu inclusiveExclusiveMenu = new JMenu("Select Inclusive or Exclusive");
-			inclusiveExclusiveGroup = new ButtonGroup();
-			inclusiveRadioButton = new JRadioButtonMenuItem("Inclusive", false);
-			//Add a listener for this radio button.
-			inclusiveRadioButton.addActionListener(this);
-			exclusiveRadioButton = new JRadioButtonMenuItem("Exclusive", true);
-			//Add a listener for this radio button.
-			exclusiveRadioButton.addActionListener(this);
-			inclusiveExclusiveGroup.add(inclusiveRadioButton);
-			inclusiveExclusiveGroup.add(exclusiveRadioButton);
-			inclusiveExclusiveMenu.add(inclusiveRadioButton);
-			inclusiveExclusiveMenu.add(exclusiveRadioButton);
-			optionsMenu.add(inclusiveExclusiveMenu);
-			//End Submenu.
+			userEventValuesMenu = new JMenu("User Event Values");
+			userEventValuesGroup = new ButtonGroup();
 			
-			//Add a submenu.
-			JMenu valuePercentMenu = new JMenu("Select Value or Percent");
-			valuePercentGroup = new ButtonGroup();
-			
-			percentButton = new JRadioButtonMenuItem("Percent", true);
-			//Add a listener for this radio button.
-			percentButton.addActionListener(this);
-			
-			valueButton = new JRadioButtonMenuItem("Value", false);
+			valueButton = new JRadioButtonMenuItem("Number of Events", true);
 			//Add a listener for this radio button.
 			valueButton.addActionListener(this);
 			
-			valuePercentGroup.add(percentButton);
-			valuePercentGroup.add(valueButton);
-			
-			valuePercentMenu.add(percentButton);
-			valuePercentMenu.add(valueButton);
-			optionsMenu.add(valuePercentMenu);
-			//End Submenu.
-			
-			//Add a submenu.
-			unitsMenu = new JMenu("Select Units");
-			unitsGroup = new ButtonGroup();
-			
-			secondsButton = new JRadioButtonMenuItem("Seconds", false);
+			minButton = new JRadioButtonMenuItem("Min. Value", false);
 			//Add a listener for this radio button.
-			secondsButton.addActionListener(this);
+			minButton.addActionListener(this);
 			
-			millisecondsButton = new JRadioButtonMenuItem("Milliseconds", false);
+			maxButton = new JRadioButtonMenuItem("Max. Value", false);
 			//Add a listener for this radio button.
-			millisecondsButton.addActionListener(this);
+			maxButton.addActionListener(this);
 			
-			microsecondsButton = new JRadioButtonMenuItem("Microseconds", true);
+			meanButton = new JRadioButtonMenuItem("Mean Value", false);
 			//Add a listener for this radio button.
-			microsecondsButton.addActionListener(this);
+			meanButton.addActionListener(this);
 			
-			unitsGroup.add(secondsButton);
-			unitsGroup.add(millisecondsButton);
-			unitsGroup.add(microsecondsButton);
+			userEventValuesGroup.add(valueButton);
+			userEventValuesGroup.add(minButton);
+			userEventValuesGroup.add(maxButton);
+			userEventValuesGroup.add(meanButton);
 			
-			unitsMenu.add(secondsButton);
-			unitsMenu.add(millisecondsButton);
-			unitsMenu.add(microsecondsButton);
-			optionsMenu.add(unitsMenu);
+			userEventValuesMenu.add(valueButton);
+			userEventValuesMenu.add(minButton);
+			userEventValuesMenu.add(maxButton);
+			userEventValuesMenu.add(meanButton);
+			optionsMenu.add(userEventValuesMenu);
 			//End Submenu.
 			
 			displaySlidersButton = new JRadioButtonMenuItem("Display Sliders", false);
@@ -196,7 +164,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			windowsMenu.add(mappingLedgerItem);
 			
 			//Add a submenu.
-			mappingGroupLedgerItem = new JMenuItem("Show Group Mapping Ledger");
+			mappingGroupLedgerItem = new JMenuItem("Show Group Ledger");
 			mappingGroupLedgerItem.addActionListener(this);
 			windowsMenu.add(mappingGroupLedgerItem);
 			
@@ -259,11 +227,11 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			mappingDataWinPanelRef = new MappingDataWindowPanel(inMappingID, this);
+			userEventWinPanelRef = new UserEventWindowPanel(inMappingID, this);
 			//The scroll panes into which the list shall be placed.
-			mappingDataWinPanelScrollPane = new JScrollPane(mappingDataWinPanelRef);
-			mappingDataWinPanelScrollPane.setBorder(mainloweredbev);
-			mappingDataWinPanelScrollPane.setPreferredSize(new Dimension(500, 450));
+			userEventWinPanelScrollPane = new JScrollPane(userEventWinPanelRef);
+			userEventWinPanelScrollPane.setBorder(mainloweredbev);
+			userEventWinPanelScrollPane.setPreferredSize(new Dimension(500, 450));
 			//**********
 			//End - Panel and ScrollPane definition.
 			//**********
@@ -284,11 +252,11 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			gbc.anchor = GridBagConstraints.CENTER;
 			gbc.weightx = 0.95;
 			gbc.weighty = 0.98;
-			addCompItem(mappingDataWinPanelScrollPane, gbc, 0, 0, 1, 1);
+			addCompItem(userEventWinPanelScrollPane, gbc, 0, 0, 1, 1);
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW02");
+			jRacy.systemError(null, "UEW02");
 		}
 		
 		
@@ -322,67 +290,40 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 					dispose();
 					System.exit(0);
 				}
-				else if(arg.equals("Inclusive"))
-				{
-					if(inclusiveRadioButton.isSelected())
-					{
-						inclusive = true;
-						//Call repaint.
-						mappingDataWinPanelRef.repaint();
-					}
-				}
-				else if(arg.equals("Exclusive"))
-				{
-					if(exclusiveRadioButton.isSelected())
-					{
-						inclusive = false;
-						//Call repaint.
-						mappingDataWinPanelRef.repaint();
-					}
-				}
-				else if(arg.equals("Percent"))
-				{
-					if(percentButton.isSelected())
-					{
-						percent = true;
-						//Call repaint.
-						mappingDataWinPanelRef.repaint();
-					}
-				}
-				else if(arg.equals("Value"))
+				else if(arg.equals("Number of Events"))
 				{
 					if(valueButton.isSelected())
 					{
-						percent = false;
+						userEventValuesString = "value";
 						//Call repaint.
-						mappingDataWinPanelRef.repaint();
+						userEventWinPanelRef.repaint();
 					}
 				}
-				else if(arg.equals("Seconds"))
+				else if(arg.equals("Min. Value"))
 				{
-					if(secondsButton.isSelected())
+					if(minButton.isSelected())
 					{
-						unitsString = "Seconds";
+						userEventValuesString = "min";
 						//Call repaint.
-						mappingDataWinPanelRef.repaint();
+						userEventWinPanelRef.repaint();
 					}
 				}
-				else if(arg.equals("Microseconds"))
+				else if(arg.equals("Max. Value"))
 				{
-					if(microsecondsButton.isSelected())
+					if(maxButton.isSelected())
 					{
-						unitsString = "Microseconds";
+						userEventValuesString = "max";
 						//Call repaint.
-						mappingDataWinPanelRef.repaint();
+						userEventWinPanelRef.repaint();
 					}
 				}
-				else if(arg.equals("Milliseconds"))
+				else if(arg.equals("Mean Value"))
 				{
-					if(millisecondsButton.isSelected())
+					if(meanButton.isSelected())
 					{
-						unitsString = "Milliseconds";
+						userEventValuesString = "mean";
 						//Call repaint.
-						mappingDataWinPanelRef.repaint();
+						userEventWinPanelRef.repaint();
 					}
 				}
 				else if(arg.equals("Display Sliders"))
@@ -402,7 +343,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 					//just show the mapping ledger window.
 					(jRacy.staticSystemData.getGlobalMapping()).displayMappingLedger(0);
 				}
-				else if(arg.equals("Show Group Mapping Ledger"))
+				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
@@ -424,26 +365,26 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 					jRacy.helpWindow.show();
 					//Since the data must have been loaded.  Tell them someting about
 					//where they are.
-					jRacy.helpWindow.writeText("This is the mapping data window for:");
+					jRacy.helpWindow.writeText("This is the user event data window for:");
 					jRacy.helpWindow.writeText(mappingName);
 					jRacy.helpWindow.writeText("");
-					jRacy.helpWindow.writeText("This window shows you this mapping's statistics across all the threads.");
+					jRacy.helpWindow.writeText("This window shows you this user event's statistics across all the threads.");
 					jRacy.helpWindow.writeText("");
 					jRacy.helpWindow.writeText("Use the options menu to select different ways of displaying the data.");
 					jRacy.helpWindow.writeText("");
 					jRacy.helpWindow.writeText("Right click anywhere within this window to bring up a popup");
 					jRacy.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
-					jRacy.helpWindow.writeText("for this mapping.");
+					jRacy.helpWindow.writeText("for this user event.");
 				}
 			}
 			else if(EventSrc == sliderMultiple)
 			{
-				mappingDataWinPanelRef.changeInMultiples();
+				userEventWinPanelRef.changeInMultiples();
 			}
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW03");
+			jRacy.systemError(null, "UEW03");
 		}
 	}
 	//******************************
@@ -456,7 +397,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	//******************************
 	public void stateChanged(ChangeEvent event)
 	{
-		mappingDataWinPanelRef.changeInMultiples();
+		userEventWinPanelRef.changeInMultiples();
 	}
 	//******************************
 	//End - Change listener code.
@@ -469,11 +410,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	{
 		try
 		{
-			if(percent)
-				unitsMenu.setEnabled(false);
-			else
-				unitsMenu.setEnabled(true);
-				
 			if(jRacy.staticSystemData.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
@@ -481,7 +417,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW04");
+			jRacy.systemError(null, "UEW04");
 		}
 		
 	}
@@ -507,12 +443,12 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			if(tmpString.equals("prefEvent"))
 			{
 				//Just need to call a repaint on the ThreadDataWindowPanel.
-				mappingDataWinPanelRef.repaint();
+				userEventWinPanelRef.repaint();
 			}
 			else if(tmpString.equals("colorEvent"))
 			{
 				//Just need to call a repaint on the ThreadDataWindowPanel.
-				mappingDataWinPanelRef.repaint();
+				userEventWinPanelRef.repaint();
 			}
 			else if(tmpString.equals("dataSetChangeEvent"))
 			{
@@ -526,17 +462,18 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW05");
+			jRacy.systemError(null, "UEW05");
 		}
 	}
 	
 	//MappingDataWindowPanel call back functions.
 	public Vector getStaticMainWindowSystemData()
 	{
+		
 		try{
 			if(sMWGeneralData == null)
 			{
-				sMWGeneralData = sMWData.getSMWMappingData(mappingID);
+				sMWGeneralData = sMWData.getSMWUserEventData(mappingID);
 				return sMWGeneralData;
 			}
 			else
@@ -551,20 +488,10 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		
 		return null;
 	}
-		
-	public boolean isInclusive()
-	{
-		return inclusive;
-	}
 	
-	public boolean isPercent()
+	public String userEventValue()
 	{
-		return percent;
-	}
-	
-	public String units()
-	{
-		return unitsString;
+		return userEventValuesString;
 	}
 	
 	public int getSliderValue()
@@ -577,7 +504,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW07");
+			jRacy.systemError(null, "UEW07");
 		}
 		
 		return tmpInt;
@@ -593,7 +520,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW08");
+			jRacy.systemError(null, "UEW08");
 		}
 		
 		return 0;
@@ -607,7 +534,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			//removed is that scrollPane.  We then add back in with new parameters.
 			//This might not be required as it seems to adjust well if left in, but just
 			//to be sure.
-			contentPane.remove(mappingDataWinPanelScrollPane);
+			contentPane.remove(userEventWinPanelScrollPane);
 			
 			gbc.fill = GridBagConstraints.NONE;
 			gbc.anchor = GridBagConstraints.EAST;
@@ -637,7 +564,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			gbc.anchor = GridBagConstraints.CENTER;
 			gbc.weightx = 0.95;
 			gbc.weighty = 0.98;
-			addCompItem(mappingDataWinPanelScrollPane, gbc, 0, 1, 4, 1);
+			addCompItem(userEventWinPanelScrollPane, gbc, 0, 1, 4, 1);
 		}
 		else
 		{
@@ -645,13 +572,13 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			contentPane.remove(sliderMultiple);
 			contentPane.remove(barLengthLabel);
 			contentPane.remove(barLengthSlider);
-			contentPane.remove(mappingDataWinPanelScrollPane);
+			contentPane.remove(userEventWinPanelScrollPane);
 			
 			gbc.fill = GridBagConstraints.BOTH;
 			gbc.anchor = GridBagConstraints.CENTER;
 			gbc.weightx = 0.95;
 			gbc.weighty = 0.98;
-			addCompItem(mappingDataWinPanelScrollPane, gbc, 0, 0, 1, 1);
+			addCompItem(userEventWinPanelScrollPane, gbc, 0, 0, 1, 1);
 		}
 		
 		//Now call validate so that these componant changes are displayed.
@@ -670,7 +597,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW09");
+			jRacy.systemError(null, "UEW09");
 		}
 	}
 	
@@ -686,7 +613,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			if(jRacy.debugIsOn)
 			{
 				System.out.println("------------------------");
-				System.out.println("A mapping window for: \"" + mappingName + "\" is closing");
+				System.out.println("A funtion window for: \"" + mappingName + "\" is closing");
 				System.out.println("Clearing resourses for that window.");
 			}
 			setVisible(false);
@@ -695,7 +622,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW10");
+			jRacy.systemError(null, "UEW10");
 		}
 	}
 	
@@ -705,22 +632,15 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	private int mappingID = -1;
 	private String mappingName = null;
 	
-	private JMenu unitsMenu;
+	private JMenu userEventValuesMenu;
 	private JMenuItem mappingGroupLedgerItem;
 	
-	private ButtonGroup inclusiveExclusiveGroup = null;
-	private ButtonGroup valuePercentGroup = null;
-	private ButtonGroup unitsGroup = null;
-	
-	private JRadioButtonMenuItem inclusiveRadioButton = null;
-	private JRadioButtonMenuItem exclusiveRadioButton = null;
+	private ButtonGroup userEventValuesGroup = null;
 	
 	private JRadioButtonMenuItem valueButton = null;
-	private JRadioButtonMenuItem percentButton = null;
-	
-	private JRadioButtonMenuItem secondsButton = null;
-	private JRadioButtonMenuItem millisecondsButton = null;
-	private JRadioButtonMenuItem microsecondsButton = null;
+	private JRadioButtonMenuItem minButton = null;
+	private JRadioButtonMenuItem maxButton = null;
+	private JRadioButtonMenuItem meanButton = null;
 	
 	private JRadioButtonMenuItem displaySlidersButton;
 	
@@ -734,19 +654,15 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	private GridBagLayout gbl = null;
 	private GridBagConstraints gbc = null;
 	
-	private JScrollPane mappingDataWinPanelScrollPane;
-	
- 	//private ThreadDataWindowPanel threadDataWindowPanelRef = null;
+	private JScrollPane userEventWinPanelScrollPane;
  	
  	StaticMainWindowData sMWData = null;
  	
  	Vector sMWGeneralData = null;
  	 	
- 	MappingDataWindowPanel mappingDataWinPanelRef = null;
+ 	UserEventWindowPanel userEventWinPanelRef = null;
  	
- 	boolean inclusive = false;
- 	boolean percent = false;
- 	private String unitsString = null;
+ 	private String userEventValuesString = null;
  	
  	//******************************
 	//End - Instance data.
