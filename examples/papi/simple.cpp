@@ -1,7 +1,9 @@
 #include <Profile/Profiler.h>
 
-#define SIZE 300
+#define SIZE 1024
 #define CACHE 64
+
+double A[SIZE][SIZE], B[SIZE][SIZE], C[SIZE][SIZE];
 
 double multiply(void)
 {
@@ -11,17 +13,18 @@ double multiply(void)
   TAU_PROFILE_TIMER(t1,"multiply-regular", "void (void)", TAU_USER);
   TAU_PROFILE_TIMER(strip_timer,"multiply-with-strip-mining-optimization", "void (void)", TAU_USER);
 
-  double A[SIZE][SIZE], B[SIZE][SIZE], C[SIZE][SIZE];
 
   for (n = 0; n < SIZE; n++)
     for (m = 0; m < SIZE; m++)
+     {
       A[n][m] = B[n][m] = n + m ;
+      C[n][m] = 0;
+     }
   TAU_PROFILE_START(t1);
   for (i = 0; i < SIZE; i ++)
   { 
     for (j = 0; j < SIZE; j++)
     {
-      C[i][j] = 0;
       for (k = 0; k < SIZE; k++)
   	C[i][j] += A[i][k] * B[k][j];
     }
