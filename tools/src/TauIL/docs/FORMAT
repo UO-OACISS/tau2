@@ -3,13 +3,13 @@ TAU Instrumentation Language - (TauIL v0.2)
 
 Table of Contents
 
--  File Format
+- File Format
 - Interpreter Environment Variables
 - Declarations
--  Blocks
+- Blocks
   +- Directives
   +- Conditions
-  +- Anti-Conditions
+  \- Anti-Conditions
 - Macros
 
  File Format
@@ -24,8 +24,13 @@ by a space so that the comment doesn't conflict with a preprocessor entity.
 The lexical and grammar specifications for TauIL can be found in the file SPEC 
 located in the TauIL documentation directory.
 
-Interpreter Environment Variables
+Interpreter Environment Variables (DEPRECATED)
 -------------------------------------------------------
+
+* NOTE: TauIL no longer supports environment variables. It is
+  uncertain whether support will be need in the future so this section
+  remains as reference only. TauIL currently treats attempts to use
+  environment variables as comments.
 
 Environment variables are used to override the default behavior of the TauIL 
 interpreter. The environment variables are preprocessor entities and are 
@@ -53,7 +58,7 @@ ENVIRONMENT VARIABLES
 
 	variable	args		default value
 	----------------------------------------------
-	version		1		0.2
+	version		1		0.2              DEPRECATED
 
 Declarations
 -------------------------------------------------------
@@ -99,7 +104,7 @@ following is an example of a global declaration:
  Blocks
 -------------------------------------------------------
 
- blocks are used to define an instrumentation scenario in 
+Blocks are used to define an instrumentation scenario in 
 the context of some form of program data. The data can be data that is 
 acquired statically, dynamically, or even post runtime. The keywords for 
 the currently allowed data sources are "static", "runtime", or "profile". 
@@ -185,14 +190,14 @@ PROFILE DATA :
 	type		tau_profile		0	tau_profile
 	use		file, db		1	file "pprof.dat"
 
-STATIC DATA
+STATIC DATA (*** NOT YET SUPPORTED ***)
 
 	directive	values			args	default value
 	--------------------------------------------------------------
 	type		pdt			0	pdt
 	use 		file			1	*UNDEFINED*		
 
-RUNTIME DATA
+RUNTIME DATA (*** NOT YET SUPPORTED ***)
 
 	directive	values			args	default value
 	--------------------------------------------------------------
@@ -249,13 +254,12 @@ on the command line or directly within the instrumentation file. Macros are
 defined in a manner similar to C-style macros using the "define" keyword. 
 Similarly, "ifndef" and "ifdef" are used in conjunction with "endif" to form 
 conditional blocks based on whether a macro has been defined. Note that 
-since the macro keywords are preprocessor elements the must always be 
+since the macro keywords are preprocessor elements they must always be 
 immediately preceded with a "#". Once a macro is defined the macro is 
 referenced using the "$" symbol in the same manner as shell environment 
 variables. The following demonstrates the use of macros in an instrumentation 
 file:
 
-	#ENV_version[0.2]
 
 	// Global declaration.
 	declarations
@@ -263,7 +267,8 @@ file:
 		include event main
 	:}
 
-	// If no output file has been given specify a default file
+	// If no output file has been given on the command line 
+	// specify a default file.
 	#ifndef $OUTFILE
 	#define OUTFILE "inst.sel"
 	#endif

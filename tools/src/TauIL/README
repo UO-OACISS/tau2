@@ -3,7 +3,7 @@ TAU Instrumentation Language (TauIL v0.2)
 
 To compile and install TauIL:
 
-	1.) Generate dependencies
+	1.) Generate dependencies (Requires that CUP and JFlex be installed)
 
 		make deps
 

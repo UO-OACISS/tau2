@@ -1,8 +1,7 @@
 include ../../Makefile.inc
 
-SOURCES	= jReduce.java \
-	  TauIL.java \
-	  Tool.java
+SOURCES	= Tool.java \
+	  TauIL.java 
 
 .PHONEY : default all
 

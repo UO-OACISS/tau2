@@ -1,5 +1,6 @@
 #!/bin/@SHELL@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
+LIBDIR=${TAUROOT}/${MACHINE}/lib
 
-java -Xmx500m -cp ${TAUROOT}/${MACHINE}/bin/TauIL.jar:${TAUROOT}/${MACHINE}/bin/ParaProf.jar:${TAUROOT}/tools/src/TauIL/bin/java_cup.jar:${TAUROOT}/tools/src/dms/dms.jar TauIL.Tool $@
+java -Xmx500m -cp ${LIBDIR}/TauIL.jar:${LIBDIR}/ParaProf.jar:${LIBDIR}/ParaProf-Old.jar:${LIBDIR}/java_cup.jar:${LIBDIR}/dms.jar TauIL.Tool $@

@@ -10,11 +10,11 @@
 
 package TauIL.interpreter;
 
-import paraprof.GlobalMapping;
-import paraprof.GlobalMappingElement;
-import paraprof.ParaProfDataSession;
-import paraprof.ParaProfObserver;
-import paraprof.TauPprofOutputSession;
+import edu.uoregon.tau.dms.dss.GlobalMapping;
+import edu.uoregon.tau.dms.dss.GlobalMappingElement;
+import edu.uoregon.tau.dms.dss.ParaProfDataSession;
+import edu.uoregon.tau.dms.dss.ParaProfObserver;
+import edu.uoregon.tau.dms.dss.TauPprofOutputSession;
 
 import java.io.File;
 import java.util.ListIterator;

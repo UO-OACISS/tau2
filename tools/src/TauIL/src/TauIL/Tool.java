@@ -17,7 +17,7 @@ import java.util.ListIterator;
 import java.util.HashMap;
 
 public class Tool {
-    public static final char [] version = { '0', '8', 'a' };
+    public static final char [] version = { '0', '5', 'a' };
 
     private static String fname = null;
     private static boolean debug = false;

@@ -7,8 +7,6 @@ TAU Instrumentation Language (TauIL v0.2)
 
 3.) Update abstract syntax rewriting code to direct ouput to a PrintStream.
 
-4.) Documentation.
+4.) Update to use profile.*.*.* files instead of pprof dump files.
 
-5.) Examples.
-
-6.) Prepare makefile for inclusion in TAU code tree.
+5.) Add support for multiple counters.

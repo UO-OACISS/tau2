@@ -1,8 +1,8 @@
-TAU_HOME	= ../../..
+TAU_HOME	= /home/tyreld/cvs/tau2
 
 TAUIL_HOME	= $(TAU_HOME)/tools/src/TauIL
 
-TOOLDIR		= $(HOME)/java
+TOOLDIR		= $(TAUIL_HOME)/tools
 CUPDIR		= $(TOOLDIR)/CUP
 JFLEXDIR	= $(TOOLDIR)/JFlex
 
@@ -24,10 +24,12 @@ JAVA_OPT	= -classpath $(CLASSPATH)
 JAR_OPT		= -cvf
 JDOC_OPT	= -d $(APIDIR) -sourcepath $(SOURCEPATH)
 
-JAVAC		= javac $(JAVAC_OPT)
-JAVA		= java $(JAVA_OPT)
-JAR		= jar $(JAR_OPT)
-JDOC		= javadoc $(JDOC_OPT)
+JAVA_HOME	= /usr/local/j2sdk1.4.2_05/bin
+
+JAVAC		= $(JAVA_HOME)/javac $(JAVAC_OPT)
+JAVA		= $(JAVA_HOME)/java $(JAVA_OPT)
+JAR		= $(JAVA_HOME)/jar $(JAR_OPT)
+JDOC		= $(JAVA_HOME)/javadoc $(JDOC_OPT)
 
 RM		= rm -f
 CP		= cp -f
