@@ -2,89 +2,126 @@ package edu.uoregon.tau.dms.analysis;
 
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.database.*;
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Vector;
 import java.util.ListIterator;
 
 public class Distance {
 	private DB db = null;
+	private EventMatrix results = null;
+	private Trial trial = null;
+	private Metric metric = null;
 
-	public Distance (PerfDMFSession session) {
+	public Distance (PerfDMFSession session, Trial inTrial, Metric inMetric) {
 		this.db = session.db();
+		this.trial = inTrial;
+		this.metric = inMetric;
 	}
 
-	public double[][] getNodeDistance(Trial inTrial, Metric inMetric) {
-		int nodeCount = inTrial.getNodeCount() * inTrial.getNumContextsPerNode() * inTrial.getNumThreadsPerContext();
+	private void getRawData() {
+		// calculate the threadCount;
+		int threadCount = trial.getNodeCount() * trial.getNumContextsPerNode() * trial.getNumThreadsPerContext();
 		// get the event count from the database
-		int eventCount = 0;
 		StringBuffer buf = new StringBuffer();
-		buf.append("select sum(id) from interval_event where trial = ");
-		buf.append(inTrial.getID());
-		// get the count thingy
+		buf.append("select count(id) from interval_event where trial = ");
+		buf.append(trial.getID());
+		int eventCount = Integer.parseInt(db.getDataItem(buf.toString()));
+		System.out.println(threadCount + " " + eventCount);
 
-		EventMatrix results = new EventMatrix(nodeCount, eventCount);
+		// initialize the matrix
+		results = new EventMatrix(threadCount, eventCount);
 
-		// hit the database, and get the matrix of raw data
-		/*
-		StringBuffer buf = new StringBuffer();
-		buf.append("select e.name, e.trial, t.node_count * ");
-		buf.append("t.contexts_per_node * t.threads_per_context as threads, ");
-		buf.append("min(i.");
-		buf.append(measurement);
-		buf.append("), avg(i.");
-		buf.append(measurement);
-		buf.append("), max(i.");
-		buf.append(measurement);
-		buf.append("), stddev(i.");
-		buf.append(measurement);
-		buf.append(") from interval_event e inner join interval_location_profile ");
-		buf.append("i on e.id = i.interval_event inner join trial t on e.trial = ");
-		buf.append("t.id where e.trial in (");
-
-		// loop through the trials, and get their IDs for the select statement
-		int i = 0;
-		while (trials.hasNext()) {
-			Trial trial = (Trial)trials.next();
-			if (i++ > 0) {
-				buf.append(",");
-			}
-			buf.append(trial.getID());
-		}
-		buf.append(") ");
-		if (function != null)
-			buf.append("and e.name like '" + function + "' ");
-		buf.append("group by e.name, e.trial, threads order by ");
-		buf.append("e.name, threads, e.trial");
-
-		// System.out.println(buf.toString());
+		// get the event names from the database
+		buf = new StringBuffer();
+		buf.append("select name from interval_event where trial = ? ");
 		try {
-			ResultSet resultSet = db.executeQuery(buf.toString());          
-			String currentFunction = new String("");
-			ScalabilityResult current = null;
-			int counter = 0;
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			statement.setInt(1, trial.getID());
+			ResultSet resultSet = statement.executeQuery();          
+			int i = 0;
 			while (resultSet.next() != false) {
-				if (!currentFunction.equals(resultSet.getString(1))) {
-					// create a new function result
-					current = new ScalabilityResult(resultSet.getString(1), inTrials.size());
-					results.add(current);
-					counter = 0;
-					currentFunction = resultSet.getString(1);
-				} else { counter++; }
-				current.threadCount[counter] = resultSet.getInt(3);
-				current.minimum[counter] = resultSet.getDouble(4);
-				current.average[counter] = resultSet.getDouble(5);
-				current.maximum[counter] = resultSet.getDouble(6);
-				current.stddev[counter] = resultSet.getDouble(7);
+				results.eventName[i++] = resultSet.getString(1);
+				// System.out.println(results.eventName[i-1]);
         	}
         	resultSet.close(); 
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return null;
+			return;
 		}
-		*/
 
+		// build the query to get total amounts
+		buf = new StringBuffer();
+		buf.append("select l.node, l.context, l.thread, sum(l.exclusive) from interval_location_profile l ");
+		buf.append("inner join interval_event e on l.interval_event = e.id ");
+		buf.append("where e.trial = ? and l.metric = ? ");
+		buf.append("group by l.node, l.context, l.thread ");
+
+		// hit the database, and get the totals for each thread
+		try {
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			statement.setInt(1, trial.getID());
+			statement.setInt(2, metric.getID());
+			ResultSet resultSet = statement.executeQuery();          
+			int i = 0;
+			while (resultSet.next() != false) {
+				results.threadTotal[i++] = resultSet.getDouble(4);
+				// System.out.println(resultSet.getInt(1) + ":" + resultSet.getInt(2) + ":" + resultSet.getInt(3) + ":" + results.threadTotal[i-1]);
+        	}
+        	resultSet.close(); 
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		// build the query to get the raw data & percentages
+		buf = new StringBuffer();
+		int cFactor = trial.getNumThreadsPerContext();
+		int nFactor = cFactor * trial.getNumContextsPerNode();
+		buf.append("select (l.node * ");
+		buf.append(nFactor);
+		buf.append(") + (l.context * ");
+		buf.append(cFactor);
+		buf.append(") + l.thread, e.name, COALESCE(l.exclusive, 0.0) from interval_event e ");
+		buf.append("left outer join interval_location_profile l on e.id = l.interval_event ");
+		buf.append("where e.trial = ? and l.metric = ? ");
+
+		// hit the database, and get the normalized values for each event on each thread
+		try {
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			statement.setInt(1, trial.getID());
+			statement.setInt(2, metric.getID());
+			ResultSet resultSet = statement.executeQuery();          
+			int i = 0;
+			int j = 0;
+			while (resultSet.next() != false) {
+				j = resultSet.getInt(1);
+				results.threadMatrix[j][i++] = resultSet.getDouble(3) / results.threadTotal[j];
+				i = i == eventCount ? 0 : i;
+        	}
+        	resultSet.close(); 
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return;
+		}
+
+	}
+
+	public double[][] getManhattanDistance() {
+		if (results == null) getRawData();
+		results.getManhattanDistance();
 		return results.distanceMatrix;
 	}
 
+	public double[][] getEuclidianDistance() {
+		if (results == null) getRawData();
+		results.getEuclidianDistance();
+		return results.distanceMatrix;
+	}
+
+	public int getThreadCount() { return results == null ? 0 : results.threadCount; }
+
+	public int getEventCount() { return results == null ? 0 : results.eventCount; }
 }
 

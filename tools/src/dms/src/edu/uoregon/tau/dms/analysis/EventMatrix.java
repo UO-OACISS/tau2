@@ -6,7 +6,7 @@ public class EventMatrix {
 
 	public double[][] threadMatrix = null;
 	public double[][] distanceMatrix = null;
-	public String[] eventNames = null;
+	public String[] eventName = null;
 	public double[] threadTotal = null;
 	public int threadCount = 0;
 	public int eventCount = 0;
@@ -14,11 +14,10 @@ public class EventMatrix {
 	public EventMatrix (int threadCount, int eventCount) {
 		this.threadMatrix = new double[threadCount][eventCount];
 		this.distanceMatrix = new double[threadCount][eventCount];
-		this.eventNames = new String[eventCount];
-		this.eventNames = new String[threadCount];
-	}
-
-	public void getRawData() {
+		this.eventName = new String[eventCount];
+		this.threadTotal = new double[threadCount];
+		this.threadCount = threadCount;
+		this.eventCount = eventCount;
 	}
 
 	public void getEuclidianDistance() {
