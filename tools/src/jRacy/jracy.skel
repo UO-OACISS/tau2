@@ -34,7 +34,7 @@ else
 	    echo "Found $i/pprof.dat"
 	    if [ $i/profile.0.0.0 -nt $i/pprof.dat ]
 	    then
-	      echo "$egenerating $i/pprof.dat file ..."
+	      echo "Regenerating $i/pprof.dat file ..."
 	      ${pprof_path} -d -f $i/profile > $i/pprof.dat
 	    else
 	      echo "$i/pprof.dat file is current"
