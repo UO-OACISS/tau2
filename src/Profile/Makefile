@@ -116,9 +116,10 @@ TAU_DISABLE   = libTauDisable$(LSX)
 TAU_SHLIBX		= .so 		  
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
-#SOL2#AR_SHFLAGS  		= -G	        #ENDIF#
+#SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAU$(TAUOPTIONS)$(TAU_SHLIBX)
+#SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
 
 ##############################################
 # If JAVA or DYNINST is defined, TAU_DSO is defined
@@ -137,7 +138,7 @@ $(TARGET):	$(OBJS)
 
 $(TAU_SHLIB): 	$(OBJS)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS)
+		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS) $(EXTRA_LIBS)
 
 $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
