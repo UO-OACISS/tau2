@@ -16,6 +16,18 @@ public class ParaProfApplication extends Application{
 
     public ParaProfApplication(){
 	super();}
+
+    public ParaProfApplication(Application application){
+	this.setID(application.getID());
+	this.setName(application.getName());
+	this.setVersion(application.getVersion());
+	this.setDescription(application.getDescription());
+	this.setLanguage(application.getLanguage());
+	this.setParaDiag(application.getParaDiag());
+	this.setUsage(application.getUsage());
+	this.setExecutableOptions(application.getExecutableOptions());
+	this.setUserData(application.getUserData());
+    }
   
     public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode){
 	this.defaultMutableTreeNode = defaultMutableTreeNode;}

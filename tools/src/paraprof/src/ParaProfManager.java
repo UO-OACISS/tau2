@@ -19,7 +19,7 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 import javax.swing.table.*;
-import java.sql.*;
+import dms.dss.*;
 
 public class ParaProfManager extends JFrame implements ActionListener{
     public ParaProfManager(){
@@ -101,9 +101,9 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    connectDisconnectButton.setFont(new Font("Times-Roman", Font.PLAIN, 12));
 	    refreshButton = new JButton("Reload");
 	    refreshButton.setFont(new Font("Times-Roman", Font.PLAIN, 12));
-	    refreshExpButton = new JButton("Reload ParaProfExperiment");
+	    refreshExpButton = new JButton("Reload Experiment");
 	    refreshExpButton.setFont(new Font("Times-Roman", Font.PLAIN, 12));
-	    serverField = new JTextField("Please enter server address", 30);
+	    configFileField = new JTextField(System.getProperty("user.dir"), 30);
 	    usernameField = new JTextField("Username", 30);
 	    passwordField = new JPasswordField("Password", 30);
 
@@ -114,17 +114,17 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    //Create the tree.
 	    //******************************
 	    //Create the root node.
-	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("ParaProfApplications");
+	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("Applications");
       
-	    DefaultMutableTreeNode standard = new DefaultMutableTreeNode(new ParaProfApplicationType("Standard ParaProfApplications"));
+	    DefaultMutableTreeNode standard = new DefaultMutableTreeNode(new ParaProfApplicationType("Standard Applications"));
 	    //Populate this node.
 	    this.populateStandardParaProfApplications(standard);
 	    root.add(standard);
       
-	    DefaultMutableTreeNode runtime = new DefaultMutableTreeNode(new ParaProfApplicationType("Runtime ParaProfApplications"));
+	    DefaultMutableTreeNode runtime = new DefaultMutableTreeNode(new ParaProfApplicationType("Runtime Applications"));
 	    root.add(runtime);
       
-	    dbApps = new DefaultMutableTreeNode(new ParaProfApplicationType("DB ParaProfApplications"));
+	    dbApps = new DefaultMutableTreeNode(new ParaProfApplicationType("DB Applications"));
 	    root.add(dbApps);
       
 	    treeModel = new DefaultTreeModel(root);
@@ -233,13 +233,13 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	else if(userObject instanceof ParaProfApplicationType){
 	    String tmpString = userObject.toString();
 	    if(parentNode != null){
-		if(tmpString.equals("Standard ParaProfApplications")){
+		if(tmpString.equals("Standard Applications")){
 		    innerPane.setRightComponent(getSAppUpperRight());
 		    innerPane2.setLeftComponent(getAppTypeNodeLowerLeft());
 		    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
 		    tree.expandPath(path);
 		}
-		else if(tmpString.equals("Runtime ParaProfApplications")){
+		else if(tmpString.equals("Runtime Applications")){
 		    innerPane.setRightComponent(getRAppUpperRight());
 		    innerPane2.setLeftComponent(getAppTypeNodeLowerLeft());
 		    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
@@ -420,7 +420,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     private Component getAppTypeNodeLowerLeft(){
 	JButton tmpJButton = null;
 	JPanel tmpJPanel = new JPanel();
-	tmpJButton = new JButton("Add ParaProfApplication");
+	tmpJButton = new JButton("Add Application");
 	tmpJButton.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent evt){
 		    newParaProfApplicationButton();}
@@ -432,7 +432,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     private Component getExpTypeNodeLowerLeft(){
 	JButton tmpJButton = null;
 	JPanel tmpJPanel = new JPanel();
-	tmpJButton = new JButton("Add ParaProfExperiment");
+	tmpJButton = new JButton("Add Experiment");
 	tmpJButton.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent evt){
 		    addExperiment();}
@@ -450,7 +450,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		    addTrial();}
 	    });
 
-	String trialTypeStrings[] = {"Pprof -d File", "Tau Output", "other-1", "other-2"};
+	String trialTypeStrings[] = {"Pprof -d File", "Tau Output", "Dynaprof", "other-2"};
 	trialType = new JComboBox(trialTypeStrings);
 	
 	JLabel jLabel = new JLabel("Trial Type");//, SwingConstants.RIGHT);
@@ -491,9 +491,9 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		    newParaProfApplicationButton();}
 	    });
 
-	JLabel serverFieldLabel = new JLabel("Server Address:");
-	JLabel usernameFieldLabel = new JLabel("Password:");
-	JLabel passwordFieldLabel = new JLabel("Username:");
+	JLabel configFileLabel = new JLabel("Config File:");
+	JLabel usernameFieldLabel = new JLabel("Username:");
+	JLabel passwordFieldLabel = new JLabel("Password:");
     
     
 	//Now add the components to the panel.
@@ -512,13 +512,13 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	gbc.anchor = GridBagConstraints.EAST;
 	gbc.weightx = 0;
 	gbc.weighty = 0;
-	panelAdd(tmpJPanel, serverFieldLabel, gbc, 0, 1, 1, 1);
+	panelAdd(tmpJPanel, configFileLabel, gbc, 0, 1, 1, 1);
     
 	gbc.fill = GridBagConstraints.BOTH;
 	gbc.anchor = GridBagConstraints.CENTER;
 	gbc.weightx = 100;
 	gbc.weighty = 0;
-	panelAdd(tmpJPanel, serverField, gbc, 1, 1, 1, 1);
+	panelAdd(tmpJPanel, configFileField, gbc, 1, 1, 1, 1);
     
 	gbc.fill = GridBagConstraints.NONE;
 	gbc.anchor = GridBagConstraints.EAST;
@@ -748,7 +748,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		type = 0;
 	    else if(s.equals("Tau Output"))
 		type = 1;
-	    else if(s.equals("other-1"))
+	    else if(s.equals("Dynaprof"))
 		type = 2;
 	    else if(s.equals("other-2"))
 		type = 3;
@@ -789,150 +789,85 @@ public class ParaProfManager extends JFrame implements ActionListener{
     }
   
     public void connectDisconnectButtonFunction(){
-    
-	if(!ParaProf.dbSupport){
-	    JOptionPane.showMessageDialog(this, "Sorry, in this release db support is not turned on!", "Warning!"
-					  ,JOptionPane.ERROR_MESSAGE);
-	    return;
-	}
-    
 	try{
 	    //Try making a connection to the database.
 	    if(connectDisconnectButton.getText().equals("Connect to Database")){
-		String serverAddress = serverField.getText().trim();
+		String configFile = configFileField.getText().trim();
 		String username = usernameField.getText().trim();
 		String password = new String(passwordField.getPassword());
-		password.trim();
-		//ConnectionManager.connect(serverAddress, username, password);
-		connectDisconnectButton.setText("Disconnect from Database");
+		if(password==null)
+		    password = "";
+		else
+		    password.trim();
+		perfDBSession = new PerfDBSession();
+		perfDBSession.initialize(configFile, password);
+		this.connectDisconnectButton.setText("Disconnect from Database");
 	    }
 	    else{
-		//ConnectionManager.dbclose();
+		perfDBSession.terminate();
+		perfDBSession = null;
 		connectDisconnectButton.setText("Connect to Database");
 	    }
 	}
-	catch(Exception e)
-	    {
-      
-		ParaProf.systemError(e, null, "ELM03");
-	    }
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "ELM03");
+	}
     }
   
-    public void refreshButton(){  
-	if(!ParaProf.dbSupport){
-	    JOptionPane.showMessageDialog(this, "Sorry, in this release db support is not turned on!", "Warning!"
-					  ,JOptionPane.ERROR_MESSAGE);
-	    return;
-	}
-    
-	/*
+    public void refreshApplications(){  
 	  try{
-	  //Clear the node before adding anything else.
-	  //Works better than the enumeration ... well, just works.
-	  for(int i=dbApps.getChildCount(); i>0; i--){
-	  treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
-	  }
-      
-	  ResultSet result;
-	  ResultSet resultExp;
-      
-	  //Excecute query.
-	  String query = new String("select * from applications; ");
-	  //result = ConnectionManager.getDB().executeQuery(query);
-      
-	  //int columnNum = result.getMetaData().getColumnCount();
-	  int counter = 0;
-	  while (result.next()){
-	  ParaProfApplication tmpApp = new ParaProfApplication();
-	  tmpApp.setDBParaProfApplication(true);
-	  for(int i=1;i<=columnNum; i++){
-          String returnString = result.getString(i);
-          switch(i){
-          case(1):
-	  tmpApp.setParaProfApplicationID(Integer.parseInt(returnString));
-	  break;
-          case(2):
-	  tmpApp.setParaProfApplicationName(returnString);
-	  break;
-          case(3):
-	  tmpApp.setVersion(returnString);
-	  break;
-          case(4):
-	  tmpApp.setDescription(returnString);
-	  break;
-          case(5):
-	  tmpApp.setLanguage(returnString);
-	  break;
-          case(6):
-	  tmpApp.setPara_diag(returnString);
-	  break;
-          case(7):
-	  tmpApp.setUsage(returnString);
-	  break;
-          case(8):
-	  tmpApp.setExe_opt(returnString);
-	  break;
-          default:
-	  System.out.println("Error in application information parsing" + i);
-          }
-	  }
-	  //Now add the application to the node.
-	  treeModel.insertNodeInto(new DefaultMutableTreeNode(tmpApp), dbApps, dbApps.getChildCount());
-	  }
-	  result.close();
-	  return;
+	      //Clear node.
+	      for(int i=dbApps.getChildCount(); i>0; i--){
+		  treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
+	      }
+ 	      ListIterator l = perfDBSession.getApplicationList();
+	      while (l.hasNext()){
+		  ParaProfApplication paraProfApplication = new ParaProfApplication((Application)l.next());
+		  paraProfApplication.setDBParaProfApplication(true);
+		  //Now add the application to the node.
+		  treeModel.insertNodeInto(new DefaultMutableTreeNode(paraProfApplication), dbApps, dbApps.getChildCount());
+	      }
+	      return;
 	  }
 	  catch(Exception e){
-	  ParaProf.systemError(e, null, "ELM03");
+	      ParaProf.systemError(e, null, "ELM03");
 	  }
-	*/
     }
   
-  
-    public void refreshParaProfExperimentsButton(){
-	/*try{
-    
-	TreePath path = tree.getSelectionPath();
-	if(path == null)
-	return;
-	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-	Object userObject = selectedNode.getUserObject();
-      
-	if(userObject instanceof ParaProfApplication){
-        int applicationID = ((ParaProfApplication) userObject).getParaProfApplicationID(); 
-        
-        //Clear the node before adding anything else.
-        //for(int i=selectedNode.getChildCount(); i>0; i--){
-	//treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
-        //}
-      
-        ResultSet result;
-        //Execute query.
-        String query = new String("select * from experiments where appID = '" + applicationID + "';");
-        //result = ConnectionManager.getDB().executeQuery(query);
-        
-        //int columnNum = result.getMetaData().getColumnCount();
-        int counter = 0;
-        
-        while (result.next()){
-	ParaProfApplication tmpApp = new ParaProfApplication();
-	System.out.println("@@@@@@@@@@@@@ParaProfApplication: " + counter++);
-	for(int i=1;i<=1; i++){
-	String returnString = result.getString(i);
-	System.out.println("ParaProfExperiment: " + returnString);
-	}
-        }
-        
-        result.close();
-        return;
-        
+    public void refreshExperiments(){
+	try{
+	    TreePath path = tree.getSelectionPath();
+	    if(path == null)
+		return;
+	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+	    Object userObject = selectedNode.getUserObject();
+	    
+	    if(userObject instanceof ParaProfApplication){
+		int applicationID = ((ParaProfApplication) userObject).getParaProfApplicationID(); 
+		
+		//Clear the node before adding anything else.
+		//for(int i=selectedNode.getChildCount(); i>0; i--){
+		//treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+		//}
+		while (result.next()){
+		    ParaProfApplication tmpApp = new ParaProfApplication();
+		    System.out.println("@@@@@@@@@@@@@ParaProfApplication: " + counter++);
+		    for(int i=1;i<=1; i++){
+			String returnString = result.getString(i);
+			System.out.println("ParaProfExperiment: " + returnString);
+		    }
+		}
+		
+		
+		result.close();
+		return;
+		
+	    }
 	}
 	catch(Exception e){
-	ParaProf.systemError(e, null, "ELM03");
+	    ParaProf.systemError(e, null, "ELM03");
 	}
-	*/
     }
-  
   
     void applyOperationButtonFunction()
     {
@@ -1248,10 +1183,11 @@ public class ParaProfManager extends JFrame implements ActionListener{
     //A reference to the default trial node.
     DefaultMutableTreeNode defaultParaProfTrialNode = null;
   
+    private PerfDBSession perfDBSession = null;
     private JButton connectDisconnectButton = null;
     private JButton refreshButton = null;
     private JButton refreshExpButton = null;
-    private JTextField serverField = null;
+    private JTextField configFileField = null;
     private JTextField usernameField = null;
     private JPasswordField passwordField = null;
 
