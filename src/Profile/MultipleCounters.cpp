@@ -62,7 +62,7 @@ int MultipleCounterLayer::cpuTimeMCL_FP;
 #ifdef TAU_MUSE
 int MultipleCounterLayer::tauMUSEMCL_CP[1];
 int MultipleCounterLayer::tauMUSEMCL_FP;
-#else /* TAU_MUSE */
+#endif /* TAU_MUSE */
 
 #ifdef TAU_PAPI
 int MultipleCounterLayer::papiMCL_CP[MAX_TAU_COUNTERS];
@@ -92,7 +92,7 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   sgiTimersMCLInit,
 						   cpuTimeMCLInit,
 						   crayTimersMCLInit,
-						   tauMUSEMCLInit
+						   tauMUSEMCLInit,
 						   papiMCLInit,
 						   papiWallClockMCLInit,
 						   papiVirtualMCLInit,
@@ -151,9 +151,9 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 #endif // CPU_TIME
 
 #ifdef TAU_MUSE
-    MultipleCounterLayer::tauMUSEMCL_CP[1] = -1;
+    MultipleCounterLayer::tauMUSEMCL_CP[0] = -1;
     MultipleCounterLayer::tauMUSEMCL_FP = -1;
-#else /* TAU_MUSE */
+#endif /* TAU_MUSE */
 
 #ifdef CRAY_TIMERS
     MultipleCounterLayer::crayTimersMCL_CP[0] = -1;
