@@ -9,6 +9,9 @@
 
 Change log:
 ------------
+Version 2.X changes (from 2.2):
+1. Introduced User Events
+
 Version 2.2 changes (from 2.1):
 1. Added callstack profile viewing tool
 2. Blitz++ compatibility changes.
