@@ -42,6 +42,9 @@ autoinstrument  - Shows the use of Program Database Toolkit (PDT) for
 		  Makefile is modified to illustrate the use of a source to 
 		  source translator (tau_instrumentor). 
 
+cinstrument     - Shows the use of PDT for C. Requires configuring TAU with 
+                  -pdt=<dir> option.
+
 fortran & f90   - Show how to instrument a simple Fortran 90 program. A C++ 
 		  linker needs to be used when linking the fortran application.
 
