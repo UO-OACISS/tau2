@@ -863,6 +863,14 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		perfDBSession.setApplication(trial.getExperiment().getApplication().getID());
 		perfDBSession.setExperiment(trial.getExperiment().getID());
 		perfDBSession.setTrial(trial.getID());
+		ListIterator l = perfDBSession.getFunctions();
+		System.out.println("###############################");
+		while(l.hasNext()){
+		    Function f = (Function) l.next();
+		    System.out.println(f.getFunctionID());
+		}
+		System.out.println("###############################");
+		/*
 		ListIterator l = perfDBSession.getFunctionData();
 		int metricID = metric.getID();
 		while(l.hasNext()){
@@ -880,7 +888,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		    System.out.println("getNumCalls: "+f.getNumCalls());
 		    System.out.println("getNumSubroutines: "+f.getNumSubroutines());
 		    System.out.println("###############################");
-		}
+		    }*/
 	    }
 	    else{
 		trial.setCurValLoc(metric.getID());
