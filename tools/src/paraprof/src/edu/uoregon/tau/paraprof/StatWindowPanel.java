@@ -168,7 +168,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    //Draw the header if required.
 	    //######
 	    if(header){
-		//FontRenderContext frc = g2D.getFontRenderContext();
+		//FontRenderContext frc2 = g2D.getFontRenderContext();
 		Insets insets = this.getInsets();
 		yCoord = yCoord + (spacing);
 		String headerString = sWindow.getHeaderString();
@@ -176,7 +176,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		StringTokenizer st = new StringTokenizer(headerString, "'\n'");
 		while(st.hasMoreTokens()){
 		    AttributedString as = new AttributedString(st.nextToken());
-		    as.addAttribute(TextAttribute.FONT, fmMonoFont);
+		    as.addAttribute(TextAttribute.FONT, monoFont);
 		    AttributedCharacterIterator aci = as.getIterator();
 		    LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
 		    float wrappingWidth = this.getSize().width - insets.left - insets.right;

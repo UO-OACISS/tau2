@@ -116,12 +116,12 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	    spacing = trial.getPreferences().getBarSpacing();
       
 	    //Create font.
-	    MonoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
+	    monoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
 	    //Compute the font metrics.
-	    fmMonoFont = g2D.getFontMetrics(MonoFont);
+	    fmMonoFont = g2D.getFontMetrics(monoFont);
 	    maxFontAscent = fmMonoFont.getMaxAscent();
 	    maxFontDescent = fmMonoFont.getMaxDescent();
-	    g2D.setFont(MonoFont);
+	    g2D.setFont(monoFont);
       
 	    if(spacing <= (maxFontAscent + maxFontDescent)){
 		spacing = spacing + 1;
@@ -366,7 +366,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    StringTokenizer st = new StringTokenizer(headerString, "'\n'");
 		    while(st.hasMoreTokens()){
 			AttributedString as = new AttributedString(st.nextToken());
-			as.addAttribute(TextAttribute.FONT, fmMonoFont);
+			as.addAttribute(TextAttribute.FONT, monoFont);
 			AttributedCharacterIterator aci = as.getIterator();
 			LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
 			float wrappingWidth = this.getSize().width - insets.left - insets.right;
@@ -991,7 +991,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     private ParaProfTrial trial = null;
     CallPathTextWindow cPTWindow = null;
     boolean global = false;
-    Font MonoFont = null;
+    Font monoFont = null;
     FontMetrics fmMonoFont = null;
 
     //Some drawing details.
