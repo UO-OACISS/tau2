@@ -257,9 +257,12 @@ int origkey = 1;
 	  (long)  event->u.class_load.methods[i].method_id, 
 		     groupname, tid); 
     } else {
+/* NO NEED TO CREATE THIS OBJECT! */ 
+/*
       TAU_MAPPING_CREATE1(funcname, " ",
 	  (long)  event->u.class_load.methods[i].method_id, origkey,
 		     groupname, tid); 
+*/
     }
    
 
@@ -411,8 +414,8 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 
 /***************************************************************************
- * $RCSfile: TauJava.cpp,v $   $Author: amorris $
- * $Revision: 1.23 $   $Date: 2004/12/09 19:06:19 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.23 2004/12/09 19:06:19 amorris Exp $
+ * $RCSfile: TauJava.cpp,v $   $Author: sameer $
+ * $Revision: 1.24 $   $Date: 2004/12/09 23:50:27 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.24 2004/12/09 23:50:27 sameer Exp $
  ***************************************************************************/
 
