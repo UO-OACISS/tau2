@@ -336,11 +336,12 @@ TauUserEvent::~TauUserEvent(void)
 
 void TauUserEvent::ReportStatistics(bool ForEachThread)
 {
-  TAU_EVENT_DATATYPE TotalNumEvents, TotalSumValue, Minima, Maxima;
+  TAU_EVENT_DATATYPE TotalNumEvents, TotalSumValue, Minima, Maxima ;
   vector<TauUserEvent*>::iterator it;
 
-    cout << "TAU Runtime Statistics" <<endl;
-    cout << "*************************************************************" << endl;
+  Maxima = Minima = 0;
+  cout << "TAU Runtime Statistics" <<endl;
+  cout << "*************************************************************" << endl;
 
   for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
   {
@@ -419,6 +420,6 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2002/11/08 02:27:24 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.10 2002/11/08 02:27:24 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 2003/05/22 00:54:34 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.11 2003/05/22 00:54:34 sameer Exp $ 
  ***************************************************************************/
