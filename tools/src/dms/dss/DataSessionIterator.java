@@ -23,7 +23,7 @@ public class DataSessionIterator implements ListIterator{
 				size = listData.size();
 		}
 
-		public add(Object o){
+		public void add(Object o){
 				throw new UnsupportedOperationException();
 		}
 
@@ -35,6 +35,7 @@ public class DataSessionIterator implements ListIterator{
 		}
 
 		public boolean hasPrevious(){
+				return false;
 		}
 
 		public Object next(){
@@ -43,7 +44,7 @@ public class DataSessionIterator implements ListIterator{
 						throw new NoSuchElementException();
 
 				//Get the object.
-				Object object = listData.elementAt(position);
+				Object object = listData.elementAt(index);
 				
 				//Increment the index.
 				index++;
@@ -56,6 +57,7 @@ public class DataSessionIterator implements ListIterator{
 		}
 
 		public Object previous(){
+				return null;
 		}
 
 		public int previousIndex(){
@@ -71,6 +73,6 @@ public class DataSessionIterator implements ListIterator{
 		}
 
 		private Vector listData = null;
-		pprivate int size = 0;
+		private int size = 0;
 		private int index = 0;
 }
