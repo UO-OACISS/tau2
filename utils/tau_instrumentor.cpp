@@ -916,7 +916,7 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 #define WRITE_SPACE(os, c) { char ch = c; if (!((ch == ' ') || (ch == '\t'))) ch = ' '; \
 				os << ch; }
 
-#define WRITE_TAB(os, column) if (column == 1) os<<"\t";
+#define WRITE_TAB(os, column) if (column < 7) os<<"\t";
 
 /* In Fortran programs, it is a bad idea to begin the first column with a C
  * as it can be confused with a comment. So, we should check and see if the
@@ -931,6 +931,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 { 
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
+  char *checkbuf=NULL; // Assign inbuf to checkbuf for return processing
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
   int space, i, j, k;
@@ -1101,14 +1102,25 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	        cout <<"line ="<<(*it)->line<<" col = "<<(*it)->col<<endl;
 #endif /* DEBUG */
 		/* Check to see if it is not a comment and has a "if" in the string */
+                checkbuf = new char[strlen(inbuf)]; 
+                if (checkbuf == (char *) NULL) 
+                {
+                  perror("ERROR: new returns NULL while creating checkbuf");
+                  exit(1);
+                }
+                for  (i = 0; i < (*it)->col; i++)
+                {
+	           checkbuf[i] = inbuf[i];
+                }
+                checkbuf[i] = '\0'; 
       		if ((!((inbuf[0] == 'c') || (inbuf[0] == 'C') || (inbuf[0] == '!'))) && 
-	  	    (strstr(inbuf,"if") != NULL))
+	  	    (strstr(checkbuf,"if") != NULL))
 		  is_if_stmt = true;
                 else
 		  is_if_stmt = false;
 
       		if ((is_if_stmt == false) && (!((inbuf[0] == 'c') || (inbuf[0] == 'C') || (inbuf[0] == '!'))) && 
-	  	    (strstr(inbuf,"IF") != NULL))
+	  	    (strstr(checkbuf,"IF") != NULL))
                 { /* only if the earlier clause was false will this be executed */
 		  is_if_stmt = true;
                 }
@@ -1146,6 +1158,9 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  }
 		}
 		/* Here, either is_if_stmt is true or it is a plain return*/
+#ifdef DEBUG
+	cout <<"if_stmt = "<<is_if_stmt<<endl;
+#endif /* DEBUG */
 
 	        if (lit == it)
 		{ /* Has body begin already written the beginning of the statement? */
@@ -1461,8 +1476,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.54 $   $Date: 2003/11/18 18:28:30 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.54 2003/11/18 18:28:30 sameer Exp $
+ * $Revision: 1.55 $   $Date: 2003/11/26 21:24:46 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.55 2003/11/26 21:24:46 sameer Exp $
  ***************************************************************************/
 
 
