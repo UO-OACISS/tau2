@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.acl.lanl.gov/tau		           **
@@ -559,7 +559,7 @@ do
     echo " options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
-    echo "  	                                           kai|nec|hitachi|intel]"
+    echo "  	                                         kai|nec|hitachi|intel]"
     echo "-useropt='<parameters>' ............... list of commandline parameters."
     echo "-pthread .................................. Use pthread thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
