@@ -25,7 +25,7 @@ TAUINSTR 	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
 CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -w -UTAU_MPI
 
-LIBS 	      	= $(TAU_LIBS) $(LEXTRA1)
+LIBS 	      	= $(TAU_LIBS) 
 
 LDFLAGS	      	= $(USER_OPT)
 

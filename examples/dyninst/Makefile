@@ -22,7 +22,7 @@ CC		= $(TAU_CC)
 #CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
 CFLAGS        	= 
 
-#LIBS 	      	= $(TAU_LIBS) $(LEXTRA1)
+#LIBS 	      	= $(TAU_LIBS) 
 #LIBS 	      	= $(TAUROOTDIR)/src/Profile/TauHooks.o $(TAU_LIBS) -ldl
 
 LDFLAGS	      	= $(USER_OPT)

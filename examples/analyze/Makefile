@@ -29,7 +29,7 @@ TAUPPROF	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/pprof
 
 CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
 
-LIBS 	      	= $(TAU_LIBS) $(LEXTRA1)
+LIBS 	      	= $(TAU_LIBS) 
 
 LDFLAGS	      	= $(USER_OPT)
 
