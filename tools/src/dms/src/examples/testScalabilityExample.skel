@@ -1,8 +1,8 @@
 #!/bin/sh
 TAUROOT=@TAUROOTDIR@
-PERFDB_HOME=${TAUROOT}/tools/src/dms
+PERFDMF_HOME=${TAUROOT}/tools/src/dms
 XMLSAX_JAR=${TAUROOT}/tools/src/contrib/xerces.jar
 JDBC_JAR=${TAUROOT}/tools/src/contrib/postgresql.jar
-DMS_JAR=${PERFDB_HOME}/dms.jar
+DMS_JAR=${PERFDMF_HOME}/dms.jar
 
-java -cp ${PERFDB_HOME}/src/examples:${DMS_JAR}:${XMLSAX_JAR}:${JDBC_JAR} examples.ScalabilityExample ${PERFDB_HOME}/data/perfdb.cfg
+java -cp ${PERFDMF_HOME}/src/examples:${DMS_JAR}:${XMLSAX_JAR}:${JDBC_JAR} ScalabilityExample ${PERFDMF_HOME}/data/perfdmf.cfg

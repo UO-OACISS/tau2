@@ -1,10 +1,5 @@
-package examples;
-
-import java.io.*;
 import java.util.*;
-import java.net.*;
-import java.sql.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class SimpleExample {
 
@@ -16,8 +11,8 @@ public class SimpleExample {
 
     public static void main(java.lang.String[] args) {
 
-		// Create a PerfDBSession object
-		DataSession session = new PerfDBSession();
+		// Create a PerfDMFSession object
+		DataSession session = new PerfDMFSession();
 		session.initialize(args[0]);
 
 		// select the application
@@ -45,18 +40,18 @@ public class SimpleExample {
 		//session.setContext(0);
 		//session.setThread(0);
 		//session.setMetric("time");
-		session.setFunction(37);
-		Function nullFun = null;
-		session.setFunction(nullFun);
-		session.setFunction(39);
+		session.setIntervalEvent(37);
+		IntervalEvent nullFun = null;
+		session.setIntervalEvent(nullFun);
+		session.setIntervalEvent(39);
 
 		ListIterator myIterator;
 		// Get the data
 		System.out.println("Getting function data...");
-		myIterator = session.getFunctionData();
+		myIterator = session.getIntervalEventData();
 		System.out.println(" ...done.");
-		FunctionDataObject functionDataObject;
-		Function function = null;
+		IntervalLocationProfile functionDataObject;
+		IntervalEvent function = null;
 		String name, group;
 		int functionIndexID, trial, node, context, thread;
 		double inclusivePercentage, inclusive, exclusive, exclusivePercentage, inclusivePerCall;
@@ -64,10 +59,10 @@ public class SimpleExample {
 		System.out.println ("Inclusive, Exclusive, Inc. Percent, Ex. Percent, Inc. Per. call:");
 		System.out.println ("Trial, Node, Context, Thread, Name, Group, Values:");
 		while (myIterator.hasNext()) {
-			functionDataObject = (FunctionDataObject)(myIterator.next());
-			functionIndexID = functionDataObject.getFunctionIndexID();
+			functionDataObject = (IntervalLocationProfile)(myIterator.next());
+			functionIndexID = functionDataObject.getIntervalEventID();
 			System.out.println("function ID:" + functionIndexID);
-			function = session.getFunction(functionIndexID);
+			function = session.getIntervalEvent(functionIndexID);
 			name = function.getName();
 			group = function.getGroup();
 			trial = function.getTrialID();
@@ -84,19 +79,19 @@ public class SimpleExample {
 
 		// get the user events
 		System.out.println("Getting userEvent data...");
-		myIterator = session.getUserEventData();
+		myIterator = session.getAtomicEventData();
 		System.out.println(" ...done.");
-		UserEventDataObject userEventDataObject;
-		UserEvent userEvent = null;
+		AtomicLocationProfile userEventDataObject;
+		AtomicEvent userEvent = null;
 		int id;
 		double sampleCount, minimumValue, maximumValue, meanValue, standardDeviation;
 
 		System.out.println ("UserEVents:");
 		System.out.println ("Trial, Node, Context, Thread, Name, Group, Count, Min, Max, Mean, StdDev:");
 		while (myIterator.hasNext()) {
-			userEventDataObject = (UserEventDataObject)(myIterator.next());
-			id = userEventDataObject.getUserEventID();
-			userEvent = session.getUserEvent(id);
+			userEventDataObject = (AtomicLocationProfile)(myIterator.next());
+			id = userEventDataObject.getAtomicEventID();
+			userEvent = session.getAtomicEvent(id);
 			name = userEvent.getName();
 			group = userEvent.getGroup();
 			trial = userEvent.getTrialID();

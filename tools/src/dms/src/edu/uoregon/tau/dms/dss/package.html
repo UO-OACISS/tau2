@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<!--
+
+  $Id: package.html,v 1.1 2004/05/05 17:43:40 khuck Exp $
+
+-->
+</head>
+<body bgcolor="white">
+
+Provides an API for access to TAU performance data.
+
+<p>
+The DMS package provides access to the TAU data in three forms:  
+PerfDB database, pprof.dat files, and streaming TAU data.  The user
+is expected to create an instance of a DataSession object, and refer
+to all data through the public methods of the DataSession object.
+</p>
+<p>
+Currently, only support for PerfDB is available.  Support for pprof.dat
+files and streaming TAU data will be available in a future release.
+</p>
+<p>
+The DataSession object can return one of several data objects, including
+Application, Experiment, Trial, Function, FunctionDataObject, UserEvent 
+and UserEventDataObject.
+</p>
+
+
+<h2>Package Specification</h2>
+
+N/A
+<!--
+<ul>
+  <li><a href="">##### REFER TO ANY FRAMEMAKER SPECIFICATION HERE #####</a>
+</ul>
+-->
+
+<h2>Related Documentation</h2>
+
+For overviews, tutorials, examples, guides, and tool documentation, please see:
+<ul>
+  <li><a href="../../../examples/TestPerfDBSession.java">TestPerfDBSession.java</a>
+  <li><a href="../../../examples/SimpleExample.java">SimpleExample.java</a>
+  <li><a href="../../../../perfdb/doc/README">README file for PerfDB</a>
+  <li><a href="../../../../../../README">README file for TAU</a>
+</ul>
+
+<!-- Put @see and @since tags down here. -->
+@see dms.dss.Application
+@see dms.dss.DataSession
+@see dms.dss.DataSessionIterator
+@see dms.dss.Experiment
+@see dms.dss.Function
+@see dms.dss.FunctionDataObject
+@see dms.dss.PerfDBSession
+@see dms.dss.Trial
+@see dms.dss.UserEvent
+@see dms.dss.UserEventDataObject
+@since 0.1
+
+</body>
+</html>

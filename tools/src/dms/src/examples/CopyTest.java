@@ -1,10 +1,5 @@
-package examples;
-
-import java.io.*;
 import java.util.*;
-import java.net.*;
-import java.sql.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class CopyTest {
 
@@ -16,8 +11,8 @@ public class CopyTest {
 
     public static void main(java.lang.String[] args) {
 
-		// Create a PerfDBSession object
-		DataSession session = new PerfDBSession();
+		// Create a PerfDMFSession object
+		DataSession session = new PerfDMFSession();
 		session.initialize(args[0]);
 
 		// select the application
@@ -48,25 +43,25 @@ public class CopyTest {
 
 		// get the list of functions
 		ListIterator functions;
-		functions = session.getFunctions();
-		Function function = null;
+		functions = session.getIntervalEvents();
+		IntervalEvent function = null;
 
 		// get the function details
 		while (functions.hasNext()) {
-			function = (Function)functions.next();
-			session.getFunctionDetail(function);
+			function = (IntervalEvent)functions.next();
+			session.getIntervalEventDetail(function);
 		}
 
 		ListIterator myIterator;
 		// Get all the data
 		System.out.println("Getting function data...");
-		myIterator = session.getFunctionData();
+		myIterator = session.getIntervalEventData();
 		System.out.println(" ...done.");
 
 		// get the user events
 		System.out.println("Getting userEvent data...");
-		myIterator = session.getUserEvents();
-		myIterator = session.getUserEventData();
+		myIterator = session.getAtomicEvents();
+		myIterator = session.getAtomicEventData();
 		System.out.println(" ...done.");
 
 		// save the trial!

@@ -1,8 +1,8 @@
 #!/bin/@SHELL@
 TAUROOT=@TAUROOTDIR@
 
-PERFDB_HOME=${TAUROOT}/tools/src/dms
-PERFDB_JAR=${PERFDB_HOME}/dms.jar
+PERFDMF_HOME=${TAUROOT}/tools/src/dms
+PERFDMF_JAR=${PERFDMF_HOME}/dms.jar
 XMLSAX_JAR=${TAUROOT}/tools/src/contrib/xerces.jar
 JDBC_JAR=${TAUROOT}/tools/src/contrib/postgresql.jar
 JARGS_JAR=${TAUROOT}/tools/src/contrib/jargs.jar
@@ -13,11 +13,11 @@ then
 	exit
 fi
 
-if [ ! -r ${PERFDB_JAR} ]
+if [ ! -r ${PERFDMF_JAR} ]
 then
 	echo ""
-	echo "$PERFDB_JAR not found."
-	echo "Please run make in the perfdb directory."
+	echo "$PERFDMF_JAR not found."
+	echo "Please run make in the perfdmf directory."
 	echo ""
 	exit 
 fi
@@ -47,6 +47,6 @@ then
 fi
 
 java \
--cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
-dms.perfdb.CreateExperiment \
--g ${PERFDB_HOME}/data/perfdb.cfg $@
+-cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
+edu.uoregon.tau.dms.loader.CreateExperiment \
+-g ${PERFDMF_HOME}/data/perfdmf.cfg $@

@@ -1,11 +1,6 @@
-package examples;
-
-import java.io.*;
 import java.util.*;
-import java.net.*;
-import java.sql.*;
-import dms.dss.*;
-import dms.analysis.*;
+import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.dms.analysis.*;
 
 public class ScalabilityExample {
 
@@ -17,8 +12,8 @@ public class ScalabilityExample {
 
     public static void main(java.lang.String[] args) {
 
-		// Create a PerfDBSession object
-		PerfDBSession session = new PerfDBSession();
+		// Create a PerfDMFSession object
+		PerfDMFSession session = new PerfDMFSession();
 		session.initialize(args[0]);
 
 		// select an experiment

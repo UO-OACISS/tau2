@@ -1,8 +1,8 @@
 #!/bin/sh
 
-PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
-XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
-JDBC_JAR=${PERFDB_HOME}/jars/mysql.jar
+PERFDMF_JAR=${PERFDMF_HOME}/jars/perfdmf.jar
+XMLSAX_JAR=${PERFDMF_HOME}/jars/xerces.jar
+JDBC_JAR=${PERFDMF_HOME}/jars/mysql.jar
 DMS_JAR=dms.jar
 
-java -cp ./examples:${DMS_JAR}:${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} SimpleExample ${PERFDB_HOME}/data/perfdb.cfg.mysql
+java -cp ./examples:${DMS_JAR}:${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR} SimpleExample ${PERFDMF_HOME}/data/perfdmf.cfg.mysql

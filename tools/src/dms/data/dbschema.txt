@@ -37,7 +37,8 @@ CREATE TABLE experiment (
 	configure_jdk           VARCHAR(100),
 	configure_profile       VARCHAR(3),
     configure_userdata      TEXT,
-    userdata                TEXT
+    userdata                TEXT,
+	FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE trial (
@@ -49,32 +50,36 @@ CREATE TABLE trial (
     node_count              INT,
     contexts_per_node       INT,
     threads_per_context     INT,
-    userdata                TEXT
+    userdata                TEXT,
+	FOREIGN KEY(experiment) REFERENCES experiment(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE metric (
     id                      SERIAL          NOT NULL     PRIMARY KEY,
     name                    TEXT            NOT NULL,
-    trial                   INT				NOT NULL
+    trial                   INT				NOT NULL,
+	FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE TABLE function (
+CREATE TABLE interval_event (
     id                      SERIAL          NOT NULL    PRIMARY KEY,
     trial                   INT             NOT NULL,
     name                    TEXT            NOT NULL,
-    group_name              VARCHAR(50)
+    group_name              VARCHAR(50),
+	FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE TABLE user_event (
+CREATE TABLE atomic_event (
     id                      SERIAL           NOT NULL    PRIMARY KEY,
     trial                   INT              NOT NULL,
     name                    TEXT             NOT NULL,
-    group_name              VARCHAR(50)
+    group_name              VARCHAR(50),
+	FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_location_profile (
     id                      SERIAL           NOT NULL    PRIMARY KEY,
-    function                INT              NOT NULL,
+    interval_event          INT              NOT NULL,
     node                    INT              NOT NULL,             
     context                 INT              NOT NULL,
     thread                  INT              NOT NULL,
@@ -85,12 +90,13 @@ CREATE TABLE interval_location_profile (
     exclusive               DECIMAL,
     call                    DECIMAL,
     subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL
+    inclusive_per_call      DECIMAL,
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE atomic_location_profile (
     id                      SERIAL           NOT NULL    PRIMARY KEY,
-    user_event              INT              NOT NULL,
+    atomic_event            INT              NOT NULL,
     node                    INT              NOT NULL,             
     context                 INT              NOT NULL,
     thread                  INT              NOT NULL,
@@ -98,12 +104,13 @@ CREATE TABLE atomic_location_profile (
     maximum_value           DECIMAL,
     minimum_value           DECIMAL,
     mean_value              DECIMAL,
-    standard_deviation      DECIMAL
+    standard_deviation      DECIMAL,
+	FOREIGN KEY(atomic_event) REFERENCES atomic_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_total_summary (
     id                		SERIAL           NOT NULL   PRIMARY KEY,
-    function                INT              NOT NULL,
+    interval_event          INT              NOT NULL,
     metric                  INT				 NOT NULL,
     inclusive_percentage    DECIMAL,
     inclusive               DECIMAL,
@@ -111,12 +118,13 @@ CREATE TABLE interval_total_summary (
     exclusive               DECIMAL,
     call                    DECIMAL,
     subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL
+    inclusive_per_call      DECIMAL,
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE TABLE interval_mean_summary (
     id                		SERIAL           NOT NULL   PRIMARY KEY,
-    function                INT              NOT NULL,
+    interval_event          INT              NOT NULL,
     metric                  INT				 NOT NULL,
     inclusive_percentage    DECIMAL,
     inclusive               DECIMAL,
@@ -124,34 +132,35 @@ CREATE TABLE interval_mean_summary (
     exclusive               DECIMAL,
     call                    DECIMAL,
     subroutines             DECIMAL,
-    inclusive_per_call      DECIMAL
+    inclusive_per_call      DECIMAL,
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 CREATE INDEX experiment_application_index on experiment (application);
 CREATE INDEX trial_experiment_index on trial (experiment);
-CREATE INDEX function_trial_index on function (trial);
-CREATE INDEX interval_loc_function_metric_index on interval_location_profile (function, metric);
-CREATE INDEX interval_total_function_metric_index on interval_total_summary (function, metric);
-CREATE INDEX interval_mean_function_metric_index on interval_mean_summary (function, metric);
-CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (function, metric, node, context, thread);
+CREATE INDEX interval_event_trial_index on interval_event (trial);
+CREATE INDEX interval_loc_interval_event_metric_index on interval_location_profile (interval_event, metric);
+CREATE INDEX interval_total_interval_event_metric_index on interval_total_summary (interval_event, metric);
+CREATE INDEX interval_mean_interval_event_metric_index on interval_mean_summary (interval_event, metric);
+CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread);
 
-CREATE VIEW function_detail
+CREATE VIEW interval_event_detail
 	( id, metric, mean_inclusive_percentage, mean_inclusive, 
 	mean_exclusive_percentage, mean_exclusive, mean_call, mean_subroutines, 
 	mean_inclusive_per_call, total_inclusive_percentage, total_inclusive, 
 	total_exclusive_percentage, total_exclusive, total_call, 
 	total_subroutines, total_inclusive_per_call )
 	AS SELECT
-	ms.function, ms.metric, ms.inclusive_percentage, ms.inclusive, 
+	ms.interval_event, ms.metric, ms.inclusive_percentage, ms.inclusive, 
 	ms.exclusive_percentage, ms.exclusive, ms.call, ms.subroutines, 
 	ms.inclusive_per_call, ts.inclusive_percentage, ts.inclusive, 
 	ts.exclusive_percentage, ts.exclusive, ts.call, ts.subroutines, 
 	ts.inclusive_per_call
 	FROM interval_mean_summary ms inner join interval_total_summary ts 
-	ON ms.function = ts.function and ms.metric = ts.metric;
+	ON ms.interval_event = ts.interval_event and ms.metric = ts.metric;
 	
-CREATE VIEW function_interval
-	( trial, function, metric, node, context, thread, inclusive_percentage, 
+CREATE VIEW interval_event_interval
+	( trial, interval_event, metric, node, context, thread, inclusive_percentage, 
 	inclusive, exclusive_percentage, exclusive, call, 
 	subroutines, inclusive_per_call )
 	AS SELECT
@@ -159,6 +168,6 @@ CREATE VIEW function_interval
 	p.inclusive_percentage, p.inclusive, 
 	p.exclusive_percentage, p.exclusive, p.call, p.subroutines, 
 	p.inclusive_per_call
-	FROM function f inner join interval_location_profile p
-	ON f.id = p.function;
+	FROM interval_event f inner join interval_location_profile p
+	ON f.id = p.interval_event;
 	
