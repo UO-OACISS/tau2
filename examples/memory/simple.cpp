@@ -1,80 +1,24 @@
-/* This demonstrates how data cache misses can affect the performance of an 
-application. We show how the time/counts for a simple matrix multiplication
-algorithm dramatically reduce when we employ a strip mining optimization. */
-#include <Profile/Profiler.h>
+#include <TAU.h>
 
-#define SIZE 512
-#define CACHE 64
+/* This example demonstrates the use of TAU_TRACK_MEMORY... macros in TAU. */
+/* There are two modes of operation: 1) the user explicitly inserts 
+   TAU_TRACK_MEMORY_HERE() calls in the source code and the memory event is
+   triggered at those locations, and 2) the user enables tracking memory by
+   calling TAU_TRACK_MEMORY() and an interrupt is generated every 10 seconds
+   and the memory event is triggered with the current value. Also, 
+   this interrupt interval can be changed by calling 
+   TAU_SET_INTERRUPT_INTERVAL(value). The tracking of memory events in both 
+   cases can be explictly enabled or disabled by calling the macros
+   TAU_ENABLE_TRACKING_MEMORY() or TAU_DISABLE_TRACKING_MEMORY(); */
 
-double A[SIZE][SIZE], B[SIZE][SIZE], C[SIZE][SIZE];
-
-double multiply(void)
-{
-  int i, j, k, n, m;
-  int vl, sz, strip;
-  TAU_PROFILE("multiply", " ", TAU_USER);
-  TAU_PROFILE_TIMER(t1,"multiply-regular", "void (void)", TAU_USER);
-  TAU_PROFILE_TIMER(strip_timer,"multiply-with-strip-mining-optimization", "void (void)", TAU_USER);
-
-
-  for (n = 0; n < SIZE; n++)
-    for (m = 0; m < SIZE; m++)
-     {
-      A[n][m] = B[n][m] = n + m ;
-      C[n][m] = 0;
-     }
-  TAU_PROFILE_START(t1);
-  for (i = 0; i < SIZE; i ++)
-  { 
-    for (j = 0; j < SIZE; j++)
-    {
-      for (k = 0; k < SIZE; k++)
-  	C[i][j] += A[i][k] * B[k][j];
-    }
-  }
-  TAU_PROFILE_STOP(t1);
-
-  /* Now we employ the strip mining optimization */
-
-  for(n = 0; n < SIZE; n++)
-    for(m = 0; m < SIZE; m++)
-      C[n][m] = 0; 
-  
-  TAU_PROFILE_START(strip_timer);
-  for(i=0; i < SIZE; i++)
-    for(k=0; k < SIZE; k++)
-      for(sz = 0; sz < SIZE; sz+=CACHE)
-      {
-        //vl = min(SIZE-sz, CACHE);
-  	vl = (SIZE - sz < CACHE ? SIZE - sz : CACHE); 
-        for(strip = sz; strip < sz+vl; strip++)
-          C[i][strip] += A[i][k]*B[k][strip];
-      }
-  TAU_PROFILE_STOP(strip_timer);
-
- 
-  return C[SIZE-10][SIZE-10];
-  // So KCC doesn't optimize this loop away.
-}
-       
-       
 int main(int argc, char **argv)
 {
-  TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
+  TAU_PROFILE("main()", " ", TAU_DEFAULT);
   TAU_PROFILE_SET_NODE(0);
 
-  /* This one call tracks heap memory utilization. It uses
-  getrusage to compute the max resident set size in KB */
-  TAU_TRACK_MEMORY();
+  TAU_TRACK_MEMORY_HERE();
 
-  /* By default the above call uses 10 seconds as the interrupt
-     interval. To change this to say 4 secs, use : */
-  TAU_SET_INTERRUPT_INTERVAL(4); 
-  /* this call is optional */
-
-  /* To disable tracking memory use TAU_DISABLE_TRACKING_MEMORY() and
-     to re-enable tracking it,  use TAU_ENABLE_TRACKING_MEMORY() */
-
-  multiply();
+  int *x = new int[5*1024*1024];
+  TAU_TRACK_MEMORY_HERE();
   return 0;
 }
