@@ -64,6 +64,11 @@ int MultipleCounterLayer::tauMUSEMCL_CP[1];
 int MultipleCounterLayer::tauMUSEMCL_FP;
 #endif /* TAU_MUSE */
 
+#ifdef TAU_MPI
+int MultipleCounterLayer::tauMPIMessageSizeMCL_CP[1];
+int MultipleCounterLayer::tauMPIMessageSizeMCL_FP;
+#endif /* TAU_MPI */
+
 #ifdef TAU_PAPI
 int MultipleCounterLayer::papiMCL_CP[MAX_TAU_COUNTERS];
 int MultipleCounterLayer::papiWallClockMCL_CP[1];
@@ -93,6 +98,7 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   cpuTimeMCLInit,
 						   crayTimersMCLInit,
 						   tauMUSEMCLInit,
+						   tauMPIMessageSizeMCLInit,
 						   papiMCLInit,
 						   papiWallClockMCLInit,
 						   papiVirtualMCLInit,
@@ -154,6 +160,11 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     MultipleCounterLayer::tauMUSEMCL_CP[0] = -1;
     MultipleCounterLayer::tauMUSEMCL_FP = -1;
 #endif /* TAU_MUSE */
+
+#ifdef TAU_MPI
+    MultipleCounterLayer::tauMPIMessageSizeMCL_CP[0] = -1;
+    MultipleCounterLayer::tauMPIMessageSizeMCL_FP = -1;
+#endif /* TAU_MPI */
 
 #ifdef CRAY_TIMERS
     MultipleCounterLayer::crayTimersMCL_CP[0] = -1;
@@ -498,6 +509,33 @@ bool MultipleCounterLayer::tauMUSEMCLInit(int functionPosition){
 #endif//TAU_MUSE
 }
 
+bool MultipleCounterLayer::tauMPIMessageSizeMCLInit(int functionPosition){
+#ifdef TAU_MPI
+  for(int i=0; i<MAX_TAU_COUNTERS; i++){
+    if(MultipleCounterLayer::names[i] != NULL){
+      if(strcmp(MultipleCounterLayer::names[i], "TAU_MPI_MESSAGE_SIZE") == 0){
+	
+	//Set the counter position.
+	tauMPIMessageSizeMCL_CP[0] = i;
+	
+	//Indicate that this function is being used.
+	MultipleCounterLayer::counterUsed[i] = true;
+	
+	//Update the functionArray.
+	MultipleCounterLayer::functionArray[functionPosition] = tauMPIMessageSizeMCL;
+	tauMPIMessageSizeMCL_FP = functionPosition;
+	//Now just return with beginCountersPosition incremented.
+	return true;
+      }
+    }
+  }
+  //If we are here, then this function is not active.
+  return false;
+#else //TAU_MPI
+  return false;
+#endif//TAU_MPI
+}
+
 
 bool MultipleCounterLayer::papiMCLInit(int functionPosition){
 #ifdef TAU_PAPI
@@ -761,6 +799,12 @@ void MultipleCounterLayer::tauMUSEMCL(int tid, double values[]){
 #ifdef TAU_MUSE 
   values[tauMUSEMCL_CP[0]] = TauMuseQuery();
 #endif//TAU_MUSE
+}
+
+void MultipleCounterLayer::tauMPIMessageSizeMCL(int tid, double values[]){
+#ifdef TAU_MPI
+  values[tauMPIMessageSizeMCL_CP[0]] = sendevent.GetSumValue(tid); //Currently TAU_EVENT_DATATYPE is a double.
+#endif//TAU_MPI
 }
 
 void MultipleCounterLayer::papiMCL(int tid, double values[]){

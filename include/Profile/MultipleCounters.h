@@ -24,7 +24,7 @@ extern "C" {
 #endif /* TAU_PAPI */
 
 
-#define SIZE_OF_INIT_ARRAY 10 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 11 //!!Change this if functions are added to the system!!
 
 
 //Some useful typedefs
@@ -66,7 +66,10 @@ class MultipleCounterLayer
 
   static bool tauMUSEMCLInit(int functionPosition);
   static void tauMUSEMCL(int tid, double values[]);
-
+  
+  static bool tauMPIMessageSizeMCLInit(int functionPosition);
+  static void tauMPIMessageSizeMCL(int tid, double values[]);
+  
   static bool papiMCLInit(int functionPosition);
   static void papiMCL(int tid, double values[]);
 
