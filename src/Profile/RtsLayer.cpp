@@ -141,6 +141,19 @@ unsigned int RtsLayer::resetProfileGroup(void) {
 
 /////////////////////////////////////////////////////////////////////////
 int RtsLayer::setMyNode(int NodeId, int tid) {
+#if (defined(TRACING_ON) && (TAU_MAX_THREADS != 1))
+  int oldid = TheNode();
+  int newid = NodeId;
+  if ((oldid != -1) && (oldid != newid))
+  { /* ie if SET_NODE macro was invoked twice for a threaded program : as 
+    in MPI+JAVA where JAVA initializes it with pid and then MPI_INIT is 
+    invoked several thousand events later, and TAU computes the process rank
+    and invokes the SET_NODE with the correct rank. Handshaking between multiple
+    levels of instrumentation. */
+    
+    TraceReinitialize(oldid, newid, tid); 
+  } 
+#endif // TRACING WITH THREADS
   TheNode() = NodeId;
 // At this stage, we should create the trace file because we know the node id
 #ifdef TRACING_ON
@@ -710,6 +723,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2000/04/03 18:21:58 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.19 2000/04/03 18:21:58 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 2000/04/06 18:51:57 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.20 2000/04/06 18:51:57 sameer Exp $ 
  ***************************************************************************/
