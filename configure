@@ -120,6 +120,7 @@ tag=no
 tautag=
 orig_useropt=
 mpi=no
+mpi2=no
 mpiinc=
 mpilib=
 mpilibrary=no
@@ -1692,6 +1693,16 @@ EOF
 
 EOF
 
+  cat <<EOF > mpi2errhandler.C
+  #include <mpi.h>
+
+  int foo (MPI_Comm_errhandler_fn *a, MPI_Errhandler *b)
+  {
+    return MPI_Comm_create_errhandler(a,b);
+ 
+  }
+EOF
+
   if $cxx_compiler $orig_useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
   then
     echo "Thread-safe MPI interface is defined... "
@@ -1706,23 +1717,41 @@ EOF
   fi
   if $cxx_compiler $orig_useropt $mpi_include -c mpi2grequest.C  1> /dev/null 2>&1
   then
-    echo "MPI-2 Grequest Interface is defined..."
-    fixmakeargs="$fixmakeargs MPIGREQUEST"
+    if [ $mpi2 = yes ]  
+    then 
+      echo "MPI-2 Grequest Interface is defined..."
+      fixmakeargs="$fixmakeargs MPIGREQUEST"
+    fi
   fi
 
   if $cxx_compiler $orig_useropt $mpi_include -c mpi2iorequest.C  1> /dev/null 2>&1
   then
-    echo "MPI-2 MPIO_Request Interface is defined..."
-    fixmakeargs="$fixmakeargs MPIOREQUEST"
+    if [ $mpi2 = yes ]  
+    then 
+      echo "MPI-2 MPIO_Request Interface is defined..."
+      fixmakeargs="$fixmakeargs MPIOREQUEST"
+    fi
   fi
 
   if $cxx_compiler $orig_useropt $mpi_include -c mpi2datarep.C  1> /dev/null 2>&1
   then
-    echo "MPI-2 MPI_Datarep_conversion_function Interface is defined..."
-    fixmakeargs="$fixmakeargs MPIDATAREP"
+    if [ $mpi2 = yes ]  
+    then 
+      echo "MPI-2 MPI_Datarep_conversion_function Interface is defined..."
+      fixmakeargs="$fixmakeargs MPIDATAREP"
+    fi
   fi
 
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2errhandler.C  1> /dev/null 2>&1
+  then
+    if [ $mpi2 = yes ]  
+    then 
+      echo "MPI-2 Comm_create_errhandler Interface is defined..."
+      fixmakeargs="$fixmakeargs MPIERRHANDLER"
+    fi
+  fi
+
+  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o mpi2errhandler.o mpi2errhandler.C
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi

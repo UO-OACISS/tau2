@@ -1246,6 +1246,8 @@ int mpi_exscan__( void * sendbuf, void * recvbuf, int count, MPI_Datatype dataty
 /******************************************************/
 
 
+#ifdef TAU_MPIERRHANDLER
+
 /******************************************************
 ***      MPI_Comm_create_errhandler wrapper function 
 ******************************************************/
@@ -1451,6 +1453,7 @@ int mpi_comm_set_errhandler__( MPI_Comm comm, MPI_Errhandler errhandler)
 
 /******************************************************/
 /******************************************************/
+#endif /* TAU_MPIERRHANDLER */
 
 
 /******************************************************
@@ -3178,6 +3181,8 @@ int mpi_win_free_keyval__( int * win_keyval)
 /******************************************************/
 
 
+#ifdef TAU_MPIERRHANDLER 
+
 /******************************************************
 ***      MPI_Win_create_errhandler wrapper function 
 ******************************************************/
@@ -3381,6 +3386,7 @@ int mpi_win_get_errhandler__( MPI_Win win, MPI_Errhandler * errhandler)
   return retvalue; 
 }
 
+#endif /* TAU_MPIERRHANDLER */
 /******************************************************/
 /******************************************************/
 
@@ -5111,7 +5117,7 @@ int mpi_type_create_darray__( int size, int rank, int ndims, int * array_of_gsiz
 /******************************************************/
 /******************************************************/
 
-
+#ifdef TAU_MPIERRHANDLER 
 /******************************************************
 ***      MPI_File_create_errhandler wrapper function 
 ******************************************************/
@@ -5315,6 +5321,7 @@ int mpi_file_get_errhandler__( MPI_File fh, MPI_Errhandler * errhandler)
   return retvalue; 
 }
 
+#endif /* TAU_MPIERRHANDLER */
 /******************************************************/
 /******************************************************/
 
@@ -8702,7 +8709,7 @@ int mpi_add_error_string__( int errorcode, char * string)
 /******************************************************/
 /******************************************************/
 
-
+#ifdef TAU_MPIERRHANDLER 
 /******************************************************
 ***      MPI_Comm_call_errhandler wrapper function 
 ******************************************************/
@@ -8768,6 +8775,7 @@ int mpi_comm_call_errhandler__( MPI_Comm comm, int errorcode)
   return retvalue; 
 }
 
+#endif /* TAU_MPIERRHANDLER */
 /******************************************************/
 /******************************************************/
 
@@ -8910,6 +8918,7 @@ int mpi_comm_get_name__( MPI_Comm comm, char * comm_name, int * resultlen)
 /******************************************************/
 
 
+#ifdef TAU_MPIERRHANDLER 
 /******************************************************
 ***      MPI_File_call_errhandler wrapper function 
 ******************************************************/
@@ -8974,6 +8983,8 @@ int mpi_file_call_errhandler__( MPI_File fh, int errorcode)
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+
+#endif /* TAU_MPIERRHANDLER */
 
 /******************************************************/
 /******************************************************/
@@ -9116,6 +9127,7 @@ int mpi_type_get_name__( MPI_Datatype type, char * type_name, int * resultlen)
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPIERRHANDLER 
 
 /******************************************************
 ***      MPI_Win_call_errhandler wrapper function 
@@ -9181,6 +9193,8 @@ int mpi_win_call_errhandler__( MPI_Win win, int errorcode)
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+
+#endif /* TAU_MPIERRHANDLER */
 
 /******************************************************/
 /******************************************************/
