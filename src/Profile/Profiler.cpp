@@ -846,7 +846,8 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 		    (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
 		    excltime, incltime); 
 	    
-	    fprintf(fp,"0 \n"); // Indicating - profile calls is turned off 
+	    fprintf(fp,"0 "); // Indicating - profile calls is turned off
+	    fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
 	    /*
 	      } // ProfileGroup test 
 	    */
@@ -1060,7 +1061,8 @@ int Profiler::StoreData(int tid)
   	      }
             } // sanity check 
 #else  // PROFILE_CALLS
-  	    fprintf(fp,"0 \n"); // Indicating - profile calls is turned off 
+  	    fprintf(fp,"0 "); // Indicating - profile calls is turned off
+	    fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
 #endif // PROFILE_CALLS
 	    /*
 	  } // ProfileGroup test 
@@ -1269,7 +1271,8 @@ int Profiler::DumpData(bool increment, int tid)
   	      (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
 	      excltime, incltime); 
 
-  	    fprintf(fp,"0 \n"); // Indicating - profile calls is turned off 
+  	    fprintf(fp,"0 "); // Indicating - profile calls is turned off
+	    fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
 	    /*
 	  } // ProfileGroup test 
 	  */
@@ -1790,7 +1793,8 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 		    (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
 		    0, 0);
 	  }
-	  fprintf(fp,"0 \n"); // Indicating - profile calls is turned off
+	  fprintf(fp,"0 "); // Indicating - profile calls is turned off
+	  fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
 	  //Free up the memory if it was allocated.
 	  if(memAllocated){
 	    free(tmpDoubleIncl);
@@ -1956,7 +1960,8 @@ int Profiler::StoreData(int tid){
 		  (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
 		  tmpDoubleExcl[i], tmpDoubleIncl[i]);
 
-	  fprintf(fp,"0 \n"); // Indicating - profile calls is turned off
+	  fprintf(fp,"0 "); // Indicating - profile calls is turned off
+	  fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
 	  
 	  //Free up the memory.
 	  free(tmpDoubleIncl);
@@ -2183,7 +2188,8 @@ int Profiler::DumpData(bool increment, int tid){
 		  (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
 		  0, 0);
 	}
-	fprintf(fp,"0 \n"); // Indicating - profile calls is turned off
+	fprintf(fp,"0 "); // Indicating - profile calls is turned off
+	fprintf(fp,"GROUP=\"%s\" \n", (*it)->GetAllGroups());
 	 //Free up the memory if it was allocated.
 	if(memAllocated){
 	  free(tmpDoubleIncl);
@@ -2441,8 +2447,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.71 $   $Date: 2002/03/29 01:06:57 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.71 2002/03/29 01:06:57 bertie Exp $ 
+ * $Revision: 1.72 $   $Date: 2002/04/15 19:14:26 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.72 2002/04/15 19:14:26 bertie Exp $ 
  ***************************************************************************/
 
 	

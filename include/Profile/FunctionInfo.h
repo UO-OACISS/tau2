@@ -137,11 +137,13 @@ public:
 	string Name;
 	string Type;
 	string GroupName;
+	string AllGroups;
 	long   FunctionId;
 	// Cough up the information about this function.
 	const char* GetName() const { return Name.c_str(); }
 	const char* GetType() const { return Type.c_str(); }
 	const char* GetPrimaryGroup() const { return GroupName.c_str(); }
+	const char* GetAllGroups() const { return AllGroups.c_str(); }
 	void SetPrimaryGroupName(const char *newname) { GroupName = newname; }
 	void SetPrimaryGroupName(string newname) { GroupName = newname; }
 	long GetFunctionId() ;
@@ -273,6 +275,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
- * $Revision: 1.21 $   $Date: 2002/03/27 10:18:59 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.21 2002/03/27 10:18:59 bertie Exp $ 
+ * $Revision: 1.22 $   $Date: 2002/04/15 19:10:17 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.22 2002/04/15 19:10:17 bertie Exp $ 
  ***************************************************************************/
