@@ -371,6 +371,8 @@ II) Platforms :
         g) Compaq Alpha Linux clusters with g++.
 	i) Microsoft Windows. Tested with MS Visual C++ v5.1.  
 	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
+	k) PowerPC Linux with g++
+	l) IA-64 Linux with g++ and SGI Pro64 compilers.
 	   
 
    TAU may work with minor modifications on other platforms.
