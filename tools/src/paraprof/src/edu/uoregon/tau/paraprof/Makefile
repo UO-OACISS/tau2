@@ -34,7 +34,7 @@ old: ../bin/ParaProf-Old.jar
 
 ../bin/ParaProf.jar: $(NEW_SOURCES)
 	rm -f ./paraprof/*.class
-	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar $(NEW_SOURCES)
+	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(NEW_SOURCES)
 	cp ./resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	cd classes; jar -cvf ParaProf.jar edu
 	mv ./classes/ParaProf.jar $(TOOLS_SRC)/paraprof/bin
@@ -43,7 +43,7 @@ old: ../bin/ParaProf-Old.jar
 
 ../bin/ParaProf-Old.jar: $(OLD_SOURCES)
 	rm -f ./paraprof/*.class
-	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar $(OLD_SOURCES)
+	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar:$(TOOLS_SRC)/contrib/jargs.jar $(OLD_SOURCES)
 	cd classes; jar -cvf ParaProf-Old.jar edu
 	mv ./classes/ParaProf-Old.jar $(TOOLS_SRC)/paraprof/bin
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf-Old.jar
