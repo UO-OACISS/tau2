@@ -15,13 +15,18 @@
 // NEWCC is defined so that compilation doesn't break on most systems.
 #include "Profile/Profiler.h"
 #include <sys/types.h>
+#if (!defined(TAU_WINDOWS))
 #include <unistd.h>
+#endif	//TAU_WINDOWS
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */ 
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
+#ifdef TAU_WINDOWS
+#include <windows.h>
+#endif	//TAU_WINDOWS
 
 TAU_REGISTER_EVENT(getdata, "Get Data values");
 
@@ -110,10 +115,17 @@ class TemplClass { // Simple class template with Get and Set methods
 int func_no_templ(void) {
   TAU_PROFILE("func_no_templ","int ()", TAU_USER3 | TAU_USER);
 
+#ifdef TAU_WINDOWS
+  DWORD	IDValue;
+
+  IDValue = GetCurrentProcessId();
+  return (int) IDValue;
+#else
   int x;
 
   x = getpid();
   return x;
+#endif	//TAU_WINDOWS
 }
 
 // Function template returns size of the type with which it is instantiated
@@ -198,11 +210,20 @@ int main(int argc, char *argv[])
 #endif //NEWCC
   TAU_PROFILE_STOP(notemp);
   // Testing func_no_templ
+
+#ifdef TAU_WINDOWS
+    if (GetCurrentProcessId() != func_no_templ()) {
+    cout <<"func_no_templ test failed func_no_templ returns "<< func_no_templ() << endl;
+  }
+  else
+    cout <<"Test Successful : func_no_templ() " << endl;
+#else  
   if (getpid() != func_no_templ()) {
     cout <<"func_no_templ test failed func_no_templ returns "<< func_no_templ() << endl;
   }
   else
     cout <<"Test Successful : func_no_templ() " << endl;
+#endif	//TAU_WINDOWS
 
   TAU_PROFILE_START(templ);
   // Testing func_templ
