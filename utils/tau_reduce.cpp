@@ -300,10 +300,14 @@ void addFunctionName(string s){
 
 //processCommand() parses the command and processes it accordingly.
 void processCommand(int more){
-  char f[10];
+  char f[32];
   char op;
   double number;
+
   sscanf(line, "%s %c %lG", f, &op, &number);
+#ifdef DEBUG
+  printf("f is %s \n", f);
+#endif /* DEBUG */
   string field=string(f);
   if(field=="numcalls"){
     if(op=='<'){
@@ -863,7 +867,7 @@ int main (int argc, char *argv[]){
 
 /***************************************************************************
  * $RCSfile: tau_reduce.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2002/07/25 20:57:13 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.2 2002/07/25 20:57:13 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2002/07/25 21:46:42 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.3 2002/07/25 21:46:42 sameer Exp $
  ***************************************************************************/
 
