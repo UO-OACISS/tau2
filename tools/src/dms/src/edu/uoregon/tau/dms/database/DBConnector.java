@@ -190,6 +190,9 @@ public class DBConnector implements DB {
 	return new String(this.parseConfig.getDBType());
     }
 
+    public String getSchemaPrefix(){
+	return "";}
+
     public PreparedStatement prepareStatement(String statement) throws SQLException {
 	return getConnection().prepareStatement(statement);
     }

@@ -17,4 +17,5 @@ public interface DB {
     public String getDBType();
     public Connection getConnection();
     public PreparedStatement prepareStatement(String statement) throws SQLException;
+    public String getSchemaPrefix();
 }
