@@ -4558,6 +4558,145 @@ int mpi_file_write_at_all__( MPI_File fh, MPI_Offset offset, void * buf, int cou
 /******************************************************/
 
 
+#ifdef TAU_MPIOREQUEST 
+/******************************************************
+***      MPI_File_iread_at wrapper function 
+******************************************************/
+int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread_at wrapper function 
+******************************************************/
+int MPI_FILE_IREAD_AT( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread_at wrapper function 
+******************************************************/
+int mpi_file_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread_at wrapper function 
+******************************************************/
+int mpi_file_iread_at_( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread_at wrapper function 
+******************************************************/
+int mpi_file_iread_at__( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************/
+/******************************************************/
+
+
+/******************************************************
+***      MPI_File_iwrite_at wrapper function 
+******************************************************/
+int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite_at wrapper function 
+******************************************************/
+int MPI_FILE_IWRITE_AT( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite_at wrapper function 
+******************************************************/
+int mpi_file_iwrite_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite_at wrapper function 
+******************************************************/
+int mpi_file_iwrite_at_( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite_at wrapper function 
+******************************************************/
+int mpi_file_iwrite_at__( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_at()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_at( fh, offset, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************/
+/******************************************************/
+#else /* ! defined TAU_MPIOREQUEST */
+
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
@@ -4694,6 +4833,7 @@ int mpi_file_iwrite_at__( MPI_File fh, MPI_Offset offset, void * buf, int count,
 
 /******************************************************/
 /******************************************************/
+#endif /* defined TAU_MPIOREQUEST */
 
 
 /******************************************************
@@ -5455,6 +5595,283 @@ int mpi_file_get_type_extent__( MPI_File fh, MPI_Datatype datatype, MPI_Aint * e
 /******************************************************/
 
 
+#ifdef TAU_MPIOREQUEST 
+/******************************************************
+***      MPI_File_iread wrapper function 
+******************************************************/
+int MPI_File_iread( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread wrapper function 
+******************************************************/
+int MPI_FILE_IREAD( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread wrapper function 
+******************************************************/
+int mpi_file_iread( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread wrapper function 
+******************************************************/
+int mpi_file_iread_( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread wrapper function 
+******************************************************/
+int mpi_file_iread__( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************/
+/******************************************************/
+
+
+/******************************************************
+***      MPI_File_iread_shared wrapper function 
+******************************************************/
+int MPI_File_iread_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread_shared wrapper function 
+******************************************************/
+int MPI_FILE_IREAD_SHARED( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread_shared wrapper function 
+******************************************************/
+int mpi_file_iread_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread_shared wrapper function 
+******************************************************/
+int mpi_file_iread_shared_( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iread_shared wrapper function 
+******************************************************/
+int mpi_file_iread_shared__( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iread_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iread_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************/
+/******************************************************/
+
+
+/******************************************************
+***      MPI_File_iwrite wrapper function 
+******************************************************/
+int MPI_File_iwrite( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite wrapper function 
+******************************************************/
+int MPI_FILE_IWRITE( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite wrapper function 
+******************************************************/
+int mpi_file_iwrite( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite wrapper function 
+******************************************************/
+int mpi_file_iwrite_( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite wrapper function 
+******************************************************/
+int mpi_file_iwrite__( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************/
+/******************************************************/
+
+
+/******************************************************
+***      MPI_File_iwrite_shared wrapper function 
+******************************************************/
+int MPI_File_iwrite_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite_shared wrapper function 
+******************************************************/
+int MPI_FILE_IWRITE_SHARED( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite_shared wrapper function 
+******************************************************/
+int mpi_file_iwrite_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite_shared wrapper function 
+******************************************************/
+int mpi_file_iwrite_shared_( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************
+***      MPI_File_iwrite_shared wrapper function 
+******************************************************/
+int mpi_file_iwrite_shared__( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_File_iwrite_shared()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_File_iwrite_shared( fh, buf, count, datatype, request) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+/******************************************************/
+/******************************************************/
+#else (! defined TAU_MPIOREQUEST )
+
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
@@ -5726,9 +6143,7 @@ int mpi_file_iwrite_shared__( MPI_File fh, void * buf, int count, MPI_Datatype d
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
-
-/******************************************************/
-/******************************************************/
+#endif /* TAU_MPIOREQUEST */
 
 
 /******************************************************
@@ -9111,6 +9526,7 @@ int mpi_is_thread_main__( int * flag)
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPIGREQUEST
 
 /******************************************************
 ***      MPI_Grequest_start wrapper function 
@@ -9245,6 +9661,8 @@ int mpi_grequest_complete__( MPI_Request request)
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+
+#endif /* TAU_MPIGREQUEST */
 
 /******************************************************/
 /******************************************************/

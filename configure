@@ -1654,6 +1654,34 @@ EOF
   }
 EOF
 
+  cat <<EOF > mpi2iorequest.C
+  #include <mpi.h>
+
+  int foo (MPI_File fh, void *buf, int count,
+                          MPI_Datatype datatype, MPIO_Request *request)
+  {
+    return MPI_File_iread_shared (fh, buf, count, datatype, request);
+
+  }
+EOF
+
+  cat <<EOF > mpi2grequest.C
+  #include <mpi.h>
+
+  int foo(MPI_Grequest_query_function *grequest_query_fn,
+              MPI_Grequest_free_function *grequest_free_fn,
+              MPI_Grequest_cancel_function *grequest_cancel_fn,
+              void *extra_state, MPI_Request *request) 
+  {
+    return MPI_Grequest_start(grequest_query_fn,
+              grequest_free_fn,
+              grequest_cancel_fn,
+              extra_state, request);
+
+  }
+
+EOF
+
   if $cxx_compiler $orig_useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
   then
     echo "Thread-safe MPI interface is defined... "
@@ -1666,7 +1694,19 @@ EOF
     fixmakeargs="$fixmakeargs MPI2"
     mpi2=yes
   fi
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2grequest.C  1> /dev/null 2>&1
+  then
+    echo "MPI-2 Grequest Interface is defined..."
+    fixmakeargs="$fixmakeargs MPIGREQUEST"
+  fi
+
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2iorequest.C  1> /dev/null 2>&1
+  then
+    echo "MPI-2 MPIO_Request Interface is defined..."
+    fixmakeargs="$fixmakeargs MPIOREQUEST"
+  fi
+
+  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
