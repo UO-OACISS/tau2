@@ -31,13 +31,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <poll.h>
+#include <sys/poll.h>
 
-#define HOST_PORT 9997			// MUSE server port
-#define HOST_IP "127.0.0.1"		
-#define BUFFERSIZE 8192
-#define MAX_ARGLEN 255
-#define MAX_REPLY_LENGTH 1024 
+#include <Profile/TauMuse.h>
+
+#define HOST_PORT 		9997			// MUSE server port
+#define HOST_IP 		"127.0.0.1"		
+#define BUFFERSIZE 		8192
+#define MAX_ARGLEN 		255
+#define MAX_REPLY_LENGTH 	1024 
+#define DEBUG_PROF 		1 
 
 /**************************************
 * Description	: PACKET PROTOCOL for communicating with
@@ -63,135 +66,6 @@ ADDFILTER:              <command=8> <handler id> <ASCII string> <size> <options>
 GET:                    <command=9> <size> <options (1st byte matters)>
 QUIT:                   <command=10> <size=0>
 *****************************************/
-/*********************
- * Description	: Struct for input data for count.
- * From		: handler/count/count.h
- *********************/
-struct count_handler_input_data
-{
-        int fsize;
-        int fname_size;
-};
-
-/*********************
- * Description	: Struct for return data for count.
- * From		: handler/count/count.h
- *********************/
-struct count_handler_return_data
-{
-        int count;
-};
-
-/*********************
- * Description	: Encode binary code for command create 
- * 		  which wil be sent to Muse server
- * From		: translator.c <modified>
- *********************/
-int encode_create_command_count(char *ascii_command, int size, char *binary_command)
-{
-        char *arg, temp[MAX_ARGLEN];
-        struct count_handler_input_data *chid;
-        int *args_size_ptr;
-
-        strncpy(temp, ascii_command, MAX_ARGLEN);
-        arg = strtok(temp, " ");
-        if (arg)
-        {
-
-                if (strcasecmp(arg, "create")==0)
-                {
-
-                        binary_command[0] = 1;
-                        arg = strtok(NULL, " ");
-                        if (strcasecmp(arg, "count")!=0)
-                        {
-                                printf("TauMuse.cpp: Internal error - string count is not in argument from TAU.");
-                                return 0;
-                        }
-                        else
-                        {
-
-                                binary_command[1] = strlen(arg);
-                                strncpy(&binary_command[2], arg, binary_command[1]+1);
-                                args_size_ptr = (int *) &binary_command[binary_command[1]+3];
-                                arg = strtok(NULL, " ");
-                                if (arg)
-                                {
-                                        chid = (struct count_handler_input_data *)
-                                                        &binary_command[binary_command[1] + 3 + sizeof(*args_size_ptr)];
-                                        chid->fname_size = htonl(strlen(arg));
-                                        strncpy(&binary_command[binary_command[1]
-                                                        +sizeof(*args_size_ptr)+sizeof(*chid)+3], arg, ntohl(chid->fname_size)+1);
-                                        arg = strtok(NULL, " ");
-                                        if (arg)
-                                                chid->fsize = htonl(atoi(arg));
-                                        else
-                                                chid->fsize = 0;
-                                }
-                                else
-                                {
-                                        chid = (struct count_handler_input_data *)
-                                                        &binary_command[binary_command[1] + 3 + sizeof(*args_size_ptr)];
-                                        chid->fname_size = 0;
-                                        chid->fsize = 0;
-                                }
-                                *args_size_ptr = htonl(sizeof(*chid) + ntohl(chid->fname_size));
-                                return (3 + binary_command[1] + sizeof(*args_size_ptr) + ntohl(*args_size_ptr));
-
-                        }
-                }//CREATE
-                else
-                {
-                        printf("Invalid command for count: %s\n"
-                                  "count is a handler, and should be used only with the CREATE command\n"
-                                  "\tUsage: CREATE count [<fname> [<fsize>]]", arg);
-                        return 0;
-                }
-        }
-        else
-        {
-                printf("Internal error: No command given??");
-                return 0;
-        }
-}
-
-/*********************
- * Description	: Decode binary code received from 
- * 		  MUSE server responding to command query_handler
- * From		: translator.c <modified>
- *********************/
-int decode_query_handler_count(const char *binary_command,
-                const char *binary_reply,
-                        int size, char *ascii_reply){
-
-        struct count_handler_return_data *chrd;
-        int *sizeptr;
-        unsigned char *errorptr;
-        /*
-        int i;
-        for (i =0; i < 8; i++)
-                printf("%d ", binary_reply[i]);
-        printf("\n");
-        */
-        sizeptr = (int *)binary_reply;
-        errorptr = (unsigned char *) (sizeptr+1);
-
-        /* error code testing is done by translator.c, but it could be passed in here
-           for specific error codes.
-           */
-        if(binary_command[0]==3)
-        {
-                chrd = (struct count_handler_return_data *) (errorptr+1);
-                snprintf(ascii_reply, size, "Count: %u\n", ntohl(chrd->count));
-        }
-        else
-        {
-                printf("TauMuse.cpp: count translator doesn't understand that command yet\n");
-                return 0;
-        }
-        //return 1;
-	return(ntohl(chrd->count));
-}
 
 /*********************
  * Description	: Send binary command to MUSE server and verify
@@ -245,8 +119,7 @@ int send_and_check(int sockfd,int command_length,char *send_buffer,char *recv_bu
                           printf("\nTauMuse.cpp: Hang up signal received from server. Terminating...\n");
                           kill(0,SIGTERM);
                 }
-                while (b < sizeof(int))
-                {
+                while (b < sizeof(int)) {
                         if ((b += recv(sockfd, &recv_buffer[b], BUFFERSIZE-b, 0)) == -1) {
                                 printf("TauMuse.cpp: recv() failed: %s", strerror(errno));
                                 kill(0,SIGTERM);
@@ -255,8 +128,7 @@ int send_and_check(int sockfd,int command_length,char *send_buffer,char *recv_bu
 
                 b -= sizeof(int);
 
-                while (b < ntohl(((int *)recv_buffer)[0]))
-                {
+                while (b < ntohl(((int *)recv_buffer)[0])) {
                         if ((b += recv(sockfd, &recv_buffer[b+sizeof(int)],
                                   BUFFERSIZE-b-sizeof(int), 0)) == -1) {
                                 printf("TauMuse.cpp: recv() failed: %s", strerror(errno));
@@ -267,6 +139,77 @@ int send_and_check(int sockfd,int command_length,char *send_buffer,char *recv_bu
         return(0);
 
 }
+/* Get the name of the MUSE handler */
+char * get_muse_handler_name(void)
+{
+	char *handler = getenv("TAU_MUSE_HANDLER");
+	if (handler == (char *) NULL)
+	{  /* the user has not specified any handler name */
+	  return "TAU_count";
+	}
+	else
+	  return handler;
+}
+/* Get the name of the MUSE handler */
+char * get_muse_matrix(void)
+{
+	char *matrix = getenv("TAU_MUSE_MATRIX");
+	if (matrix == (char *) NULL)
+	{  /* the user has not specified any handler name */
+	  return "TAU_count";
+	}
+	else
+	  return matrix;
+}
+
+/* TheMuseSockId() is a global variable now */
+int& TheMuseSockId(void)
+{
+  static int sockid = 0; 
+  return sockid;
+}
+
+/* TheMuseHandlerId() is a global variable now */
+int& TheMuseHandlerId(void)
+{
+  static int handlerid = 0; 
+  return handlerid;
+}
+
+// This function choose the appropriate create_encoder for the handler.
+int create_encode_selector(char *handler_name,char *ascii_command,int size, char *binary_command){
+	if(!strcmp("Tau_count",handler_name)){
+		return CreateTauCountEncode(ascii_command,size,binary_command);
+	}else if(!strcmp("process_scheduling",handler_name)){
+		return CreateProcessSchedulingEncode(ascii_command,size,binary_command);
+	}else{
+		return -1 ;
+	}
+}
+
+// This function choose the appropriate create_encoder for the handler.
+double query_decode_selector(char *handler_name,
+			const char *binary_command, const char *binary_reply,
+			int size, char *ascii_reply){
+	if(!strcmp("Tau_count",handler_name)){
+		return QueryTauCountDecode(binary_command,binary_reply,size,ascii_reply);
+	}else if(!strcmp("process_scheduling",handler_name)){
+		return QueryProcessSchedulingDecode(binary_command,binary_reply,size,ascii_reply);
+	}else{
+		return -1 ;
+	}
+}
+
+// This function choose the appropriate addfilter_encoder.
+int addfilter_encode_selector(char *filter_name,char *ascii_command,int size, char *binary_command){
+	if(!strcmp("process_filter",filter_name)){
+		return AddFilterProcessFilterEncode(ascii_command,size,binary_command);
+	}else{
+		return -1 ;
+	}
+}
+
+
 
 /*********************
  * Description	: Initialize socket connecting to MUSE sever
@@ -274,7 +217,7 @@ int send_and_check(int sockfd,int command_length,char *send_buffer,char *recv_bu
  * 		  - send command create <handler_hane> <args>
  * 		  - send command start <handlerID>
  *********************/
-int TauMuseInit(char* handler_name, char* args,int *sockfd){
+int TauMuseInit(char *handler_name, int filter_argc,char *args[]){
   /* creates a socket, connects to the server, creates a MUSE session, adds 
      a filter and starts the session */
         struct sockaddr_in host_addr;
@@ -284,12 +227,14 @@ int TauMuseInit(char* handler_name, char* args,int *sockfd){
         int command_length;
         unsigned int size_reply;
         int *sizeptr;
-        int handlerID;
+         int handlerID;
         unsigned char *byteptr;
-
-        // -----------------------------------
+	int i;
+	int sockfd ;
+	
+        // ===================================
         // Establish socket and connection
-        // -----------------------------------
+        // ===================================
         // host information
         memset(&host_addr,0,sizeof(host_addr));
         host_addr.sin_family = AF_INET;
@@ -297,18 +242,21 @@ int TauMuseInit(char* handler_name, char* args,int *sockfd){
         host_addr.sin_port = htons(HOST_PORT);
 
         // create socket        
-        if((*sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+        if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
                 perror("socket");
                 printf("TauMuse.cpp: Unable to create socket: %s\n",
                                 strerror(errno));
                 return(1);
         }
 
+	/* Assign sockfd to the global variable TheMuseSockId() */
+	TheMuseSockId() = sockfd; 
+
         // connect to 
 #ifdef DEBUG_PROF
         printf("TauMuse.cpp: Connecting to magnetd using AF_INET.\n");
 #endif /* DEBUG_PROF */
-        if(connect(*sockfd,(struct sockaddr *) &host_addr,
+        if(connect(sockfd,(struct sockaddr *) &host_addr,
                         sizeof(host_addr)) == -1){
                 perror("connect");
                 printf("TauMuse.cpp: Unable to connect to server: %s\n",
@@ -316,7 +264,7 @@ int TauMuseInit(char* handler_name, char* args,int *sockfd){
                 return(1);
         }
         // verify connection
-        if(recv(*sockfd, recv_buffer, BUFFERSIZE,0) == -1){
+        if(recv(sockfd, recv_buffer, BUFFERSIZE,0) == -1){
                 perror("recv");
                 printf("TauMuse.cpp: Unable to establish connection: %s\n",
                                 strerror(errno));
@@ -324,7 +272,7 @@ int TauMuseInit(char* handler_name, char* args,int *sockfd){
         }
         if(recv_buffer[0] == 1){
                 printf("TauMuse.cpp: Connection Refused from server.\n");
-                close(*sockfd);
+                close(sockfd);
                 return(1);
         }else if(recv_buffer[0] == 0){
 #ifdef DEBUG_PROF
@@ -332,51 +280,75 @@ int TauMuseInit(char* handler_name, char* args,int *sockfd){
 #endif /* DEBUG_PROF */
         }else{
                 printf("TauMuse.cpp: Unknown handshake reply.\n");
-                close(*sockfd);
+                close(sockfd);
                 return(1);
         }
 
-        // ------------------------------------
-        // command "create <handler_name> <args>"
-        // ------------------------------------
+
+
+        // ====================================
+        // command "create <handler_name>"
+        // ====================================
         // create command in binary
-        sprintf(cmdstr,"create %s %s",handler_name,args);
+        sprintf(cmdstr,"create %s",handler_name);
 #ifdef DEBUG_PROF
         printf("cmdstr = %s\n",cmdstr);
 #endif /* DEBUG_PROF */
         // Encoder is specific for each handler
-        command_length = encode_create_command_count(cmdstr,BUFFERSIZE,send_buffer);
+        command_length = create_encode_selector(handler_name,cmdstr,BUFFERSIZE,send_buffer);
 
-        send_and_check(*sockfd,command_length,send_buffer,recv_buffer);
+        send_and_check(sockfd,command_length,send_buffer,recv_buffer);
 #ifdef DEBUG_PROF
         printf("!!!!!!!!!handler is created\n");
 #endif /* DEBUG_PROF */
 
-        // ------------------------------------
-        // command "start <handlerID>"
-        // ------------------------------------
-        // create command in binary
-        memset(send_buffer,0,BUFFERSIZE);
-
-        // Command for start
-        send_buffer[0] = 5;
-
-        // check size of reply message  
-        sizeptr = (int *)recv_buffer;
-        size_reply = ntohl(*sizeptr);
-#ifdef DEBUG_PROF
-        printf("size_reply = %d\n",size_reply);
-#endif /* DEBUG_PROF */
-
+	//-------------------------------------------
+	// Need to extract information from recv_from	
         // Check HandlerID ... 
         // HACKY!!!... Endian stuff
         byteptr = (unsigned char *)recv_buffer+5;
         handlerID = (int) *byteptr;
+
+	/* Assign it to the global variable */
+        TheMuseHandlerId() = (int) *byteptr;
 #ifdef DEBUG_PROF
         printf("handlerID is %d\n",handlerID);
 #endif /* DEBUG_PROF */
-        send_buffer[1] = recv_buffer[5];
-        send_and_check(*sockfd,2+sizeof(int),send_buffer,recv_buffer);
+	//-------------------------------------------
+	
+
+	// Many filter can be add to the handler here.
+	// Just do the loop to add multiple filters.	
+	for(i=0;i<filter_argc;i++)
+	{	
+		// =====================================
+		// command "addfilter <handlerID> <filter_name> <args>"
+		// =====================================
+		sprintf(cmdstr,"addfilter %d %s",
+			handlerID,args[i]);
+#ifdef DEBUG_PROF
+		printf("cmdstr = %s\n",cmdstr);
+#endif /* DEBUG_PROF */
+		
+		// Encoder is specific for addfilter command 
+		command_length = addfilter_encode_selector(strtok(args[i]," "),cmdstr,BUFFERSIZE,send_buffer);
+		send_and_check(sockfd,command_length,send_buffer,recv_buffer);
+#ifdef DEBUG_PROF
+		printf("!!!!!!!!!filter is added.\n");
+#endif /* DEBUG_PROF */
+	}
+
+	// =====================================
+        // command "start <handlerID>"
+        // =====================================
+        // create command in binary
+        memset(send_buffer,0,BUFFERSIZE);
+        // Command for start
+        send_buffer[0] = 5;
+	byteptr = (unsigned char *)&send_buffer[sizeof(unsigned char)];	
+	*byteptr = (unsigned char)handlerID;
+
+        send_and_check(sockfd,2+sizeof(int),send_buffer,recv_buffer);
 #ifdef DEBUG_PROF
         printf("!!!!!!!!!handlerID %d is started\n",handlerID);
 #endif /* DEBUG_PROF */
@@ -391,13 +363,15 @@ int TauMuseInit(char* handler_name, char* args,int *sockfd){
  * 		  - send command destroy <handlerID>
  * 		  - send command quit 
  *********************/
-void TauMuseDestroy(int handlerID, int sockfd){
+void TauMuseDestroy(void){
         char send_buffer[BUFFERSIZE];
         char recv_buffer[BUFFERSIZE];
         unsigned char *byteptr;
-        // ------------------------------------
+	int handlerID = TheMuseHandlerId(); /* read global */
+	int sockfd = TheMuseSockId(); /* read */
+        // ====================================
         // command "stop <handlerID>"
-        // ------------------------------------
+        // ====================================
         // create command in binary
         memset(send_buffer,0,BUFFERSIZE);
         send_buffer[0] = 6;
@@ -407,9 +381,9 @@ void TauMuseDestroy(int handlerID, int sockfd){
 #ifdef DEBUG_PROF
         printf("!!!!!!!!!handlerID %d is stopped\n",handlerID);
 #endif /* DEBUG_PROF */
-        // ------------------------------------
+        // ====================================
         // command "destroy <handlerID>"
-        // ------------------------------------
+        // ====================================
         // create command in binary
         memset(send_buffer,0,BUFFERSIZE);
         send_buffer[0] = 4;
@@ -418,9 +392,9 @@ void TauMuseDestroy(int handlerID, int sockfd){
 #ifdef DEBUG_PROF
         printf("!!!!!!!!!handlerID %d is destroyed\n",handlerID);
 #endif /* DEBUG_PROF */
-        // ------------------------------------
+        // ====================================
         // command "quit"
-        // ------------------------------------
+        // ====================================
         // create command in binary
         memset(send_buffer,0,BUFFERSIZE);
         send_buffer[0] = 10;
@@ -428,16 +402,37 @@ void TauMuseDestroy(int handlerID, int sockfd){
 
 }
 
-/* Get the name of the MUSE handler */
-char * get_muse_handler_name(void)
-{
-	char *handler = getenv("TAU_MUSE_HANDLER");
-	if (handler == (char *) NULL)
-	{  /* the user has not specified any handler name */
-	  return "count";
+// This is the predefined TAU_MUSE matrix package.
+int matrix_selector(void){
+	char *args[MAX_FILTER_ARGS];
+	char *matrix=get_muse_matrix();
+	
+	if(!strcmp("Tau_count",matrix)){
+		args[0]=(char*)malloc(100);
+		memset(args[0],0,100);
+		sprintf(args[0],"process_filter pid=%d",getpid());
+#ifdef DEBUG_PROF
+		printf("args: %s\n",args[0]);
+#endif
+		setenv("TAU_MUSE_HANDLER","Tau_count",1);
+		return TauMuseInit("Tau_count",1,args);
+
 	}
-	else
-	  return handler;
+	else if(!strcmp("process_scheduling",matrix)){
+		args[0]=(char*)malloc(100);
+		memset(args[0],0,100);
+		sprintf(args[0],"process_filter pid=%d event=258",getpid());
+		args[1]=(char*)malloc(100);
+		memset(args[1],0,100);
+		sprintf(args[1],"process_filter pid=%d event=259",getpid());
+#ifdef DEBUG_PROF
+		printf("args: %s\n",args[0]);
+		printf("args: %s\n",args[1]);
+#endif
+		setenv("TAU_MUSE_HANDLER","process_scheduling",1);
+		return TauMuseInit("process_scheduling",2,args);
+	}
+	return 0;
 }
 
 /*********************
@@ -451,34 +446,33 @@ double TauMuseQuery(void){
         char result_buffer[MAX_REPLY_LENGTH];
         unsigned char *byteptr;
 	double result;
-	//*********************************		
-	// HARDCODED for now for the sake of simplicity 
-	// incase TauMuseInit was not called earlier.
-	static int global_sockfd; 
-	static char *handler_name=get_muse_handler_name();
-	static int global_handlerID = TauMuseInit(handler_name,"",&global_sockfd); 
+	int sockfd = TheMuseSockId(); /* read from the global */
 	
-	//*********************************		
-        // ------------------------------------
+	// This will get the value from environment variable
+	// to initilize the appropriate handler and filter arguments.
+	static int handlerID = matrix_selector(); 
+
+        // ====================================
         // command "query_handler <handlerID>"
-        // ------------------------------------
+        // ====================================
         // create command in binary
         memset(send_buffer,0,BUFFERSIZE);
         send_buffer[0] = 3;
-        byteptr = (unsigned char *)&global_handlerID;
+        byteptr = (unsigned char *)&handlerID;
         send_buffer[1] = (char)*byteptr;
-        send_and_check(global_sockfd,2+sizeof(int),send_buffer,recv_buffer);
+        send_and_check(sockfd,2+sizeof(int),send_buffer,recv_buffer);
 #ifdef DEBUG_PROF
-        printf("!!!!!!!!!global_handlerID %d is queried\n",global_handlerID);
+        printf("!!!!!!!!!handlerID %d is queried\n",handlerID);
 #endif /* DEBUG_PROF */
-        result = (double)decode_query_handler_count(send_buffer,recv_buffer,
+        result = (double)query_decode_selector(get_muse_handler_name(),send_buffer,recv_buffer,
                         MAX_REPLY_LENGTH,result_buffer);
 #ifdef DEBUG_PROF
-        printf("result: %s\n",result_buffer);
-        printf("result value to pass to TAU: %f\n",result);
+	printf("TauMuseQuery---: get_muse_handler_name()=%s\n",get_muse_handler_name());
+        printf("TauMuseQuery---: result buffer:\n%s\n",result_buffer);
+        printf("TauMuseQuery---: result value passing to TAU: %f\n",result);
 #endif /* DEBUG_PROF */
-	//TauMuseDestroy(global_handlerID,global_sockfd);
         return result;
 
 }
 
+/* EOF */
