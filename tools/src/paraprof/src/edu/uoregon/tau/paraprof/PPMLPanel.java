@@ -100,7 +100,7 @@ public class PPMLPanel extends JPanel implements ActionListener{
 					    arg2Field.getText().trim(),
 					    (String) operation.getSelectedItem());
 	if(metric!=null)
-	    paraProfManager.populateTrialMetrics(metric.getTrial(), false);
+	    paraProfManager.populateTrialMetrics(metric.getTrial());
     }
     
     //####################################

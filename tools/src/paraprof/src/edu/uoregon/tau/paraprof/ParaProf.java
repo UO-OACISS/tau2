@@ -146,7 +146,6 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    trial.setPaths(fl.getPath());
 		    experiment.addTrial(trial);
 		    trial.setLoading(true);
-		    ParaProf.paraProfManager.populateTrialMetrics(trial, true);
 		    trial.initialize(v);
 		}
 		else{
@@ -167,7 +166,6 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		    trial.setPaths(fl.getPath());
 		    experiment.addTrial(trial);
 		    trial.setLoading(true);
-		    ParaProf.paraProfManager.populateTrialMetrics(trial, true);
 		    trial.initialize(v);
 		}
 		else{
@@ -184,7 +182,6 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 			trial.setPaths(fl.getPath());
 			experiment.addTrial(trial);
 			trial.setLoading(true);
-			ParaProf.paraProfManager.populateTrialMetrics(trial, true);
 			trial.initialize(v);
 		    }
 		    else{

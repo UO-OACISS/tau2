@@ -114,6 +114,9 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
 	trial.setID((trials.size()));
 	trials.add(trial);
     }
+
+    public void removeTrial(ParaProfTrial trial){
+	trials.remove(trial);}
   
     public boolean isTrialPresent(String name){
  	for(Enumeration e = trials.elements(); e.hasMoreElements() ;){

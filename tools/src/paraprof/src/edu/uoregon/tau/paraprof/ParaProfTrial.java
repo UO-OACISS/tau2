@@ -126,6 +126,12 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public boolean defaultTrial(){
 	return defaultTrial;}
 
+    public void setUpload(boolean upload){
+	this.upload = upload;}
+
+    public boolean upload(){
+	return upload;}
+
     public void setLoading(boolean loading){
 	this.loading = loading;}
 
@@ -335,7 +341,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	}
 	//Now set the data session metrics.
 	dataSession.setMetrics(metrics);
-	ParaProf.paraProfManager.populateTrialMetrics(this, defaultTrial);
+	ParaProf.paraProfManager.populateTrialMetrics(this);
 	
 	//Notify any observers of this trial that the Data Session is done.
 	this.notifyObservers();
@@ -384,6 +390,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBTrial = false;
+    private boolean upload = false;
     private boolean loading = false;
      
     private SystemEvents systemEvents = new SystemEvents();

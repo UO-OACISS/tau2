@@ -11,12 +11,13 @@
 */
 
 package edu.uoregon.tau.paraprof;
+import edu.uoregon.tau.dms.dss.*;
 
 import javax.swing.tree.*;
 import javax.swing.table.*;
 
 public class ParaProfManagerTableModel extends AbstractTableModel{
-    public ParaProfManagerTableModel(Object obj, DefaultTreeModel defaultTreeModel){
+    public ParaProfManagerTableModel(ParaProfManager paraProfManager, Object obj, DefaultTreeModel defaultTreeModel){
 	super();
 	
 	if(obj instanceof ParaProfApplication){
@@ -36,7 +37,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 	    type = 3;
 	}
 
-	this.application = application;
+	this.paraProfManager = paraProfManager;
 	this.defaultTreeModel = defaultTreeModel;
     }
   
@@ -333,24 +334,31 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    switch(r){
 		    case(0):
 			application.setName(tmpString);
+			this.updateDB(application);
 			break;
 		    case(1):
 			application.setID(Integer.parseInt(tmpString));
+			this.updateDB(application);
 			break;
 		    case(2):
 			application.setLanguage(tmpString);
+			this.updateDB(application);
 			break;
 		    case(3):
 			application.setParaDiag(tmpString);
+			this.updateDB(application);
 			break;
 		    case(4):
 			application.setUsage(tmpString);
+			this.updateDB(application);
 			break;
 		    case(5):
 			application.setExecutableOptions(tmpString);
+			this.updateDB(application);
 			break;
 		    case(6):
 			application.setDescription(tmpString);
+			this.updateDB(application);
 			break;
 		    }
 		    defaultTreeModel.nodeChanged(application.getDMTN());
@@ -359,78 +367,103 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    switch(r){
 		    case(0):
 			experiment.setName(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(3):
 			experiment.setUserData(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(4):
 			experiment.setSystemName(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(5):
 			experiment.setSystemMachineType(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(6):
 			experiment.setSystemArch(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(7):
 			experiment.setSystemOS(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(8):
 			experiment.setSystemMemorySize(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(9):
 			experiment.setSystemProcessorAmount(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(10):
 			experiment.setSystemL1CacheSize(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(11):
 			experiment.setSystemL2CacheSize(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(12):
 			experiment.setSystemUserData(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(13):
 			experiment.setConfigurationPrefix(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(14):
 			experiment.setConfigurationArchitecture(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(15):
 			experiment.setConfigurationCpp(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(16):
 			experiment.setConfigurationCc(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(17):
 			experiment.setConfigurationJdk(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(18):
 			experiment.setConfigurationProfile(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(19):
 			experiment.setConfigurationUserData(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(20):
 			experiment.setCompilerCppName(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(21):
 			experiment.setCompilerCppVersion(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(22):
 			experiment.setCompilerCcName(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(23):
 			experiment.setCompilerCcVersion(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(24):
 			experiment.setCompilerJavaDirpath(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(25):
 			experiment.setCompilerJavaVersion(tmpString);
+			this.updateDB(experiment);
 			break;
 		    case(26):
 			experiment.setCompilerUserData(tmpString);
+			this.updateDB(experiment);
 			break;
 		    }
 		    defaultTreeModel.nodeChanged(experiment.getDMTN());
@@ -439,12 +472,15 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    switch(r){
 		    case(0):
 			trial.setName(tmpString);
+			this.updateDB(trial);
 			break;
 		    case(8):
 			trial.setUserData(tmpString);
+			this.updateDB(trial);
 			break;
 		    case(9):
 			trial.setProblemDefinition(tmpString);
+			this.updateDB(trial);
 			break;
 		    }
 		    defaultTreeModel.nodeChanged(trial.getDMTN());
@@ -453,12 +489,46 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 	    }
 	}
     }
-  
+
+    private void updateDB(Object obj){
+	if(obj instanceof ParaProfApplication){
+	    ParaProfApplication application = (ParaProfApplication) obj;
+	    if(application.dBApplication()){
+		PerfDMFSession perfDMFSession = paraProfManager.getDBSession();
+		if(perfDMFSession!=null){
+		    perfDMFSession.saveApplication(application);
+		    perfDMFSession.terminate();
+		}
+	    }
+	}
+	else if(obj instanceof ParaProfExperiment){
+	    ParaProfExperiment  experiment = (ParaProfExperiment) obj;
+	    if(experiment.dBExperiment()){
+		PerfDMFSession perfDMFSession = paraProfManager.getDBSession();
+		if(perfDMFSession!=null){
+		    perfDMFSession.saveExperiment(experiment);
+		    perfDMFSession.terminate();
+		}
+	    }
+	}
+	else if(obj instanceof ParaProfTrial){
+	    ParaProfTrial  trial = (ParaProfTrial) obj;
+	    if(trial.dBTrial()){
+		PerfDMFSession perfDMFSession = paraProfManager.getDBSession();
+		if(perfDMFSession!=null){
+		    perfDMFSession.saveTrial(trial);
+		    perfDMFSession.terminate();
+		}
+	    }
+	}
+    }
+
     private int type = -1; //0-application table model,1-experiment table model,2-trial table model.
     private ParaProfApplication application = null;
     private ParaProfExperiment experiment = null;
     private ParaProfTrial trial = null;
     private Metric metric = null;
+    private ParaProfManager paraProfManager = null;
     private DefaultTreeModel defaultTreeModel = null;
     String[] columnNames = {
 	"Field", "Value"

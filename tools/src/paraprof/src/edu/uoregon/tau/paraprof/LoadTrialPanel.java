@@ -19,8 +19,10 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class LoadTrialPanel extends JFrame implements ActionListener{ 
     
-    public LoadTrialPanel(ParaProfManager paraProfManager, ParaProfExperiment experiment, boolean dBTrial){
+    public LoadTrialPanel(ParaProfManager paraProfManager, ParaProfApplication application, 
+			  ParaProfExperiment experiment, boolean dBTrial){
 	this.paraProfManager = paraProfManager;
+	this.application = application;
 	this.experiment = experiment;
 	this.dBTrial = dBTrial;
 
@@ -140,7 +142,8 @@ public class LoadTrialPanel extends JFrame implements ActionListener{
 	    else if(arg.equals("Cancel")){
 		closeThisWindow();}
 	    else if(arg.equals("Ok")){
-		paraProfManager.addTrial(experiment, new File(dirLocationField.getText().trim()), null, trialTypes.getSelectedIndex());
+		paraProfManager.addTrial(application, experiment, 
+					 new File(dirLocationField.getText().trim()), null, trialTypes.getSelectedIndex());
 		closeThisWindow();
 	    }
 	}
@@ -189,11 +192,13 @@ public class LoadTrialPanel extends JFrame implements ActionListener{
     //Instance data.
     //####################################
     ParaProfManager paraProfManager = null;
+    ParaProfApplication application = null;
     ParaProfExperiment experiment = null;
     boolean dBTrial = false;
     JTextField dirLocationField = new JTextField(System.getProperty("user.dir"), 30);
     //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun.
-    String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP", "hpmtoolkit", "gprof", "psrun"};
+    //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP", "hpmtoolkit", "gprof", "psrun"};
+    String trialTypeStrings[] = {"pprof", "tau profiles"};
     JComboBox trialTypes = new JComboBox(trialTypeStrings);
     //####################################
     //End - Instance data.

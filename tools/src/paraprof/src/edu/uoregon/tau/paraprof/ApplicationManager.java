@@ -22,8 +22,8 @@ public class ApplicationManager extends Observable{
 	return application;
     }
   
-    public void removeApplication(Object obj){
-	applications.remove(obj);}
+    public void removeApplication(ParaProfApplication application){
+	applications.remove(application);}
   
     public Vector getApplications(){
 	return applications;}
@@ -53,7 +53,7 @@ public class ApplicationManager extends Observable{
 		ParaProfApplication application = (ParaProfApplication) e.nextElement();
 		if(name.equals(application.getName()))
 		    return true;
-	    }
+	}
   	return false;
     }
 

@@ -76,7 +76,7 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
 	return experiment;
     }
   
-    public void removeParaProfExperiment(ParaProfExperiment experiment){
+    public void removeExperiment(ParaProfExperiment experiment){
 	experiments.remove(experiment);}
   
     public boolean isExperimentPresent(String name){
