@@ -1,186 +1,58 @@
-*****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.acl.lanl.gov/tau		           **
-*****************************************************************************
-**    Copyright 1997  						   	   **
-**    Department of Computer and Information Science, University of Oregon **
-**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-*****************************************************************************
+<HTML>
+<TITLE> Tuning and Analysis Utilities</TITLE>
+</HTML>
+<BODY BGCOLOR="#FFFFFF" LINK="#0000ff" VLINK="#ff0000" ALINK="#ff0000" TEXT="#000000">
 
-Installation Procedure: 
------------------------
-In this directory invoke
-% ./configure
+<CENTER>
+<A HREF="http://www.acl.lanl.gov/tau"><IMG SRC="images/tau.gif" BORDER=0 HBORDER=0></A>
+<P>
+Powered by DOE2000 and ASCI
+</P>
+</CENTER>
+
+
+<H2> Introduction</H2>
+
+TAU provides a suite of static and dynamic tools that provide graphical
+user interaction and interoperation to form an integrated analysis
+environment for parallel C++ applications. 
+
+<H2> Documentation </H2>
+<UL>
+<LI> <A HREF="http://www.acl.lanl.gov/tau"> TAU website </A>
+<LI> <A HREF="../README"> What is TAU? </A>
+<LI> <A HREF="../INSTALL"> Installation Procedure </A>
+</UL>
+
+<H2> Installation Instructions For POOMA Users </H2>
+<UL> 
+<LI> <H3>Step One: Configure TAU </H3>
+<PRE>
+<code>
+% cd /usr/local/packages/tau
+% ./configure -arch=sgin32 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS 
 % make install
-This will install the TAU Portable Profiling and Tracing Package.                 
-TAU System Requirements :
--------------------------
-I) The Profiling Library needs a recent C++ compiler. Recommended :
-	a) Kuck and Associates' (http://www.kai.com) KCC compiler
-	b) SGI (http://www.sgi.com) MipsPro 7.1 or 7.2 CC compiler
+</PRE>
+</code>
+<LI> <H3>Step Two: Configure SMARTS </H3>
+<PRE>
+<code>
+% cd /usr/local/packages/smarts-1.0
+% configure -enable-profile 
+</code>
+</PRE>
+<LI> <H3>Step Three: Configure Pooma II</H3>
+<PRE>
+<code>
+% cd $POOMA2_ROOT
+% setenv TAUDIR /usr/local/packages/tau
+% setenv DUCTAPEDIR /usr/local/packages/tau/ductape
+% ./configure --arch SGIN32KCC --suite PP --parallel --profile --opt
+% setenv SUITE PP
+% make
+</code>
+</PRE>
 
-II) Platforms :
-   TAU has been tested on 
-	a) SGI R10000 based systems.  SGI Power Challenge/ Origin series.
-	b) LINUX PCs. Tested with KAI compiler, g++ (-useropt=-fguiding-decls) 
-	c) Sun Solaris2. Tested with g++ (./configure -useropt=-fguiding-decls)
-	d) HP PA-RISC. Tested with g++. 
-	e) Cray T3E. Tested with Cray C++ compiler, and KAI KCC.
-	f) DEC Alpha. Tested with g++.
-   Other platforms will be supported and it may work with other systems
-   with minor modifications.
-	
-
-III) Software Requirements :
-   a) Tcl/Tk
-   TAU's GUI racy needs Tcl 7.4/Tk 4.0 or better. The default is 8.0. 
-   Tcl/Tk can be downloaded from http://www.sunlabs.com 
-   
-   b) xauth
-   The display needs to be secure. xhost+ should not be used. Xauth style
-   security is required. See TAU FAQ on how to use this. Contact your 
-   system administrator if your X-server is not configured for Xauth 
-   cookies. 
-
-   c) xrdb
-   The configure script ensures that the display is ok using xrdb.
-  
-
-Configure options :
--------------------
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation, and
-creates the Makefile(s) (one in each subdirectory of the source
-directory). 
-
-To compile this package:
-
-1.  Configure the package for your system.
-
-   TAU can be configured as follows:
-
-% ./configure -help 
-Usage: configure [OPTIONS]
-  where [OPTIONS] are:
--prefix=<directory> ............. specifies the installation directory.
--arch=<arch> ....... specifies the target machine arch (sgin32, sgi64). 
--c++=<compiler>  ............................ specify the C++ compiler.
--cc=<compiler> ................................ specify the C compiler.
--useropt='<parameters>' ............... list of commandline parameters.
--pthread .................................. Use pthread thread package.
--tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
--smarts .................. Use SMARTS API for threads (use with above).
--TRACE ..................................... Generate TAU event traces.
--PROFILE ............ Generate profiles (summary statistics) (default).
--PROFILESTATS .................. Enable standard deviation calculation.
--PROFILECOUNTERS .... Use Hardware Performance Counters (default time).
--SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
--help ...................................... display this help message.
-
-   If <prefix> is not specified, configure installs the package in the 
-   current directory (TAUROOT). If arch is not specified, it detects it.
-
-   By default if 
-   % ./configure 
-   is invoked, configure uses time based profiling. This can be overriden
-   by -PROFILECOUNTERS option which configures it for using CPU counters.
-   -PROFILESTATS is used to configure TAU Profiling Package to generate
-   statistics such as standard deviation of exclusive time/counts for 
-   each function. This can be viewed using `pprof'.
-
-   -TRACE option generates detailed traces for each node of the parallel 
-   application. These traces can be merged and converted to other trace
-   formats such as Vampir (www.pallas.de) or SDDF or ALOG or could be viewed
-   in the ascii format (dump of the trace). tau_merge and tau_convert tools
-   can be used for this. Tracing could be used with or without Profiling. 
-
-   -SGITIMERS uses fast nanosecond resolution timers on R10000 based SGI 
-   machines and is recommended for profiling. For tracing this option should
-   only be used when compiling in -64 bit mode. 
-
-   -pthread option supports profiling for pthreads based programs. The macro
-   TAU_REGISTER_THREAD() should be used in the spawned thread prior to any 
-   profiling calls (see examples/threads).
-
-   -tulipthread=<dir> -smarts should be used to specify the smarts directory
-   and enable the smarts interface. This is required for Pooma users.
-   One also must specify the smarts machine specific directory for includes 
-   as illustrated in the example below.
-
-   Example:
-   On SGI Origin 2000, 
-   % ./configure -c++=KCC 
-   or
-   % ./configure -c++=CC -useropt='-64 -I/local/apps/STL/'
-   or
-   % ./configure -TRACE -PROFILE 
-   or with g++ 2.8.1+
-   % ./configure -useropt=-fguiding-decls
-   or 
-   % ./configure -c++=KCC -SGITIMERS -tulipthread=/home/smarts/build/smarts-1.0
-     -smarts -useropt=-I/home/smarts/build/smarts-1.0/machine-specific/iris4d 
-     -arch=sgin32 -prefix=/usr/local/packages/tau
-
-2. Compilation.
-
-   Type `make install' to compile the package. 
-   Type `make tests' to compile the example programs that are included with
-   this distribution.
-
-   Make installs the library and its stub makefile  in <prefix>/<arch>/lib 
-   subdirectory and installs utilities such as pprof and racy in 
-   <prefix>/<arch>/bin subdirectory.
-
-   
-   Add to your .cshrc file the $(TAU_ARCH)/bin subdirectory.
-   e.g.,
-   # in .cshrc file
-   set path=($path /usr/local/packages/tau/sgi64/bin)
-
-3. Examples.
-
-   After building the library, the applications that need to be profiled
-   have to be instrumented by manually inserting TAU Profiling calls in the
-   source. This is explained in detail in the documentation available at
-   http://www.acl.lanl.gov/tau and can be seen in the examples directory.
-   This process involves identifying functions and associating each function
-   with one or more TAU profile groups. This enables selectively profiling 
-   groups of functions. By default all instrumented functions that are 
-   invoked are profiled.
-   
-   % cd examples/instrument
-   % ./simple
-   % pprof
-   % racy
-
-4. Racy.
-
-   Racy is the GUI for TAU performance analysis. It brings up a project
-   management window. Type in any filename with a .pmf extension. e.g.,
-   matrix.pmf and it will bring up the racy main window.
-   
-    
-5. Modifying user's Makefile for Tracing/Profiling.
-
-   TAU provides a makefile stub file which is placed in the installation
-   directory <prefix>/<arch>/lib/Makefile.tau[-optionlist]. Users need to 
-   include this makefile and use the make variables TAU_INCLUDE TAU_LIBS
-   and TAU_DEFS appropriately in their makefiles. See (examples/instrument
-   Makefile)  
-
-6. Support for pthreads
-   Pthreads are supported on Cray, SGI and LINUX currently.
-
-7. C API
-   C Programs can be profiled using TAU. Instead of TAU_PROFILE() macro
-   explicit TAU_PROFILE_TIMER() macros with start/stop interface need to be 
-   used. Mixed language programming doesn't seem to work on Cray T3E. Tested
-   on Linux, SGI.
-
-8. Using TAU with POOMA
-   Set the environment variable TAUDIR to point to the directory where TAU is
-   installed. Also, set the variable DUCTAPEDIR to point to the ductape 
-   subdirectory in TAU. 
-
-
-
+</UL>
+</BODY>
+</HTML>
