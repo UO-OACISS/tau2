@@ -120,6 +120,22 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	return new ParaProfIterator(children);
     }
 
+    public ListIterator getCallPathIDParents(int id){
+	//The argument represents the id of the parent.
+	//Get the location of the parent first.
+	int location = UtilFncs.exists(parents,id);
+	//Now return the callpath id list for that parent.
+	return new ParaProfIterator((Vector)callPathIDSParents.elementAt(location));
+    }
+
+    public ListIterator getCallPathIDChildren(int id){
+	//The argument represents the id of the child.
+	//Get the location of the child first.
+	int location = UtilFncs.exists(children,id);
+	//Now return the callpath id list for that parent.
+	return new ParaProfIterator((Vector)callPathIDSChildren.elementAt(location));
+    }
+
     public void addChild(int id,int pathID){
 	//Check to see if this child is already present,
 	//if so, add only the callpath to the system.

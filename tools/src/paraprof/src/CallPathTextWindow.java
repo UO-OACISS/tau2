@@ -31,13 +31,15 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
   
     public CallPathTextWindow(Trial inTrial,
-			   int inServerNumber,
-			   int inContextNumber,
-			   int inThreadNumber,
-			   StaticMainWindowData inSMWData){
+			      int inServerNumber,
+			      int inContextNumber,
+			      int inThreadNumber,
+			      StaticMainWindowData inSMWData,
+			      boolean global){
 	try{
 	    trial = inTrial;
 	    sMWData = inSMWData;
+	    this.global = global;
       
 	    setLocation(new java.awt.Point(0, 0));
 	    setSize(new java.awt.Dimension(800, 600));
@@ -182,7 +184,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    panelRef = new CallPathTextWindowPanel(trial,
 						   inServerNumber,
 						   inContextNumber,
-						   inThreadNumber, this);
+						   inThreadNumber, this, global);
       
 	    //The scroll panes into which the list shall be placed.
 	    JScrollPane sp = new JScrollPane(panelRef);
@@ -375,6 +377,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private Trial trial = null;
     private CallPathTextWindowPanel panelRef;
     private StaticMainWindowData sMWData;
+    private boolean global = false;
   
     private JMenuItem mappingGroupLedgerItem;
     private JMenuItem userEventLedgerItem;

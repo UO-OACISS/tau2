@@ -38,7 +38,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     private JPopupMenu popup2 = new JPopupMenu();
   
     JMenuItem tUESWItem = null;
-    JMenuItem callpathItem = null;
+    JMenuItem globalCallpathItem = null;
+    JMenuItem threadCallpathItem = null;
     
     //**********
   
@@ -152,9 +153,13 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    tUESWItem.addActionListener(this);
 	    popup2.add(tUESWItem);
 
-	    callpathItem = new JMenuItem("Show Call Path Information");
-	    callpathItem.addActionListener(this);
-	    popup2.add(callpathItem);
+	    globalCallpathItem = new JMenuItem("Show Global Call Path Relations");
+	    globalCallpathItem.addActionListener(this);
+	    popup2.add(globalCallpathItem);
+
+	    threadCallpathItem = new JMenuItem("Show Call Path Thread Relations");
+	    threadCallpathItem.addActionListener(this);
+	    popup2.add(threadCallpathItem);
 	}
 	catch(Exception e)
 	    {
@@ -489,9 +494,15 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    trial.getSystemEvents().addObserver(tmpRef);
 			    tmpRef.show();
 			}
-		    else if(arg.equals("Show Call Path Information")){
+		    else if(arg.equals("Show Global Call Path Relations")){
 			CallPathTextWindow tmpRef = new CallPathTextWindow(trial, serverNumber, contextNumber,
-									   threadNumber, sMWindow.getSMWData());
+									   threadNumber, sMWindow.getSMWData(),true);
+			trial.getSystemEvents().addObserver(tmpRef);
+			tmpRef.show();
+		    }
+		    else if(arg.equals("Show Call Path Thread Relations")){
+			CallPathTextWindow tmpRef = new CallPathTextWindow(trial, serverNumber, contextNumber,
+									   threadNumber, sMWindow.getSMWData(),false);
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
 		    }
@@ -1290,10 +1301,14 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    tUESWItem.setEnabled(false);
 		}
 
-		if(trial.callPathDataPresent())
-		    callpathItem.setEnabled(true);
-		else
-		    callpathItem.setEnabled(false);
+		if(trial.callPathDataPresent()){
+		    globalCallpathItem.setEnabled(true);
+		    threadCallpathItem.setEnabled(true);
+		}
+		else{
+		    globalCallpathItem.setEnabled(false);
+		    threadCallpathItem.setEnabled(true);
+		}
 	    }
 	catch(Exception e)
 	    {

@@ -43,7 +43,6 @@ public class CallPathUtilFuncs{
 	    while(l.hasNext()){
 		gme1 = (GlobalMappingElement) l.next();
 		s = gme1.getMappingName();
-		System.out.println(s);
 		location = s.lastIndexOf("=>");
 		if(location>0){
 		    child = s.substring(location+3,(s.length()-2));
@@ -59,28 +58,6 @@ public class CallPathUtilFuncs{
 		    gme3 = gm.getGlobalMappingElement(child,0);
 		    gme2.addChild(gme3.getGlobalID(),gme1.getGlobalID());
 		    gme3.addParent(gme2.getGlobalID(),gme1.getGlobalID());
-		}
-	    }
-	    
-	    l.reset();
-	    Integer listValue = null;
-	    ListIterator l2 = null;
-	    while(l.hasNext()){
-		gme1 = (GlobalMappingElement) l.next();
-		System.out.println("--------");
-		l2 = gme1.getParentsIterator();
-		while(l2.hasNext()){
-		    listValue = (Integer)l2.next();
-		    gme2 = gm.getGlobalMappingElement(listValue.intValue(),0);
-		    System.out.println(gme2.getMappingName()+"["+gme2.getGlobalID()+"]");
-		}
-		
-		System.out.println("["+gme1.getGlobalID()+"]"+gme1.getMappingName());
-		l2 = gme1.getChildrenIterator();
-		while(l2.hasNext()){
-		    listValue = (Integer)l2.next();
-		    gme2 = gm.getGlobalMappingElement(listValue.intValue(),0);
-		    System.out.println(gme2.getMappingName()+"["+gme2.getGlobalID()+"]");
 		}
 	    }
 	}

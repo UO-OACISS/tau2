@@ -399,7 +399,90 @@ public class GlobalThreadDataElement
     public static int getPositionOfUserEventName(){
 	return 72;
     }
-  
+
+    public void addParent(int id,int pathID){
+	//Check to see if this parent is already present,
+	//if so, add only the callpath to the system.
+	int location = UtilFncs.exists(parents,id);
+	if(location == -1){
+	    if(parents==null){
+		parents = new Vector();
+		callPathIDSParents = new Vector();
+	    }
+	    
+	    parents.add(new Integer(id));
+	    Vector tmpVector = new Vector();
+	    tmpVector.add(new Integer(pathID));
+	    callPathIDSParents.add(tmpVector);
+
+	}
+	else{
+	    Vector tmpVector = (Vector) callPathIDSParents.elementAt(location);
+	    tmpVector.add(new Integer(pathID));
+	}
+    }
+
+    public Vector getParents(){
+	return parents;
+    }
+
+    public Vector getChildren(){
+	return children;
+    }
+
+    public ListIterator getParentsIterator(){
+	return new ParaProfIterator(parents);
+    }
+
+    public ListIterator getChildrenIterator(){
+	return new ParaProfIterator(children);
+    }
+
+    public ListIterator getCallPathIDParents(int id){
+	//The argument represents the id of the parent.
+	//Get the location of the parent first.
+	int location = UtilFncs.exists(parents,id);
+	//Now return the callpath id list for that parent.
+	return new ParaProfIterator((Vector)callPathIDSParents.elementAt(location));
+    }
+
+    public ListIterator getCallPathIDChildren(int id){
+	//The argument represents the id of the child.
+	//Get the location of the child first.
+	int location = UtilFncs.exists(children,id);
+	//Now return the callpath id list for that parent.
+	return new ParaProfIterator((Vector)callPathIDSChildren.elementAt(location));
+    }
+
+    public void addChild(int id,int pathID){
+	//Check to see if this child is already present,
+	//if so, add only the callpath to the system.
+	int location = UtilFncs.exists(children,id);
+	if(location == -1){
+	    if(children==null){
+		children = new Vector();
+		callPathIDSChildren = new Vector();
+	    }
+	    
+	    children.add(new Integer(id));
+	    Vector tmpVector = new Vector();
+	    tmpVector.add(new Integer(pathID));
+	    callPathIDSChildren.add(tmpVector);
+	}
+	else{
+	    Vector tmpVector = (Vector) callPathIDSChildren.elementAt(location);
+	    tmpVector.add(new Integer(pathID));
+	}
+    }
+
+    public void setCallPathObject(boolean b){
+	callPathObject = b;
+    }
+
+    public boolean isCallPathObject(){
+	return callPathObject;
+    }
+ 
     private static int insertSpaces(char[] inArray, int position, int number){
 	for(int i=0;i<number;i++){
 	    inArray[position] = '\u0020';
@@ -454,6 +537,13 @@ public class GlobalThreadDataElement
     private int numberOfSubRoutines = 0;
     int userEventNumberValue = 0;
     boolean userElement = false;
+
+    private Vector parents = null;
+    private Vector children = null;
+    private Vector callPathIDSParents = null;
+    private Vector callPathIDSChildren = null;
+    private boolean callPathObject = false;
+
 }
 
 
