@@ -97,6 +97,12 @@ extern "C" void tau_exit(char * msg)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_init_ref(int* argc, char ***argv)
+{
+  TAU_INIT(argc, argv);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void tau_init(int argc, char **argv)
 {
   TAU_PROFILE_INIT(argc, argv);
@@ -287,7 +293,7 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 2002/01/09 22:51:04 $
- * VERSION: $Id: TauCAPI.cpp,v 1.18 2002/01/09 22:51:04 sameer Exp $
+ * $Revision: 1.19 $   $Date: 2002/01/15 04:21:09 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.19 2002/01/15 04:21:09 sameer Exp $
  ***************************************************************************/
 

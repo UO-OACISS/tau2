@@ -151,6 +151,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
         DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<"," 
 	  << RtsLayer::myContext() << ", " << tid 
           << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
+	  << " Group :  " << MyProfileGroup_ 
 	  << " Type : " << GetType() << endl;);
 
 	return;
@@ -160,7 +161,7 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid)
 {
-      DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << MyProfileGroup_ 
+      DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
 
       Name = name;
@@ -250,6 +251,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2001/10/03 21:04:24 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.25 2001/10/03 21:04:24 sameer Exp $ 
+ * $Revision: 1.26 $   $Date: 2002/01/15 04:21:08 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.26 2002/01/15 04:21:08 sameer Exp $ 
  ***************************************************************************/

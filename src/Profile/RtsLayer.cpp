@@ -483,6 +483,7 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
  
       switch ( str[0] )
       {
+	      /*
         case 'a' :
 	case 'A' : // Assign Expression Evaluation Group
 	  if (strncasecmp(str,"ac", 2) == 0) {
@@ -592,6 +593,8 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 	case 'V' : // ACLVIZ Group
 	  RtsLayer::enableProfileGroup(TAU_VIZ);
 	  break;
+	  // Old stuff. Delete it!
+	  */
  	case '0' :
 	  RtsLayer::enableProfileGroup(TAU_GROUP_0);
 	  break;
@@ -706,7 +709,7 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 	  break;
 
 	default  :
-	  cout << prog << " : Invalid Profile Group " << str << endl;
+	  RtsLayer::enableProfileGroupName(str);
 	  break; 
       } 
       if (( str = end) != NULL) *str++ = '+';
@@ -718,19 +721,32 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 }
 
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::ProfileInit(int argc, char **argv)
+void RtsLayer::ProfileInit(int& argc, char**& argv)
 {
   int i;
+  int ret_argc;
+  char **ret_argv;
+  
+  ret_argc = 1;
+  ret_argv = new char *[argc];
+  ret_argv[0] = argv[0]; // The program name 
 
-  for(i=0; i < argc; i++) {
+  for(i=1; i < argc; i++) {
     if ( ( strcasecmp(argv[i], "--profile") == 0 ) ) {
         // Enable the profile groups
         if ( (i + 1) < argc && argv[i+1][0] != '-' )  { // options follow
            RtsLayer::resetProfileGroup(); // set it to blank
            RtsLayer::setAndParseProfileGroups(argv[0], argv[i+1]);
+	   i++; // ignore the argv after --profile 
         }
     }
+    else
+    {
+	ret_argv[ret_argc++] = argv[i];
+    }
   }
+  argc = ret_argc;
+  argv = ret_argv;
   return;
 }
 
@@ -927,6 +943,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 2002/01/09 22:51:03 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.28 2002/01/09 22:51:03 sameer Exp $ 
+ * $Revision: 1.29 $   $Date: 2002/01/15 04:21:08 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.29 2002/01/15 04:21:08 sameer Exp $ 
  ***************************************************************************/

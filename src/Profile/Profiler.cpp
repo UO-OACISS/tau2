@@ -111,6 +111,7 @@ void Profiler::Start(int tid)
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
 	&& RtsLayer::TheEnableInstrumentation()) {
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
+      DEBUGPROFMSG("Profiler::Start Entering " << ThisFunction->GetName()<<endl;);
 	
 #ifdef TRACING_ON
 	TraceEvent(ThisFunction->GetFunctionId(), 1, tid); // 1 is for entry
@@ -166,6 +167,12 @@ void Profiler::Start(int tid)
 #endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 
       }  
+      else
+      { /* If instrumentation is disabled, set the CurrentProfiler */
+
+	ParentProfiler = CurrentProfiler[tid] ;
+	CurrentProfiler[tid] = this;
+      } /* this is so Stop can access CurrentProfiler as well */
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -235,6 +242,7 @@ void Profiler::Stop(int tid)
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
 	  && RtsLayer::TheEnableInstrumentation()) {
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
+        DEBUGPROFMSG("Profiler::Stop for routine = " << ThisFunction->GetName()<<endl;);
 #ifdef TRACING_ON
 	TraceEvent(ThisFunction->GetFunctionId(), -1, tid); // -1 is for exit
 #endif //TRACING_ON
@@ -361,6 +369,10 @@ void Profiler::Stop(int tid)
         }
 
       } // if TheProfileMask() 
+      else 
+      { /* set current profiler properly */
+	CurrentProfiler[tid] = ParentProfiler; 
+      }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -468,6 +480,7 @@ int Profiler::StoreData(int tid)
 	// Recalculate number of funcs using ProfileGroup. Static objects 
         // constructed before setting Profile Groups have entries in FuncDB 
 	// (TAU_DEFAULT) even if they are not supposed to be there.
+	/*
 	numFunc = 0;
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
@@ -475,6 +488,8 @@ int Profiler::StoreData(int tid)
 	    numFunc++;
 	  }
 	}
+	*/
+	numFunc = TheFunctionDB().size();
 	header = new char[256];
 
 #if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
@@ -502,7 +517,9 @@ int Profiler::StoreData(int tid)
 	*/
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
+	/*
           if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) { 
+	  */
   
   	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping " 
   	      << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : " 
@@ -543,7 +560,9 @@ int Profiler::StoreData(int tid)
 #else  // PROFILE_CALLS
   	    fprintf(fp,"0 \n"); // Indicating - profile calls is turned off 
 #endif // PROFILE_CALLS
+	    /*
 	  } // ProfileGroup test 
+	  */
 	} // for loop. End of FunctionInfo data
 	fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
 	RtsLayer::UnLockDB();
@@ -647,6 +666,7 @@ int Profiler::DumpData(int tid)
 	// Recalculate number of funcs using ProfileGroup. Static objects 
         // constructed before setting Profile Groups have entries in FuncDB 
 	// (TAU_DEFAULT) even if they are not supposed to be there.
+	/*
 	numFunc = 0;
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
@@ -654,6 +674,8 @@ int Profiler::DumpData(int tid)
 	    numFunc++;
 	  }
 	}
+	*/
+	numFunc = TheFunctionDB().size();
 	header = new char[256];
 
 #if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
@@ -681,8 +703,9 @@ int Profiler::DumpData(int tid)
 	*/
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
-          if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask())
+          /* if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask())
 	  { 
+	  */
 
 	    if ((*it)->GetAlreadyOnStack(tid)) 
 	    { 
@@ -741,7 +764,9 @@ int Profiler::DumpData(int tid)
 	      excltime, incltime); 
 
   	    fprintf(fp,"0 \n"); // Indicating - profile calls is turned off 
+	    /*
 	  } // ProfileGroup test 
+	  */
 	} // for loop. End of FunctionInfo data
 	fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
 	// Change this when aggregate profiling in introduced in Pooma 
@@ -981,9 +1006,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.51 $   $Date: 2001/12/22 00:14:22 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.51 2001/12/22 00:14:22 bertie Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.52 $   $Date: 2002/01/15 04:21:07 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.52 2002/01/15 04:21:07 sameer Exp $ 
  ***************************************************************************/
 
 	
