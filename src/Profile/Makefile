@@ -123,10 +123,11 @@ TAU_DISABLE   = libTauDisable$(LSX)
 ##############################################
 TAU_SHLIBX		= .so 		  
 #HP#TAU_SHLIBX		= .sl			#ENDIF#
+#APPLECXX#TAU_SHLIBX    = .dylib		#ENDIF#
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
-#APPLECXX#AR_SHFLAGS = -dynamic -flat_namespace -undefined suppress -bundle #ENDIF#
+#APPLECXX#AR_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 #USE_IBMXLC#AR_SHFLAGS          = -G 		#ENDIF#
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
@@ -134,6 +135,7 @@ TAU_SHLIBX		= .so
 #ACC#AR_SHFLAGS  		= -b 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
+#APPLECXX#TAU_SHLIB = $(INSTALLDEST)/libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX) #ENDIF#
 #HITACHI# TAU_SHLIB	= #ENDIF#
 #USE_NECCXX# TAU_SHLIB	= #ENDIF#
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
@@ -153,6 +155,7 @@ TAU_RANLIB = echo "Built $(TARGET)"
 ##############################################
 TAU_DSO         = $(TAU_SHLIB)
 TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
+#APPLECXX#TAU_SHLIB_INSTALL= $(TAU_DSO) #ENDIF#
 
 
 all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) 
