@@ -85,7 +85,7 @@
 #   tc2000          a BBN Butterfly tc2000
 #   ksr1            a Kendall Square KSR1
 #   unknown         default setup, no machine selected (original)
-#   alpha           a Compaq Alpha running OSF/1
+#   alpha           an HP/Compaq Alpha running OSF/1 Tru64
 #   c90             a Cray C90 running Unicos
 #   t3d             a Cray T3D (Alpha-based) computer array
 #   i386_linux 	    an Intel ix86 PC running LINUX
@@ -745,7 +745,7 @@ case $machine in
    alpha)
      if [ $cxx_compiler = default ]
        then
-      # If it has the Compaq cxx compiler, use it
+      # If it has the HP/Compaq cxx compiler, use it
 	 if [ -d /lib/cmplrs/cxx ]
            then
              cxx_compiler=cxx
@@ -1016,7 +1016,7 @@ case $cxx_compiler in
       ;;
 
    cxx)
-      echo "Default C++ compiler will be the Compaq cxx C++ compiler"
+      echo "Default C++ compiler will be the HP Tru64 cxx C++ compiler"
       fixmakeargs="$fixmakeargs USE_DECCXX"
       if [ $fortran_compiler = no ]
       then 
@@ -1221,7 +1221,7 @@ case $fortran_compiler in
       ;;
 
    compaq)
-      echo "Default Fortran compiler will be Compaq f90"
+      echo "Default Fortran compiler will be HP Tru64 f90"
       f90loaded=`which f90 | sed -e 's/f90/../g' | grep "^no"`
       if [ "x$f90loaded" = "x" ]
       then
