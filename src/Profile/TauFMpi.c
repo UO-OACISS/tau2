@@ -572,6 +572,7 @@ int *ierr;
   *ierr = MPI_Get_processor_name( name, resultlen );
 }
 
+/*
 void  mpi_init_( argc, argv, ierr )
 int * argc;
 char *** argv;
@@ -579,6 +580,7 @@ int *ierr;
 {
   *ierr = MPI_Init( argc, argv );
 }
+*/
 
 void  mpi_init_thread_ (argc, argv, required, provided, ierr )
 int * argc;
