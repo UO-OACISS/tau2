@@ -19,14 +19,14 @@ public class SimpleExample {
 		session.initialize(args[0]);
 
 		// select the application
-		Application myApp = session.setApplication("example test", null);
+		Application myApp = session.setApplication(1);
 		if (myApp != null)
 			System.out.println("Got application: " + myApp.getName() + ", version " + myApp.getVersion());
 
 		// select an experiment
 		Experiment myExp = session.setExperiment(1);
 		if (myExp != null)
-			System.out.println("Got experiment: " + myApp.getID());
+			System.out.println("Got experiment: " + myExp.getID());
 
 		// Get the list of trials
 		ListIterator trials;
