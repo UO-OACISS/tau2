@@ -442,7 +442,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	}
         catch(Exception e){
 	    UtilFncs.systemError(new ParaProfError(this.toString()+": run()", null,
-						   "An error occurred whilst trying to load!\nExpected format to be of type \"profiles\".",
+						   "An error occurred while trying to load!\nExpected format to be of type \"profiles\".",
 						   "Please check for the correct file type or a corrupt file.",
 						   e, null, null, null, false,false, false),null,null);
 	    if(this.debug())
@@ -529,17 +529,47 @@ public class TauOutputSession extends ParaProfDataSession{
     }
 
     private void getFunctionDataLine(String string){
-	StringTokenizer st1 = new StringTokenizer(string, "\"");
-	functionDataLine.s0 = st1.nextToken(); //Name
+
+	// first, count the number of double-quotes to determine if the 
+	// function contains a double-quote
+	int quoteCount = 0;
+ 	for (int i=0; i < string.length(); i++) {
+	    if (string.charAt(i) == '"')
+		quoteCount++;
+	}
+
+	StringTokenizer st2;
+
+	if (quoteCount == 2 || quoteCount == 4) { // assume all is well
+	    StringTokenizer st1 = new StringTokenizer(string, "\"");
+	    functionDataLine.s0 = st1.nextToken(); //Name
+	    
+	    st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	} else {
+
+	    // there is a quote in the name of the timer/function
+	    // we assume that TAU_GROUP="..." is there, so the end of the name must be
+	    // at quoteCount - 2
+	    int count = 0;
+	    int i = 0;
+	    while (count < quoteCount - 2 && i < string.length()) {
+		if (string.charAt(i) == '"')
+		    count++;
+		i++;
+	    }
+	    
+	    functionDataLine.s0 = string.substring(1,i-1);
+	    st2 = new StringTokenizer(string.substring(i+1), " \t\n\r");
+	}
 	
-	StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
 	functionDataLine.i0 = Integer.parseInt(st2.nextToken()); //Calls
 	functionDataLine.i1 = Integer.parseInt(st2.nextToken()); //Subroutines
 	functionDataLine.d0 = Double.parseDouble(st2.nextToken()); //Exclusive
 	functionDataLine.d1 = Double.parseDouble(st2.nextToken()); //Inclusive
-	if(this.profileStatsPresent())
+	if (this.profileStatsPresent())
 	    functionDataLine.d2 = Double.parseDouble(st2.nextToken()); //SumExclSqr
 	functionDataLine.i2 = Integer.parseInt(st2.nextToken()); //ProfileCalls
+	
     }
 
     private String getGroupNames(String string){
