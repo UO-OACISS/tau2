@@ -35,16 +35,21 @@ printUsage () {
 	echo -e "Usage: tau_compiler.sh"
 	echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
 	echo -e "  -optPdtDir=\"\"\t\t\tPDT architecture directory. Typically \$(PDTDIR)/\$(PDTARCHDIR)"
-	echo -e "  -optPdtF95=\"\"\t\t\tOptions for Fortran parser in PDT (f95parse)"
+	echo -e "  -optPdtF95Opts=\"\"\t\tOptions for Fortran parser in PDT (f95parse)"
+	echo -e "  -optPdtF95Reset=\"\"\tReset options to the Fortran parser to the given list"
 	echo -e "  -optPdtCOpts=\"\"\t\tOptions for C parser in PDT (cparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
+	echo -e "  -optPdtCReset=\"\"\t\tReset options to the C parser to the given list"
 	echo -e "  -optPdtCxxOpts=\"\"\t\tOptions for C++ parser in PDT (cxxparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
+	echo -e "  -optPdtCReset=\"\"\t\tReset options to the C++ parser to the given list"
 	echo -e "  -optPdtF90Parser=\"\"\t\tSpecify a different Fortran parser. For e.g., f90parse instead of f95parse"
 	echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
 	echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
 	echo -e "  -optTauSelectFile=\"\"\t\tSpecify selective instrumentation file for tau_instrumentor"
 	echo -e "  -optTau=\"\"\t\t\tSpecify options for tau_instrumentor"
 	echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
+	echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
 	echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
+	echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
 	echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking (default)"
 	echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
 	if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
@@ -167,6 +172,12 @@ for arg in "$@"
 			groupType=$group_f_F
 			;;
 
+		-I*|-D*)
+			optPdtCFlags="$arg $optPdtCFlags"
+			optPdtCxxFlags="$arg $optPdtCxxFlags"
+			optPdtF95="$arg $optPdtF95"
+			optCompile="$arg $optCompile"
+			;;
 		-c)
 			isForCompilation=$TRUE
 			argsRemaining="$argsRemaining $arg"
@@ -224,16 +235,16 @@ for arg in "$@"
 				echoIfDebug "\tpdtDir read is: $optPdtDir"
 				;;
 
-			-optPdtF95*)
+			-optPdtF95Opts*)
 				#reads all the options needed for Parsing a Fortran file
 				#e.g ${FFLAGS}, ${FCPPFLAGS}. If one needs to pass any
 				#additional files for parsing, it can simply be appended before 
 				#the flags.
-				#e.g. -optPdtF95="${APP_DEFAULT_DIR}/{APP_LOCATION}/*.F90 ${FFLAGS}, ${FCPPFLAGS}.
+				#e.g. -optPdtF95Opts="${APP_DEFAULT_DIR}/{APP_LOCATION}/*.F90 ${FFLAGS}, ${FCPPFLAGS}.
 				#It is imperative that the additional files for parsing be kept
 				#before the flags.
 
-				optPdtF95=${arg#"-optPdtF95"}
+				optPdtF95="${arg#"-optPdtF95Opts="} $optPdtF95"
 				echoIfDebug "\tPDT Option for F90 is: $optPdtF95"
 				;;
 
@@ -244,13 +255,13 @@ for arg in "$@"
 
 			-optPdtCOpts*)
 				#Assumption: This reads ${CFLAGS} 
-				optPdtCFlags=${arg#"-optPdtCOpts="}
+				optPdtCFlags="${arg#"-optPdtCOpts="} $optPdtCFlags"
 				echoIfDebug "\tCFLAGS is: $optPdtCFlags"
 				;;
 
 			-optPdtCxxOpts*)
 				#Assumption: This reads both ${CPPFLAGS} 
-				optPdtCxxFlags=${arg#"-optPdtCxxOpts="}
+				optPdtCxxFlags="${arg#"-optPdtCxxOpts="} $optPdtCxxFlags"
 				echoIfDebug "\tCxxFLAGS is: $optPdtCxxFlags"
 				;;
 
@@ -285,15 +296,35 @@ for arg in "$@"
 				;;
 
 			-optLinking*)
-				optLinking=${arg#"-optLinking="}
+				optLinking="${arg#"-optLinking="} $optLinking"
 				echoIfDebug "\tLinking Options are: $optLinking"
 				;;
 
+			-optLinkReset*)
+				optLinking=${arg#"-optLinkReset="}
+				echoIfDebug "\tLinking Options are: $optLinking"
+				;;
 			-optCompile*)
-				optCompile=${arg#"-optCompile="}
+				optCompile="${arg#"-optCompile="} $optCompile"
+				echoIfDebug "\tCompiling Options are: $optCompile"
+				;;
+			-optReset*)
+				optCompile=${arg#"-optReset="}
 				echoIfDebug "\tCompiling Options are: $optCompile"
 				;;
 
+			-optPdtCReset*)
+				optPdtCFlags=${arg#"-optPdtCReset="}
+				echoIfDebug "\tParsing C Options are: $optPdtCFlags" 
+				;;
+			-optPdtCxxReset*)
+				optPdtCxxFlags=${arg#"-optPdtCxxOptsReset="}
+				echoIfDebug "\tParsing Cxx Options are: $optPdtCxxFlags" 
+				;;
+			-optPdtF95Reset*)
+				optPdtF95=${arg#"-optPdtF95Reset="} 
+				echoIfDebug "\tParsing F95 Options are: $optPdtF95" 
+				;;
 			-optVerbose*)
 				echoIfDebug "\tVerbose Option is being passed"
 				isVerbose=$TRUE
@@ -594,8 +625,8 @@ fi
 if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	tempCounter=0
 	while [ $tempCounter -lt $numFiles ]; do
-		eval "rm ${arrTau[$tempCounter]}"
-		eval "rm ${arrPdb[$tempCounter]}"
+		eval "rm ${arrTau[$tempCounter]##*/}"
+		eval "rm ${arrPdb[$tempCounter]##*/}"
 		tempCounter=tempCounter+1
 	done
 fi
