@@ -13,7 +13,7 @@ import java.util.*;
  * AFTER decrementing index. Thus, alternating calls to next and previous
  * return the same element. As required by the ListIterator specification.
  *
- * <P>CVS $Id: DataSessionIterator.java,v 1.2 2004/03/31 00:47:07 bertie Exp $</P>
+ * <P>CVS $Id: DataSessionIterator.java,v 1.3 2004/04/10 00:06:29 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -38,7 +38,6 @@ public class DataSessionIterator implements ListIterator{
 				    listData = inVector;
 				
 				//Safe to continue.				
-				listData = inVector;
 				size = listData.size();
 		}
 
