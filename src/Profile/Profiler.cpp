@@ -110,6 +110,46 @@ void TauAppShutdown(void)
 }
  
 //////////////////////////////////////////////////////////////////////
+// Get the string containing the counter name
+//////////////////////////////////////////////////////////////////////
+char * TauGetCounterString(void)
+{
+  char *header = new char[64];
+  char *tau_env = NULL;
+#ifdef SGI_HW_COUNTERS
+  return "templated_functions_hw_counters";
+#elif (defined (TAU_PAPI) || defined (TAU_PCL) \
+		|| defined(TAU_PAPI_WALLCLOCKTIME) \
+		|| defined(TAU_PAPI_VIRTUAL))
+
+#ifdef TAU_PAPI
+  tau_env = getenv("PAPI_EVENT");
+#else  /* TAU_PAPI */
+#ifdef TAU_PCL
+  tau_env = getenv("PCL_EVENT");
+#endif /* TAU_PCL */
+#endif /* TAU_PAPI */
+  if (tau_env)
+  {
+    sprintf(header, "templated_functions_MULTI_%s", tau_env);
+    return header;
+  }
+  else
+  {
+#ifdef TAU_PAPI_WALLCLOCKTIME
+    return "templated_functions_MULTI_P_WALL_CLOCK_TIME";
+#endif /* TAU_PAPI_WALLCLOCKTIME */
+
+#ifdef TAU_PAPI_VIRTUAL
+    return "templated_functions_MULTI_P_VIRTUAL_TIME";
+#endif /* TAU_PAPI_VIRTUAL */
+    return "templated_functions_hw_counters";
+  }
+#else  // ! (TAU_PAPI/PCL) => SGI_TIMERS, TULIP_TIMERS 
+  return "templated_functions";
+#endif // ALL options
+}
+//////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class Profiler
 //////////////////////////////////////////////////////////////////////
 
@@ -783,19 +823,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	//numFunc = TheFunctionDB().size();
 	header = new char[256];
 
-#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
-	|| (defined (TAU_PAPI) && \
-         (!(defined(TAU_PAPI_WALLCLOCKTIME) || (defined (TAU_PAPI_VIRTUAL))))))
-	sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
-#else  // SGI_TIMERS, TULIP_TIMERS 
-	sprintf(header,"%d templated_functions\n", numFunc);
-#endif // SGI_HW_COUNTERS 
-
-#ifdef TAU_PAPI
-	static const char * papi_env_var = getenv("PAPI_EVENT");
-	if (papi_env_var != NULL)
-	  sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
-#endif // TAU_PAPI 
+	sprintf(header,"%d %s\n", numFunc, TauGetCounterString());
 
 	// Send out the format string
 	strcat(header,"# Name Calls Subrs Excl Incl ");
@@ -1028,20 +1056,7 @@ int Profiler::StoreData(int tid)
 	numFunc = TheFunctionDB().size();
 	header = new char[256];
 
-#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
-	|| (defined (TAU_PAPI) && \
-         (!(defined(TAU_PAPI_WALLCLOCKTIME) || (defined (TAU_PAPI_VIRTUAL))))))
-	sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
-#else  // SGI_TIMERS, TULIP_TIMERS 
-	sprintf(header,"%d templated_functions\n", numFunc);
-#endif // SGI_HW_COUNTERS 
-
-#ifdef TAU_PAPI
-	static const char * papi_env_var = getenv("PAPI_EVENT");
-	if (papi_env_var != NULL)
-	  sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
-#endif // TAU_PAPI 
-	  
+	sprintf(header,"%d %s\n", numFunc, TauGetCounterString());
 	
 	// Send out the format string
 	strcat(header,"# Name Calls Subrs Excl Incl ");
@@ -1228,19 +1243,7 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
 	numFunc = TheFunctionDB().size();
 	header = new char[256];
 
-#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
-	|| (defined (TAU_PAPI) && \
-         (!(defined(TAU_PAPI_WALLCLOCKTIME) || (defined (TAU_PAPI_VIRTUAL))))))
-	sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
-#else  // SGI_TIMERS, TULIP_TIMERS 
-	sprintf(header,"%d templated_functions\n", numFunc);
-#endif // SGI_HW_COUNTERS 
-
-#ifdef TAU_PAPI
-	static const char * papi_env_var = getenv("PAPI_EVENT");
-	if (papi_env_var != NULL)
-	  sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
-#endif // TAU_PAPI 
+	sprintf(header,"%d %s\n", numFunc, TauGetCounterString());
 
 	// Send out the format string
 	strcat(header,"# Name Calls Subrs Excl Incl ");
@@ -2516,8 +2519,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.83 $   $Date: 2003/07/18 18:48:16 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.83 2003/07/18 18:48:16 sameer Exp $ 
+ * $Revision: 1.84 $   $Date: 2003/07/22 17:21:22 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.84 2003/07/22 17:21:22 sameer Exp $ 
  ***************************************************************************/
 
 	
