@@ -697,13 +697,18 @@ bool RtsLayer::isCtorDtor(const char *name)
       DEBUGPROFMSG("JAVA RtsLayer::isCtorDtor("<<name<<") returns false! "<<endl;);
       return false;
 #endif /* JAVA */
-  if (strchr(name,'~') == NULL) // a destructor 
-    if (strchr(name,':') == NULL) // could be a constructor 
-      return false;
+  if (myThread() == 0) 
+  {
+    if (strchr(name,'~') == NULL) // a destructor 
+      if (strchr(name,':') == NULL) // could be a constructor 
+        return false;
+      else  
+        return true; /* in C++ a : in a name could signify a ctor/dtor */
     else  
-      return true; /* in C++ a : in a name could signify a ctor/dtor */
-  else  
-    return true;
+      return true;
+  }
+  else 
+    return false; /* in C++, on other threads don't check for this */
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -867,6 +872,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.26 $   $Date: 2001/02/28 00:04:36 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.26 2001/02/28 00:04:36 sameer Exp $ 
+ * $Revision: 1.27 $   $Date: 2001/10/02 21:03:19 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.27 2001/10/02 21:03:19 sameer Exp $ 
  ***************************************************************************/
