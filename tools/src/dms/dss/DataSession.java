@@ -6,7 +6,7 @@ import dms.dss.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.12 2003/08/12 00:08:29 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.13 2003/08/25 18:30:28 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -269,8 +269,12 @@ public abstract class DataSession {
  * @see	DataSession#setFunction(Function)
  */
 	public void setFunction(Function function) {
-		this.functions = new Vector();
-		this.functions.addElement(function);
+		if (function == null)
+			this.functions = null;
+		else {
+			this.functions = new Vector();
+			this.functions.addElement(function);
+		}
 	}
 	
 /**
@@ -325,8 +329,12 @@ public abstract class DataSession {
  * @see	DataSession#setUserEvent(UserEvent)
  */
 	public void setUserEvent(UserEvent userEvent) {
-		this.userEvents = new Vector();
-		this.userEvents.addElement(userEvent);
+		if (userEvent == null) 
+			this.userEvents = null;
+		else {
+			this.userEvents = new Vector();
+			this.userEvents.addElement(userEvent);
+		}
 	}
 	
 /**
