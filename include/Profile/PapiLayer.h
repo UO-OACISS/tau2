@@ -31,7 +31,7 @@ class PapiLayer
 {
   public:
   static int map_eventnames(char *name);
-  static int PapiLayerInit(void);
+  static int PapiLayerInit(bool lock = true);
   static void multiCounterPapiInit(void);
   static long long getCounters(int tid);
   static long long getWallClockTime(void);
