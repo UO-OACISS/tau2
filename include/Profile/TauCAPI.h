@@ -66,6 +66,11 @@
 #define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
 #define TAU_DB_PURGE()                          Tau_purge();
 #define TAU_GET_FUNC_NAMES(functionList, num)   Tau_the_function_list(functionList, num);
+#define TAU_DUMP_FUNC_NAMES()                   Tau_dump_function_names();
+#define TAU_GET_COUNTER_NAMES(counterList, num) Tau_the_counter_names(counterList, num);
+#define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8) Tau_get_function_values(v1,v2,v3,v4,v5,v6,v7,v8);
+#define TAU_DUMP_FUNC_VALS(functionList, num)   Tau_dump_function_values(functionList, num);
+#define TAU_DUMP_FUNC_VALS_incr(functionList, num)  Tau_dump_function_values_incr(functionList, num);
 
 /*
 #define TAU_REGISTER_EVENT(event, name)	static int tauuser##event = 1;\
@@ -120,6 +125,15 @@ extern int Tau_dump(void);
 extern int Tau_dump_incr(void);
 extern void Tau_purge(void);
 extern void Tau_theFunctionList(const char **functionList, int num);
+extern void Tau_dump_function_names();
+extern void Tau_the_counter_names(const char **counterList, int num);
+extern void Tau_get_function_values(const char **inFuncs, int numOfFuncs,
+				    double **counterExclusiveValues,
+				    double **counterInclusiveValues,
+				    int *numOfCalls, int *numOfSubRoutines,
+				    const char **counterNames, int numOfCounters);
+extern void Tau_dump_function_values(const char **functionList, int num);
+extern void Tau_dump_function_values_incr(const char **functionList, int num);
 extern void Tau_register_thread();
 extern void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 extern void * Tau_get_userevent(char *name);
@@ -158,6 +172,11 @@ extern TauGroup_t Tau_get_profile_group(char *group);
 #define TAU_DB_DUMP_INCR()
 #define TAU_DB_PURGE()
 #define TAU_GET_FUNC_NAMES(functionList, num)
+#define TAU_DUMP_FUNC_NAMES()
+#define TAU_GET_COUNTER_NAMES(counterList, num)
+#define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8)
+#define TAU_DUMP_FUNC_VALS(functionList, num)
+#define TAU_DUMP_FUNC_VALS_incr(functionList, num)
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
@@ -199,7 +218,7 @@ extern TauGroup_t Tau_get_profile_group(char *group);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: bertie $
- * $Revision: 1.17 $   $Date: 2002/04/03 18:04:30 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.17 2002/04/03 18:04:30 bertie Exp $
+ * $Revision: 1.18 $   $Date: 2002/04/03 18:59:32 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.18 2002/04/03 18:59:32 bertie Exp $
  ***************************************************************************/
 
