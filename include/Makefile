@@ -114,6 +114,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #HITACHI_FORTRAN#TAU_F90     = f90 	$(ABI)    #ENDIF#
 #INTEL_FORTRAN#TAU_F90       = efc 	$(ABI)    #ENDIF#
 #INTEL32_FORTRAN#TAU_F90     = ifc 	$(ABI)    #ENDIF#
+#NEC_FORTRAN#TAU_F90         = f90 	$(ABI)    #ENDIF#
 
 
 ############# Profiling Options #############
@@ -237,6 +238,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #COMPAQ_FORTRAN#TAU_FORTRANLIBS =  $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -L$(EXTRADIR)/lib -L$(EXTRADIR)/lib/cmplrs/fort90 -L$(EXTRADIR)/lib/cmplrs/fort90 -lUfor -lfor -lFutil -lm -lmld -lexc -lc #ENDIF#
 #ABSOFT_FORTRAN#TAU_FORTRANLIBS =  -L$(EXTRADIR)/lib -lfio -lf90math -lU77 -lf77math -lfio #ENDIF#
 #HITACHI_FORTRAN#TAU_FORTRANLIBS =  -lf90 -lhf90math #ENDIF#
+#NEC_FORTRAN#TAU_FORTRANLIBS =  -f90lib #ENDIF#
 
 
 #HITACHI#TAU_HITACHI_EXTRA 	=  -L/usr/local/lib -llrz32 #ENDIF#

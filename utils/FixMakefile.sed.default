@@ -11,6 +11,7 @@ s@^DYNINSTDIR=\(.*\)@DYNINSTDIR=@g
 s@^JDKDIR=\(.*\)@JDKDIR=@g
 s@^OPARIDIR=\(.*\)@OPARIDIR=@g
 s@^EPILOGDIR=\(.*\)@EPILOGDIR=@g
+s@^EXTRADIR=\(.*\)@EXTRADIR=@g
 s@^TAU_OPTIONS=\(.*\)@TAU_OPTIONS=@g
 s@^TAU_MPI_INC=\(.*\)@TAU_MPI_INC=@g
 s@^TAU_MPI_LIB=\(.*\)@TAU_MPI_LIB=@g
