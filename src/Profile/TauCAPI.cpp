@@ -33,6 +33,7 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
+#include <stdio.h>
 
 ///////////////////////////////////////////////////////////////////////////
 // Wrappers for corresponding C++ functions follow
@@ -232,7 +233,7 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2000/10/11 18:38:52 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.12 2000/10/11 18:38:52 sameer Exp $
+ * $Revision: 1.13 $   $Date: 2000/10/11 21:21:22 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.13 2000/10/11 21:21:22 sameer Exp $
  ***************************************************************************/
 
