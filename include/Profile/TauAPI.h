@@ -83,7 +83,10 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
         t->Start(tau_tid); }
 
 #define TAU_GLOBAL_TIMER_STOP()  {int tau_threadid = RtsLayer::myThread(); \
-                Profiler::CurrentProfiler[tau_threadid]->Stop(tau_threadid);}
+                Profiler *p = Profiler::CurrentProfiler[tau_threadid]; \
+		p->Stop(tau_threadid); \
+		delete p; \
+		}
 
 
 /* The above macros are for use with global timers in a multi-threaded application */
@@ -242,7 +245,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.38 $   $Date: 2005/01/05 21:29:01 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.38 2005/01/05 21:29:01 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.39 $   $Date: 2005/01/07 01:42:48 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.39 2005/01/07 01:42:48 sameer Exp $ 
  ***************************************************************************/
