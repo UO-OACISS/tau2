@@ -12,14 +12,15 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=sgi8k
+CONFIG_ARCH=solaris2
 CONFIG_CC=gcc
-CONFIG_CXX=KCC
+CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
+TAUROOT=/nfs/research/parallel/sameer/gar/research/tau2
 #######################################################################
  
-#MIPSR8K#ABI 	     = -64		  #ENDIF#
+#MIPSR8K##ABI 	     = -64		  #ENDIF#
 #MIPSR8K#ISA          = -mips4             #ENDIF#
 
 ############# Standard Defines ##############
@@ -35,15 +36,15 @@ LSX = .a
 
 ############# Profiling Options #############
 PROFILEOPT1           = -DPROFILING_ON    #ENDIF##PROFILE#
-PROFILEOPT2         = -DSGI_TIMERS      #ENDIF##SGITIMERS#
+#SGITIMERS#PROFILEOPT2         = -DSGI_TIMERS      #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS #ENDIF#
 #PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS   #ENDIF#
 #PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS   #ENDIF#
 #DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF      #ENDIF#
-PROFILEOPT7               = -DTAU_STDCXXLIB   #ENDIF##KAI#
+#KAI#PROFILEOPT7               = -DTAU_STDCXXLIB   #ENDIF#
 #INTELTFLOP#PROFILEOPT8        = -DPOOMA_TFLOP     #ENDIF#
-#SOL2#PROFILEOPT9              = -DNO_RTTI         #ENDIF#
-#GNU#PROFILEOPT10          = -DNO_RTTI         #ENDIF#
+PROFILEOPT9              = -DNO_RTTI         #ENDIF##SOL2#
+PROFILEOPT10          = -DNO_RTTI         #ENDIF##GNU#
 TRACEOPT		       = -DTRACING_ON	   #ENDIF##TRACE#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	   #ENDIF#
@@ -52,8 +53,6 @@ PROFILEOPTS = $(PROFILEOPT1) $(PROFILEOPT2) $(PROFILEOPT3) $(PROFILEOPT4) \
               $(PROFILEOPT5) $(PROFILEOPT6) $(PROFILEOPT7) $(PROFILEOPT8) \
 	      $(PROFILEOPT9) $(PROFILEOPT10) $(TRACEOPT)
 ##############################################
-
-TAUROOT         = ../..
 
 LINKER		= $(CXX)
 
@@ -73,7 +72,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-TARGET	      	= t1
+TARGET	      	= simple
 
 EXTRAOBJS     	= 
 
