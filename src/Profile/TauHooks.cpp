@@ -71,7 +71,7 @@ void TauInitCode(char *arg)
     /* Create a new FunctionInfo object with the given name and add it to 
        the global vector of FI pointers */
     FunctionInfo *taufi = new 
-	FunctionInfo(name, " " , TAU_DEFAULT, "TAU_DEAULT", true, tid); 
+	FunctionInfo(name, " " , TAU_DEFAULT, name, true, tid); 
     if (taufi == (FunctionInfo *) NULL) {
       printf("ERROR: new returns NULL in TauInitCode\n"); exit(1); 
     }
@@ -141,6 +141,13 @@ void TauRoutineExitTest(int id)
   TAU_MONITOR_EXIT(tid);
 }
 
+void TauProgramTermination(char *name)
+{
+  dprintf("TauProgramTermination %s\n", name);
+  TAU_PROFILE_EXIT(name);
+  return;
+}
+
 void HookEntry(char *name)
 {
   dprintf("Entry ->: %s\n",name);
@@ -156,6 +163,6 @@ void HookExit(char *name)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2000/02/22 23:29:57 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.5 2000/02/22 23:29:57 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 2000/04/18 18:58:22 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.6 2000/04/18 18:58:22 sameer Exp $ 
  ***************************************************************************/
