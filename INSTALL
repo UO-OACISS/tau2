@@ -46,6 +46,13 @@ library.  The `configure' shell script attempts to guess correct values for
 various system-dependent variables used during compilation, and creates the 
 Makefile(s) (one in each subdirectory of the source directory).
 
+NOTE: It is highly recommended that you select the *minimal* set of options 
+*****
+that satisfies the instrumentation and measurement parameters that you need. 
+Multiple configurations can be created by using configure several times 
+using a different set of options each time. Commonly used configurations are 
+typically installed using the 'installtau' tool described below.
+
 % ./configure -help 
 
 TAU Configuration Utility 
