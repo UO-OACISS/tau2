@@ -198,7 +198,7 @@ public class LoadTrialPanel extends JFrame implements ActionListener{
     JTextField dirLocationField = new JTextField(System.getProperty("user.dir"), 30);
     //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun.
     //String trialTypeStrings[] = {"pprof", "tau profiles", "dynaprof", "mpiP", "hpmtoolkit", "gprof", "psrun"};
-    String trialTypeStrings[] = {"pprof", "tau profiles"};
+    String trialTypeStrings[] = {"tau profiles", "pprof"};
     JComboBox trialTypes = new JComboBox(trialTypeStrings);
     //####################################
     //End - Instance data.
