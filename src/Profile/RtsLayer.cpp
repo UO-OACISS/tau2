@@ -38,6 +38,9 @@
 #ifdef FUJITSU
 #include "Profile/fujitsu.h"
 #endif /* FUJITSU */
+#ifdef TAU_HITACHI
+#include "Profile/hitachi.h"
+#endif /* HITACHI */
 #include "Profile/Profiler.h"
 
 #ifdef TAU_XLC
@@ -1016,6 +1019,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.41 $   $Date: 2002/05/06 12:23:36 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.41 2002/05/06 12:23:36 sameer Exp $ 
+ * $Revision: 1.42 $   $Date: 2002/05/08 07:09:08 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.42 2002/05/08 07:09:08 sameer Exp $ 
  ***************************************************************************/

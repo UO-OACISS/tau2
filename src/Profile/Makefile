@@ -34,6 +34,7 @@ CC  = $(TAU_CC)
 #This includes all profile options in $(PROFILEOPTS).
 
 
+
 CEXTRA =  
 ############# For KAI KCC compiler, use --one_instantiation_per_object ##
 #KAI#CEXTRA			= --one_per	   	   #ENDIF#
@@ -131,6 +132,7 @@ TAU_SHLIBX		= .so
 #ACC#AR_SHFLAGS  		= -b 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
+#HITACHI# TAU_SHLIB	= #ENDIF#
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
 TAU_RANLIB = echo "Built $(TARGET)" 
 #APPLECXX#TAU_RANLIB = ranlib $(TARGET) #ENDIF#
