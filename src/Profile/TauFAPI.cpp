@@ -248,23 +248,29 @@ void tau_report_thread_statistics_(void)
 #ifdef CRAYKAI
 void _main();
 #endif /* CRAYKAI */
-void TAU_PROFILE_TIMER(void **ptr, char *fname, int *flen)
+void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
 {
-//#ifdef DEBUG_PROF
-//  printf("flen = %d\n", *flen);
-//#endif /* DEBUG_PROF */
-  
 
-  if (*ptr == 0) 
+#ifdef DEBUG_PROF
+  printf("flen = %d\n", flen);
+#endif /* DEBUG_PROF */
+ 
+
+  if (*ptr == 0)
   {  // remove garbage characters from the end of name
-    for(int i=0; i<1024; i++)
+    if (flen < 1024) fname[flen] = '\0';
+    else
     {
-      if (!VALID_NAME_CHAR(fname[i]))
-      { 
-        fname[i] = '\0';
-        break;
+      for(int i=0; i<1024; i++)
+      {
+        if (!VALID_NAME_CHAR(fname[i]))
+        {
+          fname[i] = '\0';
+          break;
+        }
       }
     }
+
 #ifdef DEBUG_PROF
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
@@ -340,11 +346,13 @@ void TAU_DISABLE_INSTRUMENTATION(void)
   tau_disable_instrumentation();
 }
 
-void TAU_REGISTER_EVENT(void **ptr, char *event_name, int *flen)
+void TAU_REGISTER_EVENT(void **ptr, char *event_name, int flen)
 {
 
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
+    if (flen < 1024) event_name[flen] = '\0';
+    else
     for(int i=0; i<1024; i++)
     {
       if (!VALID_NAME_CHAR(event_name[i]))
@@ -603,6 +611,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 2001/12/06 02:42:48 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.20 2001/12/06 02:42:48 sameer Exp $ 
+ * $Revision: 1.21 $   $Date: 2001/12/27 20:16:45 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.21 2001/12/27 20:16:45 sameer Exp $ 
  ***************************************************************************/
