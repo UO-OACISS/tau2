@@ -844,3 +844,11 @@ int  omperf_test_nest_lock(omp_nest_lock_t *s) {
   return omp_test_nest_lock(s);
 }
 
+
+/***************************************************************************
+ * $RCSfile: TauOpari.cpp,v $   $Author: sameer $
+ * $Revision: 1.4 $   $Date: 2001/07/11 00:36:24 $
+ * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.4 2001/07/11 00:36:24 sameer Exp $
+ ***************************************************************************/
+
+
