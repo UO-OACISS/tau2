@@ -182,7 +182,7 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() &&
          ((*rit)->kind() != pdbItem::RO_EXT) && ((*rit)->bodyBegin().line() != 0) 
 	 && ((*rit)->bodyEnd().line() != 0) && 
-	 (instrumentEntity((*rit)->name())) )
+	 (instrumentEntity((*rit)->fullName())) )
     {
         itemvec.push_back(new itemRef(*rit, BODY_BEGIN,
                 (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
@@ -534,8 +534,8 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 #endif /* DEBUG */
   ostr <<"{\n\t"<<return_type<< " tau_ret_val; "<<endl;
   ostr <<"\tTAU_PROFILE_TIMER(tautimer, \""<<
-    ((pdbRoutine *)(i->item))->name() << "\", \"" <<
-    ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
+    ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\",";
+    // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
   if (strcmp(i->item->name().c_str(), "main")==0)
   { /* it is main() */
@@ -565,8 +565,8 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& group_name)
 {
   ostr <<"{ \n\tTAU_PROFILE_TIMER(tautimer, \""<<
-    ((pdbRoutine *)(i->item))->name() << "\", \"" <<
-    ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
+    ((pdbRoutine *)(i->item))->fullName() << "\", \" " << "\", ";
+    //((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
   if (strcmp(i->item->name().c_str(), "main")==0)
   { /* it is main() */
@@ -1309,8 +1309,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.39 $   $Date: 2002/03/11 23:49:37 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.39 2002/03/11 23:49:37 sameer Exp $
+ * $Revision: 1.40 $   $Date: 2002/05/02 12:50:00 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.40 2002/05/02 12:50:00 sameer Exp $
  ***************************************************************************/
 
 
