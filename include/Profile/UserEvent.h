@@ -54,6 +54,7 @@ class TauUserEvent {
     ~TauUserEvent();
     TAU_EVENT_DATATYPE GetMin(int tid = RtsLayer::myThread());
     TAU_EVENT_DATATYPE GetMax(int tid = RtsLayer::myThread());
+    TAU_EVENT_DATATYPE GetSumValue(int tid = RtsLayer::myThread());
     TAU_EVENT_DATATYPE GetMean(int tid = RtsLayer::myThread());
     double  GetSumSqr(int tid = RtsLayer::myThread());
     long    GetNumEvents(int tid = RtsLayer::myThread());
@@ -66,7 +67,7 @@ class TauUserEvent {
     void SetDisableMax(bool value);
     void SetDisableMean(bool value);
     void SetDisableStdDev(bool value);
-    static void StoreData(void); 
+    static void ReportStatistics(bool ForEachThread = false); 
 };
 
 
@@ -79,7 +80,8 @@ vector<TauUserEvent*>& TheEventDB(int threadid = RtsLayer::myThread());
 #define TAU_EVENT_DISABLE_MAX(event) 		(event).SetDisableMax(true);
 #define TAU_EVENT_DISABLE_MEAN(event) 		(event).SetDisableMean(true);
 #define TAU_EVENT_DISABLE_STDDEV(event) 	(event).SetDisableStdDev(true);
-#define TAU_STORE_ALL_EVENTS 			TauUserEvent::StoreData();
+#define TAU_REPORT_STATISTICS()			TauUserEvent::ReportStatistics()
+#define TAU_REPORT_THREAD_STATISTICS()		TauUserEvent::ReportStatistics(true)
 
 #else // PROFILING is disabled
 #define TAU_REGISTER_EVENT(event, name)
@@ -89,12 +91,15 @@ vector<TauUserEvent*>& TheEventDB(int threadid = RtsLayer::myThread());
 #define TAU_EVENT_DISABLE_MEAN(event)
 #define TAU_EVENT_DISABLE_STDDEV(event)
 #define TAU_STORE_ALL_EVENTS
+#define TAU_REPORT_STATISTICS()
+#define TAU_REPORT_THREAD_STATISTICS()
+
 
 #endif // PROFILING_ON 
 */
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1998/09/22 01:05:30 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.3 1998/09/22 01:05:30 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 1998/09/24 16:52:22 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.4 1998/09/24 16:52:22 sameer Exp $ 
  ***************************************************************************/
