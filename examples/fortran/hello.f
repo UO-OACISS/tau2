@@ -9,7 +9,7 @@ cc-----------------------------------------------------------------------------
         integer profiler(2)
         save    profiler
 
-        call TAU_PROFILE_TIMER(profiler,'HelloWorld()\0')
+        call TAU_PROFILE_TIMER(profiler,'HelloWorld()')
         call TAU_PROFILE_START(profiler)
 cc Do something here...
  	print *, "Iteration = ", iVal
@@ -22,7 +22,7 @@ cc       HelloWorld = iVal
         integer profiler(2)
 	save profiler
         call TAU_PROFILE_INIT()
-        call TAU_PROFILE_TIMER(profiler, 'main()\0')
+        call TAU_PROFILE_TIMER(profiler, 'main()')
         call TAU_PROFILE_START(profiler)
         call TAU_PROFILE_SET_NODE(0)
 
