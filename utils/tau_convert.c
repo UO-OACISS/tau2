@@ -4,11 +4,12 @@
 /*********************************************************************/
 
 /*
- * pcxx_convert.c : convert software event traces to other formats
+ * tau_convert.c : convert software event traces to other formats
  *
  * (c) 1994 Jerry Manic Saftware
  *
  * Version 3.0
+ * Revision Jan 1998 Author Sameer Shende, (sameer@cs.uoregon.edu)
  */
 
 # include <stdio.h>
@@ -670,14 +671,14 @@ int main (int argc, char *argv[])
     fprintf (outfp, " -6   0 0          0 0 %10lu\n", intrc.firsttime);
     fprintf (outfp, " -7   0 0          0 0 %10lu\n", intrc.lasttime);
     fprintf (outfp, " -8   0 0 %10d 0          0\n", intrc.overflows+1);
-    fprintf (outfp, " -1   0 0          0 0          0 pcxx_convert -alog %s\n",
+    fprintf (outfp, " -1   0 0          0 0          0 tau_convert -alog %s\n",
              Today());
     fprintf (outfp, "-11   0 0          0 0 4294967295\n");
   }
   else if ( outFormat == SDDF )
   {
     fprintf (outfp, "/*\n");
-    fprintf (outfp, " * \"creation program\" \"pcxx_convert -SDDF\"\n");
+    fprintf (outfp, " * \"creation program\" \"tau_convert -SDDF\"\n");
     fprintf (outfp, " * \"creation date\" \"%s\"\n", Today());
     fprintf (outfp, " * \"number records\" \"%ld\"\n", intrc.numrec);
     fprintf (outfp, " * \"number processors\" \"%d\"\n", intrc.numproc+1);
@@ -694,7 +695,7 @@ int main (int argc, char *argv[])
 */
     fprintf (outfp, "CLKPERIOD 1.0E-06\n");
     fprintf (outfp, "NCPUS %d\n", intrc.numproc+1);
-    fprintf (outfp, "C CREATION PROGRAM pcxx_convert -pv\n");
+    fprintf (outfp, "C CREATION PROGRAM tau_convert -pv\n");
     fprintf (outfp, "C CREATION DATE %s\n", Today());
     fprintf (outfp, "C NUMBER RECORDS %ld\n", intrc.numrec);
     fprintf (outfp, "C FIRST TIMESTAMP %ld\n", intrc.firsttime);
@@ -716,7 +717,7 @@ int main (int argc, char *argv[])
   }
   else if ( outFormat == dump )
   {
-    fprintf (outfp, "#  creation program: pcxx_convert -dump\n");
+    fprintf (outfp, "#  creation program: tau_convert -dump\n");
     fprintf (outfp, "#     creation date: %s\n", Today());
     fprintf (outfp, "#    number records: %ld\n", intrc.numrec);
     fprintf (outfp, "# number processors: %d\n", numproc);
