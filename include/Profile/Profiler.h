@@ -28,6 +28,8 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
+#ifdef __cplusplus 
+
 #include <Profile/ProfileGroups.h>
 
 #define TAU_MAX_THREADS 64
@@ -82,7 +84,7 @@ public:
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
 	int ExcludeTimeThisCall(double t);
 	double ExclTimeThisCall; // for this invocation of the function
-#endif // PROFILE_CALLS || PROFILE_STATS
+#endif /* PROFILE_CALLS || PROFILE_STATS */
 
 	static Profiler * CurrentProfiler[TAU_MAX_THREADS];
 	double StartTime;
@@ -95,7 +97,7 @@ public:
   	double InclTime_cs;
   	double ExclTime_cs;
   	static void CallStackTrace();
-#endif // PROFILE_CALLSTACK 
+#endif /* PROFILE_CALLSTACK  */
 
 private:
 	unsigned int MyProfileGroup_;
@@ -108,10 +110,13 @@ private:
 };
 
 #endif /* PROFILING_ON || TRACING_ON */
+#else /* __cplusplus */
+#include <Profile/TauCAPI.h> /* For C program */
+#endif /* __cplusplus */
 
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 1998/07/16 17:20:59 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.14 1998/07/16 17:20:59 sameer Exp $ 
+ * $Revision: 1.15 $   $Date: 1998/08/09 22:11:51 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.15 1998/08/09 22:11:51 sameer Exp $ 
  ***************************************************************************/
