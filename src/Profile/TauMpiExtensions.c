@@ -467,7 +467,7 @@ int MPI_Type_create_hindexed( int count, int * array_of_blocklengths, MPI_Aint *
 void MPI_TYPE_CREATE_HINDEXED( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_Datatype local_type;
-  *ierr = MPI_Type_create_hindexed( *count, array_of_blocklengths, array_of_displacements, *oldtype, &local_type) ; 
+  *ierr = MPI_Type_create_hindexed( *count, array_of_blocklengths, array_of_displacements, MPI_Type_f2c(*oldtype), &local_type) ; 
   *newtype = MPI_Type_c2f(local_type);
   return ; 
 }
@@ -2592,7 +2592,7 @@ int MPI_Win_set_errhandler( MPI_Win win, MPI_Errhandler err)
 ******************************************************/
 void MPI_WIN_SET_ERRHANDLER( MPI_Fint *  win, MPI_Fint *  err, MPI_Fint * ierr)
 {
-  *ierr = MPI_Win_set_errhandler( MPI_Win_f2c(*win), *err) ; 
+  *ierr = MPI_Win_set_errhandler( MPI_Win_f2c(*win), MPI_Errhandler_f2c(*err)) ; 
   return ; 
 }
 
@@ -3254,7 +3254,7 @@ void MPI_FILE_GET_INFO( MPI_Fint *  fh, MPI_Aint * info_used, MPI_Fint * ierr)
   local_fh = MPI_File_f2c(*fh);
   
   *ierr = MPI_File_get_info( local_fh, &local_info) ; 
-  *info_used = MPI_File_c2f(local_info);
+  *info_used = MPI_Info_c2f(local_info);
   return ; 
 }
 
@@ -3489,7 +3489,7 @@ int MPI_File_read_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count,
 /******************************************************
 ***      MPI_File_read_at_all wrapper function 
 ******************************************************/
-void MPI_FILE_READ_AT_ALL( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_READ_AT_ALL( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type; 
@@ -3506,7 +3506,7 @@ void MPI_FILE_READ_AT_ALL( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf,
 /******************************************************
 ***      MPI_File_read_at_all wrapper function 
 ******************************************************/
-void mpi_file_read_at_all( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_at_all( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_AT_ALL( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -3515,7 +3515,7 @@ void mpi_file_read_at_all( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf,
 /******************************************************
 ***      MPI_File_read_at_all wrapper function 
 ******************************************************/
-void mpi_file_read_at_all_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_at_all_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_AT_ALL( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -3524,7 +3524,7 @@ void mpi_file_read_at_all_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf
 /******************************************************
 ***      MPI_File_read_at_all wrapper function 
 ******************************************************/
-void mpi_file_read_at_all__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_at_all__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_AT_ALL( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -3550,7 +3550,7 @@ int MPI_File_write_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MP
 /******************************************************
 ***      MPI_File_write_at wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type; 
@@ -3566,7 +3566,7 @@ void MPI_FILE_WRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MP
 /******************************************************
 ***      MPI_File_write_at wrapper function 
 ******************************************************/
-void mpi_file_write_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -3575,7 +3575,7 @@ void mpi_file_write_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MP
 /******************************************************
 ***      MPI_File_write_at wrapper function 
 ******************************************************/
-void mpi_file_write_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -3584,7 +3584,7 @@ void mpi_file_write_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
 /******************************************************
 ***      MPI_File_write_at wrapper function 
 ******************************************************/
-void mpi_file_write_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -3610,7 +3610,7 @@ int MPI_File_write_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count
 /******************************************************
 ***      MPI_File_write_at_all wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE_AT_ALL( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE_AT_ALL( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type; 
@@ -3626,7 +3626,7 @@ void MPI_FILE_WRITE_AT_ALL( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf
 /******************************************************
 ***      MPI_File_write_at_all wrapper function 
 ******************************************************/
-void mpi_file_write_at_all( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at_all( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT_ALL( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -3635,7 +3635,7 @@ void mpi_file_write_at_all( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf
 /******************************************************
 ***      MPI_File_write_at_all wrapper function 
 ******************************************************/
-void mpi_file_write_at_all_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at_all_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT_ALL( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -3644,7 +3644,7 @@ void mpi_file_write_at_all_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * bu
 /******************************************************
 ***      MPI_File_write_at_all wrapper function 
 ******************************************************/
-void mpi_file_write_at_all__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at_all__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT_ALL( fh, offset, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -4950,7 +4950,7 @@ void MPI_FILE_IWRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 
   local_fh = MPI_File_f2c(*fh);
   *ierr = MPI_File_iwrite_shared( local_fh, buf, *count, MPI_Type_f2c(*datatype), &local_request) ; 
-  *fh = MPI_File_f2c(local_fh);
+  *fh = MPI_File_c2f(local_fh);
   *request = MPI_Request_c2f(local_request);
   return ; 
 }
@@ -5055,7 +5055,7 @@ int MPI_File_read( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MP
 /******************************************************
 ***      MPI_File_read wrapper function 
 ******************************************************/
-void MPI_FILE_READ( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_READ( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5070,7 +5070,7 @@ void MPI_FILE_READ( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint 
 /******************************************************
 ***      MPI_File_read wrapper function 
 ******************************************************/
-void mpi_file_read( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5079,7 +5079,7 @@ void mpi_file_read( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint 
 /******************************************************
 ***      MPI_File_read wrapper function 
 ******************************************************/
-void mpi_file_read_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5088,7 +5088,7 @@ void mpi_file_read_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint
 /******************************************************
 ***      MPI_File_read wrapper function 
 ******************************************************/
-void mpi_file_read__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5114,7 +5114,7 @@ int MPI_File_read_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype
 /******************************************************
 ***      MPI_File_read_all wrapper function 
 ******************************************************/
-void MPI_FILE_READ_ALL( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_READ_ALL( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5127,7 +5127,7 @@ void MPI_FILE_READ_ALL( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_F
 /******************************************************
 ***      MPI_File_read_all wrapper function 
 ******************************************************/
-void mpi_file_read_all( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_all( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ALL( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5136,7 +5136,7 @@ void mpi_file_read_all( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_F
 /******************************************************
 ***      MPI_File_read_all wrapper function 
 ******************************************************/
-void mpi_file_read_all_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_all_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ALL( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5145,7 +5145,7 @@ void mpi_file_read_all_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_
 /******************************************************
 ***      MPI_File_read_all wrapper function 
 ******************************************************/
-void mpi_file_read_all__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_all__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ALL( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5224,7 +5224,7 @@ int MPI_File_read_all_end( MPI_File fh, void * buf, MPI_Status * status)
 /******************************************************
 ***      MPI_File_read_all_end wrapper function 
 ******************************************************/
-void MPI_FILE_READ_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_READ_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5237,7 +5237,7 @@ void MPI_FILE_READ_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, M
 /******************************************************
 ***      MPI_File_read_all_end wrapper function 
 ******************************************************/
-void mpi_file_read_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5246,7 +5246,7 @@ void mpi_file_read_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, M
 /******************************************************
 ***      MPI_File_read_all_end wrapper function 
 ******************************************************/
-void mpi_file_read_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5255,7 +5255,7 @@ void mpi_file_read_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, 
 /******************************************************
 ***      MPI_File_read_all_end wrapper function 
 ******************************************************/
-void mpi_file_read_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5334,7 +5334,7 @@ int MPI_File_read_at_all_end( MPI_File fh, void * buf, MPI_Status * status)
 /******************************************************
 ***      MPI_File_read_at_all_end wrapper function 
 ******************************************************/
-void MPI_FILE_READ_AT_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_READ_AT_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5349,7 +5349,7 @@ void MPI_FILE_READ_AT_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status
 /******************************************************
 ***      MPI_File_read_at_all_end wrapper function 
 ******************************************************/
-void mpi_file_read_at_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_at_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_AT_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5358,7 +5358,7 @@ void mpi_file_read_at_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status
 /******************************************************
 ***      MPI_File_read_at_all_end wrapper function 
 ******************************************************/
-void mpi_file_read_at_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_at_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_AT_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5367,7 +5367,7 @@ void mpi_file_read_at_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * statu
 /******************************************************
 ***      MPI_File_read_at_all_end wrapper function 
 ******************************************************/
-void mpi_file_read_at_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_at_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_AT_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5393,7 +5393,7 @@ int MPI_File_read_ordered( MPI_File fh, void * buf, int count, MPI_Datatype data
 /******************************************************
 ***      MPI_File_read_ordered wrapper function 
 ******************************************************/
-void MPI_FILE_READ_ORDERED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_READ_ORDERED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5407,7 +5407,7 @@ void MPI_FILE_READ_ORDERED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_read_ordered wrapper function 
 ******************************************************/
-void mpi_file_read_ordered( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_ordered( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ORDERED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5416,7 +5416,7 @@ void mpi_file_read_ordered( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_read_ordered wrapper function 
 ******************************************************/
-void mpi_file_read_ordered_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_ordered_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ORDERED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5425,7 +5425,7 @@ void mpi_file_read_ordered_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_read_ordered wrapper function 
 ******************************************************/
-void mpi_file_read_ordered__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_ordered__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ORDERED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5504,7 +5504,7 @@ int MPI_File_read_ordered_end( MPI_File fh, void * buf, MPI_Status * status)
 /******************************************************
 ***      MPI_File_read_ordered_end wrapper function 
 ******************************************************/
-void MPI_FILE_READ_ORDERED_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_READ_ORDERED_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5518,7 +5518,7 @@ void MPI_FILE_READ_ORDERED_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * statu
 /******************************************************
 ***      MPI_File_read_ordered_end wrapper function 
 ******************************************************/
-void mpi_file_read_ordered_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_ordered_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ORDERED_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5527,7 +5527,7 @@ void mpi_file_read_ordered_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * statu
 /******************************************************
 ***      MPI_File_read_ordered_end wrapper function 
 ******************************************************/
-void mpi_file_read_ordered_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_ordered_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ORDERED_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5536,7 +5536,7 @@ void mpi_file_read_ordered_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * stat
 /******************************************************
 ***      MPI_File_read_ordered_end wrapper function 
 ******************************************************/
-void mpi_file_read_ordered_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_ordered_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_ORDERED_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5562,7 +5562,7 @@ int MPI_File_read_shared( MPI_File fh, void * buf, int count, MPI_Datatype datat
 /******************************************************
 ***      MPI_File_read_shared wrapper function 
 ******************************************************/
-void MPI_FILE_READ_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_READ_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5576,7 +5576,7 @@ void MPI_FILE_READ_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MP
 /******************************************************
 ***      MPI_File_read_shared wrapper function 
 ******************************************************/
-void mpi_file_read_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_SHARED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5585,7 +5585,7 @@ void mpi_file_read_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MP
 /******************************************************
 ***      MPI_File_read_shared wrapper function 
 ******************************************************/
-void mpi_file_read_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_SHARED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5594,7 +5594,7 @@ void mpi_file_read_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_read_shared wrapper function 
 ******************************************************/
-void mpi_file_read_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_read_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_READ_SHARED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5779,7 +5779,7 @@ int MPI_File_write( MPI_File fh, void * buf, int count, MPI_Datatype datatype, M
 /******************************************************
 ***      MPI_File_write wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5793,7 +5793,7 @@ void MPI_FILE_WRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint
 /******************************************************
 ***      MPI_File_write wrapper function 
 ******************************************************/
-void mpi_file_write( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5802,7 +5802,7 @@ void mpi_file_write( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint
 /******************************************************
 ***      MPI_File_write wrapper function 
 ******************************************************/
-void mpi_file_write_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5811,7 +5811,7 @@ void mpi_file_write_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
 /******************************************************
 ***      MPI_File_write wrapper function 
 ******************************************************/
-void mpi_file_write__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5837,7 +5837,7 @@ int MPI_File_write_all( MPI_File fh, void * buf, int count, MPI_Datatype datatyp
 /******************************************************
 ***      MPI_File_write_all wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE_ALL( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE_ALL( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5851,7 +5851,7 @@ void MPI_FILE_WRITE_ALL( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_
 /******************************************************
 ***      MPI_File_write_all wrapper function 
 ******************************************************/
-void mpi_file_write_all( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_all( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ALL( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5860,7 +5860,7 @@ void mpi_file_write_all( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_
 /******************************************************
 ***      MPI_File_write_all wrapper function 
 ******************************************************/
-void mpi_file_write_all_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_all_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ALL( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5869,7 +5869,7 @@ void mpi_file_write_all_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI
 /******************************************************
 ***      MPI_File_write_all wrapper function 
 ******************************************************/
-void mpi_file_write_all__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_all__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ALL( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -5948,7 +5948,7 @@ int MPI_File_write_all_end( MPI_File fh, void * buf, MPI_Status * status)
 /******************************************************
 ***      MPI_File_write_all_end wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -5962,7 +5962,7 @@ void MPI_FILE_WRITE_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, 
 /******************************************************
 ***      MPI_File_write_all_end wrapper function 
 ******************************************************/
-void mpi_file_write_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5971,7 +5971,7 @@ void mpi_file_write_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, 
 /******************************************************
 ***      MPI_File_write_all_end wrapper function 
 ******************************************************/
-void mpi_file_write_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -5980,7 +5980,7 @@ void mpi_file_write_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status,
 /******************************************************
 ***      MPI_File_write_all_end wrapper function 
 ******************************************************/
-void mpi_file_write_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -6059,7 +6059,7 @@ int MPI_File_write_at_all_end( MPI_File fh, void * buf, MPI_Status * status)
 /******************************************************
 ***      MPI_File_write_at_all_end wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE_AT_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE_AT_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -6073,7 +6073,7 @@ void MPI_FILE_WRITE_AT_ALL_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * statu
 /******************************************************
 ***      MPI_File_write_at_all_end wrapper function 
 ******************************************************/
-void mpi_file_write_at_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -6082,7 +6082,7 @@ void mpi_file_write_at_all_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * statu
 /******************************************************
 ***      MPI_File_write_at_all_end wrapper function 
 ******************************************************/
-void mpi_file_write_at_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -6091,7 +6091,7 @@ void mpi_file_write_at_all_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * stat
 /******************************************************
 ***      MPI_File_write_at_all_end wrapper function 
 ******************************************************/
-void mpi_file_write_at_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_at_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_AT_ALL_END( fh, buf, status, ierr) ; 
   return ; 
@@ -6117,7 +6117,7 @@ int MPI_File_write_ordered( MPI_File fh, void * buf, int count, MPI_Datatype dat
 /******************************************************
 ***      MPI_File_write_ordered wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE_ORDERED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE_ORDERED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -6131,7 +6131,7 @@ void MPI_FILE_WRITE_ORDERED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_write_ordered wrapper function 
 ******************************************************/
-void mpi_file_write_ordered( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_ordered( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ORDERED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -6140,7 +6140,7 @@ void mpi_file_write_ordered( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_write_ordered wrapper function 
 ******************************************************/
-void mpi_file_write_ordered_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_ordered_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ORDERED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -6149,7 +6149,7 @@ void mpi_file_write_ordered_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count,
 /******************************************************
 ***      MPI_File_write_ordered wrapper function 
 ******************************************************/
-void mpi_file_write_ordered__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_ordered__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ORDERED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -6228,7 +6228,7 @@ int MPI_File_write_ordered_end( MPI_File fh, void * buf, MPI_Status * status)
 /******************************************************
 ***      MPI_File_write_ordered_end wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE_ORDERED_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE_ORDERED_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -6242,7 +6242,7 @@ void MPI_FILE_WRITE_ORDERED_END( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * stat
 /******************************************************
 ***      MPI_File_write_ordered_end wrapper function 
 ******************************************************/
-void mpi_file_write_ordered_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_ordered_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ORDERED_END( fh, buf, status, ierr) ; 
   return ; 
@@ -6251,7 +6251,7 @@ void mpi_file_write_ordered_end( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * stat
 /******************************************************
 ***      MPI_File_write_ordered_end wrapper function 
 ******************************************************/
-void mpi_file_write_ordered_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_ordered_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ORDERED_END( fh, buf, status, ierr) ; 
   return ; 
@@ -6260,7 +6260,7 @@ void mpi_file_write_ordered_end_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * sta
 /******************************************************
 ***      MPI_File_write_ordered_end wrapper function 
 ******************************************************/
-void mpi_file_write_ordered_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_ordered_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_ORDERED_END( fh, buf, status, ierr) ; 
   return ; 
@@ -6286,7 +6286,7 @@ int MPI_File_write_shared( MPI_File fh, void * buf, int count, MPI_Datatype data
 /******************************************************
 ***      MPI_File_write_shared wrapper function 
 ******************************************************/
-void MPI_FILE_WRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_FILE_WRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Status local_status;
@@ -6300,7 +6300,7 @@ void MPI_FILE_WRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_write_shared wrapper function 
 ******************************************************/
-void mpi_file_write_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_SHARED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -6309,7 +6309,7 @@ void mpi_file_write_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_write_shared wrapper function 
 ******************************************************/
-void mpi_file_write_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_SHARED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -6318,7 +6318,7 @@ void mpi_file_write_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_write_shared wrapper function 
 ******************************************************/
-void mpi_file_write_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_file_write_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_FILE_WRITE_SHARED( fh, buf, count, datatype, status, ierr) ; 
   return ; 
@@ -6521,9 +6521,7 @@ void MPI_INFO_DELETE( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
 ******************************************************/
 void mpi_info_delete( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
 {
-  MPI_Info local_info = MPI_Info_f2c(*info);
-  MPI_INFO_DELETE( &local_info, key, ierr) ; 
-  *info = MPI_Info_c2f(local_info);
+  MPI_INFO_DELETE( info, key, ierr) ; 
   return ; 
 }
 
@@ -7822,7 +7820,7 @@ int MPI_Status_set_elements( MPI_Status * status, MPI_Datatype datatype, int cou
 /******************************************************
 ***      MPI_Status_set_elements wrapper function 
 ******************************************************/
-void MPI_STATUS_SET_ELEMENTS( MPI_Aint * status, MPI_Fint *  datatype, MPI_Fint *  count, MPI_Fint * ierr)
+void MPI_STATUS_SET_ELEMENTS( MPI_Fint * status, MPI_Fint *  datatype, MPI_Fint *  count, MPI_Fint * ierr)
 {
   MPI_Status local_status; 
   MPI_Status_f2c(status, &local_status);
@@ -7835,7 +7833,7 @@ void MPI_STATUS_SET_ELEMENTS( MPI_Aint * status, MPI_Fint *  datatype, MPI_Fint 
 /******************************************************
 ***      MPI_Status_set_elements wrapper function 
 ******************************************************/
-void mpi_status_set_elements( MPI_Aint * status, MPI_Fint *  datatype, MPI_Fint *  count, MPI_Fint * ierr)
+void mpi_status_set_elements( MPI_Fint * status, MPI_Fint *  datatype, MPI_Fint *  count, MPI_Fint * ierr)
 {
   MPI_STATUS_SET_ELEMENTS( status, datatype, count, ierr) ; 
   return ; 
@@ -7844,7 +7842,7 @@ void mpi_status_set_elements( MPI_Aint * status, MPI_Fint *  datatype, MPI_Fint 
 /******************************************************
 ***      MPI_Status_set_elements wrapper function 
 ******************************************************/
-void mpi_status_set_elements_( MPI_Aint * status, MPI_Fint *  datatype, MPI_Fint *  count, MPI_Fint * ierr)
+void mpi_status_set_elements_( MPI_Fint * status, MPI_Fint *  datatype, MPI_Fint *  count, MPI_Fint * ierr)
 {
   MPI_STATUS_SET_ELEMENTS( status, datatype, count, ierr) ; 
   return ; 
@@ -7853,7 +7851,7 @@ void mpi_status_set_elements_( MPI_Aint * status, MPI_Fint *  datatype, MPI_Fint
 /******************************************************
 ***      MPI_Status_set_elements wrapper function 
 ******************************************************/
-void mpi_status_set_elements__( MPI_Aint * status, MPI_Fint *  datatype, MPI_Fint *  count, MPI_Fint * ierr)
+void mpi_status_set_elements__( MPI_Fint * status, MPI_Fint *  datatype, MPI_Fint *  count, MPI_Fint * ierr)
 {
   MPI_STATUS_SET_ELEMENTS( status, datatype, count, ierr) ; 
   return ; 
@@ -7879,7 +7877,7 @@ int MPI_Status_set_cancelled( MPI_Status * status, int flag)
 /******************************************************
 ***      MPI_Status_set_cancelled wrapper function 
 ******************************************************/
-void MPI_STATUS_SET_CANCELLED( MPI_Aint * status, MPI_Fint *  flag, MPI_Fint * ierr)
+void MPI_STATUS_SET_CANCELLED( MPI_Fint * status, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_Status local_status; 
   MPI_Status_f2c(status, &local_status);
@@ -7891,7 +7889,7 @@ void MPI_STATUS_SET_CANCELLED( MPI_Aint * status, MPI_Fint *  flag, MPI_Fint * i
 /******************************************************
 ***      MPI_Status_set_cancelled wrapper function 
 ******************************************************/
-void mpi_status_set_cancelled( MPI_Aint * status, MPI_Fint *  flag, MPI_Fint * ierr)
+void mpi_status_set_cancelled( MPI_Fint * status, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_STATUS_SET_CANCELLED( status, flag, ierr) ; 
   return ; 
@@ -7900,7 +7898,7 @@ void mpi_status_set_cancelled( MPI_Aint * status, MPI_Fint *  flag, MPI_Fint * i
 /******************************************************
 ***      MPI_Status_set_cancelled wrapper function 
 ******************************************************/
-void mpi_status_set_cancelled_( MPI_Aint * status, MPI_Fint *  flag, MPI_Fint * ierr)
+void mpi_status_set_cancelled_( MPI_Fint * status, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_STATUS_SET_CANCELLED( status, flag, ierr) ; 
   return ; 
@@ -7909,7 +7907,7 @@ void mpi_status_set_cancelled_( MPI_Aint * status, MPI_Fint *  flag, MPI_Fint * 
 /******************************************************
 ***      MPI_Status_set_cancelled wrapper function 
 ******************************************************/
-void mpi_status_set_cancelled__( MPI_Aint * status, MPI_Fint *  flag, MPI_Fint * ierr)
+void mpi_status_set_cancelled__( MPI_Fint * status, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_STATUS_SET_CANCELLED( status, flag, ierr) ; 
   return ; 
@@ -8043,7 +8041,7 @@ int MPI_Request_get_status( MPI_Request request, int * flag, MPI_Status * status
 /******************************************************
 ***      MPI_Request_get_status wrapper function 
 ******************************************************/
-void MPI_REQUEST_GET_STATUS( MPI_Fint *  request, MPI_Fint *  flag, MPI_Aint * status, MPI_Fint * ierr)
+void MPI_REQUEST_GET_STATUS( MPI_Fint *  request, MPI_Fint *  flag, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_Status local_status; 
   *ierr = MPI_Request_get_status( MPI_Request_f2c(*request), flag, &local_status) ; 
@@ -8054,7 +8052,7 @@ void MPI_REQUEST_GET_STATUS( MPI_Fint *  request, MPI_Fint *  flag, MPI_Aint * s
 /******************************************************
 ***      MPI_Request_get_status wrapper function 
 ******************************************************/
-void mpi_request_get_status( MPI_Fint *  request, MPI_Fint *  flag, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_request_get_status( MPI_Fint *  request, MPI_Fint *  flag, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_REQUEST_GET_STATUS( request, flag, status, ierr) ; 
   return ; 
@@ -8063,7 +8061,7 @@ void mpi_request_get_status( MPI_Fint *  request, MPI_Fint *  flag, MPI_Aint * s
 /******************************************************
 ***      MPI_Request_get_status wrapper function 
 ******************************************************/
-void mpi_request_get_status_( MPI_Fint *  request, MPI_Fint *  flag, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_request_get_status_( MPI_Fint *  request, MPI_Fint *  flag, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_REQUEST_GET_STATUS( request, flag, status, ierr) ; 
   return ; 
@@ -8072,7 +8070,7 @@ void mpi_request_get_status_( MPI_Fint *  request, MPI_Fint *  flag, MPI_Aint * 
 /******************************************************
 ***      MPI_Request_get_status wrapper function 
 ******************************************************/
-void mpi_request_get_status__( MPI_Fint *  request, MPI_Fint *  flag, MPI_Aint * status, MPI_Fint * ierr)
+void mpi_request_get_status__( MPI_Fint *  request, MPI_Fint *  flag, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_REQUEST_GET_STATUS( request, flag, status, ierr) ; 
   return ; 
@@ -8155,7 +8153,7 @@ void MPI_TYPE_CREATE_RESIZED( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  e
 {
   MPI_Datatype local_type; 
   *ierr = MPI_Type_create_resized( MPI_Type_f2c(*oldtype), *lb, *extent, &local_type) ; 
-  *newtype = MPI_Type_f2c(local_type);
+  *newtype = MPI_Type_c2f(local_type);
   return ; 
 }
 
