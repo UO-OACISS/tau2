@@ -73,13 +73,14 @@ public class TauOutputSession extends ParaProfDataSession{
 	    //######
 	    v = (Vector) obj;
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
-
+		System.out.println("Processing data, please wait ......");
+		long time = System.currentTimeMillis();
 		//Need to call increaseVectorStorage() on all objects that require it.
 		this.increaseVectorStorage();
 		    
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(this.firstMetric())){
-		    if(ParaProf.debugIsOn)
+		    if(this.debug())
 			System.out.println("Increasing the storage for the new counter.");
 		    
 		    for(Enumeration e1 = (this.getGlobalMapping().getMapping(0)).elements(); e1.hasMoreElements() ;){
@@ -110,7 +111,7 @@ public class TauOutputSession extends ParaProfDataSession{
 			}
 		    }
 		    
-		    if(ParaProf.debugIsOn)
+		    if(this.debug())
 			System.out.println("Done increasing the storage for the new counter.");
 		}
 
@@ -119,7 +120,11 @@ public class TauOutputSession extends ParaProfDataSession{
 
 		files = (File[]) e.nextElement();
 		for(int i=0;i<files.length;i++){
-		    System.out.println("Processing file: " + files[i].getName());
+		    if(this.debug()){
+			System.out.println("######");
+			System.out.println("Processing file: " + files[i].getName());
+			System.out.println("######");
+		    }
 
 		    FileInputStream fileIn = new FileInputStream(files[i]);
 		    InputStreamReader inReader = new InputStreamReader(fileIn);
@@ -267,23 +272,25 @@ public class TauOutputSession extends ParaProfDataSession{
 			    if(thread.getMaxUserSecPerCall(metric) < usecCall)
 				thread.setMaxUserSecPerCall(metric, usecCall);
 			    
-			    if(this.firstMetric()){ 
-				if(groupNames != null){
-				    StringTokenizer st = new StringTokenizer(groupNames, " |");
-				    while (st.hasMoreTokens()){
-					String group = st.nextToken();
-					if(group != null){
-					    //The potential new group is added here.  If the group is already present, the the addGlobalMapping
-					    //function will just return the already existing group id.  See the GlobalMapping class for more details.
-					    int groupID = this.getGlobalMapping().addGlobalMapping(group, 1);
-					    if((groupID != -1) && (this.debug())){
-						System.out.println("######");
-						System.out.println("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
-						System.out.println("######");
-					    }
-					    globalMappingElement.addGroup(groupID);
+			    if(!(globalMappingElement.groupsSet())){
+				if(this.firstMetric()){ 
+				    if(groupNames != null){
+					StringTokenizer st = new StringTokenizer(groupNames, " |");
+					while (st.hasMoreTokens()){
+					    String group = st.nextToken();
+					    if(group != null){
+						//The potential new group is added here.  If the group is already present, the the addGlobalMapping
+						//function will just return the already existing group id.  See the GlobalMapping class for more details.
+						int groupID = this.getGlobalMapping().addGlobalMapping(group, 1);
+						if((groupID != -1) && (this.debug())){
+						    System.out.println("######");
+						    System.out.println("Adding " + group + " group with id: " + groupID + " to mapping: " + functionDataLine.s0);
+						    System.out.println("######");
+						}
+						globalMappingElement.addGroup(groupID);
+					    }    
 					}    
-				    }    
+				    }
 				}
 			    }
 
@@ -464,6 +471,9 @@ public class TauOutputSession extends ParaProfDataSession{
 		    }
 		    globalMappingElement.setMeanValuesSet(true);
 		}
+		time = (System.currentTimeMillis()) - time;
+		System.out.println("Done processing data!");
+		System.out.println("Time to process (in milliseconds): " + time);
 	    }
 	}
         catch(Exception e){

@@ -397,30 +397,36 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	return position;
     }
     
-    public void setMeanValuesSet(boolean inBoolean){
-	meanValuesSet = inBoolean;}
+    public void setMeanValuesSet(boolean meanValuesSet){
+	this.meanValuesSet = meanValuesSet;}
   
     public boolean getMeanValuesSet(){
 	return meanValuesSet;}
+
+    public void setGroupsSet(boolean groupsSet){
+	this.groupsSet = groupsSet;}
+
+    public boolean groupsSet(){
+	return groupsSet;}
   
-    public void setDrawCoords(int inXBeg, int inXEnd, int inYBeg, int inYEnd){
-	xBeginPosition = inXBeg;
-	xEndPosition = inXEnd;
-	yBeginPosition = inYBeg;
-	yEndPosition = inYEnd;
+    public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd){
+	this.xBeg = xBeg;
+	this.xEnd = xEnd;
+	this.yBeg = yBeg;
+	this.yEnd = yEnd;
     }
   
     public int getXBeg(){
-	return xBeginPosition;}
+	return xBeg;}
   
     public int getXEnd(){
-	return xEndPosition;}
+	return xEnd;}
   
     public int getYBeg(){
-	return yBeginPosition;}
+	return yBeg;}
   
     public int getYEnd(){
-	return yEndPosition;}
+	return yEnd;}
   
     //Functions used to calculate the mean values for derived values (such as flops)
     public void setTotalExclusiveValue(double inDouble){
@@ -507,12 +513,13 @@ public class GlobalMappingElement implements Serializable, Comparable{
     private double meanNumberOfSubRoutines = 0;
   
     //Drawing coordinates for this Global mapping element.
-    private int xBeginPosition;
-    private int xEndPosition;
-    private int yBeginPosition;
-    private int yEndPosition;
+    private int xBeg;
+    private int xEnd;
+    private int yBeg;
+    private int yEnd;
   
     private boolean meanValuesSet = false;
+    private boolean groupsSet = false;
   
     //Instance values used to calculate the mean values for derived values (such as flops)
     private int counter = 0;

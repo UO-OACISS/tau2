@@ -464,7 +464,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		this.setFirstMetric(false);
 	    
 		time = (System.currentTimeMillis()) - time;
-		System.out.println("Done processing data file, please wait ......");
+		System.out.println("Done processing data file!");
 		System.out.println("Time to process file (in milliseconds): " + time);
 	    }
 	}
