@@ -491,10 +491,6 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	return -1;
     }
   
-    //Instance elmements.
-  
-    private ParaProfTrial trial = null;
-  
     //Global Mapping reference.
     private String mappingName = null;
     private int globalID = -1;     //Global ID for this mapping.
