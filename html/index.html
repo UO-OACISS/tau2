@@ -29,8 +29,8 @@ environment for parallel C++ applications.
 <LI> <H3>Step One: Configure TAU </H3>
 <PRE>
 <code>
-% cd /usr/local/packages/tau
-% ./configure -arch=sgin32 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS 
+% cd /usr/local/packages/tau-2.5
+% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS 
 % make install
 </PRE>
 </code>
@@ -38,16 +38,18 @@ environment for parallel C++ applications.
 <PRE>
 <code>
 % cd /usr/local/packages/smarts-1.0
-% configure -enable-profile 
+% configure --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.5 --enable-64bit --enable-profile --with-arch=iris4d
+% make install
 </code>
 </PRE>
 <LI> <H3>Step Three: Configure Pooma II</H3>
 <PRE>
 <code>
 % cd $POOMA2_ROOT
-% setenv TAUDIR /usr/local/packages/tau
+% setenv TAUDIR     /usr/local/packages/tau-2.5
 % setenv DUCTAPEDIR /usr/local/packages/tau/ductape
-% ./configure --arch SGIN32KCC --suite PP --parallel --profile --opt
+% setenv SMARTSDIR  /usr/local/packages/smarts-1.0
+% ./configure --arch SGI64KCC --suite PP --parallel --profile --opt
 % setenv SUITE PP
 % make
 </code>
