@@ -187,10 +187,10 @@ public:
 	bool GetPhase(void);
 	void SetPhase(bool flag);
 #endif /* TAU_PROFILEPHASE */
-#ifdef TAU_PROFILE_DEPTH
+#ifdef TAU_DEPTH_LIMIT
 	int  GetProfileDepth(void);
 	void SetProfileDepth(int value);
-#endif /* TAU_PROFILE_DEPTH */ 
+#endif /* TAU_DEPTH_LIMIT */ 
 
 private:
 	TauGroup_t MyProfileGroup_;
@@ -201,9 +201,9 @@ private:
 	   just the constructor.
 	   friend class ProfilerInitializer; */
 	bool 	PhaseFlag;
-#ifdef TAU_PROFILE_DEPTH
+#ifdef TAU_DEPTH_LIMIT
 	int  profiledepth; 
-#endif /* TAU_PROFILE_DEPTH */
+#endif /* TAU_DEPTH_LIMIT */
 };
 
 
@@ -217,6 +217,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.55 $   $Date: 2005/03/11 19:15:11 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.55 2005/03/11 19:15:11 sameer Exp $ 
+ * $Revision: 1.56 $   $Date: 2005/03/14 19:56:54 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.56 2005/03/14 19:56:54 sameer Exp $ 
  ***************************************************************************/

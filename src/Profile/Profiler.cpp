@@ -110,7 +110,7 @@ FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
 #endif /* PGI */
 
 //////////////////////////////////////////////////////////////////////
-// TAU_PROFILE_DEPTH 
+// TAU_DEPTH_LIMIT 
 //////////////////////////////////////////////////////////////////////
 int& TauGetProfileDepth(void)
 {
@@ -119,7 +119,7 @@ int& TauGetProfileDepth(void)
 
   if (depth == 0)
   {
-    depthvar = getenv("TAU_DEPTH"); 
+    depthvar = getenv("TAU_DEPTH_LIMIT"); 
     if (depthvar == (char *) NULL)
     {
       depth = INT_MAX; 
@@ -195,7 +195,7 @@ char * TauGetCounterString(void)
 void Profiler::Start(int tid)
 { 
       ParentProfiler = CurrentProfiler[tid]; // Timers
-#ifdef TAU_PROFILE_DEPTH
+#ifdef TAU_DEPTH_LIMIT
       int userspecifieddepth = TauGetProfileDepth();
       if (ParentProfiler)
       {
@@ -212,7 +212,7 @@ void Profiler::Start(int tid)
 	CurrentProfiler[tid] = this;
 	return; 
       }
-#endif /* TAU_PROFILE_DEPTH */
+#endif /* TAU_DEPTH_LIMIT */
 
       x_uint64 TimeStamp = 0L;
 
@@ -406,7 +406,7 @@ void Profiler::Stop(int tid)
       x_uint64 TimeStamp = 0L; 
       if (CurrentProfiler[tid] == NULL) return;
 
-#ifdef TAU_PROFILE_DEPTH
+#ifdef TAU_DEPTH_LIMIT
       int userspecifieddepth = TauGetProfileDepth();
       int mydepth = GetProfileDepth(); 
       if (mydepth > userspecifieddepth) 
@@ -415,7 +415,7 @@ void Profiler::Stop(int tid)
 	DEBUGPROFMSG("Stop: mydepth = "<<mydepth<<", userspecifieddepth = "<<userspecifieddepth<<endl;);
 	return;
       }
-#endif /* TAU_PROFILE_DEPTH */
+#endif /* TAU_DEPTH_LIMIT */
 
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
@@ -2804,7 +2804,7 @@ void Profiler::SetPhase(bool flag)
 
 #endif /* TAU_PROFILEPHASE */
 
-#ifdef TAU_PROFILE_DEPTH 
+#ifdef TAU_DEPTH_LIMIT 
 int Profiler::GetProfileDepth(void)
 {
   return profiledepth;
@@ -2814,13 +2814,13 @@ void Profiler::SetProfileDepth(int value)
 {
   profiledepth = value;
 }
-#endif /* TAU_PROFILE_DEPTH */ 
+#endif /* TAU_DEPTH_LIMIT */ 
 
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.109 $   $Date: 2005/03/11 19:15:11 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.109 2005/03/11 19:15:11 sameer Exp $ 
+ * $Revision: 1.110 $   $Date: 2005/03/14 19:56:53 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.110 2005/03/14 19:56:53 sameer Exp $ 
  ***************************************************************************/
 
 	
