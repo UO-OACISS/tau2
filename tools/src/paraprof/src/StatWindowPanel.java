@@ -215,13 +215,13 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
 		switch(windowType){
 		case 0:
-		    tmpString = sMWThreadDataElement.getMeanTotalStatString(sWindow.units());
+		    tmpString = sMWThreadDataElement.getMeanTotalStatString(sWindow.units(),ParaProf.defaultNumberPrecision);
 		    break;
 		case 1:
-		    tmpString = sMWThreadDataElement.getTStatString(sWindow.units());
+		    tmpString = sMWThreadDataElement.getTStatString(sWindow.units(),ParaProf.defaultNumberPrecision);
 		    break;
 		case 2:
-		    tmpString = sMWThreadDataElement.getUserEventStatString();
+		    tmpString = sMWThreadDataElement.getUserEventStatString(ParaProf.defaultNumberPrecision);
 		    break;
 		default:
 		    UtilFncs.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
@@ -368,13 +368,13 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		    if(fmMonoFont != null){
 			switch(windowType){
 			case 0:
-			    tmpString = sMWThreadDataElement.getMeanTotalStatString(sWindow.units());
+			    tmpString = sMWThreadDataElement.getMeanTotalStatString(sWindow.units(),ParaProf.defaultNumberPrecision);
 			    break;
 			case 1:
-			    tmpString = sMWThreadDataElement.getTStatString(sWindow.units());
+			    tmpString = sMWThreadDataElement.getTStatString(sWindow.units(),ParaProf.defaultNumberPrecision);
 			    break;
 			case 2:
-			    tmpString = sMWThreadDataElement.getUserEventStatString();
+			    tmpString = sMWThreadDataElement.getUserEventStatString(ParaProf.defaultNumberPrecision);
 			    break;
 			default:
 			    UtilFncs.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));

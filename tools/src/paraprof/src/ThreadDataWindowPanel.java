@@ -214,7 +214,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		barXCoord = barXCoord + stringWidth;
 	    }
 	    else{
-		stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(tDWindow.units(),maxValue));
+		stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(tDWindow.units(),maxValue,ParaProf.defaultNumberPrecision));
 		barXCoord = barXCoord + stringWidth;
 	    }
 	    //######
@@ -383,7 +383,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	if((tDWindow.isPercent()) && ((tDWindow.getValueType())<=4))					
 	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
 	else
-	    s = UtilFncs.getOutputString(tDWindow.units(),value);
+	    s = UtilFncs.getOutputString(tDWindow.units(),value,ParaProf.defaultNumberPrecision);
 	stringWidth = fmFont.stringWidth(s);
 	//Now draw the percent value to the left of the bar.
 	stringStart = barXCoord - xLength - stringWidth - 5;

@@ -136,7 +136,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 		UtilFncs.systemError(null, null, "Unexpected type - UEWP value: " + uEWindow.getValueType());
 	    }
 
-	    stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0,maxValue)); //No units required in this window.  Thus pass in 0 for type.
+	    stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0,maxValue,ParaProf.defaultNumberPrecision)); //No units required in this window.  Thus pass in 0 for type.
 	    barXCoord = barXCoord + stringWidth;
 	    //***
 	    //End - Set the max values for this mapping.
@@ -256,10 +256,10 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	
 	//Draw the value next to the bar.
 	g2D.setColor(Color.black);
-	s = UtilFncs.getOutputString(0,value); //Set the unit value (first arg) to 0).
-	                                       //This will ensure that UtilFncs.getOutputString
-	                                       //Does the right thing. This is of course because
-	                                       //we do not have units in this display.
+	s = UtilFncs.getOutputString(0,value,ParaProf.defaultNumberPrecision); //Set the unit value (first arg) to 0).
+	                                                                       //This will ensure that UtilFncs.getOutputString
+	                                                                       //Does the right thing. This is of course because
+	                                                                       //we do not have units in this display.
 	stringWidth = fmFont.stringWidth(s);
 	//Now draw the percent value to the left of the bar.
 	stringStart = barXCoord - xLength - stringWidth - 5;

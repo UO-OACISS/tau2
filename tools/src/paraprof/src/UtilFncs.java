@@ -63,14 +63,14 @@ public class UtilFncs{
     //2 - seconds
     //3 - hr:min:sec
     //At present, the passed in double value is assumed to be in microseconds.
-    public static String getOutputString(int type, double d){
+    public static String getOutputString(int type, double d, int precision){
 	switch(type){
 	case 0:
-	    return (Double.toString(UtilFncs.adjustDoublePresision(d, ParaProf.defaultNumberPrecision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision(d, precision)));
 	case 1:
-	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000), ParaProf.defaultNumberPrecision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000), precision)));
 	case 2:
-	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000000), precision)));
 	case 3:
 	    int hr = 0;
 	    int min = 0;
@@ -80,7 +80,7 @@ public class UtilFncs{
 	    min = (int) (d/60000000.00);
 	    //Calculate the number of microseconds left after minutess are subtracted.
 	    d = d-min*60000000.00;
-	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
+	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), precision)));
 	default:
 	    UtilFncs.systemError(null, null, "Unexpected string type - UF02 value: " + type);
 	}

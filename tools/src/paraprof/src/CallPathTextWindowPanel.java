@@ -369,8 +369,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
 				d3=d3+gtde.getNumberOfCalls();
 			    }
-			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
-			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
+			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1,ParaProf.defaultNumberPrecision), excPos, yCoord);
+			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2,ParaProf.defaultNumberPrecision), incPos, yCoord);
 			    g2D.drawString(d3+"/"+smwtde.getNumberOfCalls(), callsPos1, yCoord);
 			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
 			    g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
@@ -378,8 +378,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 			}
 			d1 = smwtde.getExclusiveValue(); 
 			d2 = smwtde.getInclusiveValue();
-			g2D.drawString("--> "+ (UtilFncs.getOutputString(cPTWindow.units(),d1)), base, yCoord);
-			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
+			g2D.drawString("--> "+ (UtilFncs.getOutputString(cPTWindow.units(),d1,ParaProf.defaultNumberPrecision)), base, yCoord);
+			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2,ParaProf.defaultNumberPrecision), incPos, yCoord);
 			g2D.drawString(Integer.toString(smwtde.getNumberOfCalls()), callsPos1, yCoord);
 			g2D.drawString(smwtde.getMappingName()+"["+smwtde.getMappingID()+"]", namePos, yCoord);
 			yCoord = yCoord + (spacing);
@@ -398,8 +398,8 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 				d3=d3+gtde.getNumberOfCalls();
 				s=s+":["+tmpInt+"]";
 			    }
-			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1), excPos, yCoord);
-			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2), incPos, yCoord);
+			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1,ParaProf.defaultNumberPrecision), excPos, yCoord);
+			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2,ParaProf.defaultNumberPrecision), incPos, yCoord);
 			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
 			    g2D.drawString(d3+"/"+gtde.getNumberOfCalls(), callsPos1, yCoord);
 			    g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);

@@ -187,9 +187,8 @@ public class GlobalThreadDataElement{
 	return "An error occured pocessing this string!"; 
     }
   
-    public String getTStatString(int type, int metric){
+    public String getTStatString(int type, int metric, int precision){
 	try{
-	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int initialBufferLength = 99;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
@@ -208,7 +207,7 @@ public class GlobalThreadDataElement{
 	    }
       
 	    position = 9;
-	    tmpString = UtilFncs.getOutputString(type,this.getExclusiveValue(metric));
+	    tmpString = UtilFncs.getOutputString(type,this.getExclusiveValue(metric),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -217,7 +216,7 @@ public class GlobalThreadDataElement{
 	    }
       
 	    position = 27;
-	    tmpString = UtilFncs.getOutputString(type,this.getInclusiveValue(metric));
+	    tmpString = UtilFncs.getOutputString(type,this.getInclusiveValue(metric),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -228,7 +227,7 @@ public class GlobalThreadDataElement{
 	    position = 45;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getNumberOfCalls(),
-										  defaultNumberPrecision)));
+										  precision)));
 	    tmpArray = tmpString.toCharArray();                       
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -238,7 +237,7 @@ public class GlobalThreadDataElement{
 	    position = 63;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getNumberOfSubRoutines(),
-										  defaultNumberPrecision)));
+										  precision)));
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -246,7 +245,7 @@ public class GlobalThreadDataElement{
 	    }
       
 	    position = 81;
-	    tmpString = UtilFncs.getOutputString(type,this.getUserSecPerCall(metric));
+	    tmpString = UtilFncs.getOutputString(type,this.getUserSecPerCall(metric),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -355,9 +354,8 @@ public class GlobalThreadDataElement{
 	return "An error occured pocessing this string!"; 
     }
   
-    public String getUserEventStatString(){
+    public String getUserEventStatString(int precision){
 	try{
-	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int initialBufferLength = 72;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
@@ -375,7 +373,7 @@ public class GlobalThreadDataElement{
 	    position = 18;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getUserEventMaxValue(),
-										  defaultNumberPrecision)));
+										  precision)));
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -385,7 +383,7 @@ public class GlobalThreadDataElement{
 	    position = 36;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getUserEventMinValue(),
-										  defaultNumberPrecision)));
+										  precision)));
 	    tmpArray = tmpString.toCharArray();                       
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -395,7 +393,7 @@ public class GlobalThreadDataElement{
 	    position = 54;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getUserEventMeanValue(),
-										  defaultNumberPrecision)));
+										  precision)));
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];

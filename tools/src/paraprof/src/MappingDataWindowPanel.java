@@ -163,7 +163,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		barXCoord = barXCoord + stringWidth;
 	    }
 	    else{
-		stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(mDWindow.units(),maxValue));
+		stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(mDWindow.units(),maxValue,ParaProf.defaultNumberPrecision));
 		barXCoord = barXCoord + stringWidth;
 	    }
 	    //***
@@ -317,7 +317,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	if((mDWindow.isPercent()) && ((mDWindow.getValueType())<=4))					
 	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
 	else
-	    s = UtilFncs.getOutputString(mDWindow.units(),value);
+	    s = UtilFncs.getOutputString(mDWindow.units(),value,ParaProf.defaultNumberPrecision);
 	stringWidth = fmFont.stringWidth(s);
 	//Now draw the percent value to the left of the bar.
 	stringStart = barXCoord - xLength - stringWidth - 5;

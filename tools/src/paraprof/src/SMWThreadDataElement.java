@@ -124,8 +124,8 @@ public class SMWThreadDataElement implements Comparable{
     public double getUserSecPerCall(){
 	return globalThreadDataElement.getUserSecPerCall(trial.getSelectedMetricID());}
   
-    public String getTStatString(int type){
-	return globalThreadDataElement.getTStatString(type, trial.getSelectedMetricID());}
+    public String getTStatString(int type, int precision){
+	return globalThreadDataElement.getTStatString(type, trial.getSelectedMetricID(), precision);}
     //####################################
     //End - Function interface.
     //####################################
@@ -145,8 +145,8 @@ public class SMWThreadDataElement implements Comparable{
     public double getUserEventMeanValue(){
 	return globalThreadDataElement.getUserEventMeanValue();}
   
-    public String getUserEventStatString(){
-	return globalThreadDataElement.getUserEventStatString();}
+    public String getUserEventStatString(int precision){
+	return globalThreadDataElement.getUserEventStatString(precision);}
     //####################################
     //End - Userevent interface.
     //####################################
@@ -178,8 +178,8 @@ public class SMWThreadDataElement implements Comparable{
     public double getMeanUserSecPerCall(){
 	return globalMappingElement.getMeanUserSecPerCall(trial.getSelectedMetricID());}
 
-    public String getMeanTotalStatString(int type){
-	return globalMappingElement.getMeanTotalStatString(type, trial.getSelectedMetricID());}
+    public String getMeanTotalStatString(int type, int precision){
+	return globalMappingElement.getMeanTotalStatString(type, trial.getSelectedMetricID(), precision);}
     //####################################
     //End - Mean interface.
     //####################################

@@ -319,10 +319,8 @@ public class GlobalMappingElement implements Serializable, Comparable{
     
   
     //Stat Strings. 
-    public String getMeanTotalStatString(int type, int dataValueLocation){
-  
-	try{
-	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
+    public String getMeanTotalStatString(int type, int dataValueLocation, int precision){
+  	try{
 	    int initialBufferLength = 99;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
@@ -341,7 +339,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    }
       
 	    position = 9;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanExclusiveValue(dataValueLocation));
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanExclusiveValue(dataValueLocation),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -350,7 +348,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    }
       
 	    position = 27;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanInclusiveValue(dataValueLocation));
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanInclusiveValue(dataValueLocation),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -361,7 +359,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    position = 45;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getMeanNumberOfCalls(),
-										  defaultNumberPrecision)));
+										  precision)));
 	    tmpArray = tmpString.toCharArray();                       
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -371,7 +369,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    position = 63;
 	    tmpString = new String(Double.toString(
 						   UtilFncs.adjustDoublePresision(this.getMeanNumberOfSubRoutines(),
-										  defaultNumberPrecision)));
+										  precision)));
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -379,7 +377,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    }
       
 	    position = 81;
-	    tmpString = UtilFncs.getOutputString(type,this.getMeanUserSecPerCall(dataValueLocation));
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanUserSecPerCall(dataValueLocation),precision);
 
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
@@ -391,12 +389,10 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    String firstPart = new String(statStringArray);
 	    return firstPart + this.getMappingName();
 	}
-	catch(Exception e)
-	    {
-		UtilFncs.systemError(e, null, "GTDE01");
-	    }
-    
-	return "An error occured pocessing this string!";
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "GTDE01");
+	}
+    	return "An error occured pocessing this string!";
     }
   
     private int insertSpaces(char[] inArray, int position, int number){
