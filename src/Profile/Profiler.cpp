@@ -172,6 +172,7 @@ void Profiler::Start(int tid)
       ParentProfiler = CurrentProfiler[tid]; // Timers
 
       x_uint64 TimeStamp = 0L;
+
       DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
@@ -281,6 +282,9 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
       StartStopUsed_ = StartStop; // will need it later in ~Profiler
       MyProfileGroup_ = ProfileGroup ;
       ThisFunction = function ; 
+#ifdef TAU_PROFILEPHASE
+      SetPhase(false); /* By default it is not in phase */
+#endif /* TAU_PROFILEPHASE */ 
       DEBUGPROFMSG("Profiler::Profiler: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       
@@ -302,6 +306,11 @@ Profiler::Profiler( const Profiler& X)
 #ifndef TAU_MULTIPLE_COUNTERS	
   StartTime = X.StartTime;
 #else //TAU_MULTIPLE_COUNTERS
+
+#ifdef TAU_PROFILEPHASE
+      SetPhase(X.GetPhase()); 
+#endif /* TAU_PROFILEPHASE */ 
+
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
     StartTime[i] = X.StartTime[i];
   }
@@ -332,6 +341,9 @@ Profiler& Profiler::operator= (const Profiler& X)
 	ParentProfiler = X.ParentProfiler; 
 	MyProfileGroup_ = X.MyProfileGroup_;
  	StartStopUsed_ = X.StartStopUsed_;
+#ifdef TAU_PROFILEPHASE
+        PhaseFlag = X.PhaseFlag;
+#endif /* TAU_PROFILEPHASE */ 
 
 	DEBUGPROFMSG(" Profiler& Profiler::operator= (const Profiler& X)" <<endl;);
 
@@ -2709,11 +2721,24 @@ void Profiler::AddNumChildren(long value)
 }
 #endif /* TAU_COMPENSATE */
 
+#ifdef TAU_PROFILEPHASE
+bool Profiler::GetPhase(void)
+{
+  return PhaseFlag;
+}
+
+void Profiler::SetPhase(bool flag)
+{
+  PhaseFlag = flag;
+}
+
+#endif /* TAU_PROFILEPHASE */
+
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.105 $   $Date: 2004/12/16 03:13:06 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.105 2004/12/16 03:13:06 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.106 $   $Date: 2005/01/11 00:45:40 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.106 2005/01/11 00:45:40 sameer Exp $ 
  ***************************************************************************/
 
 	

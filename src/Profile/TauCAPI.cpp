@@ -72,7 +72,7 @@ extern "C" void * Tau_get_profiler(char *fname, char *type, TauGroup_t group, ch
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_start_timer(void * function_info)
+extern "C" void Tau_start_timer(void * function_info, int phase)
 {
   FunctionInfo *f = (FunctionInfo *) function_info; 
   TauGroup_t gr = f->GetProfileGroup();
@@ -83,6 +83,12 @@ extern "C" void Tau_start_timer(void * function_info)
 #pragma omp critical
   printf("START tid = %d, profiler= %x\n", RtsLayer::myThread(), p);
 */
+#ifdef TAU_PROFILEPHASE
+  if (phase)
+   p->SetPhase(true);
+  else
+   p->SetPhase(false);
+#endif /* TAU_PROFILEPHASE */
 
     p->Start();
   }
@@ -536,7 +542,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void)
     ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
     if (ptr)
     {
-      Tau_start_timer(ptr);
+      Tau_start_timer(ptr, 0);
     }
   }
 }
@@ -604,8 +610,8 @@ extern "C" void Tau_set_interrupt_interval(int value)
 } 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.45 $   $Date: 2005/01/05 02:13:20 $
- * VERSION: $Id: TauCAPI.cpp,v 1.45 2005/01/05 02:13:20 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.46 $   $Date: 2005/01/11 00:45:40 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.46 2005/01/11 00:45:40 sameer Exp $
  ***************************************************************************/
 

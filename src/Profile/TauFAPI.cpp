@@ -40,7 +40,7 @@
 
 extern "C" {
 void * Tau_get_profiler(char *, char *, TauGroup_t, char *gr_name);
-void Tau_start_timer(void *);
+void Tau_start_timer(void * timer, int phase);
 void Tau_stop_timer(void *);
 void Tau_exit(char *);
 void Tau_init(int, char **);
@@ -184,7 +184,7 @@ void tau_profile_start_(void **profiler)
   printf("start_timer gets %lx\n", *profiler);
 #endif /* DEBUG_PROF */
 
-  Tau_start_timer(*profiler);
+  Tau_start_timer(*profiler, 0);
   return;
 }
 
@@ -737,7 +737,7 @@ void TAU_SET_INTERRUPT_INTERVAL(int* value)
 
 void tau_profile_start(int **profiler)
 {
-  Tau_start_timer((void *)*profiler);
+  Tau_start_timer((void *)*profiler, 0);
 }
 
 void tau_profile_stop(int **profiler)
@@ -1050,6 +1050,6 @@ void tau_set_interrupt_interval__(int* value)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.35 $   $Date: 2004/11/18 18:30:08 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.35 2004/11/18 18:30:08 sameer Exp $ 
+ * $Revision: 1.36 $   $Date: 2005/01/11 00:45:40 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.36 2005/01/11 00:45:40 sameer Exp $ 
  ***************************************************************************/

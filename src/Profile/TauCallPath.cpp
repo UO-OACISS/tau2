@@ -53,6 +53,12 @@ int& TauGetCallPathDepth(void)
 {
   char *depth; 
   static int value = 0;
+
+#ifdef TAU_PROFILEPHASE
+  value = 2;
+  return value;
+#endif /* TAU_PROFILEPHASE */
+
   if (value == 0)
   {
     if ((depth = getenv("TAU_CALLPATH_DEPTH")) != NULL)
@@ -139,6 +145,25 @@ long* TauFormulateComparisonArray(Profiler *p)
   if (ary)
   {
     ary[0] = depth; /* this tells us how deep it is */
+#ifdef TAU_PROFILEPHASE
+/* if I'm in phase, go upto the profiler that has a phase. if you don't find
+one then it is the top level profiler */
+    ary[1] = (long) current->ThisFunction; 
+    while (current != NULL)
+    {
+      ary[2] = (long) current->ThisFunction; 
+#ifdef DEBUG_PROF
+      cout <<"Name = "<< current->ThisFunction->GetName()<<" "<<
+	current->ThisFunction->GetType() <<" ";
+#endif /* DEBUG_PROF */
+      if (current->GetPhase()) /* Found the parent phase! */
+      {
+	break;
+      }
+      else
+	current = current->ParentProfiler;
+    }
+#else /* TAU_PROFILEPHASE */
     while (current != NULL && depth != 0)
     {
       i++; /* increment i */
@@ -146,6 +171,7 @@ long* TauFormulateComparisonArray(Profiler *p)
       depth --;
       current = current->ParentProfiler;
     }
+#endif /* TAU_PROFILEPHASE */
   }
   return ary;
 } 
@@ -159,6 +185,27 @@ string * TauFormulateNameString(Profiler *p)
   string delimiter(" => ");
   string *name = new string("");
 
+#ifdef TAU_PROFILEPHASE
+  while (current != NULL)
+  {
+    if (current != p && (current->GetPhase() || (current->ParentProfiler == (Profiler *) NULL)))
+    { 
+      *name =  current->ThisFunction->GetName() + string(" ") +
+	       current->ThisFunction->GetType() + delimiter + *name;
+      break; /* come out of the loop, got phase name in */
+    }
+    else 
+    { /* keep going */
+      if (current == p) /* initial name */
+      {
+        *name =  current->ThisFunction->GetName() + string (" ") + 
+	       current->ThisFunction->GetType();
+      }
+      current = current->ParentProfiler;
+    }
+  }
+
+#else /* TAU_PROFILEPHASE */
   while (current != NULL && depth != 0)
   {
     if (current != p)
@@ -170,6 +217,7 @@ string * TauFormulateNameString(Profiler *p)
     current = current->ParentProfiler;
     depth --; 
   }
+#endif /* TAU_PROFILEPHASE */
   DEBUGPROFMSG("TauFormulateNameString:Name: "<<*name <<endl;);
   return name;
 }
@@ -275,6 +323,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2004/05/24 22:00:19 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.15 2004/05/24 22:00:19 sameer Exp $ 
+ * $Revision: 1.16 $   $Date: 2005/01/11 00:45:40 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.16 2005/01/11 00:45:40 sameer Exp $ 
  ***************************************************************************/
