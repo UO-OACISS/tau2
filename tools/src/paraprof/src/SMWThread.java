@@ -1,9 +1,9 @@
 /* 
-  SMWThread.java
+   SMWThread.java
 
-  Title:      ParaProf
-  Author:     Robert Bell
-  Description:  
+   Title:      ParaProf
+   Author:     Robert Bell
+   Description:  
 */
 
 package paraprof;
@@ -14,54 +14,49 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
-public class SMWThread
-{
-  //Constructor.
-  public SMWThread()
-  {
-    threadDataList = new Vector();
-    userThreadDataList = new Vector();
-  }
+public class SMWThread{
+    //Constructor.
+    public SMWThread(){
+	threadDataList = new Vector();
+	userThreadDataList = new Vector();
+    }
   
-  //The following function adds a thread data element to
-  //the threadDataList
-  void addThreadDataElement(SMWThreadDataElement inSMWTDE)
-  {
-    threadDataList.addElement(inSMWTDE);
-  }
+    //The following function adds a thread data element to
+    //the threadDataList
+    void addThreadDataElement(SMWThreadDataElement inSMWTDE){
+	threadDataList.addElement(inSMWTDE);
+    }
   
-  //The following function adds a thread data element to
-  //the userThreadDataList
-  void addUserThreadDataElement(SMWThreadDataElement inSMWTDE)
-  {
-    userThreadDataList.addElement(inSMWTDE);
-  }
+    //The following function adds a thread data element to
+    //the userThreadDataList
+    void addUserThreadDataElement(SMWThreadDataElement inSMWTDE){
+	userThreadDataList.addElement(inSMWTDE);
+    }
   
-  Vector getThreadDataList()
-  {
-    return threadDataList;
-  }
+    public Vector getThreadDataList(){
+	return threadDataList;
+    }
+
+    public ListIterator getThreadDataListIterator(){
+	return new ParaProfIterator(threadDataList);
+    }
   
-  Vector getUserThreadDataList()
-  {
-    return userThreadDataList;
-  }
+    public Vector getUserThreadDataList(){
+	return userThreadDataList;
+    }
   
-  //Rest of the public functions.
-  public void setYDrawCoord(int inYDrawCoord)
-  {
-    yDrawCoord = inYDrawCoord;
-  }
+    //Rest of the public functions.
+    public void setYDrawCoord(int inYDrawCoord){
+	yDrawCoord = inYDrawCoord;
+    }
   
-  public int getYDrawCoord()
-  {
-    return yDrawCoord;
-  }
+    public int getYDrawCoord(){
+	return yDrawCoord;
+    }
     
-  //Instance data.
-  Vector threadDataList;
-  Vector userThreadDataList;
-  //To aid with drawing searches.
-  int yDrawCoord;
-  
+    //Instance data.
+    Vector threadDataList;
+    Vector userThreadDataList;
+    //To aid with drawing searches.
+    int yDrawCoord;
 }

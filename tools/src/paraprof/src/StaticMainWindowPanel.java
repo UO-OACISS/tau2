@@ -501,6 +501,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			tmpRef.show();
 		    }
 		    else if(arg.equals("Show Call Path Thread Relations")){
+			CallPathUtilFuncs.trimCallPathData(trial,serverNumber,contextNumber,threadNumber);
 			CallPathTextWindow tmpRef = new CallPathTextWindow(trial, serverNumber, contextNumber,
 									   threadNumber, sMWindow.getSMWData(),false);
 			trial.getSystemEvents().addObserver(tmpRef);
@@ -548,7 +549,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			//Now we are going accross in the X direction.
 			if(xCoord < barXStart){
 			    //Bring up the thread data window for this thread object!
-			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
+			    if((evt.getModifiersEx() & InputEvent.BUTTON1_MASK) != 0){
 				MeanDataWindow tmpRef = new MeanDataWindow(trial, sMWindow.getSMWData());
 				trial.getSystemEvents().addObserver(tmpRef);
 				tmpRef.show();
@@ -562,7 +563,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    return;
 			}
 			else if(xCoord < sMWMeanDataElement.getXEnd()){
-			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+			    if((evt.getModifiersEx() & InputEvent.BUTTON1_MASK) == 0){
 				//Set the clickedSMWMeanDataElement.
 				clickedOnObject = sMWMeanDataElement;
 				popup.show(this, evt.getX(), evt.getY());
@@ -584,95 +585,93 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
       
 	    //**********
 	    //Check for clicking in the rest of the window.
-	    for(Enumeration e1 = (sMWindow.getSMWGeneralData()).elements(); e1.hasMoreElements() ;)
-		{
-		    sMWServer = (SMWServer) e1.nextElement();
-		    if(yCoord <= (sMWServer.getYDrawCoord())){
-			//Enter the context loop for this server.
-			contextList = sMWServer.getContextList();
-			for(Enumeration e2 = contextList.elements(); e2.hasMoreElements() ;){
-			    sMWContext = (SMWContext) e2.nextElement();
-			    if(yCoord <= (sMWContext.getYDrawCoord())){
-				//Enter the thread loop for this context.
-				threadList = sMWContext.getThreadList();
-				for(Enumeration e3 = threadList.elements(); e3.hasMoreElements() ;){
-				    sMWThread = (SMWThread) e3.nextElement();
-				    if(yCoord <= (sMWThread.getYDrawCoord())){
-					//Now enter the thread loop for this thread.
-					threadDataList = sMWThread.getThreadDataList();
-					sMWThreadDataElementCounter = 0;
-					for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
-					    sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-					    //Now we are going accross in the X direction.
-					    if(xCoord < barXStart){
-						//Make sure that the mouse is not above or below the bar
-						//for this thread.  The y values from the first thread data
-						//object will indicate this.
-						if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
-						    //Bring up the thread data window for this thread object!
-						    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
-							ThreadDataWindow tmpRef = new ThreadDataWindow(trial, serverCounter, contextCounter,
-												       threadCounter, sMWindow.getSMWData());                  
-							trial.getSystemEvents().addObserver(tmpRef);
-							tmpRef.show();
-						    }
-						    else{
-							popup2.show(this, evt.getX(), evt.getY());
-							serverNumber = serverCounter;
-							contextNumber = contextCounter;
-							threadNumber = threadCounter;
-							return;
-						    }
+	    for(Enumeration e1 = (sMWindow.getSMWGeneralData()).elements(); e1.hasMoreElements() ;){
+		sMWServer = (SMWServer) e1.nextElement();
+		if(yCoord <= (sMWServer.getYDrawCoord())){
+		    //Enter the context loop for this server.
+		    contextList = sMWServer.getContextList();
+		    for(Enumeration e2 = contextList.elements(); e2.hasMoreElements() ;){
+			sMWContext = (SMWContext) e2.nextElement();
+			if(yCoord <= (sMWContext.getYDrawCoord())){
+			    //Enter the thread loop for this context.
+			    threadList = sMWContext.getThreadList();
+			    for(Enumeration e3 = threadList.elements(); e3.hasMoreElements() ;){
+				sMWThread = (SMWThread) e3.nextElement();
+				if(yCoord <= (sMWThread.getYDrawCoord())){
+				    //Now enter the thread loop for this thread.
+				    threadDataList = sMWThread.getThreadDataList();
+				    sMWThreadDataElementCounter = 0;
+				    for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
+					sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+					//Now we are going accross in the X direction.
+					if(xCoord < barXStart){
+					    //Make sure that the mouse is not above or below the bar
+					    //for this thread.  The y values from the first thread data
+					    //object will indicate this.
+					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
+						//Bring up the thread data window for this thread object!
+						if((evt.getModifiersEx() & InputEvent.BUTTON1_MASK) != 0){
+						    ThreadDataWindow tmpRef = new ThreadDataWindow(trial, serverCounter, contextCounter,
+												   threadCounter, sMWindow.getSMWData());                  
+						    trial.getSystemEvents().addObserver(tmpRef);
+						    tmpRef.show();
 						}
-						return;
-					    }
-					    else if(xCoord < sMWThreadDataElement.getXEnd()){
-						if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
-						    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-							//Set the clickedSMWDataElement.
-							clickedOnObject = sMWThreadDataElement;
-							popup.show(this, evt.getX(), evt.getY());
-							return;
-						    }
-						    else{
-							trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
-							MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
-							trial.getSystemEvents().addObserver(tmpRef);
-							tmpRef.show();
-						    }
+						else{
+						    popup2.show(this, evt.getX(), evt.getY());
+						    serverNumber = serverCounter;
+						    contextNumber = contextCounter;
+						    threadNumber = threadCounter;
 						    return;
 						}
 					    }
-					    else{
-						//Update the counter.
-						sMWThreadDataElementCounter = (sMWThreadDataElementCounter + 1);
+					    return;
+					}
+					else if(xCoord < sMWThreadDataElement.getXEnd()){
+					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
+						if((evt.getModifiersEx() & InputEvent.BUTTON1_MASK) == 0){
+						    //Set the clickedSMWDataElement.
+						    clickedOnObject = sMWThreadDataElement;
+						    popup.show(this, evt.getX(), evt.getY());
+						    return;
+						}
+						else{
+						    trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+						    MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
+						    trial.getSystemEvents().addObserver(tmpRef);
+						    tmpRef.show();
+						}
+						return;
 					    }
 					}
+					else{
+					    //Update the counter.
+					    sMWThreadDataElementCounter = (sMWThreadDataElementCounter + 1);
+					}
 				    }
-				    //End if statement!
-                
-				    //Update the thread counter.
-				    threadCounter++;
 				}
+				//End if statement!
+				
+				//Update the thread counter.
+				threadCounter++;
 			    }
-			    //End if statement!
-            
-			    //Update the context counter.
-			    contextCounter++;
 			}
+			//End if statement!
+			
+			//Update the context counter.
+			contextCounter++;
 		    }
-		    //End if statement!
-        
-		    //Update the server counter!
-		    serverCounter++;
 		}
+		//End if statement!
+		
+		//Update the server counter!
+		serverCounter++;
+	    }
 	    //End - Check for clicking in the rest of the window.
 	    //**********
 	} 
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SMWP05");
-	    }
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SMWP05");
+	}
     }
     public void mousePressed(MouseEvent evt){}
     public void mouseReleased(MouseEvent evt){}

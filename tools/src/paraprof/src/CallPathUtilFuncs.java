@@ -66,4 +66,74 @@ public class CallPathUtilFuncs{
 	    e.printStackTrace();
 	}
     }
+
+    public static void trimCallPathData(Trial trial,
+				 int node,
+				 int context,
+				 int thread){
+
+	ListIterator l1 = null;
+	ListIterator l2 = null;
+	ListIterator l3 = null;
+	GlobalMapping gm = trial.getGlobalMapping();
+	GlobalMappingElement gme1 = null;
+	GlobalMappingElement gme2 = null;
+	Integer listValue = null;
+	String s = null;
+	Vector staticServerList = null;
+	GlobalServer globalServer = null;
+	GlobalContext globalContext = null;
+	GlobalThread globalThread = null;
+	Vector threadDataList = null;
+	GlobalThreadDataElement gtde = null;
+	SMWThreadDataElement smwtde = null;
+	
+	//Create a pruned list from the global list.
+	//Want to grab a reference to the global list as
+	//this list contains null references for mappings
+	//which do not exist. Makes lookup much faster.
+	
+	//Find the correct global thread data element.
+	staticServerList = trial.getStaticServerList();
+	globalServer = (GlobalServer) staticServerList.elementAt(node);
+	Vector tmpRef = globalServer.getContextList();
+	globalContext = (GlobalContext) tmpRef.elementAt(context);
+	tmpRef = globalContext.getThreadList();
+	globalThread = (GlobalThread) tmpRef.elementAt(thread);
+	threadDataList = globalThread.getThreadDataList();
+	
+	l1 = gm.getMappingIterator(0);
+	while(l1.hasNext()){
+	    gme1 = (GlobalMappingElement) l1.next();
+	    gtde = (GlobalThreadDataElement) threadDataList.elementAt(gme1.getGlobalID());
+	    if((!(gme1.isCallPathObject())) && (gtde!=null)){
+		l2 = gme1.getParentsIterator();
+		while(l2.hasNext()){
+		    listValue = (Integer)l2.next();
+		    if(threadDataList.elementAt(listValue.intValue())!=null){
+			int location = gtde.addParent(listValue.intValue());
+			l3 = gme1.getCallPathIDParents(listValue.intValue());
+			while(l3.hasNext()){
+			    int pathID = ((Integer)l3.next()).intValue();
+			    if(threadDataList.elementAt(pathID)!=null)
+				gtde.addParentCallPathID(location, pathID);
+			}
+		    }
+		}
+		l2 = gme1.getChildrenIterator();
+		while(l2.hasNext()){
+		    listValue = (Integer)l2.next();
+		    if(threadDataList.elementAt(listValue.intValue())!=null){
+			int location = gtde.addChild(listValue.intValue());
+			l3 = gme1.getCallPathIDChildren(listValue.intValue());
+			while(l3.hasNext()){
+			    int pathID = ((Integer)l3.next()).intValue();
+			    if(threadDataList.elementAt(pathID)!=null)
+					gtde.addChildCallPathID(location, pathID);
+			}
+		    }
+		}
+	    }
+	}
+    }
 }

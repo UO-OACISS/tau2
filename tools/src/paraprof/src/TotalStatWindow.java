@@ -53,15 +53,6 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
       context = inContextNumber;
       thread = inThreadNumber;
       
-      FIdDE = null;
-      FIdAE = null;
-      NDE = null;
-      NAE = null;
-      MDE = null;
-      MAE = null;
-      MDI = null;
-      MAI = null;
-      
       //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
           public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -106,7 +97,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
       fileMenu.add(closeItem);
       
       //Add a menu item.
-      JMenuItem exitItem = new JMenuItem("Exit Racy!");
+      JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
       exitItem.addActionListener(this);
       fileMenu.add(exitItem);
       //******************************
@@ -157,11 +148,6 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
       
       optionsMenu.add(sortOrderMenu);
       //End Submenu.
-      
-      //Add a menu item.
-      JMenuItem colorItem = new JMenuItem("Adjust Racy Colors");
-      colorItem.addActionListener(this);
-      optionsMenu.add(colorItem);
       //******************************
       //End - Options menu.
       //******************************
@@ -203,7 +189,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
       JMenu helpMenu = new JMenu("Help");
       
       //Add a menu item.
-      JMenuItem aboutItem = new JMenuItem("About Racy");
+      JMenuItem aboutItem = new JMenuItem("About ParaProf");
       aboutItem.addActionListener(this);
       helpMenu.add(aboutItem);
       
@@ -285,122 +271,93 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
     try{
       Object EventSrc = evt.getSource();
       
-      if(EventSrc instanceof JMenuItem)
-      {
+      if(EventSrc instanceof JMenuItem){
         String arg = evt.getActionCommand();
 
-        if(arg.equals("Close This Window"))
-        {
+        if(arg.equals("Close This Window")){
           closeThisWindow();
         }
-        else if(arg.equals("Exit Racy!"))
-        {
+        else if(arg.equals("Exit ParaProf!")){
           setVisible(false);
           dispose();
           System.exit(0);
         }
-        else if(arg.equals("Adjust Racy Colors"))
-        {
-          trial.getColorChooser().showColorChooser(); //The ColorChooser class maintains all the state.
-        }
-        else if(arg.equals("Name"))
-        {
-          if(nameButton.isSelected())
-          {
+        else if(arg.equals("Name")){
+          if(nameButton.isSelected()){
             metric = "Name";
             //Call repaint.
             totalStatWindowPanelRef.repaint();
           }
         }
-        else if(arg.equals("Descending"))
-        {
-          if(descendingButton.isSelected())
-          {
+        else if(arg.equals("Descending")){
+          if(descendingButton.isSelected()){
             descendingOrder = true;
             totalStatWindowPanelRef.repaint();
           }
         }
-        else if(arg.equals("Ascending"))
-        {
-          if(ascendingButton.isSelected())
-          {
+        else if(arg.equals("Ascending")){
+          if(ascendingButton.isSelected()){
             descendingOrder = false;
             totalStatWindowPanelRef.repaint();
           }
         }
-        else if(arg.equals("Inclusive"))
-        {
-          if(inclusiveRadioButton.isSelected())
-          {
+        else if(arg.equals("Inclusive")){
+          if(inclusiveRadioButton.isSelected()){
             metric = "Inclusive";
             //Call repaint.
             totalStatWindowPanelRef.repaint();
           }
         }
-        else if(arg.equals("Exclusive"))
-        {
-          if(exclusiveRadioButton.isSelected())
-          {
+        else if(arg.equals("Exclusive")){
+          if(exclusiveRadioButton.isSelected()){
             metric = "Exclusive";
             //Call repaint.
             totalStatWindowPanelRef.repaint();
           }
         }
-        else if(arg.equals("Number of Calls"))
-        {
-          if(numOfCallsRadioButton.isSelected())
-          {
+        else if(arg.equals("Number of Calls")){
+          if(numOfCallsRadioButton.isSelected()){
             metric = "Number of Calls";
             //Call repaint.
             totalStatWindowPanelRef.repaint();
           }
         }
-        else if(arg.equals("Number of Subroutines"))
-        {
-          if(numOfSubRoutinesRadioButton.isSelected())
-          {
+        else if(arg.equals("Number of Subroutines")){
+          if(numOfSubRoutinesRadioButton.isSelected()){
             metric = "Number of Subroutines";
             //Call repaint.
             totalStatWindowPanelRef.repaint();
           }
         }
-        else if(arg.equals("Per Call Value"))
-        {
-          if(userSecPerCallRadioButton.isSelected())
-          {
+        else if(arg.equals("Per Call Value")){
+          if(userSecPerCallRadioButton.isSelected()){
             metric = "Per Call Value";
             totalStatWindowPanelRef.repaint();
           }
         }
-        else if(arg.equals("Show Function Ledger"))
-        {
+        else if(arg.equals("Show Function Ledger")){
           //In order to be in this window, I must have loaded the data. So,
           //just show the mapping ledger window.
           (trial.getGlobalMapping()).displayMappingLedger(0);
         }
-        else if(arg.equals("Show Group Ledger"))
-        {
+        else if(arg.equals("Show Group Ledger")){
           //In order to be in this window, I must have loaded the data. So,
           //just show the mapping ledger window.
           (trial.getGlobalMapping()).displayMappingLedger(1);
         }
-        else if(arg.equals("Show User Event Ledger"))
-        {
+        else if(arg.equals("Show User Event Ledger")){
           //In order to be in this window, I must have loaded the data. So,
           //just show the mapping ledger window.
           (trial.getGlobalMapping()).displayMappingLedger(2);
         }
-        else if(arg.equals("Close All Sub-Windows"))
-        {
+        else if(arg.equals("Close All Sub-Windows")){
           //Close the all subwindows.
           trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
         }
-        else if(arg.equals("About Racy"))
-        {
+        else if(arg.equals("About ParaProf")){
           JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
         }
-        else if(arg.equals("Show Help Window"))
-        {
+        else if(arg.equals("Show Help Window")){
           //Show the racy help window.
           ParaProf.helpWindow.clearText();
           ParaProf.helpWindow.show();
@@ -419,8 +376,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
         }
       }
     }
-    catch(Exception e)
-    {
+    catch(Exception e){
       ParaProf.systemError(e, null, "TSW03");
     }
   }
@@ -630,16 +586,6 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
   int server;
   int context;
   int thread;
-  
-  Vector FIdDE;
-  Vector FIdAE;
-  Vector NDE;
-  Vector NAE;
-  Vector MDE;
-  Vector MAE;
-  Vector MDI;
-  Vector MAI;
-    
   //******************************
   //End - Instance data.
   //******************************

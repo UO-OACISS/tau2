@@ -223,9 +223,7 @@ public class ParaProf implements ActionListener
   //Handles system errors.
   public static void systemError(Object inObject, Component inComponent, String inString)
   { 
-    JOptionPane.showMessageDialog(inComponent, "ParaProf Error", "Internal System Error ... ParaProf will now close!", JOptionPane.ERROR_MESSAGE);
-    
-    
+      //JOptionPane.showMessageDialog(inComponent, "ParaProf Error", "Internal System Error ... ParaProf will now close!", JOptionPane.ERROR_MESSAGE);
     if(inObject != null){
       if(inObject instanceof Exception){
         if(ParaProf.debugIsOn){

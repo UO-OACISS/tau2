@@ -399,6 +399,32 @@ public class GlobalThreadDataElement
     public static int getPositionOfUserEventName(){
 	return 72;
     }
+    
+    public boolean isCallPathObject(){
+	GlobalMappingElement tmpGME = (GlobalMappingElement) (trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
+	return tmpGME.isCallPathObject();
+    }
+
+    public int addParent(int id){
+	//This function is used in the building
+	//of the parent/child relations from the
+	//global mapping. As such, it does not have to
+	//be quite as careful as the standard addParent
+	//function (which is left in below).
+	if(parents==null){
+	    parents = new Vector();
+	    callPathIDSParents = new Vector();
+	}
+	parents.add(new Integer(id));
+	Vector tmpVector = new Vector();
+	callPathIDSParents.add(tmpVector);
+	return (parents.size()-1);
+    }
+
+    public void addParentCallPathID(int location, int pathID){
+	Vector tmpVector = (Vector) callPathIDSParents.elementAt(location);
+	tmpVector.add(new Integer(pathID));
+    }
 
     public void addParent(int id,int pathID){
 	//Check to see if this parent is already present,
@@ -450,8 +476,29 @@ public class GlobalThreadDataElement
 	//The argument represents the id of the child.
 	//Get the location of the child first.
 	int location = UtilFncs.exists(children,id);
-	//Now return the callpath id list for that parent.
+	//Now return the callpath id list for that child.
 	return new ParaProfIterator((Vector)callPathIDSChildren.elementAt(location));
+    }
+
+    public int addChild(int id){
+	//This function is used in the building
+	//of the parent/child relations from the
+	//global mapping. As such, it does not have to
+	//be quite as careful as the standard addParent
+	//function (which is left in below).
+	if(children==null){
+		children = new Vector();
+		callPathIDSChildren = new Vector();
+	}
+	children.add(new Integer(id));
+	Vector tmpVector = new Vector();
+	callPathIDSChildren.add(tmpVector);
+	return (children.size()-1);
+    }
+
+    public void addChildCallPathID(int location, int pathID){
+	Vector tmpVector = (Vector) callPathIDSChildren.elementAt(location);
+	tmpVector.add(new Integer(pathID));
     }
 
     public void addChild(int id,int pathID){
@@ -475,14 +522,6 @@ public class GlobalThreadDataElement
 	}
     }
 
-    public void setCallPathObject(boolean b){
-	callPathObject = b;
-    }
-
-    public boolean isCallPathObject(){
-	return callPathObject;
-    }
- 
     private static int insertSpaces(char[] inArray, int position, int number){
 	for(int i=0;i<number;i++){
 	    inArray[position] = '\u0020';
@@ -542,8 +581,6 @@ public class GlobalThreadDataElement
     private Vector children = null;
     private Vector callPathIDSParents = null;
     private Vector callPathIDSChildren = null;
-    private boolean callPathObject = false;
-
 }
 
 

@@ -79,8 +79,8 @@ public class GlobalThread
 	threadDataList.setElementAt(inGTDE, inPosition);
     }
     
-  //The following function adds a thread data element to
-  //the userThreadDataList
+    //The following function adds a thread data element to
+    //the userThreadDataList
     void addUserThreadDataElement(GlobalThreadDataElement inGTDE){
 	userThreadDataList.addElement(inGTDE);
     }
@@ -89,11 +89,15 @@ public class GlobalThread
 	userThreadDataList.setElementAt(inGTDE, inPosition);
     }
   
-    Vector getThreadDataList(){
+    public Vector getThreadDataList(){
 	return threadDataList;
     }
+
+    public ListIterator getThreadDataListIterator(){
+	return new ParaProfIterator(threadDataList);
+    }
   
-    Vector getUserThreadDataList(){
+    public Vector getUserThreadDataList(){
 	return userThreadDataList;
     }
   

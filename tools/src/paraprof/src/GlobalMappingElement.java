@@ -105,20 +105,16 @@ public class GlobalMappingElement implements Serializable, Comparable{
     }
 
     public Vector getParents(){
-	return parents;
-    }
+	return parents;}
 
     public Vector getChildren(){
-	return children;
-    }
+	return children;}
 
     public ListIterator getParentsIterator(){
-	return new ParaProfIterator(parents);
-    }
+	return new ParaProfIterator(parents);}
 
     public ListIterator getChildrenIterator(){
-	return new ParaProfIterator(children);
-    }
+	return new ParaProfIterator(children);}
 
     public ListIterator getCallPathIDParents(int id){
 	//The argument represents the id of the parent.
@@ -158,12 +154,10 @@ public class GlobalMappingElement implements Serializable, Comparable{
     }
 
     public void setCallPathObject(boolean b){
-	callPathObject = b;
-    }
+	callPathObject = b;}
 
     public boolean isCallPathObject(){
-	return callPathObject;
-    }
+	return callPathObject;}
     
     public void setColorFlag(boolean inBoolean){
 	colorFlag = inBoolean;
