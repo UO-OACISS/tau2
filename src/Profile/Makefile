@@ -95,7 +95,7 @@ LDFLAGS	      = $(PCXX_OPT)
 MAKEFILE      = Makefile
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
-		RtsLayer.o $(EVENTS_O) $(THR_O) 
+		RtsLayer.o RtsThread.o $(EVENTS_O) $(THR_O) 
 
 PRINT	      = pr
 
@@ -148,6 +148,9 @@ FunctionInfo.o 	: FunctionInfo.cpp $(HDRS)
 
 RtsLayer.o 	: RtsLayer.cpp $(HDRS)
 	$(CXX) $(CFLAGS) -c RtsLayer.cpp
+
+RtsThread.o 	: RtsThread.cpp $(HDRS)
+	$(CXX) $(CFLAGS) -c RtsThread.cpp
 
 pcxx_events.o   : pcxx_events.cpp $(HDRS)
 	$(CXX) $(CFLAGS) -c pcxx_events.cpp
