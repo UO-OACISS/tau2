@@ -143,9 +143,16 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    //Draw the heading!
 	    switch(windowType){
 	    case 0:
-		tmpString = GlobalThreadDataElement.getTStatStringHeading(trial);
+		if(trial.isTimeMetric())
+		    tmpString = GlobalThreadDataElement.getTStatStringHeading("Time");
+		else
+		    tmpString = GlobalThreadDataElement.getTStatStringHeading("Counts");
+		break;
 	    case 1:
-		tmpString = GlobalThreadDataElement.getTStatStringHeading(trial);
+		if(trial.isTimeMetric())
+		    tmpString = GlobalThreadDataElement.getTStatStringHeading("Time");
+		else
+		    tmpString = GlobalThreadDataElement.getTStatStringHeading("Counts");
 		break;
 	    case 2:
 		tmpString = GlobalThreadDataElement.getUserEventStatStringHeading();

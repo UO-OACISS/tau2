@@ -69,30 +69,21 @@ public class CallPathUtilFuncs{
 	}
     }
 
-    public static void trimCallPathData(ParaProfTrial trial,
-				 int nodeID,
-				 int contextID,
-				 int threadID){
-
+    public static void trimCallPathData(GlobalMapping gm, Thread thread){
 	ListIterator l1 = null;
 	ListIterator l2 = null;
 	ListIterator l3 = null;
-	GlobalMapping gm = trial.getGlobalMapping();
 	GlobalMappingElement gme1 = null;
 	GlobalMappingElement gme2 = null;
 	Integer listValue = null;
 	String s = null;
-	Thread thread = null;
 	Vector functionList = null;
 	GlobalThreadDataElement gtde = null;
-	SMWThreadDataElement smwtde = null;
 	
 	//Create a pruned list from the global list.
 	//Want to grab a reference to the global list as
 	//this list contains null references for mappings
 	//which do not exist. Makes lookup much faster.
-	
-	thread = trial.getNCT().getThread(nodeID,contextID,threadID);
 	functionList = thread.getFunctionList();
 
 	//Check to make sure that we have not trimmed before.

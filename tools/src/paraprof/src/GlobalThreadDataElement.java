@@ -112,15 +112,8 @@ public class GlobalThreadDataElement{
 	return 97;
     }
   
-    public static String getTStatStringHeading(ParaProfTrial trial){
-	String metricType = null;
-	if(trial.isTimeMetric())
-	    metricType = "time";
-	else
-	    metricType = "counts";
-	
+    public static String getTStatStringHeading(String metricType){
 	try{
-	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int initialBufferLength = 103;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];
@@ -301,7 +294,6 @@ public class GlobalThreadDataElement{
   
     public static String getUserEventStatStringHeading(){
 	try{
-	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int initialBufferLength = 82;
 	    int position = 0;
 	    char [] statStringArray = new char[initialBufferLength];

@@ -368,7 +368,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    tmpRef.show();
 		}
 		else if(arg.equals("Show Call Path Thread Relations")){
-		    CallPathUtilFuncs.trimCallPathData(trial,node,context,thread);
+		    CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(node,context,thread));
 		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, node, context,
 								       thread, sMWindow.getSMWData(),false);
 		    trial.getSystemEvents().addObserver(tmpRef);
