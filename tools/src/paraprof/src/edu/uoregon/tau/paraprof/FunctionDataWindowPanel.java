@@ -2,9 +2,9 @@
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.4 2004/12/29 00:09:48 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.5 2005/01/03 20:40:33 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		FunctionDataWindow
  */
 
@@ -192,7 +192,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         if (drawHeader) {
             FontRenderContext frc = g2D.getFontRenderContext();
             Insets insets = this.getInsets();
-            yCoord = yCoord + (barSpacing);
             String headerString = window.getHeaderString();
             //Need to split the string up into its separate lines.
             StringTokenizer st = new StringTokenizer(headerString, "'\n'");
@@ -211,6 +210,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                     x = insets.left;
                 }
             }
+            yCoord = yCoord + (barSpacing);
             lastHeaderEndPosition = yCoord;
         }
 
@@ -450,8 +450,13 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
             d = this.getSize();
         else
             d = window.getSize();
-        d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);
-        System.out.println("getImageSize x,y: " + d.getWidth() + "," + d.getHeight());
+        
+        if (header) {
+            d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);
+        } else {
+            d.setSize(d.getWidth(), d.getHeight());
+        }
+        
         return d;
     }
 
@@ -469,7 +474,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
     //This method sets both xPanelSize and yPanelSize.
     private boolean resizePanel(FontMetrics fmFont, int barXCoord) {
         boolean resized = false;
-        int newYPanelSize = ((window.getData().size()) + 6) * barSpacing + 10;
+        int newYPanelSize = ((window.getData().size()) + 1) * barSpacing + 10;
         int[] nct = ppTrial.getMaxNCTNumbers();
         String nctString = "n,c,t " + nct[0] + "," + nct[1] + "," + nct[2];
 

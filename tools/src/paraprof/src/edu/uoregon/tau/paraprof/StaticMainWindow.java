@@ -16,41 +16,8 @@ import edu.uoregon.tau.dms.dss.*;
 
 public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
 
-    public StaticMainWindow(ParaProfTrial pptrial, boolean debug) {
-        //This window needs to maintain a reference to its trial.
-        this.trial = pptrial;
-
-        //Window Stuff.
-        setTitle("ParaProf: " + pptrial.getTrialIdentifier(true));
-
-        int windowWidth = 750;
-        int windowHeight = 400;
-        setSize(new java.awt.Dimension(windowWidth, windowHeight));
-
-        dataSorter = new DataSorter(pptrial);
-
-        //Add some window listener code
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                thisWindowClosing(evt);
-            }
-        });
-
-        //Grab the screen size.
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenDimension = tk.getScreenSize();
-        int screenHeight = screenDimension.height;
-        int screenWidth = screenDimension.width;
-
-        //Set the window to come up in the center of the screen.
-        int xPosition = (screenWidth - windowWidth) / 2;
-        int yPosition = (screenHeight - windowHeight) / 2;
-
-        setLocation(xPosition, yPosition);
-        //####################################
-        //End -Window Stuff.
-        //####################################
-
+    
+    private void setupMenus() {
         //####################################
         //Code to generate the menus.
         //####################################
@@ -215,6 +182,46 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         //End - Code to generate the menus.
         //####################################
 
+    }
+    
+    public StaticMainWindow(ParaProfTrial ppTrial, boolean debug) {
+        //This window needs to maintain a reference to its trial.
+        this.trial = ppTrial;
+        
+        //Window Stuff.
+        setTitle("ParaProf: " + ppTrial.getTrialIdentifier(true));
+
+        int windowWidth = 750;
+        int windowHeight = 400;
+        setSize(new java.awt.Dimension(windowWidth, windowHeight));
+
+        dataSorter = new DataSorter(ppTrial);
+
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
+            }
+        });
+
+        //Grab the screen size.
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        Dimension screenDimension = tk.getScreenSize();
+        int screenHeight = screenDimension.height;
+        int screenWidth = screenDimension.width;
+
+        //Set the window to come up in the center of the screen.
+        int xPosition = (screenWidth - windowWidth) / 2;
+        int yPosition = (screenHeight - windowHeight) / 2;
+
+        setLocation(xPosition, yPosition);
+        //####################################
+        //End -Window Stuff.
+        //####################################
+
+
+        setupMenus();
+        
         //####################################
         //Create and add the components.
         //####################################
@@ -229,7 +236,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         //######
         //Panel and ScrollPane definition.
         //######
-        panel = new StaticMainWindowPanel(pptrial, this);
+        panel = new StaticMainWindowPanel(ppTrial, this);
         sp = new JScrollPane(panel);
         this.setHeader();
         //######
@@ -267,7 +274,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         //####################################
         //Setup the static main window data lists.
         //####################################
-        dataSorter = new DataSorter(pptrial);
+        dataSorter = new DataSorter(ppTrial);
         //####################################
         //End - Setup the static main window data lists.
         //####################################
@@ -641,7 +648,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     void closeThisWindow() {
         try {
             setVisible(false);
-            trial.getSystemEvents().deleteObserver(this);
+            
+            // don't do this!
+            //trial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
             // do nothing

@@ -2,11 +2,11 @@
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.23 2004/12/29 00:09:49 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.24 2005/01/03 20:40:33 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  */
 
 package edu.uoregon.tau.paraprof;
@@ -17,8 +17,6 @@ import java.awt.event.*;
 import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.dms.dss.*;
 import javax.swing.*;
-
-
 
 public class ParaProf implements ActionListener {
 
@@ -57,23 +55,20 @@ public class ParaProf implements ActionListener {
         //End uncomment!
     }
 
-    
     private static void usage() {
-        System.err.println("Usage: paraprof [-d] [-p] [-i] [-f <filetype>] <files/directory>\n\n" +
-                	"try `paraprof --help` for more information");
+        System.err.println("Usage: paraprof [-d] [-p] [-i] [-f <filetype>] <files/directory>\n\n"
+                + "try `paraprof --help` for more information");
     }
-    
+
     private static void outputHelp() {
-        System.err.println("Usage: paraprof [options] <files/directory> \n\n"
-                + "Options:\n\n"
+        System.err.println("Usage: paraprof [options] <files/directory> \n\n" + "Options:\n\n"
                 + "  -f, --filetype <filetype>        Specify type of performance data, options are:\n"
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                   gprof, psrun, hpm\n"
                 + "  -h, --help                       Display this help message\n"
                 + "  -p                               Use `pprof` to compute derived data\n"
                 + "  -d, --debug                      Turn debug statements on\n"
-                + "  -i, --fixnames                   Use the fixnames option for gprof\n\n"
-                + "Notes:\n"
+                + "  -i, --fixnames                   Use the fixnames option for gprof\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -82,12 +77,12 @@ public class ParaProf implements ActionListener {
     }
 
     static void incrementNumWindows() {
-//        System.out.println ("incrementing");
+        //        System.out.println ("incrementing");
         numWindowsOpen++;
     }
 
     static void decrementNumWindows() {
-//        System.out.println ("decrementing");
+        //        System.out.println ("decrementing");
         numWindowsOpen--;
         if (numWindowsOpen <= 0) {
             exitParaProf(0);
@@ -111,34 +106,31 @@ public class ParaProf implements ActionListener {
         paraProfManager.addTrial(app, experiment, sourceFiles, fileType, fixNames);
     }
 
-//    public static void error(JComponent component, Object obj) {
-//        
-//        String errorString = null;
-//        
-//        if (obj instanceof Exception) {
-//            Exception e = (Exception) obj;
-//            
-//            e.printStackTrace();
-//            System.out.println(ParaProfError.contactString);
-//
-//            StringWriter sw = new StringWriter();
-//            PrintWriter pw = new PrintWriter(sw);
-//            e.printStackTrace(pw);
-//            pw.close();
-//            errorString = sw.toString();
-//        }
-//        
-//        JOptionPane.showMessageDialog(component, errorString,
-//                "ParaProf Error", JOptionPane.ERROR_MESSAGE);
-//
-//        
-//        
-//    }
-//    
-    
-    
-   
-    
+    //    public static void error(JComponent component, Object obj) {
+    //        
+    //        String errorString = null;
+    //        
+    //        if (obj instanceof Exception) {
+    //            Exception e = (Exception) obj;
+    //            
+    //            e.printStackTrace();
+    //            System.out.println(ParaProfError.contactString);
+    //
+    //            StringWriter sw = new StringWriter();
+    //            PrintWriter pw = new PrintWriter(sw);
+    //            e.printStackTrace(pw);
+    //            pw.close();
+    //            errorString = sw.toString();
+    //        }
+    //        
+    //        JOptionPane.showMessageDialog(component, errorString,
+    //                "ParaProf Error", JOptionPane.ERROR_MESSAGE);
+    //
+    //        
+    //        
+    //    }
+    //    
+
     public void startSystem() {
         try {
 
@@ -162,28 +154,25 @@ public class ParaProf implements ActionListener {
                     //If here, means that no exception was thrown, and there is
                     // a preference file present.
                     //Create ObjectInputStream and try to read it in.
-                    ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(
-                            savedPreferenceFIS);
+                    ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
                     ParaProf.savedPreferences = (SavedPreferences) inSavedPreferencesOIS.readObject();
                     ParaProf.savedPreferences.setLoaded(true);
                 } catch (Exception e) {
                     if (e instanceof FileNotFoundException) {
                         System.out.println("No preference file present, using defaults!");
                     } else {
-                        //Print some kind of error message, and quit the
-                        // system.
-                        System.out.println("There was an internal error while trying to read the ParaProf preference");
-                        System.out.println("file.  Please delete this file, or replace it with a valid one!");
+                        //Print some kind of error message, and quit the system.
+                        System.out.println("There was an error while trying to read the ParaProf preferences file.");
+                        System.out.println("Please delete this file, or replace it with a valid one!");
                         System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
                     }
                 }
 
                 //Try and find perfdmf.cfg.
-                File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath()
-                        + "/perfdmf.cfg");
+                File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                 if (perfDMFcfg.exists()) {
-                    System.out.println("Found db configuration file: "
-                            + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
+                    //System.out.println("Found db configuration file: "
+                    //        + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                     ParaProf.savedPreferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath()
                             + "/perfdmf.cfg");
                 } else
@@ -236,17 +225,14 @@ public class ParaProf implements ActionListener {
         Object EventSrc = evt.getSource();
         if (EventSrc instanceof javax.swing.Timer) {
             System.out.println("------------------------");
-            System.out.println("The amount of memory used by the system is: "
-                    + runtime.totalMemory());
-            System.out.println("The amount of memory free to the system is: "
-                    + runtime.freeMemory());
+            System.out.println("The amount of memory used by the system is: " + runtime.totalMemory());
+            System.out.println("The amount of memory free to the system is: " + runtime.freeMemory());
         }
     }
 
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
-        return new String("ParaProf Version 2.0 ... The Tau Group!\n Java Heap Size: " + memUsage
-                + "kb");
+        return new String("ParaProf Version 2.0 ... The Tau Group!\n Java Heap Size: " + memUsage + "kb");
     }
 
     // This method is reponsible for any cleanup required in ParaProf 
@@ -262,8 +248,6 @@ public class ParaProf implements ActionListener {
         System.exit(exitValue);
     }
 
-    
-    
     // Main entry point
     static public void main(String[] args) {
 
@@ -309,7 +293,6 @@ public class ParaProf implements ActionListener {
 
         if (fixNames != null)
             ParaProf.fixNames = fixNames.booleanValue();
-
 
         if (fileTypeString != null) {
             if (fileTypeString.equals("profiles")) {

@@ -1,4 +1,3 @@
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -10,12 +9,10 @@ public class DataSorter {
         this.trial = trial;
     }
 
-    
     public Vector getUserEventProfiles(int nodeID, int contextID, int threadID, int sortType) {
 
         UserEventProfile userEventProfile = null;
-        Vector list = ((edu.uoregon.tau.dms.dss.Thread) trial.getNCT().getThread(nodeID, contextID,
-                threadID)).getUsereventList();
+        Vector list = ((edu.uoregon.tau.dms.dss.Thread) trial.getNCT().getThread(nodeID, contextID, threadID)).getUsereventList();
 
         Vector newList = new Vector();
 
@@ -31,7 +28,7 @@ public class DataSorter {
             }
         }
         Collections.sort(newList);
-        return newList;   
+        return newList;
     }
 
     public Vector getFunctionProfiles(int nodeID, int contextID, int threadID, int sortType) {
@@ -52,8 +49,8 @@ public class DataSorter {
             FunctionProfile functionProfile = (FunctionProfile) e1.nextElement();
             if (functionProfile != null) {
                 if (trialData.displayFunction(functionProfile.getFunction())) {
-                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(trial, nodeID, contextID, threadID,
-                            functionProfile);
+                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(trial, nodeID, contextID,
+                            threadID, functionProfile);
                     ppFunctionProfile.setSortType(sortType);
                     newList.addElement(ppFunctionProfile);
                 }
@@ -63,7 +60,6 @@ public class DataSorter {
         return newList;
     }
 
-    
     public Vector getAllFunctionProfiles(int sortType) {
         Vector newList = null;
         TrialData trialData = trial.getTrialData();
@@ -72,13 +68,11 @@ public class DataSorter {
         edu.uoregon.tau.dms.dss.Thread thread = trial.getDataSource().getMeanData();
 
         PPThread ppThread = new PPThread(thread);
-        
+
         for (Enumeration e4 = thread.getFunctionList().elements(); e4.hasMoreElements();) {
             FunctionProfile functionProfile = (FunctionProfile) e4.nextElement();
-            if ((functionProfile != null)
-                    && (trialData.displayFunction(functionProfile.getFunction()))) {
-                PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(trial,
-                        -1,-1,-1, functionProfile);
+            if ((functionProfile != null) && (trialData.displayFunction(functionProfile.getFunction()))) {
+                PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(trial, -1, -1, -1, functionProfile);
                 ppFunctionProfile.setSortType(sortType);
                 ppThread.addFunction(ppFunctionProfile);
             }
@@ -86,7 +80,6 @@ public class DataSorter {
         Collections.sort(ppThread.getFunctionList());
         threads.add(ppThread);
 
-        
         // reset this in case we are switching metrics
         maxExclusiveSum = 0;
 
@@ -138,18 +131,17 @@ public class DataSorter {
         return threads;
     }
 
-    
-    public Vector getFunctionData(Function function, int sortType) {
+    public Vector getFunctionData(Function function, int sortType, boolean mean) {
         Vector newList = new Vector();
-            
-            
-            Node node;
-            Context context;
-            edu.uoregon.tau.dms.dss.Thread thread;
-            FunctionProfile functionProfile;
 
-            PPFunctionProfile ppFunctionProfile;
+        Node node;
+        Context context;
+        edu.uoregon.tau.dms.dss.Thread thread;
+        FunctionProfile functionProfile;
 
+        PPFunctionProfile ppFunctionProfile;
+
+        if (mean) {
             // add mean first
             thread = trial.getDataSource().getMeanData();
             functionProfile = thread.getFunctionProfile(function);
@@ -159,25 +151,25 @@ public class DataSorter {
                 ppFunctionProfile.setSortType(sortType);
                 newList.add(ppFunctionProfile);
             }
+        }
 
-            
-            for (Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-                node = (Node) e1.nextElement();
-                for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-                    context = (Context) e2.nextElement();
-                    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-                        thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
-                        functionProfile = thread.getFunctionProfile(function);
-                        if (functionProfile != null) {
-                            //Create a new thread data object.
-                            ppFunctionProfile = new PPFunctionProfile(trial, node.getNodeID(),
-                                    context.getContextID(), thread.getThreadID(), functionProfile);
-                            ppFunctionProfile.setSortType(sortType);
-                            newList.add(ppFunctionProfile);
-                        }
+        for (Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements();) {
+            node = (Node) e1.nextElement();
+            for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
+                context = (Context) e2.nextElement();
+                for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
+                    thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+                    functionProfile = thread.getFunctionProfile(function);
+                    if (functionProfile != null) {
+                        //Create a new thread data object.
+                        ppFunctionProfile = new PPFunctionProfile(trial, node.getNodeID(),
+                                context.getContextID(), thread.getThreadID(), functionProfile);
+                        ppFunctionProfile.setSortType(sortType);
+                        newList.add(ppFunctionProfile);
                     }
                 }
             }
+        }
         Collections.sort(newList);
         return newList;
     }
@@ -185,35 +177,34 @@ public class DataSorter {
     public Vector getUserEventData(UserEvent userEvent, int sortType) {
         Vector newList = new Vector();
 
-            Node node;
-            Context context;
-            edu.uoregon.tau.dms.dss.Thread thread;
-            UserEventProfile userEventProfile;
+        Node node;
+        Context context;
+        edu.uoregon.tau.dms.dss.Thread thread;
+        UserEventProfile userEventProfile;
 
-            PPUserEventProfile ppUserEventProfile;
+        PPUserEventProfile ppUserEventProfile;
 
-            for (Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements();) {
-                node = (Node) e1.nextElement();
-                for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
-                    context = (Context) e2.nextElement();
-                    for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
-                        thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+        for (Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements();) {
+            node = (Node) e1.nextElement();
+            for (Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements();) {
+                context = (Context) e2.nextElement();
+                for (Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements();) {
+                    thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
 
-                        userEventProfile = thread.getUserEvent(userEvent.getID());
-                        if (userEventProfile != null) {
-                            //Create a new thread data object.
-                            ppUserEventProfile = new PPUserEventProfile(trial, node.getNodeID(),
-                                    context.getContextID(), thread.getThreadID(), userEventProfile);
-                            ppUserEventProfile.setSortType(sortType);
-                            newList.add(ppUserEventProfile);
-                        }
+                    userEventProfile = thread.getUserEvent(userEvent.getID());
+                    if (userEventProfile != null) {
+                        //Create a new thread data object.
+                        ppUserEventProfile = new PPUserEventProfile(trial, node.getNodeID(),
+                                context.getContextID(), thread.getThreadID(), userEventProfile);
+                        ppUserEventProfile.setSortType(sortType);
+                        newList.add(ppUserEventProfile);
                     }
                 }
             }
+        }
         Collections.sort(newList);
         return newList;
     }
-
 
     // returns the maximum exclusive sum over all threads
     public double getMaxExclusiveSum() {

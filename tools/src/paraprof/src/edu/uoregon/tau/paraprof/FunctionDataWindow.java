@@ -2,9 +2,9 @@
  * FunctionDataWindow
  * This is FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.4 2004/12/29 00:09:48 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.5 2005/01/03 20:40:33 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		FunctionDataWindowPanel
  */
 
@@ -379,7 +379,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                     tmpRef.show();
                 } else if (arg.equals("Show Histogram")) {
 
-                    HistogramWindow tmpRef = new HistogramWindow(ppTrial, this.getDataSorter(), false, function);
+                    HistogramWindow tmpRef = new HistogramWindow(ppTrial, this.getDataSorter(), function);
                     ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
                 } else if (arg.equals("Close All Sub-Windows")) {
@@ -483,9 +483,9 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
     public void sortLocalData() {
         if (nct)
-            list = dataSorter.getFunctionData(function, 30 + order);
+            list = dataSorter.getFunctionData(function, 30 + order, true);
         else
-            list = dataSorter.getFunctionData(function, valueType + order);
+            list = dataSorter.getFunctionData(function, valueType + order, true);
     }
 
     public Vector getData() {

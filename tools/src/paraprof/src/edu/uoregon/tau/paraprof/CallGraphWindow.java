@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.8 2004/12/29 00:34:28 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.9 2005/01/03 20:40:32 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -1797,9 +1797,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             boxWidth = boxWidthSlider.getValue();
             recreateGraph();
         } catch (Exception e) {
-            new ParaProfErrorDialog(e);
+            ParaProfUtils.handleException(e);
         }
-
     }
 
     public void mousePressed(MouseEvent evt) {
@@ -2018,7 +2017,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
             }
         } catch (Exception e) {
-            new ParaProfErrorDialog(e);
+            ParaProfUtils.handleException(e);
         }
     }
 

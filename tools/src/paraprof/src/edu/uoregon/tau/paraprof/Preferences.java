@@ -30,7 +30,8 @@ public class Preferences extends JFrame implements ActionListener, Observer {
             sortBy = savedPreferences.getSortBy();
 
             fontStyle = savedPreferences.getFontStyle();
-
+            fontSize = savedPreferences.getFontSize();
+            
             barDetailsSet = savedPreferences.getBarDetailsSet();
             //######
             //End - Set the saved values.
@@ -281,6 +282,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
         ParaProf.savedPreferences.setInclusiveOrExclusive(inExValue);
         ParaProf.savedPreferences.setSortBy(sortBy);
         ParaProf.savedPreferences.setFontStyle(fontStyle);
+        ParaProf.savedPreferences.setFontSize(fontSize);
         ParaProf.savedPreferences.setBarDetailsSet(barDetailsSet);
 
     }
@@ -636,6 +638,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
     // Close the window when the close box is clicked
     void thisWindowClosing(java.awt.event.WindowEvent e) {
         setVisible(false);
+        trial.getSystemEvents().updateRegisteredObjects("prefEvent");
     }
 
     //####################################

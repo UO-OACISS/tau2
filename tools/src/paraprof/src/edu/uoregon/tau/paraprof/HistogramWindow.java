@@ -2,9 +2,9 @@
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.4 2004/12/29 00:09:48 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.5 2005/01/03 20:40:33 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		HistogramWindowPanel
  *
  *
@@ -21,7 +21,7 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
-public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer {
+public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
 
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
@@ -31,15 +31,15 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         //File menu.
         JMenu fileMenu = new JMenu("File");
 
-        //        //Save menu.
-        //        subMenu = new JMenu("Save ...");
-        //
-        //        menuItem = new JMenuItem("Save Image");
-        //        menuItem.addActionListener(this);
-        //        subMenu.add(menuItem);
-        //
-        //        fileMenu.add(subMenu);
-        //        //End - Save menu.
+        //Save menu.
+        subMenu = new JMenu("Save ...");
+
+        menuItem = new JMenuItem("Save Image");
+        menuItem.addActionListener(this);
+        subMenu.add(menuItem);
+
+        fileMenu.add(subMenu);
+        //End - Save menu.
 
         menuItem = new JMenuItem("Preferences...");
         menuItem.addActionListener(this);
@@ -61,6 +61,10 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         // options menu
         optionsMenu = new JMenu("Options");
+
+        slidersCheckBox = new JCheckBoxMenuItem("Show Number of Bins Slider", false);
+        slidersCheckBox.addActionListener(this);
+        optionsMenu.add(slidersCheckBox);
 
         JCheckBoxMenuItem box = null;
         ButtonGroup group = null;
@@ -177,15 +181,15 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         setJMenuBar(mainMenu);
     }
 
-    public HistogramWindow(ParaProfTrial trial, DataSorter dataSorter, boolean normal, Function function) {
-        this.trial = trial;
+    public HistogramWindow(ParaProfTrial ppTrial, DataSorter dataSorter, Function function) {
+        this.ppTrial = ppTrial;
         this.dataSorter = dataSorter;
         this.function = function;
 
         setLocation(new java.awt.Point(300, 200));
-        setSize(new java.awt.Dimension(750, 622));
+        setSize(new java.awt.Dimension(670, 630));
         //Now set the title.
-        setTitle("Histogram: " + trial.getTrialIdentifier(true));
+        setTitle("Histogram: " + ppTrial.getTrialIdentifier(true));
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -204,6 +208,13 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         setupMenus();
 
+        numBinsSlider.setPaintTicks(true);
+        numBinsSlider.setMajorTickSpacing(50);
+        numBinsSlider.setMinorTickSpacing(10);
+        numBinsSlider.setPaintLabels(true);
+        numBinsSlider.setSnapToTicks(false);
+        numBinsSlider.addChangeListener(this);
+
         //Setting up the layout system for the main window.
         contentPane = getContentPane();
         gbl = new GridBagLayout();
@@ -212,7 +223,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         gbc.insets = new Insets(5, 5, 5, 5);
 
         //Panel and ScrollPane definition.
-        panel = new HistogramWindowPanel(trial, this, function);
+        panel = new HistogramWindowPanel(ppTrial, this, function);
         sp = new JScrollPane(panel);
         this.setHeader();
 
@@ -234,7 +245,10 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                 if (arg.equals("Print")) {
                     ParaProfUtils.print(panel);
                 } else if (arg.equals("Preferences...")) {
-                    trial.getPreferences().showPreferencesWindow();
+                    ppTrial.getPreferences().showPreferencesWindow();
+                } else if (arg.equals("Save Image")) {
+                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+                    imageOutput.saveImage((ParaProfImageInterface) panel);
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
                 } else if (arg.equals("Exit ParaProf!")) {
@@ -283,20 +297,24 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     units = 3;
                     this.setHeader();
                     panel.repaint();
-
+                } else if (arg.equals("Show Number of Bins Slider")) {
+                    if (slidersCheckBox.isSelected())
+                        displaySliders(true);
+                    else
+                        displaySliders(false);
                 } else if (arg.equals("Show Function Ledger")) {
-                    (new LedgerWindow(trial, 0)).show();
+                    (new LedgerWindow(ppTrial, 0)).show();
                 } else if (arg.equals("Show Group Ledger")) {
-                    (new LedgerWindow(trial, 1)).show();
+                    (new LedgerWindow(ppTrial, 1)).show();
                 } else if (arg.equals("Show User Event Ledger")) {
-                    (new LedgerWindow(trial, 2)).show();
+                    (new LedgerWindow(ppTrial, 2)).show();
                 } else if (arg.equals("Show Call Path Relations")) {
-                    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.dataSorter, 2);
-                    trial.getSystemEvents().addObserver(tmpRef);
+                    CallPathTextWindow tmpRef = new CallPathTextWindow(ppTrial, -1, -1, -1, this.dataSorter, 2);
+                    ppTrial.getSystemEvents().addObserver(tmpRef);
                     tmpRef.show();
 
                 } else if (arg.equals("Close All Sub-Windows")) {
-                    trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+                    ppTrial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
                 } else if (arg.equals("About ParaProf")) {
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
                 } else if (arg.equals("Show Help Window")) {
@@ -308,14 +326,59 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
+    private void displaySliders(boolean displaySliders) {
+        Container contentPane = this.getContentPane();
+        GridBagConstraints gbc = new GridBagConstraints();
+        if (displaySliders) {
+            contentPane.remove(sp);
+
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.anchor = GridBagConstraints.EAST;
+            gbc.weightx = 0.10;
+            gbc.weighty = 0.01;
+            addCompItem(numBinsLabel, gbc, 0, 1, 1, 1);
+
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.weightx = 0.70;
+            gbc.weighty = 0.01;
+            addCompItem(numBinsSlider, gbc, 1, 1, 1, 1);
+
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.weightx = 1.0;
+            gbc.weighty = 0.99;
+            addCompItem(sp, gbc, 0, 2, 2, 1);
+        } else {
+            contentPane.remove(numBinsLabel);
+            contentPane.remove(numBinsSlider);
+            contentPane.remove(sp);
+
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.weightx = 1;
+            gbc.weighty = 1;
+            addCompItem(sp, gbc, 0, 1, 1, 1);
+        }
+
+        //Now call validate so that these component changes are displayed.
+        validate();
+    }
+
     public void menuSelected(MenuEvent evt) {
         try {
-            if (trial.groupNamesPresent())
+            
+        	if (ppTrial.isTimeMetric()) {
+        	    unitsSubMenu.setEnabled(true);
+        	} else {
+        	    unitsSubMenu.setEnabled(false);
+        	}
+            if (ppTrial.groupNamesPresent())
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
 
-            if (trial.userEventsPresent())
+            if (ppTrial.userEventsPresent())
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
             else
                 ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
@@ -330,20 +393,34 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     public void menuCanceled(MenuEvent evt) {
     }
 
+    // listener for the boxWidthSlider
+    public void stateChanged(ChangeEvent event) {
+        try {
+            numBins = numBinsSlider.getValue();
+            if (numBins < 1)
+                numBins = 1;
+            panel.repaint();
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
+        }
+
+    }
+
     public void update(Observable o, Object arg) {
-            String tmpString = (String) arg;
-            if (tmpString.equals("prefEvent")) {
-                //Just need to call a repaint on the ThreadDataWindowPanel.
-                panel.repaint();
-            } else if (tmpString.equals("colorEvent")) {
-                //Just need to call a repaint on the ThreadDataWindowPanel.
-                panel.repaint();
-            } else if (tmpString.equals("dataEvent")) {
-                sortLocalData();
-                panel.repaint();
-            } else if (tmpString.equals("subWindowCloseEvent")) {
-                closeThisWindow();
-            }
+        String tmpString = (String) arg;
+        if (tmpString.equals("prefEvent")) {
+            this.setHeader();
+            //Just need to call a repaint on the ThreadDataWindowPanel.
+            panel.repaint();
+        } else if (tmpString.equals("colorEvent")) {
+            //Just need to call a repaint on the ThreadDataWindowPanel.
+            panel.repaint();
+        } else if (tmpString.equals("dataEvent")) {
+            sortLocalData();
+            panel.repaint();
+        } else if (tmpString.equals("subWindowCloseEvent")) {
+            closeThisWindow();
+        }
     }
 
     private void help(boolean display) {
@@ -361,7 +438,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     //Updates this window's data copy.
     private void sortLocalData() {
-            list = dataSorter.getFunctionData(function, 0);
+        list = dataSorter.getFunctionData(function, 0, false);
     }
 
     // This process is separated into two functions to provide the option of obtaining the current 
@@ -372,7 +449,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         jTextArea.setLineWrap(true);
         jTextArea.setWrapStyleWord(true);
         jTextArea.setEditable(false);
-        Preferences p = trial.getPreferences();
+        Preferences p = ppTrial.getPreferences();
         jTextArea.setFont(new Font(p.getParaProfFont(), p.getFontStyle(), p.getFontSize()));
         jTextArea.append(this.getHeaderString());
         sp.setColumnHeaderView(jTextArea);
@@ -380,14 +457,14 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     public String getHeaderString() {
         if (valueType > 5)
-            return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Name: "
+            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getSelectedMetricID())) + "\n" + "Name: "
                     + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
                     + "\n";
         else
-            return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID())) + "\n" + "Name: "
+            return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getSelectedMetricID())) + "\n" + "Name: "
                     + function.getName() + "\n" + "Value Type: " + UtilFncs.getValueTypeString(valueType)
                     + "\n" + "Units: "
-                    + UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric()) + "\n";
+                    + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
     }
 
     public Vector getData() {
@@ -395,11 +472,11 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-            gbc.gridx = x;
-            gbc.gridy = y;
-            gbc.gridwidth = w;
-            gbc.gridheight = h;
-            getContentPane().add(c, gbc);
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        getContentPane().add(c, gbc);
     }
 
     //Respond correctly when this window is closed.
@@ -410,7 +487,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     void closeThisWindow() {
         try {
             setVisible(false);
-            trial.getSystemEvents().deleteObserver(this);
+            ppTrial.getSystemEvents().deleteObserver(this);
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
             // do nothing
@@ -428,8 +505,12 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         return units;
     }
 
+    public int getNumBins() {
+        return numBins;
+    }
+
     //Instance data.
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter = null;
     private Function function = null;
 
@@ -448,4 +529,11 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+
+    private int numBins = 10;
+
+    private JCheckBoxMenuItem slidersCheckBox = null;
+    private JLabel numBinsLabel = new JLabel("Number of Bins");
+    private JSlider numBinsSlider = new JSlider(0, 100, 10);
+
 }

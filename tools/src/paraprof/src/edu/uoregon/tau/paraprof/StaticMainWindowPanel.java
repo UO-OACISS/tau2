@@ -68,10 +68,16 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
         jMenuItem.addActionListener(this);
         popup2.add(jMenuItem);
 
+        
+        
         //Add items to the third popup menu.
         JMenuItem functionDetailsItem = new JMenuItem("Show Function Details");
         functionDetailsItem.addActionListener(this);
         popup3.add(functionDetailsItem);
+
+        JMenuItem functionHistogramItem = new JMenuItem("Show Function Histogram");
+        functionHistogramItem.addActionListener(this);
+        popup3.add(functionHistogramItem);
 
         jMenuItem = new JMenuItem("Change Function Color");
         jMenuItem.addActionListener(this);
@@ -857,14 +863,24 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     }
                 } else if (arg.equals("Show Function Details")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
-                        PPFunctionProfile sMWFunctionProfile = (PPFunctionProfile) clickedOnObject;
+                        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
                         //Bring up an expanded data window for this function,
                         // and set this function as highlighted.
-                        trial.getColorChooser().setHighlightedFunction(sMWFunctionProfile.getFunction());
+                        //trial.getColorChooser().setHighlightedFunction(sMWFunctionProfile.getFunction());
                         FunctionDataWindow functionDataWindow = new FunctionDataWindow(trial,
-                                sMWFunctionProfile.getFunction(), window.getDataSorter());
+                                ppFunctionProfile.getFunction(), window.getDataSorter());
                         trial.getSystemEvents().addObserver(functionDataWindow);
                         functionDataWindow.show();
+                    }
+                } else if (arg.equals("Show Function Histogram")) {
+                    if (clickedOnObject instanceof PPFunctionProfile) {
+                        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
+                        // Bring up a histogram window for this function
+                        //trial.getColorChooser().setHighlightedFunction(sMWFunctionProfile.getFunction());
+                        HistogramWindow hw = new HistogramWindow(trial, window.getDataSorter(),
+                                ppFunctionProfile.getFunction());
+                        trial.getSystemEvents().addObserver(hw);
+                        hw.show();
                     }
                 } else if (arg.equals("Change Function Color")) {
                     //Get the clicked on object.

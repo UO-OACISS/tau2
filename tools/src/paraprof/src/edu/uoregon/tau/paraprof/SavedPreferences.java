@@ -120,6 +120,14 @@ public class SavedPreferences implements Serializable {
         return fontStyle;
     }
 
+    public void setFontSize(int fontSize) {
+        this.fontSize = fontSize;
+    }
+    
+    public int getFontSize() {
+        return this.fontSize;
+    }
+    
     public void setSortBy(String sortBy) {
         this.sortBy = sortBy;
     }
@@ -157,6 +165,7 @@ public class SavedPreferences implements Serializable {
     private String inclusiveOrExclusive = null;
     private String sortBy = null;
     private int fontStyle = -1;
+    private int fontSize = -1;
     private String databasePassword = null;
     private String databaseConfigurationFile = null;
 }

@@ -2,15 +2,17 @@
  * HistogramWindowPanel
  * This is the panel for the HistogramWindow.
  *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.4 2004/12/29 00:09:48 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.5 2005/01/03 20:40:33 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see		HistogramWindow
  */
 
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
+import java.awt.font.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -19,25 +21,48 @@ import java.awt.print.*;
 import java.awt.geom.*;
 //import javax.print.*;
 import edu.uoregon.tau.dms.dss.*;
+import java.text.*;
 
 public class HistogramWindowPanel extends JPanel implements Printable, ParaProfImageInterface {
 
-    public HistogramWindowPanel(ParaProfTrial trial, HistogramWindow window, Function function) {
+    public HistogramWindowPanel(ParaProfTrial ppTrial, HistogramWindow window, Function function) {
         //Set the default tool tip for this panel.
-        this.setToolTipText("ParaProf bar graph draw window!");
+        this.setToolTipText("ParaProf histogram window!");
         setBackground(Color.white);
 
-        this.trial = trial;
+        this.ppTrial = ppTrial;
         this.window = window;
         this.function = function;
 
         //Add this object as a mouse listener.
         //addMouseListener(this);
-        barXStart = 100;
     }
 
     public String getToolTipText(MouseEvent evt) {
-        return null;
+        try {
+            int x = evt.getX();
+
+            x -= xOffset;
+
+            if (x < 0 || x > 550)
+                return null;
+
+            int rectWidth = 550 / window.getNumBins();
+
+            int bin = x / rectWidth;
+
+            if (bin < 0 || bin > window.getNumBins() - 1)
+                return null;
+
+            String minString = UtilFncs.getOutputString(window.units(), minValue + (bin * binWidth), 5);
+            String maxString = UtilFncs.getOutputString(window.units(), minValue + ((bin + 1) * binWidth), 5);
+
+            return "<html>Number of threads: " + bins[bin] + "<br>Range minimum: " + minString
+                    + "<br>Range maximum: " + maxString + "</html>";
+        } catch (Exception e) {
+            // it's just a tooltip
+            return null;
+        }
     }
 
     public void paintComponent(Graphics g) {
@@ -67,190 +92,232 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
     }
 
     public Dimension getImageSize(boolean fullScreen, boolean header) {
-        return this.getSize();
+        Dimension d = null;
+        d = this.getSize();
+        
+        int yOffset = 0;
+
+        //Draw the header if required.
+        if (header) {
+            d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);
+        } else {
+            d.setSize(d.getWidth(), d.getHeight());
+        }
+
+        return d;
     }
 
-   
+    private void processData() throws ParaProfException {
+        list = window.getData();
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) throws ParaProfException {
-    
-            list = window.getData();
+        maxValue = 0;
+        minValue = 0;
+        PPFunctionProfile ppFunctionProfile = null;
 
-            //Check to see if selected groups only are being displayed.
-            TrialData td = trial.getTrialData();
+        int numThreads = 0;
 
-            //**********
-            //Other initializations.
-            xCoord = yCoord = 0;
-            //End - Other initializations.
-            //**********
+        boolean start = true;
+        for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
+            ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
 
-            //**********
-            //Do the standard font and spacing stuff.
-            if (!(trial.getPreferences().areBarDetailsSet())) {
-
-                //Create font.
-                Font font = new Font(trial.getPreferences().getParaProfFont(),
-                        trial.getPreferences().getFontStyle(), 12);
-                g2D.setFont(font);
-                FontMetrics fmFont = g2D.getFontMetrics(font);
-
-                //Set up the bar details.
-
-                //Compute the font metrics.
-                int maxFontAscent = fmFont.getAscent();
-                int maxFontDescent = fmFont.getMaxDescent();
-
-                int tmpInt = maxFontAscent + maxFontDescent;
-
-                trial.getPreferences().setBarDetails(g2D);
-
-                // trial.getPreferences().setSliders(maxFontAscent, (tmpInt +
-                // 5));
-            }
-            //End - Do the standard font and spacing stuff.
-            //**********
-
-            //Set local spacing and bar heights.
-            int barSpacing = trial.getPreferences().getBarSpacing();
-            int barHeight = trial.getPreferences().getBarHeight();
-
-            //Create font.
-            Font font = new Font(trial.getPreferences().getParaProfFont(),
-                    trial.getPreferences().getFontStyle(), barHeight);
-            g2D.setFont(font);
-            FontMetrics fmFont = g2D.getFontMetrics(font);
-
-            //**********
-            //Calculating the starting positions of drawing.
-            String tmpString2 = new String("n,c,t 99,99,99");
-            int stringWidth = fmFont.stringWidth(tmpString2);
-            barXStart = stringWidth + 15;
-            int tmpXWidthCalc = barXStart + defaultBarLength;
-            int barXCoord = barXStart;
-            yCoord = yCoord + (barSpacing);
-            //End - Calculating the starting positions of drawing.
-            //**********
-
-            Rectangle clipRect = g2D.getClipBounds();
-
-            int yBeg = (int) clipRect.getY();
-            int yEnd = (int) (yBeg + clipRect.getHeight());
-            //Because tooltip redraw can louse things up. Add an extra one to draw.
-
-            yEnd = yEnd + barSpacing;
-
-            yCoord = yCoord + (barSpacing);
-
-            //Set the drawing color to the text color ... in this case,
-            // black.
-            g2D.setColor(Color.black);
-
-            g2D.drawLine(35, 430, 35, 30);
-            g2D.drawLine(35, 430, 585, 430);
-
-            double maxValue = 0;
-            double minValue = 0;
-            boolean start = true;
-            PPFunctionProfile ppFunctionProfile = null;
-
-            for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
-
-                ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
-
-                if (ppFunctionProfile.getFunction() == function) {
-                    double tmpDataValue = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), false);
-                    if (start) {
-                        minValue = tmpDataValue;
-                        start = false;
-                    }
-                    if (tmpDataValue > maxValue)
-                        maxValue = tmpDataValue;
-                    if (tmpDataValue < minValue)
-                        minValue = tmpDataValue;
+            if (ppFunctionProfile.getFunction() == function) {
+                numThreads++;
+                double tmpValue = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), false);
+                if (start) {
+                    minValue = tmpValue;
+                    start = false;
                 }
+                maxValue = Math.max(maxValue, tmpValue);
+                minValue = Math.min(minValue, tmpValue);
             }
+        }
 
-            double increment = maxValue / 10;
+        //int numBins = 25;
+        int numBins = window.getNumBins();
 
-            for (int i = 0; i < 10; i++) {
-                g2D.drawLine(30, 30 + i * 40, 35, 30 + i * 40);
-                g2D.drawString("" + (10 * (10 - i)), 5, 33 + i * 40);
-            }
+        double increment = (double) maxValue / numBins;
+        binWidth = ((double) maxValue - minValue) / numBins;
 
-            for (int i = 1; i < 11; i++) {
-                g2D.drawLine(35 + i * 55, 430, 35 + i * 55, 435);
-            }
+        // allocate and clear the bins
+        bins = new int[numBins];
+        for (int i = 0; i < numBins; i++) {
+            bins[i] = 0;
+        }
 
-            g2D.drawString("Min Value = " + UtilFncs.getOutputString(window.units(), minValue, 6), 35, 450);
-            g2D.drawString("Max Value = " + UtilFncs.getOutputString(window.units(), maxValue, 6), 552, 450);
+        int count = 0;
 
-            xPanelSize = 552 + fmFont.stringWidth("Max Value = " + maxValue);
-
-            int[] intArray = new int[10];
-
-            for (int i = 0; i < 10; i++) {
-                intArray[i] = 0;
-            }
-
-            int count = 0;
-
-            int numBins = 10;
-
-            double binWidth = (maxValue - minValue) / numBins;
-
-            for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
-                ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
-                if (ppFunctionProfile.getFunction() == function) {
-                    double tmpDataValue = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), false);
-                    for (int j = 0; j < 10; j++) {
-                        if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
-                            intArray[j]++;
-                            count++;
-                            break;
-                        }
+        // fill the bins
+        for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
+            ppFunctionProfile = (PPFunctionProfile) e1.nextElement();
+            if (ppFunctionProfile.getFunction() == function) {
+                double tmpDataValue = ParaProfUtils.getValue(ppFunctionProfile, window.getValueType(), false);
+                for (int j = 0; j < numBins; j++) {
+                    if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
+                        bins[j]++;
+                        count++;
+                        break;
                     }
                 }
             }
+        }
 
-            g2D.setColor(Color.red);
+        // find the max number of threads in any bin
+        maxInAnyBin = 0;
+        for (int i = 0; i < numBins; i++) {
+            maxInAnyBin = Math.max(maxInAnyBin, bins[i]);
+        }
 
-            int num = count;
-            for (int i = 0; i < 10; i++) {
-                if (intArray[i] != 0) {
-                    double tmp1 = intArray[i];
-
-                    double per = (tmp1 / num) * 100;
-                    int result = (int) per;
-                    g2D.fillRect(38 + i * 55, 430 - (result * 4), 49, result * 4);
-                }
-            }
-
-            boolean sizeChange = false;
-            //Resize the panel if needed.
-            //if (tmpXWidthCalc > 600) {
-            //    xPanelSize = tmpXWidthCalc + 1;
-            //    sizeChange = true;
-            // }
-
-            // hmm
-            yCoord = 450;
-            if (yCoord > 300) {
-                yPanelSize = yCoord + 1;
-                sizeChange = true;
-            }
-
-            if (sizeChange)
-                revalidate();
     }
 
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader)
+            throws ParaProfException {
+
+        processData();
+        
+        
+        //Create font.
+        Font font = new Font(ppTrial.getPreferences().getParaProfFont(), ppTrial.getPreferences().getFontStyle(),
+                ppTrial.getPreferences().getFontSize());
+        g2D.setFont(font);
+        FontMetrics fontMetrics = g2D.getFontMetrics(font);
+
+
+        
+        int yOffset = 0;
+        
+
+        
+        //Draw the header if required.
+        if (drawHeader) {
+            FontRenderContext frc = g2D.getFontRenderContext();
+            Insets insets = this.getInsets();
+            String headerString = window.getHeaderString();
+            //Need to split the string up into its separate lines.
+            StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+            while (st.hasMoreTokens()) {
+                AttributedString as = new AttributedString(st.nextToken());
+                as.addAttribute(TextAttribute.FONT, font);
+                AttributedCharacterIterator aci = as.getIterator();
+                LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
+                float wrappingWidth = this.getSize().width - insets.left - insets.right;
+                float x = insets.left;
+                float y = insets.right;
+                while (lbm.getPosition() < aci.getEndIndex()) {
+                    TextLayout textLayout = lbm.nextLayout(wrappingWidth);
+                    yOffset += ppTrial.getPreferences().getBarSpacing();
+                    textLayout.draw(g2D, x, yOffset);
+                    x = insets.left;
+                }
+            }
+            lastHeaderEndPosition = yOffset;
+            yOffset = yOffset + ppTrial.getPreferences().getBarSpacing();
+        }
+        
+        int maxFontAscent = fontMetrics.getMaxAscent();
+        int maxFontDescent = fontMetrics.getMaxDescent();
+
+        int numBins = window.getNumBins();
+        int rectWidth = 550 / window.getNumBins();
+
+        //Set the drawing color to the text color ... in this case, black.
+        g2D.setColor(Color.black);
+
+        g2D.drawString("# Threads", 3, yOffset + maxFontAscent);
+
+        yOffset = yOffset + (maxFontAscent*2) + 3;
+
+        // determine the x offset by looking at the maximum width that the y-scale strings will be
+        xOffset = 0;
+        for (int i = 0; i < 10; i++) {
+            double height = ((10 - i)) * (double) maxInAnyBin / 10;
+            String heightString = UtilFncs.formatDouble(height, 4);
+            int stringWidth = fontMetrics.stringWidth(heightString);
+            xOffset = Math.max(xOffset, stringWidth);
+        }
+        xOffset += 25;
+
+        
+        for (int i = 0; i < 10; i++) {
+            double height = ((10 - i)) * (double) maxInAnyBin / 10;
+
+            String heightString = UtilFncs.formatDouble(height, 4);
+            int stringWidth = fontMetrics.stringWidth(heightString);
+
+            g2D.drawLine(xOffset - 5, yOffset + i * 40, xOffset, yOffset + i * 40);
+            //g2D.drawString("" + (10 * (10 - i)), 5, 33 + i * 40);
+            g2D.drawString(heightString, 15, yOffset+5 + i*40);
+        }
+
+        int spacing = (rectWidth / 10) / 2;
+
+        int endOfChart = rectWidth * numBins + xOffset + 4 - spacing;
+
+        g2D.drawLine(xOffset, 400+yOffset, xOffset, yOffset);
+        g2D.drawLine(xOffset, 400+yOffset, endOfChart, 400+yOffset);
+
+        for (int i = 1; i < numBins + 1; i++) {
+            g2D.drawLine(xOffset + 4 + i * rectWidth - spacing, 400+yOffset, xOffset + 4 + i * rectWidth - spacing, 405+yOffset);
+        }
+
+        String maxString = "Max Value = " + UtilFncs.getOutputString(window.units(), maxValue, 5);
+        int maxStringWidth = fontMetrics.stringWidth(maxString);
+
+        g2D.drawString("Min Value = " + UtilFncs.getOutputString(window.units(), minValue, 5), xOffset, 420+yOffset);
+        g2D.drawString(maxString, endOfChart - maxStringWidth, 420+yOffset);
+
+        xPanelSize = endOfChart + 10;
+
+
+        for (int i = 0; i < numBins; i++) {
+            if (bins[i] != 0) {
+                double tmp1 = bins[i];
+
+                double percent = (tmp1 / maxInAnyBin) * 100;
+                int result = (int) percent;
+
+                if (result < 1)
+                    result = 1;
+
+                int drawWidth = rectWidth - (rectWidth / 10);
+
+                if (rectWidth < 10)
+                    drawWidth = rectWidth;
+
+                if (drawWidth < 1)
+                    drawWidth = 1;
+
+
+                g2D.setColor(Color.red);
+                g2D.fillRect((xOffset + 4) + i * rectWidth, 400+yOffset - (result * 4), drawWidth, result * 4);
+
+                g2D.setColor(Color.black);
+                g2D.drawRect((xOffset + 4) + i * rectWidth, 400+yOffset - (result * 4), drawWidth, result * 4);
+
+            }
+        }
+
+        xPanelSize = Math.max(xPanelSize,lastHeaderEndPosition);
+        boolean sizeChange = false;
+        //Resize the panel if needed.
+        //if (tmpXWidthCalc > 600) {
+        //    xPanelSize = tmpXWidthCalc + 1;
+        //    sizeChange = true;
+        // }
+
+        // hmm
+        yPanelSize = 420 + yOffset;
+        sizeChange = true;
+
+        if (sizeChange)
+            revalidate();
+    }
 
     public Dimension getPreferredSize() {
-        return new Dimension(xPanelSize + 10, (yPanelSize + 10));
+        return new Dimension(xPanelSize + 10, yPanelSize + 10);
     }
 
     //Instance data.
-    private ParaProfTrial trial = null;
+    private ParaProfTrial ppTrial = null;
     HistogramWindow window = null;
     int xPanelSize = 600;
     int yPanelSize = 400;
@@ -259,10 +326,13 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
 
     private Vector list = null;
 
+    private int[] bins;
+    private int maxInAnyBin;
+    double maxValue;
+    double minValue;
+    int xOffset;
+    double binWidth;
+    
+    private int lastHeaderEndPosition = 0;
 
-    int xCoord = -1;
-    int yCoord = -1;
-
-    private int defaultBarLength = 500;
-    int barXStart = -1;
 }

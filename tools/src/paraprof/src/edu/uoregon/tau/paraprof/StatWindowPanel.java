@@ -50,6 +50,10 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             functionDetailsItem.addActionListener(this);
             popup.add(functionDetailsItem);
 
+            JMenuItem jMenuItem = new JMenuItem("Show Function Histogram");
+            jMenuItem.addActionListener(this);
+            popup.add(jMenuItem);
+
             JMenuItem changeColorItem = new JMenuItem("Change Function Color");
             changeColorItem.addActionListener(this);
             popup.add(changeColorItem);
@@ -345,7 +349,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         try {
             Object EventSrc = evt.getSource();
 
-            PPFunctionProfile ppFunctionProfile = null;
             PPUserEventProfile ppUserEventProfile = null;
 
             if (EventSrc instanceof JMenuItem) {
@@ -353,16 +356,22 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
                 if (arg.equals("Show Function Details")) {
 
                     if (clickedOnObject instanceof PPFunctionProfile) {
-                        ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        //Bring up an expanded data window for this function and highlight it
-                        trial.getColorChooser().setHighlightedFunction(ppFunctionProfile.getFunction());
+                        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
                         FunctionDataWindow tmpRef = new FunctionDataWindow(trial,
                                 ppFunctionProfile.getFunction(), trial.getStaticMainWindow().getDataSorter());
                         trial.getSystemEvents().addObserver(tmpRef);
                         tmpRef.show();
                     }
-                }
-                if (arg.equals("Show User Event Details")) {
+                } else if (arg.equals("Show Function Histogram")) {
+                    if (clickedOnObject instanceof PPFunctionProfile) {
+                        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
+                        HistogramWindow hw = new HistogramWindow(trial, window.getDataSorter(),
+                                ppFunctionProfile.getFunction());
+                        trial.getSystemEvents().addObserver(hw);
+                        hw.show();
+                    }
+
+                } else if (arg.equals("Show User Event Details")) {
 
                     if (clickedOnObject instanceof PPUserEventProfile) {
                         ppUserEventProfile = (PPUserEventProfile) clickedOnObject;
@@ -424,6 +433,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             ParaProfUtils.handleException(e);
         }
     }
+
     public void mouseClicked(MouseEvent evt) {
         try {
 
@@ -497,7 +507,6 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
         d.setSize(d.getWidth(), d.getHeight() + lastHeaderEndPosition);
         return d;
     }
-
 
     public Dimension getPreferredSize() {
         return new Dimension(xPanelSize, (yPanelSize + 10));
