@@ -702,7 +702,7 @@ int main (int argc, char *argv[])
 {
   FILE *outfp, *inev,*pcffp;
   PCXX_EV *erec;
-  bool firstScan = true;
+  int firstScan = TRUE;
   int i,j,k,l;
   int nodeId, totalnodes = 0;
   int num;
@@ -717,6 +717,7 @@ int main (int argc, char *argv[])
   char traceflag[32];
   char *inFile, *edfFile, *outFile, *ptr,*pcfFile;
   EVDESCR *ev;
+  struct trcrecv rcvdes;
 
   /* ------------------------------------------------------------------------ */
   /* -- scan command line arguments                                        -- */
@@ -1152,28 +1153,30 @@ int main (int argc, char *argv[])
   }
   else if ( outFormat == paraver )
     {
-      //The code from libseqparaver.c is used here
+      /* The code from libseqparaver.c is used here */
       char date[50];
       struct timeval tp;
       struct timezone tzp;
       time_t clock;
       struct tm *ptm;
       int numThreads = 0;
+      int i;
 
       gettimeofday (&tp, &tzp);
       clock = tp.tv_sec;
       ptm = localtime (&clock);
       strftime (date, 50, "%d/%m/%y at %H:%M", ptm);
 
-      for(int i = 0; i < numproc; i++){
+      for(i = 0; i < numproc; i++){
 	if(maxtid[i] >= 0){
 	  numThreads = numThreads + (maxtid[i] + 1);
 	}
       }
 
       
-      //create the first part of the pcf File
-      //change the file extension of outFile from prv to pcf
+      /* create the first part of the pcf File
+         change the file extension of outFile from prv to pcf
+      */
       
       if(! outFile){
 	outfp = stdout;
@@ -1389,8 +1392,6 @@ int main (int argc, char *argv[])
         fprintf (outfp, "%s { %llu, %d, %d };;\n\n",
                  ptr, erec->ti, GetNodeId(erec), erec->tid);
     }
-    ///////////////
-    ///////////////
 
     else if( outFormat == paraver ){
       long long logSend= 0;
@@ -1402,7 +1403,7 @@ int main (int argc, char *argv[])
       long long endBurstTime = 0;
       int sendTid,recvTid;
       int tempTag, tempLen;
-      bool looking;
+      int looking;
       off_t last_position;
       PCXX_EV *curr_rec;
       EVDESCR *curr_ev;
@@ -1411,31 +1412,31 @@ int main (int argc, char *argv[])
       
       
       
-      //Check for Logical Send
+      /* Check for Logical Send */
       if(((strcmp((GetEventName(erec->ev,&hasParam)), "\"MPI_Send()  \"") ==0)) && (erec->par == 1)){
 	logSend = erec->ti - intrc.firsttime;
 	tempTid = erec->tid;
 	tempNid = GetNodeId(erec);
-	looking = true;
+	looking = TRUE;
 	
 	trcdes.buffer    = tmpbuffer;
-	// get the current position from the trace file descriptor
+	/* get the current position from the trace file descriptor */
 	last_position = lseek(trcdes.fd, 0, SEEK_CUR);
 	if (last_position < 0) {
 	  perror("lseek ERROR: GetMatchingSend(), routing that matches logical & physical Send/Recv");
 	  exit(1);
 	}
 	
-	//Find Physical Send
+	/* Find Physical Send */
 	while(looking){
 	  if ((curr_rec = get_next_rec (&trcdes)) == NULL ){
-	    looking = false;
+	    looking = FALSE;
 	  }
 	  else{
 	    curr_ev = GetEventStruct(curr_rec->ev);
 	    if((curr_ev->tag == SEND_EVENT) && (GetNodeId(curr_rec) == tempNid) && (curr_rec->tid == tempTid)){
 	      phSend = curr_rec->ti - intrc.firsttime;
-	      looking = false;
+	      looking = FALSE;
 	      sendTid = curr_rec->tid;
 	      msgtag 	= (curr_rec->par>>16) & 0x000000FF;
 	      myid 		= GetNodeId(curr_rec);
@@ -1443,13 +1444,13 @@ int main (int argc, char *argv[])
 	      msglen  	= curr_rec->par & 0x0000FFFF;
 	    }
 	  }
-	}//while
+	}/* while */
 	
-	//Find Physical Receive
-	looking = true;
+	/* Find Physical Receive */
+	looking = TRUE;
 	while(looking){
 	  if ((curr_rec = get_next_rec (&trcdes)) == NULL ){
-	    looking = false;
+	    looking = FALSE;
 	  }
 	  else{
 	    curr_ev = GetEventStruct(curr_rec->ev);
@@ -1460,15 +1461,14 @@ int main (int argc, char *argv[])
 	      tempTid = curr_rec->tid;
 	      if ((tempTag == msgtag) && (tempLen == msglen) && (tempNid == otherid )){
 		phRecv = curr_rec->ti - intrc.firsttime;
-		looking = false;
+		looking = FALSE;
 	      }
 	    }
 	  }
-	}//while
+	}/* while */
 	
-	//Find logRecv
-	looking = true;
-	struct trcrecv rcvdes;
+	/* Find logRecv */
+	looking = TRUE;
 	
 	rcvdes.buffer   = trcdes.buffer;
 	rcvdes.erec	   = curr_rec;
@@ -1476,7 +1476,7 @@ int main (int argc, char *argv[])
 	rcvdes.first    = trcdes.buffer;
 	rcvdes.prev	   = curr_rec - 1;
 	
-	// get the current position from the trace file descriptor
+	/* get the current position from the trace file descriptor */
 	
 	if (last_position < 0) {
 	  perror("lseek ERROR: Get matching logical Receive");
@@ -1496,19 +1496,19 @@ int main (int argc, char *argv[])
 		fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:9\n",myid+1,myid+1,sendTid+1,logSend,phSend);
 		lseek(rcvdes.fd, last_position, SEEK_SET);
 		lseek(trcdes.fd,last_position,SEEK_SET);
-		looking = false;
+		looking = FALSE;
 	      }
 	    }
 	  }
 	  else{
 	    lseek(rcvdes.fd, last_position, SEEK_SET);
 	    lseek(trcdes.fd,last_position,SEEK_SET);
-	    looking = false;
+	    looking = FALSE;
 	  }
- 	}//while
+ 	}/* while */
       }
       else{
-	//Print Event Records for entry and exit of methods
+	/* Print Event Records for entry and exit of methods */
 	switch(erec->par){
 	case 1:
 	  fprintf (outfp, "2:%d:1:%d:%d:%llu:5:%d\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,erec->ev);
