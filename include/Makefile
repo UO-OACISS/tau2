@@ -58,6 +58,15 @@ INSTALL = /bin/cp
 SHELL = /bin/sh
 LSX = .a
 #############################################
+# JAVA DEFAULT ARCH
+#############################################
+JDKARCH                 = linux
+#DEC_ALPHA#JDKARCH      = alpha      #ENDIF#
+#SOL2#JDKARCH           = solaris    #ENDIF#
+#SGIMP#JDKARCH          = irix       #ENDIF#
+#SP1#JDKARCH            = aix        #ENDIF#
+#T3E#JDKARCH            = cray       #ENDIF#
+
 #PCL#include $(TAUROOT)/include/makefiles/PCLMakefile.stub	  #ENDIF#
 
 
