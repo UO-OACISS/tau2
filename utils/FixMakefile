@@ -97,6 +97,11 @@ fi
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     oparidir=*)
+        oparidir=`echo $1 | sed -e 's/^oparidir=//'`
+	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
+	;;
+
      pdtdir=*)
         pdtdir=`echo $1 | sed -e 's/^pdtdir=//'`
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
@@ -490,6 +495,10 @@ fi
 	;;
      OPENMP)
 	echo "NOTE: Using OpenMP Threads ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     OPARI)
+	echo "NOTE: Using Opari OpenMP directive rewriting tool ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGIOPENMP)
