@@ -166,7 +166,9 @@ static int pcxxT_notinit = 1;
 #  include <sys/param.h>
 
 #  if defined(cray)
+#ifndef HZ
 #    define HZ CLK_TCK
+#endif /* HZ */
 #  endif
 
 /*
