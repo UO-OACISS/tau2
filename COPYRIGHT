@@ -2,7 +2,7 @@
 **			Tuning and Analysis Utilities			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1998  						   	   **
+**    Copyright 1998, 1999					   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Center Juelich, ZAM Germany		  		   **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -21,7 +21,7 @@
 **  without express or implied warranty.
 **
 **  UO, ZAM AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
-**  INCLUDING , AND ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, 
+**  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. 
 **  IN NO EVENT SHALL THE UNIVERSITY OF OREGON, ZAM OR LANL BE LIABLE FOR
 **  ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
 **  RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
