@@ -211,9 +211,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    //Add items to the fifth popup menu.
 	    //######
-	    jMenuItem = new JMenuItem("Upload Metric to DB");
-	    jMenuItem.addActionListener(this);
-	    popup5.add(jMenuItem);
+	    uploadMetricItem = new JMenuItem("Upload Metric to DB");
+	    uploadMetricItem.addActionListener(this);
+	    popup5.add(uploadMetricItem);
 	    //######
 	    //End - Add items to the fifth popup menu.
 	    //######
@@ -267,8 +267,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				}
 				else if(userObject instanceof Metric){
 				    clickedOnObject = userObject;
-				    if(!((Metric)userObject).getTrial().dBTrial())
-					popup5.show(ParaProfManager.this, evt.getX(), evt.getY());
+				    if(((Metric)userObject).getTrial().dBTrial())
+					uploadMetricItem.setEnabled(false);
+				    else
+					uploadMetricItem.setEnabled(true);
+				    popup5.show(ParaProfManager.this, evt.getX(), evt.getY());
 				}
 			    }
 			    else{
@@ -1513,6 +1516,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     private JPopupMenu popup3 = new JPopupMenu();
     private JPopupMenu popup4 = new JPopupMenu();
     private JPopupMenu popup5 = new JPopupMenu();
+    private JMenuItem uploadMetricItem = null;
 
     private Object clickedOnObject = null;
     private Metric operand1 = null;
