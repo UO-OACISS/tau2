@@ -85,6 +85,8 @@
 
 #define TAU_REGISTER_THREAD()			tau_register_thread();	
 #define TAU_REGISTER_FORK(nodeid, op) 		tau_register_fork(nodeid, op);
+#define TAU_ENABLE_INSTRUMENTATION()		tau_enable_instrumentation();
+#define TAU_DISABLE_INSTRUMENTATION()		tau_disable_instrumentation();
 
 extern void * tau_get_profiler(char *fname, char *type, TauGroup_t  group);
 extern void tau_start_timer(void *profiler);
@@ -157,7 +159,7 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2000/10/11 18:43:00 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.7 2000/10/11 18:43:00 sameer Exp $
+ * $Revision: 1.8 $   $Date: 2000/10/12 19:12:24 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.8 2000/10/12 19:12:24 sameer Exp $
  ***************************************************************************/
 
