@@ -66,7 +66,7 @@ Usage: configure [OPTIONS]
     options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
-  	                                         kai|nec|hitachi|intel]
+  	                    kai|nec|hitachi|intel|absoft|lahey|nagware]
 -useropt='<parameters>' ............... list of commandline parameters.
 -prefix=<dir> ................ Specify a target installation directory.
 -pthread .................................. Use pthread thread package.
@@ -175,7 +175,8 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
 -fortran=<Fortran Compiler>
    
    Specifies the name of the Fortran90 compiler. Valid options are:
-   gnu, sgi, ibm, ibm64, hp, cray, pgi, absoft, fujitsu, sun, compaq, and intel.
+   gnu, sgi, ibm, ibm64, hp, cray, pgi, absoft, fujitsu, sun, compaq, nec, 
+   hitachi, kai, absoft, lahey, nagware, and intel.
 
 -tag=<Unique Name>
 

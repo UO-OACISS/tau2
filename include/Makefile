@@ -158,6 +158,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #CRAY_X1_FORTRAN#TAU_F90     = ftn              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PGI_FORTRAN#TAU_F90         = pgf90            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ABSOFT_FORTRAN#TAU_F90      = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#LAHEY_FORTRAN#TAU_F90      = lf95              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#NAGWARE_FORTRAN#TAU_F90      = f95              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #FUJITSU_FORTRAN#TAU_F90     = F90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SUN_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #COMPAQ_FORTRAN#TAU_F90      = f90              $(F90_ABI)  $(TAU_F90_OPT)  #ENDIF#
@@ -309,6 +311,9 @@ FWRAPPER	       = TauFMpi.o
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
+
+#GNU#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) -lstdc++ -lgcc_s #ENDIF#
+#NAGWARE_FORTRAN#TAU_FORTRANLIBS		= $(EXTRADIR)/lib/quickfit.o -L$(EXTRADIR)/lib -lf96 #ENDIF#
 #GNU_FORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
 #SGI_FORTRAN#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
 #USE_IBMXLC#TAU_IBM_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
@@ -333,7 +338,6 @@ FWRAPPER	       = TauFMpi.o
 #INTEL_FORTRAN#TAU_FORTRANLIBS         = -lcprts -lPEPCF90   #ENDIF#
 #INTEL32_FORTRAN#TAU_FORTRANLIBS       = -lcprts -lCEPCF90 -lF90 #ENDIF#
 #INTELIFORT#TAU_FORTRANLIBS       = -lcprts #ENDIF#
-#GNU#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) -lstdc++ -lgcc_s #ENDIF#
 #INTEL81FIX#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) -lstdc++ -lgcc_s #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
 #PGI1.7#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
@@ -347,6 +351,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #SOL2#EXTRALIBS = -lsocket -lnsl      #ENDIF#
 #COMPAQ_FORTRAN#TAU_FORTRANLIBS =  $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -L$(EXTRADIR)/lib -L$(EXTRADIR)/lib/cmplrs/fort90 -L$(EXTRADIR)/lib/cmplrs/fort90 -lUfor -lfor -lFutil -lm -lmld -lexc -lc #ENDIF#
 #ABSOFT_FORTRAN#TAU_FORTRANLIBS =  -L$(EXTRADIR)/lib -lfio -lf90math -lU77 -lf77math -lfio #ENDIF#
+#LAHEY_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/fj90rt0.o -L$(EXTRADIR)/lib -lfj9i6 -lfj9f6 -lfj9e6 -lfccx86_6a #ENDIF#
 #HITACHI_FORTRAN#TAU_FORTRANLIBS =  -lf90 -lhf90math #ENDIF#
 #NEC_FORTRAN#TAU_FORTRANLIBS =  -f90lib #ENDIF#
 #COMPAQ_GUIDEF90#TAU_FORTRANLIBS = $(EXTRADIR)/lib/cmplrs/fort90/for_main.o -lfor #ENDIF#
@@ -356,6 +361,9 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 
 ## To use the standard F90 linker instead of TAU_LINKER + TAU_FORTRANLIBS, add
 #GNU#TAU_CXXLIBS		= -L$(TAUGCCLIBDIR) -lstdc++ -lgcc_s #ENDIF#
+#GNU#TAU_GNUCXXLIBS		= -L$(TAUGCCLIBDIR) -lstdc++ -lgcc_s #ENDIF#
+#LAHEY_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) /usr/lib/libc.a #ENDIF#
+#NAGWARE_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) /usr/lib/libc.a #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
 #CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
 

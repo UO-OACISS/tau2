@@ -271,11 +271,11 @@ do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec ] 
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware ] 
     then
       fortran_compiler=$myarg
     else
-      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', and 'nec' "
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey' and 'nagware'"
       exit 1
     fi
     shift
@@ -770,7 +770,7 @@ do
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
-    echo "  	                                         kai|nec|hitachi|intel]"
+    echo "  	                    kai|nec|hitachi|intel|absoft|lahey|nagware]"
     echo "-useropt='<parameters>' ............... list of commandline parameters."
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-pthread .................................. Use pthread thread package."
@@ -1593,6 +1593,18 @@ case $fortran_compiler in
       echo "Default Fortran compiler will be NEC f90"
       extradir=`which f90 | sed s/f90/../`
       fixmakeargs="$fixmakeargs NEC_FORTRAN"
+      ;;
+
+   lahey)
+      echo "Default Fortran compiler will be Leahy lf95"
+      extradir=`which lf95 | sed s/lf95/../`
+      fixmakeargs="$fixmakeargs LAHEY_FORTRAN"
+      ;;
+
+   nagware)
+      echo "Default Fortran compiler will be Nagware f95"
+      extradir=`which f95 | sed s@\/f95@\/..@`
+      fixmakeargs="$fixmakeargs NAGWARE_FORTRAN"
       ;;
 
    sun)
