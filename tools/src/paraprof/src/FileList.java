@@ -229,7 +229,54 @@ public class FileList{
 	else
 	    return files;
     }
+
+    public String getPath(){
+	return path;
+    }
+
+    public static String getPathReverse(String string){
+	String string1 = string;
+	String string2 = "";
+	String string3 = "";
+
     
+	boolean isForwardSlash = false; //Just to make the reverse string look nicer on
+	//Unix based systems.
+    
+	int length = string1.length();
+                    
+	for(int i=(length-1); i>=0; i--){
+	    char tmpChar = string1.charAt(i);
+      
+	    if(tmpChar == '/'){
+      
+		//This does not really need to get done more than once but ...
+		isForwardSlash = true;
+      
+		if(string3.equals(""))
+		    string3 = string2;
+		else
+		    string3 = string3 + tmpChar + string2;
+		string2 = "";
+	    }
+	    else if(tmpChar == '\\'){
+		if(string3.equals(""))
+		    string3 = string2;
+		else
+		    string3 = string3 + tmpChar + string2;
+		string2 = "";
+	    }
+	    else{
+		string2 = tmpChar + string2;
+	    }
+	}
+      
+	if(isForwardSlash)
+	    string3 = string3 + "/";
+    
+	return string3;
+    }
+
     //For testing purposes.
     public static void main(String args[]){
 	boolean debug = false;
@@ -338,4 +385,14 @@ public class FileList{
 
 	System.exit(0);
     }
+
+    //####################################
+    //Instance data.
+    //####################################
+    //This stores the path to the last file list
+    //obtained by a call to FileList.getFileList(...).
+    String path = null;
+    //####################################
+    //End - Instance data.
+    //####################################
 }

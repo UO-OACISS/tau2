@@ -36,7 +36,6 @@ public class ParaProfExperiment extends Experiment{
 	trial.setExperiment(this);
 	trial.setID((trials.size()));
 	trials.add(trial);
-	return trial;
     }
   
     public boolean isTrialPresent(String name){

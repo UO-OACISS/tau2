@@ -69,114 +69,40 @@ public class ParaProf implements ActionListener{
 		    System.out.println("Note: Deleting the file will cause Racy to restore the default preferences");
 		}
 	    }
+
+	    //Create a default application.
+	    ParaProfApplication app = ParaProf.applicationManager.addApplication();
+	    app.setName("Default App");
 	    
-	    //Ok, now try to add the default experiment.
-	    
-	    //Check to see if a "pprof.dat" file exists.  If it does, load it.
-	    File testForPprofDat = new File("pprof.dat");
-	    
-	    boolean foundSomething = false;
+	    //Create a default experiment.
+	    ParaProfExperiment experiment = app.addExperiment();
+	    experiment.setName("Default Exp");
+
 	    ParaProfTrial trial = null;
-	    if(testForPprofDat.exists()){
-		System.out.println("Found pprof.dat!");
-		
-		//setTitle("ParaProf: " + ParaProf.profilePathName);
-		
-		//Create a default application.
-		ParaProfApplication app = ParaProf.applicationManager.addApplication();
-		app.setName("Default App");
-		
-		//Create a default experiment.
-		ParaProfExperiment exp = app.addExperiment();
-		exp.setName("Default Exp");
-		
-		//Add the trial for this pprof.dat file to the experiment.
-		String tmpString1 = null;
-		String tmpString2 = null;
-		String tmpString3 = null;
-		
-		tmpString1 = testForPprofDat.getCanonicalPath();
-		tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
-		tmpString3 = "Default ParaProfTrial" + " : " + tmpString2;
-		
-		trial = exp.addTrial();
-		
-		trial.setProfilePathName(tmpString1);
-		trial.setProfilePathName(tmpString2);
-		trial.setName(tmpString3);
-		
-		trial.initialize(testForPprofDat);
-		foundSomething = true;
-	    }
-	    else{
-		File file = new File(".");
-		ParaProfExperiment exp = null;
-		
-		String filePath = file.getCanonicalPath();
-		File [] list = file.listFiles();
-		for(int i = 0; i < list.length; i++){
-		    File tmpFile = (File) list[i];
-		    if(tmpFile != null){
-			String tmpString = tmpFile.getName();
-			
-			if(tmpString.indexOf("MULTI__") != -1){
-			    String newString = filePath + "/" + tmpString + "/pprof.dat";
-			    File testFile = new File(newString);
-			    
-			    if(testFile.exists()){
-				if(!foundSomething){
-				    System.out.println("Found pprof.dat ... loading");
-				    
-				    //setTitle("ParaProf: " + ParaProf.profilePathName);
-				    
-				    //Create a default application.
-				    ParaProfApplication app = ParaProf.applicationManager.addApplication();
-				    app.setName("Default App");
-				    
-				    //Create a default experiment.
-				    exp = app.addExperiment();
-				    exp.setName("Default Exp");
-				    
-				    //Add the experiment run for this pprof.dat file to the experiment.
-				    String tmpString1 = null;
-				    String tmpString2 = null;
-				    String tmpString3 = null;
-				    
-				    tmpString1 = filePath;
-				    tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
-				    tmpString3 = "Default ParaProfTrial" + " : " + tmpString2;
-				    
-				    trial = exp.addTrial();
-				    
-				    trial.setProfilePathName(tmpString1);
-				    trial.setProfilePathName(tmpString2);
-				    trial.setName(tmpString3);
-				    
-				    trial.initialize(testFile);
-				    
-				    System.out.println("Found: " + newString);
-				    
-				    foundSomething = true;
-				}
-				else{
-				    trial.initialize(testFile);
-				} 
-			    }
-			}
-		    }     
+	    
+	    FileList fl = new FileList();
+	    Vector v = fl.getFileList(null, 0 ,ParaProf.debugIsOn);
+	    File[] files = null;
+
+	    boolean dataAdded = false;
+	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
+		files = (File[]) e.nextElement();
+		//Note: files.length should be one with this file type.
+		for(int i=0;i<files.length;i++){
+		    trial.initialize(files[i]);
+		    dataAdded = true;
 		}
-		
-		if(!foundSomething)
-		    System.out.println("Did not find pprof.dat!");
+	    }
+	    
+	    if(dataAdded){
+		//Create the trial.
+		trial = new ParaProfTrial();
+		trial.setName("Default Trial");
+		experiment.addTrial(trial);
+		trial.showMainWindow();
 	    }
 
-	    if(!foundSomething)
-		    System.out.println("No profile data found!");
-	    else
-		trial.showMainWindow();
-	    
-	    ParaProfManager jRM = new ParaProfManager();
-	    jRM.expandDefaultParaProfTrialNode();
+	    ParaProfManager paraProfManager = new ParaProfManager();
 	}
 	catch (Exception e) {
     

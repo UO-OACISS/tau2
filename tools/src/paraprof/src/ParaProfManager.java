@@ -707,42 +707,44 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	return;
     }
 
-    void addTrial(){
+    //Adds a trial to the given experiment. If the given experiment is null it tries to determine if
+    //an experiment is clicked on in the display, and uses that.
+    //If prompt is set to true, the user is prompted for a trial name, otherwise, a default name is created.
+    //Returns the added trial or null if no trial was added.
+    public void addTrial(){
     	try{
 	    ParaProfTrial trial = null;
+	    String trialName = null;
+	    boolean dataAdded = false;
+	    ParaProfExperiment experiment;
 	    String string1 = null;
 	    String string2 = null;
 	    String string3 = null;
-      
+
 	    //Get the selected trial placeholder, and then its parent experiment node.
 	    TreePath path = tree.getSelectionPath();
-	    if(path == null){
-		System.out.println("Error adding trial ... aborted.");
-		return;
-	    }
 	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 	    DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
-	    if(parentNode == null){
-		System.out.println("Error adding trial ... aborted.");
-		return;
-	    }
 	    Object userObject = parentNode.getUserObject();
-	    if(!(userObject instanceof ParaProfExperiment)){
-		System.out.println("Error adding trial ... aborted.");
-		return;
-	    }
-        
-	    ParaProfExperiment exp = (ParaProfExperiment) userObject;
+	    experiment = (ParaProfExperiment) userObject;
       
-	    //First get the name of the new trial.
-	    String trailName = JOptionPane.showInputDialog(this, "Enter trial name, then make your selection.");
-	    if((trailName == null) || "".equals(trailName)){
+	    //Get the name of the new trial.
+	    trialName = JOptionPane.showInputDialog(this, "Enter trial name, then make your selection.");
+	    if((trialName == null) || "".equals(trialName)){
 		JOptionPane.showMessageDialog(this, "You must enter a name!", "Error!"
 					      ,JOptionPane.ERROR_MESSAGE);
+		System.out.println("Error adding trial ... aborted.");
 		return;
 	    }
 
-	    ParaProfTrial trial = new Trial();
+	    if(experiment.isTrialPresent(trialName)){
+		System.out.println("Trial with name: " + trialName + "exists. Not adding!");
+		return;
+	    }
+
+	    //Create the trial.
+	    trial = new ParaProfTrial();
+	    trial.setName(trialName);
 	    
 	    int type = -1;
 	    String s = (String) trialType.getSelectedItem();
@@ -761,40 +763,13 @@ public class ParaProfManager extends JFrame implements ActionListener{
 
 	    switch(type){
 	    case 0:
-		boolean duplicate = false;
 		for(Enumeration e1 = v.elements(); e1.hasMoreElements() ;){
 		    files = (File[]) e1.nextElement();
+		    //Note: files.length should be one with this file type.
 		    for(int i=0;i<files.length;i++){
-			string1 = files[i].getCanonicalPath();
-			string2 = ParaProf.applicationManager.getPathReverse(string1);
-			string3 = trailName + " : " + string2;
-
-			if(exp.isTrialPresent(string3)){
-			    System.out.println("Metric with name: " + string3 + "exists. Not adding.");
-			    duplicate = true;
-			}
-			else{
-			    trial = exp.addTrial();
-			    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
-			    trial.setDMTN(trialNode);
-			    trial.setProfilePathName(string1);
-			    trial.setName(string3);
-			    trial.initialize(files[i]);
-
-			    //Update the tree.
-			    for(Enumeration e2 = (trial.getMetrics()).elements(); e2.hasMoreElements() ;){
-				Metric metric = (Metric) e2.nextElement();
-				DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
-				metric.setDMTN(metricNode);
-				metricNode.setAllowsChildren(false);
-				trialNode.add(metricNode);
-			    }
-			    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
-			}
+			trial.initialize(files[i]);
+			dataAdded = true;
 		    }
-		    if(duplicate)
-			    JOptionPane.showMessageDialog(this, "Found duplicates ... see console!", "Warning!"
-							  ,JOptionPane.ERROR_MESSAGE);
 		}
 		break;
 	    case 1:
@@ -806,9 +781,31 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    default:
 		break;
 	    }
+	    
+	    //Add the new trial to experiment if the trial received some data.
+	    if(dataAdded){
+		experiment.addTrial(trial);
+		
+		DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+		trial.setDMTN(trialNode);
+		
+		//Update the tree.
+		for(Enumeration e2 = (trial.getMetrics()).elements(); e2.hasMoreElements() ;){
+		    Metric metric = (Metric) e2.nextElement();
+		    DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+		    metric.setDMTN(metricNode);
+		    metricNode.setAllowsChildren(false);
+		    trialNode.add(metricNode);
+		}
+		treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+	    }
 	}
 	catch(Exception e){
-	    ParaProf.systemError(e, null, "ELM01");
+	    System.out.println("Error adding trial ... aborted.");
+	    System.out.println("Location - ParaProfManager.addTrial(...)");
+	    if(ParaProf.debugIsOn)
+		e.printStackTrace();
+	    return;
 	}
     }
   
