@@ -219,14 +219,53 @@ public class TauOutputSession extends DataSession{
 	try{
 	    if(obj instanceof File)
 		file = (File) obj;
-	    else
-		ParaProf.systemError(null, null, "TOS1: - Invalid object type.");
+	    else{
+		ParaProfError paraProfError = new ParaProfError();
+		paraProfError.location = "TOS1";
+		paraProfError.popupString = "Data Read Error!";
+		paraProfError.s0 = 
+		    "Pprof data session file read error.\n"+
+		    "If this problem persists, please use the contact info. below!";
+		paraProfError.showPopup = true;
+		paraProfError.showContactString = true;
+		paraProfError.quit = false;
+		ParaProf.systemError(paraProfError, null, null);
+		//Just return as user might be able to load a different type of file.
+		return;
+	    }
 
-	    if(!(file.isDirectory()))
-		ParaProf.systemError(null, null, "TOS2: - File not a directory.");
+	    if(!(file.isDirectory())){
+		ParaProfError paraProfError = new ParaProfError();
+		paraProfError.location = "TOS2";
+		paraProfError.popupString = "Data Read Error!";
+		paraProfError.s0 = 
+		    "Specified input is not a directory.\n"+
+		    "If this problem persists, please use the contact info. below!";
+		paraProfError.showPopup = true;
+		paraProfError.showContactString = true;
+		paraProfError.quit = false;
+		ParaProf.systemError(paraProfError, null, null);
+		//Just return as user might be able to load a different type of file.
+		return;
+	    }
 
 	    System.out.println("Processing data file, please wait ......");
 	    long time = System.currentTimeMillis();
+
+	    Vector profileFileList = new Vector();
+	    String path = file.getCanonicalPath();
+	    File [] list = file.listFiles();
+	    for(int i = 0; i < list.length; i++){
+		File tmpFile = (File) list[i];
+		if(tmpFile != null){
+		    String tmpString = tmpFile.getName();
+		    if(tmpString.indexOf("profile.") != -1){
+			profileFileList.add(tmpString.substring(8));
+		    }
+		}
+	    }
+
+	    Collections.sort(profileFileList);
 
 	    //######
 	    //Frequently used items.

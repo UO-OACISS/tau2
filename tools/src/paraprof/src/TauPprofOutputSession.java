@@ -222,7 +222,7 @@ public class TauPprofOutputSession extends DataSession{
 	    else{
 		ParaProfError paraProfError = new ParaProfError();
 		paraProfError.location = "TPOS1";
-		paraProfError.popupString = "File Read Error!";
+		paraProfError.popupString = "Data Read Error!";
 		paraProfError.s0 = 
 		    "Pprof data session file read error.\n"+
 		    "If this problem persists, please use the contact info. below!";
@@ -230,6 +230,8 @@ public class TauPprofOutputSession extends DataSession{
 		paraProfError.showContactString = true;
 		paraProfError.quit = false;
 		ParaProf.systemError(paraProfError, null, null);
+		//Just return as user might be able to load a different type of file.
+		return;
 	    }
 
 	    System.out.println("Processing data file, please wait ......");

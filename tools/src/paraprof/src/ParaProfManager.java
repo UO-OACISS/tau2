@@ -1,3 +1,4 @@
+
 /* 
    ParaProfManager.java
 
@@ -20,11 +21,9 @@ import javax.swing.tree.*;
 import javax.swing.table.*;
 import java.sql.*;
 
-public class ParaProfManager extends JFrame implements ActionListener 
-{
-    public ParaProfManager()
-    {
-    
+public class ParaProfManager extends JFrame implements ActionListener{
+    public ParaProfManager(){
+	
 	try{
 	    //Some window stuff.
 	    setLocation(new java.awt.Point(0, 0));
@@ -443,23 +442,96 @@ public class ParaProfManager extends JFrame implements ActionListener
     }
   
     private Component getParaProfTrialTypeNodeLowerLeft(){
-	JButton tmpJButton = null;
-	JPanel tmpJPanel = new JPanel();
-	tmpJButton = new JButton("Add Single Metric Trail");
-	tmpJButton.addActionListener(new ActionListener(){
+	JPanel jPanel = new JPanel();
+	JButton jButton = new JButton("Add Trail");
+	
+	ButtonGroup buttonGroup = new ButtonGroup();
+	pprof = new JRadioButton("Pprof -d File");
+	profile = new JRadioButton("Tau Output");
+	phil = new JRadioButton("phil");
+	jeff = new JRadioButton("jeff");
+
+	buttonGroup.add(pprof);
+	buttonGroup.add(profile);
+	buttonGroup.add(phil);
+	buttonGroup.add(jeff);
+
+	//Now add the components to the panel.
+	GridBagLayout gbl = new GridBagLayout();
+	jPanel.setLayout(gbl);
+	GridBagConstraints gbc = new GridBagConstraints();
+	gbc.insets = new Insets(5, 5, 5, 5);
+
+
+	jButton.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent evt){
 		    addParaProfTrialSVTButtonFunction();}
 	    });
-	tmpJPanel.add(tmpJButton);
       
-	tmpJButton = new JButton("Add Multiple Metric Trail");
-	tmpJButton.addActionListener(new ActionListener(){
-                public void actionPerformed(ActionEvent evt){
-		    addParaProfTrialMVTButtonFunction();}
-	    });
-	tmpJPanel.add(tmpJButton);
-      
-	return tmpJPanel;
+	return jPanel;
+	
+	/*gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, tmpJButton, gbc, 0, 0, 1, 1);
+    
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.EAST;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, serverFieldLabel, gbc, 0, 1, 1, 1);
+    
+	gbc.fill = GridBagConstraints.BOTH;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 100;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, serverField, gbc, 1, 1, 1, 1);
+    
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.EAST;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, usernameFieldLabel, gbc, 0, 2, 1, 1);
+    
+	gbc.fill = GridBagConstraints.BOTH;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 100;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, usernameField, gbc, 1, 2, 1, 1);
+    
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.EAST;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, passwordFieldLabel, gbc, 0, 3, 1, 1);
+    
+	gbc.fill = GridBagConstraints.BOTH;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 100;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, passwordField, gbc, 1, 3, 1, 1);
+    
+	gbc.fill = GridBagConstraints.BOTH;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, connectDisconnectButton, gbc, 0, 4, 1, 1);
+    
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(tmpJPanel, refreshButton, gbc, 1, 4, 1, 1);
+    
+	return tmpJPanel;*/
+
+
+
+
+
+
+
     }
   
     private Component getDBAppTypeNodeLowerLeft(){
@@ -1341,7 +1413,9 @@ public class ParaProfManager extends JFrame implements ActionListener
 	getContentPane().add(c, gbc);
     }
   
-    //Instance data.
+    //####################################
+    //Instance Data.
+    //####################################
     JTree tree = null;
     DefaultTreeModel treeModel = null;
     DefaultMutableTreeNode dbApps = null;
@@ -1358,6 +1432,13 @@ public class ParaProfManager extends JFrame implements ActionListener
     private JTextField serverField = null;
     private JTextField usernameField = null;
     private JPasswordField passwordField = null;
+
+    private JButton singleMetricTrial = null;
+    private JButton multipleMetricTrial = null;
+    private JRadioButton pprof = new JRadioButton("Pprof -d File");
+    private JRadioButton profile = new JRadioButton("Tau Profile Files");
+    private JRadioButton phil = new JRadioButton("phil");
+    private JRadioButton jeff = new JRadioButton("jeff");
   
     private JComboBox operation = null;
     private JTextField opA = null;
@@ -1366,6 +1447,9 @@ public class ParaProfManager extends JFrame implements ActionListener
     private Border loweredbev = null;
     private Border raisedbev = null;
     private Border empty = null;
+    //####################################
+    //End - Instance Data.
+    //####################################
 }
 
 class JRacyTreeCellRenderer extends DefaultTreeCellRenderer{
