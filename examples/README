@@ -74,6 +74,12 @@ openmpi		- Illustrates TAU's support for hybrid exection models in the
 		  to be configured with -mpiinc=<dir> -mpilib=<dir> -openmp
 		  options to use this. 
 
+fork		- Illustrates how to register a forked process with TAU. TAU
+		  provides two options: TAU_INCLUDE_PARENT_DATA  and 
+		  TAU_EXCLUDE_PARENT_DATA which allows the child process to 
+		  inherit or clear the performance data when the fork takes 
+		  place. 
+
 
 
 
