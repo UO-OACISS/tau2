@@ -69,11 +69,11 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 }
 
 int DefUserEvent( void *userData, unsigned int userEventToken,
-		const char *userEventName )
+		const char *userEventName, int monotonicallyIncreasing )
 {
 
-  printf("DefUserEvent event id %d user event name %s\n", userEventToken,
-		  userEventName);
+  printf("DefUserEvent event id %d user event name %s, monotonically increasing = %d\n", userEventToken,
+		  userEventName, monotonicallyIncreasing);
   return 0;
 }
 
@@ -138,6 +138,6 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_reader.c,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2004/07/27 00:11:41 $
- * TAU_VERSION_ID: $Id: tau_reader.c,v 1.2 2004/07/27 00:11:41 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 2005/03/04 01:50:06 $
+ * TAU_VERSION_ID: $Id: tau_reader.c,v 1.3 2005/03/04 01:50:06 sameer Exp $ 
  ***************************************************************************/
