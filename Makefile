@@ -47,7 +47,7 @@ EXPORTS = utils src/Profile
 
 # Example Programs
 EXAMPLES = examples/matrix examples/instrument examples/pi examples/threads \
-	   examples/cthreads
+examples/cthreads
 
 # PC++ Support
 #PCXX#PCXX=lang_support/pc++#ENDIF#
