@@ -21,6 +21,9 @@ Version 2.13 changes (from 2.12):
 9. Added TAU Instrumentation Language for enhancing tau_reduce. 
 10. Added support for RTTI with g++ [ITT].
 11. Added support for PAPI 3 so that TAU works with both PAPI 2 & 3 [UTK].
+12. Paraprof enhancements for callpath profiling [LLNL].
+13. Timer overhead measurements for callpath profiling. 
+ 
 
 Version 2.12 changes (from 2.11):
 1. Enhancements in jracy for supporting multiple counter data [LLNL].
