@@ -30,7 +30,7 @@ Report bugs to tau-bugs@cs.uoregon.edu
 
 %install
 %post
-echo "Installed TAU 2.6 See INSTALL file. Use ./configure and make install"
+echo "Installed TAU 2.6 See INSTALL file. Use configure and make install"
 
 %files
 %attr(-,root,root) /home/users/sameer/tau-2.6
