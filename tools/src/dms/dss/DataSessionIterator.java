@@ -14,7 +14,7 @@ import dms.dss.*;
  * AFTER decrementing index. Thus, alternating calls to next and previous
  * return the same element. As required by the ListIterator specification.
  *
- * <P>CVS $Id: DataSessionIterator.java,v 1.5 2003/08/27 17:07:38 khuck Exp $</P>
+ * <P>CVS $Id: DataSessionIterator.java,v 1.6 2004/01/16 23:16:37 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -131,6 +131,15 @@ public class DataSessionIterator implements ListIterator{
  */
 		public int size(){
 				return size;
+		}
+
+/**
+ * Returns the full vector of elements
+ *
+ * @return Vector elements in the iterator.
+ */
+		public Vector vector(){
+				return listData;
 		}
 
 
