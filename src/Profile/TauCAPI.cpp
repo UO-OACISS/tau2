@@ -134,6 +134,18 @@ extern "C" void tau_register_fork(int nodeid, enum TauFork_t opcode)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_enable_instrumentation(void)
+{
+  TAU_ENABLE_INSTRUMENTATION();
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_disable_instrumentation(void)
+{
+  TAU_DISABLE_INSTRUMENTATION();
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void tau_trace_sendmsg(int type, int destination, int length)
 {
   TAU_TRACE_SENDMSG(type, destination, length);
@@ -233,7 +245,7 @@ extern "C" void tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2000/10/11 21:21:53 $
- * VERSION: $Id: TauCAPI.cpp,v 1.14 2000/10/11 21:21:53 sameer Exp $
+ * $Revision: 1.15 $   $Date: 2000/10/12 19:07:55 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.15 2000/10/12 19:07:55 sameer Exp $
  ***************************************************************************/
 

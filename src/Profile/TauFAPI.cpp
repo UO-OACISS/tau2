@@ -44,6 +44,8 @@ void tau_init(int, char **);
 void tau_set_node(int);
 void tau_set_context(int);
 void tau_register_thread(void);
+void tau_enable_instrumentation(void);
+void tau_disable_instrumentation(void);
 void tau_trace_sendmsg(int type, int destination, int length);
 void tau_trace_recvmsg(int type, int source, int length);
 void * tau_get_userevent(char *name);
@@ -118,6 +120,18 @@ void tau_profile_set_node_(int *node)
 void tau_profile_set_context_(int *context)
 {
   tau_set_context(*context);
+  return;
+}
+
+void tau_enable_instrumentation_(void)
+{
+  tau_enable_instrumentation();
+  return;
+}
+
+void tau_disable_instrumentation_(void)
+{
+  tau_disable_instrumentation();
   return;
 }
 
@@ -258,6 +272,16 @@ void TAU_TRACE_RECVMSG(int *type, int *source, int *length)
   tau_trace_recvmsg(*type, *source, *length);
 }
 
+void TAU_ENABLE_INSTRUMENTATION(void)
+{
+  tau_enable_instrumentation();
+}
+
+void TAU_DISABLE_INSTRUMENTATION(void)
+{
+  tau_disable_instrumentation();
+}
+
 void TAU_REGISTER_EVENT(void **ptr, char *event_name, int *flen)
 {
 
@@ -393,11 +417,6 @@ void tau_event(int **ptr, double *data)
 
 void tau_profile_timer__(void **ptr, char *fname, int *flen)
 {
-//#ifdef DEBUG_PROF
-//  printf("flen = %d\n", *flen);
-//#endif /* DEBUG_PROF */
-  
-
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
     for(int i=0; i<strlen(fname); i++)
@@ -408,6 +427,7 @@ void tau_profile_timer__(void **ptr, char *fname, int *flen)
         break;
       }
     }
+
 #ifdef DEBUG_PROF
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
@@ -504,6 +524,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2000/09/25 19:11:38 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.12 2000/09/25 19:11:38 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 2000/10/12 19:07:55 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.13 2000/10/12 19:07:55 sameer Exp $ 
  ***************************************************************************/
