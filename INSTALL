@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1997-2000				   	   	   **
+**    Copyright 1997-2001				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.9                           *
+ *                           Version 2.10                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -55,9 +55,11 @@ Usage: configure [OPTIONS]
 -cc=<compiler> ................................ specify the C compiler.
 -useropt='<parameters>' ............... list of commandline parameters.
 -pthread .................................. Use pthread thread package.
+-sproc .................................. Use SGI sproc thread package.
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
 -smarts .................. Use SMARTS API for threads (use with above).
 -openmp ........................................... Use OpenMP threads.
+-opari=<dir>... Specify location of Opari OpenMP tool (use with above).
 -pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
 -papi=<dir> ............... Specify location of PAPI (Performance API).
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
@@ -126,12 +128,19 @@ The following  command-line options are available to configure:
 -openmp
    Specifies OpenMP as the threads package to be used. 
    [ Ref: http://www.openmp.org ]
+
+-opari=<dir>
+   Specifies the location of the Opari OpenMP directive rewriting tool. 
+   The use of Opari source-to-source instrumentor in conjunction with
+   TAU exposes OpenMP events for instrumentation. 
+   [ Ref: http://www.fz-juelich.de/zam/kojak/opari/ ]
    
 -pdt=<directory>
    
    Specifies the location of the installed PDT (Program Database Toolkit) root 
-   directory. PDT is used to build tau_instrumentor, a C++ instrumentation 
-   program that automatically inserts TAU annotations in the source code.  
+   directory. PDT is used to build tau_instrumentor, a C++, C and F90 
+   instrumentation program that automatically inserts TAU annotations in the 
+   source code.  
    [ Ref: http://www.acl.lanl.gov/pdtoolkit ]
    
 -pcl=<directory>
@@ -354,7 +363,9 @@ I) The Profiling Library needs a recent C++ compiler. Our recommended list:
 	d) PGI (http://www.pgroup.com) 3.0 pgCC compiler for Linux
 	e) GNU (http://www.gnu.org) gcc-2.95 g++ compiler
 	f) IBM (http://www.ibm.com) xlC C++ compiler for IBM SP
-
+        g) SUN (http://www.sun.com) Sun CC 5.0+ compiler
+        h) Compaq (http://www.compaq.com) cxx 6.x compiler  
+ 
 II) Platforms :
    TAU has been tested on 
 	a) SGI IRIX 6.5 systems (Origin 2000) with KCC, CC, g++, guidec++.
@@ -367,7 +378,7 @@ II) Platforms :
 	c) Sun Solaris2 with g++, KCC. 
 	d) HP PA-RISC systems running HP-UX with g++. 
 	e) Cray T3E with Cray C++ compiler, and KAI KCC.
-	f) Compaq Tru64 Alpha with g++.
+	f) Compaq Tru64 Alpha with g++, cxx.
         g) Compaq Alpha Linux clusters with g++.
 	i) Microsoft Windows. Tested with MS Visual C++ v5.1.  
 	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
