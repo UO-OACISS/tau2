@@ -10,6 +10,7 @@ CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
 # If paraprof is invoked with the -p option, read and/or generate pprof.dat
 if [ "x$1" = "x-p" ]
 then
+  shift
   echo "Using pprof to generate pprof.dat"
   pprof_path=${TAUROOT}/${MACHINE}/bin/pprof
   if [ "x$pprof_path" = "x" ]
