@@ -85,7 +85,7 @@
 #   tc2000          a BBN Butterfly tc2000
 #   ksr1            a Kendall Square KSR1
 #   unknown         default setup, no machine selected (original)
-#   alpha           a DEC Alpha running OSF/1
+#   alpha           a Compaq Alpha running OSF/1
 #   c90             a Cray C90 running Unicos
 #   t3d             a Cray T3D (Alpha-based) computer array
 #   i386_linux 	    an Intel ix86 PC running LINUX
@@ -588,15 +588,13 @@ case $machine in
    alpha)
      if [ $cxx_compiler = default ]
        then
-#      # If it has the DEC cxx compiler, use it
-#	 if [ -d /lib/cmplrs/cxx ]
-#           then
-#             cxx_compiler=cxx
-#             c_compiler=cc
-#           else
-#             cxx_compiler=g++
-#         fi
-	 cxx_compiler=g++
+      # If it has the Compaq cxx compiler, use it
+	 if [ -d /lib/cmplrs/cxx ]
+           then
+             cxx_compiler=cxx
+           else
+             cxx_compiler=g++
+         fi
 	 c_compiler=cc
      fi
 
@@ -805,8 +803,15 @@ case $cxx_compiler in
       ;;
 
    cxx)
-      echo "Default C++ compiler will be the DEC cxx C++ compiler"
+      echo "Default C++ compiler will be the Compaq cxx C++ compiler"
       fixmakeargs="$fixmakeargs USE_DECCXX"
+      f90loaded=`which f90 | sed -e 's/f90/../g' | grep "^no"`
+      if [ "x$f90loaded" = "x" ]
+      then
+  	# f90 module has been loaded and which f90 returns a path	
+        extradir="`which f90 | sed s/f90/../`"
+	echo "Found f90 in `which f90`"
+      fi
       ;;
 
    xlC)
@@ -1066,7 +1071,7 @@ echo "class IamReallyATTtask : public object {};" >> /tmp/tau$$.C
 
 if $cxx_compiler -c /tmp/tau$$.C 1> /dev/null 2>&1
 then
-  echo "AT&T task library found; using it"
+#  echo "AT&T task library found; using it"
   task=yes
 fi
 rm -f /tmp/tau$$.C tau$$.o
@@ -1172,7 +1177,7 @@ case $machine in
      alpha)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs"
-	fixmakeargs="DEC_ALPHA $fixmakeargs"
+	fixmakeargs="COMPAQ_ALPHA $fixmakeargs"
 	;;
 
      sgi4k | sgi8k | sgi32 | sgin32 | sgi64)
@@ -1451,6 +1456,14 @@ then
   fi
 fi
 	
+if [ $cxx_compiler = cxx ]
+then
+  if [ $openmp = yes ]
+  then
+    fixmakeargs="$fixmakeargs COMPAQCXX_OPENMP"
+  fi
+fi
+   
 
 if [ $fujitsu = yes ]
   then
