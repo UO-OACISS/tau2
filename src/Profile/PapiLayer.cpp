@@ -192,6 +192,14 @@ int PapiLayer::PapiLayerInit(void)
      return 0;
 }
 
+void PapiLayer::multiCounterPapiInit(void)
+{
+  //This function has the possibility if being called
+  //one or more times by MultipleCounter routines.
+  //Only want to do the init. once however.
+  static int initFlag = PapiLayerInit();
+}
+
 /////////////////////////////////////////////////
 long long PapiLayer::getWallClockTime(void)
 { // Returns the wall clock time from PAPI interface
