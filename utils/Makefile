@@ -12,14 +12,15 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
-CONFIG_CC=gcc
-CONFIG_CXX=g++
+CONFIG_ARCH=sgi8k
+CONFIG_CC=cc
+CONFIG_CXX=CC
 PCXX_OPT=-g
-USER_OPT=-g
+USER_OPT=
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
 #######################################################################
  
-#MIPSR8K#ISA          = -mips4		   #ENDIF#
+ISA          = -mips4		   #ENDIF##MIPSR8K#
 
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
@@ -37,7 +38,7 @@ LINKER	= $(CC)
 #PTX#LEXTRA = -lseq#ENDIF#
 #SP1#CEXTRA = -D__SP1__#ENDIF#
 #CM5#CEXTRA = -D__CM5__#ENDIF#
-#SGIMP#CEXTRA = -D__SGIMP__#ENDIF#
+CEXTRA = -D__SGIMP__#ENDIF##SGIMP#
 #PCXX#RUNTIME1 = pcxx_merge#ENDIF#
 #PCXX#RUNTIME2 = pcxx_convert#ENDIF#
 #PCXX#RUNTIME3 = pcxx_dump#ENDIF#
@@ -61,7 +62,7 @@ SAGE1DIR=
 INCLUDEPATH = $(SAGE1DIR)/lib/include
 SAGE1LIBS = $(SAGE1DIR)/lib/$(CONFIG_ARCH)
 
-INSTALLDEST	= ../bin/$(CONFIG_ARCH)
+INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
 
 CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC)
 
@@ -143,37 +144,37 @@ $(INSTALLDEST)/tau_convert: tau_convert
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 
-$(INSTALLDEST)/$(RUNTIME1): $(RUNTIME1)
-		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
-
-$(INSTALLDEST)/$(RUNTIME2): $(RUNTIME2)
-		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
-
-$(INSTALLDEST)/$(RUNTIME3): $(INSTALLDEST)/$(RUNTIME2)
-		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
-		rm -f $(INSTALLDEST)/$(RUNTIME3)
-		ln $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3)
-
-$(INSTALLDEST)/$(RUNTIME4): $(RUNTIME4)
-		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
-
-$(INSTALLDEST)/$(RUNTIME5): $(RUNTIME5)
-		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
-
+#$(INSTALLDEST)/$(RUNTIME1): $(RUNTIME1)
+#		@echo Installing $? in $(INSTALLDEST)
+#		if [ -d $(INSTALLDEST) ] ; then true; \
+#                   else mkdir $(INSTALLDEST) ;fi
+#		$(INSTALL) $? $(INSTALLDEST)
+#
+#$(INSTALLDEST)/$(RUNTIME2): $(RUNTIME2)
+#		@echo Installing $? in $(INSTALLDEST)
+#		if [ -d $(INSTALLDEST) ] ; then true; \
+#                   else mkdir $(INSTALLDEST) ;fi
+#		$(INSTALL) $? $(INSTALLDEST)
+#
+#$(INSTALLDEST)/$(RUNTIME3): $(INSTALLDEST)/$(RUNTIME2)
+#		@echo Installing $? in $(INSTALLDEST)
+#		if [ -d $(INSTALLDEST) ] ; then true; \
+#                   else mkdir $(INSTALLDEST) ;fi
+#		rm -f $(INSTALLDEST)/$(RUNTIME3)
+#		ln $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3)
+#
+#$(INSTALLDEST)/$(RUNTIME4): $(RUNTIME4)
+#		@echo Installing $? in $(INSTALLDEST)
+#		if [ -d $(INSTALLDEST) ] ; then true; \
+#                   else mkdir $(INSTALLDEST) ;fi
+#		$(INSTALL) $? $(INSTALLDEST)
+#
+#$(INSTALLDEST)/$(RUNTIME5): $(RUNTIME5)
+#		@echo Installing $? in $(INSTALLDEST)
+#		if [ -d $(INSTALLDEST) ] ; then true; \
+#                   else mkdir $(INSTALLDEST) ;fi
+#		$(INSTALL) $? $(INSTALLDEST)
+#
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
