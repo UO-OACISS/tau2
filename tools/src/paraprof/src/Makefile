@@ -1,7 +1,9 @@
 
+#Author: Robert Bell
+
 #Makefile creates the ParaProf jar file.
 
-CLASSDIR = ./classes
+CLASSDIR = ./paraprof
 
 CLASSFILES = $(CLASSDIR)/Application.class               $(CLASSDIR)/ApplicationManager.class \
              $(CLASSDIR)/BinWindow.class                 $(CLASSDIR)/BinWindowPanel.class \
@@ -32,14 +34,10 @@ CLASSFILES = $(CLASSDIR)/Application.class               $(CLASSDIR)/Application
 
 default: ParaProf.jar
 
-ParaProf.jar: $(CLASSFILES)
-	jar -cmvf manifest.txt ParaProf.jar *
-
-jRacy/jRacy.class: jRacy.class
-	mv *.class jRacy
-
-jRacy.class: jRacy.class
+ParaProf.jar:
 	javac *.java
+	mv *.class ./paraprof
+	jar -cmvf manifest.txt ParaProf.jar ParaProf
 
 clean:
-	rm -f jRacy.jar jRacy/*.class
+	rm -f jRacy.jar paraprof/*.class
