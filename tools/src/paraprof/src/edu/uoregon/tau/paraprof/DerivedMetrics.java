@@ -175,7 +175,7 @@ public class DerivedMetrics {
 //                                    function.setMaxInclusive(metric, result);
                             }
                         }
-                        //thread.setThreadData(metric);
+                        thread.setThreadData(metric);
                     }
                 }
             }

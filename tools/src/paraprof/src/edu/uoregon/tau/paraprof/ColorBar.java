@@ -13,21 +13,17 @@ import java.awt.Color;
  * It also contains the static functions for getting a color given a value 0..1
  *  
  * 
- * <P>CVS $Id: ColorBar.java,v 1.2 2004/12/29 00:09:48 amorris Exp $</P>
+ * <P>CVS $Id: ColorBar.java,v 1.3 2005/01/11 01:40:34 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see CallGraphWindow
  */
 public class ColorBar extends JComponent {
 
-    private static final double colorsR[] = {
-        0, 0, 0, 1, 1,   1 };
-    private static final double colorsG[] = {
-        0, 1, 1, 1, 0.5, 0 };
-    private static final double colorsB[] = {
-        1, 1, 0, 0, 0, 0 };
-    
-        
+    private static final double colorsR[] = { 0, 0, 0, 1, 1, 1 };
+    private static final double colorsG[] = { 0, 1, 1, 1, 0.5, 0 };
+    private static final double colorsB[] = { 1, 1, 0, 0, 0, 0 };
+
     public ColorBar() {
         setMinimumSize(new Dimension(10, 20));
     }
@@ -51,13 +47,12 @@ public class ColorBar extends JComponent {
                 g2D.setColor(getColor(i / (float) numBoxes));
                 g2D.fillRect((i * 11) + 1, 1, 10, 18);
             }
-      } catch (Exception e) {
+        } catch (Exception e) {
             // what can I possibly do?
-       }
+        }
 
     }
 
-    
     /**
      * Retrieves a color in the colorscale based on a ratio (0..1) (blue..red)
      * 
@@ -66,7 +61,7 @@ public class ColorBar extends JComponent {
      */
     public static Color getColor(float ratio) {
         double r, g, b;
-    
+
         int section;
 
         if (ratio < 0.125) {
@@ -90,14 +85,40 @@ public class ColorBar extends JComponent {
         g = colorsG[section] + ratio * (colorsG[section + 1] - colorsG[section]);
         b = colorsB[section] + ratio * (colorsB[section + 1] - colorsB[section]);
 
-        if (r > 1)
-            r = 1;
-        if (g > 1)
-            g = 1;
-        if (b > 1)
-            b = 1;
+        r = Math.min(r, 1);
+        g = Math.min(g, 1);
+        b = Math.min(b, 1);
+
+        r = Math.max(r, 0);
+        g = Math.max(g, 0);
+        b = Math.max(b, 0);
 
         return new Color((float) r, (float) g, (float) b);
     }
 
+  
+    public static Color getContrast(Color color) {
+     
+        float r = ((float)color.getRed() / 255);
+        float g = ((float)color.getGreen() / 255);
+        float b = ((float)color.getBlue() / 255);
+        
+        double luminance = 0.25*r + 0.625*g + 0.125*b;
+
+//        double luminance = 0.25*r + 0.725*g + 0.125*b;
+
+        if (b != 1) {
+        System.out.println ("--------");
+        System.out.println ("r = " + r);
+        System.out.println ("g = " + g);
+        System.out.println ("b = " + b);
+        System.out.println ("lum = " + luminance);
+        }
+        if (luminance > 0.5) {
+            return Color.black;
+        } else {
+            return Color.white;
+        }
+    }
+    
 }

@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.13 2005/01/10 20:12:26 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.14 2005/01/11 01:40:34 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -1402,8 +1402,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
 
         if (this.colorOption == OPTION_STATIC) {
             GraphConstants.setBackground(attrib, Color.orange);
+            GraphConstants.setForeground(attrib, Color.black);
         } else {
             GraphConstants.setBackground(attrib, ColorBar.getColor(color));
+            GraphConstants.setForeground(attrib, ColorBar.getContrast(ColorBar.getColor(color)));
         }
 
         GraphConstants.setOpaque(attrib, true);
