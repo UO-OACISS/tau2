@@ -39,6 +39,7 @@ public class ConnectionManager {
 		parser = new ParseConfig(configFileName);
 		String password = getPassword();
 		initialize(configFileName, password);
+		System.out.println("\r\n");
     }
 
 	public void initialize(String configFileName, String password) {

@@ -11,13 +11,15 @@ import java.io.InputStreamReader;
 import perfdb.util.dbinterface.*;
 import java.sql.*;
 
+import jargs.gnu.CmdLineParser;
+
 public class Configure {
     private DB db = null;
     // protected String dbAccessString = perfdb.ConnectionManager.getPerfdbAcct();
-    private static String Usage = "Usage: configure config_file";
+    private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-p,--perfdbhome} path]";
     private static String Greeting = "\nWelcome to the configuration program for PerfDBF.\n" +
-	"This program will prompt you for some information necessary to ensure\nthe desired" +
-	"behavior for the PerfDB tools.\n";
+	"This program will prompt you for some information necessary to ensure\n" +
+	"the desired behavior for the PerfDB tools.\n";
     private static String PDBHomePrompt = "Please enter the PerfDB home directory:";
 		
     // todo - remove these defaults
@@ -38,8 +40,9 @@ public class Configure {
 		
     private String configFileName;
 
-    public Configure() {
-	super();
+    public Configure(String perfDBHome) {
+		super();
+		perfdb_home = perfDBHome;
     }
 
     public void errorPrint(String msg) {
@@ -69,6 +72,7 @@ public class Configure {
 		configFileFound = true;
 	    } else {
 		System.out.println("Configuration file NOT found...");
+		System.out.println("a new configuration file will be created.");
 		// If it doesn't exist, explain that the program looks for the 
 		// configuration file in ${PerfDB_Home}/bin/perfdb.cfg
 		// Since it isn't there, create a new one.
@@ -388,16 +392,36 @@ public class Configure {
     /*** Beginning of main program. ***/
 
     public static void main(java.lang.String[] args) {
-				
-	if (args.length == 0) {
-	    System.err.println(Usage);
-	    System.exit(-1);
-        }
-				
+
+	CmdLineParser parser = new CmdLineParser();
+	CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+	CmdLineParser.Option homeOpt = parser.addStringOption('p', "perfdbhome");
+	CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
+	try {
+		parser.parse(args);
+	}
+	catch ( CmdLineParser.OptionException e ) {
+		System.err.println(e.getMessage());
+		System.err.println(Usage);
+		System.exit(-1);
+	}
+
+	String configFile = (String)parser.getOptionValue(configfileOpt);
+	String perfDBHome = (String)parser.getOptionValue(homeOpt);
+	Boolean help = (Boolean)parser.getOptionValue(helpOpt);
+
+	if (help != null && help.booleanValue()) {
+		System.err.println(Usage);
+		System.exit(-1);
+	}
+
+	if (configFile == null) configFile = new String("");
+	if (perfDBHome == null) perfDBHome = new String("");
+
 	// Create a new Configure object, which will walk the user through
 	// the process of creating/editing a configuration file.
-	Configure config = new Configure();
-	config.initialize(args[0]);
+	Configure config = new Configure(perfDBHome);
+	config.initialize(configFile);
 				
 	// Give the user the ability to modify any/everything
 	config.promptForData();

@@ -650,7 +650,7 @@ public class Translator implements Serializable{
     }// end of the method.
 
 
-    public void writeXmlFiles(String appid, String expid){
+    public void writeXmlFiles(String appid, String expid, String trialName){
 
 	GlobalNode nodeObject;
 	Vector ContextList;
@@ -774,6 +774,9 @@ public class Translator implements Serializable{
 	    xwriter.newLine();
 	    
 	    xwriter.write("\t   <ExpID>" + expid + "</ExpID>", 0, ("\t   <ExpID>" + expid + "</ExpID>").length());
+	    xwriter.newLine();
+
+	    xwriter.write("\t   <TrialName>" + trialName + "</TrialName>", 0, ("\t   <TrialName>" + trialName + "</TrialName>").length());
 	    xwriter.newLine();
 
 	    xwriter.write("\t</Env>", 0, ("\t</Env>").length());
@@ -2541,7 +2544,7 @@ public class Translator implements Serializable{
 	//******************************
 
     static public void main(String[] args){
-		String USAGE = "USAGE: Translator [{-g,--configfile} configfilename] [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id]";
+		String USAGE = "USAGE: perfdb_translate [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id] [{-n,--name} trial_name]";
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
@@ -2550,6 +2553,7 @@ public class Translator implements Serializable{
         CmdLineParser.Option destinationfileOpt = parser.addStringOption('d', "destinationfile");
         CmdLineParser.Option experimentidOpt = parser.addStringOption('e', "experimentid");
         CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
+        CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
 
         try {
             parser.parse(args);
@@ -2566,6 +2570,7 @@ public class Translator implements Serializable{
         String destinationFile = (String)parser.getOptionValue(destinationfileOpt);
         String applicationID = (String)parser.getOptionValue(applicationidOpt);
         String experimentID = (String)parser.getOptionValue(experimentidOpt);
+        String trialName = (String)parser.getOptionValue(nameOpt);
 
     	if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
@@ -2576,11 +2581,30 @@ public class Translator implements Serializable{
             System.err.println("Please enter a valid config file.");
 	    	System.err.println(USAGE);
 	    	System.exit(-1);
+		} else if (sourceFile == null) {
+            System.err.println("Please enter a valid source file.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
+		} else if (destinationFile == null) {
+            System.err.println("Please enter a valid destination file.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
+		} else if (applicationID == null) {
+            System.err.println("Please enter a valid application ID.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
+		} else if (experimentID == null) {
+            System.err.println("Please enter a valid experiment ID.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
+		}
+		if (trialName == null) {
+			trialName = new String("");
 		}
 
 		Translator trans = new Translator(configFile, sourceFile, destinationFile);
 		trans.buildPprof(); 
-		trans.writeXmlFiles(applicationID, experimentID);
+		trans.writeXmlFiles(applicationID, experimentID, trialName);
 		System.out.println("Done - Translating pprof.dat into pprof.xml!");
     }
 } 

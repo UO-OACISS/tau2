@@ -265,6 +265,10 @@ public class Load {
     } 
 
 	public String getProblemString(String problemFile) {
+		// if the file wasn't passed in, this is an existing trial.
+		if (problemFile == null)
+			return new String("");
+
 		// open the file
 		BufferedReader reader = null;
 		try {

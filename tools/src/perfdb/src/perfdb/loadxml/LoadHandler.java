@@ -306,6 +306,9 @@ public class LoadHandler extends DefaultHandler {
 		else if( name.equalsIgnoreCase("Trialtime") ){
 	    	currentElement = "Trialtime";
 		}
+		else if( name.equalsIgnoreCase("TrialName") ){
+	    	currentElement = "TrialName";
+		}
 		else if( name.equalsIgnoreCase("node") ) {
 	    	currentElement = "node";
 		}

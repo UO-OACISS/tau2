@@ -21,6 +21,18 @@ public class Main {
 		+ "  | [{-c,--command} loadexp] [{-a,--applicationid} value] [{-x,--xmlfile} filename] \n"
 		+ "  | [{-c,--command} loadtrial] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] [{-p --problemfile} filename]\n";
 
+    private static String APP_USAGE = 
+        "USAGE: perfdb_loadapp [{-h,--help}] [{-x,--xmlfile} filename] \n";
+
+    private static String SCHEMA_USAGE = 
+        "USAGE: perfdb_loadschema [{-h,--help}] [{-s,--schemafile} filename]\n";
+
+    private static String EXP_USAGE = 
+        "USAGE: Main [{-h,--help}] [{-a,--applicationid} value] [{-x,--xmlfile} filename]\n";
+
+    private static String TRIAL_USAGE = 
+        "USAGE: perfdb_loadtrial [{-h,--help}] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] [{-p --problemfile} filename]\n";
+
     private perfdb.ConnectionManager connector;
 
     public Main(String configFileName) {
@@ -143,7 +155,17 @@ public class Main {
         String problemFile = (String)parser.getOptionValue(problemfileOpt);
 
     	if (help != null && help.booleanValue()) {
-			System.err.println(USAGE);
+			if (command == null) {
+				System.err.println(USAGE);
+			} else if (command.equalsIgnoreCase("LOADSCHEMA")) {
+	    		System.err.println(SCHEMA_USAGE);
+    		} else if (command.equalsIgnoreCase("LOADAPP")) {
+	    		System.err.println(APP_USAGE);
+    		} else if (command.equalsIgnoreCase("LOADEXP")) {
+	    		System.err.println(EXP_USAGE);
+    		} else if (command.equalsIgnoreCase("LOADXML") || command.equalsIgnoreCase("LOADTRIAL")) {
+	    		System.err.println(TRIAL_USAGE);
+			}
 	    	System.exit(-1);
     	}
 
@@ -158,6 +180,46 @@ public class Main {
 	    	System.err.println(USAGE);
 	    	System.exit(-1);
 		}
+
+		// validate the command line options...
+		if (command.equalsIgnoreCase("LOADSCHEMA")) {
+			if (schemaFile == null) {
+            	System.err.println("Please enter a valid schema file.");
+	    		System.err.println(SCHEMA_USAGE);
+	    		System.exit(-1);
+			}
+    	} else if (command.equalsIgnoreCase("LOADAPP")) {
+			if (xmlFile == null) {
+            	System.err.println("Please enter a valid application XML file.");
+	    		System.err.println(APP_USAGE);
+	    		System.exit(-1);
+			}
+    	} else if (command.equalsIgnoreCase("LOADEXP")) {
+			if (applicationID == null) {
+            	System.err.println("Please enter a valid application ID.");
+	    		System.err.println(EXP_USAGE);
+	    		System.exit(-1);
+			}
+			if (xmlFile == null) {
+            	System.err.println("Please enter a valid experiment XML file.");
+	    		System.err.println(EXP_USAGE);
+	    		System.exit(-1);
+			}
+    	} else if (command.equalsIgnoreCase("LOADXML") || command.equalsIgnoreCase("LOADTRIAL")) {
+			/*if (trialID == null && problemFile == null) {
+            	System.err.println("Please enter a valid problem definition XML file, or a valid trial ID.");
+	    		System.err.println(TRIAL_USAGE);
+	    		System.exit(-1);
+			} if (trialID == null && problemFile != null) { */
+			if (trialID == null) {
+				trialID = new String("0");
+			}
+			if (xmlFile == null) {
+            	System.err.println("Please enter a valid trial XML file.");
+	    		System.err.println(TRIAL_USAGE);
+	    		System.exit(-1);
+			}
+    	}
 
 	// create a new Main object, pass in the configuration file name
 		Main demo = new Main(configFile);
