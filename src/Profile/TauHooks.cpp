@@ -45,6 +45,7 @@
 #endif
 
 //#define ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP 1
+#define TAUDYNVEC 1
 
 
 int TheFlag[TAU_MAX_THREADS] ;
@@ -198,6 +199,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2001/03/15 20:53:58 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.11 2001/03/15 20:53:58 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 2001/03/20 22:01:24 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.12 2001/03/20 22:01:24 sameer Exp $ 
  ***************************************************************************/
