@@ -59,6 +59,14 @@ TAU_PREFIX_INSTALL_DIR=
 #ENABLEN32BIT#ABI 	     = -n32		  #ENDIF#
 #ENABLE32BIT#ABI 	     = -32		  #ENDIF#
 
+#######################################################################
+#IBM64#IBM_XLC_ABI	     = -q64 		  #ENDIF#
+#IBM64#IBM_GNU_ABI	     = -maix64 		  #ENDIF#
+#USE_IBMXLC#IBM_ABI    	     = $(IBM_XLC_ABI) 	  #ENDIF#
+#GNU#IBM_ABI	     	     = $(IBM_GNU_ABI) 	  #ENDIF#
+#SP1# ABI		     = $(IBM_ABI)	  #ENDIF#
+#######################################################################
+
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
 TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(USER_OPT)
@@ -137,6 +145,11 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #INTEL32_FORTRAN#TAU_F90     = ifc 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
 #NEC_FORTRAN#TAU_F90         = f90 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
 
+############# Portable F90 Options #############
+#IBM64_FORTRAN#TAU_F90_FIXED      = -qfixed  #ENDIF#
+#IBM_FORTRAN#TAU_F90_FIXED      = -qfixed  #ENDIF#
+#IBM_FORTRAN#TAU_F90_SUFFIX     = -qsuffix=f=f90  #ENDIF#
+#IBM64_FORTRAN#TAU_F90_SUFFIX     = -qsuffix=f=f90  #ENDIF#
 
 ############# Profiling Options #############
 #PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
@@ -227,7 +240,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #PAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
 #IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
-#IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -lpmapi#ENDIF#
+#IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -L/usr/pmapi/lib -lpmapi#ENDIF#
+#IBM64PAPI#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a -L/usr/lpp/pmtoolkit/lib  -L/usr/pmapi/lib -lpmapi #ENDIF#
 #SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi64 #ENDIF#
 
 #PAPI#TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
@@ -236,6 +250,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #GNU#TAU_PAPI_RPATH	= -Wl,-rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
 #SOL2PAPI#TAU_PAPI_RPATH	= #ENDIF#
 #IBMPAPI#TAU_PAPI_RPATH	= #ENDIF#
+#IBM64PAPI#TAU_PAPI_RPATH	= #ENDIF#
 #PAPI#TAU_LINKER_OPT1 = $(TAU_PAPI_RPATH) #ENDIF#
 
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
@@ -320,6 +335,10 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #USE_INTELCXX#AR_SHFLAGS        = -shared               #ENDIF#
 #ACC#AR_SHFLAGS                 = -b            #ENDIF#
 TAU_SHFLAGS = $(AR_SHFLAGS) -o
+
+##############################################
+TAU_AR                 = ar             #ENDIF#
+#IBM64#TAU_AR          = ar -X64        #ENDIF#
 
 
 ##############################################
