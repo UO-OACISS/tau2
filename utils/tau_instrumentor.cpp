@@ -295,12 +295,12 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
       { 
 	// we're at the desired line no. search for an open brace
 	int inbufLength = strlen(inbuf);
-	if (lastInstrumentedLineNo >= (*it)->line) 
+	if (lastInstrumentedLineNo >= (*it)->line )
 	{ 
 	  // Hey! This line has already been instrumented. Go to the next 
 	  // entry in the func
 #ifdef DEBUG
-	  cout <<"Entry already instrumented! line = "<<(*it)->line <<endl;
+	  cout <<"Entry already instrumented or brace not found - reached next routine! line = "<<(*it)->line <<endl;
 #endif 
 	  ostr << inbuf <<endl;
 	  break; // takes you to the outermost for loop
@@ -311,7 +311,7 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
 	  if ((inbuf[i] == '{') && (instrumented == false))
 	  {
 #ifdef DEBUG
-	    cout <<"found the *first* { on the line" <<endl;
+	    cout <<"found the *first* { on the line inputLineNo=" <<inputLineNo<< endl;
 #endif 
 	    ostr << inbuf[i] <<endl; // write the open brace and '\n'
 	    // put in instrumentation for the routine HERE
@@ -350,6 +350,14 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
 	  { 
 	    // ok to write to ostr 
 	    ostr << inbuf[i]; 
+	    if (inbuf[i] == ';')
+	    { // Hey! We've got a ; before seeing an open brace. That means 
+	      // we're dealing with a template declaration. we can't instrument
+	      // a declaration, only a definition. 
+	      instrumented = true; 	
+	      // by setting instrumented as true, it won't look for an open
+	      // brace on this line 
+	    }
           } 
 	} // for i loop
 	ostr <<endl;
