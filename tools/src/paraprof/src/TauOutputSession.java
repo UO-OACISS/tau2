@@ -29,10 +29,21 @@ import dms.dss.*;
 
 public class TauOutputSession extends ParaProfDataSession{
 
+
+    //####################################
+    //Public Section.
+    //####################################
+
+    //######
+    //Contructors.
+    //######
     public TauOutputSession(){
 	super();
 	this.setMetrics(new Vector());
     }
+    //######
+    //End - Contructors.
+    //######
 
     public void run(){
 	try{
@@ -442,6 +453,13 @@ public class TauOutputSession extends ParaProfDataSession{
 	    ParaProf.systemError(e, null, "SSD01");
 	}
     }
+
+    public static void main(String[] args){
+    }
+    //####################################
+    //End - Public Section.
+    //####################################
+
     
     //####################################
     //Private Section.
