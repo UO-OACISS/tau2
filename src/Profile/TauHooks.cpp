@@ -123,7 +123,14 @@ void TauRoutineEntry(int id )
   TAU_MAPPING_LINK(TauMethodName, id);
 #elif TAUDYNVEC
   id--; /* to account for offset. Start from 0..n-1 instead of 1..n */
-  TauMethodName = TheTauDynFI()[id];
+  vector<FunctionInfo *> vfi = TheTauDynFI();
+  for (vector<FunctionInfo *>::iterator it = vfi.begin(); it != vfi.end(); it++)
+  {
+    TauMethodName = TheTauDynFI()[id];
+    TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
+    TAU_MAPPING_PROFILE_START(TauTimer, tid);
+    break;
+  }
 #else /* TAUDYNVEC */
   id--; /* to account for offset. Start from 0..n-1 instead of 1..n */ 
   if ((TauMethodName = TheTauDynFI()[id]) == NULL) 
@@ -134,10 +141,12 @@ void TauRoutineEntry(int id )
   }
 #endif /* retrieve it from the vector */
   
+#ifndef TAUDYNVEC 
   dprintf("<tid %d> Entry <id %d> <<<<< name = %s\n", tid, id, TauMethodName->GetName());
   TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
   TAU_MAPPING_PROFILE_START(TauTimer, tid);
   dprintf("Entry into %s: id = %d\n", TauMethodName->GetName(), id);
+#endif /* TAUDYNVEC */
   TAU_MONITOR_EXIT(tid);
 }
 
@@ -147,8 +156,10 @@ void TauRoutineExit(int id)
   int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
   id --; 
+  /*
   FunctionInfo *fi = TheTauDynFI()[id];
   dprintf("<tid %d> Exit <id %d> >>>>>> name = %s\n", tid, id, fi->GetName());
+  */
   TAU_MAPPING_PROFILE_STOP(tid);
   TAU_MONITOR_EXIT(tid);
 }
@@ -189,10 +200,10 @@ void TauRoutineExitTest(int id)
   dprintf("Size = %d\n", val);
   TAU_MAPPING_PROFILE_STOP(tid);
   
-  /*
+  /*  
   FunctionInfo *fi = TheTauDynFI()[id];
   printf("<tid %d> Exit <id %d> >>>>>> name = %s\n", tid, id, fi->GetName());
-  */
+  */ 
   TAU_MONITOR_EXIT(tid);
 }
 
@@ -233,6 +244,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2003/07/17 23:43:19 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.16 2003/07/17 23:43:19 sameer Exp $ 
+ * $Revision: 1.17 $   $Date: 2003/07/17 23:52:41 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.17 2003/07/17 23:52:41 sameer Exp $ 
  ***************************************************************************/
