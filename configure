@@ -744,11 +744,13 @@ fi
 if [ $papiwallclock = yes ]
   then
     fixmakeargs="$fixmakeargs PAPIWALLCLOCK"
+    tauoptions="${tauoptions}-papiwallclock"
 fi
 
 if [ $papivirtual = yes ]
   then
     fixmakeargs="$fixmakeargs PAPIVIRTUAL"
+    tauoptions="${tauoptions}-papivirtual"
 fi
 
 if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
