@@ -34,6 +34,7 @@
 #include <string.h>
 #include <Profile/Profiler.h>
 
+//#define DEBUG_PROF
 //int debugPrint = 0;
 // control debug printf statements
 //#define dprintf if (debugPrint) printf
@@ -144,7 +145,12 @@ void TauRoutineExitTest(int id)
 void TauProgramTermination(char *name)
 {
   dprintf("TauProgramTermination %s\n", name);
-  TAU_PROFILE_EXIT(name);
+  if (TheSafeToDumpData())
+  {
+    dprintf("Dumping data...\n");
+    TAU_PROFILE_EXIT(name);
+    TheSafeToDumpData() = 0;
+  }
   return;
 }
 
@@ -163,6 +169,6 @@ void HookExit(char *name)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2000/04/18 18:58:22 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.6 2000/04/18 18:58:22 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 2000/04/18 22:54:01 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.7 2000/04/18 22:54:01 sameer Exp $ 
  ***************************************************************************/
