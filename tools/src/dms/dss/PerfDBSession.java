@@ -1,4 +1,4 @@
-package dms.dss
+package dms.dss;
 
 import perfdb.util.dbinterface.*;
 import perfdb.util.io.*;
@@ -11,13 +11,13 @@ import java.sql.*;
 public class PerfDBSession extends DataSession {
 
     private DB db = null;
-    private com.perfdb.ConnectionManager connector;
+    private perfdb.ConnectionManager connector;
 
 	public PerfDBSession () {
 		super();
 		// initialize the connection to the database,
 		// using the configuration settings.
-		connector = new com.perfdb.ConnectionManager();
+		connector = new perfdb.ConnectionManager();
 	}
 
 	public void open () {
@@ -29,7 +29,7 @@ public class PerfDBSession extends DataSession {
 		connector.dbclose();
 	}
 
-    public com.perfdb.ConnectionManager getConnector(){
+    public perfdb.ConnectionManager getConnector(){
 		return connector;
     }
 
