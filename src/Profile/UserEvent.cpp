@@ -53,6 +53,14 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+#ifdef TRACING_ON
+#ifdef TAU_EPILOG
+#include "elg_trc.h"
+#else /* TAU_EPILOG */
+#define PCXX_EVENT_SRC
+#include "Profile/pcxx_events.h"
+#endif /* TAU_EPILOG */
+#endif // TRACING_ON 
 
 #ifdef PGI
 template void vector<TauUserEvent *>::insert_aux(vector<TauUserEvent *>::iterator, TauUserEvent *const &);
@@ -74,8 +82,16 @@ void TauUserEvent::AddEventToDB()
   TheEventDB().push_back(this);
   DEBUGPROFMSG("Successfully registered event " << GetEventName() << endl;);
   DEBUGPROFMSG("Size of eventDB is " << TheEventDB().size() <<endl);
+  /* Set user event id */
+  EventId = RtsLayer::GenerateUniqueId();
   RtsLayer::UnLockDB();
   return;
+}
+
+// Constructor 
+long TauUserEvent::GetEventId(void) 
+{
+  return EventId;
 }
 
 // Constructor 
@@ -179,6 +195,12 @@ TauUserEvent& TauUserEvent::operator= (const TauUserEvent& X)
 
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid)
 { 
+#ifdef TRACING_ON
+  TraceEvent(GetEventId(), (unsigned long long) data, tid, 0, 0); 
+  /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
+#endif /* TRACING_ON */
+
+#ifdef PROFILING_ON
   // Record this value  
   LastValueRecorded[tid] = data;
 
@@ -212,6 +234,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid)
      SumSqrValue[tid] += data*data; 
   }
 
+#endif /* PROFILING_ON */
   return; // completed calculating statistics for this event
 }
 
@@ -420,6 +443,6 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2003/05/22 00:54:34 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.11 2003/05/22 00:54:34 sameer Exp $ 
+ * $Revision: 1.12 $   $Date: 2004/07/26 23:59:12 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.12 2004/07/26 23:59:12 sameer Exp $ 
  ***************************************************************************/
