@@ -250,7 +250,6 @@ NumLiteral	= 	({NLit1} | {NLit2} | {NLit3}) ({Exp})?
 	                          if (table.containsKey(key))
 				    yybegin(IGNORE);
 				  else 
-					System.out.println("Starting comment");
 				    yybegin(COMMENT);
 	                          debug("Processed ifndef."); }
 	.                       { yybegin(COMMENT); 
