@@ -20,22 +20,37 @@ public class PPML{
 
     public PPML(){}
 
-    public static Metric applyOperation(Metric operand1, Metric operand2, String inOperation){
+    public static Metric applyOperation(Metric operand1, Object operand2, String inOperation){
+	System.out.println("Here1");
 	try{
-	    ParaProfTrial trialOpA = operand1.getTrial();
-	    ParaProfTrial trialOpB = operand2.getTrial();
-	    int opA = operand1.getID();
-	    int opB = operand2.getID();
-	
+	    boolean constant = false; //Indicates whether we are just applying a constant
+	                              //as an argument for the second operand.
+	    double constantValue = 0.00;
+	    ParaProfTrial trialOpA = null;
+	    ParaProfTrial trialOpB = null;
+	    int opA = -1;
+	    int opB = -1;
 
+	    if(operand2 instanceof String){
+		constantValue = Double.parseDouble((((String)operand2).substring(4)).trim());
+		constant = true;
+	    }
+	    
+	    trialOpA = operand1.getTrial();
+	    opA = operand1.getID();
+	    if(!constant){
+		trialOpB = ((Metric)operand2).getTrial();
+		opB = ((Metric)operand2).getID();
+	    }
+	    
 	    //We do not support metric from different trials yet.  Check for this.
-	    if(trialOpA!=trialOpB){
+	    if((!constant)&&(trialOpA!=trialOpB)){
 		JOptionPane.showMessageDialog(ParaProf.paraProfManager,
 					      "Sorry, please select metrics from the same trial!", "ParaProf Error",
 					      JOptionPane.ERROR_MESSAGE);
 		return null;
 	    }
-
+	    
 	    String newMetricName = null;
 	    int operation = -1;
 	    if(inOperation.equals("Add")){
@@ -58,7 +73,12 @@ public class PPML{
 		System.out.println("Wrong operation type");
 	    }
 
-	    newMetricName = ((Metric)trialOpA.getMetrics().elementAt(opA)).getName() + newMetricName + ((Metric)trialOpA.getMetrics().elementAt(opB)).getName();
+	    if(constant)
+		newMetricName = ((Metric)trialOpA.getMetrics().elementAt(opA)).getName() + newMetricName + constantValue;
+	    else
+		newMetricName = ((Metric)trialOpA.getMetrics().elementAt(opA)).getName() + newMetricName + ((Metric)trialOpA.getMetrics().elementAt(opB)).getName();
+
+	    System.out.println("Metric name is: " + newMetricName);
       
 	    Metric newMetric = trialOpA.addMetric();
 	    newMetric.setTrial(trialOpA);
@@ -110,8 +130,12 @@ public class PPML{
 				double result = 0.0;
                             
 				d1 = globalThreadDataElement.getExclusiveValue(opA);
-				d2 = globalThreadDataElement.getExclusiveValue(opB);
-				result = PPML.apply(operation,d1,d2);
+				if(!constant){
+				    d2 = globalThreadDataElement.getExclusiveValue(opB);
+				    result = PPML.apply(operation,d1,d2);
+				}
+				else
+				    result = PPML.apply(operation,d1,constantValue);
 			    
 				globalThreadDataElement.setExclusiveValue(metric, result);
 				//Now do the global mapping element exclusive stuff.
@@ -119,8 +143,12 @@ public class PPML{
 				    globalMappingElement.setMaxExclusiveValue(metric, result);
                   
 				d1 = globalThreadDataElement.getInclusiveValue(opA);
-				d2 = globalThreadDataElement.getInclusiveValue(opB);
-				result = PPML.apply(operation,d1,d2);
+				if(!constant){
+				    d2 = globalThreadDataElement.getInclusiveValue(opB);
+				    result = PPML.apply(operation,d1,d2);
+				}
+				else
+				    result = PPML.apply(operation,d1,constantValue);
 			    
 				globalThreadDataElement.setInclusiveValue(metric, result);			    
 				//Now do the global mapping element inclusive stuff.
@@ -146,6 +174,13 @@ public class PPML{
 		//Display an error
 		JOptionPane.showMessageDialog(ParaProf.paraProfManager, "Did not recognize arguments! Note: DB apply not supported.", "Argument Error!"
 					      ,JOptionPane.ERROR_MESSAGE);
+	    }
+	    else{
+		UtilFncs.systemError(new ParaProfError(PPML.staticToString()+": applyOperation(...)",
+						       "An error occurred ... please see console!",
+						       "An error occured whilst trying to apply this operation!",
+						       null,e, ParaProf.paraProfManager,null,null,true,false,false),
+				     null,null);
 	    }
 	    return null;
 	}
@@ -175,4 +210,10 @@ public class PPML{
 	}
 	return d;
     }
+
+    public static String staticToString(){
+	return (new PPML()).toString();}
+
+    public String toString(){
+	return this.getClass().getName();}
 }

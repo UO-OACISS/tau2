@@ -36,7 +36,7 @@ public class PPMLPanel extends JPanel implements ActionListener{
 	//Set component properties.
 	//####################################
 	arg1Field.setEditable(false);
-	arg2Field.setEditable(false);
+	arg2Field.setEditable(true);
 	//####################################
 	//End - Set component properties.
 	//####################################
@@ -105,9 +105,12 @@ public class PPMLPanel extends JPanel implements ActionListener{
 	return arg2Field.getText().trim();}
 
     public void applyOperation(){
-	Metric metric = PPML.applyOperation(paraProfManager.getOperand1(),
-					    paraProfManager.getOperand2(),
-					    (String) operation.getSelectedItem());
+	String arg2 = this.getArg2Field();
+	Metric metric = null;
+	if((arg2.indexOf("val"))!=-1)
+	    metric = PPML.applyOperation(paraProfManager.getOperand1(),arg2,(String) operation.getSelectedItem());
+	else
+	    metric = PPML.applyOperation(paraProfManager.getOperand1(),paraProfManager.getOperand2(),(String) operation.getSelectedItem());
 	if(metric!=null){
 	    if(metric.getTrial().dBTrial())
 		paraProfManager.uploadMetric(metric);
