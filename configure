@@ -1436,6 +1436,14 @@ then
     # both found.
     # libmpi.* not found - look for libmpich.*
     # For fortran libfmpich.* look for libpmpi
+
+    # Special check for LAM MPI
+    if [ -r $mpilib/liblam.a ]
+    then
+      echo "This looks like a LAM MPI installation. Adding -llam -lutil to link command line"
+      mpilibargs="$mpilibargs -llam -lutil"
+      mpiflibargs="$mpiflibargs -llam -lutil"
+    fi 
     mpilibargs=`echo $mpilibargs | sed  -e 's/ /#/g'`
     mpiflibargs=`echo $mpiflibargs | sed  -e 's/ /#/g'`
     #echo "mpiincargs= $mpiincargs"
