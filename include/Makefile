@@ -34,15 +34,16 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 EXTRADIR=
-TAUROOT=/home/users/sameer/tau2
+TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2 
 TULIPDIR=
 PCLDIR=
 PDTDIR=
+DYNINSTDIR=
 JDKDIR=
 TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
-TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=/nfs/research/parallel/sameer/gar/rs/demo/tau2
 TAU_OPTIONS=
 #######################################################################
  
@@ -58,7 +59,7 @@ INSTALL = /bin/cp
 SHELL = /bin/sh
 LSX = .a
 #############################################
-# JAVA DEFAULT ARCH
+# JAVA DEFAULT ARCH 
 #############################################
 JDKARCH                 = linux
 #DEC_ALPHA#JDKARCH      = alpha      #ENDIF#
@@ -66,6 +67,16 @@ JDKARCH                 = linux
 #SGIMP#JDKARCH          = irix       #ENDIF#
 #SP1#JDKARCH            = aix        #ENDIF#
 #T3E#JDKARCH            = cray       #ENDIF#
+#############################################
+# JAVA OBJECTS
+#############################################
+#JAVA#TAU_JAVA_O 	= TauJava.o  #ENDIF#
+
+#############################################
+# DYNINST DEFAULT ARCH
+#############################################
+#SOL2#DYNINST_PLATFORM 	= sparc-sun-solaris2.4 #ENDIF#
+#SP1#DYNINST_PLATFORM 	= rs6000-ibm-aix       #ENDIF#
 
 #PCL#include $(TAUROOT)/include/makefiles/PCLMakefile.stub	  #ENDIF#
 
