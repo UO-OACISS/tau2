@@ -1930,6 +1930,10 @@ then
       #echo "Fortran fmpi.* found"
       mpiflibargs="-L$mpilib -lfmpi $wrapperlib"
     else
+      if [ $epilog = yes -a -f $epilogdir/lib/libfmpi.a -o -f $epilogdir/src/libfmpi.a ] 
+      then
+        mpiflibargs="$wrapperlib -lfmpi"
+      fi 
       if [ -f $mpilib/libfmpich.a -o -f $mpilib/libfmpich.so ]
       then
         #echo "Fortran fmpich.* found"
