@@ -157,6 +157,7 @@ char * TauGetCounterString(void)
 
 void Profiler::Start(int tid)
 { 
+      unsigned long long TimeStamp = 0L;
       DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
@@ -164,6 +165,21 @@ void Profiler::Start(int tid)
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
       DEBUGPROFMSG("Profiler::Start Entering " << ThisFunction->GetName()<<endl;);
 	
+	// Initialization is over, now record the time it started
+#ifndef TAU_MULTIPLE_COUNTERS 
+	StartTime =  RtsLayer::getUSecD(tid) ;
+	TimeStamp = (unsigned long long) StartTime;
+#else //TAU_MULTIPLE_COUNTERS
+	//Initialize the array to zero, as some of the elements will
+	//not be set by counting functions.
+	for(int i=0;i<MAX_TAU_COUNTERS;i++){
+	  StartTime[i]=0;
+	}
+	//Now get the start times.
+	RtsLayer::getUSecD(tid, StartTime);	  
+	TimeStamp = StartTime[0]; // USE COUNTER1 for tracing
+#endif//TAU_MULTIPLE_COUNTERS
+
 #ifdef TAU_CALLPATH
         CallPathStart(tid);
 #endif // TAU_CALLPATH
@@ -174,7 +190,9 @@ void Profiler::Start(int tid)
 	     << ThisFunction->GetName()<<endl;);
 	elg_enter(ThisFunction->GetFunctionId(), ELG_NO_ID, ELG_NO_LNO);
 #else /* TAU_EPILOG */
-	TraceEvent(ThisFunction->GetFunctionId(), 1, tid); // 1 is for entry
+	TraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
+	// 1 is for entry in second parameter and for use TimeStamp in last
+	DEBUGPROFMSG("Start TimeStamp for Tracing = "<<TimeStamp<<endl;);
 #endif /* TAU_EPILOG */
 #endif /* TRACING_ON */
 
@@ -198,18 +216,6 @@ void Profiler::Start(int tid)
 	  AddInclFlag = false;
 	}
 	
-	// Initialization is over, now record the time it started
-#ifndef TAU_MULTIPLE_COUNTERS 
-	StartTime =  RtsLayer::getUSecD(tid) ;
-#else //TAU_MULTIPLE_COUNTERS
-	//Initialize the array to zero, as some of the elements will
-	//not be set by counting functions.
-	for(int i=0;i<MAX_TAU_COUNTERS;i++){
-	  StartTime[i]=0;
-	}
-	//Now get the start times.
-	RtsLayer::getUSecD(tid, StartTime);	  
-#endif//TAU_MULTIPLE_COUNTERS
 	DEBUGPROFMSG("Start Time = "<< StartTime<<endl;);
 #endif // PROFILING_ON
   	
@@ -322,6 +328,7 @@ Profiler& Profiler::operator= (const Profiler& X)
 
 void Profiler::Stop(int tid)
 {
+      unsigned long long TimeStamp = 0L; 
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
@@ -329,19 +336,10 @@ void Profiler::Stop(int tid)
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
         DEBUGPROFMSG("Profiler::Stop for routine = " << ThisFunction->GetName()<<endl;);
 
-
-#ifdef TRACING_ON
-#ifdef TAU_EPILOG
-        DEBUGPROFMSG("Calling elg_exit(): "<< ThisFunction->GetName()<<endl;);
-	elg_exit();
-#else /* TAU_EPILOG */
-	TraceEvent(ThisFunction->GetFunctionId(), -1, tid); // -1 is for exit
-#endif /* TAU_EPILOG */
-#endif //TRACING_ON
-
-#ifdef PROFILING_ON  // Calculations relevent to profiling only 
 #ifndef TAU_MULTIPLE_COUNTERS
-	double TotalTime = RtsLayer::getUSecD(tid) - StartTime;
+	double CurrentTime = RtsLayer::getUSecD(tid);
+	double TotalTime = CurrentTime - StartTime;
+	TimeStamp = (unsigned long long) CurrentTime; 
 #else //TAU_MULTIPLE_COUNTERS
 	double CurrentTime[MAX_TAU_COUNTERS];
 	for(int j=0;j<MAX_TAU_COUNTERS;j++){
@@ -350,6 +348,7 @@ void Profiler::Stop(int tid)
 	//Get the current counter values.
 	RtsLayer::getUSecD(tid, CurrentTime);
 
+#ifdef PROFILING_ON
 	double TotalTime[MAX_TAU_COUNTERS];
 	for(int i=0;i<MAX_TAU_COUNTERS;i++){
 	  TotalTime[i]=0;
@@ -358,8 +357,23 @@ void Profiler::Stop(int tid)
 	for(int k=0;k<MAX_TAU_COUNTERS;k++){
 	  TotalTime[k] = CurrentTime[k] - StartTime[k];
 	}
+#endif // PROFILING_ON
+	TimeStamp = (unsigned long long) CurrentTime[0]; // USE COUNTER1
 	
 #endif//TAU_MULTIPLE_COUNTERS
+
+#ifdef TRACING_ON
+#ifdef TAU_EPILOG
+        DEBUGPROFMSG("Calling elg_exit(): "<< ThisFunction->GetName()<<endl;);
+	elg_exit();
+#else /* TAU_EPILOG */
+	TraceEvent(ThisFunction->GetFunctionId(), -1, tid, TimeStamp, 1); 
+	// -1 is for exit, 1 is for use TimeStamp in the last argument
+	DEBUGPROFMSG("Stop TimeStamp for Tracing = "<<TimeStamp<<endl;);
+#endif /* TAU_EPILOG */
+#endif //TRACING_ON
+
+#ifdef PROFILING_ON  // Calculations relevent to profiling only 
 
 #ifdef TAU_CALLPATH
 	    CallPathStop(TotalTime, tid);
@@ -2519,8 +2533,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.84 $   $Date: 2003/07/22 17:21:22 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.84 2003/07/22 17:21:22 sameer Exp $ 
+ * $Revision: 1.85 $   $Date: 2003/09/05 20:38:47 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.85 2003/09/05 20:38:47 sameer Exp $ 
  ***************************************************************************/
 
 	

@@ -62,6 +62,10 @@ static double tracerValues[MAX_TAU_COUNTERS] = {0};
 /* -- Use Profiling interface for time -- */
 unsigned long long pcxx_GetUSecLong(int tid)
 { 
+  // If you're modifying the behavior of this routine, note that in 
+  // Profiler::Start and Stop, we obtain the timestamp for tracing explicitly. 
+  // The same changes would have to be made there as well (e.g., using COUNTER1
+  // for tracing in multiplecounters case) for consistency.
 #ifdef TAU_MULTIPLE_COUNTERS
   //In the presence of multiple counters, the system always
   //assumes that counter1 contains the tracing metric.
@@ -265,7 +269,7 @@ void TraceUnInitialize(int tid)
 }
 
 /* -- write event to buffer ---------------------------------- */
-void TraceEvent(long int ev, long long par, int tid)
+void TraceEvent(long int ev, long long par, int tid, unsigned long long ts, int use_ts)
 {
   TraceEvInit(tid);
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
@@ -276,7 +280,15 @@ void TraceEvent(long int ev, long long par, int tid)
     {
 	/* we need to ensure that INIT is the first event */
       pcxx_ev_ptr->ev = PCXX_EV_INIT; 
-      pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
+      /* Should we use the timestamp provided to us? */
+      if (use_ts)
+      {
+        pcxx_ev_ptr->ti   = ts;
+      }
+      else 
+      {
+        pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
+      }
       pcxx_ev_ptr->par  = pcxx_ev_class; /* init event */ 
       /* probably the nodeid is not set yet */
       pcxx_ev_ptr->nid  = RtsLayer::myNode();
@@ -288,7 +300,14 @@ void TraceEvent(long int ev, long long par, int tid)
   } 
         
   pcxx_ev_ptr->ev   = ev;
-  pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
+  if (use_ts)
+  {
+    pcxx_ev_ptr->ti   = ts;
+  }
+  else
+  {
+    pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
+  }
   pcxx_ev_ptr->par  = par;
   pcxx_ev_ptr->nid  = RtsLayer::myNode();
   pcxx_ev_ptr->tid  = tid ;
