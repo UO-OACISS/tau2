@@ -500,6 +500,13 @@ int Profiler::StoreData(int tid)
 	sprintf(header,"%d templated_functions\n", numFunc);
 #endif // SGI_HW_COUNTERS 
 
+#ifdef TAU_PAPI
+	static const char * papi_env_var = getenv("PAPI_EVENT");
+	if (papi_env_var != NULL)
+	  sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
+#endif // TAU_PAPI 
+	  
+	
 	// Send out the format string
 	strcat(header,"# Name Calls Subrs Excl Incl ");
 #ifdef PROFILE_STATS
@@ -685,6 +692,12 @@ int Profiler::DumpData(int tid)
 #else  // SGI_TIMERS, TULIP_TIMERS 
 	sprintf(header,"%d templated_functions\n", numFunc);
 #endif // SGI_HW_COUNTERS 
+
+#ifdef TAU_PAPI
+	static const char * papi_env_var = getenv("PAPI_EVENT");
+	if (papi_env_var != NULL)
+	  sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
+#endif // TAU_PAPI 
 
 	// Send out the format string
 	strcat(header,"# Name Calls Subrs Excl Incl ");
@@ -1007,8 +1020,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.54 $   $Date: 2002/01/16 00:40:03 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.54 2002/01/16 00:40:03 sameer Exp $ 
+ * $Revision: 1.55 $   $Date: 2002/02/07 19:26:26 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.55 2002/02/07 19:26:26 sameer Exp $ 
  ***************************************************************************/
 
 	
