@@ -14,6 +14,7 @@ Version 2.13 changes (from 2.12):
 2. TAU MPI wrapper library layer enhancements [CCA].
 3. Better support for autoinstrumentation of F95 source code using PDT [LANL].
 4. Support for autoinstrumentation of Java using JDK 1.3 and 1.4.x JVMPI.
+5. Introduced the TAU Trace Input Library (TIL) [VNG, TUDresden].
 
 Version 2.12 changes (from 2.11):
 1. Enhancements in jracy for supporting multiple counter data [LLNL].
