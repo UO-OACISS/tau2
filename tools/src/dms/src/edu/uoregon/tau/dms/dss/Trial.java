@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.7 2004/08/02 23:50:32 amorris Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.8 2004/10/13 21:07:05 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -394,9 +394,18 @@ public class Trial {
 	    // save this trial
 	    PreparedStatement statement = null;
 	    if (itExists) {
-		statement = db.prepareStatement("UPDATE trial SET name = ?, experiment = ?, time = ?, problem_definition = ?, node_count = ?, contexts_per_node = ?, threads_per_context = ?, userdata = ? WHERE id = ?");
+
+		if (db.getDBType().compareTo("oracle") == 0) 
+		    statement = db.prepareStatement("UPDATE trial SET name = ?, experiment = ?, time = to_date(?), problem_definition = ?, node_count = ?, contexts_per_node = ?, threads_per_context = ?, userdata = ? WHERE id = ?");
+		else
+		    statement = db.prepareStatement("UPDATE trial SET name = ?, experiment = ?, time = ?, problem_definition = ?, node_count = ?, contexts_per_node = ?, threads_per_context = ?, userdata = ? WHERE id = ?");
+
 	    } else {
-		statement = db.prepareStatement("INSERT INTO trial (name, experiment, time, problem_definition, node_count, contexts_per_node, threads_per_context, userdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+		if (db.getDBType().compareTo("oracle") == 0) 
+		    statement = db.prepareStatement("INSERT INTO trial (name, experiment, time, problem_definition, node_count, contexts_per_node, threads_per_context, userdata) VALUES (?, ?, to_date(?), ?, ?, ?, ?, ?)");
+		else
+		    statement = db.prepareStatement("INSERT INTO trial (name, experiment, time, problem_definition, node_count, contexts_per_node, threads_per_context, userdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+
 	    }
 	    statement.setString(1, name);
 	    statement.setInt(2, experimentID);
@@ -410,6 +419,7 @@ public class Trial {
 		statement.setInt(9, trialID);
 	    }
 	    statement.executeUpdate();
+	    statement.close();
 	    if (itExists) {
 		newTrialID = trialID;
 	    } else {
@@ -418,6 +428,8 @@ public class Trial {
 		    tmpStr = "select LAST_INSERT_ID();";
 		else if (db.getDBType().compareTo("db2") == 0)
 		    tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
+		else if (db.getDBType().compareTo("oracle") == 0) 
+		    tmpStr = "select trial_id_seq.currval FROM dual";
 		else
 		    tmpStr = "select currval('trial_id_seq');";
 		newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
@@ -425,7 +437,7 @@ public class Trial {
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the trial.");
 	    e.printStackTrace();
-	    System.exit(0);
+	    //System.exit(0);
 	}
 	return newTrialID;
     }
@@ -444,12 +456,13 @@ public class Trial {
 	    }
 	    statement.setInt(1, trialID);
 	    statement.execute();
-
+	    statement.close();
 
 	    // delete the from the atomic_events table
 	    statement = db.prepareStatement(" DELETE FROM atomic_event WHERE trial = ?"); 
 	    statement.setInt(1, trialID);
 	    statement.execute();
+	    statement.close();
 
 	    // delete from the interval_location_profile table
 	    if (db.getDBType().compareTo("mysql") == 0) {
@@ -460,7 +473,8 @@ public class Trial {
 	    }
 	    statement.setInt(1, trialID);
 	    statement.execute();
-	    
+	    statement.close();
+
 	    // delete from the interval_mean_summary table
 	    if (db.getDBType().compareTo("mysql") == 0) {
 		statement = db.prepareStatement(" DELETE interval_mean_summary.* FROM interval_mean_summary LEFT JOIN interval_event ON interval_mean_summary.interval_event = interval_event.id WHERE interval_event.trial = ?");
@@ -470,6 +484,7 @@ public class Trial {
 	    }
 	    statement.setInt(1, trialID);
 	    statement.execute();
+	    statement.close();
 
 
 	    if (db.getDBType().compareTo("mysql") == 0) {
@@ -481,15 +496,23 @@ public class Trial {
 
 	    statement.setInt(1, trialID);
 	    statement.execute();
+	    statement.close();
+
 	    statement = db.prepareStatement(" DELETE FROM interval_event WHERE trial = ?");
 	    statement.setInt(1, trialID);
 	    statement.execute();
+	    statement.close();
+
 	    statement = db.prepareStatement(" DELETE FROM metric WHERE trial = ?");
 	    statement.setInt(1, trialID);
 	    statement.execute();
+	    statement.close();
+
 	    statement = db.prepareStatement(" DELETE FROM trial WHERE id = ?");
 	    statement.setInt(1, trialID);
 	    statement.execute();
+	    statement.close();
+
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while deleting the trial.");
 	    e.printStackTrace();

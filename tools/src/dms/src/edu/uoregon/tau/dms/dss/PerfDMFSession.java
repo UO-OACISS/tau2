@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.15 2004/10/12 18:38:25 amorris Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.16 2004/10/13 21:07:05 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -545,8 +545,8 @@ public class PerfDMFSession extends DataSession {
 
     // save the intervalEvent data
     private void saveIntervalEventData(Hashtable newFunHash, Hashtable newMetHash, int saveMetricIndex) {
-		Enumeration enum = intervalEventData.elements();
-	    IntervalLocationProfile.saveIntervalEventData(db, newFunHash, enum, newMetHash, saveMetricIndex);
+	Enumeration enum = intervalEventData.elements();
+	IntervalLocationProfile.saveIntervalEventData(db, newFunHash, enum, newMetHash, saveMetricIndex);
     }
 
     // save the intervalEvents
@@ -855,17 +855,17 @@ public class PerfDMFSession extends DataSession {
 	else if (db.getDBType().compareTo("db2") == 0)
 	    return;
 	/*
-	String vacuum = "vacuum;";
-	String analyze = "analyze;";
-	try {
-	    // System.out.println("Vacuuming database...");
-	    // db.executeUpdate(vacuum);
-	    System.out.println("Analyzing database...");
-	    db.executeUpdate(analyze);
-	} catch (SQLException e) {
-	    System.out.println("An error occurred while vacuuming the database.");
-	    e.printStackTrace();
-	}
+	  String vacuum = "vacuum;";
+	  String analyze = "analyze;";
+	  try {
+	  // System.out.println("Vacuuming database...");
+	  // db.executeUpdate(vacuum);
+	  System.out.println("Analyzing database...");
+	  db.executeUpdate(analyze);
+	  } catch (SQLException e) {
+	  System.out.println("An error occurred while vacuuming the database.");
+	  e.printStackTrace();
+	  }
 	*/
     }
 

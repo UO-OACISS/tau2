@@ -484,7 +484,7 @@ public abstract class ParaProfDataSession  extends DataSession{
 	// need these to keep track of the total totals (?)
 	double[] exclusiveTotalTotal = new double[numberOfMetrics];
 	double[] inclusiveTotalTotal = new double[numberOfMetrics];
-	for(int i=0;i<numberOfMetrics;i++){
+	for (int i=0;i<numberOfMetrics;i++) {
 	    exclusiveTotalTotal[i] = 0;
 	    inclusiveTotalTotal[i] = 0;
 	}

@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.4 2004/10/12 18:38:25 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.5 2004/10/13 21:07:05 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -95,11 +95,15 @@ public class Metric extends Object {
 	    stmt1.setString(1, getName());
 	    stmt1.setInt(2, newTrialID);
 	    stmt1.executeUpdate();
+	    stmt1.close();
+
 	    String tmpStr = new String();
 	    if (db.getDBType().compareTo("mysql") == 0)
 		tmpStr = "select LAST_INSERT_ID();";
 	    else if (db.getDBType().compareTo("db2") == 0)
 		tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+	    else if (db.getDBType().compareTo("oracle") == 0)
+		tmpStr = "select metric_id_seq.currval FROM dual";
 	    else
 		tmpStr = "select currval('metric_id_seq');";
 	    newMetricID = Integer.parseInt(db.getDataItem(tmpStr));
