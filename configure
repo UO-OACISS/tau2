@@ -443,9 +443,12 @@ detectspec=`cd utils; ./archfind -s`
 # if there are no arguments, GUESS at system configuration
 if [ $tauarch = unknown ]
   then 
-    if [ $1 = default ] 
+    if [ $# = 1 ]
       then
-	machine=$1
+	if [ $1 = default ]
+	then 
+	  machine=$1
+	fi
       else
         echo Attempting to auto-configure system, determining architecture...
         machine=$detectarch
@@ -784,8 +787,10 @@ if [ -d $ductape_root_dir ]
       mkdir $ductape_root_dir/$machine/bin
       mkdir $ductape_root_dir/$machine/lib
   fi
+  /bin/rm -f $ductape_root_dir/$machine/bin/cxxparse
   cat utils/cxxparse | 
   sed -e 's,@DUCTAPEROOT@,'$ductape_root_dir/',' -e 's,@CXXINCLUDES@,'"$stdinc"',' -e 's,@ARCH@,'$machine/',' > $ductape_root_dir/$machine/bin/cxxparse
+  chmod +x $ductape_root_dir/$machine/bin/cxxparse
   echo "Installed cxxparse in the DUCTAPE directory $ductape_root_dir"
 fi
     
