@@ -26,7 +26,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.3 2004/08/17 18:09:59 khuck Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.4 2004/09/29 00:54:23 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -229,7 +229,7 @@ public class IntervalLocationProfile extends Object {
 
     private void insertDouble(int dataValueLocation, int offset, double inDouble){
 		int actualLocation = (dataValueLocation*fieldCount)+offset;
-		if (actualLocation > doubleList.length)
+		if (actualLocation >= doubleList.length)
 			incrementStorage();
 		try{
 			doubleList[actualLocation] = inDouble;
