@@ -104,7 +104,7 @@ int EventTrigger( void *userData, double time,
 	       	unsigned int userEventToken,
 		long long userEventValue)
 {
-  dprintf("EventTrigger: time %g, nid %d tid %d event id %d triggered value %ld \n", time, nodeToken, threadToken, userEventToken, userEventValue);
+  dprintf("EventTrigger: time %g, nid %d tid %d event id %d triggered value %lld \n", time, nodeToken, threadToken, userEventToken, userEventValue);
   return 0;
 }
 
