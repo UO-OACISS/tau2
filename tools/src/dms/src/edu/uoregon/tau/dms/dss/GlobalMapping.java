@@ -94,7 +94,10 @@ public class GlobalMapping{
     }
 
     public GlobalMappingElement getGlobalMappingElement(String mappingName, int mappingSelection){
-	return (GlobalMappingElement) mappings[mappingSelection].elementAt(this.getMappingID(mappingName, mappingSelection));}
+	int id = this.getMappingID(mappingName, mappingSelection);
+	if (id == -1)
+	    return null;
+	return (GlobalMappingElement) mappings[mappingSelection].elementAt(id);}
 
     public int getNumberOfMappings(int mappingSelection){
 	return mappings[mappingSelection].size();}
