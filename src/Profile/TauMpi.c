@@ -216,10 +216,10 @@ char *note;
     /* for wildcard receives from any task */
     /* if (rq->otherParty == MPI_ANY_SOURCE) */ 
     otherid = status->MPI_SOURCE;
-    if (rq->tag == MPI_ANY_TAG)
-      othertag = status->MPI_TAG;
+    /* if (rq->tag == MPI_ANY_TAG) */
+    othertag = status->MPI_TAG;
     /* post the receive message */
-      TAU_TRACE_RECVMSG(othertag, otherid, rq->size);
+    TAU_TRACE_RECVMSG(othertag, otherid, rq->size);
   }
 
   /* Remove the record from the request list */
