@@ -355,6 +355,7 @@ int Profiler::StoreData(int tid)
 {
 #ifdef PROFILING_ON 
   	vector<FunctionInfo*>::iterator it;
+  	vector<TauUserEvent*>::iterator eit;
 	char *filename, *errormsg, *header;
 	char *dirname;
 	FILE* fp;
@@ -482,7 +483,14 @@ int Profiler::StoreData(int tid)
 
 	// Print UserEvent Data if any
 	
-        numEvents = TheEventDB().size();
+	numEvents = 0;
+ 	for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++)
+	{
+          if ((*eit)->GetNumEvents()) { 
+	    numEvents++;
+	  }
+	}
+
 	if (numEvents > 0) {
     	// Data format 
     	// # % userevents
@@ -656,8 +664,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 1998/09/17 15:26:00 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.16 1998/09/17 15:26:00 sameer Exp $ 
+ * $Revision: 1.17 $   $Date: 1998/09/22 01:09:59 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.17 1998/09/22 01:09:59 sameer Exp $ 
  ***************************************************************************/
 
 	
