@@ -29,6 +29,7 @@ public class ParaProfLispPrimitives{
 	primatives.add(new showThreadDataWindow(lisp, debug));
 	primatives.add(new showMeanDataWindow(lisp, debug));
 	primatives.add(new showMeanCallPathWindow(lisp, debug));
+	primatives.add(new showGroupLedgerWindow(lisp, debug));
 	primatives.add(new getExclusiveValues(lisp, debug));
 	primatives.add(new wait(lisp, debug));
 	primatives.add(new exitParaProf(lisp, debug));
@@ -220,6 +221,55 @@ class showMeanCallPathWindow extends LispPrimitive{
     //####################################
 
 }
+
+class showGroupLedgerWindow extends LispPrimitive{
+    public showGroupLedgerWindow(Jatha lisp, boolean debug){
+	super(lisp, "SHOWGROUPLEDGERWINDOW", 3);
+	this.lisp = lisp;
+    }
+
+    public void Execute(SECDMachine machine){
+	LispValue arg3 = machine.S.pop();
+	LispValue arg2 = machine.S.pop();
+	LispValue arg1 = machine.S.pop();
+
+	machine.S.push(result(arg1, arg2, arg3));
+	machine.C.pop();
+    }
+
+    LispValue result(LispValue arg1, LispValue arg2, LispValue arg3){
+	System.out.println("Applying showGroupLedgerWindow. Args: " + arg1 + "," + arg2 + "," + arg3);
+	ParaProfTrial trial = ParaProf.applicationManager.getTrial(Integer.parseInt(arg1.toString()),
+								   Integer.parseInt(arg2.toString()),
+								   Integer.parseInt(arg3.toString()));
+	if(trial.groupNamesPresent()){
+	    (new MappingLedgerWindow(trial, 1, this.debug())).show();
+	}
+	else{
+	    System.out.println("Lisp interface (SHOWGROUPSLEDGERWINDOW): No group data present!");
+	}
+	return lisp.makeInteger(0);
+    }
+    
+    public void setDebug(boolean debug){
+	this.debug = debug;}
+    
+    public boolean debug(){
+	return debug;}
+    
+    //####################################
+    //Instance data.
+    //####################################
+    Jatha lisp = null;
+    
+    private boolean debug = false; //Off by default.
+    //####################################
+    //End - Instance data.
+    //####################################
+    
+}
+
+
  
 class getExclusiveValues extends LispPrimitive{
     public getExclusiveValues(Jatha lisp, boolean debug){
