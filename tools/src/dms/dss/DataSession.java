@@ -114,7 +114,7 @@ public abstract class DataSession {
 		this.functions = functions;
 	}
 	
-	abstract public void getFunctionData();
-	abstract public Vector getUserEventData();
+	abstract public ListIterator getFunctionData();
+	abstract public ListIterator getUserEventData();
 };
 
