@@ -44,6 +44,7 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    //Frequently used items.
 	    //######
 	    
+	    //obj should be a PerfDBSession set to the correct application, experiment, and trial.
 	    PerfDBSession perfDBSession = (PerfDBSession) obj;
 
 	    int metric = 0;
@@ -84,9 +85,12 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    ListIterator l = perfDBSession.getFunctions();
 	    while(l.hasNext()){
 		    Function f = (Function) l.next();
-		    this.getGlobalMapping().addGlobalMapping(f.getFunctionID(), 0);
+		    System.out.println(f.getName());
+		    this.getGlobalMapping().addGlobalMapping(f.getName(), 0);
 	    }
+
 	    
+	    /*
 	    int numOfMetrics = trial.getMetricCount();
 	    metrics = new Vector();
 	    if(numOfMetrics==0){
@@ -457,6 +461,7 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		System.out.println("Done processing data!");
 		System.out.println("Time to process (in milliseconds): " + time);
 	    }
+	    */
 	}
         catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD01");

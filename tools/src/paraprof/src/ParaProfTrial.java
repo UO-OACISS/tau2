@@ -60,6 +60,8 @@ public class ParaProfTrial extends Trial{
 	case 3:
 	    break;
 	case 4:
+	    dataSession = new ParaProfDBSession();
+	    dataSession.setDebug(ParaProf.debugIsOn);
 	    break;
 	default:
 	    break;

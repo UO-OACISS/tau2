@@ -212,8 +212,8 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		}
 		perfDBSession.terminate();
 		System.out.println("Done loading experiment list.");
-		tree.expandPath(path);
 	    }
+	    tree.expandPath(path);
 	    jSplitPane.setRightComponent(getApplicationTable((ParaProfApplication) userObject));
 	    jSplitPane.setDividerLocation(0.5);
 	}
@@ -225,11 +225,10 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		for(int i=selectedNode.getChildCount(); i>0; i--){
 		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
 		}
-		ParaProfApplication application = experiment.getApplication();
-		//Set the application and trial.
+		//Set the application and experiment.
 		PerfDBSession perfDBSession = new PerfDBSession(); 
 		perfDBSession.initialize(configFile, password);
-		perfDBSession.setApplication(application.getID());
+		perfDBSession.setApplication(experiment.getApplicationID());
 		perfDBSession.setExperiment(experiment.getID());
 		ListIterator l = perfDBSession.getTrialList();
 		while (l.hasNext()){
@@ -242,15 +241,57 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		}
 		perfDBSession.terminate();
 		System.out.println("Done loading trial list.");
-		tree.expandPath(path);
 	    }
+	    tree.expandPath(path);
 	    jSplitPane.setRightComponent(getPanelHelpMessage(-1));
 	    jSplitPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfTrial){
-	    String tmpString = userObject.toString();
-	    //Here the actual clicked on node is an instance of ParaProfTrial (unlike the above
-	    //check on ParaProfTrial where it was the parent node).
+	    ParaProfTrial trial = (ParaProfTrial) userObject;
+	    if(trial.dBTrial()){
+		//Test to see if trial has been loaded already.
+		boolean loadedExists = false;
+		for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+		    ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+		    if((trial.getID()==loadedTrial.getID())&&
+		       (trial.getExperimentID()==loadedTrial.getExperimentID())
+		       &&(trial.getApplicationID()==loadedTrial.getApplicationID())){
+			selectedNode.setUserObject(loadedTrial);
+			trial = loadedTrial;
+			loadedExists = true;
+		    }
+		}
+		if(!loadedExists){
+		    //Need to load the trial in from the db.
+		    System.out.println("Loading trial ...");
+		    PerfDBSession perfDBSession = new PerfDBSession(); 
+		    perfDBSession.initialize(configFile, password);
+		    perfDBSession.setApplication(trial.getApplicationID());
+		    perfDBSession.setExperiment(trial.getExperimentID());
+		    perfDBSession.setTrial(trial.getID());
+		    trial.initialize(perfDBSession);
+		    perfDBSession.terminate();
+		    //Add to the list of loaded trials.
+		    loadedTrials.add(trial);
+		    System.out.println("Done loading trial.");
+		}
+		
+		//The trial should now have been setup.  Therefore, safe to add metrics.
+		//Refresh the metrics list.
+		for(int i=selectedNode.getChildCount(); i>0; i--){
+		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+		}
+		
+		for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
+			Metric metric = (Metric) e.nextElement();
+			metric.setDBMetric(true);
+			DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+			metric.setDMTN(metricNode);
+			metricNode.setAllowsChildren(false);
+			treeModel.insertNodeInto(metricNode, selectedNode, selectedNode.getChildCount());
+		}
+	    }
+	    tree.expandPath(path);
 	    jSplitPane.setRightComponent(getPanelHelpMessage(-1));
 	    jSplitPane.setDividerLocation(0.5);
 	}
@@ -566,6 +607,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 
     private String password = "";
     private String configFile = "/home/bertie/Programming/Data/pi/perfdb.cfg";
+    private Vector loadedTrials = new Vector();
     //####################################
     //End - Instance Data.
     //####################################
