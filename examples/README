@@ -50,6 +50,11 @@ mixedmode	- This example illustrates the use of PDT, hand-instrumentation
 		  call wrapper library instrumentation. Requires configuring TAU
 		  with -mpiinc=<dir> -mpilib=<dir> -pdt=<dir> -pthread options.
 
+selective	- This example illustrates the use of PDT, and selective 
+		  profiling using profile groups in the tau_instrumentor. 
+		  Requires configuring TAU with -pdt=<dir> -fortran=<...> 
+		  options.
+
 fortran & f90   - Show how to instrument a simple Fortran 90 program. A C++ 
 		  linker needs to be used when linking the fortran application.
 
