@@ -67,7 +67,7 @@
 
 #include <Profile/PapiLayer.h>
 
-#include <Profile/MultipleCounterLayer.h>
+#include <Profile/MultipleCounters.h>
 
 #include <Profile/WindowsThreadLayer.h>
 
@@ -140,6 +140,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.33 $   $Date: 2002/03/08 00:37:54 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.33 2002/03/08 00:37:54 bertie Exp $ 
+ * $Revision: 1.34 $   $Date: 2002/03/08 01:33:27 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.34 2002/03/08 01:33:27 bertie Exp $ 
  ***************************************************************************/
