@@ -43,8 +43,8 @@ public class CopyTest {
 		}
 
 		// get the metrics
-		Vector metrics = myTrial.getMetrics();
-		session.setMetric(metrics);
+		// Vector metrics = myTrial.getMetrics();
+		// session.setMetric(metrics);
 
 		// get the list of functions
 		ListIterator functions;

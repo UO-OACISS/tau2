@@ -97,7 +97,7 @@ public class TestPerfDBSession {
 		// select a function
 		session.setFunction(function);
 		// select a function, another way
-		session.setFunction(function.getIndexID());
+		session.setFunction(function.getID());
 
 		// Get the list of user events
 		ListIterator userEvents;
