@@ -8,11 +8,15 @@ instrument 	- This contains a simple C++ example that shows how TAU's
 
 threads		- A simple multi-threaded program that shows how the main
 	 	  function of a thread is instrumented. Performance data 
-		  is generated for each thread of execution.
+		  is generated for each thread of execution. Uses pthread
+ 		  library and TAU must be configured with -pthread option.
 
 cthreads	- Same as threads above, but for a C program. An 
 		  instrumented C program may be compiled with a C compiler,
 		  but needs to be linked with a C++ linker.
+
+sproc		- SGI sproc threads example. TAU should be configured with
+		  -sproc option to use this.
 
 pi		- An MPI program that calculates the value of pi and e. It
 		  highlights the use of TAU's MPI wrapper library. TAU needs
