@@ -1,5 +1,12 @@
 package dms.dss;
 
+/**
+ * Holds all the data for a trial in the database.
+ *
+ * <P>CVS $Id: Trial.java,v 1.5 2003/08/01 21:38:24 khuck Exp $</P>
+ * @author	Kevin Huck, Robert Bell
+ * @version	%I%, %G%
+ */
 public class Trial {
 	private int trialID;
 	private int experimentID;

@@ -1,5 +1,12 @@
 package dms.dss;
 
+/**
+ * Holds all the data for an experiment in the database.
+ *
+ * <P>CVS $Id: Experiment.java,v 1.5 2003/08/01 21:38:22 khuck Exp $</P>
+ * @author	Kevin Huck, Robert Bell
+ * @version	%I%, %G%
+ */
 public class Experiment {
 	private int experimentID;
 	private int applicationID;

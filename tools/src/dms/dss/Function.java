@@ -1,5 +1,12 @@
 package dms.dss;
 
+/**
+ * Holds all the data for a function in the database.
+ *
+ * <P>CVS $Id: Function.java,v 1.5 2003/08/01 21:38:22 khuck Exp $</P>
+ * @author	Kevin Huck, Robert Bell
+ * @version	%I%, %G%
+ */
 public class Function {
 	private int functionIndexID;
 	private int functionID;

@@ -1,9 +1,10 @@
 package dms.dss;
 
-/*
- * Holds all the data for an application in the database.
+/**
+ * Holds all the data for an application in the database.  This 
+ * object is returned by the DataSession object and all of its subtypes.
  *
- * <P>CVS $Id: Application.java,v 1.5 2003/08/01 18:10:19 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.6 2003/08/01 21:38:21 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  */

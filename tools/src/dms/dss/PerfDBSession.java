@@ -8,6 +8,13 @@ import java.util.*;
 import java.net.*;
 import java.sql.*;
 
+/**
+ * This is the top level class for the Database implementation of the API.
+ *
+ * <P>CVS $Id: PerfDBSession.java,v 1.17 2003/08/01 21:38:22 khuck Exp $</P>
+ * @author	Kevin Huck, Robert Bell
+ * @version	%I%, %G%
+ */
 public class PerfDBSession extends DataSession {
 
     private DB db = null;

@@ -23,4 +23,6 @@ clean:
 	examples/testSimpleExample
 	touch .simple
 
+javadoc:
+	javadoc -d ./doc -classpath ./classes:./../perfdb/jars/perfdb.jar ./dss/*.java	
 

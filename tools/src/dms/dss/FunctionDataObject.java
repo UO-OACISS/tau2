@@ -1,6 +1,13 @@
 package dms.dss;
 
-public class FunctionDataObject extends DataObject{
+/**
+ * Holds all the data for a function data object in the database.
+ *
+ * <P>CVS $Id: FunctionDataObject.java,v 1.9 2003/08/01 21:38:22 khuck Exp $</P>
+ * @author	Kevin Huck, Robert Bell
+ * @version	%I%, %G%
+ */
+public class FunctionDataObject {
 	private int node;
 	private int context;
 	private int thread;

@@ -1,6 +1,13 @@
 package dms.dss;
 
-public class UserEventDataObject extends DataObject{
+/**
+ * Holds all the data for a user event data object in the database.
+ *
+ * <P>CVS $Id: UserEventDataObject.java,v 1.4 2003/08/01 21:38:24 khuck Exp $</P>
+ * @author	Kevin Huck, Robert Bell
+ * @version	%I%, %G%
+ */
+public class UserEventDataObject {
 	private int userEventID;
 	private int profileID;
 	private int node;

@@ -1,15 +1,15 @@
-//***********************
-//
-//Name: DataSessionIterator.java
-//
-//Description: Implements the standard list interface.
-//***********************
-
 package dms.dss;
 
 import java.util.*;
 import dms.dss.*;
 
+/**
+ * Description: Implements the standard list interface.
+ *
+ * <P>CVS $Id: DataSessionIterator.java,v 1.4 2003/08/01 21:38:22 khuck Exp $</P>
+ * @author	Kevin Huck, Robert Bell
+ * @version	%I%, %G%
+ */
 public class DataSessionIterator implements ListIterator{
 
 		public DataSessionIterator(Vector inVector){
