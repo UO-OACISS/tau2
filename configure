@@ -1504,7 +1504,7 @@ case $cxx_compiler in
       if [ $fortran_compiler = no ]
       then
         fixmakeargs="$fixmakeargs INTEL_FORTRAN"
-        fortran_compiler=yes
+        fortran_compiler=intel
       fi
 
 
@@ -1518,7 +1518,7 @@ case $cxx_compiler in
       if [ $fortran_compiler = no ]
       then
         fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
-        fortran_compiler=yes
+        fortran_compiler=intel
       fi
 
       ;;
@@ -2937,7 +2937,7 @@ EOF
       then
         echo "Intel v8.0 compilers used"
       else
-        $cxx_compiler -c -cxxlib-icc f1.cpp
+        $cxx_compiler -c -cxxlib-icc f1.cpp 1>/dev/null 2>&1
         if  ifort f1.o f2.o -o foo -lcprts 1>/dev/null 2>&1
         then
           $cxx_compiler -c f1.cpp
