@@ -7,8 +7,44 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
 
-Installation Procedure: 
+FOR POOMA/SMARTS Users:
 -----------------------
+
+1. Configure TAU
+****************
+% cd /usr/local/packages/tau-2.5
+[FOR SGI]
+% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS
+[FOR LINUX PCs]
+% ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts
+% make install
+
+2. Configure SMARTS
+*******************
+% cd /usr/local/packages/smarts-1.0
+[FOR SGI]
+% configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.5 --enable-64bit --enable-profile
+[FOR LINUX PCs]
+% configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.5 --enable-profile
+% make
+% make install
+
+3. Configure Pooma II 
+*********************
+% setenv TAUDIR     /usr/local/packages/tau-2.5
+% setenv DUCTAPEDIR /usr/local/packages/tau-2.5/ductape
+% setenv SMARTSDIR  /usr/local/packages/smarts-1.0
+[FOR SGI]
+% ./configure --arch SGI64KCC --suite PP --parallel --profile --opt
+[FOR LINUX PCs]
+% ./configure --arch LINUXKCC --suite PP --parallel --profile --opt
+% setenv SUITE PP
+% make
+
+
+
+General Installation Procedure: 
+-------------------------------
 In this directory invoke
 % ./configure
 % make install
