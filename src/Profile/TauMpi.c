@@ -311,7 +311,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
   MPI_Type_size( recvtype, &typesize );
-  TAU_REDUCE_DATA(typesize*recvcount);
+  TAU_GATHER_DATA(typesize*recvcount);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -336,7 +336,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Allgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm );
   MPI_Type_size( recvtype, &typesize );
-  TAU_REDUCE_DATA(typesize*(*recvcounts));
+  TAU_GATHER_DATA(typesize*(*recvcounts));
   
 
   TAU_PROFILE_STOP(tautimer); 
@@ -472,7 +472,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Gather( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm );
   MPI_Type_size( recvtype, &typesize );
-  TAU_REDUCE_DATA(typesize*recvcount);
+  TAU_GATHER_DATA(typesize*recvcount);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -498,7 +498,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
   MPI_Type_size( recvtype, &typesize );
-  TAU_REDUCE_DATA(typesize*(*recvcnts));
+  TAU_GATHER_DATA(typesize*(*recvcnts));
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -625,7 +625,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Scatter( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm );
   MPI_Type_size( sendtype, &typesize );
-  TAU_REDUCE_DATA(typesize*sendcnt);
+  TAU_SCATTER_DATA(typesize*sendcnt);
 
   TAU_PROFILE_STOP(tautimer); 
 
@@ -651,7 +651,7 @@ MPI_Comm comm;
   
   returnVal = PMPI_Scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm );
   MPI_Type_size( sendtype, &typesize );
-  TAU_REDUCE_DATA(typesize*(*sendcnts));
+  TAU_SCATTER_DATA(typesize*(*sendcnts));
 
   TAU_PROFILE_STOP(tautimer); 
 
