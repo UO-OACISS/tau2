@@ -209,6 +209,8 @@ public abstract class ParaProfDataSession  extends DataSession{
     public ListIterator getUserEventData(){
 	return null;}
 
+    public void getFunctionDetail(Function function){};
+
     public NCT getNCT(){
 	return nct;}
 
