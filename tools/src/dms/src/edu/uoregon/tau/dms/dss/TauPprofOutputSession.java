@@ -390,6 +390,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 				    globalThreadDataElement.setUserEventMinValue(usereventDataLine.d1);
 				    globalThreadDataElement.setUserEventMaxValue(usereventDataLine.d0);
 				    globalThreadDataElement.setUserEventMeanValue(usereventDataLine.d2);
+				    globalThreadDataElement.setUserEventSumSquared(usereventDataLine.d3);
 
 				    if((globalMappingElement.getMaxUserEventNumberValue()) < usereventDataLine.i0)
 					globalMappingElement.setMaxUserEventNumberValue(usereventDataLine.i0);
@@ -399,6 +400,11 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 					globalMappingElement.setMaxUserEventMinValue(usereventDataLine.d1);
 				    if((globalMappingElement.getMaxUserEventMeanValue()) < usereventDataLine.d2)
 					globalMappingElement.setMaxUserEventMeanValue(usereventDataLine.d2);
+
+
+				    if(globalMappingElement.getMaxUserEventSumSquared() < usereventDataLine.d3)
+					globalMappingElement.setMaxUserEventSumSquared(usereventDataLine.d3);
+
 				}
 			    }
 			    //Now set the userevents flag.
@@ -625,16 +631,59 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 
     private void getUserEventData(String string){
 	try{
-	    StringTokenizer st1 = new StringTokenizer(string, "\"");
-	    st1.nextToken();
-	    usereventDataLine.s0 = st1.nextToken();
 
-	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	    // first, count the number of double-quotes to determine if the 
+	    // user event contains a double-quote
+	    int quoteCount = 0;
+	    for (int i=0; i < string.length(); i++) {
+		if (string.charAt(i) == '"')
+		    quoteCount++;
+	    }
+
+	    StringTokenizer st2;
+
+	    if (quoteCount == 2) { // proceed as usual
+		StringTokenizer st1 = new StringTokenizer(string, "\"");
+		usereventDataLine.s0 = st1.nextToken();
+		st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	    } else {
+
+		// there is a quote in the name of the user event
+		int count = 0;
+		int i = 0;
+
+
+		int firstQuote = -1;
+		while (count < quoteCount && i < string.length()) {
+		    if (string.charAt(i) == '"') {
+			if (firstQuote == -1)
+			    firstQuote = i;
+			count++;
+		    }
+		    i++;
+		}
+
+		usereventDataLine.s0 = string.substring(firstQuote+1,i-1);
+		st2 = new StringTokenizer(string.substring(i+1), " \t\n\r");
+	    }
+
 	    usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number of calls.
 	    usereventDataLine.d0 = Double.parseDouble(st2.nextToken()); //Max
 	    usereventDataLine.d1 = Double.parseDouble(st2.nextToken()); //Min
 	    usereventDataLine.d2 = Double.parseDouble(st2.nextToken()); //Mean
 	    usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation.
+
+
+	    usereventDataLine.d3 = ((usereventDataLine.d3 * usereventDataLine.d3) + (usereventDataLine.d2 * usereventDataLine.d2)) * usereventDataLine.i0;
+	    
+
+	    /*	    System.out.println ("numSamples = " + usereventDataLine.i0);
+	    System.out.println ("max = " + usereventDataLine.d0);
+	    System.out.println ("min = " + usereventDataLine.d1);
+	    System.out.println ("mean = " + usereventDataLine.d2);
+	    System.out.println ("sumsqr? = " + usereventDataLine.d3);
+	    */
+
 	}
 	catch(Exception e){
 	    System.out.println("An error occurred!");
