@@ -7,7 +7,7 @@
 default: ParaProf.jar
 
 ParaProf.jar: ../../dms.jar
-	javac -classpath ./java:../../dms/dms.jar *.java
+	javac -classpath ../../dms/dms.jar *.java
 	mv *.class ./paraprof
 	jar -cvf ParaProf.jar paraprof
 	mv ParaProf.jar ../bin
