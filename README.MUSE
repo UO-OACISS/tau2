@@ -1,0 +1,94 @@
+*************************************************************************
+*			USING TAU WITH MUSE	 	      		*	
+* Author	: Suravee Suthikulpanit (suravee@cs.uoregon.edu)	*
+* Date		: 10/23/2003						*
+* Version	: 1.0							*	
+*************************************************************************
+
+MAGNET: 
+	MAGNET instruments Linux Kernel with a set of instrumentation points
+	"MAGNET_ADD()" which will output records of specific kernel events 
+	to userspace by MUSE.
+
+MUSE: MAGNET User-Space Environment.
+	MUSE contains the implementation of magnetd and utilities for monitoring
+	MAGNET events.  Users can implement a set of "Handlers" and "Filters"
+	to analyze event records information received from MAGNET.
+
+	For more information, please refer to http://public.lanl.gov/radiant/
+
+
+INSTALLATION:
+
+% configure -muse
+   
+   Specifies the use of MAGNET/MUSE to extract low-level information from the
+   kernel. To use this configuration, Linux kernel has to be patched with MAGNET
+   and MUSE has to be install on the executing machine.  Also, magnetd has to be
+   running with the appropriate handlers and filters installed.
+
+USAGE:
+
+   TAU provides different packages which are predefined set of MUSE handlers and
+   filters with specific arguments.  These packages let TAU users monitor 
+   various performance matrices.
+   
+   The name of the package routine is set by the user using the environment 
+   variable TAU_MUSE_PACKAGE. By default, it is set to "TAU_count".
+
+   LIST OF PACKAGES:
+   
+   1) Package Name:	count
+   This package keeps track of number of MAGNET instrumentation points executed
+   in the LINUX kernel caused by the profiled program.  These counts are event 
+   records according to the specified PID.  
+	
+	Handler	:	TAU_count
+	Filter	:	process_filter
+	Command	:	
+		create TAU_count
+		addfilter <handlerID> process_filter pid=<pid>
+
+   Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=TAU_count
+
+
+   2)
+   These packages keep track of statistics by monitoring MAGNET events 
+   MAGNET_TASK_CTX_IN and MAGNET_TASK_CTX_OUT of the specified PID. 
+ 
+   2.1) Package Name: total_busy_time
+  	total time in millisec of processors in BUSY state doing work 
+	for the specified PID.
+
+	Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=total_busy_time
+
+   2.2) Package Name: total_time 
+  	total time in millisec of processors in execution for the 
+	specified PID. 
+	
+	Prior to execution, set enviroment variable MAGNET_MUSE_PACKAGE=total_time
+
+	Handler :	process_scheduling
+	Filter	:	process_filter
+	Command	:
+		create process_scheduling
+		addfilter <handlerID> process_filter pid=<pid> event=258 //MAGNET_TASK_CTX_IN	
+		addfilter <handlerID> process_filter pid=<pid> event=259 //MAGNET_TASK_CTX_OUT	
+ 
+NOTE: 
+   Please specify the number of cpu of the machine in the include/profile/TauMuse.h file
+   by setting macro. 
+	#define NUMOFCPU
+
+ 
+BUGS:
+
+1) magnetd frozen up on when kill with (Ctrl-c) at step 
+
+Closed server 0 on socket 7
+
+Terminating  --  library update thread.
+
+Terminating  --  data collection thread.
+
+
