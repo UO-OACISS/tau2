@@ -17,7 +17,7 @@ include $(TAUROOTDIR)/include/Makefile
 
 CFLAGS        	= $(TAUINC) $(TAUDEFS)
 
-LIBS 	      	= -lmpi  $(TAULIBS)
+LIBS 	      	= -lmpi  -lm $(TAULIBS)
 
 LDFLAGS	      	= $(USER_OPT)
 
