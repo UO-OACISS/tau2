@@ -11,7 +11,6 @@
 /*  Indiana University  University of Oregon  University of Rennes   */
 /*********************************************************************/
 
-
 /*
  * pprof.c : parallel profile data files printer
  * Modified by Sameer Shende (sameer@cs.uoregon.edu)
@@ -504,13 +503,31 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
 #ifdef USE_LONG 
       sscanf(&line[j+1], "%ld %ld %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 #else // DEFAULT double
+#ifdef APPLECXX
+      int a, b, c, d, e;
+      sscanf(&line[j+1], "%d %d %d %d %d", &a, &b, &c, &d, &e);
+      numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
+      incl = (double) d; numinvocations = (double) e;
+#else 
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
+
+#endif 
 #endif // USE_LONG 
     } else { // SumExclSqr is there.
 #ifdef USE_LONG 
       sscanf(&line[j+1], "%ld %ld %lG %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
 #else // DEFAULT double
-      sscanf(&line[j+1], "%lG %lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
+#ifdef APPLECXX
+      {
+      int a, b, c, d, e, f;
+      sscanf(&line[j+1], "%d %d %d %d %d %d", &a, &b, &c, &d, &e, &f);
+      numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
+      incl = (double) d; sumexclsqr = (double) e; numinvocations = (double) f;
+      }
+#else 
+      sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
+
+#endif 
 #endif // USE_LONG 
     } // profilestats 
 #ifdef DEBUG
@@ -793,14 +810,30 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
 #ifdef USE_LONG 
       sscanf(&line[j+1], "%ld %ld %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 #else // DEFAULT double
+#ifdef APPLECXX
+      int a, b, c, d, e;
+      sscanf(&line[j+1], "%d %d %d %d %d", &a, &b, &c, &d, &e);
+      numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
+      incl = (double) d; numinvocations = (double) e;
+#else 
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
+
+#endif 
 #endif // USE_LONG 
       stddev = 0; // Not defined in this case 
     } else { // SumExclSqr is there.
 #ifdef USE_LONG 
       sscanf(&line[j+1], "%ld %ld %lG %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
 #else // DEFAULT double
-      sscanf(&line[j+1], "%lG %lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
+#ifdef APPLECXX
+      int a, b, c, d, e, f;
+      sscanf(&line[j+1], "%d %d %d %d %d", &a, &b, &c, &d, &e, &f);
+      numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
+      incl = (double) d; sumexclsqr = (double) e; numinvocations = (double) f;
+#else 
+      sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
+
+#endif 
 #endif // USE_LONG 
       // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
       stddev = sqrt(fabs( (sumexclsqr/numcalls) - ((excl/numcalls) * (excl/numcalls))) );
@@ -1282,8 +1315,14 @@ void  ProcessUserEventData(FILE *fp, int node, int ctx, int thr,
     func[j-1] = '\0'; // null terminate the string
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
+#ifdef APPLECXX
+    int a1, b1, c1, d1, e1;
+    sscanf(&line[j+1], "%d %d %d %d %d", &a1, &b1, &c1, &d1, &e1);
+	userNumEvents = (double) a1; userMax = (double) b1; userMin = (double) c1; userMean = (double) d1; userSumSqr = (double) e1;  
+#else 
     sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &userNumEvents, &userMax, 
 	&userMin, &userMean, &userSumSqr);
+#endif /* APPLECXX */
 
     if ((it = userEventDB.find((const char *)func)) == userEventDB.end()) {
       cout << "ERROR : In second pass ProcessUserEventData didn't find name " 
@@ -3103,7 +3142,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2002/01/09 02:05:25 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.27 2002/01/09 02:05:25 sameer Exp $                                                   
+ * $Revision: 1.28 $   $Date: 2002/01/16 02:16:19 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.28 2002/01/16 02:16:19 sameer Exp $                                                   
  ***************************************************************************/
 
