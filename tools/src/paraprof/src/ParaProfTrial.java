@@ -303,9 +303,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public boolean callPathDataPresent(){
 	return dataSession.callPathDataPresent();}
 
-    public int getTotalNumberOfThreads(){
-	return dataSession.getTotalNumberOfThreads();}
-
     public NCT getNCT(){
 	return dataSession.getNCT();}
 
@@ -339,12 +336,16 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	    metric.setTrial(this);
 	}
 
+	System.out.println("I am HERE$%$%$%$$%$%$%$%$%$%$%$%$%$%$$%$%$%$%$%$%$%$%$$$%");
+
 	ParaProf.paraProfManager.populateTrialMetrics(this, defaultTrial);
 	
 	//Notify any observers of this trial that the Data Session is done.
 	this.notifyObservers();
     }
-    public void update(){}
+    public void update(){
+	System.out.println("I am HERE$%$%$%$$%$%$%$%$%$%$%$%$%$%$$%$%$%$%$%$%$%$%$$$%2");
+    }
     //######
     //End - Observer.
     //######
