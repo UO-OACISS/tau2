@@ -143,7 +143,8 @@ The following  command-line options are available to configure:
 -papi=<directory>
 
    Specifies the location of the installed PAPI (Performance API) root 
-   directory. PAPI specifies a standard application programming interface (API)    for accessing hardware performance counters available on most modern 
+   directory. PAPI specifies a standard application programming interface (API)    
+   for accessing hardware performance counters available on most modern 
    microprocessors similar. To measure floating point instructions, set the
    environment variable PAPI_EVENT to PAPI_FP_INS (for example). Refer to the
    TAU User's Guide or PAPI Documentation for other event names.
