@@ -77,7 +77,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	    paraProfFont = inSavedPreferences.getParaProfFont();
 	    barSpacing = inSavedPreferences.getBarSpacing();
 	    barHeight = inSavedPreferences.getBarHeight();
-	    inExValue = inSavedPreferences.getInExValue();
+	    inExValue = inSavedPreferences.getInclusiveOrExclusive();
 	    sortBy = inSavedPreferences.getSortBy();
 	    
 	    fontStyle = inSavedPreferences.getFontStyle();
@@ -393,7 +393,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 	ParaProf.savedPreferences.setParaProfFont(paraProfFont);
 	ParaProf.savedPreferences.setBarSpacing(barSpacing);
 	ParaProf.savedPreferences.setBarHeight(barHeight);
-	ParaProf.savedPreferences.setInExValue(inExValue);
+	ParaProf.savedPreferences.setInclusiveOrExclusive(inExValue);
 	ParaProf.savedPreferences.setSortBy(sortBy);
 	ParaProf.savedPreferences.setFontStyle(fontStyle);
 	ParaProf.savedPreferences.setBarDetailsSet(barDetailsSet);
@@ -527,7 +527,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 			    for(int i=0; i<numOfMappings; i++){
 				GlobalMappingElement tmpGME = (GlobalMappingElement) tmpGlobalMapping.getGlobalMappingElement(i,0);
 				if((tmpGME.getMappingName()) != null){ 
-				    ColorPair tmpCP = new ColorPair(tmpGME.getMappingName(),tmpGME.getMappingColor());
+				    ColorPair tmpCP = new ColorPair(tmpGME.getMappingName(),tmpGME.getColor());
 				    nameColorVector.add(tmpCP);
 				}
 			    }
@@ -543,7 +543,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 			    }
 			    for(Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements() ;){
 				ColorPair tmpCP = (ColorPair) e1.nextElement();
-				Color tmpColor = tmpCP.getMappingColor();
+				Color tmpColor = tmpCP.getColor();
 				if(UtilFncs.debug){
 				    System.out.println("MAPPING_NAME=\"" + (tmpCP.getMappingName()) + "\"" +
 						       " RGB=\"" +
@@ -676,15 +676,15 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 		//Grab the forth token.
 		tmpString = getMappingNameTokenizer.nextToken();
 		
-		StringTokenizer getMappingColorTokenizer = new StringTokenizer(tmpString, ",");
+		StringTokenizer getColorTokenizer = new StringTokenizer(tmpString, ",");
 		
-		tmpString = getMappingColorTokenizer.nextToken();
+		tmpString = getColorTokenizer.nextToken();
 		red = Integer.parseInt(tmpString);
 		
-		tmpString = getMappingColorTokenizer.nextToken();
+		tmpString = getColorTokenizer.nextToken();
 		green = Integer.parseInt(tmpString);
 		
-		tmpString = getMappingColorTokenizer.nextToken();
+		tmpString = getColorTokenizer.nextToken();
 		blue = Integer.parseInt(tmpString);
 		
 		Color tmpColor = new Color(red,green,blue);
@@ -703,7 +703,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
 		if(mappingID != -1){
 		    GlobalMappingElement tmpGME = tmpGlobalMapping.getGlobalMappingElement(mappingID, 0);
 		    
-		    Color tmpColor = tmpCP.getMappingColor();
+		    Color tmpColor = tmpCP.getColor();
 		    tmpGME.setSpecificColor(tmpColor);
 		    tmpGME.setColorFlag(true);
 		    if(UtilFncs.debug){

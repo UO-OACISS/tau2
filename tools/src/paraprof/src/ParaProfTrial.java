@@ -294,7 +294,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
 	dataSession.terminate();
 	this.setLoading(false);
 	
-	dataSession.getGlobalMapping().setColors(clrChooser, -1);
+	clrChooser.setColors(dataSession.getGlobalMapping(), -1);
 	
 	//Set the metrics.
 	int numberOfMetrics = dataSession.getNumberOfMetrics();

@@ -232,11 +232,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    xLength = 1;
 
 	if((xLength > 2) && (barHeight > 2)){
-	    g2D.setColor(gME.getMappingColor());
+	    g2D.setColor(gME.getColor());
 	    g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 	    
-	    if(mappingID == (trial.getColorChooser().getUEHCMappingID())){
-		g2D.setColor(trial.getColorChooser().getUEHC());
+	    if(mappingID == (trial.getColorChooser().getUserEventHightlightColorID())){
+		g2D.setColor(trial.getColorChooser().getUserEventHightlightColor());
 		g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 		g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 	    }
@@ -246,10 +246,10 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    }
 	}
 	else{
-	    if(mappingID == (trial.getColorChooser().getUEHCMappingID()))
-		g2D.setColor(trial.getColorChooser().getUEHC());
+	    if(mappingID == (trial.getColorChooser().getUserEventHightlightColorID()))
+		g2D.setColor(trial.getColorChooser().getUserEventHightlightColor());
 	    else{
-		g2D.setColor(gME.getMappingColor());
+		g2D.setColor(gME.getColor());
 	    }
 	    g2D.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
 	}
@@ -277,7 +277,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
 		if(arg.equals("Change Function Color")){ 
-		    Color tmpCol = gME.getMappingColor();
+		    Color tmpCol = gME.getColor();
 		    
 		    JColorChooser tmpJColorChooser = new JColorChooser();
 		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);

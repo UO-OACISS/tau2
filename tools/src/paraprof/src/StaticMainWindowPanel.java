@@ -320,7 +320,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		String arg = evt.getActionCommand();
 		if(arg.equals("Show Function Details")){
 		    //Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-		    trial.getColorChooser().setHighlightColorMappingID(clickedOnObject.getMappingID());
+		    trial.getColorChooser().setHighlightColorID(clickedOnObject.getMappingID());
 		    MappingDataWindow tmpRef = new MappingDataWindow(trial, clickedOnObject.getMappingID(), (sMWindow.getSMWData()));
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
@@ -331,7 +331,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
 		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		    
-		    Color tmpCol = tmpGME.getMappingColor();
+		    Color tmpCol = tmpGME.getColor();
 		    
 		    JColorChooser tmpJColorChooser = new JColorChooser();
 		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
@@ -351,10 +351,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 		}
 		else if(arg.equals("Highlight this Function")){   
-		    trial.getColorChooser().setHighlightColorMappingID(clickedOnObject.getMappingID());
+		    trial.getColorChooser().setHighlightColorID(clickedOnObject.getMappingID());
 		}
 		else if(arg.equals("Un-Highlight this Function")){   
-		    trial.getColorChooser().setHighlightColorMappingID(-1);}
+		    trial.getColorChooser().setHighlightColorID(-1);}
 		else if(arg.equals("Show Total Statistics Windows")){
 		    StatWindow tmpRef = new StatWindow(trial, node, context,
 						       thread, sMWindow.getSMWData(), 1);
@@ -425,7 +425,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				return;
 			    }
 			    else{
-				trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 				MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
 				trial.getSystemEvents().addObserver(tmpRef);
 				tmpRef.show();
@@ -492,7 +492,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 						    return;
 						}
 						else{
-						    trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+						    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 						    MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()));
 						    trial.getSystemEvents().addObserver(tmpRef);
 						    tmpRef.show();
@@ -691,17 +691,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    if(xLength > 2){
 			//Only draw if there is something to draw.   
 			if(barHeight > 2){
-			    tmpColor = sMWThreadDataElement.getMappingColor();
+			    tmpColor = sMWThreadDataElement.getColor();
 			    g2D.setColor(tmpColor);
 			    g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 				
-			    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID())){ 
+			    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID())){ 
 				highlighted = true;
 				g2D.setColor(trial.getColorChooser().getHighlightColor());
 				g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 				g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 			    }
-			    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
+			    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
 				highlighted = true;
 				g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 				g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
@@ -734,13 +734,13 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    //Now set the color values for drawing!
 			    //Get the appropriate color.
 				
-			    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+			    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID()))
 				g2D.setColor(trial.getColorChooser().getHighlightColor());
-			    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
+			    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
 				g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 			    }
 			    else{
-				tmpColor = sMWThreadDataElement.getMappingColor();
+				tmpColor = sMWThreadDataElement.getColor();
 				g2D.setColor(tmpColor);
 			    }
 			    g2D.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
@@ -854,17 +854,17 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				    if(xLength > 2){
 					//Only draw if there is something to draw.   
 					if(barHeight > 2){
-					    tmpColor = sMWThreadDataElement.getMappingColor();
+					    tmpColor = sMWThreadDataElement.getColor();
 					    g2D.setColor(tmpColor);
 					    g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 					    
-					    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID())){ 
+					    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID())){ 
 						highlighted = true;
 						g2D.setColor(trial.getColorChooser().getHighlightColor());
 						g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 						g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 					    }
-					    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
+					    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
 						highlighted = true;
 						g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 						g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
@@ -896,13 +896,13 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					else{
 					    //Now set the color values for drawing!
 					    //Get the appropriate color.
-					    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+					    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID()))
 						g2D.setColor(trial.getColorChooser().getHighlightColor());
-					    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
+					    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID()))){
 						g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 					    }
 					    else{
-						tmpColor = sMWThreadDataElement.getMappingColor();
+						tmpColor = sMWThreadDataElement.getColor();
 						g2D.setColor(tmpColor);
 					    }
 					    

@@ -241,17 +241,17 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		AttributedString as = new AttributedString(tmpString);
 		as.addAttribute(TextAttribute.FONT, MonoFont);
 		
-		if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+		if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID()))
 		    as.addAttribute(TextAttribute.FOREGROUND, 
 				    (trial.getColorChooser().getHighlightColor()),
 				    GlobalThreadDataElement.getPositionOfName(), tmpString.length());
-		else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+		else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID())))
 		    as.addAttribute(TextAttribute.FOREGROUND, 
 				    (trial.getColorChooser().getGroupHighlightColor()),
 				    GlobalThreadDataElement.getPositionOfName(), tmpString.length());
 		else
 		    as.addAttribute(TextAttribute.FOREGROUND, 
-				    (sMWThreadDataElement.getMappingColor()),
+				    (sMWThreadDataElement.getColor()),
 				    GlobalThreadDataElement.getPositionOfName(), tmpString.length());
 		
 		g2D.drawString(as.getIterator(), 20, yCoord);
@@ -294,7 +294,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-			trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+			trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 			MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), trial.getStaticMainWindow().getSMWData());
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
@@ -310,7 +310,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
 		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		    
-		    Color tmpCol = tmpGME.getMappingColor();
+		    Color tmpCol = tmpGME.getColor();
 		    
 		    JColorChooser tmpJColorChooser = new JColorChooser();
 		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
@@ -398,14 +398,14 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 			    else{
 				//Want to set the clicked on mapping to the current highlight color or, if the one
 				//clicked on is already the current highlighted one, set it back to normal.
-				if((trial.getColorChooser().getHighlightColorMappingID()) == -1){
-				    trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+				if((trial.getColorChooser().getHighlightColorID()) == -1){
+				    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 				}
 				else{
-				    if(!((trial.getColorChooser().getHighlightColorMappingID()) == (sMWThreadDataElement.getMappingID())))
-					trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+				    if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
+					trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 				    else
-					trial.getColorChooser().setHighlightColorMappingID(-1);
+					trial.getColorChooser().setHighlightColorID(-1);
 				}
 			    }
 			}

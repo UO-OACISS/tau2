@@ -38,7 +38,7 @@ public class ColorPair implements Comparable
     return mappingName;
   }
   
-  public Color getMappingColor()
+  public Color getColor()
   {
     return color;
   }

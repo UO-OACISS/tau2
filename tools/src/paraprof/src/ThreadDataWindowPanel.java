@@ -340,7 +340,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
 	int mappingID = sMWThreadDataElement.getMappingID();
         String mappingName = sMWThreadDataElement.getMappingName();
-	boolean groupMember = sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID());
+	boolean groupMember = sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID());
 
 	d = (value / maxValue);
 	xLength = (int) (d * barLength);
@@ -348,10 +348,10 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    xLength = 1;
 
 	if((xLength > 2) && (barHeight > 2)){
-	    g2D.setColor(sMWThreadDataElement.getMappingColor());
+	    g2D.setColor(sMWThreadDataElement.getColor());
 	    g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 	    
-	    if(mappingID == (trial.getColorChooser().getHighlightColorMappingID())){
+	    if(mappingID == (trial.getColorChooser().getHighlightColorID())){
 		g2D.setColor(trial.getColorChooser().getHighlightColor());
 		g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 		g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
@@ -367,12 +367,12 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	}
 	else{
-	    if(mappingID == (trial.getColorChooser().getHighlightColorMappingID()))
+	    if(mappingID == (trial.getColorChooser().getHighlightColorID()))
 		g2D.setColor(trial.getColorChooser().getHighlightColor());
 	    else if(groupMember)
 		g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 	    else{
-		g2D.setColor(sMWThreadDataElement.getMappingColor());
+		g2D.setColor(sMWThreadDataElement.getColor());
 	    }
 	    g2D.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
 	}
@@ -432,7 +432,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-			trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+			trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 			MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), sMWData);
 			trial.getSystemEvents().addObserver(tmpRef);
 			tmpRef.show();
@@ -448,7 +448,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
 		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		    
-		    Color tmpCol = tmpGME.getMappingColor();
+		    Color tmpCol = tmpGME.getColor();
 		    
 		    JColorChooser tmpJColorChooser = new JColorChooser();
 		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
@@ -509,14 +509,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			else{
 			    //Want to set the clicked on mapping to the current highlight color or, if the one
 			    //clicked on is already the current highlighted one, set it back to normal.
-			    if((trial.getColorChooser().getHighlightColorMappingID()) == -1){
-				trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+			    if((trial.getColorChooser().getHighlightColorID()) == -1){
+				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 			    }
 			    else{
-				if(!((trial.getColorChooser().getHighlightColorMappingID()) == (sMWThreadDataElement.getMappingID())))
-				    trial.getColorChooser().setHighlightColorMappingID(sMWThreadDataElement.getMappingID());
+				if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
+				    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
 				else
-				    trial.getColorChooser().setHighlightColorMappingID(-1);
+				    trial.getColorChooser().setHighlightColorID(-1);
 			    }
 			}
 			//Nothing more to do ... return.

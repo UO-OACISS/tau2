@@ -163,18 +163,18 @@ public class GlobalMappingElement implements Serializable, Comparable{
     public boolean isColorFlagSet(){
 	return colorFlag;}
   
-    public void setMappingColor(Color color){
-	mappingColor = color;}
-  
-    public void setSpecificColor(Color color){
-	specificMappingColor = color;}
-  
-    public Color getMappingColor(){
+    public void setColor(Color color){
+	this.color = color;}
+
+    public Color getColor(){
 	if(colorFlag)
-	    return specificMappingColor;
+	    return specificColor;
 	else
-	    return mappingColor;
+	    return color;
     }
+  
+    public void setSpecificColor(Color specificColor){
+	this.specificColor = specificColor;}
   
     public void setMaxValues(){
 	System.out.println("MUST FILL IN THIS METHOD - GlobalMappingElement.setMaxValues");
@@ -501,8 +501,8 @@ public class GlobalMappingElement implements Serializable, Comparable{
 
     //Color Settings.
     private boolean colorFlag = false;
-    private Color mappingColor = null;
-    private Color specificMappingColor = null;
+    private Color color = null;
+    private Color specificColor = null;
   
     private double[] doubleList = null;
     private int maxNumberOfCalls = 0;

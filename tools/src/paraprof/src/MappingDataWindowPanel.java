@@ -194,7 +194,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    }
 
 	    //Check for group membership.
-	    groupMember = gME.isGroupMember(trial.getColorChooser().getGHCMID());
+	    groupMember = gME.isGroupMember(trial.getColorChooser().getGroupHighlightColorID());
 
 
 	    //Some points to note about drawing. When we draw, swing begins at the given y coord,
@@ -282,10 +282,10 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    xLength = 1;
 
 	if((xLength > 2) && (barHeight > 2)){
-	    g2D.setColor(gME.getMappingColor());
+	    g2D.setColor(gME.getColor());
 	    g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 	    
-	    if(mappingID == (trial.getColorChooser().getHighlightColorMappingID())){
+	    if(mappingID == (trial.getColorChooser().getHighlightColorID())){
 		g2D.setColor(trial.getColorChooser().getHighlightColor());
 		g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 		g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
@@ -301,12 +301,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    }
 	}
 	else{
-	    if(mappingID == (trial.getColorChooser().getHighlightColorMappingID()))
+	    if(mappingID == (trial.getColorChooser().getHighlightColorID()))
 		g2D.setColor(trial.getColorChooser().getHighlightColor());
-	    else if((gME.isGroupMember(trial.getColorChooser().getGHCMID())))
+	    else if((gME.isGroupMember(trial.getColorChooser().getGroupHighlightColorID())))
 		g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 	    else{
-		g2D.setColor(gME.getMappingColor());
+		g2D.setColor(gME.getColor());
 	    }
 	    g2D.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
 	}
@@ -339,7 +339,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
 		if(arg.equals("Change Function Color")){ 
-		    Color tmpCol = gME.getMappingColor();
+		    Color tmpCol = gME.getColor();
 		    
 		    JColorChooser tmpJColorChooser = new JColorChooser();
 		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);

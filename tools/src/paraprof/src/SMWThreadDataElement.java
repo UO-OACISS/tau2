@@ -70,8 +70,8 @@ public class SMWThreadDataElement implements Comparable{
     public int getMappingID(){
 	return globalMappingElement.getGlobalID();}
   
-    public Color getMappingColor(){
-	return globalMappingElement.getMappingColor();}
+    public Color getColor(){
+	return globalMappingElement.getColor();}
   
     public boolean getMappingExists(){
 	return globalThreadDataElement.getMappingExists();}

@@ -1,9 +1,9 @@
 /* 
-  SavedPreferences.java
+   SavedPreferences.java
 
-  Title:      ParaProf
-  Author:     Robert Bell
-  Description:  
+   Title:      ParaProf
+   Author:     Robert Bell
+   Description:  
 */
 
 package paraprof;
@@ -13,165 +13,104 @@ import java.lang.*;
 import java.io.*;
 import java.awt.*;
 
-public class SavedPreferences implements Serializable
-{ 
-  //******************************
-  //Instance data.
-  //******************************
-  Vector globalColors = null;
-  Vector mappingGroupColors = null;
+public class SavedPreferences implements Serializable{ 
+    public void SavedPreferences(){}
   
-  private Color highlightColor = null;
-  private Color groupHighlightColor = null;
-  private Color uEHC = null;
-  private Color miscMappingsColor = null;
-  private int barSpacing = -1;
-  private int barHeight = -1;
-  boolean barDetailsSet = false;
+    public void setColors(Vector vector){
+	colors = vector;}
   
-  String ParaProfFont;
+    public Vector getColors(){
+	return colors;}
   
-  String inExValue = null;
-  String sortBy = null;
+    public void setGroupColors(Vector vector){
+	groupColors = vector;}
   
-  int fontStyle = -1;
-  //******************************
-  //End - Instance data.
-  //******************************
+    public Vector getGroupColors(){
+	return groupColors;}
   
-  public void SavedPreferences()
-  {
-  }
+    public void setHighlightColor(Color highlightColor){
+	this.highlightColor = highlightColor;}
   
-  public void setGlobalColors(Vector inVector)
-  {
-    globalColors = inVector;
-  }
+    public Color getHighlightColor(){
+	return highlightColor;}
   
-  public Vector getGlobalColors()
-  {
-    return globalColors;
-  }
+    public void setGroupHighlightColor(Color grouphighlightColor){
+	this.groupHighlightColor = grouphighlightColor;}
   
-  public void setMappingGroupColors(Vector inVector)
-  {
-    mappingGroupColors = inVector;
-  }
+    public Color getGroupHighlightColor(){
+	return groupHighlightColor;}
   
-  public Vector getMappingGroupColors()
-  {
-    return mappingGroupColors;
-  }
+    public void setUserEventHighlightColor(Color userEventHighlightColor){
+	this.userEventHighlightColor = userEventHighlightColor;}
   
-  public void setHighlightColor(Color inhighlightColor)
-  {
-    highlightColor = inhighlightColor;
-  }
+    public Color getUserEventHightlightColor(){
+	return userEventHighlightColor;}
   
-  public Color getHighlightColor()
-  {
-    return highlightColor;
-  }
+    public void setMiscMappingsColor(Color miscMappingsColor){
+	this.miscMappingsColor = miscMappingsColor;}
   
-  public void setGroupHighlightColor(Color inGrouphighlightColor)
-  {
-    groupHighlightColor = inGrouphighlightColor;
-  }
+    public Color getMiscMappingsColor(){
+	return miscMappingsColor;}
   
-  public Color getGroupHighlightColor()
-  {
-    return groupHighlightColor;
-  }
+    public String getParaProfFont(){
+	return paraProfFont;} 
   
-  public void setUEHC(Color inUEHC)
-  {
-    uEHC = inUEHC;
-  }
+    public void setParaProfFont(String paraProfFont){
+	this.paraProfFont = paraProfFont;}
   
-  public Color getUEHC()
-  {
-    return uEHC;
-  }
+    public void setBarSpacing(int barSpacing){
+	this.barSpacing = barSpacing;}
+
+    public int getBarSpacing(){
+	return barSpacing;}
   
-  public void setMiscMappingsColor(Color inMiscMappingsColor)
-  {
-    miscMappingsColor = inMiscMappingsColor;
-  }
+    public void setBarHeight(int barHeight){
+	this.barHeight = barHeight;}
   
-  public Color getMiscMappingsColor()
-  {
-    return miscMappingsColor;
-  }
+    public int getBarHeight(){
+	return barHeight;}
   
-  public String getParaProfFont()
-  {
-    return ParaProfFont;
-  } 
+    public void setBarDetailsSet(boolean barDetailsSet){
+	this.barDetailsSet = barDetailsSet;}
   
-  public void setParaProfFont(String inString)
-  {
-    ParaProfFont = inString;
-  }
+    public boolean getBarDetailsSet(){
+	return barDetailsSet;}
   
-  public void setBarSpacing(int inInt)
-  {
-    barSpacing = inInt;
-  }
+    public void setInclusiveOrExclusive(String inclusiveOrExclusive){
+	this.inclusiveOrExclusive = inclusiveOrExclusive;}
   
-  public void setBarHeight(int inInt)
-  {
-    barHeight = inInt;
-  }
+    public String getInclusiveOrExclusive(){
+	return inclusiveOrExclusive;}
   
-  public int getBarSpacing()
-  {
-    return barSpacing;
-  }
+    public void setFontStyle(int fontStyle){
+	this.fontStyle = fontStyle;}
   
-  public int getBarHeight()
-  {
-    return barHeight;
-  }
+    public int getFontStyle(){
+	return fontStyle;}
   
-  public void setBarDetailsSet(boolean inBool)
-  {
-    barDetailsSet = inBool;
-  }
+    public void setSortBy(String sortBy){
+	this.sortBy = sortBy;}
   
-  public boolean getBarDetailsSet()
-  {
-    return barDetailsSet;
-  }
-  
-  public void setInExValue(String inString)
-  {
-    inExValue = inString;
-  }
-  
-  public String getInExValue()
-  {
-    return inExValue;
-  }
-  
-  public void setFontStyle(int inInt)
-  {
-    fontStyle = inInt;
-  }
-  
-  public int getFontStyle()
-  {
-    return fontStyle;
-  }
-  
-  //Setting and returning sortBy.
-  public void setSortBy(String inString)
-  {
-    sortBy = inString;
-  }
-  
-  public String getSortBy()
-  {
-    return sortBy;
-  }
-  
+    public String getSortBy(){
+	return sortBy;}
+
+    //####################################
+    //Instance data.
+    //####################################
+    private Vector colors = null;
+    private Vector groupColors = null;
+    private Color highlightColor = null;
+    private Color groupHighlightColor = null;
+    private Color userEventHighlightColor = null;
+    private Color miscMappingsColor = null;
+    private int barSpacing = -1;
+    private int barHeight = -1;
+    private boolean barDetailsSet = false;
+    private String paraProfFont;
+    private String inclusiveOrExclusive = null;
+    private String sortBy = null;
+    private int fontStyle = -1;
+    //####################################
+    //End - Instance data.
+    //####################################
 }
