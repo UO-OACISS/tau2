@@ -97,6 +97,8 @@ void TauJavaLayer::Init(char *options){
 char *token;
 static int num_tokens = 0; /* This can be called more than once! TauJAPI */
 int token_len;
+char *s1;
+char *s2;
 
 #ifdef DEBUG_PROF
   printf("Inside TauJavaLayer::Init options = %s\n",options);
@@ -108,7 +110,21 @@ int token_len;
     fprintf(stdout,"Init: options = %s, len=%d\n", options, strlen(options));
 #endif // DEBUG_PROF
 
-    token=strtok(options, "=,");
+    // There are problems with strtok. Since this is called twice,
+    // we allocate new strings before using with strtok. Crashes otherwise 	
+    if (num_tokens == 0)
+    {
+      s1 = new char [strlen (options) ];
+      strcpy(s1, options);
+      token=strtok(s1, "=,");
+    }
+    else
+    {
+      s2 = new char [strlen (options) ];
+      strcpy(s2, options);
+      token=strtok(s2, "=,");
+    }
+
 
     if (strcmp(token,"exclude")==0) {
       if (TauExcludeList == (char **) NULL) {
@@ -358,7 +374,7 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2000/12/02 19:51:48 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.19 2000/12/02 19:51:48 sameer Exp $
+ * $Revision: 1.20 $   $Date: 2000/12/04 19:22:04 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.20 2000/12/04 19:22:04 sameer Exp $
  ***************************************************************************/
 
