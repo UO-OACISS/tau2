@@ -2509,7 +2509,7 @@ proc multiEventgraph {win leftlabels nodes values tags} {
 #         dir: directory in which profile data should be looked for
 #
 
-set wantnum 100
+set wantnum 100000
 
 proc readProfile {} {
     global depfile \
