@@ -46,8 +46,8 @@
 #define TAU_SUBFIELD    	0x00002000   /* SubField      'su' */
 #define TAU_COMMUNICATION 	0x00004000   /* A++ Commm     'c' */
 #define TAU_DESCRIPTOR_OVERHEAD 0x00008000   /* A++ Descriptor Overhead   'de' */
+#define TAU_BLITZ		0x00010000   /* Blitz++       'b' */
 /*
-SPACE for 			0x00010000
 SPACE for 			0x00020000
 SPACE for 			0x00040000
 SPACE for 			0x00080000
@@ -124,6 +124,9 @@ public:
           unsigned int ProfileGroup = TAU_DEFAULT, 
 	  const char *ProfileGroupName = "TAU_DEFAULT");
 	FunctionInfo(const char* name, string& type, 
+	  unsigned int ProfileGroup = TAU_DEFAULT,
+	  const char *ProfileGroupName = "TAU_DEFAULT");
+	FunctionInfo(string& name, string& type, 
 	  unsigned int ProfileGroup = TAU_DEFAULT,
 	  const char *ProfileGroupName = "TAU_DEFAULT");
 
@@ -396,7 +399,11 @@ class RtsLayer
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
+#ifdef PROFILE_CALLSTACK
 #define TAU_PROFILE_CALLSTACK()    Profiler::CallStackTrace();
+#else
+#define TAU_PROFILE_CALLSTACK() 
+#endif /* PROFILE_CALLSTACK */
 
 #ifdef NO_RTTI
 #define CT(obj) string(#obj)
@@ -424,6 +431,7 @@ class RtsLayer
 #define TAU_PROFILE_EXIT(msg)
 #define TAU_PROFILE_INIT(argc, argv)
 #define TAU_PROFILE_SET_NODE(node)
+#define TAU_PROFILE_CALLSTACK()    
 #define CT(obj)
 
 #endif /* PROFILING_ON */
@@ -439,7 +447,7 @@ class RtsLayer
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: mikek $
- * $Revision: 1.8 $   $Date: 1998/02/22 23:39:45 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.8 1998/02/22 23:39:45 mikek Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.9 $   $Date: 1998/03/20 21:47:51 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.9 1998/03/20 21:47:51 sameer Exp $ 
  ***************************************************************************/
