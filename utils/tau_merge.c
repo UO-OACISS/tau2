@@ -56,12 +56,16 @@
 # define OUTMAX   BUFSIZ   /* chars   */
 
 int dynamic = TRUE ; /* by default events.<node>.edf files exist */
+#ifndef TAU_XLC
 extern "C" {
+#endif /* TAU_XLC */
   int open_edf_file(char *prefix, int nodeid);
   int parse_edf_file(int node);
   int store_merged_edffile(char *filename);
   int GID(int node, long localEventId); 
-}
+#ifndef TAU_XLC
+} 
+#endif /* TAU_XLC */
 
 
 static struct trcdescr
