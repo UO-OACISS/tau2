@@ -99,11 +99,6 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 #endif //TRACING_ON
    int tid = RtsLayer::myThread();
 
-        NumCalls[tid] = 0;
-        NumSubrs[tid] = 0;
-  	ExclTime[tid] = 0;
-  	InclTime[tid] = 0;
-
 // Since FunctionInfo constructor is called once for each function (static)
 // we know that it couldn't be already on the call stack.
 	SetAlreadyOnStack(false, tid);
@@ -143,6 +138,15 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
+  : 
+    NumCalls(TAU_SIZE), 
+    NumSubrs(TAU_SIZE),
+    ExclTime(TAU_SIZE),
+    InclTime(TAU_SIZE),
+    AlreadyOnStack(TAU_SIZE)
+#ifdef PROFILE_STATS
+    , SumExclSqr(TAU_SIZE) 
+#endif //PROFILE_STATS
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -157,6 +161,15 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 
 FunctionInfo::FunctionInfo(const char *name, string& type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
+  : 
+    NumCalls(TAU_SIZE), 
+    NumSubrs(TAU_SIZE),
+    ExclTime(TAU_SIZE),
+    InclTime(TAU_SIZE),
+    AlreadyOnStack(TAU_SIZE)
+#ifdef PROFILE_STATS
+    , SumExclSqr(TAU_SIZE) 
+#endif //PROFILE_STATS
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -171,6 +184,15 @@ FunctionInfo::FunctionInfo(const char *name, string& type,
 
 FunctionInfo::FunctionInfo(string& name, const char * type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
+  : 
+    NumCalls(TAU_SIZE), 
+    NumSubrs(TAU_SIZE),
+    ExclTime(TAU_SIZE),
+    InclTime(TAU_SIZE),
+    AlreadyOnStack(TAU_SIZE)
+#ifdef PROFILE_STATS
+    , SumExclSqr(TAU_SIZE) 
+#endif //PROFILE_STATS
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -185,6 +207,15 @@ FunctionInfo::FunctionInfo(string& name, const char * type,
 
 FunctionInfo::FunctionInfo(string& name, string& type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
+  : 
+    NumCalls(TAU_SIZE), 
+    NumSubrs(TAU_SIZE),
+    ExclTime(TAU_SIZE),
+    InclTime(TAU_SIZE),
+    AlreadyOnStack(TAU_SIZE)
+#ifdef PROFILE_STATS
+    , SumExclSqr(TAU_SIZE) 
+#endif //PROFILE_STATS
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
@@ -251,6 +282,6 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1998/07/10 20:13:02 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.3 1998/07/10 20:13:02 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 1998/07/16 17:28:02 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.4 1998/07/16 17:28:02 sameer Exp $ 
  ***************************************************************************/
