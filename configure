@@ -1232,6 +1232,7 @@ then
   #echo "MPI is specified"
   mpi=yes
   fixmakeargs="$fixmakeargs MPI"
+  tauoptions="${tauoptions}-mpi"
   cat <<EOF > mpi_thread_test.C
   #include <mpi.h>
 
@@ -1876,6 +1877,7 @@ fi
 if [ $pdt = yes ]
 then
   fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
+  tauoptions="${tauoptions}-pdt"
   if [ $pdtcompdir != unknown ]
   then
     fixmakeargs="$fixmakeargs PDTARCH pdtcompdir=$pdtcompdir"
