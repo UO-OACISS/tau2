@@ -2022,7 +2022,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
   FILE *in;
   double t1, t2;
   double total, ct;
-  extern int errno;
+//  extern int errno;
   char s1[128], s2[128];
   char aggr_str[32],ident_str[32];
 
@@ -2897,7 +2897,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 1998/08/10 01:35:56 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.11 1998/08/10 01:35:56 sameer Exp $                                                   
+ * $Revision: 1.12 $   $Date: 1998/08/11 14:06:47 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.12 1998/08/11 14:06:47 sameer Exp $                                                   
  ***************************************************************************/
 
