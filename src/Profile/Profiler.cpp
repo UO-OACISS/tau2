@@ -114,6 +114,7 @@ void Profiler::Start(int tid)
 #endif /* TRACING_ON */
 
 #ifdef PROFILING_ON
+	ThisFunction->SetWritten(0, tid);
 	// First, increment the number of calls
 	ThisFunction->IncrNumCalls(tid);
         // now increment parent's NumSubrs()
@@ -229,13 +230,14 @@ void Profiler::Stop(int tid)
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
-	  && RtsLayer::TheEnableInstrumentation()){
+	  && RtsLayer::TheEnableInstrumentation()) {
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
 #ifdef TRACING_ON
 	TraceEvent(ThisFunction->GetFunctionId(), -1, tid); // -1 is for exit
 #endif //TRACING_ON
 
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
+	ThisFunction->SetWritten(0, tid);
 	double TotalTime = RtsLayer::getUSecD(tid) - StartTime;
 
         DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
@@ -343,7 +345,7 @@ void Profiler::Stop(int tid)
               << ThisFunction->GetName() <<endl;);
   
               StoreData(tid);
-            }
+	    }
         // dump data here. Dump it only at the exit of top level profiler.
 	  }
         }
@@ -579,6 +581,232 @@ int Profiler::StoreData(int tid)
 
 //////////////////////////////////////////////////////////////////////
 
+int Profiler::DumpData(int tid)
+{
+#ifdef PROFILING_ON 
+	vector<FunctionInfo*>::iterator it;
+  	vector<TauUserEvent*>::iterator eit;
+	char *filename, *errormsg, *header;
+	char *dirname;
+	FILE* fp;
+ 	int numFunc, numEvents;
+#endif //PROFILING_ON
+#ifdef PROFILE_CALLS
+	long listSize, numCalls;
+	list<pair<double,double> >::iterator iter;
+#endif // PROFILE_CALLS
+
+	DEBUGPROFMSG("Profiler::DumpData( tid = "<<tid <<" ) "<<endl;);
+
+#ifdef TRACING_ON
+	TraceEvClose(tid);
+	RtsLayer::DumpEDF(tid);
+#endif // TRACING_ON 
+
+#ifdef PROFILING_ON 
+	RtsLayer::LockDB();
+	if ((dirname = getenv("PROFILEDIR")) == NULL) {
+	// Use default directory name .
+	   dirname  = new char[8];
+	   strcpy (dirname,".");
+	}
+	 
+	filename = new char[1024];
+	sprintf(filename,"%s/dump.%d.%d.%d",dirname, RtsLayer::myNode(),
+		RtsLayer::myContext(), tid);
+	DEBUGPROFMSG("Creating " << filename << endl;);
+	if ((fp = fopen (filename, "a")) == NULL) {
+	 	errormsg = new char[1024];
+		sprintf(errormsg,"Error: Could not create %s",filename);
+		perror(errormsg);
+		return 0;
+	}
+
+	// Data format :
+	// %d templated_functions
+	// "%s %s" %ld %G %G  
+	//  funcname type numcalls Excl Incl
+	// %d aggregates
+	// <aggregate info>
+       
+	// Recalculate number of funcs using ProfileGroup. Static objects 
+        // constructed before setting Profile Groups have entries in FuncDB 
+	// (TAU_DEFAULT) even if they are not supposed to be there.
+	numFunc = 0;
+ 	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
+	{
+          if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) { 
+	    numFunc++;
+	  }
+	}
+	header = new char[256];
+
+#if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
+	|| (defined (TAU_PAPI) && \
+         (!(defined(TAU_PAPI_WALLCLOCKTIME) || (defined (TAU_PAPI_VIRTUAL))))))
+	sprintf(header,"%d templated_functions_hw_counters\n", numFunc);
+#else  // SGI_TIMERS, TULIP_TIMERS 
+	sprintf(header,"%d templated_functions\n", numFunc);
+#endif // SGI_HW_COUNTERS 
+
+	// Send out the format string
+	strcat(header,"# Name Calls Subrs Excl Incl ");
+#ifdef PROFILE_STATS
+	strcat(header,"SumExclSqr ");
+#endif //PROFILE_STATS
+	strcat(header,"ProfileCalls\n");
+	int sz = strlen(header);
+	int ret = fprintf(fp, "%s",header);	
+	ret = fflush(fp);
+	/*
+	if (ret != sz) {
+	  cout <<"ret not equal to strlen "<<endl;
+ 	}
+        cout <<"Header: "<< tid << " : bytes " <<ret <<":"<<header ;
+	*/
+ 	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
+	{
+          if (((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) &&
+	   !((*it)->IsWritten(tid))) { 
+
+	    (*it)->SetWritten(1, tid);
+  
+  	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping " 
+  	      << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : " 
+              << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid) 
+  	      << " Excl : " << (*it)->GetExclTime(tid) << " Incl : " 
+  	      << (*it)->GetInclTime(tid) << endl;);
+  	
+  	    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
+  	      (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
+  	      (*it)->GetExclTime(tid), (*it)->GetInclTime(tid));
+
+#ifdef PROFILE_STATS 
+  	    fprintf(fp,"%.16G ", (*it)->GetSumExclSqr(tid));
+#endif //PROFILE_STATS
+  
+#ifdef PROFILE_CALLS
+  	    listSize = (long) (*it)->ExclInclCallList->size(); 
+  	    numCalls = (*it)->GetCalls(tid);
+  	    // Sanity check
+  	    if (listSize != numCalls) 
+  	    {
+  	      fprintf(fp,"0 \n"); // don't write any invocation data
+  	      DEBUGPROFMSG("Error *** list (profileCalls) size mismatch size "
+  	        << listSize << " numCalls " << numCalls << endl;);
+  	    }
+  	    else { // List is maintained correctly
+  	      fprintf(fp,"%ld \n", listSize); // no of records to follow
+  	      for (iter = (*it)->ExclInclCallList->begin(); 
+  	        iter != (*it)->ExclInclCallList->end(); iter++)
+  	      {
+  	        DEBUGPROFMSG("Node: " << RtsLayer::myNode() <<" Name "
+  	          << (*it)->GetName() << " " << (*it)->GetType()
+  	          << " ExclThisCall : "<< (*iter).first <<" InclThisCall : " 
+  	          << (*iter).second << endl; );
+  	        fprintf(fp,"%G %G\n", (*iter).first , (*iter).second);
+  	      }
+            } // sanity check 
+#else  // PROFILE_CALLS
+  	    fprintf(fp,"0 \n"); // Indicating - profile calls is turned off 
+#endif // PROFILE_CALLS
+	  } // ProfileGroup test 
+	} // for loop. End of FunctionInfo data
+	fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
+	// Change this when aggregate profiling in introduced in Pooma 
+
+	// Print UserEvent Data if any
+	
+	numEvents = 0;
+ 	for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++)
+	{
+          if ((*eit)->GetNumEvents(tid)) { 
+	    numEvents++;
+	  }
+	}
+
+	if (numEvents > 0) {
+    	// Data format 
+    	// # % userevents
+    	// # name numsamples max min mean sumsqr 
+    	  fprintf(fp, "%d userevents\n", numEvents);
+    	  fprintf(fp, "# eventname numevents max min mean sumsqr\n");
+
+    	  vector<TauUserEvent*>::iterator it;
+    	  for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
+    	  {
+      
+	    DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+              (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid) 
+              << "\n Max " << (*it)->GetMax(tid) << "\n Mean " 
+	      << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid) 
+	      << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
+
+     	    fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
+	    (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+	    (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+    	  }
+	}
+	// End of userevents data 
+
+	RtsLayer::UnLockDB();
+	fclose(fp);
+
+#endif //PROFILING_ON
+	return 1;
+}
+
+void Profiler::PurgeData(int tid)
+{
+	vector<FunctionInfo*>::iterator it;
+	vector<TauUserEvent*>::iterator eit;
+	Profiler *curr;
+
+	DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
+	RtsLayer::LockDB();
+
+	// Reset The Function Database (save callstack entries)
+	for(it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+// May be able to recycle fns which never get called again??
+	    (*it)->SetWritten(0,tid);
+	    (*it)->SetCalls(tid,0);
+	    (*it)->SetSubrs(tid,0);
+	    (*it)->SetExclTime(tid,0);
+	    (*it)->SetInclTime(tid,0);
+#ifdef PROFILE_STATS
+	    (*it)->SetSumExclSqr(tid,0);
+#endif //PROFILE_STATS
+#ifdef PROFILE_CALLS
+	    (*it)->ExclInclCallList->clear();
+#endif // PROFILE_CALLS
+/*
+	  }
+*/
+	}
+	// Now Re-register callstack entries
+	curr = CurrentProfiler[tid];
+	curr->ThisFunction->IncrNumCalls(tid);
+	curr = curr->ParentProfiler;
+	while(curr != 0) {
+	  curr->ThisFunction->IncrNumCalls(tid);
+	  curr->ThisFunction->IncrNumSubrs(tid);
+	  curr = curr->ParentProfiler;
+	}
+
+	// Reset the Event Database
+	for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
+	  (*eit)->LastValueRecorded[tid] = 0;
+	  (*eit)->NumEvents[tid] = 0L;
+	  (*eit)->MinValue[tid] = 9999999;
+	  (*eit)->MaxValue[tid] = -9999999;
+	  (*eit)->SumSqrValue[tid] = 0;
+	  (*eit)->SumValue[tid] = 0;
+	}
+
+	RtsLayer::UnLockDB();
+}
+//////////////////////////////////////////////////////////////////////
+
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 int Profiler::ExcludeTimeThisCall(double t)
 {
@@ -718,9 +946,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.42 $   $Date: 2000/10/12 19:04:31 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.42 2000/10/12 19:04:31 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: tjaqua $
+ * $Revision: 1.43 $   $Date: 2001/02/17 01:43:37 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.43 2001/02/17 01:43:37 tjaqua Exp $ 
  ***************************************************************************/
 
 	
