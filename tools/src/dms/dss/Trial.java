@@ -13,7 +13,7 @@ import java.util.*;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.8 2003/10/14 00:27:55 bertie Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.9 2003/10/17 18:46:54 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -28,13 +28,14 @@ public class Trial {
 	private int trialID;
 	private int experimentID;
 	private int applicationID;
-        private String name;
+	private String name;
 	private String time;
 	private int problemSize;
 	private int nodeCount;
 	private int contextsPerNode;
 	private int threadsPerContext;
 	private Vector metric;
+	private String userData;
 
 /**
  * Gets the unique identifier of the current trial object.
@@ -115,6 +116,24 @@ public class Trial {
  */
 	public int getNumThreadsPerContext () {
 		return this.threadsPerContext;
+	}
+
+/**
+ * Gets the name of the current trial object.
+ *
+ * @return	the name of the trial
+ */
+	public String getName() {
+		return name;
+	}
+
+/**
+ * Gets the user data of the current trial object.
+ *
+ * @return	the user data of the trial
+ */
+	public String getUserData() {
+		return userData;
 	}
 
 /**
@@ -232,6 +251,28 @@ public class Trial {
  */
 	public void setNumThreadsPerContext (int threadsPerContext) {
 		this.threadsPerContext = threadsPerContext;
+	}
+ 
+/**
+ * Sets the user data of the current trial object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	userData the trial user data
+ */
+	public void setUserData(String userData) {
+		this.userData = userData;
+	}
+
+/**
+ * Sets the name of the current trial object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	name the trial name
+ */
+	public void setName(String name) {
+		this.name = name;
 	}
 
 /**

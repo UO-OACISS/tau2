@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.26 2003/09/02 16:25:31 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.27 2003/10/17 18:46:54 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -38,6 +38,18 @@ public class PerfDBSession extends DataSession {
 		}
 	}
 
+	public void initialize (Object obj, String password) {
+		String configFileName = (String)(obj);
+		// initialize the connection to the database,
+		// using the configuration settings.
+		try {
+			connector = new perfdb.ConnectionManager(configFileName, password);
+			connector.connect();
+			db = connector.getDB();
+		} catch ( Exception e ) {
+		}
+	}
+
 	public void terminate () {
 		connector.dbclose();
 	}
@@ -58,8 +70,8 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		buf.append("select distinct id, name, version, description, ");
-		buf.append(" language, para_diag, usage_text, execution_options, ");
-		buf.append(" experiment_table_name from application");
+		buf.append(" language, paradigm, usage_text, execution_options, ");
+		buf.append(" userdata from application");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
 
@@ -76,7 +88,7 @@ public class PerfDBSession extends DataSession {
 				app.setParaDiag(resultSet.getString(6));
 				app.setUsage(resultSet.getString(7));
 				app.setExecutableOptions(resultSet.getString(8));
-				// app.setExperimentTableName(resultSet.getString(9));
+				app.setUserData(resultSet.getString(9));
 				applications.addElement(app);
 	    	}
 			resultSet.close(); 
@@ -101,9 +113,18 @@ public class PerfDBSession extends DataSession {
 		Vector experiments = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct id, application, system_info, ");
-		buf.append("configuration_info, instrumentation_info, ");
-		buf.append("compiler_info, trial_table_name from experiment ");
+		buf.append("select distinct id, application, name, system_name, ");
+		buf.append("system_machine_type, system_arch, system_os, ");
+		buf.append("system_memory_size, system_processor_amt, ");
+		buf.append("system_l1_cache_size, system_l2_cache_size, ");
+		buf.append("system_userdata, ");
+		buf.append("configure_prefix, configure_arch, configure_cpp, ");
+		buf.append("configure_cc, configure_jdk, configure_profile, ");
+		buf.append("configure_userdata, ");
+		buf.append("compiler_cpp_name, compiler_cpp_version, ");
+		buf.append("compiler_cc_name, compiler_cc_version, ");
+		buf.append("compiler_java_dirpath, compiler_java_version, ");
+		buf.append("compiler_userdata, userdata from experiment ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
 
@@ -114,11 +135,31 @@ public class PerfDBSession extends DataSession {
 				Experiment exp = new Experiment();
 				exp.setID(resultSet.getInt(1));
 				exp.setApplicationID(resultSet.getInt(2));
-				exp.setSystemInfo(resultSet.getString(3));
-				exp.setConfigurationInfo(resultSet.getString(4));
-				exp.setInstrumentationInfo(resultSet.getString(5));
-				exp.setCompilerInfo(resultSet.getString(6));
-				// exp.setTrialTableName(resultSet.getString(7));
+    			exp.setName(resultSet.getString(3));
+    			exp.setSystemName(resultSet.getString(4));
+    			exp.setSystemMachineType(resultSet.getString(5));
+    			exp.setSystemArch(resultSet.getString(6));
+    			exp.setSystemOS(resultSet.getString(7));
+    			exp.setSystemMemorySize(resultSet.getString(8));
+    			exp.setSystemProcessorAmount(resultSet.getString(9));
+    			exp.setSystemL1CacheSize(resultSet.getString(10));
+    			exp.setSystemL2CacheSize(resultSet.getString(11));
+    			exp.setSystemUserData(resultSet.getString(12));
+    			exp.setConfigurationPrefix(resultSet.getString(13));
+    			exp.setConfigurationArchitecture(resultSet.getString(14));
+    			exp.setConfigurationCpp(resultSet.getString(15));
+    			exp.setConfigurationCc(resultSet.getString(16));
+    			exp.setConfigurationJdk(resultSet.getString(17));
+    			exp.setConfigurationProfile(resultSet.getString(18));
+    			exp.setConfigurationUserData(resultSet.getString(19));
+    			exp.setCompilerCppName(resultSet.getString(20));
+    			exp.setCompilerCppVersion(resultSet.getString(21));
+    			exp.setCompilerCcName(resultSet.getString(22));
+    			exp.setCompilerCcVersion(resultSet.getString(23));
+    			exp.setCompilerJavaDirpath(resultSet.getString(24));
+    			exp.setCompilerJavaVersion(resultSet.getString(25));
+    			exp.setCompilerUserData(resultSet.getString(26));
+    			exp.setUserData(resultSet.getString(27));
 				experiments.addElement(exp);
 	    	}
 			resultSet.close(); 
@@ -183,7 +224,8 @@ public class PerfDBSession extends DataSession {
 		StringBuffer buf = new StringBuffer();
 		buf.append("select distinct t.id, t.experiment, e.application, ");
 		buf.append("t.time, t.problem_size, t.node_count, ");
-		buf.append("t.contexts_per_node, t.threads_per_context ");
+		buf.append("t.contexts_per_node, t.threads_per_context, ");
+		buf.append("t.name, t.userdata ");
 		buf.append("from trial t inner join experiment e ");
 		buf.append("on t.experiment = e.id ");
 		buf.append(whereClause);
@@ -202,6 +244,8 @@ public class PerfDBSession extends DataSession {
 				trial.setNodeCount(resultSet.getInt(6));
 				trial.setNumContextsPerNode(resultSet.getInt(7));
 				trial.setNumThreadsPerContext(resultSet.getInt(8));
+				trial.setName(resultSet.getString(9));
+				trial.setUserData(resultSet.getString(10));
 				trials.addElement(trial);
 	    	}
 			resultSet.close(); 

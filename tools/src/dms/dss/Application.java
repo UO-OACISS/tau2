@@ -7,7 +7,7 @@ package dms.dss;
  * an application from which the TAU performance data has been generated.
  * An application has one or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.8 2003/08/27 17:07:37 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.9 2003/10/17 18:46:53 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since 0.1
@@ -25,6 +25,7 @@ public class Application {
 	private String usage;
 	private String executableOptions;
 	private String experimentTableName;
+	private String userData;
 
 /**
  * Gets the unique identifier of the current application object.
@@ -96,6 +97,15 @@ public class Application {
  */
 	public String getExecutableOptions() {
 		return executableOptions;
+	}
+
+/**
+ * Gets the user data of the current application object.
+ *
+ * @return	the user data of the application
+ */
+	public String getUserData() {
+		return userData;
 	}
 
 /*
@@ -194,6 +204,17 @@ public class Application {
  */
 	public void setExecutableOptions(String executableOptions) {
 		this.executableOptions = executableOptions;
+	}
+ 
+/**
+ * Sets the user data of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	userData the application user data
+ */
+	public void setUserData(String userData) {
+		this.userData = userData;
 	}
 }
 
