@@ -19,20 +19,17 @@ extern "C" {
 
   struct ThreadValue{
   int ThreadID;
-  long long CounterValue;
+  int EventSet; 
+  long long *CounterValues;
   };
 
 
 
 class PapiLayer
 {
-
-  //No need to define constructors and destructors.
-  //The default ones will do.
-
   public:
-    //Default getCounters ... without sychronization of resources.
-    static long long getCounters(int tid);
+  //Default getCounters.
+  static long long getCounters(int tid);
 };
 
 #endif /* TAU_PAPI */
