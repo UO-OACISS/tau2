@@ -151,13 +151,15 @@ public class ConnectionManager {
     }
 
 	public String getPassword () {
-		String tmpString = new String ("");
-		try {
-			PasswordField passwordField = new PasswordField();
-			tmpString = passwordField.getPassword(parser.getDBUserName() + "'s database password:");
-		} catch (IOException ex) {
-	    	ex.printStackTrace();
-			System.exit(0);
+		String tmpString = new String (parser.getDBPasswd());	
+		if (tmpString == null) {
+			try {
+				PasswordField passwordField = new PasswordField();
+				tmpString = passwordField.getPassword(parser.getDBUserName() + "'s database password:");
+			} catch (IOException ex) {
+	    		ex.printStackTrace();
+				System.exit(0);
+			}
 		}
 		return tmpString;
 	}
