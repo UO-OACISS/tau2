@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.3  2003/03/20 18:41:05  sameer
+// Added TAU_HPUX guards for <limit> header.
+//
 // Revision 1.2  2003/03/15 01:39:10  sameer
 // Added <limits> [HP-UX] and moved funcDB in PyTimer.cpp to inside the profileTimer routine.
 //
@@ -31,7 +34,9 @@
 //
 // 
 
+#ifdef TAU_HPUX
 #include <limits>
+#endif /* TAU_HPUX */
 #include <Python.h>
 
 #include "Profile/PyDatabase.h"
@@ -276,7 +281,7 @@ PyObject * pytau_dumpFuncValsIncr(PyObject *, PyObject * args)
 
 
 // version
-// $Id: PyDatabase.cpp,v 1.2 2003/03/15 01:39:10 sameer Exp $
+// $Id: PyDatabase.cpp,v 1.3 2003/03/20 18:41:05 sameer Exp $
 
 // End of file
   

@@ -12,6 +12,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.4  2003/03/20 18:41:05  sameer
+// Added TAU_HPUX guards for <limit> header.
+//
 // Revision 1.3  2003/03/15 01:49:13  sameer
 // Python bindings and wish fix.
 //
@@ -24,7 +27,9 @@
 //
 // 
 
+#ifdef TAU_HPUX
 #include <limits>
+#endif /* TAU_HPUX */
 #include <Python.h>
 
 // Tau includes
@@ -165,7 +170,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.3 2003/03/15 01:49:13 sameer Exp $
+// $Id: PyTimer.cpp,v 1.4 2003/03/20 18:41:05 sameer Exp $
 
 // End of file
   
