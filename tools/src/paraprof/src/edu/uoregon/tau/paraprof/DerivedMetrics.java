@@ -159,6 +159,9 @@ public class DerivedMetrics {
                                     result = DerivedMetrics.apply(operation, d1, constantValue);
 
                                 functionProfile.setInclusive(metric, result);
+
+                                functionProfile.setInclusivePerCall(metric, functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
+
                                 //Now do the global mapping element inclusive
                                 // stuff.
 
@@ -174,8 +177,7 @@ public class DerivedMetrics {
                     }
                 }
             }
-            //Done with this metric, let the global mapping compute the mean
-            // values.
+            //Done with this metric, compute the mean values.
             trialOpA.setMeanData(metric);
             return newMetric;
         } catch (Exception e) {
