@@ -212,17 +212,13 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 	t->SetPhase(1); \
         t->Start(tau_tid); }
 
-#define TAU_GLOBAL_PHASE_STOP()  {int tau_threadid = RtsLayer::myThread(); \
-                Profiler *p = Profiler::CurrentProfiler[tau_threadid]; \
-		p->Stop(tau_threadid); \
-		delete p; \
-		}
+#define TAU_GLOBAL_PHASE_STOP(timer) Tau_stop_timer(&timer()); 
 
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer) extern FunctionInfo& timer(void);
 #else /* TAU_PROFILEPHASE */
 #define TAU_GLOBAL_PHASE 	TAU_GLOBAL_TIMER
 #define TAU_GLOBAL_PHASE_START	TAU_GLOBAL_TIMER_START
-#define TAU_GLOBAL_PHASE_STOP	TAU_GLOBAL_TIMER_STOP
+#define TAU_GLOBAL_PHASE_STOP(timer)	TAU_GLOBAL_TIMER_STOP()
 #define TAU_GLOBAL_PHASE_EXTERNAL TAU_GLOBAL_TIMER_EXTERNAL
 
 #endif /* TAU_PROFILEPHASE */
@@ -383,7 +379,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.45 $   $Date: 2005/01/12 00:16:18 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.45 2005/01/12 00:16:18 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.46 $   $Date: 2005/01/12 19:00:20 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.46 2005/01/12 19:00:20 sameer Exp $ 
  ***************************************************************************/
