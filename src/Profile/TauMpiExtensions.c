@@ -6550,7 +6550,7 @@ void mpi_info_delete__( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
-int MPI_Info_get( MPI_Info info, TAU_CONST char * key, int valuelen, TAU_CONST char * value, int * flag)
+int MPI_Info_get( MPI_Info info, TAU_CONST char * key, int valuelen, char * value, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get()", "", TAU_MESSAGE); 
