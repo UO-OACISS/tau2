@@ -1,0 +1,5 @@
+#!/bin/sh
+TAUROOT=${HOME}/cvs/tau2
+MACHINE=i386_linux
+
+java -Xmx500m -cp ${TAUROOT}/tools/src/TauIL/bin/TauIL.jar:${TAUROOT}/${MACHINE}/bin/ParaProf.jar:${TAUROOT}/tools/src/TauIL/bin/java_cup.jar:${TAUROOT}/tools/src/dms/dms.jar TauIL.Tool $@
