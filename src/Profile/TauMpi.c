@@ -1250,6 +1250,7 @@ char *** argv;
   return returnVal;
 }
 
+/*
 int  MPI_Initialized( flag )
 int * flag;
 {
@@ -1264,6 +1265,7 @@ int * flag;
 
   return returnVal;
 }
+*/
 
 double  MPI_Wtick(  )
 {
