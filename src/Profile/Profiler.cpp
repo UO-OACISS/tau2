@@ -115,12 +115,12 @@ void TauAppShutdown(void)
 char * TauGetCounterString(void)
 {
   char *header = new char[64];
-  char *tau_env = NULL;
 #ifdef SGI_HW_COUNTERS
   return "templated_functions_hw_counters";
 #elif (defined (TAU_PAPI) || defined (TAU_PCL) \
 		|| defined(TAU_PAPI_WALLCLOCKTIME) \
 		|| defined(TAU_PAPI_VIRTUAL))
+  char *tau_env = NULL;
 
 #ifdef TAU_PAPI
   tau_env = getenv("PAPI_EVENT");
@@ -2537,8 +2537,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.86 $   $Date: 2003/10/10 00:50:34 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.86 2003/10/10 00:50:34 sameer Exp $ 
+ * $Revision: 1.87 $   $Date: 2003/11/15 02:59:41 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.87 2003/11/15 02:59:41 sameer Exp $ 
  ***************************************************************************/
 
 	
