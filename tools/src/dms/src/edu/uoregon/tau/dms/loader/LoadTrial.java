@@ -162,7 +162,7 @@ public class LoadTrial{
 	    break;
 	}
 
-	trial = new Trial();
+	trial = new Trial(0);
 	trial.setDataSession(dataSession);
 	dataSession.initialize(v);
 	if(trialID==0)
@@ -179,12 +179,12 @@ public class LoadTrial{
     public void saveTrial() {
 	// if (fileType == 101) return;
 	// set some things in the trial
-	int[] maxNCT = dataSession.getMaxNCTNumbers();
-	trial.setNodeCount(maxNCT[0]+1);
-	trial.setNumContextsPerNode(maxNCT[1]+1);
-	trial.setNumThreadsPerContext(maxNCT[2]+1);
+// 	int[] maxNCT = dataSession.getMaxNCTNumbers();
+// 	trial.setNodeCount(maxNCT[0]+1);
+// 	trial.setNumContextsPerNode(maxNCT[1]+1);
+// 	trial.setNumThreadsPerContext(maxNCT[2]+1);
 	trial.setName(trialName);
-	trial.setProblemDefinition(getProblemString());
+	//trial.setProblemDefinition(getProblemString());
 	trial.setExperimentID(expID);
 	dbSession.saveParaProfTrial(trial, -1);
 	System.out.println("Done saving trial!");

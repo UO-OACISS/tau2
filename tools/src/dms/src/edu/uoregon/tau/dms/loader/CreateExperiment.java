@@ -26,7 +26,7 @@ public class CreateExperiment {
 
     public int createExp(String name, int appid) {
 	int expid = 0;
-	Experiment exp = new Experiment();
+	Experiment exp = new Experiment(0);
 	exp.setName(name);
 	exp.setApplicationID(appid);
 	session.setExperiment(exp);

@@ -198,7 +198,7 @@ public class ConfigureTest {
         }
 
 	try {
-	    String query = new String ("SELECT version FROM version");
+	    String query = new String ("SELECT version FROM  " + db.getSchemaPrefix() + "version");
 	    ResultSet resultSet = db.executeQuery(query);
 	    
 	    String version = "none";
@@ -219,13 +219,13 @@ public class ConfigureTest {
 
 	} catch (Exception e) {
 	    
-	    //e.printStackTrace();
+	    e.printStackTrace();
 	    
 
 	    // The schema does not have the version table, it must be older than 2.13.7 (or whatever comes after 2.13.6)
 
 	    try {
-		String query = new String ("SELECT * FROM application");
+		String query = new String ("SELECT * FROM " + db.getSchemaPrefix() + "application");
 		ResultSet resultSet = db.executeQuery(query);
 		
 		// if we got here (i.e. no exception) then the schema in the database must be the old one

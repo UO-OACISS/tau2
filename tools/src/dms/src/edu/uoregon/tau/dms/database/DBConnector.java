@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 
+import java.sql.DatabaseMetaData;
 /*******************************************************
  * Implements access to a database
  * Be sure to specify JDBC Driver in the class path.
@@ -120,19 +121,19 @@ public class DBConnector implements DB {
 
     public int executeUpdate(String sql) throws SQLException {
 	//	try {
-	    if (statement == null) {
-		if (conn == null) {
-		    System.err.println("Database is closed for " + sql);
-		    return 0;
-		}
-		statement = conn.createStatement();
+	if (statement == null) {
+	    if (conn == null) {
+		System.err.println("Database is closed for " + sql);
+		return 0;
 	    }
-	    //	    System.out.println ("sql: " + sql);
-	    return statement.executeUpdate(sql.trim());
-	    //	} catch (SQLException ex) {
-	    //	    ex.printStackTrace();
-	    //	    return 0;
-	    //	}
+	    statement = conn.createStatement();
+	}
+	//	    System.out.println ("sql: " + sql);
+	return statement.executeUpdate(sql.trim());
+	//	} catch (SQLException ex) {
+	//	    ex.printStackTrace();
+	//	    return 0;
+	//	}
     }
 
     public java.sql.Connection getConnection() {
@@ -189,6 +190,10 @@ public class DBConnector implements DB {
 	}
     }
 
+    public DatabaseMetaData getMetaData() throws SQLException {
+	return conn.getMetaData();
+    }
+
     public void setDBAddress(String newValue) {
 	this.dbaddress = newValue;
     }
@@ -198,9 +203,96 @@ public class DBConnector implements DB {
     }
 
     public String getSchemaPrefix(){
-	return "";}
+	return new String(this.parseConfig.getDBSchemaPrefix() + ".");
+    }
 
     public PreparedStatement prepareStatement(String statement) throws SQLException {
 	return getConnection().prepareStatement(statement);
     }
+
+
+
+
+    // JDBC types in Java 1.4.1_01:
+    // BIT          : -7
+    // TINYINT      : -6
+    // SMALLINT     : 5
+    // INTEGER      : 4
+    // BIGINT       : -5
+    // FLOAT        : 6
+    // REAL         : 7
+    // DOUBLE       : 8
+    // NUMERIC      : 2
+    // DECIMAL      : 3
+    // CHAR         : 1
+    // VARCHAR      : 12
+    // LONGVARCHAR  : -1
+    // DATE         : 91
+    // TIME         : 92
+    // TIMESTAMP    : 93
+    // BINARY       : -2
+    // VARBINARY    : -3
+    // LONGVARBINARY: -4
+    // NULL         : 0
+    // OTHER        : 1111
+    // JAVA_OBJECT  : 2000
+    // DISTINCT     : 2001
+    // STRUCT       : 2002
+    // ARRAY        : 2003
+    // BLOB         : 2004
+    // CLOB         : 2005
+    // REF          : 2006
+
+//     public static boolean isReadWriteType(int type) {
+// 	if (type == java.sql.Types.VARCHAR 
+// 	    || type == java.sql.Types.CLOB
+// 	    || type == java.sql.Types.INTEGER
+// 	    || type == java.sql.Types.DECIMAL
+// 	    || type == java.sql.Types.LONGVARCHAR)
+// 	    return true;
+// 	return false;
+//     }
+
+    public static boolean isReadAbleType(int type) {
+	if (type == java.sql.Types.VARCHAR 
+	    || type == java.sql.Types.CLOB
+	    || type == java.sql.Types.INTEGER
+	    || type == java.sql.Types.DECIMAL
+	    || type == java.sql.Types.LONGVARCHAR
+	    || type == java.sql.Types.TIME
+	    || type == java.sql.Types.TIMESTAMP)
+	    return true;
+	return false;
+    }
+
+
+    public static boolean isWritableType(int type) {
+	if (type == java.sql.Types.VARCHAR 
+	    || type == java.sql.Types.CLOB
+	    || type == java.sql.Types.INTEGER
+	    || type == java.sql.Types.DECIMAL
+	    || type == java.sql.Types.LONGVARCHAR)
+	    return true;
+	return false;
+    }
+
+    public static boolean isIntegerType(int type) {
+	if (type == java.sql.Types.INTEGER)
+	    return true;
+	return false;
+    }
+
+    public static boolean isFloatingPointType(int type) {
+	if (type == java.sql.Types.DECIMAL)
+	    return true;
+	return false;
+    }
+
+//     public static boolean isReadOnlyType(int type) {
+// 	if (type == java.sql.Types.TIME 
+// 	    || type == java.sql.Types.TIMESTAMP)
+// 	    return true;
+// 	return false;
+//     }
+
 }

@@ -35,6 +35,7 @@ public class Configure {
     private String db_dbname = "perfdmf";
     private String db_username = "";
     private String db_password = "";
+    private String db_schemaprefix = "";
     private boolean store_db_password = false;
     private String db_schemafile = "dbschema.txt";
     private String xml_parser = "xerces.jar";
@@ -103,6 +104,7 @@ public class Configure {
 	jdbc_db_type = parser.getDBType();
 	db_hostname = parser.getDBHost();
 	db_portnum = parser.getDBPort();
+	db_schemaprefix = parser.getDBSchemaPrefix();
 	db_dbname = parser.getDBName();
 	db_username = parser.getDBUserName();
 	db_password = parser.getDBPasswd();
@@ -240,6 +242,14 @@ public class Configure {
 	    }
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) db_dbname = tmpString;
+
+
+	    if (jdbc_db_type.compareTo("oracle") == 0) {
+		System.out.print("Please enter the database schema name, or your username if you are creating the tables now.\n(" + db_schemaprefix + "):");
+		tmpString = reader.readLine();
+		if (tmpString.length() > 0) db_schemaprefix = tmpString;
+	    }
+
 						
 	    // Prompt for database username
 	    System.out.print("Please enter the database username.\n(" + db_username + "):");
@@ -370,7 +380,11 @@ public class Configure {
 	    configWriter.write("# Database name\n");
 	    configWriter.write("db_dbname:" + db_dbname + "\n");
 	    configWriter.newLine();
-						
+
+	    configWriter.write("# Database Schema name\n");
+	    configWriter.write("db_schemaprefix:" + db_schemaprefix + "\n");
+	    configWriter.newLine();
+				
 	    configWriter.write("# Database username\n");
 	    configWriter.write("db_username:" + db_username + "\n");
 	    configWriter.newLine();

@@ -26,12 +26,12 @@ public class CreateApplication {
 
     public int createApp(String name) {
 	int appid = 0;
-	Application app = new Application();
+	Application app = new Application(0);
 	app.setName(name);
-	app.setVersion("");
-	app.setLanguage("");
+	//app.setVersion("");
+	//app.setLanguage("");
 	session.setApplication(app);
-	appid = session.saveApplication();
+	//appid = session.saveApplication();
 	System.out.println("Created Application, ID: " + appid);
 	session.terminate();
 	return appid;

@@ -13,6 +13,7 @@ public class ParseConfig {
     private String dbHost;
     private String dbPort;
     private String dbName;
+    private String dbSchemaPrefix = "";
     private String dbUserName;
     private String dbPasswd;
     private String dbSchema;
@@ -41,6 +42,7 @@ public class ParseConfig {
 		    else if (name.equals("db_hostname")) dbHost = value; 
 		    else if (name.equals("db_portnum")) dbPort = value; 
 		    else if (name.equals("db_dbname")) dbName = value; 
+		    else if (name.equals("db_schemaprefix")) dbSchemaPrefix = value; 
 		    else if (name.equals("db_username")) dbUserName = value; 
 		    else if (name.equals("db_password")) dbPasswd = value; 
 		    else if (name.equals("db_schemafile")) dbSchema = value; 
@@ -92,6 +94,7 @@ public class ParseConfig {
 
     public String getDBName(){ return dbName; }
 
+    public String getDBSchemaPrefix() { return dbSchemaPrefix; }
     public String getDBUserName(){ return dbUserName; }
 
     public String getDBPasswd(){ return dbPasswd; }

@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.DatabaseMetaData;
 
 /*** Interface to access a DBMS ***/
 
@@ -18,4 +19,6 @@ public interface DB {
     public Connection getConnection();
     public PreparedStatement prepareStatement(String statement) throws SQLException;
     public String getSchemaPrefix();
+    public DatabaseMetaData getMetaData() throws SQLException;
+
 }
