@@ -35,7 +35,7 @@ public class UtilFncs{
 	    result = dF.format(d);
 	}
 	catch(Exception e){
-		ParaProf.systemError(e, null, "UF01");
+		UtilFncs.systemError(e, null, "UF01");
 	}
 	return Double.parseDouble(result);
     }
@@ -82,7 +82,7 @@ public class UtilFncs{
 	    d = d-min*60000000.00;
 	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
 	default:
-	    ParaProf.systemError(null, null, "Unexpected string type - UF02 value: " + type);
+	    UtilFncs.systemError(null, null, "Unexpected string type - UF02 value: " + type);
 	}
 	return null;
     }
@@ -102,7 +102,7 @@ public class UtilFncs{
 	case 3:
 	    return "hour:minute:seconds";
 	default:
-	    ParaProf.systemError(null, null, "Unexpected string type - UF03 value: " + type);
+	    UtilFncs.systemError(null, null, "Unexpected string type - UF03 value: " + type);
 	}
 	return null;
     }
@@ -128,7 +128,7 @@ public class UtilFncs{
 	case 18:
 	    return "mean";
 	default:
-	    ParaProf.systemError(null, null, "Unexpected string type - UF04 value: " + type);
+	    UtilFncs.systemError(null, null, "Unexpected string type - UF04 value: " + type);
 	}
 	return null;
     }
@@ -384,5 +384,242 @@ public class UtilFncs{
 	menuItem = new JMenuItem("About ParaProf");
 	menuItem.addActionListener(actionListener);
 	jMenu.add(menuItem);
+    }
+
+    //The component argument is passed to the showOpenDialog method.  It is ok if it is null.
+    //The functionality that should be expected is as follows: Multiple files in a single directory
+    //may be chosen, however, if a directory is selected, then no other files (or directories) may 
+    //be chosen. Thus, if files.length > 1, it must contain only files.  If files.length == 1 then
+    //it can be a file or a directory.
+    //Returns a MetricFileList array of length 0 if no files are obtained.
+    public static Vector getFileList(Component component, int type){
+	try{
+	    File[] files = new File[0];
+	    File  file = null;
+	    Vector result = new Vector();
+
+	    if(type>3)
+		UtilFncs.systemError(new ParaProfError("UF05","File Selection Error!",
+						       "Internal error: Unexpected file type - value: " + type, null,
+						       component, true), null, null);
+	    
+	    //Now we are sure that the type is at least valid, reset typeError
+	    //to something which indicates a type/selection mismatch.
+	    paraProfError.s0 = "File type/selction error - file selection does not match type: " + type;
+	    paraProfError.quit = false;
+
+	    JFileChooser jFileChooser = new JFileChooser(System.getPropertie("user.dir"));
+	    if((jFileChooser.showOpenDialog(component)) == JFileChooser.APPROVE_OPTION){
+		File files = jFileChooser.getSelectedFiles();
+		if(files != null){
+		    //Validate the selection.
+		    if(files.length == 0){
+			UtilFncs.systemError(new ParaProfError("UF06","File Selection Error!",
+							       "No files selected.", null,
+							       component, false), null, null);
+			return result;
+		    }
+		    else if(files.length > 1){
+			for(int i=0;i<files.length;i++){
+			    if(files[i].isDirectory()){
+				UtilFncs.systemError(new ParaProfError("UF07","File Selection Error!",
+							       "Please chose one or more files OR a single directory.", null,
+							       component, false), null, null);
+				return result;
+			    }
+			}
+		    }
+		    
+		    //If hear, selection is valid.
+		    if(files.length == 1){
+			if(files[0].isDirectory()){
+			    //First try to find a pprof.dat file or profile.*.*.* files in this directory.
+			    switch(type){
+			    case 0:
+				files = UtilFuncs.getMetricFileListHelper(files[0]);
+				if(files!=null)
+				    result.add(files);
+				break;
+			    case 1:
+				files = files.listFiles();
+				Vector v = new Vector();
+				for(int i = 0;i<files.length;i++){
+				    if(files[i] != null){
+					if((files[i].isDirectory())&&(files[i].getName().indexOf("MULTI__") != -1))
+					    v.add(files[i]);
+				    }
+				}
+				int length = v.size();
+				if(length!=0){
+				    for(int i=0;i<length;i++){
+					file = (File)(v.elementAt(i));
+					files = UtilFuncs.getMetricFileListHelper(file);
+					if(files!=null)
+					    result.add(files);
+				    }
+				}
+				break;
+			    default:
+				UtilFncs.systemError(new ParaProfError("UF08","File Selection Error!",
+							       "File selection/File Type mismatch", null,
+							       component, false), null, null);
+				break;
+			    }
+			}
+			else{
+			    switch(type){
+			    case 0:
+				result.add(files);
+				break;
+			    case 1:
+				result.add(files);
+				break;
+			    default:
+				UtilFncs.systemError(new ParaProfError("UF09","File Selection Error!",
+							       "File selection/File Type mismatch", null,
+							       component, false), null, null);
+				break;
+			    }
+			}
+		    }
+		    else{ //More than one file in selection (already checked for zero).
+			switch(type){
+			case 0:
+			    break;
+			case 1:
+			    result.add(files);
+			    break;
+			default:
+			    UtilFncs.systemError(new ParaProfError("UF10","File Selection Error!",
+							       "File selection/File Type mismatch", null,
+							       component, false), null, null);
+			    break;
+			}
+		    }
+		}
+	    }
+	    UtilFncs.systemError(new ParaProfError("UF11", "File selection cancelled by user",null),null,null);
+		return result;
+	    }
+	catch(Exception e){
+	    //Did not find anything that could be used.
+	    ParaProfError paraProfError = new ParaProfError();
+	    paraProfError.location = "UF08";
+	    paraProfError.popupString = "File Selection Error!";
+	    paraProfError.s0 = "An error has been detected.";
+	    paraProfError.exp = e;
+	    paraProfError.component = component;
+	    paraProfError.showPopup = true;
+	    paraProfError.showContactString = true;
+	    paraProfError.quit = true;
+	    UtilFncs.systemError(paraProfError, null, null);
+	}
+	return new File[0];
+    }
+
+    //This function helps the getFileList function above. It looks in the given directory
+    //for a pprof.dat file, or for a list of profile.*.*.* files (in that order).
+    //If nothing is found, it returns null.
+    public static File[] getFileListHelper(File directory, int type){
+	if(directory.isDirectory()){
+	    File[] files = new File[0];
+	    File  file = null;
+	    String directoryPath = directory.getCanonicalPath();
+	    String fileSeparator = System.getProperty("file.separator");
+	    
+	    switch(type){
+	    case 0:
+		file = new File(directoryPath + fileSeparator + "pprof.dat");
+		if(file.exists()){
+		    System.out.println("Found pprof.dat!");
+		    files = new File[1];
+		    files[0] = file;
+		    return files;
+		}
+		break;
+	    case 1:
+		files = directory.listFiles();
+		Vector v = new Vector();
+		for(int i = 0;i<files.length;i++){
+		    if(files[i] != null){
+			if(files[i].getName().indexOf("profile.") != -1)
+			    v.add(files[i]);
+		    }
+		}
+		int length = v.size();
+		if(length!=0){
+		    files = new File[length];
+		    for(int i=0;i<length;i++){
+			files[i] = (File) v.elementAt(i);
+		    }
+		    return files;
+		}
+		break;
+	    default:
+		return null;
+	    }
+	}
+	return null;
+    }
+
+    public static void systemError(Object obj, Component component, String string, boolean){ 
+	System.out.println("####################################");
+	boolean quit = true; //Quit by default.
+	if(obj != null){
+	    if(obj instanceof Exception){
+		Exception exception = (Exception) obj;
+		if(ParaProf.debugIsOn){
+		    System.out.println(exception.toString());
+		    exception.printStackTrace();
+		    System.out.println("\n");
+		}
+		System.out.println("An error was detected: " + string);
+		System.out.println(ParaProfError.contactString);
+	    }
+	    if(obj instanceof ParaProfError){
+		ParaProfError paraProfError = (ParaProfError) obj;
+		if(ParaProf.debugIsOn){
+		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
+			JOptionPane.showMessageDialog(paraProfError.component,
+						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
+		    if(paraProfError.exp!=null){
+			System.out.println(paraProfError.exp.toString());
+			paraProfError.exp.printStackTrace();
+			System.out.println("\n");
+		    }
+		    if(paraProfError.location!=null)
+			System.out.println("Location: " + paraProfError.location);
+		    if(paraProfError.s0!=null)
+			System.out.println(paraProfError.s0);
+		    if(paraProfError.s1!=null)
+			System.out.println(paraProfError.s1);
+		    if(paraProfError.showContactString)
+			System.out.println(ParaProfError.contactString);
+		}
+		else{
+		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
+			JOptionPane.showMessageDialog(paraProfError.component,
+						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
+		    if(paraProfError.location!=null)
+			System.out.println("Location: " + paraProfError.location);
+		    if(paraProfError.s0!=null)
+			System.out.println(paraProfError.s0);
+		    if(paraProfError.s1!=null)
+			System.out.println(paraProfError.s1);
+		    if(paraProfError.showContactString)
+			System.out.println(ParaProfError.contactString);
+		}
+		quit = paraProfError.quit;
+	    }
+	    else{
+		System.out.println("An error has been detected: " + string);
+	    }
+	}
+	else{
+	    System.out.println("An error was detected at " + string);
+	}
+	System.out.println("####################################");
+	if(quit)
+	    System.exit(0);
     }
 }

@@ -14,6 +14,52 @@ package paraprof;
 import java.awt.*;
 
 public class ParaProfError{
+    
+    //Provide some useful constructors.
+    //Everything constructor.
+    public ParaProfError(String location, String popupString,
+			 String s0, String s1,
+			 Exception exp, Component component,
+			 Object obj0, Object obj1, boolean showPopup,
+			 boolean showContactString, boolean quit){
+	this.location = location;
+	this.popupString = popupString;
+	this.s0 = s0;
+	this.s1 = s1;
+	this.exp = exp;
+	this.component = component;
+	this.obj0 = obj0;
+	this.obj1 = obj1;
+	this.showPopup = showPopup;
+	this.showContactString = showContactString;
+	this.quit =  quit;
+    }
+    
+    //Show the popup, a message, and an optional quit.
+    public ParaProfError(String location, String popupString,
+			 String s0, String s1,
+			 Component component, boolean quit){
+	this.location = location;
+	this.popupString = popupString;
+	this.s0 = s0;
+	this.s1 = s1;
+	this.component = component;
+	this.showPopup = true;
+	if(!quit){
+	    this.showContactString = false;
+	    this.quit =  false;
+	}
+    }
+
+    //Just an informational message to the console.
+    public ParaProfError(String location, String s0, String s1){
+	this.location = location;
+	this.s0 = s0;
+	this.s1 = s1;
+	this.showContactString = false;
+	this.quit =  false;
+    }
+
     //####################################
     //Instance Data.
     //####################################
@@ -40,9 +86,9 @@ public class ParaProfError{
     public boolean showPopup = false; //Indicates whether it is safe to show a popup window.
                                       //Some methods do not seem to like being interupted - 
                                       //paintComponent methods for example.
-    public boolean showContactString = false; //Indicates whether the contact string is printed.
+    public boolean showContactString = true; //Indicates whether the contact string is printed.
     public boolean quit = true; //Indicates whether this error is serious
-                                 //enough to quit the system or not.
+                                //enough to quit the system or not.
     //####################################
     //End - Instance Data.
     //####################################

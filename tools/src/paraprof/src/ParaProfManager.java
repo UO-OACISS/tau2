@@ -738,10 +738,27 @@ public class ParaProfManager extends JFrame implements ActionListener{
 					      ,JOptionPane.ERROR_MESSAGE);
 		return;
 	    }
-	    //Create a file chooser to allow the user to select the pprof dump file.
-	    JFileChooser jFileChooser = new JFileChooser(System.getProperties("user.dir"));
-	    if((jFileChooser.showOpenDialog(this)) == JFileChooser.APPROVE_OPTION){
-		//Obtain the selected file or directory.
+	    
+	    int type = -1;
+	    String s = (String) trialType.getSelectedItem();
+	    if(s.equals("Pprof -d File"))
+		type = 0;
+	    else if(s.equals("Tau Output"))
+		type = 1;
+	    else if(s.equals("other-1"))
+		type = 2;
+	    else if(s.equals("other-2"))
+		type = 3;
+
+	    MetricFileList[] metricFileList = UtilFuncs.getFileList(this, type);
+	    
+
+
+
+
+
+	    for(int i=0;i<files.length;i++){
+
 		File file = jFileChooser.getSelectedFile();
 		if(file != null){
 		    if(file.isDirectory()){
