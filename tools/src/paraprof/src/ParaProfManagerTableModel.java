@@ -27,9 +27,13 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 	    this.experiment = (ParaProfExperiment)obj;
 	    type = 1;
 	}
-	else{
+	else if(obj instanceof ParaProfTrial){
 	    this.trial = (ParaProfTrial)obj;
 	    type = 2;
+	}
+	else{
+	    this.metric = (Metric) obj;
+	    type = 3;
 	}
 
 	this.application = application;
@@ -47,6 +51,8 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 	    return 27;
 	case 2:
 	    return 10;
+	case 3:
+	    return 5;
 	default:
 	    return 0;
 	}
@@ -272,6 +278,39 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    return "";
 		}
 	    }
+	    case 3:
+	    if(c==0){
+		switch(r){
+		case(0):
+		    return "Name";
+		case(1):
+		    return "Application ID";
+		case(2):
+		    return "Experiment ID";
+		case(3):
+		    return "Trial ID";
+		case(4):
+		    return "Metric ID";
+		default:
+		    return "";
+		}
+	    }
+	    else{
+		switch(r){
+		case(0):
+		    return metric.getName();
+		case(1):
+		    return new Integer(metric.getApplicationID());
+		case(2):
+		    return new Integer(metric.getExperimentID());
+		case(3):
+		    return new Integer(metric.getTrialID());
+		case(4):
+		    return new Integer(metric.getID());
+		default:
+		    return "";
+		}
+	    }
 	default:
 	    return "";
 	}
@@ -332,6 +371,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
     private ParaProfApplication application = null;
     private ParaProfExperiment experiment = null;
     private ParaProfTrial trial = null;
+    private Metric metric = null;
     private DefaultTreeModel defaultTreeModel = null;
     String[] columnNames = {
 	"Field", "Value"

@@ -97,6 +97,10 @@ public class ParaProfTrial extends Trial{
 	
 	globalMapping.setColors(clrChooser, -1);
 
+	for(int i=(metrics.size())-1;i>=0;i--){
+	    ((Metric) metrics.elementAt(i)).setTrial(this);
+	}
+
     }
 
     public void setExperiment(ParaProfExperiment experiment){

@@ -85,6 +85,18 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 
 	    //######
+	    //Options menu.
+	    //######
+	    JMenu optionsMenu = new JMenu("Options");
+	    
+	    JMenuItem applyOperationItem = new JMenuItem("Apply Operation");
+	    applyOperationItem.addActionListener(this);
+	    optionsMenu.add(applyOperationItem);
+	    //######
+	    //End - Options menu.
+	    //######
+
+	    //######
 	    //Help menu.
 	    //######
 	    JMenu helpMenu = new JMenu("Help");
@@ -104,6 +116,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
        
 	    //Now, add all the menus to the main menu.
 	    mainMenu.add(fileMenu);
+	    mainMenu.add(optionsMenu);
 	    mainMenu.add(helpMenu);
 	    setJMenuBar(mainMenu);
 	    //####################################
@@ -198,6 +211,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    }
 		    else if(arg.equals("Database Configuration")){
 			(new DBConfiguration(this)).show();
+		    }
+		    else if(arg.equals("Apply Operation")){
+
 		    }
 		    else if(arg.equals("About ParaProf")){
 			JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
@@ -403,7 +419,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jSplitPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof Metric){
-	    jSplitPane.setRightComponent(getPanelHelpMessage(-1));
+	    jSplitPane.setRightComponent(getTable(userObject));
 	    jSplitPane.setDividerLocation(0.5);
 	    //Note that the parent user object should be an intance of trial.
 	    //Check though!

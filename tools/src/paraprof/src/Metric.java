@@ -39,6 +39,15 @@ public class Metric{
     
     public void setID(int id){
 	this.id = id;}
+
+    public int getApplicationID(){
+	return trial.getApplicationID();}
+
+    public int getExperimentID(){
+	return trial.getExperimentID();}
+
+    public int getTrialID(){
+	return trial.getID();}
     
     public int getID(){
 	return id;}
