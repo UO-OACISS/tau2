@@ -662,7 +662,7 @@ detectspec=`cd utils; ./archfind -s`
 
 ###############################################################
 # if there are no arguments, GUESS at system configuration
-if [ $tauarch = unknown ]
+if [ $tauarch = unknown -o $tauarch = none ]
   then 
     if [ $# = 1 ]
       then
@@ -1864,6 +1864,14 @@ case $machine in
 	;;
     esac
 
+if [ $tauarch = none ]
+then
+  architecture=
+  fixmakeargs="$fixmakeargs arch= "
+else
+  architecture=$machine
+fi
+
 # write out .h file to define this architecture __easily__
 echo \#define TAU_$machine > ./include/tauarch.h
 echo \#define TAU_ARCH $machine >> ./include/tauarch.h
@@ -1872,28 +1880,28 @@ if [ $tauprefix = unknown ]
 then 
   fixmakeargs="$fixmakeargs tauprefix=$tauroot"
   # make bin dir if it does not exist
-  if [ ! -d $machine ] 
+  if [ ! -d ./$architecture ] 
     then
-      mkdir -p $machine
+      mkdir -p ./$architecture
   fi
-  if [ ! -d $machine/bin ] 
+  if [ ! -d ./$architecture/bin ] 
     then
-      mkdir $machine/bin
+      mkdir ./$architecture/bin
   fi
 
   # make lib dir if it does not exist
-  if [ ! -d $machine/lib ] 
+  if [ ! -d ./$architecture/lib ] 
     then
-      mkdir $machine/lib
+      mkdir ./$architecture/lib
   fi
 fi
 
 # make XtraP directories
 if [ -d XtraP ]
 then
-  if [ ! -d XtraP/lib/$machine ] 
+  if [ ! -d XtraP/lib/$architecture ] 
     then
-      mkdir XtraP/lib/$machine
+      mkdir XtraP/lib/$architecture
   fi
 fi
 
@@ -2201,36 +2209,51 @@ if [ $machine = solaris2 -o $machine = alpha ]
 then
   taushell=ksh
 fi
+
+
 if [ $tauprefix = unknown ]
 then
   cat ${tauroot}/tools/src/jRacy/jracy.skel | 
-  sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$machine',' \
-	> ${tauroot}/${machine}/bin/jracy
-  chmod a+rx ${tauroot}/${machine}/bin/jracy
-  echo "TAU: installed jracy in ${tauroot}/${machine}/bin"
-  cp ${tauroot}/tools/src/jRacy/jRacy.jar ${tauroot}/${machine}/lib
-  echo "TAU: installed jRacy.jar in ${tauroot}/${machine}/lib"
+  sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+	> ${tauroot}/${architecture}/bin/jracy
+  chmod a+rx ${tauroot}/${architecture}/bin/jracy
+  echo "TAU: installed jracy in ${tauroot}/${architecture}/bin"
+  cp ${tauroot}/tools/src/jRacy/jRacy.jar ${tauroot}/${architecture}/lib
+  echo "TAU: installed jRacy.jar in ${tauroot}/${architecture}/lib"
 else
   if [ ! -d ${tauprefix} ]
   then
     echo "making directory $tauprefix "
     mkdir -p ${tauprefix}
   fi
-  if [ ! -d ${tauprefix}/${machine} ]
+  if [ ! -d ${tauprefix}/${architecture} ]
   then
-    echo "making directory $tauprefix/$machine lib bin"
-    mkdir ${tauprefix}/${machine}
-    mkdir ${tauprefix}/${machine}/lib
-    mkdir ${tauprefix}/${machine}/bin
+    echo "making directory $tauprefix/$architecture lib bin"
+    mkdir ${tauprefix}/${architecture}
+    mkdir ${tauprefix}/${architecture}/lib
+    mkdir ${tauprefix}/${architecture}/bin
+  else
+    if [ "x$architecture" = "x" ]
+    then
+      echo "making directory $tauprefix lib bin"
+      if [ ! -d ${tauprefix}/bin ]
+      then
+	mkdir ${tauprefix}/bin
+      fi
+      if [ ! -d ${tauprefix}/lib ]
+      then
+	mkdir ${tauprefix}/lib
+      fi
+    fi
   fi
 
   cat ${tauroot}/tools/src/jRacy/jracy.skel | 
-  sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$machine',' \
-	> ${tauprefix}/${machine}/bin/jracy
-  chmod a+rx ${tauprefix}/${machine}/bin/jracy
-  echo "TAU: installed jracy in ${tauprefix}/${machine}/bin"
-  cp ${tauroot}/tools/src/jRacy/jRacy.jar ${tauprefix}/${machine}/lib
-  echo "TAU: installed jRacy.jar in ${tauprefix}/${machine}/lib"
+  sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+	> ${tauprefix}/${architecture}/bin/jracy
+  chmod a+rx ${tauprefix}/${architecture}/bin/jracy
+  echo "TAU: installed jracy in ${tauprefix}/${architecture}/bin"
+  cp ${tauroot}/tools/src/jRacy/jRacy.jar ${tauprefix}/${architecture}/lib
+  echo "TAU: installed jRacy.jar in ${tauprefix}/${architecture}/lib"
 fi
 
 # -- determine Tcl/Tk version
@@ -2288,7 +2311,7 @@ rm /tmp/tau$$
 echo "Using wish command: $wishname"
 echo " "
 
-# We don't need any tkman for RACY. 
+# We do not need any tkman for RACY. 
 # -- find out where tkman is installed
 #echo " "
 #echo "The TAU editor requires the manual page viewer, TkMan 1.7"  
@@ -2326,22 +2349,22 @@ TAUTOOLS="taud racy"
 if [ $tauprefix = unknown ]
 then 
 echo " "
-echo "TAU: installing tools in ${tauroot}/${machine}/bin"
+echo "TAU: installing tools in ${tauroot}/${architecture}/bin"
 for tool in $TAUTOOLS
 do
   $echo "TAU: installing ${tool}... ${nnl}"
-  rm -f ${tauroot}/${machine}/bin/$tool
+  rm -f ${tauroot}/${architecture}/bin/$tool
   cat ${tauroot}/tools/tool.skel |
-  sed -e 's,@TAUROOT@,'$tauroot',' -e 's,@ARCH@,'$machine',' -e 's,@TOOL@,'$tool',' \
+  sed -e 's,@TAUROOT@,'$tauroot',' -e 's,@ARCH@,'$architecture',' -e 's,@TOOL@,'$tool',' \
       -e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
       -e 's,@WISHNAME@,'$wishname',' \
-      > ${tauroot}/${machine}/bin/${tool}
-  chmod a+rx ${tauroot}/${machine}/bin/${tool}
+      > ${tauroot}/${architecture}/bin/${tool}
+  chmod a+rx ${tauroot}/${architecture}/bin/${tool}
   echo "done"
 done
 else 
 echo " "
-echo "TAU: installing tools in ${tauprefix}/${machine}/bin"
+echo "TAU: installing tools in ${tauprefix}/${architecture}/bin"
 #Make installation directories
 
 
@@ -2350,24 +2373,24 @@ if [ ! -d ${tauprefix} ]
     echo "making directory $tauprefix "
     mkdir -p ${tauprefix}
   fi
-if [ ! -d ${tauprefix}/${machine} ]
+if [ ! -d ${tauprefix}/${architecture} ]
   then
-    echo "making directory $tauprefix/$machine lib bin"
-    mkdir ${tauprefix}/${machine}
-    mkdir ${tauprefix}/${machine}/lib
-    mkdir ${tauprefix}/${machine}/bin
+    echo "making directory $tauprefix/$architecture lib bin"
+    mkdir ${tauprefix}/${architecture}
+    mkdir ${tauprefix}/${architecture}/lib
+    mkdir ${tauprefix}/${architecture}/bin
   fi
 
 for tool in $TAUTOOLS
 do
   $echo "TAU: installing ${tool}... ${nnl}"
-  rm -f ${tauprefix}/${machine}/bin/$tool
+  rm -f ${tauprefix}/${architecture}/bin/$tool
   cat ${tauroot}/tools/tool.skel |
-  sed -e 's,@TAUROOT@,'$tauroot',' -e 's,@ARCH@,'$machine',' -e 's,@TOOL@,'$tool',' \
+  sed -e 's,@TAUROOT@,'$tauroot',' -e 's,@ARCH@,'$architecture',' -e 's,@TOOL@,'$tool',' \
       -e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
       -e 's,@WISHNAME@,'$wishname',' \
-      > ${tauprefix}/${machine}/bin/${tool}
-  chmod a+rx ${tauprefix}/${machine}/bin/${tool}
+      > ${tauprefix}/${architecture}/bin/${tool}
+  chmod a+rx ${tauprefix}/${architecture}/bin/${tool}
   echo "done"
 done
 fi
@@ -2377,11 +2400,11 @@ if [ $use_pcxx = yes ]
 then
 
 $echo "TAU: installing breezy... ${nnl}"
-rm -f ${tauroot}/bin/${machine}/breezy
+rm -f ${tauroot}/bin/${architecture}/breezy
 cat lang_support/pc++/breezy/userAgent/tool.skel |
-sed -e 's,@TAUROOT@,'${tauroot}',' -e 's,@ARCH@,'${machine}',' -e 's,@TOOL@,'breezy',' \
-> ${tauroot}/bin/${machine}/breezy
-chmod a+rx ${tauroot}/bin/${machine}/breezy
+sed -e 's,@TAUROOT@,'${tauroot}',' -e 's,@ARCH@,'${architecture}',' -e 's,@TOOL@,'breezy',' \
+> ${tauroot}/bin/${architecture}/breezy
+chmod a+rx ${tauroot}/bin/${architecture}/breezy
 echo "done"
 
 if [ $tcltkfile  = "/" ]
