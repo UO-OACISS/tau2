@@ -145,20 +145,12 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    //******************************
 	    //End - Create the tree.
 	    //******************************
-          
-      
 	    //Set up the split panes.
-	    innerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, getWelcomeUpperRight());
+	    innerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, getPanelHelpMessage(0));
 	    innerPane.setContinuousLayout(true);
 	    innerPane.setOneTouchExpandable(true);
-	    innerPane.setDividerLocation(0.5);
-      
-	    innerPane2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, test1, getApplyOperationComponent());
-	    innerPane2.setContinuousLayout(true);
-	    innerPane2.setOneTouchExpandable(true);
-	    innerPane2.setDividerLocation(0.5);
-      
-	    outerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, innerPane, innerPane2);
+
+	    outerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, innerPane, new JPanel());
 	    outerPane.setContinuousLayout(true);
 	    outerPane.setOneTouchExpandable(true);
       
@@ -181,7 +173,6 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    //the sliders can be set.
 	    this.show();
 	    innerPane.setDividerLocation(0.5);
-	    innerPane2.setDividerLocation(0.5);
 	    outerPane.setDividerLocation(0.667);
     
 	}
@@ -203,50 +194,48 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	Object userObject = selectedNode.getUserObject();
 	if(selectedNode.isRoot()){
 	    //We are at the root node.  Display some helpful information.
-	    innerPane.setRightComponent(getRootUpperRight());
-	    innerPane2.setLeftComponent(new JPanel());
-	    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
+	    innerPane.setRightComponent(getPanelHelpMessage(1));
+	    outerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfApplicationType){
 	    String tmpString = userObject.toString();
 	    if(parentNode != null){
 		if(tmpString.equals("Standard Applications")){
-		    innerPane.setRightComponent(getSAppUpperRight());
-		    innerPane2.setLeftComponent(getAppTypeNodeLowerLeft());
-		    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
+		    outerPane.setRightComponent(getApplicationPanel(0));
+		    innerPane.setRightComponent(getPanelHelpMessage(2));
+		    innerPane.setDividerLocation(0.5);
+		    outerPane.setDividerLocation(0.667);
 		    tree.expandPath(path);
 		}
 		else if(tmpString.equals("Runtime Applications")){
-		    innerPane.setRightComponent(getRAppUpperRight());
-		    innerPane2.setLeftComponent(getAppTypeNodeLowerLeft());
-		    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
+		    outerPane.setRightComponent(getApplicationPanel(1));
+		    innerPane.setRightComponent(getPanelHelpMessage(3));
+		    innerPane.setDividerLocation(0.5);
+		    outerPane.setDividerLocation(0.667);
 		}
 		else{
-		    innerPane.setRightComponent(getDBAppUpperRight());
-		    innerPane2.setLeftComponent(getDBAppTypeNodeLowerLeft());
-		    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
+		    outerPane.setRightComponent(getApplicationPanel(2));
+		    innerPane.setRightComponent(getPanelHelpMessage(4));
+		    innerPane.setDividerLocation(0.5);
+		    outerPane.setDividerLocation(0.667);
 		}
 	    }
 	}
-	else if(userObject instanceof ParaProfApplication){
-	    innerPane.setRightComponent(getAppNodeUpperRight((ParaProfApplication) userObject));
-	    innerPane2.setLeftComponent(getBlank());
-	    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
-	}
 	else if((parentNode.getUserObject()) instanceof ParaProfApplication){
-	    innerPane.setRightComponent(getExpTypeNodeUpperRight());
-	    innerPane2.setLeftComponent(getExpTypeNodeLowerLeft());
-	    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
+	    innerPane.setRightComponent(getPanelHelpMessage(5));
+	    innerPane.setDividerLocation(0.5);
 	}
 	else if((parentNode.getUserObject()) instanceof ParaProfExperiment){
-	    innerPane.setRightComponent(getParaProfTrialTypeNodeUpperRight());
-	    innerPane2.setLeftComponent(getParaProfTrialTypeNodeLowerLeft());
-	    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
+	    innerPane.setRightComponent(getPanelHelpMessage(6));
+	    outerPane.setDividerLocation(0.5);
+	}
+	else if(userObject instanceof ParaProfApplication){
+	    innerPane.setRightComponent(getApplicationTable((ParaProfApplication) userObject));
+	    innerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfExperiment){
-	    innerPane.setRightComponent(getExpNodeUpperRight());
-	    innerPane2.setLeftComponent(getBlank());
-	    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
+	    innerPane.setRightComponent(getPanelHelpMessage(6));
+	    innerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfTrial){
 	    //Would like this node expanded.  Makes more sense.
@@ -254,12 +243,12 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    String tmpString = userObject.toString();
 	    //Here the actual clicked on node is an instance of ParaProfTrial (unlike the above
 	    //check on ParaProfTrial where it was the parent node).
-	    innerPane.setRightComponent(getParaProfTrialNodeUpperRight());
-	    innerPane2.setLeftComponent(getBlank());
-	    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
+	    innerPane.setRightComponent(getPanelHelpMessage(8));
+	    innerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof Metric){
-	    innerPane.setRightComponent(getMetricUpperRight());
+	    innerPane.setRightComponent(getPanelHelpMessage(7));
+	    innerPane.setDividerLocation(0.5);
 	    //Note that the parent user object should be an intance of trial.
 	    //Check though!
 	    Object tmpObject =  parentNode.getUserObject();
@@ -267,8 +256,6 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		showMetric((ParaProfTrial) tmpObject, (Metric) userObject);
 	    else
 		ParaProf.systemError(null, null, "jRM02 - Logic Error");
-	    innerPane2.setLeftComponent(getBlank());
-	    setJSPDividers(innerPane, innerPane2, 0.5, 0.5);
 	}
     }
   
@@ -314,99 +301,149 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	return (new JScrollPane(tmpJTA));
     }
   
-    private Component getSAppUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
+    private Component getPanelHelpMessage(int type){
+	JTextArea jTextArea = new JTextArea();
+	jTextArea.setLineWrap(true);
+	jTextArea.setWrapStyleWord(true);
 	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("This is the Standard application section:\n\n");
-	tmpJTA.append("Standard - The classic ParaProf mode.  Data sets that are loaded at startup are placed"
-		      + "under the default application automatically. Please see the ParaProf documentation for mre details.\n");
-	return (new JScrollPane(tmpJTA));
+	switch(type){
+	case 0:
+	    jTextArea.append("ParaProf Manager\n\n");
+	    jTextArea.append("This window allows you to manage all of ParaProf's loaded data.\n");
+	    jTextArea.append("Data can be static (ie, not updated at runtime),"
+			     + " and loaded either remotely or locally.  You can also specify data to be uploaded at runtime.\n\n");
+	    break;
+	case 1:
+	    jTextArea.append("ParaProf Manager\n\n");
+	    jTextArea.append("There are three application types:\n\n");
+	    jTextArea.append("Standard - The classic ParaProf mode.  At present, there is only a \"default\" set"
+			     + " which is set for you automatically.  This maintains compatability with older versions where the"
+			     + " application set was not definied.  This grouping will be expanded in time. For now, you may add"
+			     + " experiments under the default set only.\n\n");
+	    jTextArea.append("Runtime - A new feature allowing ParaProf to update data at runtime.  Please see"
+			     + " the ParaProf documentation if the options are not clear."
+			     + " As in the Standard set, there is only section.\n\n");
+	    jTextArea.append("DB Apps - Another new feature allowing ParaProf to load data from a database.  Again, please see"
+			     + " the ParaProf documentation if the options are not clear.\n\n");
+	    
+	    break;
+	case 2:
+	    jTextArea.append("ParaProf Manager\n\n");
+	    jTextArea.append("This is the Standard application section:\n\n");
+	    jTextArea.append("Standard - The classic ParaProf mode.  Data sets that are loaded at startup are placed"
+			  + "under the default application automatically. Please see the ParaProf documentation for mre details.\n");
+	    break;
+	case 3:
+	    jTextArea.append("ParaProf Manager\n\n");
+	    jTextArea.append("This is the Runtime application section:\n\n");
+	    jTextArea.append("Runtime - A new feature allowing ParaProf to update data at runtime.  Please see"
+			  + " the ParaProf documentation if the options are not clear.\n");
+	    break;
+	case 4:
+	    jTextArea.append("ParaProf Manager\n\n");
+	    jTextArea.append("This is the DB Apps application section:\n\n");
+	    jTextArea.append("DB Apps - Another new feature allowing ParaProf to load data from a database.  Again, please see"
+			  + " the ParaProf documentation if the options are not clear.\n");
+	    break;
+	case 5:
+	    jTextArea.append("ParaProf Manager\n\n");
+	    jTextArea.append("Click the add experiment button below to add an experiment.\n");
+	    break;
+	case 6:
+	    jTextArea.append("ParaProf Manager\n\n");
+	    jTextArea.append("Click the add trial button below to add an trial.\n");
+	    break;
+	case 7:
+	    jTextArea.append("ParaProf Manager\n\n");
+	    jTextArea.append("Clicking on different metrics causes ParaProf to display the clicked on metric.\n\n");
+	    jTextArea.append("The sub-window below allow you to generate new metrics based on those that were"
+			     + " gathered during the run.  The operand number options for Operand A and B correspond the numbers prefixing the metrics.\n");
+	    break;
+	case 8:
+	    //Don't set any text.
+	    break;
+	default:
+	    break;
+	}
+	return (new JScrollPane(jTextArea));
+    }
+
+    private Component getApplicationTable(ParaProfApplication application){
+	return (new JScrollPane(new JTable(new ParaProfTableModel(application))));}
+    
+    private Component getApplicationPanel(int type){
+	JPanel jPanel = new JPanel();
+	JButton jButton = new JButton("Add Application");
+	jButton.addActionListener(new ActionListener(){
+		public void actionPerformed(ActionEvent evt){
+		    addApplicationButton();}});
+    
+	//Now add the components to the panel.
+	GridBagLayout gbl = new GridBagLayout();
+	jPanel.setLayout(gbl);
+	GridBagConstraints gbc = new GridBagConstraints();
+	gbc.insets = new Insets(5, 5, 5, 5);
+    
+	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.WEST;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	panelAdd(jPanel, jButton, gbc, 0, 0, 2, 1);
+
+	if(type == 2){
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, new JLabel("Username:"), gbc, 0, 1, 1, 1);
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 100;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, usernameField, gbc, 1, 1, 1, 1);
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, new JLabel("Password:"), gbc, 0, 2, 1, 1);
+
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 100;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, passwordField, gbc, 1, 2, 1, 1);
+
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, new JLabel("Config File:"), gbc, 0, 3, 1, 1);
+	    
+	    gbc.fill = GridBagConstraints.BOTH;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 100;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, configFileField, gbc, 1, 3, 3, 1);
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.WEST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, connectDisconnect, gbc, 0, 4, 2, 1);
+	    
+	    gbc.fill = GridBagConstraints.NONE;
+	    gbc.anchor = GridBagConstraints.EAST;
+	    gbc.weightx = 0;
+	    gbc.weighty = 0;
+	    panelAdd(jPanel, refreshApplications, gbc, 2, 4, 2, 1);
+	}
+	
+	return jPanel;
     }
   
-    private Component getRAppUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
-	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("This is the Runtime application section:\n\n");
-	tmpJTA.append("Runtime - A new feature allowing ParaProf to update data at runtime.  Please see"
-		      + " the ParaProf documentation if the options are not clear.\n");
-	return (new JScrollPane(tmpJTA));
-    }
-  
-    private Component getDBAppUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
-	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("This is the DB Apps application section:\n\n");
-	tmpJTA.append("DB Apps - Another new feature allowing ParaProf to load data from a database.  Again, please see"
-		      + " the ParaProf documentation if the options are not clear.\n");
-	return (new JScrollPane(tmpJTA));
-    }
-  
-    private Component  getExpTypeNodeUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
-	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("The button in the lower left allows you to add an experiment. Other features will be added here soon.\n");
-	return (new JScrollPane(tmpJTA));
-    }
-  
-  
-    private Component  getParaProfTrialTypeNodeUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
-	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("The buttons in the lower left allow you to add trials to this experiment.  You can either add"
-		      + " a trial with a single counter (top button) or you can select to add a trial with multiple counters\n"
-		      + " (bottom button).  You will be prompted for a name for the trial, and then you can select either a \n"
-		      + " pprof dump file, or a directory, depending on which button you clicked on.\n");
-	return (new JScrollPane(tmpJTA));
-    }
-  
-    private Component  getExpNodeUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
-	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("If this node is not expanded, you may double click on it to see the trials in this experiment.\n");
-	return (new JScrollPane(tmpJTA));
-    }
-  
-    private Component  getParaProfTrialNodeUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
-	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("If this node is not expanded, you may double click on it to see the metrics in this trial.\n");
-	return (new JScrollPane(tmpJTA));
-    }
-  
-    private Component getAppTypeNodeLowerLeft(){
-	JButton tmpJButton = null;
-	JPanel tmpJPanel = new JPanel();
-	tmpJButton = new JButton("Add Application");
-	tmpJButton.addActionListener(new ActionListener(){
-                public void actionPerformed(ActionEvent evt){
-		    newParaProfApplicationButton();}
-	    });
-	tmpJPanel.add(tmpJButton);
-	return tmpJPanel;
-    }
-  
-    private Component getExpTypeNodeLowerLeft(){
+    private Component getExperimentPanel(){
 	JButton tmpJButton = null;
 	JPanel tmpJPanel = new JPanel();
 	tmpJButton = new JButton("Add Experiment");
@@ -418,7 +455,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	return tmpJPanel;
     }
   
-    private Component getParaProfTrialTypeNodeLowerLeft(){
+    private Component getTrial(){
 	JPanel jPanel = new JPanel();
 
 	JButton jButton = new JButton("Add Trail");
@@ -458,226 +495,9 @@ public class ParaProfManager extends JFrame implements ActionListener{
 
 	return jPanel;
     }
-  
-    private Component getDBAppTypeNodeLowerLeft(){
-	JButton tmpJButton = null;
-	JPanel tmpJPanel = new JPanel();
-	tmpJButton = new JButton("Add ParaProfApplication");
-	tmpJButton.addActionListener(new ActionListener(){
-		public void actionPerformed(ActionEvent evt){
-		    newParaProfApplicationButton();}
-	    });
-
-	JLabel configFileLabel = new JLabel("Config File:");
-	JLabel usernameFieldLabel = new JLabel("Username:");
-	JLabel passwordFieldLabel = new JLabel("Password:");
-    
-    
-	//Now add the components to the panel.
-	GridBagLayout gbl = new GridBagLayout();
-	tmpJPanel.setLayout(gbl);
-	GridBagConstraints gbc = new GridBagConstraints();
-	gbc.insets = new Insets(5, 5, 5, 5);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, tmpJButton, gbc, 0, 0, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, configFileLabel, gbc, 0, 1, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 100;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, configFileField, gbc, 1, 1, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, usernameFieldLabel, gbc, 0, 2, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 100;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, usernameField, gbc, 1, 2, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, passwordFieldLabel, gbc, 0, 3, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 100;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, passwordField, gbc, 1, 3, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, connectDisconnect, gbc, 0, 4, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, refreshApplications, gbc, 1, 4, 1, 1);
-    
-	return tmpJPanel;
-    }
-  
-    private Component getRootUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
-	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("There are three application types:\n\n");
-	tmpJTA.append("Standard - The classic ParaProf mode.  At present, there is only a \"default\" set"
-		      + " which is set for you automatically.  This maintains compatability with older versions where the"
-		      + " application set was not definied.  This grouping will be expanded in time. For now, you may add"
-		      + " experiments under the default set only.\n\n");
-	tmpJTA.append("Runtime - A new feature allowing ParaProf to update data at runtime.  Please see"
-		      + " the ParaProf documentation if the options are not clear."
-		      + " As in the Standard set, there is only section.\n\n");
-	tmpJTA.append("DB Apps - Another new feature allowing ParaProf to load data from a database.  Again, please see"
-		      + " the ParaProf documentation if the options are not clear.\n\n");
-	return (new JScrollPane(tmpJTA));
-    }
-  
-    private Component getAppNodeUpperRight(ParaProfApplication inApp){
-	return (new JScrollPane(new JTable(new ParaProfTableModel(inApp))));
-    }
-  
-    private Component getMetricUpperRight(){
-	JTextArea tmpJTA = new JTextArea();
-	tmpJTA.setLineWrap(true);
-	tmpJTA.setWrapStyleWord(true);
-	///Set the text.
-	tmpJTA.append("ParaProf Manager\n\n");
-	tmpJTA.append("Clicking on different metrics causes ParaProf to display the clicked on metric.\n\n");
-	tmpJTA.append("The sub-window below allow you to generate new metrics based on those that were"
-		      + " gathered during the run.  The operand number options for Operand A and B correspond the numbers prefixing the metrics.\n");
-	return (new JScrollPane(tmpJTA));
-    }
-  
-    private Component getAppNodeLowerLeft(ParaProfApplication inApp){
-	JButton tmpJButton = null;
-	JPanel tmpJPanel = new JPanel();
-      
-	tmpJButton = new JButton("Update ParaProfApplication");
-	tmpJButton.addActionListener(new ActionListener(){
-                public void actionPerformed(ActionEvent evt){
-		    updateParaProfApplicationButton();}
-	    });
-	tmpJPanel.add(tmpJButton);
-      
-	tmpJButton = new JButton("Add ParaProfExperiment");
-	tmpJButton.addActionListener(new ActionListener(){
-                public void actionPerformed(ActionEvent evt){
-                }
-	    });
-	tmpJPanel.add(tmpJButton);
-	return tmpJPanel;
-    }
-  
-    private Component getApplyOperationComponent(){
-	JPanel tmpJPanel = new JPanel();
-    
-	JButton tmpJButton = new JButton("Apply Operation");
-	tmpJButton.addActionListener(new ActionListener(){
-		public void actionPerformed(ActionEvent evt){
-		    applyOperation();}
-	    });
-    
-	//Now add the components to the panel.
-	GridBagLayout gbl = new GridBagLayout();
-	tmpJPanel.setLayout(gbl);
-	GridBagConstraints gbc = new GridBagConstraints();
-	gbc.insets = new Insets(5, 5, 5, 5);
-    
-	JLabel opALabel = new JLabel("Op A");
-	JLabel opBLabel = new JLabel("Op B:");
-	JLabel opInstrLabel = new JLabel("Apply operations here!");
-	JLabel opLabel = new JLabel("Operation");
-    
-	opA = new JTextField("XXXX - XXXX...            ", 30);
-	opB = new JTextField("XXXX _ XXXX...            ", 30);
-    
-	gbc.fill = GridBagConstraints.VERTICAL;
-	gbc.anchor = GridBagConstraints.NORTH;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, opInstrLabel, gbc, 0, 0, 1, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, opALabel, gbc, 0, 1, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 1;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, opA, gbc, 1, 1, 2, 1);
-    
-	gbc.fill = GridBagConstraints.CENTER;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, opBLabel, gbc, 0, 2, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 1;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, opB, gbc, 1, 2, 2, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, opLabel, gbc, 0, 3, 1, 1);
-    
-	gbc.fill = GridBagConstraints.BOTH;
-	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 1;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, operation, gbc, 1, 3, 2, 1);
-    
-	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.SOUTH;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	panelAdd(tmpJPanel, tmpJButton, gbc, 0, 4, 3, 1);
-    
-	return tmpJPanel;
-    }
-  
-    private Component getBlank(){
-	return new JPanel();
-    }
-  
     //******************************
     //End - Component functions.
     //******************************
-  
-    private void setJSPDividers(JSplitPane inJSP1, JSplitPane inJSP2, double inDouble1, double inDouble2){
-	inJSP1.setDividerLocation(inDouble1);
-	inJSP2.setDividerLocation(inDouble2);
-    }
-  
     void addExperiment(){
 	JOptionPane.showMessageDialog(this, "Only the default experiment allowed in this release!", "Warning!"
                                       ,JOptionPane.ERROR_MESSAGE);
@@ -970,7 +790,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     //******************************
     //Manage the applications.
     //******************************
-    public void newParaProfApplicationButton()
+    public void addApplicationButton()
     {
 	JOptionPane.showMessageDialog(this, "Only the default application allowed in this release!", "Warning!"
                                       ,JOptionPane.ERROR_MESSAGE);
@@ -1123,7 +943,6 @@ public class ParaProfManager extends JFrame implements ActionListener{
     DefaultTreeModel treeModel = null;
     DefaultMutableTreeNode dbApps = null;
     JSplitPane innerPane = null;
-    JSplitPane innerPane2 = null;
     JSplitPane outerPane = null;
   
     //A reference to the default trial node.
@@ -1134,8 +953,8 @@ public class ParaProfManager extends JFrame implements ActionListener{
     private JButton refreshApplications = new JButton("Refresh Applications");
     private JButton refreshExperiments = new JButton("Refresh Experiments");
     private JTextField configFileField = new JTextField(System.getProperty("user.dir"), 30);
-    private JTextField usernameField = new JTextField("username", 30);
-    private JPasswordField passwordField = new JPasswordField("password", 30);
+    private JTextField usernameField = new JTextField("username", 20);
+    private JPasswordField passwordField = new JPasswordField("password",20);
 
     private JComboBox trialType = null;
   
