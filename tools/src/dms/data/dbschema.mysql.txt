@@ -1,8 +1,9 @@
 
 CREATE TABLE version (
-    version		    VARCHAR(100) DEFAULT	'2.13.7'     
+    version		    VARCHAR(100)     
 );
 
+INSERT INTO version values('2.13.7');
 
 CREATE TABLE application (
     id                      INT		NOT NULL	PRIMARY KEY AUTO_INCREMENT,
