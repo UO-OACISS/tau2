@@ -230,6 +230,7 @@ FunctionInfo::~FunctionInfo()
   TheSafeToDumpData() = 0;
 }
 
+#ifdef TAU_MULTIPLE_COUNTERS
 double * FunctionInfo::GetExclTime(int tid){
   double * tmpCharPtr = (double *) malloc( sizeof(double) * MAX_TAU_COUNTERS);
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
@@ -245,6 +246,7 @@ double * FunctionInfo::GetInclTime(int tid){
   }
   return tmpCharPtr;
 }
+#endif //TAU_MULTIPLE_COUNTERS
 
 #ifdef PROFILE_CALLS
 //////////////////////////////////////////////////////////////////////
@@ -278,6 +280,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: bertie $
- * $Revision: 1.28 $   $Date: 2002/03/27 10:11:26 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.28 2002/03/27 10:11:26 bertie Exp $ 
+ * $Revision: 1.29 $   $Date: 2002/03/27 21:25:38 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.29 2002/03/27 21:25:38 bertie Exp $ 
  ***************************************************************************/
