@@ -388,13 +388,10 @@ inline double TauGetMHz(void)
   static double ratings = TauGetMHzRatings();
   return ratings;
 }
+
 ///////////////////////////////////////////////////////////////////////////
-inline unsigned long long getLinuxHighResolutionTscCounter(void)
-{
-   unsigned long high, low;
-   __asm__ __volatile__(".byte 0x0f,0x31" : "=a" (low), "=d" (high));
-   return ((unsigned long long) high << 32) + low;
-}
+extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
+// Moved to TauLinuxTimers.c 
 
 #endif /* TAU_LINUX_TIMERS */
 
@@ -1014,7 +1011,7 @@ int RtsLayer::DumpEDF(int tid)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: bertie $
- * $Revision: 1.39 $   $Date: 2002/03/10 23:57:38 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.39 2002/03/10 23:57:38 bertie Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.40 $   $Date: 2002/03/28 20:45:28 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.40 2002/03/28 20:45:28 sameer Exp $ 
  ***************************************************************************/
