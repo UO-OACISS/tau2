@@ -39,13 +39,13 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     //Storage control.
     //######
-	public int getStorageSize() {
-		return doubleList.length / 14;
-	}
-
+    public int getStorageSize() {
+	return doubleList.length / 15;
+    }
+    
     public void incrementStorage(){
 	int currentLength = doubleList.length;
-	double[] newArray = new double[currentLength+14];
+	double[] newArray = new double[currentLength+15];
 	for(int i=0;i<currentLength;i++){
 	    newArray[i] = doubleList[i];
 	}
@@ -54,7 +54,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 
     public void incrementStorage(int increase){
 	int currentLength = doubleList.length;
-	double[] newArray = new double[currentLength+(increase*14)];
+	double[] newArray = new double[currentLength+(increase*15)];
 	for(int i=0;i<currentLength;i++){
 	    newArray[i] = doubleList[i];
 	}
@@ -95,7 +95,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	return false;
     }
 
-	public int getNumberOfGroups() { return numberOfGroups; }
+    public int getNumberOfGroups() { return numberOfGroups; }
 
     public int[] getGroups(){
 	int[] groups = new int[numberOfGroups];
@@ -489,7 +489,7 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
 	return yBeg;}
   
     public int getYEnd(){
-    return yEnd;}
+	return yEnd;}
     //######
     //End - Draw section.
     //######
@@ -516,14 +516,14 @@ public class GlobalMappingElement implements Mapping, Serializable, Comparable{
     //######
     private void insertDouble(int location, int offset, double d){
 	try{
-	    doubleList[(location*14)+offset] = d;}
+	    doubleList[(location*15)+offset] = d;}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GME01");}
     }
   
     private double getDouble(int location, int offset){
 	try{
-	    return doubleList[(location*14)+offset];}
+	    return doubleList[(location*15)+offset];}
 	catch(Exception e){
 	    System.out.println("location: " + location);
 	    System.out.println("offset: " + offset);
