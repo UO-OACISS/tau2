@@ -118,6 +118,9 @@ class RtsLayer
 	// For tracing 
 	static int 	DumpEDF(int tid); 
 
+	// For tracing
+	static int      MergeAndConvertTracesIfNecessary();
+
   	// Return the number of the 'current' node.
 	static int myNode(void);
 
@@ -141,6 +144,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2004/07/26 23:53:45 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.19 2004/07/26 23:53:45 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 2004/08/21 21:58:16 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.20 2004/08/21 21:58:16 sameer Exp $ 
  ***************************************************************************/
