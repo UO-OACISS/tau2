@@ -69,7 +69,7 @@ Double reporting of parent and child functions in come callpath sources.
 # Report 08
 # Report 
 # Date: 9nd March 2004
-# Status: (outstanding)
+# Status: (completed - 9nd March 2004 Robert Bell)
 # Reporter: Sameer Shende (University of Oregon)
 Crashing with the following error outputs:
 Invalid n,c,t id: -1,0,0 ... not processing this file:
