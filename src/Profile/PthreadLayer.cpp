@@ -59,6 +59,7 @@ pthread_key_t PthreadLayer::tauPthreadId;
 pthread_mutex_t PthreadLayer::tauThreadcountMutex;
 pthread_mutexattr_t PthreadLayer::tauThreadcountAttr;
 pthread_mutex_t     PthreadLayer::tauDBMutex;  
+pthread_mutex_t     PthreadLayer::tauEnvMutex;  
 pthread_mutexattr_t PthreadLayer::tauDBAttr;
 
 int PthreadLayer::tauThreadCount = 0; 
@@ -204,9 +205,9 @@ int PthreadLayer::UnLockEnv(void)
   return 1;
 }  
 /***************************************************************************
- * $RCSfile: PthreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2005/01/05 01:59:17 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.6 2005/01/05 01:59:17 sameer Exp $
+ * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.7 $   $Date: 2005/01/05 02:11:05 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.7 2005/01/05 02:11:05 amorris Exp $
  ***************************************************************************/
 
 
