@@ -171,7 +171,7 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 
 //////////////////////////////////////////////////////////////////////
 
-FunctionInfo::FunctionInfo(const char *name, string& type, 
+FunctionInfo::FunctionInfo(const char *name, const string& type, 
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid)
 {
@@ -183,7 +183,7 @@ FunctionInfo::FunctionInfo(const char *name, string& type,
 
 //////////////////////////////////////////////////////////////////////
 
-FunctionInfo::FunctionInfo(string& name, const char * type, 
+FunctionInfo::FunctionInfo(const string& name, const char * type, 
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid)
 {
@@ -195,7 +195,7 @@ FunctionInfo::FunctionInfo(string& name, const char * type,
 
 //////////////////////////////////////////////////////////////////////
 
-FunctionInfo::FunctionInfo(string& name, string& type, 
+FunctionInfo::FunctionInfo(const string& name, const string& type, 
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid)
 {
@@ -250,6 +250,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2001/06/20 20:26:45 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.24 2001/06/20 20:26:45 sameer Exp $ 
+ * $Revision: 1.25 $   $Date: 2001/10/03 21:04:24 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.25 2001/10/03 21:04:24 sameer Exp $ 
  ***************************************************************************/
