@@ -32,7 +32,7 @@ include $(TAUDIR)/include/Makefile
 #---------------------------------------------------------------------------
 # This is the fortran compiler used for MPI programs
 #---------------------------------------------------------------------------
-MPIF77 = $(TAU_F90) 
+MPIF77 = $(TAU_F90)  $(TAU_F90_FIXED)
 # This links MPI fortran programs; usually the same as ${MPIF77}
 FLINK	= $(TAU_LINKER)
 
@@ -55,7 +55,7 @@ FMPI_INC = $(TAU_MPI_INCLUDE)
 #---------------------------------------------------------------------------
 # Global *compile time* flags for Fortran programs
 #---------------------------------------------------------------------------
-FFLAGS	= -O3 
+FFLAGS	= -O3
 # FFLAGS = -g
 
 #---------------------------------------------------------------------------
