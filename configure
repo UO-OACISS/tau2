@@ -882,7 +882,7 @@ fi
   
 if [ "x$mpilib" != "x" ]
 then
-  mpilibargs="-L$tauroot/$machine/lib -lTauMpi"
+  mpilibargs="-L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
   if [ -d $mpilib ]
   then
     #echo "Lib dir found. adding -L$mpilib to LIB"
@@ -890,15 +890,15 @@ then
     if [ -f $mpilib/libfmpi.* ]
     then
       #echo "Fortran fmpi.* found"
-      mpiflibargs="-L$mpilib -lfmpi -L$tauroot/$machine/lib -lTauMpi"
+      mpiflibargs="-L$mpilib -lfmpi -L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
     else
       if [ -f $mpilib/libfmpich.* ]
       then
         #echo "Fortran fmpich.* found"
-        mpiflibargs="-L$mpilib -lfmpich -L$tauroot/$machine/lib -lTauMpi"
+        mpiflibargs="-L$mpilib -lfmpich -L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
       else 
         #echo "No Fortran interface found"
-        mpiflibargs="$mpiflibargs -L$tauroot/$machine/lib -lTauMpi -L$mpilib"
+        mpiflibargs="$mpiflibargs -L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS) -L$mpilib"
       fi
     fi
   
@@ -945,6 +945,7 @@ then
     #echo "mpilibargs= $mpilibargs"
     #echo "mpiflibargs= $mpiflibargs"
     fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+    
   fi # If -d mpilib
 fi # if mpilib is specified
 
