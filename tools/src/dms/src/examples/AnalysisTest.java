@@ -22,19 +22,19 @@ public class AnalysisTest {
 
 		// test out the analysis!
 		// Trial trial = session.setTrial(50);
-		// Trial trial = session.setTrial(55); // sppm, 256 threads on blue
+		Trial trial = session.setTrial(55); // sppm, 256 threads on blue
 		// Trial trial = session.setTrial(61); // sppm, 256 threads on frost
-		Trial trial = session.setTrial(67); // sphot, 32 nodes, 2 threads
+		// Trial trial = session.setTrial(67); // sphot, 32 nodes, 2 threads
 		// Trial trial = session.setTrial(68); // pprof.dat example
 		// Trial trial = session.setTrial(69); // sphot, 4 nodes 2 threads
 		// Trial trial = session.setTrial(72); // sppm, openmp, 8 threads
 		Vector metrics = session.getMetrics();
-		// Metric metric = (Metric)(metrics.elementAt(0));
-		Metric metric = (Metric)(metrics.elementAt(3));
+		Metric metric = (Metric)(metrics.elementAt(0));
+		// Metric metric = (Metric)(metrics.elementAt(3));
 		// DistanceAnalysis distance = new ThreadDistance((PerfDMFSession)session, trial, metric);
 		DistanceAnalysis distance = new EventDistance((PerfDMFSession)session, trial, metric);
 		/*
-		double[][] matrix = distance.getEuclidianDistance();
+		double[][] matrix = distance.getEuclideanDistance();
 		System.out.print(distance.toString());
 		System.out.println("Euclidian distance:");
 		for (int i = 0 ; i < distance.getThreadCount(); i++ ) {
