@@ -97,6 +97,9 @@ int& TheSafeToDumpData()
 void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, 
 	const char *ProfileGroupName, bool InitData, int tid)
 {
+  //Need to keep track of all the groups this function is a member of.
+  AllGroups = ProfileGroupName;
+
 #ifdef TRACING_ON
 	GroupName = RtsLayer::PrimaryGroup(ProfileGroupName);
 #endif //TRACING_ON
@@ -280,6 +283,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: bertie $
- * $Revision: 1.29 $   $Date: 2002/03/27 21:25:38 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.29 2002/03/27 21:25:38 bertie Exp $ 
+ * $Revision: 1.30 $   $Date: 2002/04/16 18:51:21 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.30 2002/04/16 18:51:21 bertie Exp $ 
  ***************************************************************************/
