@@ -27,7 +27,7 @@ public class ConnectionManager{
 	initialize(this.getPassword());
     }
 	
-    public ConnectionManager(String configFileName, String password) {
+    public ConnectionManager(String configFileName, String password){
 	parser = new ParseConfig(configFileName);
 	initialize(password);
     }
@@ -43,7 +43,7 @@ public class ConnectionManager{
     //####################################
     //Public section.
     //####################################
-    public void initialize(String password) {
+    public void initialize(String password){
 	perfdmfUser = parser.getDBUserName();
 	perfdmfPass = password;
 	dbschema = parser.getDBSchema();
