@@ -35,7 +35,7 @@ public class Distance {
 
 		// get the event names from the database
 		buf = new StringBuffer();
-		buf.append("select name from interval_event where trial = ? ");
+		buf.append("select name from interval_event where trial = ? order by id");
 		try {
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, trial.getID());
@@ -85,7 +85,7 @@ public class Distance {
 		buf.append(cFactor);
 		buf.append(") + l.thread, e.name, COALESCE(l.exclusive, 0.0) from interval_event e ");
 		buf.append("left outer join interval_location_profile l on e.id = l.interval_event ");
-		buf.append("where e.trial = ? and l.metric = ? ");
+		buf.append("where e.trial = ? and l.metric = ? order by e.id ");
 
 		// hit the database, and get the normalized values for each event on each thread
 		try {

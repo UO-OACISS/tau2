@@ -148,9 +148,9 @@ public class TestPerfDMFSession {
 		Metric metric = (Metric)(metrics.elementAt(0));
 		Distance distance = new Distance((PerfDMFSession)session, trial, metric);
 		double[][] matrix = distance.getEuclidianDistance();
-		System.out.print("TC: " + distance.getThreadCount());
-		System.out.println(", EC: " + distance.getEventCount());
+		System.out.println("Euclidian distance:");
 		for (int i = 0 ; i < distance.getThreadCount(); i++ ) {
+			System.out.print("thread " + i + ": ");
 			for (int j = 0 ; j < distance.getEventCount(); j++ ) {
 				if (j > 0) System.out.print(", ");
 				System.out.print(matrix[i][j]);
@@ -158,9 +158,9 @@ public class TestPerfDMFSession {
 			System.out.println("");
 		}
 		matrix = distance.getManhattanDistance();
-		System.out.print("TC: " + distance.getThreadCount());
-		System.out.println(", EC: " + distance.getEventCount());
+		System.out.println("Manhattan distance:");
 		for (int i = 0 ; i < distance.getThreadCount(); i++ ) {
+			System.out.print("thread " + i + ": ");
 			for (int j = 0 ; j < distance.getEventCount(); j++ ) {
 				if (j > 0) System.out.print(", ");
 				System.out.print(matrix[i][j]);
