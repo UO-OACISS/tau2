@@ -1086,7 +1086,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
 
 		WRITE_TAB(ostr,(*it)->col);
-		ostr <<"integer profiler(2)"<<endl;
+		ostr <<"integer profiler(2) / 0, 0 /"<<endl;
 		/* spaces */
      		for (space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
@@ -1605,8 +1605,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.63 $   $Date: 2004/07/27 00:01:56 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.63 2004/07/27 00:01:56 sameer Exp $
+ * $Revision: 1.64 $   $Date: 2004/09/01 14:00:54 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.64 2004/09/01 14:00:54 sameer Exp $
  ***************************************************************************/
 
 
