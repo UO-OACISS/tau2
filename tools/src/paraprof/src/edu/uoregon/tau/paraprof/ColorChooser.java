@@ -37,6 +37,23 @@ public class ColorChooser implements WindowListener {
             groupHighlightColor = savedPreferences.getGroupHighlightColor();
             userEventHighlightColor = savedPreferences.getUserEventHighlightColor();
             miscFunctionColor = savedPreferences.getMiscFunctionColor();
+            
+            if (functionHighlightColor == null) {
+                functionHighlightColor = Color.red;
+            }
+
+            if (groupHighlightColor == null) {
+                groupHighlightColor = new Color(0, 255, 255);
+            }
+
+            if (userEventHighlightColor == null) {
+                userEventHighlightColor = new Color(255, 255, 0);
+            }
+            
+            if (miscFunctionColor == null) {
+                miscFunctionColor = Color.black;
+            }
+            
         } else {
             //Set the default colors.
             this.setDefaultColors();

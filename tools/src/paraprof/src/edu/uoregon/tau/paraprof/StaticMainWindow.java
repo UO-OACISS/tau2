@@ -19,6 +19,9 @@ import edu.uoregon.tau.paraprof.enums.*;
 
 public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
 
+    private int userEventLedgerIndex;
+    private int groupLedgerIndex;
+    
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
@@ -59,11 +62,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         //Options menu.
         optionsMenu = new JMenu("Options");
 
-//        JMenuItem assignColors = new JMenuItem("Assign colors ", false);
-//        nameCheckBox.addActionListener(this);
-//        optionsMenu.add(nameCheckBox);
-
-        
         nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
         nameCheckBox.addActionListener(this);
         optionsMenu.add(nameCheckBox);
@@ -99,9 +97,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         //Windows menu
         windowsMenu = new JMenu("Windows");
 
-//        menuItem = new JMenuItem("Show 3D Window");
-//        menuItem.addActionListener(this);
-//        windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("Show 3D Window");
+        menuItem.addActionListener(this);
+        windowsMenu.add(menuItem);
 
         menuItem = new JMenuItem("Show ParaProf Manager");
         menuItem.addActionListener(this);
@@ -110,14 +108,17 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         menuItem = new JMenuItem("Show Function Ledger");
         menuItem.addActionListener(this);
         windowsMenu.add(menuItem);
+        
 
         menuItem = new JMenuItem("Show Group Ledger");
         menuItem.addActionListener(this);
         windowsMenu.add(menuItem);
+        groupLedgerIndex = windowsMenu.getItemCount() - 1;
 
         menuItem = new JMenuItem("Show User Event Ledger");
         menuItem.addActionListener(this);
         windowsMenu.add(menuItem);
+        userEventLedgerIndex = windowsMenu.getItemCount() - 1;
 
         menuItem = new JMenuItem("Show Call Path Relations");
         menuItem.addActionListener(this);
@@ -175,25 +176,22 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
             }
         });
 
-//        // Grab the screen size.
-//        Toolkit tk = Toolkit.getDefaultToolkit();
-//        Dimension screenDimension = tk.getScreenSize();
-//        int screenHeight = screenDimension.height;
-//        int screenWidth = screenDimension.width;
-//
-//        // Set the window to come up in the center of the screen.
-//        int xPosition = (screenWidth - windowWidth) / 2;
-//        int yPosition = (screenHeight - windowHeight) / 2;
+        //        // Grab the screen size.
+        //        Toolkit tk = Toolkit.getDefaultToolkit();
+        //        Dimension screenDimension = tk.getScreenSize();
+        //        int screenHeight = screenDimension.height;
+        //        int screenWidth = screenDimension.width;
+        //
+        //        // Set the window to come up in the center of the screen.
+        //        int xPosition = (screenWidth - windowWidth) / 2;
+        //        int yPosition = (screenHeight - windowHeight) / 2;
 
-        
-        
         //setLocation(xPosition, yPosition);
 
-        
         int xPosition = ParaProf.paraProfManager.getLocation().x;
         int yPosition = ParaProf.paraProfManager.getLocation().y;
-        setLocation(xPosition+75, yPosition+110);
-        
+        setLocation(xPosition + 75, yPosition + 110);
+
         setupMenus();
 
         //Setting up the layout system for the main window.
@@ -255,8 +253,14 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 
                 } else if (arg.equals("Show ParaProf Manager")) {
                     (new ParaProfManagerWindow()).show();
-//                } else if (arg.equals("Show 3D Window")) {
-//                    (new ThreeDeeFullDataWindow(ppTrial)).show();
+                } else if (arg.equals("Show 3D Window")) {
+                    try {
+                        (new ThreeDeeWindow(ppTrial)).show();
+                    } catch (UnsatisfiedLinkError e) {
+                        JOptionPane.showMessageDialog(this, "Unable to load jogl library.  Possible reasons:\nlibjogl.so is not in your LD_LIBRARY_PATH.\nJogl is not built for this platform.\nOpenGL is not installed\n\nJogl is available at jogl.dev.java.net");
+                    } catch (UnsupportedClassVersionError e) {
+                        JOptionPane.showMessageDialog(this, "Unsupported class version.  Are you using Java 1.4 or above?");
+                    }
                 } else if (arg.equals("Preferences...")) {
                     ppTrial.getPreferencesWindow().showPreferencesWindow();
                 }
@@ -297,8 +301,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                 //		    }
                 //		}
                 else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-                    imageOutput.saveImage((ParaProfImageInterface) panel);
+                    ParaProfImageOutput.saveImage(panel);
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
                 } else if (arg.equals("Exit ParaProf!")) {
@@ -391,14 +394,14 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     public void menuSelected(MenuEvent evt) {
         try {
             if (ppTrial.groupNamesPresent())
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(true);
+                ((JMenuItem) windowsMenu.getItem(groupLedgerIndex)).setEnabled(true);
             else
-                ((JMenuItem) windowsMenu.getItem(2)).setEnabled(false);
+                ((JMenuItem) windowsMenu.getItem(groupLedgerIndex)).setEnabled(false);
 
             if (ppTrial.userEventsPresent())
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(true);
+                ((JMenuItem) windowsMenu.getItem(userEventLedgerIndex)).setEnabled(true);
             else
-                ((JMenuItem) windowsMenu.getItem(3)).setEnabled(false);
+                ((JMenuItem) windowsMenu.getItem(userEventLedgerIndex)).setEnabled(false);
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }

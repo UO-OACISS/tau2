@@ -59,6 +59,16 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
         return ppTrial.getID();
     }
 
+    
+    public boolean isTimeMetric() {
+        String metricName = this.getName().toUpperCase();
+        if (metricName.indexOf("TIME") == -1)
+            return false;
+        else
+            return true;
+    }
+
+    
     public String getIDString() {
         if (ppTrial != null)
             return ppTrial.getIDString() + ":" + this.getID() + " - " + this.getName();

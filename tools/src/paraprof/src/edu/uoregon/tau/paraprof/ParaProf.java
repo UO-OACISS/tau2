@@ -1,4 +1,3 @@
-
 package edu.uoregon.tau.paraprof;
 
 import java.util.*;
@@ -12,19 +11,32 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.32 2005/03/11 00:24:45 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.33 2005/04/04 22:26:00 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.32 $
+ * @version $Revision: 1.33 $
  */
 public class ParaProf implements ActionListener {
 
+    static public class XThrowableHandler {
+        
+        public XThrowableHandler() {
+        }
+        
+        public void handle(Throwable t) throws Throwable {
+            if (t instanceof Exception) {
+                ParaProfUtils.handleException((Exception) t);
+            } else {
+                System.err.println("Uncaught Throwable: " + t.fillInStackTrace());
+            }
+        }
+    }
+
     private final static String VERSION = "2.1 (with TAU 2.14.1) (01/21/2005)";
 
-    
     static ColorMap colorMap = new ColorMap();
-    
+
     //System wide stuff.
     static String homeDirectory = null;
     static File paraProfHomeDirectory = null;
@@ -50,16 +62,28 @@ public class ParaProf implements ActionListener {
     private static boolean fixNames = false;
     //End - Command line options related.
 
-    
-    
     private ParaProfTrial pptrial = null;
 
     public ParaProf() {
-        /*
-         * try {
-         * UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
-         * catch (Exception e) { }
-         */
+
+        try {
+            //            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
+            //            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+            //
+            //            
+            //            UIManager.setLookAndFeel(
+            //                                     "com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+            //     
+            //            UIManager.setLookAndFeel(
+            //            "javax.swing.plaf.metal.MetalLookAndFeel");
+            //
+            //            UIManager.setLookAndFeel(
+            //            "com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+
+        } catch (Exception e) {
+
+        }
+
     }
 
     private static void usage() {
@@ -108,13 +132,9 @@ public class ParaProf implements ActionListener {
 
         ParaProf.helpWindow = new HelpWindow();
         ParaProf.paraProfManager = new ParaProfManagerWindow();
-        
+
         paraProfManager.addTrial(app, experiment, sourceFiles, fileType, fixNames);
     }
- 
-    
-    
-    
 
     public void startSystem() {
         try {
@@ -129,7 +149,7 @@ public class ParaProf implements ActionListener {
             // by default in the user's home directory.
             ParaProf.paraProfHomeDirectory = new File(homeDirectory + "/.ParaProf");
             if (paraProfHomeDirectory.exists()) {
-     
+
                 //Try and load a preference file ... ParaProfPreferences.dat
                 try {
                     FileInputStream savedPreferenceFIS = new FileInputStream(
@@ -147,13 +167,13 @@ public class ParaProf implements ActionListener {
                     } else {
                         //Print some kind of error message, and quit the system.
                         System.out.println("Error while trying to read the ParaProf preferences file, using defaults");
-//                        System.out.println("Please delete this file, or replace it with a valid one!");
-//                        System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
+                        //                        System.out.println("Please delete this file, or replace it with a valid one!");
+                        //                        System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
                     }
                 }
 
                 ParaProf.colorMap.setMap(preferences.getAssignedColors());
-                
+
                 //Try and find perfdmf.cfg.
                 File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                 if (perfDMFcfg.exists()) {
@@ -172,10 +192,15 @@ public class ParaProf implements ActionListener {
             if (colorChooser == null) {
                 ParaProf.colorChooser = new ColorChooser(null);
             }
-            
+
             ParaProf.preferencesWindow = new PreferencesWindow(preferences);
-            
-            loadDefaultTrial();
+
+            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    System.setProperty("sun.awt.exception.handler", XThrowableHandler.class.getName());
+                    loadDefaultTrial();
+                }
+            });
 
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -193,18 +218,18 @@ public class ParaProf implements ActionListener {
 
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
-        return new String("ParaProf Version " + getVersionString() + "\n Java Heap Size: " + memUsage + "kb"); 
+        return new String("ParaProf Version " + getVersionString() + "\n Java Heap Size: " + memUsage + "kb");
     }
 
     public static String getVersionString() {
         return new String(VERSION);
     }
-    
-    
-    public static void loadPreferences (File file) throws FileNotFoundException, IOException, ClassNotFoundException {
-        
+
+    public static void loadPreferences(File file) throws FileNotFoundException, IOException,
+            ClassNotFoundException {
+
         FileInputStream savedPreferenceFIS = new FileInputStream(file);
-        
+
         //If here, means that no exception was thrown, and there is a preference file present.
         //Create ObjectInputStream and try to read it in.
         ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
@@ -222,10 +247,8 @@ public class ParaProf implements ActionListener {
             ppTrial.getSystemEvents().updateRegisteredObjects("prefEvent");
         }
 
-        
-        
     }
-    
+
     // This method is reponsible for any cleanup required in ParaProf 
     // before an exit takes place.
     public static void exitParaProf(int exitValue) {
@@ -234,35 +257,34 @@ public class ParaProf implements ActionListener {
         //} catch (Exception e) {
         //   e.printStackTrace();
         //}
-        
-//        if (
-//        File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
-//
-//        try {
-//            ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
-//            this.setSavedPreferences();
-//            prefsOut.writeObject(ParaProf.savedPreferences);
-//            prefsOut.close();
-//        } catch (Exception e) {
-//            //Display an error
-//            JOptionPane.showMessageDialog(this,
-//                    "An error occured while trying to save ParaProf preferences.", "Error!",
-//                    JOptionPane.ERROR_MESSAGE);
-//        }
-        
+
+        //        if (
+        //        File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
+        //
+        //        try {
+        //            ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
+        //            this.setSavedPreferences();
+        //            prefsOut.writeObject(ParaProf.savedPreferences);
+        //            prefsOut.close();
+        //        } catch (Exception e) {
+        //            //Display an error
+        //            JOptionPane.showMessageDialog(this,
+        //                    "An error occured while trying to save ParaProf preferences.", "Error!",
+        //                    JOptionPane.ERROR_MESSAGE);
+        //        }
+
         savePreferences(new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf"));
-       
-        
+
         System.exit(exitValue);
     }
 
     public static boolean savePreferences(File file) {
-        
+
         ParaProf.colorChooser.setSavedColors();
         ParaProf.preferences.setAssignedColors(ParaProf.colorMap.getMap());
         ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManager.getLocation());
 
-//        System.out.println ("saving manager position = " + preferences.getManagerWindowPosition());
+        //        System.out.println ("saving manager position = " + preferences.getManagerWindowPosition());
 
         try {
             ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
@@ -275,7 +297,7 @@ public class ParaProf implements ActionListener {
         }
         return true;
     }
-    
+
     // Main entry point
     static public void main(String[] args) {
 
@@ -346,11 +368,11 @@ public class ParaProf implements ActionListener {
 
         ParaProf.runtime = Runtime.getRuntime();
 
-//        if (UtilFncs.debug) {
-//            //Create and start the a timer, and then add paraprof to it.
-//            javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);
-//            jTimer.start();
-//        }
+        //        if (UtilFncs.debug) {
+        //            //Create and start the a timer, and then add paraprof to it.
+        //            javax.swing.Timer jTimer = new javax.swing.Timer(8000, paraProf);
+        //            jTimer.start();
+        //        }
 
         paraProf.startSystem();
     }

@@ -14,9 +14,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.9 2005/03/08 01:11:18 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.10 2005/04/04 22:26:00 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
@@ -246,8 +246,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                 } else if (arg.equals("Preferences...")) {
                     ppTrial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-                    imageOutput.saveImage((ParaProfImageInterface) panel);
+                    ParaProfImageOutput.saveImage(panel);
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
                 } else if (arg.equals("Exit ParaProf!")) {

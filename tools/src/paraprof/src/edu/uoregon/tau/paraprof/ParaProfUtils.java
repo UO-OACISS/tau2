@@ -23,6 +23,14 @@ public class ParaProfUtils {
         menu.add(item);
     }
     
+    public static void addCompItem(Container jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        jPanel.add(c, gbc);
+    }
+    
     public static void print(Printable printable) {
         PrinterJob job = PrinterJob.getPrinterJob();
         PageFormat defaultFormat = job.defaultPage();

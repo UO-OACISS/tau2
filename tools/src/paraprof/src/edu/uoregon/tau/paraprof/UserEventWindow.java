@@ -289,8 +289,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-                    imageOutput.saveImage((ParaProfImageInterface) panel);
+                    ParaProfImageOutput.saveImage(panel);
                 }
                 if (arg.equals("Close This Window")) {
                     closeThisWindow();

@@ -138,6 +138,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                     panel.repaint();
                 }
             });
+            group.add(button);
             return button;
         } else {
             JMenu subSubMenu = new JMenu(valueType.toString() + "...");
@@ -387,8 +388,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                 } else if (arg.equals("Preferences...")) {
                     ppTrial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-                    imageOutput.saveImage((ParaProfImageInterface) panel);
+                    ParaProfImageOutput.saveImage(panel);
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
                 } else if (arg.equals("Exit ParaProf!")) {
@@ -664,7 +664,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     }
 
     public int units() {
-        if (showValuesAsPercent.isSelected())
+
+        if (showValuesAsPercent.isEnabled() && showValuesAsPercent.isSelected())
             return 0;
 
         if (!dataSorter.isTimeMetric()) // we don't do units for non-time metrics

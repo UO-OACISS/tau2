@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.14 2005/03/11 00:24:45 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.15 2005/04/04 22:26:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -117,16 +117,30 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                                         - treeScrollPane.getVerticalScrollBar().getValue());
                             } else if (userObject instanceof ParaProfApplication) {
                                 clickedOnObject = userObject;
-                                popup2.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
+                                if (((ParaProfApplication)userObject).dBApplication())
+                                    dbAppPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
+                                            - treeScrollPane.getVerticalScrollBar().getValue());
+                                else
+                                    stdAppPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
                                         - treeScrollPane.getVerticalScrollBar().getValue());
                             } else if (userObject instanceof ParaProfExperiment) {
                                 clickedOnObject = userObject;
-                                popup3.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
+                                if (((ParaProfExperiment)userObject).dBExperiment())
+                                    dbExpPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
                                         - treeScrollPane.getVerticalScrollBar().getValue());
+                                else
+                                    stdExpPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
+                                            - treeScrollPane.getVerticalScrollBar().getValue());
+
                             } else if (userObject instanceof ParaProfTrial) {
                                 clickedOnObject = userObject;
-                                popup4.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
+                                if (((ParaProfTrial)userObject).dBTrial())
+                                    dbTrialPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
                                         - treeScrollPane.getVerticalScrollBar().getValue());
+                                else
+                                    stdTrialPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
+                                            - treeScrollPane.getVerticalScrollBar().getValue());
+                                    
                             }
                         } else {
                             if (evt.getClickCount() == 2) {
@@ -251,35 +265,63 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem.addActionListener(this);
         popup1.add(jMenuItem);
 
+        // Standard application popup
         jMenuItem = new JMenuItem("Add Experiment");
         jMenuItem.addActionListener(this);
-        popup2.add(jMenuItem);
+        stdAppPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Add Trial");
         jMenuItem.addActionListener(this);
-        popup2.add(jMenuItem);
+        stdAppPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Upload Application to DB");
         jMenuItem.addActionListener(this);
-        popup2.add(jMenuItem);
+        stdAppPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
-        popup2.add(jMenuItem);
+        stdAppPopup.add(jMenuItem);
 
-        jMenuItem = new JMenuItem("Upload Experiment to DB");
+        // DB application popup
+        jMenuItem = new JMenuItem("Add Experiment");
         jMenuItem.addActionListener(this);
-        popup3.add(jMenuItem);
+        dbAppPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Add Trial");
         jMenuItem.addActionListener(this);
-        popup3.add(jMenuItem);
+        dbAppPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
-        popup3.add(jMenuItem);
+        dbAppPopup.add(jMenuItem);
 
+
+        // Standard experiment popup
+        jMenuItem = new JMenuItem("Upload Experiment to DB");
+        jMenuItem.addActionListener(this);
+        stdExpPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Add Trial");
+        jMenuItem.addActionListener(this);
+        stdExpPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Delete");
+        jMenuItem.addActionListener(this);
+        stdExpPopup.add(jMenuItem);
+
+        // DB experiment popup
+        jMenuItem = new JMenuItem("Add Trial");
+        jMenuItem.addActionListener(this);
+        dbExpPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Delete");
+        jMenuItem.addActionListener(this);
+        dbExpPopup.add(jMenuItem);
+
+        // Standard trial popup
         jMenuItem = new JMenuItem("Upload Trial to DB");
         jMenuItem.addActionListener(this);
-        popup4.add(jMenuItem);
+        stdTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
-        popup4.add(jMenuItem);
+        stdTrialPopup.add(jMenuItem);
+
+        // DB trial popup
+        jMenuItem = new JMenuItem("Delete");
+        jMenuItem.addActionListener(this);
+        dbTrialPopup.add(jMenuItem);
 
     }
 
@@ -1638,9 +1680,18 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     //Popup menu stuff.
     private JPopupMenu popup1 = new JPopupMenu();
-    private JPopupMenu popup2 = new JPopupMenu();
-    private JPopupMenu popup3 = new JPopupMenu();
-    private JPopupMenu popup4 = new JPopupMenu();
+    
+    
+    private JPopupMenu stdAppPopup = new JPopupMenu();
+    private JPopupMenu stdExpPopup = new JPopupMenu();
+    private JPopupMenu stdTrialPopup = new JPopupMenu();
+
+    private JPopupMenu dbAppPopup = new JPopupMenu();
+    private JPopupMenu dbExpPopup = new JPopupMenu();
+    private JPopupMenu dbTrialPopup = new JPopupMenu();
+
+    
+    
     private JMenuItem uploadMetricItem = null;
 
     private Object clickedOnObject = null;

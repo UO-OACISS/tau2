@@ -19,12 +19,11 @@ import javax.swing.tree.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfTrial implements ParaProfTreeNodeUserObject {
-    
+
     private Function highlightedFunction = null;
     private Group highlightedGroup = null;
     private UserEvent highlightedUserEvent = null;
 
-    
     private DatabaseAPI dbAPI;
     private ParaProfExperiment experiment = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
@@ -42,10 +41,9 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     private String pathReverse = null;
     private int defaultMetricID = 0;
     private Vector observers = new Vector();
-    
+
     private Trial trial;
-    
-    
+
     public ParaProfTrial() {
         trial = new Trial();
         trial.setID(-1);
@@ -58,11 +56,10 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         this.trial = new Trial(trial);
     }
 
-    
     public Trial getTrial() {
         return trial;
     }
-    
+
     public int getApplicationID() {
         return trial.getApplicationID();
     }
@@ -74,7 +71,7 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     public int getID() {
         return trial.getID();
     }
-    
+
     public void setApplicationID(int id) {
         trial.setApplicationID(id);
     }
@@ -87,19 +84,14 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         trial.setID(id);
     }
 
-
     public String getName() {
         return trial.getName();
     }
-    
+
     public DataSource getDataSource() {
         return trial.getDataSource();
     }
 
-    
-    
-    
-    
     public void setExperiment(ParaProfExperiment experiment) {
         this.experiment = experiment;
     }
@@ -132,8 +124,6 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         return dBTrial;
     }
 
- 
-    
     public void setUpload(boolean upload) {
         this.upload = upload;
     }
@@ -203,7 +193,6 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         this.setDMTN(null);
     }
 
-
     //####################################
     //Functions that control the obtaining and the opening
     //and closing of the static main window for this trial.
@@ -261,6 +250,15 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
             return true;
     }
 
+    //    public boolean isTimeMetric(int metricID) {
+    //        String metricName = this.getMetricName(metricID);
+    //        metricName = metricName.toUpperCase();
+    //        if (metricName.indexOf("TIME") == -1)
+    //            return false;
+    //        else
+    //            return true;
+    //    }
+
     public boolean isDerivedMetric() {
 
         // We can't do this, HPMToolkit stuff has /'s and -'s all over the place
@@ -305,9 +303,9 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     //Pass-though methods to the data session for this instance.
     //####################################
 
-//    public edu.uoregon.tau.dms.dss.Thread getThread(int nodeID, int contextID, int threadID) {
-//        return dataSource.getThread(nodeID, contextID, threadID);
-//    }
+    //    public edu.uoregon.tau.dms.dss.Thread getThread(int nodeID, int contextID, int threadID) {
+    //        return dataSource.getThread(nodeID, contextID, threadID);
+    //    }
 
     public boolean groupNamesPresent() {
         return trial.getDataSource().getGroupNamesPresent();
@@ -330,7 +328,18 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         trial.getDataSource().setMeanData(metricID, metricID);
     }
 
-    
+    // return a vector of only those functions that are currently "displayed" (i.e. group masks, etc)
+    public Vector getDisplayedFunctions() {
+        Vector displayedFunctions = new Vector();
+
+        for (Iterator it = this.getDataSource().getFunctions(); it.hasNext();) {
+            Function function = (Function) it.next();
+            if (this.displayFunction(function)) {
+                displayedFunctions.add(function);
+            }
+        }
+        return displayedFunctions;
+    }
 
     public boolean displayFunction(Function func) {
         switch (groupFilter) {
@@ -373,18 +382,16 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
 
     private Group selectedGroup;
     private int groupFilter = 0;
-    
-    
+
     //####################################
     //end - Pass-though methods to the data session for this instance.
     //####################################
 
-    
     public void finishLoad() {
 
         // The dataSource has accumulated edu.uoregon.tau.dms.dss.Metrics.
         // Inside ParaProf, these need to be ParaProfMetrics.
-        
+
         int numberOfMetrics = trial.getDataSource().getNumberOfMetrics();
         Vector ppMetrics = new Vector();
         for (int i = 0; i < numberOfMetrics; i++) {
@@ -398,16 +405,13 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         // Now set the dataSource's metrics.
         trial.getDataSource().setMetrics(ppMetrics);
 
-        
         // set the colors
         clrChooser.setColors(this, -1);
-        
-        
+
         //Set this trial's loading flag to false.
         this.setLoading(false);
     }
-    
-  
+
     public DatabaseAPI getDatabaseAPI() {
         return dbAPI;
     }
@@ -415,8 +419,7 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
     public void setDatabaseAPI(DatabaseAPI dbAPI) {
         this.dbAPI = dbAPI;
     }
-    
-    
+
     public void setHighlightedFunction(Function func) {
         this.highlightedFunction = func;
         this.getSystemEvents().updateRegisteredObjects("colorEvent");
@@ -434,7 +437,6 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         this.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
 
-    
     public void setHighlightedGroup(Group group) {
         this.highlightedGroup = group;
         this.getSystemEvents().updateRegisteredObjects("colorEvent");
@@ -452,10 +454,8 @@ public class ParaProfTrial implements ParaProfTreeNodeUserObject {
         this.getSystemEvents().updateRegisteredObjects("colorEvent");
     }
 
-    
-//    private boolean uploading;
-    
-    
+    //    private boolean uploading;
+
     public void setHighlightedUserEvent(UserEvent userEvent) {
         this.highlightedUserEvent = userEvent;
         this.getSystemEvents().updateRegisteredObjects("colorEvent");

@@ -31,9 +31,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.23 2005/03/11 00:48:29 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.24 2005/04/04 22:26:00 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.23 $
+ * @version	$Revision: 1.24 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, KeyListener,
         ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -191,7 +191,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         public Dimension getPreferredSize() {
             Dimension inner = super.getPreferredSize();
             inner.setSize(inner.width + 10, inner.height + 10);
-            return inner;
+            return inner;	
         }
 
         public Graph(GraphModel gm, CallGraphWindow cgw) {
@@ -1998,7 +1998,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 graph.setScale(scale);
             }
         } catch (Exception e) {
-            new ParaProfErrorDialog(e);
+            ParaProfUtils.handleException(e);
         }
 
     }
@@ -2158,8 +2158,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 } else if (arg.equals("Print")) {
                     ParaProfUtils.print(this);
                 } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-                    imageOutput.saveImage((ParaProfImageInterface) this);
+                    ParaProfImageOutput.saveImage((ParaProfImageInterface) this);
 
                 } else if (arg.equals("Display Width Slider")) {
                     if (slidersCheckBox.isSelected())

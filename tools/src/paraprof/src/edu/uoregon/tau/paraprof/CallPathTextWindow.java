@@ -12,9 +12,9 @@ import edu.uoregon.tau.paraprof.enums.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.17 2005/03/09 18:07:50 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.18 2005/04/04 22:26:00 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -334,8 +334,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                 } else if (arg.equals("Preferences...")) {
                     trial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-                    imageOutput.saveImage((ParaProfImageInterface) panel);
+                    ParaProfImageOutput.saveImage(panel);
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
                 } else if (arg.equals("Exit ParaProf!")) {

@@ -133,7 +133,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
     public synchronized void finishLoad() {
         this.notifyAll();
     }
-    
+
     private synchronized void execute(final boolean justDB) {
 
         java.lang.Thread thread = new java.lang.Thread(new Runnable() {
@@ -150,20 +150,23 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
                     } else {
 
                         dataSource.load();
-                        ppTrial.finishLoad();
-                        //ppTrial.update(dataSource);
-                        progressBar.setValue(100);
+                        if (!aborted) {
+//                            progressBar.setValue(100);
+                            ppTrial.finishLoad();
+                            //ppTrial.update(dataSource);
 
-                        if (ppTrial.upload()) {
-                            upload();
+                            if (ppTrial.upload()) {
+                                upload();
+                            }
+
+                            ParaProf.paraProfManager.populateTrialMetrics(ppTrial);
+                            ppTrial.showMainWindow();
                         }
-
-                        ParaProf.paraProfManager.populateTrialMetrics(ppTrial);
-                        ppTrial.showMainWindow();
                         jTimer.stop();
                         LoadTrialProgressWindow.this.dispose();
                     }
                 } catch (final Exception e) {
+                    LoadTrialProgressWindow.this.dispose();
                     EventQueue.invokeLater(new Runnable() {
                         public void run() {
                             ParaProfUtils.handleException(e);
@@ -188,8 +191,8 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
         } else {
             int progress = (int) dataSource.getProgress();
-            if (progress > 99)
-                progress = 99;
+            if (progress > 100)
+                progress = 100;
             progressBar.setValue(progress);
         }
     }

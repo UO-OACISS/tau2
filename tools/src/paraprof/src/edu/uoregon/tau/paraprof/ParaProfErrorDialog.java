@@ -14,6 +14,9 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
         String errorString = null;
 
+        
+        
+        
         if (obj instanceof DataSourceException) {
             DataSourceException dse = (DataSourceException) obj;
             Exception e = dse.getException();
@@ -42,6 +45,7 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
             e.printStackTrace(pw);
             pw.close();
             errorString = dbe.getMessage() + "\n\n" + sw.toString();
+
         } else {
             Exception e = obj;
             e.printStackTrace();

@@ -13,9 +13,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.14 2005/03/09 18:07:50 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.15 2005/04/04 22:26:00 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -101,6 +101,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                     panel.repaint();
                 }
             });
+            group.add(button);
             return button;
         } else {
             JMenu subSubMenu = new JMenu(valueType.toString() + "...");
@@ -332,8 +333,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                 } else if (arg.equals("Preferences...")) {
                     ppTrial.getPreferencesWindow().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
-                    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
-                    imageOutput.saveImage((ParaProfImageInterface) panel);
+                    ParaProfImageOutput.saveImage(panel);
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();
                 } else if (arg.equals("Exit ParaProf!")) {
@@ -554,7 +554,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public int units() {
-        if (showValuesAsPercent.isSelected())
+        if (showValuesAsPercent.isEnabled() && showValuesAsPercent.isSelected())
             return 0;
 
         if (!dataSorter.isTimeMetric()) // we don't do units for non-time metrics
