@@ -286,7 +286,11 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    //**********
 	    panel = new MappingDataWindowPanel(trial, inMappingID, this);
 	    sp = new JScrollPane(panel);
-	    JLabel label = new JLabel(mappingName);
+	    String counterName = trial.getCounterName();
+	    String heading = null;
+	    if(counterName != null)
+		heading = "COUNTER NAME: " + counterName + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName;
+	    label = new JLabel(heading);
             sp.setColumnHeaderView(label);
 	    //**********
 	    //End - Panel and scroll bar definitions.
@@ -530,9 +534,17 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		//Just need to call a repaint on the ThreadDataWindowPanel.
 		panel.repaint();
 	    }
-	    else if(tmpString.equals("dataSetChangeEvent")){
+	    else if(tmpString.equals("dataEvent")){
 		//Clear any locally saved data.
 		sMWGeneralData = null;
+		if(!(trial.isTimeMetric()))
+		    units = 0;
+		String counterName = trial.getCounterName();
+		String heading = null;
+		if(counterName != null)
+		    heading = "COUNTER NAME: " + counterName + UtilFncs.getUnitsString(units, trial.isTimeMetric()) + "  FUNCTION NAME: " + mappingName;
+		label.setText(heading);
+		panel.repaint();
 	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){
 		closeThisWindow();
@@ -564,9 +576,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     public int getMetric(){
 	return metric;}
     
-    public boolean isInclusive(){
-	return inclusive;}
-  
     public boolean isPercent(){
 	return percent;}
   
@@ -726,9 +735,9 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     
     MappingDataWindowPanel panel = null;
     JScrollPane sp = null;
+    JLabel label = null;
 
     private int metric = 1; //0-inclusive,1-exclusive,2-number of calls,3-number of subroutines,4-per call value.
-    boolean inclusive = false;
     boolean percent = true;
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
     //******************************

@@ -570,6 +570,8 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, MenuL
 	    else if(tmpString.equals("dataEvent"))
 		{
 		    lastSorting = "";
+		    if(!(trial.isTimeMetric()))
+			units = 0;
 		    panel.repaint();
 		}
 	    else if(tmpString.equals("subWindowCloseEvent"))

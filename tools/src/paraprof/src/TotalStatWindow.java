@@ -492,7 +492,9 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 		//Just need to call a repaint on the ThreadDataWindowPanel.
 		panel.repaint();
 	    }
-	    else if(tmpString.equals("dataEvent")){ 
+	    else if(tmpString.equals("dataEvent")){
+		if(!(trial.isTimeMetric()))
+		    units = 0;
 		panel.repaint();
 	    }
 	    else if(tmpString.equals("subWindowCloseEvent")){ 

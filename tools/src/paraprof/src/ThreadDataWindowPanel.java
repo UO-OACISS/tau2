@@ -190,7 +190,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
       //Draw the counter name if required.
       counterName = trial.getCounterName();
       if(counterName != null){
-        g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
+	  g.drawString("COUNTER NAME: " + counterName + UtilFncs.getUnitsString(tDWindow.units(), trial.isTimeMetric()), 5, yCoord);
         yCoord = yCoord + (barSpacing);}
       //End - Draw the counter name if required.
       //**********
@@ -265,11 +265,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
           }
           else{
             //Check to see what the units are.
-            if((tDWindow.units()).equals("Seconds")){
+            if((tDWindow.units())==2){
               stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000000), defaultNumberPrecision));
               barXCoord = barXCoord + stringWidth;
             }
-            else if((tDWindow.units()).equals("Milliseconds")){
+            else if((tDWindow.units())==1){
               stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000), defaultNumberPrecision));
               barXCoord = barXCoord + stringWidth;
             }
@@ -287,11 +287,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
           }
           else{
             //Check to see what the units are.
-            if((tDWindow.units()).equals("Seconds")){
+            if((tDWindow.units())==2){
               stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000000), defaultNumberPrecision));
               barXCoord = barXCoord + stringWidth;
             }
-            else if((tDWindow.units()).equals("Milliseconds")){
+            else if((tDWindow.units())==1){
               stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000), defaultNumberPrecision));
               barXCoord = barXCoord + stringWidth;
             }
@@ -303,7 +303,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         }
             
         //Test for the different menu options for this window.
-        if((tDWindow.getMetric()).equals("Inclusive"))
+        if((tDWindow.getMetric())==0)
         {
         
           //@@@In the inclusive section. - This comment aids in matching up if/else statements.@@@
@@ -458,14 +458,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
               g.setColor(Color.black);
               
               //Check to see what the units are.
-              if((tDWindow.units()).equals("Seconds")){
+              if((tDWindow.units())==2){
                 tmpString = new String(Double.toString(
                   UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
                 stringWidth = fmFont.stringWidth(tmpString);
                 stringStart = barXCoord - xLength - stringWidth - 5;
                 g.drawString(tmpString, stringStart, yCoord);
               }
-              else if((tDWindow.units()).equals("Milliseconds"))
+              else if((tDWindow.units())==1)
               {
                 tmpString = new String(Double.toString(
                   UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
@@ -498,7 +498,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             }
           }
         }
-        else if((tDWindow.getMetric()).equals("Exclusive"))
+        else if((tDWindow.getMetric())==1)
         { 
           //@@@In the exclusive section. - This comment aids in matching up if/else statements.@@@
           if(tDWindow.isPercent())
@@ -651,14 +651,14 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
               g.setColor(Color.black);
               
               //Check to see what the units are.
-              if((tDWindow.units()).equals("Seconds")){
+              if((tDWindow.units())==2){
                 tmpString = new String(Double.toString(
                   UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
                 stringWidth = fmFont.stringWidth(tmpString);
                 stringStart = barXCoord - xLength - stringWidth - 5;
                 g.drawString(tmpString, stringStart, yCoord);
               }
-              else if((tDWindow.units()).equals("Milliseconds")){
+              else if((tDWindow.units())==1){
                 tmpString = new String(Double.toString(
                   UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
                 stringWidth = fmFont.stringWidth(tmpString);
@@ -689,7 +689,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             }
           }
         }
-        else if((tDWindow.getMetric()).equals("Number of Calls"))
+        else if((tDWindow.getMetric())==2)
         {
           //@@@In the Number Of Calls section. - This comment aids in matching up if/else statements.@@@
           
@@ -774,7 +774,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             tmpSMWThreadDataElement.setTDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);                     
           }
         }
-        else if((tDWindow.getMetric()).equals("Number of Subroutines"))
+        else if((tDWindow.getMetric())==3)
         { 
           //@@@In the Number of Subroutines section. - This comment aids in matching up if/else statements.@@@
           
@@ -860,7 +860,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
           }
           
         }
-        else if((tDWindow.getMetric()).equals("Per Call Value"))
+        else if((tDWindow.getMetric())==4)
         { 
           //@@@In the Per Call Value section. - This comment aids in matching up if/else statements.@@@
           

@@ -208,11 +208,11 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
           }
           else{
             //Check to see what the units are.
-            if((mDWindow.units()).equals("Seconds")){
+            if((mDWindow.units())==2){
               stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000000), defaultNumberPrecision));
               barXCoord = barXCoord + stringWidth;
             }
-            else if((mDWindow.units()).equals("Milliseconds")){
+            else if((mDWindow.units())==1){
               stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000), defaultNumberPrecision));
               barXCoord = barXCoord + stringWidth;
             }
@@ -230,11 +230,11 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
           }
           else{
             //Check to see what the units are.
-            if((mDWindow.units()).equals("Seconds")){
+            if((mDWindow.units())==2){
               stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000000), defaultNumberPrecision));
               barXCoord = barXCoord + stringWidth;
             }
-            else if((mDWindow.units()).equals("Milliseconds")){
+            else if((mDWindow.units())==1){
               stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000), defaultNumberPrecision));
               barXCoord = barXCoord + stringWidth;
             }
@@ -246,7 +246,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
         }
           
         //Test for the different menu options for this window.
-        if((mDWindow.getMetric()).equals("Inclusive"))
+        if((mDWindow.getMetric())==0)
         {
           if(mDWindow.isPercent())
           {
@@ -399,14 +399,14 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
               g.setColor(Color.black);
               
               //Check to see what the units are.
-              if((mDWindow.units()).equals("Seconds")){
+              if((mDWindow.units())==2){
                 tmpString = new String(Double.toString(
                   UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
                 stringWidth = fmFont.stringWidth(tmpString);
                 stringStart = barXCoord - xLength - stringWidth - 5;
                 g.drawString(tmpString, stringStart, yCoord);
               }
-              else if((mDWindow.units()).equals("Milliseconds")){
+              else if((mDWindow.units())==1){
                 tmpString = new String(Double.toString(
                   UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
                 stringWidth = fmFont.stringWidth(tmpString);
@@ -437,7 +437,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
             }
           }
         }
-        else if((mDWindow.getMetric()).equals("Exclusive"))
+        else if((mDWindow.getMetric())==1)
         {
           if(mDWindow.isPercent())
           {
@@ -586,7 +586,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
               g.setColor(Color.black);
               
               //Check to see what the units are.
-              if((mDWindow.units()).equals("Seconds"))
+              if((mDWindow.units())==2)
               {
                 tmpString = new String(Double.toString(
                   UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
@@ -594,7 +594,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
                 stringStart = barXCoord - xLength - stringWidth - 5;
                 g.drawString(tmpString, stringStart, yCoord);
               }
-              else if((mDWindow.units()).equals("Milliseconds"))
+              else if((mDWindow.units())==1)
               {
                 tmpString = new String(Double.toString(
                   UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
@@ -627,7 +627,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
             }
           }
         }
-        else if((mDWindow.getMetric()).equals("Number of Calls"))
+        else if((mDWindow.getMetric())==2)
         {
           for(int i = startMeanElement; i <= endMeanElement; i++)
             {   
@@ -709,7 +709,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
             tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
           }
         }
-        else if((mDWindow.getMetric()).equals("Number of Subroutines"))
+        else if((mDWindow.getMetric())==3)
         {
           for(int i = startMeanElement; i <= endMeanElement; i++)
             {   
@@ -791,7 +791,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
             tmpSMWMeanDataElement.setDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
           }
         }
-        else if((mDWindow.getMetric()).equals("Per Call Value"))
+        else if((mDWindow.getMetric())==4)
         {
           for(int i = startMeanElement; i <= endMeanElement; i++)
             {   

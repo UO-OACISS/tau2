@@ -141,7 +141,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
       //Draw the counter name if required.
       String counterName = trial.getCounterName();
       if(counterName != null){
-        g.drawString("COUNTER NAME: " + counterName + UtilFncs.getUnitsString(mTSWindow.units()), 5, yCoord);
+        g.drawString("COUNTER NAME: " + counterName + UtilFncs.getUnitsString(mTSWindow.units(), trial.isTimeMetric()), 5, yCoord);
         yCoord = yCoord + (spacing);
       }
       //End - Draw the counter name if required.

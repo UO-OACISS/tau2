@@ -45,10 +45,6 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
       
 	    currentSMWMeanData = null;
       
-	    inclusive = false;
-	    percent = true;
-	    unitsString = "milliseconds";
-      
 	    //Now set the title.
 	    this.setTitle("Mean Data Window: " + trial.getProfilePathName());
       
@@ -300,14 +296,14 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	    //**********
 	    //Panel and ScrollPane definition.
 	    //**********
-	    meanDataWindowPanelRef = new MeanDataWindowPanel(trial, this, sMWData);
+	    panel = new MeanDataWindowPanel(trial, this, sMWData);
       
 	    //**********
 	    //End - Panel and ScrollPane definition.
 	    //**********
       
 	    //The scroll panes into which the list shall be placed.
-	    meanDataWindowPanelScrollPane = new JScrollPane(meanDataWindowPanelRef);
+	    meanDataWindowPanelScrollPane = new JScrollPane(panel);
 	    meanDataWindowPanelScrollPane.setBorder(mainloweredbev);
 	    meanDataWindowPanelScrollPane.setPreferredSize(new Dimension(500, 450));
       
@@ -370,7 +366,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				    sortByMillisecond = false;
 				    sortLocalData();
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Selected Metric"))  //Note the difference in case from the millisecond option below.
@@ -382,7 +378,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				    sortByMillisecond = true;
 				    sortLocalData();
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Descending"))
@@ -391,7 +387,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				{
 				    descendingOrder = true;
 				    sortLocalData();
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Ascending"))
@@ -400,62 +396,62 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				{
 				    descendingOrder = false;
 				    sortLocalData();
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Inclusive"))
 			{
 			    if(inclusiveRadioButton.isSelected())
 				{
-				    metric = "Inclusive";
+				    metric = 0;
 				    //Sort the local data.
 				    sortLocalData();
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Exclusive"))
 			{
 			    if(exclusiveRadioButton.isSelected())
 				{
-				    metric = "Exclusive";
+				    metric = 1;
 				    //Sort the local data.
 				    sortLocalData();
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Number of Calls"))
 			{
 			    if(numOfCallsRadioButton.isSelected())
 				{
-				    metric = "Number of Calls";
+				    metric = 2;
 				    //Sort the local data.
 				    sortLocalData();
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Number of Subroutines"))
 			{
 			    if(numOfSubRoutinesRadioButton.isSelected())
 				{
-				    metric = "Number of Subroutines";
+				    metric = 3;
 				    //Sort the local data.
 				    sortLocalData();
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Per Call Value"))
 			{
 			    if(userSecPerCallRadioButton.isSelected())
 				{
-				    metric = "Per Call Value";
+				    metric = 4;
 				    //Sort the local data.
 				    sortLocalData();
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Percent"))
@@ -465,7 +461,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				    percent = true;
 				    sortLocalData();
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Value"))
@@ -474,34 +470,34 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				{
 				    percent = false;
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
-				}
-			}
-		    else if(arg.equals("Seconds"))
-			{
-			    if(secondsButton.isSelected())
-				{
-				    unitsString = "Seconds";
-				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Microseconds"))
 			{
 			    if(microsecondsButton.isSelected())
 				{
-				    unitsString = "Microseconds";
+				    units = 0;
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Milliseconds"))
 			{
 			    if(millisecondsButton.isSelected())
 				{
-				    unitsString = "Milliseconds";
+				    units = 1;
 				    //Call repaint.
-				    meanDataWindowPanelRef.repaint();
+				    panel.repaint();
+				}
+			}
+		     else if(arg.equals("Seconds"))
+			{
+			    if(secondsButton.isSelected())
+				{
+				    units = 2;
+				    //Call repaint.
+				    panel.repaint();
 				}
 			}
 		    else if(arg.equals("Display Sliders"))
@@ -563,7 +559,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 	    else if(EventSrc == sliderMultiple)
 		{
-		    meanDataWindowPanelRef.changeInMultiples();
+		    panel.changeInMultiples();
 		}
 	}
 	catch(Exception e)
@@ -577,7 +573,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
     //******************************
     public void stateChanged(ChangeEvent event)
     {
-	meanDataWindowPanelRef.changeInMultiples();
+	panel.changeInMultiples();
     }
     //******************************
     //End - Change listener code.
@@ -589,7 +585,8 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
     public void menuSelected(MenuEvent evt)
     {
 	try{
-	    if((metric.equals("Number of Calls")) || (metric.equals("Number of Subroutines")) || (metric.equals("Per Call Value"))){
+
+	    if(metric > 1){
 		valuePercentMenu.setEnabled(false);
 		unitsMenu.setEnabled(false);}
 	    else if(percent){
@@ -603,13 +600,12 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		valuePercentMenu.setEnabled(true);
 		unitsMenu.setEnabled(false);
 	    }
-	
 
 	    if(trial.groupNamesPresent())
 		mappingGroupLedgerItem.setEnabled(true);
 	    else
 		mappingGroupLedgerItem.setEnabled(false);
-        
+	    
 	    if(trial.userEventsPresent())
 		userEventLedgerItem.setEnabled(true);
 	    else
@@ -641,17 +637,19 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	    if(tmpString.equals("prefEvent"))
 		{
 		    //Just need to call a repaint on the ThreadDataWindowPanel.
-		    meanDataWindowPanelRef.repaint();
+		    panel.repaint();
 		}
 	    else if(tmpString.equals("colorEvent"))
 		{
 		    //Just need to call a repaint on the ThreadDataWindowPanel.
-		    meanDataWindowPanelRef.repaint();
+		    panel.repaint();
 		}
 	    else if(tmpString.equals("dataEvent"))
 		{
 		    sortLocalData();
-		    meanDataWindowPanelRef.repaint();
+		    if(!(trial.isTimeMetric()))
+			units = 0;
+		    panel.repaint();
 		}
 	    else if(tmpString.equals("subWindowCloseEvent"))
 		{
@@ -670,35 +668,35 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	    {
 		if(sortByMappingID)
 		    {
-			if(metric.equals("Inclusive"))
+			if(metric==0)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdDI");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdAI");
 			    }
-			else if(metric.equals("Exclusive"))
+			else if(metric==1)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdDE");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdAE");
 			    }
-			else if(metric.equals("Number of Calls"))
+			else if(metric==2)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdDNC");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdANC");
 			    }
-			else if(metric.equals("Number of Subroutines"))
+			else if(metric==3)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdDNS");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdANS");
 			    }
-			else if(metric.equals("Per Call Value"))
+			else if(metric==4)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("FIdDUS");
@@ -709,35 +707,35 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		else if(sortByName)
 		    {
         
-			if(metric.equals("Inclusive"))
+			if(metric==0)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("NDI");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("NAI");
 			    }
-			else if(metric.equals("Exclusive"))
+			else if(metric==1)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("NDE");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("NAE");
 			    }
-			else if(metric.equals("Number of Calls"))
+			else if(metric==2)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("NDNC");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("NANC");
 			    }
-			else if(metric.equals("Number of Subroutines"))
+			else if(metric==3)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("NDNS");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("NANS");
 			    }
-			else if(metric.equals("Per Call Value"))
+			else if(metric==4)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("NDUS");
@@ -748,35 +746,35 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		else if(sortByMillisecond)
 		    {
         
-			if(metric.equals("Inclusive"))
+			if(metric==0)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("MDI");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("MAI");
 			    }
-			else if(metric.equals("Exclusive"))
+			else if(metric==1)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("MDE");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("MAE");
 			    }
-			else if(metric.equals("Number of Calls"))
+			else if(metric==2)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("MDNC");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("MANC");
 			    }
-			else if(metric.equals("Number of Subroutines"))
+			else if(metric==3)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("MDNS");
 				else
 				    currentSMWMeanData = sMWData.getSMWMeanData("MANS");
 			    }
-			else if(metric.equals("Per Call Value"))
+			else if(metric==4)
 			    {
 				if(descendingOrder)
 				    currentSMWMeanData = sMWData.getSMWMeanData("MDUS");
@@ -800,23 +798,24 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
   
     public boolean isInclusive()
     {
-	return inclusive;
+	if(metric==0)
+	    return true;
+	else
+	    return false;
     }
   
-    public String getMetric(){
-	return metric;
-    }
+
+    public int getMetric(){
+	return metric;}
   
     public boolean isPercent()
     {
 	return percent;
     }
   
-    public String units()
-    {
-	return unitsString;
-    }
-  
+    public int units(){
+	return units;}
+
     public int getSliderValue()
     {
 	int tmpInt = -1;
@@ -1002,7 +1001,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
   
     private JScrollPane meanDataWindowPanelScrollPane;
   
-    private MeanDataWindowPanel meanDataWindowPanelRef;
+    private MeanDataWindowPanel panel;
   
     private Trial trial = null;
     private StaticMainWindowData sMWData = null;
@@ -1010,17 +1009,16 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
     //Local data.
     Vector currentSMWMeanData = null;
   
-    private String metric = "Exclusive";
-  
     private boolean sortByMappingID = false;
     private boolean sortByName = false;
     private boolean sortByMillisecond = true;
   
     private boolean descendingOrder = true;
   
-    private boolean inclusive;
-    private boolean percent;
-    private String unitsString;
+    private int metric = 1; //0-inclusive,1-exclusive,2-number of calls,3-number of subroutines,4-per call value.
+    private boolean inclusive = false;
+    private boolean percent = true;
+    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
     //******************************
     //End - Instance data.
     //******************************

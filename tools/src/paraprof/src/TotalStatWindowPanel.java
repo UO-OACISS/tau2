@@ -123,7 +123,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 	    //our data list is zero.  If so, just return.
 	    if((tmpThreadDataElementList.size()) == 0)
 		return;
-      
+   
       
 	    Rectangle clipRect = g.getClipBounds();
       
@@ -139,7 +139,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 	    //Draw the counter name if required.
 	    String counterName = trial.getCounterName();
 	    if(counterName != null){
-		g.drawString("COUNTER NAME: " + counterName + UtilFncs.getUnitsString(tSWindow.units()), 5, yCoord);
+		g.drawString("COUNTER NAME: " + counterName + UtilFncs.getUnitsString(tSWindow.units(), trial.isTimeMetric()), 5, yCoord);
 		yCoord = yCoord + (spacing);
 	    }
 	    //End - Draw the counter name if required.

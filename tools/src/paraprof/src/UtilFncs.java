@@ -85,7 +85,11 @@ public class UtilFncs{
 	return null;
     }
 
-    public static String getUnitsString(int type){
+    public static String getUnitsString(int type, boolean time){
+	
+	if(!time)
+	    return " (counts)";
+
 	switch(type){
 	case 0:
 	    return " (microseconds)";
