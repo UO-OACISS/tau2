@@ -38,7 +38,7 @@
 #define NO_ERROR -1
 
 int expectError = NO_ERROR;
-int debugPrint = 1;
+int debugPrint = 0;
 
 template class BPatch_Vector<BPatch_variableExpr*>;
 void checkCost(BPatch_snippet snippet);
@@ -466,7 +466,6 @@ int main(int argc, char **argv){
    delete mpistubargs;
   }
 
-  cout<<"Executing..."<<endl;
   dprintf("Executing...\n");
   appThread->continueExecution();
   
@@ -476,7 +475,6 @@ int main(int argc, char **argv){
   }//while
 
   if (appThread->isTerminated()){
-    cout<<"End of application..."<<endl;
     dprintf("End of application\n");
   }//if
 
