@@ -90,12 +90,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PHASE_STOP  TAU_PROFILE_STOP
 #endif /* TAU_PROFILEPHASE */
 
-// Construct a Profiler obj and a FunctionInfo obj with an extended name
-// e.g., FunctionInfo loop1fi(); Profiler loop1();
-#define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
-                                Tau_start_timer(var##fi, 0);
-#define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
-                                Tau_stop_timer(var##fi);
+
 
 #else  /* TAU_MAX_THREADS */
 // Multithreaded, we should use thread-safe tauCreateFI to create the FunctionInfo object
@@ -165,6 +160,15 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PHASE_STOP TAU_PROFILE_STOP
 #endif /* TAU_PROFILEPHASE */
 #endif  /* TAU_MAX_THREADS */
+
+
+
+// Construct a Profiler obj and a FunctionInfo obj with an extended name
+// e.g., FunctionInfo loop1fi(); Profiler loop1();
+#define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
+                                Tau_start_timer(var##fi, 0);
+#define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
+                                Tau_stop_timer(var##fi);
 
 #define TAU_PROFILE_STMT(stmt) stmt;
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
@@ -380,6 +384,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.44 $   $Date: 2005/01/11 03:23:26 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.44 2005/01/11 03:23:26 amorris Exp $ 
+ * $Revision: 1.45 $   $Date: 2005/01/12 00:16:18 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.45 2005/01/12 00:16:18 amorris Exp $ 
  ***************************************************************************/
