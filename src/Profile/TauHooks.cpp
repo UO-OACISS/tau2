@@ -47,10 +47,15 @@
 //#define ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP 1
 #define TAUDYNVEC 1
 
-
+#ifndef __ia64
 int TheFlag[TAU_MAX_THREADS] ;
 #define TAU_MONITOR_ENTER(tid) if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; } 
 #define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
+#else /* FOR IA64 */
+vector<int> TheFlag(TAU_MAX_THREADS); 
+#define TAU_MONITOR_ENTER(tid)  if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; } 
+#define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
+#endif /* IA64 */
 
 vector<string> TauFuncNameVec; /* holds just names */
 vector<FunctionInfo *> TauDynFI; /* global FI vector */
@@ -199,6 +204,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2001/06/20 20:31:51 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.13 2001/06/20 20:31:51 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 2001/10/30 00:42:12 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.14 2001/10/30 00:42:12 sameer Exp $ 
  ***************************************************************************/
