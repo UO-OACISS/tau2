@@ -52,8 +52,50 @@ if [ ! -r ${JDBC_JAR} ]; then
 	echo ""
 	echo "$JDBC_JAR not found."
 	echo ""
-	exit
-fi
 
+	echo "JDBC drivers are not distributed with TAU.  You should acquire the JDBC driver"
+	echo "that corresponds to the database you are connecting to.  TAU can now attempt "
+	echo "to download a JDBC driver that will *probably* work."  
+	echo ""
+
+
+	while [ -z $RESPONSE ]; do
+	    echo -n "Would you like to attempt to automatically download a JDBC driver? (y/n) "
+	    read RESPONSE
+	    case $RESPONSE in
+		[yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
+		[nN]|[Nn][Oo]) RESPONSE=n ;;
+	    esac
+	    
+	done
+
+
+	if [ ${RESPONSE} == "y" ]; then 
+	    JDBC_ROOT=`basename ${JDBC_JAR}`
+	    
+	    if [ ${JDBC_ROOT} == "mysql.jar" ]; then
+		wget http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-3.0.14-production.tar.gz/from/http://mysql.247available.com/
+		gunzip mysql-connector-java-3.0.14-production.tar.gz
+		tar -Oxf mysql-connector-java-3.0.14-production.tar mysql-connector-java-3.0.14-production/mysql-connector-java-3.0.14-production-bin.jar > ${JDBC_JAR}
+		rm mysql-connector-java-3.0.14-production.tar
+	    fi
+	    
+	    if [ ${JDBC_ROOT} == "postgresql.jar" ]; then
+		wget http://jdbc.postgresql.org/download/pg74.214.jdbc2.jar
+		mv pg74.214.jdbc2.jar ${JDBC_JAR}
+	    fi
+
+	    if [ ! -r ${JDBC_JAR} ]; then
+		echo ""
+		echo "Still couldn't find $JDBC_JAR, please acquire you JDBC driver manually"
+		echo ""
+		
+		exit
+	    fi
+
+	else
+	    exit
+	fi
+fi
 
 java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${JDBC_JAR} edu.uoregon.tau.dms.loader.ConfigureTest -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE} $@
