@@ -1,10 +1,10 @@
 /* 
-   ParaProfExperiment.java
+ ParaProfExperiment.java
 
-   Title:      ParaProf
-   Author:     Robert Bell
-   Description:  
-*/
+ Title:      ParaProf
+ Author:     Robert Bell
+ Description:  
+ */
 
 package edu.uoregon.tau.paraprof;
 
@@ -13,96 +13,111 @@ import javax.swing.tree.*;
 import edu.uoregon.tau.dms.dss.*;
 import edu.uoregon.tau.dms.database.*;
 
-public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUserObject{
+public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUserObject {
 
-    public ParaProfExperiment(){
-	super(0);
-	this.setID(-1);
-	this.setApplicationID(-1);
-	this.setName("");
+    public ParaProfExperiment() {
+        super(0);
+        this.setID(-1);
+        this.setApplicationID(-1);
+        this.setName("");
     }
 
-    public ParaProfExperiment(DB db){
-	super(db);
-	this.setID(-1);
-	this.setApplicationID(-1);
-	this.setName("");
+    public ParaProfExperiment(DB db) throws DatabaseException {
+        super(db);
+        this.setID(-1);
+        this.setApplicationID(-1);
+        this.setName("");
     }
 
-    public ParaProfExperiment(Experiment experiment){
-	super(experiment);
+    public ParaProfExperiment(Experiment experiment) {
+        super(experiment);
     }
 
-    public void setApplication(ParaProfApplication application){
-	this.application = application;}
-
-    public ParaProfApplication getApplication(){
-	return application;}
-  
-    public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode){
-	this.defaultMutableTreeNode = defaultMutableTreeNode;}
-  
-    public DefaultMutableTreeNode getDMTN(){
-	return defaultMutableTreeNode;}
-
-    public void setTreePath(TreePath treePath){
-	this.treePath = treePath;}
-
-    public TreePath getTreePath(){
-	return treePath;}
-  
-    public void setDBExperiment(boolean dBExperiment){
-	this.dBExperiment = dBExperiment;}
-  
-    public boolean dBExperiment(){
-	return dBExperiment;}
-
-    public Vector getTrials(){
-	return trials;}
-
-    public DssIterator getTrialList(){
-	return new DssIterator(trials);}
-
-    public ParaProfTrial getTrial(int trialID){
-	return (ParaProfTrial) trials.elementAt(trialID);}
-  
-    public void addTrial(ParaProfTrial trial){
-	trial.setExperiment(this);
-	trial.setID((trials.size()));
-	trials.add(trial);
+    public void setApplication(ParaProfApplication application) {
+        this.application = application;
     }
 
-    public void removeTrial(ParaProfTrial trial){
-	trials.remove(trial);}
-  
-    public boolean isTrialPresent(String name){
- 	for(Enumeration e = trials.elements(); e.hasMoreElements() ;){
-		ParaProfTrial trial = (ParaProfTrial) e.nextElement();
-		if(name.equals(trial.toString()))
-		    return true;
-	}
-    	return false;
+    public ParaProfApplication getApplication() {
+        return application;
     }
 
-    public String getIDString(){
-	if(application!=null)
-	    return (application.getIDString()) + ":" + (super.getID());
-	else
-	    return  ":" + (super.getID());
+    public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode) {
+        this.defaultMutableTreeNode = defaultMutableTreeNode;
     }
-  
-    public String toString(){ 
-	return super.getName();}
+
+    public DefaultMutableTreeNode getDMTN() {
+        return defaultMutableTreeNode;
+    }
+
+    public void setTreePath(TreePath treePath) {
+        this.treePath = treePath;
+    }
+
+    public TreePath getTreePath() {
+        return treePath;
+    }
+
+    public void setDBExperiment(boolean dBExperiment) {
+        this.dBExperiment = dBExperiment;
+    }
+
+    public boolean dBExperiment() {
+        return dBExperiment;
+    }
+
+    public Vector getTrials() {
+        return trials;
+    }
+
+    public DssIterator getTrialList() {
+        return new DssIterator(trials);
+    }
+
+    public ParaProfTrial getTrial(int trialID) {
+        return (ParaProfTrial) trials.elementAt(trialID);
+    }
+
+    public void addTrial(ParaProfTrial trial) {
+        trial.setExperiment(this);
+        trial.setID((trials.size()));
+        trials.add(trial);
+    }
+
+    public void removeTrial(ParaProfTrial trial) {
+        trials.remove(trial);
+    }
+
+    public boolean isTrialPresent(String name) {
+        for (Enumeration e = trials.elements(); e.hasMoreElements();) {
+            ParaProfTrial trial = (ParaProfTrial) e.nextElement();
+            if (name.equals(trial.toString()))
+                return true;
+        }
+        return false;
+    }
+
+    public String getIDString() {
+        if (application != null)
+            return (application.getIDString()) + ":" + (super.getID());
+        else
+            return ":" + (super.getID());
+    }
+
+    public String toString() {
+        return super.getName();
+    }
 
     //####################################
     //Interface code.
     //####################################
-    
+
     //######
     //ParaProfTreeUserObject
     //######
-    public void clearDefaultMutableTreeNodes(){
-	this.setDMTN(null);}
+    public void clearDefaultMutableTreeNodes() {
+        this.setDMTN(null);
+    }
+
     //######
     //End - ParaProfTreeUserObject
     //######
@@ -110,7 +125,7 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
     //####################################
     //End - Interface code.
     //####################################
-    
+
     //####################################
     //Instance data.
     //####################################
