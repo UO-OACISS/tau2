@@ -50,7 +50,8 @@ Then convert to Vampir trace format
 Download and install Vampir (free evaluation license typically lasts for a 
 month) from http://www.pallas.de.
 % vampir Pi.pv 
-Then assign colors to the groups by (Preferences -> Colors -> Activities).
+Then assign colors to the groups by choosing the menu option 
+Preferences -> Colors -> Activities.
 See TAU user's Guide for further details on using racy and Vampir. 
 
 For any comments/suggestions/questions on TAU, please send mail to 
