@@ -16,7 +16,7 @@ BASE_SOURCES=ApplicationManager.java GlobalMappingElement.java PPMLPanel.java PP
              DBConfiguration.java Metric.java ParaProfIterator.java SavedPreferences.java UserEventWindowPanel.java \
              DynaprofOutputSession.java NCT.java ParaProfManager.java StatWindow.java UtilFncs.java \
              Node.java ParaProfManagerTableModel.java StatWindowPanel.java \
-             GlobalMapping.java PPML.java ParaProfObserver.java StaticMainWindow.java
+             GlobalMapping.java PPML.java ParaProfObserver.java StaticMainWindow.java ParaProfTreeNodeUserObject.java
 
 NEW_SOURCES=$(BASE_SOURCES) FileList.java ParaProfImageOutput.java
 
