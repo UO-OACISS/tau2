@@ -36,11 +36,14 @@ all : 		$(TARGET)
 
 install:	$(INSTALLDEST)/$(TARGET) 
 
-$(TARGET) : 	TauMpi.o
-	$(AR) $(ARFLAGS) $(TARGET) TauMpi.o
+$(TARGET) : 	TauMpi.o $(FWRAPPER)
+	$(AR) $(ARFLAGS) $(TARGET) TauMpi.o $(FWRAPPER)
 
 TauMpi.o :	TauMpi.c
 	$(CC) $(CFLAGS) -c TauMpi.c
+
+TauFMpi.o: 	TauFMpi.c
+	$(CC) $(CFLAGS) -c TauFMpi.c
 
 $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
