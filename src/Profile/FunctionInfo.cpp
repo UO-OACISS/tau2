@@ -139,6 +139,9 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
 {
+
+      DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << MyProfileGroup_ 
+        << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
@@ -215,6 +218,6 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 1998/08/10 16:48:49 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.6 1998/08/10 16:48:49 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 1998/09/17 15:26:00 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.7 1998/09/17 15:26:00 sameer Exp $ 
  ***************************************************************************/

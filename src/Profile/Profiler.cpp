@@ -99,6 +99,8 @@ void Profiler::Start(void)
 { 
   int tid;
      
+      DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
+        << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
   	tid = RtsLayer::myThread();
 	
@@ -154,6 +156,8 @@ Profiler::Profiler( FunctionInfo * function, unsigned int ProfileGroup, bool Sta
       MyProfileGroup_ = ProfileGroup ;
       ThisFunction = function ; 
       ParentProfiler = CurrentProfiler[RtsLayer::myThread()]; // Timers
+      DEBUGPROFMSG("Profiler::Profiler: MyProfileGroup_ = " << MyProfileGroup_ 
+        << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       
       if(!StartStopUsed_) { // Profiler ctor/dtor interface used
 	Start(); 
@@ -204,6 +208,8 @@ Profiler& Profiler::operator= (const Profiler& X)
 void Profiler::Stop(void)
 {
   int tid; 
+      DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
+        << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
 
  	tid = RtsLayer::myThread();
@@ -650,8 +656,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 1998/08/27 19:26:14 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.15 1998/08/27 19:26:14 sameer Exp $ 
+ * $Revision: 1.16 $   $Date: 1998/09/17 15:26:00 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.16 1998/09/17 15:26:00 sameer Exp $ 
  ***************************************************************************/
 
 	

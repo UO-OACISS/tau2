@@ -38,7 +38,7 @@ extern "C" void * tau_get_profiler(char *fname, char *type, unsigned int group)
   FunctionInfo *f;
   Profiler *p;
 
-  DEBUGPROFMSG("Inside get_profiler" <<endl;);
+  DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
 
 
   f = new FunctionInfo(fname, type, group);
@@ -104,7 +104,7 @@ extern "C" void tau_register_thread(void)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/08/09 22:09:30 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.1 1998/08/09 22:09:30 sameer Exp $
+ * $Revision: 1.2 $   $Date: 1998/09/17 15:25:59 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.2 1998/09/17 15:25:59 sameer Exp $
  ***************************************************************************/
 
