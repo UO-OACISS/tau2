@@ -34,7 +34,7 @@ public class PerfDBSession extends DataSession {
     }
 
 	// returns Vector of Application objects
-	public Vector getAppList() {
+	public ListIterator getAppList() {
 		Vector apps = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
@@ -58,11 +58,11 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 		
-		return apps;
+		return new DataSessionIterator(apps);
 	}
 
 	// returns Vector of Experiment objects
-	public Vector getExpList() {
+	public ListIterator getExpList() {
 		Vector exps = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
@@ -86,11 +86,11 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 		
-		return exps;
+		return new DataSessionIterator(exps);
 	}
 
 	// returns Vector of Trial objects
-	public Vector getTrialList() {
+	public ListIterator getTrialList() {
 		Vector trials = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
@@ -130,7 +130,7 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 		
-		return trials;
+		return new DataSessionIterator(trials);
 	}
 
 	// set the Application for this session
@@ -404,7 +404,7 @@ public class PerfDBSession extends DataSession {
 	}
 
 	// returns a Vector of Functions
-	public Vector getFunctions() {
+	public ListIterator getFunctions() {
 		Vector funs = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
@@ -483,11 +483,11 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 		
-		return funs;
+		return new DataSessionIterator(funs);
 	}
 
-	public Vector getUserEvents() {
-		return new Vector();
+	public ListIterator getUserEvents() {
+		return new DataSessionIterator(new Vector());
 	}
 
 	public Function setFunction(int id) {
@@ -665,7 +665,7 @@ public class PerfDBSession extends DataSession {
 			resultSet.close(); 
 		}catch (Exception ex) {
 	    	ex.printStackTrace();
-	    	return;
+	    	return null;
 		}
 
 		// print the data
@@ -677,10 +677,11 @@ public class PerfDBSession extends DataSession {
 			System.out.println ("Function Data = " + function.getInclusivePercentage() + ", " + function.getInclusive() + ", " + function.getExclusivePercentage() + ", " + function.getExclusive() + ", " + function.getNumCalls() + ", " + function.getNumSubroutines() + ", " + function.getInclusivePerCall());
 		}
 
-		//Added by Robert.  Looks like the correct place to add it. :-)
-		return DataSessionIterator(functionData);
-
 		*/
+		
+		//Added by Robert.  Looks like the correct place to add it. :-)
+		return new DataSessionIterator(functionData);
+
 	}
 	
 	public ListIterator getUserEventData() {

@@ -24,21 +24,21 @@ public abstract class DataSession {
 	abstract public void close() ;
 
 	// returns Vector of Application objects
-	abstract public Vector getAppList() ;
+	abstract public ListIterator getAppList() ;
 
 	// returns Vector of Experiment objects
-	abstract public Vector getExpList() ;
+	abstract public ListIterator getExpList() ;
 
 	// returns Vector of Trial objects
-	abstract public Vector getTrialList() ;
+	abstract public ListIterator getTrialList() ;
 
 	// set the Application for this session
 	public void setApplication(Application application) {
 		this.application = application;
 	}
 
-	// are these necessary? 
 	abstract public Application setApplication(int id) ;
+
 	abstract public Application setApplication(String name) ;
 
 	// set the Experiment for this session
@@ -100,8 +100,8 @@ public abstract class DataSession {
 	}
 
 	// returns a Vector of Functions
-	abstract public Vector getFunctions() ;
-	abstract public Vector getUserEvents() ;
+	abstract public ListIterator getFunctions() ;
+	abstract public ListIterator getUserEvents() ;
 
 	abstract public Function setFunction(int id) ;
 
