@@ -181,6 +181,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	//We are only ever watching an instance of ParaProfTrial.
 	ParaProfTrial trial = (ParaProfTrial) obj;
 	trial.showMainWindow();
+	//	ParaProf.paraProfManager.show();
     }
     public void update(){}
     //######

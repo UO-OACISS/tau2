@@ -244,15 +244,15 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 		if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorID()))
 		    as.addAttribute(TextAttribute.FOREGROUND, 
 				    (trial.getColorChooser().getHighlightColor()),
-				    GlobalThreadDataElement.getPositionOfName(), tmpString.length());
+				    GlobalThreadDataElement.getPositionOfUserEventName(), tmpString.length());
 		else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGroupHighlightColorID())))
 		    as.addAttribute(TextAttribute.FOREGROUND, 
 				    (trial.getColorChooser().getGroupHighlightColor()),
-				    GlobalThreadDataElement.getPositionOfName(), tmpString.length());
+				    GlobalThreadDataElement.getPositionOfUserEventName(), tmpString.length());
 		else
 		    as.addAttribute(TextAttribute.FOREGROUND, 
 				    (sMWThreadDataElement.getColor()),
-				    GlobalThreadDataElement.getPositionOfName(), tmpString.length());
+				    GlobalThreadDataElement.getPositionOfUserEventName(), tmpString.length());
 		
 		g2D.drawString(as.getIterator(), 20, yCoord);
 		

@@ -396,10 +396,9 @@ public class GlobalThreadDataElement{
 	    String firstPart = new String(statStringArray);
 	    return firstPart + this.getUserEventName();
 	}
-	catch(Exception e)
-	    {
-		UtilFncs.systemError(e, null, "GTDE01");
-	    }
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "GTDE01");
+	}
     
 	return "An error occured pocessing this string!";
     }
