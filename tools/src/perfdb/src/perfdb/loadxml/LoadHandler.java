@@ -809,7 +809,7 @@ public class LoadHandler extends DefaultHandler {
 	       
 	    funTempFile.delete();   
 	    interLocTempFile.delete();
-	    // ueTempFile.delete();
+	    ueTempFile.delete();
 	    atomicLocTempFile.delete();
 	    totalTempFile.delete();
 	    meanTempFile.delete();
