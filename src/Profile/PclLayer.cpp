@@ -18,6 +18,23 @@
 
 #include <pthread.h>
 
+
+//Helper function used to determine the counter value
+//from the event name.
+int map_eventnames(char *name)
+{
+  int i;
+
+  /* search all names */
+  for (i = 0; i < PCL_MAX_EVENT; ++i)
+    if (!strcmp(name, PCLeventname(i)))
+      return i;
+
+  /* not found */
+  return -1;
+}
+
+
 PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 {
   static ThreadValue * ThreadList[TAU_MAX_THREADS];
@@ -51,12 +68,19 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 	ThreadList[i] = NULL;
 
       char * EnvironmentVariable = NULL;
-      EnvironmentVariable = getenv("PCL_Counter");
+      EnvironmentVariable = getenv("PCL_EVENT");
       if(EnvironmentVariable != NULL)
-	PCL_CounterList[0] = atoi(EnvironmentVariable);
-      else
 	{
-	  cout << "Error - You must define the PCL_Counter environment variable." << endl;
+	  PCL_CounterList[0] = map_eventnames(EnvironmentVariable); 
+	  if(PCL_CounterList[0] == -1)
+	    {
+	      cout << "Unable to determine event type" << endl;
+	      return -1;
+	    }
+	}
+	else
+	{
+	  cout << "Error - You must define the PCL_EVENT environment variable." << endl;
 	  if((pthread_mutex_unlock(&lock) != 0))
 	     {
 	       cout << "There was a problem locking or unlocking a resource" << endl;
@@ -214,12 +238,19 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 	ThreadList[i] = NULL;
 
       char * EnvironmentVariable = NULL;
-      EnvironmentVariable = getenv("PCL_Counter");
+      EnvironmentVariable = getenv("PCL_EVENT");
       if(EnvironmentVariable != NULL)
-	PCL_CounterList[0] = atoi(EnvironmentVariable);
+	{
+	  PCL_CounterList[0] = map_eventnames(EnvironmentVariable); 
+	  if(PCL_CounterList[0] == -1)
+	    {
+	      cout << "Unable to determine event type" << endl;
+	      return -1;
+	    }
+	}
       else
 	{
-	  cout << "Error - You must define the PCL_Counter environment variable." << endl;
+	  cout << "Error - You must define the PCL_EVENT environment variable." << endl;
 	  return -1;
 	}
 
