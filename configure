@@ -3906,17 +3906,17 @@ then
 fi
 
 
-
-for i in $exampleslist
+# Modify the Makefiles only if prefix is not specified. 
+if [ $tauprefix = unknown ]
+then 
+  for i in $exampleslist
   do 
     $echo ".${nnl}"
     sed -f $sedex < $pr/${i} > $pr/${i}~~0
     mv $pr/${i}~~0 $pr/${i}
-done
-if [ ${tauprefix} = unknown ]
-then
+  done
 # Copy over the Makefile so make clean works
- cp include/Makefile $machine/lib/Makefile.tau$tauoptions
+  cp include/Makefile $machine/lib/Makefile.tau$tauoptions
 fi
 echo .
 
