@@ -25,6 +25,7 @@ public class ParaProfLispPrimitives{
     public static DataSessionIterator getPrimitiveList(Jatha lisp, boolean debug){
 	Vector primatives = new Vector();
 	primatives.add(new showThreadDataWindow(lisp, debug));
+	primatives.add(new GetExclusiveValues(lisp, debug));
 
 	return new DataSessionIterator(primatives);
     }
@@ -110,5 +111,77 @@ class showThreadDataWindow extends LispPrimitive{
     //####################################
 
 }
+ 
+class GetExclusiveValues extends LispPrimitive{
+    public GetExclusiveValues(Jatha lisp, boolean debug){
+	super(lisp, "GETEXCLUSIVEVALUES", 4);
+	this.lisp = lisp;
+    }
+
+    public void Execute(SECDMachine machine){
+	LispValue arg4 = machine.S.pop();
+	LispValue arg3 = machine.S.pop();
+	LispValue arg2 = machine.S.pop();
+	LispValue arg1 = machine.S.pop();
+
+	machine.S.push(result(arg1, arg2, arg3, arg4));
+	machine.C.pop();
+    }
+
+    LispValue result(LispValue arg1, LispValue arg2, LispValue arg3, LispValue arg4){
+	System.out.println("Applying getTrial. Args: " + arg1 + "," + arg2 + "," + arg3 + "," + arg4);
+	Vector v = new Vector();
+	
+	try{
+	    //Get the exclusive values for the given metric.  Put the result in a list, and pass it back.
+	    ParaProfTrial trial = ParaProf.applicationManager.getTrial(Integer.parseInt(arg1.toString()),
+								       Integer.parseInt(arg2.toString()),
+								       Integer.parseInt(arg3.toString()));
+	    
+	    int metric = Integer.parseInt(arg4.toString());
+	    if(trial!=null){
+		DataSession dataSession = trial.getDataSession();
+		for(Enumeration e1 = dataSession.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
+		    Node node = (Node) e1.nextElement();
+		    for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+			Context context = (Context) e2.nextElement();
+			for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
+			    edu.uoregon.tau.dms.dss.Thread thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
+			    ListIterator l = thread.getFunctionListIterator();
+			    while(l.hasNext()){
+				GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
+				if(globalThreadDataElement!=null){
+				    v.add(lisp.makeReal(globalThreadDataElement.getExclusiveValue(metric)));
+				    System.out.println(globalThreadDataElement.getMappingName()+": "+globalThreadDataElement.getExclusiveValue(metric));
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+	catch(Exception e){
+	    System.out.println("An exception was caught in: GetTrial(...)");
+	    e.printStackTrace();
+	}
+	return lisp.makeList(v);
+    }
+
+    public void setDebug(boolean debug){
+	this.debug = debug;}
     
+    public boolean debug(){
+	return debug;}
+
+    //####################################
+    //Instance data.
+    //####################################
+    Jatha lisp = null;
+
+    private boolean debug = false; //Off by default.
+    //####################################
+    //End - Instance data.
+    //####################################
+
+}   
     

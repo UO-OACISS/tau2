@@ -147,6 +147,34 @@ public class ParaProf implements ParaProfObserver, ActionListener{
             //Register lisp primatives in ParaProfLisp.
 	    ParaProf.paraProfLisp.registerParaProfPrimitives();
 
+	    //See if the user has defined any lisp code to run.
+	    try{
+		FileInputStream file = new FileInputStream("ParaProfLisp.lp");
+		//If here, means that no exception was thrown, and there is a lisp file present.
+		InputStreamReader isr = new InputStreamReader(file);
+		BufferedReader br = new BufferedReader(isr);
+		
+		String inputString = null;
+		
+		while((inputString = br.readLine()) != null){
+		    System.out.println("Expression: " + inputString);
+		    System.out.println(ParaProf.paraProfLisp.eval(inputString));
+		}
+		
+	    }
+	    catch(Exception e){
+		if(e instanceof FileNotFoundException){
+		    System.out.println("No ParaProfLisp.lp file present!");
+		}
+		else{
+		    //Print some kind of error message, and quit the system.
+		    System.out.println("There was an internal error whilst trying to read the ParaProfLisp.pl");
+		    System.out.println("Please delete this file, or replace it with a valid one!");
+		}
+	    }
+
+
+
 	    //######
 	    //Static Initialization
 	    //######
