@@ -73,7 +73,7 @@ MAKEFILE      = Makefile
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O) \
-		$(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) $(MULT_O)
+		$(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) $(MULT_O) $(PLATFORM_O)
 
 PRINT	      = pr
 
@@ -275,6 +275,9 @@ OpenMPLayer.o 	: OpenMPLayer.cpp $(HDRS)
 
 TauOpari.o 	: TauOpari.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauLinuxTimers.o : TauLinuxTimers.c $(HDRS)
+	gcc -c $(@:.o=.c)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
