@@ -69,12 +69,14 @@ if [ -f ~/.ParaProf/ParaProfPreferences.dat ] ; then
 fi
 
 # get the jdbc jar file from the configuration file
-JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} | sed s/jdbc_db_jarfile://`
+JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} 2>/dev/null | sed s/jdbc_db_jarfile://`
 
-if [ ! -r ${JDBC_JAR} ]; then
-    echo ""
-    echo "$JDBC_JAR not found."
-    echo ""
+if [ ! -z ${JDBC_JAR} ]; then
+    if [ ! -r ${JDBC_JAR} ]; then
+        echo ""
+        echo "Warning: JDBC driver '$JDBC_JAR' not found."
+        echo ""
+    fi
 fi
 
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 500m (500MB).
