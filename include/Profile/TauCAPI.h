@@ -51,17 +51,30 @@
 #define TAU_PROFILE_SET_NODE(node) 		tau_set_node(node);
 #define TAU_PROFILE_SET_CONTEXT(context)	tau_set_context(context);
 #define TAU_PROFILE_CALLSTACK()			tau_callstack();
-#define TAU_REGISTER_EVENT(event, name)		
-
-/* USER EVENTS ARE NOT CURRENTLY SUPPORTED IN C */
-#define TAU_EVENT(event, data)
-#define TAU_EVENT_DISABLE_MIN(event)
-#define TAU_EVENT_DISABLE_MAX(event)
-#define TAU_EVENT_DISABLE_MEAN(event)
-#define TAU_EVENT_DISABLE_STDDEV(event)
+/*
+#define TAU_REGISTER_EVENT(event, name)	static int tauuser##event = 1;\
+				        static void *event; \ 
+					if (tauuser##event == 1) { \ 
+					  event = tau_get_userevent(name); \
+					  tauuser##event = 0; }
+*/
+#define TAU_REGISTER_EVENT(event, name)	static int taufirst##event = 1;\
+                                 static void *event; \
+                                 if (taufirst##event == 1) { \
+                                   event = tau_get_userevent(name); \
+                                   taufirst##event = 0; }
+				
+#define TAU_EVENT(event, data)			tau_userevent(event, data);
+#define TAU_REPORT_STATISTICS()		tau_report_statistics();
+#define TAU_REPORT_THREAD_STATISTICS()  tau_report_thread_statistics();
+#define TAU_EVENT_DISABLE_MIN(event) 	tau_event_disable_min(event);
+#define TAU_EVENT_DISABLE_MAX(event)	tau_event_disable_max(event);
+#define TAU_EVENT_DISABLE_MEAN(event)	tau_event_disable_mean(event);
+#define TAU_EVENT_DISABLE_STDDEV(event) tau_event_disable_stddev(event);
 #define TAU_STORE_ALL_EVENTS
 #define TYPE_STRING(profileString, str)
 #define PROFILED_BLOCK(name, type)
+/* C doesn't support runtime type information */
 #define CT(obj)
 
 #define TAU_REGISTER_THREAD()			tau_register_thread();	
@@ -75,6 +88,15 @@ extern void tau_set_node(int node);
 extern void tau_set_context(int context);
 extern void tau_callstack(void);
 extern void tau_register_thread();
+extern void * tau_get_userevent(char *name);
+extern void tau_userevent(void *event, double data);
+extern void tau_report_statistics(void);
+extern void tau_report_thread_statistics(void);
+extern void tau_event_disable_min(void *event);
+extern void tau_event_disable_max(void *event);
+extern void tau_event_disable_mean(void *event);
+extern void tau_event_disable_stddev(void *event);
+
 
 #else /* PROFILING_ON */
 /* In the absence of profiling, define the functions as null */
@@ -95,6 +117,8 @@ extern void tau_register_thread();
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
+#define TAU_REPORT_STATISTICS()
+#define TAU_REPORT_THREAD_STATISTICS()
 #define TAU_EVENT_DISABLE_MIN(event)
 #define TAU_EVENT_DISABLE_MAX(event)
 #define TAU_EVENT_DISABLE_MEAN(event)
@@ -111,7 +135,7 @@ extern void tau_register_thread();
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/08/09 22:11:52 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.1 1998/08/09 22:11:52 sameer Exp $
+ * $Revision: 1.2 $   $Date: 1999/04/06 22:52:50 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.2 1999/04/06 22:52:50 sameer Exp $
  ***************************************************************************/
 
