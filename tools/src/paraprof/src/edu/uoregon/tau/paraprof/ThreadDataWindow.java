@@ -312,6 +312,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
         //######
         panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this);
         sp = new JScrollPane(panel);
+        JScrollBar vScollBar = sp.getVerticalScrollBar();
+        vScollBar.setUnitIncrement(35);
+
         this.setHeader();
         //######
         //End - Panel and ScrollPane definition.

@@ -340,7 +340,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
             }
         }
         //Resize the panel if needed.
-        if ((newYPanelSize >= yPanelSize) || (tmpXWidthCalc >= xPanelSize)) {
+        if ((newYPanelSize != yPanelSize) || (tmpXWidthCalc >= xPanelSize)) {
             yPanelSize = newYPanelSize + 1;
             xPanelSize = tmpXWidthCalc + 1;
             revalidate();

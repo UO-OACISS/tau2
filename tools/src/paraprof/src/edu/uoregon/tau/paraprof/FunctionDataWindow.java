@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.8 2005/01/10 20:12:26 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.9 2005/01/14 17:37:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -249,6 +249,9 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         //Panel and ScrollPane definition.
         panel = new FunctionDataWindowPanel(trial, function, this);
         sp = new JScrollPane(panel);
+        JScrollBar vScollBar = sp.getVerticalScrollBar();
+        vScollBar.setUnitIncrement(35);
+
         this.setHeader();
 
         //Slider setup.

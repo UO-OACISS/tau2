@@ -295,6 +295,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         //######
         panel = new StatWindowPanel(trial, nodeID, contextID, threadID, this, userEventWindow);
         sp = new JScrollPane(panel);
+        
+        JScrollBar jScrollBar = sp.getVerticalScrollBar();
+        jScrollBar.setUnitIncrement(35);
+
         this.setHeader();
         //######
         //End - Panel and ScrollPane definition.

@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.7 2005/01/07 19:56:44 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.8 2005/01/14 17:37:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -157,6 +157,9 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
         //Panel and ScrollPane definition.
         panel = new LedgerWindowPanel(trial, this, windowType);
         sp = new JScrollPane(panel);
+        JScrollBar vScollBar = sp.getVerticalScrollBar();
+        vScollBar.setUnitIncrement(35);
+
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
