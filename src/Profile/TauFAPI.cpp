@@ -296,10 +296,101 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 }
 #endif /* CRAYKAI */
 
+#if (defined (TAU_XLC) || defined(TAU_AIX))
+void tau_profile_timer(int **profiler, char *fname)
+{
+  if (*profiler == 0)
+  {
+    // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(fname[i]))
+      {
+        fname[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("tau_get_profiler() \n");
+#endif /* DEBUG_PROF */
+    *profiler = (int *) tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
+  }
+}
+
+void tau_profile_start(int **profiler)
+{
+  tau_start_timer((void *)*profiler);
+}
+
+void tau_profile_stop(int **profiler)
+{
+  tau_stop_timer((void *)*profiler);
+}
+
+void tau_profile_init()
+{
+  
+}
+
+void tau_profile_set_node(int *node)
+{
+  tau_set_node(*node);
+}
+
+void tau_profile_exit(char *msg)
+{
+  tau_exit(msg);
+}
+
+void tau_profile_set_context(int *context)
+{
+  tau_set_context(*context);
+}
+
+void tau_trace_sendmessage(int *type, int *destination, int *length)
+/* FOR IBM use TAU_TRACE_SENDMESSAGE instead of TAU_TRACE_SENDMSG in Fortran*/
+{ 
+  tau_trace_sendmsg(*type, *destination, *length);
+}
+
+void tau_trace_recvmessage(int *type, int *source, int *length)
+/* FOR IBM use TAU_TRACE_RECVMESSAGE instead of TAU_TRACE_RECVMSG in Fortran*/
+{
+  tau_trace_recvmsg(*type, *source, *length);
+}
+
+void tau_register_event(int **ptr, char *event_name, int *flen)
+{
+
+  if (*ptr == 0)
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(event_name[i]))
+      {
+        event_name[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("tau_get_userevent() \n");
+#endif /* DEBUG_PROF */
+    *ptr = (int *)tau_get_userevent(event_name);
+  }
+  return;
+
+}
+
+void tau_event(int **ptr, double *data)
+{
+  tau_userevent((void *)*ptr, *data);
+}
+
+#endif /* TAU_XLC || TAU_AIX */
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 1999/09/14 23:42:11 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.9 1999/09/14 23:42:11 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 2000/06/02 22:58:28 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.10 2000/06/02 22:58:28 sameer Exp $ 
  ***************************************************************************/
