@@ -899,7 +899,7 @@ void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, do
   int i;
   for (i = 1; i < numberOfActiveFunctions; i++)
   { /* for each event */
-    TraceEvent(counterEvents[i]->GetEventId(), values[i], tid, timestamp, 1);
+    TraceEvent(counterEvents[i]->GetEventId(), (long long) values[i], tid, timestamp, 1);
     // 1 in the last parameter is for use timestamp 
   }
 
