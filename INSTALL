@@ -9,7 +9,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure	   *
- *                           Version 2.5                           *
+ *                           Version 2.6                           *
  *                        Developer Release 1                      *
  *                                                                 *
  *******************************************************************
@@ -30,27 +30,27 @@ FOR POOMA/SMARTS Users:
 
 1. Configure TAU
 ****************
-% cd /usr/local/packages/tau-2.5
+% cd /usr/local/packages/tau-2.6
 [FOR SGI]
-% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS
+% ./configure -arch=sgi64 -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -SGITIMERS -pdt=/usr/local/packages/pdt-1.0
 [FOR LINUX PCs]
-% ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts
+% ./configure -arch=linux -c++=KCC -tulipthread=/usr/local/packages/smarts-1.0 -smarts -pdt=/usr/local/packages/pdt-1.0
 % make install
 
 2. Configure SMARTS
 *******************
 % cd /usr/local/packages/smarts-1.0
 [FOR SGI]
-% configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.5 --enable-64bit --enable-profile
+% configure --with-arch=iris4d --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.6 --enable-64bit --enable-profile
 [FOR LINUX PCs]
-% configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.5 --enable-profile
+% configure --with-arch=i386-linux --prefix /usr/local/packages/smarts-1.0 --with-taudir=/usr/local/packages/tau-2.6 --enable-profile
 % make
 % make install
 
 3. Configure Pooma II 
 *********************
-% setenv TAUDIR     /usr/local/packages/tau-2.5
-% setenv DUCTAPEDIR /usr/local/packages/tau-2.5/ductape
+% setenv TAUDIR     /usr/local/packages/tau-2.6
+% setenv PDTDIR	    /usr/local/packages/pdt-1.0
 % setenv SMARTSDIR  /usr/local/packages/smarts-1.0
 [FOR SGI]
 % ./configure --arch SGI64KCC --suite PP --parallel --profile --opt
@@ -71,8 +71,9 @@ TAU System Requirements :
 -------------------------
 I) The Profiling Library needs a recent C++ compiler. Recommended :
 	a) Kuck and Associates' (http://www.kai.com) KCC compiler
-	b) SGI (http://www.sgi.com) MipsPro 7.1 or 7.2 CC compiler
+	b) SGI (http://www.sgi.com) MipsPro 7.2+ CC compiler
 	c) PGI (http://www.pgroup.com) 3.0 pgCC compiler
+	d) GNU (http://www.gnu.org) gcc-2.8.1 g++ compiler
 
 II) Platforms :
    TAU has been tested on 
@@ -85,7 +86,8 @@ II) Platforms :
 	c) Sun Solaris2. Tested with g++ (./configure -useropt=-fguiding-decls)
 	d) HP PA-RISC. Tested with g++. 
 	e) Cray T3E. Tested with Cray C++ compiler, and KAI KCC.
-	f) DEC Alpha. Tested with g++.
+	f) Compaq Tru64 Alpha. Tested with g++.
+        g) Compaq Alpha Linux clusters. Tested with g++.
    Other platforms will be supported and it may work with other systems
    with minor modifications.
 	
@@ -93,7 +95,7 @@ II) Platforms :
 III) Software Requirements :
    a) Tcl/Tk
    TAU's GUI racy needs Tcl 7.4/Tk 4.0 or better. The default is 8.0. 
-   Tcl/Tk can be downloaded from http://www.sunlabs.com 
+   Tcl/Tk can be downloaded from http://www.scriptics.com 
    
    b) xauth
    The display needs to be secure. xhost+ should not be used. Xauth style
@@ -119,22 +121,26 @@ To compile this package:
    TAU can be configured as follows:
 
 % ./configure -help 
+TAU Configuration Utility 
+***********************************************************************
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
--prefix=<directory> ............. specifies the installation directory.
--arch=<arch> ....... specifies the target machine arch (sgin32, sgi64). 
 -c++=<compiler>  ............................ specify the C++ compiler.
 -cc=<compiler> ................................ specify the C compiler.
 -useropt='<parameters>' ............... list of commandline parameters.
 -pthread .................................. Use pthread thread package.
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
 -smarts .................. Use SMARTS API for threads (use with above).
+-pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
+-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILESTATS .................. Enable standard deviation calculation.
 -PROFILECOUNTERS .... Use Hardware Performance Counters (default time).
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
+-noex .................. Use no exceptions while compiling the library.
 -help ...................................... display this help message.
+***********************************************************************
 
    If <prefix> is not specified, configure installs the package in the 
    current directory (TAUROOT). If arch is not specified, it detects it.
@@ -235,8 +241,7 @@ Usage: configure [OPTIONS]
 
 8. Using TAU with POOMA
    Set the environment variable TAUDIR to point to the directory where TAU is
-   installed. Also, set the variable DUCTAPEDIR to point to the ductape 
-   subdirectory in TAU. 
+   installed.
 
 
 
