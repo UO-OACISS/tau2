@@ -383,7 +383,11 @@ int main(int argc, char **argv){
   // getting an assertion failure under Linux otherwise 
   // bpatch->setDebugParsing(false); 
   // removed for DyninstAPI 4.0
+#ifdef TAU_DYNINST41PLUS
   appThread = bpatch->createProcess(argv[1], (const char **)&argv[1] , NULL);
+#else
+  appThread = bpatch->createProcess(argv[1], &argv[1] , NULL);
+#endif /* TAU_DYNINST41PLUS */
   dprintf("After createProcess\n");
 
   if (!appThread){ 
