@@ -63,14 +63,14 @@ public class UtilFncs{
     //2 - seconds
     //3 - hr:min:sec
     //At present, the passed in double value is assumed to be in microseconds.
-    public static String getOutputString(int type, double d){
+    public static String getOutputString(int type, double d, int precision){
 	switch(type){
 	case 0:
-	    return (Double.toString(UtilFncs.adjustDoublePresision(d, ParaProf.defaultNumberPrecision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision(d, precision)));
 	case 1:
-	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000), ParaProf.defaultNumberPrecision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000), precision)));
 	case 2:
-	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
+	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000000), precision)));
 	case 3:
 	    int hr = 0;
 	    int min = 0;
@@ -80,7 +80,7 @@ public class UtilFncs{
 	    min = (int) (d/60000000.00);
 	    //Calculate the number of microseconds left after minutess are subtracted.
 	    d = d-min*60000000.00;
-	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
+	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), precision)));
 	default:
 	    UtilFncs.systemError(null, null, "Unexpected string type - UF02 value: " + type);
 	}
@@ -402,15 +402,10 @@ public class UtilFncs{
 		UtilFncs.systemError(new ParaProfError("UF05","File Selection Error!",
 						       "Internal error: Unexpected file type - value: " + type, null,
 						       component, true), null, null);
-	    
-	    //Now we are sure that the type is at least valid, reset typeError
-	    //to something which indicates a type/selection mismatch.
-	    paraProfError.s0 = "File type/selction error - file selection does not match type: " + type;
-	    paraProfError.quit = false;
 
-	    JFileChooser jFileChooser = new JFileChooser(System.getPropertie("user.dir"));
+	    JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
 	    if((jFileChooser.showOpenDialog(component)) == JFileChooser.APPROVE_OPTION){
-		File files = jFileChooser.getSelectedFiles();
+		files = jFileChooser.getSelectedFiles();
 		if(files != null){
 		    //Validate the selection.
 		    if(files.length == 0){
@@ -436,12 +431,12 @@ public class UtilFncs{
 			    //First try to find a pprof.dat file or profile.*.*.* files in this directory.
 			    switch(type){
 			    case 0:
-				files = UtilFuncs.getMetricFileListHelper(files[0]);
+				files = UtilFncs.fileListHelper(files[0], type);
 				if(files!=null)
 				    result.add(files);
 				break;
 			    case 1:
-				files = files.listFiles();
+				files = files[0].listFiles();
 				Vector v = new Vector();
 				for(int i = 0;i<files.length;i++){
 				    if(files[i] != null){
@@ -453,7 +448,7 @@ public class UtilFncs{
 				if(length!=0){
 				    for(int i=0;i<length;i++){
 					file = (File)(v.elementAt(i));
-					files = UtilFuncs.getMetricFileListHelper(file);
+					files = UtilFncs.fileListHelper(file, type);
 					if(files!=null)
 					    result.add(files);
 				    }
@@ -520,7 +515,7 @@ public class UtilFncs{
     //This function helps the getFileList function above. It looks in the given directory
     //for a pprof.dat file, or for a list of profile.*.*.* files (in that order).
     //If nothing is found, it returns null.
-    public static File[] getFileListHelper(File directory, int type){
+    public static File[] fileListHelper(File directory, int type){
 	if(directory.isDirectory()){
 	    File[] files = new File[0];
 	    File  file = null;
@@ -562,13 +557,13 @@ public class UtilFncs{
 	return null;
     }
 
-    public static void systemError(Object obj, Component component, String string, boolean){ 
+    public static void systemError(Object obj, Component component, String string, boolean debug){ 
 	System.out.println("####################################");
 	boolean quit = true; //Quit by default.
 	if(obj != null){
 	    if(obj instanceof Exception){
 		Exception exception = (Exception) obj;
-		if(ParaProf.debugIsOn){
+		if(debug){
 		    System.out.println(exception.toString());
 		    exception.printStackTrace();
 		    System.out.println("\n");
@@ -578,7 +573,7 @@ public class UtilFncs{
 	    }
 	    if(obj instanceof ParaProfError){
 		ParaProfError paraProfError = (ParaProfError) obj;
-		if(ParaProf.debugIsOn){
+		if(debug){
 		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
 			JOptionPane.showMessageDialog(paraProfError.component,
 						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);

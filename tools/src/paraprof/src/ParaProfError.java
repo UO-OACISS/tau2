@@ -15,6 +15,8 @@ import java.awt.*;
 
 public class ParaProfError{
     
+    public ParaProfError(){}
+
     //Provide some useful constructors.
     //Everything constructor.
     public ParaProfError(String location, String popupString,
