@@ -250,6 +250,11 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     MPICONSTCHAR)
+        echo "NOTE: Using TAU's MPI-2 MPI_Info_set const char * interface"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPI_THREADED)
         echo NOTE: Using the TAU MPI_Init_thread Profiling Interface Wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
