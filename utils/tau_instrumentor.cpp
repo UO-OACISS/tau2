@@ -1123,16 +1123,16 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #ifdef DEBUG
 		  cout <<"col = "<<(*it)->col <<endl;
 #endif /* DEBUG */
-		  for(int i = ((*it)->col)-1; i > 0; i--)
+		  for(int c = ((*it)->col)-1; c > 0; c--)
 		  {
 #ifdef DEBUG
-		    cout <<"i = "<<i<<"inbuf[i] = "<<inbuf[i]<<endl;
+		    cout <<"c = "<<c<<"inbuf[c] = "<<inbuf[c]<<endl;
 #endif /* DEBUG */
-	            if (inbuf[i] == ' ' || inbuf[i] == '\t') continue;
-		    if (inbuf[i] == ')' ) 
+	            if (inbuf[c] == ' ' || inbuf[c] == '\t') continue;
+		    if (inbuf[c] == ')' ) 
 		    { /* return is in a continuation line - has " ) return" */
 #ifdef DEBUG
-		       cout <<"inbuf[i] = "<<inbuf[i]<<endl;
+		       cout <<"inbuf[c] = "<<inbuf[c]<<endl;
 #endif /* DEBUG */
 		       is_if_stmt = true;
 		       break;
@@ -1455,8 +1455,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.49 $   $Date: 2003/10/24 17:27:29 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.49 2003/10/24 17:27:29 sameer Exp $
+ * $Revision: 1.50 $   $Date: 2003/10/24 17:34:07 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.50 2003/10/24 17:34:07 sameer Exp $
  ***************************************************************************/
 
 
