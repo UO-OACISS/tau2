@@ -12,7 +12,7 @@ import java.util.Vector;
 import java.awt.Component;
 import java.io.*;
 
-public class LoadTrial implements ParaProfObserver {
+public class LoadTrial{
 
 	public static String USAGE = "USAGE: perfdmf_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file] [{-i --fixnames}]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n";
     private File readPprof;
@@ -164,8 +164,11 @@ public class LoadTrial implements ParaProfObserver {
 
 	trial = new Trial();
 	trial.setDataSession(dataSession);
-	dataSession.addObserver(this);
 	dataSession.initialize(v);
+	if(trialID==0)
+	    saveTrial();
+	else
+	    appendToTrial();
     }
 
     public void writeTrial() {
@@ -230,17 +233,6 @@ public class LoadTrial implements ParaProfObserver {
 
 	// return the string
 	return problemString.toString();
-    }
-
-    public void update (Object obj) {
-		if (trialID == 0)
-			saveTrial();
-		else
-			appendToTrial();
-    }
-
-    public void update () {
-	saveTrial();
     }
 
 	private boolean fileExists() {
