@@ -15,17 +15,23 @@ TAUROOTDIR	= ../..
 
 include $(TAUROOTDIR)/include/Makefile
 
+MPICHDIR 	= /usr/local/packages/mpich
+
+MPICHARCH	= LINUX/ch_p4
+
 CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
 #CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) -I/usr/local/packages/mpich/include
 
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) 
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)  -I$(MPICHDIR)/include
 
 #LIBS            = $(TAU_LIBS) -L/usr/local/packages/mpich/lib/LINUX/ch_p4 -lmpich $(LEXTRA1)
 
-LIBS            = $(TAU_LIBS) -lmpi
+LIBS            = $(TAU_LIBS) -L$(MPICHDIR)/lib/$(MPICHARCH) -lmpich $(LEXTRA1)
+
+#LIBS            = $(TAU_LIBS) -lmpi
 
 LDFLAGS	      	= $(USER_OPT)
 
