@@ -1135,7 +1135,9 @@ void   mpi_comm_free_( comm, ierr)
 MPI_Fint * comm;
 MPI_Fint *ierr;
 {
-  *ierr = MPI_Comm_free( comm );
+  MPI_Comm local_comm = MPI_Comm_f2c(*comm);
+  *ierr = MPI_Comm_free( &local_comm );
+  *comm = MPI_Comm_c2f(local_comm);
 }
 
 void   mpi_comm_free__( comm, ierr)
@@ -1932,7 +1934,7 @@ MPI_Fint * comm_out;
 MPI_Fint *ierr;
 {
   MPI_Comm local_comm_out;
-  *ierr = MPI_Intercomm_create( MPI_Comm_f2c(*local_comm), *local_leader, *peer_comm, *remote_leader, *tag, &local_comm_out );
+  *ierr = MPI_Intercomm_create( MPI_Comm_f2c(*local_comm), *local_leader, MPI_Comm_f2c(*peer_comm), *remote_leader, *tag, &local_comm_out );
   *comm_out = MPI_Comm_c2f(local_comm_out);
 }
 
@@ -4289,7 +4291,7 @@ MPI_Fint *ierr;
   MPI_Datatype local_new_type; 
   *ierr = MPI_Type_contiguous( *count, MPI_Type_f2c(*old_type), 
 		&local_new_type );
-  *newtype = MPI_Comm_c2f(local_new_type);
+  *newtype = MPI_Type_c2f(local_new_type);
 }
 
 void  mpi_type_contiguous__( count, old_type, newtype, ierr )
@@ -4541,7 +4543,7 @@ MPI_Fint *datatype;
 MPI_Aint * displacement;
 MPI_Fint *ierr;
 {
-  *ierr = MPI_Type_lb( *datatype, displacement );
+  *ierr = MPI_Type_lb( MPI_Type_f2c(*datatype), displacement );
 }
 
 void   mpi_type_lb__( datatype, displacement, ierr )
@@ -4576,7 +4578,7 @@ MPI_Fint *datatype;
 MPI_Fint * size;
 MPI_Fint *ierr;
 {
-  *ierr = MPI_Type_size( *datatype, size );
+  *ierr = MPI_Type_size( MPI_Type_f2c(*datatype), size );
 }
 
 void   mpi_type_size__( datatype, size, ierr )
@@ -4703,7 +4705,7 @@ MPI_Fint * newtype;
 MPI_Fint *ierr;
 {
   MPI_Datatype local_new_type;
-  *ierr = MPI_Type_vector( *count, *blocklen, *stride, MPI_Type_f2c(*old_type), newtype );
+  *ierr = MPI_Type_vector( *count, *blocklen, *stride, MPI_Type_f2c(*old_type), &local_new_type );
   *newtype = MPI_Type_c2f(local_new_type);
 }
 
@@ -5272,7 +5274,9 @@ MPI_Fint * remain_dims;
 MPI_Fint * comm_new;
 MPI_Fint *ierr;
 {
-  *ierr = MPI_Cart_sub( MPI_Comm_f2c(*comm), remain_dims, comm_new );
+  MPI_Comm local_comm_new;
+  *ierr = MPI_Cart_sub( MPI_Comm_f2c(*comm), remain_dims, &local_comm_new );
+  *comm_new = MPI_Comm_c2f(local_comm_new);
 }
 
 void   mpi_cart_sub__( comm, remain_dims, comm_new, ierr )
