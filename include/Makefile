@@ -208,6 +208,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = -L$(PCLDIR)/lib -lpcl 	       #ENDIF#
 #PAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
+#IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -lpmapi#ENDIF#
 #SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi64 #ENDIF#

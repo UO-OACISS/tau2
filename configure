@@ -1673,6 +1673,14 @@ case $machine in
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
+     ia64)
+	echo "Found an IA-64 configuration definition"
+	
+	if [ $papi = yes ]
+ 	  then
+	    fixmakeargs="$fixmakeargs IA64PAPI"
+	fi
+	;;
      rs6000)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs SP1"
