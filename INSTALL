@@ -465,9 +465,7 @@ Usage: installtau [OPTIONS]
 
 2. Compilation.
 
-   Type `make install' to compile the package. 
-   Type `make tests' to compile the example programs that are included with
-   this distribution.
+   Type `make clean install' to compile the package. 
 
    Make installs the library and its stub makefile  in <prefix>/<arch>/lib 
    subdirectory and installs utilities such as pprof and paraprof in 
@@ -478,6 +476,9 @@ Usage: installtau [OPTIONS]
    e.g.,
    # in .cshrc file
    set path=($path /usr/local/packages/tau/sgi64/bin)
+
+   See the examples included with this distribution in the examples/ directory.
+   The README file in examples directory describes the examples. 
 
 3. Instrumentation.
    JAVA requires no special instrumentation. To use TAU with JAVA, the 
