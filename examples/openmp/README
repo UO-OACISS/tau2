@@ -7,6 +7,12 @@ Bernd Mohr, FZJ, Germany) in the subdirectories. To use it:
 It will pick up default arguments and run the program. 
 % pprof; racy 
 
+NOTE: It is VERY important to include the -mp flag on the link command-line for
+***** 
+OpenMP programs (for PGI). Since this is not a universal option applicable to 
+all OpenMP compilers, TAU doesn't add this. If this option is not included, 
+the linker may not find all the mp routines. 
+
 The implementation of Mandelbrot is described below (by Bernd in German) :)
 
 Berechnung der Mandelbrotmenge ("Apfelmännchen")
