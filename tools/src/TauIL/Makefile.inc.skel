@@ -24,12 +24,10 @@ JAVA_OPT	= -classpath $(CLASSPATH)
 JAR_OPT		= -cvf
 JDOC_OPT	= -d $(APIDIR) -sourcepath $(SOURCEPATH)
 
-JAVA_HOME	= /usr/local/j2sdk1.4.2_05/bin
-
-JAVAC		= $(JAVA_HOME)/javac $(JAVAC_OPT)
-JAVA		= $(JAVA_HOME)/java $(JAVA_OPT)
-JAR		= $(JAVA_HOME)/jar $(JAR_OPT)
-JDOC		= $(JAVA_HOME)/javadoc $(JDOC_OPT)
+JAVAC		= javac $(JAVAC_OPT)
+JAVA		= java $(JAVA_OPT)
+JAR		= jar $(JAR_OPT)
+JDOC		= javadoc $(JDOC_OPT)
 
 RM		= rm -f
 CP		= cp -f
