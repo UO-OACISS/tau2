@@ -684,11 +684,15 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 		return_string = ((pdbRoutine *)((*it)->item))->signature()->returnType()->name() ;
 */
 		{
-   		const pdbType *t = ((pdbRoutine *)((*it)->item))->signature()->returnType();
-   		if ( const pdbGroup* gr = t->isGroup() )
-     		  return_string = gr->name();
-   		else
-     		  return_string = t->name();
+   		  const pdbType *t = ((pdbRoutine *)((*it)->item))->signature()->returnType();
+   		  if ( const pdbGroup* gr = t->isGroup() )
+		  {
+     		    return_string = gr->fullName();
+		  }
+   		  else
+		  {
+     		    return_string = t->fullName();
+		  }
 		}
 
 		/* If return type is a reference, treat it as a void */
@@ -1289,8 +1293,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.35 $   $Date: 2002/01/31 23:56:29 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.35 2002/01/31 23:56:29 sameer Exp $
+ * $Revision: 1.36 $   $Date: 2002/02/01 18:19:32 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.36 2002/02/01 18:19:32 sameer Exp $
  ***************************************************************************/
 
 
