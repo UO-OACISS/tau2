@@ -19,7 +19,7 @@ if [ $HOSTTYPE = iris4d ]
      -D_MIPS_FPSET=32 -D_MIPS_SZINT=32 -D_MIPS_SZLONG=64 -D_MIPS_SZPTR=64"
   EXTRAOPT="-D__noinline=\"\" -D__restrict=\"\"  -w"
 else
-  if [ $HOSTTYPE = i386-linux ]
+  if [ $HOSTTYPE = i386-linux -o $HOSTTYPE = i386 ]
     then
 # machine options for KCC on linux
   MACHOPT="--strict \
