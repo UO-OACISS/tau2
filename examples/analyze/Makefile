@@ -121,7 +121,7 @@ $(TARGET).pdb : $(PDTPARSE) $(TARGET).cpp
 	$(PDTPARSE) $(TARGET).cpp $(CFLAGS) 
 
 clean: 
-	$(RM) $(TARGET).o $(TARGET).inst.cpp $(TARGET) $(TARGET).pdb *.refined* profile* pprof.dat
+	$(RM) $(TARGET).o $(TARGET).inst.cpp $(TARGET) $(TARGET).pdb *.refined* profile* pprof.dat *.out
 ##############################################
 
 $(PDTPARSE):

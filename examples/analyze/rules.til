@@ -13,12 +13,12 @@ instrument with profile as $SELECT_FILE
 	
 	conditions
 	{:
-		usec > 1000 & numcalls > 400000 & usec/call < 30 & percent > 25
+		usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
 
 		// The following will end up selecting the same events as the previous
 		// line.
 
-		TAU_USER : usec > 1000 & numcalls > 400000 & usec/call < 30 & percent > 25
+		TAU_USER : usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
 
 		// The following line will cause extremly light-weight events that are
 		// executed more than a million times from the instrumentation.
