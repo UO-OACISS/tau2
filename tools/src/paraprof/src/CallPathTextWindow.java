@@ -145,10 +145,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    descendingOrder.addActionListener(this);
 	    optionsMenu.add(descendingOrder);
 	    
-	    showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", true);
-	    showValuesAsPercent.addActionListener(this);
-	    optionsMenu.add(showValuesAsPercent);
-	    
 	    //Units submenu.
 	    unitsSubMenu = new JMenu("Select Units");
 	    group = new ButtonGroup();
@@ -383,14 +379,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    sortLocalData();
 		    panel.repaint();
 		}
-		else if(arg.equals("Show Values as Percent")){
-		    if(showValuesAsPercent.isSelected())
-			percent = true;
-		    else
-			percent = false;
-		    sortLocalData();
-		    panel.repaint();
-		}
 		else if(arg.equals("Exclusive")){
 		    valueType = 2;
 		    sortLocalData();
@@ -474,18 +462,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //######
    public void menuSelected(MenuEvent evt){
 	try{
-	    if(valueType > 4){
-		showValuesAsPercent.setEnabled(false);
-		unitsSubMenu.setEnabled(false);}
-	    else if(percent){
-		showValuesAsPercent.setEnabled(true);
-		unitsSubMenu.setEnabled(false);}
-	    else if(trial.isTimeMetric()){
-		showValuesAsPercent.setEnabled(true);
-		unitsSubMenu.setEnabled(true);}
-	    else{
-		showValuesAsPercent.setEnabled(true);
-		unitsSubMenu.setEnabled(false);}
+	    if(valueType > 4)
+		unitsSubMenu.setEnabled(false);
+	    else if(trial.isTimeMetric())
+		unitsSubMenu.setEnabled(true);
+	    else
+		unitsSubMenu.setEnabled(false);
 	    
 	    if(trial.groupNamesPresent())
 		((JMenuItem)windowsMenu.getItem(1)).setEnabled(true);
@@ -594,9 +576,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     public int getWindowType(){
 	return windowType;}
 
-    public boolean isPercent(){
-	return percent;}
-    
     public int getValueType(){
 	return valueType;}
     
@@ -691,7 +670,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     
     private JCheckBoxMenuItem sortByName = null;
     private JCheckBoxMenuItem descendingOrder = null;
-    private JCheckBoxMenuItem showValuesAsPercent = null;
     private JCheckBoxMenuItem displaySliders = null;
     private JCheckBoxMenuItem  showPathTitleInReverse = null;
     private JCheckBoxMenuItem  showMetaData = null;
@@ -706,7 +684,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.
-    private boolean percent = true; //true: show values as percent,false: show actual values.
     private int valueType = 2; //2-exclusive,4-inclusive,6-number of calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
 
