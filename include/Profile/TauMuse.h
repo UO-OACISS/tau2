@@ -6,7 +6,7 @@
 
 #define MAX_ARGLEN 		255
 #define MAX_REPLY_LENGTH 	1024 
-#define NUMOFCPU		2 
+#define MAXNUMOFCPU		2 
 #define MAX_FILTER_ARGS		5	
 
 /***************************************************************************************
@@ -45,20 +45,16 @@ int QueryTauCountDecode(const char *binary_command,
 struct process_scheduling_handler_input_data{
 };
 
-struct linked_list;
+struct cpu_stat{
+        unsigned long long time_busy;
+        unsigned long long time_sched;
+};
 
 struct process_scheduling_handler_return_data{
   unsigned long long total_time;
-  unsigned long long total_idle_time;
-  unsigned long long total_busy_time;
-  unsigned long long total_sched_time;
-  unsigned long long total_error_time;
-  unsigned long long current_state;
-  unsigned int cpu_counter_in[NUMOFCPU];
-  unsigned int cpu_counter_out[NUMOFCPU];
-  unsigned long long cpu_busy_time[NUMOFCPU];
   unsigned long long cpu_speed;
-
+  unsigned int numofcpu;
+  struct cpu_stat stat[MAXNUMOFCPU];
 };
 
 int CreateProcessSchedulingEncode(char *ascii_command, int size, char *binary_command);
