@@ -7,16 +7,15 @@
 BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
              BinWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
              BinWindowPanel.java ParaProfApplication.java PrefColorPanel.java SystemEvents.java \
-             CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java ParaProfDBSession.java PrefSpacingPanel.java TauOutputSession.java \
-             CallPathTextWindowPanel.java LineData.java ParaProfDataSession.java Preferences.java TauPprofOutputSession.java \
-             CallPathUtilFuncs.java MappingDataWindow.java \
+             CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java PrefSpacingPanel.java \
+             CallPathTextWindowPanel.java Preferences.java MappingDataWindow.java \
              ColorChooser.java MappingDataWindowPanel.java ParaProfExperiment.java ThreadDataWindow.java \
              ColorPair.java MappingLedgerWindow.java ParaProfImageInterface.java ParaProfImageOptionsPanel.java ParaProfImageFormatFileFilter.java \
              SMWThread.java ThreadDataWindowPanel.java MappingLedgerWindowPanel.java SMWThreadDataElement.java \
              UserEventWindow.java DBConfiguration.java Metric.java SavedPreferences.java UserEventWindowPanel.java \
-             DynaprofOutputSession.java ParaProfManager.java StatWindow.java \
+             ParaProfManager.java StatWindow.java \
              ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             PPML.java ParaProfObserver.java StaticMainWindow.java ParaProfTreeNodeUserObject.java XMLSupport.java
+             PPML.java StaticMainWindow.java ParaProfTreeNodeUserObject.java XMLSupport.java
 
 NEW_SOURCES=$(BASE_SOURCES) FileList.java ParaProfImageOutput.java
 
