@@ -86,7 +86,7 @@ public class ConnectionManager{
 
     /*** This method loads database schema. Be sure to load it ONLY once. ***/
 
-    public void genParentSchema(String filename){
+    public int genParentSchema(String filename){
 	File readSchema = new File(filename);
 	String inputString;
 	StringBuffer buf = new StringBuffer();
@@ -102,26 +102,40 @@ public class ConnectionManager{
 	    while ((inputString = preader.readLine())!= null){
 		inputString = inputString.replaceAll("@DATABASE_NAME@", parser.getDBName());
 		buf.append(inputString);
-		if (isEnd(inputString)) {
+		if (isEnd(db,inputString)) {
 		    try {
+			if (db.getDBType().compareTo("oracle")==0) {
+			    buf.delete(buf.length()-1,buf.length());
+			}
+			//System.out.println ("line: " + buf.toString());
 			getDB().executeUpdate(buf.toString());
 			buf = buf.delete(0,buf.length());
 		    } catch (SQLException ex) {
 			ex.printStackTrace();
+			return -1;
 		    }				
 		}		
 	    }
 	}
-	catch (Exception e){
+	catch (Exception e) {
 	    e.printStackTrace();
+	    return -1;
 	}
+	return 0;
     }
 
-    public void genParentSchema(){
-	genParentSchema(parser.getDBSchema());}
+    public int genParentSchema() {
+	return genParentSchema(parser.getDBSchema());
+    }
 
-    public static boolean isEnd(String st){
-	return st.trim().endsWith(";");}
+    public static boolean isEnd(DB db, String st){
+
+	if (db.getDBType().compareTo("oracle")==0) {
+	    return st.trim().endsWith("/");
+	} else {
+	    return st.trim().endsWith(";");
+	}
+    }
 
     //For backward compatibility, simulate default parameter.
     public String getPassword (){

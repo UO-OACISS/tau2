@@ -49,8 +49,13 @@ public class DBConnector implements DB {
 	if (parser.getDBType().equals("db2")) {
 	    dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
 	} else {
-	    dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
-	    	+ ":" + parser.getDBPort() + "/" + parser.getDBName();
+	    if (parser.getDBType().equals("oracle")) {
+		dbaddress = "jdbc:oracle:thin:@//" + parser.getDBHost() + ":" + parser.getDBPort() 
+		    + "/" + parser.getDBName();
+	    } else {
+		dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
+		    + ":" + parser.getDBPort() + "/" + parser.getDBName();
+	    }
 	}
     }
 
@@ -93,6 +98,7 @@ public class DBConnector implements DB {
 	    }
 	    statement = conn.createStatement();
 	}
+	//	System.out.println ("executing query: " + query.trim());
 	return statement.executeQuery(query.trim());
     }
 
@@ -113,7 +119,7 @@ public class DBConnector implements DB {
 	 the number of rows modified, 0 if no result returned.***/
 
     public int executeUpdate(String sql) throws SQLException {
-	try {
+	//	try {
 	    if (statement == null) {
 		if (conn == null) {
 		    System.err.println("Database is closed for " + sql);
@@ -121,11 +127,12 @@ public class DBConnector implements DB {
 		}
 		statement = conn.createStatement();
 	    }
+	    //	    System.out.println ("sql: " + sql);
 	    return statement.executeUpdate(sql.trim());
-	} catch (SQLException ex) {
-	    ex.printStackTrace();
-	    return 0;
-	}
+	    //	} catch (SQLException ex) {
+	    //	    ex.printStackTrace();
+	    //	    return 0;
+	    //	}
     }
 
     public java.sql.Connection getConnection() {
