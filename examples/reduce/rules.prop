@@ -11,5 +11,5 @@ usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
 #will ultimately be ignored because the results are duplicated
 TAU_USER: usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
 
-#this rule will give an error because there is no field
-TAU_DEFAULT:
+#uncommenting this rule will give an error because there is no field
+#TAU_DEFAULT:
