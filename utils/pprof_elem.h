@@ -1,7 +1,7 @@
 #ifndef _pprof_elem_h
 #define _pprof_elem_h
 
-#include "ifdefs.h"
+#include "tau_platforms.h"
 #include <string>
 using std::string;
 
@@ -50,7 +50,7 @@ protected:
 
 /***************************************************************************
  * $RCSfile: pprof_elem.h,v $   $Author: ntrebon $
- * $Revision: 1.1 $   $Date: 2002/07/25 20:40:16 $
- * TAU_VERSION_ID: $Id: pprof_elem.h,v 1.1 2002/07/25 20:40:16 ntrebon Exp $
+ * $Revision: 1.2 $   $Date: 2002/07/25 20:51:00 $
+ * TAU_VERSION_ID: $Id: pprof_elem.h,v 1.2 2002/07/25 20:51:00 ntrebon Exp $
  ***************************************************************************/
 
