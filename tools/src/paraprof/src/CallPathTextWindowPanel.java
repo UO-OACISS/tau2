@@ -22,6 +22,7 @@ import java.awt.print.*;
 import javax.swing.*;
 import java.awt.geom.*;
 import javax.swing.event.*;
+import dms.dss.*;
 
 public class CallPathTextWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
     
@@ -414,7 +415,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		GlobalMappingElement gme2 = null;
 		Integer listValue = null;
 		String s = null;
-		Thread thread = null;
+		dms.dss.Thread thread = null;
 		Vector functionList = null;
 		GlobalThreadDataElement gtde = null;
 		SMWThreadDataElement smwtde = null;

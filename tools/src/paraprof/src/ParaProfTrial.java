@@ -251,8 +251,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public Vector getMetrics(){
 	return metrics;}
 
-    public ParaProfIterator getMetricList(){
-	return new ParaProfIterator(metrics);}
+    public DataSessionIterator getMetricList(){
+	return new DataSessionIterator(metrics);}
 
     public int getNumberOfMetrics(){
 	return metrics.size();}

@@ -21,11 +21,11 @@ public class ParaProfLispPrimitives{
     public ParaProfLispPrimitives(boolean debug){
 	super();}
 
-    public static ParaProfIterator getPrimitiveList(Jatha lisp, boolean debug){
+    public static DataSessionIterator getPrimitiveList(Jatha lisp, boolean debug){
 	Vector primatives = new Vector();
 	primatives.add(new showThreadDataWindow(lisp, debug));
 
-	return new ParaProfIterator(primatives);
+	return new DataSessionIterator(primatives);
     }
 
     public void setDebug(boolean debug){

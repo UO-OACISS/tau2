@@ -15,6 +15,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.print.*;
+import dms.dss.*;
 
 public class CallPathTextWindow extends JFrame implements ActionListener, MenuListener, Observer{
 
@@ -588,7 +589,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	return list;}
 
     public ListIterator getDataIterator(){
-	return new ParaProfIterator(this.getData());
+	return new DataSessionIterator(this.getData());
     }
 
     public int getWindowType(){

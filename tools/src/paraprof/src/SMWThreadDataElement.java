@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import dms.dss.*;
 
 public class SMWThreadDataElement implements Comparable{
     //Constructor.
@@ -346,7 +347,7 @@ public class SMWThreadDataElement implements Comparable{
     private int contextID = -1;
     private int threadID = -1;
 
-    //Global Thread Data Element Reference.
+    //Global dms.dss.Thread Data Element Reference.
     GlobalThreadDataElement globalThreadDataElement;
   
     //Global Mapping reference.

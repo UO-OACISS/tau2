@@ -13,12 +13,13 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import dms.dss.*;
 
 public class SMWThread{
 
     public SMWThread(){}
 
-    public SMWThread(Thread thread){
+    public SMWThread(dms.dss.Thread thread){
 	this.thread = thread;}
 
     public int getNodeID(){
@@ -40,13 +41,13 @@ public class SMWThread{
 	return functions;}
 
     public ListIterator getFunctionListIterator(){
-	return new ParaProfIterator(functions);}
+	return new DataSessionIterator(functions);}
   
     public Vector getUsereventList(){
 	return userevents;}
 
     public ListIterator getUsereventListIterator(){
-	return new ParaProfIterator(userevents);}
+	return new DataSessionIterator(userevents);}
   
     //Rest of the public functions.
     public void setYDrawCoord(int yDrawCoord){
@@ -58,7 +59,7 @@ public class SMWThread{
     //####################################
     //Instance data.
     //####################################
-    Thread thread = null;
+    dms.dss.Thread thread = null;
     Vector functions = new Vector();
     Vector userevents = new Vector();
     //To aid with drawing searches.

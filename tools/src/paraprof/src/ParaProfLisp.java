@@ -34,7 +34,7 @@ public class ParaProfLisp{
 	lisp.COMPILER.Register(lispPrimitive);}
 
     public void registerParaProfPrimitives(){
-	ParaProfIterator l = ParaProfLispPrimitives.getPrimitiveList(lisp, this.debug());
+	DataSessionIterator l = ParaProfLispPrimitives.getPrimitiveList(lisp, this.debug());
 	while(l.hasNext()){
 	    this.register((LispPrimitive)l.next());}
     }

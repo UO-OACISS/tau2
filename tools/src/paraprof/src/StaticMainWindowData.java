@@ -11,6 +11,7 @@ package paraprof;
 
 import java.util.*;
 import java.lang.*;
+import dms.dss.*;
 
 public class StaticMainWindowData{
 
@@ -31,7 +32,7 @@ public class StaticMainWindowData{
 		    //It is possible (because of selection criteria - groups for example) to filter
 		    //out all mappings on a particular thread.  The default at present is not to add.
 		    int counter = 0; //Counts the number of SMWThreadDataElements that are actually added.
-		    Thread thread = (Thread) e3.nextElement();
+		    dms.dss.Thread thread = (Thread) e3.nextElement();
 		    SMWThread sMWThread = new SMWThread(thread);
 		    //Do not add thread to the context until we have verified counter is not zero (done after next loop).
 		    //Now enter the thread data loops for this thread.
@@ -56,7 +57,7 @@ public class StaticMainWindowData{
     }
 
     //Returns a list of SMWThreadDataElement elements.  List does not include
-    //GlobalThreadDataElements that are not present on this Thread (indicated by
+    //GlobalThreadDataElements that are not present on this dms.dss.Thread (indicated by
     //a null value on the Thread).
     //Function also takes into account the current group selection.
     public Vector getThreadData(int nodeID, int contextID, int threadID, int listType, int sortType){
@@ -99,7 +100,7 @@ public class StaticMainWindowData{
 	try{
 	    Node node;
 	    Context context;
-	    Thread thread;
+	    dms.dss.Thread thread;
 	    GlobalThreadDataElement globalThreadDataElement;
 
 	    SMWThreadDataElement sMWThreadDataElement;

@@ -10,6 +10,7 @@
 */
 
 package paraprof;
+import dms.dss.*;
 
 public class LineData{
     //####################################

@@ -17,12 +17,9 @@
 
 package paraprof;
 
-
-
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-
 import java.io.*;
 import java.util.*;
 import dms.dss.*;
@@ -45,7 +42,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 	    
 	    Node node = null;
 	    Context context = null;
-	    Thread thread = null;
+	    dms.dss.Thread thread = null;
 	    int nodeID = -1;
 	    int contextID = -1;
 	    int threadID = -1;
@@ -409,7 +406,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 	    nct[2] = Integer.parseInt(last);
 	}
 	catch(NumberFormatException e1){
-	    System.out.println("Thread identifier not present ... grabbing context ...");
+	    System.out.println("dms.dss.Thread identifier not present ... grabbing context ...");
 	    try{
 		nct[1] = Integer.parseInt(last);
 	    }

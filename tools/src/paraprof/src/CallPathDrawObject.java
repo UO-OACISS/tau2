@@ -12,6 +12,8 @@
 
 package paraprof;
 
+import dms.dss.*;
+
 public class CallPathDrawObject implements Mapping{
 
     public CallPathDrawObject(Mapping mapping, boolean parent, boolean child, boolean spacer){

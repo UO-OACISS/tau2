@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import dms.dss.*;
 
 public class PPML{
 
@@ -95,7 +96,7 @@ public class PPML{
 
 	Node node;
 	Context context;
-	Thread thread;
+	dms.dss.Thread thread;
      
 	for(Enumeration e1 = trialOpA.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
 	    node = (Node) e1.nextElement();

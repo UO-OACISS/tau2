@@ -21,7 +21,7 @@ import java.awt.geom.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
-
+import dms.dss.*;
 
 public class MappingLedgerWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
 

@@ -43,7 +43,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    
 	    Node node = null;
 	    Context context = null;
-	    Thread thread = null;
+	    dms.dss.Thread thread = null;
 	    int nodeID = -1;
 	    int contextID = -1;
 	    int threadID = -1;

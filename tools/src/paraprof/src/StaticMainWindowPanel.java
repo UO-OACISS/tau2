@@ -18,6 +18,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
+import dms.dss.*;
 
 public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener, Printable, ParaProfImageInterface{
   
@@ -135,7 +136,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    return new String("Left or right click for more options");
 		}
 		else{
-		    ParaProfIterator l = new ParaProfIterator(list[1]);
+		    DataSessionIterator l = new DataSessionIterator(list[1]);
 		    while(l.hasNext()){
 			SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 			if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -204,7 +205,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    return new String("Left or right click for more options");
 		}
 		else{
-		    ParaProfIterator l = (ParaProfIterator) sMWThread.getFunctionListIterator();
+		    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 		    while(l.hasNext()){
 			SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 			if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -437,7 +438,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     
     private void drawBar(Graphics2D g2D, FontMetrics fmFont, String text, SMWThread sMWThread,
 			 int barXCoord, int yCoord, int barHeight, int instruction, boolean mean){
-	ParaProfIterator l = null;
+	DataSessionIterator l = null;
 	int selectedGroupID = trial.getColorChooser().getGroupHighlightColorID();
 	boolean highlighted = false;
 
@@ -449,9 +450,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	//Calculate the sum for this thread.
 	double sum = 0.00;
 	if(mean)
-	    l = new ParaProfIterator(list[1]);
+	    l = new DataSessionIterator(list[1]);
 	else
-	    l = (ParaProfIterator) sMWThread.getFunctionListIterator();
+	    l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 	while(l.hasNext()){
 	    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 	    if(mean)
@@ -711,7 +712,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    else{
 			if(index==-1){
 			    //Find the appropriate SMWThreadDataElement.
-			    ParaProfIterator l = new ParaProfIterator(list[1]);
+			    DataSessionIterator l = new DataSessionIterator(list[1]);
 			    while(l.hasNext()){
 				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 				if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -724,7 +725,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			}
 			else{
 			    //Find the appropriate SMWThreadDataElement.
-			    ParaProfIterator l = (ParaProfIterator) sMWThread.getFunctionListIterator();
+			    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 			    while(l.hasNext()){
 				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 				if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -757,7 +758,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    else{
 			if(index==-1){
 			    //Find the appropriate SMWThreadDataElement.
-			    ParaProfIterator l = new ParaProfIterator(list[1]);
+			    DataSessionIterator l = new DataSessionIterator(list[1]);
 			    while(l.hasNext()){
 				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 				if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -773,7 +774,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			}
 			else{
 			    //Find the appropriate SMWThreadDataElement.
-			    ParaProfIterator l = (ParaProfIterator) sMWThread.getFunctionListIterator();
+			    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 			    while(l.hasNext()){
 				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 				if(xCoord < sMWThreadDataElement.getXEnd()){

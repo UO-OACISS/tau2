@@ -65,7 +65,7 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
 	return experiments;}
 
     public ListIterator getExperimentList(){
-	return new ParaProfIterator(experiments);}
+	return new DataSessionIterator(experiments);}
   
     public ParaProfExperiment addExperiment(){
 	ParaProfExperiment experiment = new ParaProfExperiment();

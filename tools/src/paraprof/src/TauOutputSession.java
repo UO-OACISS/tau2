@@ -67,7 +67,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    
 	    Node node = null;
 	    Context context = null;
-	    Thread thread = null;
+	    dms.dss.Thread thread = null;
 	    int nodeID = -1;
 	    int contextID = -1;
 	    int threadID = -1;
@@ -289,7 +289,7 @@ public class TauOutputSession extends ParaProfDataSession{
 				globalThreadDataElement.setNumberOfSubRoutines(functionDataLine.i1);
 				globalThreadDataElement.setUserSecPerCall(metric, usecCall);
 			    
-				//Set the max values (thread max values are calculated in the Thread class).
+				//Set the max values (thread max values are calculated in the dms.dss.Thread class).
 				if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
 				    globalMappingElement.setMaxExclusiveValue(metric, functionDataLine.d0);
 				if((globalMappingElement.getMaxInclusiveValue(metric)) < functionDataLine.d1)

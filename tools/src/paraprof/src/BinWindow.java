@@ -20,6 +20,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.print.*;
+import dms.dss.*;
+
 
 public class BinWindow extends JFrame implements ActionListener, MenuListener, Observer{
   

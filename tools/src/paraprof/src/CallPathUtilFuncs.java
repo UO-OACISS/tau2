@@ -9,6 +9,7 @@
 package paraprof;
 
 import java.util.*;
+import dms.dss.*;
 
 public class CallPathUtilFuncs{
     public CallPathUtilFuncs(){}
@@ -39,9 +40,9 @@ public class CallPathUtilFuncs{
 	    String parent = null;
 	    String child = null;
 	    int location = -1;
-	    ParaProfIterator l = null;
+	    DataSessionIterator l = null;
 	    
-	    l = (ParaProfIterator)gm.getMappingIterator(0);
+	    l = (DataSessionIterator)gm.getMappingIterator(0);
 	    while(l.hasNext()){
 		gme1 = (GlobalMappingElement) l.next();
 		s = gme1.getMappingName();
@@ -68,7 +69,7 @@ public class CallPathUtilFuncs{
 	}
     }
 
-    public static void trimCallPathData(GlobalMapping gm, Thread thread){
+    public static void trimCallPathData(GlobalMapping gm, dms.dss.Thread thread){
 	ListIterator l1 = null;
 	ListIterator l2 = null;
 	ListIterator l3 = null;

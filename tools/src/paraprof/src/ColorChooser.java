@@ -15,6 +15,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.colorchooser.*;
 import javax.swing.event.*;
+import dms.dss.*;
 
 
 public class ColorChooser implements WindowListener{

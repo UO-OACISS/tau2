@@ -18,6 +18,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
+import dms.dss.*;
 
 public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener, Printable, ParaProfImageInterface{
   
@@ -54,7 +55,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
       
-	    jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
+	    jMenuItem = new JMenuItem("Show Mean Call Path dms.dss.Thread Relations");
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
 	    //######
@@ -72,7 +73,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 
-	    jMenuItem = new JMenuItem("Show Call Path Thread Relations");
+	    jMenuItem = new JMenuItem("Show Call Path dms.dss.Thread Relations");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 	    //######
@@ -112,7 +113,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    int xCoord = evt.getX();
 	    int yCoord = evt.getY();
 
-	    SMWThread sMWThread = null;
+	    SMWdms.dss.Thread sMWdms.dss.Thread = null;
 	    
 	    //Calculate which SMWThreadDataElement was clicked on.
 	    int index = (yCoord)/(trial.getPreferences().getBarSpacing())-1;
@@ -135,7 +136,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    return new String("Left or right click for more options");
 		}
 		else{
-		    ParaProfIterator l = new ParaProfIterator(list[1]);
+		    DataSessionIterator l = new DataSessionIterator(list[1]);
 		    while(l.hasNext()){
 			SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 			if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -185,7 +186,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		}
 	    }
 	    else if(index<list[0].size()){
-		sMWThread = (SMWThread) list[0].elementAt(index);
+		sMWdms.dss.Thread = (SMWThread) list[0].elementAt(index);
 		if(xCoord<barXCoord){
 		    if(ParaProf.helpWindow.isShowing()){
 			//Clear the window fisrt.
@@ -204,7 +205,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    return new String("Left or right click for more options");
 		}
 		else{
-		    ParaProfIterator l = (ParaProfIterator) sMWThread.getFunctionListIterator();
+		    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 		    while(l.hasNext()){
 			SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 			if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -299,7 +300,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //Some declarations.
 	    //######
 	    int yCoord = 0;
-	    SMWThread sMWThread = null;
+	    SMWdms.dss.Thread sMWdms.dss.Thread = null;
 	    //######
 	    //Some declarations.
 	    //######
@@ -413,7 +414,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //Draw thread information for this mapping.
 	    //######
 	    for(int i = startElement; i <= endElement; i++){
-		sMWThread = (SMWThread) list[0].elementAt(i);
+		sMWdms.dss.Thread = (SMWThread) list[0].elementAt(i);
 		yCoord = yCoord + (barSpacing);
 		drawBar(g2D, fmFont,
 			"n,c,t " + (sMWThread.getNodeID()) +
@@ -435,9 +436,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }
     
-    private void drawBar(Graphics2D g2D, FontMetrics fmFont, String text, SMWThread sMWThread,
+    private void drawBar(Graphics2D g2D, FontMetrics fmFont, String text, SMWdms.dss.Thread sMWThread,
 			 int barXCoord, int yCoord, int barHeight, int instruction, boolean mean){
-	ParaProfIterator l = null;
+	DataSessionIterator l = null;
 	int selectedGroupID = trial.getColorChooser().getGroupHighlightColorID();
 	boolean highlighted = false;
 
@@ -449,9 +450,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	//Calculate the sum for this thread.
 	double sum = 0.00;
 	if(mean)
-	    l = new ParaProfIterator(list[1]);
+	    l = new DataSessionIterator(list[1]);
 	else
-	    l = (ParaProfIterator) sMWThread.getFunctionListIterator();
+	    l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 	while(l.hasNext()){
 	    SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 	    if(mean)
@@ -576,7 +577,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		}
 		else if(arg.equals("Show Mean Total User Event Statistics Windows")){
 		    if(clickedOnObject instanceof SMWThread){
-			SMWThread sMWThread = (SMWThread) clickedOnObject;
+			SMWdms.dss.Thread sMWdms.dss.Thread = (SMWThread) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThread.getNodeID(),
 							       sMWThread.getContextID(),
 							       sMWThread.getThreadID(),sMWindow.getSMWData(),
@@ -585,9 +586,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Mean Call Path Thread Relations")){
+		else if(arg.equals("Show Mean Call Path dms.dss.Thread Relations")){
 		    if(clickedOnObject instanceof SMWThread){
-			SMWThread sMWThread = (SMWThread) clickedOnObject;
+			SMWdms.dss.Thread sMWdms.dss.Thread = (SMWThread) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThread.getNodeID(),
 													     sMWThread.getContextID(),
 													     sMWThread.getThreadID()));
@@ -601,7 +602,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		}
 		else if(arg.equals("Show Total Statistics Windows")){
 		    if(clickedOnObject instanceof SMWThread){
-			SMWThread sMWThread = (SMWThread) clickedOnObject;
+			SMWdms.dss.Thread sMWdms.dss.Thread = (SMWThread) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThread.getNodeID(),
 							       sMWThread.getContextID(),
 							       sMWThread.getThreadID(),sMWindow.getSMWData(),
@@ -612,7 +613,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		}
 		else if(arg.equals("Show Total User Event Statistics Windows")){
 		    if(clickedOnObject instanceof SMWThread){
-			SMWThread sMWThread = (SMWThread) clickedOnObject;
+			SMWdms.dss.Thread sMWdms.dss.Thread = (SMWThread) clickedOnObject;
 			StatWindow statWindow = new StatWindow(trial, sMWThread.getNodeID(),
 							       sMWThread.getContextID(),
 							       sMWThread.getThreadID(),sMWindow.getSMWData(),
@@ -621,9 +622,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Call Path Thread Relations")){
+		else if(arg.equals("Show Call Path dms.dss.Thread Relations")){
 		    if(clickedOnObject instanceof SMWThread){
-			SMWThread sMWThread = (SMWThread) clickedOnObject;
+			SMWdms.dss.Thread sMWdms.dss.Thread = (SMWThread) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThread.getNodeID(),
 													     sMWThread.getContextID(),
 													     sMWThread.getThreadID()));
@@ -692,14 +693,14 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //Get the number of times clicked.
 	    int clickCount = evt.getClickCount();
 	    
-	    SMWThread sMWThread = null;
+	    SMWdms.dss.Thread sMWdms.dss.Thread = null;
 	    
 	    //Calculate which SMWThreadDataElement was clicked on.
 	    int index = (yCoord)/(trial.getPreferences().getBarSpacing())-1;
 	    
 	    if(index<list[0].size()){
 		if(index!=-1)
-		    sMWThread = (SMWThread) list[0].elementAt(index);
+		    sMWdms.dss.Thread = (SMWThread) list[0].elementAt(index);
 		if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
 		    if(xCoord<barXCoord){
 			clickedOnObject = sMWThread;
@@ -711,7 +712,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    else{
 			if(index==-1){
 			    //Find the appropriate SMWThreadDataElement.
-			    ParaProfIterator l = new ParaProfIterator(list[1]);
+			    DataSessionIterator l = new DataSessionIterator(list[1]);
 			    while(l.hasNext()){
 				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 				if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -724,7 +725,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			}
 			else{
 			    //Find the appropriate SMWThreadDataElement.
-			    ParaProfIterator l = (ParaProfIterator) sMWThread.getFunctionListIterator();
+			    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 			    while(l.hasNext()){
 				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 				if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -757,7 +758,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		    else{
 			if(index==-1){
 			    //Find the appropriate SMWThreadDataElement.
-			    ParaProfIterator l = new ParaProfIterator(list[1]);
+			    DataSessionIterator l = new DataSessionIterator(list[1]);
 			    while(l.hasNext()){
 				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 				if(xCoord < sMWThreadDataElement.getXEnd()){
@@ -773,7 +774,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			}
 			else{
 			    //Find the appropriate SMWThreadDataElement.
-			    ParaProfIterator l = (ParaProfIterator) sMWThread.getFunctionListIterator();
+			    DataSessionIterator l = (DataSessionIterator) sMWThread.getFunctionListIterator();
 			    while(l.hasNext()){
 				SMWThreadDataElement sMWThreadDataElement = (SMWThreadDataElement) l.next();
 				if(xCoord < sMWThreadDataElement.getXEnd()){

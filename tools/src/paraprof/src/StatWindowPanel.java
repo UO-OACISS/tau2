@@ -19,6 +19,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.geom.*;
 import java.awt.print.*;
+import dms.dss.*;
 
 public class StatWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
     public StatWindowPanel(){

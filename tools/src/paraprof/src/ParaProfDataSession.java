@@ -31,7 +31,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
      */
     public void initialize(Object obj){
 	initializeObject = obj;
-	java.lang.Thread thread = new java.lang.Thread(this);
+	java.lang.dms.dss.Thread thread = new java.lang.Thread(this);
 	thread.start();
     }
 
@@ -354,7 +354,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		    if(context.getContextID()>maxNCT[1])
 			maxNCT[1]=context.getContextID();
 		    for(Enumeration e3 = (context.getThreads()).elements(); e3.hasMoreElements() ;){
-			Thread thread = (Thread) e3.nextElement();
+			dms.dss.Thread thread = (Thread) e3.nextElement();
 			if(thread.getThreadID()>maxNCT[2])
 			    maxNCT[2]=thread.getThreadID();
 		    }
@@ -390,7 +390,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		    Context context = (Context) e2.nextElement();
 		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
-			Thread thread = (Thread) e3.nextElement();
+			dms.dss.Thread thread = (Thread) e3.nextElement();
 			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(id);
 			if(globalThreadDataElement != null){
 			    exclusiveTotal+=globalThreadDataElement.getExclusiveValue(metric);
@@ -511,7 +511,7 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		    Context context = (Context) e2.nextElement();
 		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
-			Thread thread = (Thread) e3.nextElement();
+			dms.dss.Thread thread = (Thread) e3.nextElement();
 			GlobalThreadDataElement globalThreadDataElement = thread.getFunction(id);
 			if(globalThreadDataElement != null){
 			    for(int i=0;i<numberOfMetrics;i++){

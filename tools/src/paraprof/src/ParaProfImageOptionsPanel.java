@@ -16,6 +16,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.beans.*;
+import dms.dss.*;
 
 public class  ParaProfImageOptionsPanel extends JPanel implements PropertyChangeListener{ 
     public ParaProfImageOptionsPanel(Component component){

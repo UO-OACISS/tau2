@@ -16,6 +16,7 @@ import java.awt.print.*;
 import java.awt.geom.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import dms.dss.*;
 
 public class ThreadDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
 
@@ -639,7 +640,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     private int threadID = -1;
     private ThreadDataWindow tDWindow = null;
     private int windowType = -1;
-    private Thread thread = null;  
+    private dms.dss.Thread thread = null;  
     private Vector list = null;
   
     private JPopupMenu popup = new JPopupMenu();

@@ -9,6 +9,7 @@
 package paraprof;
 
 import java.util.*;
+import dms.dss.*;
 
 public class ApplicationManager extends Observable{
     public ApplicationManager(){}
@@ -27,8 +28,8 @@ public class ApplicationManager extends Observable{
     public Vector getApplications(){
 	return applications;}
 
-    public ParaProfIterator getApplicationList(){
-	return new ParaProfIterator(applications);}
+    public DataSessionIterator getApplicationList(){
+	return new DataSessionIterator(applications);}
   
     public boolean isEmpty(){
 	if((applications.size()) == 0)

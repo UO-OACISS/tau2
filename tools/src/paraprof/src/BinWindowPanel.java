@@ -23,6 +23,8 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
 //import javax.print.*;
+import dms.dss.*;
+
 
 
 public class BinWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener, Printable{
@@ -261,7 +263,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 		
 		SMWServer tmpSMWServer = null;
 		SMWContext tmpSMWContext = null;
-		SMWThread tmpSMWThread = null;
+		SMWThread tmpThread = null;
 		SMWThreadDataElement tmpSMWThreadDataElement = null;
 		Vector tmpContextList = null;
 		Vector tmpThreadList = null;
@@ -363,7 +365,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 		
 		SMWServer tmpSMWServer = null;
 		SMWContext tmpSMWContext = null;
-		SMWThread tmpSMWThread = null;
+		SMWThread tmpThread = null;
 		SMWThreadDataElement tmpSMWThreadDataElement = null;
 		Vector tmpContextList = null;
 		Vector tmpThreadList = null;
