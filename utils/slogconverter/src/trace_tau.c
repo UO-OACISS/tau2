@@ -718,8 +718,15 @@ dprintf("TestUDef1\n");
         /* Assume 1 method ID */
         type->methods[ 0 ] = atoi( str4methods );
 
+    /*if ( ((TRACE_file)userData)->num_types >= ((TRACE_file)userData)->max_types )
+        return 10;*/
     if ( ((TRACE_file)userData)->num_types >= ((TRACE_file)userData)->max_types )
-        return 10;
+  	{
+		((TRACE_file)userData)->max_types=(((TRACE_file)userData)->max_types)*2;
+		((TRACE_file)userData)->types      = (DRAW_Category **) realloc(((TRACE_file)userData)->types, ((TRACE_file)userData)->max_types
+                                              * sizeof(DRAW_Category *) );
+		  
+ 	 } 
     ((TRACE_file)userData)->types[ ((TRACE_file)userData)->num_types ] = type;
 
 	((TRACE_file)userData)->num_types++;
@@ -1109,7 +1116,14 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
         type->methods[ 0 ] = atoi( str4methods );
 
     if ( ((TRACE_file)userData)->num_types >= ((TRACE_file)userData)->max_types )
-        return 10;
+  	{
+		((TRACE_file)userData)->max_types=(((TRACE_file)userData)->max_types)*2;
+		((TRACE_file)userData)->types      = (DRAW_Category **) realloc(((TRACE_file)userData)->types, ((TRACE_file)userData)->max_types
+                                              * sizeof(DRAW_Category *) );
+		  
+ 	 }      
+/*		return 10;*/
+		
     ((TRACE_file)userData)->types[ ((TRACE_file)userData)->num_types ] = type;
 
 
@@ -1344,8 +1358,15 @@ char *name = "message";
         /* Assume 1 method ID */
         type->methods[ 0 ] = atoi( str4methods );
 
-    if ( ((TRACE_file)userData)->num_types >= ((TRACE_file)userData)->max_types )
-        return 10;
+   /* if ( ((TRACE_file)userData)->num_types >= ((TRACE_file)userData)->max_types )
+        return 10;*/
+	if ( ((TRACE_file)userData)->num_types >= ((TRACE_file)userData)->max_types )
+  	{
+		((TRACE_file)userData)->max_types=(((TRACE_file)userData)->max_types)*2;
+		((TRACE_file)userData)->types      = (DRAW_Category **) realloc(((TRACE_file)userData)->types, ((TRACE_file)userData)->max_types
+                                              * sizeof(DRAW_Category *) );
+		  
+ 	 } 
     ((TRACE_file)userData)->types[ ((TRACE_file)userData)->num_types ] = type;
 
 	((TRACE_file)userData)->num_types++;
@@ -1873,8 +1894,8 @@ int TRACE_Get_next_category( const TRACE_file fp,
 
     type  = fp->types[ fp->num_types-1 ];
     if ( type == NULL ) {
-        fprintf( stderr, "TRACE_Get_next_category(): Cannot locate "
-                         "current category in Category Table.\n" );
+      /* fprintf( stderr, "TRACE_Get_next_category(): Cannot locate "
+	 "current category in Category Table.\n" );*/
         return 20;
     }
    
@@ -2011,8 +2032,8 @@ int TRACE_Get_next_primitive( const TRACE_file fp,
 
 
     if ( fp->prime == NULL ) {
-        fprintf( stderr, "TRACE_Get_next_primitive(): Cannot locate "
-                         "Primitive in TRACE_file.\n" );
+      /*fprintf( stderr, "TRACE_Get_next_primitive(): Cannot locate "
+	"Primitive in TRACE_file.\n" );*/
         return 30;
     }
     prime = fp->prime;
@@ -2401,9 +2422,9 @@ int TRACE_Peek_next_ycoordmap( TRACE_file fp,
 #endif
 
     if ( methods_len != Nmeths ) {
-        fprintf( stderr, "TRACE_Peek_next_ycoordmap(): The number of methods "
+      /* fprintf( stderr, "TRACE_Peek_next_ycoordmap(): The number of methods "
                          "defined is %d and number read is %d\n",
-                         Nmeths, methods_len );
+                         Nmeths, methods_len );*/
         return 61;
     }
 
@@ -2493,8 +2514,8 @@ int TRACE_Get_next_ycoordmap( TRACE_file fp,
     
 
     if ( fp->ymap == NULL ) {
-        fprintf( stderr, "TRACE_Get_next_ycoordmap(): Cannot locate "
-                         "YCoordMap in TRACE_file.\n" );
+      /*fprintf( stderr, "TRACE_Get_next_ycoordmap(): Cannot locate "
+	"YCoordMap in TRACE_file.\n" );*/
         return 60;
     }
     ymap = fp->ymap;
