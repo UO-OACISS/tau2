@@ -65,6 +65,9 @@ double*& TheTauFullTimerOverhead()
   return full;
 }
 #endif /* TAU_MULTIPLE_COUNTERS */
+#ifdef TAU_DEPTH_LIMIT
+int& TauGetDepthLimit(void);
+#endif /* TAU_DEPTH_LIMIT */
 int TauCalibrateNullTimer(void)
 {
   TAU_PROFILE_TIMER(tnull, ".TAU null timer overhead", " ", TAU_DEFAULT);
@@ -84,6 +87,11 @@ int TauCalibrateNullTimer(void)
   }
     
 
+#ifdef TAU_DEPTH_LIMIT
+  int original = TauGetDepthLimit();
+  TauGetDepthLimit() = INT_MAX;
+#endif /* TAU_DEPTH_LIMIT */
+
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tone);
     /* nested */
@@ -95,9 +103,14 @@ int TauCalibrateNullTimer(void)
   TAU_PROFILE_STOP(tone);
   Tau_stop_top_level_timer_if_necessary();
 
+#ifdef TAU_DEPTH_LIMIT
+  TauGetDepthLimit() = original; /* reset! */
+#endif /* TAU_DEPTH_LIMIT */
+
   /* Get thread id */
   tid = RtsLayer::myThread();
   int n = tnullfi->GetCalls(tid);
+
 #ifndef TAU_MULTIPLE_COUNTERS 
   TheTauNullTimerOverhead() = tnullfi->GetInclTime(tid)/n;
   /* n*(a+b+c+d) + b+c = tone */

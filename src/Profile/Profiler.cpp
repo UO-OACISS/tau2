@@ -112,7 +112,7 @@ FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
 //////////////////////////////////////////////////////////////////////
 // TAU_DEPTH_LIMIT 
 //////////////////////////////////////////////////////////////////////
-int& TauGetProfileDepth(void)
+int& TauGetDepthLimit(void)
 {
   static int depth = 0;
   char *depthvar; 
@@ -196,16 +196,16 @@ void Profiler::Start(int tid)
 { 
       ParentProfiler = CurrentProfiler[tid]; // Timers
 #ifdef TAU_DEPTH_LIMIT
-      int userspecifieddepth = TauGetProfileDepth();
+      int userspecifieddepth = TauGetDepthLimit();
       if (ParentProfiler)
       {
-	SetProfileDepth(ParentProfiler->GetProfileDepth()+1);
+	SetDepthLimit(ParentProfiler->GetDepthLimit()+1);
       }
       else
       {
-	SetProfileDepth(1);
+	SetDepthLimit(1);
       }
-      int mydepth = GetProfileDepth();
+      int mydepth = GetDepthLimit();
       DEBUGPROFMSG("Start: Name: "<< ThisFunction->GetName()<<" mydepth = "<<mydepth<<", userspecifieddepth = "<<userspecifieddepth<<endl;);
       if (mydepth > userspecifieddepth) 
       { /* set the profiler */
@@ -407,8 +407,8 @@ void Profiler::Stop(int tid)
       if (CurrentProfiler[tid] == NULL) return;
 
 #ifdef TAU_DEPTH_LIMIT
-      int userspecifieddepth = TauGetProfileDepth();
-      int mydepth = GetProfileDepth(); 
+      int userspecifieddepth = TauGetDepthLimit();
+      int mydepth = GetDepthLimit(); 
       if (mydepth > userspecifieddepth) 
       {
 	CurrentProfiler[tid] = ParentProfiler; 
@@ -2805,12 +2805,12 @@ void Profiler::SetPhase(bool flag)
 #endif /* TAU_PROFILEPHASE */
 
 #ifdef TAU_DEPTH_LIMIT 
-int Profiler::GetProfileDepth(void)
+int Profiler::GetDepthLimit(void)
 {
   return profiledepth;
 }
 
-void Profiler::SetProfileDepth(int value)
+void Profiler::SetDepthLimit(int value)
 {
   profiledepth = value;
 }
@@ -2819,8 +2819,8 @@ void Profiler::SetProfileDepth(int value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.110 $   $Date: 2005/03/14 19:56:53 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.110 2005/03/14 19:56:53 sameer Exp $ 
+ * $Revision: 1.111 $   $Date: 2005/03/15 00:17:34 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.111 2005/03/15 00:17:34 sameer Exp $ 
  ***************************************************************************/
 
 	
