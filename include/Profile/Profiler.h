@@ -36,7 +36,7 @@
 #define TAU_MAX_THREADS 64
 #else
 #define TAU_MAX_THREADS 1
-#endif
+#endif /* PTHREADS || TULIPTHREADS */
 
 #include <Profile/TauAPI.h>
 
@@ -110,7 +110,10 @@ private:
 	//friend class ProfilerInitializer;
 };
 
+
 #endif /* PROFILING_ON || TRACING_ON */
+#include <Profile/TauMapping.h>
+// included after class Profiler is defined.
 #else /* __cplusplus */
 #include <Profile/TauCAPI.h> /* For C program */
 #endif /* __cplusplus */
@@ -118,6 +121,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 1998/09/22 01:04:46 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.18 1998/09/22 01:04:46 sameer Exp $ 
+ * $Revision: 1.19 $   $Date: 1999/04/27 22:20:10 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.19 1999/04/27 22:20:10 sameer Exp $ 
  ***************************************************************************/
