@@ -169,6 +169,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #FOR F90 MPI on SGI
 #SGIMP#FWRAPPER	       = TauFMpi.o       #ENDIF#
 #SP1#FWRAPPER	       = TauFMpi.o       #ENDIF#
+#PGI_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
