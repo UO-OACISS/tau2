@@ -337,6 +337,12 @@ void Profiler::Stop(int tid)
               << ThisFunction->GetName() <<endl;);
   
               StoreData(tid);
+	      if (strstr(ThisFunction->GetName(), "main") != NULL) 
+	      { 
+		DEBUGPROFMSG(ThisFunction->GetName() 
+		  << " contains a main - exiting..."<<endl;);
+	        exit(0); // TURN THE LIGHTS OUT!! 
+	      }
             }
         // dump data here. Dump it only at the exit of top level profiler.
 	  }
@@ -710,9 +716,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.32 $   $Date: 1999/10/27 21:16:36 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.32 1999/10/27 21:16:36 bertie Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.33 $   $Date: 2000/02/05 00:00:05 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.33 2000/02/05 00:00:05 sameer Exp $ 
  ***************************************************************************/
 
 	
