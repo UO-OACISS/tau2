@@ -179,6 +179,38 @@ void errorFunc1(BPatchErrorLevel level, int num, const char **params)
 }
 // END OF TEST3 code
  
+// Constraints for instrumentation 
+int moduleConstraint(char *fname)
+{ // fname is the name of module/file 
+
+  if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
+      (strcmp(fname, "LIBRARY_MODULE") == 0))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+// Constriant for routines 
+int routineConstraint(char *fname)
+{ // fname is the function name
+  if ((strncmp(fname, "Tau", 3) == 0) ||
+            (strncmp(fname, "Profiler", 8) == 0) ||
+            (strncmp(fname, "FunctionInfo",12) == 0) ||
+            (strncmp(fname, "RtsLayer", 8) == 0) ||
+            (strncmp(fname, "The", 3) == 0)) 
+  {
+    return true;
+  }
+  else
+  { 
+    return false; 
+  }
+}
+
 //
 // entry point 
 //
@@ -275,8 +307,7 @@ int main(int argc, char **argv)
 
 
 
-    if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
-  	(strcmp(fname, "LIBRARY_MODULE") == 0))
+    if (moduleConstraint(fname)) 
     { // constraint 
 
       for (i=0; i < p->size(); i++) 
@@ -285,11 +316,7 @@ int main(int argc, char **argv)
         //memset(fname, 0x0, FUNCNAMELEN); 
         (*p)[i]->getName(fname, FUNCNAMELEN);
         dprintf("Name %s\n", fname);
-        if ((strncmp(fname, "Tau", 3) == 0) || 
-            (strncmp(fname, "Profiler", 8) == 0) || 
-            (strncmp(fname, "FunctionInfo",12) == 0) ||
-            (strncmp(fname, "RtsLayer", 8) == 0) || 
-	    (strncmp(fname, "The", 3) == 0)) 
+        if (routineConstraint(fname))
         { // The above procedures shouldn't be instrumented
            dprintf("don't instrument %s\n", fname);
         } /* Put the constraints above */ 
@@ -298,6 +325,46 @@ int main(int argc, char **argv)
          
 	  functions.append("|");
 	  functions.append(fname);
+
+	}
+      }
+    } /* DEFAULT */
+  } /* Module */
+
+  // form the args to InitCode
+  BPatch_constExpr funcName(functions.c_str());
+  initArgs.push_back(&funcName);
+
+
+  Initialize(appThread, appImage, initArgs);
+  dprintf("Did Initialize\n");
+
+  /* In our tests, the routines started execution concurrently with the 
+     one time code. To avoid this, we first start the one time code and then
+     iterate through the list of routines to select for instrumentation and
+     instrument these. So, we need to iterate twice. */
+
+  for (j=0; j < m->size(); j++) {
+    sprintf(modulename, "Module %s\n", (*m)[j]->getName(fname, FUNCNAMELEN));
+    BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
+    dprintf("%s", modulename);
+
+
+    if (moduleConstraint(fname)) 
+    { // constraint
+
+      for (i=0; i < p->size(); i++)
+      {
+        // For all procedures within the module, iterate
+        //memset(fname, 0x0, FUNCNAMELEN);
+        (*p)[i]->getName(fname, FUNCNAMELEN);
+        dprintf("Name %s\n", fname);
+  	if (routineConstraint(fname))
+        { // The above procedures shouldn't be instrumented
+           dprintf("don't instrument %s\n", fname);
+        } /* Put the constraints above */
+        else
+        { // routines that are ok to instrument
 
  	  dprintf("Assigning id %d to %s\n", instrumented, fname);
           instrumented ++;
@@ -324,14 +391,9 @@ int main(int argc, char **argv)
   } // for modules
 
 
-  // form the args to InitCode
-  BPatch_constExpr funcName(functions.c_str());
-  initArgs.push_back(&funcName);
-
-
-  Initialize(appThread, appImage, initArgs);
-  dprintf("After Initialize\n");
+  dprintf("Executing...\n");
   appThread->continueExecution();
+  
   while (!appThread->isTerminated())
         bpatch->waitForStatusChange();
 
