@@ -58,7 +58,13 @@ vector<int> TheFlag(TAU_MAX_THREADS);
 #endif /* IA64 */
 
 vector<string> TauFuncNameVec; /* holds just names */
-vector<FunctionInfo *> TauDynFI; /* global FI vector */
+vector<FunctionInfo*>& TheTauDynFI(void)
+{ // FunctionDB contains pointers to each FunctionInfo static object
+  static vector<FunctionInfo*> FuncTauDynFI;
+
+  return FuncTauDynFI;
+}
+/* global FI vector */
 // Initialization procedure. Should be called before invoking 
 // other TAU routines.
 extern "C" {
@@ -87,13 +93,14 @@ void TauInitCode(char *arg, int isMPI)
     if (taufi == (FunctionInfo *) NULL) {
       printf("ERROR: new returns NULL in TauInitCode\n"); exit(1); 
     }
-    TauDynFI.push_back(taufi); 
+    dprintf("TAU FI = %lx\n", taufi);
+    TheTauDynFI().push_back(taufi); 
 #else /* TAUDYNVEC */
     int id;
     id = functionId - 1; /* start from 0 */
     TauFuncNameVec.push_back(string(name));  /* Save the name with id */
     dprintf("TauFuncNameVec[%d] = %s\n", id, TauFuncNameVec[id].c_str()); 
-    TauDynFI.push_back(NULL); /* create a null entry for this symbol */
+    TheTauDynFI().push_back(NULL); /* create a null entry for this symbol */
 #endif /* TAUDYNVEC */
 #endif /* ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP */
     
@@ -116,14 +123,14 @@ void TauRoutineEntry(int id )
   TAU_MAPPING_LINK(TauMethodName, id);
 #elif TAUDYNVEC
   id--; /* to account for offset. Start from 0..n-1 instead of 1..n */
-  TauMethodName = TauDynFI[id];
+  TauMethodName = TheTauDynFI()[id];
 #else /* TAUDYNVEC */
   id--; /* to account for offset. Start from 0..n-1 instead of 1..n */ 
-  if ((TauMethodName = TauDynFI[id]) == NULL) 
+  if ((TauMethodName = TheTauDynFI()[id]) == NULL) 
   {	/* Function has not been called so far */
     TauMethodName = new   
 	 FunctionInfo(TauFuncNameVec[id].c_str(), " " , TAU_DEFAULT, "TAU_DEFAULT", true, tid); 
-    TauDynFI[id] = TauMethodName;
+    TheTauDynFI()[id] = TauMethodName;
   }
 #endif /* retrieve it from the vector */
   
@@ -140,7 +147,7 @@ void TauRoutineExit(int id)
   int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
   id --; 
-  FunctionInfo *fi = TauDynFI[id];
+  FunctionInfo *fi = TheTauDynFI()[id];
   dprintf("<tid %d> Exit <id %d> >>>>>> name = %s\n", tid, id, fi->GetName());
   TAU_MAPPING_PROFILE_STOP(tid);
   TAU_MONITOR_EXIT(tid);
@@ -151,21 +158,41 @@ void TauRoutineEntryTest(int id )
   int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
   id --; 
-  dprintf("<tid %d> Entry <id %d>\n", tid, id);
-  FunctionInfo *fi = TauDynFI[id];
+  dprintf("<tid %d> TAU Entry <id %d>\n", tid, id);
+  dprintf("At entry, Size = %d\n", TheTauDynFI().size());
+  vector<FunctionInfo *> vfi = TheTauDynFI();
+  FunctionInfo *fi = 0;
+  for (vector<FunctionInfo *>::iterator it = vfi.begin(); it != vfi.end(); it++)
+  {
+    fi = TheTauDynFI()[id];
+    TAU_MAPPING_PROFILE_TIMER(TauTimer, fi, tid);
+    TAU_MAPPING_PROFILE_START(TauTimer, tid);
+    break;
+  }
+  /*
+  FunctionInfo *fi = TheTauDynFI()[0];
   dprintf("<tid %d> Entry <id %d> <<<<< name = %s\n", tid, id, fi->GetName());
+  */
+  
 
   TAU_MONITOR_EXIT(tid);
 }
   
+
 void TauRoutineExitTest(int id)
 {
   int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
   id --; 
-  dprintf("<tid %d> Exit <id %d>\n", tid, id);
-  FunctionInfo *fi = TauDynFI[id];
+  dprintf("<tid %d> TAU Exit <id %d>\n", tid, id);
+  int val = TheTauDynFI().size();
+  dprintf("Size = %d\n", val);
+  TAU_MAPPING_PROFILE_STOP(tid);
+  
+  /*
+  FunctionInfo *fi = TheTauDynFI()[id];
   printf("<tid %d> Exit <id %d> >>>>>> name = %s\n", tid, id, fi->GetName());
+  */
   TAU_MONITOR_EXIT(tid);
 }
 
@@ -182,15 +209,15 @@ void TauProgramTermination(char *name)
   return;
 }
 
-void HookEntry(char *name)
+void HookEntry(int id)
 {
-  dprintf("Entry ->: %s\n",name);
+  dprintf("Entry ->: %d\n",id);
   return;
 }
 
-void HookExit(char *name)
+void HookExit(int id)
 {
-  dprintf("Exit <-: %s\n",name);
+  dprintf("Exit <-: %d\n",id);
   return;
 }
 
@@ -206,6 +233,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2002/08/01 00:26:52 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.15 2002/08/01 00:26:52 sameer Exp $ 
+ * $Revision: 1.16 $   $Date: 2003/07/17 23:43:19 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.16 2003/07/17 23:43:19 sameer Exp $ 
  ***************************************************************************/
