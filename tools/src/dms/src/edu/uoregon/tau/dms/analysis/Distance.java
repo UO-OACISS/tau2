@@ -28,7 +28,7 @@ public class Distance {
 		buf.append("select count(id) from interval_event where trial = ");
 		buf.append(trial.getID());
 		int eventCount = Integer.parseInt(db.getDataItem(buf.toString()));
-		System.out.println(threadCount + " " + eventCount);
+		// System.out.println(threadCount + " " + eventCount);
 
 		// initialize the matrix
 		results = new EventMatrix(threadCount, eventCount);
