@@ -629,7 +629,7 @@ case $machine in
 	 if [ -f /usr/bin/xlC ]
            then
              cxx_compiler=xlC
-             c_compiler=cc
+             c_compiler=xlc
            else
              cxx_compiler=g++
          fi
@@ -892,6 +892,23 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" ]
 then
   #echo "MPI is specified"
   fixmakeargs="$fixmakeargs MPI"
+  cat <<EOF > mpi_thread_test.C
+  #include <mpi.h>
+
+  int main(int argc, char **argv)
+  {
+    int ret, req, provided;
+    ret = MPI_Init_thread(&argc, &argv, req, &provided);
+    return ret;
+  }
+EOF
+
+  if $cxx_compiler $useropt -I$mpiinc -c mpi_thread_test.C  1> /dev/null 2>&1
+  then
+    echo "Thread-safe MPI interface is defined... "
+    fixmakeargs="$fixmakeargs MPI_THREADED"
+    /bin/rm -rf mpi_thread_test.C
+  fi
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
 fi

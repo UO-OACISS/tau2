@@ -182,6 +182,11 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     MPI_THREADED)
+        echo NOTE: Using the TAU MPI_Init_thread Profiling Interface Wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      mpiincargs=*)
         mpiinc=`echo $1 | sed -e 's/^mpiincargs=//' -e 's/#/ /g'`
 	echo "s@^TAU_MPI_INC=\(.*\)@TAU_MPI_INC=$mpiinc@g" >> $sedout
