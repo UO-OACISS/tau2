@@ -46,7 +46,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			currentSMWMeanData = null;
 			
 			inclusive = false;
-	 		percent = false;
+	 		percent = true;
 	 		unitsString = "milliseconds";
 			
 			//Now set the title.
@@ -169,11 +169,11 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			valuePercentMenu = new JMenu("Select Value or Percent");
 			valuePercentGroup = new ButtonGroup();
 			
-			percentButton = new JRadioButtonMenuItem("Percent", false);
+			percentButton = new JRadioButtonMenuItem("Percent", true);
 			//Add a listener for this radio button.
 			percentButton.addActionListener(this);
 			
-			valueButton = new JRadioButtonMenuItem("Value", true);
+			valueButton = new JRadioButtonMenuItem("Value", false);
 			//Add a listener for this radio button.
 			valueButton.addActionListener(this);
 			
@@ -590,6 +590,16 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	{
 		try
 		{
+			String trialName = trial.getCounterName();
+			trialName = trialName.toUpperCase();
+			boolean isDefault = false;
+			boolean isTimeMetric = false;
+			
+			if(trialName.equals("DEFAULT"))	
+				isDefault = true;
+			else if(trialName.indexOf("TIME") != -1)
+				isTimeMetric = true;
+			
 			if(trial.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else

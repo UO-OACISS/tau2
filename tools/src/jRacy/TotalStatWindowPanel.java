@@ -88,9 +88,6 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			double tmpSum;
 			double tmpDataValue;
 			Color tmpColor;
-			
-			
-
 			int yCoord = 0;
 			
 			
@@ -104,7 +101,6 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 			
 			String tmpString = null;
 			String dashString = "";
-			
 			
 			//Create font.
 			MonoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
@@ -154,7 +150,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 		    if ((clipRect != null))
 		    {
 		    	//Draw the heading!
-				tmpString = trial.getHeading();
+				tmpString = GlobalThreadDataElement.getTStatStringHeading();
 				int tmpInt = tmpString.length();
 				
 				for(int i=0; i<tmpInt; i++)
@@ -163,12 +159,23 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 				}
 				
 				g.setColor(Color.black);
+				
+				AttributedString dashStringAS = new AttributedString(dashString);
+				dashStringAS.addAttribute(TextAttribute.FONT, MonoFont);
+				
+				//Draw the first dashed string.
 				yCoord = yCoord + spacing;
-				g.drawString(dashString, 20, yCoord);
+				g.drawString(dashStringAS.getIterator(), 20, yCoord);
 				yCoord = yCoord + spacing + 10;
-				g.drawString(tmpString, 20, yCoord);
+				
+				//Draw the heading.
+				AttributedString headingStringAS = new AttributedString(tmpString);
+				headingStringAS.addAttribute(TextAttribute.FONT, MonoFont);
+				g.drawString(headingStringAS.getIterator(), 20, yCoord);
 				yCoord = yCoord + spacing + 10;
-				g.drawString(dashString, 20, yCoord);
+				
+				//Draw the second dashed string.
+				g.drawString(dashStringAS.getIterator(), 20, yCoord);
 				
 				startLocation = yCoord;
 				
@@ -210,40 +217,32 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 		    		tmpSMWThreadDataElement = (SMWThreadDataElement) tmpThreadDataElementList.elementAt(i);
 					tmpString = tmpSMWThreadDataElement.getTStatString();
 					
-					if(tmpString.equals("")){
-						tmpString = "Sorry, but this is not supported for derived values yet!";
-						yCoord = yCoord + spacing;
-						g.setColor(Color.black);
-						g.drawString(tmpString, 20, yCoord);
-					}
-					else{
-						yCoord = yCoord + spacing;
+					yCoord = yCoord + spacing;
+					
+		    		g.setColor(Color.black);
 						
-			    		g.setColor(Color.black);
-							
-						AttributedString as = new AttributedString(tmpString);
-						as.addAttribute(TextAttribute.FONT, MonoFont);
-						
-						if((tmpSMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(trial.getColorChooser().getHighlightColor()),
-								trial.getPositionOfName(), tmpString.length());
-						else if((tmpSMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(trial.getColorChooser().getGroupHighlightColor()),
-								trial.getPositionOfName(), tmpString.length());
-						else
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWThreadDataElement.getMappingColor()),
-								trial.getPositionOfName(), tmpString.length());
-						
-						g.drawString(as.getIterator(), 20, yCoord);
-						
-						//Figure out how wide that string was for x coord reasons.
-						if(tmpXWidthCalc < (20 + fmMonoFont.stringWidth(tmpString) + 5))
-						{
-							tmpXWidthCalc = (20 + fmMonoFont.stringWidth(tmpString) + 15);
-						}
+					AttributedString as = new AttributedString(tmpString);
+					as.addAttribute(TextAttribute.FONT, MonoFont);
+					
+					if((tmpSMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(trial.getColorChooser().getHighlightColor()),
+							GlobalThreadDataElement.getPositionOfName(), tmpString.length());
+					else if((tmpSMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(trial.getColorChooser().getGroupHighlightColor()),
+							GlobalThreadDataElement.getPositionOfName(), tmpString.length());
+					else
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(tmpSMWThreadDataElement.getMappingColor()),
+							GlobalThreadDataElement.getPositionOfName(), tmpString.length());
+					
+					g.drawString(as.getIterator(), 20, yCoord);
+					
+					//Figure out how wide that string was for x coord reasons.
+					if(tmpXWidthCalc < 2*fmMonoFont.stringWidth(tmpString))
+					{
+						tmpXWidthCalc = (20 + 2*fmMonoFont.stringWidth(tmpString));
 					}
 				}
 		    		
@@ -256,78 +255,6 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 					revalidate();
 				}	
 					
-			}
-			else
-			{
-				//Draw the heading!
-				tmpString = trial.getHeading();
-				int tmpInt = tmpString.length();
-				
-				for(int i=0; i<tmpInt; i++)
-				{
-					dashString = dashString + "-";
-				}
-				
-				g.setColor(Color.black);
-				yCoord = yCoord + spacing;
-				g.drawString(dashString, 20, yCoord);
-				yCoord = yCoord + spacing + 10;
-				g.drawString(tmpString, 20, yCoord);
-				yCoord = yCoord + spacing + 10;
-				g.drawString(dashString, 20, yCoord);
-				
-				startLocation = yCoord;
-				
-		    	//Set up some panel dimensions.
-		    	newYPanelSize = yCoord + ((tmpThreadDataElementList.size() + 1) * spacing);
-				
-				//Cycle through the elements getting the strings.
-				for(Enumeration e1 = tmpThreadDataElementList.elements(); e1.hasMoreElements() ;)
-				{	
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					tmpString = tmpSMWThreadDataElement.getTStatString();
-					
-					if(tmpString != null)
-					{
-						
-						yCoord = yCoord + spacing;
-						
-						g.setColor(Color.black);
-						
-						AttributedString as = new AttributedString(tmpString);
-						as.addAttribute(TextAttribute.FONT, MonoFont);
-						
-						if((tmpSMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(trial.getColorChooser().getHighlightColor()),
-								trial.getPositionOfName(), tmpString.length());
-						else if((tmpSMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(trial.getColorChooser().getGroupHighlightColor()),
-								trial.getPositionOfName(), tmpString.length());
-						else
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWThreadDataElement.getMappingColor()),
-								trial.getPositionOfName(), tmpString.length());
-						
-						g.drawString(as.getIterator(), 20, yCoord);
-						
-						//Figure out how wide that string was for x coord reasons.
-						if(tmpXWidthCalc < (20 + fmMonoFont.stringWidth(tmpString) + 5))
-						{
-							tmpXWidthCalc = (20 + fmMonoFont.stringWidth(tmpString) + 15);
-						}
-					}
-				}
-						
-				//Resize the panel if needed.
-				if((newYPanelSize >= yPanelSize) || (tmpXWidthCalc  >= xPanelSize))
-				{
-					yPanelSize = newYPanelSize + 1;
-					xPanelSize = tmpXWidthCalc + 1;
-					
-					revalidate();
-				}
 			}
 		}
 		catch(Exception e)

@@ -116,6 +116,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 			g.setFont(font);
 			FontMetrics fmFont = g.getFontMetrics(font);
 
+			int defaultNumberPrecision = jRacy.defaultNumberPrecision;
 			double tmpSum;
 			double tmpDataValue;
 			Color tmpColor;
@@ -191,39 +192,32 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 		    	yCoord = yCoord + (startMeanElement * barSpacing);
 		    	
 		    	//Set the max values for this mapping.
-				maxInclusiveValue = trial.getMaxMeanInclusiveValue(trial.getCurRunValLoc());
-				maxExclusiveValue = trial.getMaxMeanExclusiveValue(trial.getCurRunValLoc());
-				maxInclusivePercentValue = trial.getMaxMeanInclusivePercentValue(trial.getCurRunValLoc());
-				maxExclusivePercentValue = trial.getMaxMeanExclusivePercentValue(trial.getCurRunValLoc());
+				maxInclusiveValue = trial.getMaxMeanInclusiveValue(trial.getCurValLoc());
+				maxExclusiveValue = trial.getMaxMeanExclusiveValue(trial.getCurValLoc());
+				maxInclusivePercentValue = trial.getMaxMeanInclusivePercentValue(trial.getCurValLoc());
+				maxExclusivePercentValue = trial.getMaxMeanExclusivePercentValue(trial.getCurValLoc());
 				maxNumberOfCalls = trial.getMaxMeanNumberOfCalls();
 				maxNumberOfSubroutines = trial.getMaxMeanNumberOfSubRoutines();
-				maxUserSecPerCall = trial.getMaxMeanUserSecPerCall(trial.getCurRunValLoc());
+				maxUserSecPerCall = trial.getMaxMeanUserSecPerCall(trial.getCurValLoc());
 				
 				if((mDWindow.isInclusive())){
 					if(mDWindow.isPercent()){
 						//Need to figure out how long the percentage string will be.
-						tmpString = new String(maxInclusivePercentValue + "%");
-						stringWidth = fmFont.stringWidth(tmpString);
+						stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxInclusivePercentValue, defaultNumberPrecision) + "%");
 						barXCoord = barXCoord + stringWidth;
 					}
 					else{
 						//Check to see what the units are.
-						if((mDWindow.units()).equals("Seconds"))
-						{
-							tmpString = new String((Double.toString((maxInclusiveValue / 1000000.00))));
-							stringWidth = fmFont.stringWidth(tmpString);
+						if((mDWindow.units()).equals("Seconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000000), defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
-						else if((mDWindow.units()).equals("Milliseconds"))
-						{
-							tmpString = new String((Double.toString((maxInclusiveValue / 1000))));
-							stringWidth = fmFont.stringWidth(tmpString);
+						else if((mDWindow.units()).equals("Milliseconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000), defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
-						else
-						{
-							tmpString = new String(Double.toString(maxInclusiveValue));
-							stringWidth = fmFont.stringWidth(tmpString);
+						else{
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxInclusiveValue, defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
 					}
@@ -231,29 +225,21 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 				else{
 					if(mDWindow.isPercent()){
 						//Need to figure out how long the percentage string will be.
-						tmpString = new String(maxExclusivePercentValue + "%");
-						stringWidth = fmFont.stringWidth(tmpString);
+						stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxExclusivePercentValue, defaultNumberPrecision) + "%");
 						barXCoord = barXCoord + stringWidth;
 					}
 					else{
-					
-						//Add the correct amount to barXCoord.
-						if((mDWindow.units()).equals("Seconds"))
-						{
-							tmpString = new String((Double.toString((maxExclusiveValue / 1000000.00))));
-							stringWidth = fmFont.stringWidth(tmpString);
+						//Check to see what the units are.
+						if((mDWindow.units()).equals("Seconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000000), defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
-						else if((mDWindow.units()).equals("Milliseconds"))
-						{
-							tmpString = new String((Double.toString((maxExclusiveValue / 1000))));
-							stringWidth = fmFont.stringWidth(tmpString);
+						else if((mDWindow.units()).equals("Milliseconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000), defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
-						else
-						{
-							tmpString = new String(Double.toString(maxExclusiveValue));
-							stringWidth = fmFont.stringWidth(tmpString);
+						else{
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxExclusiveValue, defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
 					}
@@ -324,11 +310,11 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							//Now print the percentage to the left of the bar.
 							g.setColor(Color.black);
 							//Need to figure out how long the percentage string will be.
-							tmpString = new String(tmpDataValue + "%");
+							tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
 							stringWidth = fmFont.stringWidth(tmpString);
 							//Now draw the percent value to the left of the bar.
 							stringStart = barXCoord - xLength - stringWidth - 5;
-							g.drawString(tmpDataValue + "%", stringStart, yCoord);
+							g.drawString(tmpString, stringStart, yCoord);
 							
 							//Now print the name of the mapping to the right of the bar.
 							tmpString = tmpSMWMeanDataElement.getMappingName();
@@ -413,26 +399,26 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							g.setColor(Color.black);
 							
 							//Check to see what the units are.
-							if((mDWindow.units()).equals("Seconds"))
-							{
-								tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+							if((mDWindow.units()).equals("Seconds")){
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+								g.drawString(tmpString, stringStart, yCoord);
 							}
-							else if((mDWindow.units()).equals("Milliseconds"))
-							{
-								tmpString = new String((Double.toString((tmpDataValue / 1000))));
+							else if((mDWindow.units()).equals("Milliseconds")){
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+								g.drawString(tmpString, stringStart, yCoord);
 							}
-							else
-							{
-								tmpString = new String(Double.toString(tmpDataValue));
+							else{
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+								g.drawString(tmpString, stringStart, yCoord);
 							}				
 							
 							//Now print the name of the mapping to the right of the bar.
@@ -515,11 +501,11 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							//Now print the percentage to the left of the bar.
 							g.setColor(Color.black);
 							//Need to figure out how long the percentage string will be.
-							tmpString = new String(tmpDataValue + "%");
+							tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
 							stringWidth = fmFont.stringWidth(tmpString);
 							stringStart = barXCoord - xLength - stringWidth - 5;
 							//Now draw the percent value to the left of the bar.
-							g.drawString(tmpDataValue + "%", stringStart, yCoord);
+							g.drawString(tmpString, stringStart, yCoord);
 							
 							//Now print the name of the mapping to the right of the bar.
 							tmpString = tmpSMWMeanDataElement.getMappingName();
@@ -602,24 +588,27 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							//Check to see what the units are.
 							if((mDWindow.units()).equals("Seconds"))
 							{
-								tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+								g.drawString(tmpString, stringStart, yCoord);
 							}
 							else if((mDWindow.units()).equals("Milliseconds"))
 							{
-								tmpString = new String((Double.toString((tmpDataValue / 1000))));
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+								g.drawString(tmpString, stringStart, yCoord);
 							}
 							else
 							{
-								tmpString = new String(Double.toString(tmpDataValue));
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
-								g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+								g.drawString(tmpString, stringStart, yCoord);
 							}				
 							
 							//Now print the name of the mapping to the right of the bar.
@@ -864,10 +853,11 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						//Now print the percentage to the left of the bar.
 						g.setColor(Color.black);
 						
-						tmpString = new String(Double.toString(tmpDataValue));
+						tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
-						g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+						g.drawString(tmpString, stringStart, yCoord);
 						
 						//Now print the name of the mapping to the right of the bar.
 						tmpString = tmpSMWMeanDataElement.getMappingName();
@@ -1137,14 +1127,3 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 	//End - Other useful variables.
 	//**********
 }
-
-//Now compute the length of the bar for this object.
-							//The default length for the bar shall be 200.
-							
-							/*  Some notes on the drawing.
-								
-								Drawing of the bars starts from position 200, and goes to the left.
-								The percent value is then draw to the left of it.  The mapping name
-								is then drawn to the right of the bar.
-								
-							*/

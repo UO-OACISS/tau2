@@ -93,22 +93,22 @@ public class SMWThreadDataElement implements Comparable
 	
 	public double getInclusiveValue()
 	{
-		return gTDEReference.getInclusiveValue(trial.getCurRunValLoc());
+		return gTDEReference.getInclusiveValue(trial.getCurValLoc());
 	}
 	
 	public double getExclusiveValue()
 	{
-		return gTDEReference.getExclusiveValue(trial.getCurRunValLoc());
+		return gTDEReference.getExclusiveValue(trial.getCurValLoc());
 	}
 	
 	public double getInclusivePercentValue()
 	{
-		return gTDEReference.getInclusivePercentValue(trial.getCurRunValLoc());
+		return gTDEReference.getInclusivePercentValue(trial.getCurValLoc());
 	}
 	
 	public double getExclusivePercentValue()
 	{
-		return gTDEReference.getExclusivePercentValue(trial.getCurRunValLoc());
+		return gTDEReference.getExclusivePercentValue(trial.getCurValLoc());
 	}
 	
 	public int getNumberOfCalls(){
@@ -120,12 +120,12 @@ public class SMWThreadDataElement implements Comparable
 	}
 	
 	public double getUserSecPerCall(){
-		return gTDEReference.getUserSecPerCall(trial.getCurRunValLoc());
+		return gTDEReference.getUserSecPerCall(trial.getCurValLoc());
 	}
 	
 	public String getTStatString()
 	{
-		return gTDEReference.getTStatString(trial.getCurRunValLoc());
+		return gTDEReference.getTStatString(trial.getCurValLoc());
 	}
 	
 	//User event interface.

@@ -92,12 +92,90 @@ public class GlobalThreadDataElement implements Serializable
 	public double getUserSecPerCall(int dataValueLocation){
 		return this.getDouble(5,dataValueLocation);}
 	
-	public String getTStatString(int dataValueLocation){
+	
+	public static int getPositionOfName(){
+		return 97;
+	}
+	
+	public static String getTStatStringHeading(){
 		try{
-			int initialBufferLength = 80;
+			int defaultNumberPrecision = jRacy.defaultNumberPrecision;
+			int initialBufferLength = 101;
 			int position = 0;
 			char [] statStringArray = new char[initialBufferLength];
 			char [] tmpArray;
+			String tmpString;
+			
+			insertSpaces(statStringArray , 0, 100);
+			
+			tmpArray = ("%time").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 7;
+			tmpArray = ("counts").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 25;
+			tmpArray = ("total counts").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 43;
+			tmpArray = ("#calls").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 61;
+			tmpArray = ("#subrs").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 79;
+			tmpArray = ("count/call").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 97;
+			tmpArray = ("name").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			return new String(statStringArray);
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(e, null, "GTDE01");
+		}
+		
+		return "An error occured pocessing this string!";	
+	}
+	
+	public String getTStatString(int dataValueLocation){
+		try{
+			int defaultNumberPrecision = jRacy.defaultNumberPrecision;
+			int initialBufferLength = 97;
+			int position = 0;
+			char [] statStringArray = new char[initialBufferLength];
+			char [] tmpArray;
+			String tmpString;
+			
+			this.insertSpaces(statStringArray , 0, 97);
 			
 			DecimalFormat dF = new DecimalFormat();
 			dF.applyPattern("##0.0");
@@ -107,47 +185,54 @@ public class GlobalThreadDataElement implements Serializable
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			dF.applyPattern("0.######E0");
-			tmpArray = (dF.format(this.getExclusiveValue(dataValueLocation))).toCharArray();
+			position = 7;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getExclusiveValue(dataValueLocation),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (dF.format(this.getInclusiveValue(dataValueLocation))).toCharArray();
+			position = 25;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getInclusiveValue(dataValueLocation),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (Integer.toString(this.getNumberOfCalls())).toCharArray();
+			position = 43;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getNumberOfCalls(),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();												
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (Integer.toString(this.getNumberOfSubRoutines())).toCharArray();
+			position = 61;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getNumberOfSubRoutines(),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (dF.format(this.getUserSecPerCall(dataValueLocation))).toCharArray();
+			position = 79;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getUserSecPerCall(dataValueLocation),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
-				position++;
-			}
-			position = this.insertSpaces(statStringArray , position, 2);
-			
-			//Fill in the rest of the buffer.
-			while(position < initialBufferLength){
-				statStringArray[position] = '\u0020';
 				position++;
 			}
 			
@@ -200,47 +285,106 @@ public class GlobalThreadDataElement implements Serializable
 	public double getUserEventMeanValue(){
 		return this.getDouble(3,0);}
 	
-	public String getUserEventStatString(){
+	
+	public static String getUserEventStatStringHeading(){
 		try{
-			int initialBufferLength = 80;
+			int defaultNumberPrecision = jRacy.defaultNumberPrecision;
+			int initialBufferLength = 82;
 			int position = 0;
 			char [] statStringArray = new char[initialBufferLength];
 			char [] tmpArray;
+			String tmpString;
 			
+			insertSpaces(statStringArray , 0, 82);
+			
+			tmpArray = ("NumSamples").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 18;
+			tmpArray = ("MaxValue").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 36;
+			tmpArray = ("MinValue").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 54;
+			tmpArray = ("MeanValue").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			position = 72;
+			tmpArray = ("Event Name").toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			
+			return new String(statStringArray);
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(e, null, "GTDE01");
+		}
+		
+		return "An error occured pocessing this string!";	
+	}
+	
+	public String getUserEventStatString(){
+		try{
+			int defaultNumberPrecision = jRacy.defaultNumberPrecision;
+			int initialBufferLength = 72;
+			int position = 0;
+			char [] statStringArray = new char[initialBufferLength];
+			char [] tmpArray;
+			String tmpString;
+			
+			this.insertSpaces(statStringArray , 0, 72);
 			
 			tmpArray = (Integer.toString(this.getUserEventNumberValue()).toCharArray());
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			DecimalFormat dF = new DecimalFormat();
-			dF.applyPattern("0.######E0");
-			tmpArray = (dF.format(this.getUserEventMaxValue())).toCharArray();
+			position = 18;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getUserEventMaxValue(),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (dF.format(this.getUserEventMinValue())).toCharArray();
+			position = 36;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getUserEventMinValue(),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();												
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (dF.format(this.getUserEventMeanValue())).toCharArray();
+			position = 54;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getUserEventMeanValue(),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
-				position++;
-			}
-			position = this.insertSpaces(statStringArray , position, 2);
-			
-			//Fill in the rest of the buffer.
-			while(position < initialBufferLength){
-				statStringArray[position] = '\u0020';
 				position++;
 			}
 			
@@ -250,13 +394,17 @@ public class GlobalThreadDataElement implements Serializable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(e, null, "GTDE04");
+			jRacy.systemError(e, null, "GTDE01");
 		}
 		
-		return "An error occured pocessing this string!";	
+		return "An error occured pocessing this string!";
 	}
 	
-	private int insertSpaces(char[] inArray, int position, int number){
+	public static int getPositionOfUserEventName(){
+		return 72;
+	}
+	
+	private static int insertSpaces(char[] inArray, int position, int number){
 		for(int i=0;i<number;i++){
 			inArray[position] = '\u0020';
 			position++;

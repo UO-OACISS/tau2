@@ -87,6 +87,12 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		{
 			super.paintComponent(g);
 			
+			Rectangle clipRect = g.getClipBounds();
+			
+			int yBeg = (int) clipRect.getY();
+			int yEnd = (int) (yBeg + clipRect.getHeight());
+			yEnd = yEnd + barSpacing;
+			
 			//Do the standard font and spacing stuff.
 			if(!(trial.getPreferences().areBarDetailsSet()))
 			{
@@ -113,11 +119,18 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			barSpacing = trial.getPreferences().getBarSpacing();
 			barHeight = trial.getPreferences().getBarHeight();
 			
+			//Reset the font to the correct height.
+			Font nameMetricFont = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), 12);
+			FontMetrics fmFont = g.getFontMetrics(nameMetricFont);
+			//Compute the font metrics for this font.
+			int nameMetricHeight = fmFont.getAscent() + fmFont.getMaxDescent();
+			
 			//Create font.
 			Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), barHeight);
 			g.setFont(font);
-			FontMetrics fmFont = g.getFontMetrics(font);
+			fmFont = g.getFontMetrics(font);
 
+			int defaultNumberPrecision = jRacy.defaultNumberPrecision;
 			double tmpSum;
 			double tmpDataValue;
 			Color tmpColor;
@@ -128,13 +141,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			//Convenient counters.
 			int colorCounter = 0;
 		
-			int yCoord = 0;
-			
+			int yCoord = (2*nameMetricHeight)+14;
 			int tmpXWidthCalc = 0;
 			
 			//An XCoord used in drawing the bars.
 			int barXCoord = defaultBarLength + 60;
-			yCoord = 0;
 			
 			//Grab the appropriate global mapping element.
 			GlobalMapping tmpGM = trial.getGlobalMapping();
@@ -143,104 +154,79 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			mappingID = tmpGME.getGlobalID();
 			
 			//Set the max values for this mapping.
-			maxInclusiveValue = tmpGME.getMaxInclusiveValue(trial.getCurRunValLoc());
-			maxExclusiveValue = tmpGME.getMaxExclusiveValue(trial.getCurRunValLoc());
-			maxInclusivePercentValue = tmpGME.getMaxInclusivePercentValue(trial.getCurRunValLoc());
-			maxExclusivePercentValue = tmpGME.getMaxExclusivePercentValue(trial.getCurRunValLoc());
+			maxInclusiveValue = tmpGME.getMaxInclusiveValue(trial.getCurValLoc());
+			maxExclusiveValue = tmpGME.getMaxExclusiveValue(trial.getCurValLoc());
+			maxInclusivePercentValue = tmpGME.getMaxInclusivePercentValue(trial.getCurValLoc());
+			maxExclusivePercentValue = tmpGME.getMaxExclusivePercentValue(trial.getCurValLoc());
 			maxNumberOfCalls = tmpGME.getMaxNumberOfCalls();
 			maxNumberOfSubroutines = tmpGME.getMaxNumberOfSubRoutines();
-			maxUserSecPerCall = tmpGME.getMaxUserSecPerCall(trial.getCurRunValLoc());
-			
-			yCoord = yCoord + (barSpacing);
+			maxUserSecPerCall = tmpGME.getMaxUserSecPerCall(trial.getCurValLoc());
 			
 			//**********
 			//Draw the counter name if required.
-			counterName = trial.getCounterName();
-			if(counterName != null){
-				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
-				yCoord = yCoord + (barSpacing);
-			}
+			//counterName = trial.getCounterName();
+			//if(counterName != null){
+			//	g.drawString("COUNTER NAME: " + counterName, 5, yBeg + 16);
+			//	yCoord = yCoord + (16);
+			//}
 			//End - Draw the counter name if required.
 			//**********
 			
 			
 			//**********
 			//Draw the mapping name.
-			g.drawString("FUNCTION NAME: " + mappingName, 5, yCoord);
+			//g.drawString("FUNCTION NAME: " + mappingName, 5, yBeg + 32);
 			//Calculate its width.
-			tmpXWidthCalc = fmFont.stringWidth(mappingName);
-			yCoord = yCoord + (barSpacing);
+			//tmpXWidthCalc = fmFont.stringWidth(mappingName);
+			//yCoord = yCoord + (barSpacing);
 			//End - Draw the mapping name.
 			//**********
 			
-			Rectangle clipRect = g.getClipBounds();
-			
-			int yBeg = (int) clipRect.getY();
-			int yEnd = (int) (yBeg + clipRect.getHeight());
-			yEnd = yEnd + barSpacing;
-			
-			
 			//Get some string lengths.
-			
 			if((mDWindow.isInclusive())){
-				if(mDWindow.isPercent()){
-					//Need to figure out how long the percentage string will be.
-					tmpString = new String(maxInclusivePercentValue + "%");
-					stringWidth = fmFont.stringWidth(tmpString);
-					barXCoord = barXCoord + stringWidth;
+					if(mDWindow.isPercent()){
+						//Need to figure out how long the percentage string will be.
+						stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxInclusivePercentValue, defaultNumberPrecision) + "%");
+						barXCoord = barXCoord + stringWidth;
+					}
+					else{
+						//Check to see what the units are.
+						if((mDWindow.units()).equals("Seconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000000), defaultNumberPrecision));
+							barXCoord = barXCoord + stringWidth;
+						}
+						else if((mDWindow.units()).equals("Milliseconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000), defaultNumberPrecision));
+							barXCoord = barXCoord + stringWidth;
+						}
+						else{
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxInclusiveValue, defaultNumberPrecision));
+							barXCoord = barXCoord + stringWidth;
+						}
+					}
 				}
 				else{
-					//Check to see what the units are.
-					if((mDWindow.units()).equals("Seconds"))
-					{
-						tmpString = new String((Double.toString((maxInclusiveValue / 1000000.00))));
-						stringWidth = fmFont.stringWidth(tmpString);
+					if(mDWindow.isPercent()){
+						//Need to figure out how long the percentage string will be.
+						stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxExclusivePercentValue, defaultNumberPrecision) + "%");
 						barXCoord = barXCoord + stringWidth;
 					}
-					else if((mDWindow.units()).equals("Milliseconds"))
-					{
-						tmpString = new String((Double.toString((maxInclusiveValue / 1000))));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					else
-					{
-						tmpString = new String(Double.toString(maxInclusiveValue));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-				}
-			}
-			else{
-				if(mDWindow.isPercent()){
-					//Need to figure out how long the percentage string will be.
-					tmpString = new String(maxExclusivePercentValue + "%");
-					stringWidth = fmFont.stringWidth(tmpString);
-					barXCoord = barXCoord + stringWidth;
-				}
-				else{
-				
-					//Add the correct amount to barXCoord.
-					if((mDWindow.units()).equals("Seconds"))
-					{
-						tmpString = new String((Double.toString((maxExclusiveValue / 1000000.00))));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					else if((mDWindow.units()).equals("Milliseconds"))
-					{
-						tmpString = new String((Double.toString((maxExclusiveValue / 1000))));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
-					}
-					else
-					{
-						tmpString = new String(Double.toString(maxExclusiveValue));
-						stringWidth = fmFont.stringWidth(tmpString);
-						barXCoord = barXCoord + stringWidth;
+					else{
+						//Check to see what the units are.
+						if((mDWindow.units()).equals("Seconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000000), defaultNumberPrecision));
+							barXCoord = barXCoord + stringWidth;
+						}
+						else if((mDWindow.units()).equals("Milliseconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000), defaultNumberPrecision));
+							barXCoord = barXCoord + stringWidth;
+						}
+						else{
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxExclusiveValue, defaultNumberPrecision));
+							barXCoord = barXCoord + stringWidth;
+						}
 					}
 				}
-			}
 			
 			//******************************
 			//Do the mean bar.
@@ -249,6 +235,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			//Build the node,context,thread string.
 			String s1 = "mean";
 			
+			if((yCoord >= yBeg) && (yCoord <= yEnd)){
+			
 			//Test for the different menu options for this window.
 			if((mDWindow.getMetric()).equals("Inclusive"))
 			{	
@@ -256,7 +244,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 				{		
 					yCoord = yCoord + (barSpacing);
 					
-					tmpDataValue = tmpGME.getMeanInclusivePercentValue(trial.getCurRunValLoc());
+					tmpDataValue = tmpGME.getMeanInclusivePercentValue(trial.getCurValLoc());
 					
 					int xLength;
 					double tmpDouble;
@@ -310,11 +298,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					//Now print the percentage to the left of the bar.
 					g.setColor(Color.black);
 					//Need to figure out how long the percentage string will be.
-					tmpString = new String(tmpDataValue + "%");
+					tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
 					stringWidth = fmFont.stringWidth(tmpString);
 					//Now draw the percent value to the left of the bar.
 					stringStart = barXCoord - xLength - stringWidth - 5;
-					g.drawString(tmpDataValue + "%", stringStart, yCoord);
+					g.drawString(tmpString, stringStart, yCoord);
 					
 					//Now print the node,context,thread to the right of the bar.
 					tmpString = s1;
@@ -334,7 +322,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					yCoord = yCoord + (barSpacing);
 					
 					//Set tmpDataValue to the correct value.
-					tmpDataValue = tmpGME.getMeanInclusiveValue(trial.getCurRunValLoc());
+					tmpDataValue = tmpGME.getMeanInclusiveValue(trial.getCurValLoc());
 					
 					//Figure out how long the bar should be.
 					int xLength;
@@ -392,24 +380,27 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					//Check to see what the units are.
 					if((mDWindow.units()).equals("Seconds"))
 					{
-						tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+						tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
-						g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+						g.drawString(tmpString, stringStart, yCoord);
 					}
 					else if((mDWindow.units()).equals("Milliseconds"))
 					{
-						tmpString = new String((Double.toString((tmpDataValue / 1000))));
+						tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
-						g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+						g.drawString(tmpString, stringStart, yCoord);
 					}
 					else
 					{
-						tmpString = new String(Double.toString(tmpDataValue));
+						tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
-						g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+						g.drawString(tmpString, stringStart, yCoord);
 					}				
 					
 					//Now print the node,context,thread to the right of the bar.
@@ -431,7 +422,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					//For consistancy in drawing, the y coord is updated at the beggining of the loop.
 					yCoord = yCoord + (barSpacing);
 					
-					tmpDataValue = tmpGME.getMeanExclusivePercentValue(trial.getCurRunValLoc());
+					tmpDataValue = tmpGME.getMeanExclusivePercentValue(trial.getCurValLoc());
 					
 					int xLength;
 					double tmpDouble;
@@ -485,11 +476,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					//Now print the percentage to the left of the bar.
 					g.setColor(Color.black);
 					//Need to figure out how long the percentage string will be.
-					tmpString = new String(tmpDataValue + "%");
+					tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
 					stringWidth = fmFont.stringWidth(tmpString);
 					stringStart = barXCoord - xLength - stringWidth - 5;
 					//Now draw the percent value to the left of the bar.
-					g.drawString(tmpDataValue + "%", stringStart, yCoord);
+					g.drawString(tmpString, stringStart, yCoord);
 					
 					//Now print the node,context,thread to the right of the bar.
 					tmpString = s1;
@@ -507,7 +498,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					yCoord = yCoord + (barSpacing);
 					
 					//Set tmpDataValue to the correct value.
-					tmpDataValue = tmpGME.getMeanExclusiveValue(trial.getCurRunValLoc());
+					tmpDataValue = tmpGME.getMeanExclusiveValue(trial.getCurValLoc());
 					
 					//Figure out how long the bar should be.
 					int xLength;
@@ -563,26 +554,26 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 					g.setColor(Color.black);
 					
 					//Check to see what the units are.
-					if((mDWindow.units()).equals("Seconds"))
-					{
-						tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+					if((mDWindow.units()).equals("Seconds")){
+						tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
-						g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+						g.drawString(tmpString, stringStart, yCoord);
 					}
-					else if((mDWindow.units()).equals("Milliseconds"))
-					{
-						tmpString = new String((Double.toString((tmpDataValue / 1000))));
+					else if((mDWindow.units()).equals("Milliseconds")){
+						tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
-						g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+						g.drawString(tmpString, stringStart, yCoord);
 					}
-					else
-					{
-						tmpString = new String(Double.toString(tmpDataValue));
+					else{
+						tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
-						g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+						g.drawString(tmpString, stringStart, yCoord);
 					}				
 					
 					//Now print the node,context,thread to the right of the bar.
@@ -757,7 +748,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 				yCoord = yCoord + (barSpacing);
 				
 				//Set tmpDataValue to the correct value.
-				tmpDataValue = tmpGME.getMeanUserSecPerCall(trial.getCurRunValLoc());
+				tmpDataValue = tmpGME.getMeanUserSecPerCall(trial.getCurValLoc());
 				
 				//Figure out how long the bar should be.
 				int xLength;
@@ -812,10 +803,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 				//Now print the percentage to the left of the bar.
 				g.setColor(Color.black);
 				
-				tmpString = new String(Double.toString(tmpDataValue));
+				tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 				stringWidth = fmFont.stringWidth(tmpString);
 				stringStart = barXCoord - xLength - stringWidth - 5;
-				g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+				g.drawString(tmpString, stringStart, yCoord);
 				
 				//Now print the node,context,thread to the right of the bar.
 				tmpString = s1;
@@ -832,7 +824,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			//******************************
 			//End - Do the mean bar.
 			//******************************
-			
+			}
 			
 			//******************************
 			//Now the rest.
@@ -933,11 +925,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 											//Now print the percentage to the left of the bar.
 											g.setColor(Color.black);
 											//Need to figure out how long the percentage string will be.
-											tmpString = new String(tmpDataValue + "%");
+											tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
 											stringWidth = fmFont.stringWidth(tmpString);
 											//Now draw the percent value to the left of the bar.
 											stringStart = barXCoord - xLength - stringWidth - 5;
-											g.drawString(tmpDataValue + "%", stringStart, yCoord);
+											g.drawString(tmpString, stringStart, yCoord);
 											
 											//Now print the node,context,thread to the right of the bar.
 											tmpString = s1;
@@ -1027,24 +1019,27 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 											//Check to see what the units are.
 											if((mDWindow.units()).equals("Seconds"))
 											{
-												tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+												tmpString = new String(Double.toString(
+													UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
 												stringWidth = fmFont.stringWidth(tmpString);
 												stringStart = barXCoord - xLength - stringWidth - 5;
-												g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+												g.drawString(tmpString, stringStart, yCoord);
 											}
 											else if((mDWindow.units()).equals("Milliseconds"))
 											{
-												tmpString = new String((Double.toString((tmpDataValue / 1000))));
+												tmpString = new String(Double.toString(
+													UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
 												stringWidth = fmFont.stringWidth(tmpString);
 												stringStart = barXCoord - xLength - stringWidth - 5;
-												g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+												g.drawString(tmpString, stringStart, yCoord);
 											}
 											else
 											{
-												tmpString = new String(Double.toString(tmpDataValue));
+												tmpString = new String(Double.toString(
+													UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 												stringWidth = fmFont.stringWidth(tmpString);
 												stringStart = barXCoord - xLength - stringWidth - 5;
-												g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+												g.drawString(tmpString, stringStart, yCoord);
 											}				
 											
 											//Now print the node,context,thread to the right of the bar.
@@ -1133,11 +1128,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 											//Now print the percentage to the left of the bar.
 											g.setColor(Color.black);
 											//Need to figure out how long the percentage string will be.
-											tmpString = new String(tmpDataValue + "%");
+											tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
 											stringWidth = fmFont.stringWidth(tmpString);
 											stringStart = barXCoord - xLength - stringWidth - 5;
 											//Now draw the percent value to the left of the bar.
-											g.drawString(tmpDataValue + "%", stringStart, yCoord);
+											g.drawString(tmpString, stringStart, yCoord);
 											
 											//Now print the node,context,thread to the right of the bar.
 											tmpString = s1;
@@ -1228,24 +1223,27 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 											//Check to see what the units are.
 											if((mDWindow.units()).equals("Seconds"))
 											{
-												tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+												tmpString = new String(Double.toString(
+													UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
 												stringWidth = fmFont.stringWidth(tmpString);
 												stringStart = barXCoord - xLength - stringWidth - 5;
-												g.drawString((Double.toString((tmpDataValue / 1000000.00))), stringStart, yCoord);
+												g.drawString(tmpString, stringStart, yCoord);
 											}
 											else if((mDWindow.units()).equals("Milliseconds"))
 											{
-												tmpString = new String((Double.toString((tmpDataValue / 1000))));
+												tmpString = new String(Double.toString(
+													UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
 												stringWidth = fmFont.stringWidth(tmpString);
 												stringStart = barXCoord - xLength - stringWidth - 5;
-												g.drawString((Double.toString((tmpDataValue / 1000))), stringStart, yCoord);
+												g.drawString(tmpString, stringStart, yCoord);
 											}
 											else
 											{
-												tmpString = new String(Double.toString(tmpDataValue));
+												tmpString = new String(Double.toString(
+													UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 												stringWidth = fmFont.stringWidth(tmpString);
 												stringStart = barXCoord - xLength - stringWidth - 5;
-												g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+												g.drawString(tmpString, stringStart, yCoord);
 											}				
 											
 											//Now print the node,context,thread to the right of the bar.
@@ -1517,10 +1515,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 										//Now print the percentage to the left of the bar.
 										g.setColor(Color.black);
 										
-										tmpString = new String(Double.toString(tmpDataValue));
+										tmpString = new String(Double.toString(
+											UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 										stringWidth = fmFont.stringWidth(tmpString);
 										stringStart = barXCoord - xLength - stringWidth - 5;
-										g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);
+										g.drawString(tmpString, stringStart, yCoord);
 										
 										//Now print the node,context,thread to the right of the bar.
 										tmpString = s1;
@@ -1551,6 +1550,29 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			serverNumber++;
 			
 			}
+			
+			g.setColor(Color.white);
+			g.fillRect(0, yBeg, tmpXWidthCalc, 2*nameMetricHeight+12);
+			g.setColor(Color.black);
+			
+			g.setFont(nameMetricFont);
+			//**********
+			//Draw the counter name if required.
+			counterName = trial.getCounterName();
+			if(counterName != null){
+				g.drawString("COUNTER NAME: " + counterName, 5, yBeg + nameMetricHeight + 3);
+			}
+			//End - Draw the counter name if required.
+			//**********
+			
+			
+			//**********
+			//Draw the mapping name.
+			g.drawString("FUNCTION NAME: " + mappingName, 5, yBeg+2*nameMetricHeight+6);
+			//Calculate its width.
+			tmpXWidthCalc = fmFont.stringWidth(mappingName);
+			//End - Draw the mapping name.
+			//**********
 			
 			boolean sizeChange = false;		
 			//Resize the panel if needed.

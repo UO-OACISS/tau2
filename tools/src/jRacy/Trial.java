@@ -26,21 +26,62 @@ import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.tree.*;
+//import javax.swing.Timer;
 
 public class Trial implements Serializable
 {
 	//Constructor.
-	public Trial()
+	public Trial(Experiment inParentExp)
 	{
+		parentExperiment = inParentExp;
 		globalMapping = new GlobalMapping(this);
 		systemEvents = new SystemEvents();
 		StaticServerList = new Vector();
-		positionOfName = -1;
-		positionOfUserEventName = -1;
 		counterName = null;
-		heading = null;
-		userEventHeading = null;
 		isUserEventHeadingSet = false;
+	}
+	
+	public Experiment getParentExperiment(){
+		return parentExperiment;
+	}
+	
+	public void setDMTN(DefaultMutableTreeNode inNode){
+		nodeRef = inNode;
+	}
+	
+	public DefaultMutableTreeNode getDMTN(){
+		return nodeRef;
+	}
+	
+	public void setTrialName(String inString){
+		trialName = inString;
+	}
+	
+	public String getTrialName(){
+		return trialName;
+	}
+	
+	public void setTrialID(int inTrialID){
+		trialID = inTrialID;
+		//Since the parentApplication is set in the constructor,
+		//it is not null.  Therefore we can safely set the experimentIDString.
+		trialIDString = parentExperiment.getExperimentIDString() + trialID;
+	}
+	
+	public int getTrialID(){
+		return trialID;
+	}
+	
+	public String getTrialIDString(){
+		return trialIDString;
+	}
+	
+	public Value addValue(){
+		Value newValue = new Value(this);
+		newValue.setValueID((values.size()));
+		values.add(newValue);
+		return newValue;
 	}
 	
 	public ColorChooser getColorChooser(){
@@ -67,43 +108,23 @@ public class Trial implements Serializable
 		return profilePathNameReverse;
 	}
 	
-	//This sets the name for the run.  The run name is different
-	//from the list of run value names.  A run has one run name
-	//,but can have multiple run value names.
-	public void setRunName(String inString){
-		runName = inString;
+	public Vector getValues(){
+		return values;
 	}
 	
-	
-	public void addRunValueName(String inString){
-		runValueNameList.add(inString);
-	}
-	
-	public Vector getRunValueNameList(){
-		return runValueNameList;
-	}
-	
-	public boolean isTrialValueNamePresent(String inString){
-		return false;
-	}
-	
-	public int getTrialValueNamePosition(String inString){
-		
+	public int getValuePosition(String inString){
 		int counter = 0;
-		
-		for(Enumeration e = runValueNameList.elements(); e.hasMoreElements() ;)
-		{
-			String tmpString = (String) e.nextElement();
-			if(inString.equals(tmpString.toString()))
+		for(Enumeration e = values.elements(); e.hasMoreElements() ;){
+			Value tmpValue = (Value) e.nextElement();
+			if((tmpValue.getValueName()).equals(inString))
 				return counter;
 			counter++;
 		}
-		
 		return -1;
 	}
 	
 	public String toString(){
-		return runName;
+		return trialName;
 	}
 	
 	public Vector getStaticServerList()
@@ -129,18 +150,12 @@ public class Trial implements Serializable
 		return systemEvents;
 	}
 	
-	
-	public void setCurRunValLoc(int inInt){
-		currentRunValueLocation = inInt;
+	public void setCurValLoc(int inValueLocation){
+		currentValueLocation = inValueLocation;
 	}
 	
-	public void setCurRunValLoc(String inString){
-		int tmpInt = this.getTrialValueNamePosition(inString);
-		currentRunValueLocation = tmpInt;
-	}
-	
-	public int getCurRunValLoc(){
-		return currentRunValueLocation;
+	public int getCurValLoc(){
+		return currentValueLocation;
 	}
 	
 	
@@ -150,6 +165,8 @@ public class Trial implements Serializable
 		maxMeanInclusivePercentValueList.add(new Double(0));
 		maxMeanExclusivePercentValueList.add(new Double(0));
 		maxMeanUserSecPerCallList.add(new Double(0));
+		totalMeanInclusiveValueList.add(new Double(0));
+		totalMeanExclusiveValueList.add(new Double(0));
 	}
 	
 	//The following funtion initializes the GlobalMapping object.
@@ -172,7 +189,8 @@ public class Trial implements Serializable
 	
 	public String getCounterName()
 	{
-		return (String) runValueNameList.elementAt(currentRunValueLocation);
+		Value tmpValue = (Value) values.elementAt(currentValueLocation);
+		return tmpValue.getValueName();
 	}
 	
 	//The core public function of this class.  It reads pprof dump files ... that is pprof
@@ -184,7 +202,13 @@ public class Trial implements Serializable
 		String inputString = null;
 		try
 		{
-			BufferedReader br = new BufferedReader(new FileReader(inFile));
+			
+			//new FileReader(inFile)
+			
+			FileInputStream fileIn = new FileInputStream(inFile);
+			ProgressMonitorInputStream progressIn = new ProgressMonitorInputStream(null, "Processing ...", fileIn);
+			InputStreamReader inReader = new InputStreamReader(progressIn);
+			BufferedReader br = new BufferedReader(inReader);
 			
 			//Some useful strings.
 			//String inputString;
@@ -280,11 +304,11 @@ public class Trial implements Serializable
 									}
 									
 									//Set the value for this mapping.
-									if(!(globalMapping.setTotalExclusiveValueAt(currentRunValueLocation, value, mappingID, 0)))
+									if(!(globalMapping.setTotalExclusiveValueAt(currentValueLocation, value, mappingID, 0)))
 										System.out.println("There was an error setting Exc/Inc total time");	
 								}
 								else{
-									if(!(globalMapping.setTotalInclusiveValueAt(currentRunValueLocation, value, mappingID, 0)))
+									if(!(globalMapping.setTotalInclusiveValueAt(currentValueLocation, value, mappingID, 0)))
 										System.out.println("There was an error setting Exc/Inc total time");
 								}
 							} //End - Check to See if the String begins with a t.
@@ -299,23 +323,23 @@ public class Trial implements Serializable
 								if(checkForExcInc(inputString, true, false))
 								{
 									//Now set the values correctly.
-									if((this.getMaxMeanExclusiveValue(currentRunValueLocation)) < value){
-										this.setMaxMeanExclusiveValue(currentRunValueLocation, value);}
-									if((this.getMaxMeanExclusivePercentValue(currentRunValueLocation)) < percentValue){
-										this.setMaxMeanExclusivePercentValue(currentRunValueLocation, percentValue);}
+									if((this.getMaxMeanExclusiveValue(currentValueLocation)) < value){
+										this.setMaxMeanExclusiveValue(currentValueLocation, value);}
+									if((this.getMaxMeanExclusivePercentValue(currentValueLocation)) < percentValue){
+										this.setMaxMeanExclusivePercentValue(currentValueLocation, percentValue);}
 									
-									tmpGlobalMappingElement.setMeanExclusiveValue(currentRunValueLocation, value);
-									tmpGlobalMappingElement.setMeanExclusivePercentValue(currentRunValueLocation, percentValue);
+									tmpGlobalMappingElement.setMeanExclusiveValue(currentValueLocation, value);
+									tmpGlobalMappingElement.setMeanExclusivePercentValue(currentValueLocation, percentValue);
 								}
 								else{
 									//Now set the values correctly.
-									if((this.getMaxMeanInclusiveValue(currentRunValueLocation)) < value){
-										this.setMaxMeanInclusiveValue(currentRunValueLocation, value);}
-									if((this.getMaxMeanInclusivePercentValue(currentRunValueLocation)) < percentValue){
-										this.setMaxMeanInclusivePercentValue(currentRunValueLocation, percentValue);}
+									if((this.getMaxMeanInclusiveValue(currentValueLocation)) < value){
+										this.setMaxMeanInclusiveValue(currentValueLocation, value);}
+									if((this.getMaxMeanInclusivePercentValue(currentValueLocation)) < percentValue){
+										this.setMaxMeanInclusivePercentValue(currentValueLocation, percentValue);}
 									
-									tmpGlobalMappingElement.setMeanInclusiveValue(currentRunValueLocation, value);
-									tmpGlobalMappingElement.setMeanInclusivePercentValue(currentRunValueLocation, percentValue);
+									tmpGlobalMappingElement.setMeanInclusiveValue(currentValueLocation, value);
+									tmpGlobalMappingElement.setMeanInclusivePercentValue(currentValueLocation, percentValue);
 									
 									//Set number of calls/subroutines/usersec per call.
 									inputString = br.readLine();
@@ -339,10 +363,10 @@ public class Trial implements Serializable
 									//Update the max values if required.
 									//Grab the correct global mapping element.
 									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
-									if((tmpGlobalMappingElement.getMaxExclusiveValue(currentRunValueLocation)) < value)
-										tmpGlobalMappingElement.setMaxExclusiveValue(currentRunValueLocation, value);
-									if((tmpGlobalMappingElement.getMaxExclusivePercentValue(currentRunValueLocation)) < percentValue)
-										tmpGlobalMappingElement.setMaxExclusivePercentValue(currentRunValueLocation, percentValue);
+									if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < value)
+										tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, value);
+									if((tmpGlobalMappingElement.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
+										tmpGlobalMappingElement.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 									//Get the node,context,thread.
 									node = getNCT(0,inputString, false);
 									context = getNCT(1,inputString, false);
@@ -397,13 +421,13 @@ public class Trial implements Serializable
 													currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
 												}
 												tmpGTDE.setMappingExists();
-												tmpGTDE.setExclusiveValue(currentRunValueLocation, value);
-												tmpGTDE.setExclusivePercentValue(currentRunValueLocation, percentValue);
+												tmpGTDE.setExclusiveValue(currentValueLocation, value);
+												tmpGTDE.setExclusivePercentValue(currentValueLocation, percentValue);
 												//Now check the max values on this thread.
-												if((currentGlobalThread.getMaxExclusiveValue(currentRunValueLocation)) < value)
-													currentGlobalThread.setMaxExclusiveValue(currentRunValueLocation, value);
-												if((currentGlobalThread.getMaxExclusivePercentValue(currentRunValueLocation)) < value)
-													currentGlobalThread.setMaxExclusivePercentValue(currentRunValueLocation, percentValue);
+												if((currentGlobalThread.getMaxExclusiveValue(currentValueLocation)) < value)
+													currentGlobalThread.setMaxExclusiveValue(currentValueLocation, value);
+												if((currentGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < value)
+													currentGlobalThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 												
 												//Check to see if the context is zero.
 												if(context == 0)
@@ -472,13 +496,13 @@ public class Trial implements Serializable
 												}
 												
 												tmpGTDE.setMappingExists();
-												tmpGTDE.setExclusiveValue(currentRunValueLocation, value);
-												tmpGTDE.setExclusivePercentValue(currentRunValueLocation, percentValue);
+												tmpGTDE.setExclusiveValue(currentValueLocation, value);
+												tmpGTDE.setExclusivePercentValue(currentValueLocation, percentValue);
 												//Now check the max values on this thread.
-												if((currentGlobalThread.getMaxExclusiveValue(currentRunValueLocation)) < value)
-													currentGlobalThread.setMaxExclusiveValue(currentRunValueLocation, value);
-												if((currentGlobalThread.getMaxExclusivePercentValue(currentRunValueLocation)) < value)
-													currentGlobalThread.setMaxExclusivePercentValue(currentRunValueLocation, percentValue);
+												if((currentGlobalThread.getMaxExclusiveValue(currentValueLocation)) < value)
+													currentGlobalThread.setMaxExclusiveValue(currentValueLocation, value);
+												if((currentGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < value)
+													currentGlobalThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 												
 												//Add the current thread
 												currentGlobalContext.addThread(currentGlobalThread);
@@ -500,13 +524,13 @@ public class Trial implements Serializable
 											}
 											
 											tmpGTDE.setMappingExists();
-											tmpGTDE.setExclusiveValue(currentRunValueLocation, value);
-											tmpGTDE.setExclusivePercentValue(currentRunValueLocation, percentValue);
+											tmpGTDE.setExclusiveValue(currentValueLocation, value);
+											tmpGTDE.setExclusivePercentValue(currentValueLocation, percentValue);
 											//Now check the max values on this thread.
-											if((currentGlobalThread.getMaxExclusiveValue(currentRunValueLocation)) < value)
-												currentGlobalThread.setMaxExclusiveValue(currentRunValueLocation, value);
-											if((currentGlobalThread.getMaxExclusivePercentValue(currentRunValueLocation)) < percentValue)
-												currentGlobalThread.setMaxExclusivePercentValue(currentRunValueLocation, percentValue);
+											if((currentGlobalThread.getMaxExclusiveValue(currentValueLocation)) < value)
+												currentGlobalThread.setMaxExclusiveValue(currentValueLocation, value);
+											if((currentGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
+												currentGlobalThread.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 										}
 									}
 									else{
@@ -521,14 +545,14 @@ public class Trial implements Serializable
 										
 										GlobalThreadDataElement tmpGTDE = (GlobalThreadDataElement) tmpGlobalThreadDataElementList.elementAt(mappingID);
 									
-										tmpGTDE.setExclusiveValue(currentRunValueLocation, value);
-										tmpGTDE.setExclusivePercentValue(currentRunValueLocation, percentValue);
+										tmpGTDE.setExclusiveValue(currentValueLocation, value);
+										tmpGTDE.setExclusivePercentValue(currentValueLocation, percentValue);
 										
 										//Now check the max values on this thread.
-										if((tmpGT.getMaxExclusiveValue(currentRunValueLocation)) < value)
-											tmpGT.setMaxExclusiveValue(currentRunValueLocation, value);
-										if((tmpGT.getMaxExclusivePercentValue(currentRunValueLocation)) < percentValue)
-											tmpGT.setMaxExclusivePercentValue(currentRunValueLocation, percentValue);
+										if((tmpGT.getMaxExclusiveValue(currentValueLocation)) < value)
+											tmpGT.setMaxExclusiveValue(currentValueLocation, value);
+										if((tmpGT.getMaxExclusivePercentValue(currentValueLocation)) < percentValue)
+											tmpGT.setMaxExclusivePercentValue(currentValueLocation, percentValue);
 											
 									}
 								}
@@ -545,11 +569,11 @@ public class Trial implements Serializable
 									//Grab the correct global mapping element.
 									tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
 									
-									if((tmpGlobalMappingElement.getMaxInclusiveValue(currentRunValueLocation)) < value)
-										tmpGlobalMappingElement.setMaxInclusiveValue(currentRunValueLocation, value);
+									if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < value)
+										tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, value);
 										
-									if((tmpGlobalMappingElement.getMaxInclusivePercentValue(currentRunValueLocation)) < percentValue)
-										tmpGlobalMappingElement.setMaxInclusivePercentValue(currentRunValueLocation, percentValue);
+									if((tmpGlobalMappingElement.getMaxInclusivePercentValue(currentValueLocation)) < percentValue)
+										tmpGlobalMappingElement.setMaxInclusivePercentValue(currentValueLocation, percentValue);
 									
 									//Print out the node,context,thread.
 									node = getNCT(0,inputString, false);
@@ -575,13 +599,13 @@ public class Trial implements Serializable
 										currentGlobalThread.addThreadDataElement(tmpGTDE, mappingID);
 									}
 									
-									tmpGTDE.setInclusiveValue(currentRunValueLocation, value);
-									tmpGTDE.setInclusivePercentValue(currentRunValueLocation, percentValue);
+									tmpGTDE.setInclusiveValue(currentValueLocation, value);
+									tmpGTDE.setInclusivePercentValue(currentValueLocation, percentValue);
 									//Now check the max values on this thread.
-									if((tmpGT.getMaxInclusiveValue(currentRunValueLocation)) < value)
-										tmpGT.setMaxInclusiveValue(currentRunValueLocation, value);
-									if((tmpGT.getMaxInclusivePercentValue(currentRunValueLocation)) < percentValue)
-										tmpGT.setMaxInclusivePercentValue(currentRunValueLocation, percentValue);
+									if((tmpGT.getMaxInclusiveValue(currentValueLocation)) < value)
+										tmpGT.setMaxInclusiveValue(currentValueLocation, value);
+									if((tmpGT.getMaxInclusivePercentValue(currentValueLocation)) < percentValue)
+										tmpGT.setMaxInclusivePercentValue(currentValueLocation, percentValue);
 									
 									
 									//Get the number of calls and number of sub routines
@@ -608,9 +632,6 @@ public class Trial implements Serializable
 										
 										//The first line will be the user event heading ... get it.
 										inputString = br.readLine();
-										userEventHeading = inputString;
-										
-										positionOfUserEventName = inputString.indexOf("Event Name");
 										
 										//Find the correct global thread data element.
 										GlobalServer tmpGSUE = null;
@@ -705,8 +726,8 @@ public class Trial implements Serializable
 						}
 						else
 						{
-							heading = inputString;
-							positionOfName = inputString.indexOf("name");
+							//heading = inputString;
+							//positionOfName = inputString.indexOf("name");
 						}
 					
 					}
@@ -823,8 +844,9 @@ public class Trial implements Serializable
 							
 						System.out.println("Counter name is: " + counterName);
 							
-						this.addRunValueName(counterName);
-						this.setCurRunValLoc(counterName);
+						Value newValue = this.addValue();
+						newValue.setValueName(counterName);
+						this.setCurValLoc(newValue.getValueID());
 						System.out.println("The number of mappings in the system is: " + tokenString);
 					}
 						
@@ -996,11 +1018,11 @@ public class Trial implements Serializable
 			//Set usersec per call.
 			tmpString = getMappingIDTokenizer.nextToken();
 			tmpDouble = Double.parseDouble(tmpString);
-			if((inGME.getMaxUserSecPerCall(currentRunValueLocation)) < tmpDouble)
-				inGME.setMaxUserSecPerCall(currentRunValueLocation, tmpDouble);
-			if((inGT.getMaxUserSecPerCall(currentRunValueLocation)) < tmpDouble)
-				inGT.setMaxUserSecPerCall(currentRunValueLocation, tmpDouble);
-			inGTDE.setUserSecPerCall(currentRunValueLocation, tmpDouble);
+			if((inGME.getMaxUserSecPerCall(currentValueLocation)) < tmpDouble)
+				inGME.setMaxUserSecPerCall(currentValueLocation, tmpDouble);
+			if((inGT.getMaxUserSecPerCall(currentValueLocation)) < tmpDouble)
+				inGT.setMaxUserSecPerCall(currentValueLocation, tmpDouble);
+			inGTDE.setUserSecPerCall(currentValueLocation, tmpDouble);
 		}
 		catch(Exception e)
 		{
@@ -1034,9 +1056,9 @@ public class Trial implements Serializable
 			//Set usersec per call.
 			tmpString = getMappingIDTokenizer.nextToken();
 			tmpDouble = Double.parseDouble(tmpString);
-			if((this.getMaxMeanUserSecPerCall(currentRunValueLocation)) < tmpDouble)
-				this.setMaxMeanUserSecPerCall(currentRunValueLocation, tmpDouble);
-			inGME.setMeanUserSecPerCall(currentRunValueLocation, tmpDouble);
+			if((this.getMaxMeanUserSecPerCall(currentValueLocation)) < tmpDouble)
+				this.setMaxMeanUserSecPerCall(currentValueLocation, tmpDouble);
+			inGME.setMeanUserSecPerCall(currentValueLocation, tmpDouble);
 		}
 		catch(Exception e)
 		{
@@ -1461,10 +1483,10 @@ public class Trial implements Serializable
 	//******************************
 	//Operation functions to work on the stored data.
 	//******************************
-	public String applyOperation(String tmpString1, String tmpString2, String inOperation){
+	public Value applyOperation(String tmpString1, String tmpString2, String inOperation){
 	
-		int opA = this.getTrialValueNamePosition(tmpString1);
-		int opB = this.getTrialValueNamePosition(tmpString2);
+		int opA = this.getValuePosition(tmpString1);
+		int opB = this.getValuePosition(tmpString2);
 		String tmpString3 = null;
 		
 		int operation = -1;
@@ -1488,16 +1510,10 @@ public class Trial implements Serializable
 		else{
 			System.out.println("Wrong operation type");
 		}
-		
-		//Pop up the dialog if there is already an experiment with this name.
-		if(this.isTrialValueNamePresent(tmpString3)){
-			JOptionPane.showMessageDialog(null, "This metric has alread been computed!", "Warning!"
-															  ,JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
 			
-		this.addRunValueName(tmpString3);
-		this.setCurRunValLoc(tmpString3);
+		Value newValue = this.addValue();
+		newValue.setValueName(tmpString3);
+		this.setCurValLoc(newValue.getValueID());
 	
 		for(Enumeration e1 = (this.globalMapping.getMapping(0)).elements(); e1.hasMoreElements() ;){
 									
@@ -1513,6 +1529,8 @@ public class Trial implements Serializable
 			GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
 			tmpGME.addDefaultToVectors();
 		}
+		
+		this.addDefaultToVectors();
 		
 		GlobalServer tmpGlobalServer;
 		GlobalContext tmpGlobalContext;
@@ -1571,14 +1589,14 @@ public class Trial implements Serializable
 									tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
 									
 									tmpDouble = tmpDouble1+tmpDouble2;
-									tmpGlobalThreadDataElement.setExclusiveValue(currentRunValueLocation, tmpDouble);
-									if((tmpGlobalThread.getMaxExclusiveValue(currentRunValueLocation)) < tmpDouble)
-										tmpGlobalThread.setMaxExclusiveValue(currentRunValueLocation, tmpDouble);
+									tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
+									if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+										tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
 									tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
 										
 									//Now do the global mapping element exclusive stuff.
-									if((tmpGlobalMappingElement.getMaxExclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalMappingElement.setMaxExclusiveValue(currentRunValueLocation, tmpDouble);
+									if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
 									tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
 									
 									
@@ -1587,14 +1605,14 @@ public class Trial implements Serializable
 									tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
 									
 									tmpDouble = tmpDouble1+tmpDouble2;
-									tmpGlobalThreadDataElement.setInclusiveValue(currentRunValueLocation, tmpDouble);
-									if((tmpGlobalThread.getMaxInclusiveValue(currentRunValueLocation)) < tmpDouble)
-										tmpGlobalThread.setMaxInclusiveValue(currentRunValueLocation, tmpDouble);
+									tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
+									if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+										tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
 									tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
 										
 									//Now do the global mapping element inclusive stuff.
-									if((tmpGlobalMappingElement.getMaxInclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalMappingElement.setMaxInclusiveValue(currentRunValueLocation, tmpDouble);
+									if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
 									tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
 						
 									break;
@@ -1604,14 +1622,14 @@ public class Trial implements Serializable
 									
 									if(tmpDouble1 > tmpDouble2){
 										tmpDouble = tmpDouble1 - tmpDouble2;
-										tmpGlobalThreadDataElement.setExclusiveValue(currentRunValueLocation, tmpDouble);
-										if((tmpGlobalThread.getMaxExclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalThread.setMaxExclusiveValue(currentRunValueLocation, tmpDouble);
+										tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
+										if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
 										tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
 											
 										//Now do the global mapping element exclusive stuff.
-										if((tmpGlobalMappingElement.getMaxExclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalMappingElement.setMaxExclusiveValue(currentRunValueLocation, tmpDouble);
+										if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
 										tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
 									}
 									
@@ -1620,14 +1638,14 @@ public class Trial implements Serializable
 									
 									if(tmpDouble1 > tmpDouble2){
 										tmpDouble = tmpDouble1 - tmpDouble2;
-										tmpGlobalThreadDataElement.setInclusiveValue(currentRunValueLocation, tmpDouble);
-										if((tmpGlobalThread.getMaxInclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalThread.setMaxInclusiveValue(currentRunValueLocation, tmpDouble);
+										tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
+										if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
 										tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
 											
 										//Now do the global mapping element inclusive stuff.
-										if((tmpGlobalMappingElement.getMaxInclusiveValue(currentRunValueLocation)) < tmpDouble)
-												tmpGlobalMappingElement.setMaxInclusiveValue(currentRunValueLocation, tmpDouble);
+										if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+												tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
 										tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
 									}
 									
@@ -1637,28 +1655,28 @@ public class Trial implements Serializable
 									tmpDouble2 = tmpGlobalThreadDataElement.getExclusiveValue(opB);
 									
 									tmpDouble = tmpDouble1*tmpDouble2;
-									tmpGlobalThreadDataElement.setExclusiveValue(currentRunValueLocation, tmpDouble);
-									if((tmpGlobalThread.getMaxExclusiveValue(currentRunValueLocation)) < tmpDouble)
-										tmpGlobalThread.setMaxExclusiveValue(currentRunValueLocation, tmpDouble);
+									tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
+									if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+										tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
 									tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
 										
 									//Now do the global mapping element exclusive stuff.
-									if((tmpGlobalMappingElement.getMaxExclusiveValue(currentRunValueLocation)) < tmpDouble)
-										tmpGlobalMappingElement.setMaxExclusiveValue(currentRunValueLocation, tmpDouble);
+									if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+										tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
 									tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
 									
 									tmpDouble1 = tmpGlobalThreadDataElement.getInclusiveValue(opA);
 									tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(opB);
 									
 									tmpDouble = tmpDouble1*tmpDouble2;
-									tmpGlobalThreadDataElement.setInclusiveValue(currentRunValueLocation, tmpDouble);
-									if((tmpGlobalThread.getMaxInclusiveValue(currentRunValueLocation)) < tmpDouble)
-										tmpGlobalThread.setMaxInclusiveValue(currentRunValueLocation, tmpDouble);
+									tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
+									if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+										tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
 									tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
 									
 									//Now do the global mapping element inclusive stuff.
-									if((tmpGlobalMappingElement.getMaxInclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalMappingElement.setMaxInclusiveValue(currentRunValueLocation, tmpDouble);
+									if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
 									tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
 									
 									
@@ -1670,14 +1688,14 @@ public class Trial implements Serializable
 									if(tmpDouble2 != 0){
 										tmpDouble = tmpDouble1/tmpDouble2;
 										
-										tmpGlobalThreadDataElement.setExclusiveValue(currentRunValueLocation, tmpDouble);
-										if((tmpGlobalThread.getMaxExclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalThread.setMaxExclusiveValue(currentRunValueLocation, tmpDouble);
+										tmpGlobalThreadDataElement.setExclusiveValue(currentValueLocation, tmpDouble);
+										if((tmpGlobalThread.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalThread.setMaxExclusiveValue(currentValueLocation, tmpDouble);
 										tmpGlobalThread.incrementTotalExclusiveValue(tmpDouble);
 										
 										//Now do the global mapping element exclusive stuff.
-										if((tmpGlobalMappingElement.getMaxExclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalMappingElement.setMaxExclusiveValue(currentRunValueLocation, tmpDouble);
+										if((tmpGlobalMappingElement.getMaxExclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalMappingElement.setMaxExclusiveValue(currentValueLocation, tmpDouble);
 										tmpGlobalMappingElement.incrementTotalExclusiveValue(tmpDouble);
 									}
 									
@@ -1686,14 +1704,14 @@ public class Trial implements Serializable
 									
 									if(tmpDouble2 != 0){
 										tmpDouble = tmpDouble1/tmpDouble2;
-										tmpGlobalThreadDataElement.setInclusiveValue(currentRunValueLocation, tmpDouble);
-										if((tmpGlobalThread.getMaxInclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalThread.setMaxInclusiveValue(currentRunValueLocation, tmpDouble);
+										tmpGlobalThreadDataElement.setInclusiveValue(currentValueLocation, tmpDouble);
+										if((tmpGlobalThread.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalThread.setMaxInclusiveValue(currentValueLocation, tmpDouble);
 										tmpGlobalThread.incrementTotalInclusiveValue(tmpDouble);
 										
 										//Now do the global mapping element inclusive stuff.
-										if((tmpGlobalMappingElement.getMaxInclusiveValue(currentRunValueLocation)) < tmpDouble)
-											tmpGlobalMappingElement.setMaxInclusiveValue(currentRunValueLocation, tmpDouble);
+										if((tmpGlobalMappingElement.getMaxInclusiveValue(currentValueLocation)) < tmpDouble)
+											tmpGlobalMappingElement.setMaxInclusiveValue(currentValueLocation, tmpDouble);
 										tmpGlobalMappingElement.incrementTotalInclusiveValue(tmpDouble);
 									}
 							
@@ -1705,13 +1723,12 @@ public class Trial implements Serializable
 					}
 					
 					//Now try setting the percent values.
-					//Now try setting the percent values.
 					for(Enumeration e7 = tmpThreadDataList.elements(); e7.hasMoreElements() ;)
 					{
 						tmpGlobalThreadDataElement = (GlobalThreadDataElement) e7.nextElement();
 						
 						double exclusiveTotal = tmpGlobalThread.getTotalExclusiveValue();
-						double inclusiveMax = tmpGlobalThread.getMaxInclusiveValue(currentRunValueLocation);
+						double inclusiveMax = tmpGlobalThread.getMaxInclusiveValue(currentValueLocation);
 						
 						boolean excl = false;
 						boolean incl = false;
@@ -1730,33 +1747,29 @@ public class Trial implements Serializable
 							int mappingID = tmpGlobalThreadDataElement.getMappingID();
 							GlobalMappingElement tmpGlobalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
 						
-							double tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(currentRunValueLocation);
-							double tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(currentRunValueLocation);
+							double tmpDouble1 = tmpGlobalThreadDataElement.getExclusiveValue(currentValueLocation);
+							double tmpDouble2 = tmpGlobalThreadDataElement.getInclusiveValue(currentValueLocation);
 							
 							if(excl){
 								double result = (tmpDouble1/exclusiveTotal) * 100;
-								tmpGlobalThreadDataElement.setExclusivePercentValue(currentRunValueLocation, result);
-								if((tmpGlobalThread.getMaxExclusivePercentValue(currentRunValueLocation)) < result)
-									tmpGlobalThread.setMaxExclusivePercentValue(currentRunValueLocation, result);
+								tmpGlobalThreadDataElement.setExclusivePercentValue(currentValueLocation, result);
+								if((tmpGlobalThread.getMaxExclusivePercentValue(currentValueLocation)) < result)
+									tmpGlobalThread.setMaxExclusivePercentValue(currentValueLocation, result);
 								
 								//Now do the global mapping element exclusive stuff.
-								if((tmpGlobalMappingElement.getMaxExclusivePercentValue(currentRunValueLocation)) < result)
-										tmpGlobalMappingElement.setMaxExclusivePercentValue(currentRunValueLocation, result);
+								if((tmpGlobalMappingElement.getMaxExclusivePercentValue(currentValueLocation)) < result)
+										tmpGlobalMappingElement.setMaxExclusivePercentValue(currentValueLocation, result);
 							}
 							
 							if(incl){
 								double result = (tmpDouble2/inclusiveMax) * 100;
-								double testDouble = result * 100;
-								long testLong = Math.round(testDouble);
-								testDouble = (double) testLong;
-								testDouble = testDouble/100;
-								tmpGlobalThreadDataElement.setInclusivePercentValue(currentRunValueLocation, testDouble);
-								if((tmpGlobalThread.getMaxInclusivePercentValue(currentRunValueLocation)) < testDouble){
-									tmpGlobalThread.setMaxInclusivePercentValue(currentRunValueLocation, testDouble);}
+								tmpGlobalThreadDataElement.setInclusivePercentValue(currentValueLocation, result);
+								if((tmpGlobalThread.getMaxInclusivePercentValue(currentValueLocation)) < result){
+									tmpGlobalThread.setMaxInclusivePercentValue(currentValueLocation, result);}
 									
 								//Now do the global mapping element exclusive stuff.
-								if((tmpGlobalMappingElement.getMaxInclusivePercentValue(currentRunValueLocation)) < testDouble)
-									tmpGlobalMappingElement.setMaxInclusivePercentValue(currentRunValueLocation, testDouble);
+								if((tmpGlobalMappingElement.getMaxInclusivePercentValue(currentValueLocation)) < result)
+									tmpGlobalMappingElement.setMaxInclusivePercentValue(currentValueLocation, result);
 							}
 							
 						}
@@ -1771,17 +1784,56 @@ public class Trial implements Serializable
 			GlobalMappingElement tmpGME = (GlobalMappingElement) e10.nextElement();
 			
 			double tmpDouble = (tmpGME.getTotalExclusiveValue())/(tmpGME.getCounter());
-			tmpGME.setMeanExclusiveValue(this.getCurRunValLoc(), tmpDouble);
-			if((this.getMaxMeanExclusiveValue(currentRunValueLocation) < tmpDouble))
-				this.setMaxMeanExclusiveValue(currentRunValueLocation, tmpDouble);
+			//Increment the total values.
+			this.setTotalMeanExclusiveValue(this.getCurValLoc(),(this.getTotalMeanExclusiveValue(this.getCurValLoc())) + tmpDouble);
+			tmpGME.setMeanExclusiveValue(this.getCurValLoc(), tmpDouble);
+			if((this.getMaxMeanExclusiveValue(this.getCurValLoc()) < tmpDouble))
+				this.setMaxMeanExclusiveValue(this.getCurValLoc(), tmpDouble);
 			
 			tmpDouble = (tmpGME.getTotalInclusiveValue())/(tmpGME.getCounter());
-			tmpGME.setMeanInclusiveValue(this.getCurRunValLoc(), tmpDouble);
-			if((this.getMaxMeanInclusiveValue(currentRunValueLocation) < tmpDouble))
-				this.setMaxMeanInclusiveValue(currentRunValueLocation, tmpDouble);
+			//Increment the total values.
+			this.setTotalMeanInclusiveValue(this.getCurValLoc(),(this.getTotalMeanInclusiveValue(this.getCurValLoc())) + tmpDouble);
+			tmpGME.setMeanInclusiveValue(this.getCurValLoc(), tmpDouble);
+			if((this.getMaxMeanInclusiveValue(this.getCurValLoc()) < tmpDouble))
+				this.setMaxMeanInclusiveValue(this.getCurValLoc(), tmpDouble);
 		}
 		
-		return tmpString3;
+		double exclusiveTotal = this.getTotalMeanExclusiveValue(this.getCurValLoc());
+		double inclusiveMax = this.getMaxMeanInclusiveValue(this.getCurValLoc());
+		
+		boolean excl = false;
+		boolean incl = false;
+		
+		if(exclusiveTotal != 0)
+			excl = true;
+			
+		if(inclusiveMax != 0)
+			incl = true;
+		
+		//Now do the percent values.
+		for(Enumeration e11 = (this.globalMapping.getMapping(0)).elements(); e11.hasMoreElements() ;){
+									
+			GlobalMappingElement tmpGME = (GlobalMappingElement) e11.nextElement();
+			
+			if(excl){
+				double tmpDouble = ((tmpGME.getMeanExclusiveValue(this.getCurValLoc()))/exclusiveTotal) * 100;
+				System.out.println("The mev is: " + (tmpGME.getMeanExclusiveValue(this.getCurValLoc())));
+				tmpGME.setMeanExclusivePercentValue(currentValueLocation, tmpDouble);
+				if((this.getMaxMeanExclusivePercentValue(this.getCurValLoc()) < tmpDouble))
+					this.setMaxMeanExclusivePercentValue(this.getCurValLoc(), tmpDouble);
+			}
+			
+			if(incl){
+				double tmpDouble = ((tmpGME.getMeanInclusiveValue(this.getCurValLoc()))/inclusiveMax) * 100;
+				tmpGME.setMeanInclusivePercentValue(this.getCurValLoc(), tmpDouble);
+				if((this.getMaxMeanInclusivePercentValue(this.getCurValLoc()) < tmpDouble))
+					this.setMaxMeanInclusivePercentValue(this.getCurValLoc(), tmpDouble);
+			}
+		}
+		
+		
+		
+		return newValue;
 	}
 	
 	//******************************
@@ -1802,27 +1854,6 @@ public class Trial implements Serializable
 	//items that are easier to calculate whilst building the global
 	//lists
 	//******************************
-	
-	public int getPositionOfName()
-	{
-		return positionOfName;
-	}
-	
-	public int getPositionOfUserEventName()
-	{
-		return positionOfUserEventName;
-	}
-	
-	public String getHeading()
-	{
-		return heading;
-	}
-	
-	public String getUserEventHeading()
-	{
-		return userEventHeading;
-	}
-	
 	public int getNumberOfMappings(){
 		return numberOfMappings;
 	}
@@ -1886,6 +1917,23 @@ public class Trial implements Serializable
 	public double getMaxMeanUserSecPerCall(int dataValueLocation){
 		Double tmpDouble = (Double) maxMeanUserSecPerCallList.elementAt(dataValueLocation);
 		return tmpDouble.doubleValue();}
+		
+		
+	public void setTotalMeanInclusiveValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		totalMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
+	
+	public double getTotalMeanInclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) totalMeanInclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
+	
+	public void setTotalMeanExclusiveValue(int dataValueLocation, double inDouble){
+		Double tmpDouble = new Double(inDouble);
+		totalMeanExclusiveValueList.add(dataValueLocation, tmpDouble);}
+	
+	public double getTotalMeanExclusiveValue(int dataValueLocation){
+		Double tmpDouble = (Double) totalMeanExclusiveValueList.elementAt(dataValueLocation);
+		return tmpDouble.doubleValue();}
 	
 	public boolean groupNamesPresent(){
 		return groupNamesPresent;
@@ -1906,6 +1954,14 @@ public class Trial implements Serializable
 	//******************************
 	//Instance data.
 	//******************************
+	Experiment parentExperiment = null;
+	DefaultMutableTreeNode nodeRef = null;
+	private String trialName = null;
+	private int trialID = -1;
+	private String trialIDString = null;
+	
+	private Vector values = new Vector();
+	
 	private SystemEvents systemEvents = null;
 	private StaticMainWindow sMW = null;
 	private ColorChooser clrChooser = new ColorChooser(this, null);
@@ -1913,18 +1969,13 @@ public class Trial implements Serializable
 	
 	private String profilePathName = null;
 	private String profilePathNameReverse = null;
-	private String runName = null;
-	private Vector runValueNameList = new Vector(); 
-	private int currentRunValueLocation = 0;
-	private int currentRunValueWriteLocation = 0;		
+	//private Vector valueNameList = new Vector(); 
+	private int currentValueLocation = 0;
+	private int currentValueWriteLocation = 0;		
 	
 	private GlobalMapping globalMapping;
 	private Vector StaticServerList;
-	private int positionOfName;
-	private int positionOfUserEventName;
 	private String counterName;
-	private String heading;
-	private String userEventHeading;
 	private boolean isUserEventHeadingSet;
 	boolean groupNamesCheck = false;
 	boolean groupNamesPresent = false;
@@ -1943,6 +1994,9 @@ public class Trial implements Serializable
 	private double maxMeanNumberOfCalls = 0;
 	private double maxMeanNumberOfSubRoutines = 0;
 	private Vector maxMeanUserSecPerCallList = new Vector();
+	
+	private Vector totalMeanInclusiveValueList = new Vector();
+	private Vector totalMeanExclusiveValueList = new Vector();
 	
 	
 	//******************************

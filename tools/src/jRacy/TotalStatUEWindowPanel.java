@@ -152,7 +152,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 		    if ((clipRect != null))
 		    {
 		    	//Draw the heading!
-				tmpString = trial.getUserEventHeading();
+				tmpString = GlobalThreadDataElement.getUserEventStatStringHeading();
 				int tmpInt = tmpString.length();
 				
 				for(int i=0; i<tmpInt; i++)
@@ -161,12 +161,23 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 				}
 				
 				g.setColor(Color.black);
+				
+				AttributedString dashStringAS = new AttributedString(dashString);
+				dashStringAS.addAttribute(TextAttribute.FONT, MonoFont);
+				
+				//Draw the first dashed string.
 				yCoord = yCoord + spacing;
-				g.drawString(dashString, 20, yCoord);
+				g.drawString(dashStringAS.getIterator(), 20, yCoord);
 				yCoord = yCoord + spacing + 10;
-				g.drawString(tmpString, 20, yCoord);
+				
+				//Draw the heading.
+				AttributedString headingStringAS = new AttributedString(tmpString);
+				headingStringAS.addAttribute(TextAttribute.FONT, MonoFont);
+				g.drawString(headingStringAS.getIterator(), 20, yCoord);
 				yCoord = yCoord + spacing + 10;
-				g.drawString(dashString, 20, yCoord);
+				
+				//Draw the second dashed string.
+				g.drawString(dashStringAS.getIterator(), 20, yCoord);
 				
 				startLocation = yCoord;
 				
@@ -207,36 +218,29 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 		    	{
 		    		tmpSMWThreadDataElement = (SMWThreadDataElement) tmpThreadDataElementList.elementAt(i);
 					tmpString = tmpSMWThreadDataElement.getUserEventStatString();
-					if(tmpString.equals("")){
-						tmpString = "Sorry, but this is not supported for derived values yet!";
-						yCoord = yCoord + spacing;
-						g.setColor(Color.black);
-						g.drawString(tmpString, 20, yCoord);
-					}
-					else{
-						yCoord = yCoord + spacing;
+				
+					yCoord = yCoord + spacing;
+					
+		    		g.setColor(Color.black);
 						
-			    		g.setColor(Color.black);
-							
-						AttributedString as = new AttributedString(tmpString);
-						as.addAttribute(TextAttribute.FONT, MonoFont);
-						
-						if((tmpSMWThreadDataElement.getUserEventID()) == (trial.getColorChooser().getUEHCMappingID()))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(trial.getColorChooser().getUEHC()),
-								trial.getPositionOfUserEventName(), tmpString.length());
-						else
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWThreadDataElement.getUserEventMappingColor()),
-								trial.getPositionOfUserEventName(), tmpString.length());
-						
-						g.drawString(as.getIterator(), 20, yCoord);
-						
-						//Figure out how wide that string was for x coord reasons.
-						if(tmpXWidthCalc < (20 + fmMonoFont.stringWidth(tmpString) + 5))
-						{
-							tmpXWidthCalc = (20 + fmMonoFont.stringWidth(tmpString) + 15);
-						}
+					AttributedString as = new AttributedString(tmpString);
+					as.addAttribute(TextAttribute.FONT, MonoFont);
+					
+					if((tmpSMWThreadDataElement.getUserEventID()) == (trial.getColorChooser().getUEHCMappingID()))
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(trial.getColorChooser().getUEHC()),
+							GlobalThreadDataElement.getPositionOfUserEventName(), tmpString.length());
+					else
+						as.addAttribute(TextAttribute.FOREGROUND, 
+							(tmpSMWThreadDataElement.getUserEventMappingColor()),
+							GlobalThreadDataElement.getPositionOfUserEventName(), tmpString.length());
+					
+					g.drawString(as.getIterator(), 20, yCoord);
+					
+					//Figure out how wide that string was for x coord reasons.
+					if(tmpXWidthCalc < 2*fmMonoFont.stringWidth(tmpString))
+					{
+						tmpXWidthCalc = (20 + 2*fmMonoFont.stringWidth(tmpString));
 					}
 				}
 		    		
@@ -249,74 +253,6 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 					revalidate();
 				}	
 					
-			}
-			else
-			{
-				//Draw the heading!
-				tmpString = trial.getUserEventHeading();
-				int tmpInt = tmpString.length();
-				
-				for(int i=0; i<tmpInt; i++)
-				{
-					dashString = dashString + "-";
-				}
-				
-				g.setColor(Color.black);
-				yCoord = yCoord + spacing;
-				g.drawString(dashString, 20, yCoord);
-				yCoord = yCoord + spacing + 10;
-				g.drawString(tmpString, 20, yCoord);
-				yCoord = yCoord + spacing + 10;
-				g.drawString(dashString, 20, yCoord);
-				
-				startLocation = yCoord;
-				
-		    	//Set up some panel dimensions.
-		    	newYPanelSize = yCoord + ((tmpThreadDataElementList.size() + 1) * spacing);
-				
-				//Cycle through the elements getting the strings.
-				for(Enumeration e1 = tmpThreadDataElementList.elements(); e1.hasMoreElements() ;)
-				{	
-					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-					tmpString = tmpSMWThreadDataElement.getUserEventStatString();
-					
-					if(tmpString != null)
-					{
-						
-						yCoord = yCoord + spacing;
-						
-						g.setColor(Color.black);
-						
-						AttributedString as = new AttributedString(tmpString);
-						as.addAttribute(TextAttribute.FONT, MonoFont);
-						
-						if((tmpSMWThreadDataElement.getUserEventID()) == (trial.getColorChooser().getUEHCMappingID()))
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(trial.getColorChooser().getUEHC()),
-								trial.getPositionOfUserEventName(), tmpString.length());
-						else
-							as.addAttribute(TextAttribute.FOREGROUND, 
-								(tmpSMWThreadDataElement.getUserEventMappingColor()),
-								trial.getPositionOfUserEventName(), tmpString.length());
-						
-						g.drawString(as.getIterator(), 20, yCoord);
-						
-						//Figure out how wide that string was for x coord reasons.
-						if(tmpXWidthCalc < (20 + fmMonoFont.stringWidth(tmpString) + 5))
-						{
-							tmpXWidthCalc = (20 + fmMonoFont.stringWidth(tmpString) + 15);
-						}
-					}
-				}
-						
-				//Resize the panel if needed.
-				if((newYPanelSize >= yPanelSize) || (tmpXWidthCalc  >= xPanelSize))
-				{
-					yPanelSize = newYPanelSize + 1;
-					xPanelSize = tmpXWidthCalc + 1;
-					
-					revalidate();
-				}
 			}
 		}
 		catch(Exception e)

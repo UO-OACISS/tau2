@@ -181,7 +181,7 @@ public class StaticMainWindowData
 				SMWMeanDataElement tmpSMWMeanDataElement = new SMWMeanDataElement(trial);
 
 				tmpSMWMeanDataElement.setMappingID(tmpGME.getGlobalID());
-				tmpSMWMeanDataElement.setValue(tmpGME.getMeanExclusiveValue(trial.getCurRunValLoc()));
+				tmpSMWMeanDataElement.setValue(tmpGME.getMeanExclusiveValue(trial.getCurValLoc()));
 				tmpSMWMeanDataElement.setSortByValue();
 				tmpSMWMeanDataElement.setSortByReverse(true);
 				

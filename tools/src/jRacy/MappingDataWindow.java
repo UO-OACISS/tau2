@@ -516,6 +516,16 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	{
 		try
 		{
+			String trialName = trial.getCounterName();
+			trialName = trialName.toUpperCase();
+			boolean isDefault = false;
+			boolean isTimeMetric = false;
+			
+			if(trialName.equals("DEFAULT"))	
+				isDefault = true;
+			else if(trialName.indexOf("TIME") != -1)
+				isTimeMetric = true;
+			
 			if(trial.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else

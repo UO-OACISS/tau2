@@ -318,6 +318,19 @@ public class ColorChooser implements WindowListener
 			addColor(new Color(0,255,0));
 			addColor(new Color(121,196,144));
 			addColor(new Color(86,88,112));
+			
+			addColor(new Color(151,204,255));
+			addColor(new Color(102,102,255));
+			addColor(new Color(204,255,51));
+			addColor(new Color(255,204,153));
+			addColor(new Color(204,0,204));
+			addColor(new Color(0,102,102));
+			addColor(new Color(204,204,255));
+			addColor(new Color(102,255,255));
+			addColor(new Color(255,102,102));
+			addColor(new Color(255,204,204));
+			addColor(new Color(240,97,159));
+			addColor(new Color(0,102,153));
 		}
 		catch(Exception e){
 			jRacy.systemError(e, null, "CC14");

@@ -538,7 +538,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							}
 							else{
 								//Bring up the total stat window here!
-								//System.out.println("Will bring up the total stat window for the mean.");
 								MeanTotalStatWindow tmpRef = new MeanTotalStatWindow(trial, sMWindow.getSMWData());
 								trial.getSystemEvents().addObserver(tmpRef);
 								tmpRef.show();

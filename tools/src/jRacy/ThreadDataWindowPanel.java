@@ -9,15 +9,6 @@
 
 package jRacy;
 
-/*import java.util.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.event.*;
-import java.awt.print.*;
-import java.awt.geom.*;*/
-
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -152,12 +143,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 		{	
 			boolean formatValues = tDWindow.getFormatNumbers();
 				
-			//Get an instance of NumberFormat.
-			DecimalFormat dF = new DecimalFormat();
-			if(formatValues){
-				dF.applyPattern("##0.######E0");
-			}
-			
 			//Set the numberOfColors variable.
 			numberOfColors = trial.getColorChooser().getNumberOfColors();
 			
@@ -186,6 +171,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
 			//**********
 			//Some declarations.
+			int defaultNumberPrecision = jRacy.defaultNumberPrecision;
 			double tmpSum = 0.00;
 			double tmpDataValue;
 			Color tmpColor;
@@ -261,39 +247,34 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			
 			
 				//Set the max values for this mapping.
-				maxInclusiveValue = tmpGT.getMaxInclusiveValue(trial.getCurRunValLoc());
-				maxExclusiveValue = tmpGT.getMaxExclusiveValue(trial.getCurRunValLoc());
-				maxInclusivePercentValue = tmpGT.getMaxInclusivePercentValue(trial.getCurRunValLoc());
-				maxExclusivePercentValue = tmpGT.getMaxExclusivePercentValue(trial.getCurRunValLoc());
+				maxInclusiveValue = tmpGT.getMaxInclusiveValue(trial.getCurValLoc());
+				maxExclusiveValue = tmpGT.getMaxExclusiveValue(trial.getCurValLoc());
+				maxInclusivePercentValue = tmpGT.getMaxInclusivePercentValue(trial.getCurValLoc());
+				maxExclusivePercentValue = tmpGT.getMaxExclusivePercentValue(trial.getCurValLoc());
 				maxNumberOfCalls = tmpGT.getMaxNumberOfCalls();
 				maxNumberOfSubroutines = tmpGT.getMaxNumberOfSubRoutines();
-				maxUserSecPerCall = tmpGT.getMaxUserSecPerCall(trial.getCurRunValLoc());
+				maxUserSecPerCall = tmpGT.getMaxUserSecPerCall(trial.getCurValLoc());
 			
+				
+				
 				if((tDWindow.isInclusive())){
 					if(tDWindow.isPercent()){
 						//Need to figure out how long the percentage string will be.
-						tmpString = new String(maxInclusivePercentValue + "%");
-						stringWidth = fmFont.stringWidth(tmpString);
+						stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxInclusivePercentValue, defaultNumberPrecision) + "%");
 						barXCoord = barXCoord + stringWidth;
 					}
 					else{
 						//Check to see what the units are.
-						if((tDWindow.units()).equals("Seconds"))
-						{
-							tmpString = new String((Double.toString((maxInclusiveValue / 1000000.00))));
-							stringWidth = fmFont.stringWidth(tmpString);
+						if((tDWindow.units()).equals("Seconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000000), defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
-						else if((tDWindow.units()).equals("Milliseconds"))
-						{
-							tmpString = new String((Double.toString((maxInclusiveValue / 1000))));
-							stringWidth = fmFont.stringWidth(tmpString);
+						else if((tDWindow.units()).equals("Milliseconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxInclusiveValue/1000), defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
-						else
-						{
-							tmpString = new String(Double.toString(maxInclusiveValue));
-							stringWidth = fmFont.stringWidth(tmpString);
+						else{
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxInclusiveValue, defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
 					}
@@ -301,29 +282,21 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 				else{
 					if(tDWindow.isPercent()){
 						//Need to figure out how long the percentage string will be.
-						tmpString = new String(maxExclusivePercentValue + "%");
-						stringWidth = fmFont.stringWidth(tmpString);
+						stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxExclusivePercentValue, defaultNumberPrecision) + "%");
 						barXCoord = barXCoord + stringWidth;
 					}
 					else{
-					
-						//Add the correct amount to barXCoord.
-						if((tDWindow.units()).equals("Seconds"))
-						{
-							tmpString = new String((Double.toString((maxExclusiveValue / 1000000.00))));
-							stringWidth = fmFont.stringWidth(tmpString);
+						//Check to see what the units are.
+						if((tDWindow.units()).equals("Seconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000000), defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
-						else if((tDWindow.units()).equals("Milliseconds"))
-						{
-							tmpString = new String((Double.toString((maxExclusiveValue / 1000))));
-							stringWidth = fmFont.stringWidth(tmpString);
+						else if((tDWindow.units()).equals("Milliseconds")){
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString((maxExclusiveValue/1000), defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
-						else
-						{
-							tmpString = new String(Double.toString(maxExclusiveValue));
-							stringWidth = fmFont.stringWidth(tmpString);
+						else{
+							stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxExclusiveValue, defaultNumberPrecision));
 							barXCoord = barXCoord + stringWidth;
 						}
 					}
@@ -398,7 +371,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							//Now print the percentage to the left of the bar.
 							g.setColor(Color.black);
 							//Need to figure out how long the percentage string will be.
-							tmpString = (dF.format(tmpDataValue)) + "%";
+							tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
 							stringWidth = fmFont.stringWidth(tmpString);
 							//Now draw the percent value to the left of the bar.
 							stringStart = barXCoord - xLength - stringWidth - 5;
@@ -485,28 +458,25 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							g.setColor(Color.black);
 							
 							//Check to see what the units are.
-							if((tDWindow.units()).equals("Seconds"))
-							{
-								double adjustedValue = tmpDataValue / 1000000;
-								tmpString = (dF.format(adjustedValue));
-								//tmpString = new String((Double.toString((tmpDataValue / 1000000.00))));
+							if((tDWindow.units()).equals("Seconds")){
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
 								g.drawString(tmpString, stringStart, yCoord);
 							}
 							else if((tDWindow.units()).equals("Milliseconds"))
 							{
-								double adjustedValue = tmpDataValue / 1000;
-								tmpString = (dF.format(adjustedValue)) + "%";
-								//tmpString = new String((Double.toString((tmpDataValue / 1000))));
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
 								g.drawString(tmpString, stringStart, yCoord);
 							}
 							else
 							{
-								tmpString = dF.format(tmpDataValue);
-								//tmpString = new String(Double.toString(tmpDataValue));
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
 								g.drawString(tmpString, stringStart, yCoord);
@@ -596,7 +566,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							//Now print the percentage to the left of the bar.
 							g.setColor(Color.black);
 							//Need to figure out how long the percentage string will be.
-							tmpString = (dF.format(tmpDataValue)) + "%";
+							tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
 							stringWidth = fmFont.stringWidth(tmpString);
 							stringStart = barXCoord - xLength - stringWidth - 5;
 							//Now draw the percent value to the left of the bar.
@@ -681,25 +651,23 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 							g.setColor(Color.black);
 							
 							//Check to see what the units are.
-							if((tDWindow.units()).equals("Seconds"))
-							{
-								double adjustedValue = tmpDataValue / 1000000;
-								tmpString = dF.format(adjustedValue);
+							if((tDWindow.units()).equals("Seconds")){
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000000), defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
 								g.drawString(tmpString, stringStart, yCoord);
 							}
-							else if((tDWindow.units()).equals("Milliseconds"))
-							{
-								double adjustedValue = tmpDataValue / 1000;
-								tmpString = dF.format(adjustedValue);
+							else if((tDWindow.units()).equals("Milliseconds")){
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision((tmpDataValue / 1000), defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
 								g.drawString(tmpString, stringStart, yCoord);
 							}
-							else
-							{
-								tmpString = dF.format(tmpDataValue);
+							else{
+								tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 								stringWidth = fmFont.stringWidth(tmpString);
 								stringStart = barXCoord - xLength - stringWidth - 5;
 								g.drawString(tmpString, stringStart, yCoord);
@@ -957,7 +925,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 						//Now print the percentage to the left of the bar.
 						g.setColor(Color.black);
 						
-						tmpString = new String(Double.toString(tmpDataValue));
+						tmpString = new String(Double.toString(
+									UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)));
 						stringWidth = fmFont.stringWidth(tmpString);
 						stringStart = barXCoord - xLength - stringWidth - 5;
 						g.drawString((Double.toString(tmpDataValue)), stringStart, yCoord);

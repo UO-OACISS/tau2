@@ -23,13 +23,14 @@ public class jRacy implements ActionListener
 	//Some system wide state variables.
 	static boolean debugIsOn = false;					//Flip this if debugging output is required.
 	static String profilePathName = null;				//This contains the path to the currently loaded profile data.
+	static int defaultNumberPrecision = 4;
+	static boolean dbSupport = false;
 	//End - Some system wide state variables.
 	//**********
 	
 	//**********
 	//Start or define all the persistant objects.
 	static SavedPreferences savedPreferences = new SavedPreferences();
-	static ExperimentManager experimentManager = new ExperimentManager();
 	static ApplicationManager applicationManager = new ApplicationManager();
 	static HelpWindow helpWindow = new HelpWindow();
 	//End start of persistant objects.
@@ -53,32 +54,20 @@ public class jRacy implements ActionListener
 	public void startSystem(){
 	try{
 			//Try and load the Racy preference file ... racyPreferences.dat
-			try
-			{
+			try{
 				FileInputStream savedPreferenceFIS = new FileInputStream("jRacyPreferences.dat");
 				
 				//If here, means that no exception was thrown, and there is a preference file present.
 				//Create ObjectInputStream and try to read it in.
 				ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
 				jRacy.savedPreferences = (SavedPreferences) inSavedPreferencesOIS.readObject();
-				
-				//jRacy.clrChooser = new ColorChooser(savedPreferences);
-				//jRacy.jRacyPreferences = new Preferences(savedPreferences);
-				
-				//jRacy.systemEvents.addObserver(jRacyPreferences);
 			}
 			catch(Exception e)
 			{
-				if(e instanceof FileNotFoundException)
-				{
-					//There was no preference file found, therefore, just create a default preference object.
+				if(e instanceof FileNotFoundException){
 					System.out.println("No preference file present, using defaults!");
-					//jRacy.clrChooser = new ColorChooser(null);
-					//jRacy.jRacyPreferences = new Preferences(null);
-					//jRacy.systemEvents.addObserver(jRacyPreferences);
 				}
-				else
-				{
+				else{
 					//Print some kind of error message, and quit the system.
 					System.out.println("There was an internal error whilst trying to read the Racy preference");
 					System.out.println("file.  Please delete this file, or replace it with a valid one!");
@@ -98,12 +87,12 @@ public class jRacy implements ActionListener
 				//setTitle("jRacy: " + jRacy.profilePathName);
 				
 				//Create a default application.
-				Application app = jRacy.applicationManager.addApplication(null);
+				Application app = jRacy.applicationManager.addApplication();
 				app.setApplicationName("Default App");
 				
 				//Create a default experiment.
-				Experiment exp = new Experiment("Default Exp");
-				app.addExperiment(exp);
+				Experiment exp = app.addExperiment();
+				exp.setExperimentName("Default Exp");
 				
 				//Add the trial for this pprof.dat file to the experiment.
 				Trial trial = null;
@@ -112,16 +101,15 @@ public class jRacy implements ActionListener
 				String tmpString3 = null;
 				
 				tmpString1 = testForPprofDat.getCanonicalPath();
-				tmpString2 = jRacy.experimentManager.getPathReverse(tmpString1);
+				tmpString2 = jRacy.applicationManager.getPathReverse(tmpString1);
 				tmpString3 = "Default Trial" + " : " + tmpString2;
 																	  
-				trial = new Trial();
+				trial = exp.addTrial();
 						
 				trial.setProfilePathName(tmpString1);
 				trial.setProfilePathName(tmpString2);
-				trial.setRunName(tmpString3);
+				trial.setTrialName(tmpString3);
 				
-				exp.addTrial(trial);
 				trial.buildStaticData(true, testForPprofDat);
 				
 				trial.showStaticMainWindow();
@@ -153,12 +141,12 @@ public class jRacy implements ActionListener
 									//setTitle("jRacy: " + jRacy.profilePathName);
 									
 									//Create a default application.
-									Application app = jRacy.applicationManager.addApplication(null);
+									Application app = jRacy.applicationManager.addApplication();
 									app.setApplicationName("Default App");
 									
 									//Create a default experiment.
-									exp = new Experiment("Default Exp");
-									app.addExperiment(exp);
+									exp = app.addExperiment();
+									exp.setExperimentName("Default Exp");
 									
 									//Add the experiment run for this pprof.dat file to the experiment.
 									String tmpString1 = null;
@@ -166,16 +154,15 @@ public class jRacy implements ActionListener
 									String tmpString3 = null;
 									
 									tmpString1 = filePath;
-									tmpString2 = jRacy.experimentManager.getPathReverse(tmpString1);
+									tmpString2 = jRacy.applicationManager.getPathReverse(tmpString1);
 									tmpString3 = "Default Trial" + " : " + tmpString2;
 																						  
-									trial = new Trial();
+									trial = exp.addTrial();
 											
 									trial.setProfilePathName(tmpString1);
 									trial.setProfilePathName(tmpString2);
-									trial.setRunName(tmpString3);
+									trial.setTrialName(tmpString3);
 									
-									exp.addTrial(trial);
 									trial.buildStaticData(true, testFile);
 									
 									System.out.println("Found: " + newString);
@@ -276,39 +263,6 @@ public class jRacy implements ActionListener
 	// Main entry point
 	static public void main(String[] args) 
 	{
-	
-		//At the moment, command line arguments are optional.  Keep this here though if
-		//they become mandatory.
-		/*if (args.length == 0) {
-                System.err.println(USAGE);
-		System.exit(-1);
-        }*/
-
-
-		/*try{
-			File file = new File(".");
-			
-			String filePath = file.getCanonicalPath();
-			File [] list = file.listFiles();
-			for(int i = 0; i < list.length; i++)
-			{
-				File tmpFile = (File) list[i];
-				if(tmpFile != null){
-					String tmpString = tmpFile.getName();
-					
-					if(tmpString.indexOf("MULTI__") != -1){
-						System.out.println(filePath + "/" + tmpString);
-					}
-				}
-								
-			}
-		}
-		catch(Exception e){
-			System.out.println(e);
-		}*/
-
-
-
 		int numberOfArguments = 0;
 		String argument;
 

@@ -321,10 +321,14 @@ public class GlobalMappingElement implements Serializable
 	public String getMeanTotalStatString(int dataValueLocation){
 	
 		try{
-			int initialBufferLength = 80;
+			int defaultNumberPrecision = jRacy.defaultNumberPrecision;
+			int initialBufferLength = 97;
 			int position = 0;
 			char [] statStringArray = new char[initialBufferLength];
 			char [] tmpArray;
+			String tmpString;
+			
+			this.insertSpaces(statStringArray , 0, 97);
 			
 			DecimalFormat dF = new DecimalFormat();
 			dF.applyPattern("##0.0");
@@ -334,47 +338,54 @@ public class GlobalMappingElement implements Serializable
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			dF.applyPattern("0.######E0");
-			tmpArray = (dF.format(this.getMeanExclusiveValue(dataValueLocation))).toCharArray();
+			position = 7;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getMeanExclusiveValue(dataValueLocation),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (dF.format(this.getMeanInclusiveValue(dataValueLocation))).toCharArray();
+			position = 25;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getMeanInclusiveValue(dataValueLocation),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (dF.format(this.getMeanNumberOfCalls())).toCharArray();
+			position = 43;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getMeanNumberOfCalls(),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();												
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (dF.format(this.getMeanNumberOfSubRoutines())).toCharArray();
+			position = 61;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getMeanNumberOfSubRoutines(),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
 				position++;
 			}
-			position = this.insertSpaces(statStringArray , position, 2);
 			
-			tmpArray = (dF.format(this.getMeanUserSecPerCall(dataValueLocation))).toCharArray();
+			position = 79;
+			tmpString = new String(Double.toString(
+							UtilFncs.adjustDoublePresision(this.getMeanUserSecPerCall(dataValueLocation),
+															defaultNumberPrecision)));
+			tmpArray = tmpString.toCharArray();
 			for(int i=0;i<tmpArray.length;i++){
 				statStringArray[position] = tmpArray[i];
-				position++;
-			}
-			position = this.insertSpaces(statStringArray , position, 2);
-			
-			//Fill in the rest of the buffer.
-			while(position < initialBufferLength){
-				statStringArray[position] = '\u0020';
 				position++;
 			}
 			
@@ -388,8 +399,6 @@ public class GlobalMappingElement implements Serializable
 		}
 		
 		return "An error occured pocessing this string!";
-	
-	
 	}
 	
 	private int insertSpaces(char[] inArray, int position, int number){
