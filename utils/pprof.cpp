@@ -86,6 +86,10 @@ extern int optind, opterr, optopt;
 #include <Profile/fujitsu.h>
 #endif /* FUJITSU */
 
+#ifndef DBL_MIN
+#include <float.h>
+#endif 
+
 
 /* Macros for min/max. To avoid <algobase> and gcc-3.0 problems, we define: */
 #define TAU_MIN(a,b) (((a)<(b))?(a):(b))
@@ -3095,7 +3099,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2001/07/19 01:18:10 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.25 2001/07/19 01:18:10 sameer Exp $                                                   
+ * $Revision: 1.26 $   $Date: 2001/08/24 16:45:56 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.26 2001/08/24 16:45:56 sameer Exp $                                                   
  ***************************************************************************/
 
