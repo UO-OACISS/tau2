@@ -673,6 +673,10 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
   if [ $cxx_compiler = CC ]
     then
       fixmakeargs="$fixmakeargs SGICC"
+      if [ $pdt = yes ]
+        then
+ 	  fixmakeargs="$fixmakeargs PDTSGICC"
+      fi
   fi
 fi
 
