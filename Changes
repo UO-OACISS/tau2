@@ -38,6 +38,8 @@ Version 2.13 changes (from 2.12):
 26. Introduced hierarchical trace merging using tau_merge (both offline/online).
 27. Added -PROFILEMEMORY option that tracks memory at each routine entry [LLNL].
 28. Improved support for MySQL and PostgreSQL databases in PerfDMF. 
+29. Added automated trace merge/convert with tau2vtf using TAU_TRACEFILE env. 
+30. Added $(TAU_COMPILER) shell script/makefile variable for automatic instr.
 
   
  
