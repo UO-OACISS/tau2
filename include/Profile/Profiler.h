@@ -55,6 +55,8 @@
 			  
 #include <Profile/UserEvent.h>
 
+#include <Profile/PclLayer.h>
+
 //////////////////////////////////////////////////////////////////////
 //
 // class Profiler
@@ -121,6 +123,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 1999/05/04 22:32:10 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.20 1999/05/04 22:32:10 sameer Exp $ 
+ * $Revision: 1.21 $   $Date: 1999/07/20 21:47:27 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.21 1999/07/20 21:47:27 sameer Exp $ 
  ***************************************************************************/
