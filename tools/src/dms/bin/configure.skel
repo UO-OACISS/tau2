@@ -46,6 +46,9 @@ fi
 
 java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR} edu.uoregon.tau.dms.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE} $@
 
+
+
+
 JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} | sed s/jdbc_db_jarfile://`
 
 if [ ! -r ${JDBC_JAR} ]; then
@@ -59,8 +62,16 @@ if [ ! -r ${JDBC_JAR} ]; then
 	echo ""
 
 
+	# -- set up portable echo command
+	case "`echo 'x\c'`" in
+	'x\c')  echo="echo -n"  nnl= ;;     #BSD
+	x)      echo="echo"     nnl="\c";;  #SysV
+	*)      echo 'Cannot setup echo. What weird machine do you have?' 1>2&
+        exit 1;;
+	esac
+
 	while [ -z $RESPONSE ]; do
-	    echo -n "Would you like to attempt to automatically download a JDBC driver? (y/n) "
+	    $echo "Would you like to attempt to automatically download a JDBC driver? (y/n) ${nnl}"
 	    read RESPONSE
 	    case $RESPONSE in
 		[yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
