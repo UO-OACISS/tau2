@@ -24,12 +24,12 @@ extern "C" {
 #endif /* TAU_PAPI */
 
 
-#define SIZE_OF_INIT_ARRAY 4 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 5 //!!Change this if functions are added to the system!!
 
 
 //Some useful typedefs
 typedef bool (*firstListType)(int);
-typedef void (*secondListType)(double[]);
+typedef void (*secondListType)(int, double[]);
 
 class MultipleCounterLayer
 {
@@ -37,6 +37,7 @@ class MultipleCounterLayer
   static bool initializeMultiCounterLayer(void);
   static void getCounters(int tid, double values[]);
   static char * getCounterNameAt(int position);
+  static bool getCounterUsed(int inPosition){return counterUsed[inPosition];}
 
   //*********************
   //The list of counter functions, and their init. functions.
@@ -46,16 +47,19 @@ class MultipleCounterLayer
   
  private:
   static bool gettimeofdayMCLInit(int functionPosition);
-  static void gettimeofdayMCL(double values[]);
+  static void gettimeofdayMCL(int tid, double values[]);
 
   static bool linuxTimerMCLInit(int functionPosition);
-  static void linuxTimerMCL(int functionPosition);
+  static void linuxTimerMCL(int tid, double values[]);
+
+  static bool papiMCLInit(int functionPosition);
+  static void papiMCL(int tid, double values[]);
 
   static bool papiWallClockMCLInit(int functionPosition);
-  static void papiWallClockMCL(double values[]);
+  static void papiWallClockMCL(int tid, double values[]);
 
   static bool papiVirtualMCLInit(int functionPosition);
-  static void papiVirtualMCL(double values[]);
+  static void papiVirtualMCL(int tid, double values[]);
   //*********************
   //End - List of counter and init. functions.
   //*********************
@@ -63,15 +67,21 @@ class MultipleCounterLayer
   //Other class stuff.
   static char environment[25][10];
   static int gettimeofdayMCL_CP[1];
+  static int papiMCL_CP[MAX_TAU_COUNTERS];
   static int papiWallClockMCL_CP[1];
   static int papiVirtualMCL_CP[1];
   static int linuxTimerMCL_CP[1];
+
+  //Data specific to the papiMCL function.
+  static int numberOfPapiHWCounters;
+  static int PAPI_CounterCodeList[MAX_TAU_COUNTERS];
 
 
   static firstListType initArray[SIZE_OF_INIT_ARRAY];
   static secondListType functionArray[MAX_TAU_COUNTERS];
   static int numberOfActiveFunctions;
   static char * names[MAX_TAU_COUNTERS];
+  static bool counterUsed[MAX_TAU_COUNTERS];
 };
 
 #endif /* TAU_MULTIPLE_COUNTERS */
