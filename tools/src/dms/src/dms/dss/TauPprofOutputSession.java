@@ -357,7 +357,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			    //Now that we know how many user events to expect, we can grab that number of lines.
 			    //Note that inputString is still set the the line before the heading which is what we want.
 			    int numberOfLines = getNumberOfUserEvents(inputString);
-			    for(int j=numberOfLines; j<numberOfLines; j++){
+			    for(int j=0; j<numberOfLines; j++){
 				//Initialize the user list for this thread.
 				if(j == 0)
 				    (this.getNCT().getThread(nodeID,contextID,threadID)).initializeUsereventList(this.getGlobalMapping().getNumberOfMappings(2));
@@ -365,7 +365,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 				s1 = br.readLine();
 				s2 = br.readLine();
 				getUserEventData(s1);
-				System.out.println("noc:"+usereventDataLine.i0+"min:"+usereventDataLine.d1+"max:"+usereventDataLine.d0+"mean:"+usereventDataLine.d2);
+				// System.out.println("noc:"+usereventDataLine.i0+"min:"+usereventDataLine.d1+"max:"+usereventDataLine.d0+"mean:"+usereventDataLine.d2);
 				
 				if(usereventDataLine.i0 != 0){
 				    mappingID = this.getGlobalMapping().addGlobalMapping(usereventDataLine.s0, 2, 1);
