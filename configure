@@ -188,6 +188,7 @@ tautoplevel=
 tauoptions=
 pdt_root_dir="."
 pdt=no
+vtf=no
 opari=no
 epilog=no
 opari_region=no
@@ -444,6 +445,17 @@ do
       if [ ! -d $pdtdir ]
       then
         echo "Error: Cannot access PDT directory $pdtdir"
+        exit 1
+      fi
+    shift
+    ;;
+
+  -vtf=*)
+      vtf=yes
+      vtfdir=`echo $arg | sed -e 's/-vtf=//'`
+      if [ ! -d $vtfdir ]
+      then
+        echo "Error: Cannot access VTF3 directory $vtfdir"
         exit 1
       fi
     shift
@@ -2432,6 +2444,11 @@ if [ $python = yes ]
       echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
       exit 1
     fi
+fi
+
+if [ $vtf = yes ]
+then
+  fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
 fi
 
 if [ $pdt = yes ]

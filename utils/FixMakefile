@@ -123,6 +123,11 @@ fi
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
 	;;
 
+     vtfdir=*)
+        vtfdir=`echo $1 | sed -e 's/^vtfdir=//'`
+	echo "s,^vtfdir=.*$,vtfdir=$vtfdir,g" >> $sedout
+	;;
+
      pdtcompdir=*)
         pdtcompdir=`echo $1 | sed -e 's/^pdtcompdir=//'`
 	echo "s,^PDTCOMPDIR=.*$,PDTCOMPDIR=$pdtcompdir,g" >> $sedout
@@ -632,6 +637,10 @@ fi
 	;;
      PDT)
 	echo "NOTE: Using PDT for TAU Source Code Instrumentation ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     VTF)
+	echo "NOTE: Using VTF3 library to build tau2vtf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST)
