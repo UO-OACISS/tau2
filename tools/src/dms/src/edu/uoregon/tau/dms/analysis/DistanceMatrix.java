@@ -11,6 +11,52 @@ public class DistanceMatrix {
 	public int matrixSize = 0;
 	public int dimensionCount = 0;
 	private double maxDistance = 0.0;
+	private final int[] colorMap = { 0xFF000000,
+                               0xFF000011,
+                               0xFF000022,
+                               0xFF000033,
+                               0xFF000044,
+                               0xFF000055,
+                               0xFF000066,
+                               0xFF000077,
+                               0xFF000088,
+                               0xFF000099,
+                               0xFF0000AA,
+                               0xFF0000BB,
+                               0xFF0000CC,
+                               0xFF0000DD,
+                               0xFF0000EE,
+                               0xFF0000FF,
+                               0xFF001100,
+                               0xFF002200,
+                               0xFF003300,
+                               0xFF004400,
+                               0xFF005500,
+                               0xFF006600,
+                               0xFF007700,
+                               0xFF008800,
+                               0xFF009900,
+                               0xFF00AA00,
+                               0xFF00BB00,
+                               0xFF00CC00,
+                               0xFF00DD00,
+                               0xFF00EE00,
+                               0xFF00FF00,
+                               0xFF11EE00,
+                               0xFF22DD00,
+                               0xFF33CC00,
+                               0xFF44BB00,
+                               0xFF55AA00,
+                               0xFF669900,
+                               0xFF778800,
+                               0xFF887700,
+                               0xFF996600,
+                               0xFFAA5500,
+                               0xFFBB4400,
+                               0xFFCC3300,
+                               0xFFDD2200,
+                               0xFFEE1100,
+                               0xFFFF0000 };
 
 	public DistanceMatrix (int matrixSize, int dimensionCount) {
 		this.dataMatrix = new double[matrixSize][dimensionCount];
@@ -132,6 +178,35 @@ public class DistanceMatrix {
 					red = green = blue = (int)(distanceMatrix[i][j] * factor);
         			value = (opaque << 24 ) | (red << 16 ) | (green << 8 ) | blue;
 					data[idx++] = value;
+            	}
+        	}
+        }
+
+		System.out.println("Image range: 0.0 to " + maxDistance);
+		return data;
+	}
+
+	public int[] toColorImage(boolean scaledRange, boolean triangle) {
+		int[] data = new int[matrixSize*matrixSize];
+		// the range of the matrix values are from 0.0 to 2.0.
+		// that needs to be converted to 0 to 45.  Therefore,
+		// multiply the matrix value by 22.5 and convert to 
+		// an integer.
+		double factor = scaledRange ? 45.0 / maxDistance : 22.5;
+		int i, j, k, l;
+		int idx = 0;
+
+		if (triangle) {
+        	for (i = 0 ; i < matrixSize; i++ ) {
+            	for (j = i ; j < matrixSize; j++ ) {
+					idx = i * matrixSize + j;
+					data[idx] = colorMap[(int)(distanceMatrix[i][j] * factor)];
+            	}
+        	}
+        } else {
+        	for (i = 0 ; i < matrixSize; i++ ) {
+            	for (j = 0 ; j < matrixSize; j++ ) {
+					data[idx++] = colorMap[(int)(distanceMatrix[i][j] * factor)];
             	}
         	}
         }

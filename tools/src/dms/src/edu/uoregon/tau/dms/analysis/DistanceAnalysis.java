@@ -20,7 +20,7 @@ import java.util.ListIterator;
  * details.  The two extensions of this class are EventDistance and
  * ThreadDistance.
  *
- * <P>CVS $Id: DistanceAnalysis.java,v 1.4 2004/08/10 22:26:26 khuck Exp $</P>
+ * <P>CVS $Id: DistanceAnalysis.java,v 1.5 2004/08/12 00:29:00 khuck Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1
@@ -172,6 +172,19 @@ abstract public class DistanceAnalysis {
 			return new int[0];
 		else
 			return results.toImage(scaledRange, triangle); 
+	}
+
+/**
+ * This method dumps the data in the distance matrix to an image.
+ * This is a method used to check the output from the distance calculation.
+ *
+ * @return	an array of image data.
+ */
+	public int[] toColorImage(boolean scaledRange, boolean triangle) { 
+		if (results == null)
+			return new int[0];
+		else
+			return results.toColorImage(scaledRange, triangle); 
 	}
 }
 
