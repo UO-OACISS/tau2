@@ -35,6 +35,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
+
+	    //Add this object as a mouse listener.
+	    addMouseListener(this);
 	    
 	    this.nodeID = nodeID;
 	    this.contextID = contextID;
@@ -370,6 +373,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 			g2D.drawString("Name[id]", namePos, yCoord);
 		    }
 		    else if(i==3){
+			System.out.println("---" + yCoord);
 			g2D.drawString("--------------------------------------------------------------------------------", excPos, yCoord);
 		    }
 		    else if(!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()){
@@ -425,6 +429,31 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     //######
     public void mouseClicked(MouseEvent evt){
 	try{
+	    //Get the location of the mouse.
+	    int xCoord = evt.getX();
+	    int yCoord = evt.getY();
+
+	    //Get the number of times clicked.
+	    int clickCount = evt.getClickCount();
+
+	    CallPathDrawObject callPathDrawObject = null;
+
+	    //Calculate which CallPathDrawObject was clicked on.
+	    int index = (yCoord-1)/(trial.getPreferences().getBarSpacing()) + 1;
+
+	    System.out.println("######");
+	    System.out.println("yCoord: " + yCoord);
+	    System.out.println("spacing: " + trial.getPreferences().getBarSpacing());
+	    System.out.println("size: " + drawObjects.size());
+	    System.out.println("index: " + index);
+	    System.out.println("######");
+
+	    if(index<drawObjects.size()){
+		callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(index);
+		if(!callPathDrawObject.isSpacer())
+		    System.out.println(callPathDrawObject.getMappingName());
+	    }
+
 	    /*
 	    SMWThreadDataElement sMWThreadDataElement = null;
 	    //Get the location of the mouse.
@@ -557,6 +586,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     int yHeightNeeded = 0;
     int xWidthNeeded = 0;
     int length = 0;
+
+    private JPopupMenu popup = new JPopupMenu();
+    private Object clickedOnObject = null;
 
     private boolean debug = false; //Off by default.
     //####################################
