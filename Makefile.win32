@@ -1,0 +1,95 @@
+# To use, do "nmake /f makefile.win32"
+
+# To build tau_instrumentor you must have PDT
+# use "nmake /f makefile.win32 "PDT=<path\to\pdt\>" tau_instrumentor
+# (e.g. nmake /f makefile.win32 "PDT=c:\pdtoolkit" tau_instrumentor
+
+# To build tau2vtf you must have libvtf3.lib
+# use "nmake /f makefile.win32 "VTF=<path\to\libvtf3.lib> tau2vtf
+# (e.g. nmake /f makefile.win32 "VTF=c:\" tau2vtf
+
+CFLAGS= $(CFLAGS) /O2 /GR /nologo /TP /EHsc -I .
+CC=cl
+INCLUDES=-Iinclude -I../include
+DEFINES=-DTAU_WINDOWS -DTAU_DOT_H_LESS_HEADERS
+CFLAGS=$(CFLAGS) $(DEFINES) $(INCLUDES)
+LD=link
+LDFLAGS=
+O=.obj
+
+
+TAU_PROFILE_SRCS= src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp
+TAU_CALLPATH_SRCS= src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp
+TAU_TRACE_SRCS= src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\Tracer.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp
+
+TAU_PROFILE_OBJS= $(TAU_PROFILE_SRCS:.cpp=.obj) 
+TAU_CALLPATH_OBJS= $(TAU_CALLPATH_SRCS:.cpp=.obj) 
+TAU_TRACE_OBJS= $(TAU_TRACE_SRCS:.cpp=.obj)
+
+all : win32 pprof tau_convert tau_merge tau_reduce libs
+
+libs : 
+	-del $(TAU_PROFILE_OBJS)
+	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON" tau-profile.lib
+	-del $(TAU_PROFILE_OBJS)
+	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON /MT" tau-profile-mt.lib
+	-del $(TAU_CALLPATH_OBJS)
+	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH" tau-callpath.lib
+	-del $(TAU_CALLPATH_OBJS)
+	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH /MT" tau-callpath-mt.lib
+	-del $(TAU_TRACE_OBJS)
+	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON" tau-trace.lib
+	-del $(TAU_TRACE_OBJS)
+	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON /MT" tau-trace-mt.lib
+
+
+tau2vtf :
+	$(CC) $(CFLAGS) -DTRACING_ON -o win32\bin\tau2vtf utils\tau2vtf.cpp src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_Cwrapper.cpp -Isrc\TraceInput -I$(VTF) /link $(VTF)\libvtf3.lib
+
+tau_instrumentor :
+	$(CC) $(CFLAGS) -o win32\bin\tau_instrumentor utils\tau_instrumentor.cpp utils\tau_selective.cpp -I$(PDT)\ductape\inc /link $(PDT)\windows\lib\ductape.lib	
+	
+win32 :
+	md win32
+	md win32\bin
+	md win32\lib
+	
+
+
+pprof : utils\function_data.cpp utils\pprof.cpp utils\user_event_data.cpp
+	$(CC) $(CFLAGS) -o win32\bin\pprof utils\function_data.cpp utils\pprof.cpp utils\user_event_data.cpp
+	
+	
+tau_convert : utils\tau_convert.c
+	$(CC) $(CFLAGS) -o win32\bin\tau_convert utils\tau_convert.c	
+	
+tau_merge : utils\tau_events.cpp utils\tau_merge.c utils\getopt.cpp
+	$(CC) $(CFLAGS) -o win32\bin\tau_merge utils\tau_events.cpp utils\tau_merge.c utils\getopt.cpp	
+	
+tau_reduce : utils\tau_reduce.cpp utils\pprof_elem.cpp
+	$(CC) $(CFLAGS) -o win32\bin\tau_reduce utils\tau_reduce.cpp utils\pprof_elem.cpp
+	
+	
+tau-profile.lib : $(TAU_PROFILE_OBJS)
+	lib /OUT:"win32\lib\tau-profile.lib" $(TAU_PROFILE_OBJS)
+
+tau-profile-mt.lib : $(TAU_PROFILE_OBJS)
+	lib /OUT:"win32\lib\tau-profile-mt.lib" $(TAU_PROFILE_OBJS)
+
+tau-callpath.lib : $(TAU_CALLPATH_OBJS)
+	lib /OUT:"win32\lib\tau-callpath.lib" $(TAU_CALLPATH_OBJS)
+
+tau-callpath-mt.lib : $(TAU_CALLPATH_OBJS)
+	lib /OUT:"win32\lib\tau-callpath-mt.lib" $(TAU_CALLPATH_OBJS)
+	
+tau-trace.lib : $(TAU_TRACE_OBJS)
+	lib /OUT:"win32\lib\tau-trace.lib" $(TAU_TRACE_OBJS)
+
+tau-trace-mt.lib : $(TAU_TRACE_OBJS)
+	lib /OUT:"win32\lib\tau-trace-mt.lib" $(TAU_TRACE_OBJS)
+
+
+
+.cpp.obj :
+	$(CC) $(FLAGS) $(CFLAGS) /Fo$@ -c $<
+	
