@@ -103,10 +103,12 @@ SPACE for 			0x00080000
 #define TAU_GROUP_30		0x00000002
 #define TAU_GROUP_31		0x00000001
 
+#define TAU_DISABLE		0x00000000
+
 
 #endif /* _PROFILE_GROUPS_H_ */
 /***************************************************************************
  * $RCSfile: ProfileGroups.h,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2001/02/28 00:03:58 $
- * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.6 2001/02/28 00:03:58 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 2004/11/05 18:37:16 $
+ * POOMA_VERSION_ID: $Id: ProfileGroups.h,v 1.7 2004/11/05 18:37:16 sameer Exp $ 
  ***************************************************************************/
