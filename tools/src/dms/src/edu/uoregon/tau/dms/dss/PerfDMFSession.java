@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.13 2004/08/17 18:09:58 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.14 2004/08/17 18:48:17 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -35,32 +35,32 @@ public class PerfDMFSession extends DataSession {
     // Initialization / termination routines
 
     public void initialize (Object obj){
-	try{
+	try {
 	    initialize(obj, true, false);
 	}
-	catch(Exception e){
+	catch(Exception e) {
 	    System.exit(0);
 	} 
     }
     
-    public void initialize (Object obj, boolean prompt, boolean catchException) throws Exception{
+    public void initialize (Object obj, boolean prompt, boolean catchException) throws Exception {
 	configFileName = new String((String)(obj));
 	//Initialize the connection to the database,
 	//using the configuration settings.
-	try{
+	try {
 	    connector = new ConnectionManager(configFileName, prompt);
 	    connector.connect();
 	    db = connector.getDB();
 	}
 	catch(Exception e){
-	    if(catchException)
+	    if (catchException)
 		System.exit(0);
 	    else
 		throw e;
 	}
     }
 
-    public void initialize (Object obj, String password, boolean catchException) throws Exception{
+    public void initialize (Object obj, String password, boolean catchException) throws Exception {
 	String configFileName = (String)(obj);
 	//Initialize the connection to the database,
 	//using the configuration settings.
@@ -95,7 +95,7 @@ public class PerfDMFSession extends DataSession {
     public ListIterator getExperimentList() {
 	String whereClause = "";
 	if (application != null)
-	    whereClause = "where application = " + application.getID();
+	    whereClause = "WHERE application = " + application.getID();
 	return new DataSessionIterator(Experiment.getExperimentList(db, whereClause));
     }
 
@@ -103,9 +103,9 @@ public class PerfDMFSession extends DataSession {
     public ListIterator getTrialList() {
 	StringBuffer whereClause = new StringBuffer();
 	if (experiment != null) {
-	    whereClause.append("where t.experiment = " + experiment.getID());
+	    whereClause.append("WHERE t.experiment = " + experiment.getID());
 	} else if (application != null) {
-	    whereClause.append("where e.application = " + application.getID());
+	    whereClause.append("WHERE e.application = " + application.getID());
 	}
 	return new DataSessionIterator(Trial.getTrialList(db, whereClause.toString()));
     }
@@ -118,7 +118,7 @@ public class PerfDMFSession extends DataSession {
 	this.intervalEventHash = null;
 	this.atomicEventHash = null;
 	// create a string to hit the database
-	String whereClause = " where id = " + id;
+	String whereClause = " WHERE id = " + id;
 	Vector applications = Application.getApplicationList(db, whereClause);
 	if (applications.size() == 1) {
 	    this.application = (Application)applications.elementAt(0);
@@ -135,9 +135,9 @@ public class PerfDMFSession extends DataSession {
 	this.atomicEventHash = null;
 	// create a string to hit the database
 	StringBuffer whereClause = new StringBuffer();
-	whereClause.append(" where name = '" + name + "'");
+	whereClause.append(" WHERE name = '" + name + "'");
 	if (version != null) {
-	    whereClause.append(" and version = " + version);
+	    whereClause.append(" AND version = " + version);
 	}
 	Vector applications = Application.getApplicationList(db, whereClause.toString());
 	if (applications.size() == 1) {
@@ -154,7 +154,7 @@ public class PerfDMFSession extends DataSession {
 	this.atomicEventHash = null;
 	// create a string to hit the database
 	String whereClause;
-	whereClause = " where id = " + id;
+	whereClause = " WHERE id = " + id;
 	Vector experiments = Experiment.getExperimentList(db, whereClause);
 	if (experiments.size() == 1) {
 	    this.experiment = (Experiment)experiments.elementAt(0);
@@ -177,7 +177,7 @@ public class PerfDMFSession extends DataSession {
 	}
 	// create a string to hit the database
 	String whereClause;
-	whereClause = " where t.id = " + id;
+	whereClause = " WHERE t.id = " + id;
 	Vector trials = Trial.getTrialList(db, whereClause);
 	if (trials.size() == 1) {
 	    this.trial = (Trial)trials.elementAt(0);
@@ -190,11 +190,11 @@ public class PerfDMFSession extends DataSession {
     public ListIterator getIntervalEvents() {
 	String whereClause = new String();
 	if (trial != null) {
-	    whereClause = " where trial = " + trial.getID();
+	    whereClause = " WHERE trial = " + trial.getID();
 	} else if (experiment != null) {
-	    whereClause = " where experiment = " + experiment.getID();
+	    whereClause = " WHERE experiment = " + experiment.getID();
 	} else if (application != null) {
-	    whereClause = " where application = " + application.getID();
+	    whereClause = " WHERE application = " + application.getID();
 	}
 
 	intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
@@ -211,9 +211,9 @@ public class PerfDMFSession extends DataSession {
     // gets the mean & total data for a intervalEvent
     public void getIntervalEventDetail(IntervalEvent intervalEvent) {
 	StringBuffer buf = new StringBuffer();
-	buf.append(" where ms.interval_event = " + intervalEvent.getID());
+	buf.append(" WHERE ms.interval_event = " + intervalEvent.getID());
 	if (metrics != null && metrics.size() > 0) {
-	    buf.append(" and ms.metric in (");
+	    buf.append(" AND ms.metric in (");
 	    Metric metric;
 	    for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
 		metric = (Metric) en.nextElement();
@@ -230,7 +230,7 @@ public class PerfDMFSession extends DataSession {
     // gets the mean & total data for a atomicEvent
     public void getAtomicEventDetail(AtomicEvent atomicEvent) {
 	StringBuffer buf = new StringBuffer();
-	buf.append(" where e.id = " + atomicEvent.getID());
+	buf.append(" WHERE e.id = " + atomicEvent.getID());
 	AtomicLocationProfile.getAtomicEventDetail(db, atomicEvent, buf.toString());
     }
 
@@ -238,11 +238,11 @@ public class PerfDMFSession extends DataSession {
     public ListIterator getAtomicEvents() {
 	String whereClause = new String();
 	if (trial != null) {
-	    whereClause = " where t.id = " + trial.getID();
+	    whereClause = " WHERE t.id = " + trial.getID();
 	} else if (experiment != null) {
-	    whereClause = " where t.experiment = " + experiment.getID();
+	    whereClause = " WHERE t.experiment = " + experiment.getID();
 	} else if (application != null) {
-	    whereClause = " where e.application = " + application.getID();
+	    whereClause = " WHERE e.application = " + application.getID();
 	}
 	atomicEvents = AtomicEvent.getAtomicEvents(this, db, whereClause);
 	if (atomicEventHash == null)
@@ -301,14 +301,14 @@ public class PerfDMFSession extends DataSession {
 	boolean gotWhere = false;
 	StringBuffer buf = new StringBuffer();
 	if (trial != null) {
-	    buf.append(" where e.trial = " + trial.getID());
+	    buf.append(" WHERE e.trial = " + trial.getID());
 	    gotWhere = true;
 	}
 	if (intervalEvents != null && intervalEvents.size() > 0) {
 	    if (gotWhere)
-		buf.append(" and p.interval_event in (");
+		buf.append(" AND p.interval_event in (");
 	    else
-		buf.append(" where p.interval_event in (");
+		buf.append(" WHERE p.interval_event in (");
 	    IntervalEvent intervalEvent;
 	    for(Enumeration en = intervalEvents.elements(); en.hasMoreElements() ;) {
 		intervalEvent = (IntervalEvent) en.nextElement();
@@ -320,7 +320,7 @@ public class PerfDMFSession extends DataSession {
 	    }
 	}
 	if (nodes != null && nodes.size() > 0) {
-	    buf.append(" and p.node in (");
+	    buf.append(" AND p.node IN (");
 	    Integer node;
 	    for(Enumeration en = nodes.elements(); en.hasMoreElements() ;) {
 		node = (Integer) en.nextElement();
@@ -332,7 +332,7 @@ public class PerfDMFSession extends DataSession {
 	    }
 	}
 	if (contexts != null && contexts.size() > 0) {
-	    buf.append(" and p.context in (");
+	    buf.append(" AND p.context IN (");
 	    Integer context;
 	    for(Enumeration en = contexts.elements(); en.hasMoreElements() ;) {
 		context = (Integer) en.nextElement();
@@ -344,7 +344,7 @@ public class PerfDMFSession extends DataSession {
 	    }
 	}
 	if (threads != null && threads.size() > 0) {
-	    buf.append(" and p.thread in (");
+	    buf.append(" AND p.thread IN (");
 	    Integer thread;
 	    for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
 		thread = (Integer) en.nextElement();
@@ -356,7 +356,7 @@ public class PerfDMFSession extends DataSession {
 	    }
 	}
 	if (metrics != null && metrics.size() > 0) {
-	    buf.append(" and p.metric in (");
+	    buf.append(" AND p.metric IN (");
 	    Metric metric;
 	    for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
 		metric = (Metric) en.nextElement();
@@ -385,15 +385,15 @@ public class PerfDMFSession extends DataSession {
 	boolean gotWhere = false;
 	StringBuffer buf = new StringBuffer();
 	if (trial != null) {
-	    buf.append(" where e.trial = " + trial.getID());
+	    buf.append(" WHERE e.trial = " + trial.getID());
 	    gotWhere = true;
 	}
 		
 	if (atomicEvents != null && atomicEvents.size() > 0) {
 	    if (gotWhere)
-		buf.append(" and e.id in (");
+		buf.append(" AND e.id IN (");
 	    else
-		buf.append(" where e.id in (");
+		buf.append(" WHERE e.id IN (");
 	    AtomicEvent atomicEvent;
 	    for(Enumeration en = atomicEvents.elements(); en.hasMoreElements() ;) {
 		atomicEvent = (AtomicEvent) en.nextElement();
@@ -406,7 +406,7 @@ public class PerfDMFSession extends DataSession {
 	}
 
 	if (nodes != null && nodes.size() > 0) {
-	    buf.append(" and p.node in (");
+	    buf.append(" AND p.node IN (");
 	    Integer node;
 	    for(Enumeration en = nodes.elements(); en.hasMoreElements() ;) {
 		node = (Integer) en.nextElement();
@@ -418,7 +418,7 @@ public class PerfDMFSession extends DataSession {
 	    }
 	}
 	if (contexts != null && contexts.size() > 0) {
-	    buf.append(" and p.context in (");
+	    buf.append(" AND p.context IN (");
 	    Integer context;
 	    for(Enumeration en = contexts.elements(); en.hasMoreElements() ;) {
 		context = (Integer) en.nextElement();
@@ -430,7 +430,7 @@ public class PerfDMFSession extends DataSession {
 	    }
 	}
 	if (threads != null && threads.size() > 0) {
-	    buf.append(" and p.thread in (");
+	    buf.append(" AND p.thread IN (");
 	    Integer thread;
 	    for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
 		thread = (Integer) en.nextElement();
@@ -454,7 +454,7 @@ public class PerfDMFSession extends DataSession {
 	if (intervalEvent == null) {
 	    // create a string to hit the database
 	    String whereClause;
-	    whereClause = " where id = " + id;
+	    whereClause = " WHERE id = " + id;
 	    Vector intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
 	    if (intervalEvents.size() == 1) {
 		intervalEvent = (IntervalEvent)intervalEvents.elementAt(0);
@@ -474,7 +474,7 @@ public class PerfDMFSession extends DataSession {
 	if (atomicEvent == null) {
 	    // create a string to hit the database
 	    String whereClause;
-	    whereClause = " where u.id = " + id;
+	    whereClause = " WHERE u.id = " + id;
 	    Vector atomicEvents = AtomicEvent.getAtomicEvents(this, db, whereClause);
 	    if (atomicEvents.size() == 1) {
 		atomicEvent = (AtomicEvent)atomicEvents.elementAt(0);
@@ -688,7 +688,11 @@ public class PerfDMFSession extends DataSession {
 		    if (i > 0) buf.append ("|");
 		    buf.append(groupNames[groupIDs[i]]);
 		}
-		intervalEvent.setGroup(buf.toString());
+		
+		if (element.getNumberOfGroups() > 0) {
+		    intervalEvent.setGroup(buf.toString());
+		}
+
 		// put the intervalEvent in the vector
 		intervalEvents.add(intervalEvent);
 
@@ -850,6 +854,7 @@ public class PerfDMFSession extends DataSession {
 	    return;
 	else if (db.getDBType().compareTo("db2") == 0)
 	    return;
+	/*
 	String vacuum = "vacuum;";
 	String analyze = "analyze;";
 	try {
@@ -861,6 +866,7 @@ public class PerfDMFSession extends DataSession {
 	    System.out.println("An error occurred while vacuuming the database.");
 	    e.printStackTrace();
 	}
+	*/
     }
 
     public int saveApplication() {
@@ -927,16 +933,16 @@ public class PerfDMFSession extends DataSession {
 	Application.deleteApplication(db, applicationID);
     }
 
-    //This method has been added to let applications get the number of metrics
-    //after the setApplition, setExperiment, setTrial have been called.
-    //It does not affect the state of this object in any way.
-    public int getNumberOfMetrics(){
+    // This method has been added to let applications get the number of metrics
+    // after the setApplition, setExperiment, setTrial have been called.
+    // It does not affect the state of this object in any way.
+    public int getNumberOfMetrics() {
 	StringBuffer buf = new StringBuffer();
-	buf.append("select id, name ");
-	buf.append("from metric ");
-	buf.append("where trial = ");
+	buf.append("SELECT id, name ");
+	buf.append("FROM metric ");
+	buf.append("WHERE trial = ");
 	buf.append(this.trial.getID());
-	buf.append(" order by id ");
+	buf.append(" ORDER BY id ");
 	// System.out.println(buf.toString());
 
 	// get the results
@@ -948,11 +954,10 @@ public class PerfDMFSession extends DataSession {
 	    }
 	    resultSet.close();
 	    return counter;
-	}catch (Exception ex) {
+	} catch (Exception ex) {
 	    ex.printStackTrace();
 	    return -1;
 	}
     }
-
 };
 
