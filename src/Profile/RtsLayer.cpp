@@ -68,23 +68,40 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////
+unsigned int& RtsLayer::TheProfileMask(void)
+{ // to avoid initialization problems of non-local static variables
+  static unsigned int ProfileMask = TAU_DEFAULT;
+
+  return ProfileMask;
+}
+
+/////////////////////////////////////////////////////////////////////////
+int& RtsLayer::TheNode(void)
+{
+  static int Node = -1;
+ 
+  return Node;
+}
+
+/////////////////////////////////////////////////////////////////////////
 
 unsigned int RtsLayer::enableProfileGroup(unsigned int ProfileGroup) {
-  ProfileMask |= ProfileGroup; // Add it to the mask
-  DEBUGPROFMSG("enableProfileGroup " << ProfileGroup <<" Mask = " << ProfileMask << endl;);
-  return ProfileMask;
+  TheProfileMask() |= ProfileGroup; // Add it to the mask
+  DEBUGPROFMSG("enableProfileGroup " << ProfileGroup <<" Mask = " 
+	<< TheProfileMask() << endl;);
+  return TheProfileMask();
 }
 
 /////////////////////////////////////////////////////////////////////////
 
 unsigned int RtsLayer::resetProfileGroup(void) {
-  ProfileMask = 0;
-  return ProfileMask;
+  TheProfileMask() = 0;
+  return TheProfileMask();
 }
 
 /////////////////////////////////////////////////////////////////////////
 int RtsLayer::setMyNode(int NodeId) {
-  Node  = NodeId;
+  TheNode() = NodeId;
 // At this stage, we should create the trace file because we know the node id
 #ifdef TRACING_ON
   char *dirname, tracefilename[1024];
@@ -96,13 +113,13 @@ int RtsLayer::setMyNode(int NodeId) {
   sprintf(tracefilename, "%s/tau.####.trc",dirname); 
   pcxx_EvInit(tracefilename);
 #endif // TRACING_ON
-  return Node;
+  return TheNode();
 }
 
 /////////////////////////////////////////////////////////////////////////
 
 bool RtsLayer::isEnabled(unsigned int ProfileGroup) {
-unsigned int res =  ProfileGroup & ProfileMask ;
+unsigned int res =  ProfileGroup & TheProfileMask() ;
 
   if (res > 0)
     return true;
@@ -506,7 +523,7 @@ int RtsLayer::DumpEDF(void)
 	// id group tag "name type" parameters
 
 	numExtra = 9; // Number of extra events
-	numEvents = FunctionInfo::FunctionDB[RtsLayer::myThread()].size();
+	numEvents = TheFunctionDB().size();
 
 	numEvents += numExtra;
 
@@ -514,8 +531,8 @@ int RtsLayer::DumpEDF(void)
 
 	fprintf(fp,"# FunctionId Group Tag \"Name Type\" Parameters\n");
 
- 	for (it = FunctionInfo::FunctionDB[RtsLayer::myThread()].begin(); 
-	  it != FunctionInfo::FunctionDB[RtsLayer::myThread()].end(); it++)
+ 	for (it = TheFunctionDB().begin(); 
+	  it != TheFunctionDB().end(); it++)
 	{
   	  DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping EDF Id : " 
 	    << (*it)->GetFunctionId() << " " << (*it)->GetPrimaryGroup() 
@@ -544,6 +561,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:08:19 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.1 1998/04/24 00:08:19 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/04/26 07:29:26 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.2 1998/04/26 07:29:26 sameer Exp $ 
  ***************************************************************************/

@@ -53,9 +53,9 @@
 
 vector<TauUserEvent*>& TheEventDB(int threadid)
 {
-  static vector<TauUserEvent*> EventDB[TAU_MAX_THREADS];
+  static vector<TauUserEvent*> EventDB;
 
-  return EventDB[threadid];
+  return EventDB;
 }
 
 // Add User Event to the EventDB
@@ -305,6 +305,6 @@ void TauUserEvent::StoreData(void)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:01:06 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.1 1998/04/24 00:01:06 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/04/26 07:29:28 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.2 1998/04/26 07:29:28 sameer Exp $ 
  ***************************************************************************/

@@ -70,10 +70,10 @@ using namespace std;
 // vector<FunctionInfo*> FunctionInfo::FunctionDB[TAU_MAX_THREADS] ;
 Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
 // The rest of CurrentProfiler entries are initialized to null automatically
-unsigned int RtsLayer::ProfileMask = TAU_DEFAULT;
+//unsigned int RtsLayer::ProfileMask = TAU_DEFAULT;
 
 // Default value of Node.
-int RtsLayer::Node = -1;
+//int RtsLayer::Node = -1;
 
 //////////////////////////////////////////////////////////////////////
 // Explicit Instantiations for templated entities needed for ASCI Red
@@ -98,7 +98,7 @@ template FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,Functio
 void Profiler::Start(void)
 { 
      
-      if (MyProfileGroup_ & RtsLayer::ProfileMask) {
+      if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
 	
 #ifdef TRACING_ON
 	pcxx_Event(ThisFunction->GetFunctionId(), 1); // 1 is for entry
@@ -199,7 +199,7 @@ Profiler& Profiler::operator= (const Profiler& X)
 
 void Profiler::Stop()
 {
-      if (MyProfileGroup_ & RtsLayer::ProfileMask) {
+      if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
 
 #ifdef TRACING_ON
 	pcxx_Event(ThisFunction->GetFunctionId(), -1); // -1 is for exit 
@@ -263,7 +263,7 @@ void Profiler::Stop()
 	// While exiting, reset value of CurrentProfiler to reflect the parent
 	CurrentProfiler[RtsLayer::myThread()] = ParentProfiler;
 
-      } // if ProfileMask 
+      } // if TheProfileMask() 
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -276,7 +276,7 @@ Profiler::~Profiler() {
 	// If the Profiler object is going out of scope without Stop being
 	// called, call it now!
 
-      if (MyProfileGroup_ & RtsLayer::ProfileMask) {
+      if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
 	if (ParentProfiler == 0) {
 	  if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
 	  // Not a destructor of a static object - its a function like main 
@@ -376,7 +376,7 @@ int Profiler::StoreData()
 	numFunc = 0;
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
-          if ((*it)->GetProfileGroup() & RtsLayer::ProfileMask) { 
+          if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) { 
 	    numFunc++;
 	  }
 	}
@@ -397,7 +397,7 @@ int Profiler::StoreData()
 	
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
-          if ((*it)->GetProfileGroup() & RtsLayer::ProfileMask) { 
+          if ((*it)->GetProfileGroup() & RtsLayer::TheProfileMask()) { 
   
   	    DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping " 
   	      << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : " 
@@ -591,8 +591,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 1998/04/24 00:24:52 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.9 1998/04/24 00:24:52 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 1998/04/26 07:29:23 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.10 1998/04/26 07:29:23 sameer Exp $ 
  ***************************************************************************/
 
 	

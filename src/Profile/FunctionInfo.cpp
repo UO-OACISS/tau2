@@ -67,10 +67,10 @@ using namespace std;
 // used (Ref: Scott Meyers, Item 47 Eff. C++).
 //////////////////////////////////////////////////////////////////////
 vector<FunctionInfo*>& TheFunctionDB(int threadid)
-{
-  static vector<FunctionInfo*> FunctionDB[TAU_MAX_THREADS];
+{ // FunctionDB contains pointers to each FunctionInfo static object
+  static vector<FunctionInfo*> FunctionDB;
 
-  return FunctionDB[threadid];
+  return FunctionDB;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -121,7 +121,7 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
 {
-      if (ProfileGroup & RtsLayer::ProfileMask) {
+      if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
@@ -135,7 +135,7 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 FunctionInfo::FunctionInfo(const char *name, string& type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
 {
-      if (ProfileGroup & RtsLayer::ProfileMask) {
+      if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
@@ -149,7 +149,7 @@ FunctionInfo::FunctionInfo(const char *name, string& type,
 FunctionInfo::FunctionInfo(string& name, const char * type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
 {
-      if (ProfileGroup & RtsLayer::ProfileMask) {
+      if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
@@ -163,7 +163,7 @@ FunctionInfo::FunctionInfo(string& name, const char * type,
 FunctionInfo::FunctionInfo(string& name, string& type, 
 	unsigned int ProfileGroup , const char *ProfileGroupName)
 {
-      if (ProfileGroup & RtsLayer::ProfileMask) {
+      if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
@@ -225,6 +225,6 @@ int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/04/24 00:06:49 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.1 1998/04/24 00:06:49 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1998/04/26 07:29:21 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.2 1998/04/26 07:29:21 sameer Exp $ 
  ***************************************************************************/
