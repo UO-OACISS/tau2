@@ -42,7 +42,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    this.mDWindow = mDWindow;
 	    this.debug = debug;
 	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
- 	    mappingName = gME.getMappingName();
 	    this.mappingID = mappingID;
 	    barLength = baseBarLength;
 
@@ -284,7 +283,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    }
 
 	    //Check for group membership.
-	    groupMember = gME.isGroupMember(trial.getColorChooser().getGroupHighlightColorID());
+	    int groupMember = gME.isGroupMember(trial.getColorChooser().getGroupHighlightColorID());
 
 	    //######
 	    //Draw the header if required.
@@ -681,31 +680,46 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     //####################################
     //Instance data.
     //####################################
-    private String counterName = null;
+    private ParaProfTrial trial = null;
+    private MappingDataWindow mDWindow = null;
+    private Vector list = null;
     private int mappingID = -1;
-    private String mappingName;
     GlobalMappingElement gME = null;
+
+    //######
+    //Drawing information.
+    //######
     private int barHeight = -1;
     private int barSpacing = -1;
     private int baseBarLength = 250;
     private int barLength = 0;
     private int textOffset = 60;
     private int barXCoord = 0;
-    private int maxXLength = 0;
-    private boolean groupMember = false;
-    private ParaProfTrial trial = null;
-    private MappingDataWindow mDWindow = null;
-    private Vector list = null;
+    private int lastHeaderEndPosition = 0;
+    //######
+    //End - Drawing information.
+    //######
+    
+    //######
+    //Panel information.
+    //######
     int xPanelSize = 0;
     int yPanelSize = 0;
+    //######
+    //End - Panel information.
+    //######
   
+    //######
+    //Popup menu stuff.
+    //######
     private JPopupMenu popup1 = new JPopupMenu();
     private JPopupMenu popup2 = new JPopupMenu();
     private JPopupMenu popup3 = new JPopupMenu();
     private Object clickedOnObject = null;
+    //######
+    //End - Popup menu stuff.
+    //######
 
-    private int lastHeaderEndPosition = 0;
-    
     private boolean debug = false; //Off by default.
     //####################################
     //Instance data.
