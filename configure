@@ -1692,6 +1692,9 @@ then
   t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
 	;;
+  solaris2*)
+	mpiinc=/opt/SUNWhpc/include
+	;;
   *)
 	;;
   esac
@@ -2032,6 +2035,9 @@ then
   alpha)  
 	mpilib=/usr/lib 
     	;;
+  solaris2*)
+	mpilib=/opt/SUNWhpc/lib
+	;;
   *)    
 	mpilib=/usr/lib 
         ;;	
