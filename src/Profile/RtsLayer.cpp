@@ -226,7 +226,7 @@ double RtsLayer::getUSecD () {
 #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS)) 
   struct timeval tp;
   gettimeofday (&tp, 0);
-  return ( tp.tv_sec * 1000000 + tp.tv_usec );
+  return ( (double) tp.tv_sec * 1e6 + tp.tv_usec );
 #else  // TULIP_TIMERS by default.  
   return pcxx_GetUSecD();
 #endif  //POOMA_TFLOP
@@ -579,6 +579,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1998/08/10 16:48:48 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.4 1998/08/10 16:48:48 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 1998/08/14 15:39:48 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.5 1998/08/14 15:39:48 sameer Exp $ 
  ***************************************************************************/
