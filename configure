@@ -1737,7 +1737,7 @@ then
   # make bin dir if it does not exist
   if [ ! -d $machine ] 
     then
-      mkdir $machine
+      mkdir -p $machine
   fi
   if [ ! -d $machine/bin ] 
     then
@@ -2064,7 +2064,7 @@ else
   if [ ! -d ${tauprefix} ]
   then
     echo "making directory $tauprefix "
-    mkdir ${tauprefix}
+    mkdir -p ${tauprefix}
   fi
   if [ ! -d ${tauprefix}/${machine} ]
   then
@@ -2096,9 +2096,9 @@ cat << EOF > /tmp/tau$$
 	
 EOF
 
-if tversion=`( wish8.0 -f /tmp/tau$$ ) 2>/dev/null`
+if tversion=`( wish8.3 -f /tmp/tau$$ ) 2>/dev/null`
 then
-  wishname=wish8.0
+  wishname=wish8.3
   echo "Found Tcl/Tk wish $tversion"
 else
   if tversion=`( wish8.2 -f /tmp/tau$$ ) 2>/dev/null`
@@ -2106,9 +2106,9 @@ else
     wishname=wish8.2
     echo "Found Tcl/Tk wish $tversion"
   else
-    if tversion=`( wish8.3 -f /tmp/tau$$ ) 2>/dev/null`
+    if tversion=`( wish8.0 -f /tmp/tau$$ ) 2>/dev/null`
     then
-      wishname=wish8.3
+      wishname=wish8.0
       echo "Found Tcl/Tk wish $tversion"
     else
       if tversion=`( wish -f /tmp/tau$$ ) 2>/dev/null`
@@ -2198,7 +2198,7 @@ echo "TAU: installing tools in ${tauprefix}/${machine}/bin"
 if [ ! -d ${tauprefix} ]
   then
     echo "making directory $tauprefix "
-    mkdir ${tauprefix}
+    mkdir -p ${tauprefix}
   fi
 if [ ! -d ${tauprefix}/${machine} ]
   then
