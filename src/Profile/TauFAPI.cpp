@@ -155,18 +155,19 @@ void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
 void tau_profile_timer_(void **ptr, char *infname, int slen)
 {
   
-  char * fname = (char *) malloc((size_t)slen+1);
-  strncpy(fname, infname, slen);
-  fname[slen] = '\0';
 
 #ifdef DEBUG_PROF
   printf("Inside tau_profile_timer_ fname=%s\n", fname);
 #endif /* DEBUG_PROF */
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
+    char * fname = (char *) malloc((size_t)slen+1);
+    strncpy(fname, infname, slen);
+    fname[slen] = '\0';
     
     EXTRACT_GROUP(fname, slen, gr, gr_name)
     *ptr = Tau_get_profiler(fname, (char *)" ", gr, gr_name);
+    free(fname); 
   }
 
 #ifdef DEBUG_PROF 
@@ -1049,6 +1050,6 @@ void tau_set_interrupt_interval__(int value)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2004/09/01 13:46:36 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.31 2004/09/01 13:46:36 sameer Exp $ 
+ * $Revision: 1.32 $   $Date: 2004/09/07 20:25:23 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.32 2004/09/07 20:25:23 sameer Exp $ 
  ***************************************************************************/
