@@ -20,52 +20,73 @@ import javax.swing.event.*;
 import javax.swing.tree.*;
 import javax.swing.table.*;
 import dms.dss.*;
-import java.net.*;
 
-public class ParaProfManager extends JFrame implements ActionListener{
+public class ParaProfManager extends JFrame implements ActionListener, TreeSelectionListener, TreeExpansionListener{
     public ParaProfManager(){
 	
 	try{
-	    //Some window stuff.
-	    setLocation(new java.awt.Point(0, 0));
-	    setSize(new java.awt.Dimension(800, 600));
+	    //####################################
+	    //Window Stuff.
+	    //####################################
+	    int windowWidth = 800;
+	    int windowHeight = 500;
+	    
+	    //Grab the screen size.
+	    Toolkit tk = Toolkit.getDefaultToolkit();
+	    Dimension screenDimension = tk.getScreenSize();
+	    int screenHeight = screenDimension.height;
+	    int screenWidth = screenDimension.width;
+	    
+	    
+	    //Set the window to come up in the center of the screen.
+	    int xPosition = (screenWidth - windowWidth) / 2;
+	    int yPosition = (screenHeight - windowHeight) / 2;
+	    
+	    this.setLocation(xPosition, yPosition);
+	    setSize(new java.awt.Dimension(windowWidth, windowHeight));
 	    setTitle("ParaProf Manager");
-      
+	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {
 		    public void windowClosing(java.awt.event.WindowEvent evt) {
 			thisWindowClosing(evt);
 		    }
 		});
+	    //####################################
+	    //End - Window Stuff.
+	    //####################################
       
-      
-	    //******************************
+	    //####################################
 	    //Code to generate the menus.
-	    //******************************
+	    //####################################
 	    JMenuBar mainMenu = new JMenuBar();
       
-	    //******************************
+	    //######
 	    //File menu.
-	    //******************************
+	    //######
 	    JMenu fileMenu = new JMenu("File");
+
+	    //Add a menu item.
+	    JMenuItem dbItem = new JMenuItem("Database Configuration");
+	    dbItem.addActionListener(this);
+	    fileMenu.add(dbItem);
       
 	    //Add a menu item.
-	    JMenuItem closeItem = new JMenuItem("ParaProf Manager");
+	    JMenuItem closeItem = new JMenuItem("Close This Window");
 	    closeItem.addActionListener(this);
 	    fileMenu.add(closeItem);
-      
       
 	    //Add a menu item.
 	    JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
 	    exitItem.addActionListener(this);
 	    fileMenu.add(exitItem);
-	    //******************************
+	    //######
 	    //End - File menu.
-	    //******************************
-      
-	    //******************************
+	    //######
+
+	    //######
 	    //Help menu.
-	    //******************************
+	    //######
 	    JMenu helpMenu = new JMenu("Help");
       
 	    //Add a menu item.
@@ -77,22 +98,21 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    JMenuItem showHelpWindowItem = new JMenuItem("Show Help Window");
 	    showHelpWindowItem.addActionListener(this);
 	    helpMenu.add(showHelpWindowItem);
-	    //******************************
+	    //######
 	    //End - Help menu.
-	    //******************************
+	    //######
        
 	    //Now, add all the menus to the main menu.
 	    mainMenu.add(fileMenu);
 	    mainMenu.add(helpMenu);
 	    setJMenuBar(mainMenu);
-      
-	    //******************************
+	    //####################################
 	    //End - Code to generate the menus.
-	    //******************************
-    
-	    //******************************
+	    //####################################
+   
+	    //####################################
 	    //Create the tree.
-	    //******************************
+	    //####################################
 	    //Create the root node.
 	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("Applications");
   	    DefaultMutableTreeNode standard = new DefaultMutableTreeNode("Standard Applications");
@@ -113,31 +133,24 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    ParaProfTreeCellRenderer renderer = new ParaProfTreeCellRenderer();
 	    tree.setCellRenderer(renderer);
       
+	    //######
 	    //Add tree listeners.
-	    tree.addTreeSelectionListener(new TreeSelectionListener(){
-		    public void valueChanged(TreeSelectionEvent event){
-			treeSelectionEventHandler(event);
-		    }
-		});
-      
-	    tree.addTreeExpansionListener(new TreeExpansionListener(){
-		    public void treeCollapsed(TreeExpansionEvent event){
-			treeCollapsedEventHandler(event);
-		    }
-		    public void treeExpanded(TreeExpansionEvent event){
-			treeExpansionEventHandler(event);
-		    }
-		}); 
-      
+	    tree.addTreeSelectionListener(this);
+	    tree.addTreeExpansionListener(this);
+	    //######
+	          
 	    //Bung it in a scroll pane.
-	    JScrollPane treeScrollPane = new JScrollPane(tree); 
-	    //******************************
+	    JScrollPane treeScrollPane = new JScrollPane(tree);
+	    //####################################
 	    //End - Create the tree.
-	    //******************************
-	    //Set up the split pane.
+	    //####################################
+
+
+	    //####################################
+	    //Set up the split pane, and add to content pane.
+	    //####################################
 	    jSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, getPanelHelpMessage(0));
 	    jSplitPane.setContinuousLayout(true);
-	    
 	    (getContentPane()).add(jSplitPane, "Center");
       
 	    //Show before setting dividers.
@@ -145,17 +158,77 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    //the dividers can be set.
 	    this.show();
 	    jSplitPane.setDividerLocation(0.5);
+	    //####################################
+	    //End - Set up the split pane, and add to content pane.
+	    //####################################
 	}
 	catch(Exception e){
 	    e.printStackTrace();
-	    ParaProf.systemError(e, null, "jRM01");
+	    ParaProf.systemError(e, null, "PPM01");
 	} 
     }
-  
-    //******************************
-    //Tree event handlers.
-    //******************************
-    private void treeSelectionEventHandler(TreeSelectionEvent event){
+
+    //####################################
+    //Interface code.
+    //####################################
+    
+    //######
+    //ActionListener.
+    //######
+    public void actionPerformed(ActionEvent evt){
+	try{
+	    Object EventSrc = evt.getSource();
+	    if(EventSrc instanceof JMenuItem){
+		    String arg = evt.getActionCommand();
+		    if(arg.equals("Exit ParaProf!")){
+			setVisible(false);
+			dispose();
+			System.exit(0);
+		    } 
+		    else if(arg.equals("Close This Window")){
+			if(!(ParaProf.runHasBeenOpened)){
+			    setVisible(false);
+			    dispose();
+			    System.out.println("Quiting ParaProf!");
+			    System.exit(0);
+			}
+			else{
+			    dispose();
+			}
+		    }
+		    else if(arg.equals("Database Configuration")){
+			(new DBConfiguration(this)).show();
+		    }
+		    else if(arg.equals("About ParaProf")){
+			JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
+		    }
+		    else if(arg.equals("Show Help Window")){
+			//Show the ParaProf help window.
+			ParaProf.helpWindow.clearText();
+			ParaProf.helpWindow.show();
+			
+			ParaProf.helpWindow.writeText("This is the experiment manager window.");
+			ParaProf.helpWindow.writeText("");
+			ParaProf.helpWindow.writeText("You can create an experiment, and then add separate runs,.");
+			ParaProf.helpWindow.writeText("which may contain one or more metrics (gettimeofday, cache misses, etc.");
+			ParaProf.helpWindow.writeText("You can also derive new metrics in this window.");
+			ParaProf.helpWindow.writeText("");
+			ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
+		    }
+	    }
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "ELM05");
+	}
+    }
+    //######
+    //End - ActionListener.
+    //######
+
+    //######
+    //TreeSelectionListener
+    //######
+    public void valueChanged(TreeSelectionEvent event){
 	TreePath path = tree.getSelectionPath();
 	if(path == null)
 	    return;
@@ -165,6 +238,22 @@ public class ParaProfManager extends JFrame implements ActionListener{
 
 	if((parentNode.isRoot())&&(userObject.toString().equals("DB Applications"))){
 	    try{
+		if(configFile==null||password==null){//Check to see if the user has set configuration information.
+		    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
+						  "DB Configuration Error!",
+						  JOptionPane.ERROR_MESSAGE);
+		    return;
+		}
+		else{//Test to see if configurataion file exists.
+		    File file = new File(configFile);
+		    if(!file.exists()){
+			JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
+						  "DB Configuration Error!",
+						  JOptionPane.ERROR_MESSAGE);
+			return;
+		    }
+		}
+		//Basic checks done, try to access the db.
 		//Refresh the application list.
 		System.out.println("Loading application list ...");
 		for(int i=dbApps.getChildCount(); i>0; i--){
@@ -186,36 +275,41 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		return;
 	    }
 	    catch(Exception e){
-		ParaProf.systemError(e, null, "ELM03");
+		e.printStackTrace();
 	    }
 	}
 	else if(userObject instanceof ParaProfApplication){
-	    ParaProfApplication application = (ParaProfApplication) userObject;
-	    if(application.dBApplication()){
-		//Refresh the experiments list.
-		System.out.println("Loading experiment list ...");
-		for(int i=selectedNode.getChildCount(); i>0; i--){
-		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+	    try{
+		ParaProfApplication application = (ParaProfApplication) userObject;
+		if(application.dBApplication()){
+		    //Refresh the experiments list.
+		    System.out.println("Loading experiment list ...");
+		    for(int i=selectedNode.getChildCount(); i>0; i--){
+			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+		    }
+		    PerfDBSession perfDBSession = new PerfDBSession(); 
+		    perfDBSession.initialize(configFile, password);
+		    //Set the application.
+		    perfDBSession.setApplication(application.getID());
+		    ListIterator l = perfDBSession.getExperimentList();
+		    while (l.hasNext()){
+			ParaProfExperiment experiment = new ParaProfExperiment((Experiment)l.next());
+			experiment.setDBExperiment(true);
+			experiment.setApplication(application);
+			DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			experiment.setDMTN(experimentNode);
+			treeModel.insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
+		    }
+		    perfDBSession.terminate();
+		    System.out.println("Done loading experiment list.");
 		}
-		PerfDBSession perfDBSession = new PerfDBSession(); 
-		perfDBSession.initialize(configFile, password);
-		//Set the application.
-		perfDBSession.setApplication(application.getID());
-		ListIterator l = perfDBSession.getExperimentList();
-		while (l.hasNext()){
-		    ParaProfExperiment experiment = new ParaProfExperiment((Experiment)l.next());
-		    experiment.setDBExperiment(true);
-		    experiment.setApplication(application);
-		    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
-		    experiment.setDMTN(experimentNode);
-		    treeModel.insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
-		}
-		perfDBSession.terminate();
-		System.out.println("Done loading experiment list.");
+		tree.expandPath(path);
+		jSplitPane.setRightComponent(getTable(userObject));
+		jSplitPane.setDividerLocation(0.5);
 	    }
-	    tree.expandPath(path);
-	    jSplitPane.setRightComponent(getTable(userObject));
-	    jSplitPane.setDividerLocation(0.5);
+	    catch(Exception e){
+		e.printStackTrace();
+	    }
 	}
 	else if(userObject instanceof ParaProfExperiment){
 	    ParaProfExperiment experiment = (ParaProfExperiment) userObject;
@@ -307,18 +401,38 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		ParaProf.systemError(null, null, "jRM02 - Logic Error");
 	}
     }
-  
-    private void treeExpansionEventHandler(TreeExpansionEvent event){}
-    private void treeCollapsedEventHandler(TreeExpansionEvent event){}
-  
-    //******************************
-    //End - Tree event handlers.
-    //******************************
-  
-    //******************************
+    //######
+    //End - TreeSelectionListener
+    //######
+
+    //######
+    //TreeExpansionListener
+    //######
+    public void treeCollapsed(TreeExpansionEvent event){}
+    public void treeExpanded(TreeExpansionEvent event){}
+    //######
+    //End - TreeSelectionListener
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
+
+    public void setDatabasePassword(String password){
+	this.password = password;}
+
+    public String getDatabasePassword(){
+	return password;}
+
+    public void setDatabaseConfigurationFile(String configFile){
+	this.configFile = configFile;}
+
+    public String getDatabaseConfigurationFile(){
+	return configFile;}
+
+    //####################################
     //Component functions.
-    //******************************
-  
+    //####################################
     private Component getPanelHelpMessage(int type){
 	JTextArea jTextArea = new JTextArea();
 	jTextArea.setLineWrap(true);
@@ -357,11 +471,11 @@ public class ParaProfManager extends JFrame implements ActionListener{
 
     private Component getTable(Object obj){
 	return (new JScrollPane(new JTable(new ParaProfManagerTableModel(obj, treeModel))));}
-    
-    //******************************
+    //####################################
     //End - Component functions.
-    //******************************
-    void addExperiment(){
+    //####################################
+
+    private void addExperiment(){
 	JOptionPane.showMessageDialog(this, "Only the default experiment allowed in this release!", "Warning!"
                                       ,JOptionPane.ERROR_MESSAGE);
 	return;
@@ -371,7 +485,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
     //an experiment is clicked on in the display, and uses that.
     //If prompt is set to true, the user is prompted for a trial name, otherwise, a default name is created.
     //Returns the added trial or null if no trial was added.
-    public void addTrial(){
+    private void addTrial(){
     	try{
 	    ParaProfTrial trial = null;
 	    String trialName = null;
@@ -448,7 +562,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	}
     }
   
-    void showMetric(ParaProfTrial trial, Metric metric){
+    private void showMetric(ParaProfTrial trial, Metric metric){
 	try{
 	    trial.setCurValLoc(metric.getID());
 	    trial.getSystemEvents().updateRegisteredObjects("dataEvent");
@@ -459,7 +573,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	}
     }
   
-    void populateStandardApplications(DefaultMutableTreeNode inNode){
+    private void populateStandardApplications(DefaultMutableTreeNode inNode){
 	DefaultMutableTreeNode applicationNode = null;
 	DefaultMutableTreeNode experimentNode = null;
 	DefaultMutableTreeNode trialNode = null;
@@ -509,55 +623,6 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    tree.expandPath(new TreePath(defaultParaProfTrialNode.getPath()));
     }
 
-    //******************************
-    //Event listener code!!
-    //******************************
-  
-    //ActionListener code.
-    public void actionPerformed(ActionEvent evt){
-	try{
-	    Object EventSrc = evt.getSource();
-	    if(EventSrc instanceof JMenuItem){
-		    String arg = evt.getActionCommand();
-		    if(arg.equals("Exit ParaProf!")){
-			setVisible(false);
-			dispose();
-			System.exit(0);
-		    } 
-		    else if(arg.equals("ParaProf Manager")){
-			if(!(ParaProf.runHasBeenOpened)){
-			    setVisible(false);
-			    dispose();
-			    System.out.println("Quiting ParaProf!");
-			    System.exit(0);
-			}
-			else{
-			    dispose();
-			}
-		    }
-		    else if(arg.equals("About ParaProf")){
-			JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
-		    }
-		    else if(arg.equals("Show Help Window")){
-			//Show the ParaProf help window.
-			ParaProf.helpWindow.clearText();
-			ParaProf.helpWindow.show();
-			
-			ParaProf.helpWindow.writeText("This is the experiment manager window.");
-			ParaProf.helpWindow.writeText("");
-			ParaProf.helpWindow.writeText("You can create an experiment, and then add separate runs,.");
-			ParaProf.helpWindow.writeText("which may contain one or more metrics (gettimeofday, cache misses, etc.");
-			ParaProf.helpWindow.writeText("You can also derive new metrics in this window.");
-			ParaProf.helpWindow.writeText("");
-			ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
-		    }
-	    }
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "ELM05");
-	}
-    }
-  
     //Respond correctly when this window is closed.
     void thisWindowClosing(java.awt.event.WindowEvent e){
 	closeThisWindow();
@@ -577,15 +642,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 	    ParaProf.systemError(e, null, "ELM06");
 	}
     }
-  
-    private void panelAdd(JPanel inJPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h){
-	gbc.gridx = x;
-	gbc.gridy = y;
-	gbc.gridwidth = w;
-	gbc.gridheight = h;
-	inJPanel.add(c, gbc);
-    }
-  
+
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h){
 	gbc.gridx = x;
 	gbc.gridy = y;
@@ -605,35 +662,10 @@ public class ParaProfManager extends JFrame implements ActionListener{
     //A reference to the default trial node.
     DefaultMutableTreeNode defaultParaProfTrialNode = null;
 
-    private String password = "";
-    private String configFile = "/home/bertie/Programming/data/perfdb.cfg";
+    private String password = null;
+    private String configFile = null;//"/home/bertie/Programming/data/perfdb.cfg";
     private Vector loadedTrials = new Vector();
     //####################################
     //End - Instance Data.
     //####################################
-}
-
-class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer{
-    public Component getTreeCellRendererComponent(JTree tree,
-						  Object value,
-						  boolean selected,
-						  boolean expanded,
-						  boolean leaf,
-						  int row,
-						  boolean hasFocus){
-	super.getTreeCellRendererComponent(tree,value,selected,expanded,leaf,row,hasFocus);
-	DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-	Object userObject = node.getUserObject();
-	
-	if(parentNode.isRoot()){
-	    URL url = ParaProfTreeCellRenderer.class.getResource("red-ball.gif");
-	    this.setIcon(new ImageIcon(url));
-	}
-	else if(userObject instanceof Metric){
-	    URL url = ParaProfTreeCellRenderer.class.getResource("green-ball.gif");
-	    this.setIcon(new ImageIcon(url));
-	}
-	return this;
-    }
 }
