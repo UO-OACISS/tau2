@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 //#define DEBUG_PROF 1
-#include "omperf_lib.h"
+#include "pomp_lib.h"
 #include <Profile/Profiler.h>
 
 /* These two defines specify if we want region based views or construct based
@@ -47,136 +47,136 @@ static int omp_fin_called = 0;
  * Fortran wrappers calling the C versions
  */
 
-void FSUB(omperf_finalize)() {
-  omperf_finalize();
+void FSUB(pomp_finalize)() {
+  pomp_finalize();
 }
 
-void FSUB(omperf_init)() {
-  omperf_init();
+void FSUB(pomp_init)() {
+  pomp_init();
 }
 
-void FSUB(omperf_off)() {
+void FSUB(pomp_off)() {
   omp_tracing = 0;
 }
 
-void FSUB(omperf_on)() {
+void FSUB(pomp_on)() {
   omp_tracing = 1;
 }
 
-void FSUB(omperf_atomic_enter)(int* id) {
-  if ( omp_tracing ) omperf_atomic_enter(omp_rd_table[*id]);
+void FSUB(pomp_atomic_enter)(int* id) {
+  if ( omp_tracing ) pomp_atomic_enter(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_atomic_exit)(int* id) {
-  if ( omp_tracing ) omperf_atomic_exit(omp_rd_table[*id]);
+void FSUB(pomp_atomic_exit)(int* id) {
+  if ( omp_tracing ) pomp_atomic_exit(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_barrier_enter)(int* id) {
-  if ( omp_tracing ) omperf_barrier_enter(omp_rd_table[*id]);
+void FSUB(pomp_barrier_enter)(int* id) {
+  if ( omp_tracing ) pomp_barrier_enter(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_barrier_exit)(int* id) {
-  if ( omp_tracing ) omperf_barrier_exit(omp_rd_table[*id]);
+void FSUB(pomp_barrier_exit)(int* id) {
+  if ( omp_tracing ) pomp_barrier_exit(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_critical_begin)(int* id) {
-  if ( omp_tracing ) omperf_critical_begin(omp_rd_table[*id]);
+void FSUB(pomp_critical_begin)(int* id) {
+  if ( omp_tracing ) pomp_critical_begin(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_critical_end)(int* id) {
-  if ( omp_tracing ) omperf_critical_end(omp_rd_table[*id]);
+void FSUB(pomp_critical_end)(int* id) {
+  if ( omp_tracing ) pomp_critical_end(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_critical_enter)(int* id) {
-  if ( omp_tracing ) omperf_critical_enter(omp_rd_table[*id]);
+void FSUB(pomp_critical_enter)(int* id) {
+  if ( omp_tracing ) pomp_critical_enter(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_critical_exit)(int* id) {
-  if ( omp_tracing ) omperf_critical_exit(omp_rd_table[*id]);
+void FSUB(pomp_critical_exit)(int* id) {
+  if ( omp_tracing ) pomp_critical_exit(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_do_enter)(int* id) {
-  if ( omp_tracing ) omperf_for_enter(omp_rd_table[*id]);
+void FSUB(pomp_do_enter)(int* id) {
+  if ( omp_tracing ) pomp_for_enter(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_do_exit)(int* id) {
-  if ( omp_tracing ) omperf_for_exit(omp_rd_table[*id]);
+void FSUB(pomp_do_exit)(int* id) {
+  if ( omp_tracing ) pomp_for_exit(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_master_begin)(int* id) {
-  if ( omp_tracing ) omperf_master_begin(omp_rd_table[*id]);
+void FSUB(pomp_master_begin)(int* id) {
+  if ( omp_tracing ) pomp_master_begin(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_master_end)(int* id) {
-  if ( omp_tracing ) omperf_master_end(omp_rd_table[*id]);
+void FSUB(pomp_master_end)(int* id) {
+  if ( omp_tracing ) pomp_master_end(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_parallel_begin)(int* id) {
-  if ( omp_tracing ) omperf_parallel_begin(omp_rd_table[*id]);
+void FSUB(pomp_parallel_begin)(int* id) {
+  if ( omp_tracing ) pomp_parallel_begin(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_parallel_end)(int* id) {
-  if ( omp_tracing ) omperf_parallel_end(omp_rd_table[*id]);
+void FSUB(pomp_parallel_end)(int* id) {
+  if ( omp_tracing ) pomp_parallel_end(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_parallel_fork)(int* id) {
-  if ( omp_tracing ) omperf_parallel_fork(omp_rd_table[*id]);
+void FSUB(pomp_parallel_fork)(int* id) {
+  if ( omp_tracing ) pomp_parallel_fork(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_parallel_join)(int* id) {
-  if ( omp_tracing ) omperf_parallel_join(omp_rd_table[*id]);
+void FSUB(pomp_parallel_join)(int* id) {
+  if ( omp_tracing ) pomp_parallel_join(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_section_begin)(int* id) {
-  if ( omp_tracing ) omperf_section_begin(omp_rd_table[*id]);
+void FSUB(pomp_section_begin)(int* id) {
+  if ( omp_tracing ) pomp_section_begin(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_section_end)(int* id) {
-  if ( omp_tracing ) omperf_section_end(omp_rd_table[*id]);
+void FSUB(pomp_section_end)(int* id) {
+  if ( omp_tracing ) pomp_section_end(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_sections_enter)(int* id) {
-  if ( omp_tracing ) omperf_sections_enter(omp_rd_table[*id]);
+void FSUB(pomp_sections_enter)(int* id) {
+  if ( omp_tracing ) pomp_sections_enter(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_sections_exit)(int* id) {
-  if ( omp_tracing ) omperf_sections_exit(omp_rd_table[*id]);
+void FSUB(pomp_sections_exit)(int* id) {
+  if ( omp_tracing ) pomp_sections_exit(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_single_begin)(int* id) {
-  if ( omp_tracing ) omperf_single_begin(omp_rd_table[*id]);
+void FSUB(pomp_single_begin)(int* id) {
+  if ( omp_tracing ) pomp_single_begin(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_single_end)(int* id) {
-  if ( omp_tracing ) omperf_single_end(omp_rd_table[*id]);
+void FSUB(pomp_single_end)(int* id) {
+  if ( omp_tracing ) pomp_single_end(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_single_enter)(int* id) {
-  if ( omp_tracing ) omperf_single_enter(omp_rd_table[*id]);
+void FSUB(pomp_single_enter)(int* id) {
+  if ( omp_tracing ) pomp_single_enter(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_single_exit)(int* id) {
-  if ( omp_tracing ) omperf_single_exit(omp_rd_table[*id]);
+void FSUB(pomp_single_exit)(int* id) {
+  if ( omp_tracing ) pomp_single_exit(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_workshare_enter)(int* id) {
-  if ( omp_tracing ) omperf_workshare_enter(omp_rd_table[*id]);
+void FSUB(pomp_workshare_enter)(int* id) {
+  if ( omp_tracing ) pomp_workshare_enter(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_workshare_exit)(int* id) {
-  if ( omp_tracing ) omperf_workshare_exit(omp_rd_table[*id]);
+void FSUB(pomp_workshare_exit)(int* id) {
+  if ( omp_tracing ) pomp_workshare_exit(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_begin)(int* id) {
-  if ( omp_tracing ) omperf_begin(omp_rd_table[*id]);
+void FSUB(pomp_begin)(int* id) {
+  if ( omp_tracing ) pomp_begin(pomp_rd_table[*id]);
 }
 
-void FSUB(omperf_end)(int* id) {
-  if ( omp_tracing ) omperf_end(omp_rd_table[*id]);
+void FSUB(pomp_end)(int* id) {
+  if ( omp_tracing ) pomp_end(pomp_rd_table[*id]);
 }
 
 /*
- * C omperf function library
+ * C pomp function library
  */
 
 /* TAU specific calls */
@@ -215,9 +215,9 @@ void TauStartOpenMPRegionTimer(struct ompregdescr *r)
 
 }
 
-/* omperf library calls */
+/* pomp library calls */
 
-void omperf_finalize() {
+void pomp_finalize() {
   if ( ! omp_fin_called ) {
     omp_fin_called = 1;
   }
@@ -226,33 +226,33 @@ void omperf_finalize() {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_init() {
+void pomp_init() {
   int i;
 
-  atexit(omperf_finalize);
+  atexit(pomp_finalize);
 
 #ifdef DEBUG_PROF
   fprintf(stderr, "  0: init\n");
 #endif /* DEBUG_PROF */
 
-  for(i=0; i<OMPERF_MAX_ID; ++i) {
-    if ( omp_rd_table[i] ) {
-      omp_rd_table[i]->data = 0; /* allocate space for performance data here */
+  for(i=0; i<POMP_MAX_ID; ++i) {
+    if ( pomp_rd_table[i] ) {
+      pomp_rd_table[i]->data = 0; /* allocate space for performance data here */
     }
   }
 }
 
-void omperf_off() {
+void pomp_off() {
   TAU_DISABLE_INSTRUMENTATION();
   omp_tracing = 0;
 }
 
-void omperf_on() {
+void pomp_on() {
   TAU_ENABLE_INSTRUMENTATION();
   omp_tracing = 1;
 }
 
-void omperf_atomic_enter(struct ompregdescr* r) {
+void pomp_atomic_enter(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tatomic);
@@ -269,7 +269,7 @@ void omperf_atomic_enter(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_atomic_exit(struct ompregdescr* r) {
+void pomp_atomic_exit(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -286,7 +286,7 @@ void omperf_atomic_exit(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_barrier_enter(struct ompregdescr* r) {
+void pomp_barrier_enter(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tbarrier);
@@ -307,7 +307,7 @@ void omperf_barrier_enter(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_barrier_exit(struct ompregdescr* r) {
+void pomp_barrier_exit(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -328,7 +328,7 @@ void omperf_barrier_exit(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_critical_begin(struct ompregdescr* r) {
+void pomp_critical_begin(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tcriticalb);
@@ -346,7 +346,7 @@ void omperf_critical_begin(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_critical_end(struct ompregdescr* r) {
+void pomp_critical_end(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -364,7 +364,7 @@ void omperf_critical_end(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_critical_enter(struct ompregdescr* r) {
+void pomp_critical_enter(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tcriticale);
@@ -382,7 +382,7 @@ void omperf_critical_enter(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_critical_exit(struct ompregdescr* r) {
+void pomp_critical_exit(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -401,7 +401,7 @@ void omperf_critical_exit(struct ompregdescr* r) {
 }
 
 	
-void omperf_for_enter(struct ompregdescr* r) {
+void pomp_for_enter(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tfor); 
@@ -418,7 +418,7 @@ void omperf_for_enter(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_for_exit(struct ompregdescr* r) {
+void pomp_for_exit(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -436,7 +436,7 @@ void omperf_for_exit(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_master_begin(struct ompregdescr* r) {
+void pomp_master_begin(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tmaster);
@@ -453,7 +453,7 @@ void omperf_master_begin(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_master_end(struct ompregdescr* r) {
+void pomp_master_end(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -470,7 +470,7 @@ void omperf_master_end(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_parallel_begin(struct ompregdescr* r) {
+void pomp_parallel_begin(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tparallelb);
@@ -487,7 +487,7 @@ void omperf_parallel_begin(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_parallel_end(struct ompregdescr* r) {
+void pomp_parallel_end(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -504,7 +504,7 @@ void omperf_parallel_end(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_parallel_fork(struct ompregdescr* r) {
+void pomp_parallel_fork(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tparallelf);
@@ -521,7 +521,7 @@ void omperf_parallel_fork(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_parallel_join(struct ompregdescr* r) {
+void pomp_parallel_join(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -538,7 +538,7 @@ void omperf_parallel_join(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_section_begin(struct ompregdescr* r) {
+void pomp_section_begin(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tsectionb);
@@ -555,7 +555,7 @@ void omperf_section_begin(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_section_end(struct ompregdescr* r) {
+void pomp_section_end(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -572,7 +572,7 @@ void omperf_section_end(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_sections_enter(struct ompregdescr* r) {
+void pomp_sections_enter(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tsectione);
@@ -589,7 +589,7 @@ void omperf_sections_enter(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_sections_exit(struct ompregdescr* r) {
+void pomp_sections_exit(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -606,7 +606,7 @@ void omperf_sections_exit(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_single_begin(struct ompregdescr* r) {
+void pomp_single_begin(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tsingleb);
@@ -623,7 +623,7 @@ void omperf_single_begin(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_single_end(struct ompregdescr* r) {
+void pomp_single_end(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -640,7 +640,7 @@ void omperf_single_end(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_single_enter(struct ompregdescr* r) {
+void pomp_single_enter(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tsinglee);
@@ -657,7 +657,7 @@ void omperf_single_enter(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_single_exit(struct ompregdescr* r) {
+void pomp_single_exit(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -674,7 +674,7 @@ void omperf_single_exit(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_workshare_enter(struct ompregdescr* r) {
+void pomp_workshare_enter(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tworkshare);
@@ -691,7 +691,7 @@ void omperf_workshare_enter(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_workshare_exit(struct ompregdescr* r) {
+void pomp_workshare_exit(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -708,7 +708,7 @@ void omperf_workshare_exit(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_begin(struct ompregdescr* r) {
+void pomp_begin(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_START(tregion);
@@ -726,7 +726,7 @@ void omperf_begin(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_end(struct ompregdescr* r) {
+void pomp_end(struct ompregdescr* r) {
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
@@ -744,7 +744,7 @@ void omperf_end(struct ompregdescr* r) {
 #endif /* DEBUG_PROF */
 }
 
-void omperf_init_lock(omp_lock_t *s) {
+void pomp_init_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_init_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -754,7 +754,7 @@ void omperf_init_lock(omp_lock_t *s) {
   omp_init_lock(s);
 }
 
-void omperf_destroy_lock(omp_lock_t *s) {
+void pomp_destroy_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_destroy_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -764,7 +764,7 @@ void omperf_destroy_lock(omp_lock_t *s) {
   omp_destroy_lock(s);
 }
 
-void omperf_set_lock(omp_lock_t *s) {
+void pomp_set_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_set_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -774,7 +774,7 @@ void omperf_set_lock(omp_lock_t *s) {
   omp_set_lock(s);
 }
 
-void omperf_unset_lock(omp_lock_t *s) {
+void pomp_unset_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_unset_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -784,7 +784,7 @@ void omperf_unset_lock(omp_lock_t *s) {
   omp_unset_lock(s);
 }
 
-int  omperf_test_lock(omp_lock_t *s) {
+int  pomp_test_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_test_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -794,7 +794,7 @@ int  omperf_test_lock(omp_lock_t *s) {
   return omp_test_lock(s);
 }
 
-void omperf_init_nest_lock(omp_nest_lock_t *s) {
+void pomp_init_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_init_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -804,7 +804,7 @@ void omperf_init_nest_lock(omp_nest_lock_t *s) {
   omp_init_nest_lock(s);
 }
 
-void omperf_destroy_nest_lock(omp_nest_lock_t *s) {
+void pomp_destroy_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_destroy_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -814,7 +814,7 @@ void omperf_destroy_nest_lock(omp_nest_lock_t *s) {
   omp_destroy_nest_lock(s);
 }
 
-void omperf_set_nest_lock(omp_nest_lock_t *s) {
+void pomp_set_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_set_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -824,7 +824,7 @@ void omperf_set_nest_lock(omp_nest_lock_t *s) {
   omp_set_nest_lock(s);
 }
 
-void omperf_unset_nest_lock(omp_nest_lock_t *s) {
+void pomp_unset_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_unset_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -834,7 +834,7 @@ void omperf_unset_nest_lock(omp_nest_lock_t *s) {
   omp_unset_nest_lock(s);
 }
 
-int  omperf_test_nest_lock(omp_nest_lock_t *s) {
+int  pomp_test_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_test_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
@@ -847,8 +847,8 @@ int  omperf_test_nest_lock(omp_nest_lock_t *s) {
 
 /***************************************************************************
  * $RCSfile: TauOpari.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2001/07/11 00:36:24 $
- * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.4 2001/07/11 00:36:24 sameer Exp $
+ * $Revision: 1.5 $   $Date: 2001/08/21 17:35:10 $
+ * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.5 2001/08/21 17:35:10 sameer Exp $
  ***************************************************************************/
 
 
