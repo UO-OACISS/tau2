@@ -688,7 +688,8 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	char *filename, *dumpfile, *errormsg, *header;
 	char *dirname;
 	FILE* fp;
- 	int numFunc, numEvents;
+ 	int numFunc = numOfFuncs; 
+	int numEvents;
 
 	bool functionCheck = false;
 	const char *tmpFunctionName = NULL;
@@ -748,7 +749,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	  }
 	}
 	*/
-	numFunc = TheFunctionDB().size();
+	//numFunc = TheFunctionDB().size();
 	header = new char[256];
 
 #if (defined (SGI_HW_COUNTERS) || defined (TAU_PCL) \
@@ -1611,7 +1612,8 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 
   FILE* fp;
   char *dirname, *dumpfile;
-  int numFunc, numEvents;
+  int numFunc = numOfFuncs; 
+  int numEvents;
 
   bool memAllocated = false; //Used to help with memory cleanup.
   double * tmpDoubleExcl;
@@ -1684,7 +1686,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 	}
       */
 
-      numFunc = TheFunctionDB().size();
+      //numFunc = TheFunctionDB().size();
 
       //Setting the header to the correct name.
       sprintf(header,"%d templated_functions_MULTI_%s\n", numFunc, tmpChar);
@@ -2439,8 +2441,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.70 $   $Date: 2002/03/29 00:34:50 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.70 2002/03/29 00:34:50 bertie Exp $ 
+ * $Revision: 1.71 $   $Date: 2002/03/29 01:06:57 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.71 2002/03/29 01:06:57 bertie Exp $ 
  ***************************************************************************/
 
 	

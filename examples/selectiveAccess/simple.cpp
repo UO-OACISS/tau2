@@ -18,7 +18,7 @@ using namespace std;
 #include <stdlib.h>
 #include "decl.h"
 
-#define DEFAULT_SIZE 100000
+#define DEFAULT_SIZE 1000000
 #define DEFAULT_K    4 /* fourth largest element from the array */
 #define middle(i)	5*i+2
 /* the large array is partitioned into 5 elements each 2, 7, 12 etc. are 
@@ -253,10 +253,10 @@ void sort_5elements(int *arr)
 {
   TAU_PROFILE("void sort_5elements(int *)", " ", TAU_USER);
 
-  //Dump this function's values every time we reach 10000 calls.
+  //Dump this function's values every time we reach 100000 calls.
   static int counter = 0;
   counter++;
-  if(counter == 10000){
+  if(counter == 100000){
     const char **inFuncs = (const char **) malloc(sizeof(const char *) * 2);
     inFuncs[0] = "void sort_5elements(int *)";
     TAU_DUMP_FUNC_VALS_INCR(inFuncs, 1);
