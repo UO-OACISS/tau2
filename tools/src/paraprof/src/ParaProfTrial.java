@@ -300,6 +300,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public boolean callPathDataPresent(){
 	return dataSession.callPathDataPresent();}
 
+    //Overides the parent getMaxNCTNumbers.
     public int[] getMaxNCTNumbers(){
 	return dataSession.getMaxNCTNumbers();}
 

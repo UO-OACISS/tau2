@@ -15,7 +15,7 @@ BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.jav
              UserEventWindow.java DBConfiguration.java Metric.java SavedPreferences.java UserEventWindowPanel.java \
              ParaProfManager.java StatWindow.java \
              ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             PPML.java StaticMainWindow.java ParaProfTreeNodeUserObject.java XMLSupport.java
+             PPML.java StaticMainWindow.java ParaProfTreeNodeUserObject.java
 
 NEW_SOURCES=$(BASE_SOURCES) FileList.java ParaProfImageOutput.java
 
