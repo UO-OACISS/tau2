@@ -30,7 +30,7 @@
 
 #if (defined(TAU_WINDOWS))
 #pragma warning( disable : 4786 )
-#endif //TAU_WINDOWS
+#endif /* TAU_WINDOWS */
 
 #ifdef __cplusplus 
 
@@ -134,6 +134,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2000/07/22 20:57:14 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.27 2000/07/22 20:57:14 sameer Exp $ 
+ * $Revision: 1.28 $   $Date: 2000/11/01 19:34:33 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.28 2000/11/01 19:34:33 sameer Exp $ 
  ***************************************************************************/
