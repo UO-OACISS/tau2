@@ -25,13 +25,14 @@ F90PARSE        = $(PDTDIR)/$(PDTARCHDIR)/bin/f90parse
 
 TAUINSTR        = $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) 
 
 #FFLAGS          = -W132
+FFLAGS          = $(TAU_F90_SUFFIX)
 
 LIBS            = $(TAU_LIBS) $(TAU_FORTRANLIBS) 
 
-LDFLAGS	      	= $(USER_OPT)  $(TAU_LDFLAGS)
+LDFLAGS	      	= $(USER_OPT)  
 
 TARGET	      	= app
 
