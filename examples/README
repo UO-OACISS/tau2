@@ -79,6 +79,11 @@ pdt_mpi         - This directory contains C, C++ and F90 examples that
                   options. You may also try this with the -TRACE -epilog=<dir> 
                   options to use the EPILOG tracing package (from FZJ). 
 
+callpath        - Shows the use of callpath profiling. Requires configuring
+                  TAU with the -PROFILECALLPATH option. Setting the environment
+                  variable TAU_CALLPATH_DEPTH changes the depth of the callpath
+                  recorded by TAU. The default value of this variable is 2. 
+
 selective	- This example illustrates the use of PDT, and selective 
 		  profiling using profile groups in the tau_instrumentor. 
 		  Requires configuring TAU with -pdt=<dir> -fortran=<...> 
