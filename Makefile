@@ -2,9 +2,10 @@
 #*			TAU Portable Profiling Package			   **
 #*			http://www.acl.lanl.gov/tau		           **
 #****************************************************************************
-#*    Copyright 1997  						   	   **
+#*    Copyright 1997-99 					   	   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#*    Research Center Juelich, ZAM Germany                                 **
 #****************************************************************************
 #######################################################################
 ##                              TAU (C) 1996                         ##
@@ -18,7 +19,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/home/users/sameer/tau2
 #######################################################################
  
 include include/Makefile
