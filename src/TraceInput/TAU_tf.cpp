@@ -506,6 +506,12 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 
       strcpy(param, &linebuf[k+2]);
 
+      // Fix 13/10 to 10 for event files generated with windows
+      if (param[strlen(param)-2] == 13) {
+ 	param[strlen(param)-2] = 10;
+ 	param[strlen(param)-1] = 0;
+      }
+
 #ifdef DEBUG 
       printf(" Got eventname=%s param=%s\n", eventname, param);
 #endif /* DEBUG */
@@ -577,6 +583,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 }
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.5 $   $Date: 2004/09/01 18:53:28 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.5 2004/09/01 18:53:28 amorris Exp $ 
+ * $Revision: 1.6 $   $Date: 2005/03/29 20:15:39 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.6 2005/03/29 20:15:39 amorris Exp $ 
  ***************************************************************************/
