@@ -41,7 +41,7 @@ FLINK	= $(TAU_CXX)
 #---------------------------------------------------------------------------
 #FMPI_LIB  = -L/usr/local/lib -lmpi
 
-FMPI_LIB  = $(TAU_MPI_FLIBS) $(TAU_LIBS) $(LEXTRA1) $(TAU_FORTRANLIBS) $(EXTRALIBS) -lm
+FMPI_LIB  = $(TAU_MPI_FLIBS) $(TAU_LIBS) $(LEXTRA1) $(TAU_LDFLAGS) $(TAU_FORTRANLIBS) $(EXTRALIBS) -lm
 
 # TO DISABLE THE INSTRUMENTATION USE $(TAU_DISABLE) INSTEAD OF $(TAU_LIBS)
 #FMPI_LIB  = $(TAU_DISABLE) $(LEXTRA1) $(TAU_FORTRANLIBS)
@@ -94,7 +94,7 @@ CLINK	= $(TAU_CC)
 #---------------------------------------------------------------------------
 #CMPI_LIB  = -L/usr/local/lib -lmpi
 #CMPI_LIB  = -L$(MPIDIR)/lib/$(MPIARCH) -lmpich
-CMPI_LIB  = $(TAU_MPI_LIBS) $(TAU_LIBS) $(LEXTRA1)
+CMPI_LIB  = $(TAU_MPI_LIBS) $(TAU_LIBS) $(LEXTRA1) $(TAU_LDFLAGS)
 
 #---------------------------------------------------------------------------
 # These macros are passed to the compiler to help find 'mpi.h'

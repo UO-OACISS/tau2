@@ -23,7 +23,7 @@ CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)  $(TAU_MPI_INCLUDE)
 
 LIBS            = $(TAU_MPI_LIBS) $(TAU_LIBS) $(LEXTRA1) $(EXTRALIBS)  -lm
 
-LDFLAGS	      	= $(CFLAGS)
+LDFLAGS	      	= $(USER_OPT)  $(TAU_LDFLAGS)
 
 MAKEFILE      	= Makefile
 
