@@ -217,7 +217,7 @@ public class HelpWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "HW01");
+			jRacy.systemError(e, null, "HW01");
 		}
 	}
 }

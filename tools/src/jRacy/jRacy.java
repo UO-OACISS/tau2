@@ -30,6 +30,7 @@ public class jRacy implements ActionListener
 	//Start or define all the persistant objects.
 	static SavedPreferences savedPreferences = new SavedPreferences();
 	static ExperimentManager experimentManager = new ExperimentManager();
+	static ApplicationManager applicationManager = new ApplicationManager();
 	static HelpWindow helpWindow = new HelpWindow();
 	//End start of persistant objects.
 	
@@ -42,18 +43,15 @@ public class jRacy implements ActionListener
 	public jRacy() 
 	{
 		try {
-			// For native Look and Feel, uncomment the following code.
-			
-			try {
-				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			} 
-			catch (Exception e) { 
-			}
-			//End uncomment!
-			
-			//Add some observers.
-			//jRacy.systemEvents.addObserver(helpWindow);
-			
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} 
+		catch (Exception e) { 
+		}
+		//End uncomment!
+	}
+	
+	public void startSystem(){
+	try{
 			//Try and load the Racy preference file ... racyPreferences.dat
 			try
 			{
@@ -95,34 +93,38 @@ public class jRacy implements ActionListener
 			
 			if(testForPprofDat.exists())
 			{
-				System.out.println("Found pprof.dat ... loading");
+				System.out.println("Found pprof.dat!");
 				
 				//setTitle("jRacy: " + jRacy.profilePathName);
 				
-				//Create a default experiment.
-				Experiment exp = new Experiment("default");
-				experimentManager.addExperiment(exp);
+				//Create a default application.
+				Application app = jRacy.applicationManager.addApplication(null);
+				app.setApplicationName("Default App");
 				
-				//Add the experiment run for this pprof.dat file to the experiment.
-				ExperimentRun expRun = null;
+				//Create a default experiment.
+				Experiment exp = new Experiment("Default Exp");
+				app.addExperiment(exp);
+				
+				//Add the trial for this pprof.dat file to the experiment.
+				Trial trial = null;
 				String tmpString1 = null;
 				String tmpString2 = null;
 				String tmpString3 = null;
 				
 				tmpString1 = testForPprofDat.getCanonicalPath();
 				tmpString2 = jRacy.experimentManager.getPathReverse(tmpString1);
-				tmpString3 = "defaultRun" + " : " + tmpString2;
+				tmpString3 = "Default Trial" + " : " + tmpString2;
 																	  
-				expRun = new ExperimentRun();
+				trial = new Trial();
 						
-				expRun.setProfilePathName(tmpString1);
-				expRun.setProfilePathName(tmpString2);
-				expRun.setRunName(tmpString3);
+				trial.setProfilePathName(tmpString1);
+				trial.setProfilePathName(tmpString2);
+				trial.setRunName(tmpString3);
 				
-				exp.addExperimentRun(expRun);
-				expRun.buildStaticData(true, testForPprofDat);
+				exp.addTrial(trial);
+				trial.buildStaticData(true, testForPprofDat);
 				
-				expRun.showStaticMainWindow();
+				trial.showStaticMainWindow();
 			}
 			else
 			{
@@ -130,7 +132,7 @@ public class jRacy implements ActionListener
 				
 				File file = new File(".");
 				Experiment exp = null;
-				ExperimentRun expRun = null;
+				Trial trial = null;
 			
 				String filePath = file.getCanonicalPath();
 				File [] list = file.listFiles();
@@ -150,9 +152,13 @@ public class jRacy implements ActionListener
 									
 									//setTitle("jRacy: " + jRacy.profilePathName);
 									
+									//Create a default application.
+									Application app = jRacy.applicationManager.addApplication(null);
+									app.setApplicationName("Default App");
+									
 									//Create a default experiment.
-									exp = new Experiment("default");
-									experimentManager.addExperiment(exp);
+									exp = new Experiment("Default Exp");
+									app.addExperiment(exp);
 									
 									//Add the experiment run for this pprof.dat file to the experiment.
 									String tmpString1 = null;
@@ -161,25 +167,23 @@ public class jRacy implements ActionListener
 									
 									tmpString1 = filePath;
 									tmpString2 = jRacy.experimentManager.getPathReverse(tmpString1);
-									tmpString3 = "defaultRun" + " : " + tmpString2;
+									tmpString3 = "Default Trial" + " : " + tmpString2;
 																						  
-									expRun = new ExperimentRun();
+									trial = new Trial();
 											
-									expRun.setProfilePathName(tmpString1);
-									expRun.setProfilePathName(tmpString2);
-									expRun.setRunName(tmpString3);
+									trial.setProfilePathName(tmpString1);
+									trial.setProfilePathName(tmpString2);
+									trial.setRunName(tmpString3);
 									
-									exp.addExperimentRun(expRun);
-									expRun.buildStaticData(true, testFile);
+									exp.addTrial(trial);
+									trial.buildStaticData(true, testFile);
 									
 									System.out.println("Found: " + newString);
 									
 									foundSomething = true;
-									
-									//expRun.showStaticMainWindow();
 								}
 								else{
-									expRun.buildStaticData(false, testFile);
+									trial.buildStaticData(false, testFile);
 								}	
 							}
 						}
@@ -189,12 +193,11 @@ public class jRacy implements ActionListener
 				if(!foundSomething)
 					System.out.println("Did not find pprof.dat!");
 				else
-					expRun.showStaticMainWindow();
-				
-				
-				jRacy.experimentManager.displayExperimentListManager();
+					trial.showStaticMainWindow();
+					
+				jRacyManager jRM = new jRacyManager();
+				jRM.expandDefaultTrialNode();
 			}
-			
 			
 			//Bring up the main window.
 			//staticMainWindow = new StaticMainWindow();
@@ -214,6 +217,7 @@ public class jRacy implements ActionListener
 			e.printStackTrace();
 		}
 	}
+		
 	
 	public void actionPerformed(ActionEvent evt)
 	{
@@ -234,11 +238,28 @@ public class jRacy implements ActionListener
 	}
 	
 	//Handles system errors.
-	public static void systemError(Component inComponent, String inString)
+	public static void systemError(Object inObject, Component inComponent, String inString)
 	{	
-		JOptionPane.showMessageDialog(inComponent, "jRacy Error", "Internal System Error ... Closing jRacy!", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(inComponent, "jRacy Error", "Internal System Error ... jRacy will now close!", JOptionPane.ERROR_MESSAGE);
 		
-		System.out.println("An exception was caught at " + inString);
+		
+		if(inObject != null){
+			if(inObject instanceof Exception){
+				if(jRacy.debugIsOn){
+					System.out.println(((Exception) inObject).toString());
+					System.out.println("");
+					System.out.println("");
+				}
+				
+				System.out.println("An exception was caught at " + inString);
+			}
+			else{
+				System.out.println("An error was detected at " + inString);
+			}
+		}
+		else{
+			System.out.println("An error was detected at " + inString);
+		}
 		System.out.println("Please email us at: tau-bugs@cs.uoregon.edu");
 		System.out.println("");
 		System.out.println("If possible, include the profile files that caused this error,");
@@ -314,6 +335,8 @@ public class jRacy implements ActionListener
 			javax.swing.Timer jTimer = new javax.swing.Timer(8000, racy);
 			jTimer.start();
 		}
+		
+		racy.startSystem();
 	}
 	
 }

@@ -31,9 +31,9 @@ import javax.swing.event.*;
 public class GlobalMapping implements WindowListener, Serializable 
 {
 	//Constructors.
-	public GlobalMapping(ExperimentRun inExpRun)
+	public GlobalMapping(Trial inTrial)
 	{
-		expRun = inExpRun;
+		trial = inTrial;
 		
 		mappings = new Vector[3];
 		numberOfMappings = new int[3];
@@ -55,13 +55,13 @@ public class GlobalMapping implements WindowListener, Serializable
 		if(tmpInt == -1){
 			//Just adds to the end of the list.  Its position becomes
 			//the value of its mapping ID.
-			GlobalMappingElement tmpGME = new GlobalMappingElement(expRun);
+			GlobalMappingElement tmpGME = new GlobalMappingElement(trial);
 			tmpGME.setMappingName(inMappingName);
 			tmpGME.setGlobalID(numberOfMappings[mappingSelection]);
 			if((mappingSelection == 0) || (mappingSelection == 2))
-				tmpGME.setGenericColor(expRun.getColorChooser().getColorInLocation(numberOfMappings[mappingSelection] % (expRun.getColorChooser().getNumberOfColors())));
+				tmpGME.setGenericColor(trial.getColorChooser().getColorInLocation(numberOfMappings[mappingSelection] % (trial.getColorChooser().getNumberOfColors())));
 			else
-				tmpGME.setGenericColor(expRun.getColorChooser().getMappingGroupColorInLocation(numberOfMappings[mappingSelection] % (expRun.getColorChooser().getNumberOfMappingGroupColors())));
+				tmpGME.setGenericColor(trial.getColorChooser().getMappingGroupColorInLocation(numberOfMappings[mappingSelection] % (trial.getColorChooser().getNumberOfMappingGroupColors())));
 			mappings[mappingSelection].addElement(tmpGME);
 			
 			//Update the number of global mappings present for the selection.  (Example ... first time
@@ -315,23 +315,23 @@ public class GlobalMapping implements WindowListener, Serializable
 	public void updateGenericColors(int mappingSelection)
 	{
 		if(mappingSelection == 0){
-			int tmpInt = expRun.getColorChooser().getNumberOfColors();
+			int tmpInt = trial.getColorChooser().getNumberOfColors();
 			for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
 			{
 				
 				GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
 				int mappingID = tmpGME.getGlobalID();
-				tmpGME.setGenericColor(expRun.getColorChooser().getColorInLocation(mappingID % tmpInt));
+				tmpGME.setGenericColor(trial.getColorChooser().getColorInLocation(mappingID % tmpInt));
 			}
 		}
 		else{
-			int tmpInt = expRun.getColorChooser().getNumberOfMappingGroupColors();
+			int tmpInt = trial.getColorChooser().getNumberOfMappingGroupColors();
 			for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;)
 			{
 				
 				GlobalMappingElement tmpGME = (GlobalMappingElement) e.nextElement();
 				int mappingID = tmpGME.getGlobalID();
-				tmpGME.setGenericColor(expRun.getColorChooser().getMappingGroupColorInLocation(mappingID % tmpInt));
+				tmpGME.setGenericColor(trial.getColorChooser().getMappingGroupColorInLocation(mappingID % tmpInt));
 			}
 		}		
 	}
@@ -365,11 +365,11 @@ public class GlobalMapping implements WindowListener, Serializable
 		if(mappingLedgerWindows[mappingSelection] == null)
 		{
 			
-			mappingLedgerWindows[mappingSelection] = new MappingLedgerWindow(expRun, mappings[mappingSelection], mappingSelection);
+			mappingLedgerWindows[mappingSelection] = new MappingLedgerWindow(trial, mappings[mappingSelection], mappingSelection);
 			//Add the main window as a listener as it needs
 			//to know when this window closes.
 			mappingLedgerWindows[mappingSelection].addWindowListener(this);
-			expRun.getSystemEvents().addObserver(mappingLedgerWindows[mappingSelection]);
+			trial.getSystemEvents().addObserver(mappingLedgerWindows[mappingSelection]);
 			mappingLedgerWindows[mappingSelection].show();
 		}
 		else
@@ -387,7 +387,7 @@ public class GlobalMapping implements WindowListener, Serializable
 		
 		if(mappingLedgerWindows[mappingSelection] != null)
 		{
-			expRun.getSystemEvents().deleteObserver(mappingLedgerWindows[mappingSelection]);
+			trial.getSystemEvents().deleteObserver(mappingLedgerWindows[mappingSelection]);
 			mappingLedgerWindows[mappingSelection].setVisible(false);
 			mappingLedgerWindows[mappingSelection].dispose();
 			mappingLedgerWindows[mappingSelection] = null;
@@ -428,7 +428,7 @@ public class GlobalMapping implements WindowListener, Serializable
 	
 	
 	//Instance element.
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	
 	Vector[] mappings;
 	int[] numberOfMappings;

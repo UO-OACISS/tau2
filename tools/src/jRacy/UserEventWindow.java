@@ -29,17 +29,17 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW01");
+			jRacy.systemError(e, null, "UEW01");
 		}
 	}
 	
-	public UserEventWindow(ExperimentRun inExpRun, int inMappingID, StaticMainWindowData inSMWData)
+	public UserEventWindow(Trial inTrial, int inMappingID, StaticMainWindowData inSMWData)
 	{
 		try{
 			setLocation(new java.awt.Point(300, 200));
 			setSize(new java.awt.Dimension(550, 550));
 			
-			expRun = inExpRun;
+			trial = inTrial;
 			mappingID = inMappingID;
 			sMWData = inSMWData;
 			
@@ -47,13 +47,13 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	 		
 	 		
 	 		//Grab the appropriate global mapping element.
-			GlobalMapping tmpGM = expRun.getGlobalMapping();
+			GlobalMapping tmpGM = trial.getGlobalMapping();
 			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(inMappingID, 2);
 			
 			mappingName = tmpGME.getMappingName();
 			
 			//Now set the title.
-			this.setTitle("User Event Window: " + expRun.getProfilePathName());
+			this.setTitle("User Event Window: " + trial.getProfilePathName());
 			
 			//Add some window listener code
 			addWindowListener(new java.awt.event.WindowAdapter() {
@@ -233,7 +233,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			userEventWinPanelRef = new UserEventWindowPanel(expRun, inMappingID, this);
+			userEventWinPanelRef = new UserEventWindowPanel(trial, inMappingID, this);
 			//The scroll panes into which the list shall be placed.
 			userEventWinPanelScrollPane = new JScrollPane(userEventWinPanelRef);
 			userEventWinPanelScrollPane.setBorder(mainloweredbev);
@@ -262,7 +262,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW02");
+			jRacy.systemError(e, null, "UEW02");
 		}
 		
 		
@@ -347,24 +347,24 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(0);
+					(trial.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(1);
+					(trial.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(2);
+					(trial.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+					trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -396,7 +396,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW03");
+			jRacy.systemError(e, null, "UEW03");
 		}
 	}
 	//******************************
@@ -422,19 +422,19 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	{
 		try
 		{
-			if(expRun.groupNamesPresent())
+			if(trial.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(expRun.userEventsPresent())
+			if(trial.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW04");
+			jRacy.systemError(e, null, "UEW04");
 		}
 		
 	}
@@ -479,7 +479,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW05");
+			jRacy.systemError(e, null, "UEW05");
 		}
 	}
 	
@@ -500,7 +500,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW06");
+			jRacy.systemError(e, null, "MDW06");
 		}
 		
 		return null;
@@ -521,7 +521,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW07");
+			jRacy.systemError(e, null, "UEW07");
 		}
 		
 		return tmpInt;
@@ -537,7 +537,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW08");
+			jRacy.systemError(e, null, "UEW08");
 		}
 		
 		return 0;
@@ -614,7 +614,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW09");
+			jRacy.systemError(e, null, "UEW09");
 		}
 	}
 	
@@ -634,12 +634,12 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 				System.out.println("Clearing resourses for that window.");
 			}
 			setVisible(false);
-			expRun.getSystemEvents().deleteObserver(this);
+			trial.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "UEW10");
+			jRacy.systemError(e, null, "UEW10");
 		}
 	}
 	
@@ -674,7 +674,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	
 	private JScrollPane userEventWinPanelScrollPane;
  	
- 	private ExperimentRun expRun = null;
+ 	private Trial trial = null;
  	StaticMainWindowData sMWData = null;
  	
  	Vector sMWGeneralData = null;

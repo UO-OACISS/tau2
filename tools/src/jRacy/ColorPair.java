@@ -53,7 +53,7 @@ public class ColorPair implements Comparable
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "CP01");
+			jRacy.systemError(e, null, "CP01");
 		}
 		
 		return 0;

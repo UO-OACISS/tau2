@@ -29,25 +29,25 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW01");
+			jRacy.systemError(e, null, "TSW01");
 		}
 	}
 	
-	public TotalStatWindow(ExperimentRun inExpRun,
+	public TotalStatWindow(Trial inTrial,
 						   int inServerNumber,
 						   int inContextNumber,
 						   int inThreadNumber,
 						   StaticMainWindowData inSMWData)
 	{
 		try{
-			expRun = inExpRun;
+			trial = inTrial;
 			sMWData = inSMWData;
 			
 			setLocation(new java.awt.Point(0, 0));
 			setSize(new java.awt.Dimension(800, 600));
 			
 			//Now set the title.
-			this.setTitle("Total " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber + " - " + expRun.getProfilePathName());
+			this.setTitle("Total " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber + " - " + trial.getProfilePathName());
 			
 			server = inServerNumber;
 			context = inContextNumber;
@@ -247,7 +247,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			totalStatWindowPanelRef = new TotalStatWindowPanel(expRun,
+			totalStatWindowPanelRef = new TotalStatWindowPanel(trial,
 															   inServerNumber,
 															   inContextNumber,
 															   inThreadNumber, this);
@@ -271,7 +271,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW02");
+			jRacy.systemError(e, null, "TSW02");
 		}
 	}
 	
@@ -301,7 +301,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 				}
 				else if(arg.equals("Adjust Racy Colors"))
 				{
-					expRun.getColorChooser().showColorChooser();	//The ColorChooser class maintains all the state.
+					trial.getColorChooser().showColorChooser();	//The ColorChooser class maintains all the state.
 				}
 				else if(arg.equals("Name"))
 				{
@@ -376,24 +376,24 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(0);
+					(trial.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(1);
+					(trial.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(2);
+					(trial.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+					trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -421,7 +421,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW03");
+			jRacy.systemError(e, null, "TSW03");
 		}
 	}
 	
@@ -432,12 +432,12 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 	{
 		try
 		{
-			if(expRun.groupNamesPresent())
+			if(trial.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(expRun.userEventsPresent())
+			if(trial.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else{
 				userEventLedgerItem.setEnabled(false);
@@ -445,7 +445,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW03");
+			jRacy.systemError(e, null, "TSW03");
 		}
 		
 	}
@@ -488,7 +488,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW04");
+			jRacy.systemError(e, null, "TSW04");
 		}
 	} 
 	
@@ -505,7 +505,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW05");
+			jRacy.systemError(e, null, "TSW05");
 		}
 	}
 	
@@ -561,7 +561,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW06");
+			jRacy.systemError(e, null, "TSW06");
 		}
 		
 		return null;
@@ -585,19 +585,19 @@ public class TotalStatWindow extends JFrame implements ActionListener, MenuListe
 			}
 			
 			setVisible(false);
-			expRun.getSystemEvents().deleteObserver(this);
+			trial.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSW07");
+			jRacy.systemError(e, null, "TSW07");
 		}
 	}
 	
 	//******************************
 	//Instance data.
 	//******************************
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
  	private TotalStatWindowPanel totalStatWindowPanelRef;
  	private StaticMainWindowData sMWData;
  	

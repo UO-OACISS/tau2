@@ -25,7 +25,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	//Instance data.
 	//******************************
 	
-	ExperimentRun expRun = null;
+	Trial trial = null;
 	
 	//Create a file chooser to allow the user to select files for loading data.
 	JFileChooser fileChooser = new JFileChooser();
@@ -80,19 +80,19 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	//******************************
 	
 	
-	public StaticMainWindow(ExperimentRun inExpRun)
+	public StaticMainWindow(Trial inTrial)
 	{
 		try{
-			expRun = inExpRun;
+			trial = inTrial;
 			
 			//Window Stuff.
-			setTitle("jRacy Main Window: " + expRun.getProfilePathName());
+			setTitle("jRacy Main Window: " + trial.getProfilePathName());
 			
 			int windowWidth = 750;
 			int windowHeight = 400;
 			setSize(new java.awt.Dimension(windowWidth, windowHeight));
 			
-			sMWData = new StaticMainWindowData(expRun);
+			sMWData = new StaticMainWindowData(trial);
 			
 			//Add some window listener code
 			addWindowListener(new java.awt.event.WindowAdapter() {
@@ -144,7 +144,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 				*/
 				
 				//Add a menu item.
-				JMenuItem openExperimentManagerItem = new JMenuItem("Experiment Manager");
+				JMenuItem openExperimentManagerItem = new JMenuItem("jRacy Manager");
 				openExperimentManagerItem.addActionListener(this);
 				openMenu.add(openExperimentManagerItem);
 				
@@ -327,7 +327,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			sMWPanel = new StaticMainWindowPanel(expRun, this);
+			sMWPanel = new StaticMainWindowPanel(trial, this);
 			sMWPanel.setPreferredSize(new Dimension(600,300));
 			//The scroll panes into which the list shall be placed.
 			scrollPane = new JScrollPane(sMWPanel);
@@ -371,7 +371,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{	
-			jRacy.systemError(null, "SMW01");
+			jRacy.systemError(e, null, "SMW01");
 		}
 			
 	}
@@ -415,14 +415,14 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 							//for example!
 							if(jRacy.debugIsOn)
 								System.out.println("Closing the mapping ledger windows.");
-							(expRun.getGlobalMapping()).closeMappingLedger(0);
-							(expRun.getGlobalMapping()).closeMappingLedger(1);
+							(trial.getGlobalMapping()).closeMappingLedger(0);
+							(trial.getGlobalMapping()).closeMappingLedger(1);
 							if(jRacy.debugIsOn)
 								System.out.println("End - Closing the mapping ledger windows.");
 							
 							//Closing all subwindows.
 							System.out.println("Closing all subwindows.");
-							expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+							trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 							
 							
 							jRacy.profilePathName = file.getCanonicalPath();
@@ -430,7 +430,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 							setTitle("jRacy: " + jRacy.profilePathName);
 							
 							//Initialize the static data object.
-							jRacy.staticSystemData = new ExperimentRun();
+							jRacy.staticSystemData = new Trial();
 							sMWData = new StaticMainWindowData();
 							
 							//Call the garbage collector.
@@ -440,7 +440,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 							
 							System.out.println("Building internal data system ... please wait ...");
 							
-							expRun.buildStaticData(file);
+							trial.buildStaticData(file);
 							
 							System.out.println("Finished building internal data system.");
 							
@@ -453,7 +453,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 							jRacy.clrChooser.setHighlightColorMappingID(-1);
 							
 							//Indicate to the rest of the system that there has been a change of data.
-							expRun.getSystemEvents().updateRegisteredObjects("dataSetChangeEvent");
+							trial.getSystemEvents().updateRegisteredObjects("dataSetChangeEvent");
 							
 							System.out.println("Done ... loading complete!");
 							
@@ -494,18 +494,18 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 							
 							//Closing all subwindows.
 							System.out.println("Closing all subwindows.");
-							expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+							trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 							
 							
 							//Get the data object to which this file refers.
 							try
 							{
 								ObjectInputStream racyDataObjectIn = new ObjectInputStream(new FileInputStream(file));
-								jRacy.staticSystemData = (ExperimentRun) racyDataObjectIn.readObject();
+								jRacy.staticSystemData = (Trial) racyDataObjectIn.readObject();
 							}
 							catch(Exception e)
 							{
-								jRacy.systemError(null, "SMW02A");
+								jRacy.systemError(e, null, "SMW02A");
 							}
 							
 							sMWData = new StaticMainWindowData();
@@ -523,7 +523,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 							jRacy.clrChooser.setHighlightColorMappingID(-1);
 							
 							//Indicate to the rest of the system that there has been a change of data.
-							expRun.getSystemEvents().updateRegisteredObjects("dataSetChangeEvent");
+							trial.getSystemEvents().updateRegisteredObjects("dataSetChangeEvent");
 							
 							System.out.println("Done ... loading complete!");
 							
@@ -539,9 +539,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 					}
 				*/
 				}
-				else if(arg.equals("Experiment Manager"))
+				else if(arg.equals("jRacy Manager"))
 				{
-					jRacy.experimentManager.displayExperimentListManager();
+					jRacyManager jRM = new jRacyManager();
+					jRM.show();
 				}
 				else if(arg.equals("To A jRacy Output File"))
 				{
@@ -609,7 +610,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 							{
 								//Write to the savedPreferences object.
 								jRacy.clrChooser.setSavedColors();
-								expRun.getPreferences().setSavedPreferences();
+								trial.getPreferences().setSavedPreferences();
 								
 								ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
 								prefsOut.writeObject(jRacy.savedPreferences);
@@ -632,19 +633,9 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 					}
 				*/
 				}
-				else if(arg.equals("Print"))
-				{
-					PrinterJob job = PrinterJob.getPrinterJob();
-					PageFormat defaultFormat = job.defaultPage();
-					PageFormat selectedFormat = job.pageDialog(defaultFormat);
-					job.setPrintable(sMWPanel, selectedFormat);
-					if(job.printDialog()){
-						job.print();
-					}
-				}
 				else if(arg.equals("Edit jRacy Preferences!"))
 				{
-					expRun.getPreferences().showPreferencesWindow();
+					trial.getPreferences().showPreferencesWindow();
 				}	
 				else if(arg.equals("Exit jRacy!"))
 				{
@@ -731,7 +722,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 					if(sMWData.isDataLoaded())
 					{
 						//Grab the global mapping and bring up the mapping ledger window.
-						(expRun.getGlobalMapping()).displayMappingLedger(0);
+						(trial.getGlobalMapping()).displayMappingLedger(0);
 					}
 					else
 					{
@@ -746,7 +737,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 					if(sMWData.isDataLoaded())
 					{
 						//Grab the global mapping and bring up the mapping ledger window.
-						(expRun.getGlobalMapping()).displayMappingLedger(1);
+						(trial.getGlobalMapping()).displayMappingLedger(1);
 					}
 					else
 					{
@@ -761,7 +752,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 					if(sMWData.isDataLoaded())
 					{
 						//Grab the global mapping and bring up the mapping ledger window.
-						(expRun.getGlobalMapping()).displayMappingLedger(2);
+						(trial.getGlobalMapping()).displayMappingLedger(2);
 					}
 					else
 					{
@@ -773,7 +764,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+					trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -804,7 +795,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW02");
+			jRacy.systemError(e, null, "SMW02");
 		}
 	}
 	
@@ -815,19 +806,19 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	{
 		try
 		{
-			if(expRun.groupNamesPresent())
+			if(trial.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(expRun.userEventsPresent())
+			if(trial.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW03");
+			jRacy.systemError(e, null, "SMW03");
 		}
 		
 	}
@@ -888,7 +879,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW04");
+			jRacy.systemError(e, null, "SMW04");
 		}
 	}
 	
@@ -902,7 +893,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW05");
+			jRacy.systemError(e, null, "SMW05");
 		}
 		
 		return tmpInt;
@@ -918,7 +909,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW06");
+			jRacy.systemError(e, null, "SMW06");
 		}
 		
 		return 0;
@@ -995,7 +986,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW07");
+			jRacy.systemError(e, null, "SMW07");
 		}
 	}
 	
@@ -1061,7 +1052,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW08");
+			jRacy.systemError(e, null, "SMW08");
 		}
 		
 	}
@@ -1087,7 +1078,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "SMW09");
+			jRacy.systemError(e, null, "SMW09");
 		}
 		
 		return false;

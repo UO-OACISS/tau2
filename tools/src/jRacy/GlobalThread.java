@@ -114,6 +114,25 @@ public class GlobalThread implements Serializable
 		Double tmpDouble = (Double) maxUserSecPerCallList.elementAt(dataValueLocation);
 		return tmpDouble.doubleValue();}
 		
+	//Functions used to calculate the percentage values for derived values (such as flops)
+	public void setTotalExclusiveValue(double inDouble){
+		totalExclusiveValue = inDouble;}
+		
+	public void incrementTotalExclusiveValue(double inDouble){
+		totalExclusiveValue = totalExclusiveValue + inDouble;}
+		
+	public double getTotalExclusiveValue(){
+		return totalExclusiveValue;}
+		
+	public void setTotalInclusiveValue(double inDouble){
+		totalInclusiveValue = inDouble;}
+		
+	public void incrementTotalInclusiveValue(double inDouble){
+		totalInclusiveValue = totalInclusiveValue + inDouble;}
+		
+	public double getTotalInclusiveValue(){
+		return totalInclusiveValue;}
+		
 		
 	//Instance data.
 	Vector threadDataList;
@@ -124,6 +143,8 @@ public class GlobalThread implements Serializable
 	private Vector maxExclusiveValueList = new Vector();
 	private Vector maxInclusivePercentValueList = new Vector();
 	private Vector maxExclusivePercentValueList = new Vector();
+	double totalExclusiveValue = 0;
+	double totalInclusiveValue = 0;
 	private int maxNumberOfCalls = 0;
 	private int maxNumberOfSubRoutines = 0;
 	private Vector maxUserSecPerCallList = new Vector();

@@ -31,11 +31,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW01");
+			jRacy.systemError(e, null, "TDW01");
 		}
 	}
 	
-	public ThreadDataWindow(ExperimentRun inExpRun,
+	public ThreadDataWindow(Trial inTrial,
 							int inServerNumber,
 							int inContextNumber,
 							int inThreadNumber,
@@ -44,8 +44,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		try
 		{
 			
-			expRun = inExpRun;
+			trial = inTrial;
 			sMWData = inSMWData;
+			
+			lPWindow = new LocalPrefWindow(trial, this);
 			
 			setLocation(new java.awt.Point(300, 200));
 			setSize(new java.awt.Dimension(700, 450));
@@ -55,7 +57,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			thread = inThreadNumber;
 			
 			//Now set the title.
-			this.setTitle("n,c,t, " + server + "," + context + "," + thread + " - " + expRun.getProfilePathName());
+			this.setTitle("n,c,t, " + server + "," + context + "," + thread + " - " + trial.getProfilePathName());
 			
 			//Add some window listener code
 			addWindowListener(new java.awt.event.WindowAdapter() {
@@ -101,6 +103,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			JMenuItem printItem = new JMenuItem("Print");
 			printItem.addActionListener(this);
 			fileMenu.add(printItem);*/
+			
+			//Add a menu item.
+			JMenuItem editPrefItem = new JMenuItem("Edit jRacy Preferences!");
+			editPrefItem.addActionListener(this);
+			fileMenu.add(editPrefItem);
 			
 			//Add a menu item.
 			JMenuItem closeItem = new JMenuItem("Close This Window");
@@ -218,6 +225,11 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			displaySlidersButton.addActionListener(this);
 			optionsMenu.add(displaySlidersButton);
 			
+			formatValuesButton = new JRadioButtonMenuItem("Format Values", true);
+			//Add a listener for this radio button.
+			formatValuesButton.addActionListener(this);
+			optionsMenu.add(formatValuesButton);
+			
 			//******************************
 			//End - Options menu.
 			//******************************
@@ -304,7 +316,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			threadDataWindowPanelRef = new ThreadDataWindowPanel(expRun,
+			threadDataWindowPanelRef = new ThreadDataWindowPanel(trial,
 																 inServerNumber,
 																 inContextNumber,
 																 inThreadNumber, this, sMWData);
@@ -339,7 +351,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW02");
+			jRacy.systemError(e, null, "TDW02");
 		}
 		
 		
@@ -370,6 +382,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 					if(job.printDialog()){
 						job.print();
 					}
+				}
+				else if(arg.equals("Edit jRacy Preferences!"))
+				{
+					lPWindow.show();
 				}
 				else if(arg.equals("Close This Window"))
 				{
@@ -540,28 +556,43 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 						displaySiders(false);
 					}
 				}
+				else if(arg.equals("Format Values"))
+				{
+					if(formatValuesButton.isSelected())
+					{	
+						formatNumbers = true;
+						//Call repaint.
+						threadDataWindowPanelRef.repaint();
+					}
+					else
+					{
+						formatNumbers = false;
+						//Call repaint.
+						threadDataWindowPanelRef.repaint();
+					}
+				}
 				else if(arg.equals("Show Function Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(0);
+					(trial.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(1);
+					(trial.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(2);
+					(trial.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+					trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -593,7 +624,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW03");
+			jRacy.systemError(e, null, "TDW03");
 		}
 	}
 	
@@ -620,12 +651,12 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	{
 		try
 		{
-			if(expRun.groupNamesPresent())
+			if(trial.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(expRun.userEventsPresent())
+			if(trial.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
@@ -644,7 +675,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW04");
+			jRacy.systemError(e, null, "TDW04");
 		}
 		
 	}
@@ -689,8 +720,12 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW05");
+			jRacy.systemError(e, null, "TDW05");
 		}
+	}
+	
+	public void refreshPanel(){
+		threadDataWindowPanelRef.repaint();
 	}
 	
 	//Updates the sorted lists after a change of sorting method takes place.
@@ -818,7 +853,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW06");
+			jRacy.systemError(e, null, "TDW06");
 		}
 	}
 	
@@ -827,6 +862,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	public Vector getStaticMainWindowSystemData()
 	{
 		return currentSMWThreadData;
+	}
+	
+	public LocalPrefWindow getLocalPrefWindow(){
+		return lPWindow;
 	}
 	
 	public boolean isInclusive()
@@ -861,7 +900,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW07");
+			jRacy.systemError(e, null, "TDW07");
 		}
 		
 		return tmpInt;
@@ -877,7 +916,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "FDW08");
+			jRacy.systemError(e, null, "FDW08");
 		}
 		
 		return 0;
@@ -942,6 +981,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		validate();
 	}
 	
+	public boolean getFormatNumbers(){
+		return formatNumbers;}
+	
 	//Helper functions.
 	private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h)
 	{
@@ -956,7 +998,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW09");
+			jRacy.systemError(e, null, "TDW09");
 		}
 	}
 	
@@ -978,12 +1020,12 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 			}
 			
 			setVisible(false);
-			expRun.getSystemEvents().deleteObserver(this);
+			trial.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW10");
+			jRacy.systemError(e, null, "TDW10");
 		}
 	}
 	
@@ -1013,14 +1055,15 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	private JRadioButtonMenuItem numOfSubRoutinesRadioButton = new JRadioButtonMenuItem("Number of Subroutines", false);
 	private JRadioButtonMenuItem userSecPerCallRadioButton = new JRadioButtonMenuItem("Per Call Value", false);
 	
-	private JRadioButtonMenuItem valueButton = new JRadioButtonMenuItem("Value", true);
-	private JRadioButtonMenuItem percentButton = new JRadioButtonMenuItem("Percent", false);
+	private JRadioButtonMenuItem valueButton = new JRadioButtonMenuItem("Value", false);
+	private JRadioButtonMenuItem percentButton = new JRadioButtonMenuItem("Percent", true);
 	
 	private JRadioButtonMenuItem secondsButton = new JRadioButtonMenuItem("Seconds", false);
 	private JRadioButtonMenuItem millisecondsButton = new JRadioButtonMenuItem("Milliseconds", false);
 	private JRadioButtonMenuItem microsecondsButton = new JRadioButtonMenuItem("Microseconds", true);
 	
 	private JRadioButtonMenuItem displaySlidersButton;
+	private JRadioButtonMenuItem formatValuesButton;
 	
 	private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
 	private JComboBox sliderMultiple;
@@ -1035,8 +1078,9 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	private JScrollPane threadDataWindowPanelScrollPane;
 	
  	private ThreadDataWindowPanel threadDataWindowPanelRef = null;
+ 	private LocalPrefWindow lPWindow = null;
  	
- 	private ExperimentRun expRun = null;
+ 	private Trial trial = null;
  	private StaticMainWindowData sMWData = null;
  	
  	SMWThreadDataElement tmpSMWThreadDataElement = null;
@@ -1052,8 +1096,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	private boolean descendingOrder = true;
  	
  	private String metric = "Exclusive";
- 	private boolean percent = false;
+ 	private boolean percent = true;
  	private String unitsString = "milliseconds";
+ 	
+ 	private boolean formatNumbers = true;
  	
  	private int server = -1;
  	private int context = -1;

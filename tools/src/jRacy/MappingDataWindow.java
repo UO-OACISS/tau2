@@ -29,17 +29,17 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW01");
+			jRacy.systemError(e, null, "MDW01");
 		}
 	}
 	
-	public MappingDataWindow(ExperimentRun inExpRun, int inMappingID, StaticMainWindowData inSMWData)
+	public MappingDataWindow(Trial inTrial, int inMappingID, StaticMainWindowData inSMWData)
 	{
 		try{
 			
 			
 			mappingID = inMappingID;
-			expRun = inExpRun;
+			trial = inTrial;
 			sMWData = inSMWData;
 			
 			
@@ -47,18 +47,18 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			setSize(new java.awt.Dimension(550, 550));
 			
 			inclusive = false;
-	 		percent = false;
+	 		percent = true;
 	 		unitsString = "milliseconds";
 	 		
 	 		
 	 		//Grab the appropriate global mapping element.
-			GlobalMapping tmpGM = expRun.getGlobalMapping();
+			GlobalMapping tmpGM = trial.getGlobalMapping();
 			GlobalMappingElement tmpGME = tmpGM.getGlobalMappingElement(inMappingID, 0);
 			
 			mappingName = tmpGME.getMappingName();
 			
 			//Now set the title.
-			this.setTitle("Function Data Window: " + expRun.getProfilePathName());
+			this.setTitle("Function Data Window: " + trial.getProfilePathName());
 			
 			//Add some window listener code
 			addWindowListener(new java.awt.event.WindowAdapter() {
@@ -144,11 +144,11 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			valuePercentMenu = new JMenu("Select Value or Percent");
 			valuePercentGroup = new ButtonGroup();
 			
-			percentButton = new JRadioButtonMenuItem("Percent", false);
+			percentButton = new JRadioButtonMenuItem("Percent", true);
 			//Add a listener for this radio button.
 			percentButton.addActionListener(this);
 			
-			valueButton = new JRadioButtonMenuItem("Value", true);
+			valueButton = new JRadioButtonMenuItem("Value", false);
 			//Add a listener for this radio button.
 			valueButton.addActionListener(this);
 			
@@ -276,7 +276,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			mappingDataWinPanelRef = new MappingDataWindowPanel(expRun, inMappingID, this);
+			mappingDataWinPanelRef = new MappingDataWindowPanel(trial, inMappingID, this);
 			//The scroll panes into which the list shall be placed.
 			mappingDataWinPanelScrollPane = new JScrollPane(mappingDataWinPanelRef);
 			mappingDataWinPanelScrollPane.setBorder(mainloweredbev);
@@ -305,7 +305,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW02");
+			jRacy.systemError(e, null, "MDW02");
 		}
 		
 		
@@ -441,24 +441,24 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(0);
+					(trial.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(1);
+					(trial.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(2);
+					(trial.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+					trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -490,7 +490,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW03");
+			jRacy.systemError(e, null, "MDW03");
 		}
 	}
 	//******************************
@@ -516,12 +516,12 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	{
 		try
 		{
-			if(expRun.groupNamesPresent())
+			if(trial.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(expRun.userEventsPresent())
+			if(trial.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
@@ -540,7 +540,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TDW04");
+			jRacy.systemError(e, null, "TDW04");
 		}
 	}
 	
@@ -584,7 +584,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW05");
+			jRacy.systemError(e, null, "MDW05");
 		}
 	}
 	
@@ -604,7 +604,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW06");
+			jRacy.systemError(e, null, "MDW06");
 		}
 		
 		return null;
@@ -639,7 +639,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW07");
+			jRacy.systemError(e, null, "MDW07");
 		}
 		
 		return tmpInt;
@@ -655,7 +655,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW08");
+			jRacy.systemError(e, null, "MDW08");
 		}
 		
 		return 0;
@@ -732,7 +732,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW09");
+			jRacy.systemError(e, null, "MDW09");
 		}
 	}
 	
@@ -752,12 +752,12 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 				System.out.println("Clearing resourses for that window.");
 			}
 			setVisible(false);
-			expRun.getSystemEvents().deleteObserver(this);
+			trial.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW10");
+			jRacy.systemError(e, null, "MDW10");
 		}
 	}
 	
@@ -808,7 +808,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	
  	//private ThreadDataWindowPanel threadDataWindowPanelRef = null;
  	
- 	private ExperimentRun expRun = null;
+ 	private Trial trial = null;
  	StaticMainWindowData sMWData = null;
  	
  	Vector sMWGeneralData = null;
@@ -818,7 +818,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
  	private String metric = "Exclusive";
  	
  	boolean inclusive = false;
- 	boolean percent = false;
+ 	boolean percent = true;
  	private String unitsString = null;
  	
  	//******************************

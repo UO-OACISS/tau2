@@ -15,43 +15,22 @@ import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import java.text.*;
 
 public class GlobalThreadDataElement implements Serializable 
 {
 	//Constructor.
-	public GlobalThreadDataElement(ExperimentRun inExpRun, boolean userElement){	
-		expRun = inExpRun;
-		globalMappingReference = expRun.getGlobalMapping();
+	public GlobalThreadDataElement(Trial inTrial, boolean inUserElement){	
+		trial = inTrial;
+		globalMappingReference = trial.getGlobalMapping();
 		mappingID = -1;
 		
-		if(!userElement)
-			this.addDefaultToVectors();
-		else
-			this.addDefaultToVectorsUE();
-	}
-	
-	public void addDefaultToVectors(){
-		inclusiveValueList.add(new Double(0));
-		exclusiveValueList.add(new Double(0));
-		inclusivePercentValueList.add(new Double(0));
-		exclusivePercentValueList.add(new Double(0));
-		userSecPerCallList.add(new Double(0));
-		
-		tStatStringList.add(new String(""));
-		
-		userEventNumberValueList.add(new Integer(0));
-		userEventMinValueList.add(new Double(0));
-		userEventMaxValueList.add(new Double(0));
-		userEventMeanValueList.add(new Double(0));
-		userEventStatStringList.add(new String(""));
-	}
-	
-	public void addDefaultToVectorsUE(){
-		userEventNumberValueList.add(new Integer(0));
-		userEventMinValueList.add(new Double(0));
-		userEventMaxValueList.add(new Double(0));
-		userEventMeanValueList.add(new Double(0));
-		userEventStatStringList.add(new String(""));
+		if(inUserElement)
+			userElement = true;
+		else{
+			doubleList4 = new double[1];
+			doubleList5 = new double[1];
+		}
 	}
 	
 	//Rest of the public functions.
@@ -71,37 +50,29 @@ public class GlobalThreadDataElement implements Serializable
 	public int getMappingID(){
 		return mappingID;}
 	
-	public void setInclusiveValue(int dataValueLocation, double inInclusiveValue){
-		Double tmpDouble = new Double(inInclusiveValue);
-		inclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public void setInclusiveValue(int dataValueLocation, double inDouble){
+		this.insertDouble(1,dataValueLocation,inDouble);}
 	
 	public double getInclusiveValue(int dataValueLocation){
-		Double tmpDouble = (Double) inclusiveValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+		return this.getDouble(1,dataValueLocation);}
 	
-	public void setExclusiveValue(int dataValueLocation, double inExclusiveValue){
-		Double tmpDouble = new Double(inExclusiveValue);
-		exclusiveValueList.setElementAt(tmpDouble, dataValueLocation);}
-	
-	public double getExclusiveValue(int dataValueLocation){
-		Double tmpDouble = (Double) exclusiveValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
-	
-	public void setInclusivePercentValue(int dataValueLocation, double inInclusivePercentValue){
+	public void setExclusiveValue(int dataValueLocation, double inDouble){
+		this.insertDouble(2,dataValueLocation,inDouble);}
 		
-		Double tmpDouble = new Double(inInclusivePercentValue);
-		inclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public double getExclusiveValue(int dataValueLocation){
+		return this.getDouble(2,dataValueLocation);}
+		
+	public void setInclusivePercentValue(int dataValueLocation, double inDouble){
+		this.insertDouble(3,dataValueLocation,inDouble);}
 	
 	public double getInclusivePercentValue(int dataValueLocation){
-		Double tmpDouble = (Double) inclusivePercentValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+		return this.getDouble(3,dataValueLocation);}
 	
-	public void setExclusivePercentValue(int dataValueLocation, double inExclusivePercentValue){
-		Double tmpDouble = new Double(inExclusivePercentValue);
-		exclusivePercentValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public void setExclusivePercentValue(int dataValueLocation, double inDouble){
+		this.insertDouble(4,dataValueLocation,inDouble);}
+		
 	public double getExclusivePercentValue(int dataValueLocation){
-		Double tmpDouble = (Double) exclusivePercentValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+		return this.getDouble(4,dataValueLocation);}
 	
 	public void setNumberOfCalls(int inInt){
 		numberOfCalls = inInt;}
@@ -116,18 +87,81 @@ public class GlobalThreadDataElement implements Serializable
 		return numberOfSubRoutines;}
 	
 	public void setUserSecPerCall(int dataValueLocation, double inDouble){
-		Double tmpDouble = new Double(inDouble);
-		userSecPerCallList.setElementAt(tmpDouble, dataValueLocation);}
+		this.insertDouble(5,dataValueLocation,inDouble);}
 	
 	public double getUserSecPerCall(int dataValueLocation){
-		Double tmpDouble = (Double) userSecPerCallList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
-	
-	public void setTStatString(int dataValueLocation, String inString){
-		tStatStringList.setElementAt(inString, dataValueLocation);}
+		return this.getDouble(5,dataValueLocation);}
 	
 	public String getTStatString(int dataValueLocation){
-		return (String) tStatStringList.elementAt(dataValueLocation);}
+		try{
+			int initialBufferLength = 80;
+			int position = 0;
+			char [] statStringArray = new char[initialBufferLength];
+			char [] tmpArray;
+			
+			DecimalFormat dF = new DecimalFormat();
+			dF.applyPattern("##0.0");
+			tmpArray = (dF.format(this.getInclusivePercentValue(dataValueLocation))).toCharArray();
+			
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			dF.applyPattern("0.######E0");
+			tmpArray = (dF.format(this.getExclusiveValue(dataValueLocation))).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (dF.format(this.getInclusiveValue(dataValueLocation))).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (Integer.toString(this.getNumberOfCalls())).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (Integer.toString(this.getNumberOfSubRoutines())).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (dF.format(this.getUserSecPerCall(dataValueLocation))).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			//Fill in the rest of the buffer.
+			while(position < initialBufferLength){
+				statStringArray[position] = '\u0020';
+				position++;
+			}
+			
+			//Everything should be added now except the function name.
+			String firstPart = new String(statStringArray);
+			return firstPart + this.getMappingName();
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(e, null, "GTDE01");
+		}
+		
+		return "An error occured pocessing this string!";	
+	}
 	
 	//User event interface.
 	public String getUserEventName(){
@@ -135,52 +169,187 @@ public class GlobalThreadDataElement implements Serializable
 		return tmpGME.getMappingName();}
 	
 	public void setUserEventID(int inUserEventID){
-		userEventID = inUserEventID;}
+		mappingID = inUserEventID;}
 	
 	public int getUserEventID(){
-		return userEventID;}
+		return mappingID;}
 	
-	public void setUserEventNumberValue(int dataValueLocation, int inUserEventNumberValue){
-		Integer tmpInt = new Integer(inUserEventNumberValue);
-		userEventNumberValueList.setElementAt(tmpInt, dataValueLocation);}
+	public void setUserEventNumberValue(int inInt){
+		userEventNumberValue = inInt;
+	}
 	
-	public int getUserEventNumberValue(int dataValueLocation){
-		Integer tmpInt = (Integer) userEventNumberValueList.elementAt(dataValueLocation);
-		return tmpInt.intValue();}
+	public int getUserEventNumberValue(){
+		return userEventNumberValue;
+	}
 	
-	public void setUserEventMinValue(int dataValueLocation, double inUserEventMinValue){
-		Double tmpDouble = new Double(inUserEventMinValue);
-		userEventMinValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public void setUserEventMinValue(double inDouble){
+		this.insertDouble(1,0,inDouble);}
 	
-	public double getUserEventMinValue(int dataValueLocation){
-		Double tmpDouble = (Double) userEventMinValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+	public double getUserEventMinValue(){
+		return this.getDouble(1,0);}
 	
-	public void setUserEventMaxValue(int dataValueLocation, double inUserEventMaxValue){
-		Double tmpDouble = new Double(inUserEventMaxValue);
-		userEventMaxValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public void setUserEventMaxValue(double inDouble){
+		this.insertDouble(2,0,inDouble);}
 	
-	public double getUserEventMaxValue(int dataValueLocation){
-		Double tmpDouble = (Double) userEventMaxValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+	public double getUserEventMaxValue(){
+		return this.getDouble(2,0);}
 	
-	public void setUserEventMeanValue(int dataValueLocation, double inUserEventMeanValue){
-		Double tmpDouble = new Double(inUserEventMeanValue);
-		userEventMeanValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public void setUserEventMeanValue(double inDouble){
+		this.insertDouble(3,0,inDouble);}
 	
-	public double getUserEventMeanValue(int dataValueLocation){
-		Double tmpDouble = (Double) userEventMeanValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+	public double getUserEventMeanValue(){
+		return this.getDouble(3,0);}
 	
-	public void setUserEventStatString(int dataValueLocation, String inString){
-		userEventStatStringList.setElementAt(inString, dataValueLocation);}
+	public String getUserEventStatString(){
+		try{
+			int initialBufferLength = 80;
+			int position = 0;
+			char [] statStringArray = new char[initialBufferLength];
+			char [] tmpArray;
+			
+			
+			tmpArray = (Integer.toString(this.getUserEventNumberValue()).toCharArray());
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			DecimalFormat dF = new DecimalFormat();
+			dF.applyPattern("0.######E0");
+			tmpArray = (dF.format(this.getUserEventMaxValue())).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (dF.format(this.getUserEventMinValue())).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (dF.format(this.getUserEventMeanValue())).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			//Fill in the rest of the buffer.
+			while(position < initialBufferLength){
+				statStringArray[position] = '\u0020';
+				position++;
+			}
+			
+			//Everything should be added now except the function name.
+			String firstPart = new String(statStringArray);
+			return firstPart + this.getUserEventName();
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(e, null, "GTDE04");
+		}
+		
+		return "An error occured pocessing this string!";	
+	}
 	
-	public String getUserEventStatString(int dataValueLocation){
-		return (String) userEventStatStringList.elementAt(dataValueLocation);}
+	private int insertSpaces(char[] inArray, int position, int number){
+		for(int i=0;i<number;i++){
+			inArray[position] = '\u0020';
+			position++;
+		}
+		return position;
+	}
+	
+	private void insertDouble(int listNumber, int dataValueLocation, double inDouble){
+		try{
+			switch(listNumber){
+			case(1):
+				doubleList1[dataValueLocation] = inDouble;
+				break;
+			case(2):
+				doubleList2[dataValueLocation] = inDouble;
+				break;			
+			case(3):
+				doubleList3[dataValueLocation] = inDouble;
+				break;
+			case(4):
+				doubleList4[dataValueLocation] = inDouble;
+				break;
+			case(5):
+				doubleList5[dataValueLocation] = inDouble;
+				break;
+			default:
+				jRacy.systemError(null, null, "GTDE03");
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(e, null, "GTDE04");
+		}
+	}
+	
+	private double getDouble(int listNumber, int dataValueLocation){
+		try{
+			switch(listNumber){
+			case(1):
+				return doubleList1[dataValueLocation];
+				
+			case(2):
+				return doubleList2[dataValueLocation];			
+			case(3):
+				return doubleList3[dataValueLocation];
+			case(4):
+				return doubleList4[dataValueLocation];
+			case(5):
+				return doubleList5[dataValueLocation];
+			default:
+				jRacy.systemError(null, null, "GTDE05");
+			}
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(e, null, "GTDE06");
+		}
+		
+		return -1;
+	}
+	
+	public void incrementStorage(){
+		if(userElement)
+			System.out.println("We are trying to increase storage on a user event object!");
+		//Since all arrays are kept at the same size, just use one of them to get the current length.
+		int currentLength = doubleList1.length;
 
+		//can use a little space here ... space for speed! :-)
+		double[] newArray1 = new double[currentLength+1];
+		double[] newArray2 = new double[currentLength+1];
+		double[] newArray3 = new double[currentLength+1];
+		double[] newArray4 = new double[currentLength+1];
+		double[] newArray5 = new double[currentLength+1];
+		
+		for(int i=0;i<currentLength;i++){
+			newArray1[i] = doubleList1[i];
+			newArray2[i] = doubleList2[i];
+			newArray3[i] = doubleList3[i];
+			newArray4[i] = doubleList4[i];
+			newArray5[i] = doubleList5[i];
+		}
+		
+		doubleList1 = newArray1;
+		doubleList2 = newArray2;
+		doubleList3 = newArray3;
+		doubleList4 = newArray4;
+		doubleList5 = newArray5;
+	}
+		
+	
 	//Instance data.
 	
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	
 	//Global Mapping reference.
 	GlobalMapping globalMappingReference;
@@ -195,26 +364,16 @@ public class GlobalThreadDataElement implements Serializable
 	int mappingID;
 	
 	//Named data values.
-	private Vector inclusiveValueList = new Vector();
-	private Vector exclusiveValueList = new Vector();
-	private Vector inclusivePercentValueList = new Vector();
-	private Vector exclusivePercentValueList = new Vector();
+	private double[] doubleList1 = new double[1];	//inclusive/minValue
+	private double[] doubleList2 = new double[1];	//exclusive/maxValue
+	private double[] doubleList3 = new double[1];	//inclusivePercent/meanValue
+	private double[] doubleList4;					//exclusivePercent
 	private int numberOfCalls = 0;
 	private int numberOfSubRoutines = 0;
-	private Vector userSecPerCallList = new Vector();
+	private double[] doubleList5;
+	int userEventNumberValue = 0;
 	
-	//The total statics string.
-	private Vector tStatStringList = new Vector();
-	
-	
-	//User event section.
-	private String userEventName;
-	private int userEventID;
-	private Vector userEventNumberValueList = new Vector();
-	private Vector userEventMinValueList = new Vector();
-	private Vector userEventMaxValueList = new Vector();
-	private Vector userEventMeanValueList = new Vector();
-	private Vector userEventStatStringList = new Vector();
+	boolean userElement = false;
 }
 
 

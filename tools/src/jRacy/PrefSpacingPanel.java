@@ -23,7 +23,7 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener
 	//Instance data.
 	//******************************
 	
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	
 	
 	int xPanelSize = 600;
@@ -38,9 +38,9 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener
 	
 	Color tmpColor;
 	
-	public PrefSpacingPanel(ExperimentRun inExpRun)
+	public PrefSpacingPanel(Trial inTrial)
 	{	
-		expRun = inExpRun;
+		trial = inTrial;
 		
 		setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 		setPreferredSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -58,11 +58,11 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener
 		super.paintComponent(g);
 		
 		//Do the standard font and spacing stuff.
-		if(!(expRun.getPreferences().areBarDetailsSet()))
+		if(!(trial.getPreferences().areBarDetailsSet()))
 		{
 			
 			//Create font.
-			Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), 12);
+			Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), 12);
 			g.setFont(font);
 			FontMetrics fmFont = g.getFontMetrics(font);
 			
@@ -74,20 +74,20 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener
 			
 			int tmpInt = maxFontAscent + maxFontDescent;
 			
-			expRun.getPreferences().setBarDetails(maxFontAscent, (tmpInt + 5));
+			trial.getPreferences().setBarDetails(maxFontAscent, (tmpInt + 5));
 			
-			expRun.getPreferences().setSliders(maxFontAscent, (tmpInt + 5));
+			trial.getPreferences().setSliders(maxFontAscent, (tmpInt + 5));
 		}
 		
 		//Set local spacing and bar heights.
-		barSpacing = expRun.getPreferences().getBarSpacing();
-		barHeight = expRun.getPreferences().getBarHeight();
+		barSpacing = trial.getPreferences().getBarSpacing();
+		barHeight = trial.getPreferences().getBarHeight();
 		
 		//Set up the yCoord.
 		yCoord = 25 + barHeight;
 		
 		//Create font.
-		Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), barHeight);
+		Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), barHeight);
 		g.setFont(font);
 		FontMetrics fmFont = g.getFontMetrics(font);
 		
@@ -115,9 +115,9 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener
 			g.drawString(s1, (barXStart - tmpStringWidth - 5), yCoord);
 			
 			//After the above check, do the usual drawing stuff.
-			for(int j=0; j<(expRun.getColorChooser().getNumberOfColors()); j++)
+			for(int j=0; j<3; j++)
 			{
-				tmpColor = expRun.getColorChooser().getColorInLocation(j);
+				tmpColor = trial.getColorChooser().getColorInLocation(j);
 				g.setColor(tmpColor);
 				g.fillRect(barXCoord, (yCoord - barHeight), 40, barHeight);
 				barXCoord = barXCoord + 30;
@@ -136,7 +136,7 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener
 	
 	public void stateChanged(ChangeEvent event)
 	{
-		expRun.getPreferences().updateBarDetails();
+		trial.getPreferences().updateBarDetails();
 		this.repaint();
 	}
 }

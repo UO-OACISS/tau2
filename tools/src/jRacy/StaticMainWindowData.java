@@ -18,7 +18,7 @@ import java.lang.*;
 public class StaticMainWindowData
 {
 
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	
 	//A variable to check to make sure that the user has loaded system data.
 	boolean dataLoaded = false;
@@ -31,9 +31,9 @@ public class StaticMainWindowData
 	
 	private String currentlySortedAsMeanTotalStatWindow;
 	
-	public StaticMainWindowData(ExperimentRun inExpRun)
+	public StaticMainWindowData(Trial inTrial)
 	{
-		expRun = inExpRun;
+		trial = inTrial;
 	}
 	
 	//Setting and getting the loaded system data boolean.
@@ -96,7 +96,7 @@ public class StaticMainWindowData
 		Vector tmpThreadDataList;
 		
 		//Get a reference to the global data.
-		Vector tmpVector = expRun.getStaticServerList();
+		Vector tmpVector = trial.getStaticServerList();
 		
 		//Clear the sMWGeneralData list for safety.
 		sMWGeneralData.removeAllElements();
@@ -144,7 +144,7 @@ public class StaticMainWindowData
 						if(tmpGlobalThreadDataElement != null)
 						{
 							//Create a new thread data object.
-							tmpSMWThreadDataElement = new SMWThreadDataElement(expRun, tmpGlobalThreadDataElement);
+							tmpSMWThreadDataElement = new SMWThreadDataElement(trial, tmpGlobalThreadDataElement);
 							
 							tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getMappingID());
 							
@@ -163,7 +163,7 @@ public class StaticMainWindowData
 	private void buildSMWMeanList()
 	{
 		//First, grab the global mapping element list.
-		GlobalMapping tmpGlobalMapping = expRun.getGlobalMapping();
+		GlobalMapping tmpGlobalMapping = trial.getGlobalMapping();
 		
 		Vector tmpVector = tmpGlobalMapping.getMapping(0);
 		
@@ -178,10 +178,10 @@ public class StaticMainWindowData
 			if(tmpGME.getMeanValuesSet())
 			{
 				//Create a new mean data element.
-				SMWMeanDataElement tmpSMWMeanDataElement = new SMWMeanDataElement(expRun);
+				SMWMeanDataElement tmpSMWMeanDataElement = new SMWMeanDataElement(trial);
 
 				tmpSMWMeanDataElement.setMappingID(tmpGME.getGlobalID());
-				tmpSMWMeanDataElement.setValue(tmpGME.getMeanExclusiveValue(expRun.getCurRunValLoc()));
+				tmpSMWMeanDataElement.setValue(tmpGME.getMeanExclusiveValue(trial.getCurRunValLoc()));
 				tmpSMWMeanDataElement.setSortByValue();
 				tmpSMWMeanDataElement.setSortByReverse(true);
 				
@@ -230,7 +230,7 @@ public class StaticMainWindowData
 		
 		
 		//Get a reference to the global data.
-		tmpVector = expRun.getStaticServerList();
+		tmpVector = trial.getStaticServerList();
 		
 		for(Enumeration e1 = tmpVector.elements(); e1.hasMoreElements() ;)
 		{
@@ -273,7 +273,7 @@ public class StaticMainWindowData
 					if(tmpGlobalThreadDataElement != null)
 					{
 						//Create a new thread data object.
-						tmpSMWThreadDataElement = new SMWThreadDataElement(expRun, tmpGlobalThreadDataElement);
+						tmpSMWThreadDataElement = new SMWThreadDataElement(trial, tmpGlobalThreadDataElement);
 						
 						tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getMappingID());
 						
@@ -311,7 +311,7 @@ public class StaticMainWindowData
 		
 		
 		//Get a reference to the global data.
-		tmpVector = expRun.getStaticServerList();
+		tmpVector = trial.getStaticServerList();
 		
 		for(Enumeration e1 = tmpVector.elements(); e1.hasMoreElements() ;)
 		{
@@ -354,7 +354,7 @@ public class StaticMainWindowData
 					if(tmpGlobalThreadDataElement != null)
 					{
 						//Create a new thread data object.
-						tmpSMWThreadDataElement = new SMWThreadDataElement(expRun, tmpGlobalThreadDataElement);
+						tmpSMWThreadDataElement = new SMWThreadDataElement(trial, tmpGlobalThreadDataElement);
 						
 						tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getUserEventID());
 						
@@ -375,7 +375,7 @@ public class StaticMainWindowData
 		int metric = 0;
 		boolean isExclusive = true;
 		//Check to see if selected groups only are being displayed.
-		GlobalMapping tmpGM = expRun.getGlobalMapping();
+		GlobalMapping tmpGM = trial.getGlobalMapping();
 		
 		boolean isSelectedGroupOn = false;
 		int selectedGroupID = 0;
@@ -497,7 +497,7 @@ public class StaticMainWindowData
 				{
 					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
 					//Create a new thread data object.
-					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(expRun, tmpSMWThreadDataElement.getGTDE());
+					tmpSMWThreadDataElementCopy = new SMWThreadDataElement(trial, tmpSMWThreadDataElement.getGTDE());
 					
 					tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 					
@@ -531,7 +531,7 @@ public class StaticMainWindowData
 					tmpSMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
 					if(tmpSMWThreadDataElement.isGroupMember(selectedGroupID)){
 						//Create a new thread data object.
-						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(expRun, tmpSMWThreadDataElement.getGTDE());
+						tmpSMWThreadDataElementCopy = new SMWThreadDataElement(trial, tmpSMWThreadDataElement.getGTDE());
 					
 						tmpSMWThreadDataElementCopy.setMappingID(tmpSMWThreadDataElement.getMappingID());
 						switch(metric){
@@ -567,7 +567,7 @@ public class StaticMainWindowData
 	public Vector getSMWUEThreadData(int inServer, int inContext, int inThread)
 	{
 		//First, obtain the appropriate server.
-		Vector tmpVector = expRun.getStaticServerList();
+		Vector tmpVector = trial.getStaticServerList();
 		
 		//Find the correct global thread data element.
 		GlobalServer tmpGSUE = null;
@@ -598,7 +598,7 @@ public class StaticMainWindowData
 			if(tmpGlobalThreadDataElement != null)
 			{
 				//Create a new thread data object.
-				tmpSMWThreadDataElement = new SMWThreadDataElement(expRun, tmpGlobalThreadDataElement);
+				tmpSMWThreadDataElement = new SMWThreadDataElement(trial, tmpGlobalThreadDataElement);
 				tmpSMWThreadDataElement.setMappingID(tmpGlobalThreadDataElement.getUserEventID());
 				//Add to the thread data object.
 				returnVector.add(tmpSMWThreadDataElement);
@@ -708,7 +708,7 @@ public class StaticMainWindowData
 		int metric = 0;
 		
 		//Check to see if selected groups only are being displayed.
-		GlobalMapping tmpGM = expRun.getGlobalMapping();
+		GlobalMapping tmpGM = trial.getGlobalMapping();
 		
 		boolean isSelectedGroupOn = false;
 		int selectedGroupID = 0;
@@ -822,7 +822,7 @@ public class StaticMainWindowData
 			{
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement(expRun);
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement(trial);
 				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
 				//Set the sorting method.
 				switch(metric){
@@ -856,7 +856,7 @@ public class StaticMainWindowData
 			{
 				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
 				
-				tmpSMWMeanDataElementCopy = new SMWMeanDataElement(expRun);
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement(trial);
 				tmpSMWMeanDataElementCopy.setMappingID(tmpSMWMeanDataElement.getMappingID());				
 				//Set the sorting method.
 				switch(metric){

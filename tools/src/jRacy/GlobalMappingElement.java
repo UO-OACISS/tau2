@@ -14,13 +14,14 @@ import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import java.text.*;
 
 public class GlobalMappingElement implements Serializable 
 {
 	//Constructors.
-	public GlobalMappingElement(ExperimentRun inExpRun)
+	public GlobalMappingElement(Trial inTrial)
 	{
-		expRun = inExpRun;
+		trial = inTrial;
 		
 		mappingName = null;
 		globalID = -1;
@@ -40,11 +41,6 @@ public class GlobalMappingElement implements Serializable
 		maxExclusivePercentValueList.add(new Double(0));
 		maxUserSecPerCallList.add(new Double(0));
 		
-		maxUserEventNumberValueList.add(new Integer(0));
-		maxUserEventMinValueList.add(new Double(0));
-		maxUserEventMaxValueList.add(new Double(0));
-		maxUserEventMeanValueList.add(new Double(0));
-		
 		meanInclusiveValueList.add(new Double(0));
 		meanExclusiveValueList.add(new Double(0));
 		meanInclusivePercentValueList.add(new Double(0));
@@ -58,7 +54,6 @@ public class GlobalMappingElement implements Serializable
 		totalExclusivePercentValueList.add(new Double(0));
 		
 		meanTotalStatStringList.add(new String(""));
-		totalTotalStatStringList.add(new String(""));
 	}
 	
 	public void setMappingName(String inMappingName)
@@ -97,7 +92,7 @@ public class GlobalMappingElement implements Serializable
 	
 	public boolean isGroupMember(int inGroupID)
 	{
-		GlobalMapping tmpGM = expRun.getGlobalMapping();
+		GlobalMapping tmpGM = trial.getGlobalMapping();
 		
 		boolean tmpBool = tmpGM.getIsAllExceptGroupOn();
 		boolean tmpBoolResult = false;
@@ -206,38 +201,30 @@ public class GlobalMappingElement implements Serializable
 		return tmpDouble.doubleValue();}
 		
 	//User event section.
-	public void setMaxUserEventNumberValue(int dataValueLocation, int inUserEventNumberValue){
-		Integer tmpInt = new Integer(inUserEventNumberValue);
-		maxUserEventNumberValueList.setElementAt(tmpInt, dataValueLocation);}
+	public void setMaxUserEventNumberValue(int inInt){
+		maxUserEventNumberValue = inInt;}
 	
-	public int getMaxUserEventNumberValue(int dataValueLocation){
-		Integer tmpInt = (Integer) maxUserEventNumberValueList.elementAt(dataValueLocation);
-		return tmpInt.intValue();}
+	public int getMaxUserEventNumberValue(){
+		return maxUserEventNumberValue;}
 	
-	public void setMaxUserEventMinValue(int dataValueLocation, double inUserEventMinValue){
-		
-		Double tmpDouble = new Double(inUserEventMinValue);
-		maxUserEventMinValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public void setMaxUserEventMinValue(double inDouble){
+		maxUserEventMinValue = inDouble;}
 	
-	public double getMaxUserEventMinValue(int dataValueLocation){
-		Double tmpDouble = (Double) maxUserEventMinValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+	public double getMaxUserEventMinValue(){
+		return maxUserEventMinValue;}
 	
-	public void setMaxUserEventMaxValue(int dataValueLocation, double inUserEventMaxValue){
-		Double tmpDouble = new Double(inUserEventMaxValue);
-		maxUserEventMaxValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public void setMaxUserEventMaxValue(double inDouble){
+		maxUserEventMaxValue = inDouble;}
 	
-	public double getMaxUserEventMaxValue(int dataValueLocation){
-		Double tmpDouble = (Double) maxUserEventMaxValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+	public double getMaxUserEventMaxValue(){
+		return maxUserEventMaxValue;}
 	
-	public void setMaxUserEventMeanValue(int dataValueLocation, double inUserEventMeanValue){
-		Double tmpDouble = new Double(inUserEventMeanValue);
-		maxUserEventMeanValueList.setElementAt(tmpDouble, dataValueLocation);}
+	public void setMaxUserEventMeanValue(double inDouble){
+		maxUserEventMeanValue = inDouble;}
 	
-	public double getMaxUserEventMeanValue(int dataValueLocation){
-		Double tmpDouble = (Double) maxUserEventMeanValueList.elementAt(dataValueLocation);
-		return tmpDouble.doubleValue();}
+	public double getMaxUserEventMeanValue(){
+		return maxUserEventMeanValue;
+	}
 	
 	
 	
@@ -283,7 +270,7 @@ public class GlobalMappingElement implements Serializable
 	public void setMeanNumberOfSubRoutines(double inDouble){
 		meanNumberOfSubRoutines = inDouble;}
 	
-	public double getMeanNumberOfSubRoutines(int dataValueLocation){
+	public double getMeanNumberOfSubRoutines(){
 		return meanNumberOfSubRoutines;}
 	
 	public void setMeanUserSecPerCall(int dataValueLocation, double inDouble){
@@ -330,20 +317,89 @@ public class GlobalMappingElement implements Serializable
 	
 	
 	
-	//Stat Strings.
-	public void setMeanTotalStatString(int dataValueLocation, String inString){
-		meanTotalStatStringList.setElementAt(inString, dataValueLocation);}
-	
+	//Stat Strings.	
 	public String getMeanTotalStatString(int dataValueLocation){
-		return (String) meanTotalStatStringList.elementAt(dataValueLocation);}
+	
+		try{
+			int initialBufferLength = 80;
+			int position = 0;
+			char [] statStringArray = new char[initialBufferLength];
+			char [] tmpArray;
+			
+			DecimalFormat dF = new DecimalFormat();
+			dF.applyPattern("##0.0");
+			tmpArray = (dF.format(this.getMeanInclusivePercentValue(dataValueLocation))).toCharArray();
+			
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			dF.applyPattern("0.######E0");
+			tmpArray = (dF.format(this.getMeanExclusiveValue(dataValueLocation))).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (dF.format(this.getMeanInclusiveValue(dataValueLocation))).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (dF.format(this.getMeanNumberOfCalls())).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (dF.format(this.getMeanNumberOfSubRoutines())).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			tmpArray = (dF.format(this.getMeanUserSecPerCall(dataValueLocation))).toCharArray();
+			for(int i=0;i<tmpArray.length;i++){
+				statStringArray[position] = tmpArray[i];
+				position++;
+			}
+			position = this.insertSpaces(statStringArray , position, 2);
+			
+			//Fill in the rest of the buffer.
+			while(position < initialBufferLength){
+				statStringArray[position] = '\u0020';
+				position++;
+			}
+			
+			//Everything should be added now except the function name.
+			String firstPart = new String(statStringArray);
+			return firstPart + this.getMappingName();
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(e, null, "GTDE01");
+		}
 		
-	public void setTotalTotalStatString(int dataValueLocation, String inString){
-		totalTotalStatStringList.setElementAt(inString, dataValueLocation);}
+		return "An error occured pocessing this string!";
 	
-	public String getTotalTotalStatString(int dataValueLocation){
-		return (String) totalTotalStatStringList.elementAt(dataValueLocation);}
 	
-
+	}
+	
+	private int insertSpaces(char[] inArray, int position, int number){
+		for(int i=0;i<number;i++){
+			inArray[position] = '\u0020';
+			position++;
+		}
+		return position;
+	}
+		
 	public void setMeanValuesSet(boolean inBoolean)
 	{
 		meanValuesSet = inBoolean;
@@ -414,7 +470,7 @@ public class GlobalMappingElement implements Serializable
 	
 	//Instance elmements.
 	
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	
 	//Global Mapping reference.
 	String mappingName;
@@ -436,10 +492,10 @@ public class GlobalMappingElement implements Serializable
 	private int maxNumberOfSubRoutines = 0;
 	private Vector maxUserSecPerCallList = new Vector();
 	
-	private Vector maxUserEventNumberValueList = new Vector();
-	private Vector maxUserEventMinValueList = new Vector();
-	private Vector maxUserEventMaxValueList = new Vector();
-	private Vector maxUserEventMeanValueList = new Vector();
+	private int maxUserEventNumberValue = 0;
+	private double maxUserEventMinValue = 0;
+	private double maxUserEventMaxValue = 0;
+	private double maxUserEventMeanValue = 0;
 	
 	private Vector meanInclusiveValueList = new Vector();
 	private Vector meanExclusiveValueList = new Vector();
@@ -449,14 +505,12 @@ public class GlobalMappingElement implements Serializable
 	private double meanNumberOfSubRoutines = 0;
 	private Vector meanUserSecPerCallList = new Vector();
 	
-	
 	private Vector totalInclusiveValueList = new Vector();
 	private Vector totalExclusiveValueList = new Vector();
 	private Vector totalInclusivePercentValueList = new Vector();
 	private Vector totalExclusivePercentValueList = new Vector();
 	
 	private Vector meanTotalStatStringList = new Vector();
-	private Vector totalTotalStatStringList = new Vector();
 	
 	//Drawing coordinates for this Global mapping element.
 	int xBeginPosition;

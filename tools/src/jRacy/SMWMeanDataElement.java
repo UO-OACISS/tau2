@@ -19,11 +19,11 @@ public class SMWMeanDataElement implements Comparable
 {
 
 	//Constructor.
-	public SMWMeanDataElement(ExperimentRun inExpRun)
+	public SMWMeanDataElement(Trial inTrial)
 	{	
-		expRun = inExpRun;
+		trial = inTrial;
 		
-		globalMappingReference = expRun.getGlobalMapping();
+		globalMappingReference = trial.getGlobalMapping();
 		
 		value = 0;
 		
@@ -160,35 +160,35 @@ public class SMWMeanDataElement implements Comparable
 	{
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
-		return tmpGME.getMeanExclusiveValue(expRun.getCurRunValLoc());
+		return tmpGME.getMeanExclusiveValue(trial.getCurRunValLoc());
 	}
 	
 	public double getMeanExclusivePercentValue()
 	{
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
-		return tmpGME.getMeanExclusivePercentValue(expRun.getCurRunValLoc());
+		return tmpGME.getMeanExclusivePercentValue(trial.getCurRunValLoc());
 	}
 	
 	public double getMeanInclusiveValue()
 	{
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
-		return tmpGME.getMeanInclusiveValue(expRun.getCurRunValLoc());
+		return tmpGME.getMeanInclusiveValue(trial.getCurRunValLoc());
 	}
 	
 	public double getMeanInclusivePercentValue()
 	{
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
-		return tmpGME.getMeanInclusivePercentValue(expRun.getCurRunValLoc());
+		return tmpGME.getMeanInclusivePercentValue(trial.getCurRunValLoc());
 	}
 	
 	public String getMeanTotalStatString()
 	{
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		
-		return tmpGME.getMeanTotalStatString(expRun.getCurRunValLoc());
+		return tmpGME.getMeanTotalStatString(trial.getCurRunValLoc());
 	}
 	
 	public double getMeanNumberOfCalls(){
@@ -198,19 +198,12 @@ public class SMWMeanDataElement implements Comparable
 	
 	public double getMeanNumberOfSubRoutines(){
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		return tmpGME.getMeanNumberOfSubRoutines(expRun.getCurRunValLoc());
+		return tmpGME.getMeanNumberOfSubRoutines();
 	}
 	
 	public double getMeanUserSecPerCall(){
 		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		return tmpGME.getMeanUserSecPerCall(expRun.getCurRunValLoc());
-	}
-	
-	public String getTotalTotalStatString()
-	{
-		tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		
-		return tmpGME.getTotalTotalStatString(expRun.getCurRunValLoc());
+		return tmpGME.getMeanUserSecPerCall(trial.getCurRunValLoc());
 	}
 	
 	public void setDrawCoords(int inXBeg, int inXEnd, int inYBeg, int inYEnd)
@@ -283,7 +276,7 @@ public class SMWMeanDataElement implements Comparable
 	
 	//Instance data.
 	
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	
 	//A global mapping element reference.
 	GlobalMappingElement tmpGME;

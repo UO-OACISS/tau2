@@ -29,15 +29,15 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW01");
+			jRacy.systemError(e, null, "MDW01");
 		}
 	}
 	
-	public MeanDataWindow(ExperimentRun inExpRun, StaticMainWindowData inSMWData)
+	public MeanDataWindow(Trial inTrial, StaticMainWindowData inSMWData)
 	{
 		try{
 			
-			expRun = inExpRun;
+			trial = inTrial;
 			sMWData = inSMWData;
 			
 			setLocation(new java.awt.Point(300, 200));
@@ -50,7 +50,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	 		unitsString = "milliseconds";
 			
 			//Now set the title.
-			this.setTitle("Mean Data Window: " + expRun.getProfilePathName());
+			this.setTitle("Mean Data Window: " + trial.getProfilePathName());
 			
 			//Add some window listener code
 				addWindowListener(new java.awt.event.WindowAdapter() {
@@ -300,7 +300,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			//**********
 			//Panel and ScrollPane definition.
 			//**********
-			meanDataWindowPanelRef = new MeanDataWindowPanel(expRun, this, sMWData);
+			meanDataWindowPanelRef = new MeanDataWindowPanel(trial, this, sMWData);
 			
 			//**********
 			//End - Panel and ScrollPane definition.
@@ -331,7 +331,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW02");
+			jRacy.systemError(e, null, "MDW02");
 		}
 			
 		
@@ -519,24 +519,24 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(0);
+					(trial.getGlobalMapping()).displayMappingLedger(0);
 				}
 				else if(arg.equals("Show Group Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(1);
+					(trial.getGlobalMapping()).displayMappingLedger(1);
 				}
 				else if(arg.equals("Show User Event Ledger"))
 				{
 					//In order to be in this window, I must have loaded the data. So,
 					//just show the mapping ledger window.
-					(expRun.getGlobalMapping()).displayMappingLedger(2);
+					(trial.getGlobalMapping()).displayMappingLedger(2);
 				}
 				else if(arg.equals("Close All Sub-Windows"))
 				{
 					//Close the all subwindows.
-					expRun.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
+					trial.getSystemEvents().updateRegisteredObjects("subWindowCloseEvent");
 				}
 				else if(arg.equals("About Racy"))
 				{
@@ -568,7 +568,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW03");
+			jRacy.systemError(e, null, "MDW03");
 		}
 	}
 	
@@ -590,12 +590,12 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	{
 		try
 		{
-			if(expRun.groupNamesPresent())
+			if(trial.groupNamesPresent())
 				mappingGroupLedgerItem.setEnabled(true);
 			else
 				mappingGroupLedgerItem.setEnabled(false);
 				
-			if(expRun.userEventsPresent())
+			if(trial.userEventsPresent())
 				userEventLedgerItem.setEnabled(true);
 			else
 				userEventLedgerItem.setEnabled(false);
@@ -614,7 +614,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW04");
+			jRacy.systemError(e, null, "MDW04");
 		}
 		
 	}
@@ -658,7 +658,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW05");
+			jRacy.systemError(e, null, "MDW05");
 		}
 	}
 	
@@ -785,7 +785,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW06");
+			jRacy.systemError(e, null, "MDW06");
 		}
 	}
 	
@@ -825,7 +825,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW07");
+			jRacy.systemError(e, null, "MDW07");
 		}
 		
 		return tmpInt;
@@ -841,7 +841,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW08");
+			jRacy.systemError(e, null, "MDW08");
 		}
 		
 		return 0;
@@ -919,7 +919,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW09");
+			jRacy.systemError(e, null, "MDW09");
 		}
 	}
 	
@@ -942,12 +942,12 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 			}
 			
 			setVisible(false);
-			expRun.getSystemEvents().deleteObserver(this);
+			trial.getSystemEvents().deleteObserver(this);
 			dispose();
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW10");
+			jRacy.systemError(e, null, "MDW10");
 		}
 	}
 	
@@ -1002,7 +1002,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, MenuListen
 	
  	private MeanDataWindowPanel meanDataWindowPanelRef;
  	
- 	private ExperimentRun expRun = null;
+ 	private Trial trial = null;
  	private StaticMainWindowData sMWData = null;
  	
  	//Local data.

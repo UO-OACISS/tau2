@@ -16,167 +16,166 @@ import javax.swing.border.*;
 import javax.swing.colorchooser.*;
 import javax.swing.event.*;
 
-//The colouring class maintains all colouring info for Racy.  There should only be one instance
-//of this class present for consistant colouring across windows.
-
-
 
 public class ColorChooser implements WindowListener
 {
-	public ColorChooser(ExperimentRun inExpRun, SavedPreferences inSavedPreferences)
+	public ColorChooser(Trial inTrial, SavedPreferences inSavedPreferences)
 	{
 		
-		expRun = inExpRun;
-		
-		if(inSavedPreferences != null)
-		{
-			globalColors = inSavedPreferences.getGlobalColors();
-			mappingGroupColors = inSavedPreferences.getMappingGroupColors();
-			highlightColor = inSavedPreferences.getHighlightColor();
-			groupHighlightColor = inSavedPreferences.getGroupHighlightColor();
-			uEHC = inSavedPreferences.getUEHC();
-			miscMappingsColor = inSavedPreferences.getMiscMappingsColor();
+		try{
+			trial = inTrial;
+			
+			if(inSavedPreferences != null)
+			{
+				globalColors = inSavedPreferences.getGlobalColors();
+				mappingGroupColors = inSavedPreferences.getMappingGroupColors();
+				highlightColor = inSavedPreferences.getHighlightColor();
+				groupHighlightColor = inSavedPreferences.getGroupHighlightColor();
+				uEHC = inSavedPreferences.getUEHC();
+				miscMappingsColor = inSavedPreferences.getMiscMappingsColor();
+			}
+			else
+			{
+				//Set the default colours.
+				this.setDefaultColors();
+				this.setDefaultMappingGroupColors();
+			}
 		}
-		else
-		{
-			//Set the default colours.
-			this.setDefaultColors();
-			this.setDefaultMappingGroupColors();
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC01");
 		}
 	}
 	
 	public void showColorChooser()
 	{
-		if(!clrChooserFrameShowing)
-		{
-			//Bring up the color chooser frame.
-			clrChooserFrame = new ColorChooserFrame(expRun, this);
-			clrChooserFrame.addWindowListener(this);
+		try{
+			if(!clrChooserFrameShowing)
+			{
+				//Bring up the color chooser frame.
+				clrChooserFrame = new ColorChooserFrame(trial, this);
+				clrChooserFrame.addWindowListener(this);
+				clrChooserFrame.show();
+				clrChooserFrameShowing = true;
+			}
+			else
+			{
+			//Just bring it to the foreground.
 			clrChooserFrame.show();
-			clrChooserFrameShowing = true;
+			}
 		}
-		else
-		{
-		//Just bring it to the foreground.
-		clrChooserFrame.show();
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC02");
 		}
 	}
 	
 	public void setSavedColors()
 	{
-		jRacy.savedPreferences.setGlobalColors(globalColors);
-		jRacy.savedPreferences.setMappingGroupColors(mappingGroupColors);
-		jRacy.savedPreferences.setHighlightColor(highlightColor);
-		jRacy.savedPreferences.setGroupHighlightColor(groupHighlightColor);
-		jRacy.savedPreferences.setMiscMappingsColor(miscMappingsColor);
+		try{
+			jRacy.savedPreferences.setGlobalColors(globalColors);
+			jRacy.savedPreferences.setMappingGroupColors(mappingGroupColors);
+			jRacy.savedPreferences.setHighlightColor(highlightColor);
+			jRacy.savedPreferences.setGroupHighlightColor(groupHighlightColor);
+			jRacy.savedPreferences.setMiscMappingsColor(miscMappingsColor);
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC03");
+		}
 	}
 	
 	public int getNumberOfColors()
 	{
-		return globalColors.size();
+		int tmpInt = -1;
+		
+		try{
+			tmpInt = globalColors.size();
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC04");
+		}
+		
+		return tmpInt;
 	}
 	
 	public int getNumberOfMappingGroupColors()
 	{
-		return mappingGroupColors.size();
+		int tmpInt = -1;
+		
+		try{
+			tmpInt = mappingGroupColors.size();
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC05");
+		}
+		
+		return tmpInt;
 	}
 	
 	public void setColorInLocation(Color inColor, int inLocation)
 	{
-		try
-		{
+		try{
 			globalColors.setElementAt(inColor, inLocation);
 		}
-		catch(Exception e)
-		{
-			if(e instanceof ArrayIndexOutOfBoundsException)
-			{
-				System.out.println("An out of bounds exception occurred while trying to set a color!");
-				System.out.println("The value of the index is: " + inLocation);
-			}
-			else
-			{
-				System.out.println("An error occurs whilst setting a color!");
-			}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC06");
 		}
 	}
 	
 	public void setMappingGroupColorInLocation(Color inColor, int inLocation)
 	{
-		try
-		{
+		try{
 			mappingGroupColors.setElementAt(inColor, inLocation);
 		}
-		catch(Exception e)
-		{
-			if(e instanceof ArrayIndexOutOfBoundsException)
-			{
-				System.out.println("An out of bounds exception occurred while trying to set a mapping group color!");
-				System.out.println("The value of the index is: " + inLocation);
-			}
-			else
-			{
-				System.out.println("An error occurs whilst setting a color!");
-			}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC07");
 		}
 	}
 	
 	public Color getColorInLocation(int inLocation)
 	{
+		Color tmpColor = null;
 		
-		try
-		{
-			return (Color) globalColors.elementAt(inLocation);
+		try{
+			tmpColor = (Color) globalColors.elementAt(inLocation);
 		}
-		catch(Exception e)
-		{
-			if(e instanceof ArrayIndexOutOfBoundsException)
-			{
-				System.out.println("An out of bounds exception occurred while trying to get a color!");
-				System.out.println("The value of the index is: " + inLocation);
-			}
-			else
-			{
-				System.out.println("An error occurs whilst getting a color!");
-			}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC08");
 		}
 		
-		//Return null if the above did not work.
-		return null;
+		return tmpColor;
 	}
 	
 	public Color getMappingGroupColorInLocation(int inLocation)
 	{
+		Color tmpColor = null;
 		
-		try
-		{
-			return (Color) mappingGroupColors.elementAt(inLocation);
+		try{
+			tmpColor = (Color) mappingGroupColors.elementAt(inLocation);
 		}
-		catch(Exception e)
-		{
-			if(e instanceof ArrayIndexOutOfBoundsException)
-			{
-				System.out.println("An out of bounds exception occurred while trying to get a mapping group color!");
-				System.out.println("The value of the index is: " + inLocation);
-			}
-			else
-			{
-				System.out.println("An error occurs whilst getting a color!");
-			}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC09");
 		}
 		
-		//Return null if the above did not work.
-		return null;
+		return tmpColor;
 	}
 	
 	public void addColor(Color inColor)
 	{
-		globalColors.add(inColor);
+		try{
+			globalColors.add(inColor);
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC10");
+		}
 	}
 	
 	public void addMappingGroupColor(Color inColor)
 	{
-		mappingGroupColors.add(inColor);
+		try{
+			mappingGroupColors.add(inColor);
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC11");
+		}
 	}
 	
 	public Vector getAllColors()
@@ -206,7 +205,7 @@ public class ColorChooser implements WindowListener
 	{
 		highlightColorMappingID = inInt;
 		
-		expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+		trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 	}
 	
 	public int getHighlightColorMappingID()
@@ -233,9 +232,13 @@ public class ColorChooser implements WindowListener
 	
 	public void setGroupHighlightColorMappingID(int inInt)
 	{
-		groupHighlightColorMappingID = inInt;
-		
-		expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+		try{
+			groupHighlightColorMappingID = inInt;
+			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC12");
+		}
 	}
 	
 	public int getGHCMID()
@@ -261,9 +264,13 @@ public class ColorChooser implements WindowListener
 	
 	public void setUEHCMappingID(int inInt)
 	{
-		uEHCMappingID = inInt;
-		
-		expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+		try{
+			uEHCMappingID = inInt;
+			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC13");
+		}
 	}
 	
 	public int getUEHCMappingID()
@@ -294,43 +301,53 @@ public class ColorChooser implements WindowListener
 	//A function which sets the globalColors vector to be the default set.
 	public void setDefaultColors()
 	{
-		//Clear the globalColors vector.
-		globalColors.clear();
-		
-		//Add the default colours.
-		addColor(new Color(61,104,63));
-		addColor(new Color(102,0,51));
-		addColor(new Color(0,102,102));
-		addColor(new Color(0,51,255));
-		addColor(new Color(102,132,25));
-		addColor(new Color(119,71,145));
-		addColor(new Color(221,232,30));
-		addColor(new Color(70,156,168));
-		addColor(new Color(255,153,0));
-		addColor(new Color(0,255,0));
-		addColor(new Color(121,196,144));
-		addColor(new Color(86,88,112));
+		try{
+			//Clear the globalColors vector.
+			globalColors.clear();
+			
+			//Add the default colours.
+			addColor(new Color(61,104,63));
+			addColor(new Color(102,0,51));
+			addColor(new Color(0,102,102));
+			addColor(new Color(0,51,255));
+			addColor(new Color(102,132,25));
+			addColor(new Color(119,71,145));
+			addColor(new Color(221,232,30));
+			addColor(new Color(70,156,168));
+			addColor(new Color(255,153,0));
+			addColor(new Color(0,255,0));
+			addColor(new Color(121,196,144));
+			addColor(new Color(86,88,112));
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC14");
+		}
 	}
 	
 	//A function which sets the globalColors vector to be the default set.
 	public void setDefaultMappingGroupColors()
 	{
-		//Clear the globalColors vector.
-		mappingGroupColors.clear();
-		
-		//Add the default colours.
-		addMappingGroupColor(new Color(102,0,102));
-		addMappingGroupColor(new Color(51,51,0));
-		addMappingGroupColor(new Color(204,0,51));
-		addMappingGroupColor(new Color(0,102,102));
-		addMappingGroupColor(new Color(255,255,102));
-		addMappingGroupColor(new Color(0,0,102));
-		addMappingGroupColor(new Color(153,153,255));
-		addMappingGroupColor(new Color(255,51,0));
-		addMappingGroupColor(new Color(255,153,0));
-		addMappingGroupColor(new Color(255,102,102));
-		addMappingGroupColor(new Color(51,0,51));
-		addMappingGroupColor(new Color(255,255,102));
+		try{
+			//Clear the globalColors vector.
+			mappingGroupColors.clear();
+			
+			//Add the default colours.
+			addMappingGroupColor(new Color(102,0,102));
+			addMappingGroupColor(new Color(51,51,0));
+			addMappingGroupColor(new Color(204,0,51));
+			addMappingGroupColor(new Color(0,102,102));
+			addMappingGroupColor(new Color(255,255,102));
+			addMappingGroupColor(new Color(0,0,102));
+			addMappingGroupColor(new Color(153,153,255));
+			addMappingGroupColor(new Color(255,51,0));
+			addMappingGroupColor(new Color(255,153,0));
+			addMappingGroupColor(new Color(255,102,102));
+			addMappingGroupColor(new Color(51,0,51));
+			addMappingGroupColor(new Color(255,255,102));
+		}
+		catch(Exception e){
+			jRacy.systemError(e, null, "CC15");
+		}
 	}
 	
 	//Window Listener code.
@@ -350,7 +367,7 @@ public class ColorChooser implements WindowListener
 
 
 	//Instance Data.
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	Vector globalColors = new Vector();
 	Vector mappingGroupColors = new Vector();
 	
@@ -365,183 +382,168 @@ public class ColorChooser implements WindowListener
 	private ColorChooserFrame clrChooserFrame;
 }
 	
-	
-	
+		
 class ColorChooserFrame extends JFrame implements ActionListener
-{
-	//******************************
-	//Instance data!
-	//******************************
-	private ExperimentRun expRun = null;
-	ColorChooser colorChooserRef;
-	private ColorSelectionModel clrModel;
-	JColorChooser clrChooser;
-	DefaultListModel listModel;
-	JList colorList;
-	JButton addColorButton;
-	JButton addMappingGroupColorButton;
-	JButton deleteColorButton;
-	JButton updateColorButton;
-	JButton restoreDefaultsButton;
-	
-	int numberOfColors = expRun.getColorChooser().getNumberOfColors();
-	//******************************
-	//End - Instance data!
-	//******************************
-	
-	public ColorChooserFrame(ExperimentRun inExpRun, ColorChooser inColorChooser)
+{	
+	public ColorChooserFrame(Trial inTrial, ColorChooser inColorChooser)
 	{
 		
-		
-		//Window Stuff.
-		setLocation(new Point(100, 100));
-		setSize(new Dimension(850, 450));
-		
-		expRun = inExpRun;
-		colorChooserRef = inColorChooser;
-		
-		//******************************
-		//Code to generate the menus.
-		//******************************
-		
-		
-		JMenuBar mainMenu = new JMenuBar();
-		
-		//******************************
-		//File menu.
-		//******************************
-		JMenu fileMenu = new JMenu("File");
-		
-		//Add a menu item.
-		JMenuItem closeItem = new JMenuItem("Close This Window");
-		closeItem.addActionListener(this);
-		fileMenu.add(closeItem);
-		
-		//Add a menu item.
-		JMenuItem exitItem = new JMenuItem("Exit jRacy!");
-		exitItem.addActionListener(this);
-		fileMenu.add(exitItem);
-		//******************************
-		//End - File menu.
-		//******************************
-		
-		//******************************
-		//Help menu.
-		//******************************
-		/*JMenu helpMenu = new JMenu("Help");
-		
-		//Add a menu item.
-		JMenuItem aboutItem = new JMenuItem("About Racy");
-		helpMenu.add(aboutItem);
-		
-		//Add a menu item.
-		JMenuItem showHelpWindowItem = new JMenuItem("Show Help Window");
-		showHelpWindowItem.addActionListener(this);
-		helpMenu.add(showHelpWindowItem);*/
-		//******************************
-		//End - Help menu.
-		//******************************
-		
-		
-		//Now, add all the menus to the main menu.
-		mainMenu.add(fileMenu);
-		//mainMenu.add(helpMenu);
-		
-		setJMenuBar(mainMenu);
-		
-		//******************************
-		//End - Code to generate the menus.
-		//******************************
-		
-		//******************************
-		//Create and add the componants.
-		//******************************
-		//Setting up the layout system for the main window.
-		Container contentPane = getContentPane();
-		GridBagLayout gbl = new GridBagLayout();
-		contentPane.setLayout(gbl);
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.insets = new Insets(5, 5, 5, 5);
-		
-		//Create some borders.
-		Border raisedBev = BorderFactory.createRaisedBevelBorder();
-		Border empty = BorderFactory.createEmptyBorder();
-		
-		
-		//Create a new ColorChooser.
-		clrChooser = new JColorChooser();
-		clrModel = clrChooser.getSelectionModel();
-		
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.anchor = GridBagConstraints.CENTER;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		
-		//First add the label.
-		JLabel titleLabel = new JLabel("jRacy Color Set.");
-		titleLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
-		addCompItem(titleLabel, gbc, 0, 0, 1, 1);
-		
-		gbc.fill = GridBagConstraints.BOTH;
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		
-		//Create and add color list.
-		listModel = new DefaultListModel();
-		colorList = new JList(listModel);
-		colorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			colorList.setCellRenderer(new CustomCellRenderer(expRun));
-		JScrollPane sp = new JScrollPane(colorList);
-		sp.setBorder(raisedBev);
-		addCompItem(sp, gbc, 0, 1, 1, 5);
-		
-		
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.CENTER;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		addColorButton = new JButton("Add Color");
-		addColorButton.addActionListener(this);
-		addCompItem(addColorButton, gbc, 1, 1, 1, 1);
-		
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.CENTER;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		addMappingGroupColorButton = new JButton("Add Mapping Gr. Color");
-		addMappingGroupColorButton.addActionListener(this);
-		addCompItem(addMappingGroupColorButton, gbc, 1, 2, 1, 1);
-		
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.NORTH;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		deleteColorButton = new JButton("Delete Selected Color");
-		deleteColorButton.addActionListener(this);
-		addCompItem(deleteColorButton, gbc, 1, 3, 1, 1);
-		
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.NORTH;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		updateColorButton = new JButton("Update Selected Color");
-		updateColorButton.addActionListener(this);
-		addCompItem(updateColorButton, gbc, 1, 4, 1, 1);
-		
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.NORTH;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		restoreDefaultsButton = new JButton("Restore Defaults");
-		restoreDefaultsButton.addActionListener(this);
-		addCompItem(restoreDefaultsButton, gbc, 1, 5, 1, 1);
-		
-		//Add the JColorChooser.
-		addCompItem(clrChooser, gbc, 2, 0, 1, 6);
-		
-		//Now populate the colour list.
-		populateColorList();
+		try{
+			//Window Stuff.
+			setLocation(new Point(100, 100));
+			setSize(new Dimension(850, 450));
+			
+			trial = inTrial;
+			colorChooserRef = inColorChooser;
+			numberOfColors = trial.getColorChooser().getNumberOfColors();
+			
+			
+			
+			//******************************
+			//Code to generate the menus.
+			//******************************
+			JMenuBar mainMenu = new JMenuBar();
+			
+			//******************************
+			//File menu.
+			//******************************
+			JMenu fileMenu = new JMenu("File");
+			
+			//Add a menu item.
+			JMenuItem closeItem = new JMenuItem("Close This Window");
+			closeItem.addActionListener(this);
+			fileMenu.add(closeItem);
+			
+			//Add a menu item.
+			JMenuItem exitItem = new JMenuItem("Exit jRacy!");
+			exitItem.addActionListener(this);
+			fileMenu.add(exitItem);
+			//******************************
+			//End - File menu.
+			//******************************
+			
+			//******************************
+			//Help menu.
+			//******************************
+			/*JMenu helpMenu = new JMenu("Help");
+			
+			//Add a menu item.
+			JMenuItem aboutItem = new JMenuItem("About Racy");
+			helpMenu.add(aboutItem);
+			
+			//Add a menu item.
+			JMenuItem showHelpWindowItem = new JMenuItem("Show Help Window");
+			showHelpWindowItem.addActionListener(this);
+			helpMenu.add(showHelpWindowItem);*/
+			//******************************
+			//End - Help menu.
+			//******************************
+			
+			
+			//Now, add all the menus to the main menu.
+			mainMenu.add(fileMenu);
+			//mainMenu.add(helpMenu);
+			
+			setJMenuBar(mainMenu);
+			
+			//******************************
+			//End - Code to generate the menus.
+			//******************************
+			
+			//******************************
+			//Create and add the componants.
+			//******************************
+			//Setting up the layout system for the main window.
+			Container contentPane = getContentPane();
+			GridBagLayout gbl = new GridBagLayout();
+			contentPane.setLayout(gbl);
+			GridBagConstraints gbc = new GridBagConstraints();
+			gbc.insets = new Insets(5, 5, 5, 5);
+			
+			//Create some borders.
+			Border raisedBev = BorderFactory.createRaisedBevelBorder();
+			Border empty = BorderFactory.createEmptyBorder();
+			
+			
+			//Create a new ColorChooser.
+			clrChooser = new JColorChooser();
+			clrModel = clrChooser.getSelectionModel();
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.CENTER;
+			gbc.weightx = 0;
+			gbc.weighty = 0;
+			
+			//First add the label.
+			JLabel titleLabel = new JLabel("jRacy Color Set.");
+			titleLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
+			addCompItem(titleLabel, gbc, 0, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.BOTH;
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.weightx = 0;
+			gbc.weighty = 0;
+			
+			//Create and add color list.
+			listModel = new DefaultListModel();
+			colorList = new JList(listModel);
+			colorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+				colorList.setCellRenderer(new CustomCellRenderer(trial));
+			JScrollPane sp = new JScrollPane(colorList);
+			sp.setBorder(raisedBev);
+			addCompItem(sp, gbc, 0, 1, 1, 5);
+			
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.CENTER;
+			gbc.weightx = 0;
+			gbc.weighty = 0;
+			addColorButton = new JButton("Add Color");
+			addColorButton.addActionListener(this);
+			addCompItem(addColorButton, gbc, 1, 1, 1, 1);
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.CENTER;
+			gbc.weightx = 0;
+			gbc.weighty = 0;
+			addMappingGroupColorButton = new JButton("Add Mapping Gr. Color");
+			addMappingGroupColorButton.addActionListener(this);
+			addCompItem(addMappingGroupColorButton, gbc, 1, 2, 1, 1);
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.NORTH;
+			gbc.weightx = 0;
+			gbc.weighty = 0;
+			deleteColorButton = new JButton("Delete Selected Color");
+			deleteColorButton.addActionListener(this);
+			addCompItem(deleteColorButton, gbc, 1, 3, 1, 1);
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.NORTH;
+			gbc.weightx = 0;
+			gbc.weighty = 0;
+			updateColorButton = new JButton("Update Selected Color");
+			updateColorButton.addActionListener(this);
+			addCompItem(updateColorButton, gbc, 1, 4, 1, 1);
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.NORTH;
+			gbc.weightx = 0;
+			gbc.weighty = 0;
+			restoreDefaultsButton = new JButton("Restore Defaults");
+			restoreDefaultsButton.addActionListener(this);
+			addCompItem(restoreDefaultsButton, gbc, 1, 5, 1, 1);
+			
+			//Add the JColorChooser.
+			addCompItem(clrChooser, gbc, 2, 0, 1, 6);
+			
+			//Now populate the colour list.
+			populateColorList();
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(e, null, "CCF01");
+		}
 	}	
 	
 	
@@ -578,11 +580,11 @@ class ColorChooserFrame extends JFrame implements ActionListener
 				populateColorList();
 				
 				//Update the GlobalMapping.
-				GlobalMapping gMRef = expRun.getGlobalMapping();
+				GlobalMapping gMRef = trial.getGlobalMapping();
 				gMRef.updateGenericColors(0);
 				
 				//Update the listeners.
-				expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+				trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 			}
 			else if(arg.equals("Add Mapping Gr. Color"))
 			{
@@ -594,11 +596,11 @@ class ColorChooserFrame extends JFrame implements ActionListener
 				populateColorList();
 				
 				//Update the GlobalMapping.
-				GlobalMapping gMRef = expRun.getGlobalMapping();
+				GlobalMapping gMRef = trial.getGlobalMapping();
 				gMRef.updateGenericColors(1);
 				
 				//Update the listeners.
-				expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+				trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 			}
 			else if(arg.equals("Delete Selected Color"))
 			{
@@ -606,30 +608,30 @@ class ColorChooserFrame extends JFrame implements ActionListener
 				int [] values = colorList.getSelectedIndices();
 				for(int i = 0; i < values.length; i++)
 				{
-					if((values[i]) < expRun.getColorChooser().getNumberOfColors())
+					if((values[i]) < trial.getColorChooser().getNumberOfColors())
 					{
 						System.out.println("The value being deleted is: " + values[i]);
 						listModel.removeElementAt(values[i]);
 						(colorChooserRef.getAllColors()).removeElementAt(values[i]);
 						
 						//Update the GlobalMapping.
-						GlobalMapping gMRef = expRun.getGlobalMapping();
+						GlobalMapping gMRef = trial.getGlobalMapping();
 						gMRef.updateGenericColors(0);
 					}
-					else if((values[i]) < (expRun.getColorChooser().getNumberOfColors()) + (expRun.getColorChooser().getNumberOfMappingGroupColors()))
+					else if((values[i]) < (trial.getColorChooser().getNumberOfColors()) + (trial.getColorChooser().getNumberOfMappingGroupColors()))
 					{
 						System.out.println("The value being deleted is: " + values[i]);
 						listModel.removeElementAt(values[i]);
-						(colorChooserRef.getAllMappingGroupColors()).removeElementAt(values[i] - (expRun.getColorChooser().getNumberOfColors()));
+						(colorChooserRef.getAllMappingGroupColors()).removeElementAt(values[i] - (trial.getColorChooser().getNumberOfColors()));
 						
 						//Update the GlobalMapping.
-						GlobalMapping gMRef = expRun.getGlobalMapping();
+						GlobalMapping gMRef = trial.getGlobalMapping();
 						gMRef.updateGenericColors(1);
 					}
 				}
 				
 				//Update the listeners.
-				expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+				trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 			}
 			else if(arg.equals("Update Selected Color"))
 			{
@@ -641,40 +643,40 @@ class ColorChooserFrame extends JFrame implements ActionListener
 				{
 					listModel.setElementAt(tmpColor, values[i]);
 					
-					int totalNumberOfColors = (expRun.getColorChooser().getNumberOfColors()) + (expRun.getColorChooser().getNumberOfMappingGroupColors());
+					int totalNumberOfColors = (trial.getColorChooser().getNumberOfColors()) + (trial.getColorChooser().getNumberOfMappingGroupColors());
 					
 					if((values[i]) == (totalNumberOfColors)){
-						expRun.getColorChooser().setHighlightColor(tmpColor);
+						trial.getColorChooser().setHighlightColor(tmpColor);
 					}
 					else if((values[i]) == (totalNumberOfColors+1)){
-						expRun.getColorChooser().setGroupHighlightColor(tmpColor);
+						trial.getColorChooser().setGroupHighlightColor(tmpColor);
 					}
 					else if((values[i]) == (totalNumberOfColors+2)){
-						expRun.getColorChooser().setUEHC(tmpColor);
+						trial.getColorChooser().setUEHC(tmpColor);
 					}
 					else if((values[i]) == (totalNumberOfColors+3)){
-						expRun.getColorChooser().setMiscMappingsColor(tmpColor);
+						trial.getColorChooser().setMiscMappingsColor(tmpColor);
 					}
-					else if((values[i]) < expRun.getColorChooser().getNumberOfColors())
+					else if((values[i]) < trial.getColorChooser().getNumberOfColors())
 					{
 						colorChooserRef.setColorInLocation(tmpColor, values[i]);
 						
 						//Update the GlobalMapping.
-						GlobalMapping gMRef = expRun.getGlobalMapping();
+						GlobalMapping gMRef = trial.getGlobalMapping();
 						gMRef.updateGenericColors(0);
 					}
 					else
 					{
-						colorChooserRef.setMappingGroupColorInLocation(tmpColor, (values[i] - expRun.getColorChooser().getNumberOfColors()));
+						colorChooserRef.setMappingGroupColorInLocation(tmpColor, (values[i] - trial.getColorChooser().getNumberOfColors()));
 						
 						//Update the GlobalMapping.
-						GlobalMapping gMRef = expRun.getGlobalMapping();
+						GlobalMapping gMRef = trial.getGlobalMapping();
 						gMRef.updateGenericColors(1);
 					}
 				}
 				
 				//Update the listeners.
-				expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+				trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 			}
 			else if(arg.equals("Restore Defaults"))
 			{
@@ -688,12 +690,12 @@ class ColorChooserFrame extends JFrame implements ActionListener
 				populateColorList();
 				
 				//Update the GlobalMapping.
-				GlobalMapping gMRef = expRun.getGlobalMapping();
+				GlobalMapping gMRef = trial.getGlobalMapping();
 				gMRef.updateGenericColors(0);
 				gMRef.updateGenericColors(1);
 				
 				//Update the listeners.
-				expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+				trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 			}
 		}
 	}
@@ -724,25 +726,45 @@ class ColorChooserFrame extends JFrame implements ActionListener
 			listModel.addElement(tmpColor);
 		}
 		
-		tmpColor = expRun.getColorChooser().getHighlightColor();
+		tmpColor = trial.getColorChooser().getHighlightColor();
 		listModel.addElement(tmpColor);
 		
-		tmpColor = expRun.getColorChooser().getGroupHighlightColor();
+		tmpColor = trial.getColorChooser().getGroupHighlightColor();
 		listModel.addElement(tmpColor);
 		
-		tmpColor = expRun.getColorChooser().getUEHC();
+		tmpColor = trial.getColorChooser().getUEHC();
 		listModel.addElement(tmpColor);
 		
-		tmpColor = expRun.getColorChooser().getMiscMappingsColor();
+		tmpColor = trial.getColorChooser().getMiscMappingsColor();
 		listModel.addElement(tmpColor);
 	}
+	
+	//******************************
+	//Instance data!
+	//******************************
+	private Trial trial = null;
+	ColorChooser colorChooserRef;
+	private ColorSelectionModel clrModel;
+	JColorChooser clrChooser;
+	DefaultListModel listModel;
+	JList colorList;
+	JButton addColorButton;
+	JButton addMappingGroupColorButton;
+	JButton deleteColorButton;
+	JButton updateColorButton;
+	JButton restoreDefaultsButton;
+	
+	int numberOfColors = -1;
+	//******************************
+	//End - Instance data!
+	//******************************
 	
 }
 
 class CustomCellRenderer implements ListCellRenderer
 {
-	CustomCellRenderer(ExperimentRun inExpRun){
-		expRun = inExpRun;
+	CustomCellRenderer(Trial inTrial){
+		trial = inTrial;
 	}
 	
 	public Component getListCellRendererComponent(final JList list, final Object value,
@@ -772,7 +794,7 @@ class CustomCellRenderer implements ListCellRenderer
 					
 					
 					//Create font.
-					Font font = new Font(expRun.getPreferences().getJRacyFont(), Font.PLAIN, barHeight);
+					Font font = new Font(trial.getPreferences().getJRacyFont(), Font.PLAIN, barHeight);
 					g.setFont(font);
 					FontMetrics fmFont = g.getFontMetrics(font);
 					
@@ -782,7 +804,7 @@ class CustomCellRenderer implements ListCellRenderer
 					xSize = getWidth();
 					ySize = getHeight();
 					
-					String tmpString1 = new String("00" + (expRun.getColorChooser().getNumberOfColors()));
+					String tmpString1 = new String("00" + (trial.getColorChooser().getNumberOfColors()));
 					maxXNumFontSize = fmFont.stringWidth(tmpString1);
 					
 					
@@ -798,7 +820,7 @@ class CustomCellRenderer implements ListCellRenderer
 					int yStringPos1 = (ySize - 5);
 					g.setColor(isSelected ? list.getSelectionForeground() : list.getForeground());
 					
-					int totalNumberOfColors = (expRun.getColorChooser().getNumberOfColors()) + (expRun.getColorChooser().getNumberOfMappingGroupColors());
+					int totalNumberOfColors = (trial.getColorChooser().getNumberOfColors()) + (trial.getColorChooser().getNumberOfMappingGroupColors());
 					
 					if(index == totalNumberOfColors){
 						g.drawString(("" + ("MHC")), xStringPos1, yStringPos1);
@@ -812,12 +834,12 @@ class CustomCellRenderer implements ListCellRenderer
 					else if(index == (totalNumberOfColors+3)){
 						g.drawString(("" + ("MPC")), xStringPos1, yStringPos1);
 					}
-					else if(index < (expRun.getColorChooser().getNumberOfColors())){
+					else if(index < (trial.getColorChooser().getNumberOfColors())){
 						g.drawString(("" + (index + 1)), xStringPos1, yStringPos1);
 					}
 					else
 					{
-						g.drawString(("G" + (index - (expRun.getColorChooser().getNumberOfColors()) + 1)), xStringPos1, yStringPos1);
+						g.drawString(("G" + (index - (trial.getColorChooser().getNumberOfColors()) + 1)), xStringPos1, yStringPos1);
 					}
 					
 					g.setColor(inColor);
@@ -848,11 +870,11 @@ class CustomCellRenderer implements ListCellRenderer
 					int barHeight = 12;
 					
 					//Create font.
-					Font font = new Font(expRun.getPreferences().getJRacyFont(), Font.PLAIN, barHeight);
+					Font font = new Font(trial.getPreferences().getJRacyFont(), Font.PLAIN, barHeight);
 					Graphics g = getGraphics();
 					FontMetrics fmFont = g.getFontMetrics(font);
 					
-					String tmpString = new String("00" + (expRun.getColorChooser().getNumberOfColors()));
+					String tmpString = new String("00" + (trial.getColorChooser().getNumberOfColors()));
 					maxXNumFontSize = fmFont.stringWidth(tmpString);
 					
 					maxXFontSize = fmFont.stringWidth("0000,0000,0000");
@@ -867,5 +889,5 @@ class CustomCellRenderer implements ListCellRenderer
 	}
 	
 	//Instance Data.
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 }

@@ -32,13 +32,13 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDWP01");
+			jRacy.systemError(e, null, "MDWP01");
 		}
 	
 	}
 	
 	
-	public MeanDataWindowPanel(ExperimentRun inExpRun, MeanDataWindow inMDWindow, StaticMainWindowData inSMWData)
+	public MeanDataWindowPanel(Trial inTrial, MeanDataWindow inMDWindow, StaticMainWindowData inSMWData)
 	{
 		try{
 			setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -47,9 +47,9 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 			//Add this object as a mouse listener.
 			addMouseListener(this);
 			
-			staticNodeList = inExpRun.getStaticServerList();
+			staticNodeList = inTrial.getStaticServerList();
 
-			expRun = inExpRun;
+			trial = inTrial;
 			mDWindow = inMDWindow;
 			sMWData = inSMWData;
 			
@@ -71,7 +71,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDWP02");
+			jRacy.systemError(e, null, "MDWP02");
 		}
 	
 	}
@@ -83,14 +83,14 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 			super.paintComponent(g);
 			
 			//Set the numberOfColors variable.
-			numberOfColors = expRun.getColorChooser().getNumberOfColors();
+			numberOfColors = trial.getColorChooser().getNumberOfColors();
 			
 			//Do the standard font and spacing stuff.
-			if(!(expRun.getPreferences().areBarDetailsSet()))
+			if(!(trial.getPreferences().areBarDetailsSet()))
 			{
 				
 				//Create font.
-				Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), 12);
+				Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), 12);
 				g.setFont(font);
 				FontMetrics fmFont = g.getFontMetrics(font);
 				
@@ -102,17 +102,17 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 				
 				int tmpInt = maxFontAscent + maxFontDescent;
 				
-				expRun.getPreferences().setBarDetails(maxFontAscent, (tmpInt + 5));
+				trial.getPreferences().setBarDetails(maxFontAscent, (tmpInt + 5));
 				
-				expRun.getPreferences().setSliders(maxFontAscent, (tmpInt + 5));
+				trial.getPreferences().setSliders(maxFontAscent, (tmpInt + 5));
 			}
 			
 			//Set local spacing and bar heights.
-			barSpacing = expRun.getPreferences().getBarSpacing();
-			barHeight = expRun.getPreferences().getBarHeight();
+			barSpacing = trial.getPreferences().getBarSpacing();
+			barHeight = trial.getPreferences().getBarHeight();
 			
 			//Create font.
-			Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), barHeight);
+			Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), barHeight);
 			g.setFont(font);
 			FontMetrics fmFont = g.getFontMetrics(font);
 
@@ -138,7 +138,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 			
 			//**********
 			//Draw the counter name if required.
-			counterName = expRun.getCounterName();
+			counterName = trial.getCounterName();
 			if(counterName != null){
 				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 				yCoord = yCoord + (barSpacing);
@@ -191,13 +191,13 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 		    	yCoord = yCoord + (startMeanElement * barSpacing);
 		    	
 		    	//Set the max values for this mapping.
-				maxInclusiveValue = expRun.getMaxMeanInclusiveValue(expRun.getCurRunValLoc());
-				maxExclusiveValue = expRun.getMaxMeanExclusiveValue(expRun.getCurRunValLoc());
-				maxInclusivePercentValue = expRun.getMaxMeanInclusivePercentValue(expRun.getCurRunValLoc());
-				maxExclusivePercentValue = expRun.getMaxMeanExclusivePercentValue(expRun.getCurRunValLoc());
-				maxNumberOfCalls = expRun.getMaxMeanNumberOfCalls();
-				maxNumberOfSubroutines = expRun.getMaxMeanNumberOfSubRoutines();
-				maxUserSecPerCall = expRun.getMaxMeanUserSecPerCall(expRun.getCurRunValLoc());
+				maxInclusiveValue = trial.getMaxMeanInclusiveValue(trial.getCurRunValLoc());
+				maxExclusiveValue = trial.getMaxMeanExclusiveValue(trial.getCurRunValLoc());
+				maxInclusivePercentValue = trial.getMaxMeanInclusivePercentValue(trial.getCurRunValLoc());
+				maxExclusivePercentValue = trial.getMaxMeanExclusivePercentValue(trial.getCurRunValLoc());
+				maxNumberOfCalls = trial.getMaxMeanNumberOfCalls();
+				maxNumberOfSubroutines = trial.getMaxMeanNumberOfSubRoutines();
+				maxUserSecPerCall = trial.getMaxMeanUserSecPerCall(trial.getCurRunValLoc());
 				
 				if((mDWindow.isInclusive())){
 					if(mDWindow.isPercent()){
@@ -288,15 +288,15 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+								if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 								{
-									g.setColor(expRun.getColorChooser().getHighlightColor());
+									g.setColor(trial.getColorChooser().getHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
-								else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+								else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 								{
-									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+									g.setColor(trial.getColorChooser().getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -308,10 +308,10 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							}
 							else
 							{
-								if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
-									g.setColor(expRun.getColorChooser().getHighlightColor());
-								else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
-									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+								if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+									g.setColor(trial.getColorChooser().getHighlightColor());
+								else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+									g.setColor(trial.getColorChooser().getGroupHighlightColor());
 								else
 								{
 									tmpColor = tmpSMWMeanDataElement.getMappingColor();
@@ -376,15 +376,15 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+								if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 								{
-									g.setColor(expRun.getColorChooser().getHighlightColor());
+									g.setColor(trial.getColorChooser().getHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
-								else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+								else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 								{
-									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+									g.setColor(trial.getColorChooser().getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -396,10 +396,10 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							}
 							else
 							{
-								if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
-									g.setColor(expRun.getColorChooser().getHighlightColor());
-								else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
-									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+								if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+									g.setColor(trial.getColorChooser().getHighlightColor());
+								else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+									g.setColor(trial.getColorChooser().getGroupHighlightColor());
 								else
 								{
 									tmpColor = tmpSMWMeanDataElement.getMappingColor();
@@ -479,15 +479,15 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+								if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 								{
-									g.setColor(expRun.getColorChooser().getHighlightColor());
+									g.setColor(trial.getColorChooser().getHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
-								else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+								else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 								{
-									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+									g.setColor(trial.getColorChooser().getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -499,10 +499,10 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							}
 							else
 							{
-								if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
-									g.setColor(expRun.getColorChooser().getHighlightColor());
-								else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
-									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+								if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+									g.setColor(trial.getColorChooser().getHighlightColor());
+								else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+									g.setColor(trial.getColorChooser().getGroupHighlightColor());
 								else
 								{
 									tmpColor = tmpSMWMeanDataElement.getMappingColor();
@@ -563,15 +563,15 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							{
 								g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 								
-								if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+								if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 								{
-									g.setColor(expRun.getColorChooser().getHighlightColor());
+									g.setColor(trial.getColorChooser().getHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
-								else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+								else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 								{
-									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+									g.setColor(trial.getColorChooser().getGroupHighlightColor());
 									g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 									g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 								}
@@ -583,10 +583,10 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 							}
 							else
 							{
-								if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
-									g.setColor(expRun.getColorChooser().getHighlightColor());
-								else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
-									g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+								if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+									g.setColor(trial.getColorChooser().getHighlightColor());
+								else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+									g.setColor(trial.getColorChooser().getGroupHighlightColor());
 								else
 								{
 									tmpColor = tmpSMWMeanDataElement.getMappingColor();
@@ -664,15 +664,15 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						{
 							g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 							
-							if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+							if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 							{
-								g.setColor(expRun.getColorChooser().getHighlightColor());
+								g.setColor(trial.getColorChooser().getHighlightColor());
 								g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 								g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 							}
-							else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+							else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 							{
-								g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+								g.setColor(trial.getColorChooser().getGroupHighlightColor());
 								g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 								g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 							}
@@ -684,10 +684,10 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						}
 						else
 						{
-							if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
-								g.setColor(expRun.getColorChooser().getHighlightColor());
-							else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
-								g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+							if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+								g.setColor(trial.getColorChooser().getHighlightColor());
+							else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+								g.setColor(trial.getColorChooser().getGroupHighlightColor());
 							else
 							{
 								tmpColor = tmpSMWMeanDataElement.getMappingColor();
@@ -746,15 +746,15 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						{
 							g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 							
-							if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+							if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 							{
-								g.setColor(expRun.getColorChooser().getHighlightColor());
+								g.setColor(trial.getColorChooser().getHighlightColor());
 								g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 								g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 							}
-							else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+							else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 							{
-								g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+								g.setColor(trial.getColorChooser().getGroupHighlightColor());
 								g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 								g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 							}
@@ -766,10 +766,10 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						}
 						else
 						{
-							if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
-								g.setColor(expRun.getColorChooser().getHighlightColor());
-							else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
-								g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+							if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+								g.setColor(trial.getColorChooser().getHighlightColor());
+							else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+								g.setColor(trial.getColorChooser().getGroupHighlightColor());
 							else
 							{
 								tmpColor = tmpSMWMeanDataElement.getMappingColor();
@@ -828,15 +828,15 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						{
 							g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 							
-							if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+							if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 							{
-								g.setColor(expRun.getColorChooser().getHighlightColor());
+								g.setColor(trial.getColorChooser().getHighlightColor());
 								g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 								g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 							}
-							else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+							else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 							{
-								g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+								g.setColor(trial.getColorChooser().getGroupHighlightColor());
 								g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 								g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 							}
@@ -848,10 +848,10 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						}
 						else
 						{
-							if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
-								g.setColor(expRun.getColorChooser().getHighlightColor());
-							else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
-								g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+							if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+								g.setColor(trial.getColorChooser().getHighlightColor());
+							else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
+								g.setColor(trial.getColorChooser().getGroupHighlightColor());
 							else
 							{
 								tmpColor = tmpSMWMeanDataElement.getMappingColor();
@@ -915,7 +915,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDWP03");
+			jRacy.systemError(e, null, "MDWP03");
 		}
 		
 		
@@ -944,9 +944,9 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 					{
 						tmpSMWMeanDataElement = (SMWMeanDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						expRun.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
-						MappingDataWindow tmpRef = new MappingDataWindow(expRun, tmpSMWMeanDataElement.getMappingID(), sMWData);
-						expRun.getSystemEvents().addObserver(tmpRef);
+						trial.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(trial, tmpSMWMeanDataElement.getMappingID(), sMWData);
+						trial.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -958,7 +958,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 					if(clickedOnObject instanceof SMWMeanDataElement)
 						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
+					GlobalMapping globalMappingReference = trial.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					Color tmpCol = tmpGME.getMappingColor();
@@ -970,7 +970,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						tmpGME.setSpecificColor(tmpCol);
 						tmpGME.setColorFlag(true);
 						
-						expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+						trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 					}
 				}
 				
@@ -983,17 +983,17 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 					if(clickedOnObject instanceof SMWMeanDataElement)
 						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
+					GlobalMapping globalMappingReference = trial.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					tmpGME.setColorFlag(false);
-					expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+					trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 			}
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDWP04");
+			jRacy.systemError(e, null, "MDWP04");
 		}
 	}
 	
@@ -1030,16 +1030,16 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 						{
 							//Want to set the clicked on mapping to the current highlight color or, if the one
 							//clicked on is already the current highlighted one, set it back to normal.
-							if((expRun.getColorChooser().getHighlightColorMappingID()) == -1)
+							if((trial.getColorChooser().getHighlightColorMappingID()) == -1)
 							{
-								expRun.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+								trial.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
 							}
 							else
 							{
-								if(!((expRun.getColorChooser().getHighlightColorMappingID()) == (tmpSMWMeanDataElement.getMappingID())))
-									expRun.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+								if(!((trial.getColorChooser().getHighlightColorMappingID()) == (tmpSMWMeanDataElement.getMappingID())))
+									trial.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
 								else
-									expRun.getColorChooser().setHighlightColorMappingID(-1);
+									trial.getColorChooser().setHighlightColorMappingID(-1);
 							}
 						}
 						//Nothing more to do ... return.
@@ -1059,7 +1059,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDWP05");
+			jRacy.systemError(e, null, "MDWP05");
 		}
 	}
 	
@@ -1091,7 +1091,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDWP06");
+			jRacy.systemError(e, null, "MDWP06");
 		}
 	}
 	
@@ -1110,7 +1110,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 	int maxXLength = 0;
 	int numberOfColors = 0;
 	
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	
 	MeanDataWindow mDWindow;
  	

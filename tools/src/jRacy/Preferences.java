@@ -23,10 +23,9 @@ public class Preferences extends JFrame implements ActionListener, Observer
 	//******************************
 	//Instance data.
 	//******************************
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 		
 	//References for some of the components for this frame.
-	private PrefColorPanel pCPanel;
 	private PrefSpacingPanel pSPanel;
 	
 	private JCheckBox loadPprofDat;
@@ -70,10 +69,10 @@ public class Preferences extends JFrame implements ActionListener, Observer
 	//******************************
 	//End - Instance data.
 	//******************************
-	public Preferences(ExperimentRun inExpRun, SavedPreferences inSavedPreferences)
+	public Preferences(Trial inTrial, SavedPreferences inSavedPreferences)
 	{	
 		
-		expRun = inExpRun;
+		trial = inTrial;
 		
 		
 		if(inSavedPreferences != null)
@@ -155,8 +154,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		fontComboBox.addActionListener(this);
 		
 		//Now initialize the panels.
-		pCPanel = new PrefColorPanel(expRun);
-		pSPanel = new PrefSpacingPanel(expRun);
+		pSPanel = new PrefSpacingPanel(trial);
 		
 		//Window Stuff.
 		setTitle("jRacy Preferences: No Data Loaded");
@@ -270,13 +268,9 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		//**********
 		//Panel and ScrollPane definition.
 		//**********
-		JScrollPane scrollPaneC = new JScrollPane(pCPanel);
-		scrollPaneC.setBorder(mainloweredbev);
-		scrollPaneC.setPreferredSize(new Dimension(500, 100));
-		
 		JScrollPane scrollPaneS = new JScrollPane(pSPanel);
 		scrollPaneS.setBorder(mainloweredbev);
-		scrollPaneS.setPreferredSize(new Dimension(500, 200));
+		scrollPaneS.setPreferredSize(new Dimension(200, 200));
 		//**********
 		//End - Panel and ScrollPane definition.
 		//**********
@@ -289,14 +283,12 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		barSpacingSlider.setMinorTickSpacing(5);
 		barSpacingSlider.setPaintLabels(true);
 		barSpacingSlider.addChangeListener(pSPanel);
-		barSpacingSlider.addChangeListener(pCPanel);
 		
 		barHeightSlider.setPaintTicks(true);
 		barHeightSlider.setMajorTickSpacing(20);
 		barHeightSlider.setMinorTickSpacing(5);
 		barHeightSlider.setPaintLabels(true);
 		barHeightSlider.addChangeListener(pSPanel);
-		barHeightSlider.addChangeListener(pCPanel);
 		//**********
 		//End - Slider Setup
 		//**********
@@ -369,38 +361,34 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(scrollPaneS, gbc, 0, 3, 2, 2);
+		addCompItem(scrollPaneS, gbc, 0, 2, 2, 2);
 		
 		gbc.fill = GridBagConstraints.NONE;
 		gbc.anchor = GridBagConstraints.NORTH;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(barSpacingLabel, gbc, 2, 3, 1, 1);
+		addCompItem(barSpacingLabel, gbc, 2, 2, 1, 1);
 		
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.anchor = GridBagConstraints.NORTH;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(barSpacingSlider, gbc, 2, 4, 1, 1);
+		addCompItem(barSpacingSlider, gbc, 2, 3, 1, 1);
 		
 		gbc.fill = GridBagConstraints.NONE;
 		gbc.anchor = GridBagConstraints.NORTH;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(barHeightLabel, gbc, 3, 3, 1, 1);
+		addCompItem(barHeightLabel, gbc, 3, 2, 1, 1);
 		
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.anchor = GridBagConstraints.NORTH;
 		gbc.weightx = 1;
 		gbc.weighty = 1;
-		addCompItem(barHeightSlider, gbc, 3, 4, 1, 1);
+		addCompItem(barHeightSlider, gbc, 3, 3, 1, 1);
 		//******************************
 		//End - Create and add the componants.
 		//******************************
-		
-		pCPanel.repaint();
-		//pSPanel.repaint();
-			
 	}
 	
 	public void showPreferencesWindow()
@@ -497,7 +485,6 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		if(tmpString.equals("colorEvent"))
 		{			
 			//Just need to call a repaint.
-			pCPanel.repaint();
 			pSPanel.repaint();
 		}
 	}
@@ -513,7 +500,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 			
 			if(arg.equals("Edit Color Map"))
 			{
-				expRun.getColorChooser().showColorChooser();
+				trial.getColorChooser().showColorChooser();
 			}
 			else if(arg.equals("Load Color Map"))
 			{
@@ -535,7 +522,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 					{	
 						System.out.println("Loading color map ...");
 						loadColorMap(file);
-						expRun.getSystemEvents().updateRegisteredObjects("prefEvent");
+						trial.getSystemEvents().updateRegisteredObjects("prefEvent");
 						System.out.println("Done loading color map ...");
 					}
 					else
@@ -569,7 +556,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 						{
 							//Just output the data for the moment to have a look at it.
 							Vector nameColorVector = new Vector();
-							GlobalMapping tmpGlobalMapping = expRun.getGlobalMapping();
+							GlobalMapping tmpGlobalMapping = trial.getGlobalMapping();
 							
 							int numOfMappings = tmpGlobalMapping.getNumberOfMappings(0);
 							
@@ -642,7 +629,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 			else if(arg.equals("Apply and Close Window"))
 			{
 				setVisible(false);
-				expRun.getSystemEvents().updateRegisteredObjects("prefEvent");
+				trial.getSystemEvents().updateRegisteredObjects("prefEvent");
 			}
 		}
 		else if(EventSrc instanceof JRadioButton)
@@ -725,7 +712,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 			int green = 0;
 			int blue = 0;
 			
-			GlobalMapping tmpGlobalMapping = expRun.getGlobalMapping(); 
+			GlobalMapping tmpGlobalMapping = trial.getGlobalMapping(); 
 			
 			
 			//Read in the file line by line!
@@ -798,7 +785,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "P01");
+			jRacy.systemError(e, null, "P01");
 		}
 	}
 				

@@ -31,13 +31,13 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSUEWP01");
+			jRacy.systemError(e, null, "TSUEWP01");
 		}
 	
 	}
 	
 	
-	public TotalStatUEWindowPanel(ExperimentRun inExpRun,
+	public TotalStatUEWindowPanel(Trial inTrial,
 								  int inServerNumber,
 								  int inContextNumber,
 								  int inThreadNumber,
@@ -51,7 +51,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 			contextNumber = inContextNumber;
 			threadNumber = inThreadNumber;
 
-			expRun = inExpRun;
+			trial = inTrial;
 			tSUEWindow = inTSUEWindow;
 			
 			//Add this object as a mouse listener.
@@ -74,7 +74,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSUEWP02");
+			jRacy.systemError(e, null, "TSUEWP02");
 		}
 	
 	}
@@ -95,8 +95,8 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 			//In this window, a Monospaced font has to be used.  This will probably not be the same
 			//font as the rest of jRacy.  As a result, some extra work will have to be done to calculate
 			//spacing.
-			int fontSize = expRun.getPreferences().getBarHeight();
-			spacing = expRun.getPreferences().getBarSpacing();
+			int fontSize = trial.getPreferences().getBarHeight();
+			spacing = trial.getPreferences().getBarSpacing();
 			
 			int tmpXWidthCalc = 0;
 			
@@ -105,7 +105,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 			
 			
 			//Create font.
-			MonoFont = new Font("Monospaced", expRun.getPreferences().getFontStyle(), fontSize);
+			MonoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
 			//Compute the font metrics.
 			fmMonoFont = g.getFontMetrics(MonoFont);
 			maxFontAscent = fmMonoFont.getMaxAscent();
@@ -139,7 +139,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 			
 			//**********
 			//Draw the counter name if required.
-			String counterName = expRun.getCounterName();
+			String counterName = trial.getCounterName();
 			if(counterName != null){
 				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 				yCoord = yCoord + (spacing);
@@ -152,7 +152,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 		    if ((clipRect != null))
 		    {
 		    	//Draw the heading!
-				tmpString = expRun.getUserEventHeading();
+				tmpString = trial.getUserEventHeading();
 				int tmpInt = tmpString.length();
 				
 				for(int i=0; i<tmpInt; i++)
@@ -221,14 +221,14 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 						AttributedString as = new AttributedString(tmpString);
 						as.addAttribute(TextAttribute.FONT, MonoFont);
 						
-						if((tmpSMWThreadDataElement.getUserEventID()) == (expRun.getColorChooser().getUEHCMappingID()))
+						if((tmpSMWThreadDataElement.getUserEventID()) == (trial.getColorChooser().getUEHCMappingID()))
 							as.addAttribute(TextAttribute.FOREGROUND, 
-								(expRun.getColorChooser().getUEHC()),
-								expRun.getPositionOfUserEventName(), tmpString.length());
+								(trial.getColorChooser().getUEHC()),
+								trial.getPositionOfUserEventName(), tmpString.length());
 						else
 							as.addAttribute(TextAttribute.FOREGROUND, 
 								(tmpSMWThreadDataElement.getUserEventMappingColor()),
-								expRun.getPositionOfUserEventName(), tmpString.length());
+								trial.getPositionOfUserEventName(), tmpString.length());
 						
 						g.drawString(as.getIterator(), 20, yCoord);
 						
@@ -253,7 +253,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 			else
 			{
 				//Draw the heading!
-				tmpString = expRun.getUserEventHeading();
+				tmpString = trial.getUserEventHeading();
 				int tmpInt = tmpString.length();
 				
 				for(int i=0; i<tmpInt; i++)
@@ -290,14 +290,14 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 						AttributedString as = new AttributedString(tmpString);
 						as.addAttribute(TextAttribute.FONT, MonoFont);
 						
-						if((tmpSMWThreadDataElement.getUserEventID()) == (expRun.getColorChooser().getUEHCMappingID()))
+						if((tmpSMWThreadDataElement.getUserEventID()) == (trial.getColorChooser().getUEHCMappingID()))
 							as.addAttribute(TextAttribute.FOREGROUND, 
-								(expRun.getColorChooser().getUEHC()),
-								expRun.getPositionOfUserEventName(), tmpString.length());
+								(trial.getColorChooser().getUEHC()),
+								trial.getPositionOfUserEventName(), tmpString.length());
 						else
 							as.addAttribute(TextAttribute.FOREGROUND, 
 								(tmpSMWThreadDataElement.getUserEventMappingColor()),
-								expRun.getPositionOfUserEventName(), tmpString.length());
+								trial.getPositionOfUserEventName(), tmpString.length());
 						
 						g.drawString(as.getIterator(), 20, yCoord);
 						
@@ -321,7 +321,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSUEWP03");
+			jRacy.systemError(e, null, "TSUEWP03");
 		}
 		
 	}
@@ -349,9 +349,9 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 					{
 						tmpSMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						expRun.getColorChooser().setUEHCMappingID(tmpSMWThreadDataElement.getMappingID());
-						UserEventWindow tmpRef = new UserEventWindow(expRun, tmpSMWThreadDataElement.getMappingID(), expRun.getStaticMainWindow().getSMWData());
-						expRun.getSystemEvents().addObserver(tmpRef);
+						trial.getColorChooser().setUEHCMappingID(tmpSMWThreadDataElement.getMappingID());
+						UserEventWindow tmpRef = new UserEventWindow(trial, tmpSMWThreadDataElement.getMappingID(), trial.getStaticMainWindow().getSMWData());
+						trial.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -363,7 +363,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 					if(clickedOnObject instanceof SMWThreadDataElement)
 						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
+					GlobalMapping globalMappingReference = trial.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
 					
 					Color tmpCol = tmpGME.getMappingColor();
@@ -375,7 +375,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 						tmpGME.setSpecificColor(tmpCol);
 						tmpGME.setColorFlag(true);
 						
-						expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+						trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 					}
 				}
 				else if(arg.equals("Reset to Generic Color"))
@@ -387,17 +387,17 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 					if(clickedOnObject instanceof SMWThreadDataElement)
 						mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
+					GlobalMapping globalMappingReference = trial.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
 					
 					tmpGME.setColorFlag(false);
-					expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+					trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 			}
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSUEWP04");
+			jRacy.systemError(e, null, "TSUEWP04");
 		}
 	}
 	
@@ -411,7 +411,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 			int xCoord = evt.getX();
 			int yCoord = evt.getY();
 			
-			int fontSize = expRun.getPreferences().getBarHeight();
+			int fontSize = trial.getPreferences().getBarHeight();
 			
 			//Get the number of times clicked.
 			int clickCount = evt.getClickCount();
@@ -446,16 +446,16 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 							{
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((expRun.getColorChooser().getUEHCMappingID()) == -1)
+								if((trial.getColorChooser().getUEHCMappingID()) == -1)
 								{
-									expRun.getColorChooser().setUEHCMappingID((tmpSMWThreadDataElement.getMappingID()));
+									trial.getColorChooser().setUEHCMappingID((tmpSMWThreadDataElement.getMappingID()));
 								}
 								else
 								{
-									if(!((expRun.getColorChooser().getUEHCMappingID()) == (tmpSMWThreadDataElement.getMappingID())))
-										expRun.getColorChooser().setUEHCMappingID(tmpSMWThreadDataElement.getMappingID());
+									if(!((trial.getColorChooser().getUEHCMappingID()) == (tmpSMWThreadDataElement.getMappingID())))
+										trial.getColorChooser().setUEHCMappingID(tmpSMWThreadDataElement.getMappingID());
 									else
-										expRun.getColorChooser().setUEHCMappingID(-1);
+										trial.getColorChooser().setUEHCMappingID(-1);
 								}
 							}
 						}
@@ -465,7 +465,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "TSUEWP05");
+			jRacy.systemError(e, null, "TSUEWP05");
 		}
 	}
 	
@@ -496,7 +496,7 @@ public class TotalStatUEWindowPanel extends JPanel implements ActionListener, Mo
 	int serverNumber;
 	int	contextNumber;
 	int	threadNumber;
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
  	TotalStatUEWindow tSUEWindow;
  	Vector tmpThreadDataElementList;
  	SMWThreadDataElement tmpSMWThreadDataElement;

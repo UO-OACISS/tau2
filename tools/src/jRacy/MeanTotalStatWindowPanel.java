@@ -32,19 +32,19 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MTSWP01");
+			jRacy.systemError(e, null, "MTSWP01");
 		}
 	
 	}
 	
 	
-	public MeanTotalStatWindowPanel(ExperimentRun inExpRun, MeanTotalStatWindow inMTSWindow)
+	public MeanTotalStatWindowPanel(Trial inTrial, MeanTotalStatWindow inMTSWindow)
 	{
 		try{
 			setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 			setBackground(Color.white);
 
-			expRun = inExpRun;
+			trial = inTrial;
 			
 			mTSWindow = inMTSWindow;
 			
@@ -73,7 +73,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MTSWP02");
+			jRacy.systemError(e, null, "MTSWP02");
 		}
 	}
 	
@@ -95,8 +95,8 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			//In this window, a Monospaced font has to be used.  This will probably not be the same
 			//font as the rest of jRacy.  As a result, some extra work will have to be done to calculate
 			//spacing.
-			int fontSize = expRun.getPreferences().getBarHeight();
-			spacing = expRun.getPreferences().getBarSpacing();
+			int fontSize = trial.getPreferences().getBarHeight();
+			spacing = trial.getPreferences().getBarSpacing();
 			
 			int tmpXWidthCalc = 0;
 			
@@ -105,7 +105,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			
 			
 			//Create font.
-			MonoFont = new Font("Monospaced", expRun.getPreferences().getFontStyle(), fontSize);
+			MonoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
 			//Compute the font metrics.
 			fmMonoFont = g.getFontMetrics(MonoFont);
 			maxFontAscent = fmMonoFont.getMaxAscent();
@@ -139,7 +139,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			
 			//**********
 			//Draw the counter name if required.
-			String counterName = expRun.getCounterName();
+			String counterName = trial.getCounterName();
 			if(counterName != null){
 				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 				yCoord = yCoord + (spacing);
@@ -152,7 +152,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 		    if ((clipRect != null))
 		    {
 		    	//Draw the heading!
-				tmpString = expRun.getHeading();
+				tmpString = trial.getHeading();
 				int tmpInt = tmpString.length();
 				
 				for(int i=0; i<tmpInt; i++)
@@ -230,18 +230,18 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 						AttributedString as = new AttributedString(tmpString);
 						as.addAttribute(TextAttribute.FONT, MonoFont);
 						
-						if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+						if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 									as.addAttribute(TextAttribute.FOREGROUND, 
-										(expRun.getColorChooser().getHighlightColor()),
-										expRun.getPositionOfName(), tmpString.length());
-						else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+										(trial.getColorChooser().getHighlightColor()),
+										trial.getPositionOfName(), tmpString.length());
+						else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 							as.addAttribute(TextAttribute.FOREGROUND, 
-								(expRun.getColorChooser().getGroupHighlightColor()),
-								expRun.getPositionOfName(), tmpString.length());
+								(trial.getColorChooser().getGroupHighlightColor()),
+								trial.getPositionOfName(), tmpString.length());
 						else
 							as.addAttribute(TextAttribute.FOREGROUND, 
 								(tmpSMWMeanDataElement.getMappingColor()),
-								expRun.getPositionOfName(), tmpString.length());
+								trial.getPositionOfName(), tmpString.length());
 						
 						g.drawString(as.getIterator(), 20, yCoord);
 						
@@ -267,7 +267,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			else
 			{
 				//Draw the heading!
-				tmpString = expRun.getHeading();
+				tmpString = trial.getHeading();
 				int tmpInt = tmpString.length();
 				
 				for(int i=0; i<tmpInt; i++)
@@ -301,18 +301,18 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 					AttributedString as = new AttributedString(tmpString);
 					as.addAttribute(TextAttribute.FONT, MonoFont);
 					
-					if((tmpSMWMeanDataElement.getMappingID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+					if((tmpSMWMeanDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 						as.addAttribute(TextAttribute.FOREGROUND, 
-							(expRun.getColorChooser().getHighlightColor()),
-							expRun.getPositionOfName(), tmpString.length());
-					else if((tmpSMWMeanDataElement.isGroupMember(expRun.getColorChooser().getGHCMID())))
+							(trial.getColorChooser().getHighlightColor()),
+							trial.getPositionOfName(), tmpString.length());
+					else if((tmpSMWMeanDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
 						as.addAttribute(TextAttribute.FOREGROUND, 
-							(expRun.getColorChooser().getGroupHighlightColor()),
-							expRun.getPositionOfName(), tmpString.length());
+							(trial.getColorChooser().getGroupHighlightColor()),
+							trial.getPositionOfName(), tmpString.length());
 					else
 						as.addAttribute(TextAttribute.FOREGROUND, 
 							(tmpSMWMeanDataElement.getMappingColor()),
-							expRun.getPositionOfName(), tmpString.length());
+							trial.getPositionOfName(), tmpString.length());
 					
 					g.drawString(as.getIterator(), 20, yCoord);
 					
@@ -335,7 +335,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MTSWP03");
+			jRacy.systemError(e, null, "MTSWP03");
 		}
 		
 	}
@@ -363,9 +363,9 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 					{
 						tmpSMWMeanDataElement = (SMWMeanDataElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						expRun.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
-						MappingDataWindow tmpRef = new MappingDataWindow(expRun, tmpSMWMeanDataElement.getMappingID(), expRun.getStaticMainWindow().getSMWData());
-						expRun.getSystemEvents().addObserver(tmpRef);
+						trial.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+						MappingDataWindow tmpRef = new MappingDataWindow(trial, tmpSMWMeanDataElement.getMappingID(), trial.getStaticMainWindow().getSMWData());
+						trial.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -377,7 +377,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 					if(clickedOnObject instanceof SMWMeanDataElement)
 						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
+					GlobalMapping globalMappingReference = trial.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					Color tmpCol = tmpGME.getMappingColor();
@@ -389,7 +389,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 						tmpGME.setSpecificColor(tmpCol);
 						tmpGME.setColorFlag(true);
 						
-						expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+						trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 					}
 				}
 				
@@ -402,17 +402,17 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 					if(clickedOnObject instanceof SMWMeanDataElement)
 						mappingID = ((SMWMeanDataElement) clickedOnObject).getMappingID();
 					
-					GlobalMapping globalMappingReference = expRun.getGlobalMapping();
+					GlobalMapping globalMappingReference = trial.getGlobalMapping();
 					GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 					
 					tmpGME.setColorFlag(false);
-					expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+					trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 			}
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MTSWP04");
+			jRacy.systemError(e, null, "MTSWP04");
 		}
 	}
 	
@@ -457,16 +457,16 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 							{
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((expRun.getColorChooser().getHighlightColorMappingID()) == -1)
+								if((trial.getColorChooser().getHighlightColorMappingID()) == -1)
 								{
-									expRun.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+									trial.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
 								}
 								else
 								{
-									if(!((expRun.getColorChooser().getHighlightColorMappingID()) == (tmpSMWMeanDataElement.getMappingID())))
-										expRun.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
+									if(!((trial.getColorChooser().getHighlightColorMappingID()) == (tmpSMWMeanDataElement.getMappingID())))
+										trial.getColorChooser().setHighlightColorMappingID(tmpSMWMeanDataElement.getMappingID());
 									else
-										expRun.getColorChooser().setHighlightColorMappingID(-1);
+										trial.getColorChooser().setHighlightColorMappingID(-1);
 								}
 							}
 						}
@@ -476,7 +476,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MTSWP05");
+			jRacy.systemError(e, null, "MTSWP05");
 		}
 	}
 	
@@ -492,7 +492,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 	
 	//Instance stuff.
 	
-	private ExperimentRun expRun = null;
+	private Trial trial = null;
 	
 	int xPanelSize = 800;
 	int yPanelSize = 600;

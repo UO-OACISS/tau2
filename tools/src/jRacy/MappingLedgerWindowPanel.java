@@ -36,18 +36,18 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MLWP01");
+			jRacy.systemError(e, null, "MLWP01");
 		}
 	
 	}
 	
-	public MappingLedgerWindowPanel(ExperimentRun inExpRun, Vector inNameIDMapping,  int inMappingSelection)
+	public MappingLedgerWindowPanel(Trial inTrial, Vector inNameIDMapping,  int inMappingSelection)
 	{
 		try{
 			setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 			setBackground(Color.white);
 			
-			expRun = inExpRun;
+			trial = inTrial;
 			NameIDMapping = inNameIDMapping;
 			mappingSelection = inMappingSelection;
 			
@@ -110,7 +110,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MLWP02");
+			jRacy.systemError(e, null, "MLWP02");
 		}
 		
 		
@@ -124,7 +124,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			super.paintComponent(g);
 			
 			//Set the numberOfColors variable.
-			numberOfColors = expRun.getColorChooser().getNumberOfColors();
+			numberOfColors = trial.getColorChooser().getNumberOfColors();
 			
 			//Cycle through the id mapping list.
 			GlobalMappingElement globalMappingElement = null;
@@ -150,11 +150,11 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			xCoord = 5;
 			
 			//Do the standard font and spacing stuff.
-			if(!(expRun.getPreferences().areBarDetailsSet()))
+			if(!(trial.getPreferences().areBarDetailsSet()))
 			{
 				
 				//Create font.
-				Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), 12);
+				Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), 12);
 				g.setFont(font);
 				FontMetrics fmFont = g.getFontMetrics(font);
 				
@@ -163,17 +163,17 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 				//Compute the font metrics.
 				int maxFontAscent = fmFont.getAscent();
 				
-				expRun.getPreferences().setBarDetails(maxFontAscent, maxFontAscent);
+				trial.getPreferences().setBarDetails(maxFontAscent, maxFontAscent);
 				
-				expRun.getPreferences().setSliders(maxFontAscent, maxFontAscent);
+				trial.getPreferences().setSliders(maxFontAscent, maxFontAscent);
 			}
 			
 			//Set local spacing and bar heights.
-			barSpacing = expRun.getPreferences().getBarSpacing();
-			barHeight = expRun.getPreferences().getBarHeight();
+			barSpacing = trial.getPreferences().getBarSpacing();
+			barHeight = trial.getPreferences().getBarHeight();
 			
 			//Create font.
-			Font font = new Font(expRun.getPreferences().getJRacyFont(), expRun.getPreferences().getFontStyle(), barHeight);
+			Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), barHeight);
 			g.setFont(font);
 			FontMetrics fmFont = g.getFontMetrics(font);
 		
@@ -181,7 +181,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			
 			//**********
 			//Draw the counter name if required.
-			counterName = expRun.getCounterName();
+			counterName = trial.getCounterName();
 			if(counterName != null){
 				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
 				yCoord = yCoord + (barSpacing);
@@ -209,9 +209,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						
 						if(mappingSelection == 2)
 						{
-							if((globalMappingElement.getGlobalID()) == (expRun.getColorChooser().getUEHCMappingID()))
+							if((globalMappingElement.getGlobalID()) == (trial.getColorChooser().getUEHCMappingID()))
 							{
-								g.setColor(expRun.getColorChooser().getUEHC());
+								g.setColor(trial.getColorChooser().getUEHC());
 								g.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 								g.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
 							}
@@ -223,9 +223,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						}
 						else if(mappingSelection == 1)
 						{
-							if((globalMappingElement.getGlobalID()) == (expRun.getColorChooser().getGHCMID()))
+							if((globalMappingElement.getGlobalID()) == (trial.getColorChooser().getGHCMID()))
 							{
-								g.setColor(expRun.getColorChooser().getGroupHighlightColor());
+								g.setColor(trial.getColorChooser().getGroupHighlightColor());
 								g.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 								g.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
 							}
@@ -237,9 +237,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						}
 						else
 						{
-							if((globalMappingElement.getGlobalID()) == (expRun.getColorChooser().getHighlightColorMappingID()))
+							if((globalMappingElement.getGlobalID()) == (trial.getColorChooser().getHighlightColorMappingID()))
 							{
-								g.setColor(expRun.getColorChooser().getHighlightColor());
+								g.setColor(trial.getColorChooser().getHighlightColor());
 								g.drawRect(xCoord, (yCoord - barHeight), barHeight, barHeight);
 								g.drawRect(xCoord + 1, (yCoord - barHeight) + 1, barHeight - 2, barHeight - 2);
 							}
@@ -292,7 +292,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MLWP03");
+			jRacy.systemError(e, null, "MLWP03");
 		}
 		
 	}
@@ -315,9 +315,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					{
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						expRun.getColorChooser().setHighlightColorMappingID(tmpGlobalMappingElement.getGlobalID());
-						MappingDataWindow tmpRef = new MappingDataWindow(expRun, tmpGlobalMappingElement.getGlobalID(), expRun.getStaticMainWindow().getSMWData());
-						expRun.getSystemEvents().addObserver(tmpRef);
+						trial.getColorChooser().setHighlightColorMappingID(tmpGlobalMappingElement.getGlobalID());
+						MappingDataWindow tmpRef = new MappingDataWindow(trial, tmpGlobalMappingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData());
+						trial.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -328,9 +328,9 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					{
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 						//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-						expRun.getColorChooser().setUEHCMappingID(tmpGlobalMappingElement.getGlobalID());
-						UserEventWindow tmpRef = new UserEventWindow(expRun, tmpGlobalMappingElement.getGlobalID(), expRun.getStaticMainWindow().getSMWData());
-						expRun.getSystemEvents().addObserver(tmpRef);
+						trial.getColorChooser().setUEHCMappingID(tmpGlobalMappingElement.getGlobalID());
+						UserEventWindow tmpRef = new UserEventWindow(trial, tmpGlobalMappingElement.getGlobalID(), trial.getStaticMainWindow().getSMWData());
+						trial.getSystemEvents().addObserver(tmpRef);
 						tmpRef.show();
 					}
 				}
@@ -348,7 +348,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 						tmpGlobalMappingElement.setSpecificColor(tmpCol);
 						tmpGlobalMappingElement.setColorFlag(true);
 						
-						expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+						trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 					}
 				}
 				else if(arg.equals("Reset to Generic Color"))
@@ -359,7 +359,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					
 					tmpGlobalMappingElement.setColorFlag(false);
 					
-					expRun.getSystemEvents().updateRegisteredObjects("colorEvent");
+					trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 				else if(arg.equals("Show This Group Only"))
 				{	
@@ -367,12 +367,12 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					if(clickedOnObject instanceof GlobalMappingElement)
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 					
-					GlobalMapping tmpGM = expRun.getGlobalMapping();
+					GlobalMapping tmpGM = trial.getGlobalMapping();
 					tmpGM.setIsSelectedGroupOn(true);
 					tmpGM.setIsAllExceptGroupOn(false);
 					tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
 					
-					expRun.getSystemEvents().updateRegisteredObjects("dataEvent");
+					trial.getSystemEvents().updateRegisteredObjects("dataEvent");
 				}
 				else if(arg.equals("Show All Groups Except This One"))
 				{	
@@ -380,12 +380,12 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					if(clickedOnObject instanceof GlobalMappingElement)
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 					
-					GlobalMapping tmpGM = expRun.getGlobalMapping();
+					GlobalMapping tmpGM = trial.getGlobalMapping();
 					tmpGM.setIsSelectedGroupOn(true);
 					tmpGM.setIsAllExceptGroupOn(true);
 					tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
 					
-					expRun.getSystemEvents().updateRegisteredObjects("dataEvent");
+					trial.getSystemEvents().updateRegisteredObjects("dataEvent");
 				}
 				else if(arg.equals("Show All Groups"))
 				{	
@@ -393,18 +393,18 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					if(clickedOnObject instanceof GlobalMappingElement)
 						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
 					
-					GlobalMapping tmpGM = expRun.getGlobalMapping();
+					GlobalMapping tmpGM = trial.getGlobalMapping();
 					tmpGM.setIsSelectedGroupOn(false);
 					tmpGM.setIsAllExceptGroupOn(false);
 					tmpGM.setSelectedGroupID(-1);
 					
-					expRun.getSystemEvents().updateRegisteredObjects("dataEvent");
+					trial.getSystemEvents().updateRegisteredObjects("dataEvent");
 				}
 			}
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MLWP04");
+			jRacy.systemError(e, null, "MLWP04");
 		}
 	}
 	
@@ -447,16 +447,16 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 								
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((expRun.getColorChooser().getUEHCMappingID()) == -1)
+								if((trial.getColorChooser().getUEHCMappingID()) == -1)
 								{
-									expRun.getColorChooser().setUEHCMappingID(globalMappingElement.getGlobalID());
+									trial.getColorChooser().setUEHCMappingID(globalMappingElement.getGlobalID());
 								}
 								else
 								{
-									if(!((expRun.getColorChooser().getUEHCMappingID()) == (globalMappingElement.getGlobalID())))
-										expRun.getColorChooser().setUEHCMappingID(globalMappingElement.getGlobalID());
+									if(!((trial.getColorChooser().getUEHCMappingID()) == (globalMappingElement.getGlobalID())))
+										trial.getColorChooser().setUEHCMappingID(globalMappingElement.getGlobalID());
 									else
-										expRun.getColorChooser().setUEHCMappingID(-1);
+										trial.getColorChooser().setUEHCMappingID(-1);
 								}
 							}
 							else if(mappingSelection == 1)
@@ -464,32 +464,32 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 								
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((expRun.getColorChooser().getGHCMID()) == -1)
+								if((trial.getColorChooser().getGHCMID()) == -1)
 								{
-									expRun.getColorChooser().setGroupHighlightColorMappingID(globalMappingElement.getGlobalID());
+									trial.getColorChooser().setGroupHighlightColorMappingID(globalMappingElement.getGlobalID());
 								}
 								else
 								{
-									if(!((expRun.getColorChooser().getGHCMID()) == (globalMappingElement.getGlobalID())))
-										expRun.getColorChooser().setGroupHighlightColorMappingID(globalMappingElement.getGlobalID());
+									if(!((trial.getColorChooser().getGHCMID()) == (globalMappingElement.getGlobalID())))
+										trial.getColorChooser().setGroupHighlightColorMappingID(globalMappingElement.getGlobalID());
 									else
-										expRun.getColorChooser().setGroupHighlightColorMappingID(-1);
+										trial.getColorChooser().setGroupHighlightColorMappingID(-1);
 								}
 							}
 							else
 							{
 								//Want to set the clicked on mapping to the current highlight color or, if the one
 								//clicked on is already the current highlighted one, set it back to normal.
-								if((expRun.getColorChooser().getHighlightColorMappingID()) == -1)
+								if((trial.getColorChooser().getHighlightColorMappingID()) == -1)
 								{
-									expRun.getColorChooser().setHighlightColorMappingID(globalMappingElement.getGlobalID());
+									trial.getColorChooser().setHighlightColorMappingID(globalMappingElement.getGlobalID());
 								}
 								else
 								{
-									if(!((expRun.getColorChooser().getHighlightColorMappingID()) == (globalMappingElement.getGlobalID())))
-										expRun.getColorChooser().setHighlightColorMappingID(globalMappingElement.getGlobalID());
+									if(!((trial.getColorChooser().getHighlightColorMappingID()) == (globalMappingElement.getGlobalID())))
+										trial.getColorChooser().setHighlightColorMappingID(globalMappingElement.getGlobalID());
 									else
-										expRun.getColorChooser().setHighlightColorMappingID(-1);
+										trial.getColorChooser().setHighlightColorMappingID(-1);
 								}
 							}
 						}
@@ -510,7 +510,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MLWP05");
+			jRacy.systemError(e, null, "MLWP05");
 		}
 	}
 	
@@ -530,7 +530,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	//******************************
 	//Instance data.
 	//******************************
-	ExperimentRun expRun = null;
+	Trial trial = null;
 	Vector NameIDMapping;
 	int mappingSelection = -1;
 	int numberOfColors = 0;
