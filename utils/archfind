@@ -23,7 +23,7 @@ set SPECIAL=
 # Not everyone uses gcc.
 
 if ( ${?CCOM} == "0" ) then
-  setenv CCOM cc
+  set CCOM=cc
 endif
 
 set ARCH=`$CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'`
