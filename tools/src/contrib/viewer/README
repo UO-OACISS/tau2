@@ -1,0 +1,71 @@
+
+***************************************************************************************
+ 
+Performance Database Graphic User Interface and Performance Analysis Toolkit (viewer)
+
+***************************************************************************************
+
+1. Installation: 
+
+a. System requirement.
+
+In general, a modern UNIX-compatible platform should be able to run viewer.
+The following software packages are required for building viewer.
+
+ * viewer is one of three software components of performance database framework. The 
+   other two components are PerfDB and DMS. viewer is not able to work properly 
+   without these two components being installed. So before installation, please make
+   sure that you have correctly installed PerfDB and DMS.
+   
+ * viewer is written in Java.  It requires a JDK 1.4 or higher and ANT 1.5 or higher.
+   ANT is a tool for building Java-based packages. It can be downloaded from the ANT web 
+   site.
+ 	
+2. Compilation:
+
+In directory of viewer, where build.xml file is located, entering "ant" will compile
+all source files in src/ directory. After the compilation, java class files are generated and stored in classes/ directory, and a perfdbgui.jar file is created in jars/ directory.
+   
+
+3. Run:
+
+  In general, running viewer is as simple as:
+
+  java -cp dependent-jar-file-name src.GUI.MainWindow db-config-file-name
+
+  db-config-file-name is a database configuration file that is created when installing
+  PerfDB.  
+
+  There are six dependent jar files for viewer:
+  * postgresql.jar - PostgreSQL JDBC driver
+  * xerces.jar - xml parser
+  * perfdb.jar - performance database builder
+  * jargs.jar - command line parser
+  * dms.jar - performance database query API
+  * viewer.jar - viewer
+
+  A default location for these files is ../. directory. You can put them elsewhere
+  though, and indicate the location in java options. The demo script in bin/ directory
+  gives an example script of running viewer.    
+
+4. A quick tutorial of the toolkit
+
+  In main window of viewer, users are able to do following things:
+	
+  * load applications, experiments and trials. The functionality is available in 
+    'Database' menu.
+
+  * look at performance data. Various options are available in 'Options' menu, which 
+    provides different views of an execution. Select a trial node on the left side of 
+    the window before looking at its performance data. 
+
+  * compare trials/functions. First select all trials/functions to be compared, click
+   'Operations' menu, select 'Compare', and then choose 'Trial'/'Functions' menu. 
+
+  * scalability plots. First Select a group
+    of trials to be investigated, click 'Operations' menu, select 'Scalability', and then
+    choose a metric menu of interest.  A plot window will thereby pop up, 
+    displaying one or more performance data curves.  
+
+
+
