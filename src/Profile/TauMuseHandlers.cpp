@@ -37,6 +37,20 @@
 #endif //__BYTE_ORDER = __LITTLE_ENDIAN
 #endif //__BYTE_ORDER = __BIG_ENDIAN
 
+#ifndef bswap64_t
+#define swap_type(type,a,b) { type t=(a); (a)=(b); (b)=t; }
+
+int64_t bswap_64( int64_t n )
+{       
+  int8_t* p = (int8_t*)&n;
+  swap_type( int8_t, p[0], p[7] );
+  swap_type( int8_t, p[1], p[6] );
+  swap_type( int8_t, p[2], p[5] );
+  swap_type( int8_t, p[3], p[4] );
+  return n;             
+}                       
+#endif /* bswap64_t */  
+
 /*********************
  * Description	: Encode binary code for command create 
  * 		  which wil be sent to Muse server
