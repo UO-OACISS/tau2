@@ -97,6 +97,11 @@ JDKARCH                 = linux
 #PROFILECALLPATH#CALLPATH_O  = TauCallPath.o #ENDIF#
 
 #############################################
+# Python Binding OBJECTS
+#############################################
+#PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o #ENDIF#
+
+#############################################
 # DYNINST DEFAULT ARCH
 #############################################
 DYNINST_PLATFORM 	= $(PLATFORM) 
@@ -197,6 +202,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SGICOUNTERS#PROFILEOPT35      = -DSGI_HW_COUNTERS     #ENDIF#
 #EPILOG#PROFILEOPT36	       = -DTAU_EPILOG -I$(EPILOGDIR)/include	#ENDIF#
 #PROFILECALLPATH#PROFILEOPT36  = -DTAU_CALLPATH #ENDIF#
+#PYTHON#PROFILEOPT37  = -I$(PYTHON_INCDIR) #ENDIF#
 
 
 #FOR F90 MPI on SGI
@@ -287,7 +293,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT25) $(PROFILEOPT26) $(PROFILEOPT27) $(PROFILEOPT28) \
 	      $(PROFILEOPT29) $(PROFILEOPT30) $(PROFILEOPT31) $(PROFILEOPT32) \
 	      $(PROFILEOPT33) $(PROFILEOPT34) $(PROFILEOPT35) $(PROFILEOPT36) \
-              $(TRACEOPT)
+              $(PROFILEOPT37) $(TRACEOPT)
 
 ##############################################
 
