@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <mpi.h>
 
+static const int anz = 512;
 class C {
 public:
-  static const int anz = 512;
   C(int m, int p) : me(m), proc(p) {}
   void method() {
     int i;
