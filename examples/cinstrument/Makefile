@@ -23,7 +23,7 @@ PDTPARSE 	= $(PDTDIR)/$(PDTARCHDIR)/bin/cparse
 
 TAUINSTR 	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
-CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -w
+CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -w -UTAU_MPI
 
 LIBS 	      	= $(TAU_LIBS) $(LEXTRA1)
 
