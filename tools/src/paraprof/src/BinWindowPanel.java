@@ -156,9 +156,6 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    
 	    list = bWindow.getData();
 
-	    //Set the numberOfColors variable.
-	    numberOfColors = trial.getColorChooser().getNumberOfColors();
-	    
 	    //Check to see if selected groups only are being displayed.
 	    GlobalMapping tmpGM = trial.getGlobalMapping();
 	    

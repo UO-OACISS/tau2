@@ -11,9 +11,9 @@ Things to do:
 3)Try to bring the paintComponent/renderIt function in line with other schemes in ParaProf.
 4)Fix panel sizing to match the way other windows organize the computation.
 5)Don't let this window do total calculations. Want to off load that job to a more central
-  location.
+location.
 6)Investigate the code to find better a way of registering clicks and tooltips - looks a
-  bit messy at the moment.
+bit messy at the moment.
 7)Linked to the last point, do a bit of a code review.
 */
 
@@ -363,7 +363,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 		}
 		else if(arg.equals("Show Total User Event Statistics Windows")){
 		    StatWindow tmpRef = new StatWindow(trial, node, context,
-								     thread, sMWindow.getSMWData(), 2);
+						       thread, sMWindow.getSMWData(), 2);
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
@@ -377,7 +377,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    }
 	}
 	catch(Exception e){
-		ParaProf.systemError(e, null, "SMWP04");}
+	    ParaProf.systemError(e, null, "SMWP04");}
     }
     
     
@@ -784,12 +784,8 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    //End - Drawing the mean bar.
 	    //**********
 		
-		
 	    //Set the drawing color to the text color ... in this case, black.
 	    g2D.setColor(Color.black);
-		
-		
-		
 		
 	    //**********
 	    //Draw the thread data bars.
@@ -842,205 +838,104 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    //Now that we have the total, can begin drawing.
 			    colorCounter = 0;
 			    barXCoord = barXStart;
-			    if(!isSelectedGroupOn){
-				for(Enumeration e5 = threadDataList.elements(); e5.hasMoreElements() ;){
-				    //@@@@1
-				    sMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
-				    //@@@@2
-				    tmpDataValue = sMWThreadDataElement.getExclusiveValue();
-				    if(tmpDataValue > 0.0){
-					//Don't want to draw a bar if the value is zero.
-					//Now compute the length of the bar for this object.
-					//The default length for the bar shall be 200.
-					int xLength;
-					double tmpDouble;
-					tmpDouble = (tmpDataValue / tmpSum);
-					xLength = (int) (tmpDouble * defaultBarLength);
-					if(xLength > 2){
-					    //Only draw if there is something to draw.   
-					    if(barHeight > 2){
-						tmpColor = sMWThreadDataElement.getMappingColor();
-						g2D.setColor(tmpColor);
-						g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-						    
-						if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID())){ 
-						    highlighted = true;
-						    g2D.setColor(trial.getColorChooser().getHighlightColor());
-						    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-						    g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-						}
-						else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
-						    highlighted = true;
-						    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
-						    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-						    g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-						}
-						else{
-						    g2D.setColor(Color.black);
-						    if(highlighted){
-							//Manually draw in the lines for consistancy.
-							g2D.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
-							g2D.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
-							g2D.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
-							    
-							//g2D.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
-							highlighted = false;
-						    }
-						    else{
-							g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-						    }
-						}
-						    
-						//Set the draw coords.
-						if(instruction==0)
-						    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
-						    
-						//Update barXCoord.
-						barXCoord = (barXCoord + xLength);
+			    for(Enumeration e5 = threadDataList.elements(); e5.hasMoreElements() ;){
+				//@@@@1
+				sMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
+				//@@@@2
+				tmpDataValue = sMWThreadDataElement.getExclusiveValue();
+				if(tmpDataValue > 0.0){
+				    //Don't want to draw a bar if the value is zero.
+				    //Now compute the length of the bar for this object.
+				    //The default length for the bar shall be 200.
+				    int xLength;
+				    double tmpDouble;
+				    tmpDouble = (tmpDataValue / tmpSum);
+				    xLength = (int) (tmpDouble * defaultBarLength);
+				    if(xLength > 2){
+					//Only draw if there is something to draw.   
+					if(barHeight > 2){
+					    tmpColor = sMWThreadDataElement.getMappingColor();
+					    g2D.setColor(tmpColor);
+					    g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+					    
+					    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID())){ 
+						highlighted = true;
+						g2D.setColor(trial.getColorChooser().getHighlightColor());
+						g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+						g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+					    }
+					    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
+						highlighted = true;
+						g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
+						g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+						g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 					    }
 					    else{
-						//Now set the color values for drawing!
-						//Get the appropriate color.
-						if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
-						    g2D.setColor(trial.getColorChooser().getHighlightColor());
-						else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
-						    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
-						}
-						else{
-						    tmpColor = sMWThreadDataElement.getMappingColor();
-						    g2D.setColor(tmpColor);
-						}
-						    
-						g2D.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 						g2D.setColor(Color.black);
-						g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+						if(highlighted){
+						    //Manually draw in the lines for consistancy.
+						    g2D.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
+						    g2D.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
+						    g2D.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
 						    
-						//Set the draw coords.
-						if(instruction==0)
-						    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
-						    
-						//Update barXCoord.
-						barXCoord = (barXCoord + xLength);
-					    }
-						
-					}
-					    
-					//Still want to set the draw coords for this mapping, were it to be none zero.
-					//This aids in mouse click and tool tip events.
-					if(instruction==0)
-					    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
-					    
-				    }
-				    else{
-					//Still want to set the draw coords for this mapping, were it to be none zero.
-					//This aids in mouse click and tool tip events.
-					if(instruction==0)
-					    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
-				    }
-				    colorCounter = (colorCounter + 1) % numberOfColors;   //Want to cycle to the next color
-				    //whether we have drawn or not.
-				}
-			    }
-			    else{
-				for(Enumeration e5 = threadDataList.elements(); e5.hasMoreElements() ;){
-				    sMWThreadDataElement = (SMWThreadDataElement) e5.nextElement();
-				    tmpDataValue = sMWThreadDataElement.getExclusiveValue();
-				    if((tmpDataValue > 0.0) && (sMWThreadDataElement.isGroupMember(selectedGroupID))){
-					//Don't want to draw a bar if the
-					//value is zero or this group is
-					//not being displayed.
-					    
-					//Now compute the length of the bar for this object.
-					//The default length for the bar shall be 200.
-					int xLength;
-					double tmpDouble;
-					tmpDouble = (tmpDataValue / tmpSum);
-					xLength = (int) (tmpDouble * defaultBarLength);
-					if(xLength > 2){   //Only draw if there is something to draw.
-					    if(barHeight > 2){
-						tmpColor = sMWThreadDataElement.getMappingColor();
-						g2D.setColor(tmpColor);
-						g2D.fillRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-						    
-						if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID())){ 
-						    highlighted = true;
-						    g2D.setColor(trial.getColorChooser().getHighlightColor());
-						    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-						    g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-						}
-						else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
-						    highlighted = true;
-						    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
-						    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-						    g2D.drawRect(barXCoord + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+						    //g2D.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
+						    highlighted = false;
 						}
 						else{
-						    g2D.setColor(Color.black);
-						    if(highlighted){
-							//Manually draw in the lines for consistancy.
-							g2D.drawLine(barXCoord + 1, (yCoord - barHeight), barXCoord + 1 + xLength, (yCoord - barHeight));
-							g2D.drawLine(barXCoord + 1, yCoord, barXCoord + 1 + xLength, yCoord);
-							g2D.drawLine(barXCoord + 1 + xLength, (yCoord - barHeight), barXCoord + 1 + xLength, yCoord);
-							    
-							//g2D.drawRect(barXCoord + 1, (yCoord - barHeight), xLength, barHeight);
-							highlighted = false;
-						    }
-						    else{
-							g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-						    }
+						    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 						}
-						    
-						//Set the draw coords.
-						if(instruction==0)
-						    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
-						    
-						//Update barXCoord.
-						barXCoord = (barXCoord + xLength);
+					    }
+					    
+					    //Set the draw coords.
+					    if(instruction==0)
+						sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+					    
+					    //Update barXCoord.
+					    barXCoord = (barXCoord + xLength);
+					}
+					else{
+					    //Now set the color values for drawing!
+					    //Get the appropriate color.
+					    if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
+						g2D.setColor(trial.getColorChooser().getHighlightColor());
+					    else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
+						g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 					    }
 					    else{
-						//Now set the color values for drawing!
-						//Get the appropriate color.
-						if((sMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID()))
-						    g2D.setColor(trial.getColorChooser().getHighlightColor());
-						else if((sMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
-						    g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
-						}
-						else{
-						    tmpColor = sMWThreadDataElement.getMappingColor();
-						    g2D.setColor(tmpColor);
-						}
-						    
-						g2D.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-						g2D.setColor(Color.black);
-						g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
-						    
-						//Set the draw coords.
-						if(instruction==0)
-						    sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
-						    
-						//Update barXCoord.
-						barXCoord = (barXCoord + xLength);
+						tmpColor = sMWThreadDataElement.getMappingColor();
+						g2D.setColor(tmpColor);
 					    }
-						
+					    
+					    g2D.fillRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+					    g2D.setColor(Color.black);
+					    g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
+					    
+					    //Set the draw coords.
+					    if(instruction==0)
+						sMWThreadDataElement.setDrawCoords(barXCoord, (barXCoord + xLength), (yCoord - barHeight), yCoord);
+					    
+					    //Update barXCoord.
+					    barXCoord = (barXCoord + xLength);
 					}
-					    
-					//Still want to set the draw coords for this mapping, were it to be none zero.
-					//This aids in mouse click and tool tip events.
-					if(instruction==0)
-					    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
-					    
+					
 				    }
-				    else{
-					//Still want to set the draw coords for this mapping, were it to be none zero.
-					//This aids in mouse click and tool tip events.
-					if(instruction==0)
-					    sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
-				    }
-				    colorCounter = (colorCounter + 1) % numberOfColors;   //Want to cycle to the next color
-				    //whether we have drawn or not.
+				    
+				    //Still want to set the draw coords for this mapping, were it to be none zero.
+				    //This aids in mouse click and tool tip events.
+				    if(instruction==0)
+					sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+				    
 				}
+				else{
+				    //Still want to set the draw coords for this mapping, were it to be none zero.
+				    //This aids in mouse click and tool tip events.
+				    if(instruction==0)
+					sMWThreadDataElement.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight), yCoord);
+				}
+				colorCounter = (colorCounter + 1) % numberOfColors;   //Want to cycle to the next color
+				//whether we have drawn or not.
 			    }
-				
+			    
 			    //We have reached the end of the cycle for this thread.  However, we might be less
 			    //than the max length of the bar.  Therefore, fill in the rest of the bar with the
 			    //misc. mapping colour.
@@ -1050,7 +945,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 				g2D.setColor(Color.black);
 				g2D.drawRect(barXCoord, (yCoord - barHeight), ((defaultBarLength + barXStart) - barXCoord), barHeight);
 			    }
-				
+			    
 			    //Reset the drawing color to the text color ... in this case, black.
 			    g2D.setColor(Color.black);
 			}//End yBeg, yEnd check.
@@ -1144,7 +1039,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     private ParaProfTrial trial = null;
     StaticMainWindow sMWindow = null;
     private Vector[] list = {new Vector(), new Vector()}; //list[0]:The result of a call to getSMWGeneralData in StaticMainWindowData
-                                           //list[1]:The result of a call to getMeanData in StaticMainWindowData
+    //list[1]:The result of a call to getMeanData in StaticMainWindowData
   
     int xPanelSize = 600;
     int yPanelSize = 300;

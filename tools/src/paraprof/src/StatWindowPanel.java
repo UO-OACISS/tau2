@@ -369,6 +369,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 			switch(windowType){
 			case 0:
 			    tmpString = sMWThreadDataElement.getMeanTotalStatString(sWindow.units());
+			    break;
 			case 1:
 			    tmpString = sMWThreadDataElement.getTStatString(sWindow.units());
 			    break;
