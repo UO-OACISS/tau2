@@ -12,7 +12,7 @@ public class ParaProfUtils {
         PageFormat selectedFormat = job.pageDialog(defaultFormat);
         if (defaultFormat != selectedFormat) { // only proceed if the user did not select cancel
             job.setPrintable(printable, selectedFormat);
-            if (job.getPrintService() != null) {
+            //if (job.getPrintService() != null) {
                 if (job.printDialog()) { // only proceed if the user did not select cancel
                     try {
                         job.print();
@@ -20,7 +20,7 @@ public class ParaProfUtils {
                         ParaProfUtils.handleException(e);
                     }
                 }
-            }
+            //}
         }
 
     }
