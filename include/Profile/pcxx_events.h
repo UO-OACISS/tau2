@@ -90,8 +90,10 @@ extern int aa_poll_count; /* For Ariadne - defined in tulip/mpi/src/KernelCom.c 
           long int           ev;    /* -- event id        -- */
           short unsigned int nid;   /* -- node id         -- */
           short unsigned int tid;   /* -- thread id       -- */
-          long int           par;   /* -- event parameter -- */
-          unsigned long int  ti;    /* -- time [us]?      -- */
+          long long           par;   /* -- event parameter -- */
+/**** CHANGED long int to long long for 8 bytes. *******/
+          unsigned long long  ti;    /* -- time [us]?      -- */
+/**** CHANGED unsigned long int to unsigned long long for 8 bytes. *******/
         } PCXX_EV;
 
         /* -- pointer to next free element of event record buffer ---- */
@@ -109,21 +111,21 @@ extern int aa_poll_count; /* For Ariadne - defined in tulip/mpi/src/KernelCom.c 
              if (pcxx_ev_class&(c)) pcxx_LongEvent(e,l,p)
 #     ifdef __cplusplus
         void pcxx_EvInit (char *n);
-        void pcxx_Event (long int e, long int p);
+        void pcxx_Event (long int e, long long p);
         void pcxx_LongEvent (long int e, int l, char *p);
         void pcxx_EvClose ();
         void pcxx_EvFlush ();
 	/* New tracing interface */
 	void TraceEvInit(int tid);
-        void TraceEventOnly(long int ev,long int par, int tid);
+        void TraceEventOnly(long int ev,long long par, int tid);
         void TraceEvFlush(int tid);
- 	void TraceEvent(long int ev, long int par, int tid);
+ 	void TraceEvent(long int ev, long long par, int tid);
 	void TraceEvClose(int tid);
 
         }
 #     else
         extern void pcxx_EvInit(char *n);
-        extern void pcxx_Event(long int e, long int p);
+        extern void pcxx_Event(long int e, long long p);
         extern void pcxx_LongEvent(long int e, int l, char *p);
         extern void pcxx_EvClose ();
         extern void pcxx_EvFlush ();
