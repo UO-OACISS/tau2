@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
@@ -65,10 +66,10 @@
 #define TAU_DB_DUMP()                           Tau_dump();
 #define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
 #define TAU_DB_PURGE()                          Tau_purge();
-#define TAU_GET_FUNC_NAMES(functionList, num)   Tau_the_function_list(functionList, num);
+#define TAU_GET_FUNC_NAMES(functionList, num)   Tau_the_function_list(&functionList, &num);
 #define TAU_DUMP_FUNC_NAMES()                   Tau_dump_function_names();
 #define TAU_GET_COUNTER_NAMES(counterList, num) Tau_the_counter_names(counterList, num);
-#define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8) Tau_get_function_values(v1,v2,v3,v4,v5,v6,v7,v8);
+#define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8) Tau_get_function_values(v1,v2,&v3,&v4,&v5,&v6,&v7,&v8);
 #define TAU_DUMP_FUNC_VALS(functionList, num)   Tau_dump_function_values(functionList, num);
 #define TAU_DUMP_FUNC_VALS_incr(functionList, num)  Tau_dump_function_values_incr(functionList, num);
 
@@ -125,14 +126,14 @@ extern void Tau_callstack(void);
 extern int Tau_dump(void);
 extern int Tau_dump_incr(void);
 extern void Tau_purge(void);
-extern void Tau_theFunctionList(const char **functionList, int num);
+extern void Tau_theFunctionList(const char ***functionList, int *num);
 extern void Tau_dump_function_names();
 extern void Tau_the_counter_names(const char **counterList, int num);
 extern void Tau_get_function_values(const char **inFuncs, int numOfFuncs,
-				    double **counterExclusiveValues,
-				    double **counterInclusiveValues,
-				    int *numOfCalls, int *numOfSubRoutines,
-				    const char **counterNames, int numOfCounters);
+				    double ***counterExclusiveValues,
+				    double ***counterInclusiveValues,
+				    int **numOfCalls, int **numOfSubRoutines,
+				    const char ***counterNames, int *numOfCounters);
 extern void Tau_dump_function_values(const char **functionList, int num);
 extern void Tau_dump_function_values_incr(const char **functionList, int num);
 extern void Tau_register_thread();
@@ -224,8 +225,8 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 2002/11/08 02:25:06 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.21 2002/11/08 02:25:06 sameer Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: bertie $
+ * $Revision: 1.22 $   $Date: 2002/11/28 00:54:03 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.22 2002/11/28 00:54:03 bertie Exp $
  ***************************************************************************/
 
