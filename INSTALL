@@ -381,7 +381,99 @@ III) Software Requirements :
    and TAU_DEFS appropriately in their makefiles. See (examples/instrument
    Makefile)  
 
-7. Using TAU with POOMA
+7. Examples of configuration and usage on the IBM SP
+        
+     % cd tau-2.x
+     Example I:
+     Profiling a Multithreaded C++ program (compiled with xlC)
+     
+     % configure -pthread
+     % make clean; make install
+     % set path=($path <TAU DIRECTORY>/rs6000/bin)
+     % cd examples/threads
+     % make; 
+     % hello
+     
+       It has two threads: the profiling data should show functions executing on
+       each thread
+     % pprof
+       This is the text based profile browser.
+     % racy  
+       This is the gui - type hello.pmf and click on "Create" in the project 
+       management window.
+     
+     Example II:
+     Profiling an MPI program using the TAU MPI wrapper library.
+     
+     % configure -mpiinc=/usr/lpp/ppe.poe/include -mpilib=/usr/lpp/ppe.poe/lib
+     % make clean; make install
+     % cd examples/pi
+     % make CXX=mpCC
+       It is very important to compile the application with the mp version of the
+       compiler for MPI jobs. e.g., mpKCC, mpCC, etc.
+     % poe cpi -procs 4 -rmpool 2
+     % pprof or racy
+       Note: Using the MPI Profiling Interface TAU can generate profile data for 
+       all MPI routines as well.
+     
+     Example III:
+     Profiling an application written in C++ (compiled with KCC) using automatic 
+     source code instrumentation and using CPU time instead of (the default) 
+     wallclock time.
+     [ For KCC you'll need % module load KCC]
+     Download PDT (Program Database Toolkit) from http://www.acl.lanl.gov/pdtoolkit
+     
+     % cd pdtoolkit-1.x
+     % configure 
+     % make ; make install
+       This takes a while...
+     
+     Next configure TAU to use PDT for automatic source code instrumentation.
+     % cd tau-2.x
+     % configure -c++=KCC -cc=cc -pdt=<pdtoolkit-1.x root directory> -CPUTIME
+     		e.g.,   ... -pdt=/u1/sameer/pdtoolkit-1.3 ...
+     % make clean; make install
+     % cd examples/autoinstrument
+     % make 
+       This takes klargest.cpp, an uninstrumented file, parses it (PDT), and 
+       invokes tau_instrumentor, which takes the PDT output and generates an 
+       instrumented C++ file, which when linked with the TAU library, generates
+       performance date when executed.
+     % klargest
+     % pprof
+     % racy
+     
+     Example IV:
+     Tracing an MPI program (compiled with KCC) and displaying the traces in 
+     Vampir.
+     
+     % configure -c++=KCC -cc=cc -mpiinc=/usr/lpp/ppe.poe/include 
+       	  -mpilib=/usr/lpp/ppe.poe/lib -TRACE
+     % make clean; make install
+     % cd examples/pi
+     % make CXX=mpKCC
+     % poe cpi -procs 4 -rmpool 2 2000
+       Calculate the value of pi using 2000 iterations. 
+     
+     % tau_merge tautrace.*.trc cpi.trc
+     % tau_convert -vampir cpi.trc tau.edf cpi.pv
+     
+     % vampir cpi.pv 
+     
+     In the Menu, choose Preferences -> Color Styles -> Activities and choose a 
+     distinct color for each activity. 
+     
+     Example V:
+     Profiling an OpenMPI (OpenMP + MPI) C program using xlC.
+     % configure -openmp -mpiinc=/usr/lpp/ppe.poe/include 
+         -mpilib=/usr/lpp/ppe.poe/lib  
+     % cd examples/openmpi
+     % make CXX=mpCC_r CC=mpcc_r
+     % setenv OMP_NUM_THREADS 2
+     % poe stommel -procs 2 -rmpool 2 
+     % pprof
+   
+8. Using TAU with POOMA
    Set the environment variable TAUDIR to point to the directory where TAU is
    installed. Follow the following procedure.
 
