@@ -36,7 +36,7 @@
 
 #include <Profile/ProfileGroups.h>
 
-#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (_OPENMP))
+#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP))
 #define TAU_MAX_THREADS 128
 #else
 #define TAU_MAX_THREADS 1
@@ -135,7 +135,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: tjaqua $
- * $Revision: 1.30 $   $Date: 2001/02/16 23:54:15 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.30 2001/02/16 23:54:15 tjaqua Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.31 $   $Date: 2001/03/08 23:52:01 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.31 2001/03/08 23:52:01 sameer Exp $ 
  ***************************************************************************/

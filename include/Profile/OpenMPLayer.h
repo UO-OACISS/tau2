@@ -36,7 +36,7 @@
 // This class is used for supporting OpenMP Threads in RtsLayer class.
 //////////////////////////////////////////////////////////////////////
 
-#ifdef _OPENMP
+#ifdef TAU_OPENMP
 extern "C" {
 #include <omp.h>
 }
@@ -59,7 +59,7 @@ class OpenMPLayer
 	static omp_lock_t tauDBmutex;  // to protect TheFunctionDB
 	
 };
-#endif // _OPENMP
+#endif // TAU_OPENMP
 
 #endif // _TAU_OPENMP_LAYER_H_
 
@@ -67,8 +67,8 @@ class OpenMPLayer
 
 /***************************************************************************
  * $RCSfile: OpenMPLayer.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2000/06/09 22:09:16 $
- * POOMA_VERSION_ID: $Id: OpenMPLayer.h,v 1.1 2000/06/09 22:09:16 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2001/03/08 23:52:01 $
+ * POOMA_VERSION_ID: $Id: OpenMPLayer.h,v 1.2 2001/03/08 23:52:01 sameer Exp $
  ***************************************************************************/
 
 
