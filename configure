@@ -1645,6 +1645,10 @@ case $machine in
 		fixmakeargs="HPGNU $fixmakeargs"
 	fi
 
+	if [ $pdt_cxx_compiler = aCC ]
+  	then
+		fixmakeargs="PDTHPACC $fixmakeargs"
+	fi
 
 # Check for Convex SPP enviroment
 	if [ $detectxdev = cnxspp ]
@@ -1680,6 +1684,10 @@ case $machine in
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs"
 	fixmakeargs="COMPAQ_ALPHA $fixmakeargs"
+        if [ $pdt_cxx_compiler = cxx ]
+        then
+          fixmakeargs="$fixmakeargs PDTALPHACXX"
+        fi
 	;;
 
      sgi4k | sgi8k | sgi32 | sgin32 | sgi64)

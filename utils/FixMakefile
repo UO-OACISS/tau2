@@ -375,6 +375,14 @@ fi
 	echo NOTE: Using a different architecture/compiler dir for PDT 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PDTALPHACXX)
+	echo NOTE: Using -D__USE_STD_IOSTREAM option for tau_instrumentor
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PDTHPACC)
+	echo NOTE: Using -AA option for tau_instrumentor
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      ENABLE32BIT)
 	echo NOTE: Using -32 flag for the C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

@@ -50,8 +50,7 @@ LEXTRA =
 #USE_INTELCXX#MERGE_CXX_OPT = -x c++ #ENDIF#
 #USE_NECCXX#CEXTRA = -DTAU_DOT_H_LESS_HEADERS -DTAU_NEC -Xp #ENDIF#
 #CM5#CEXTRA = -D__CM5__#ENDIF#
-#SGIMP#CEXTRA = -LANG:std -D__SGIMP__#ENDIF#
-#PDTSGICC#CEXTRA = -LANG:std -D__SGIMP__#ENDIF#
+#SGICC#CEXTRA = -LANG:std -D__SGIMP__#ENDIF#
 #PCXX#RUNTIME1 = pcxx_merge#ENDIF#
 #PCXX#RUNTIME2 = pcxx_convert#ENDIF#
 #PCXX#RUNTIME3 = pcxx_dump#ENDIF#
@@ -84,6 +83,12 @@ CWARNING	= $(WARNINGSOPT)
 # Do we use a different compiler for PDT based tau_instrumentor?
 PDT_CXX_COMP = $(CXX)
 #PDTCXX#PDT_CXX_COMP = $(PDT_CXX) $(ABI) $(ISA) #ENDIF#
+
+# Different compilation flags for PDT_CXX
+PDT_CFLAGS = $(CFLAGS)
+#PDTSGICC#PDT_CFLAGS = -LANG:std -D__SGIMP__#ENDIF#
+#PDTALPHACXX#PDT_CFLAGS = -x c++ -D__USE_STD_IOSTREAM #ENDIF#
+#PDTHPACC#PDT_CFLAGS = -AA #ENDIF#
 
 SAGE1DIR=
 INCLUDEPATH = $(SAGE1DIR)/lib/include
@@ -148,10 +153,10 @@ tau_instrumentor: tau_instrumentor.o tau_selective.o $(PDTDIR)/$(PDTARCHDIR)/lib
 		$(PDT_CXX_COMP) $(CFLAGS) tau_instrumentor.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
 tau_instrumentor.o: tau_instrumentor.cpp 
-		$(PDT_CXX_COMP) $(CFLAGS) -I$(PDTDIR)/include -c tau_instrumentor.cpp
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_instrumentor.cpp
 
 tau_selective.o: tau_selective.cpp 
-		$(PDT_CXX_COMP) $(CFLAGS) -c tau_selective.cpp
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -c tau_selective.cpp
 
 tau_run: 	tau_run.o tau_selective.o  
 		$(CXX) $(CFLAGS) tau_run.o tau_selective.o -o $@ $(DYNLIBS) $(LEXTRA) 
