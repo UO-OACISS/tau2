@@ -1,0 +1,14 @@
+This example shows the use of PAPI Hardware Performance Counters API with 
+pthreads and TAU. It has been tested under Linux. 
+
+% setenv PAPI_EVENT PAPI_FP_INS
+% make; simple
+% pprof
+
+For 50x50 matrix multiplication, we'd expect 50^3*2 (ax+b is one operation 
+on Intel) floating point operations in each multiply loop on each thread. There
+are two ways to multiply the matrices. 
+
+If you increase the SIZE, remember that it may exceed the default stack size 
+set on your machine (esp. under Linux) (see limit). 
+
