@@ -52,7 +52,11 @@ TAU Configuration Utility
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
 -c++=<compiler>  ............................ specify the C++ compiler.
+       options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++].
 -cc=<compiler> ................................ specify the C compiler.
+                                  options [cc|gcc|KCC|pgcc|guidec|xlc].
+-fortran=<compiler> ..................... specify the Fortran compiler.
+ options [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|kai].
 -useropt='<parameters>' ............... list of commandline parameters.
 -pthread .................................. Use pthread thread package.
 -sproc .................................. Use SGI sproc thread package.
@@ -73,8 +77,9 @@ Usage: configure [OPTIONS]
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILESTATS .................. Enable standard deviation calculation.
--PROFILECOUNTERS .... Use Hardware Performance Counters (default time).
+-MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
+-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time.
 -CPUTIME .......... Use usertime+system time instead of wallclock time.
 -PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi.
 -PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation.
@@ -102,13 +107,21 @@ The following  command-line options are available to configure:
 -c++=<C++ compiler>
    
    Specifies the name of the C++ compiler. Supported  C++ compilers include  
-   KCC (from KAI), CC,  g++ (from GNU), FCC (from Fujitsu) and pgCC (from PGI). 
+   KCC (from KAI/Intel), CC,  g++ (from GNU), FCC (from Fujitsu), xlC(from IBM),
+   guidec++ (from KAI/Intel), aCC (from HP), c++ (from Apple), and pgCC 
+   (from PGI). 
    
 -cc=<C Compiler>
    
    Specifies the name of the C compiler. Supported C compilers include cc, 
-   gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu) and KCC (from KAI).
+   gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu), xlc (from IBM), and 
+   KCC (from KAI/Intel).
    
+-fortran=<Fortran Compiler>
+   
+   Specifies the name of the Fortran90 compiler. Valid options are:
+   gnu, sgi, ibm, ibm64, hp, cray, pgi, absoft, fujitsu, sun, compaq, and kai.
+
 -pthread
    
    Specifies pthread as the thread package to be used. In the default mode, no 
@@ -215,6 +228,12 @@ The following  command-line options are available to configure:
    using the SGI R10000 perfex counter access interface. The use of this option 
    is deprecated in favor of the -pcl=<dir> and -papi=<dir> options described 
    above. 
+
+-MULTIPLECOUNTERS
+   
+   Allows TAU to track more than one quantity (multiple hardware counters, CPU
+   time, wallclock time, etc.) Configure with other options such as -papi=<dir>,
+   -pcl=<dir>, -LINUXTIMERS, -SGITIMERS, -CPUTIME, -PAPIVIRTUAL, etc. 
    
 -SGITIMERS
    
@@ -391,8 +410,9 @@ II) Platforms :
         g) Compaq Alpha Linux clusters with g++.
 	i) Microsoft Windows. Tested with MS Visual C++ v6.0.
 	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
-	k) PowerPC Linux with g++
+	k) PowerPC Linux with g++.
 	l) IA-64 Linux with g++ and SGI Pro64 compilers.
+	m) Apple OS X (Darwin) with c++.
 	   
 
    TAU may work with minor modifications on other platforms.
@@ -400,7 +420,10 @@ II) Platforms :
 III) Software Requirements :
    a) Tcl/Tk
    TAU's GUI racy needs Tcl 7.4/Tk 4.0 or better. The default is 8.0. 
-   Tcl/Tk can be downloaded from http://www.scriptics.com 
+   Tcl/Tk can be downloaded from http://www.scriptics.com. 
+   NOTE: Tcl/Tk is only required for running the profile browser racy. The
+   current version of TAU supports the new Java based jracy profile browser that
+   replaces the Tcl/Tk based racy. 
    
    b) xauth
    The display needs to be secure. xhost+ should not be used. Xauth style
@@ -420,7 +443,7 @@ III) Software Requirements :
    TAU provides a makefile stub file which is placed in the installation
    directory <prefix>/<arch>/lib/Makefile.tau[-optionlist]. Users need to 
    include this makefile and use the make variables TAU_INCLUDE TAU_LIBS
-   and TAU_DEFS appropriately in their makefiles. See (examples/instrument
+   and TAU_DEFS appropriately in their makefiles. See (examples/instrument/
    Makefile)  
 
 7. Examples of configuration and usage on the IBM SP
