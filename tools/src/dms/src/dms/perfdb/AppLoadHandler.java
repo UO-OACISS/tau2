@@ -129,6 +129,8 @@ public void endElement(String url, String name, String qname) {
 		    buf.delete(0, buf.toString().length());
 			if (getDB().getDBType().compareTo("mysql") == 0)
 		    	buf.append("select LAST_INSERT_ID();");
+			if (getDB().getDBType().compareTo("db2") == 0)
+		    	buf.append("select IDENTITY_VAL_LOCAL() from application ");
 			else
 		    	buf.append("select currval('application_id_seq');");
 		    appid = getDB().getDataItem(buf.toString()); 

@@ -36,3 +36,10 @@ javadoc: ./src/dms/dss/*.java ./src/dms/dss/package.html
 	javadoc -d ./doc -classpath ./classes ./src/dms/dss/*.java	
 
 remake: clean all
+
+simple.db2: ./src/examples/SimpleExample.class
+	./src/examples/testSimpleExample.db2
+
+buildtest.db2: src/examples/TestPerfDBSession.class
+	src/examples/testBuild.db2
+

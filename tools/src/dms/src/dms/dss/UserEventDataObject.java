@@ -18,7 +18,7 @@ import java.util.Vector;
  * the node, context and thread that identify the location, and the data collected for this
  * location, such as sample count, maximum value, minimum value, mean value and standard deviation.  
  *
- * <P>CVS $Id: UserEventDataObject.java,v 1.4 2004/04/02 23:28:18 khuck Exp $</P>
+ * <P>CVS $Id: UserEventDataObject.java,v 1.5 2004/04/07 17:36:58 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -247,7 +247,7 @@ public class UserEventDataObject {
 		Vector userEventData = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct p.id, p.user_event, p.node, ");
+		buf.append("select p.id, p.user_event, p.node, ");
 		buf.append("p.context, p.thread, p.sample_count, ");
 		buf.append("p.maximum_value, p.minimum_value, p.mean_value, ");
 		buf.append("p.standard_deviation, u.trial ");

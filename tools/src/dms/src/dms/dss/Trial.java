@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.7 2004/04/06 18:57:40 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.8 2004/04/07 17:36:58 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -311,7 +311,7 @@ public class Trial {
     private void getTrialMetrics(DB db) {
 	// create a string to hit the database
 	StringBuffer buf = new StringBuffer();
-	buf.append("select distinct id, name ");
+	buf.append("select id, name ");
 	buf.append("from metric ");
 	buf.append("where trial = ");
 	buf.append(getID());
@@ -340,7 +340,7 @@ public class Trial {
 	Vector trials = new Vector();
 	// create a string to hit the database
 	StringBuffer buf = new StringBuffer();
-	buf.append("select distinct t.id, t.experiment, e.application, ");
+	buf.append("select t.id, t.experiment, e.application, ");
 	buf.append("t.time, t.problem_definition, t.node_count, ");
 	buf.append("t.contexts_per_node, t.threads_per_context, ");
 	buf.append("t.name, t.userdata ");
@@ -400,7 +400,9 @@ public class Trial {
 	    statement.executeUpdate();
 	    String tmpStr = new String();
 	    if (db.getDBType().compareTo("mysql") == 0)
-		tmpStr = "select LAST_INSERT_ID();";
+			tmpStr = "select LAST_INSERT_ID();";
+		if (db.getDBType().compareTo("db2") == 0)
+			tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
 	    else
 		tmpStr = "select currval('trial_id_seq');";
 	    newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
@@ -418,6 +420,8 @@ public class Trial {
 			tmpStr = new String();
 			if (db.getDBType().compareTo("mysql") == 0)
 				tmpStr = "select LAST_INSERT_ID();";
+			if (db.getDBType().compareTo("db2") == 0)
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
 			else
 				tmpStr = "select currval('metric_id_seq');";
 			metric.setID(Integer.parseInt(db.getDataItem(tmpStr)));
@@ -447,6 +451,8 @@ public class Trial {
 					String tmpStr = new String();
 					if (db.getDBType().compareTo("mysql") == 0)
 						tmpStr = "select LAST_INSERT_ID();";
+					if (db.getDBType().compareTo("db2") == 0)
+						tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
 					else
 						tmpStr = "select currval('metric_id_seq');";
 					metric.setID(Integer.parseInt(db.getDataItem(tmpStr)));

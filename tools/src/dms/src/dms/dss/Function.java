@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.6 2004/04/06 22:26:44 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.7 2004/04/07 17:36:57 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -199,7 +199,7 @@ public class Function {
 		Vector funs = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct id, name, group_name, trial ");
+		buf.append("select id, name, group_name, trial ");
 		buf.append("from function ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
@@ -238,6 +238,8 @@ public class Function {
 				String tmpStr = new String();
 				if (db.getDBType().compareTo("mysql") == 0)
 					tmpStr = "select LAST_INSERT_ID();";
+				if (db.getDBType().compareTo("db2") == 0)
+					tmpStr = "select IDENTITY_VAL_LOCAL() FROM function";
 				else
 					tmpStr = "select currval('function_id_seq');";
 				newFunctionID = Integer.parseInt(db.getDataItem(tmpStr));

@@ -24,7 +24,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.6 2004/04/06 22:26:44 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.7 2004/04/07 17:36:57 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -486,7 +486,6 @@ public class FunctionDataObject extends Object {
 					statement.setInt(1, functionIndexID);
 					statement.setInt(2, metric.getID());
 					statement.setDouble(3, getInclusivePercentage(i));
-					// System.out.println("\nInclusive(" + i + "): " + getInclusivePercentage(i));
 					statement.setDouble(4, getInclusive(i));
 					statement.setDouble(5, getExclusivePercentage(i));
 					statement.setDouble(6, getExclusive(i));

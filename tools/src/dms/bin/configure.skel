@@ -4,7 +4,7 @@ TAUROOT=@TAUROOTDIR@
 PERFDB_HOME=${TAUROOT}/tools/src/dms
 PERFDB_JAR=${PERFDB_HOME}/dms.jar
 XMLSAX_JAR=${TAUROOT}/tools/src/contrib/xerces.jar
-JDBC_JAR=${TAUROOT}/tools/src/contrib/postgresql.jar
+JDBC_JAR=${TAUROOT}/tools/src/contrib/db2.jar
 JARGS_JAR=${TAUROOT}/tools/src/contrib/jargs.jar
 
 if [ "x$TAUROOT" = "x" ] 

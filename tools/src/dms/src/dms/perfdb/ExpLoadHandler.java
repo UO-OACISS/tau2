@@ -207,7 +207,8 @@ public void endElement(String url, String name, String qname) {
 	    StringBuffer buf = new StringBuffer();
 	    buf.append("select id from  ");
 	    buf.append(EXP_TABLE);
-	    buf.append("  where name='" + this.name + "' and application='" + application + "'; ");
+	    buf.append("  where name like '" + this.name + "' and application = " + application + "; ");
+		// System.out.println(buf.toString());
 	    if (getDB().getDataItem(buf.toString()) == null){
 
 	    	buf = new StringBuffer();
@@ -254,6 +255,8 @@ public void endElement(String url, String name, String qname) {
 		    	buf.delete(0, buf.toString().length());
 				if (getDB().getDBType().compareTo("mysql") == 0)
 		    		buf.append("select LAST_INSERT_ID();");
+				if (getDB().getDBType().compareTo("db2") == 0)
+		    		buf.append("select IDENTITY_VAL_LOCAL() from experiment ");
 				else
 		    		buf.append("select currval('experiment_id_seq');");
 		    	id = getDB().getDataItem(buf.toString()); 

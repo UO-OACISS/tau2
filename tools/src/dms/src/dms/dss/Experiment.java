@@ -14,7 +14,7 @@ import java.util.Vector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.1 2004/03/27 01:02:55 khuck Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.2 2004/04/07 17:36:57 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -606,7 +606,7 @@ public class Experiment {
 		Vector experiments = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct id, application, name, system_name, ");
+		buf.append("select id, application, name, system_name, ");
 		buf.append("system_machine_type, system_arch, system_os, ");
 		buf.append("system_memory_size, system_processor_amt, ");
 		buf.append("system_l1_cache_size, system_l2_cache_size, ");
@@ -706,6 +706,8 @@ public class Experiment {
 			String tmpStr = new String();
 			if (db.getDBType().compareTo("mysql") == 0)
 				tmpStr = "select LAST_INSERT_ID();";
+			if (db.getDBType().compareTo("db2") == 0)
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
 			else
 				tmpStr = "select currval('experiment_id_seq;);";
 			experimentID = Integer.parseInt(db.getDataItem(tmpStr));

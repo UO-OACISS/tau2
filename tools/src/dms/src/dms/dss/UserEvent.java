@@ -17,7 +17,7 @@ import java.util.Vector;
  * A user event has particular information, including the name of the user event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: UserEvent.java,v 1.2 2004/03/30 17:56:31 khuck Exp $</P>
+ * <P>CVS $Id: UserEvent.java,v 1.3 2004/04/07 17:36:58 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -161,7 +161,7 @@ public class UserEvent {
 		Vector userEvents = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct u.id, u.trial, u.name, ");
+		buf.append("select u.id, u.trial, u.name, ");
 		buf.append("u.group_name ");
 		buf.append("from user_event u inner join trial t on u.trial = t.id ");
 		buf.append("inner join experiment e on t.experiment = e.id ");
@@ -201,6 +201,8 @@ public class UserEvent {
 			String tmpStr = new String();
 			if (db.getDBType().compareTo("mysql") == 0)
 				tmpStr = "select LAST_INSERT_ID();";
+			if (db.getDBType().compareTo("db2") == 0)
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM user_event";
 			else
 				tmpStr = "select currval('user_event_id_seq');";
 			newUserEventID = Integer.parseInt(db.getDataItem(tmpStr));

@@ -13,7 +13,7 @@ import java.util.Vector;
  * an application from which the TAU performance data has been generated.
  * An application has one or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.1 2004/03/27 01:02:54 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.2 2004/04/07 17:36:57 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since 0.1
@@ -226,7 +226,7 @@ public class Application {
 		Vector applications = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct * from application ");
+		buf.append("select * from application ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
 
@@ -279,8 +279,10 @@ public class Application {
 			String tmpStr = new String();
 			if (db.getDBType().compareTo("mysql") == 0)
 				tmpStr = "select LAST_INSERT_ID();";
-			else
-				tmpStr = "select currval('application_id_seq;);";
+			if (db.getDBType().compareTo("db2") == 0)
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
+			else // postgresql
+				tmpStr = "select currval('application_id_seq');";
 			applicationID = Integer.parseInt(db.getDataItem(tmpStr));
 		} catch (SQLException e) {
 			System.out.println("An error occurred while saving the application.");

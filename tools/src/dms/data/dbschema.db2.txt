@@ -86,13 +86,13 @@ CREATE TABLE interval_location_profile ( \
     context                 INT              NOT NULL, \
     thread                  INT              NOT NULL, \
     metric                  INT				 NOT NULL, \
-    inclusive_percentage    DECIMAL, \
-    inclusive               DECIMAL, \
-    exclusive_percentage    DECIMAL, \
-    exclusive               DECIMAL, \
-    call                    DECIMAL, \
-    subroutines             DECIMAL, \
-    inclusive_per_call      DECIMAL, \
+    inclusive_percentage    DOUBLE, \
+    inclusive               DOUBLE, \
+    exclusive_percentage    DOUBLE, \
+    exclusive               DOUBLE, \
+    call                    DOUBLE, \
+    subroutines             DOUBLE, \
+    inclusive_per_call      DOUBLE, \
 	FOREIGN KEY(function) REFERENCES function(id) ON DELETE NO ACTION, \
 	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION \
 )
@@ -104,10 +104,10 @@ CREATE TABLE atomic_location_profile ( \
     context                 INT              NOT NULL, \
     thread                  INT              NOT NULL, \
     sample_count            INT    ,          \
-    maximum_value           DECIMAL, \
-    minimum_value           DECIMAL, \
-    mean_value              DECIMAL, \
-    standard_deviation      DECIMAL, \
+    maximum_value           DOUBLE, \
+    minimum_value           DOUBLE, \
+    mean_value              DOUBLE, \
+    standard_deviation      DOUBLE, \
 	FOREIGN KEY(user_event) REFERENCES user_event(id) ON DELETE NO ACTION \
 )
 
@@ -115,13 +115,13 @@ CREATE TABLE interval_total_summary ( \
     id                		INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, \
     function                INT              NOT NULL, \
     metric                  INT				 NOT NULL, \
-    inclusive_percentage    DECIMAL, \
-    inclusive               DECIMAL, \
-    exclusive_percentage    DECIMAL, \
-    exclusive               DECIMAL, \
-    call                    DECIMAL, \
-    subroutines             DECIMAL, \
-    inclusive_per_call      DECIMAL, \
+    inclusive_percentage    DOUBLE, \
+    inclusive               DOUBLE, \
+    exclusive_percentage    DOUBLE, \
+    exclusive               DOUBLE, \
+    call                    DOUBLE, \
+    subroutines             DOUBLE, \
+    inclusive_per_call      DOUBLE, \
 	FOREIGN KEY(function) REFERENCES function(id) ON DELETE NO ACTION, \
 	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION \
 )
@@ -130,13 +130,13 @@ CREATE TABLE interval_mean_summary ( \
     id                		INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, \
     function                INT              NOT NULL, \
     metric                  INT				 NOT NULL, \
-    inclusive_percentage    DECIMAL, \
-    inclusive               DECIMAL, \
-    exclusive_percentage    DECIMAL, \
-    exclusive               DECIMAL, \
-    call                    DECIMAL, \
-    subroutines             DECIMAL, \
-    inclusive_per_call      DECIMAL, \
+    inclusive_percentage    DOUBLE, \
+    inclusive               DOUBLE, \
+    exclusive_percentage    DOUBLE, \
+    exclusive               DOUBLE, \
+    call                    DOUBLE, \
+    subroutines             DOUBLE, \
+    inclusive_per_call      DOUBLE, \
 	FOREIGN KEY(function) REFERENCES function(id) ON DELETE NO ACTION, \
 	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION \
 )

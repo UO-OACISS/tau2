@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.17 2004/04/06 23:02:12 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.18 2004/04/07 17:36:57 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -765,6 +765,11 @@ public class PerfDBSession extends DataSession {
     }
 
 	private void vacuumDatabase() {
+		// don't do this for mysql or db2
+	    if (db.getDBType().compareTo("mysql") == 0)
+			return;
+		else if (db.getDBType().compareTo("db2") == 0)
+			return;
 		String vacuum = "vacuum;";
 		String analyze = "analyze;";
 		try {
