@@ -69,61 +69,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, MenuListen
     float minScatterValues[];
     float maxScatterValues[];
 
-    public ThreeDeeWindow() {
-        this.setTitle("ParaProf Visualizer");
-
-        //Add some window listener code
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                thisWindowClosing(evt);
-            }
-        });
-
-        setupMenus();
-        this.show();
-
-//
-//        EventQueue.invokeLater(new Runnable() {
-//
-//            public void run() {
-
-                GLCapabilities glCapabilities = new GLCapabilities();
-
-                //glCapabilities.setHardwareAccelerated(true);
-
-                //canvas = GLDrawableFactory.getFactory().createGLJPanel(new GLCapabilities());
-                //canvas = GLDrawableFactory.getFactory().createGLCanvas(new GLCapabilities());
-
-                canvas = GLDrawableFactory.getFactory().createGLCanvas(glCapabilities);
-
-                //        canvas.setRenderingThread(java.lang.Thread.currentThread());
-                //canvas.setNoAutoRedrawMode(true);
-
-                // Use debug pipeline
-                //    canvas.setGL(new DebugGL(canvas.getGL()));
-                // System.err.println("CANVAS GL IS: " + canvas.getGL().getClass().getName());
-                //System.err.println("CANVAS GLU IS: " + canvas.getGLU().getClass().getName());
-
-                canvas.addGLEventListener(new Gears.GearRenderer());
-                ThreeDeeWindow.this.getContentPane().add(canvas);
-                ThreeDeeWindow.this.setSize(300, 300);
-                ThreeDeeWindow.this.validate();
-//            }
-//        });
-
-
-                
-        //        final Animator animator = new Animator(canvas);
-        //        this.addWindowListener(new WindowAdapter() {
-        //            public void windowClosing(WindowEvent e) {
-        //              //animator.stop();
-        //              System.exit(0);
-        //            }
-        //          });
-        //canvas.display();
-        //animator.start();
-    }
-
     public ThreeDeeWindow(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
 
