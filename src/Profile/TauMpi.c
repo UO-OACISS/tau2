@@ -1,6 +1,7 @@
 #include <Profile/Profiler.h>
 #include <stdio.h>
 #include <mpi.h>
+#include <stdlib.h>
 
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
