@@ -2269,6 +2269,13 @@ fi
 
 
 ######################################################################
+if [ $machine = x86_64 -a ! -f /usr/lib/libc.a ] 
+then
+  #echo "This looks like a CATAMOUNT Cray RS system..."
+  fixmakeargs="$fixmakeargs CATAMOUNT"
+fi
+
+######################################################################
 if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ ]   
   then
     fixmakeargs="$fixmakeargs GNU"

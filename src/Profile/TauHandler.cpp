@@ -31,7 +31,9 @@
 #ifndef TAU_HASMALLINFO
 #if (defined (__linux__) || defined (_AIX) || defined(sgi) || \
      defined(sun) || defined (__alpha))
+#ifndef TAU_CATAMOUNT
 #define TAU_HASMALLINFO 1 
+#endif /* TAU_CATAMOUNT does not have mallinfo */
 #endif /* platforms */
 #endif 
 /* TAU_HASMALLINFO: if your platform is not listed here and you know that
@@ -285,9 +287,9 @@ void TauTrackMuseEvents(void)
 }
   
 /***************************************************************************
- * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
- * $Revision: 1.8 $   $Date: 2004/09/01 18:52:35 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.8 2004/09/01 18:52:35 amorris Exp $ 
+ * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
+ * $Revision: 1.9 $   $Date: 2004/10/14 23:46:19 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.9 2004/10/14 23:46:19 sameer Exp $ 
  ***************************************************************************/
 
 	
