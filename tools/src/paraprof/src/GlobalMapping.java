@@ -333,7 +333,7 @@ public class GlobalMapping implements WindowListener, Serializable
   }
 
   public ListIterator getMappingIterator(int mappingSelection){
-    return new DataSessionIterator(mappings[mappingSelection]);
+    return new ParaProfIterator(mappings[mappingSelection]);
   }  
   
   public void updateGenericColors(int mappingSelection)

@@ -1,6 +1,6 @@
 //***********************
 //
-//Name: DataSessionIterator.java
+//Name: ParaProfIterator.java
 //
 //Description: Implements the standard list interface.
 //***********************
@@ -9,9 +9,9 @@ package paraprof;
 
 import java.util.*;
 
-public class DataSessionIterator implements ListIterator{
+public class ParaProfIterator implements ListIterator{
 
-    public DataSessionIterator(Vector inVector){
+    public ParaProfIterator(Vector inVector){
 				
 	//Check to make sure that the Vector is not null.
 	if(inVector == null)
