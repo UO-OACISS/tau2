@@ -2126,7 +2126,7 @@ int Profiler::DumpData(bool increment, int tid){
       char *errormsg = new char[1024];
       char *header = new char[1024];
 
-      sprintf(newdirname,"%s/%s",dirname,tmpChar);
+      sprintf(newdirname,"%s/MULTI__%s",dirname,tmpChar);
 
       sprintf(filename,"%s/temp.%d.%d.%d",newdirname, RtsLayer::myNode(),
 	      RtsLayer::myContext(), tid);
@@ -2515,9 +2515,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.81 $   $Date: 2003/05/20 18:44:28 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.81 2003/05/20 18:44:28 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: bertie $
+ * $Revision: 1.82 $   $Date: 2003/07/14 23:47:07 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.82 2003/07/14 23:47:07 bertie Exp $ 
  ***************************************************************************/
 
 	
