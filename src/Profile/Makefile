@@ -43,7 +43,7 @@ INSTALLDEST	= $(TAUROOT)/lib/$(CONFIG_ARCH)
 
 CEXTRA = 
 
-TAUINC	      = -I$(TAUROOT)/include  
+TAUINC	      = -I$(TAUROOT)/include 
 
 CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)
 
@@ -54,7 +54,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h  \
 		$(INCDIR)/PthreadLayer.h $(INCDIR)/RtsLayer.h       \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h      \
 		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h    \
-	        $(INCDIR)/bstring.h
+	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h   
 
 LDFLAGS	      = $(PCXX_OPT)
 
@@ -121,6 +121,9 @@ pcxx_events.o   : pcxx_events.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TulipThreadLayer.o   : TulipThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
