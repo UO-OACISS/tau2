@@ -177,7 +177,10 @@ static int pcxxT_notinit = 1;
    }
 */ /* NOTE : times clashes with C++ times. */
 #else
-   double tulip_UserClock() { return -1; /* Not implemented for now */ }
+#if (defined (CRAYKAI) || defined(CRAYCC))
+#else
+    double tulip_UserClock() ; { return -1; /* Not implemented for now */ }
+#endif /* CRAYKAI || CRAYCC */
 #ifdef __SOLARIS2__
    double tulip_UserClock() {
      prusage_t myrusage;
