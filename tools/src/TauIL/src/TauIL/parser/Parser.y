@@ -1,3 +1,13 @@
+/************************************************************
+ *
+ *           File : Parser.y
+ *         Author : Tyrel Datwyler
+ *
+ *    Description : Grammar specification for the TauIL
+ *                  parser.
+ *
+ ************************************************************/
+
 package TauIL.parser;
 
 import TauIL.lexer.*;
