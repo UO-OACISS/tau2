@@ -15,7 +15,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-public class MeanDataWindow extends JFrame implements ActionListener, Observer
+public class MeanDataWindow extends JFrame implements ActionListener, Observer, ChangeListener
 {
 	
 	public MeanDataWindow()
@@ -48,7 +48,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer
 	 		unitsString = "milliseconds";
 			
 			//Now set the title.
-			this.setTitle("Mean Data Window");
+			this.setTitle("Mean Data Window: " + jRacy.profilePathName);
 			
 			//Add some window listener code
 				addWindowListener(new java.awt.event.WindowAdapter() {
@@ -301,32 +301,47 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer
 			meanDataWindowPanelScrollPane.setBorder(mainloweredbev);
 			meanDataWindowPanelScrollPane.setPreferredSize(new Dimension(500, 450));
 			
+			String sliderMultipleStrings[] = {"1.00", "0.75", "0.50", "0.25", "0.10"};
+			sliderMultiple = new JComboBox(sliderMultipleStrings);
+			sliderMultiple.addActionListener(this);
+			
 			barLengthSlider.setPaintTicks(true);
 			barLengthSlider.setMajorTickSpacing(5);
 			barLengthSlider.setMinorTickSpacing(1);
 			barLengthSlider.setPaintLabels(true);
 			barLengthSlider.setSnapToTicks(true);
-			barLengthSlider.addChangeListener(meanDataWindowPanelRef);
-			
+			barLengthSlider.addChangeListener(this);
 			
 			//Now add the componants to the main screen.
 			gbc.fill = GridBagConstraints.NONE;
 			gbc.anchor = GridBagConstraints.EAST;
-			gbc.weightx = 0.475;
+			gbc.weightx = 0.10;
 			gbc.weighty = 0.01;
-			addCompItem(barLengthLabel, gbc, 0, 0, 1, 1);
+			addCompItem(sliderMultipleLabel, gbc, 0, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.WEST;
+			gbc.weightx = 0.10;
+			gbc.weighty = 0.01;
+			addCompItem(sliderMultiple, gbc, 1, 0, 1, 1);
+			
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.anchor = GridBagConstraints.EAST;
+			gbc.weightx = 0.10;
+			gbc.weighty = 0.01;
+			addCompItem(barLengthLabel, gbc, 2, 0, 1, 1);
 			
 			gbc.fill = GridBagConstraints.HORIZONTAL;
 			gbc.anchor = GridBagConstraints.WEST;
-			gbc.weightx = 0.475;
+			gbc.weightx = 0.7;
 			gbc.weighty = 0.01;
-			addCompItem(barLengthSlider, gbc, 1, 0, 1, 1);
+			addCompItem(barLengthSlider, gbc, 3, 0, 1, 1);
 			
 			gbc.fill = GridBagConstraints.BOTH;
 			gbc.anchor = GridBagConstraints.CENTER;
 			gbc.weightx = 0.95;
 			gbc.weighty = 0.98;
-			addCompItem(meanDataWindowPanelScrollPane, gbc, 0, 1, 2, 1);
+			addCompItem(meanDataWindowPanelScrollPane, gbc, 0, 1, 4, 1);
 		}
 		catch(Exception e)
 		{
@@ -513,12 +528,27 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer
 					jRacy.helpWindow.writeText("You can also left click any function to hightlight it in the system.");
 				}
 			}
+			else if(EventSrc == sliderMultiple)
+			{
+				meanDataWindowPanelRef.changeInMultiples();
+			}
 		}
 		catch(Exception e)
 		{
 			jRacy.systemError(null, "MDW03");
 		}
 	}
+	
+	//******************************
+	//Change listener code.
+	//******************************
+	public void stateChanged(ChangeEvent event)
+	{
+		meanDataWindowPanelRef.changeInMultiples();
+	}
+	//******************************
+	//End - Change listener code.
+	//******************************
 	
 	//Observer functions.
 	public void update(Observable o, Object arg)
@@ -634,7 +664,34 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer
 	
 	public int getSliderValue()
 	{
-		return barLengthSlider.getValue();
+		int tmpInt = -1;
+		
+		try
+		{
+			tmpInt = barLengthSlider.getValue();
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDW06");
+		}
+		
+		return tmpInt;
+	}
+	
+	public double getSliderMultiple()
+	{
+		String tmpString = null;
+		try
+		{
+			tmpString = (String) sliderMultiple.getSelectedItem();
+			return Double.parseDouble(tmpString);
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDW07");
+		}
+		
+		return 0;
 	}
 	
 	//Helper functions.
@@ -650,7 +707,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW06");
+			jRacy.systemError(null, "MDW08");
 		}
 	}
 	
@@ -678,7 +735,7 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer
 		}
 		catch(Exception e)
 		{
-			jRacy.systemError(null, "MDW07");
+			jRacy.systemError(null, "MDW09");
 		}
 	}
 	
@@ -711,8 +768,10 @@ public class MeanDataWindow extends JFrame implements ActionListener, Observer
 	
 	private JRadioButtonMenuItem showZeroFunctionsItem;
 	
-	private JLabel barLengthLabel = new JLabel("Bar Mulitiple");
+	private JLabel sliderMultipleLabel = new JLabel("Slider Mulitiple");
+	private JComboBox sliderMultiple;
 	
+	private JLabel barLengthLabel = new JLabel("Bar Mulitiple");
 	private JSlider barLengthSlider = new JSlider(0, 40, 1);
 	
  	private MeanDataWindowPanel meanDataWindowPanelRef;

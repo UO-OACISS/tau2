@@ -17,7 +17,7 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 
 
-public class MeanDataWindowPanel extends JPanel implements ActionListener, MouseListener, ChangeListener
+public class MeanDataWindowPanel extends JPanel implements ActionListener, MouseListener
 {
 	int xPanelSize = 700;
 	int yPanelSize = 450;
@@ -132,7 +132,19 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 			//An XCoord used in drawing the bars.
 			int barXCoord = 0;
 			yCoord = 0;
-		
+			
+			yCoord = yCoord + (barSpacing);
+			
+			//**********
+			//Draw the counter name if required.
+			counterName = jRacy.staticSystemData.getCounterName();
+			if(counterName != null){
+				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
+				yCoord = yCoord + (barSpacing);
+			}
+			//End - Draw the counter name if required.
+			//**********
+			
 			//Grab the appropriate thread.
 			tmpMeanDataElementList = mDWindow.getStaticMainWindowSystemData();
 			
@@ -1045,8 +1057,22 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 				}
 			}
 				
-				
+			boolean sizeChange = false;		
+			//Resize the panel if needed.
+			if(tmpXWidthCalc > 550){
+				xPanelSize = tmpXWidthCalc + 1;
+				sizeChange = true;
+			}
 			
+			if(newYPanelSize > 550){
+				yPanelSize = newYPanelSize + 1;
+				sizeChange = true;
+			}
+			
+			if(sizeChange)
+				revalidate();	
+			
+			/*
 			//Resize the panel if needed.
 			if((newYPanelSize >= yPanelSize) || (tmpXWidthCalc  >= xPanelSize))
 			{
@@ -1055,6 +1081,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 				
 				revalidate();
 			}
+			*/
 		}
 		catch(Exception e)
 		{
@@ -1211,22 +1238,31 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 	public void mouseEntered(MouseEvent evt) {}
 	public void mouseExited(MouseEvent evt) {}
 	
-	public void stateChanged(ChangeEvent event)
+	public void changeInMultiples()
 	{
-		try{
-			int tmpInt = mDWindow.getSliderValue();
-			defaultBarLength = 250*tmpInt;
-			this.repaint();
-		}
-		catch(Exception e)
-		{
-			jRacy.systemError(null, "MDWP06");
-		}		
+		computeDefaultBarLength();
+		this.repaint();
 	}
 	
 	public Dimension getPreferredSize()
 	{
 		return new Dimension(xPanelSize, (yPanelSize + 10));
+	}
+	
+	public void computeDefaultBarLength()
+	{
+		try
+		{
+			double sliderValue = (double) mDWindow.getSliderValue();
+			double sliderMultiple = mDWindow.getSliderMultiple();
+			double result = 250*sliderValue*sliderMultiple;
+			
+			defaultBarLength = (int) result;
+		}
+		catch(Exception e)
+		{
+			jRacy.systemError(null, "MDWP06");
+		}
 	}
 	
 	//Instance stuff.
@@ -1235,6 +1271,8 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
 	int newXPanelSize = 0;
 	int newYPanelSize = 0;
 	
+	
+	String counterName = null;
 	
 	int barHeight;
 	int barSpacing;

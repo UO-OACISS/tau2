@@ -907,14 +907,9 @@ public class StaticMainWindowData
 	
 	public Vector getSMWMeanData(String inString)
 	{	
-		SMWServer tmpSMWServer;
-		SMWContext tmpSMWContext;
-		SMWThread tmpSMWThread;
-		SMWThreadDataElement tmpSMWThreadDataElement;
-		
-		Vector tmpContextList;
-		Vector tmpThreadList;
-		Vector tmpThreadDataList;
+		Vector tmpVector = new Vector();
+		SMWMeanDataElement tmpSMWMeanDataElement;
+		SMWMeanDataElement tmpSMWMeanDataElementCopy;
 		
 		if(inString == null)
 		{
@@ -928,186 +923,243 @@ public class StaticMainWindowData
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());				
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanExclusiveValue());
-				tmpSMWMeanDataElement.setSortByFunctionID();
-				tmpSMWMeanDataElement.setSortByReverse(true);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByFunctionID();
+				tmpSMWMeanDataElementCopy.setSortByReverse(true);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			
-			currentlySortedAsMeanTotalStatWindow = new String("FIdDE");
-			
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 			
 		}
 		else if(inString.equals("FIdDI"))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanInclusiveValue());
-				tmpSMWMeanDataElement.setSortByFunctionID();
-				tmpSMWMeanDataElement.setSortByReverse(true);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByFunctionID();
+				tmpSMWMeanDataElementCopy.setSortByReverse(true);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 		
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if(inString.equals("FIdAE"))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanExclusiveValue());
-				tmpSMWMeanDataElement.setSortByFunctionID();
-				tmpSMWMeanDataElement.setSortByReverse(false);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByFunctionID();
+				tmpSMWMeanDataElementCopy.setSortByReverse(false);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if(inString.equals("FIdAI"))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanInclusiveValue());
-				tmpSMWMeanDataElement.setSortByFunctionID();
-				tmpSMWMeanDataElement.setSortByReverse(false);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByFunctionID();
+				tmpSMWMeanDataElementCopy.setSortByReverse(false);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if(inString.equals("NDE"))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanExclusiveValue());
-				tmpSMWMeanDataElement.setSortByName();
-				tmpSMWMeanDataElement.setSortByReverse(true);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByName();
+				tmpSMWMeanDataElementCopy.setSortByReverse(true);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if(inString.equals("NDI"))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanInclusiveValue());
-				tmpSMWMeanDataElement.setSortByName();
-				tmpSMWMeanDataElement.setSortByReverse(true);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByName();
+				tmpSMWMeanDataElementCopy.setSortByReverse(true);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if(inString.equals("NAE"))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanExclusiveValue());
-				tmpSMWMeanDataElement.setSortByName();
-				tmpSMWMeanDataElement.setSortByReverse(false);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByName();
+				tmpSMWMeanDataElementCopy.setSortByReverse(false);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if(inString.equals("NAI"))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanInclusiveValue());
-				tmpSMWMeanDataElement.setSortByName();
-				tmpSMWMeanDataElement.setSortByReverse(false);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByName();
+				tmpSMWMeanDataElementCopy.setSortByReverse(false);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if(inString.equals("MDE"))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanExclusiveValue());
-				tmpSMWMeanDataElement.setSortByValue();
-				tmpSMWMeanDataElement.setSortByReverse(true);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByValue();
+				tmpSMWMeanDataElementCopy.setSortByReverse(true);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if((inString.equals("MDI")))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanInclusiveValue());
-				tmpSMWMeanDataElement.setSortByValue();
-				tmpSMWMeanDataElement.setSortByReverse(true);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByValue();
+				tmpSMWMeanDataElementCopy.setSortByReverse(true);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else if((inString.equals("MAE")))
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanExclusiveValue());
-				tmpSMWMeanDataElement.setSortByValue();
-				tmpSMWMeanDataElement.setSortByReverse(false);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanExclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByValue();
+				tmpSMWMeanDataElementCopy.setSortByReverse(false);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 		else
 		{
 			for(Enumeration e1 = sMWMeanData.elements(); e1.hasMoreElements() ;)
 			{
-				SMWMeanDataElement tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				tmpSMWMeanDataElement = (SMWMeanDataElement) e1.nextElement();
+				
+				tmpSMWMeanDataElementCopy = new SMWMeanDataElement();
+				tmpSMWMeanDataElementCopy.setFunctionID(tmpSMWMeanDataElement.getFunctionID());
 				//Set the sorting method.
-				tmpSMWMeanDataElement.setValue(tmpSMWMeanDataElement.getMeanInclusiveValue());
-				tmpSMWMeanDataElement.setSortByValue();
-				tmpSMWMeanDataElement.setSortByReverse(false);
+				tmpSMWMeanDataElementCopy.setValue(tmpSMWMeanDataElementCopy.getMeanInclusiveValue());
+				tmpSMWMeanDataElementCopy.setSortByValue();
+				tmpSMWMeanDataElementCopy.setSortByReverse(false);
+				
+				tmpVector.addElement(tmpSMWMeanDataElementCopy);
 				
 			}
 			
-			Collections.sort(sMWMeanData);
-			return sMWMeanData;
+			Collections.sort(tmpVector);
+			return tmpVector;
 		}
 	}
 	

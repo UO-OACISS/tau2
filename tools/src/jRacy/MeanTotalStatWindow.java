@@ -40,7 +40,7 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, Obser
 			setSize(new java.awt.Dimension(800, 600));
 			
 			//Now set the title.
-			this.setTitle("Mean Total Stat Window");
+			this.setTitle("Mean Total Stat Window: " + jRacy.profilePathName);
 			
 			
 			sMWData = inSMWData;
@@ -74,40 +74,20 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, Obser
 			//******************************
 			//Code to generate the menus.
 			//******************************
-			
-			//Generic Duke Stuff.
-			Icon dukeStandingSmall = new ImageIcon("Duke_Standing_Small.gif");
-			Icon dukeWavingSmall = new ImageIcon("Duke_Waving_Small.gif");
-			JRadioButton menubarDuke = new JRadioButton(dukeStandingSmall);
-			JRadioButton fileMenuDuke = new JRadioButton(dukeStandingSmall);
-			JRadioButton optionsMenuDuke = new JRadioButton(dukeStandingSmall);
-			JRadioButton windowsMenuDuke = new JRadioButton(dukeStandingSmall);
-			JRadioButton helpMenuDuke = new JRadioButton(dukeStandingSmall);
-			menubarDuke.setRolloverIcon(dukeWavingSmall);
-			fileMenuDuke.setRolloverIcon(dukeWavingSmall);
-			optionsMenuDuke.setRolloverIcon(dukeWavingSmall);
-			windowsMenuDuke.setRolloverIcon(dukeWavingSmall);
-			helpMenuDuke.setRolloverIcon(dukeWavingSmall);
-			
-			
 			JMenuBar mainMenu = new JMenuBar();
-			
-			//Duke placement.
-			mainMenu.add(menubarDuke);
 			
 			//******************************
 			//File menu.
 			//******************************
 			JMenu fileMenu = new JMenu("File");
-			fileMenu.add(fileMenuDuke);
 			
 			//Add a menu item.
-			JMenuItem closeItem = new JMenuItem("Close This Window", dukeWavingSmall);
+			JMenuItem closeItem = new JMenuItem("Close This Window");
 			closeItem.addActionListener(this);
 			fileMenu.add(closeItem);
 			
 			//Add a menu item.
-			JMenuItem exitItem = new JMenuItem("Exit Racy!", dukeWavingSmall);
+			JMenuItem exitItem = new JMenuItem("Exit Racy!");
 			exitItem.addActionListener(this);
 			fileMenu.add(exitItem);
 			//******************************
@@ -118,7 +98,6 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, Obser
 			//Options menu.
 			//******************************
 			JMenu optionsMenu = new JMenu("Options");
-			optionsMenu.add(optionsMenuDuke);
 			
 			//Add a submenu.
 			JMenu sortMenu = new JMenu("Sort by ...");
@@ -196,7 +175,6 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, Obser
 			//Window menu.
 			//******************************
 			JMenu windowsMenu = new JMenu("Windows");
-			windowsMenu.add(windowsMenuDuke);
 			
 			//Add a submenu.
 			JMenuItem functionLedgerItem = new JMenuItem("Show Function Ledger");
@@ -216,7 +194,6 @@ public class MeanTotalStatWindow extends JFrame implements ActionListener, Obser
 			//Help menu.
 			//******************************
 			JMenu helpMenu = new JMenu("Help");
-			helpMenu.add(helpMenuDuke);
 			
 			//Add a menu item.
 			JMenuItem aboutItem = new JMenuItem("About Racy");

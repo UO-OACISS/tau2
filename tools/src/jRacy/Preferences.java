@@ -151,7 +151,7 @@ public class Preferences extends JFrame implements ActionListener, Observer
 		pSPanel = new PrefSpacingPanel();
 		
 		//Window Stuff.
-		setTitle("jRacy Preferences");
+		setTitle("jRacy Preferences: " + jRacy.profilePathName);
 		
 		int windowWidth = 900;
 		int windowHeight = 450;

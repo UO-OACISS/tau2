@@ -22,6 +22,7 @@ public class jRacy implements ActionListener
 	//**********
 	//Some system wide state variables.
 	static boolean debugIsOn = false;					//Flip this if debugging output is required.
+	static String profilePathName = null;				//This contains the path to the currently loaded profile data.
 	//End - Some system wide state variables.
 	//**********
 	

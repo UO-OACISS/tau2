@@ -43,7 +43,7 @@ public class TotalStatWindow extends JFrame implements ActionListener, Observer
 			setSize(new java.awt.Dimension(800, 600));
 			
 			//Now set the title.
-			this.setTitle("Total " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber);
+			this.setTitle("Total " + "n,c,t, " + inServerNumber + "," + inContextNumber + "," + inThreadNumber + " - " + jRacy.profilePathName);
 			
 			server = inServerNumber;
 			context = inContextNumber;

@@ -108,6 +108,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			fmMonoFont = g.getFontMetrics(MonoFont);
 			maxFontAscent = fmMonoFont.getMaxAscent();
 			maxFontDescent = fmMonoFont.getMaxDescent();
+			g.setFont(MonoFont);
 			
 			if(spacing <= (maxFontAscent + maxFontDescent))
 			{
@@ -127,6 +128,19 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 			int endThreadElement = 0;
 			
 			
+			yCoord = yCoord + (spacing);
+			
+			//**********
+			//Draw the counter name if required.
+			String counterName = jRacy.staticSystemData.getCounterName();
+			if(counterName != null){
+				g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
+				yCoord = yCoord + (spacing);
+			}
+			//End - Draw the counter name if required.
+			//**********
+			
+			
 		    //To be on the safe side, have an alternative to the clip rectangle.
 		    if ((clipRect != null))
 		    {
@@ -140,7 +154,6 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 				}
 				
 				g.setColor(Color.black);
-				g.setFont(MonoFont);
 				yCoord = yCoord + spacing;
 				g.drawString(dashString, 20, yCoord);
 				yCoord = yCoord + spacing + 10;
@@ -254,7 +267,6 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
 				}
 				
 				g.setColor(Color.black);
-				g.setFont(MonoFont);
 				yCoord = yCoord + spacing;
 				g.drawString(dashString, 20, yCoord);
 				yCoord = yCoord + spacing + 10;
