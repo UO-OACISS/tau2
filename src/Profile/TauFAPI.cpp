@@ -300,9 +300,9 @@ void tau_disable_tracking_muse_events(void)
   Tau_disable_tracking_muse_events();
 } 
 
-void tau_set_interrupt_interval(int value)
+void tau_set_interrupt_interval(int* value)
 {
-  Tau_set_interrupt_interval(value);
+  Tau_set_interrupt_interval(*value);
 } 
 
 ////////////////////////////////////////////////////
@@ -471,9 +471,9 @@ void tau_disable_tracking_muse_events_(void)
   Tau_disable_tracking_muse_events();
 } 
 
-void tau_set_interrupt_interval_(int value)
+void tau_set_interrupt_interval_(int* value)
 {
-  Tau_set_interrupt_interval(value);
+  Tau_set_interrupt_interval(*value);
 } 
 
 /* Cray F90 specific extensions */
@@ -730,9 +730,9 @@ void TAU_DISABLE_TRACKING_MUSE_EVENTS(void)
   Tau_disable_tracking_muse_events();
 } 
 
-void TAU_SET_INTERRUPT_INTERVAL(int value)
+void TAU_SET_INTERRUPT_INTERVAL(int* value)
 {
-  Tau_set_interrupt_interval(value);
+  Tau_set_interrupt_interval(*value);
 } 
 
 void tau_profile_start(int **profiler)
@@ -1039,9 +1039,9 @@ void tau_disable_tracking_muse_events__(void)
   Tau_disable_tracking_muse_events();
 } 
 
-void tau_set_interrupt_interval__(int value)
+void tau_set_interrupt_interval__(int* value)
 {
-  Tau_set_interrupt_interval(value);
+  Tau_set_interrupt_interval(*value);
 } 
 
 
@@ -1050,6 +1050,6 @@ void tau_set_interrupt_interval__(int value)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.32 $   $Date: 2004/09/07 20:25:23 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.32 2004/09/07 20:25:23 sameer Exp $ 
+ * $Revision: 1.33 $   $Date: 2004/10/15 17:13:11 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.33 2004/10/15 17:13:11 sameer Exp $ 
  ***************************************************************************/
