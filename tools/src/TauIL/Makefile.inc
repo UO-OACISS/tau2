@@ -39,8 +39,6 @@ CUP		= $(JAVA) java_cup.Main $(CUPOPT)
 
 CUPDEP		= java_cup.runtime
 
-PARAPROF	= $(HOME)/cvs/tau2/tools/src/paraprof/classes
-
 LEXER		= TauIL.lexer
 PARSER		= TauIL.parser
 
