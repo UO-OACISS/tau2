@@ -450,8 +450,7 @@ int main (int argc, char *argv[])
   if ( argc < 3 )
   {
     fprintf (stderr, "usage: %s [-alog | -SDDF | -dump |", argv[0]);
-    fprintf (stderr, " -pv [-compact] [-user|-class|-all] [-nocomm]]");
-    fprintf (stderr, " -vampir");
+    fprintf (stderr, " -pv | -vampir [-compact] [-user|-class|-all] [-nocomm]]");
     fprintf (stderr, " inputtrc edffile [outputtrc]\n");
     fprintf (stderr, " Note: -vampir option assumes multiple threads/node\n");
     exit (1);
