@@ -14,6 +14,7 @@ Version 2.11 changes (from 2.9):
 2. Added -LINUXTIMERS option for low overhead Linux wallclock time [CACR].
 3. Added -c|-c++|-fortran options to tau_instrumentor [CACR].
 4. Lowered the overhead of timers of disabled profile groups [CACR].
+5. Added support for PAPI v2.1 [CACR]. 
 
 Version 2.10 changes (from 2.9):
 1. Better support for C instrumentation [HDF5].
