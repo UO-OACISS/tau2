@@ -18,7 +18,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class StaticMainWindowPanel extends JPanel implements ActionListener, MouseListener, PopupMenuListener, Printable, ParaProfImageInterface{
   

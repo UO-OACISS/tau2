@@ -15,7 +15,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class PPMLPanel extends JPanel implements ActionListener{ 
     

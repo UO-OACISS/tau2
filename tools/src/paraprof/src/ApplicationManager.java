@@ -9,7 +9,7 @@
 package paraprof;
 
 import java.util.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class ApplicationManager extends Observable{
     public ApplicationManager(){}

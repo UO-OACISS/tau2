@@ -14,7 +14,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class PPML{
 
@@ -96,14 +96,14 @@ public class PPML{
 
 	Node node;
 	Context context;
-	dms.dss.Thread thread;
+	edu.uoregon.tau.dms.dss.Thread thread;
      
 	for(Enumeration e1 = trialOpA.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
 	    node = (Node) e1.nextElement();
  	    for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		context = (Context) e2.nextElement();
  		for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
-		    thread = (dms.dss.Thread) e3.nextElement();
+		    thread = (edu.uoregon.tau.dms.dss.Thread) e3.nextElement();
 		    thread.incrementStorage();
 		    l = thread.getFunctionListIterator();
 		    while(l.hasNext()){

@@ -22,7 +22,7 @@ import java.awt.print.*;
 import javax.swing.*;
 import java.awt.geom.*;
 import javax.swing.event.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class CallPathTextWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
     
@@ -415,7 +415,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		GlobalMappingElement gme2 = null;
 		Integer listValue = null;
 		String s = null;
-		dms.dss.Thread thread = null;
+		edu.uoregon.tau.dms.dss.Thread thread = null;
 		Vector functionList = null;
 		GlobalThreadDataElement gtde = null;
 		SMWThreadDataElement smwtde = null;
@@ -424,7 +424,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		double d2 = 0.0;
 		int d3 = 0;
 
-		thread = (dms.dss.Thread) trial.getNCT().getThread(nodeID,contextID,threadID); 
+		thread = (edu.uoregon.tau.dms.dss.Thread) trial.getNCT().getThread(nodeID,contextID,threadID); 
 		functionList = thread.getFunctionList();
 
 		//######

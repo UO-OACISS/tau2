@@ -16,7 +16,7 @@ import javax.swing.*;
 import javax.swing.text.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class HelpWindow extends JFrame implements ActionListener, Observer{
 

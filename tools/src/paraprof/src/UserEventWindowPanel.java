@@ -20,7 +20,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.geom.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 
 public class UserEventWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{

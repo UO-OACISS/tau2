@@ -17,7 +17,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.colorchooser.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class Preferences extends JFrame implements ActionListener, Observer{ 
     //******************************

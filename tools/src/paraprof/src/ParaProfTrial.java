@@ -20,7 +20,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTreeNodeUserObject{
 
@@ -322,7 +322,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	//Set the colours.
 	clrChooser.setColors(dataSession.getGlobalMapping(), -1);
 	
-	//The dataSession has accumulated dms.dss.Metrics. Inside ParaProf,
+	//The dataSession has accumulated edu.uoregon.tau.dms.dss.Metrics. Inside ParaProf,
 	//these need to be paraprof.Metrics.
 	int numberOfMetrics = dataSession.getNumberOfMetrics();
 	Vector metrics = new Vector();

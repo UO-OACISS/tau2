@@ -9,9 +9,9 @@
 package paraprof;
 
 import javax.swing.tree.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
-public class Metric extends dms.dss.Metric implements ParaProfTreeNodeUserObject{
+public class Metric extends edu.uoregon.tau.dms.dss.Metric implements ParaProfTreeNodeUserObject{
     public Metric(){}
     
     public void setTrial(ParaProfTrial trial){

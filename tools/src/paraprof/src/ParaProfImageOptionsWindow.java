@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import edu.uoregon.tau.dms.dss.UtilFncs;
 
 public class  ParaProfImageOptionsWindow extends JFrame implements ActionListener{ 
     

@@ -23,7 +23,7 @@ import javax.swing.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
 //import javax.print.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 
 

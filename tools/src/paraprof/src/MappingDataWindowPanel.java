@@ -20,7 +20,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.geom.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 
 public class MappingDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
@@ -60,7 +60,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
       
-	    jMenuItem = new JMenuItem("Show Mean Call Path dms.dss.Thread Relations");
+	    jMenuItem = new JMenuItem("Show Mean Call Path edu.uoregon.tau.dms.dss.Thread Relations");
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
 	    //######
@@ -78,7 +78,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 
-	    jMenuItem = new JMenuItem("Show Call Path dms.dss.Thread Relations");
+	    jMenuItem = new JMenuItem("Show Call Path edu.uoregon.tau.dms.dss.Thread Relations");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 	    //######
@@ -459,7 +459,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Mean Call Path dms.dss.Thread Relations")){
+		else if(arg.equals("Show Mean Call Path edu.uoregon.tau.dms.dss.Thread Relations")){
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThreadDataElement.getNodeID(),
@@ -495,7 +495,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Call Path dms.dss.Thread Relations")){
+		else if(arg.equals("Show Call Path edu.uoregon.tau.dms.dss.Thread Relations")){
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThreadDataElement.getNodeID(),

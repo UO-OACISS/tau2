@@ -10,7 +10,7 @@ package paraprof;
 
 import java.util.*;
 import javax.swing.tree.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUserObject{
 

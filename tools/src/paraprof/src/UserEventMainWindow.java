@@ -16,7 +16,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.print.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class UserEventMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener{ 
   

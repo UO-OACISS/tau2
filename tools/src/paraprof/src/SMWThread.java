@@ -13,13 +13,13 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class SMWThread{
 
     public SMWThread(){}
 
-    public SMWThread(dms.dss.Thread thread){
+    public SMWThread(edu.uoregon.tau.dms.dss.Thread thread){
 	this.thread = thread;}
 
     public int getNodeID(){
@@ -59,7 +59,7 @@ public class SMWThread{
     //####################################
     //Instance data.
     //####################################
-    dms.dss.Thread thread = null;
+    edu.uoregon.tau.dms.dss.Thread thread = null;
     Vector functions = new Vector();
     Vector userevents = new Vector();
     //To aid with drawing searches.

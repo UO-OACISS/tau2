@@ -12,7 +12,7 @@
 
 package paraprof;
 
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class CallPathDrawObject implements Mapping{
 

@@ -10,7 +10,7 @@ package paraprof;
 
 import java.util.*;
 import java.awt.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class ColorPair implements Comparable
 {

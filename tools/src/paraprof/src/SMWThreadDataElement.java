@@ -25,7 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
-import dms.dss.*;
+import edu.uoregon.tau.dms.dss.*;
 
 public class SMWThreadDataElement implements Comparable{
     //Constructor.
@@ -347,7 +347,7 @@ public class SMWThreadDataElement implements Comparable{
     private int contextID = -1;
     private int threadID = -1;
 
-    //Global dms.dss.Thread Data Element Reference.
+    //Global edu.uoregon.tau.dms.dss.Thread Data Element Reference.
     GlobalThreadDataElement globalThreadDataElement;
   
     //Global Mapping reference.
