@@ -67,7 +67,9 @@
 #define TAU_EVENT_DISABLE_MAX(event) 		(event).SetDisableMax(true);
 #define TAU_EVENT_DISABLE_MEAN(event) 		(event).SetDisableMean(true);
 #define TAU_EVENT_DISABLE_STDDEV(event) 	(event).SetDisableStdDev(true);
-#define TAU_STORE_ALL_EVENTS 			TauUserEvent::StoreData();
+#define TAU_REPORT_STATISTICS()			TauUserEvent::ReportStatistics();
+#define TAU_REPORT_THREAD_STATISTICS()		TauUserEvent::ReportStatistics(true);
+
 #define TAU_REGISTER_THREAD()			RtsLayer::RegisterThread();
 
 #ifdef NO_RTTI
@@ -99,7 +101,8 @@
 #define TAU_EVENT_DISABLE_MAX(event)
 #define TAU_EVENT_DISABLE_MEAN(event)
 #define TAU_EVENT_DISABLE_STDDEV(event)
-#define TAU_STORE_ALL_EVENTS
+#define TAU_REPORT_STATISTICS()
+#define TAU_REPORT_THREAD_STATISTICS()
 #define TAU_REGISTER_THREAD()
 
 #define CT(obj)
@@ -127,6 +130,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1998/07/10 20:11:28 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.3 1998/07/10 20:11:28 sameer Exp $ 
+ * $Revision: 1.4 $   $Date: 1998/09/24 17:07:53 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.4 1998/09/24 17:07:53 sameer Exp $ 
  ***************************************************************************/
