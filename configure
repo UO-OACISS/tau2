@@ -1076,6 +1076,7 @@ fi
 if [ $profilememory = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILEMEMORY"
+    tauoptions="${tauoptions}-memory"
 fi
 
 if [ $tag = yes ]
