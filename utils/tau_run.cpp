@@ -306,7 +306,7 @@ int main(int argc, char **argv)
       loadlib=true;
       sprintf(libname, "libTAU.so"); 
     }
-    if (strncasecmp (argv[1], "-f", "3") == 0)
+    if (strncasecmp (argv[1], "-f", 3) == 0)
     { // Load the selective instrumentation file 
       processInstrumentationRequests(argv[2]);
       dprintf("Loading instrumentation requests file %s\n", argv[2]);
