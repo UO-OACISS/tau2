@@ -574,8 +574,29 @@ public class TauOutputSession extends ParaProfDataSession{
 
     private String getGroupNames(String string){
 	try{  
-	    StringTokenizer getMappingNameTokenizer = new StringTokenizer(string, "\"");
- 	    getMappingNameTokenizer.nextToken();
+
+
+	    // first, count the number of double-quotes to determine if the 
+	    // function contains a double-quote
+	    int quoteCount = 0;
+	    for (int i=0; i < string.length(); i++) {
+		if (string.charAt(i) == '"')
+		    quoteCount++;
+	    }
+	    
+	    
+	    // there is a quote in the name of the timer/function
+	    // we assume that TAU_GROUP="..." is there, so the end of the name must be
+	    // at quoteCount - 2
+	    int count = 0;
+	    int i = 0;
+	    while (count < quoteCount - 2 && i < string.length()) {
+		if (string.charAt(i) == '"')
+		    count++;
+		i++;
+	    }
+
+	    StringTokenizer getMappingNameTokenizer = new StringTokenizer(string.substring(i+1), "\"");
 	    String str = getMappingNameTokenizer.nextToken();
 	    
 	    //Just do the group check once.

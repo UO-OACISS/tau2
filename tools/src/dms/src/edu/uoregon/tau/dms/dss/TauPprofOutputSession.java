@@ -499,15 +499,42 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		    return result;
 	    }
       
-	    //Now, we want to grab the substring that occurs AFTER the SECOND '"'.
-	    //At present, pprof does not seem to allow an '"' in the mapping name.  So
-	    //, I can be assured that I will not find more than two before the "excl" or "incl".
-	    StringTokenizer checkQuotesTokenizer = new StringTokenizer(inString,"\"");
-      
-	    //Need to get the third token.  Could do it in a loop, just as quick this way.
-	    String tmpString = checkQuotesTokenizer.nextToken();
-	    tmpString = checkQuotesTokenizer.nextToken();
-	    tmpString = checkQuotesTokenizer.nextToken();
+
+
+	    // first, count the number of double-quotes to determine if the 
+	    // function contains a double-quote
+	    int quoteCount = 0;
+	    for (int i=0; i < inString.length(); i++) {
+		if (inString.charAt(i) == '"')
+		    quoteCount++;
+	    }
+	    
+	    StringTokenizer st2;
+
+	    String tmpString;
+	    if (quoteCount == 2 || quoteCount == 4) { // assume all is well
+		StringTokenizer checkQuotesTokenizer = new StringTokenizer(inString,"\"");
+		
+		//Need to get the third token.  Could do it in a loop, just as quick this way.
+		tmpString = checkQuotesTokenizer.nextToken();
+		tmpString = checkQuotesTokenizer.nextToken();
+		tmpString = checkQuotesTokenizer.nextToken();
+		
+	    } else {
+
+		// there is a quote in the name of the timer/function
+		// we assume that TAU_GROUP="..." is there, so the end of the name must be
+		// at quoteCount - 2
+		int count = 0;
+		int i = 0;
+		while (count < quoteCount - 2 && i < inString.length()) {
+		    if (inString.charAt(i) == '"')
+			count++;
+		    i++;
+		}
+		tmpString = inString.substring(i+1);
+	    }
+
       
 	    //Ok, now, the string in tmpString should include at least "excl" or "incl", and
 	    //also, the first token should be either "excl" or "incl".
@@ -531,11 +558,45 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 
     private void getFunctionDataLine1(String string){
 	try{
-	    StringTokenizer st1 = new StringTokenizer(string, "\"");
-	    st1.nextToken();
-	    functionDataLine1.s0 = st1.nextToken(); //Name
+
+	    // first, count the number of double-quotes to determine if the 
+	    // function contains a double-quote
+	    int quoteCount = 0;
+	    for (int i=0; i < string.length(); i++) {
+		if (string.charAt(i) == '"')
+		    quoteCount++;
+	    }
 	    
-	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	    StringTokenizer st2;
+
+	    if (quoteCount == 2 || quoteCount == 4) { // assume all is well
+		StringTokenizer st1 = new StringTokenizer(string, "\"");
+		st1.nextToken();
+		functionDataLine1.s0 = st1.nextToken(); //Name
+		
+		st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+
+	    } else {
+		// there is a quote in the name of the timer/function
+		// we assume that TAU_GROUP="..." is there, so the end of the name must be
+		// at quoteCount - 2
+		int count = 0;
+		int i = 0;
+		
+		int firstQuote = -1;
+		while (count < quoteCount - 2 && i < string.length()) {
+		    if (string.charAt(i) == '"') {
+			if (firstQuote == -1)
+			    firstQuote = i;
+			count++;
+		    }
+		    i++;
+		}
+		
+		functionDataLine1.s0 = string.substring(firstQuote+1,i-1); // get the name
+		st2 = new StringTokenizer(string.substring(i+1), " \t\n\r");
+	    }
+
 	    st2.nextToken();
 	    functionDataLine1.d0 = Double.parseDouble(st2.nextToken()); //Value
 	    functionDataLine1.d1 = Double.parseDouble(st2.nextToken()); //Percent value
@@ -553,6 +614,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    getMappingIDTokenizer.nextToken();
 	    
 	    functionDataLine2.i0 = (int) Double.parseDouble(getMappingIDTokenizer.nextToken()); //Number of calls
+
 	    functionDataLine2.i1 = (int) Double.parseDouble(getMappingIDTokenizer.nextToken()); //Number of subroutines
 	    functionDataLine2.d0 = Double.parseDouble(getMappingIDTokenizer.nextToken()); //User seconds per call
 	}
