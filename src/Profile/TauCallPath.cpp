@@ -130,6 +130,19 @@ void Profiler::CallPathStart(int tid)
       // Set up metrics. Increment number of calls and subrs
       CallPathFunction->IncrNumCalls(tid);
 
+      // Next, if this function is not already on the call stack, put it
+      if (CallPathFunction->GetAlreadyOnStack(tid) == false)   {
+        AddInclCallPathFlag = true;
+        // We need to add Inclusive time when it gets over as
+        // it is not already on callstack.
+
+        CallPathFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
+      }
+      else { // the function is already on callstack, no need to add
+             // inclusive time
+        AddInclCallPathFlag = false;
+      }
+
     } 
   }
   else
@@ -146,9 +159,17 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   if (ParentProfiler != NULL)
   {
     DEBUGPROFMSG("Inside CallPath Stop "<<ThisFunction->GetName()<<endl;);
-    if (AddInclFlag == true) { // first time on the callstack 
+    if (AddInclCallPathFlag == true) { // The first time it came on call stack
+      CallPathFunction->SetAlreadyOnStack(false, tid); // while exiting
+
+      DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
+       << RtsLayer::myContext() << "," << tid  << " "
+       << "CallPathStop: After SetAlreadyOnStack Going for AddInclTime" <<endl; );
+
+      // And its ok to add both excl and incl times
       CallPathFunction->AddInclTime(TotalTime, tid);
     }
+
     CallPathFunction->AddExclTime(TotalTime, tid);  
     DEBUGPROFMSG("Before IncrNumSubr"<<endl;);
     if (ParentProfiler->CallPathFunction != 0)
@@ -163,6 +184,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 2002/08/09 00:56:56 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.4 2002/08/09 00:56:56 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 2002/08/09 18:09:01 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.5 2002/08/09 18:09:01 sameer Exp $ 
  ***************************************************************************/
