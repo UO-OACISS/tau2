@@ -47,12 +47,7 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
     TheTauMapFI(group) = &TauMapFI; \
   } 
 
-/*
-#define TAU_MAPPING_CREATE(name, type, key, groupname)  { static FunctionInfo TauMapFI(name, type, key, groupname); \
-    TheTauMapFI(key) = &TauMapFI; \
-  } 
-*/
-#define TAU_MAPPING_CREATE(name, type, key, groupname)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, key, groupname, true); \
+#define TAU_MAPPING_CREATE(name, type, key, groupname, tid)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, key, groupname, true, tid); \
     if (TauMapFI == (FunctionInfo *) NULL) { \
 	printf("ERROR: new returns NULL"); exit(1); \
     } \
@@ -83,8 +78,8 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
    object that can be subsequently used with TAU_PROFILE_START and 
    TAU_PROFILE_STOP
 */
-#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar) Profiler *Timer; \
-   Timer = new Profiler(FuncInfoVar, FuncInfoVar->GetProfileGroup(), true); \
+#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid) Profiler *Timer; \
+   Timer = new Profiler(FuncInfoVar, FuncInfoVar->GetProfileGroup(), true, tid); \
    if (Timer == (Profiler *) NULL) {\
      printf("ERROR: TAU_MAPPING_PROFILE_TIMER: new returns NULL Profiler *\n");\
    }
@@ -92,11 +87,12 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 
 /* TAU_MAPPING_PROFILE_START acts like TAU_PROFILE_START by starting the timer 
 */
-#define TAU_MAPPING_PROFILE_START(Timer) Timer->Start();
+#define TAU_MAPPING_PROFILE_START(Timer, tid) Timer->Start(tid);
 
 /* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer 
 */
-#define TAU_MAPPING_PROFILE_STOP() Profiler::CurrentProfiler[RtsLayer::myThread()]->Stop();
+#define TAU_MAPPING_PROFILE_STOP(tid) Profiler::CurrentProfiler[tid]->Stop(tid);
+#define TAU_MAPPING_PROFILE_EXIT(msg, tid)  Profiler::ProfileExit(msg, tid); 
 #else
 /* Create null , except the main statement which should be executed as it is*/
 #define TAU_MAPPING(stmt, group) stmt

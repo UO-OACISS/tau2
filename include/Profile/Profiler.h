@@ -32,11 +32,11 @@
 
 #include <Profile/ProfileGroups.h>
 
-#if (defined(PTHREADS) || defined(TULIPTHREADS))
+#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA))
 #define TAU_MAX_THREADS 64
 #else
 #define TAU_MAX_THREADS 1
-#endif /* PTHREADS || TULIPTHREADS */
+#endif /* PTHREADS || TULIPTHREADS || JAVA */
 
 #include <Profile/TauAPI.h>
 
@@ -73,15 +73,16 @@ class Profiler
 {
 public:
 	Profiler(FunctionInfo * fi, TauGroup_t ProfileGroup = TAU_DEFAULT, 
-	  bool StartStop = false);
+	  bool StartStop = false, int tid = RtsLayer::myThread());
 
-	void Start(void);
+	void Start(int tid = RtsLayer::myThread());
 	Profiler(const Profiler& X);
 	Profiler& operator= (const Profiler& X);
 	// Clean up data from this invocation.
-	void Stop(void);
+	void Stop(int tid = RtsLayer::myThread());
 	~Profiler();
-  	static void ProfileExit(const char *message=0);
+  	static void ProfileExit(const char *message=0, 
+	  int tid = RtsLayer::myThread());
 	static int StoreData(int tid); 
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
@@ -123,6 +124,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 1999/08/12 00:00:31 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.22 1999/08/12 00:00:31 sameer Exp $ 
+ * $Revision: 1.23 $   $Date: 1999/08/19 22:27:57 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.23 1999/08/19 22:27:57 sameer Exp $ 
  ***************************************************************************/

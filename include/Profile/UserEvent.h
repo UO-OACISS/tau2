@@ -71,7 +71,7 @@ class TauUserEvent {
 };
 
 
-vector<TauUserEvent*>& TheEventDB(int threadid = RtsLayer::myThread()); 
+vector<TauUserEvent*>& TheEventDB(void);
 /*    
 #ifdef PROFILING_ON
 #define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
@@ -100,6 +100,6 @@ vector<TauUserEvent*>& TheEventDB(int threadid = RtsLayer::myThread());
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1998/09/24 16:52:22 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.4 1998/09/24 16:52:22 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 1999/08/19 22:27:58 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.5 1999/08/19 22:27:58 sameer Exp $ 
  ***************************************************************************/

@@ -88,7 +88,7 @@ class RtsLayer
 	static int 	setMyContext(int ContextId);
 
 	// For tracing 
-	static int 	DumpEDF(void); 
+	static int 	DumpEDF(int tid); 
 
   	// Return the number of the 'current' node.
 	static int myNode(void);
@@ -111,6 +111,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 1999/05/04 22:32:10 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.5 1999/05/04 22:32:10 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 1999/08/19 22:27:57 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.6 1999/08/19 22:27:57 sameer Exp $ 
  ***************************************************************************/
