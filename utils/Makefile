@@ -16,10 +16,11 @@ include ../include/Makefile
 CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
+PDT_CXX=
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
-PDTDIR=/home/grads/sameer/pdt
+TAU_PREFIX_INSTALL_DIR=
+PDTDIR=
 DYNINSTDIR=
 #######################################################################
  
@@ -77,6 +78,9 @@ CWARNING	= $(WARNINGSOPT)
 #KAI#COMPILEROPT = -DKAI#ENDIF#
 #COMPAQ_ALPHA#COMPSPECIFIC = -DCOMPAQ_ALPHA#ENDIF#
 
+# Do we use a different compiler for PDT based tau_instrumentor?
+PDT_CXX_COMP = $(CXX)
+#PDTCXX#PDT_CXX_COMP = $(PDT_CXX) #ENDIF#
 
 SAGE1DIR=
 INCLUDEPATH = $(SAGE1DIR)/lib/include
@@ -138,13 +142,13 @@ tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
 
 tau_instrumentor: tau_instrumentor.o tau_selective.o $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a 
-		$(CXX) $(CFLAGS) tau_instrumentor.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+		$(PDT_CXX_COMP) $(CFLAGS) tau_instrumentor.o tau_selective.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
 tau_instrumentor.o: tau_instrumentor.cpp 
-		$(CXX) $(CFLAGS) -I$(PDTDIR)/include -c tau_instrumentor.cpp
+		$(PDT_CXX_COMP) $(CFLAGS) -I$(PDTDIR)/include -c tau_instrumentor.cpp
 
 tau_selective.o: tau_selective.cpp 
-		$(CXX) $(CFLAGS) -c tau_selective.cpp
+		$(PDT_CXX_COMP) $(CFLAGS) -c tau_selective.cpp
 
 tau_run: 	tau_run.o tau_selective.o  
 		$(CXX) $(CFLAGS) tau_run.o tau_selective.o -o $@ $(DYNLIBS) $(LEXTRA) 
