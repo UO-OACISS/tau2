@@ -387,10 +387,123 @@ void tau_event(int **ptr, double *data)
 }
 
 #endif /* TAU_XLC || TAU_AIX */
+
+
+#ifdef TAU_GNU
+
+void tau_profile_timer__(void **ptr, char *fname, int *flen)
+{
+//#ifdef DEBUG_PROF
+//  printf("flen = %d\n", *flen);
+//#endif /* DEBUG_PROF */
+  
+
+  if (*ptr == 0) 
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(fname[i]))
+      { 
+        fname[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("tau_get_profiler() \n");
+#endif /* DEBUG_PROF */
+    *ptr = tau_get_profiler(fname, " ", TAU_DEFAULT);
+  }
+
+#ifdef DEBUG_PROF 
+  printf("get_profiler returns %x\n", *ptr);
+#endif /* DEBUG_PROF */
+
+  return;
+}
+
+void tau_profile_start__(void **profiler)
+{
+  tau_profile_start_(profiler);
+}
+
+void tau_profile_stop__(void **profiler)
+{
+  tau_profile_stop_(profiler);
+}
+
+void tau_profile_exit__(char *msg)
+{
+  tau_profile_exit_(msg);
+}
+
+void tau_profile_init__()
+{
+  //_main();
+  // tau_profile_init_(argc, argv);
+}
+
+void tau_profile_set_node__(int *node)
+{
+  tau_profile_set_node_(node);
+}
+
+void tau_profile_set_context__(int *context)
+{
+  tau_profile_set_context_(context);
+}
+
+void tau_trace_sendmsg__(int *type, int *destination, int *length)
+{
+  tau_trace_sendmsg(*type, *destination, *length);
+}
+
+void tau_trace_recvmsg__(int *type, int *source, int *length)
+{
+  tau_trace_recvmsg(*type, *source, *length);
+}
+
+void tau_register_event__(void **ptr, char *event_name, int *flen)
+{
+
+  if (*ptr == 0) 
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(event_name[i]))
+      { 
+        event_name[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("tau_get_userevent() \n");
+#endif /* DEBUG_PROF */
+    *ptr = tau_get_userevent(event_name);
+  }
+  return;
+
+}
+
+void tau_event__(void **ptr, double *data)
+{
+  tau_userevent(*ptr, *data);
+}
+
+void tau_report_statistics__(void)
+{
+  tau_report_statistics();
+}
+
+void tau_report_thread_statistics__(void)
+{
+  tau_report_thread_statistics();
+}
+
+#endif /* TAU_GNU */
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2000/06/02 22:58:28 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.10 2000/06/02 22:58:28 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 2000/09/25 18:47:55 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.11 2000/09/25 18:47:55 sameer Exp $ 
  ***************************************************************************/
