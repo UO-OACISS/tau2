@@ -195,7 +195,7 @@ void Profiler::Start(int tid)
 #ifdef TAU_EPILOG
 	DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
 	     << ThisFunction->GetName()<<endl;);
-	elg_enter(ThisFunction->GetFunctionId(), ELG_NO_ID, ELG_NO_LNO);
+	elg_enter(ThisFunction->GetFunctionId());
 #else /* TAU_EPILOG */
 	TraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
 	// 1 is for entry in second parameter and for use TimeStamp in last
@@ -2631,8 +2631,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.92 $   $Date: 2004/03/02 03:05:41 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.92 2004/03/02 03:05:41 sameer Exp $ 
+ * $Revision: 1.93 $   $Date: 2004/05/19 14:10:16 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.93 2004/05/19 14:10:16 sameer Exp $ 
  ***************************************************************************/
 
 	
