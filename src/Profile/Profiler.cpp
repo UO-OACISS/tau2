@@ -102,6 +102,7 @@ void Profiler::Start(void)
       DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
+	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
   	tid = RtsLayer::myThread();
 	
 #ifdef TRACING_ON
@@ -223,7 +224,7 @@ void Profiler::Stop(void)
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
-
+	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
  	tid = RtsLayer::myThread();
 #ifdef TRACING_ON
 	TraceEvent(ThisFunction->GetFunctionId(), -1, tid); // -1 is for exit
@@ -704,8 +705,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 1999/04/27 22:19:12 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.20 1999/04/27 22:19:12 sameer Exp $ 
+ * $Revision: 1.21 $   $Date: 1999/04/28 22:28:43 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.21 1999/04/28 22:28:43 sameer Exp $ 
  ***************************************************************************/
 
 	
