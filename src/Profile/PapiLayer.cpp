@@ -20,7 +20,7 @@ using namespace std;
 
 //Helper function used to determine the counter value
 //from the event name.
-int map_eventnames(char *name)
+int PapiLayer::map_eventnames(char *name)
 {
   int i;
 
@@ -175,7 +175,7 @@ long long PapiLayer::getCounters(int tid)
 
 
 /////////////////////////////////////////////////
-int PapiLayerInit(void)
+int PapiLayer::PapiLayerInit(void)
 { 
      // Initialization routine for PAPI timers
      if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
