@@ -175,6 +175,13 @@ Note: By default if
    matrix.pmf and it will bring up the racy main window.
    
     
+5. Modifying user's Makefile for Tracing/Profiling.
+
+   A sample Makefile is provided in ./include/Makefile and this may be 
+   included in other Makefiles for user applications or libraries not 
+   in this distribution. It defines the include directories, sets profiling
+   and tracing options and provides the libraries that need to be included.
+   See the ./include/Makefile for details on how to use this. 
 
 
 
