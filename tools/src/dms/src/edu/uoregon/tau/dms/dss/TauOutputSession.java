@@ -458,7 +458,7 @@ public class TauOutputSession extends ParaProfDataSession{
 						   "Please check for the correct file type or a corrupt file.",
 						   e, null, null, null, false,false, false),null,null);
 	    if(this.debug())
-		this.outputDebugMessage(this.toString()+": run()\nAn error occured whilst trying to load!\nExpected format to be of type \"profiles\".");
+		this.outputDebugMessage("run()\nAn error occured whilst trying to load!\nExpected format to be of type \"profiles\".");
 	}
     }
 

@@ -137,6 +137,7 @@ public class PSRunDataSession extends ParaProfDataSession{
 		thread = context.getThread(threadID);
 		if(thread==null){
 			thread = context.addThread(threadID);
+			thread.setDebug(this.debug());
 			thread.initializeFunctionList(this.getGlobalMapping().getNumberOfMappings(0));
 			thread.initializeUsereventList(this.getGlobalMapping().getNumberOfMappings(2));
 		}

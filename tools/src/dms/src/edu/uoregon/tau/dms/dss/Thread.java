@@ -187,6 +187,9 @@ public class Thread implements Comparable{
 
     
     public void setThreadData(int metric){
+	if(this.debug){
+	    this.outputDebugMessage("setThreadData\nmetrics:"+metric);
+	}
 	this.setThreadDataHelper(metric);
 	this.setPercentData(metric);
 	this.setThreadDataHelper(metric);
@@ -194,6 +197,9 @@ public class Thread implements Comparable{
 
     public void setThreadDataAllMetrics(){
 	//This needs to be made more efficient (such as that used for setting the mean values).
+	if(this.debug){
+	    this.outputDebugMessage("setThreadDataAllMetrics()\nnumberOfMetrics:"+this.getNumberOfMetrics());
+	}
 	for(int i=0;i<this.getNumberOfMetrics();i++){
 	    this.setThreadDataHelper(i);
 	    this.setPercentData(i);
