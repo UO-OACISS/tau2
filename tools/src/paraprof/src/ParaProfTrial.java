@@ -142,7 +142,7 @@ public class ParaProfTrial extends Trial{
     public String getTrialIdentifier(boolean reverse){
 	if(path!=null){
 	    if(reverse)
-		return FileList.getPathReverse(path);
+		return pathReverse;
 	    else
 		return path;
 	}
@@ -152,12 +152,18 @@ public class ParaProfTrial extends Trial{
 		", Trial " + this.getID() + ".";
     }
   
-    public void setPath(String path){
-	this.path = path;}
+    //Sets both the path and the path reverse.
+    public void setPaths(String path){
+	this.path = path;
+	this.pathReverse = FileList.getPathReverse(path);
+    }
     
     public String getPath(){
 	return path;}
   
+    public String getPathReverse(){
+	return pathReverse;}
+
     public Vector getMetrics(){
 	return metrics;}
   
@@ -344,6 +350,7 @@ public class ParaProfTrial extends Trial{
     private Preferences  preferences = new  Preferences(this, null);
   
     private String path = null;
+    private String pathReverse = null;
     private int currentValueLocation = 0;
   
     private GlobalMapping globalMapping;

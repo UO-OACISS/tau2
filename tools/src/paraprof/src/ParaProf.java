@@ -113,6 +113,7 @@ public class ParaProf implements ActionListener{
 		    break;
 		}
 		if(v.size()>0){
+		    trial.setPaths(fl.getPath());
 		    trial.initialize(v);
 		    experiment.addTrial(trial);
 		    trial.showMainWindow();
@@ -141,9 +142,10 @@ public class ParaProf implements ActionListener{
 		    else
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", ParaProf.debugIsOn);
 		    if(v.size()>0){
-		    trial.initialize(v);
-		    experiment.addTrial(trial);
-		    trial.showMainWindow();
+			trial.setPaths(fl.getPath());
+			trial.initialize(v);
+			experiment.addTrial(trial);
+			trial.showMainWindow();
 		    }
 		    else{
 			System.out.println("No profile files found in the current directory.");
