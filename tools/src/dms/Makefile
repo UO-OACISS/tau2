@@ -14,6 +14,7 @@ classes/dms/dss/PerfDBSession.class: dss/PerfDBSession.java
 
 ./examples/TestPerfDBSession.class: dms.jar
 	javac -d ./examples -classpath ./classes:./dms.jar ./examples/*.java
+	examples/testPerfDBSession
 
 clean:
 	rm -rf dms.jar classes/* examples/*.class
