@@ -2732,8 +2732,13 @@ then
     cd ${tauroot}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
   fi
   echo "TAU: installed paraprof in ${tauroot}/${architecture}/bin"
-  cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/bin
-  echo "TAU: installed ParaProf.jar in ${tauroot}/${architecture}/bin"
+  cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/dms/dms.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/jargs.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/jatha.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/junit.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/contrib/xerces.jar ${tauroot}/${architecture}/lib
+  echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauroot}/${architecture}/lib"
 else
   if [ ! -d ${tauprefix} ]
   then
@@ -2770,8 +2775,13 @@ else
     cd ${tauprefix}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
   fi
   echo "TAU: installed paraprof in ${tauprefix}/${architecture}/bin"
-  cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/bin
-  echo "TAU: installed ParaProf.jar in ${tauprefix}/${architecture}/bin"
+  cp ${tauprefix}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/lib
+  cp ${tauprefix}/tools/src/dms/dms.jar ${tauprefix}/${architecture}/lib
+  cp ${tauprefix}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib
+  cp ${tauprefix}/tools/src/contrib/jatha.jar ${tauprefix}/${architecture}/lib
+  cp ${tauprefix}/tools/src/contrib/junit.jar ${tauprefix}/${architecture}/lib
+  cp ${tauprefix}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
+  echo "TAU: installed ParaProf, DMS, and supporting jars in ${tauprefix}/${architecture}/lib"
 fi
 
 
