@@ -76,6 +76,7 @@ using namespace std;
 usptr_t * SprocLayer::tauArena = NULL; 
 int 	  SprocLayer::tauThreadCount = 0; 
 usema_t * SprocLayer::tauDBMutex = NULL; 
+usema_t * SprocLayer::tauEnvMutex = NULL; 
 usema_t * SprocLayer::tauThreadCountMutex = NULL; 
 
 map<pid_t, int, less<pid_t> >& TheTauPidSprocMap(void)
@@ -250,8 +251,8 @@ int SprocLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: SprocLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2005/01/05 01:59:17 $
- * POOMA_VERSION_ID: $Id: SprocLayer.cpp,v 1.2 2005/01/05 01:59:17 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2005/01/05 02:21:07 $
+ * POOMA_VERSION_ID: $Id: SprocLayer.cpp,v 1.3 2005/01/05 02:21:07 sameer Exp $
  ***************************************************************************/
 
 

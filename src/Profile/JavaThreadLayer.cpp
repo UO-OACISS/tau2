@@ -59,6 +59,7 @@ JavaVM 	* JavaThreadLayer::tauVM;
 int 	  JavaThreadLayer::tauThreadCount = 0; 
 JVMPI_RawMonitor JavaThreadLayer::tauNumThreadsLock ;
 JVMPI_RawMonitor JavaThreadLayer::tauDBMutex ;
+JVMPI_RawMonitor JavaThreadLayer::tauEnvMutex ;
 JVMPI_Interface  * JavaThreadLayer::tau_jvmpi_interface;
 
 
@@ -268,8 +269,8 @@ int JavaThreadLayer::TotalThreads(void)
 
 /***************************************************************************
  * $RCSfile: JavaThreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2005/01/05 01:59:17 $
- * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.2 2005/01/05 01:59:17 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2005/01/05 02:21:07 $
+ * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.3 2005/01/05 02:21:07 sameer Exp $
  ***************************************************************************/
 
 
