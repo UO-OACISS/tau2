@@ -50,7 +50,6 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 /*
 #define TAU_MAPPING_CREATE(name, type, key, groupname)  { static FunctionInfo TauMapFI(name, type, key, groupname); \
     TheTauMapFI(key) = &TauMapFI; \
-    printf("Associating %d id with name %s", key, name); \
   } 
 */
 #define TAU_MAPPING_CREATE(name, type, key, groupname)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, key, groupname, true); \
@@ -58,7 +57,6 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 	printf("ERROR: new returns NULL"); exit(1); \
     } \
     TheTauMapFI(key) = TauMapFI; \
-    printf("Associating %d id with name %s", key, name); \
   } 
 /* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
    object that is used to relate a lower level layer with a higher level layer 
@@ -71,7 +69,7 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 */
 #define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); \
 	if (FuncInfoVar == (FunctionInfo *)NULL) { \
-	  printf("ERROR: map rets NULL"); \
+	  printf("ERROR: TAU_MAPPING_LINK map returns NULL FunctionInfo *\n"); \
  	  return; \
         } 
 
@@ -85,11 +83,16 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
    object that can be subsequently used with TAU_PROFILE_START and 
    TAU_PROFILE_STOP
 */
-#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar) Profiler Timer(FuncInfoVar, FuncInfoVar->GetProfileGroup(), true);
+#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar) Profiler *Timer; \
+   Timer = new Profiler(FuncInfoVar, FuncInfoVar->GetProfileGroup(), true); \
+   if (Timer == (Profiler *) NULL) {\
+     printf("ERROR: TAU_MAPPING_PROFILE_TIMER: new returns NULL Profiler *\n");\
+   }
+   
 
 /* TAU_MAPPING_PROFILE_START acts like TAU_PROFILE_START by starting the timer 
 */
-#define TAU_MAPPING_PROFILE_START(Timer) Timer.Start();
+#define TAU_MAPPING_PROFILE_START(Timer) Timer->Start();
 
 /* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer 
 */
