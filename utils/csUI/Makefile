@@ -24,7 +24,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/sameer/tau2
+TAUROOT=
 XFORMSROOT=/local/apps/xforms/FORMS
 #######################################################################
  
@@ -34,8 +34,8 @@ XFORMSROOT=/local/apps/xforms/FORMS
 CC = $(CONFIG_CC) $(ABI) $(ISA)
 CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 DEFINES = 
-INSTALL = /bin/cp
-SHELL = /bin/sh
+TAU_INSTALL = /bin/cp
+TAU_SHELL = /bin/sh
 LSX = .a
 #############################################
 
@@ -68,5 +68,5 @@ $(INSTALLDEST)/$(TARGET): $(TARGET)
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
