@@ -137,9 +137,17 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event)
 	 	(long) event->u.method.method_id);
   }
 
-  
+  Profiler *p = new Profiler(TauMethodName, TauMethodName->GetProfileGroup(),true); 
+  if (p == (Profiler *) NULL) 
+  { 
+    printf("TauJavaLayer::MethodEntry Profiler is NULL");
+    exit(1);
+  }
+  p->Start();
+/*
   TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName);
   TauTimer.Start();
+*/
   
  // TAU_MAPPING_PROFILE_START(TauTimer);
 
