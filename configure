@@ -365,9 +365,9 @@ echo "-----------------------------------------------------------------"
 fixmakeargs="$fixmakeargs tauroot=$tauroot"
 # Try and figure out architecture
 detectarch=unknown
-detectarch=`utils/archfind`
-detectxdev=`utils/archfind -x`
-detectspec=`utils/archfind -s`
+detectarch=`cd utils; ./archfind`
+detectxdev=`cd utils; ./archfind -x`
+detectspec=`cd utils; ./archfind -s`
 
 
 ###########################################################################
