@@ -1,6 +1,6 @@
-package com.perfdb.loadxml;
+package perfdb.loadxml;
 
-import com.perfdb.util.dbinterface.*;
+import perfdb.util.dbinterface.*;
 import java.sql.*;
 import org.xml.sax.*; 
 import org.xml.sax.helpers.*; 
@@ -18,12 +18,12 @@ public class Load {
 
     public Load() {
 	super();
-	parserClass = (new com.perfdb.ConnectionManager()).getParserClass();
+	parserClass = (new perfdb.ConnectionManager()).getParserClass();
     }
 
     public Load(DB db) {
 	super();
-	parserClass = (new com.perfdb.ConnectionManager()).getParserClass();
+	parserClass = (new perfdb.ConnectionManager()).getParserClass();
 	setDB(db);
     }	
 

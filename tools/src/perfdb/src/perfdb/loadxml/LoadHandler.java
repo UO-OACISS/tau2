@@ -1,7 +1,7 @@
-package com.perfdb.loadxml;
+package perfdb.loadxml;
 
-import com.perfdb.util.dbinterface.*;
-import com.perfdb.dbmanager.*;
+import perfdb.util.dbinterface.*;
+import perfdb.dbmanager.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 import java.util.*;

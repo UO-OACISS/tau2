@@ -1,8 +1,8 @@
-package com.perfdb.loadxml;
+package perfdb.loadxml;
 
-import com.perfdb.util.dbinterface.*;
-import com.perfdb.util.io.*;
-import com.perfdb.dbmanager.*;
+import perfdb.util.dbinterface.*;
+import perfdb.util.io.*;
+import perfdb.dbmanager.*;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
@@ -18,14 +18,14 @@ public class Main {
     private int enable_AppPartition=0;
     private int enable_ExpPartition=0;
 
-    private com.perfdb.ConnectionManager connector;
+    private perfdb.ConnectionManager connector;
 
     public Main() {
 	super();
-	connector = new com.perfdb.ConnectionManager();
+	connector = new perfdb.ConnectionManager();
     }
 
-    public com.perfdb.ConnectionManager getConnector(){
+    public perfdb.ConnectionManager getConnector(){
 	return connector;
     }
 

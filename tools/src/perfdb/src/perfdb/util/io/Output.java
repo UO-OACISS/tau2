@@ -1,8 +1,8 @@
-package com.perfdb.util.io;
+package perfdb.util.io;
 
 import java.io.*;
 import java.sql.*;
-import com.perfdb.analysisutil.*;
+// import perfdb.analysisutil.*;
 
 /*** Handles output of a query. ***/
 
@@ -122,7 +122,7 @@ public class Output {
 
     /*** Store the query result back to DB. Before storing, please make sure the data structure conforms to
          the table schema.  ***/
-    public void appendToTable(com.perfdb.ConnectionManager connector, String tblName){
+    public void appendToTable(perfdb.ConnectionManager connector, String tblName){
 	
 	File tempFile = new File("save.tmp");
 	if (!tempFile.exists()){

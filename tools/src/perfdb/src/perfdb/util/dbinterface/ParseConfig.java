@@ -1,4 +1,4 @@
-package com.perfdb.util.dbinterface;
+package perfdb.util.dbinterface;
 
 import java.io.*;
 

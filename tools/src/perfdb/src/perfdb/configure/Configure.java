@@ -1,15 +1,15 @@
-package com.configure;
+package perfdb.configure;
 
-import com.perfdb.util.dbinterface.*;
-import com.perfdb.util.io.*;
-import com.perfdb.dbmanager.*;
+import perfdb.util.dbinterface.*;
+import perfdb.util.io.*;
+import perfdb.dbmanager.*;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
 
 public class Configure {
     private DB db = null;
-    // protected String dbAccessString = com.perfdb.ConnectionManager.getPerfdbAcct();
+    // protected String dbAccessString = perfdb.ConnectionManager.getPerfdbAcct();
 	private static String Greeting = "\nWelcome to the configuration program for PerfDBF.\nThis program will prompt you for some information necessary to ensure\nthe desired behavior for the PerfDB tools.\n";
 	private static String PDBHomePrompt = "Please enter the PerfDB home directory:";
 
@@ -230,8 +230,8 @@ public class Configure {
 	 */
 
 	public void TestDBConnection() {
-	// com.perfdb.ConnectionManager.connect();
-	// com.perfdb.ConnectionManager.dbclose();
+	// perfdb.ConnectionManager.connect();
+	// perfdb.ConnectionManager.dbclose();
 	}
 
 	/** TestDB method

@@ -4,7 +4,6 @@ PACKAGES = \
 	perfdb.util.dbinterface \
 	perfdb \
 	perfdb.loadxml \
-	perfdb.analysisutil \
 	perfdb.dbmanager \
 	perfdb.configure \
 

@@ -1,4 +1,4 @@
-package com.perfdb.util.dbinterface;
+package perfdb.util.dbinterface;
 
 /*** Contain access information for connection to DBMS through JDBC. ***/
 

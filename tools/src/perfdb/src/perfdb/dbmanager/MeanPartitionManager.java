@@ -1,4 +1,4 @@
-package com.perfdb.dbmanager;
+package perfdb.dbmanager;
 
 import java.util.*;
 import java.sql.*;

@@ -1,7 +1,7 @@
-package com.perfdb;
+package perfdb;
 
-import com.perfdb.util.dbinterface.*;
-import com.perfdb.util.io.*;
+import perfdb.util.dbinterface.*;
+import perfdb.util.io.*;
 import java.io.*;
 import java.sql.*;
 

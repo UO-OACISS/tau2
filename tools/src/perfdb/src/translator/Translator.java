@@ -1,4 +1,4 @@
-package com.translator;
+package translator;
 
 import java.io.*;
 import java.util.*;
@@ -13,7 +13,7 @@ public class Translator implements Serializable{
 
     /* This variable connects translator to DB in order to check whether
        the app. and exp. associated with the trial data do exist there. */
-    private com.perfdb.ConnectionManager connector;
+    private perfdb.ConnectionManager connector;
 
     int maxNode;
     int maxContext;
@@ -73,7 +73,7 @@ public class Translator implements Serializable{
 	maxContext = 0;
 	maxThread = 0;
 
-	connector = new com.perfdb.ConnectionManager();
+	connector = new perfdb.ConnectionManager();
 	connector.connect();
     }
 
