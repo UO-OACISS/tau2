@@ -157,13 +157,15 @@ static int procid_0;
 
   
 
-
-
-
-
-
-
-
+int totalnodes(void)
+{
+  static int nodes = -1;
+  if (nodes == -1)
+  {
+    PMPI_Comm_size(MPI_COMM_WORLD, &nodes);
+  }
+  return nodes;
+}
 
 
 
@@ -207,8 +209,16 @@ char *note;
       prof_send( procid_0, rq->otherParty, rq->tag, rq->size, note );
       */
     } else {
-      PMPI_Get_count( status, MPI_BYTE, &size );
-      TAU_TRACE_RECVMSG( status->MPI_TAG, status->MPI_SOURCE, size); 
+      if (PMPI_Get_count( status, MPI_BYTE, &size ) == MPI_SUCCESS)
+      {
+        if ((status->MPI_SOURCE < totalnodes()) && 
+	    (status->MPI_SOURCE >= 0) &&
+	    (size != MPI_UNDEFINED) &&
+	    (size >= 0))
+        {
+          TAU_TRACE_RECVMSG( status->MPI_TAG, status->MPI_SOURCE, size); 
+	}
+      }
       /*
       prof_recv( procid_0, status->MPI_SOURCE, status->MPI_TAG,
 		size, note );
