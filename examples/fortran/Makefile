@@ -13,7 +13,7 @@
  
 TAUROOTDIR	= ../..
 
-include $(TAUROOTDIR)/i386_linux/lib/Makefile.tau
+include $(TAUROOTDIR)/include/Makefile
 
 CXX		= $(TAU_CXX)
 
