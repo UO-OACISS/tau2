@@ -435,6 +435,12 @@ void Profiler::Stop(int tid)
 	{
  	  ThisFunction->SetExclTime(tid, 0.0);
 	}
+#ifdef TAU_CALLPATH
+	if ((ParentProfiler != NULL) && (CallPathFunction->GetExclTime(tid) < 0)) 
+	{
+ 	  CallPathFunction->SetExclTime(tid, 0.0);
+	}
+#endif /* TAU_CALLPATH */
 #endif /* TAU_COMPENSATE */
 
 #if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS)|| defined(PROFILE_CALLSTACK) )
@@ -2602,8 +2608,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.88 $   $Date: 2004/01/09 01:14:11 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.88 2004/01/09 01:14:11 sameer Exp $ 
+ * $Revision: 1.89 $   $Date: 2004/01/15 23:44:33 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.89 2004/01/15 23:44:33 sameer Exp $ 
  ***************************************************************************/
 
 	
