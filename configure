@@ -1627,6 +1627,12 @@ case $fortran_compiler in
       fixmakeargs="$fixmakeargs NAGWARE_FORTRAN"
       ;;
 
+   pathscale)
+      echo "Default Fortran compiler will be Pathscale pathf90"
+      extradir=`which pathf90 | sed s@\/pathf90@\/..@`
+      fixmakeargs="$fixmakeargs PATHSCALE_FORTRAN"
+      ;;
+
    sun)
       echo "Default Fortran compiler will be SUN f90" 
       fixmakeargs="$fixmakeargs SUN_FORTRAN"
