@@ -22,6 +22,7 @@
 **			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
 **			  -DPOOMA_KAI for KCC compiler 			  **
 **			  -DDEBUG_PROF  for internal debugging messages   **
+**                        -DPROFILE_CALLSTACK to enable callstack traces  **
 **	Documentation	: See http://www.acl.lanl.gov/tau	          **
 ***************************************************************************/
 
@@ -280,9 +281,9 @@ void Profiler::Start(void)
 
 	CurrentProfiler[RtsLayer::myThread()] = this;
 
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) )
+#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall = 0;
-#endif //PROFILE_CALLS || PROFILE_STATS
+#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
       }  
 }
 
@@ -314,9 +315,9 @@ Profiler::Profiler( const Profiler& X)
 
 	CurrentProfiler[RtsLayer::myThread()] = this;
 
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) )
+#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall = X.ExclTimeThisCall;
-#endif //PROFILE_CALLS || PROFILE_STATS
+#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -331,9 +332,9 @@ Profiler& Profiler::operator= (const Profiler& X)
 
 	DEBUGPROFMSG(" Profiler& Profiler::operator= (const Profiler& X)" <<endl;);
 
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) )
+#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall = X.ExclTimeThisCall;
-#endif //PROFILE_CALLS || PROFILE_STATS
+#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 
 	return (*this) ;
 
@@ -369,13 +370,13 @@ void Profiler::Stop()
 	ThisFunction->AddExclTime(TotalTime);
 	// In either case we need to add time to the exclusive time.
 
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) )
+#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS)|| defined(PROFILE_CALLSTACK) )
 	ExclTimeThisCall += TotalTime;
 	DEBUGPROFMSG("Thr "<< RtsLayer::myNode() << "Profiler::Stop() : Name " 
 	  << ThisFunction->GetName() << " ExclTimeThisCall = "
 	  << ExclTimeThisCall << " InclTimeThisCall " << TotalTime << endl;);
 
-#endif //PROFILE_CALLS || PROFILE_STATS
+#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 
 #ifdef PROFILE_CALLS
 	ThisFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
@@ -392,9 +393,9 @@ void Profiler::Stop()
 	    << ParentProfiler->ThisFunction->GetName() << endl;);
 
 	  ParentProfiler->ThisFunction->ExcludeTime(TotalTime);
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) )
+#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 	  ParentProfiler->ExcludeTimeThisCall(TotalTime);
-#endif //PROFILE_CALLS || PROFILE_STATS
+#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 
 	}
 	
@@ -595,13 +596,13 @@ int Profiler::StoreData()
 
 //////////////////////////////////////////////////////////////////////
 
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) )
+#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
 int Profiler::ExcludeTimeThisCall(double t)
 {
 	ExclTimeThisCall -= t;
 	return 1;
 }
-#endif //PROFILE_CALLS || PROFILE_STATS
+#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -1081,8 +1082,7 @@ int RtsLayer::DumpEDF(void)
 	return 1;
 }
 
-// should be #ifdef PROFILE_CALLSTACK
-#ifdef PROFILE_CALLS
+#ifdef PROFILE_CALLSTACK
 
 //////////////////////////////////////////////////////////////////////
 //  Profiler::CallStackTrace()
@@ -1104,10 +1104,11 @@ void Profiler::CallStackTrace()
                                  //   stack
   static int ncalls = 0;         // number of times CallStackTrace()
                                  //   has been called
-  
-
+ 
   // get wallclock time
   now = RtsLayer::getUSecD();  
+
+  DEBUGPROFMSG("CallStackTrace started at " << now << endl;);
 
   // increment num of calls to trace
   ncalls++;
@@ -1179,14 +1180,16 @@ void Profiler::CallStackTrace()
 
   if (ncalls == 1)
   {
-    fprintf(fp,"%s%s","Name Type Calls Subrs Prof-Incl ",
+    fprintf(fp,"%s%s","# Name Type Calls Subrs Prof-Incl ",
             "Prof-Excl Func-Incl Func-Excl\n");
     fprintf(fp, 
-            "-------------------------------------------------------------\n");
+            "# -------------------------------------------------------------\n");
   }
   else
     fprintf(fp, "\n");
 
+  // output time of callstack dump
+  fprintf(fp, "%.16G\n", now);
   // output call stack info
   curr = CurrentProfiler[RtsLayer::myThread()];
   while (curr != 0 )
@@ -1206,13 +1209,13 @@ void Profiler::CallStackTrace()
 
 }
 /*-----------------------------------------------------------------*/
-#endif //PROFILE_CALLS
+#endif //PROFILE_CALLSTACK
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1997/12/29 23:08:26 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.4 1997/12/29 23:08:26 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: mikek $
+ * $Revision: 1.5 $   $Date: 1998/01/06 00:35:51 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.5 1998/01/06 00:35:51 mikek Exp $ 
  ***************************************************************************/
 
 	
