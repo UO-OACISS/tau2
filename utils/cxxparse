@@ -1,0 +1,49 @@
+#!/bin/sh
+DUCTAPEROOT= @DUCTAPEROOT@
+ARCH = @ARCH@
+BIN=$DUCTAPEROOT/$ARCH/bin
+CXXINCLUDES= @CXXINCLUDES@
+
+#EDGOPT="--instantiate used --no_il_lowering --restrict --exceptions"
+EDGOPT="--instantiate none --no_il_lowering --restrict --exceptions --late_tiebreaker"
+
+# machine options for SGI-64
+MACHOPT="-DMIPSEB -D_MIPSEB -D_PIC -D__DSO__ \
+     -D_LANGUAGE_C_PLUS_PLUS=1 -D__EXTENSIONS__ -D_MODERN_C \
+     -D_SGI_SOURCE -D_LONGLONG -D_SVR4_SOURCE -Dmips -Dunix \
+     -Dsgi -Dhost_mips -D__sgi -D__host_mips \
+     -D_SYSTYPE_SVR4 -D__unix -D_COMPILER_VERSION=721 \
+     -D__mips=4 -D_MIPS_ISA=4 -D_ABI64=3 -D_MIPS_SIM=_ABI64 \
+     -D_MIPS_FPSET=32 -D_MIPS_SZINT=32 -D_MIPS_SZLONG=64 -D_MIPS_SZPTR=64"
+
+# compiler options for SGI CC
+#COMPOPT="-I/opt/MIPSpro/MIPSpro_7.2.1/usr/include/CC \
+#     -I/opt/MIPSpro/MIPSpro_7.2.1/usr/include \
+#     -I/usr/include/CC -I/usr/include"
+
+# compiler options for KCC
+COMPOPT="$CXXINCLUDES -D__noinline=\"\" -D__restrict=\"\"  -w"
+
+ILF=/usr/tmp/$$.il
+case $1 in
+*.cc)   PDB=`basename $1 .cc`.pdb
+        ;;
+*.cpp)  PDB=`basename $1 .cpp`.pdb
+        ;;
+*.cxx)  PDB=`basename $1 .cxx`.pdb
+        ;;
+*.C)    PDB=`basename $1 .C`.pdb
+        ;;
+*)      PDB=$1.pdb
+        ;;
+esac
+INF=$1
+shift
+
+#set -x
+echo "edgcpfe ${INF} --> ${ILF}"
+eval ${BIN}/edgcpfe ${MACHOPT} ${COMPOPT} ${EDGOPT} $* -o ${ILF} ${INF}
+echo "taucpdisp ${ILF} --> ${PDB}"
+${BIN}/taucpdisp ${ILF} > ${PDB}
+rm ${ILF}
+
