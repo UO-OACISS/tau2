@@ -123,7 +123,7 @@ JDKARCH                 = linux
 #############################################
 # DYNINST DEFAULT ARCH
 #############################################
-DYNINST_PLATFORM 	= $(PLATFORM) 
+DYNINST_PLATFORM 	= $(PLATFORM)
 
 
 #PCL##include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/PCLMakefile.stub	  #ENDIF#
