@@ -1,0 +1,2 @@
+#example rule file
+usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
