@@ -17,12 +17,23 @@ public class Thread implements Comparable{
     public Thread(){
 	doubleList = new double[7];
     }
+
+    public Thread(int initialCapacity){
+	doubleList = new double[initialCapacity*7];
+    }
     
     public Thread(int nodeID, int contextID, int threadID){
 	this.nodeID = nodeID;
 	this.contextID = contextID;
 	this.threadID = threadID;
 	doubleList = new double[7];
+    }
+
+    public Thread(int nodeID, int contextID, int threadID, int initialCapacity){
+	this.nodeID = nodeID;
+	this.contextID = contextID;
+	this.threadID = threadID;
+	doubleList = new double[initialCapacity*7];
     }
     //####################################
     //End - Contructor(s).
