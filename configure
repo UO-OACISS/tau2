@@ -4047,6 +4047,7 @@ case $machine in
 
     ia64)
 	gunzip -c tools/src/contrib/ia64/libjogl.so.gz > $architecture/lib/libjogl.so
+	gunzip -c tools/src/contrib/ia64/jogl.jar.gz > $architecture/lib/jogl.jar
 	;;
 
     solaris2)
