@@ -51,7 +51,7 @@ public class PerfDBSession extends DataSession {
 		buf.append(" language, para_diag, usage_text, execution_options, ");
 		buf.append(" experiment_table_name from application");
 		buf.append(whereClause);
-		System.out.println(buf.toString());
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -95,7 +95,7 @@ public class PerfDBSession extends DataSession {
 		buf.append("configuration_info, instrumentation_info, ");
 		buf.append("compiler_info, trial_table_name from experiment ");
 		buf.append(whereClause);
-		System.out.println(buf.toString());
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -149,7 +149,7 @@ public class PerfDBSession extends DataSession {
 		buf.append("from trial t inner join experiment e ");
 		buf.append("on t.experiment = e.id ");
 		buf.append(whereClause);
-		System.out.println(buf.toString());
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -299,7 +299,7 @@ public class PerfDBSession extends DataSession {
 		buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
 		buf.append("inner join interval_total_summary ts on f.id = ts.function ");
 		buf.append(whereClause);
-		System.out.println(buf.toString());
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -395,7 +395,7 @@ public class PerfDBSession extends DataSession {
 		buf.append("from user_event u inner join trial t on u.trial = t.id ");
 		buf.append("inner join experiment e on t.experiment = e.id ");
 		buf.append(whereClause);
-		System.out.println(buf.toString());
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -549,7 +549,7 @@ public class PerfDBSession extends DataSession {
 			gotWhile = true;
 		}
 		buf.append(" order by f.trial, p.node, p.context, p.thread, p.function");
-		System.out.println(buf.toString());
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -588,11 +588,11 @@ public class PerfDBSession extends DataSession {
 		StringBuffer buf = new StringBuffer();
 		buf.append("select distinct p.id, p.user_event, p.node, ");
 		buf.append("p.context, p.thread, p.sample_count, ");
-		buf.append("p.maximum_value, p.minimum_valie, p.mean_value, ");
+		buf.append("p.maximum_value, p.minimum_value, p.mean_value, ");
 		buf.append("p.standard_deviation, u.trial ");
 		buf.append("from atomic_location_profile p ");
 		buf.append("inner join user_event u on u.id = p.user_event ");
-		buf.append("inner join trial t on f.trial = t.id ");
+		buf.append("inner join trial t on u.trial = t.id ");
 		buf.append("inner join experiment e on e.id = t.experiment ");
 		boolean gotWhile = false;
 		if (application != null) {
@@ -688,7 +688,7 @@ public class PerfDBSession extends DataSession {
 			gotWhile = true;
 		}
 		buf.append(" order by u.trial, p.node, p.context, p.thread, p.user_event");
-		System.out.println(buf.toString());
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
