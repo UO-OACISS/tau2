@@ -47,6 +47,9 @@ LINKER	= $(CC)
 #HPCXX#RUNTIME4 = pcxx2ar#ENDIF#
 #HPCXX#RUNTIME5 = ar2pcxx#ENDIF#
 
+# Compiler specific flags
+#KAI#COMPSPECIFIC = -DKAI#ENDIF#
+
 
 SAGE1DIR=
 INCLUDEPATH = $(SAGE1DIR)/lib/include
@@ -54,7 +57,7 @@ SAGE1LIBS = $(SAGE1DIR)/lib/$(CONFIG_ARCH)
 
 INSTALLDEST	= ../bin/$(CONFIG_ARCH)
 
-CFLAGS        = $(USER_OPT) -I../include $(CEXTRA)
+CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(COMPSPECIFIC)
 
 HDRS	      =
 

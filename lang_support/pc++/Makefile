@@ -5,11 +5,11 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=sgi8k
-CONFIG_CC=cc
-CONFIG_CXX=CC
+CONFIG_ARCH=default
+CONFIG_CC=gcc
+CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-64
+USER_OPT=-g
 #######################################################################
  
 ############# Standard Defines ##############
