@@ -105,6 +105,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 // we know that it couldn't be already on the call stack.
 	RtsLayer::LockDB();
 // Use LockDB to avoid a possible race condition.
+
+	//Add function name to the name list.
+	Profiler::theFunctionList(NULL, NULL, true, (const char *)GetName());
+
         if (InitData) 
         {
 	  SetAlreadyOnStack(false, tid);
@@ -226,6 +230,22 @@ FunctionInfo::~FunctionInfo()
   TheSafeToDumpData() = 0;
 }
 
+double * FunctionInfo::GetExclTime(int tid){
+  double * tmpCharPtr = (double *) malloc( sizeof(double) * MAX_TAU_COUNTERS);
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    tmpCharPtr[i] = ExclTime[tid][i];
+  }
+  return tmpCharPtr;
+}
+
+double * FunctionInfo::GetInclTime(int tid){
+  double * tmpCharPtr = (double *) malloc( sizeof(double) * MAX_TAU_COUNTERS);
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    tmpCharPtr[i] = InclTime[tid][i];
+  }
+  return tmpCharPtr;
+}
+
 #ifdef PROFILE_CALLS
 //////////////////////////////////////////////////////////////////////
 
@@ -258,6 +278,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: bertie $
- * $Revision: 1.27 $   $Date: 2002/03/08 20:58:03 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.27 2002/03/08 20:58:03 bertie Exp $ 
+ * $Revision: 1.28 $   $Date: 2002/03/27 10:11:26 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.28 2002/03/27 10:11:26 bertie Exp $ 
  ***************************************************************************/
