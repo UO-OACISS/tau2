@@ -15,12 +15,9 @@ public class DBDataSource extends DataSource {
     private Object initializeObject;
 
     
-    
-    
-
     private boolean abort = false;
-    int totalItems = 0;
-    int itemsDone = 0;
+    private int totalItems = 0;
+    private int itemsDone = 0;
 
     public int getProgress() {
         return 0;
@@ -224,6 +221,7 @@ public class DBDataSource extends DataSource {
             while (l.hasNext()) {
                 AtomicEvent ue = (AtomicEvent) l.next();
                 this.addUserEvent(ue.getName());
+                setUserEventsPresent(true);
             }
 
             l = databaseAPI.getAtomicEventData();
@@ -240,11 +238,6 @@ public class DBDataSource extends DataSource {
                 thread = context.getThread(alp.getThread());
                 if (thread == null) {
                     thread = context.addThread(alp.getThread(), numberOfMetrics);
-                }
-
-
-                if (thread.getUserEventProfiles() == null) {
-                    setUserEventsPresent(true);
                 }
 
                 userEvent = this.getUserEvent(databaseAPI.getAtomicEvent(alp.getAtomicEventID()).getName());
@@ -282,14 +275,6 @@ public class DBDataSource extends DataSource {
         
     }
 
-    //####################################
-    //Instance data.
-    //####################################
-    private LineData functionDataLine = new LineData();
-    private LineData usereventDataLine = new LineData();
-    //####################################
-    //End - Instance data.
-    //####################################
 }
 
 /*
