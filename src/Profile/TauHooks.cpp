@@ -51,6 +51,7 @@ int TheFlag[TAU_MAX_THREADS] ;
 #define TAU_MONITOR_ENTER(tid) if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; } 
 #define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
 
+vector<string> TauFuncNameVec; /* holds just names */
 vector<FunctionInfo *> TauDynFI; /* global FI vector */
 // Initialization procedure. Should be called before invoking 
 // other TAU routines.
@@ -60,6 +61,9 @@ void TauInitCode(char *arg, int isMPI)
   int tid = 0;
   TAU_MONITOR_ENTER(0);
   int functionId = 0;
+  int id;
+
+  /* iterate for each routine name */
   name = strtok(arg, "|");
   while (name != (char *)NULL)
   { 
@@ -71,13 +75,20 @@ void TauInitCode(char *arg, int isMPI)
     dprintf("Extracted : %s :id = %d\n", name, functionId-1);
     /* Create a new FunctionInfo object with the given name and add it to 
        the global vector of FI pointers */
+#ifdef TAUDYNVEC
     FunctionInfo *taufi = new 
 	FunctionInfo(name, " " , TAU_DEFAULT, "TAU_DEFAULT", true, tid); 
     if (taufi == (FunctionInfo *) NULL) {
       printf("ERROR: new returns NULL in TauInitCode\n"); exit(1); 
     }
     TauDynFI.push_back(taufi); 
-#endif
+#else /* TAUDYNVEC */
+    id = functionId - 1; /* start from 0 */
+    TauFuncNameVec.push_back(string(name));  /* Save the name with id */
+    dprintf("TauFuncNameVec[%d] = %s\n", id, TauFuncNameVec[id].c_str()); 
+    TauDynFI.push_back(NULL); /* create a null entry for this symbol */
+#endif /* TAUDYNVEC */
+#endif /* ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP */
     
     name = strtok(NULL, "|");
   }
@@ -96,9 +107,17 @@ void TauRoutineEntry(int id )
   TAU_MAPPING_OBJECT(TauMethodName);
 #ifdef ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP
   TAU_MAPPING_LINK(TauMethodName, id);
-#else
+#elif TAUDYNVEC
   id--; /* to account for offset. Start from 0..n-1 instead of 1..n */
   TauMethodName = TauDynFI[id];
+#else /* TAUDYNVEC */
+  id--; /* to account for offset. Start from 0..n-1 instead of 1..n */ 
+  if ((TauMethodName = TauDynFI[id]) == NULL) 
+  {	/* Function has not been called so far */
+    TauMethodName = new   
+	 FunctionInfo(TauFuncNameVec[id].c_str(), " " , TAU_DEFAULT, "TAU_DEFAULT", true, tid); 
+    TauDynFI[id] = TauMethodName;
+  }
 #endif /* retrieve it from the vector */
   
   dprintf("<tid %d> Entry <id %d> <<<<< name = %s\n", tid, id, TauMethodName->GetName());
@@ -179,6 +198,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.10 $   $Date: 2000/11/17 18:55:09 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.10 2000/11/17 18:55:09 sameer Exp $ 
+ * $Revision: 1.11 $   $Date: 2001/03/15 20:53:58 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.11 2001/03/15 20:53:58 sameer Exp $ 
  ***************************************************************************/
