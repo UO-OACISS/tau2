@@ -157,4 +157,73 @@ public class UtilFncs{
 	}
 	return -1;
     }
+
+    //####################################
+    //Error handling.
+    //####################################
+    public static boolean debug = false;
+
+    public static void systemError(Object obj, Component component, String string){ 
+	System.out.println("####################################");
+	boolean quit = true; //Quit by default.
+	if(obj != null){
+	    if(obj instanceof Exception){
+		Exception exception = (Exception) obj;
+		if(UtilFncs.debug){
+		    System.out.println(exception.toString());
+		    exception.printStackTrace();
+		    System.out.println("\n");
+		}
+		System.out.println("An error was detected: " + string);
+		System.out.println(ParaProfError.contactString);
+	    }
+	    if(obj instanceof ParaProfError){
+		ParaProfError paraProfError = (ParaProfError) obj;
+		if(UtilFncs.debug){
+		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
+			JOptionPane.showMessageDialog(paraProfError.component,
+						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
+		    if(paraProfError.exp!=null){
+			System.out.println(paraProfError.exp.toString());
+			paraProfError.exp.printStackTrace();
+			System.out.println("\n");
+		    }
+		    if(paraProfError.location!=null)
+			System.out.println("Location: " + paraProfError.location);
+		    if(paraProfError.s0!=null)
+			System.out.println(paraProfError.s0);
+		    if(paraProfError.s1!=null)
+			System.out.println(paraProfError.s1);
+		    if(paraProfError.showContactString)
+			System.out.println(ParaProfError.contactString);
+		}
+		else{
+		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
+			JOptionPane.showMessageDialog(paraProfError.component,
+						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
+		    if(paraProfError.location!=null)
+			System.out.println("Location: " + paraProfError.location);
+		    if(paraProfError.s0!=null)
+			System.out.println(paraProfError.s0);
+		    if(paraProfError.s1!=null)
+			System.out.println(paraProfError.s1);
+		    if(paraProfError.showContactString)
+			System.out.println(ParaProfError.contactString);
+		}
+		quit = paraProfError.quit;
+	    }
+	    else{
+		System.out.println("An error has been detected: " + string);
+	    }
+	}
+	else{
+	    System.out.println("An error was detected at " + string);
+	}
+	System.out.println("####################################");
+	if(quit)
+	    System.exit(0);
+    }
+    //####################################
+    //End - Error handling.
+    //####################################
 }
