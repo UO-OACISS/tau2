@@ -113,6 +113,7 @@ pcxxopt=-g
 useropt=-g
 awe=no
 pthread=no
+tulipthread=no
 task=no
 lwp=no
 tcltk=yes
@@ -222,6 +223,12 @@ do
  
   -pthread)
       pthread=yes
+    shift
+    ;;
+
+  -tulipthread=*)
+      tulipthread=yes
+      tulipdir=`echo $arg | sed -e 's/-tulipthread=//'`
     shift
     ;;
 
@@ -1064,6 +1071,12 @@ if [ $pthread = yes ]
   then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
     echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
+fi
+
+if [ $tulipthread = yes ]
+  then
+    fixmakeargs="$fixmakeargs TULIPTHREADS tulipdir=$tulipdir"
+    echo "$machine: TULIPDIR = $tulipdir" >> ./build/Config.info
 fi
 
 if [ $lwp = yes ]
