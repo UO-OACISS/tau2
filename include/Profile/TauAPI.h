@@ -42,6 +42,23 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void);
 extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
+
+#if (TAU_MAX_THREADS == 1)
+// If we're not multi-threaded, just use the non-thread-safe static initializer
+
+#define TAU_PROFILE(name, type, group) \
+        static TauGroup_t tau_gr = group; \
+        static FunctionInfo tauFI(name, type, tau_gr, #group); \
+        Profiler tauFP(&tauFI, tau_gr);
+#define TAU_PROFILE_TIMER(var, name, type, group) \
+        static TauGroup_t var##tau_gr = group; \
+        static FunctionInfo var##fi(name, type, var##tau_gr, #group);
+
+
+#else 
+// Multithreaded, we should use thread-safe tauCreateFI to create the FunctionInfo object
+// Note: It's still not absolutely theoretically 100% thread-safe, since the static 
+// initializer is not in a lock, but we don't want to pay that price for every function call 
 #define TAU_PROFILE(name, type, group) \
 	static TauGroup_t tau_gr = group; \
 	static FunctionInfo *tauFI = NULL; \
@@ -50,8 +67,9 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_PROFILE_TIMER(var, name, type, group) \
 	static TauGroup_t var##tau_gr = group; \
 	static FunctionInfo *var##fi = NULL; \
-        tauCreateFI(&tauFI, name, type, var##tau_gr, #group); 
+        tauCreateFI(&var##fi, name, type, var##tau_gr, #group); 
 
+#endif
 //	Profiler var(&var##fi, var##tau_gr, true); 
 
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
@@ -245,7 +263,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.39 $   $Date: 2005/01/07 01:42:48 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.39 2005/01/07 01:42:48 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.40 $   $Date: 2005/01/08 01:14:10 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.40 2005/01/08 01:14:10 amorris Exp $ 
  ***************************************************************************/

@@ -33,6 +33,26 @@
 #if (PROFILING_ON || TRACING_ON)
 // For Mapping, global variables used between layers
 FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
+
+
+#if (TAU_MAX_THREADS == 1)
+// If we're not multi-threaded, just use the non-thread-safe static initializer
+
+#define TAU_MAPPING(stmt, group)   \
+  { \
+    static FunctionInfo TauMapFI(#stmt, " " , group, #group); \
+    static Profiler *TauMapProf = new Profiler(&TauMapFI, group, true); \
+    TheTauMapFI(group) = &TauMapFI; \
+    TauMapProf->Start(); \
+    stmt; \
+    TauMapProf->Stop(); \
+  }
+
+#else
+// Multithreaded, we should use thread-safe tauCreateFI to create the FunctionInfo object
+// Note: It's still not absolutely theoretically 100% thread-safe, since the static 
+// initializer is not in a lock, but we don't want to pay that price for every function call 
+
 #define TAU_MAPPING(stmt, group)   \
   { \
     static FunctionInfo *TauMapFI = NULL; \
@@ -44,6 +64,8 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
     TauMapProf->Stop(); \
     delete TauMapProf; \
   } 
+
+#endif
 
 #define TAU_MAPPING_REGISTER(stmt, group)  { \
     static FunctionInfo *TauMapFI = NULL; \
