@@ -135,6 +135,7 @@ void Profiler::Start(int tid)
 	
 	// Initialization is over, now record the time it started
 	StartTime =  RtsLayer::getUSecD(tid) ;
+	DEBUGPROFMSG("Start Time = "<< StartTime<<endl;);
 #endif // PROFILING_ON
   	
 	ParentProfiler = CurrentProfiler[tid] ;
@@ -329,6 +330,7 @@ void Profiler::Stop(int tid)
  	DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
             << RtsLayer::myContext() << "," << tid
 	    << " Stop: " << ThisFunction->GetName() 
+	    << " TheSafeToDumpData() = " << TheSafeToDumpData()
 	    << " CurrProf = "<<CurrentProfiler[tid] << " this = "
 	    << this<<endl;);
 
@@ -971,8 +973,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.45 $   $Date: 2001/06/20 20:30:39 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.45 2001/06/20 20:30:39 sameer Exp $ 
+ * $Revision: 1.46 $   $Date: 2001/07/02 18:07:19 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.46 2001/07/02 18:07:19 sameer Exp $ 
  ***************************************************************************/
 
 	
