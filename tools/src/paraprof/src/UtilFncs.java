@@ -87,22 +87,36 @@ public class UtilFncs{
 	return null;
     }
 
-    public static String getUnitsString(int type, boolean time){
-	
-	if(!time)
-	    return "counts";
-
-	switch(type){
-	case 0:
-	    return "microseconds";
-	case 1:
-	    return "milliseconds";
-	case 2:
-	    return "seconds";
-	case 3:
-	    return "hour:minute:seconds";
-	default:
-	    UtilFncs.systemError(null, null, "Unexpected string type - UF03 value: " + type);
+    public static String getUnitsString(int type, boolean time, boolean derived){
+	if(derived){
+	   if(!time)
+	       return "counts";
+	   switch(type){
+	   case 0:
+	       return "Derived metric shown in microseconds format";
+	   case 1:
+	       return "Derived metric shown in milliseconds format";
+	   case 2:
+	       return "Derived metric shown in seconds format";
+	   case 3:
+	       return "Derived metric shown in hour:minute:seconds format"; 
+	   }
+	}
+	else{
+	    if(!time)
+		return "counts";
+	    switch(type){
+	    case 0:
+		return "microseconds";
+	    case 1:
+		return "milliseconds";
+	    case 2:
+		return "seconds";
+	    case 3:
+		return "hour:minute:seconds";
+	    default:
+		UtilFncs.systemError(null, null, "Unexpected string type - UF03 value: " + type);
+	    }
 	}
 	return null;
     }

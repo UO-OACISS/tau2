@@ -22,6 +22,16 @@ public class PPMLPanel extends JPanel implements ActionListener{
 	this.paraProfManager = paraProfManager;
 
 	//####################################
+	//Window Stuff.
+	//####################################
+	int windowWidth = 800;
+	int windowHeight = 200;
+	setSize(new java.awt.Dimension(windowWidth, windowHeight));
+	//####################################
+	//End - Window Stuff.
+	//####################################
+
+	//####################################
 	//Create and add the components.
 	//####################################
 	//Setting up the layout system for the main window.
@@ -54,22 +64,13 @@ public class PPMLPanel extends JPanel implements ActionListener{
 	gbc.weighty = 0;
 	addCompItem(arg2Field, gbc, 1, 1, 2, 1);
 
-	JButton jButton = new JButton("Cancel");
-	jButton.addActionListener(this);
 	gbc.fill = GridBagConstraints.NONE;
-	gbc.anchor = GridBagConstraints.EAST;
-	gbc.weightx = 0;
-	gbc.weighty = 0;
-	addCompItem(jButton, gbc, 0, 2, 1, 1);
-
-	jButton.addActionListener(this);
-	gbc.fill = GridBagConstraints.BOTH;
 	gbc.anchor = GridBagConstraints.CENTER;
-	gbc.weightx = 100;
+	gbc.weightx = 0;
 	gbc.weighty = 0;
 	addCompItem(operation, gbc, 1, 2, 1, 1);
 
-	jButton = new JButton("Apply operation");
+	JButton jButton = new JButton("Apply operation");
 	jButton.addActionListener(this);
 	gbc.fill = GridBagConstraints.NONE;
 	gbc.anchor = GridBagConstraints.EAST;
@@ -81,6 +82,26 @@ public class PPMLPanel extends JPanel implements ActionListener{
 	//####################################
     }
 
+    public void setArg1Field(String arg1){
+	arg1Field.setText(arg1);}
+
+    public String getArg1Field(){
+	return arg1Field.getText().trim();}
+
+    public void setArg2Field(String arg2){
+	arg2Field.setText(arg2);}
+
+    public String getArg2Field(){
+	return arg2Field.getText().trim();}
+
+    public void applyOperation(){
+	Metric metric = PPML.applyOperation(arg1Field.getText().trim(),
+					    arg2Field.getText().trim(),
+					    (String) operation.getSelectedItem());
+	if(metric!=null)
+	    paraProfManager.populateTrialMetrics(metric.getTrial(), false);
+    }
+    
     //####################################
     //Interface code.
     //####################################
@@ -93,10 +114,7 @@ public class PPMLPanel extends JPanel implements ActionListener{
 	    Object EventSrc = evt.getSource();
 	    String arg = evt.getActionCommand();
 	    if(arg.equals("Apply operation")){
-		Metric metric = PPML.applyOperation(arg1Field.getText().trim(),
-						    arg2Field.getText().trim(),
-						    (String) operation.getSelectedItem());
-		paraProfManager.insertMetric(metric);
+		this.applyOperation();
 	    }
 	}
 	catch(Exception e){

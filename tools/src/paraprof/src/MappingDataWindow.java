@@ -647,7 +647,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
 	    "Name: " + mappingName+"\n" +
 	    "Value Type: "+UtilFncs.getValueTypeString(valueType)+"\n"+
-	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n";
+	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric())+"\n";
     }
     //######
     //End - Panel header.

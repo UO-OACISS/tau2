@@ -17,10 +17,30 @@ import javax.swing.event.*;
 import java.text.*;
 
 public class GlobalMappingElement implements Serializable, Comparable{
+    //######
     //Constructors.
+    //######
     public GlobalMappingElement(int capacity){
 	doubleList = new double[capacity*14];}
+    //######
+    //End - Constructors.
+    //######
     
+    public void setMappingName(String mappingName){
+	this.mappingName = mappingName;}
+  
+    public String getMappingName(){
+	return mappingName;}
+  
+    public void setGlobalID(int globalID){
+	this.globalID = globalID;}
+  
+    public int getGlobalID(){
+	return globalID;}
+
+    //######
+    //Storage control.
+    //######
     public void incrementStorage(){
 	int currentLength = doubleList.length;
 	double[] newArray = new double[currentLength+14];
@@ -38,19 +58,13 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	}
 	doubleList = newArray;
     }
+    //######
+    //End - Storage control.
+    //######
   
-    public void setMappingName(String mappingName){
-	this.mappingName = mappingName;}
-  
-    public String getMappingName(){
-	return mappingName;}
-  
-    public void setGlobalID(int globalID){
-	this.globalID = globalID;}
-  
-    public int getGlobalID(){
-	return globalID;}
-  
+    //######
+    //Group section.
+    //######
     public void addGroup(int id){
 	//Don't add group if already a member.
 	if(this.isGroupMember(id))
@@ -80,6 +94,30 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	return false;
     }
 
+    public void setGroupsSet(boolean groupsSet){
+	this.groupsSet = groupsSet;}
+
+    public boolean groupsSet(){
+	return groupsSet;}
+    //######
+    //End - Group section.
+    //######
+
+    //######
+    //Members section.
+    //######
+    public void addMember(GlobalMappingElement globalMappingElement){
+	if(members==null)
+	    members = new Vector();
+	members.add(globalMappingElement);
+    }
+    //######
+    //End - Members section.
+    //######
+
+    //######
+    //Call path section.
+    //######
     public void addParent(int id,int pathID){
 	//Check to see if this parent is already present,
 	//if so, add only the callpath to the system.
@@ -156,13 +194,13 @@ public class GlobalMappingElement implements Serializable, Comparable{
 
     public boolean isCallPathObject(){
 	return callPathObject;}
-    
-    public void setColorFlag(boolean colorFlag){
-	this.colorFlag = colorFlag;}
-  
-    public boolean isColorFlagSet(){
-	return colorFlag;}
-  
+    //######
+    //End - Call path section.
+    //######
+
+    //######
+    //End - Colour section.
+    //######
     public void setColor(Color color){
 	this.color = color;}
 
@@ -172,14 +210,22 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	else
 	    return color;
     }
+    
+    public void setColorFlag(boolean colorFlag){
+	this.colorFlag = colorFlag;}
+  
+    public boolean isColorFlagSet(){
+	return colorFlag;}
   
     public void setSpecificColor(Color specificColor){
 	this.specificColor = specificColor;}
+    //######
+    //End - Colour section.
+    //######
   
-    public void setMaxValues(){
-	System.out.println("MUST FILL IN THIS METHOD - GlobalMappingElement.setMaxValues");
-    }
-
+    //######
+    //Max values section.
+    //######
     public void setMaxInclusiveValue(int dataValueLocation, double inDouble){
 	this.insertDouble(dataValueLocation,0,inDouble);}
   
@@ -221,36 +267,44 @@ public class GlobalMappingElement implements Serializable, Comparable{
   
     public double getMaxUserSecPerCall(int dataValueLocation){
 	return this.getDouble(dataValueLocation,4);}
+    //######
+    //End - Max values section.
+    //######
     
-    //User event section.
-    public void setMaxUserEventNumberValue(int inInt){
-	maxUserEventNumberValue = inInt;}
+    //######
+    //Userevent max section.
+    //######
+    public void setMaxUserEventNumberValue(int maxUserEventNumberValue){
+	this.maxUserEventNumberValue = maxUserEventNumberValue;}
   
     public int getMaxUserEventNumberValue(){
 	return maxUserEventNumberValue;}
   
-    public void setMaxUserEventMinValue(double inDouble){
-	maxUserEventMinValue = inDouble;}
+    public void setMaxUserEventMinValue(double maxUserEventMinValue){
+	this.maxUserEventMinValue = maxUserEventMinValue;}
   
     public double getMaxUserEventMinValue(){
 	return maxUserEventMinValue;}
   
-    public void setMaxUserEventMaxValue(double inDouble){
-	maxUserEventMaxValue = inDouble;}
+    public void setMaxUserEventMaxValue(double maxUserEventMaxValue){
+	this.maxUserEventMaxValue = maxUserEventMaxValue;}
   
     public double getMaxUserEventMaxValue(){
 	return maxUserEventMaxValue;}
   
-    public void setMaxUserEventMeanValue(double inDouble){
-	maxUserEventMeanValue = inDouble;}
+    public void setMaxUserEventMeanValue(double maxUserEventMeanValue){
+	this.maxUserEventMeanValue = maxUserEventMeanValue;}
   
     public double getMaxUserEventMeanValue(){
 	return maxUserEventMeanValue;
     }
-  
-  
-  
+    //######
+    //End - Userevent max section.
+    //######
+
+    //######
     //Mean section.
+    //######
     public void setMeanInclusiveValue(int dataValueLocation, double inDouble){
 	this.insertDouble(dataValueLocation,5,inDouble);}
   
@@ -292,33 +346,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
   
     public double getMeanUserSecPerCall(int dataValueLocation){
   	return this.getDouble(dataValueLocation,9);}
-  
-    public void setTotalInclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,10,inDouble);}
-  
-    public double getTotalInclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,10);}
-  
-    public void setTotalExclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,11,inDouble);}
-  
-    public double getTotalExclusiveValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,11);}
-  
-    public void setTotalInclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,12,inDouble);}
-  
-    public double getTotalInclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,12);}
-  
-    public void setTotalExclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(dataValueLocation,13,inDouble);}
-  
-    public double getTotalExclusivePercentValue(int dataValueLocation){
-	return this.getDouble(dataValueLocation,13);}
-    
-  
-    //Stat Strings. 
+
     public String getMeanTotalStatString(int type, int dataValueLocation, int precision){
   	try{
 	    int initialBufferLength = 99;
@@ -394,27 +422,49 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	}
     	return "An error occured pocessing this string!";
     }
-  
-    private int insertSpaces(char[] inArray, int position, int number){
-	for(int i=0;i<number;i++){
-	    inArray[position] = '\u0020';
-	    position++;
-	}
-	return position;
-    }
-    
+
     public void setMeanValuesSet(boolean meanValuesSet){
 	this.meanValuesSet = meanValuesSet;}
   
     public boolean getMeanValuesSet(){
 	return meanValuesSet;}
-
-    public void setGroupsSet(boolean groupsSet){
-	this.groupsSet = groupsSet;}
-
-    public boolean groupsSet(){
-	return groupsSet;}
+    //######
+    //End - Mean section.
+    //######
   
+    //######
+    //Total section.
+    //######
+    public void setTotalInclusiveValue(int dataValueLocation, double inDouble){
+	this.insertDouble(dataValueLocation,10,inDouble);}
+  
+    public double getTotalInclusiveValue(int dataValueLocation){
+	return this.getDouble(dataValueLocation,10);}
+  
+    public void setTotalExclusiveValue(int dataValueLocation, double inDouble){
+	this.insertDouble(dataValueLocation,11,inDouble);}
+  
+    public double getTotalExclusiveValue(int dataValueLocation){
+	return this.getDouble(dataValueLocation,11);}
+  
+    public void setTotalInclusivePercentValue(int dataValueLocation, double inDouble){
+	this.insertDouble(dataValueLocation,12,inDouble);}
+  
+    public double getTotalInclusivePercentValue(int dataValueLocation){
+	return this.getDouble(dataValueLocation,12);}
+  
+    public void setTotalExclusivePercentValue(int dataValueLocation, double inDouble){
+	this.insertDouble(dataValueLocation,13,inDouble);}
+  
+    public double getTotalExclusivePercentValue(int dataValueLocation){
+	return this.getDouble(dataValueLocation,13);}
+    //######
+    //End - Total section.
+    //######
+  
+    //######
+    //Draw section.
+    //######
     public void setDrawCoords(int xBeg, int xEnd, int yBeg, int yEnd){
 	this.xBeg = xBeg;
 	this.xEnd = xEnd;
@@ -433,8 +483,13 @@ public class GlobalMappingElement implements Serializable, Comparable{
   
     public int getYEnd(){
 	return yEnd;}
+    //######
+    //End - Draw section.
+    //######
   
-    //Functions used to calculate the mean values for derived values (such as flops)
+    //######
+    //Usage?
+    //######
     public void setTotalExclusiveValue(double inDouble){
 	totalExclusiveValue = inDouble;}
     
@@ -461,11 +516,30 @@ public class GlobalMappingElement implements Serializable, Comparable{
     
     public int getCounter(){
 	return counter;}
-  
-  
+    //######
+    //End - Usage?
+    //######
+    
+    //####################################
+    //Interface code.
+    //####################################
+    
+    //######
+    //Comparable section.
+    //######
     public int compareTo(Object inObject){
 	return mappingName.compareTo((String)inObject);}
+    //######
+    //End - Comparable section.
+    //######
 
+    //####################################
+    //End - Interface code.
+    //####################################
+
+    //######
+    //Private section.
+    //######
     private void insertDouble(int dataValueLocation, int offset, double inDouble){
 	int actualLocation = (dataValueLocation*14)+offset;
 	try{
@@ -486,8 +560,21 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	}
 	return -1;
     }
-  
-    //Global Mapping reference.
+
+    private int insertSpaces(char[] inArray, int position, int number){
+	for(int i=0;i<number;i++){
+	    inArray[position] = '\u0020';
+	    position++;
+	}
+	return position;
+    }
+    //######
+    //End - Private section.
+    //######
+
+    //####################################
+    //Instance data.
+    //####################################
     private String mappingName = null;
     private int globalID = -1;     //Global ID for this mapping.
   
@@ -527,4 +614,9 @@ public class GlobalMappingElement implements Serializable, Comparable{
     private int counter = 0;
     private double totalExclusiveValue = 0;
     private double totalInclusiveValue = 0;
+
+    private Vector members = null;
+    //####################################
+    //End - Instance data.
+    //####################################
 }

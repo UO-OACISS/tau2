@@ -449,7 +449,6 @@ public class TauOutputSession extends ParaProfDataSession{
 			thread.setThreadData(metric);
 		    }
 		}
-		time = (System.currentTimeMillis()) - time;
 	    }
 	    //Generate mean data.
 	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
@@ -470,6 +469,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    if(this.debug())
 		this.outputToFile("Done - Processing callpath data!");
 
+	    time = (System.currentTimeMillis()) - time;
 	    System.out.println("Done processing data!");
 	    System.out.println("Time to process (in milliseconds): " + time);
 	    if(this.debug()){

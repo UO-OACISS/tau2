@@ -10,60 +10,71 @@
 package paraprof;
 
 import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
 
 public class PPML{
 
     public PPML(){}
 
     public static Metric applyOperation(String tmpString1, String tmpString2, String inOperation){
-
 	
 	StringTokenizer st = new StringTokenizer(tmpString1, ":");
 	int applicationID = Integer.parseInt(st.nextToken());
 	int experimentID = Integer.parseInt(st.nextToken());
 	int trialID = Integer.parseInt(st.nextToken());
-	
-	ParaProfTrial trial = ParaProf.applicationManager.getTrial(applicationID, experimentID, trialID);
+	int metricID = Integer.parseInt(st.nextToken());
+	ParaProfTrial trialOpA = ParaProf.applicationManager.getTrial(applicationID, experimentID, trialID);
+	int opA = metricID;
 
-	int opA = Integer.parseInt(st.nextToken());
 	st = new StringTokenizer(tmpString2, ":");
-	st.nextToken();
-	st.nextToken();
-	st.nextToken();
-	int opB = Integer.parseInt(st.nextToken());
-	
-	String tmpString3 = null;
-    
-	int operation = -1;
-    
-	if(inOperation.equals("Add")){
+	applicationID = Integer.parseInt(st.nextToken());
+	experimentID = Integer.parseInt(st.nextToken());
+	trialID = Integer.parseInt(st.nextToken());
+	metricID = Integer.parseInt(st.nextToken());
+	ParaProfTrial trialOpB = ParaProf.applicationManager.getTrial(applicationID, experimentID, trialID);
+	int opB = metricID;
+
+	//We do not support metric from different trials yet.  Check for this.
+	if(trialOpA!=trialOpB)
+	    JOptionPane.showMessageDialog(ParaProf.paraProfManager,
+					  "ParaProf Error", "Sorry, please select metrics from the same trial!",
+					  JOptionPane.ERROR_MESSAGE);
+
+	String newMetricName = null;
+  	int operation = -1;
+  	if(inOperation.equals("Add")){
 	    operation = 0;
-	    tmpString3 = " + ";
+	    newMetricName = " + ";
 	}
 	else if(inOperation.equals("Subtract")){
 	    operation = 1;
-	    tmpString3 = " - ";
+	    newMetricName = " - ";
 	}
 	else if(inOperation.equals("Multiply")){
 	    operation = 2;
-	    tmpString3 = " * ";
+	    newMetricName = " * ";
 	}
 	else if(inOperation.equals("Divide")){
 	    operation = 3;
-	    tmpString3 = " / ";
+	    newMetricName = " / ";
 	}
 	else{
 	    System.out.println("Wrong operation type");
 	}
 
-	tmpString3 = ((Metric)trial.getMetrics().elementAt(opA)).getName() + tmpString3 + ((Metric)trial.getMetrics().elementAt(opA)).getName();
+	newMetricName = ((Metric)trialOpA.getMetrics().elementAt(opA)).getName() + newMetricName + ((Metric)trialOpA.getMetrics().elementAt(opB)).getName();
       
-	Metric newMetric = trial.addMetric();
-	newMetric.setName(tmpString3);
+	Metric newMetric = trialOpA.addMetric();
+	newMetric.setTrial(trialOpA);
+	newMetric.setName(newMetricName);
+	newMetric.setDerivedMetric(true);
 	int metric = newMetric.getID();
-	trial.setSelectedMetricID(metric);
+	trialOpA.setSelectedMetricID(metric);
 
-	ListIterator l = trial.getGlobalMapping().getMappingIterator(0);
+	ListIterator l = trialOpA.getGlobalMapping().getMappingIterator(0);
 	while(l.hasNext()){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
 	    globalMappingElement.incrementStorage();
@@ -71,13 +82,13 @@ public class PPML{
 	    globalMappingElement.setTotalInclusiveValue(0);
 	    globalMappingElement.setCounter(0);
 	}
-	l = trial.getGlobalMapping().getMappingIterator(2);
+	l = trialOpA.getGlobalMapping().getMappingIterator(2);
 	while(l.hasNext()){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
 	    globalMappingElement.incrementStorage();
 	}
 
-	trial.getGlobalMapping().increaseVectorStorage();
+	trialOpA.getGlobalMapping().increaseVectorStorage();
     
 	//######
 	//Calculate the raw values.
@@ -91,7 +102,7 @@ public class PPML{
 	Context context;
 	Thread thread;
      
-	for(Enumeration e1 = trial.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
+	for(Enumeration e1 = trialOpA.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
 	    node = (Node) e1.nextElement();
  	    for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
 		context = (Context) e2.nextElement();
@@ -103,7 +114,7 @@ public class PPML{
 			GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
 			if(globalThreadDataElement != null){
 			    GlobalMappingElement globalMappingElement =
-				trial.getGlobalMapping().getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
+				trialOpA.getGlobalMapping().getGlobalMappingElement(globalThreadDataElement.getMappingID(), 0);
 			    globalMappingElement.incrementCounter();
 			    globalThreadDataElement.incrementStorage();
               
@@ -137,7 +148,7 @@ public class PPML{
 	    }
 	}
 	//Done with this metric, let the global mapping compute the mean values.
-	trial.setMeanData(0,metric);
+	trialOpA.setMeanData(0,metric);
 	return newMetric;
     }
 

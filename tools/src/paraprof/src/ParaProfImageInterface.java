@@ -2,7 +2,7 @@
   
   ParaProfImageInterface.java
   
-  Title:       ParaProfImageOutput.java
+  Title:       ParaProfImageInterface.java
   Author:      Robert Bell
   Description: Handles the output of the various panels to image files.
 */

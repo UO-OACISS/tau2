@@ -33,7 +33,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //Window Stuff.
 	    //####################################
 	    int windowWidth = 800;
-	    int windowHeight = 500;
+	    int windowHeight = 515;
 	    
 	    //Grab the screen size.
 	    Toolkit tk = Toolkit.getDefaultToolkit();
@@ -100,9 +100,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //######
 	    JMenu optionsMenu = new JMenu("Options");
 	    
-	    JMenuItem applyOperationItem = new JMenuItem("Apply Operation");
-	    applyOperationItem.addActionListener(this);
-	    optionsMenu.add(applyOperationItem);
+	    showApplyOperationItem = new JCheckBoxMenuItem("Show Apply Operation", false);
+	    showApplyOperationItem.addActionListener(this);
+	    optionsMenu.add(showApplyOperationItem);
 	    //######
 	    //End - Options menu.
 	    //######
@@ -168,17 +168,19 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 
 
 	    //####################################
-	    //Set up the split pane, and add to content pane.
+	    //Set up the split panes, and add to content pane.
 	    //####################################
-	    jSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, getPanelHelpMessage(0));
-	    jSplitPane.setContinuousLayout(true);
-	    (getContentPane()).add(jSplitPane, "Center");
+	    jSplitInnerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, getPanelHelpMessage(0));
+	    jSplitInnerPane.setContinuousLayout(true);
+	    jSplitOuterPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, jSplitInnerPane, pPMLPanel);
+	    (getContentPane()).add(jSplitOuterPane, "Center");
       
 	    //Show before setting dividers.
 	    //Components have to be realized on the screen before
 	    //the dividers can be set.
 	    this.show();
-	    jSplitPane.setDividerLocation(0.5);
+	    jSplitInnerPane.setDividerLocation(0.5);
+	    jSplitOuterPane.setDividerLocation(1.0);
 	    //####################################
 	    //End - Set up the split pane, and add to content pane.
 	    //####################################
@@ -219,8 +221,12 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    }
 		    else if(arg.equals("Database Configuration")){
 			(new DBConfiguration(this)).show();}
-		    else if(arg.equals("Apply Operation")){
-			(new PPMLWindow(this)).show();}
+		    else if(arg.equals("Show Apply Operation")){
+			if(showApplyOperationItem.isSelected())
+			    jSplitOuterPane.setDividerLocation(0.75);
+			else
+			    jSplitOuterPane.setDividerLocation(1.00);
+		    }
 		    else if(arg.equals("About ParaProf")){
 			JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
 		    }
@@ -254,45 +260,41 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	TreePath path = tree.getSelectionPath();
 	if(path == null)
 	    return;
+	if(UtilFncs.debug)
+	    System.out.println("In valueChanged - path:" + path.toString());
 	DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
 	Object userObject = selectedNode.getUserObject();
 
 	if(selectedNode.isRoot()){
-	    jSplitPane.setRightComponent(getPanelHelpMessage(0));
-	    jSplitPane.setDividerLocation(0.5);
+	    jSplitInnerPane.setRightComponent(getPanelHelpMessage(0));
+	    jSplitInnerPane.setDividerLocation(0.5);
 	}
 	else if((parentNode.isRoot())){
 	    if(userObject.toString().equals("Standard Applications")){
-		jSplitPane.setRightComponent(getPanelHelpMessage(1));
-		jSplitPane.setDividerLocation(0.5);
+		jSplitInnerPane.setRightComponent(getPanelHelpMessage(1));
+		jSplitInnerPane.setDividerLocation(0.5);
 	    }
 	    else if(userObject.toString().equals("Runtime Applications")){
-		jSplitPane.setRightComponent(getPanelHelpMessage(2));
-		jSplitPane.setDividerLocation(0.5);		
+		jSplitInnerPane.setRightComponent(getPanelHelpMessage(2));
+		jSplitInnerPane.setDividerLocation(0.5);		
 	    }
 	    else if(userObject.toString().equals("DB Applications")){
-		jSplitPane.setRightComponent(getPanelHelpMessage(3));
-		jSplitPane.setDividerLocation(0.5);
+		jSplitInnerPane.setRightComponent(getPanelHelpMessage(3));
+		jSplitInnerPane.setDividerLocation(0.5);
 	    }
 	}
 	else if(userObject instanceof ParaProfApplication){
-	    jSplitPane.setRightComponent(getTable(userObject));
-	    jSplitPane.setDividerLocation(0.5);
-	    if(!tree.isExpanded(path))
-		tree.expandPath(path);
+	    jSplitInnerPane.setRightComponent(getTable(userObject));
+	    jSplitInnerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfExperiment){
-	    jSplitPane.setRightComponent(getTable(userObject));
-	    jSplitPane.setDividerLocation(0.5);
-	    if(!tree.isExpanded(path))
-		tree.expandPath(path);
+	    jSplitInnerPane.setRightComponent(getTable(userObject));
+	    jSplitInnerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfTrial){
-	    jSplitPane.setRightComponent(getTable(userObject));
-	    jSplitPane.setDividerLocation(0.5);
-	    if(!tree.isExpanded(path))
-		tree.expandPath(path);
+	    jSplitInnerPane.setRightComponent(getTable(userObject));
+	    jSplitInnerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof Metric)
 	    this.metric(path);
@@ -362,8 +364,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	}
 	else if((parentNode.isRoot())){
 	    if(userObject.toString().equals("Standard Applications")){
-		jSplitPane.setRightComponent(getPanelHelpMessage(1));
-		jSplitPane.setDividerLocation(0.5);
+		jSplitInnerPane.setRightComponent(getPanelHelpMessage(1));
+		jSplitInnerPane.setDividerLocation(0.5);
 		//Refresh the application list.
 		System.out.println("Loading application list ...");
 		for(int i=standard.getChildCount(); i>0; i--){
@@ -380,13 +382,13 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		return;
 	    }
 	    else if(userObject.toString().equals("Runtime Applications")){
-		jSplitPane.setRightComponent(getPanelHelpMessage(2));
-		jSplitPane.setDividerLocation(0.5);
+		jSplitInnerPane.setRightComponent(getPanelHelpMessage(2));
+		jSplitInnerPane.setDividerLocation(0.5);
 	    }
 	    else if(userObject.toString().equals("DB Applications")){
 		try{
-		    jSplitPane.setRightComponent(getPanelHelpMessage(3));
-		    jSplitPane.setDividerLocation(0.5);
+		    jSplitInnerPane.setRightComponent(getPanelHelpMessage(3));
+		    jSplitInnerPane.setDividerLocation(0.5);
 		    
 		    if(configFile==null||password==null){//Check to see if the user has set configuration information.
 			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
@@ -467,8 +469,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    }
 		    System.out.println("Done loading experiment list.");
 		}
-		jSplitPane.setRightComponent(getTable(userObject));
-		jSplitPane.setDividerLocation(0.5);
+		jSplitInnerPane.setRightComponent(getTable(userObject));
+		jSplitInnerPane.setDividerLocation(0.5);
 	    }
 	    catch(Exception e){
 		e.printStackTrace();
@@ -515,8 +517,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		System.out.println("Done loading trial list.");
 	    }
-	    jSplitPane.setRightComponent(getTable(userObject));
-	    jSplitPane.setDividerLocation(0.5);
+	    jSplitInnerPane.setRightComponent(getTable(userObject));
+	    jSplitInnerPane.setDividerLocation(0.5);
 	}
 	else if(userObject instanceof ParaProfTrial){
 	    ParaProfTrial trial = (ParaProfTrial) userObject;
@@ -564,12 +566,12 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		}
 		System.out.println("Done loading metric list.");
 		
-		jSplitPane.setRightComponent(getTable(userObject));
-		jSplitPane.setDividerLocation(0.5);
+		jSplitInnerPane.setRightComponent(getTable(userObject));
+		jSplitInnerPane.setDividerLocation(0.5);
 	    }
 	    else{
-		jSplitPane.setRightComponent(new JScrollPane(this.getLoadingTrialPanel(userObject)));
-		jSplitPane.setDividerLocation(0.5);
+		jSplitInnerPane.setRightComponent(new JScrollPane(this.getLoadingTrialPanel(userObject)));
+		jSplitInnerPane.setDividerLocation(0.5);
 	    }
 	}
     }
@@ -591,35 +593,26 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 
 	ParaProfTrial paraProfTrial  =  (ParaProfTrial) parentNode.getUserObject();
 	Metric metric = (Metric) userObject;
-	jSplitPane.setRightComponent(getTable(userObject));
-	jSplitPane.setDividerLocation(0.5);
+	jSplitInnerPane.setRightComponent(getTable(userObject));
+	jSplitInnerPane.setDividerLocation(0.5);
+	pPMLPanel.setArg2Field(pPMLPanel.getArg1Field());
+	pPMLPanel.setArg1Field(metric.getApplicationID()+":"+metric.getExperimentID()+":"+metric.getTrialID()+":"+metric.getID());
 	this.showMetric(paraProfTrial, metric);
     }
 
     public void clearDefaultMutableTreeNodes(DefaultMutableTreeNode defaultMutableTreeNode){
-	int experimentCount = -1;
-	int trialCount = -1;
-	int metricCount = -1;
-	DefaultMutableTreeNode experimentNode = null;
-	DefaultMutableTreeNode trialNode = null;
-	DefaultMutableTreeNode metricNode = null;
+	//Do not want to clear this node's user object's DefaultMutableTreeNode so start the 
+	//recursion on its children.
+	int count = defaultMutableTreeNode.getChildCount();
+	for(int i=0;i<count;i++)
+	    clearDefaultMutableTreeNodesHelper((DefaultMutableTreeNode) defaultMutableTreeNode.getChildAt(i));
+    }
 
-	((ParaProfTreeNodeUserObject) defaultMutableTreeNode.getUserObject()).clearDefaultMutableTreeNodes();
-	experimentCount = defaultMutableTreeNode.getChildCount();
-	for(int i=0;i<experimentCount;i++){
-	    experimentNode  = (DefaultMutableTreeNode) defaultMutableTreeNode.getChildAt(i);
-	    ((ParaProfTreeNodeUserObject) experimentNode.getUserObject()).clearDefaultMutableTreeNodes();
-	    trialCount = experimentNode.getChildCount();
-	    for(int j=0;j<trialCount;j++){
-		trialNode = (DefaultMutableTreeNode) experimentNode.getChildAt(j);
-		((ParaProfTreeNodeUserObject) trialNode.getUserObject()).clearDefaultMutableTreeNodes();
-		metricCount = trialNode.getChildCount();
-		for(int k=0;k<metricCount;k++){
-		    metricNode = (DefaultMutableTreeNode) trialNode.getChildAt(k);
-		    ((ParaProfTreeNodeUserObject) metricNode.getUserObject()).clearDefaultMutableTreeNodes();
-		}
-	    }
-	}
+    public void clearDefaultMutableTreeNodesHelper(DefaultMutableTreeNode defaultMutableTreeNode){
+	int count = defaultMutableTreeNode.getChildCount();
+	for(int i=0;i<count;i++)
+	    this.clearDefaultMutableTreeNodesHelper((DefaultMutableTreeNode) defaultMutableTreeNode.getChildAt(i));
+	((ParaProfTreeNodeUserObject)defaultMutableTreeNode.getUserObject()).clearDefaultMutableTreeNodes();
     }
     //####################################
     //End - Tree selection helpers.
@@ -803,17 +796,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	}
     }
 
-    public void insertMetric(Metric metric){
-	DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
-	metric.setDMTN(metricNode);
-	metricNode.setAllowsChildren(false);
-
-	ParaProfTrial trial = metric.getTrial();
-	DefaultMutableTreeNode trialNode = trial.getDMTN();
-
-	treeModel.insertNodeInto(metricNode, trialNode, trialNode.getChildCount());
-    }
-
     private void showMetric(ParaProfTrial trial, Metric metric){
 	try{
 	    trial.setSelectedMetricID(metric.getID());
@@ -881,15 +863,19 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //####################################
     //Instance Data.
     //####################################
-    JTree tree = null;
-    DefaultTreeModel treeModel = null;
-    DefaultMutableTreeNode standard = null;
-    DefaultMutableTreeNode runtime = null;
-    DefaultMutableTreeNode dbApps = null;
-    JSplitPane jSplitPane = null;
+    private JTree tree = null;
+    private DefaultTreeModel treeModel = null;
+    private DefaultMutableTreeNode standard = null;
+    private DefaultMutableTreeNode runtime = null;
+    private DefaultMutableTreeNode dbApps = null;
+    private JSplitPane jSplitInnerPane = null;
+    private JSplitPane jSplitOuterPane = null;
   
     //A reference to the default trial node.
-    DefaultMutableTreeNode defaultParaProfTrialNode = null;
+    private DefaultMutableTreeNode defaultParaProfTrialNode = null;
+
+    private JCheckBoxMenuItem showApplyOperationItem = null;
+    private PPMLPanel pPMLPanel = new PPMLPanel(this);
 
     private String password = null;
     private String configFile = null;//"/home/bertie/Programming/data/perfdb.cfg";

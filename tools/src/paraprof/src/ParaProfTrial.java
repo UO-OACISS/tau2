@@ -241,6 +241,9 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	    return true;
     }
 
+    public boolean isDerivedMetric(){
+	return this.getMetric(this.getSelectedMetricID()).getDerivedMetric();}
+	
     public Vector getMetrics(){
 	return metrics;}
 

@@ -36,6 +36,12 @@ public class Metric implements ParaProfTreeNodeUserObject{
 
     public boolean getDBMetric(){
 	return dBMetric;}
+
+    public void setDerivedMetric(boolean derivedMetric){
+	this.derivedMetric = derivedMetric;}
+
+    public boolean getDerivedMetric(){
+	return derivedMetric;}
     
     public void setName(String name){
 	this.name = name;}
@@ -89,6 +95,7 @@ public class Metric implements ParaProfTreeNodeUserObject{
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBMetric = false;
+    private boolean derivedMetric = false;
     private String name = null;
     private int id = -1;
 }
