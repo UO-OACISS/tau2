@@ -157,6 +157,7 @@ use_pstl=no
 use_hpnx=no
 tauarch=unknown
 tauprefix=unknown
+tautoplevel=
 tauoptions=
 pdt_root_dir="."
 pdt=no
@@ -1106,10 +1107,17 @@ then
   esac
 fi
   
+if [ $tauprefix != unknown ]
+  then
+    tautoplevel=$tauprefix
+  else
+    tautoplevel=$tauroot
+fi
+
 
 if [ $mpi = yes ]
 then
-  mpilibargs="-L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
+  mpilibargs="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
   if [ -d $mpilib ]
   then
     #echo "Lib dir found. adding -L$mpilib to LIB"
@@ -1117,15 +1125,15 @@ then
     if [ -f $mpilib/libfmpi.* ]
     then
       #echo "Fortran fmpi.* found"
-      mpiflibargs="-L$mpilib -lfmpi -L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
+      mpiflibargs="-L$mpilib -lfmpi -L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
     else
       if [ -f $mpilib/libfmpich.* ]
       then
         #echo "Fortran fmpich.* found"
-        mpiflibargs="-L$mpilib -lfmpich -L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
+        mpiflibargs="-L$mpilib -lfmpich -L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
       else 
         #echo "No Fortran interface found"
-        mpiflibargs="$mpiflibargs -L$tauroot/$machine/lib -lTauMpi\$(TAU_OPTIONS) -L$mpilib"
+        mpiflibargs="$mpiflibargs -L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS) -L$mpilib"
       fi
     fi
   
