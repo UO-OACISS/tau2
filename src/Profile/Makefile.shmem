@@ -1,0 +1,56 @@
+#****************************************************************************
+#*			TAU Portable Profiling Package			   **
+#*			http://www.acl.lanl.gov/tau		           **
+#****************************************************************************
+#*    Copyright 1997  						   	   **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+#######################################################################
+##                  pC++/Sage++  Copyright (C) 1993,1995             ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
+
+TAUROOTDIR	= ../..
+
+include $(TAUROOTDIR)/include/Makefile
+
+CXX		= $(TAU_CXX)
+
+CC		= $(TAU_CC)
+
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_SHMEM_INC) $(USER_OPT)
+
+RM		= /bin/rm -f
+
+AR		= $(TAU_AR)
+
+ARFLAGS		= rcv
+
+INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
+
+TAU_TARGET		= libTauShmem$(TAU_OPTIONS)$(LSX)
+##############################################
+
+all : 		$(TAU_TARGET)
+
+install:	$(INSTALLDEST)/$(TAU_TARGET) 
+
+$(TAU_TARGET) : 	$(TAU_SHMEM_OBJS) 
+	$(AR) $(ARFLAGS) $(TAU_TARGET) $(TAU_SHMEM_OBJS)
+	$(TAU_RANLIB) $(TAU_TARGET)
+
+TauShmemCray.o :	TauShmemCray.c
+	$(CC) $(CFLAGS) -c TauShmemCray.c
+
+TauShmemTurbo.o: 	TauShmemTurbo.c
+	$(CC) $(CFLAGS) -c TauShmemTurbo.c
+
+$(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+clean: 	
+	$(RM) core $(TAU_SHMEM_OBJS) $(TAU_TARGET)
+##############################################
