@@ -7,14 +7,6 @@ Author:     Robert Bell
 Description:  
 Things to do:
 1)Add printing support.
-2)Add image support.
-3)Try to bring the paintComponent/renderIt function in line with other schemes in ParaProf.
-4)Fix panel sizing to match the way other windows organize the computation.
-5)Don't let this window do total calculations. Want to off load that job to a more central
-location.
-6)Investigate the code to find better a way of registering clicks and tooltips - looks a
-bit messy at the moment.
-7)Linked to the last point, do a bit of a code review.
 */
 
 package paraprof;
