@@ -20,6 +20,12 @@
 # include <fcntl.h>
 # include <unistd.h>
 
+#ifdef TAU_NEC
+extern "C" {
+int getdtablesize(void);
+}
+#endif /* TAU_NEC */
+
 #ifndef NeXT
 # include <unistd.h>
 #endif

@@ -57,13 +57,16 @@ FILE * edfFiles[MAX_OPEN_FILES]; /* array of descriptors */
 
 int  dynamictrace = FALSE;
 
+#ifndef TAU_NEC
 extern "C" {
+#endif /*TAU_NEC compiles tau_merge.c as a C++ file */
   int open_edf_file(char *prefix, int nodeid);
   int parse_edf_file(int node);
   int store_merged_edffile(char *filename);
   int GID(int node, long localEventId);
+#ifndef TAU_NEC
 }
-
+#endif /* TAU_NEC */
 char header[256]; /* File header like # FunctionId Group Tag "Name Type" Par */
 
 struct ltstr
