@@ -36,6 +36,9 @@
 
 # include <vector.h>
 # include <map.h>
+#ifdef KAI
+using namespace std;
+#endif /* KAI*/ 
 
 # define FILENAME_SIZE 	1024
 # define MAX_OPEN_FILES  256
