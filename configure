@@ -148,6 +148,7 @@ tauprefix=unknown
 tauoptions=
 pdt_root_dir="."
 pdt=no
+java=no
 
 # debug:
 # echo $arguments
@@ -259,6 +260,12 @@ do
   -pdt=*)
       pdt=yes
       pdtdir=`echo $arg | sed -e 's/-pdt=//'`
+    shift
+    ;;
+
+  -jdk=*)
+      java=yes
+      jdkdir=`echo $arg | sed -e 's/-jdk=//'`
     shift
     ;;
 
@@ -401,6 +408,7 @@ do
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
+    echo "-jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+)."
     echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
     echo "-mpilib=<dir> ............. Specify location of MPI library dir and use"
@@ -1267,6 +1275,11 @@ fi
 if [ $pdt = yes ]
   then
     fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
+fi
+
+if [ $java = yes ]
+  then
+    fixmakeargs="$fixmakeargs JAVA jdkdir=$jdkdir"
 fi
 
 if [ $pcl = yes ]
