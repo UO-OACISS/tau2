@@ -47,15 +47,8 @@
 
 
 int TheFlag[TAU_MAX_THREADS] ;
-#define MONITOR_ENTER(tid) if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; } 
-#define MONITOR_EXIT(tid) TheFlag[tid] = 0
-/* This doesn't work. Use TheFlag instead of TheFlag()
-int& TheFlag(void)
-{
-  static int flag = 0;
-  return flag;
-}
-*/
+#define TAU_MONITOR_ENTER(tid) if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; } 
+#define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
 
 vector<FunctionInfo *> TauDynFI; /* global FI vector */
 // Initialization procedure. Should be called before invoking 
@@ -64,7 +57,7 @@ void TauInitCode(char *arg)
 {
   char *name;
   int tid = 0;
-  MONITOR_ENTER(0);
+  TAU_MONITOR_ENTER(0);
   int functionId = 0;
   name = strtok(arg, "|");
   while (name != (char *)NULL)
@@ -90,14 +83,14 @@ void TauInitCode(char *arg)
   dprintf("Inside TauInitCode Initializations to be done here!\n");
   TAU_MAPPING_PROFILE_SET_NODE(0, tid);
   dprintf("Node = %d\n", RtsLayer::myNode());
-  MONITOR_EXIT(0);
+  TAU_MONITOR_EXIT(0);
 }
 
 // Hook for function entry.
 void TauRoutineEntry(int id )
 {
-  int tid = 0;
-  MONITOR_ENTER(tid);
+  int tid = RtsLayer::myThread();
+  TAU_MONITOR_ENTER(tid);
   TAU_MAPPING_OBJECT(TauMethodName);
 #ifdef ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP
   TAU_MAPPING_LINK(TauMethodName, id);
@@ -109,17 +102,36 @@ void TauRoutineEntry(int id )
   TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
   TAU_MAPPING_PROFILE_START(TauTimer, tid);
   dprintf("Entry into %s: id = %d\n", TauMethodName->GetName(), id);
-  MONITOR_EXIT(tid);
+  TAU_MONITOR_EXIT(tid);
 }
 
 // Hook for function exit.
 void TauRoutineExit(int id)
 {
-  int tid = 0;
-  MONITOR_ENTER(tid);
+  int tid = RtsLayer::myThread();
+  TAU_MONITOR_ENTER(tid);
   TAU_MAPPING_PROFILE_STOP(tid);
   dprintf("Exit from id = %d\n", id-1);
-  MONITOR_EXIT(tid);
+  TAU_MONITOR_EXIT(tid);
 }
 
+void TauRoutineEntryTest(int id )
+{
+  int tid =  RtsLayer::myThread();
+  TAU_MONITOR_ENTER(tid);
+  id --; 
+  FunctionInfo *fi = TauDynFI[id];
+  printf("Tid = %d, Entry into id = %d, name = %s\n", tid, id, fi->GetName());
+  TAU_MONITOR_EXIT(tid);
+}
+  
+void TauRoutineExitTest(int id)
+{
+  int tid = RtsLayer::myThread();
+  printf("EXIT tid = %d\n", tid); 
+  TAU_MONITOR_ENTER(tid);
+  id --; 
+  printf("Exit into id = %d\n", id);
+  TAU_MONITOR_EXIT(tid);
+}
 // EOF TauHooks.cpp
