@@ -1309,7 +1309,7 @@ int main(int argc, char **argv)
   {
      bool instrumentThisFile = false;
      if (((*it)->name() == string(filename)) && 
-         (instrumentThisFile = processFileForInstrumentation(filename)))
+         (instrumentThisFile = processFileForInstrumentation(string(filename))))
      { /* should we instrument this file? Yes */
        PDB::lang_t l = p.language();
 
@@ -1381,8 +1381,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.44 $   $Date: 2003/07/14 21:41:29 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.44 2003/07/14 21:41:29 sameer Exp $
+ * $Revision: 1.45 $   $Date: 2003/07/15 17:57:49 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.45 2003/07/15 17:57:49 sameer Exp $
  ***************************************************************************/
 
 
