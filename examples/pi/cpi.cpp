@@ -30,7 +30,7 @@ void main(int argc, char* argv[])
 {
     int i, n, myid, numprocs, namelen;
     double mySum, h, sum, x;
-    double startwtime, endwtime, timePi, timeE, time1;
+    double startwtime, timePi, timeE, time1;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 
     TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
