@@ -19,6 +19,8 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.geom.*;
+import java.text.*;
+import java.awt.font.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
 
@@ -166,13 +168,26 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    //Draw the header if required.
 	    //######
 	    if(header){
+		//FontRenderContext frc = g2D.getFontRenderContext();
+		Insets insets = this.getInsets();
 		yCoord = yCoord + (spacing);
 		String headerString = sWindow.getHeaderString();
 		//Need to split the string up into its separate lines.
 		StringTokenizer st = new StringTokenizer(headerString, "'\n'");
 		while(st.hasMoreTokens()){
-		    g2D.drawString(st.nextToken(), 15, yCoord);
-		    yCoord = yCoord + (spacing);
+		    AttributedString as = new AttributedString(st.nextToken());
+		    as.addAttribute(TextAttribute.FONT, fmMonoFont);
+		    AttributedCharacterIterator aci = as.getIterator();
+		    LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
+		    float wrappingWidth = this.getSize().width - insets.left - insets.right;
+		    float x = insets.left;
+		    float y = insets.right;
+		    while(lbm.getPosition() < aci.getEndIndex()){
+			TextLayout textLayout = lbm.nextLayout(wrappingWidth);
+			yCoord+= spacing;
+			textLayout.draw(g2D, x, yCoord);
+			x = insets.left;
+		    }
 		}
 		lastHeaderEndPosition = yCoord;
 	    }
@@ -531,7 +546,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     public Dimension getImageSize(boolean fullScreen, boolean header){
 	Dimension d = null;
 	if(fullScreen)
-	    d = this.getPreferredSize();
+	    d = this.getSize();
 	else
 	    d = sWindow.getSize();
 	d.setSize(d.getWidth(),d.getHeight()+lastHeaderEndPosition);
