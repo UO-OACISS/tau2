@@ -288,18 +288,25 @@ int cannot_get_enough_fd(int need)
 #endif /* TAU_WINDOWS */
 }
 
+int get_nodeid(int edf_file_index)
+{
+  return trcdes[edf_file_index].nid; /* return the node id associated with it*/
+}
+
 /* -------------------------------------------------------------------------- */
 /* -- PCXX_MERGE MAIN PROGRAM ----------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
 extern char *optarg;
 extern int   optind;
+char **edfnames; /* if they're specified */
+int edfspecified; /* tau_events also needs this */
 
 int main(int argc, char *argv[])
 {
   int i, active, numtrc, source, errflag, first;
-  int adjust, min_over, reassembly, edfspecified, numedfprocessed;
-  int startedfindex;
+  int adjust, min_over, reassembly, numedfprocessed;
+  int startedfindex, edfcount;
   unsigned long min_time, first_time;
   long numrec;
   char *trcfile;
@@ -312,6 +319,7 @@ int main(int argc, char *argv[])
   unsigned long last_time;
 # endif
 
+  edfcount   = 0;
   numtrc     = 0;
   numrec     = 0;
   errflag    = FALSE;
@@ -338,6 +346,8 @@ int main(int argc, char *argv[])
       case 'e': /* -- EDF files specified on the commandline -- */
                 edfspecified = TRUE;
 		numedfprocessed = 0;
+		edfnames = (char **) malloc (argc * (sizeof(char *))); 
+		/* first array */
 		for (i = optind-1; i < argc; i++)
 		{
 		  if(strstr(argv[i], ".edf") != 0)
@@ -348,6 +358,10 @@ int main(int argc, char *argv[])
 #endif /* DEBUG */
 	            open_edf_file(argv[i], numedfprocessed, TRUE);
 		    numedfprocessed++; 
+		    /* store the name of the edf file so that we can re-open 
+		     * it later if event files need to be re-read */
+		    edfnames[edfcount] = strdup(argv[i]);
+		    edfcount++; /* increment the count */
 		  }
 		  else 
 		    break; /* come out of the loop! */

@@ -62,6 +62,9 @@ FILE * edfFiles[MAX_OPEN_FILES]; /* array of descriptors */
 int  dynamictrace = FALSE;
 
 extern char *mergededffile; /* name of merged edf file */
+extern char **edfnames; /* names of edf files, if specified by the user */
+extern int edfspecified; /* whether edf files are specified by the user */
+extern "C" int get_nodeid(int edf_file_index); /* returns nid */ 
 
 #ifndef TAU_NEC
 extern "C" {
@@ -350,7 +353,27 @@ int GID(int node, long local)
 #endif /* DEBUG */
     fclose(edfFiles[node]);
 
+    /* OLD 
     open_edf_file("events", node, FALSE);
+    */
+    /* use default edf file names  "events.*.edf" */
+    if (edfspecified == FALSE)
+    {
+      char eventfilename[2048];
+      sprintf(eventfilename, "events.%d.edf", get_nodeid(node));
+      open_edf_file(eventfilename, node, TRUE);
+#ifdef DEBUG
+      printf("re-opening %s\n", eventfilename);
+#endif /* DEBUG */
+    }
+    else  /* edf file is not specified */
+    { /* Hey, we need to know the edf file name! */
+      open_edf_file(edfnames[node], node, TRUE); 
+#ifdef DEBUG
+      printf("re-opening edf file (specified by user): %s\n", edfnames[node]);
+#endif /* DEBUG */
+    }
+
     parse_edf_file(node);
     store_merged_edffile(mergededffile); /* update the merged edf file */
     return nodeEventTable[node][local];
