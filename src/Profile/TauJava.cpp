@@ -41,6 +41,13 @@
 
 #define CALL(routine) (JavaThreadLayer::tau_jvmpi_interface->routine)
 
+// Should we exclude all methods using -XrunTAU:nomethods flag? 
+bool& TheTauExcludeMethodsFlag()
+{
+  static bool flag = false; 
+  return flag;
+}
+
 // profiler agent entry point
 extern "C" {
   JNIEXPORT jint JNICALL JVM_OnLoad(JavaVM *jvm, char *options, void *reserved)
@@ -62,9 +69,12 @@ extern "C" {
     JavaThreadLayer::tau_jvmpi_interface->NotifyEvent = 
       TauJavaLayer::NotifyEvent;
     // enabling class load event notification
-    CALL(EnableEvent)(JVMPI_EVENT_CLASS_LOAD, NULL);
-    CALL(EnableEvent)(JVMPI_EVENT_METHOD_ENTRY, NULL);
-    CALL(EnableEvent)(JVMPI_EVENT_METHOD_EXIT, NULL);
+    if (!TheTauExcludeMethodsFlag())
+    {
+      CALL(EnableEvent)(JVMPI_EVENT_CLASS_LOAD, NULL);
+      CALL(EnableEvent)(JVMPI_EVENT_METHOD_ENTRY, NULL);
+      CALL(EnableEvent)(JVMPI_EVENT_METHOD_EXIT, NULL);
+    }
     CALL(EnableEvent)(JVMPI_EVENT_THREAD_START, NULL);
     CALL(EnableEvent)(JVMPI_EVENT_THREAD_END, NULL);
     CALL(EnableEvent)(JVMPI_EVENT_JVM_SHUT_DOWN, NULL);
@@ -82,7 +92,7 @@ extern "C" {
 #endif //TAU_WINDOWS
 
     TauJavaLayer::Init(options);
-    TauJavaLayer::Init("exclude=TAU/Profile");
+    TauJavaLayer::Init("exclude=TAU/Profile,TAU.Profile");
 
 #ifdef DEBUG_PROF 
     fprintf(stdout, "TAU> .... ok \n\n");
@@ -90,6 +100,7 @@ extern "C" {
     return JNI_OK;
   }
 }
+
 
 static char **TauExcludeList=NULL;
 static int TauExcludeListSize = 0;
@@ -125,6 +136,9 @@ char *s2;
       token=strtok(s2, "=,");
     }
 
+    if (strcmp(token,"nomethods")==0) {
+      TheTauExcludeMethodsFlag() = true;
+    } 
 
     if (strcmp(token,"exclude")==0) {
       if (TauExcludeList == (char **) NULL) {
@@ -156,15 +170,25 @@ char *s2;
 
 // function for handling event notification
 void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
+  int tid = JavaThreadLayer::GetThreadId(event->env_id);
+#ifndef TAU_MPI
+  static int j = TAU_MAPPING_PROFILE_SET_NODE(0, tid);
+#else  /* TAU_MPI */
+  //static int j = TAU_MAPPING_PROFILE_SET_NODE(getpid(), tid);
+#endif /* TAU_MPI */
+
   switch(event->event_type) {
   case JVMPI_EVENT_CLASS_LOAD:
-    TauJavaLayer::ClassLoad(event);
+    if (!TheTauExcludeMethodsFlag())
+      TauJavaLayer::ClassLoad(event);
     break;
   case JVMPI_EVENT_METHOD_ENTRY:
-    TauJavaLayer::MethodEntry(event);
+    if (!TheTauExcludeMethodsFlag())
+      TauJavaLayer::MethodEntry(event);
     break;
   case JVMPI_EVENT_METHOD_EXIT:
-    TauJavaLayer::MethodExit(event);
+    if (!TheTauExcludeMethodsFlag())
+      TauJavaLayer::MethodExit(event);
     break;
   case JVMPI_EVENT_THREAD_START:
     TauJavaLayer::ThreadStart(event);
@@ -208,11 +232,6 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 #endif /* DEBUG_PROF */
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
 /* Do this for single threaded appls that don't have PROFILE_SET_NODE */
-#ifndef TAU_MPI
-  static int j = TAU_MAPPING_PROFILE_SET_NODE(0, tid);
-#else  /* TAU_MPI */
-  //static int j = TAU_MAPPING_PROFILE_SET_NODE(getpid(), tid);
-#endif /* TAU_MPI */
 
 int origkey = 1;
   
@@ -415,7 +434,7 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2004/12/09 23:50:27 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.24 2004/12/09 23:50:27 sameer Exp $
+ * $Revision: 1.25 $   $Date: 2005/01/20 00:45:17 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.25 2005/01/20 00:45:17 sameer Exp $
  ***************************************************************************/
 
