@@ -109,14 +109,13 @@ int main (int argc, char **argv)
   }
 
   /* prior to exiting, print statistics related to user defined events */
-  TAU_REPORT_THREAD_STATISTICS();
   printf("Exiting main...\n");
   TAU_PROFILE_STOP(tautimer);
   return 0;
 }
 /***************************************************************************
  * $RCSfile: hello.c,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 1999/06/18 17:09:54 $
- * POOMA_VERSION_ID: $Id: hello.c,v 1.5 1999/06/18 17:09:54 sameer Exp $
+ * $Revision: 1.6 $   $Date: 1999/06/20 05:01:24 $
+ * POOMA_VERSION_ID: $Id: hello.c,v 1.6 1999/06/20 05:01:24 sameer Exp $
  ***************************************************************************/
 
