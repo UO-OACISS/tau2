@@ -28,15 +28,19 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
+#if (defined(TAU_WINDOWS))
+#pragma warning( disable : 4786 )
+#endif //TAU_WINDOWS
+
 #ifdef __cplusplus 
 
 #include <Profile/ProfileGroups.h>
 
-#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA))
+#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS))
 #define TAU_MAX_THREADS 64
 #else
 #define TAU_MAX_THREADS 1
-#endif /* PTHREADS || TULIPTHREADS || JAVA */
+#endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS*/
 
 #include <Profile/TauAPI.h>
 
@@ -56,6 +60,8 @@
 #include <Profile/UserEvent.h>
 
 #include <Profile/PclLayer.h>
+
+#include <Profile/WindowsThreadLayer.h>
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -123,7 +129,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 1999/08/19 22:27:57 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.23 1999/08/19 22:27:57 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: bertie $
+ * $Revision: 1.24 $   $Date: 1999/10/27 21:18:19 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.24 1999/10/27 21:18:19 bertie Exp $ 
  ***************************************************************************/

@@ -116,7 +116,7 @@ private:
 
 	// A record of the information unique to this function.
 	// Statistics about calling this function.
-#if (defined(PTHREADS) || defined(TULIPTHREADS))
+#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(TAU_WINDOWS))
 	STORAGE(long, NumCalls);
 	STORAGE(long, NumSubrs);
 	STORAGE(double, ExclTime);
@@ -214,7 +214,7 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 }
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 1999/08/19 22:27:56 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.9 1999/08/19 22:27:56 sameer Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
+ * $Revision: 1.10 $   $Date: 1999/10/27 21:18:19 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.10 1999/10/27 21:18:19 bertie Exp $ 
  ***************************************************************************/
