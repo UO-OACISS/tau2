@@ -1,0 +1,255 @@
+=========================================================================
+		WORKING OF THE TAU_COMPILER.SH 
+=========================================================================
+
+Table of Contents
+	1.0. Program Description: Overall 
+	2.0. Program Description: Detailed 
+		2.1 Parsing the source-code
+		2.2 Instrumenting the source-code
+		2.3 Compiling the instrumented source-code
+		2.4 Misc
+	3.0. Assumptions 
+
+
+
+=========================================================
+1.0. Program Description: Overall 
+=========================================================
+Firstly, the command passed is parsed. Then, it can be distinctly 
+broken into five phases:
+	-- Linking [In case no source files are passed]
+	-- Parsing using the appropriate pdt-parser is done.
+	-- Instrumenting using the passed instrumentor is done.
+	-- Compilation of the instrumented code is done.
+	-- Executing the regular command in case of any intermediate error.
+	
+
+
+Parsing the source-code:
+
+=========================================================
+2.0. Program Description: Detailed 
+=========================================================
+
+
+2.1 Parsing the source-code:
+
+	-- All the script options are passed before the actual command.
+
+	-- All any command passed after the sequence of -opt* form 
+		the regular command, with the first command immediately after 
+		the -opt* sequence considered as the compiler.
+		The regular command is important, since if any error is encountered
+		during parsing or instrumentation, the script reverts back to 
+		regular command.
+
+	-- Script options are parsed under the inner case structure based on
+		-opt*) outer case.  If one needs to define a new option, it 
+		should be defined as -optNew, where "New" is the name 
+		of the option.  For each of the cases, -opt*="$OPTION",
+		'-opt*=' is stripped off leading to the pure option
+		$OPTION.
+	
+	-- Files are currently divided into the following four groups. They require
+		different type of parsers.
+		group_f_F [parser = f95parse] 
+		group_F90 [parser = f95parse] 
+		group_F95 [parser = f95parse] 
+		group_c [parser = cparse] 
+		group_C [parser = cxxparse] 
+
+	-- File of different types are passed with different options.
+
+	-- In case of multiple files, each file is instrumented individually. 
+
+	-- In the case of an appropriate output .pdb file being NOT produced, current errorStatus
+		is set to $TRUE, after which all subsequent steps are ignored
+		and the regular command is executed. In case of multiple files, output is 
+		checked for each file.
+	
+
+2.2 Instrumenting the source-code:
+
+	-- All the instrumentation commands are passed with -f option, which takes
+		the TAU_SELECT file.
+
+	-- In case of multiple files, each file is instrumented individually. 
+
+	-- In the case of an appropriate output .inst. file being NOT produced, current errorStatus
+		is set to $TRUE, after which all subsequent steps are ignored
+		and the regular command is executed. In case of multiple files, output is 
+		checked for each file.
+
+		
+2.3 Compiling the instrumented source-code:
+
+	-- Here the input is .inst. file (output of instrumentation phase) instead of the regular 
+		source file.
+
+	-- In case of multiple files, all .inst. files are compiled together. 
+
+	-- Based on the file-type, different types of arguments can be passed to
+		the command (like TAU_INCLUDE, TAU_LIBS etc.).
+ 
+ 	-- In case of no output file, an output based on the basename of the file is  
+		created. There are instances, when this is required.
+
+	-- In the case of an output file being NOT produced, current errorStatus
+		is set to $TRUE, after which the regular command is executed. 
+
+
+2.4 Misc:
+
+	-- The parameters passed by the script file are:
+			-optVerbose
+			-optNoMpi
+			-optPdtDir=""
+			-optPdtF90=""
+			-optPdtF95=""
+			-optPdtCOpts=""
+			-optPdtCxxOpts=""
+			-optPdtF90Parser=""
+			-optPdtUser=""
+			-optTauInstr=""
+			-optTauSelectFile=""
+			-optTau=""
+			-optCompile=""
+			-optLinking=""
+
+
+	-- The arguments to these options must be passed within double quotes.
+
+	-- Option -optVerbose would print a verbose output of execution.
+
+	-- These options can be overwritten by passing them from the makefile.
+		So, in order to overwrite the TauLibs, one can simply append
+		the following to the rule in the makefile
+			-optTau ="$NEW_TAU_LIBS"
+		This will overwrite the default -optTau="" passed by the script file.
+
+	-- If one needs to define a new option, it should be defined as
+		-optNew, where "New" is the name of the option. It must be parsed 
+		as the sub-case, -opt*)) in this script.
+
+	-- During debugging of the script, you can set the debug flag $TRUE as:
+		declare -i isDebug=$TRUE
+
+	-- Functions - echoIfVerbose() and echoIfDebug(), take only one string as
+		input. If you have multiple strings that you would like to print, concatenate 
+		them before you pass them to these functions.
+
+	-- Variable $errorStatus tells if an error has occurred. If there is an error
+		with either parsing stage or instrumentation stage or the compilation of 
+		instrumented code stage, the remaining steps are simply ignored and the 
+		regular command is executed.
+
+	-- Variable $gotoNextStep is by default set to $TRUE. In case of error, 
+		it is set to $FALSE and so all the steps are ignored. Only the final 
+		regular command is executed. The reason, this is needed is because 
+		in case of the first stage of linking, $gotoNextStop is set to $FALSE
+		but $errorStatus remains set to $FALSE.
+		Hence not only are the subsequent stages ignored, but the final stage, 
+		which is executed when $errorStatus equals $TRUE is also ignored as well.
+
+	-- Usage: In order to print the Usage of these options, use 
+		tau_compiler.sh --help 
+		tau_compiler.sh -h 
+		tau_compiler.sh
+
+	-- Here are the following six types of cases that can be handled by the script.
+			case 1) icc -c hello.c
+			case 2) icc -c hello.c -o hello.o
+			tau_compiler modifies case 1 to case 2, where it creates an hello.o 
+			along with an -o option. "-o hello.o" is then appended to 
+			"icc -c hello.c" to create "icc -c hello.c -o hello.o"
+			In case of multiple files, compilation is done individually for
+			all the files. Hence  the command
+				icc -c hello1.c hello2.c hello3.c 
+			is reduced to three commands of
+				icc -c hello1.c -o hello1.o
+				icc -c hello2.c -o hello2.o
+				icc -c hello3.c -o hello3.o
+
+	 
+			case 3) icc hello.c [a.out]
+			case 4) icc  hello.c -o hello
+			Here like the first two cases, case 3) is extended to case 4) by
+			appending a "-o a.out" to form the command 
+			"icc hello.c -o a.out"
+
+			In addition, each of these commands are split into two stages
+			namely a) compilation stage and then b) linking stage.
+			Hence, case 4) is split into to commands
+				icc -c hello.c -o hello.o
+				icc hello.o -o hello
+
+			In case of multiple files, compilation is done individually for
+			all the files and then linking is done in the last. Hence  the command
+				icc hello1.c hello2.c hello3.c -o output
+			is reduced to three commands of
+				icc -c hello1.c -o hello1.o
+				icc -c hello2.c -o hello2.o
+				icc -c hello3.c -o hello3.o
+				icc hello1.o hello2.o hello3.o -o output 
+
+			case 5) icc f1.c hello.o -o output [Mixed ]
+			In case of passing a mixture of source files and object files, source files are compiled
+			and converted into object files and then in the final stage linking is done together
+			with original object files. Thus the command is first split to
+				icc -c f1.o hello.o
+			and then  
+				icc f1.o hello.o -o output 
+
+			case 6) icc f1.o hello.o [Plain Linking stage]
+			In this case, object files are simply linked. Neither parsing, nor instrumentation is 
+			done for this case.
+
+
+=========================================================
+3.0. Assumptions 
+=========================================================
+
+	-- Executable or an output object file (if it were to appears), appears immediately 
+		after -o option
+
+	-- *.pdb and *.inst.* files are created in the current directory
+		since all the check options in the makefile were [! -f *.pdb ]. 
+		This assumption is used while creation of *.pdb and  *.inst.* files.
+		The directory part of the file name is stripped off. This assumption
+		is also used while checking if the file has been created or not
+		(e.g. [! -e *.pdb ]).  Since *.pdb (*.inst.*) or files can be created
+		using source codes located in directories other than the current directory,
+		during parsing, the names of the source files are NOT stripped off of 
+		their directory component.
+
+
+	-- All the options passed by script must be passed before the actual command.
+		The reason being script assumes that all any command passed 
+		after the sequence of -opt* form the regular command, with the 
+		first command immediately after the -opt* sequence as the compiler.
+
+		No option should be passed by the script without -opt* attached to it.
+
+
+	-- Option -optPdtF90Parser: It should be passed with parser executable along 
+		with the complete path to the parser executable. However, if the path 
+		is defined in the enviroment, then it would work even if only the
+		name of the parser executable is passed. If by mistake NULL is passed, or 
+		even simply few blank spaces are parsed (I have assumed a maximum of 3), 
+		then it would be equivalent to not being defined at all.  So the 
+		default f95parser would be invoked.
+
+	-- Option -optTauSelectFile: Passing a blank file name with -f option 
+		would cause ERROR and so if it is blank, -f option should not be appended at
+		the start.  This is the reason, one cannot pass it as a generic optTau
+		with -f selectFile (Unless in case of select file being NULL, even -f 
+		is not included i.e. IF SELECT_FILE does not exist, then entire "-f SELECT_FILE" 
+		is omitted). But then what if the user does pass a (a few) blank space(s) in
+		place of selectFile? An -f option without file would cause error. We assume
+		that the user is allowed to pass a maximum of two blank spaces.  If the name
+		of the selectFile is less than 3, then this value should be modified.
+
+
+=========================================================
+=========================================================
