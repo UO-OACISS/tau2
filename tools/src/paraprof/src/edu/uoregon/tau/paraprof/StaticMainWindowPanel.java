@@ -441,9 +441,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 
         while (l.hasNext()) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l.next();
-            sum += ppFunctionProfile.getExclusiveValue();
-        }
 
+            if (ppFunctionProfile.getExclusiveValue() > 0) { 
+                sum += ppFunctionProfile.getExclusiveValue();
+            }
+        }
+        
         l.reset();
         double valueSum = 0;
         int lengthDrawn = 0;
