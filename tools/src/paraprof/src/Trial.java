@@ -328,12 +328,12 @@ public class Trial extends Thread{
 	  
 		for(Enumeration e1 = (globalMapping.getMapping(0)).elements(); e1.hasMoreElements() ;){
 		    GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
-		    tmpGME.addDefaultToVectors();
+		    tmpGME.incrementStorage();
 		}
 	  
 		for(Enumeration e2 = (globalMapping.getMapping(2)).elements(); e2.hasMoreElements() ;){
 		    GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
-		    tmpGME.addDefaultToVectors();
+		    tmpGME.incrementStorage();
 		}
 	  
 	  
@@ -839,6 +839,7 @@ public class Trial extends Thread{
 	    System.out.println("Processing callpath data ...");
 	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
 		setCallPathDataPresent(true);
+		CallPathUtilFuncs.buildRelations(getGlobalMapping());
 	    }
 	    else{
 		System.out.println("No callpath data found.");
@@ -1387,7 +1388,7 @@ public class Trial extends Thread{
 	for(Enumeration e1 = (this.globalMapping.getMapping(0)).elements(); e1.hasMoreElements() ;){
                   
 	    GlobalMappingElement tmpGME = (GlobalMappingElement) e1.nextElement();
-	    tmpGME.addDefaultToVectors();
+	    tmpGME.incrementStorage();
 	    tmpGME.setTotalExclusiveValue(0);
 	    tmpGME.setTotalInclusiveValue(0);
 	    tmpGME.setCounter(0);
@@ -1396,7 +1397,7 @@ public class Trial extends Thread{
 	for(Enumeration e2 = (this.globalMapping.getMapping(2)).elements(); e2.hasMoreElements() ;){
       
 	    GlobalMappingElement tmpGME = (GlobalMappingElement) e2.nextElement();
-	    tmpGME.addDefaultToVectors();
+	    tmpGME.incrementStorage();
 	}
     
 	this.addDefaultToVectors();
