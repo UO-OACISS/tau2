@@ -33,7 +33,7 @@
 //#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
 #include "Profile/Profiler.h"
 
-
+extern "C" void tau_disable_instrumentation(void);
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 using namespace std;
@@ -340,6 +340,7 @@ void Profiler::Stop(int tid)
 	  // For Dyninst. tcf gets called after main and all the data structures may not be accessible
 	  // after main exits. Still needed on Linux - we use TauProgramTermination()
 	  if (strcmp(ThisFunction->GetName(), "_fini") == 0) TheSafeToDumpData() = 0;
+	  atexit(tau_disable_instrumentation); 
   	  if (TheSafeToDumpData()) {
             if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
             // Not a destructor of a static object - its a function like main
@@ -975,8 +976,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.47 $   $Date: 2001/07/05 17:37:20 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.47 2001/07/05 17:37:20 sameer Exp $ 
+ * $Revision: 1.48 $   $Date: 2001/07/26 00:37:41 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.48 2001/07/26 00:37:41 sameer Exp $ 
  ***************************************************************************/
 
 	
