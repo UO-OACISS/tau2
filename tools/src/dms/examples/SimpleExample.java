@@ -53,10 +53,9 @@ public class SimpleExample {
 		String name, group;
 		int functionIndexID, trial, node, context, thread;
 		double inclusivePercentage;
-		String metric;
 
 		System.out.println ("Inclusive Percentages:");
-		System.out.println ("Trial, Node, Context, Thread, Metric, Name, Group, Value:");
+		System.out.println ("Trial, Node, Context, Thread, Name, Group, Value:");
 		while (myIterator.hasNext()) {
 			functionDataObject = (FunctionDataObject)(myIterator.next());
 			functionIndexID = functionDataObject.getFunctionIndexID();
@@ -67,9 +66,8 @@ public class SimpleExample {
 			node = functionDataObject.getNode();
 			context = functionDataObject.getContext();
 			thread = functionDataObject.getThread();
-			metric = functionDataObject.getMetric(0);
 			inclusivePercentage = functionDataObject.getInclusivePercentage(0);
-			System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + metric + ", " + name + ", " + group + " = " + inclusivePercentage);
+			System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = " + inclusivePercentage);
 		}
 
 		// disconnect and exit.

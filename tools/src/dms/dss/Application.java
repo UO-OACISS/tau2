@@ -4,7 +4,7 @@ package dms.dss;
  * Holds all the data for an application in the database.  This 
  * object is returned by the DataSession object and all of its subtypes.
  *
- * <P>CVS $Id: Application.java,v 1.6 2003/08/01 21:38:21 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.7 2003/08/11 07:41:41 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  */
@@ -112,7 +112,7 @@ public class Application {
 /**
  * Sets the name of the current application object.
  *
- * @param	id the application name
+ * @param	name the application name
  */
 	public void setName(String name) {
 		this.name = name;
@@ -121,7 +121,7 @@ public class Application {
 /**
  * Sets the version of the current application object.
  *
- * @param	id the application version
+ * @param	version the application version
  */
 	public void setVersion(String version) {
 		this.version = version;
@@ -130,7 +130,7 @@ public class Application {
 /**
  * Sets the description of the current application object.
  *
- * @param	id the application description
+ * @param	description the application description
  */
 	public void setDescription(String description) {
 		this.description = description;
@@ -139,7 +139,7 @@ public class Application {
 /**
  * Sets the language of the current application object.
  *
- * @param	id the application language
+ * @param	language the application language
  */
 	public void setLanguage(String language) {
 		this.language = language;
@@ -148,7 +148,7 @@ public class Application {
 /**
  * Sets the para diag of the current application object.
  *
- * @param	id the application para diag
+ * @param	paraDiag the application para diag
  */
 	public void setParaDiag(String paraDiag) {
 		this.paraDiag = paraDiag;
@@ -157,7 +157,7 @@ public class Application {
 /**
  * Sets the usage of the current application object.
  *
- * @param	id the application usage
+ * @param	usage the application usage
  */
 	public void setUsage(String usage) {
 		this.usage = usage;
@@ -166,7 +166,7 @@ public class Application {
 /**
  * Sets the executable options of the current application object.
  *
- * @param	id the application executable options
+ * @param	executableOptions the application executable options
  */
 	public void setExecutableOptions(String executableOptions) {
 		this.executableOptions = executableOptions;
@@ -175,7 +175,7 @@ public class Application {
 /**
  * Sets the experiment table name of the current application object.
  *
- * @param	id the application experiment table name
+ * @param	experimentTableName the application experiment table name
  */
 	public void setExperimentTableName(String experimentTableName) {
 		this.experimentTableName = experimentTableName;

@@ -3,7 +3,7 @@ package dms.dss;
 /**
  * Holds all the data for a function data object in the database.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.10 2003/08/07 20:23:08 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.11 2003/08/11 07:41:43 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -12,20 +12,17 @@ public class FunctionDataObject {
 	private int context;
 	private int thread;
 	private int functionID;
-	private String[] metric;
 	private double[] doubleList;
 	private int numCalls;
 	private int numSubroutines;
 
 	public FunctionDataObject() {
 		super();
-		metric = new String[1];
 		doubleList = new double[5];
 	}
 
 	public FunctionDataObject(int arraySize) {
 		super();
-		metric = new String[arraySize];
 		doubleList = new double[arraySize];
 	}
 
@@ -101,14 +98,6 @@ public class FunctionDataObject {
 		this.numSubroutines = numSubroutines;
 	}
 
-	public void setMetric (int metricIndex, String metric) {
-		try {
-			this.metric[metricIndex] = metric;
-		} catch (Exception e) {
-			// do something
-		}
-	}
-
 	public int getNode () {
 		return this.node;
 	}
@@ -153,8 +142,5 @@ public class FunctionDataObject {
 		return this.numSubroutines;
 	}
 
-	public String getMetric (int metricIndex) {
-		return metric[metricIndex];
-	}
 }
 

@@ -6,7 +6,7 @@ import dms.dss.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.9 2003/08/01 21:38:21 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.10 2003/08/11 07:41:41 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -93,7 +93,7 @@ public abstract class DataSession {
 /**
  * Set the Application for this DataSession.  The DataSession object will maintain a reference to the Application referenced by the name and/or version.  To clear this reference, call setApplication(Application) with a null reference.
  *
- * @param	id name of the Application object to be saved.
+ * @param	name name of the Application object to be saved.
  * @param	version version of the Application object to be saved.
  * @see	Application
  * @see	DataSession#setApplication(Application)
@@ -194,7 +194,7 @@ public abstract class DataSession {
 /**
  * Set a Vector of context values for this DataSession.  The DataSession object will maintain a reference to the Vector of context values.  To clear this reference, call setContext(int) with DataSession.PERFDB_NONE.
  *
- * @param	context Vector of context values to be saved.
+ * @param	contexts Vector of context values to be saved.
  * @see	DataSession#PERFDB_NONE
  */
 	public void setContext(Vector contexts) {
@@ -277,7 +277,7 @@ public abstract class DataSession {
 /**
  * Returns the Function identified by the unique function id.
  *
- * @param	id unique id of the Function object.
+ * @param	functionID unique id of the Function object.
  * @return	Function object identified by the unique function id.
  * @see	Function
  */
@@ -333,7 +333,7 @@ public abstract class DataSession {
 /**
  * Returns the UserEvent identified by the unique user event id.
  *
- * @param	id unique id of the UserEvent object to be saved.
+ * @param	userEventID unique id of the UserEvent object to be saved.
  * @return	UserEvent object identified by the unique user event id.
  * @see	UserEvent
  */
