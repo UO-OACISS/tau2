@@ -191,11 +191,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++' and 'aCC'"
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC' and 'c++'"
 #      exit 1
     fi
     shift
@@ -626,6 +626,18 @@ case $machine in
      fi
      ;;
    
+   apple) 
+     if [ $cxx_compiler = default ]
+       then
+         cxx_compiler=c++
+     fi
+
+     if [ $c_compiler = default ]
+       then
+         c_compiler=cc             
+     fi
+     ;;
+
    alpha)
      if [ $cxx_compiler = default ]
        then
@@ -938,6 +950,12 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs HP_FORTRAN"
       fi
         
+      ;;
+   c++)
+      echo "Default C++ compiler will be Apple c++ compiler"
+      fixmakeargs="$fixmakeargs APPLECXX"
+      tauoptions="${tauoptions}-cxx"
+
       ;;
    *)
       echo "ERROR Unknown C++ compiler"

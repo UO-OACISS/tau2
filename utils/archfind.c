@@ -344,6 +344,11 @@ ARCHmips
 ARCHalpha
 #endif
 
+#if defined(__APPLE__)
+#  define _havehosttype_ 
+ARCHapple 
+# endif 
+
 # if defined(m88k) || defined(__m88k__)
 #   ifndef _havehosttype_
 #     define _havehosttype_
