@@ -92,6 +92,11 @@ fi
 	echo "s,^PCLDIR=.*$,PCLDIR=$pcldir,g" >> $sedout
 	;;
 
+     papidir=*)
+        papidir=`echo $1 | sed -e 's/^papidir=//'`
+	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
+	;;
+
      pdtdir=*)
         pdtdir=`echo $1 | sed -e 's/^pdtdir=//'`
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
@@ -451,6 +456,10 @@ fi
 	echo "NOTE: Using PCL interface for Hardware Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PAPI)
+	echo "NOTE: Using PAPI interface for Hardware Performance Counters ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PDT)
 	echo "NOTE: Using PDT for TAU Source Code Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -464,6 +473,10 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PCLPTHREAD)
+	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PAPIPTHREAD)
 	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
