@@ -36,6 +36,10 @@
 
 #define TRUE  1;
 #define FALSE 0;
+// mpi master to slave messages
+const int SLAVE_TERMINATE        = 0;
+const int SLAVE_EXPECT_BROADCAST = 1;
+const int SLAVE_EXPECT_MESSAGE   = 2;
 
 
 /*--------------------------------------------------------------------
@@ -81,10 +85,6 @@ class Matrix_MPI
     int master;
 
 
-    // mpi master to slave messages
-    const int SLAVE_TERMINATE        = 0;
-    const int SLAVE_EXPECT_BROADCAST = 1;
-    const int SLAVE_EXPECT_MESSAGE   = 2;
 
 };
 /*------------------------------------------------------------------*/
