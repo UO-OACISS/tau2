@@ -17,6 +17,7 @@ Version 2.10 changes (from 2.9):
 5. Made some modifications for PDT v2.1 [CACR C++/C].
 6. Added jracy, TAU's new Java based profile browser to replace racy.
 7. Added support for specifying a fortran compiler during configuration.
+8. Added support for auto-detection of mpi libs and include dirs (-mpi).
 
 Version 2.9 changes (from 2.8):
 1. Better support for mixed model programming
