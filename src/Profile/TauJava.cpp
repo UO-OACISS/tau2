@@ -131,7 +131,8 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
 
 void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 {
-  char funcname[2048], groupname[1024];
+  char funcname[2048], classname[1024];
+  char *groupname;
   int i;
 #ifdef DEBUG_PROF
     fprintf(stdout, "TAU> Class Load : %s\n", event->u.class_load.class_name);
@@ -153,7 +154,8 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 	event->u.class_load.methods[i].method_signature); 
 #endif /* signature is too much for tau_convert to handle */
 
-    sprintf(groupname, "%s", event->u.class_load.class_name); 
+    sprintf(classname, "%s", event->u.class_load.class_name); 
+    groupname = strtok(classname, " /=");
 
     TAU_MAPPING_CREATE(funcname, " ",
 	  (long)  event->u.class_load.methods[i].method_id, 
@@ -176,11 +178,11 @@ int TauJavaLayer::GetTid(JVMPI_Event *event)
        if ((*tid) == 0)
        {	 
          CreateTopLevelRoutine("THREAD=JVM-MainThread; THREAD GROUP=system", 
-	 	" ", "TAU_DEFAULT", (*tid));
+	 	" ", "THREAD", (*tid));
        }
        else
        {	 
-         CreateTopLevelRoutine("THREAD=JVM-InternalThread; THREAD GROUP=system", 	  	" ", "TAU_DEFAULT", (*tid));
+         CreateTopLevelRoutine("THREAD=JVM-InternalThread; THREAD GROUP=system", 	  	" ", "THREAD", (*tid));
        }
 	
   }
@@ -266,7 +268,7 @@ void TauJavaLayer::ThreadStart(JVMPI_Event *event)
   char thread_name[256];
   sprintf(thread_name, "THREAD=%s; THREAD GROUP=%s", event->u.thread_start.thread_name,
 	  event->u.thread_start.group_name); 
-  CreateTopLevelRoutine(thread_name, " ", event->u.thread_start.group_name, tid); 
+  CreateTopLevelRoutine(thread_name, " ", "THREAD", tid); 
 }
 
 void TauJavaLayer::ThreadEnd(JVMPI_Event *event)
