@@ -424,6 +424,17 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    }
 		}
 		else if(arg.equals("Add Experiment")){
+		    if(clickedOnObject == standard){
+		    }
+		    else if(clickedOnObject == dbApps){
+			/*ParaProfExperiment experiment  = new ParaProfExperiment();
+			experiment.setName("New Experiment");
+			PerfDBSession perfDBSession = new PerfDBSession(); 
+			perfDBSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
+			perfDBSession.setExperiment(application);
+			perfDBSession.saveApplication();
+			perfDBSession.terminate();*/
+		    }
 		}
 		else if(arg.equals("Update Meta Data in DB")){
 		    //A few things to check here.
