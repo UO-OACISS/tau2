@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.4 2004/04/02 23:28:17 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.5 2004/04/05 16:10:43 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -42,7 +42,7 @@ public class Trial {
     private Vector metric;
     private String userData;
     private String problemDefinition;
-    private DataSession dataSession = null;
+    protected DataSession dataSession = null;
 
     /**
      * Gets the unique identifier of the current trial object.
