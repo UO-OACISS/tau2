@@ -981,6 +981,18 @@ int main (int argc, char *argv[])
  	  otherid 	= ((erec->par>>24) & 0x000000FF) + 1;
 	  msglen  	= erec->par & 0x0000FFFF; 
 
+	  if (threads)
+	  { /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
+	       node. True for MPI+JAVA. In future, do a matching algo. */
+	     otherid	= offset[otherid-1] + erec->tid + 1; 
+	     /* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
+#ifdef DEBUG
+	     printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
+	     printf("SEND: OTHER %d, myid %d len %d tag %d: PAR: %lx\n", 	
+	       otherid, myid, msglen, msgtag, erec->par);
+#endif /* DEBUG */
+  	  }
+
 	
           fprintf (outfp, "%llu SENDMSG %d FROM %d TO %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
@@ -1000,6 +1012,18 @@ int main (int argc, char *argv[])
 	  myid 		= GetNodeId(erec)+1;
 	  otherid       = ((erec->par>>24) & 0x000000FF) + 1;
 	  msglen	= erec->par & 0x0000FFFF;
+
+	  if (threads)
+	  { /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
+	       node. True for MPI+JAVA. In future, do a matching algo. */
+	     otherid	= offset[otherid-1] + erec->tid + 1; 
+	     /* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
+#ifdef DEBUG
+	     printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
+	     printf("RECV: OTHER %d, myid %d len %d tag %d: PAR: %lx\n", 	
+	       otherid, myid, msglen, msgtag, erec->par);
+#endif /* DEBUG */
+  	  }
 
           fprintf (outfp, "%llu RECVMSG %d BY %d FROM %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
