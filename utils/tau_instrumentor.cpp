@@ -73,6 +73,11 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
 	 ((*rit)->kind() != pdbItem::RO_EXT) ) 
     {
+#ifdef DEBUG
+        cout <<"Routine "<<(*rit)->fullName() <<" body Begin line "
+             << (*rit)->bodyBegin().line() << " col "
+             << (*rit)->bodyBegin().col() <<endl;
+#endif /* DEBUG */
 	if ((*rit)->isInline())
   	{ 
 	  if (noinline_flag)
@@ -93,11 +98,13 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	if ((((*rit)->parentGroup()) == 0) || (*rit)->isStatic())
 	{ // If it is a static function or if 
 	  // there's no parent class. No need to add CT(*this)
-          itemvec.push_back(new itemRef(*rit, true));
+          itemvec.push_back(new itemRef(*rit, true, 
+	    (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
 	}
 	else
 	{
-          itemvec.push_back(new itemRef(*rit, false));
+          itemvec.push_back(new itemRef(*rit, false, 
+            (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
 	  // false puts CT(*this)
 	}
 #ifdef DEBUG
@@ -127,12 +134,15 @@ void getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
         if ((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_STATMEM))
 	{ 
 	  // There's no parent class. No need to add CT(*this)
-          itemvec.push_back(new itemRef(*te, true)); // False puts CT(*this)
+          itemvec.push_back(new itemRef(*te, true, 
+            (*te)->bodyBegin().line(), (*te)->bodyBegin().col())); 
+	  // False puts CT(*this)
 	}
 	else 
 	{ 
 	  // it is a member function add the CT macro
-          itemvec.push_back(new itemRef(*te, false));
+          itemvec.push_back(new itemRef(*te, false, 
+	    (*te)->bodyBegin().line(), (*te)->bodyBegin().col()));
 	}
       }
       else 
@@ -1084,8 +1094,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2001/12/21 17:42:14 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.25 2001/12/21 17:42:14 sameer Exp $
+ * $Revision: 1.26 $   $Date: 2002/01/04 18:28:56 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.26 2002/01/04 18:28:56 sameer Exp $
  ***************************************************************************/
 
 
