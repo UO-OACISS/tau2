@@ -57,6 +57,16 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
    object that is used to relate a lower level layer with a higher level layer 
 */
 
+#define TAU_MAPPING_CREATE1(name, type, key1, groupid, groupname, tid)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, groupid, groupname, true, tid); \
+    if (TauMapFI == (FunctionInfo *) NULL) { \
+	printf("ERROR: new returns NULL"); exit(1); \
+    } \
+    TheTauMapFI(key1) = TauMapFI; \
+  } 
+/* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
+   object that is used to relate a lower level layer with a higher level layer 
+*/
+
 #define TAU_MAPPING_OBJECT(FuncInfoVar) FunctionInfo * FuncInfoVar;
 
 /* TAU_MAPPING_LINK gets in a var the function info object associated with the 

@@ -34,6 +34,7 @@
 #define _TAU_JAVA_H_
 
 struct TauJavaLayer {
+  static void Init(char *options);
   static void NotifyEvent(JVMPI_Event *event);
   static void ClassLoad(JVMPI_Event *event);
   static void MethodEntry(JVMPI_Event *event);
