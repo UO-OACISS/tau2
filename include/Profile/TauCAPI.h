@@ -37,14 +37,16 @@
 
 
 #define TAU_PROFILE(name, type, group) 
-/* OLD CODE. Not thread-safe 
+/* OLD CODE. Not thread-safe  */
+/*
 #define TAU_PROFILE_TIMER(var,name, type, group) static int taufirst##var = 1;\
                                  static void *var; \
                                  if (taufirst##var == 1) { \
                                    var = tau_get_profiler(name, type, group); \
                                    taufirst##var = 0; }
 */
-#define TAU_PROFILE_TIMER(var,name, type, group) static void *var; var = tau_get_profiler(name, type, group); 
+
+#define TAU_PROFILE_TIMER(var,name, type, group) static void *var=NULL; tau_profile_c_timer(&var, name, type, group);
 
 
 #define TAU_PROFILE_START(var) 			tau_start_timer(var);
@@ -153,7 +155,7 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2000/07/22 20:59:31 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.5 2000/07/22 20:59:31 sameer Exp $
+ * $Revision: 1.6 $   $Date: 2000/07/27 19:26:57 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.6 2000/07/27 19:26:57 sameer Exp $
  ***************************************************************************/
 
