@@ -85,7 +85,6 @@ secondListType MultipleCounterLayer::functionArray[] = { };
 char * MultipleCounterLayer::names[] = { };
 bool MultipleCounterLayer::counterUsed[] = { };
 
-
 bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 {
   static bool flag = true;
@@ -101,7 +100,7 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     for(int a=0; a<MAX_TAU_COUNTERS; a++){
       functionArray[a] = NULL;
       MultipleCounterLayer::names[a] = NULL;
-      MultipleCounterLayer::counterUsed[a] = false;
+      MultipleCounterLayer::counterUsed[a] = false; //Don't use setter function as we are already in RtsLayer::LockDB();
 #ifdef TAU_PAPI 
       MultipleCounterLayer::papiMCL_CP[a] = -1;
       MultipleCounterLayer::PAPI_CounterCodeList[a] = -1;
@@ -152,17 +151,6 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
       MultipleCounterLayer::names[c] = getenv(environment[c]);
     }
 
-  
-    //  cout << "The names obtained were:" << endl;
-    //for(int d=0; d<MAX_TAU_COUNTERS; d++)
-    //{
-    //  if(MultipleCounterLayer::names[d] != NULL){
-    //cout << "COUNTER" << d << " = " ;
-    //cout << MultipleCounterLayer::names[d] << endl;
-    //  }
-    //}
-
-
     //Initialize the function array with the correct active functions.
     for(int e=0; e<SIZE_OF_INIT_ARRAY; e++)
     {
@@ -194,15 +182,51 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
   return returnValue;
 }
 
+bool * MultipleCounterLayer::getCounterUsedList()
+{
+  bool *tmpPtr = (bool *) malloc(sizeof(bool *) * MAX_TAU_COUNTERS);
+
+  RtsLayer::LockDB();
+  for(int i=0;i< MAX_TAU_COUNTERS;i++){
+    tmpPtr[i] = MultipleCounterLayer::counterUsed[i];
+  }
+  RtsLayer::UnLockDB();
+
+  return tmpPtr;
+
+}
+
+bool MultipleCounterLayer::getCounterUsed(int inPosition)
+{
+  bool tmpBool = false;
+
+  RtsLayer::LockDB();
+  if(inPosition < MAX_TAU_COUNTERS)
+    tmpBool = MultipleCounterLayer::counterUsed[inPosition];
+
+  RtsLayer::UnLockDB();
+
+  return tmpBool;
+
+}
+
+void MultipleCounterLayer::setCounterUsed(bool inValue, int inPosition)
+{
+  RtsLayer::LockDB();
+  if(inPosition < MAX_TAU_COUNTERS)
+    MultipleCounterLayer::counterUsed[inPosition] = inValue;
+  RtsLayer::UnLockDB();
+}
+
 void MultipleCounterLayer::getCounters(int tid, double values[])
 {
   static bool initFlag = initializeMultiCounterLayer();
 
   //Just cycle through the list of function in the active function array.
-  for(int i=0; i<numberOfActiveFunctions; i++)
-    {
+  for(int i=0; i<numberOfActiveFunctions; i++){
+    if(functionArray[i] != NULL) //Need this check just in case a function is deactivated.
       MultipleCounterLayer::functionArray[i](tid, values);
-    }
+  }
 }
 
 char * MultipleCounterLayer::getCounterNameAt(int position)
@@ -211,6 +235,69 @@ char * MultipleCounterLayer::getCounterNameAt(int position)
     return MultipleCounterLayer::names[position];
   else
     return NULL;
+}
+
+void MultipleCounterLayer::theCounterList(const char ***inPtr, int *numOfCounters)
+{
+  static const char **counterList = ( char const **) malloc( sizeof(char *) * MAX_TAU_COUNTERS);
+  int numberOfCounters = 0;
+
+  //With a look toward future developements, this list might
+  //change from call to call.  Thus, build it each time.
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    char *tmpChar = getCounterNameAt(i);
+    if((tmpChar != NULL) && (MultipleCounterLayer::getCounterUsed(i))){
+      counterList[i] = tmpChar;
+      numberOfCounters++;
+    }
+  }
+
+  //We do not want to pass back references to internal pointers.
+  *inPtr = ( char const **) malloc( sizeof(char *) * numberOfCounters);
+  for(int j=0;j<numberOfCounters;j++){
+    (*inPtr)[j] = counterList[j]; //Need the () in (*inPtr)[j] or the dereferrencing is
+    //screwed up!
+
+    *numOfCounters = numberOfCounters;
+  }
+}
+
+void MultipleCounterLayer::theCounterListInternal(const char ***inPtr,
+						  int *numOfCounters,
+						  bool **tmpPtr)
+{
+  //For situations where a consistency is needed between the elements
+  //in the counterUsed array and those in the counter names array.
+  //As such, we grab the counter used list array atomically,
+  //and then only grab the counter names that were active when the
+  //counter used array was obtained.  This consistency is really only
+  //required internally.  The external interface should use theCounterList
+  //function above.
+  bool * tmpCounterUsedList;
+
+  tmpCounterUsedList = MultipleCounterLayer::getCounterUsedList();
+
+  static const char **counterList = ( char const **) malloc( sizeof(char *) * MAX_TAU_COUNTERS);
+  int numberOfCounters = 0;
+  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+    char *tmpChar = getCounterNameAt(i);
+    if((tmpChar != NULL) && (tmpCounterUsedList[i])){
+      counterList[i] = tmpChar;
+      numberOfCounters++;
+    }
+  }
+
+  //We do not want to pass back internal pointers.
+  *inPtr = ( char const **) malloc( sizeof(char *) * numberOfCounters);
+  for(int j=0;j<numberOfCounters;j++){
+    (*inPtr)[j] = counterList[j]; //Need the () in (*inPtr)[j] or the dereferrencing is
+    //screwed up!
+
+    *numOfCounters = numberOfCounters;
+  }
+
+  *numOfCounters = numberOfCounters;
+  *tmpPtr = tmpCounterUsedList;
 }
 
 bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition)
@@ -607,14 +694,16 @@ void MultipleCounterLayer::papiMCL(int tid, double values[]){
 	  cout <<"This could be a limit on either the number of events" << endl;
 	  cout <<"allowed by this hardware, or the combination of events chosen." << endl;
 	  cout << endl;
-	  cout <<"The papi layer calls are being disabled!" << endl;
-	  cout <<"Deleting papiMCL in position: " << papiMCL_FP << endl;
-	  cout <<"Setting papi flags in counterUsed array to false ... " << endl;
-	  for(int h=0;h<numberOfPapiHWCounters;h++){
-	    MultipleCounterLayer::counterUsed[papiMCL_CP[h]] = false;
-	    cout <<"counterUsed[" << papiMCL_CP[h] << "] is now false ..." << endl;
-	    cout <<"Finished disabling papi layer calls!" << endl;
-	  }
+	}
+	cout <<"The papi layer calls are being disabled!" << endl;
+	cout <<"Deleting papiMCL in position: " << papiMCL_FP << endl;
+	MultipleCounterLayer::functionArray[papiMCL_FP] = NULL;
+	cout <<"Setting papi flags in counterUsed array to false ... " << endl;
+	for(int h=0;h<numberOfPapiHWCounters;h++){
+	  MultipleCounterLayer::setCounterUsed(false, papiMCL_CP[h]);
+	  //MultipleCounterLayer::counterUsed[papiMCL_CP[h]] = false;
+	  cout <<"counterUsed[" << papiMCL_CP[h] << "] is now false ..." << endl;
+	  cout <<"Finished disabling papi layer calls!" << endl;
 	}
       }
 
