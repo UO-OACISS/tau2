@@ -201,13 +201,13 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    l = perfDBSession.getUserEvents();
 	    while(l.hasNext()){
 		UserEvent ue = (UserEvent) l.next();
-		    System.out.println(ue.getName());
-		    this.getGlobalMapping().addGlobalMapping(ue.getName(), 2);
+		System.out.println(ue.getName());
+		this.getGlobalMapping().addGlobalMapping(ue.getName(), 2);
 	    }
 
 	    l = perfDBSession.getUserEventData();
 	    while(l.hasNext()){
-
+		l.next();
 	    }
 
 	    time = (System.currentTimeMillis()) - time;

@@ -99,32 +99,11 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		//####################################
 		//This is an important line.
 		inputString = br.readLine();
-		genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-		//It's first token will be the number of mappings present.  Get it.
-		tokenString = genericTokenizer.nextToken();
-      
-		if(!(this.firstMetric())){
-		    if((this.getNumberOfMappings()) != Integer.parseInt(tokenString)){
-			System.out.println("***********************");
-			System.out.println("The number of mappings does not match!!!");
-			System.out.println("");
-			System.out.println("To add to an existing run, you must be choosing from");
-			System.out.println("a list of multiple metrics from that same run!!!");
-			System.out.println("***********************");
-	      
-			return;
-		    }
-		}
-
 		//Set the counter name.
 		String counterName = getCounterName(inputString);
       
-		//Ok, we are adding a counter name.  Since nothing much has happened yet, it is a
-		//good place to initialize a few things.
-      
 		//Need to call increaseVectorStorage() on all objects that require it.
 		this.getGlobalMapping().increaseVectorStorage();
-
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(this.firstMetric())){
 		    if(ParaProf.debugIsOn)
@@ -171,8 +150,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		Metric metricRef = this.addMetric();
 		metricRef.setName(counterName);
 		metric = metricRef.getID();
-		System.out.println("The number of mappings in the system is: " + tokenString);
-      
+
 		bSDCounter++;
 		//####################################
 		//End - Second  Line
