@@ -1,6 +1,8 @@
       program mandel
       use ppm
 
+      implicit none
+
       integer, parameter               :: dp=selected_real_kind(13)
       complex(kind=dp) :: c, z
       integer          :: ix, iy, cnt
@@ -40,7 +42,7 @@
           do 
             z = z*z + c
             cnt = cnt+1
-            if ( (dble(z)*dble(z) + dimag(z)*dimag(z)) >= 16 .or. &
+            if ( (dble(z)*dble(z) + aimag(z)*aimag(z)) >= 16 .or. &
                  cnt >= maxiter ) then
               exit
             end if
