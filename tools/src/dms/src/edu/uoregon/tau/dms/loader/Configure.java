@@ -35,6 +35,7 @@ public class Configure {
     private String db_dbname = "perfdmf";
     private String db_username = "";
     private String db_password = "";
+    private boolean store_db_password = false;
     private String db_schemafile = "dbschema.txt";
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
@@ -152,7 +153,7 @@ public class Configure {
 		// if the user has chosen postgresql and the config file is not already set for it
 		jdbc_db_jarfile = tau_root + "/" + arch + "/lib/" + "postgresql.jar";
 		jdbc_db_driver = "org.postgresql.Driver";
-		db_schemafile = perfdmf_home + "/data/" + "dbschema.txt";
+		db_schemafile = perfdmf_home + "/data/" +"dbschema.txt";
 		db_portnum = "5432";
 	    } else if (jdbc_db_type.compareTo("mysql") == 0 && old_jdbc_db_type.compareTo("mysql") != 0) {
 		// if the user has chosen mysql and the config file is not already set for it
@@ -201,6 +202,17 @@ public class Configure {
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) db_username = tmpString;
 
+
+	    System.out.print("Would you like to store the database password in CLEAR TEXT in your configuration file?\n(no):");
+	    tmpString = reader.readLine();
+
+	    if (tmpString.compareTo("yes")==0 || tmpString.compareTo("y")==0 || tmpString.compareTo("Y")==0) {
+		PasswordField passwordField = new PasswordField();
+		db_password = passwordField.getPassword("Please enter the database password:");
+
+		store_db_password = true;
+	    }
+
 	    /*
 	      boolean passwordMatch = false;
 	      while (!passwordMatch) {
@@ -238,6 +250,8 @@ public class Configure {
 	    if (tmpString.length() > 0) xml_parser = tmpString;
 	    else if (!configFileFound)
 		xml_parser = perfdmf_home + "/" + arch + "/lib/" + xml_parser;
+
+
 	}
 	catch (IOException e) {
 	    // todo - get info from the exception
@@ -317,11 +331,13 @@ public class Configure {
 	    configWriter.write("db_username:" + db_username + "\n");
 	    configWriter.newLine();
 
-	    /*
-	      configWriter.write("# Database password\n");
-	      configWriter.write("db_password:" + db_password + "\n");
-	      configWriter.newLine();
-	    */
+
+	    if (store_db_password) {
+		configWriter.write("# Database password\n");
+		configWriter.write("db_password:" + db_password + "\n");
+		configWriter.newLine();
+	    }
+
 
 	    configWriter.write("# Database Schema file - note: the path is absolute\n");
 	    configWriter.write("db_schemafile:" + db_schemafile + "\n");
