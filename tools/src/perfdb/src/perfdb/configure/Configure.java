@@ -101,7 +101,7 @@ public class Configure {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		String tmpString;
 
-		System.out.println("\nYou will now be prompted for new values, if desired.  The current or default\nvalues for each prompt are shown in parenthesis.  To accept the default, just\npress Enter/Return.\n");
+		System.out.println("\nYou will now be prompted for new values, if desired.  The current or default\nvalues for each prompt are shown in parenthesis.  To accept the current/default value, just\npress Enter/Return.\n");
 		try {
 			// Prompt for XML parsing jar file
 			System.out.print("Please enter the new PerfDB Home directory.\n(" + perfdb_home + "):");
@@ -109,9 +109,14 @@ public class Configure {
 			if (tmpString.length() > 0) perfdb_home = tmpString;
 
 			// Prompt for JDBC jar file
-			System.out.print("Please enter the JDBC jar file.\n(" + jdbc_db_jarfile + "):");
+			if (jdbc_db_jarfile.compareTo("postgresql.jar") == 0)
+				System.out.print("Please enter the JDBC jar file.\n(" + perfdb_home + "/jars/" + jdbc_db_jarfile + "):");
+			else
+				System.out.print("Please enter the JDBC jar file.\n(" + jdbc_db_jarfile + "):");
+
 			tmpString = reader.readLine();
 			if (tmpString.length() > 0) jdbc_db_jarfile = tmpString;
+			else jdbc_db_jarfile = perfdb_home + "/jars/" + jdbc_db_jarfile;
 
 			// Prompt for JDBC driver name
 			System.out.print("Please enter the JDBC Driver name.\n(" + jdbc_db_driver + "):");
@@ -147,11 +152,10 @@ public class Configure {
 			while (!passwordMatch) {
 				// Prompt for database password
 				System.out.println("NOTE: Passwords will be stored in an encrypted format.");
-				System.out.print("Please enter the database password\n(default not shown):");
-				tmpString = reader.readLine();
+				PasswordField passwordField = new PasswordField();
+				tmpString = passwordField.getPassword("Please enter the database password (default not shown):");
 				if (tmpString.length() > 0) db_password = tmpString;
-				System.out.print("Please enter the database password again to confirm:");
-				String tmpString2 = reader.readLine();
+				String tmpString2 = passwordField.getPassword("Please enter the database password again to confirm:");
 				if (tmpString.compareTo(tmpString2) == 0) {
 					db_password = tmpString;
 					passwordMatch = true;
@@ -160,14 +164,22 @@ public class Configure {
 			}
 
 			// Prompt for database schema file
-			System.out.print("Please enter the PerfDBF schema file.\n(" + db_schemafile + "):");
+			if (db_schemafile.compareTo("dbschema.txt") == 0)
+				System.out.print("Please enter the PerfDBF schema file.\n(" + perfdb_home + "/data/" + db_schemafile + "):");
+			else
+				System.out.print("Please enter the PerfDBF schema file.\n(" + db_schemafile + "):");
 			tmpString = reader.readLine();
 			if (tmpString.length() > 0) db_schemafile = tmpString;
+			else db_schemafile = perfdb_home + "/data/" + db_schemafile;
 
 			// Prompt for XML Parser jar file
-			System.out.print("Please enter the XML Parser jar file.\n(" + xml_parser + "):");
+			if (xml_parser.compareTo("xerces.jar") == 0)
+				System.out.print("Please enter the XML Parser jar file.\n(" + perfdb_home + "/jars/" + xml_parser + "):");
+			else
+				System.out.print("Please enter the XML Parser jar file.\n(" + xml_parser + "):");
 			tmpString = reader.readLine();
 			if (tmpString.length() > 0) xml_parser = tmpString;
+			else xml_parser = perfdb_home + "/jars/" + xml_parser;
 		}
 		catch (IOException e) {
 			// todo - get info from the exception
