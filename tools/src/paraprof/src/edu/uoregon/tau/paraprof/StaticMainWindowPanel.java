@@ -609,7 +609,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial, sMWThread.getNodeID(),
 										       sMWThread.getContextID(),
 										       sMWThread.getThreadID(),sMWindow.getSMWData(),
-										       false, this.debug());
+										       1, this.debug());
 			trial.getSystemEvents().addObserver(callPathTextWindow);
 			callPathTextWindow.show();
 		    }
@@ -634,20 +634,6 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 							       2, this.debug());
 			trial.getSystemEvents().addObserver(statWindow);
 			statWindow.show();
-		    }
-		}
-		else if(arg.equals("Show Call Path Thread Relations")){
-		    if(clickedOnObject instanceof SMWThread){
-			SMWThread sMWThread = (SMWThread) clickedOnObject;
-			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThread.getNodeID(),
-													     sMWThread.getContextID(),
-													     sMWThread.getThreadID()));
-			CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial, sMWThread.getNodeID(),
-										       sMWThread.getContextID(),
-										       sMWThread.getThreadID(),sMWindow.getSMWData(),
-										       false, this.debug());
-			trial.getSystemEvents().addObserver(callPathTextWindow);
-			callPathTextWindow.show();
 		    }
 		}
 		else if(arg.equals("Show Function Details")){

@@ -33,7 +33,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 				   int contextID,
 				   int threadID,
 				   CallPathTextWindow cPTWindow,
-				   boolean global,
+				   int windowType,
 				   boolean debug){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
@@ -44,7 +44,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	    this.threadID = threadID;
 	    this.trial = trial;
 	    this.cPTWindow = cPTWindow;
-	    this.global = global;
+	    this.windowType = windowType;
 	    this.debug = debug;
 	    this.repaint();
 
@@ -127,7 +127,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		spacing = spacing + 1;
 	    }
 
-	    if(global){
+	    if(windowType==2){
 		ListIterator l1 = null;
 		ListIterator l2 = null;
 		ListIterator l3 = null;
@@ -421,7 +421,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		    }
 		}
 	    }
-	    else{
+	    else if(windowType==1){
 		ListIterator l1 = null;
 		ListIterator l2 = null;
 		ListIterator l3 = null;
@@ -990,7 +990,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     int threadID = -1;
     private ParaProfTrial trial = null;
     CallPathTextWindow cPTWindow = null;
-    boolean global = false;
+    int windowType = 0; //0: mean data,1: function data, 2: global relations.
     Font monoFont = null;
     FontMetrics fmMonoFont = null;
 

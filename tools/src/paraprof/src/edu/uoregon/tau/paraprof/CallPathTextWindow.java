@@ -34,24 +34,26 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
   
     public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, 
 			      StaticMainWindowData sMWData, 
-			      boolean global, boolean debug){
+			      int windowType, boolean debug){
 	try{
 	    this.trial = trial;
 	    this.nodeID = nodeID;
 	    this.contextID = contextID;
 	    this.threadID = threadID;
 	    this.sMWData = sMWData;
-	    this.global = global;
+	    this.windowType = windowType;
 	    this.debug = debug;
       
 	    setLocation(new java.awt.Point(0, 0));
 	    setSize(new java.awt.Dimension(800, 600));
       
 	    //Now set the title.
-	    if(global)
-		this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
-	    else
+	    if(windowType==0)
+		this.setTitle("Mean Call Path Data - " + trial.getTrialIdentifier(true));
+	    else if(windowType==1)
 		this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(true));
+	    else
+		this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
 	    
 	    //Add some window listener code
 	    addWindowListener(new java.awt.event.WindowAdapter() {
@@ -302,7 +304,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new CallPathTextWindowPanel(trial, nodeID, contextID, threadID, this, global, this.debug());
+	    panel = new CallPathTextWindowPanel(trial, nodeID, contextID, threadID, this, windowType, this.debug());
 	    //The scroll panes into which the list shall be placed.
 	    sp = new JScrollPane(panel);
 	    JScrollBar vScollBar = sp.getVerticalScrollBar();
@@ -442,11 +444,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    panel.repaint();
 		}
 		else if(arg.equals("Show Path Title in Reverse")){
-		    if(global)
-			this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
+		    if(windowType==0)
+			this.setTitle("Mean Call Path Data - " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+		    else if(windowType==1)
+			this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
 		    else
-			this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + 
-				      threadID + " - " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+			this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
 		}
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
@@ -460,7 +463,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Show Call Path Relations")){
-		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true, this.debug());
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),2, this.debug());
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}
@@ -577,17 +580,22 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //Updates this window's data copy.
     private void sortLocalData(){ 
 	try{
-	    if(global){
-		list = (trial.getGlobalMapping()).getMapping(0);
+	    //The name selection behaves slightly differently. Thus the check for it.
+	    if(name){
+		if(windowType==0)
+		    list = sMWData.getMeanData(order);
+		else if(windowType==1)
+		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, order);
+		else
+		    list = (trial.getGlobalMapping()).getMapping(0);
 	    }
 	    else{
-		//The name selection behaves slightly differently. Thus the check for it.
-		if(name){
-		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, order);
-		}
-		else{
-		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, valueType+order);
-		}
+		if(windowType==0)
+		    list = sMWData.getMeanData(18+valueType+order); 
+		else if(windowType==1)
+		    list = sMWData.getThreadData(nodeID, contextID, threadID, windowType, valueType+order); 
+		else
+		    list = (trial.getGlobalMapping()).getMapping(0); 
 	    }
 	}
 	catch(Exception e){
@@ -705,10 +713,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private int contextID = -1;
     private int threadID = -1;
     private StaticMainWindowData sMWData = null;
-    private boolean global = false;
-    private int windowType = 1; //0: mean data,1: function data.
-                                //Note that in this window, windowType
-                                //will always be 1.
+    private int windowType = 0; //0: mean data,1: function data, 2: global relations.
 
     private JMenu optionsMenu = null;
     private JMenu windowsMenu = null;

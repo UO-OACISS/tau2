@@ -392,7 +392,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 		    (new MappingLedgerWindow(trial, 2, this.debug())).show();
 		}
 		else if(arg.equals("Show Call Path Relations")){
-		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),true, this.debug());
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, -1, -1, -1, this.getSMWData(),1, this.debug());
 		    trial.getSystemEvents().addObserver(tmpRef);
 		    tmpRef.show();
 		}

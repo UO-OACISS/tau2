@@ -483,7 +483,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial, sMWThreadDataElement.getNodeID(),
 										       sMWThreadDataElement.getContextID(),
 										       sMWThreadDataElement.getThreadID(),mDWindow.getSMWData(),
-										       false, this.debug());
+										       1, this.debug());
 			trial.getSystemEvents().addObserver(callPathTextWindow);
 			callPathTextWindow.show();
 		    }
@@ -519,7 +519,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			CallPathTextWindow callPathTextWindow = new CallPathTextWindow(trial, sMWThreadDataElement.getNodeID(),
 										       sMWThreadDataElement.getContextID(),
 										       sMWThreadDataElement.getThreadID(),mDWindow.getSMWData(),
-										       false, this.debug());
+										       1, this.debug());
 			trial.getSystemEvents().addObserver(callPathTextWindow);
 			callPathTextWindow.show();
 		    }
