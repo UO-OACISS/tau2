@@ -1,5 +1,6 @@
 #ifdef TAU_DOT_H_LESS_HEADERS 
 #include <iostream> 
+using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
