@@ -514,10 +514,12 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
       }
       else
       { // Hey! What data did we read?
+#ifdef DEBUG 
         printf("Unable to process data read: %s\n", line);
         printf("You're probably using an older version of this tool. \
           Please upgrade\n");
         fclose(fp);
+#endif /* DEBUG */
         return 0;
       }
       // First read the comment line 
@@ -830,17 +832,19 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix)
     if (strcmp(version, "userevents") == 0) /* User events */
     {
       userevents = true;
+#ifdef DEBUG
+      printf("User Events read %s \n", line);
+#endif /* DEBUG */
+      ProcessUserEventData(fp, node, ctx, thr, numberOfUserEvents);
     } 
     else
     { // Hey! What data did we read? 
+#ifdef DEBUG
       printf("Unable to process data read: %s\n", line);
       printf("You're probably using an older version of this tool. \
 	Please upgrade\n");
-    }
-#ifdef DEBUG
-    printf("User Events read %s \n", line);
 #endif /* DEBUG */
-    ProcessUserEventData(fp, node, ctx, thr, numberOfUserEvents);
+    }
 
   } /* user event data was there */
      
@@ -1190,7 +1194,7 @@ void  ProcessUserEventData(FILE *fp, int node, int ctx, int thr,
   // "# Name Calls Subrs Excl Incl SumExclSqr ProfileCalls"
   // "# eventname numevents max min mean sumsqr
   if (fgets(line, sizeof(line), fp) == NULL) {
-    perror("Error: fgets returns NULL in format string ");
+    perror("Error: User Event fgets returns NULL in format string ");
     return ;
   }
   if (strncmp (line, "# eventname numevents max min mean sumsqr", 
@@ -1419,6 +1423,8 @@ static int CallCmp (const void *left, const void *right)
 
 static int MsecPerCallCmp (const void *left, const void *right)
 {
+  if (((struct p_prof_elem *) left) ->numcalls == 0) return sign;
+  if (((struct p_prof_elem *) right) ->numcalls == 0) return -sign;
   double l = ((struct p_prof_elem *) left) ->usec/ ((struct p_prof_elem *) left) ->numcalls;
   double r = ((struct p_prof_elem *) right) ->usec/ ((struct p_prof_elem *) right)->numcalls;
 
@@ -1432,6 +1438,8 @@ static int MsecPerCallCmp (const void *left, const void *right)
 
 static int CumMsecPerCallCmp (const void *left, const void *right)
 {
+  if (((struct p_prof_elem *) left) ->numcalls == 0) return sign;
+  if (((struct p_prof_elem *) right) ->numcalls == 0) return -sign;
   double l = ((struct p_prof_elem *) left) ->cumusec/ ((struct p_prof_elem *) left) ->numcalls;
   double r = ((struct p_prof_elem *) right) ->cumusec/ ((struct p_prof_elem *) right)->numcalls;
 
@@ -2482,7 +2490,7 @@ static void PrintSummary (int max, int numproc)
   printf("PrintSummary: numproc = %d, dump = %d \n", numproc, dump);
 #endif /* DEBUG */
 
-  if ( (numproc > 1) || dump ) {
+  if ( (numproc > 1) || dump || (nodeprint == FALSE) ) {
     PrintFuncSummary (p_total_tbl, total_total, max, "total", "t");
     if (dumpminmax) {
       PrintFuncSummary (p_min_tbl, min_total, max, "min", "<");
@@ -2887,7 +2895,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 1998/07/10 20:16:01 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.9 1998/07/10 20:16:01 sameer Exp $                                                   
+ * $Revision: 1.10 $   $Date: 1998/08/09 22:14:08 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.10 1998/08/09 22:14:08 sameer Exp $                                                   
  ***************************************************************************/
 
