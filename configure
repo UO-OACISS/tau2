@@ -1526,6 +1526,11 @@ for i in `find . -name Makefile -print `
 done
 echo .
 
+if [ $tauprefix != unknown ]
+  then 
+    echo "TAU: Copying include directory in ${tauprefix}"
+    cp -r include ${tauprefix}
+fi
 
 # Attempt to install metatext (jev)
 if [ -f ./metatext/configure ]
