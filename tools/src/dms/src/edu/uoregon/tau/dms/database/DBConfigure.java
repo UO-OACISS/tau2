@@ -387,7 +387,7 @@ public class DBConfigure extends JFrame implements ActionListener
 			perfDMFHome.setText(tmpString);
 		    }
 		    catch(IOException exp){
-			System.out.println("An error occurred whilst getting the directory name!");
+			System.out.println("An error occurred while getting the directory name!");
 			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
 		    }
 		}
@@ -415,7 +415,7 @@ public class DBConfigure extends JFrame implements ActionListener
 			jDBCJarfile.setText(tmpString);
 		    }
 		    catch(IOException exp){
-			System.out.println("An error occurred whilst getting the jar file!");
+			System.out.println("An error occurred while getting the jar file!");
 			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
 		    }
 		}
@@ -443,7 +443,7 @@ public class DBConfigure extends JFrame implements ActionListener
 			dBSchemaFile.setText(tmpString);
 		    }
 		    catch(IOException exp){
-			System.out.println("An error occurred whilst getting the directory name!");
+			System.out.println("An error occurred while getting the directory name!");
 			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
 		    }
 		}
@@ -471,7 +471,7 @@ public class DBConfigure extends JFrame implements ActionListener
 			xMLPaser.setText(tmpString);
 		    }
 		    catch(IOException exp){
-			System.out.println("An error occurred whilst getting the directory name!");
+			System.out.println("An error occurred while getting the directory name!");
 			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
 		    }
 		}
@@ -498,7 +498,7 @@ public class DBConfigure extends JFrame implements ActionListener
 			configFileName.setText(tmpString);
 		    }
 		    catch(IOException exp){
-			System.out.println("An error occurred whilst getting the directory name!");
+			System.out.println("An error occurred while getting the directory name!");
 			System.out.println("Please reprot this bug to:tau-bugs.cs.uoregon.edu");
 		    }
 		}

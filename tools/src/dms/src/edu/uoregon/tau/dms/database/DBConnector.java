@@ -72,6 +72,14 @@ public class DBConnector implements DB {
 	}
     }
 
+    public void setAutoCommit(boolean auto) throws SQLException {
+	conn.setAutoCommit(auto);
+    }
+    public void commit() throws SQLException {
+	conn.commit();
+    }
+
+
     public boolean connect(String user, String password) throws SQLException {
 	String cs = "";
 	try {

@@ -23,4 +23,8 @@ public interface DB {
 
     public int checkSchema() throws SQLException;
 
+
+    public void setAutoCommit(boolean auto) throws SQLException;
+    public void commit() throws SQLException;
+
 }
