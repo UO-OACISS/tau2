@@ -78,6 +78,7 @@ Usage: configure [OPTIONS]
                            the TAU MPI Profiling and Tracing Interface.
 -mpilib=<dir> ............. Specify location of MPI library dir and use
                            the TAU MPI Profiling and Tracing Interface.
+-epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILESTATS .................. Enable standard deviation calculation.
@@ -226,6 +227,14 @@ The following  command-line options are available to configure:
    be used in conjunction with the -mpiinc=<dir> option to generate the TAU 
    MPI wrapper library. 
    
+-epilog=<dir>
+   
+   Specifies the directory where the EPILOG tracing package [FZJ] is installed.   This option should be used in conjunction with the -TRACE option to generate
+   binary EPILOG traces (instead of binary TAU traces). EPILOG traces can then
+   be used with other tools such as EXPERT. EPILOG comes with its own 
+   implementation of the MPI wrapper library and the POMP library used with 
+   Opari. Using option overrides TAU's libraries for MPI, and OpenMP.
+
 -PROFILE 
 
    This is the default option; it specifies summary profile files to be 
