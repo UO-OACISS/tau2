@@ -165,6 +165,7 @@ tauoptions=
 pdt_root_dir="."
 pdt=no
 opari=no
+epilog=no
 opari_region=no
 opari_construct=no
 dyninst=no
@@ -328,6 +329,12 @@ do
 
   -opari_construct)
       opari_construct=yes
+    shift
+    ;;
+
+  -epilog=*)
+      epilog=yes
+      epilogdir=`echo $arg | sed -e 's/-epilog=//'`
     shift
     ;;
 
@@ -548,6 +555,7 @@ do
     echo "                           the TAU MPI Profiling and Tracing Interface."
     echo "-mpilib=<dir> ............. Specify location of MPI library dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
+    echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
@@ -1217,7 +1225,17 @@ fi
 
 if [ $mpi = yes ]
 then
-  mpilibargs="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
+  wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
+  if [ $epilog = yes -a $mpi = yes ]
+  then
+    wrapperlib="-L$epilogdir/lib -lelg.mpi"
+    if [ $openmp = yes ] 
+    then
+      wrapperlib="-L$epilogdir/lib -lelg.ompi"
+    fi
+  fi 
+     
+  mpilibargs=$wrapperlib
   if [ -d $mpilib ]
   then
     #echo "Lib dir found. adding -L$mpilib to LIB"
@@ -1225,15 +1243,15 @@ then
     if [ -f $mpilib/libfmpi.* ]
     then
       #echo "Fortran fmpi.* found"
-      mpiflibargs="-L$mpilib -lfmpi -L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
+      mpiflibargs="-L$mpilib -lfmpi $wrapperlib"
     else
       if [ -f $mpilib/libfmpich.* ]
       then
         #echo "Fortran fmpich.* found"
-        mpiflibargs="-L$mpilib -lfmpich -L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS)"
+        mpiflibargs="-L$mpilib -lfmpich $wrapperlib"
       else 
         #echo "No Fortran interface found"
-        mpiflibargs="$mpiflibargs -L$tautoplevel/$machine/lib -lTauMpi\$(TAU_OPTIONS) -L$mpilib"
+        mpiflibargs="$mpiflibargs $wrapperlib -L$mpilib"
       fi
     fi
   
@@ -1770,6 +1788,26 @@ if [ $opari = yes ]
   then
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
+fi
+
+if [ $epilog = yes ]
+  then
+    fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir"
+    tauoptions="${tauoptions}-epilog"
+    if [ $mpi = yes ] 
+    then 
+      if [ $openmp = yes ] 
+      then
+        fixmakeargs="$fixmakeargs EPILOGOMPI" 
+      else
+        fixmakeargs="$fixmakeargs EPILOGMPI" 
+      fi 
+    else
+      if [ $openmp = yes ]
+      then
+        fixmakeargs="$fixmakeargs EPILOGOMP" 
+      fi
+    fi
 fi
 
 if [ $dyninst = yes ]

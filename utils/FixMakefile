@@ -107,6 +107,11 @@ fi
 	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
 	;;
 
+     epilogdir=*)
+        epilogdir=`echo $1 | sed -e 's/^epilogdir=//'`
+	echo "s,^EPILOGDIR=.*$,EPILOGDIR=$epilogdir,g" >> $sedout
+	;;
+
      pdtdir=*)
         pdtdir=`echo $1 | sed -e 's/^pdtdir=//'`
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
@@ -551,6 +556,22 @@ fi
 	;;
      OPARI_CONSTRUCT)
 	echo "NOTE: Using Opari tool with OpenMP construct information ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     EPILOG)
+	echo "NOTE: Using EPILOG Tracing Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     EPILOGMPI)
+	echo "NOTE: Using EPILOG's MPI Wrapper Library ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     EPILOGOMPI)
+	echo "NOTE: Using EPILOG's OpenMP MPI Wrapper Library ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     EPILOGOMP)
+	echo "NOTE: Using EPILOG's OpenMP Trace Library ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGIOPENMP)
