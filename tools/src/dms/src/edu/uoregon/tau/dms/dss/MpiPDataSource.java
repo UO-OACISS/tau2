@@ -76,17 +76,6 @@ public class MpiPDataSource extends DataSource {
             InputStreamReader inReader = new InputStreamReader(fileIn);
             BufferedReader br = new BufferedReader(inReader);
 
-            //####################################
-            //First Line
-            //####################################
-            //This line is not required. Check to make sure that it is
-            // there however.
-            inputString = br.readLine();
-            if (inputString == null)
-                return;
-            //####################################
-            //End - First Line
-            //####################################
 
             //Set the metric name.
             String metricName = "Time";
@@ -117,6 +106,11 @@ public class MpiPDataSource extends DataSource {
                 }
             }
 
+            
+            fileIn = new FileInputStream(files[0]);
+            inReader = new InputStreamReader(fileIn);
+            br = new BufferedReader(inReader);
+            
             // find the start and stop time
             while ((inputString = br.readLine()) != null) {
                 if (inputString.startsWith("@ Stop time")) {
@@ -134,6 +128,10 @@ public class MpiPDataSource extends DataSource {
                 }
             }
 
+            fileIn = new FileInputStream(files[0]);
+            inReader = new InputStreamReader(fileIn);
+            br = new BufferedReader(inReader);
+            
             int eventCount = 0;
             // find the callsite names
             while ((inputString = br.readLine()) != null) {
