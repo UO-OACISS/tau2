@@ -119,6 +119,13 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
 #define TAU_MAPPING_DB_PURGE(tid)  Profiler::PurgeData(tid); 
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  RtsLayer::setMyNode(node, tid); 
 #define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name) timer->SetPrimaryGroupName(name);
+#define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) timer->GetPrimaryGroup();
+#define TAU_MAPPING_PROFILE_GET_GROUP(timer) timer->GetProfileGroup();
+#define TAU_MAPPING_PROFILE_SET_NAME(timer, name) timer->SetName(name);
+#define TAU_MAPPING_PROFILE_GET_NAME(timer) timer->GetName();
+#define TAU_MAPPING_PROFILE_SET_TYPE(timer, name) timer->SetType(name);
+#define TAU_MAPPING_PROFILE_GET_TYPE(timer) timer->GetType();
+#define TAU_MAPPING_PROFILE_SET_GROUP(timer, id) timer->SetProfileGroup(id);
 
 #else
 /* Create null , except the main statement which should be executed as it is*/
@@ -136,6 +143,13 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
 #define TAU_MAPPING_DB_PURGE(tid)
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  
 #define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name)
+#define TAU_MAPPING_PROFILE_SET_NAME(timer, name) 
+#define TAU_MAPPING_PROFILE_SET_TYPE(timer, name)
+#define TAU_MAPPING_PROFILE_SET_GROUP(timer, id) 
+#define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) 
+#define TAU_MAPPING_PROFILE_GET_GROUP(timer) 
+#define TAU_MAPPING_PROFILE_GET_NAME(timer) 
+#define TAU_MAPPING_PROFILE_GET_TYPE(timer) 
 
 #endif /* PROFILING_ON or TRACING_ON  */
 #endif /* _TAU_MAPPING_H_ */

@@ -187,6 +187,7 @@ public:
 #endif//TAU_MULTIPLE_COUNTERS
 
 	TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
+	void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 #ifdef PROFILE_STATS 
 	double GetSumExclSqr(int tid) { return SumExclSqr[tid]; }
 	void SetSumExclSqr(int tid, double s) { SumExclSqr[tid] = s; }
@@ -277,6 +278,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2002/08/01 21:10:37 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.23 2002/08/01 21:10:37 sameer Exp $ 
+ * $Revision: 1.24 $   $Date: 2002/08/05 20:45:00 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.24 2002/08/05 20:45:00 sameer Exp $ 
  ***************************************************************************/

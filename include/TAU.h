@@ -78,6 +78,17 @@
 #define TAU_MAPPING_DB_PURGE(tid)
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  
 #define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name)
+#define TAU_PROFILE_TIMER_SET_NAME(t, newname)
+#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)
+#define TAU_PROFILE_TIMER_SET_GROUP(t, id) 
+#define TAU_MAPPING_PROFILE_SET_NAME(timer, name)
+#define TAU_MAPPING_PROFILE_SET_TYPE(timer, name)
+#define TAU_MAPPING_PROFILE_SET_GROUP(timer, id)
+#define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer)
+#define TAU_MAPPING_PROFILE_GET_GROUP(timer)
+#define TAU_MAPPING_PROFILE_GET_NAME(timer)
+#define TAU_MAPPING_PROFILE_GET_TYPE(timer)
+
 
 #endif /* PROFILING_ON || TRACING_ON */
 

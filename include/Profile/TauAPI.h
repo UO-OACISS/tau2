@@ -64,6 +64,9 @@ extern "C" void Tau_stop_timer(void * function_info);
 #define TAU_PROFILE_SET_CONTEXT(context) RtsLayer::setMyContext(context);
 #define TAU_PROFILE_SET_GROUP_NAME(newname) tauFI.SetPrimaryGroupName(newname);
 #define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) t##fi.SetPrimaryGroupName(newname);
+#define TAU_PROFILE_TIMER_SET_NAME(t, newname)	t##fi.SetName(newname);
+#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  t##fi.SetType(newname);
+#define TAU_PROFILE_TIMER_SET_GROUP(t, id) t##fi.SetProfileGroup(id); 
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) static FunctionInfo timer##fi(name, type, group, #group);
 #define TAU_GLOBAL_TIMER_START(timer) FunctionInfo *timer##fptr = &timer##fi; \
@@ -145,6 +148,9 @@ extern "C" void Tau_stop_timer(void * function_info);
 #define TAU_PROFILE_SET_CONTEXT(context)
 #define TAU_PROFILE_SET_GROUP_NAME(newname)
 #define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname)
+#define TAU_PROFILE_TIMER_SET_NAME(t, newname)
+#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)
+#define TAU_PROFILE_TIMER_SET_GROUP(t, id)
 #define TAU_PROFILE_CALLSTACK()    
 #define TAU_DB_DUMP()
 #define TAU_DB_DUMP_INCR()
@@ -199,7 +205,7 @@ extern "C" void Tau_stop_timer(void * function_info);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: bertie $
- * $Revision: 1.21 $   $Date: 2002/03/29 00:36:30 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.21 2002/03/29 00:36:30 bertie Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.22 $   $Date: 2002/08/05 20:45:01 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.22 2002/08/05 20:45:01 sameer Exp $ 
  ***************************************************************************/
