@@ -20,6 +20,7 @@ Version 2.12 changes (from 2.11):
 8. Bug fixes for IA-64 and Intel 7.1 compiler [NCSA].
 9. Added TAU_CALLPATH_DEPTH env. variable specification for callpath profiling [LLNL].
 10. Added support for -arch=ibm64. It suppports PAPI 64 bit/Power4. [UTK]
+11. Bug fixes for shared libraries with MPI, g++/KCC under AIX 5.1. [LLNL]
 
 Version 2.11 changes (from 2.10):
 1. Added -i header option for tau_instrumentor [CASC]. 
