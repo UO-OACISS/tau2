@@ -59,14 +59,28 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     if ( (*te)->location().file() == file)
     {
       pdbItem::templ_t tekind = (*te)->kind();
-      if ((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_MEMFUNC) || 
-	  (tekind == pdbItem::TE_STATMEM))
+      if ((tekind == pdbItem::TE_MEMFUNC) || 
+	  (tekind == pdbItem::TE_STATMEM) ||
+	  (tekind == pdbItem::TE_FUNC))
       { 
   	// templates need some processing. Give it a false for isTarget arg.
-        itemvec.push_back(new itemRef(*te, false));
-	// Once we get to the template search for "{" and then put in instr. 
-	// to identify this processing, we give it a false arg. Functions are
-	// straightforward and need no special processing. 
+	// target helps identify if we need to put a CT(*this) in the type
+	if (((*te)->parentClass()) == 0) 
+	{ 
+	  // There's no parent class. No need to add CT(*this)
+          itemvec.push_back(new itemRef(*te, true)); // False puts CT(*this)
+	}
+	else 
+	{ 
+	  // it is a member function add the CT macro
+          itemvec.push_back(new itemRef(*te, false));
+	}
+      }
+      else 
+      {
+#ifdef DEBUG
+	cout <<"T: "<<(*te)->fullName()<<" Kind = "<<toName(tekind)<<endl;
+#endif // DEBUG
       }
     }
   }
@@ -283,6 +297,16 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
     cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
 #endif 
     bool instrumented = false;
+    if (lastInstrumentedLineNo >= (*it)->line )
+    { 
+      // Hey! This line has already been instrumented. Go to the next 
+      // entry in the func
+#ifdef DEBUG
+      cout <<"Entry already instrumented or brace not found - reached next routine! line = "<<(*it)->line <<endl;
+#endif 
+      continue; // takes you to the next iteration in the for loop
+    }
+
     while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
     {
       inputLineNo ++;
@@ -295,16 +319,6 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
       { 
 	// we're at the desired line no. search for an open brace
 	int inbufLength = strlen(inbuf);
-	if (lastInstrumentedLineNo >= (*it)->line )
-	{ 
-	  // Hey! This line has already been instrumented. Go to the next 
-	  // entry in the func
-#ifdef DEBUG
-	  cout <<"Entry already instrumented or brace not found - reached next routine! line = "<<(*it)->line <<endl;
-#endif 
-	  ostr << inbuf <<endl;
-	  break; // takes you to the outermost for loop
-	}
 
 	for(int i=0; i< inbufLength; i++)
 	{ 
@@ -322,13 +336,21 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
 	    // leave some leading spaces for formatting...
 
 	    ostr <<"  TAU_PROFILE(\"" << (*it)->item->fullName() ;
-	    if (!(*it)->isTarget) 
-	    { // it is a template. Help it by giving an additional ()
+	    if (!((*it)->isTarget))
+	    { // it is a template member. Help it by giving an additional ()
 	      ostr <<"()" ;
+	    // if the item is a member function or a static member func give
+	    // it a class name using CT
+	      ostr <<"\", \"CT(*this)\", ";
 	    } 
+ 	    else // it is not a class member 
+	    { 
+	      ostr << "\", \" \", "; // null type arg to TAU_PROFILE 
+	    }
+
 	    if (strstr((*it)->item->fullName().c_str(), "main(")) 
 	    { /* it is main() */
-	      ostr <<"\", \" \", TAU_DEFAULT);" <<endl; // give an additional line 
+	      ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
 #ifdef SPACES
 	      for (int space = 0; space < (*it)->col ; space++) ostr << " " ; 
 #endif 
@@ -337,7 +359,7 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
 	    }
 	    else 
 	    {
-	      ostr <<"\", \" \", TAU_USER);" <<endl; // give an additional line 
+	      ostr <<"TAU_USER);" <<endl; // give an additional line 
 	    }
 	    // if its a function, it already has a ()
 	    instrumented = true;
