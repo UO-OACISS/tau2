@@ -53,7 +53,7 @@ public class ParaProf implements ActionListener
   
   public void startSystem(){
   try{
-      //Try and load the Racy preference file ... racyPreferences.dat
+      //Try and load a preference file ... ParaProfPreferences.dat
       try{
         FileInputStream savedPreferenceFIS = new FileInputStream("ParaProfPreferences.dat");
         
