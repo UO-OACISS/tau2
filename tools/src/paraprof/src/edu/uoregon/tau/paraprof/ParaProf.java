@@ -65,6 +65,35 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    if(paraProfHomeDirectory.exists()){
 		System.out.println("Found ParaProf home directory!");
 		System.out.println("Looking for preferences ...");
+		//Try and load a preference file ... ParaProfPreferences.dat
+		try{
+		    FileInputStream savedPreferenceFIS = new FileInputStream(ParaProf.paraProfHomeDirectory.getPath()+"/ParaProf.dat");
+		    
+		    //If here, means that no exception was thrown, and there is a preference file present.
+		    //Create ObjectInputStream and try to read it in.
+		    ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
+		    ParaProf.savedPreferences = (SavedPreferences) inSavedPreferencesOIS.readObject();
+		}
+		catch(Exception e){
+		    if(e instanceof FileNotFoundException){
+			System.out.println("No preference file present, using defaults!");
+		    }
+		    else{
+			//Print some kind of error message, and quit the system.
+			System.out.println("There was an internal error whilst trying to read the ParaProf preference");
+			System.out.println("file.  Please delete this file, or replace it with a valid one!");
+			System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
+		    }
+		}
+
+		//Try and find perfdmf.cfg.
+		File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath()+"/perfdmf.cfg");
+		if(perfDMFcfg.exists()){
+		    System.out.println("Found db configuration file: " + ParaProf.paraProfHomeDirectory.getPath()+"/perfdmf.cfg");
+		    ParaProf.savedPreferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath()+"/perfdmf.cfg");
+		}
+		else
+		    System.out.println("Did not find db configuration file ... load manually"); 
 	    }
 	    else{
 		System.out.println("Did not find ParaProf home directory ... creating ...");
@@ -72,29 +101,6 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		System.out.println("Done creating ParaProf home directory!");
 	    }
 		
-
-
-	    //Try and load a preference file ... ParaProfPreferences.dat
-	    try{
-		FileInputStream savedPreferenceFIS = new FileInputStream("pref.dat");
-        
-		//If here, means that no exception was thrown, and there is a preference file present.
-		//Create ObjectInputStream and try to read it in.
-		ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
-		ParaProf.savedPreferences = (SavedPreferences) inSavedPreferencesOIS.readObject();
-	    }
-	    catch(Exception e){
-		if(e instanceof FileNotFoundException){
-		    System.out.println("No preference file present, using defaults!");
-		}
-		else{
-		    //Print some kind of error message, and quit the system.
-		    System.out.println("There was an internal error whilst trying to read the ParaProf preference");
-		    System.out.println("file.  Please delete this file, or replace it with a valid one!");
-		    System.out.println("Note: Deleting the file will cause ParaProf to restore the default preferences");
-		}
-	    }
-
 	    paraProfLisp = new ParaProfLisp(UtilFncs.debug);
 	    //Register lisp primatives in ParaProfLisp.
 	    ParaProf.paraProfLisp.registerParaProfPrimitives();
@@ -270,7 +276,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 
 	/*
 	if(System.getProperty("user.name").equals("sameer")){
-	    JOptionPane.showMessageDialog(null,"Sorry, user \"sammer\" detected. We no longer support this user!", "ParaProf Error", JOptionPane.ERROR_MESSAGE);
+	    JOptionPane.showMessageDialog(null,"Sorry, user \"sameer\" detected. We no longer support this user!", "ParaProf Error", JOptionPane.ERROR_MESSAGE);
 	    System.exit(-1);
 	    }*/
 

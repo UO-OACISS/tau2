@@ -25,7 +25,7 @@ public class PPML{
 	    ParaProfTrial trialOpA = operand1.getTrial();
 	    ParaProfTrial trialOpB = operand2.getTrial();
 	    int opA = operand1.getID();
-	    int opB = operand1.getID();
+	    int opB = operand2.getID();
 	
 
 	    //We do not support metric from different trials yet.  Check for this.

@@ -158,7 +158,11 @@ public class DBConfiguration extends JFrame implements ActionListener{
 	    else if(arg.equals("Cancel")){
 		closeThisWindow();}
 	    else if(arg.equals("Ok")){
-		ParaProf.savedPreferences.setDatabasePassword((new String(passwordField.getPassword())).trim());
+		String password = (new String(passwordField.getPassword())).trim();
+		if(password.equals(""))
+		    ParaProf.savedPreferences.setDatabasePassword(null);
+		else
+		    ParaProf.savedPreferences.setDatabasePassword(password);
 		ParaProf.savedPreferences.setDatabaseConfigurationFile(configFileField.getText().trim());
 		closeThisWindow();
 	    }

@@ -411,20 +411,21 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    if(clickedOnObject instanceof ParaProfApplication){
 			ParaProfApplication application = (ParaProfApplication) clickedOnObject;
 			if(application.dBApplication()){
-			    PerfDMFSession perfDMFSession = new PerfDMFSession();
-			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			    perfDMFSession.deleteApplication(application.getID());
-			    perfDMFSession.terminate();
-			    //Remove any loaded trials associated with this application.
-			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
-			    for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
-				ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-				if(loadedTrial.getApplicationID()==application.getID())
-				    loadedTrials.remove(loadedTrial);
+			    PerfDMFSession perfDMFSession = this.getDBSession();
+			    if(perfDMFSession!=null){
+				perfDMFSession.deleteApplication(application.getID());
+				perfDMFSession.terminate();
+				//Remove any loaded trials associated with this application.
+				System.out.println("Removing associated loaded trials from this ParaProf session ...");
+				for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+				    ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+				    if(loadedTrial.getApplicationID()==application.getID())
+					loadedTrials.remove(loadedTrial);
+				}
+				System.out.println("Done - Removing associated loaded trials!");
+				treeModel.removeNodeFromParent(application.getDMTN());
+				System.out.println("Application deleted!");
 			    }
-			    System.out.println("Done - Removing associated loaded trials!");
-			    treeModel.removeNodeFromParent(application.getDMTN());
-			    System.out.println("Application deleted!");
 			}
 			else{
 			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
@@ -436,20 +437,21 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    else if(clickedOnObject instanceof ParaProfExperiment){
 			ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
 			if(experiment.dBExperiment()){
-			    PerfDMFSession perfDMFSession = new PerfDMFSession();
-			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			    perfDMFSession.deleteExperiment(experiment.getID());
-			    perfDMFSession.terminate();
-			    //Remove any loaded trials associated with this application.
-			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
-			    for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
-				ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-				if(loadedTrial.getApplicationID()==experiment.getApplicationID()&&
-				   loadedTrial.getExperimentID()==experiment.getID())
-				    loadedTrials.remove(loadedTrial);
+			    PerfDMFSession perfDMFSession = this.getDBSession();
+			    if(perfDMFSession!=null){
+				perfDMFSession.deleteExperiment(experiment.getID());
+				perfDMFSession.terminate();
+				//Remove any loaded trials associated with this application.
+				System.out.println("Removing associated loaded trials from this ParaProf session ...");
+				for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+				    ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+				    if(loadedTrial.getApplicationID()==experiment.getApplicationID()&&
+				       loadedTrial.getExperimentID()==experiment.getID())
+					loadedTrials.remove(loadedTrial);
+				}
+				treeModel.removeNodeFromParent(experiment.getDMTN());
+				System.out.println("Experiment deleted!");
 			    }
-			    treeModel.removeNodeFromParent(experiment.getDMTN());
-			    System.out.println("Experiment deleted!");
 			}
 			else{
 			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
@@ -462,21 +464,22 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    else if(clickedOnObject instanceof ParaProfTrial){
 			ParaProfTrial trial = (ParaProfTrial) clickedOnObject;
 			if(trial.dBTrial()){
-			    PerfDMFSession perfDMFSession = new PerfDMFSession();
-			    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-			    perfDMFSession.deleteTrial(trial.getID());
-			    perfDMFSession.terminate();
-			    //Remove any loaded trials associated with this application.
-			    System.out.println("Removing associated loaded trials from this ParaProf session ...");
-			    for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
-				ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-				if(loadedTrial.getApplicationID()==trial.getApplicationID()&&
-				   loadedTrial.getExperimentID()==trial.getID()&&
-				   loadedTrial.getID()==trial.getID())
-				    loadedTrials.remove(loadedTrial);
+			    PerfDMFSession perfDMFSession = this.getDBSession();
+			    if(perfDMFSession!=null){
+				perfDMFSession.deleteTrial(trial.getID());
+				perfDMFSession.terminate();
+				//Remove any loaded trials associated with this application.
+				System.out.println("Removing associated loaded trials from this ParaProf session ...");
+				for(Enumeration e = loadedTrials.elements(); e.hasMoreElements() ;){
+				    ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+				    if(loadedTrial.getApplicationID()==trial.getApplicationID()&&
+				       loadedTrial.getExperimentID()==trial.getID()&&
+				       loadedTrial.getID()==trial.getID())
+					loadedTrials.remove(loadedTrial);
+				}
+				treeModel.removeNodeFromParent(trial.getDMTN());
+				System.out.println("Trial deleted!");
 			    }
-			    treeModel.removeNodeFromParent(trial.getDMTN());
-			    System.out.println("Trial deleted!");
 			}
 			else{
 			    System.out.println("Removing trial from this ParaProf session ...");
@@ -769,39 +772,22 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		try{
 		    jSplitInnerPane.setRightComponent(getPanelHelpMessage(3));
 		    jSplitInnerPane.setDividerLocation(0.5);
-		    
-		    if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null||ParaProf.savedPreferences.getDatabasePassword()==null){//Check to see if the user has set configuration information.
-			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
-						      "DB Configuration Error!",
-						      JOptionPane.ERROR_MESSAGE);
-			return;
-		    }
-		    else{//Test to see if configurataion file exists.
-			File file = new File(ParaProf.savedPreferences.getDatabaseConfigurationFile());
-			if(!file.exists()){
-			    JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
-							  "DB Configuration Error!",
-							  JOptionPane.ERROR_MESSAGE);
-			    return;
-			}
-		    }
-		    //Basic checks done, try to access the db.
-		    //Refresh the application list.
 		    System.out.println("Loading application list ...");
 		    for(int i=dbApps.getChildCount(); i>0; i--){
 			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
 		    }
-		    PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-		    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-		    ListIterator l = perfDMFSession.getApplicationList();
-		    while (l.hasNext()){
-			ParaProfApplication application = new ParaProfApplication((Application)l.next());
-			application.setDBApplication(true);
-			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-			application.setDMTN(applicationNode);
-			treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
+		    PerfDMFSession perfDMFSession = this.getDBSession();
+		    if(perfDMFSession!=null){
+			ListIterator l = perfDMFSession.getApplicationList();
+			while (l.hasNext()){
+			    ParaProfApplication application = new ParaProfApplication((Application)l.next());
+			    application.setDBApplication(true);
+			    DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+			    application.setDMTN(applicationNode);
+			    treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
+			}
+			perfDMFSession.terminate();
 		    }
-		    perfDMFSession.terminate();
 		    System.out.println("Done loading application list.");
 		    return;
 		}
@@ -819,20 +805,21 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    for(int i=selectedNode.getChildCount(); i>0; i--){
 			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
 		    }
-		    PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-		    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-		    //Set the application.
-		    perfDMFSession.setApplication(application.getID());
-		    ListIterator l = perfDMFSession.getExperimentList();
-		    while (l.hasNext()){
-			ParaProfExperiment experiment = new ParaProfExperiment((Experiment)l.next());
-			experiment.setDBExperiment(true);
-			experiment.setApplication(application);
-			DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
-			experiment.setDMTN(experimentNode);
-			treeModel.insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
+		    PerfDMFSession perfDMFSession = this.getDBSession();
+		    if(perfDMFSession!=null){
+			//Set the application.
+			perfDMFSession.setApplication(application.getID());
+			ListIterator l = perfDMFSession.getExperimentList();
+			while (l.hasNext()){
+			    ParaProfExperiment experiment = new ParaProfExperiment((Experiment)l.next());
+			    experiment.setDBExperiment(true);
+			    experiment.setApplication(application);
+			    DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			    experiment.setDMTN(experimentNode);
+			    treeModel.insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
+			}
+			perfDMFSession.terminate();
 		    }
-		    perfDMFSession.terminate();
 		    System.out.println("Done loading experiment list.");
 		}
 		else{
@@ -865,22 +852,23 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
 		}
 		//Set the application and experiment.
-		PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-		perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-		perfDMFSession.setApplication(experiment.getApplicationID());
-		perfDMFSession.setExperiment(experiment.getID());
-		ListIterator l = perfDMFSession.getTrialList();
-		while (l.hasNext()){
-		    ParaProfTrial trial = new ParaProfTrial((Trial)l.next(), 4);
-		    trial.setExperiment(experiment);
-		    trial.setDBTrial(true);
-		    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
-		    trial.setDMTN(trialNode);
-		    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
-		    trial.setTreePath(new TreePath(trialNode.getPath()));
-		    //treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+		PerfDMFSession perfDMFSession = this.getDBSession();
+		if(perfDMFSession!=null){
+		    perfDMFSession.setApplication(experiment.getApplicationID());
+		    perfDMFSession.setExperiment(experiment.getID());
+		    ListIterator l = perfDMFSession.getTrialList();
+		    while (l.hasNext()){
+			ParaProfTrial trial = new ParaProfTrial((Trial)l.next(), 4);
+			trial.setExperiment(experiment);
+			trial.setDBTrial(true);
+			DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+			trial.setDMTN(trialNode);
+			treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+			trial.setTreePath(new TreePath(trialNode.getPath()));
+			//treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+		    }
+		    perfDMFSession.terminate();
 		}
-		perfDMFSession.terminate();
 		System.out.println("Done loading trial list.");
 	    }
 	    else{
@@ -919,14 +907,15 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		if(!loadedExists){
 		    //Need to load the trial in from the db.
 		    System.out.println("Loading trial ...");
-		    PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-		    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(), ParaProf.savedPreferences.getDatabasePassword());
-		    perfDMFSession.setApplication(trial.getApplicationID());
-		    perfDMFSession.setExperiment(trial.getExperimentID());
-		    perfDMFSession.setTrial(trial.getID());
-		    trial.initialize(perfDMFSession);
-		    //Add to the list of loaded trials.
-		    loadedTrials.add(trial);
+		    PerfDMFSession perfDMFSession = this.getDBSession();
+		    if(perfDMFSession!=null){
+			perfDMFSession.setApplication(trial.getApplicationID());
+			perfDMFSession.setExperiment(trial.getExperimentID());
+			perfDMFSession.setTrial(trial.getID());
+			trial.initialize(perfDMFSession);
+			//Add to the list of loaded trials.
+			loadedTrials.add(trial);
+		    }
 		}
 	    }
 	    
@@ -1438,8 +1427,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 
     public PerfDMFSession getDBSession(){
 	//Check to see if the user has set configuration information.
-	if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null
-	   ||ParaProf.savedPreferences.getDatabasePassword()==null){
+	if(ParaProf.savedPreferences.getDatabaseConfigurationFile()==null){
 	    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
 					  "DB Configuration Error!",
 					  JOptionPane.ERROR_MESSAGE);
@@ -1455,9 +1443,12 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    }
 	}
 	//Basic checks done, try to access the db.
-	PerfDMFSession perfDMFSession = new PerfDMFSession(); 
-	perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),
-				  ParaProf.savedPreferences.getDatabasePassword());
+	PerfDMFSession perfDMFSession = new PerfDMFSession();
+	if(ParaProf.savedPreferences.getDatabasePassword()==null)
+	    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),false);
+	else
+	    perfDMFSession.initialize(ParaProf.savedPreferences.getDatabaseConfigurationFile(),
+				      ParaProf.savedPreferences.getDatabasePassword());
 	return perfDMFSession;
     }
     
