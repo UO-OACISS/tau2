@@ -17,6 +17,8 @@ Version 2.12 changes (from 2.11):
 5. Added MPI shared library examples [CACR]. 
 6. Added support for building multiple configurations (installtau) [LANL, LLNL].
 7. Added support for Python under AIX and OSX [LLNL].
+8. Bug fixes for IA-64 and Intel 7.1 compiler [NCSA].
+9. Added TAU_CALLPATH_DEPTH env. variable specification for callpath profiling [LLNL].
 
 Version 2.11 changes (from 2.10):
 1. Added -i header option for tau_instrumentor [CASC]. 
