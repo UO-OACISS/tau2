@@ -18,7 +18,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/research/paraducks/apps/pdt/dev/tau2
+TAUROOT=/home/grads/sameer/tau2
 #######################################################################
  
 include include/Makefile
@@ -30,6 +30,8 @@ INSTALL = /bin/cp
 SHELL = /bin/sh
 LSX = .a
 #############################################
+#PDT#PDTEXAMPLE = examples/autoinstrument #ENDIF#
+#MPI#MPIEXAMPLES = examples/pi examples/NPB2.3 #ENDIF#
 
 # Pete Beckman  (3/16/95)
 
@@ -46,8 +48,8 @@ BASIC = utils src/Profile
 EXPORTS = utils src/Profile 
 
 # Example Programs
-EXAMPLES = examples/instrument examples/pi examples/threads \
-examples/cthreads examples/fortran examples/f90 examples/NPB2.3
+EXAMPLES = examples/instrument examples/threads \
+examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 
 # PC++ Support
 #PCXX#PCXX=lang_support/pc++#ENDIF#
