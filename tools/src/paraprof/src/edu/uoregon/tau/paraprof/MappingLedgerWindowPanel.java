@@ -295,7 +295,8 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 			tmpRef.show();
 		    }
 		}
-		else if((arg.equals("Change Function Color")) || (arg.equals("Change User Event Color"))){ 
+		else if((arg.equals("Change Function Color")) || (arg.equals("Change User Event Color")) ||
+			(arg.equals("Change Group Color"))){ 
 		    if(clickedOnObject instanceof GlobalMappingElement){
 			GlobalMappingElement globalMapppingElement = (GlobalMappingElement) clickedOnObject;
 			Color color = globalMapppingElement.getColor();
