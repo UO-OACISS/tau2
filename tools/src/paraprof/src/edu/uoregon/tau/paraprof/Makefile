@@ -3,8 +3,9 @@
 
 #Makefile creates the ParaProf jar file.
 ##########################
-CONFIG_ARCH=i386_linux
-TAUROOT=/home/amorris/tau2
+
+CONFIG_ARCH=@TAUARCH@
+TAUROOT=@TAUROOT@
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java ParaProfTreeCellRenderer.java \
              HistogramWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
@@ -19,7 +20,7 @@ BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java
 	     UserEventWindowPanel.java PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java \
              ParaProfManagerWindow.java StatWindow.java LoadTrialWindow.java DataSourceThreadControl.java \
              ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java DisplayProperties.java ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java
+             StaticMainWindow.java ParaProfTreeNodeUserObject.java Interpreter.java DisplayProperties.java ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java ParaProfObserver.java
 
 NEW_SOURCES=$(BASE_SOURCES) ParaProfImageOutput.java
 
