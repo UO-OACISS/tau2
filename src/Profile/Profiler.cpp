@@ -588,6 +588,7 @@ int Profiler::StoreData(int tid)
 
 int Profiler::DumpData(int tid)
 {
+  	TAU_PROFILE("TAU_DUMP_DB()", " ", TAU_IO);
 #ifdef PROFILING_ON 
 	vector<FunctionInfo*>::iterator it;
   	vector<TauUserEvent*>::iterator eit;
@@ -976,8 +977,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.48 $   $Date: 2001/07/26 00:37:41 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.48 2001/07/26 00:37:41 sameer Exp $ 
+ * $Revision: 1.49 $   $Date: 2001/08/30 17:23:21 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.49 2001/08/30 17:23:21 sameer Exp $ 
  ***************************************************************************/
 
 	
