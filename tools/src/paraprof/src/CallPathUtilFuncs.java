@@ -64,8 +64,7 @@ public class CallPathUtilFuncs{
 	    }
 	}
 	catch(Exception e){
-	    System.out.println(e.toString());
-	    e.printStackTrace();
+	    UtilFncs.systemError(e, null, "CPUF01");
 	}
     }
 
@@ -73,61 +72,89 @@ public class CallPathUtilFuncs{
 	ListIterator l1 = null;
 	ListIterator l2 = null;
 	ListIterator l3 = null;
-	GlobalMappingElement gme1 = null;
-	GlobalMappingElement gme2 = null;
+	GlobalMappingElement gme = null;
 	Integer listValue = null;
-	String s = null;
 	Vector functionList = null;
 	GlobalThreadDataElement gtde = null;
-	
-	//Create a pruned list from the global list.
-	//Want to grab a reference to the global list as
-	//this list contains null references for mappings
-	//which do not exist. Makes lookup much faster.
-	functionList = thread.getFunctionList();
 
-	//Check to make sure that we have not trimmed before.
-	if(thread.trimmed())
-	    return;
-	
-	l1 = gm.getMappingIterator(0);
-	while(l1.hasNext()){
-	    gme1 = (GlobalMappingElement) l1.next();
-	    if((gme1.getGlobalID())<(functionList.size())){ 
-		gtde = (GlobalThreadDataElement) functionList.elementAt(gme1.getGlobalID());
-		if((!(gme1.isCallPathObject())) && (gtde!=null)){
-		    l2 = gme1.getParentsIterator();
-		    while(l2.hasNext()){
-			listValue = (Integer)l2.next();
-			if(((listValue.intValue())<(functionList.size()))&&(functionList.elementAt(listValue.intValue())!=null)){
-			    int location = gtde.addParent(listValue.intValue());
-			    l3 = gme1.getCallPathIDParents(listValue.intValue());
-			    while(l3.hasNext()){
-				int pathID = ((Integer)l3.next()).intValue();
-				if(functionList.elementAt(pathID)!=null)
-				    gtde.addParentCallPathID(location, pathID);
+	try{
+	    //Create a pruned list from the global list.
+	    //Want to grab a reference to the global list as
+	    //this list contains null references for mappings
+	    //which do not exist. Makes lookup much faster.
+	    functionList = thread.getFunctionList();
+	    
+	    //Check to make sure that we have not trimmed before.
+	    if(thread.trimmed())
+		return;
+	    
+	    l1 = gm.getMappingIterator(0);
+	    while(l1.hasNext()){
+		gme = (GlobalMappingElement) l1.next();
+		if((gme.getGlobalID())<(functionList.size())){ 
+		    gtde = (GlobalThreadDataElement) functionList.elementAt(gme.getGlobalID());
+		    if((!(gme.isCallPathObject())) && (gtde!=null)){
+			l2 = gme.getParentsIterator();
+			while(l2.hasNext()){
+			    listValue = (Integer)l2.next();
+			    if(((listValue.intValue())<(functionList.size()))&&(functionList.elementAt(listValue.intValue())!=null)){
+				int location = gtde.addParent(listValue.intValue());
+				l3 = gme.getCallPathIDParents(listValue.intValue());
+				while(l3.hasNext()){
+				    int pathID = ((Integer)l3.next()).intValue();
+				    if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null))
+					gtde.addParentCallPathID(location, pathID);
+				}
 			    }
 			}
-		    }
-		    l2 = gme1.getChildrenIterator();
-		    while(l2.hasNext()){
-			listValue = (Integer)l2.next();
-			if(((listValue.intValue())<(functionList.size()))&&(functionList.elementAt(listValue.intValue())!=null)){
-			    int location = gtde.addChild(listValue.intValue());
-			    l3 = gme1.getCallPathIDChildren(listValue.intValue());
-			    while(l3.hasNext()){
-				int pathID = ((Integer)l3.next()).intValue();
-				if(functionList.elementAt(pathID)!=null)
-				    gtde.addChildCallPathID(location, pathID);
+			l2 = gme.getChildrenIterator();
+			while(l2.hasNext()){
+			    listValue = (Integer)l2.next();
+			    if(((listValue.intValue())<(functionList.size()))&&(functionList.elementAt(listValue.intValue())!=null)){
+				int location = gtde.addChild(listValue.intValue());
+				l3 = gme.getCallPathIDChildren(listValue.intValue());
+				while(l3.hasNext()){
+				    int pathID = ((Integer)l3.next()).intValue();
+				    if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null))
+					gtde.addChildCallPathID(location, pathID);
+				}
 			    }
 			}
 		    }
 		}
+		
 	    }
-
+	    
+	    //Set this thread to indicate that it has been trimmed.
+	    thread.setTrimmed(true);
 	}
+	catch(Exception e){
+	    //Print out the current state of this function.
+	    /*
+	    System.out.println("######");
+	    System.out.println("gme:");
+	    if(gme!=null){
+		System.out.println("name:" + gme.getMappingName());
+		System.out.println("id:" + gme.getGlobalID());
+	    }
+	    else
+		System.out.println("gme is null");
+	    System.out.println("gtde:");
+	    if(gtde!=null){
+		System.out.println("name:" + gtde.getMappingName());
+		System.out.println("id:" + gtde.getMappingID());
+	    }
+	    else
+		System.out.println("gtde is null");
+	    System.out.println("listValue:");
+	    if(listValue!=null)
+		System.out.println("value:" + listValue.intValue());
+	    else
+		System.out.println("listValue is null");
 
-	//Set this thread to indicate that it has been trimmed.
-	thread.setTrimmed(true);
+	    e.printStackTrace();
+	    */
+	    UtilFncs.systemError(e, null, "CPUF02");
+	}
     }
 }
