@@ -454,7 +454,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		ListIterator l = trial.getMetricList();
 		while (l.hasNext()){
 		    Metric metric = (Metric)l.next();
-		    DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+		    DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric, false);
+		    
 		    metric.setDMTN(metricNode);
 		    treeModel.insertNodeInto(metricNode, selectedNode, selectedNode.getChildCount());
 		}
@@ -486,9 +487,13 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //TreeExpansionListener
     //######
     public void treeCollapsed(TreeExpansionEvent event){
-	System.out.println("Tree collapsed");
+	TreePath treePath = event.getPath();
+	System.out.println("Tree collapsed: " + treePath);
     }
-    public void treeExpanded(TreeExpansionEvent event){}
+    public void treeExpanded(TreeExpansionEvent event){
+	TreePath treePath = event.getPath();
+	System.out.println("Tree expanded: " + treePath);
+    }
     //######
     //End - TreeSelectionListener
     //######
@@ -751,12 +756,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 				trialNode.add(metricNode);
 			    }
 			    tree.expandPath(path);
-			    jSplitPane.setRightComponent(getTable(userObject));
+			    jSplitPane.setRightComponent(getTable(metric));
 			    jSplitPane.setDividerLocation(0.5);
 			}
 			else{
-			    tree.expandPath(path);
-			    jSplitPane.setRightComponent(new JScrollPane(this.getLoadingTrialPanel(userObject)));
+			    jSplitPane.setRightComponent(new JScrollPane(this.getLoadingTrialPanel(metric)));
 			    jSplitPane.setDividerLocation(0.5);
 			}
 		    }

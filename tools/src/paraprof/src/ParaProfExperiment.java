@@ -87,6 +87,12 @@ public class ParaProfExperiment extends Experiment{
   
     public DefaultMutableTreeNode getDMTN(){
 	return defaultMutableTreeNode;}
+
+    public void setTreePath(TreePath treePath){
+	this.treePath = treePath;}
+
+    public TreePath getTreePath(){
+	return treePath;}
   
     public void setDBExperiment(boolean dBExperiment){
 	this.dBExperiment = dBExperiment;}
@@ -133,6 +139,7 @@ public class ParaProfExperiment extends Experiment{
     //####################################
     private ParaProfApplication application = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private TreePath treePath = null;
     private boolean dBExperiment = false;
     private Vector trials = new Vector();
     //####################################

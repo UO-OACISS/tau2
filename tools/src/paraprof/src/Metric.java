@@ -25,6 +25,12 @@ public class Metric{
     public DefaultMutableTreeNode getDMTN(){
 	return defaultMutableTreeNode;}
 
+    public void setTreePath(TreePath treePath){
+	this.treePath = treePath;}
+
+    public TreePath getTreePath(){
+	return treePath;}
+
     public void setDBMetric(boolean dBMetric){
 	this.dBMetric = dBMetric;}
 
@@ -64,6 +70,7 @@ public class Metric{
     
     private ParaProfTrial trial = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private TreePath treePath = null;
     private boolean dBMetric = false;
     private String name = null;
     private int id = -1;

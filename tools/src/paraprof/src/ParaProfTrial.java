@@ -103,6 +103,12 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
     public DefaultMutableTreeNode getDMTN(){
 	return defaultMutableTreeNode;}
 
+    public void setTreePath(TreePath treePath){
+	this.treePath = treePath;}
+
+    public TreePath getTreePath(){
+	return treePath;}
+
     public void setDBTrial(boolean dBTrial){
 	this.dBTrial = dBTrial;}
   
@@ -338,6 +344,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
     ParaProfDataSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private TreePath treePath = null;
     private boolean dBTrial = false;
     private boolean loading = false;
      
