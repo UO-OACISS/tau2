@@ -54,21 +54,24 @@ using a different set of options each time. Commonly used configurations are
 typically installed using the 'installtau' tool described below.
 
 % ./configure -help 
+
 TAU Configuration Utility 
 ***********************************************************************
 Usage: configure [OPTIONS]
   where [OPTIONS] are:
 -c++=<compiler>  ............................ specify the C++ compiler.
-    options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
+         options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
+                                                          icpc|pathCC].
 -cc=<compiler> ................................ specify the C compiler.
-                            options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc].
+                      options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc].
 -pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
     options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
-  	                    kai|nec|hitachi|intel|absoft|lahey|nagware]
+  	            kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
 -useropt='<parameters>' ............... list of commandline parameters.
 -prefix=<dir> ................ Specify a target installation directory.
+-exec-prefix=<arch> .......... Specify a target architecture directory.
 -pthread .................................. Use pthread thread package.
 -sproc .................................. Use SGI sproc thread package.
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
@@ -110,6 +113,7 @@ Usage: configure [OPTIONS]
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
+-PROFILEPHASE .......................... Generate phase based profiles.
 -PROFILESTATS .................. Enable standard deviation calculation.
 -PROFILEMEMORY .. Track heap memory utilization at each function entry.
 -MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
@@ -365,6 +369,13 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    This option is an extension of -PROFILE, the default profiling option. 
    Specifying TAU_CALLPATH_DEPTH environment variable, the user can vary the 
    depth of the callpath. See examples/calltree for further information.
+
+-PROFILEPHASE
+   
+   This option generates phase based profiles. It requires special instrumentation
+   to mark phases in an application (I/O, computation, etc.). Phases can be 
+   static or dynamic (different phases for each loop iteration, for instance).
+   See examples/phase/README for further information. 
 
 -PROFILESTATS
    
