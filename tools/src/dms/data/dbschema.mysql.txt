@@ -1,6 +1,6 @@
 
 CREATE TABLE version (
-    version		    VARCHAR(100)     
+    version		    TEXT     
 );
 
 INSERT INTO version values('2.13.7');

@@ -231,8 +231,11 @@ drop table application CASCADE;
 
 
 CREATE TABLE version (
-    version		    VARCHAR(100) DEFAULT	'2.13.7'     
+    version		    TEXT
 );
+
+INSERT INTO version values('2.13.7');
+
 
 
 CREATE TABLE application (
@@ -444,14 +447,12 @@ insert into interval_mean_summary (select interval_event, metric, inclusive_perc
 
 
 
-select setval('application_id_seq', (nextval('application_temp_id_seq') - 1));
-
-select setval('application_id_seq', (nextval('application_temp_id_seq') - 1));
-select setval('experiment_id_seq', (nextval('experiment_temp_id_seq') - 1));
-select setval('trial_id_seq', (nextval('trial_temp_id_seq') - 1));
-select setval('metric_id_seq', (nextval('metric_temp_id_seq') - 1));
-select setval('interval_event_id_seq', (nextval('interval_event_temp_id_seq') - 1));
-select setval('atomic_event_id_seq', (nextval('atomic_event_temp_id_seq') - 1));
+select setval('application_id_seq', (nextval('application_temp_id_seq')));
+select setval('experiment_id_seq', (nextval('experiment_temp_id_seq')));
+select setval('trial_id_seq', (nextval('trial_temp_id_seq')));
+select setval('metric_id_seq', (nextval('metric_temp_id_seq')));
+select setval('interval_event_id_seq', (nextval('interval_event_temp_id_seq')));
+select setval('atomic_event_id_seq', (nextval('atomic_event_temp_id_seq')));
 
 drop table interval_mean_summary_temp CASCADE;
 drop table interval_total_summary_temp CASCADE;
