@@ -24,16 +24,21 @@
 **			  -DDEBUG_PROF  for internal debugging messages   **
 **	Documentation	: See http://www.acl.lanl.gov/tau	          **
 ***************************************************************************/
-#ifndef PROFILING_ON
-#define PROFILING_ON
-#endif // PROFILING_ON
 
 //////////////////////////////////////////////////////////////////////
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
 #include "Profile/Profiler.h"
+
+
+#ifdef POOMA_USE_STANDARD_HEADERS
+#include <iostream>
+using namespace std;
+#else
 #include <iostream.h>
+#endif
+
 #include <stdio.h> 
 #include <fcntl.h>
 #include <time.h>
@@ -47,6 +52,11 @@
 #include "Profile/TulipTimers.h"
 #endif //TULIP_TIMERS 
 #endif //POOMA_TFLOP
+
+#ifdef TRACING_ON
+#define PCXX_EVENT_SRC
+#include "pcxx_events.h"
+#endif // TRACING_ON 
 
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
 //#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
@@ -88,12 +98,15 @@ template FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,Functio
 
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
-	unsigned int ProfileGroup )
+	unsigned int ProfileGroup , const char *ProfileGroupName)
 {
       if (ProfileGroup & RtsLayer::ProfileMask) {
 
         Name = name;
   	Type = type;
+#ifdef TRACING_ON
+	GroupName = RtsLayer::PrimaryGroup(ProfileGroupName);
+#endif //TRACING_ON
         NumCalls = 0;
         NumSubrs = 0;
   	ExclTime = 0;
@@ -114,6 +127,10 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 	
         MyProfileGroup_ = ProfileGroup ;
 	FunctionDB[RtsLayer::myThread()].push_back(this);
+#ifdef TRACING_ON
+	// Function Id is the index into the DB vector
+	FunctionId = FunctionDB[RtsLayer::myThread()].size();
+#endif //TRACING_ON
 		
         DEBUGPROFMSG("Thr "<< RtsLayer::myNode() 
           << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
@@ -124,17 +141,19 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const char *name, string& type, 
-	unsigned int ProfileGroup )
+	unsigned int ProfileGroup , const char *ProfileGroupName)
 {
       if (ProfileGroup & RtsLayer::ProfileMask) {
 
         Name = name;
   	Type = type;
+#ifdef TRACING_ON
+	GroupName = RtsLayer::PrimaryGroup(ProfileGroupName);
+#endif //TRACING_ON 
         NumCalls = 0;
         NumSubrs = 0;
   	ExclTime = 0;
   	InclTime = 0;
-
 
 // Since FunctionInfo constructor is called once for each function (static)
 // we know that it couldn't be already on the call stack.
@@ -151,6 +170,10 @@ FunctionInfo::FunctionInfo(const char *name, string& type,
 	
         MyProfileGroup_ = ProfileGroup ;
 	FunctionDB[RtsLayer::myThread()].push_back(this);
+#ifdef TRACING_ON
+	// Function Id is the index into the DB vector
+	FunctionId = FunctionDB[RtsLayer::myThread()].size();
+#endif //TRACING_ON
 		
         DEBUGPROFMSG("Thr "<< RtsLayer::myNode() 
           << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
@@ -221,6 +244,11 @@ void Profiler::Start(void)
      
       if (MyProfileGroup_ & RtsLayer::ProfileMask) {
 	
+#ifdef TRACING_ON
+	pcxx_Event(ThisFunction->GetFunctionId(), 1); // 1 is for entry
+#endif /* TRACING_ON */
+
+#ifdef PROFILING_ON
 	// First, increment the number of calls
 	ThisFunction->IncrNumCalls();
         // now increment parent's NumSubrs()
@@ -242,6 +270,7 @@ void Profiler::Start(void)
 	
 	// Initialization is over, now record the time it started
 	StartTime =  RtsLayer::getUSecD() ;
+#endif // PROFILING_ON
   	ParentProfiler = CurrentProfiler[RtsLayer::myThread()] ;
 
 	DEBUGPROFMSG("Thr " << RtsLayer::myNode() <<
@@ -316,6 +345,11 @@ void Profiler::Stop()
 {
       if (MyProfileGroup_ & RtsLayer::ProfileMask) {
 
+#ifdef TRACING_ON
+	pcxx_Event(ThisFunction->GetFunctionId(), -1); // -1 is for exit 
+#endif //TRACING_ON
+
+#ifdef PROFILING_ON  // Calculations relevent to profiling only 
 	double TotalTime = RtsLayer::getUSecD() - StartTime;
 
         DEBUGPROFMSG("Thr "<< RtsLayer::myNode() 
@@ -364,6 +398,7 @@ void Profiler::Stop()
 
 	}
 	
+#endif //PROFILING_ON
 	// First check if timers are overlapping.
 	if (CurrentProfiler[RtsLayer::myThread()] != this) {
 	  cout <<"ERROR: Timers Overlap. Illegal operation Profiler::Stop " 
@@ -437,16 +472,25 @@ void Profiler::ProfileExit(const char *message)
 
 int Profiler::StoreData()
 {
+#ifdef PROFILING_ON 
   	vector<FunctionInfo*>::iterator it;
 	char filename[1024], errormsg[1024];
 	char *dirname;
 	FILE* fp;
  	int numFunc;
+#endif //PROFILING_ON
 #ifdef PROFILE_CALLS
 	long listSize, numCalls;
 	list<pair<double,double> >::iterator iter;
 #endif // PROFILE_CALLS
 
+
+#ifdef TRACING_ON
+	pcxx_EvClose();
+	RtsLayer::DumpEDF();
+#endif // TRACING_ON 
+
+#ifdef PROFILING_ON 
 	if ((dirname = getenv("PROFILEDIR")) == NULL) {
 	// Use default directory name .
 	   dirname  = new char[8];
@@ -545,6 +589,7 @@ int Profiler::StoreData()
 
 	fclose(fp);
 
+#endif //PROFILING_ON
 	return 1;
 }
 
@@ -580,6 +625,22 @@ unsigned int RtsLayer::resetProfileGroup(void) {
   return ProfileMask;
 }
 
+/////////////////////////////////////////////////////////////////////////
+int RtsLayer::setMyNode(int NodeId) {
+  Node  = NodeId;
+// At this stage, we should create the trace file because we know the node id
+#ifdef TRACING_ON
+  char *dirname, tracefilename[1024];
+  if ((dirname = getenv("TRACEDIR")) == NULL) {
+  // Use default directory name .
+    dirname  = new char[8];
+    strcpy (dirname,".");
+  }
+  sprintf(tracefilename, "%s/tau.####.trc",dirname); 
+  pcxx_EvInit(tracefilename);
+#endif // TRACING_ON
+  return Node;
+}
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -688,6 +749,7 @@ double RtsLayer::getUSecD () {
 
 ///////////////////////////////////////////////////////////////////////////
 //Note: This is similar to Tulip event classes during tracing
+///////////////////////////////////////////////////////////////////////////
 int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 {
   char *end;
@@ -863,26 +925,172 @@ bool RtsLayer::isCtorDtor(const char *name)
     return true;
 }
 
+//////////////////////////////////////////////////////////////////////
+// PrimaryGroup returns the first group that the function belongs to.
+// This is needed in tracing as Vampir can handle only one group per
+// function. PrimaryGroup("TAU_FIELD | TAU_USER") should return "TAU_FIELD"
+//////////////////////////////////////////////////////////////////////
+string RtsLayer::PrimaryGroup(const char *ProfileGroupName) 
+{
+  string groups = ProfileGroupName;
+  string primary; 
+  string separators = " |"; 
+  int start, stop, n;
+
+  start = groups.find_first_not_of(separators);
+  n = groups.length();
+  stop = groups.find_first_of(separators, start); 
+
+  if ((stop < 0) || (stop > n)) stop = n;
+
+  primary = groups.substr(start, stop - start) ;
+  return primary;
+
+}
+
+//////////////////////////////////////////////////////////////////////
+// TraceSendMsg traces the message send
+//////////////////////////////////////////////////////////////////////
+void RtsLayer::TraceSendMsg(int type, int destination, int length)
+{
+#ifdef TRACING_ON 
+  long int parameter, othernode;
+
+  if (RtsLayer::isEnabled(TAU_MESSAGE))
+  {
+    parameter = 0L;
+    /* for send, othernode is receiver or destination */
+    othernode = (long int) destination;
+    /* Format for parameter is
+       31 ..... 24 23 ......16 15..............0
+          other       type          length       
+     */
+  
+    parameter = (length & 0x0000FFFF) | ((type & 0x000000FF)  << 16) | 
+  	      (othernode << 24);
+    pcxx_Event(TAU_MESSAGE_SEND, parameter); 
+#ifdef DEBUG_PROF
+    printf("Node %d TraceSendMsg, type %x dest %x len %x par %lx \n", 
+  	RtsLayer::myNode(), type, destination, length, parameter);
+#endif //DEBUG_PROF
+  } 
+#endif //TRACING_ON
+}
+
+  
+//////////////////////////////////////////////////////////////////////
+// TraceRecvMsg traces the message recv
+//////////////////////////////////////////////////////////////////////
+void RtsLayer::TraceRecvMsg(int type, int source, int length)
+{
+#ifdef TRACING_ON
+  long int parameter, othernode;
+
+  if (RtsLayer::isEnabled(TAU_MESSAGE)) 
+  {
+    parameter = 0L;
+    /* for recv, othernode is sender or source*/
+    othernode = (long int) source;
+    /* Format for parameter is
+       31 ..... 24 23 ......16 15..............0
+          other       type          length       
+     */
+  
+    parameter = (length & 0x0000FFFF) | ((type & 0x000000FF)  << 16) | 
+  	      (othernode << 24);
+    pcxx_Event(TAU_MESSAGE_RECV, parameter); 
+  
+#ifdef DEBUG_PROF
+    printf("Node %d TraceRecvMsg, type %x src %x len %x par %lx \n", 
+  	RtsLayer::myNode(), type, source, length, parameter);
+#endif //DEBUG_PROF
+  }
+#endif //TRACING_ON
+}
 
 //////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////
+// DumpEDF() writes the function information in the edf.<node> file
+// The function info consists of functionId, group, name, type, parameters
+//////////////////////////////////////////////////////////////////////
+int RtsLayer::DumpEDF(void)
+{
+#ifdef TRACING_ON 
+  	vector<FunctionInfo*>::iterator it;
+	char filename[1024], errormsg[1024];
+	char *dirname;
+	FILE* fp;
+	int  numEvents, numExtra;
+
+
+	if ((dirname = getenv("TRACEDIR")) == NULL) {
+	// Use default directory name .
+	   dirname  = new char[8];
+	   strcpy (dirname,".");
+	}
+
+	sprintf(filename,"%s/events.%d.edf",dirname, RtsLayer::myNode());
+	DEBUGPROFMSG("Creating " << filename << endl;);
+	if ((fp = fopen (filename, "w+")) == NULL) {
+		sprintf(errormsg,"Error: Could not create %s",filename);
+		perror(errormsg);
+		return 0;
+	}
+	
+	// Data Format 
+	// <no.> events
+	// # or \n ignored
+	// %s %s %d "%s %s" %s 
+	// id group tag "name type" parameters
+
+	numExtra = 9; // Number of extra events
+	numEvents = FunctionInfo::FunctionDB[RtsLayer::myThread()].size();
+
+	numEvents += numExtra;
+
+	fprintf(fp,"%d dynamic_trace_events\n", numEvents);
+
+	fprintf(fp,"# FunctionId Group Tag \"Name Type\" Parameters\n");
+
+ 	for (it = FunctionInfo::FunctionDB[RtsLayer::myThread()].begin(); 
+	  it != FunctionInfo::FunctionDB[RtsLayer::myThread()].end(); it++)
+	{
+  	  DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping EDF Id : " 
+	    << (*it)->GetFunctionId() << " " << (*it)->GetPrimaryGroup() 
+	    << " 0 " << (*it)->GetName() << " " << (*it)->GetType() 
+	    << " EntryExit" << endl;); 
+	
+	  fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (*it)->GetFunctionId(),
+	    (*it)->GetPrimaryGroup(), (*it)->GetName(), (*it)->GetType() );
+	}
+	// Now add the nine extra events 
+	fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) PCXX_EV_INIT); 
+	fprintf(fp,"%ld TRACER 0 \"FLUSH_ENTER\" none\n", (long) PCXX_EV_FLUSH_ENTER); 
+	fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) PCXX_EV_FLUSH_EXIT); 
+	fprintf(fp,"%ld TRACER 0 \"FLUSH_CLOSE\" none\n", (long) PCXX_EV_CLOSE); 
+	fprintf(fp,"%ld TRACER 0 \"FLUSH_INITM\" none\n", (long) PCXX_EV_INITM); 
+	fprintf(fp,"%ld TRACER 0 \"WALL_CLOCK\" none\n", (long) PCXX_EV_WALL_CLOCK); 
+	fprintf(fp,"%ld TRACER 0 \"CONT_EVENT\" none\n", (long) PCXX_EV_CONT_EVENT); 
+	fprintf(fp,"%ld TAU_MESSAGE -7 \"MESSAGE_SEND\" par\n", (long) TAU_MESSAGE_SEND); 
+	fprintf(fp,"%ld TAU_MESSAGE -8 \"MESSAGE_RECV\" par\n", (long) TAU_MESSAGE_RECV); 
+
+  
+	fclose(fp);
+#endif //TRACING_ON
+	return 1;
+}
 
 // should be #ifdef PROFILE_CALLSTACK
 #ifdef PROFILE_CALLS
 
-/*-------------------------------------------------------------------
-|
-|  Profiler::CallStackTrace()
-|  =========================
-|
-|  Author:  Mike Kaufman
-|           mikek@cs.uoregon.edu
-|
-|  Date:    11/4/1997
-|
-|  output stack of active Profiler objects
-|
-*/
+//////////////////////////////////////////////////////////////////////
+//  Profiler::CallStackTrace()
+//
+//  Author:  Mike Kaufman
+//           mikek@cs.uoregon.edu
+//  output stack of active Profiler objects
+//////////////////////////////////////////////////////////////////////
 void Profiler::CallStackTrace()
 {
   char      *dirname;            // directory name of output file
@@ -915,7 +1123,6 @@ void Profiler::CallStackTrace()
   sprintf(fname, "%s/callstack.%d.%d.%d", dirname, RtsLayer::myNode(),
 	  RtsLayer::myContext(), RtsLayer::myThread());
   
-
   // traverse stack and set all FunctionInfo's *_cs fields to zero
   curr = CurrentProfiler[RtsLayer::myThread()];
   while (curr != 0)
@@ -1003,9 +1210,9 @@ void Profiler::CallStackTrace()
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: mikek $
- * $Revision: 1.3 $   $Date: 1997/12/05 20:38:57 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.3 1997/12/05 20:38:57 mikek Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.4 $   $Date: 1997/12/29 23:08:26 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.4 1997/12/29 23:08:26 sameer Exp $ 
  ***************************************************************************/
 
 	
