@@ -1,0 +1,5 @@
+This example demonstrates the use of pthreads with C and TAU profiling 
+interface for C. Special care should be taken to register the thread as soon 
+as it is created by calling TAU_REGISTER_THREAD() as shown in the example.
+The program creates another thread that sleeps for 5 secs and calls other 
+functions. TAU_PROFILE_TIMERS are used in C rather than TAU_PROFILE. 
