@@ -145,7 +145,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		if(metricName == null)
 		    metricName = new String("Time");
 
-		System.out.println("Metric name is: " + metricName);
+		//		System.out.println("Metric name is: " + metricName);
       
 		metric = this.getNumberOfMetrics();
 		this.addMetric(metricName);
@@ -438,14 +438,16 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 		System.out.println("Done processing data file!");
 		System.out.println("Time to process file (in milliseconds): " + time);
 	    }
-	    System.out.println("Processing callpath data ...");
+
+	    //System.out.println("Processing callpath data ...");
 	    if(CallPathUtilFuncs.isAvailable(getGlobalMapping().getMappingIterator(0))){
 		setCallPathDataPresent(true);
 		CallPathUtilFuncs.buildRelations(getGlobalMapping());
 	    }
-	    else
-		System.out.println("No callpath data found.");
-	    System.out.println("Done - Processing callpath data!");
+	    else {
+		//System.out.println("No callpath data found.");
+	    }
+	    //System.out.println("Done - Processing callpath data!");
 	}
         catch(Exception e){
 	    UtilFncs.systemError(new ParaProfError(this.toString()+": run()", null,
@@ -644,6 +646,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 
 	    if (quoteCount == 2) { // proceed as usual
 		StringTokenizer st1 = new StringTokenizer(string, "\"");
+		String trash = st1.nextToken();
 		usereventDataLine.s0 = st1.nextToken();
 		st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
 	    } else {
@@ -673,6 +676,8 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 	    usereventDataLine.d2 = Double.parseDouble(st2.nextToken()); //Mean
 	    usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation.
 
+
+	    // Sum Squared = [ (stddev)^2 + (mean)^2] * N
 
 	    usereventDataLine.d3 = ((usereventDataLine.d3 * usereventDataLine.d3) + (usereventDataLine.d2 * usereventDataLine.d2)) * usereventDataLine.i0;
 	    
