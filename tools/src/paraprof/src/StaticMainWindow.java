@@ -103,12 +103,6 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  testItem.addActionListener(this);
 	  openMenu.add(testItem);
 	  
-	  //Testing the image stuff.
-	  JMenuItem imageItem = new JMenuItem("testImage");
-	  imageItem.addActionListener(this);
-	  openMenu.add(imageItem);
-	  
-	  
 	  fileMenu.add(openMenu);
 	  //End submenu.
 	  
@@ -139,11 +133,12 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  editPrefItem.addActionListener(this);
 	  fileMenu.add(editPrefItem);
 	  
+	  /*
 	  //Add a menu item.
 	  JMenuItem saveImageItem = new JMenuItem("Save Image");
 	  saveImageItem.addActionListener(this);
 	  fileMenu.add(saveImageItem);
-	  
+	  */
 	  //Add a menu item.
 	  JMenuItem exitItem = new JMenuItem("Exit ParaProf!");
 	  exitItem.addActionListener(this);
