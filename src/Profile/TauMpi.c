@@ -13,10 +13,9 @@
    that can happen on a uniprocessor if a receive is traced before the send
    is traced. 
 
-   To generate TauMpi.c use: 
+   This file was once generated using:
    % <mpich>/mpe/profiling/wrappergen/wrappergen -w TauMpi.w -o TauMpi.c
 
-   DO NOT EDIT TauMpi.c manually. Instead edit TauMpi.w and use wrappergen
 */
 
 /* Requests */
@@ -105,11 +104,18 @@ static int translateRankToWorld(MPI_Comm comm, int rank) {
   MPI_Group commGroup, worldGroup;
   int ranks[1], worldranks[1];
   if (comm != MPI_COMM_WORLD) {
-    ranks[0] = rank;
-    MPI_Comm_group(MPI_COMM_WORLD, &worldGroup);
-    MPI_Comm_group(comm, &commGroup);
-    PMPI_Group_translate_ranks(commGroup, 1, ranks, worldGroup, worldranks);
-    return worldranks[0];
+
+    int result;
+    MPI_Comm_compare(comm, MPI_COMM_WORLD, &result);
+    if (result == MPI_IDENT || result == MPI_CONGRUENT) {
+      return rank;
+    } else {
+      ranks[0] = rank;
+      PMPI_Comm_group(MPI_COMM_WORLD, &worldGroup);
+      PMPI_Comm_group(comm, &commGroup);
+      PMPI_Group_translate_ranks(commGroup, 1, ranks, worldGroup, worldranks);
+      return worldranks[0];
+    }
   }
   return rank;
 }
