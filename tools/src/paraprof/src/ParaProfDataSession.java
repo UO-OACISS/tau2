@@ -712,6 +712,4 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     //####################################
     //End - Instance data.
     //####################################
-
-
 }
