@@ -77,7 +77,7 @@ OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o $(EVENTS_O) $(THR_O) $(PCL_O) $(PAPI_O) \
 		$(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) $(MULT_O) $(PLATFORM_O) \
-		$(CALLPATH_O) $(PYTHON_O)
+		$(CALLPATH_O) $(PYTHON_O) $(MUSE_O)
 
 PRINT	      = pr
 
@@ -335,6 +335,9 @@ PyTimer.o 	: PyTimer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 PyTau.o 	: PyTau.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauMuse.o 	: TauMuse.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)

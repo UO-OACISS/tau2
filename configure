@@ -130,6 +130,7 @@ python=no
 extradir=
 awe=no
 pthread=no
+muse=no
 comm=yes
 sproc=no
 noex=no
@@ -317,6 +318,11 @@ do
  
   -pthread)
       pthread=yes
+    shift
+    ;;
+
+  -muse)
+      muse=yes
     shift
     ;;
 
@@ -2094,6 +2100,12 @@ if [ $pthread = yes ]
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
     echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
     tauoptions="${tauoptions}-pthread"
+fi
+
+if [ $muse = yes ]
+  then
+    fixmakeargs="$fixmakeargs MUSE"
+    tauoptions="${tauoptions}-muse"
 fi
 
 if [ $sproc = yes ]
