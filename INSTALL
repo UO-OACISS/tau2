@@ -177,11 +177,12 @@ The following  command-line options are available to configure:
    # in .cshrc file
    set path=($path /usr/local/packages/tau/sgi64/bin)
 
-3. Examples.
-
-   After building the library, the applications that need to be profiled
-   have to be instrumented by manually inserting TAU Profiling calls in the
-   source. This is explained in detail in the documentation available at
+3. Instrumentation.
+   For  TAU instrumentation, macros must be added  to the source code to 
+   identify routine transitions. It can be done automatically using the C++ 
+   instrumentor - tau_instrumentor,  based on the Program Database Toolkit, or 
+   manually using the instrumentation API (Application Programmers Interface). 
+   The API is explained in detail in the documentation available at
    http://www.acl.lanl.gov/tau and can be seen in the examples directory.
    This process involves identifying functions and associating each function
    with one or more TAU profile groups. This enables selectively profiling 
@@ -193,6 +194,28 @@ The following  command-line options are available to configure:
    % pprof
    % racy
 
+   To use tau_instrumentor, the C++ source code instrumentor: 
+   a. Install pdtoolkit. [ Ref: http://www.acl.lanl.gov/pdtoolkit ] 
+      % ./configure -arch=IRIX64 -KCC
+
+   b. Install TAU using the -pdt configuration option.
+      % ./configure -pdt=/usr/local/packages/pdtoolkit-1.0 -c++=KCC -arch=sgi64 
+
+   c. Modify the makefile to invoke cxxparse from PDT which generates a 
+      program database file (.pdb) that contains program  entities (such as 
+      routine locations) and tau_instrumentor that uses the .pdb file and the 
+      C++ source code to generate an instrumented version of the source code.  
+      See examples/autoinstrument/Makefile. 
+
+   To illustrate the use of TAU Fortran 90 instrumentation API, we have 
+   included the NAS Parallel Benchmarks 2.3 LU and SP suites in the 
+   examples/NPB2.3 directory [Ref http://www.nas.nasa.gov/NAS/NPB/ ].
+   See the config/make.def makefile that shows how TAU can be used with 
+   MPI  (with the TAU MPI Wrapper library) and Fortran 90. To use this, TAU
+   must be configured using the -mpiinc=<dir>  and -mpilib=<dir> options. The
+   default Fortran 90 compiler used is f90. This may be changed by the user in
+   the makefile.
+ 
 4. Racy.
 
    Racy is the GUI for TAU performance analysis. It brings up a project
