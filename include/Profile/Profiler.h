@@ -107,7 +107,11 @@ public:
 #endif /* PROFILE_CALLS || PROFILE_STATS */
 
 	static Profiler * CurrentProfiler[TAU_MAX_THREADS];
+#ifndef TAU_MULTIPLE_COUNTERS
 	double StartTime;
+#else //TAU_MULTIPLE_COUNTERS
+	double StartTime[MAX_TAU_COUNTERS];
+#endif//TAU_MULTIPLE_COUNTERS
 	FunctionInfo * ThisFunction;
 	Profiler * ParentProfiler; 
 
@@ -140,6 +144,6 @@ private:
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.34 $   $Date: 2002/03/08 01:33:27 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.34 2002/03/08 01:33:27 bertie Exp $ 
+ * $Revision: 1.35 $   $Date: 2002/03/08 21:06:11 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.35 2002/03/08 21:06:11 bertie Exp $ 
  ***************************************************************************/
