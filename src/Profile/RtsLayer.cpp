@@ -1042,18 +1042,24 @@ int RtsLayer::DumpEDF(int tid)
 }
 
 #ifdef __GNUC__
+#ifndef NO_RTTI
 #include <cxxabi.h>
+#endif /* NO_RTTI */
 #endif /* __GNUC__ */
 
 /////////////////////////////////////////////////////////////////////////
 std::string RtsLayer::GetRTTI(const char *name)
 {
 #ifdef __GNUC__
+#ifndef NO_RTTI
   std::size_t len;
   int stat;
   char *ptr = NULL;
   const std::string mangled = name;
   return abi::__cxa_demangle(mangled.c_str(), ptr, &len, &stat);
+#else /* NO_RTTI */
+  return string(name);
+#endif /* NO_RTTI */
 #else
   return string(CheckNotNull(name));
 #endif /* GNUC */
@@ -1061,6 +1067,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.48 $   $Date: 2003/12/11 20:12:09 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.48 2003/12/11 20:12:09 sameer Exp $ 
+ * $Revision: 1.49 $   $Date: 2003/12/11 22:42:43 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.49 2003/12/11 22:42:43 sameer Exp $ 
  ***************************************************************************/
