@@ -1,6 +1,9 @@
 #ifndef _AIX_H_
 #define _AIX_H_
 
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE
+
 
 //#define _XOPEN _SOURCE
 //#define _XOPEN_SOURCE_EXTENDED 1
@@ -14,6 +17,7 @@ typedef long            time_t;
 #define _SIZE_T
 typedef unsigned long   size_t;
 #endif
+
 
 #ifndef KAI
 struct timeval {
@@ -37,4 +41,5 @@ extern "C" {
 //extern int     getopt(int, char* const*, const char*);
 }
 */
+#endif /* XOPEN_SOURCE */
 #endif /* _AIX_H_ */
