@@ -1,8 +1,0 @@
-#!/bin/sh
-
-PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
-XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
-JDBC_JAR=${PERFDB_HOME}/jars/mysql.jar
-
-#Translate pprof.dat into pprof.xml
-java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} translator.Translator ${PERFDB_HOME}/data/perfdb.cfg.mysql ${PERFDB_HOME}/data/pprof.dat ${PERFDB_HOME}/data/pprof.xml 250 1 1
