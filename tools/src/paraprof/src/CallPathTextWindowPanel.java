@@ -135,16 +135,16 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		String s = null;
 				
 		//######
-		//Populate drawObjects vector.
+		//Populate drawObjectsComplete vector.
 		//This should only happen once.
 		//######
-		if(drawObjects==null){
-		    drawObjects = new Vector();
+		if(drawObjectsComplete==null){
+		    drawObjectsComplete = new Vector();
 		    //Add five spacer objects representing the column headings.
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+		    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+		    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+		    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
 
 		    l1 = cPTWindow.getDataIterator();
 		    while(l1.hasNext()){
@@ -154,21 +154,110 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 			    l2 = gme.getParentsIterator();
 			    while(l2.hasNext()){
 				listValue = (Integer)l2.next();
-				callPathDrawObject = new CallPathDrawObject(gm.getGlobalMappingElement(listValue.intValue(),0), true, false);
-				drawObjects.add(callPathDrawObject);
+				callPathDrawObject = new CallPathDrawObject(gm.getGlobalMappingElement(listValue.intValue(),0), true, false, false);
+				drawObjectsComplete.add(callPathDrawObject);
 			    }
-			    callPathDrawObject = new CallPathDrawObject(gme, false, false);
-			    drawObjects.add(callPathDrawObject);
+			    callPathDrawObject = new CallPathDrawObject(gme, false, false, false);
+			    drawObjectsComplete.add(callPathDrawObject);
 			    l2 = gme.getChildrenIterator();
 			    while(l2.hasNext()){
 				listValue = (Integer)l2.next();
-				callPathDrawObject = new CallPathDrawObject(gm.getGlobalMappingElement(listValue.intValue(),0), true, false);
-				drawObjects.add(callPathDrawObject);
+				callPathDrawObject = new CallPathDrawObject(gm.getGlobalMappingElement(listValue.intValue(),0), false, true, false);
+				drawObjectsComplete.add(callPathDrawObject);
 			    }
-			    drawObjects.add(new CallPathDrawObject(null, false, true));
-			    drawObjects.add(new CallPathDrawObject(null, false, true));
+			    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+			    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
 			}
 		    }
+		}
+		//######
+		//End - Populate drawObjectsComplete vector.
+		//######
+
+		//######
+		//Populate drawObjects vector.
+		//######
+		if(drawObjects==null){
+		    drawObjects = new Vector();
+		    Vector holdingPattern = new Vector();
+		    boolean adding = false;
+		    int state = -1;
+		    int size = -1;
+		    if(cPTWindow.showCollapsedView()){
+			for(Enumeration e = drawObjectsComplete.elements();e.hasMoreElements() ;){
+			    callPathDrawObject = (CallPathDrawObject) e.nextElement();
+			    if(callPathDrawObject.isSpacer())
+				    state = 0;
+			    else if(callPathDrawObject.isParent()){
+				if(adding)
+				    state = 1;
+				else
+				    state = 2;
+			    }
+			    else if(callPathDrawObject.isChild()){
+				if(adding)
+				    state = 3;
+				else
+				    state = 4;
+			    }
+			    else{
+				if(adding)
+				    state = 5;
+				else
+				    state = 6;
+			    }
+
+			    switch(state){
+			    case 0:
+				drawObjects.add(callPathDrawObject);
+				break;
+			    case 1:
+				adding = false;
+				holdingPattern.add(callPathDrawObject);
+				break;
+			    case 2:
+				holdingPattern.add(callPathDrawObject);
+				break;
+			    case 3:
+				drawObjects.add(callPathDrawObject);
+				break;
+			    case 5:
+				//Transfer holdingPattern elements to drawObjects, then add this function
+				//to drawObjects.
+				size = holdingPattern.size();
+				for(int i=0;i<size;i++)
+				    drawObjects.add(holdingPattern.elementAt(i));
+				holdingPattern.clear();
+				drawObjects.add(callPathDrawObject);
+				//Now check to see if this object is expanded.
+				if(callPathDrawObject.isExpanded())
+				    adding = true;
+				else
+				    adding = false;
+				break;
+			    case 6:
+				if(callPathDrawObject.isExpanded()){
+				    //Transfer holdingPattern elements to drawObjects, then add this function
+				    //to drawObjects.
+				    size = holdingPattern.size();
+				    for(int i=0;i<size;i++)
+					drawObjects.add(holdingPattern.elementAt(i));
+				    holdingPattern.clear();
+				    adding = true;
+				}
+				else{
+				    holdingPattern.clear();
+				}
+				drawObjects.add(callPathDrawObject);
+				break;
+			    default:
+				if(this.debug())
+				    System.out.println("In default state (CPTWP). State is: "+state);
+			    }
+			}
+		    }
+		    else
+			drawObjects = drawObjectsComplete;
 		}
 		//######
 		//End - Populate drawObjects vector.
@@ -338,16 +427,16 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		functionList = thread.getFunctionList();
 
 		//######
-		//Populate drawObjects vector.
+		//Populate drawObjectsComplete vector.
 		//This should only happen once.
 		//######
-		if(drawObjects==null){
-		    drawObjects = new Vector();
+		if(drawObjectsComplete==null){
+		    drawObjectsComplete = new Vector();
 		    //Add five spacer objects representing the column headings.
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+		    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+		    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+		    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
 
 		    l1 = cPTWindow.getDataIterator();
 		    while(l1.hasNext()){
@@ -368,18 +457,18 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 				    d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
 				    d3=d3+gtde.getNumberOfCalls();
 				}
-				callPathDrawObject = new CallPathDrawObject(thread.getFunction(listValue.intValue()), true, false);
+				callPathDrawObject = new CallPathDrawObject(thread.getFunction(listValue.intValue()), true, false, false);
 				callPathDrawObject.setExclusiveValue(d1);
 				callPathDrawObject.setInclusiveValue(d2);
 				callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
 				callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
-				drawObjects.add(callPathDrawObject);
+				drawObjectsComplete.add(callPathDrawObject);
 			    }
-			    callPathDrawObject = new CallPathDrawObject(thread.getFunction(smwtde.getMappingID()), false, false);
+			    callPathDrawObject = new CallPathDrawObject(thread.getFunction(smwtde.getMappingID()), false, false, false);
 			    callPathDrawObject.setExclusiveValue(smwtde.getExclusiveValue());
 			    callPathDrawObject.setInclusiveValue(smwtde.getInclusiveValue());
 			    callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
-			    drawObjects.add(callPathDrawObject);
+			    drawObjectsComplete.add(callPathDrawObject);
 			    l2 = smwtde.getChildrenIterator();
 			    while(l2.hasNext()){
 				listValue = (Integer)l2.next();
@@ -394,17 +483,106 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 				    d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
 				    d3=d3+gtde.getNumberOfCalls();
 				}
-				callPathDrawObject = new CallPathDrawObject(thread.getFunction(listValue.intValue()), true, false);
+				callPathDrawObject = new CallPathDrawObject(thread.getFunction(listValue.intValue()), false, true, false);
 				callPathDrawObject.setExclusiveValue(d1);
 				callPathDrawObject.setInclusiveValue(d2);
 				callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
 				callPathDrawObject.setNumberOfCalls(gtde.getNumberOfCalls());
-				drawObjects.add(callPathDrawObject);
+				drawObjectsComplete.add(callPathDrawObject);
 			    }
-			    drawObjects.add(new CallPathDrawObject(null, false, true));
-			    drawObjects.add(new CallPathDrawObject(null, false, true));
+			    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
+			    drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
 			}
 		    }
+		}
+		//######
+		//End - Populate drawObjectsComplete vector.
+		//######
+
+		//######
+		//Populate drawObjects vector.
+		//######
+		if(drawObjects==null){
+		    drawObjects = new Vector();
+		    Vector holdingPattern = new Vector();
+		    boolean adding = false;
+		    int state = -1;
+		    int size = -1;
+		    if(cPTWindow.showCollapsedView()){
+			for(Enumeration e = drawObjectsComplete.elements();e.hasMoreElements() ;){
+			    callPathDrawObject = (CallPathDrawObject) e.nextElement();
+			    if(callPathDrawObject.isSpacer())
+				    state = 0;
+			    else if(callPathDrawObject.isParent()){
+				if(adding)
+				    state = 1;
+				else
+				    state = 2;
+			    }
+			    else if(callPathDrawObject.isChild()){
+				if(adding)
+				    state = 3;
+				else
+				    state = 4;
+			    }
+			    else{
+				if(adding)
+				    state = 5;
+				else
+				    state = 6;
+			    }
+
+			    switch(state){
+			    case 0:
+				drawObjects.add(callPathDrawObject);
+				break;
+			    case 1:
+				adding = false;
+				holdingPattern.add(callPathDrawObject);
+				break;
+			    case 2:
+				holdingPattern.add(callPathDrawObject);
+				break;
+			    case 3:
+				drawObjects.add(callPathDrawObject);
+				break;
+			    case 5:
+				//Transfer holdingPattern elements to drawObjects, then add this function
+				//to drawObjects.
+				size = holdingPattern.size();
+				for(int i=0;i<size;i++)
+				    drawObjects.add(holdingPattern.elementAt(i));
+				holdingPattern.clear();
+				drawObjects.add(callPathDrawObject);
+				//Now check to see if this object is expanded.
+				if(callPathDrawObject.isExpanded())
+				    adding = true;
+				else
+				    adding = false;
+				break;
+			    case 6:
+				if(callPathDrawObject.isExpanded()){
+				    //Transfer holdingPattern elements to drawObjects, then add this function
+				    //to drawObjects.
+				    size = holdingPattern.size();
+				    for(int i=0;i<size;i++)
+					drawObjects.add(holdingPattern.elementAt(i));
+				    holdingPattern.clear();
+				    adding = true;
+				}
+				else{
+				    holdingPattern.clear();
+				}
+				drawObjects.add(callPathDrawObject);
+				break;
+			    default:
+				if(this.debug())
+				    System.out.println("In default state (CPTWP). State is: "+state);
+			    }
+			}
+		    }
+		    else
+			drawObjects = drawObjectsComplete;
 		}
 		//######
 		//End - Populate drawObjects vector.
@@ -704,6 +882,16 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 			return;
 		    }
 		    else{
+			//Check to see if the click occured to the left of startPosition.
+			if(xCoord<startPosition){
+			    if(!callPathDrawObject.isParentChild()){
+				if(callPathDrawObject.isExpanded())
+				   callPathDrawObject.setExpanded(false);
+				else
+				   callPathDrawObject.setExpanded(true);
+			    }
+			    drawObjects = null;
+			}
 			//Want to set the clicked on mapping to the current highlight color or, if the one
 			//clicked on is already the current highlighted one, set it back to normal.
 			if((trial.getColorChooser().getHighlightColorID()) == -1){
@@ -752,7 +940,9 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     //End - Interface code.
     //####################################
 
-    public void resetDrawObecjts(){
+    public void resetAllDrawObjects(){
+	drawObjectsComplete.clear();
+	drawObjectsComplete = null;
 	drawObjects.clear();
 	drawObjects = null;
     }
@@ -789,6 +979,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     FontMetrics fmMonoFont = null;
 
     //Some drawing details.
+    Vector drawObjectsComplete = null;
     Vector drawObjects = null;
     int startLocation = 0;
     int maxFontAscent = 0;

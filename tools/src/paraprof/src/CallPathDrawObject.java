@@ -14,9 +14,10 @@ package paraprof;
 
 public class CallPathDrawObject implements Mapping{
 
-    public CallPathDrawObject(Mapping mapping, boolean parentChild, boolean spacer){
+    public CallPathDrawObject(Mapping mapping, boolean parent, boolean child, boolean spacer){
 	this.mapping = mapping;
-	this.parentChild = parentChild;
+	this.parent = parent;
+	this.child = child;
 	this.spacer = spacer;
     }
     
@@ -60,17 +61,31 @@ public class CallPathDrawObject implements Mapping{
     public int getNumberOfCalls(){
 	return numberOfCalls;}
 
+    public boolean isParent(){
+	return parent;}
+
+    public boolean isChild(){
+	return child;}
+
     public boolean isParentChild(){
-	return parentChild;}
+	return (parent||child);}
 
     public boolean isSpacer(){
 	return spacer;}
+
+    public void setExpanded(boolean expanded){
+	this.expanded = expanded;}
+
+    public boolean isExpanded(){
+	return this.expanded;}
     //####################################
     //Instance Data.
     //####################################
     Mapping mapping = null;
-    boolean parentChild = false;
+    boolean parent = false;
+    boolean child = false;
     boolean spacer = false;
+    boolean expanded = false;
 
     private double exclusiveValue = 0.0;
     private double inclusiveValue = 0.0;

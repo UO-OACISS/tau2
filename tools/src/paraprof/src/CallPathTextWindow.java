@@ -203,10 +203,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    
 	    optionsMenu.add(subMenu);
 	    //End - Set the value type options.
-	    
-	    box = new JCheckBoxMenuItem("Display Sliders", false);
-	    box.addActionListener(this);
-	    optionsMenu.add(box);
+
+	    collapsedView = new JCheckBoxMenuItem("Collapsed View", false);
+	    collapsedView.addActionListener(this);
+	    optionsMenu.add(collapsedView);
 	    
 	    showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
 	    showPathTitleInReverse.addActionListener(this);
@@ -369,7 +369,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    else
 			name = false;
 		    sortLocalData();
-		    panel.resetDrawObecjts();
+		    panel.resetAllDrawObjects();
 		    panel.repaint();
 		}
 		else if(arg.equals("Descending Order")){
@@ -378,42 +378,42 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    else
 			order = 1;
 		    sortLocalData();
-		    panel.resetDrawObecjts();
+		    panel.resetAllDrawObjects();
 		    panel.repaint();
 		}
 		else if(arg.equals("Exclusive")){
 		    valueType = 2;
 		    this.setHeader();
 		    sortLocalData();
-		    panel.resetDrawObecjts();
+		    panel.resetAllDrawObjects();
 		    panel.repaint();
 		}
 		else if(arg.equals("Inclusive")){
 		    valueType = 4;
 		    this.setHeader();
 		    sortLocalData();
-		    panel.resetDrawObecjts();
+		    panel.resetAllDrawObjects();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Calls")){
 		    valueType = 6;
 		    this.setHeader();
 		    sortLocalData();
-		    panel.resetDrawObecjts();
+		    panel.resetAllDrawObjects();
 		    panel.repaint();
 		}
 		else if(arg.equals("Number of Subroutines")){
 		    valueType = 8;
 		    this.setHeader();
 		    sortLocalData();
-		    panel.resetDrawObecjts();
+		    panel.resetAllDrawObjects();
 		    panel.repaint();
 		}
 		else if(arg.equals("Per Call Value")){
 		    valueType = 10;
 		    this.setHeader();
 		    sortLocalData();
-		    panel.resetDrawObecjts();
+		    panel.resetAllDrawObjects();
 		    panel.repaint();
 		}
 		else if(arg.equals("Microseconds")){
@@ -434,6 +434,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		else if(arg.equals("hr:min:sec")){
 		    units = 3;
 		    this.setHeader();
+		    panel.repaint();
+		}
+		else if(arg.equals("Collapsed View")){
+		    panel.resetAllDrawObjects();
 		    panel.repaint();
 		}
 		else if(arg.equals("Show Path Title in Reverse")){
@@ -596,6 +600,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     public int units(){
 	return units;}
 
+    public boolean showCollapsedView(){
+	return collapsedView.isSelected();}
+
     public Dimension getViewportSize(){
 	return sp.getViewport().getExtentSize();}
 
@@ -655,7 +662,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //End - Panel header.
     //######
   
-    void closeThisWindow(){ 
+    void closeThisWindow(){
 	try{
 	    if(this.debug){
 		System.out.println("------------------------");
@@ -696,7 +703,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     
     private JCheckBoxMenuItem sortByName = null;
     private JCheckBoxMenuItem descendingOrder = null;
-    private JCheckBoxMenuItem displaySliders = null;
+    private JCheckBoxMenuItem  collapsedView = null;
     private JCheckBoxMenuItem  showPathTitleInReverse = null;
     private JCheckBoxMenuItem  showMetaData = null;
     private JMenuItem groupLedger = null;
