@@ -931,9 +931,8 @@ bool Profiler::createDirectories(){
   char *dirname;
   
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
-    char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
-    
-    if(tmpChar != NULL){
+    if(MultipleCounterLayer::getCounterUsed(i)){
+      char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
       char *newdirname = new char[1024];
       char *rmdircommand = new char[1024];
       char *mkdircommand = new char[1024];
@@ -983,9 +982,8 @@ int Profiler::StoreData(int tid){
   }
 
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
-    char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
-    
-    if(tmpChar != NULL){
+    if(MultipleCounterLayer::getCounterUsed(i)){
+      char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
       RtsLayer::LockDB();
       
       char *newdirname = new char[1024];
@@ -1233,8 +1231,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.59 $   $Date: 2002/03/11 19:39:53 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.59 2002/03/11 19:39:53 bertie Exp $ 
+ * $Revision: 1.60 $   $Date: 2002/03/11 20:08:37 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.60 2002/03/11 20:08:37 bertie Exp $ 
  ***************************************************************************/
 
 	
