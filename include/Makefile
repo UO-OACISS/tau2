@@ -564,7 +564,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optTauInstr="$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_instrumentor" \
         -optNoMpi \
         -optCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
-        -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_CXXLIBS)"
+        -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"
 #############################################
 TAU_COMPILER=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_compiler.sh $(TAUCOMPILEROPTS)
 #############################################
