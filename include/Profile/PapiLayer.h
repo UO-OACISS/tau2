@@ -11,9 +11,11 @@
 
 #ifdef TAU_PAPI
 extern "C" {
-#include "papiStdEventDefs.h"
+/*#include "papiStdEventDefs.h" */
 #include "papi.h"
+/*
 #include "papi_internal.h"
+*/
 }
 
 
