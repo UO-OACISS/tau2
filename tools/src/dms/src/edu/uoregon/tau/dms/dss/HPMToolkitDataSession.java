@@ -71,7 +71,13 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 			} else if (inputString.trim().startsWith("Count:")) {
 			    processHeaderLine3(inputString);
 			} else if (inputString.trim().startsWith("Wall Clock Time:")) {
-			    processHeaderLine4(inputString);
+			    processHeaderLine4(inputString, 0);
+			} else if (inputString.trim().startsWith("Average duration:")) {
+			    processHeaderLine4(inputString, 1);
+			} else if (inputString.trim().startsWith("Standard deviation:")) {
+			    processHeaderLine4(inputString, 2);
+			} else if (inputString.trim().startsWith("Exclusive duration:")) {
+			    processHeaderLine4(inputString, 3);
 			} else if (inputString.trim().startsWith("Total time in user mode:")) {
 			    processHeaderLine5(inputString);
 			} else {
@@ -226,7 +232,7 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 	}
     }
 
-    private void processHeaderLine4(String string) {
+    private void processHeaderLine4(String string, int variable) {
 	// System.out.println("Header line 4");
 	try{
 	    StringTokenizer st1 = new StringTokenizer(string, ":");
@@ -235,7 +241,10 @@ public class HPMToolkitDataSession extends ParaProfDataSession{
 	    // get the value
 	    string = st1.nextToken();
 	    StringTokenizer st2 = new StringTokenizer(string, " ");
-	    header4.d0 = Double.parseDouble(st2.nextToken()); // section id
+		if (variable == 0) header4.d0 = Double.parseDouble(st2.nextToken()); // section id
+	    else if (variable == 1) header4.d1 = Double.parseDouble(st2.nextToken()); // section id
+	    else if (variable == 2) header4.d2 = Double.parseDouble(st2.nextToken()); // section id
+	    else if (variable == 3) header4.d3 = Double.parseDouble(st2.nextToken()); // section id
 	} catch(Exception e) {
 	    System.out.println("An error occured while parsing the header!");
 	    e.printStackTrace();
