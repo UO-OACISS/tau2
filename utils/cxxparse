@@ -1,8 +1,8 @@
 #!/bin/sh
-DUCTAPEROOT= @DUCTAPEROOT@
-ARCH = @ARCH@
+DUCTAPEROOT=@DUCTAPEROOT@
+ARCH=@ARCH@
 BIN=$DUCTAPEROOT/$ARCH/bin
-CXXINCLUDES= @CXXINCLUDES@
+CXXINCLUDES="@CXXINCLUDES@"
 
 #EDGOPT="--instantiate used --no_il_lowering --restrict --exceptions"
 EDGOPT="--instantiate none --no_il_lowering --restrict --exceptions --late_tiebreaker"
