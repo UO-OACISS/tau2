@@ -38,6 +38,11 @@
 
 # define F_EXISTS    0
 
+/* The following three decl apply to -vampir (multi-node, multi-threaded) */
+# define TAU_MAX_NODES 32*1024 /* max nodes, within nodes are threads */
+static int offset[TAU_MAX_NODES] = {  0 }; /* offset to calculate cpuid */
+static int maxtid[TAU_MAX_NODES] = {  0 }; /* max tid encountered for a node */ 
+
 static struct trcdescr
 {
   int     fd;              /* -- input file descriptor                     -- */
@@ -405,7 +410,13 @@ static PCXX_EV *get_next_rec (struct trcdescr *tdes)
 int GetNodeId(PCXX_EV *rec)
 {
   if (threads)
-    return rec->tid;
+  {
+    /* OLD 
+    return rec->tid; 
+    */
+    return offset[rec->nid] + rec->tid; 
+	/* CPUID ranges from 0..N-1: N is sum(threads on all nodes ) */
+  }
   else
     return rec->nid;
 }
@@ -420,7 +431,8 @@ int main (int argc, char *argv[])
 {
   FILE *outfp, *inev;
   PCXX_EV *erec;
-  int i,j,k;
+  int i,j,k,l;
+  int nodeId, totalnodes = 0;
   int num;
   int tag;
   int myid, otherid, msglen, msgtag;
@@ -497,10 +509,27 @@ int main (int argc, char *argv[])
   { 
     outFormat = pv;
     threads   = TRUE;
-    fileIdx = 2;
 #ifdef DEBUG
     printf("Using Vampir with threads");
 #endif
+    i = 2;
+    while ( argv[i][0] == '-' )
+    {
+      if ( strcmp (argv[i], "-compact") == 0 )
+        pvCompact = TRUE;
+      else if ( strcmp (argv[i], "-user") == 0 )
+        pvMode = user;
+      else if ( strcmp (argv[i], "-class") == 0 )
+        pvMode = pvclass;
+      else if ( strcmp (argv[i], "-all") == 0 )
+        pvMode = all;
+      else if ( strcmp (argv[i], "-nocomm") == 0 )
+        pvComm = FALSE;
+      else
+        break;
+      i++;
+    }
+    fileIdx = i;
   }
 
   inFile  = argv[fileIdx];
@@ -549,7 +578,14 @@ int main (int argc, char *argv[])
     else
     {
       intrc.numrec    = 1L;
-      intrc.numproc   = GetNodeId(erec);
+      if (threads)
+      { /* Don't call GetNodeId here as it uses offset, maxthreads */
+	intrc.numproc = erec->nid;
+      }
+      else 
+      { /* No threads */
+        intrc.numproc   = GetNodeId(erec);
+      }
       intrc.firsttime = erec->ti;
       intrc.lasttime  = erec->ti;
     }
@@ -680,11 +716,42 @@ int main (int argc, char *argv[])
       if ( erec->ti < intrc.lasttime ) intrc.overflows++;
       intrc.lasttime = erec->ti;
 
-      /* -- check process id -------------------------------------------- */
-      if ( GetNodeId(erec) > intrc.numproc ) intrc.numproc = GetNodeId(erec);
+
+      /* -- check thread id -------------------------------------------- */
+      if (threads)
+      { 
+        /* -- check node id -------------------------------------------- */
+        if ( erec->nid > totalnodes ) totalnodes = erec->nid; 
+
+        /* totalnodes has node id in the range 0..N-1 */
+
+	if ( maxtid[erec->nid] < erec->tid ) maxtid[erec->nid] = erec->tid; 
+	/* Update the max thread id vector for this node for each record */ 
+ 	/* printf("maxtid[%d] = %d\n", totalnodes, maxtid[totalnodes]); */
+      }
+      else 
+      { /* no threads */
+        if ( GetNodeId(erec) > intrc.numproc ) intrc.numproc = GetNodeId(erec);
+      }
+       
     }
   }
   while ( erec != NULL );
+
+  if (threads)
+  { /* We've gone through the whole trace, now make the offset vector */
+    offset[0] = 0; 
+    for(nodeId = 1; nodeId <= totalnodes; nodeId++)
+    {
+      offset[nodeId] = offset[nodeId - 1] + maxtid[nodeId - 1] + 1;
+      /* printf("offset[%d] = %d\n", nodeId, offset[nodeId]); */
+      /* So if node 0 has 2 threads, 1 has 3 and 2 has 3, then 
+	 maxtid[0] = 1, maxtid[1] = 2, maxtid[2] = 2 and  
+	 offset[0] = 0, offset[1] = 2, offset[2] = 5 */
+    }
+    intrc.numproc = offset[totalnodes] + maxtid[totalnodes];
+  }
+  /* printf("Done with offset! numproc = %d\n", intrc.numproc); */
 
   /* ------------------------------------------------------------------------ */
   /* -- write trace file header --------------------------------------------- */
@@ -723,7 +790,26 @@ int main (int argc, char *argv[])
     fprintf (outfp, "CLKPERIOD 0.1000E-06\n");
 */
     fprintf (outfp, "CLKPERIOD 1.0E-06\n");
-    fprintf (outfp, "NCPUS %d\n", intrc.numproc+1);
+    if (threads)
+    { 
+/* PUT CPUS HERE !*/	
+      fprintf(outfp,"NCPUS");
+      for(l=0; l < totalnodes+1; l++)
+      {
+	fprintf(outfp," %d", maxtid[l]+1); 
+      }
+      fprintf(outfp,"\n");
+      fprintf(outfp, "CPUNAMES");
+      for(l=0; l < totalnodes+1; l++)
+      {
+	fprintf(outfp," \"Node %d\"", l);
+      }
+      fprintf(outfp,"\n");
+    }
+    else 
+    { /* just report number of processors */
+      fprintf (outfp, "NCPUS %d\n", intrc.numproc+1);
+    }
     fprintf (outfp, "C CREATION PROGRAM tau_convert -pv\n");
     fprintf (outfp, "C CREATION DATE %s\n", Today());
     fprintf (outfp, "C NUMBER RECORDS %ld\n", intrc.numrec);
@@ -736,6 +822,8 @@ int main (int argc, char *argv[])
                malloc ((intrc.numproc+1)*sizeof(struct stkitem *));
     stkptr   = (struct stkitem **)
                malloc ((intrc.numproc+1)*sizeof(struct stkitem *));
+    
+
     for (i=0; i<=intrc.numproc; i++)
     {
       stkptr[i] = statestk[i] = (struct stkitem *)
@@ -893,6 +981,7 @@ int main (int argc, char *argv[])
  	  otherid 	= ((erec->par>>24) & 0x000000FF) + 1;
 	  msglen  	= erec->par & 0x0000FFFF; 
 
+	
           fprintf (outfp, "%llu SENDMSG %d FROM %d TO %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
 		  msgtag, myid , otherid , msglen);
