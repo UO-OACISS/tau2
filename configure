@@ -2841,6 +2841,11 @@ sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$
  > ${tauroot}/tools/src/dms/src/examples/testSimpleExample
 chmod a+rx ${tauroot}/tools/src/dms/src/examples/testSimpleExample
 
+cat ${tauroot}/tools/src/dms/src/examples/testScalabilityExample.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/tools/src/dms/src/examples/testScalabilityExample
+chmod a+rx ${tauroot}/tools/src/dms/src/examples/testScalabilityExample
+
 cat ${tauroot}/tools/src/dms/src/examples/testCopy.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${tauroot}/tools/src/dms/src/examples/testCopy
