@@ -26,15 +26,17 @@
 
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=sgi8k
-CONFIG_CC=cc
-CONFIG_CXX=CC
+CONFIG_CC=gcc
+CONFIG_CXX=KCC
 PCXX_OPT=-g
-USER_OPT=-64
+USER_OPT=-g
 #######################################################################
  
+#MIPSR8K#ABI 	     = -64		   #ENDIF#
+#MIPSR8K#ISA          = -mips4		   #ENDIF#
 ############# Standard Defines ##############
-CC = $(CONFIG_CC)
-CXX = $(CONFIG_CXX)
+CC = $(CONFIG_CC) $(ABI) $(ISA)
+CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 DEFINES = 
 INSTALL = /bin/cp
 SHELL = /bin/sh
@@ -48,17 +50,19 @@ PROFILEOPT2         = -DSGI_TIMERS      #ENDIF##SGITIMERS#
 #PROFILECALLS#PROFILEOPT4      = -DPROFILE_CALLS   #ENDIF#
 #PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS   #ENDIF#
 #DEBUGPROF#PROFILEOPT6	       = -DDEBUG_PROF	   #ENDIF#
-#KAI#PROFILEOPT7	       = -DTAU_STDCXXLIB   #ENDIF#
+PROFILEOPT7	       = -DTAU_STDCXXLIB   #ENDIF##KAI#
 #INTELTFLOP#PROFILEOPT8        = -DPOOMA_TFLOP	   #ENDIF#
 #SOL2CC#PROFILEOPT9	       = -DNO_RTTI	   #ENDIF#
 #GNU#PROFILEOPT10	       = -DNO_RTTI	   #ENDIF#
+TRACEOPT		       = -DTRACING_ON	   #ENDIF##TRACE#
+EVENTS_O		       = pcxx_events.o     #ENDIF##TRACE#
 
 PROFILEOPTS = $(PROFILEOPT1) $(PROFILEOPT2) $(PROFILEOPT3) $(PROFILEOPT4) \
 	      $(PROFILEOPT5) $(PROFILEOPT6) $(PROFILEOPT7) $(PROFILEOPT8) \
-	      $(PROFILEOPT9) $(PROFILEOPT10)
+	      $(PROFILEOPT9) $(PROFILEOPT10) $(TRACEOPT)
 ##############################################
-#KAI#AR			= $(CONFIG_CXX)     #ENDIF#
-#KAI#ARFLAGS			= -o		    #ENDIF#
+AR			= $(CONFIG_CXX)     #ENDIF##KAI#
+ARFLAGS			= -o		    #ENDIF##KAI#
 #SOL2CC#EXTRAOBJS		= Templates.DB/*.o  #ENDIF#
 #############################################
 
@@ -71,7 +75,7 @@ INSTALLDEST	= $(TAUROOT)/lib/$(CONFIG_ARCH)
 
 CEXTRA = 
 
-TAUINC	      = -I$(TAUROOT)/include 
+TAUINC	      = -I$(TAUROOT)/include  -I$(TAUROOT)/include/Profile
 
 CFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)
 
@@ -83,7 +87,7 @@ LDFLAGS	      = $(PCXX_OPT)
 
 MAKEFILE      = Makefile
 
-OBJS	      = Profiler.o TulipTimers.o
+OBJS	      = Profiler.o TulipTimers.o $(EVENTS_O)
 
 PRINT	      = pr
 
@@ -93,8 +97,8 @@ AR	      = ar
 
 ARFLAGS	      = rcv 
 ############# For KAI KCC compiler, replace AR accordingly #######
-#KAI#AR			= $(CONFIG_CXX) 		   #ENDIF#
-#KAI#ARFLAGS			= -o				   #ENDIF#
+AR			= $(CONFIG_CXX) 		   #ENDIF##KAI#
+ARFLAGS			= -o				   #ENDIF##KAI#
 ##################################################################
 
 RM 	      = /bin/rm -f
@@ -122,6 +126,9 @@ Profiler.o 	: Profiler.cpp $(HDRS)
 
 TulipTimers.o 	: TulipTimers.cpp $(HDRS)
 	$(CXX) $(CFLAGS) -c TulipTimers.cpp
+
+pcxx_events.o   : pcxx_events.cpp $(HDRS)
+	$(CXX) $(CFLAGS) -c pcxx_events.cpp
 
 clean : 
 		$(RM) $(OBJS) $(TARGET) $(EXTRAOBJS)
