@@ -170,7 +170,7 @@ public class TauOutputSession extends ParaProfDataSession{
 			//It's first token will be the number of function present.
 			tokenString = genericTokenizer.nextToken();
 		    
-			if(i==0){
+			if(metricRef.getName()==null){
 			    //Set the counter name.
 			    String counterName = getCounterName(inputString);
 			    //Now set the counter name.
