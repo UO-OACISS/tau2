@@ -146,6 +146,7 @@ There are several parameters for perfdb_translate:
 
 An example of how to run the translator:
 
+        $ pprof -d > pprof.dat
 	$ perfdb_translate -s pprof.dat -d pprof.xml -a 1 -e 1
 
 8) Loading translated Trial data
