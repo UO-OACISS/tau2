@@ -149,6 +149,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
+#GNU#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
 #SGIMP#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
 #SP1#TAU_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
 #SP164BIT#TAU_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
