@@ -9,7 +9,7 @@
  *
  *
  *
- * <P>CVS $Id: NCT.java,v 1.2 2004/05/05 23:16:28 khuck Exp $</P>
+ * <P>CVS $Id: NCT.java,v 1.3 2004/08/13 16:08:55 bertie Exp $</P>
  * @author	Robert Bell
  * @version	2.0
  * @since	0.1
@@ -196,6 +196,26 @@ public class NCT{
     //Returns the number of threads on the specified node,context.
     public int getNumberOfThreads(int nodeID, int contextID){
 	return (this.getContext(nodeID,contextID)).getNumberOfThreads();}
+
+    public Vector getThreads(){
+	Vector vector = new Vector();
+	for(Enumeration e1 = this.getNodes().elements(); e1.hasMoreElements() ;){
+	    Node node = (Node) e1.nextElement();
+	    for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+		vector.addAll(((Context) e2.nextElement()).getThreads());
+	    }
+	}
+	return vector;
+    }
+
+    public Vector getThreads(int nodeID){
+	Vector vector = new Vector();
+	Node node = this.getNode(nodeID);
+	for(Enumeration e = node.getContexts().elements(); e.hasMoreElements() ;){
+		vector.addAll(((Context) e.nextElement()).getThreads());
+	}
+	return vector;
+    }
 
     public Vector getThreads(int nodeID, int contextID){
 	Vector vector = null;
