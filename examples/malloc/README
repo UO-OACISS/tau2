@@ -1,0 +1,34 @@
+To use TAU's malloc and track the size of memory and location in source code
+where allocation and deallocation of memory takes place, follow the following 
+steps as shown in this example:
+1) Add <malloc.h> header to your source code after #include <TAU.h>
+2) Instrument the application as you'd normally instrument (main must be 
+   instrumented).
+3) Change your Makefile and add $(TAU_INCLUDE_MEMORY) to the compilation of 
+   C/C++ source code:
+   CFLAGS = $(TAU_INCLUDE) $(TAU_INCLUDE_MEMORY) $(TAU_DEFS)
+   LDFLAGS  = $(TAU_LIBS)
+
+   We substitute malloc.h from TAU's include/Memory directory by specifying this
+   flag
+4) Execute the application. 
+For a sample run, we see at the end of pprof output:
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1  4.002E+04  4.002E+04  4.002E+04          0  free size <file=main.cpp, line=298>
+         1       8000       8000       8000          0  free size <file=main.cpp, line=299>
+         3      3E+04       6000    1.7E+04       9899  free size <file=select.cpp, line=107>
+         3      3E+04       6000    1.7E+04       9899  free size <file=select.cpp, line=109>
+         7       6000        600       2229       1806  free size <file=select.cpp, line=118>
+         7       6000        600       2229       1806  free size <file=select.cpp, line=119>
+         2        240        240        240          0  free size <file=select.cpp, line=126>
+         2        240        240        240          0  free size <file=select.cpp, line=128>
+         1  4.002E+04  4.002E+04  4.002E+04          0  malloc size <file=main.cpp, line=252>
+         1       8000       8000       8000          0  malloc size <file=main.cpp, line=258>
+        12      3E+04        240       5590       8385  malloc size <file=select.cpp, line=80>
+        12      3E+04        240       5590       8385  malloc size <file=select.cpp, line=81>
+---------------------------------------------------------------------------------------
+
