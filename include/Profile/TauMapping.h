@@ -67,6 +67,10 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
    object that is used to relate a lower level layer with a higher level layer 
 */
 
+/* TAU_MAPPING_TIMER_CREATE creates a functionInfo pointer with a specified 
+   group name. */
+#define TAU_MAPPING_TIMER_CREATE(t, name, type, gr, group_name) t = new FunctionInfo((string &) name, type, gr, group_name, true, RtsLayer::myThread());
+
 #define TAU_MAPPING_OBJECT(FuncInfoVar) FunctionInfo * FuncInfoVar;
 
 /* TAU_MAPPING_LINK gets in a var the function info object associated with the 
@@ -114,6 +118,8 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
 #define TAU_MAPPING_DB_DUMP(tid)  Profiler::DumpData(tid); 
 #define TAU_MAPPING_DB_PURGE(tid)  Profiler::PurgeData(tid); 
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  RtsLayer::setMyNode(node, tid); 
+#define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name) timer->SetPrimaryGroupName(name);
+
 #else
 /* Create null , except the main statement which should be executed as it is*/
 #define TAU_MAPPING(stmt, group) stmt
@@ -122,12 +128,14 @@ There's no error when FunctionInfo * is NULL. A region may not be active.
 #define TAU_MAPPING_PROFILE(FuncInfoVar) 
 #define TAU_MAPPING_CREATE(name, type, key, groupname, tid) 
 #define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid)
+#define TAU_MAPPING_TIMER_CREATE(t, name, type, gr, group_name)
 #define TAU_MAPPING_PROFILE_START(Timer, tid) 
 #define TAU_MAPPING_PROFILE_STOP(tid) 
 #define TAU_MAPPING_PROFILE_EXIT(msg, tid)  
 #define TAU_MAPPING_DB_DUMP(tid)
 #define TAU_MAPPING_DB_PURGE(tid)
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  
+#define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name)
 
 #endif /* PROFILING_ON or TRACING_ON  */
 #endif /* _TAU_MAPPING_H_ */

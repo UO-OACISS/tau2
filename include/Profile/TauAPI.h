@@ -53,6 +53,8 @@
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
 #define TAU_PROFILE_SET_CONTEXT(context) RtsLayer::setMyContext(context);
+#define TAU_PROFILE_SET_GROUP_NAME(newname) tauFI.SetPrimaryGroupName(newname);
+#define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) t##fi.SetPrimaryGroupName(newname);
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) static FunctionInfo timer##fi(name, type, group, #group);
 #define TAU_GLOBAL_TIMER_START(timer) FunctionInfo *timer##fptr = &timer##fi; \
@@ -113,6 +115,8 @@
 #define TAU_PROFILE_INIT(argc, argv)
 #define TAU_PROFILE_SET_NODE(node)
 #define TAU_PROFILE_SET_CONTEXT(context)
+#define TAU_PROFILE_SET_GROUP_NAME(newname)
+#define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname)
 #define TAU_PROFILE_CALLSTACK()    
 #define TAU_DB_DUMP()
 #define TAU_DB_PURGE()
@@ -157,6 +161,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2001/07/25 21:01:49 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.12 2001/07/25 21:01:49 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 2001/08/28 18:42:44 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.13 2001/08/28 18:42:44 sameer Exp $ 
  ***************************************************************************/

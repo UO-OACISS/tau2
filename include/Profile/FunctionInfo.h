@@ -146,6 +146,8 @@ public:
 	const char* GetName() const { return Name.c_str(); }
 	const char* GetType() const { return Type.c_str(); }
 	const char* GetPrimaryGroup() const { return GroupName.c_str(); }
+	void SetPrimaryGroupName(const char *newname) { GroupName = newname; }
+	void SetPrimaryGroupName(string newname) { GroupName = newname; }
 	long GetFunctionId() ;
 	long GetCalls(int tid) { return NumCalls[tid]; }
 	void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
@@ -221,6 +223,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2001/06/20 20:25:04 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.13 2001/06/20 20:25:04 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 2001/08/28 18:42:44 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.14 2001/08/28 18:42:44 sameer Exp $ 
  ***************************************************************************/
