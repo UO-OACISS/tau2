@@ -4,4 +4,4 @@ PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
 XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
 JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
 
-java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} com.perfdb.loadxml.Main loadapp ${PERFDB_HOME}/data/App_Info.xml
+java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main loadapp ${PERFDB_HOME}/data/App_Info.xml

@@ -5,4 +5,4 @@ XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
 JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
 
 #Translate pprof.dat into pprof.xml
-java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} com.translator.Translator pprof.dat pprof.xml
+java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} translator.Translator ${PERFDB_HOME}/data/pprof.dat ${PERFDB_HOME}/data/pprof.xml
