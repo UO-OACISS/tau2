@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://www.acl.lanl.gov/tau                        **
 *****************************************************************************
-**    Copyright 1997-2000						   **
+**    Copyright 1997-2001						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
@@ -33,6 +33,7 @@ Version 2.9 changes (from 2.8):
 21. Improved MPI wrapper library support [Uintah].
 22. Added support for gcc-3.0 (pprof).
 23. Added a bug fix for Vampir (tau_convert -pv -longsymbolbugfix) [SAMRAI].
+24. Changed Opari options (omperf to pomp name change).
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
