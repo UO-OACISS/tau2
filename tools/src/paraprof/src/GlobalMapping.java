@@ -190,7 +190,7 @@ public class GlobalMapping{
 
 	if((mappingSelection == -1) || (mappingSelection == 0)){
 	    int numberOfColors = c.getNumberOfColors();
-	    for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;){
+	    for(Enumeration e = mappings[0].elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
 		globalMappingElement.setMappingColor(c.getColorInLocation((globalMappingElement.getGlobalID()) % numberOfColors));
 	    }
@@ -198,7 +198,7 @@ public class GlobalMapping{
 	
 	if((mappingSelection == -1) || (mappingSelection == 1)){
 	    int numberOfColors = c.getNumberOfMappingGroupColors();
-	    for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;){
+	    for(Enumeration e = mappings[1].elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
 		globalMappingElement.setMappingColor(c.getMappingGroupColorInLocation((globalMappingElement.getGlobalID()) % numberOfColors));
 	    }
@@ -206,7 +206,7 @@ public class GlobalMapping{
 
 	if((mappingSelection == -1) || (mappingSelection == 2)){
 	    int numberOfColors = c.getNumberOfColors();
-	    for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;){
+	    for(Enumeration e = mappings[2].elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
 		globalMappingElement.setMappingColor(c.getColorInLocation((globalMappingElement.getGlobalID()) % numberOfColors));
 	    }

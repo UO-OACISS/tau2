@@ -49,6 +49,9 @@ public class ParaProfTrial extends Trial{
 	maxMeanNumberOfCalls = dataSession.getMaxMeanNumberOfCalls();
 	maxMeanNumberOfSubRoutines = dataSession.getMaxMeanNumberOfSubRoutines();
 	maxMeanUserSecPerCallList = dataSession.getMaxMeanUserSecPerCallList();
+
+	globalMapping.setColors(clrChooser, -1);
+
     }
 
     public void setExperiment(ParaProfExperiment experiment){

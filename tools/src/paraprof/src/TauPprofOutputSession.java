@@ -239,13 +239,11 @@ public class TauPprofOutputSession extends DataSession{
 	    String s2 = null;
 
 	    String tokenString;
-	    String mappingNameString = null;
 	    String groupNamesString = null;
 	    StringTokenizer genericTokenizer;
 
+	    FunctionDataLine1 line1 = null;
 	    int mappingID = -1;
-	    double value = -1;
-	    double percentValue = -1;
 
 	    //A loop counter.
 	    int bSDCounter = 0;
@@ -417,10 +415,8 @@ public class TauPprofOutputSession extends DataSession{
 	    
 		//Common things to grab
 		if((lineType!=6) && (lineType!=-1)){
-		    value = getValue(inputString);
-		    percentValue = getPercentValue(inputString);
-		    mappingNameString = getMappingName(inputString);
-		    mappingID = globalMapping.addGlobalMapping(mappingNameString, 0);
+		    line1 = this.getFunctionDataLine1(inputString);
+		    mappingID = globalMapping.addGlobalMapping(line1.name, 0);
 		    globalMappingElement = globalMapping.getGlobalMappingElement(mappingID, 0);
 		}
 
@@ -441,46 +437,63 @@ public class TauPprofOutputSession extends DataSession{
 				    //function, update this mapping to be a member of this group.
 				    globalMapping.addGroup(mappingID, tmpInt, 0);
 				    if((tmpInt != -1) && (ParaProf.debugIsOn))
-					System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + mappingNameString);
+					System.out.println("Adding " + tmpString + " group with id: " + tmpInt + " to mapping: " + line1.name);
 				}    
 			    }    
 			}
 		    }
-		    globalMapping.setTotalExclusiveValueAt(metric, value, mappingID, 0);
+		    globalMapping.setTotalExclusiveValueAt(metric, line1.value, mappingID, 0);
 		    break;
 		case 1:
-		    globalMapping.setTotalInclusiveValueAt(metric, value, mappingID, 0);
+		    globalMapping.setTotalInclusiveValueAt(metric, line1.value, mappingID, 0);
 		    break;
 		case 2:
 		    //Now set the values correctly.
-		    if((this.getMaxMeanExclusiveValue(metric)) < value){
-			this.setMaxMeanExclusiveValue(metric, value);}
-		    if((this.getMaxMeanExclusivePercentValue(metric)) < percentValue){
-			this.setMaxMeanExclusivePercentValue(metric, percentValue);}
+		    if((this.getMaxMeanExclusiveValue(metric)) < line1.value){
+			this.setMaxMeanExclusiveValue(metric, line1.value);}
+		    if((this.getMaxMeanExclusivePercentValue(metric)) < line1.percentValue){
+			this.setMaxMeanExclusivePercentValue(metric, line1.percentValue);}
 		    
-		    globalMappingElement.setMeanExclusiveValue(metric, value);
-		    globalMappingElement.setMeanExclusivePercentValue(metric, percentValue);
+		    globalMappingElement.setMeanExclusiveValue(metric, line1.value);
+		    globalMappingElement.setMeanExclusivePercentValue(metric, line1.percentValue);
 		    break;
 		case 3:
 		    //Now set the values correctly.
-		    if((this.getMaxMeanInclusiveValue(metric)) < value){
-			this.setMaxMeanInclusiveValue(metric, value);}
-		    if((this.getMaxMeanInclusivePercentValue(metric)) < percentValue){
-			this.setMaxMeanInclusivePercentValue(metric, percentValue);}
+		    if((this.getMaxMeanInclusiveValue(metric)) < line1.value){
+			this.setMaxMeanInclusiveValue(metric, line1.value);}
+		    if((this.getMaxMeanInclusivePercentValue(metric)) < line1.percentValue){
+			this.setMaxMeanInclusivePercentValue(metric, line1.percentValue);}
 		    
-		    globalMappingElement.setMeanInclusiveValue(metric, value);
-		    globalMappingElement.setMeanInclusivePercentValue(metric, percentValue);
+		    globalMappingElement.setMeanInclusiveValue(metric, line1.value);
+		    globalMappingElement.setMeanInclusivePercentValue(metric, line1.percentValue);
 		    
 		    //Set number of calls/subroutines/usersec per call.
 		    inputString = br.readLine();
-		    this.setNumberOfCSUMean(metric, inputString, globalMappingElement);
+
+		    FunctionDataLine2 meanLine2 = this.getFunctionDataLine2(inputString);
+
+		    //Set the values.
+		    globalMappingElement.setMeanNumberOfCalls(meanLine2.noc);
+		    globalMappingElement.setMeanNumberOfSubRoutines(meanLine2.nsbr);
+		    globalMappingElement.setMeanUserSecPerCall(metric, meanLine2.useccall);
+
+		    //Set the max values.
+		    if((this.getMaxMeanNumberOfCalls()) < meanLine2.noc)
+			this.setMaxMeanNumberOfCalls(meanLine2.noc);
+
+		    if((this.getMaxMeanNumberOfSubRoutines()) < meanLine2.nsbr)
+			this.setMaxMeanNumberOfSubRoutines(meanLine2.nsbr);
+
+		    if((this.getMaxMeanUserSecPerCall(metric)) < meanLine2.useccall)
+			this.setMaxMeanUserSecPerCall(metric, meanLine2.useccall);
+
 		    globalMappingElement.setMeanValuesSet(true);
 		    break;
 		case 4:
-		    if((globalMappingElement.getMaxExclusiveValue(metric)) < value)
-			globalMappingElement.setMaxExclusiveValue(metric, value);
-		    if((globalMappingElement.getMaxExclusivePercentValue(metric)) < percentValue)
-			globalMappingElement.setMaxExclusivePercentValue(metric, percentValue);
+		    if((globalMappingElement.getMaxExclusiveValue(metric)) < line1.value)
+			globalMappingElement.setMaxExclusiveValue(metric, line1.value);
+		    if((globalMappingElement.getMaxExclusivePercentValue(metric)) < line1.percentValue)
+			globalMappingElement.setMaxExclusivePercentValue(metric, line1.percentValue);
 		    //Get the node,context,thread.
 		    nodeID = getNCT(0,inputString, false);
 		    contextID = getNCT(1,inputString, false);
@@ -519,13 +532,13 @@ public class TauPprofOutputSession extends DataSession{
 				    currentThread.addFunction(tmpGTDE, mappingID);
 				}
 				tmpGTDE.setMappingExists();
-				tmpGTDE.setExclusiveValue(metric, value);
-				tmpGTDE.setExclusivePercentValue(metric, percentValue);
+				tmpGTDE.setExclusiveValue(metric, line1.value);
+				tmpGTDE.setExclusivePercentValue(metric, line1.percentValue);
 				//Now check the max values on this thread.
-				if((currentThread.getMaxExclusiveValue(metric)) < value)
-				    currentThread.setMaxExclusiveValue(metric, value);
-				if((currentThread.getMaxExclusivePercentValue(metric)) < value)
-				    currentThread.setMaxExclusivePercentValue(metric, percentValue);
+				if((currentThread.getMaxExclusiveValue(metric)) < line1.value)
+				    currentThread.setMaxExclusiveValue(metric, line1.value);
+				if((currentThread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
+				    currentThread.setMaxExclusivePercentValue(metric, line1.percentValue);
 				
 				//Check to see if the context is zero.
 				if(contextID == 0){
@@ -577,13 +590,13 @@ public class TauPprofOutputSession extends DataSession{
 				}
 				
 				tmpGTDE.setMappingExists();
-				tmpGTDE.setExclusiveValue(metric, value);
-				tmpGTDE.setExclusivePercentValue(metric, percentValue);
+				tmpGTDE.setExclusiveValue(metric, line1.value);
+				tmpGTDE.setExclusivePercentValue(metric, line1.percentValue);
 				//Now check the max values on this thread.
-				if((currentThread.getMaxExclusiveValue(metric)) < value)
-				    currentThread.setMaxExclusiveValue(metric, value);
-				if((currentThread.getMaxExclusivePercentValue(metric)) < value)
-				    currentThread.setMaxExclusivePercentValue(metric, percentValue);
+				if((currentThread.getMaxExclusiveValue(metric)) < line1.value)
+				    currentThread.setMaxExclusiveValue(metric, line1.value);
+				if((currentThread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
+				    currentThread.setMaxExclusivePercentValue(metric, line1.percentValue);
 				
 				//Add the current thread
 				currentContext.addThread(currentThread);
@@ -602,50 +615,71 @@ public class TauPprofOutputSession extends DataSession{
 			    }
 			    
 			    tmpGTDE.setMappingExists();
-			    tmpGTDE.setExclusiveValue(metric, value);
-			    tmpGTDE.setExclusivePercentValue(metric, percentValue);
+			    tmpGTDE.setExclusiveValue(metric, line1.value);
+			    tmpGTDE.setExclusivePercentValue(metric, line1.percentValue);
 			    //Now check the max values on this thread.
-			    if((currentThread.getMaxExclusiveValue(metric)) < value)
-				currentThread.setMaxExclusiveValue(metric, value);
-			    if((currentThread.getMaxExclusivePercentValue(metric)) < percentValue)
-				currentThread.setMaxExclusivePercentValue(metric, percentValue);
+			    if((currentThread.getMaxExclusiveValue(metric)) < line1.value)
+				currentThread.setMaxExclusiveValue(metric, line1.value);
+			    if((currentThread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
+				currentThread.setMaxExclusivePercentValue(metric, line1.percentValue);
 			}
 		    }
 		    else{
 			Thread thread = this.getThread(nodeID,contextID,threadID);
 			GlobalThreadDataElement tmpGTDE = thread.getFunction(mappingID);
-			tmpGTDE.setExclusiveValue(metric, value);
-			tmpGTDE.setExclusivePercentValue(metric, percentValue);
-			if((thread.getMaxExclusiveValue(metric)) < value)
-			    thread.setMaxExclusiveValue(metric, value);
-			if((thread.getMaxExclusivePercentValue(metric)) < percentValue)
-			    thread.setMaxExclusivePercentValue(metric, percentValue);
+			tmpGTDE.setExclusiveValue(metric, line1.value);
+			tmpGTDE.setExclusivePercentValue(metric, line1.percentValue);
+			if((thread.getMaxExclusiveValue(metric)) < line1.value)
+			    thread.setMaxExclusiveValue(metric, line1.value);
+			if((thread.getMaxExclusivePercentValue(metric)) < line1.percentValue)
+			    thread.setMaxExclusivePercentValue(metric, line1.percentValue);
 		    }
 		    break;
 		case 5:
-		    if((globalMappingElement.getMaxInclusiveValue(metric)) < value)
-			globalMappingElement.setMaxInclusiveValue(metric, value);
+		    if((globalMappingElement.getMaxInclusiveValue(metric)) < line1.value)
+			globalMappingElement.setMaxInclusiveValue(metric, line1.value);
 		    
-		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < percentValue)
-			globalMappingElement.setMaxInclusivePercentValue(metric, percentValue);
+		    if((globalMappingElement.getMaxInclusivePercentValue(metric)) < line1.percentValue)
+			globalMappingElement.setMaxInclusivePercentValue(metric, line1.percentValue);
 		    
 		    //Print out the node,context,thread.
 		    nodeID = getNCT(0,inputString, false);
 		    contextID = getNCT(1,inputString, false);
 		    threadID = getNCT(2,inputString, false);
 		    Thread thread = this.getThread(nodeID,contextID,threadID);
-		    GlobalThreadDataElement tmpGTDE = thread.getFunction(mappingID);
+		    GlobalThreadDataElement globalThreadDataElement = thread.getFunction(mappingID);
 		    
-		    tmpGTDE.setInclusiveValue(metric, value);
-		    tmpGTDE.setInclusivePercentValue(metric, percentValue);
-		    if((thread.getMaxInclusiveValue(metric)) < value)
-			thread.setMaxInclusiveValue(metric, value);
-		    if((thread.getMaxInclusivePercentValue(metric)) < percentValue)
-			thread.setMaxInclusivePercentValue(metric, percentValue);
+		    globalThreadDataElement.setInclusiveValue(metric, line1.value);
+		    globalThreadDataElement.setInclusivePercentValue(metric, line1.percentValue);
+		    if((thread.getMaxInclusiveValue(metric)) < line1.value)
+			thread.setMaxInclusiveValue(metric, line1.value);
+		    if((thread.getMaxInclusivePercentValue(metric)) < line1.percentValue)
+			thread.setMaxInclusivePercentValue(metric, line1.percentValue);
 		    
 		    //Get the number of calls and number of sub routines
 		    inputString = br.readLine();
-		    this.setNumberOfCSU(metric, inputString, globalMappingElement, thread, tmpGTDE);
+		    FunctionDataLine2 line2 = this.getFunctionDataLine2(inputString);
+
+		    //Set the values.
+		    globalThreadDataElement.setNumberOfCalls(line2.noc);
+		    globalThreadDataElement.setNumberOfSubRoutines(line2.nsbr);
+		    globalThreadDataElement.setUserSecPerCall(metric, line2.useccall);
+
+		    //Set the max values.
+		    if(globalMappingElement.getMaxNumberOfCalls() < line2.noc)
+			globalMappingElement.setMaxNumberOfCalls(line2.noc);
+		    if(thread.getMaxNumberOfCalls() < line2.noc)
+			thread.setMaxNumberOfCalls(line2.noc);
+
+		    if(globalMappingElement.getMaxNumberOfSubRoutines() < line2.nsbr)
+			globalMappingElement.setMaxNumberOfSubRoutines(line2.nsbr);
+		    if(thread.getMaxNumberOfSubRoutines() < line2.nsbr)
+			thread.setMaxNumberOfSubRoutines(line2.nsbr);
+		    
+		    if(globalMappingElement.getMaxUserSecPerCall(metric) < line2.useccall)
+			globalMappingElement.setMaxUserSecPerCall(metric, line2.useccall);
+		    if(thread.getMaxUserSecPerCall(metric) < line2.useccall)
+			thread.setMaxUserSecPerCall(metric, line2.useccall);
 		    break;
 		case 6:
 		    //Just ignore the string if this is not the first check.
@@ -986,30 +1020,6 @@ public class TauPprofOutputSession extends DataSession{
 	return ued;
     }
 
-    private String getMappingName(String string){
-	try{
-	    StringTokenizer st = new StringTokenizer(string, "\"");
-	    st.nextToken();
-	    return st.nextToken();
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD08");
-	}
-	return null;
-    }
-    
-    private int getMappingID(String string){
-	try{
-	    StringTokenizer st = new StringTokenizer(string, " \t\n\r");
- 	    st.nextToken();
- 	    return Integer.parseInt(st.nextToken());
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD09");
-	}
-	return -1;
-    }
-    
     private boolean checkForExcInc(String inString, boolean exclusive, boolean checkString){
 	boolean result = false;
     
@@ -1053,121 +1063,69 @@ public class TauPprofOutputSession extends DataSession{
 	    ParaProf.systemError(e, null, "SSD04");}
 	return result;
     }
-  
-    private void setNumberOfCSU(int metric, String inString, GlobalMappingElement inGME,
-				Thread thread, GlobalThreadDataElement inGTDE){ 
-	//Set the number of calls/subroutines/usersec per call.
+
+    private FunctionDataLine1 getFunctionDataLine1(String string){
+	try{
+	    FunctionDataLine1 line1 = new FunctionDataLine1();
+	    StringTokenizer st1 = new StringTokenizer(string, "\"");
+	    st1.nextToken();
+	    line1.name = st1.nextToken();
+	    
+	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	    st2.nextToken();
+	    line1.value = Double.parseDouble(st2.nextToken());
+	    line1.percentValue = Double.parseDouble(st2.nextToken());
+	    
+	    return line1;
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD08");
+	}
+	return null;
+    }
+
+    private FunctionDataLine2 getFunctionDataLine2(String string){ 
 	//The number of calls will be the fourth token on its line.
 	//The number of subroutines will be the fifth token on its line.
 	//The usersec per call will be the sixth token on its line.
 	try{
-	    String tmpString = null;
-	    double tmpDouble = -1;
-	    int tmpInt = -1;  //Parse as a double, but cast to this int just in case pprof.dat records as a double.
-	    StringTokenizer getMappingIDTokenizer = new StringTokenizer(inString, " \t\n\r");
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    //Set number of calls.
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpDouble = Double.parseDouble(tmpString);
-	    tmpInt = (int) tmpDouble;
-	    if((inGME.getMaxNumberOfCalls()) < tmpInt)
-		inGME.setMaxNumberOfCalls(tmpInt);
-	    if((thread.getMaxNumberOfCalls()) < tmpInt)
-		thread.setMaxNumberOfCalls(tmpInt);
-	    inGTDE.setNumberOfCalls(tmpInt);
-	    //Set number of subroutines.
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpDouble = Double.parseDouble(tmpString);
-	    tmpInt = (int) tmpDouble;
-	    if((inGME.getMaxNumberOfSubRoutines()) < tmpInt)
-		inGME.setMaxNumberOfSubRoutines(tmpInt);
-	    if((thread.getMaxNumberOfSubRoutines()) < tmpInt)
-		thread.setMaxNumberOfSubRoutines(tmpInt);
-	    inGTDE.setNumberOfSubRoutines(tmpInt);
-	    //Set usersec per call.
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpDouble = Double.parseDouble(tmpString);
-	    if((inGME.getMaxUserSecPerCall(metric)) < tmpDouble)
-		inGME.setMaxUserSecPerCall(metric, tmpDouble);
-	    if((thread.getMaxUserSecPerCall(metric)) < tmpDouble)
-		thread.setMaxUserSecPerCall(metric, tmpDouble);
-	    inGTDE.setUserSecPerCall(metric, tmpDouble);
+	    FunctionDataLine2 line2 = new FunctionDataLine2();
+	    StringTokenizer getMappingIDTokenizer = new StringTokenizer(string, " \t\n\r");
+	    getMappingIDTokenizer.nextToken();
+	    getMappingIDTokenizer.nextToken();
+	    getMappingIDTokenizer.nextToken();
+	    
+	    line2.noc = (int) Double.parseDouble(getMappingIDTokenizer.nextToken());
+	    line2.nsbr = (int) Double.parseDouble(getMappingIDTokenizer.nextToken());
+	    line2.useccall = Double.parseDouble(getMappingIDTokenizer.nextToken());
+	    return line2;
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD10");
 	}
+	return null;
     }
-    
-    private void setNumberOfCSUMean(int metric, String inString, GlobalMappingElement inGME){
-	//Set the number of calls/subroutines/usersec per call for mean.
-	//The number of calls will be the fourth token on its line.
-	//The number of subroutines will be the fifth token on its line.
-	//The usersec per call will be the sixth token on its line.
-	try{
-	    String tmpString = null;
-	    double tmpDouble = -1;
-	    StringTokenizer getMappingIDTokenizer = new StringTokenizer(inString, " \t\n\r");
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    //Set number of calls.
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpDouble = Double.parseDouble(tmpString);
-	    if((this.getMaxMeanNumberOfCalls()) < tmpDouble)
-		this.setMaxMeanNumberOfCalls(tmpDouble);
-	    inGME.setMeanNumberOfCalls(tmpDouble);
-	    //Set number of subroutines.
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpDouble = Double.parseDouble(tmpString);
-	    if((this.getMaxMeanNumberOfSubRoutines()) < tmpDouble)
-		this.setMaxMeanNumberOfSubRoutines(tmpDouble);
-	    inGME.setMeanNumberOfSubRoutines(tmpDouble);
-	    //Set usersec per call.
-	    tmpString = getMappingIDTokenizer.nextToken();
-	    tmpDouble = Double.parseDouble(tmpString);
-	    if((this.getMaxMeanUserSecPerCall(metric)) < tmpDouble)
-		this.setMaxMeanUserSecPerCall(metric, tmpDouble);
-	    inGME.setMeanUserSecPerCall(metric, tmpDouble);
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD10");
-	}
-    }
-  
-    private String getGroupNames(String inString){
-    
+
+    private String getGroupNames(String string){
 	try{  
-	    String tmpString = null;
-        
-	    StringTokenizer getMappingNameTokenizer = new StringTokenizer(inString, "\"");
-        
-	    //Grab the first token.
-	    tmpString = getMappingNameTokenizer.nextToken();
-	    //Grab the second token.
-	    tmpString = getMappingNameTokenizer.nextToken();
-	    //Grab the third token.
-	    tmpString = getMappingNameTokenizer.nextToken();
+	    StringTokenizer getMappingNameTokenizer = new StringTokenizer(string, "\"");
+ 	    getMappingNameTokenizer.nextToken();
+	    getMappingNameTokenizer.nextToken();
+	    String str = getMappingNameTokenizer.nextToken();
         
 	    //Just do the group check once.
 	    if(!groupNamesCheck){
 		//If present, "GROUP=" will be in this token.
-		int tmpInt = tmpString.indexOf("GROUP=");
+		int tmpInt = str.indexOf("GROUP=");
 		if(tmpInt > 0){
 		    groupNamesPresent = true;
 		}
-		
 		groupNamesCheck = true;
-		
 	    }
 	    
 	    if(groupNamesPresent){
-		//We can grab the group name.
-		
-		//Grab the forth token.
-		tmpString = getMappingNameTokenizer.nextToken();
-		    return tmpString;
+		 str = getMappingNameTokenizer.nextToken();
+		    return str;
 	    }
 	    //If here, this profile file does not track the group names.
 	    return null;
@@ -1178,79 +1136,14 @@ public class TauPprofOutputSession extends DataSession{
 	return null;
     }
   
-    private double getValue(String inString){
+    private int getNumberOfUserEvents(String string){
 	try{
-	    String tmpString;
-      
-	    //First strip away the portion of the string not needed.
-	    StringTokenizer valueQuotesTokenizer = new StringTokenizer(inString,"\"");
-      
-	    //Grab the third token.
-	    tmpString = valueQuotesTokenizer.nextToken();
-	    tmpString = valueQuotesTokenizer.nextToken();
-	    tmpString = valueQuotesTokenizer.nextToken();
-      
-	    //Ok, now concentrate on the third token.  The token in question should be the second.
-	    StringTokenizer valueTokenizer = new StringTokenizer(tmpString, " \t\n\r");
-	    tmpString = valueTokenizer.nextToken();
-	    tmpString = valueTokenizer.nextToken();
-      
-	    return (double)Double.parseDouble(tmpString);
+	    StringTokenizer st = new StringTokenizer(string, " \t\n\r");
+	    return Integer.parseInt(st.nextToken());
+  	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "SSD16");
 	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD13");
-	    }
-    
-	return -1;
-    }
-  
-    private double getPercentValue(String inString){
-	try{
-	    String tmpString;
-      
-	    //First strip away the portion of the string not needed.
-	    StringTokenizer percentValueQuotesTokenizer = new StringTokenizer(inString,"\"");
-      
-	    //Grab the third token.
-	    tmpString = percentValueQuotesTokenizer.nextToken();
-	    tmpString = percentValueQuotesTokenizer.nextToken();
-	    tmpString = percentValueQuotesTokenizer.nextToken();
-      
-	    //Ok, now concentrate on the third token.  The token in question should be the third.
-	    StringTokenizer percentValueTokenizer = new StringTokenizer(tmpString, " \t\n\r");
-	    tmpString = percentValueTokenizer.nextToken();
-	    tmpString = percentValueTokenizer.nextToken();
-	    tmpString = percentValueTokenizer.nextToken();
-      
-	    //Now return the value obtained.
-	    return Double.parseDouble(tmpString);
-	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD14");
-	    }
-    
-	return -1;
-    }
-  
-    private int getNumberOfUserEvents(String inString){
-	try{
-	    StringTokenizer getNumberOfUserEventsTokenizer = new StringTokenizer(inString, " \t\n\r");
-      
-	    String tmpString;
-      
-	    //It will be the first token.
-	    tmpString = getNumberOfUserEventsTokenizer.nextToken();
-      
-	    //Now return the number of user events number.
-	    return Integer.parseInt(tmpString);
-	}
-	catch(Exception e)
-	    {
-		ParaProf.systemError(e, null, "SSD16");
-	    }
-    
 	return -1;
     }
   
@@ -1410,6 +1303,18 @@ public class TauPprofOutputSession extends DataSession{
     //####################################
     //End - Instance data.
     //####################################
+}
+
+class FunctionDataLine1{
+    public double value = -1.0;
+    public double percentValue = -1.0;
+    public String name = null;
+}
+
+class FunctionDataLine2{
+    public int noc = -1;
+    public int nsbr = -1;
+    public double useccall = -1.0;
 }
 
 class UserEventData{
