@@ -29,7 +29,6 @@ public class ParaProfImageOutput{
 						      JOptionPane.ERROR_MESSAGE);
 	}
 	catch(Exception e){
-	    UtilFncs.systemError(null, null, "PPII02");
 	}
     }
 }
