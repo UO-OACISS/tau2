@@ -1,7 +1,9 @@
 /*
  * SavedPreferences.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 package edu.uoregon.tau.paraprof;
@@ -11,8 +13,17 @@ import java.io.*;
 import java.awt.*;
 
 public class SavedPreferences implements Serializable {
-    // public void SavedPreferences(){}
+    
+    boolean loadedFromFile = false;
 
+    public void setLoaded(boolean b) {
+        loadedFromFile = true;
+    }
+    
+    public boolean getLoaded() {
+        return loadedFromFile;
+    }
+    
     public void setColors(Vector vector) {
         colors = vector;
     }

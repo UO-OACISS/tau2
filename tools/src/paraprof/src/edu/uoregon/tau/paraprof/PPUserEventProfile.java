@@ -78,8 +78,74 @@ public class PPUserEventProfile implements Comparable {
         return userEventProfile.getUserEventMeanValue();
     }
 
+    public double getStdDev() {
+        return userEventProfile.getUserEventStdDev();
+    }
+
     public String getUserEventStatString(int precision) {
-        return userEventProfile.getUserEventStatString(precision);
+        try {
+            int initialBufferLength = 90;
+            int position = 0;
+            char[] statStringArray = new char[initialBufferLength];
+            char[] tmpArray;
+            String tmpString;
+
+            PPUserEventProfile.insertSpaces(statStringArray, 0, 90);
+
+            tmpArray = (Integer.toString(this.getUserEventNumberValue()).toCharArray());
+            for (int i = 0; i < tmpArray.length; i++) {
+                statStringArray[position] = tmpArray[i];
+                position++;
+            }
+
+
+            position = 18;
+            tmpString = UtilFncs.getOutputString(0, this.getUserEventMaxValue(), precision);
+            tmpArray = tmpString.toCharArray();
+            for (int i = 0; i < tmpArray.length; i++) {
+                statStringArray[position] = tmpArray[i];
+                position++;
+            }
+
+            position = 36;
+            tmpString = UtilFncs.getOutputString(0, this.getUserEventMinValue(), precision);
+            tmpArray = tmpString.toCharArray();
+            for (int i = 0; i < tmpArray.length; i++) {
+                statStringArray[position] = tmpArray[i];
+                position++;
+            }
+
+            position = 54;
+            tmpString = UtilFncs.getOutputString(0, this.getUserEventMeanValue(), precision);
+            tmpArray = tmpString.toCharArray();
+            for (int i = 0; i < tmpArray.length; i++) {
+                statStringArray[position] = tmpArray[i];
+                position++;
+            }
+
+            position = 72;
+            tmpString = UtilFncs.getOutputString(0, this.getStdDev(), precision);
+            tmpArray = tmpString.toCharArray();
+            for (int i = 0; i < tmpArray.length; i++) {
+                statStringArray[position] = tmpArray[i];
+                position++;
+            }
+
+            //Everything should be added now except the function name.
+            return new String(statStringArray);
+        } catch (Exception e) {
+            UtilFncs.systemError(e, null, "GTDE01");
+        }
+
+        return "An error occurred processing this string!";
+    }
+
+    private static int insertSpaces(char[] inArray, int position, int number) {
+        for (int i = 0; i < number; i++) {
+            inArray[position] = '\u0020';
+            position++;
+        }
+        return position;
     }
 
     //####################################
@@ -128,6 +194,12 @@ public class PPUserEventProfile implements Comparable {
         case 19:
             return compareToHelper(this.getUserEventMeanValue(),
                     ((PPUserEventProfile) inObject).getUserEventMeanValue());
+        case 20:
+            return compareToHelper(this.getStdDev(), ((PPUserEventProfile) inObject).getStdDev());
+        case 21:
+            return compareToHelper(this.getUserEventMeanValue(),
+                    ((PPUserEventProfile) inObject).getUserEventMeanValue());
+
         case 30:
             PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) inObject;
             if (ppUserEventProfile.getNodeID() != this.getNodeID())
@@ -219,7 +291,7 @@ public class PPUserEventProfile implements Comparable {
     //Global Mapping reference.
     TrialData trialData;
     UserEvent userEvent = null;
-    
+
     //Drawing coordinates for this thread data object.
     int xBeg = 0;
     int xEnd = 0;

@@ -87,32 +87,48 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, 0, false);
+            renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             System.out.println(e);
             UtilFncs.systemError(e, null, "TDWP03");
         }
     }
 
-    public int print(Graphics g, PageFormat pf, int page) {
+    public int print(Graphics g, PageFormat pageFormat, int page) {
+        if (page >= 1) {
+            return NO_SUCH_PAGE;
+        }
+        
+        double pageWidth = pageFormat.getImageableWidth();
+        double pageHeight = pageFormat.getImageableHeight();
+        int cols = (int) (xPanelSize / pageWidth) + 1;
+        int rows = (int) (yPanelSize / pageHeight) + 1;
+        double xScale = pageWidth / xPanelSize;
+        double yScale = pageHeight / yPanelSize;
+        double scale = Math.min(xScale, yScale);
+        
+        double tx = 0.0;
+        double ty = 0.0;
+        if (xScale > scale) {
+            tx = 0.5 * (xScale - scale) * xPanelSize;
+        } else {
+            ty = 0.5 * (yScale - scale) * yPanelSize;
+        }
 
-        if (pf.getOrientation() == PageFormat.PORTRAIT)
-            System.out.println("PORTRAIT");
-        else if (pf.getOrientation() == PageFormat.LANDSCAPE)
-            System.out.println("LANDSCAPE");
-
-        if (page >= 3)
-            return Printable.NO_SUCH_PAGE;
         Graphics2D g2 = (Graphics2D) g;
-        g2.translate(pf.getImageableX(), pf.getImageableY());
-        g2.draw(new Rectangle2D.Double(0, 0, pf.getImageableWidth(), pf.getImageableHeight()));
 
-        renderIt(g2, 2, false);
+        g2.translate((int) pageFormat.getImageableX(),
+                (int) pageFormat.getImageableY());
+        g2.translate(tx, ty);
+        g2.scale(scale, scale);
+
+        renderIt(g2, false, true, false);
 
         return Printable.PAGE_EXISTS;
+
     }
 
-    public void renderIt(Graphics2D g2D, int instruction, boolean header) {
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         try {
             list = tDWindow.getData();
@@ -185,9 +201,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
 
             if (tDWindow.isPercent()) {
-                stringWidth = fmFont.stringWidth(UtilFncs.adjustDoublePresision(maxValue,
-                        ParaProf.defaultNumberPrecision)
-                        + "%");
+                stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue, 6) + "%");
                 barXCoord = barXCoord + stringWidth;
             } else {
                 stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(tDWindow.units(),
@@ -205,27 +219,15 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             Rectangle clipRect = null;
             Rectangle viewRect = null;
 
-            if (instruction == 0 || instruction == 1) {
-                if (instruction == 0) {
+            if (!fullWindow) {
+                if (toScreen) {
                     clipRect = g2D.getClipBounds();
                     yBeg = (int) clipRect.getY();
                     yEnd = (int) (yBeg + clipRect.getHeight());
-                    /*
-                     * System.out.println("Clipping Rectangle: xBeg,xEnd:
-                     * "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+ "
-                     * yBeg,yEnd:
-                     * "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
-                     */
                 } else {
                     viewRect = tDWindow.getViewRect();
                     yBeg = (int) viewRect.getY();
                     yEnd = (int) (yBeg + viewRect.getHeight());
-                    /*
-                     * System.out.println("Viewing Rectangle: xBeg,xEnd:
-                     * "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+ "
-                     * yBeg,yEnd:
-                     * "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
-                     */
                 }
                 startElement = ((yBeg - yCoord) / barSpacing) - 1;
                 endElement = ((yEnd - yCoord) / barSpacing) + 1;
@@ -242,9 +244,9 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
                 if (endElement > (list.size() - 1))
                     endElement = (list.size() - 1);
 
-                if (instruction == 0)
+                if (toScreen)
                     yCoord = yCoord + (startElement * barSpacing);
-            } else if (instruction == 2 || instruction == 3) {
+            } else {
                 startElement = 0;
                 endElement = ((list.size()) - 1);
             }
@@ -254,7 +256,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             //just call revalidate. Make sure we check the instruction value as
             // we only want to
             //revalidate if we are drawing to the screen.
-            if (resizePanel(fmFont, barXCoord, list, startElement, endElement) && instruction == 0) {
+            if (resizePanel(fmFont, barXCoord, list, startElement, endElement) && toScreen) {
                 this.revalidate();
                 return;
             }
@@ -262,7 +264,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
             //######
             //Draw the header if required.
             //######
-            if (header) {
+            if (drawHeader) {
                 FontRenderContext frc = g2D.getFontRenderContext();
                 Insets insets = this.getInsets();
                 yCoord = yCoord + (barSpacing);
@@ -322,7 +324,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
                 yCoord = yCoord + (barSpacing);
                 drawBar(g2D, fmFont, value, maxValue, barXCoord, yCoord, barHeight,
-                        ppFunctionProfile, instruction);
+                        ppFunctionProfile, toScreen);
             }
         } catch (Exception e) {
             UtilFncs.systemError(e, null, "TDWP04");
@@ -330,8 +332,8 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     }
 
     private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue,
-            int barXCoord, int yCoord, int barHeight, PPFunctionProfile ppFunctionProfile,
-            int instruction) {
+            int barXCoord, int yCoord, int barHeight, PPFunctionProfile ppFunctionProfile, boolean toScreen
+            ) {
         int xLength = 0;
         double d = 0.0;
         String s = null;
@@ -381,9 +383,13 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         g2D.setColor(Color.black);
         //Do not want to put a percent sign after the bar if we are not
         // exclusive or inclusive.
-        if ((tDWindow.isPercent()) && ((tDWindow.getValueType()) <= 4))
-            s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
-        else
+        if (tDWindow.isPercent() && tDWindow.getValueType() <= 4) {
+            //s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
+        //s = (UtilFncs.adjustDoublePresision(value, 4)) + "%";
+        s = UtilFncs.getOutputString(0, value, 6) + "%";
+
+        
+        } else
             s = UtilFncs.getOutputString(tDWindow.units(), value, ParaProf.defaultNumberPrecision);
         stringWidth = fmFont.stringWidth(s);
         //Now draw the percent value to the left of the bar.
@@ -396,7 +402,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         //Grab the width of the mappingName.
         stringWidth = fmFont.stringWidth(mappingName);
         //Update the drawing coordinates if we are drawing to the screen.
-        if (instruction == 0)
+        if (toScreen)
             ppFunctionProfile.setDrawCoords(stringStart, (barXCoord + 5 + stringWidth),
                     (yCoord - barHeight), yCoord);
     }

@@ -91,7 +91,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
             fileMenu.add(subMenu);
             //End - Save menu.
 
-            menuItem = new JMenuItem("Edit ParaProf Preferences!");
+            menuItem = new JMenuItem("Preferences...");
             menuItem.addActionListener(this);
             fileMenu.add(menuItem);
 
@@ -322,7 +322,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
                     //HistogramWindow bW = new HistogramWindow(trial, dataSorter,
                     // true, 0, false);
                     //bW.show();
-                } else if (arg.equals("Edit ParaProf Preferences!")) {
+                } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 }
                 //		

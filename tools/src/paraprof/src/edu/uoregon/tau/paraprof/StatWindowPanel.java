@@ -85,39 +85,58 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, 0, false);
+            renderIt((Graphics2D) g, true,false, false);
         } catch (Exception e) {
             System.out.println(e);
             UtilFncs.systemError(e, null, "SWP03");
         }
     }
 
-    public int print(Graphics g, PageFormat pf, int page) {
+    public int print(Graphics g, PageFormat pageFormat, int page) {
+        if (page >= 1) {
+            return NO_SUCH_PAGE;
+        }
+        
+        double pageWidth = pageFormat.getImageableWidth();
+        double pageHeight = pageFormat.getImageableHeight();
+        int cols = (int) (xPanelSize / pageWidth) + 1;
+        int rows = (int) (yPanelSize / pageHeight) + 1;
+        double xScale = pageWidth / xPanelSize;
+        double yScale = pageHeight / yPanelSize;
+        double scale = Math.min(xScale, yScale);
+        
+        double tx = 0.0;
+        double ty = 0.0;
+        if (xScale > scale) {
+            tx = 0.5 * (xScale - scale) * xPanelSize;
+        } else {
+            ty = 0.5 * (yScale - scale) * yPanelSize;
+        }
 
-        if (pf.getOrientation() == PageFormat.PORTRAIT)
-            System.out.println("PORTRAIT");
-        else if (pf.getOrientation() == PageFormat.LANDSCAPE)
-            System.out.println("LANDSCAPE");
-
-        if (page >= 3)
-            return Printable.NO_SUCH_PAGE;
         Graphics2D g2 = (Graphics2D) g;
-        g2.translate(pf.getImageableX(), pf.getImageableY());
-        g2.draw(new Rectangle2D.Double(0, 0, pf.getImageableWidth(), pf.getImageableHeight()));
 
-        renderIt(g2, 2, false);
+        g2.translate((int) pageFormat.getImageableX(),
+                (int) pageFormat.getImageableY());
+        g2.translate(tx, ty);
+        g2.scale(scale, scale);
+
+        renderIt(g2, false, true, false);
 
         return Printable.PAGE_EXISTS;
+
     }
 
-public void renderIt(Graphics2D g2D, int instruction, boolean header) { 
     
+    public static String getUserEventStatStringHeading() {
+
+        int w = 18;
+        return UtilFncs.pad("NumSamples", w) + UtilFncs.pad("Max", w) + UtilFncs.pad("Min", w)
+                + UtilFncs.pad("Mean", w) + UtilFncs.pad("Std. Dev", w);
+
+    }
+    
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         try {
-            if (this.debug()) {
-                System.out.println("####################################");
-                System.out.println("StatWindowPanel.renderIt(...)");
-                System.out.println("####################################");
-            }
 
             list = sWindow.getData();
 
@@ -167,7 +186,7 @@ public void renderIt(Graphics2D g2D, int instruction, boolean header) {
             //######
             //Draw the header if required.
             //######
-            if (header) {
+            if (drawHeader) {
                 //FontRenderContext frc2 = g2D.getFontRenderContext();
                 Insets insets = this.getInsets();
                 yCoord = yCoord + (spacing);
@@ -196,7 +215,7 @@ public void renderIt(Graphics2D g2D, int instruction, boolean header) {
             //######
 
             if (userEventWindow) {
-                tmpString = UserEventProfile.getUserEventStatStringHeading();
+                tmpString = StatWindowPanel.getUserEventStatStringHeading();
                 
             } else {
                 if (trial.isTimeMetric())
@@ -235,7 +254,7 @@ public void renderIt(Graphics2D g2D, int instruction, boolean header) {
             //Draw the second dashed string.
             g2D.drawString(dashString, 20, yCoord);
 
-            if (instruction == 0)
+            if (toScreen)
                 startLocation = yCoord;
 
             //Set up some panel dimensions.
@@ -248,27 +267,15 @@ public void renderIt(Graphics2D g2D, int instruction, boolean header) {
             Rectangle clipRect = null;
             Rectangle viewRect = null;
 
-            if (instruction == 0 || instruction == 1) {
-                if (instruction == 0) {
+            if (!fullWindow) {
+                if (toScreen) {
                     clipRect = g2D.getClipBounds();
                     yBeg = (int) clipRect.getY();
                     yEnd = (int) (yBeg + clipRect.getHeight());
-                    /*
-                     * System.out.println("Clipping Rectangle: xBeg,xEnd:
-                     * "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+ "
-                     * yBeg,yEnd:
-                     * "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
-                     */
                 } else {
                     viewRect = sWindow.getViewRect();
                     yBeg = (int) viewRect.getY();
                     yEnd = (int) (yBeg + viewRect.getHeight());
-                    /*
-                     * System.out.println("Viewing Rectangle: xBeg,xEnd:
-                     * "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+ "
-                     * yBeg,yEnd:
-                     * "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
-                     */
                 }
                 startElement = ((yBeg - yCoord) / spacing) - 1;
                 endElement = ((yEnd - yCoord) / spacing) + 1;
@@ -285,9 +292,9 @@ public void renderIt(Graphics2D g2D, int instruction, boolean header) {
                 if (endElement > (list.size() - 1))
                     endElement = (list.size() - 1);
 
-                if (instruction == 0)
+                if (toScreen)
                     yCoord = yCoord + (startElement * spacing);
-            } else if (instruction == 2 || instruction == 3) {
+            } else {
                 startElement = 0;
                 endElement = ((list.size()) - 1);
             }

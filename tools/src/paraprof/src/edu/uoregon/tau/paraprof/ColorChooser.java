@@ -305,11 +305,18 @@ public class ColorChooser implements WindowListener {
     //If the selection is equal to -1, then set the colors in all the
     // sets,
     //otherwise, just set the ones for the specified set.
-    public void setColors(TrialData trialData, int selection) {
+    public void setColors(ParaProfTrial ppTrial, int selection) {
+
+        TrialData trialData = ppTrial.getTrialData();
         if ((selection == -1) || (selection == 0)) {
             int numberOfColors = this.getNumberOfColors();
-            for (Iterator i = trialData.getFunctions(); i.hasNext();) {
-                Function func = (Function) i.next();
+            
+            DataSorter dataSorter = new DataSorter(ppTrial, false);
+
+            Vector list = dataSorter.getFunctionProfiles(-1,-1,-1,20);
+            
+            for (int i = 0; i < list.size(); i++) {
+                Function func = ((PPFunctionProfile) list.get(i)).getFunction();
                 func.setColor(this.getColor((func.getID()) % numberOfColors));
             }
         }
@@ -563,7 +570,7 @@ class ColorChooserFrame extends JFrame implements ActionListener {
                 listModel.clear();
                 populateColorList();
                 //Update the TrialData.
-                colorChooser.setColors(trial.getTrialData(), 0);
+                colorChooser.setColors(trial, 0);
                 //Update the listeners.
                 trial.getSystemEvents().updateRegisteredObjects("colorEvent");
             } else if (arg.equals("Add Group Color")) {
@@ -572,7 +579,7 @@ class ColorChooserFrame extends JFrame implements ActionListener {
                 listModel.clear();
                 populateColorList();
                 //Update the TrialData.
-                colorChooser.setColors(trial.getTrialData(), 1);
+                colorChooser.setColors(trial, 1);
                 //Update the listeners.
                 trial.getSystemEvents().updateRegisteredObjects("colorEvent");
             } else if (arg.equals("Delete Selected Color")) {
@@ -584,7 +591,7 @@ class ColorChooserFrame extends JFrame implements ActionListener {
                         listModel.removeElementAt(values[i]);
                         (colorChooser.getColors()).removeElementAt(values[i]);
                         //Update the TrialData.
-                        colorChooser.setColors(trial.getTrialData(), 0);
+                        colorChooser.setColors(trial, 0);
                     } else if ((values[i]) < (trial.getColorChooser().getNumberOfColors())
                             + (trial.getColorChooser().getNumberOfGroupColors())) {
                         System.out.println("The value being deleted is: " + values[i]);
@@ -592,7 +599,7 @@ class ColorChooserFrame extends JFrame implements ActionListener {
                         (colorChooser.getGroupColors()).removeElementAt(values[i]
                                 - (trial.getColorChooser().getNumberOfColors()));
                         //Update the TrialData.
-                        colorChooser.setColors(trial.getTrialData(), 1);
+                        colorChooser.setColors(trial, 1);
                     }
                 }
 
@@ -617,12 +624,12 @@ class ColorChooserFrame extends JFrame implements ActionListener {
                     } else if ((values[i]) < trial.getColorChooser().getNumberOfColors()) {
                         colorChooser.setColor(color, values[i]);
                         //Update the TrialData.
-                        colorChooser.setColors(trial.getTrialData(), 0);
+                        colorChooser.setColors(trial, 0);
                     } else {
                         colorChooser.setGroupColor(color,
                                 (values[i] - trial.getColorChooser().getNumberOfColors()));
                         //Update the TrialData.
-                        colorChooser.setColors(trial.getTrialData(), 1);
+                        colorChooser.setColors(trial, 1);
                     }
                 }
                 //Update the listeners.
@@ -637,8 +644,8 @@ class ColorChooserFrame extends JFrame implements ActionListener {
                 listModel.clear();
                 populateColorList();
                 //Update the TrialData.
-                colorChooser.setColors(trial.getTrialData(), 0);
-                colorChooser.setColors(trial.getTrialData(), 1);
+                colorChooser.setColors(trial, 0);
+                colorChooser.setColors(trial, 1);
                 //Update the listeners.
                 trial.getSystemEvents().updateRegisteredObjects("colorEvent");
             }

@@ -84,10 +84,8 @@ public class ParaProfImageOutput {
                     g2D.setColor(Color.black);
 
                     //Draw to this graphics object.
-                    if (paraProfImageOptionsPanel.isFullScreen())
-                        ref.renderIt(g2D, 2, paraProfImageOptionsPanel.isPrependHeader());
-                    else
-                        ref.renderIt(g2D, 1, paraProfImageOptionsPanel.isPrependHeader());
+                    ref.renderIt(g2D, false, paraProfImageOptionsPanel.isFullScreen(),
+                            paraProfImageOptionsPanel.isPrependHeader());
 
                     //Now write the image to file.
                     ImageWriter writer = null;

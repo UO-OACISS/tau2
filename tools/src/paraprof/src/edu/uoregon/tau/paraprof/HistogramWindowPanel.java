@@ -2,7 +2,9 @@
  * 
  * HistogramWindowPanel.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 /*
@@ -22,10 +24,8 @@ import java.awt.geom.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class HistogramWindowPanel extends JPanel implements ActionListener, MouseListener,
-        PopupMenuListener, Printable {
+        PopupMenuListener, Printable, ParaProfImageInterface {
 
-    //**********
-    //The constructors!!
     public HistogramWindowPanel() {
         try {
             //Set the default tool tip for this panel.
@@ -130,32 +130,52 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            drawPage((Graphics2D) g, false);
+            renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             System.out.println(e);
             UtilFncs.systemError(e, null, "TDWP03");
         }
     }
 
-    public int print(Graphics g, PageFormat pf, int page) {
+    public int print(Graphics g, PageFormat pageFormat, int page) {
+        if (page >= 1) {
+            return NO_SUCH_PAGE;
+        }
+        
+        double pageWidth = pageFormat.getImageableWidth();
+        double pageHeight = pageFormat.getImageableHeight();
+        int cols = (int) (xPanelSize / pageWidth) + 1;
+        int rows = (int) (yPanelSize / pageHeight) + 1;
+        double xScale = pageWidth / xPanelSize;
+        double yScale = pageHeight / yPanelSize;
+        double scale = Math.min(xScale, yScale);
+        
+        double tx = 0.0;
+        double ty = 0.0;
+        if (xScale > scale) {
+            tx = 0.5 * (xScale - scale) * xPanelSize;
+        } else {
+            ty = 0.5 * (yScale - scale) * yPanelSize;
+        }
 
-        if (pf.getOrientation() == PageFormat.PORTRAIT)
-            System.out.println("PORTRAIT");
-        else if (pf.getOrientation() == PageFormat.LANDSCAPE)
-            System.out.println("LANDSCAPE");
-
-        if (page >= 3)
-            return Printable.NO_SUCH_PAGE;
         Graphics2D g2 = (Graphics2D) g;
-        g2.translate(pf.getImageableX(), pf.getImageableY());
-        g2.draw(new Rectangle2D.Double(0, 0, pf.getImageableWidth(), pf.getImageableHeight()));
 
-        drawPage(g2, true);
+        g2.translate((int) pageFormat.getImageableX(),
+                (int) pageFormat.getImageableY());
+        g2.translate(tx, ty);
+        g2.scale(scale, scale);
+
+        renderIt(g2, false, true, false);
 
         return Printable.PAGE_EXISTS;
     }
 
-    public void drawPage(Graphics2D g2D, boolean print) {
+    
+    public Dimension getImageSize(boolean fullScreen, boolean header) {
+        return this.getSize();
+    }
+
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         try {
 
             list = bWindow.getData();
@@ -273,7 +293,6 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
                             minValue = tmpDataValue;
                             start = false;
                         }
-                        System.out.println("value is: " + tmpDataValue);
                         if (tmpDataValue > maxValue)
                             maxValue = tmpDataValue;
                         if (tmpDataValue < minValue)
@@ -282,7 +301,6 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
                 }
             }
 
-            System.out.println("maxValue: " + maxValue);
 
             double increment = maxValue / 10;
 
@@ -362,21 +380,16 @@ public class HistogramWindowPanel extends JPanel implements ActionListener, Mous
                 }
             }
 
-            for (int i = 0; i < 10; i++) {
-                System.out.println("Arr. Loc. " + i + " is: " + intArray[i]);
-            }
 
             g2D.setColor(Color.red);
 
             int num = count;
-            System.out.println("Number of gm is: " + num);
             for (int i = 0; i < 10; i++) {
                 if (intArray[i] != 0) {
                     double tmp1 = intArray[i];
 
                     double per = (tmp1 / num) * 100;
                     int result = (int) per;
-                    System.out.println("result[" + i + "] is: " + result);
                     g2D.fillRect(38 + i * 55, 430 - (result * 4), 49, result * 4);
                 }
             }

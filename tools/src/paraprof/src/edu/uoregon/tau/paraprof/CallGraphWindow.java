@@ -19,6 +19,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JSlider;
 
 import java.util.Hashtable;
+import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.GridBagLayout;
 import java.awt.Rectangle;
@@ -37,7 +38,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     private static final int HORIZONTAL_SPACING = 10;
     private static final int VERTICAL_SPACING = 120;
 
-    //    private static final int HEIGHT = 25;
 
     class ThisGraphSelectionModel extends DefaultGraphSelectionModel {
 
@@ -120,6 +120,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             return null;
         }
 
+        public Dimension getPreferredSize() {
+            Dimension inner = super.getPreferredSize();
+            inner.setSize(inner.width+10,inner.height);
+            return inner;
+        }
+        
         public Graph(GraphModel gm) {
             super(gm);
             this.setSelectionModel(new ThisGraphSelectionModel(this));
@@ -226,7 +232,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 thread = trial.getNCT().getThread(nodeID, contextID, threadID);
             }
 
-            CallPathUtilFuncs.buildThreadRelations(trial.getTrialData(), thread);
+            if (trial.callPathDataPresent())
+                CallPathUtilFuncs.buildThreadRelations(trial.getTrialData(), thread);
 
             functionProfileList = thread.getFunctionList();
 
@@ -296,7 +303,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             Dimension prefSize = jGraphPane.getPreferredSize();
 
             prefSize.width += 25;
-            prefSize.height += 75;
+            prefSize.height += 75 + 20;
 
             if (prefSize.width > 1000)
                 prefSize.width = 1000;
@@ -349,7 +356,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
         fileMenu.add(subMenu);
         //End - Save menu.
 
-        menuItem = new JMenuItem("Edit ParaProf Preferences!");
+        menuItem = new JMenuItem("Preferences...");
         menuItem.addActionListener(this);
         fileMenu.add(menuItem);
 
@@ -587,9 +594,6 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                             if (!found)
                                 parent.children.add(child);
 
-                            if (child == null) {
-                                System.out.println("bob");
-                            }
 
                             found = false;
                             for (int j = 0; j < child.parents.size(); j++) {
@@ -1905,8 +1909,11 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             return this.getSize();
     }
 
-    public void renderIt(Graphics2D g2D, int instruction, boolean header) {
-        if (instruction == 2) { // "fullscreen"
+    
+  
+    
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+        if (fullWindow) { // "fullscreen"
             graph.paintAll(g2D);
         } else {
             graph.paint(g2D);
@@ -2042,7 +2049,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
                 dispose();
                 ParaProf.exitParaProf(0);
 
-            } else if (arg.equals("Edit ParaProf Preferences!")) {
+            } else if (arg.equals("Preferences...")) {
                 trial.getPreferences().showPreferencesWindow();
             } else if (arg.equals("Close This Window")) {
                 closeThisWindow();

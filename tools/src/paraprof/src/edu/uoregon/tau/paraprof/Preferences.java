@@ -17,7 +17,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
 
     public Preferences(ParaProfTrial trial, SavedPreferences savedPreferences) {
         this.trial = trial;
-        if (savedPreferences != null) {
+        if (savedPreferences != null && savedPreferences.getLoaded()) {
             //######
             //Set the saved values.
             //######
@@ -120,6 +120,10 @@ public class Preferences extends JFrame implements ActionListener, Observer {
         loadColorItem.addActionListener(this);
         fileMenu.add(loadColorItem);
 
+        JMenuItem saveItem = new JMenuItem("Save Preferences");
+        saveItem.addActionListener(this);
+        fileMenu.add(saveItem);
+
         //Add a menu item.
         JMenuItem closeItem = new JMenuItem("Apply and Close Window");
         closeItem.addActionListener(this);
@@ -149,7 +153,6 @@ public class Preferences extends JFrame implements ActionListener, Observer {
         //######
         //End - Help menu.
         //######
-
         //Now, add all the menus to the main menu.
         mainMenu.add(fileMenu);
         //mainMenu.add(helpMenu);
@@ -407,8 +410,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
                             for (Iterator i = trial.getTrialData().getFunctions(); i.hasNext();) {
                                 Function f = (Function) i.next();
                                 if (f.getName() != null) {
-                                    ColorPair tmpCP = new ColorPair(f.getName(),
-                                            f.getColor());
+                                    ColorPair tmpCP = new ColorPair(f.getName(), f.getColor());
                                     nameColorVector.add(tmpCP);
                                 }
                             }
@@ -454,10 +456,26 @@ public class Preferences extends JFrame implements ActionListener, Observer {
                 setVisible(false);
                 dispose();
                 ParaProf.exitParaProf(0);
+            } else if (arg.equals("Save Preferences")) {
+
+                File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
+
+                try {
+                    ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
+                    this.setSavedPreferences();
+                    prefsOut.writeObject(ParaProf.savedPreferences);
+                    prefsOut.close();
+                } catch (Exception e) {
+                    //Display an error
+                    JOptionPane.showMessageDialog(this,
+                            "An error occured while trying to save ParaProf preferences.",
+                            "Error!", JOptionPane.ERROR_MESSAGE);
+                }
             } else if (arg.equals("Apply and Close Window")) {
                 setVisible(false);
                 trial.getSystemEvents().updateRegisteredObjects("prefEvent");
             }
+
         } else if (EventSrc instanceof JRadioButton) {
             if (arg.equals("Plain Font")) {
                 if (italic.isSelected())
@@ -580,7 +598,7 @@ public class Preferences extends JFrame implements ActionListener, Observer {
             }
             for (Enumeration e1 = nameColorVector.elements(); e1.hasMoreElements();) {
                 ColorPair tmpCP = (ColorPair) e1.nextElement();
-                
+
                 Function f = trialData.getFunction(tmpCP.getMappingName());
                 if (f != null) {
                     Color tmpColor = tmpCP.getColor();

@@ -319,10 +319,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
             //ensure proper cleanup.
             //dataSession.terminate();
 
-            //Need to update setup the dataSource object for correct usage in
-            //in a ParaProfTrial object.
-            //Set the colours.
-            clrChooser.setColors(dataSource.getTrialData(), -1);
 
             //The dataSource has accumulated edu.uoregon.tau.dms.dss.Metrics.
             // Inside ParaProf,
@@ -343,9 +339,17 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
             //Now set the trial's dataSource object to be this one.
             this.setDataSource(dataSource);
 
+            
+            // set the colors
+            clrChooser.setColors(this, -1);
+
+            
             //Set this trial's loading flag to false.
             this.setLoading(false);
 
+            
+            
+            
             ParaProf.paraProfManager.populateTrialMetrics(this);
 
         } catch (Exception e) {
@@ -383,7 +387,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
     private SystemEvents systemEvents = new SystemEvents();
     private StaticMainWindow sMW = null;
     private ColorChooser clrChooser = new ColorChooser(this, null);
-    private Preferences preferences = new Preferences(this, null);
+    private Preferences preferences = new Preferences(this, ParaProf.savedPreferences);
 
     private String path = null;
     private String pathReverse = null;

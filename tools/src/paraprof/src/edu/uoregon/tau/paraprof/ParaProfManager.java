@@ -220,16 +220,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
         menuItem.addActionListener(this);
         fileMenu.add(menuItem);
 
-        //Save menu.
-        JMenu subMenu = new JMenu("Save ...");
-
-        menuItem = new JMenuItem("ParaProf Preferences");
-        menuItem.addActionListener(this);
-        subMenu.add(menuItem);
-
-        fileMenu.add(subMenu);
-        //End - Save menu.
-
         //Add a menu item.
         menuItem = new JMenuItem("Close This Window");
         menuItem.addActionListener(this);
@@ -359,37 +349,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
                     }
                 } else if (arg.equals("Database Configuration")) {
                     (new DBConfiguration(this)).show();
-                } else if (arg.equals("ParaProf Preferences")) {
-                    JFileChooser fileChooser = new JFileChooser();
-                    //Set the directory to the current directory.
-                    fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
-                    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                    fileChooser.setSelectedFile(new File("pref.dat"));
-                    //Bring up the save file chooser.
-                    int resultValue = fileChooser.showSaveDialog(this);
-                    if (resultValue == JFileChooser.APPROVE_OPTION) {
-                        //Get the file.
-                        File file = fileChooser.getSelectedFile();
-                        //Check to make sure that something was obtained.
-                        if (file != null) {
-                            try {
-                                ObjectOutputStream prefsOut = new ObjectOutputStream(
-                                        new FileOutputStream(file));
-                                prefsOut.writeObject(ParaProf.savedPreferences);
-                                prefsOut.close();
-                            } catch (Exception e) {
-                                //Display an error
-                                JOptionPane.showMessageDialog(
-                                        this,
-                                        "An error occured while trying to save ParaProf preferences.",
-                                        "Error!", JOptionPane.ERROR_MESSAGE);
-                            }
-                        } else {
-                            //Display an error
-                            JOptionPane.showMessageDialog(this, "No filename was given!", "Error!",
-                                    JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
+         
                 } else if (arg.equals("Show Derived Metric Panel")) {
                     if (showApplyOperationItem.isSelected()) {
                      

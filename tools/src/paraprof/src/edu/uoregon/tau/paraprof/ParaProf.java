@@ -2,11 +2,11 @@
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.20 2004/12/21 00:44:00 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.21 2004/12/21 20:52:58 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  */
 
 package edu.uoregon.tau.paraprof;
@@ -119,9 +119,7 @@ public class ParaProf implements ActionListener {
             // necessary. Static initializations are marked with "Static Initialization" 
             // to make them easy to find.
 
-            //Static Initialization
             ParaProf.savedPreferences = new SavedPreferences();
-            //End - Static Initialization
 
             //Establish the presence of a .ParaProf directory. This is located
             // by default in the user's home
@@ -131,7 +129,7 @@ public class ParaProf implements ActionListener {
                 //Try and load a preference file ... ParaProfPreferences.dat
                 try {
                     FileInputStream savedPreferenceFIS = new FileInputStream(
-                            ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.dat");
+                            ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.prefs");
 
                     //If here, means that no exception was thrown, and there is
                     // a preference file present.
@@ -139,6 +137,7 @@ public class ParaProf implements ActionListener {
                     ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(
                             savedPreferenceFIS);
                     ParaProf.savedPreferences = (SavedPreferences) inSavedPreferencesOIS.readObject();
+                    ParaProf.savedPreferences.setLoaded(true);
                 } catch (Exception e) {
                     if (e instanceof FileNotFoundException) {
                         System.out.println("No preference file present, using defaults!");
@@ -201,9 +200,6 @@ public class ParaProf implements ActionListener {
             loadDefaultTrial();
 
         } catch (Exception e) {
-            System.out.println("An un-caught exception has occurred within the program!");
-            System.out.println("The details of this exception have been stored in a file named: exception.err");
-            System.out.println("Please email this file to Robert Bell at bertie@cs.uoregon.edu ");
             e.printStackTrace();
         }
     }

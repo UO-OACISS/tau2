@@ -125,7 +125,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             fileMenu.add(subMenu);
             //End - Save menu.
 
-            menuItem = new JMenuItem("Edit ParaProf Preferences!");
+            menuItem = new JMenuItem("Preferences...");
             menuItem.addActionListener(this);
             fileMenu.add(menuItem);
 
@@ -388,7 +388,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
                 if (arg.equals("Show ParaProf Manager")) {
                     ParaProfManager jRM = new ParaProfManager();
                     jRM.show();
-                } else if (arg.equals("Edit ParaProf Preferences!")) {
+                } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();

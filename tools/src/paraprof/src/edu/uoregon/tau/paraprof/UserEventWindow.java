@@ -102,7 +102,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
             fileMenu.add(subMenu);
             //End - Save menu.
 
-            menuItem = new JMenuItem("Edit ParaProf Preferences!");
+            menuItem = new JMenuItem("Preferences...");
             menuItem.addActionListener(this);
             fileMenu.add(menuItem);
 
@@ -132,7 +132,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
             JCheckBoxMenuItem box = null;
             JRadioButtonMenuItem button = null;
 
-            descendingOrder = new JCheckBoxMenuItem("Decending Order", true);
+            descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
             descendingOrder.addActionListener(this);
             optionsMenu.add(descendingOrder);
 
@@ -159,6 +159,13 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
             button.addActionListener(this);
             group.add(button);
             subMenu.add(button);
+
+            
+            button = new JRadioButtonMenuItem("Standard Deviation", false);
+            button.addActionListener(this);
+            group.add(button);
+            subMenu.add(button);
+
             optionsMenu.add(subMenu);
 
             box = new JCheckBoxMenuItem("Display Sliders", false);
@@ -314,7 +321,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                     if (job.printDialog()) {
                         job.print();
                     }
-                } else if (arg.equals("Edit ParaProf Preferences!")) {
+                } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();
@@ -342,7 +349,11 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
                     valueType = 18;
                     this.setHeader();
                     panel.repaint();
-                } else if (arg.equals("Decending Order")) {
+                } else if (arg.equals("Standard Deviation")) {
+                    valueType = 20;
+                    this.setHeader();
+                    panel.repaint();
+                } else if (arg.equals("Descending Order")) {
                     if (((JCheckBoxMenuItem) optionsMenu.getItem(0)).isSelected())
                         order = 0;
                     else

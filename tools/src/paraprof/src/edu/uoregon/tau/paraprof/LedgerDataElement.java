@@ -4,9 +4,9 @@
  * This provides the ledger window classes a uniform interface to dealing with these objects.
  * It also provides draw coordinates for mouse events.
  * 
- * <P>CVS $Id: LedgerDataElement.java,v 1.1 2004/12/21 00:43:58 amorris Exp $</P>
+ * <P>CVS $Id: LedgerDataElement.java,v 1.2 2004/12/21 20:52:57 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		LedgerWindow
  * @see		LedgerWindowPanel
  */

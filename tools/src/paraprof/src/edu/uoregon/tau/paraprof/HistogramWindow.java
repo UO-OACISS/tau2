@@ -89,7 +89,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             fileMenu.add(subMenu);
             //End - Save menu.
 
-            menuItem = new JMenuItem("Edit ParaProf Preferences!");
+            menuItem = new JMenuItem("Preferences...");
             menuItem.addActionListener(this);
             fileMenu.add(menuItem);
 
@@ -226,7 +226,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     if (job.printDialog()) {
                         job.print();
                     }
-                } else if (arg.equals("Edit ParaProf Preferences!")) {
+                } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Close This Window")) {
                     closeThisWindow();

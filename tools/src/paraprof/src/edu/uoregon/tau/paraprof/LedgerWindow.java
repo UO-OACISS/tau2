@@ -2,9 +2,9 @@
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.1 2004/12/21 00:43:59 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.2 2004/12/21 20:52:57 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.1 $
+ * @version	$Revision: 1.2 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -62,7 +62,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
         fileMenu.add(subMenu);
         //End - Save menu.
 
-        menuItem = new JMenuItem("Edit ParaProf Preferences!");
+        menuItem = new JMenuItem("Preferences...");
         menuItem.addActionListener(this);
         fileMenu.add(menuItem);
 
@@ -241,7 +241,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
                     if (job.printDialog()) {
                         job.print();
                     }
-                } else if (arg.equals("Edit ParaProf Preferences!")) {
+                } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();

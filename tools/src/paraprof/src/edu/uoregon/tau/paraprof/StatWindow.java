@@ -99,7 +99,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             fileMenu.add(subMenu);
             //End - Save menu.
 
-            menuItem = new JMenuItem("Edit ParaProf Preferences!");
+            menuItem = new JMenuItem("Preferences...");
             menuItem.addActionListener(this);
             fileMenu.add(menuItem);
 
@@ -351,7 +351,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     if (job.printDialog()) {
                         job.print();
                     }
-                } else if (arg.equals("Edit ParaProf Preferences!")) {
+                } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();

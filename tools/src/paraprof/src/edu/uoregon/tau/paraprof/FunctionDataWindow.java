@@ -105,7 +105,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             fileMenu.add(subMenu);
             //End - Save menu.
 
-            menuItem = new JMenuItem("Edit ParaProf Preferences!");
+            menuItem = new JMenuItem("Preferences...");
             menuItem.addActionListener(this);
             fileMenu.add(menuItem);
 
@@ -361,7 +361,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                     if (job.printDialog()) {
                         job.print();
                     }
-                } else if (arg.equals("Edit ParaProf Preferences!")) {
+                } else if (arg.equals("Preferences...")) {
                     trial.getPreferences().showPreferencesWindow();
                 } else if (arg.equals("Save Image")) {
                     ParaProfImageOutput imageOutput = new ParaProfImageOutput();

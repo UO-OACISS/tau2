@@ -281,48 +281,54 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, 0, false);
+            renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             UtilFncs.systemError(e, null, "SMWP06");
         }
     }
 
-    public int print(Graphics g, PageFormat pf, int page) {
+    public int print(Graphics g, PageFormat pageFormat, int page) {
 
-        if (pf.getOrientation() == PageFormat.PORTRAIT)
-            System.out.println("PORTRAIT");
-        else if (pf.getOrientation() == PageFormat.LANDSCAPE)
-            System.out.println("LANDSCAPE");
+        if (page >= 1) {
+            return NO_SUCH_PAGE;
+        }
+        
+        double pageWidth = pageFormat.getImageableWidth();
+        double pageHeight = pageFormat.getImageableHeight();
+        int cols = (int) (xPanelSize / pageWidth) + 1;
+        int rows = (int) (yPanelSize / pageHeight) + 1;
+        double xScale = pageWidth / xPanelSize;
+        double yScale = pageHeight / yPanelSize;
+        double scale = Math.min(xScale, yScale);
+        
+        double tx = 0.0;
+        double ty = 0.0;
+        if (xScale > scale) {
+            tx = 0.5 * (xScale - scale) * xPanelSize;
+        } else {
+            ty = 0.5 * (yScale - scale) * yPanelSize;
+        }
 
-        if (page >= 3)
-            return Printable.NO_SUCH_PAGE;
         Graphics2D g2 = (Graphics2D) g;
-        g2.translate(pf.getImageableX(), pf.getImageableY());
-        g2.draw(new Rectangle2D.Double(0, 0, pf.getImageableWidth(), pf.getImageableHeight()));
 
-        renderIt(g2, 2, false);
+        g2.translate((int) pageFormat.getImageableX(),
+                (int) pageFormat.getImageableY());
+        g2.translate(tx, ty);
+        g2.scale(scale, scale);
+
+        renderIt(g2, false, true, false);
 
         return Printable.PAGE_EXISTS;
     }
 
-    public void renderIt(Graphics2D g2D, int instruction, boolean header) {
+    
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         try {
-            if (this.debug()) {
-                System.out.println("####################################");
-                System.out.println("StaticMainWindowPanel.renderIt(...)");
-                System.out.println("####################################");
-            }
 
             list = sMWindow.getData();
 
-            //######
-            //Some declarations.
-            //######
             int yCoord = 0;
             PPThread ppThread = null;
-            //######
-            //Some declarations.
-            //######
 
             //To make sure the bar details are set, this
             //method must be called.
@@ -363,30 +369,18 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
             Rectangle clipRect = null;
             Rectangle viewRect = null;
 
-            if (instruction == 0 || instruction == 1) {
-                if (instruction == 0) {
+            if (!fullWindow) {
+                if (toScreen) {
                     clipRect = g2D.getClipBounds();
                     yBeg = (int) clipRect.getY();
                     yEnd = (int) (yBeg + clipRect.getHeight());
-                    /*
-                     * System.out.println("Clipping Rectangle: xBeg,xEnd:
-                     * "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+ "
-                     * yBeg,yEnd:
-                     * "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
-                     */
                 } else {
                     viewRect = sMWindow.getViewRect();
                     yBeg = (int) viewRect.getY();
                     yEnd = (int) (yBeg + viewRect.getHeight());
-                    /*
-                     * System.out.println("Viewing Rectangle: xBeg,xEnd:
-                     * "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+ "
-                     * yBeg,yEnd:
-                     * "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
-                     */
                 }
-                //Because tooltip redraw can louse things up. Add an extra one
-                // to draw.
+                
+                //Because tooltip redraw can louse things up. Add an extra one to draw.
                 startElement = ((yBeg - yCoord) / barSpacing) - 2;
                 endElement = ((yEnd - yCoord) / barSpacing) + 2;
 
@@ -402,9 +396,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                 if (endElement > (list.size() - 1))
                     endElement = (list.size() - 1);
 
-                if (instruction == 0)
+                if (toScreen)
                     yCoord = yCoord + (startElement * barSpacing);
-            } else if (instruction == 2 || instruction == 3) {
+            } else {
                 startElement = 0;
                 endElement = ((list.size()) - 1);
             }
@@ -412,7 +406,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
             //######
             //Draw the header if required.
             //######
-            if (header) {
+            if (drawHeader) {
                 FontRenderContext frc = g2D.getFontRenderContext();
                 Insets insets = this.getInsets();
                 yCoord = yCoord + (barSpacing);
@@ -463,7 +457,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     }
 
                     int width = drawBar(g2D, fmFont, barString, ppThread, barXCoord, yCoord,
-                            barHeight, instruction);
+                            barHeight, toScreen);
 
                     if (width > maxBarWidth)
                         maxBarWidth = width;
@@ -471,7 +465,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                 }
             }
 
-            if (resizePanel(fmFont, maxBarWidth + 5) && instruction == 0) {
+            if (resizePanel(fmFont, maxBarWidth + 5) && toScreen) {
                 this.revalidate();
                 return;
             }
@@ -487,7 +481,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     }
 
     private int drawStackedBar(Graphics2D g2D, FontMetrics fmFont, String text,
-            PPThread ppThread, int barXCoord, int yCoord, int barHeight, int instruction) {
+            PPThread ppThread, int barXCoord, int yCoord, int barHeight, boolean toScreen) {
 
         DssIterator l = null;
         Group selectedGroup = trial.getColorChooser().getHighlightedGroup();
@@ -571,7 +565,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     }
 
                     //Set the draw coords.
-                    if (instruction == 0)
+                    if (toScreen)
                         ppFunctionProfile.setDrawCoords(barXCoord, (barXCoord + xLength),
                                 (yCoord - barHeight), yCoord);
 
@@ -595,7 +589,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 
                     //Set the draw coords.
-                    if (instruction == 0)
+                    if (toScreen)
                         ppFunctionProfile.setDrawCoords(barXCoord, (barXCoord + xLength),
                                 (yCoord - barHeight), yCoord);
 
@@ -608,7 +602,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                 //Still want to set the draw coords for this function, were it
                 // to be non zero.
                 //This aids in mouse click and tool tip events.
-                if (instruction == 0)
+                if (toScreen)
                     ppFunctionProfile.setDrawCoords(barXCoord, barXCoord, (yCoord - barHeight),
                             yCoord);
             }
@@ -661,11 +655,11 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     }
 
     private int drawBar(Graphics2D g2D, FontMetrics fmFont, String text, PPThread ppThread,
-            int barXCoord, int yCoord, int barHeight, int instruction) {
+            int barXCoord, int yCoord, int barHeight, boolean toScreen) {
 
         if (sMWindow.getStackBars())
             return drawStackedBar(g2D, fmFont, text, ppThread, barXCoord, yCoord, barHeight,
-                    instruction);
+                    toScreen);
 
         Iterator l = null;
         Group selectedGroup = trial.getColorChooser().getHighlightedGroup();
@@ -771,7 +765,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                         }
 
                         //Set the draw coords.
-                        if (instruction == 0)
+                        if (toScreen)
                             ppFunctionProfile.setDrawCoords(barXCoord, (barXCoord + xLength),
                                     (yCoord - barHeight), yCoord);
 
@@ -795,7 +789,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                         g2D.drawRect(barXCoord, (yCoord - barHeight), xLength, barHeight);
 
                         //Set the draw coords.
-                        if (instruction == 0)
+                        if (toScreen)
                             ppFunctionProfile.setDrawCoords(barXCoord, (barXCoord + xLength),
                                     (yCoord - barHeight), yCoord);
 
@@ -808,7 +802,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
                     //Still want to set the draw coords for this function, were
                     // it to be none zero.
                     //This aids in mouse click and tool tip events.
-                    if (instruction == 0)
+                    if (toScreen)
                         ppFunctionProfile.setDrawCoords(barXCoord, barXCoord,
                                 (yCoord - barHeight), yCoord);
                 }

@@ -2,11 +2,11 @@
  * LedgerWindowPanel This object represents the ledger window panel.
  * 
  * <P>
- * CVS $Id: LedgerWindowPanel.java,v 1.1 2004/12/21 00:43:59 amorris Exp $
+ * CVS $Id: LedgerWindowPanel.java,v 1.2 2004/12/21 20:52:57 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see LedgerDataElement
  * @see LedgerWindow
  * 
@@ -125,32 +125,51 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, 0, false);
+            renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             System.out.println(e);
             UtilFncs.systemError(e, null, "TDWP03");
         }
     }
 
-    public int print(Graphics g, PageFormat pf, int page) {
+    public int print(Graphics g, PageFormat pageFormat, int page) {
 
-        if (pf.getOrientation() == PageFormat.PORTRAIT)
-            System.out.println("PORTRAIT");
-        else if (pf.getOrientation() == PageFormat.LANDSCAPE)
-            System.out.println("LANDSCAPE");
+        if (page >= 1) {
+            return NO_SUCH_PAGE;
+        }
+        
+        double pageWidth = pageFormat.getImageableWidth();
+        double pageHeight = pageFormat.getImageableHeight();
+        int cols = (int) (xPanelSize / pageWidth) + 1;
+        int rows = (int) (yPanelSize / pageHeight) + 1;
+        double xScale = pageWidth / xPanelSize;
+        double yScale = pageHeight / yPanelSize;
+        double scale = Math.min(xScale, yScale);
+        
+        double tx = 0.0;
+        double ty = 0.0;
+        if (xScale > scale) {
+            tx = 0.5 * (xScale - scale) * xPanelSize;
+        } else {
+            ty = 0.5 * (yScale - scale) * yPanelSize;
+        }
 
-        if (page >= 3)
-            return Printable.NO_SUCH_PAGE;
         Graphics2D g2 = (Graphics2D) g;
-        g2.translate(pf.getImageableX(), pf.getImageableY());
-        g2.draw(new Rectangle2D.Double(0, 0, pf.getImageableWidth(), pf.getImageableHeight()));
 
-        renderIt(g2, 2, false);
+        g2.translate((int) pageFormat.getImageableX(),
+                (int) pageFormat.getImageableY());
+        g2.translate(tx, ty);
+        g2.scale(scale, scale);
+
+        
+
+        renderIt(g2, false, true, false);
 
         return Printable.PAGE_EXISTS;
     }
 
-    public void renderIt(Graphics2D g2D, int instruction, boolean header) {
+    
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         try {
             list = lWindow.getData();
 
@@ -196,7 +215,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             }
             
             
-            if (resizePanel(fmFont, barXCoord) && instruction == 0) {
+            if (resizePanel(fmFont, barXCoord) && toScreen) {
                 this.revalidate();
                 return;
             }
@@ -208,8 +227,8 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             Rectangle clipRect = null;
             Rectangle viewRect = null;
 
-            if (instruction == 0 || instruction == 1) {
-                if (instruction == 0) {
+            if (!fullWindow) {
+                if (toScreen) {
                     clipRect = g2D.getClipBounds();
                     yBeg = (int) clipRect.getY();
                     yEnd = (int) (yBeg + clipRect.getHeight());
@@ -233,7 +252,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                 if (endElement > (list.size() - 1))
                     endElement = (list.size() - 1);
 
-                if (instruction == 0)
+                if (toScreen)
                     yCoord = yCoord + ((startElement-1) * barSpacing);
             } else {
                 startElement = 0;
@@ -285,13 +304,13 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
                     // reasons.
                     int tmpWidth = 5 + barHeight + (fmFont.stringWidth(s));
 
-                    //Figure out how wide that string was for x coord
-                    // reasons.
+                    //Figure out how wide that string was for x coord reasons.
                     if (tmpXWidthCalc < tmpWidth) {
                         tmpXWidthCalc = (tmpWidth + 11);
                     }
 
-                    if (instruction == 0)
+                    // only set the boundaries (for clicking) if we are drawing to the screen
+                    if (toScreen)
                         lde.setDrawCoords(0, tmpWidth, (yCoord - barHeight), yCoord);
 
                     //Reset the xCoord.

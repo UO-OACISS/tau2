@@ -65,38 +65,49 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     public void paintComponent(Graphics g) {
         try {
             super.paintComponent(g);
-            renderIt((Graphics2D) g, 0, false);
+            renderIt((Graphics2D) g, true, false, false);
         } catch (Exception e) {
             System.out.println(e);
             UtilFncs.systemError(e, null, "TDWP03");
         }
     }
 
-    public int print(Graphics g, PageFormat pf, int page) {
+    public int print(Graphics g, PageFormat pageFormat, int page) {
+        if (page >= 1) {
+            return NO_SUCH_PAGE;
+        }
+        
+        double pageWidth = pageFormat.getImageableWidth();
+        double pageHeight = pageFormat.getImageableHeight();
+        int cols = (int) (xPanelSize / pageWidth) + 1;
+        int rows = (int) (yPanelSize / pageHeight) + 1;
+        double xScale = pageWidth / xPanelSize;
+        double yScale = pageHeight / yPanelSize;
+        double scale = Math.min(xScale, yScale);
+        
+        double tx = 0.0;
+        double ty = 0.0;
+        if (xScale > scale) {
+            tx = 0.5 * (xScale - scale) * xPanelSize;
+        } else {
+            ty = 0.5 * (yScale - scale) * yPanelSize;
+        }
 
-        if (pf.getOrientation() == PageFormat.PORTRAIT)
-            System.out.println("PORTRAIT");
-        else if (pf.getOrientation() == PageFormat.LANDSCAPE)
-            System.out.println("LANDSCAPE");
-
-        if (page >= 3)
-            return Printable.NO_SUCH_PAGE;
         Graphics2D g2 = (Graphics2D) g;
-        g2.translate(pf.getImageableX(), pf.getImageableY());
-        g2.draw(new Rectangle2D.Double(0, 0, pf.getImageableWidth(), pf.getImageableHeight()));
 
-        renderIt(g2, 2, false);
+        g2.translate((int) pageFormat.getImageableX(),
+                (int) pageFormat.getImageableY());
+        g2.translate(tx, ty);
+        g2.scale(scale, scale);
+
+        renderIt(g2, false, true, false);
 
         return Printable.PAGE_EXISTS;
     }
 
-    public void renderIt(Graphics2D g2D, int instruction, boolean header) {
+    
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         try {
-            if (this.debug()) {
-                System.out.println("####################################");
-                System.out.println("UserEventWindowPanel.renderIt(...)");
-                System.out.println("####################################");
-            }
 
             list = uEWindow.getData();
 
@@ -144,6 +155,9 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             case 18:
                 maxValue = userEvent.getMaxUserEventMeanValue();
                 break;
+            case 20:
+                maxValue = userEvent.getMaxUserEventStdDev();
+                break;
             default:
                 UtilFncs.systemError(null, null, "Unexpected type - UEWP value: "
                         + uEWindow.getValueType());
@@ -163,7 +177,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             //At this point we can determine the size this panel will
             //require. If we need to resize, don't do any more drawing,
             //just call revalidate.
-            if (resizePanel(fmFont, barXCoord) && instruction == 0) {
+            if (resizePanel(fmFont, barXCoord) && toScreen) {
                 this.revalidate();
                 return;
             }
@@ -175,27 +189,15 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             Rectangle clipRect = null;
             Rectangle viewRect = null;
 
-            if (instruction == 0 || instruction == 1) {
-                if (instruction == 0) {
+            if (!fullWindow) {
+                if (toScreen) {
                     clipRect = g2D.getClipBounds();
                     yBeg = (int) clipRect.getY();
                     yEnd = (int) (yBeg + clipRect.getHeight());
-                    /*
-                     * System.out.println("Clipping Rectangle: xBeg,xEnd:
-                     * "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+ "
-                     * yBeg,yEnd:
-                     * "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
-                     */
                 } else {
                     viewRect = uEWindow.getViewRect();
                     yBeg = (int) viewRect.getY();
                     yEnd = (int) (yBeg + viewRect.getHeight());
-                    /*
-                     * System.out.println("Viewing Rectangle: xBeg,xEnd:
-                     * "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+ "
-                     * yBeg,yEnd:
-                     * "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
-                     */
                 }
                 startElement = ((yBeg - yCoord) / barSpacing) - 1;
                 endElement = ((yEnd - yCoord) / barSpacing) + 1;
@@ -212,9 +214,9 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                 if (endElement > (list.size() - 1))
                     endElement = (list.size() - 1);
 
-                if (instruction == 0)
+                if (toScreen)
                     yCoord = yCoord + (startElement * barSpacing);
-            } else if (instruction == 2 || instruction == 3) {
+            } else {
                 startElement = 0;
                 endElement = ((list.size()) - 1);
             }
@@ -222,7 +224,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
             //######
             //Draw the header if required.
             //######
-            if (header) {
+            if (drawHeader) {
                 FontRenderContext frc = g2D.getFontRenderContext();
                 Insets insets = this.getInsets();
                 yCoord = yCoord + (barSpacing);
@@ -268,6 +270,9 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                 case 18:
                     value = ppUserEventProfile.getUserEventMeanValue();
                     break;
+                case 20:
+                    value = ppUserEventProfile.getStdDev();
+                    break;
                 default:
                     UtilFncs.systemError(null, null, "Unexpected type - UEWP value: "
                             + uEWindow.getValueType());
@@ -281,7 +286,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
                 drawBar(g2D, fmFont, value, maxValue, "n,c,t " + (ppUserEventProfile.getNodeID())
                         + "," + (ppUserEventProfile.getContextID()) + ","
                         + (ppUserEventProfile.getThreadID()), barXCoord, yCoord, barHeight,
-                        groupMember, instruction);
+                        groupMember);
             }
             //######
             //End - Draw thread information for this mapping.
@@ -292,8 +297,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     }
 
     private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue,
-            String text, int barXCoord, int yCoord, int barHeight, boolean groupMember,
-            int instruction) {
+            String text, int barXCoord, int yCoord, int barHeight, boolean groupMember) {
 
         int xLength = 0;
         double d = 0.0;
