@@ -498,19 +498,25 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 #ifdef DEBUG_PROF
   printf("Inside Tau_profile_timer_ fname=%s *ptr = %x\n", fname, *ptr);
 #endif /* DEBUG_PROF */
-  if (*ptr == 0)
-  {  // remove garbage characters from the end of name
-    for(int i=0; i<strlen(fname); i++)
-    {
-      if (!isprint(fname[i]))
-      {
-        fname[i] = '\0';
-        break;
-      }
-    }
-    *ptr = Tau_get_profiler(fname, type, group, group_name);
-  }
 
+
+  if (*ptr == 0) {
+    
+    RtsLayer::LockEnv();
+    
+    if (*ptr == 0) {  
+      // remove garbage characters from the end of name
+      for(int i=0; i<strlen(fname); i++) {
+	if (!isprint(fname[i])) {
+	  fname[i] = '\0';
+	  break;
+	}
+      }
+      *ptr = Tau_get_profiler(fname, type, group, group_name);
+    }
+    RtsLayer::UnLockEnv();
+  }
+  
 #ifdef DEBUG_PROF
   printf("get_profiler returns %x\n", *ptr);
 #endif /* DEBUG_PROF */
@@ -599,7 +605,7 @@ extern "C" void Tau_set_interrupt_interval(int value)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.44 $   $Date: 2004/10/04 23:32:15 $
- * VERSION: $Id: TauCAPI.cpp,v 1.44 2004/10/04 23:32:15 amorris Exp $
+ * $Revision: 1.45 $   $Date: 2005/01/05 02:13:20 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.45 2005/01/05 02:13:20 amorris Exp $
  ***************************************************************************/
 
