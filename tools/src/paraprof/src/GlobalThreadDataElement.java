@@ -95,8 +95,7 @@ public class GlobalThreadDataElement
   
     public static String getTStatStringHeading(Trial trial){
 	String metricType = null;
-	String trialName = trial.getCounterName();
-	if((trialName.equals("Default"))||(trialName.indexOf("TIME") != -1))
+	if(trial.isTimeMetric())
 	    metricType = "time";
 	else
 	    metricType = "counts";
@@ -146,7 +145,7 @@ public class GlobalThreadDataElement
 	    }
       
 	    position = 81;
-	    tmpArray = ("count/call").toCharArray();
+	    tmpArray = ("total "+metricType+"/call").toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
 		position++;
@@ -169,7 +168,7 @@ public class GlobalThreadDataElement
 	return "An error occured pocessing this string!"; 
     }
   
-    public String getTStatString(int dataValueLocation){
+    public String getTStatString(int type, int dataValueLocation){
 	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
 	    int initialBufferLength = 99;
@@ -190,9 +189,8 @@ public class GlobalThreadDataElement
 	    }
       
 	    position = 9;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getExclusiveValue(dataValueLocation),
-										  defaultNumberPrecision)));
+	    tmpString = UtilFncs.getOutputString(type,this.getExclusiveValue(dataValueLocation));
+
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -200,9 +198,8 @@ public class GlobalThreadDataElement
 	    }
       
 	    position = 27;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getInclusiveValue(dataValueLocation),
-										  defaultNumberPrecision)));
+	    tmpString = UtilFncs.getOutputString(type,this.getInclusiveValue(dataValueLocation));
+
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -230,9 +227,8 @@ public class GlobalThreadDataElement
 	    }
       
 	    position = 81;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getUserSecPerCall(dataValueLocation),
-										  defaultNumberPrecision)));
+	    tmpString = UtilFncs.getOutputString(type,this.getUserSecPerCall(dataValueLocation));
+
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];

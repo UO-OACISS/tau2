@@ -121,8 +121,8 @@ public class SMWThreadDataElement implements Comparable{
     public double getUserSecPerCall(){
 	return gTDEReference.getUserSecPerCall(trial.getCurValLoc());}
   
-    public String getTStatString(){
-	return gTDEReference.getTStatString(trial.getCurValLoc());}
+    public String getTStatString(int type){
+	return gTDEReference.getTStatString(type, trial.getCurValLoc());}
   
     //User event interface.
     public String getUserEventName(){

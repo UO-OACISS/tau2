@@ -59,6 +59,7 @@ public class UtilFncs{
     //0 - microseconds
     //1 - milliseconds
     //2 - seconds
+    //3 - hr:min:sec
     //At present, the passed in double value is assumed to be in microseconds.
     public static String getOutputString(int type, double d){
 	switch(type){
@@ -68,6 +69,32 @@ public class UtilFncs{
 	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000), ParaProf.defaultNumberPrecision)));
 	case 2:
 	    return (Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
+	case 3:
+	    int hr = 0;
+	    int min = 0;
+	    hr = (int) (d/3600000000.00);
+	    //Calculate the number of microseconds left after hours are subtracted.
+	    d = d-hr*3600000000.00;
+	    min = (int) (d/60000000.00);
+	    //Calculate the number of microseconds left after minutess are subtracted.
+	    d = d-min*60000000.00;
+	    return (Integer.toString(hr)+":"+Integer.toString(min)+":"+Double.toString(UtilFncs.adjustDoublePresision((d/1000000), ParaProf.defaultNumberPrecision)));
+	default:
+	    ParaProf.systemError(null, null, "Unexpected string type - UF02 value: " + type);
+	}
+	return null;
+    }
+
+    public static String getUnitsString(int type){
+	switch(type){
+	case 0:
+	    return " (microseconds)";
+	case 1:
+	    return " (milliseconds)";
+	case 2:
+	    return " (seconds)";
+	case 3:
+	    return " (hour:minute:seconds)";
 	default:
 	    ParaProf.systemError(null, null, "Unexpected string type - UF02 value: " + type);
 	}

@@ -481,15 +481,21 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //******************************
     public void menuSelected(MenuEvent evt){
 	try{
-	    String trialName = trial.getCounterName();
-	    boolean isDefault = false;
-	    boolean isTimeMetric = false;
-	    
-	    if(trialName.equals("Default")) 
-		isDefault = true;
-	    else if(trialName.indexOf("TIME") != -1)
-		isTimeMetric = true;
-	    
+	    if(metric > 1){
+		valuePercentMenu.setEnabled(false);
+		unitsMenu.setEnabled(false);}
+	    else if(percent){
+		valuePercentMenu.setEnabled(true);
+		unitsMenu.setEnabled(false);}
+	    else if(trial.isTimeMetric()){
+		valuePercentMenu.setEnabled(true);
+		unitsMenu.setEnabled(true);
+	    }
+	    else{
+		valuePercentMenu.setEnabled(true);
+		unitsMenu.setEnabled(false);
+	    }
+
 	    if(trial.groupNamesPresent())
 		mappingGroupLedgerItem.setEnabled(true);
 	    else
@@ -499,23 +505,6 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 		userEventLedgerItem.setEnabled(true);
 	    else
 		userEventLedgerItem.setEnabled(false);
-	    
-	    
-	    
-	    if(metric > 1){
-		valuePercentMenu.setEnabled(false);
-		unitsMenu.setEnabled(false);}
-	    else if(percent){
-		valuePercentMenu.setEnabled(true);
-		unitsMenu.setEnabled(false);}
-	    else if(!(isDefault || isTimeMetric)){
-		valuePercentMenu.setEnabled(true);
-		unitsMenu.setEnabled(false);
-	    }
-	    else{
-		valuePercentMenu.setEnabled(true);
-		unitsMenu.setEnabled(true);
-	    }
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "TDW04");

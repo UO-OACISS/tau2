@@ -325,7 +325,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
     
   
     //Stat Strings. 
-    public String getMeanTotalStatString(int dataValueLocation){
+    public String getMeanTotalStatString(int type, int dataValueLocation){
   
 	try{
 	    int defaultNumberPrecision = ParaProf.defaultNumberPrecision;
@@ -347,9 +347,8 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    }
       
 	    position = 9;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getMeanExclusiveValue(dataValueLocation),
-										  defaultNumberPrecision)));
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanExclusiveValue(dataValueLocation));
+
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -357,9 +356,8 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    }
       
 	    position = 27;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getMeanInclusiveValue(dataValueLocation),
-										  defaultNumberPrecision)));
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanInclusiveValue(dataValueLocation));
+
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];
@@ -387,9 +385,8 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	    }
       
 	    position = 81;
-	    tmpString = new String(Double.toString(
-						   UtilFncs.adjustDoublePresision(this.getMeanUserSecPerCall(dataValueLocation),
-										  defaultNumberPrecision)));
+	    tmpString = UtilFncs.getOutputString(type,this.getMeanUserSecPerCall(dataValueLocation));
+
 	    tmpArray = tmpString.toCharArray();
 	    for(int i=0;i<tmpArray.length;i++){
 		statStringArray[position] = tmpArray[i];

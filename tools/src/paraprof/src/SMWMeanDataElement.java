@@ -184,11 +184,11 @@ public class SMWMeanDataElement implements Comparable
     return tmpGME.getMeanInclusivePercentValue(trial.getCurValLoc());
   }
   
-  public String getMeanTotalStatString()
+  public String getMeanTotalStatString(int type)
   {
     tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
     
-    return tmpGME.getMeanTotalStatString(trial.getCurValLoc());
+    return tmpGME.getMeanTotalStatString(type, trial.getCurValLoc());
   }
   
   public double getMeanNumberOfCalls(){

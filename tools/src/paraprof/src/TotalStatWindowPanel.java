@@ -139,7 +139,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 	    //Draw the counter name if required.
 	    String counterName = trial.getCounterName();
 	    if(counterName != null){
-		g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
+		g.drawString("COUNTER NAME: " + counterName + UtilFncs.getUnitsString(tSWindow.units()), 5, yCoord);
 		yCoord = yCoord + (spacing);
 	    }
 	    //End - Draw the counter name if required.
@@ -215,7 +215,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
 		    for(int i = startThreadElement; i <= endThreadElement; i++)
 			{ 
 			    tmpSMWThreadDataElement = (SMWThreadDataElement) tmpThreadDataElementList.elementAt(i);
-			    tmpString = tmpSMWThreadDataElement.getTStatString();
+			    tmpString = tmpSMWThreadDataElement.getTStatString(tSWindow.units());
           
 			    yCoord = yCoord + spacing;
           
@@ -368,7 +368,7 @@ public class TotalStatWindowPanel extends JPanel implements ActionListener, Mous
           
 			    if(fmMonoFont != null)
 				{
-				    String tmpString = tmpSMWThreadDataElement.getTStatString();
+				    String tmpString = tmpSMWThreadDataElement.getTStatString(tSWindow.units());
 				    int stringWidth = fmMonoFont.stringWidth(tmpString) + 20;
           
 				    if(xCoord <= stringWidth)

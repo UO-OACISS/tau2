@@ -172,13 +172,19 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //Add a listener for this radio button.
 	    microsecondsButton.addActionListener(this);
       
+	    hMSButton = new JRadioButtonMenuItem("hr:min:sec", false);
+	    //Add a listener for this radio button.
+	    hMSButton.addActionListener(this);
+
 	    unitsGroup.add(secondsButton);
 	    unitsGroup.add(millisecondsButton);
 	    unitsGroup.add(microsecondsButton);
+	    unitsGroup.add(hMSButton);
       
 	    unitsMenu.add(secondsButton);
 	    unitsMenu.add(millisecondsButton);
 	    unitsMenu.add(microsecondsButton);
+	    unitsMenu.add(hMSButton);
 	    optionsMenu.add(unitsMenu);
 	    //End Submenu.
 
@@ -362,27 +368,34 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 			panel.repaint();
 		    }
 		}
+		else if(arg.equals("hr:min:sec")){
+		    if(hMSButton.isSelected()){
+			units = 3;
+			//Call repaint.
+			panel.repaint();
+		    }
+		}
 		else if(arg.equals("Microseconds")){
 			if(microsecondsButton.isSelected()){
 			    units = 0;
 			    //Call repaint.
 			    panel.repaint();
 			}
+		}
+		else if(arg.equals("Milliseconds")){
+		    if(millisecondsButton.isSelected()){
+			units = 1;
+			//Call repaint.
+			panel.repaint();
 		    }
-		    else if(arg.equals("Milliseconds")){
-			if(millisecondsButton.isSelected()){
-			    units = 1;
-			    //Call repaint.
-			    panel.repaint();
-			}
+		}
+		else if(arg.equals("Seconds")){
+		    if(secondsButton.isSelected()){
+			units = 2;
+			//Call repaint.
+			panel.repaint();
 		    }
-		    else if(arg.equals("Seconds")){
-			if(secondsButton.isSelected()){
-			    units = 2;
-			    //Call repaint.
-			    panel.repaint();
-			}
-		    }
+		}
 		else if(arg.equals("Show Function Ledger")){
 		    //In order to be in this window, I must have loaded the data. So,
 		    //just show the mapping ledger window.
@@ -442,13 +455,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     public void menuSelected(MenuEvent evt){
 	try{
 	    String trialName = trial.getCounterName();
-	    boolean isDefault = false;
-	    boolean isTimeMetric = false;
-	    
-	    if(trialName.equals("Default")) 
-		isDefault = true;
-	    else if(trialName.indexOf("TIME") != -1)
-		isTimeMetric = true;
+	    trialName = trialName.toUpperCase();
+	    if((trial.isTimeMetric())&&(!global))
+		unitsMenu.setEnabled(true);
+	    else
+		unitsMenu.setEnabled(false);
+
 
 	    if(trial.groupNamesPresent())
 		mappingGroupLedgerItem.setEnabled(true);
@@ -460,11 +472,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    else{
 		userEventLedgerItem.setEnabled(false);
 	    }
-	    
-	    if((isDefault || isTimeMetric)&&(!global))
-		unitsMenu.setEnabled(true);
-	    else
-		unitsMenu.setEnabled(false);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "CPTW03");
@@ -595,12 +602,12 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private StaticMainWindowData sMWData;
     private boolean global = false;
   
-    private JMenu unitsMenu;
-    private JMenuItem mappingGroupLedgerItem;
-    private JMenuItem userEventLedgerItem;
+    private JMenu unitsMenu = null;;
+    private JMenuItem mappingGroupLedgerItem = null;;
+    private JMenuItem userEventLedgerItem = null;;
 
-    private ButtonGroup sortGroup;
-    private ButtonGroup sortOrderGroup;
+    private ButtonGroup sortGroup = null;;
+    private ButtonGroup sortOrderGroup = null;;
     private ButtonGroup unitsGroup = null;
     private ButtonGroup metricGroup = null;
   
@@ -616,6 +623,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private JRadioButtonMenuItem secondsButton = null;
     private JRadioButtonMenuItem millisecondsButton = null;
     private JRadioButtonMenuItem microsecondsButton = null;
+    private JRadioButtonMenuItem hMSButton = null;
     
     private String metric = "Exclusive";
     
@@ -624,7 +632,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     boolean sortByMillisecond = true;    
     boolean descendingOrder = true;
     boolean inclusive = false;
-    private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+    private int units = 0; //0-microseconds,1-milliseconds,2-seconds,3-hr:min:sec.
 
 
     int server;

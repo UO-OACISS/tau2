@@ -141,7 +141,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
       //Draw the counter name if required.
       String counterName = trial.getCounterName();
       if(counterName != null){
-        g.drawString("COUNTER NAME: " + counterName, 5, yCoord);
+        g.drawString("COUNTER NAME: " + counterName + UtilFncs.getUnitsString(mTSWindow.units()), 5, yCoord);
         yCoord = yCoord + (spacing);
       }
       //End - Draw the counter name if required.
@@ -215,7 +215,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
           for(int i = startThreadElement; i <= endThreadElement; i++)
           { 
             tmpSMWMeanDataElement = (SMWMeanDataElement) tmpMeanDataElementList.elementAt(i);
-          tmpString = tmpSMWMeanDataElement.getMeanTotalStatString();
+          tmpString = tmpSMWMeanDataElement.getMeanTotalStatString(mTSWindow.units());
           
           yCoord = yCoord + spacing;
             g.setColor(Color.black);
@@ -364,7 +364,7 @@ public class MeanTotalStatWindowPanel extends JPanel implements ActionListener, 
           
           if(fmMonoFont != null)
           {
-            String tmpString = tmpSMWMeanDataElement.getMeanTotalStatString();
+            String tmpString = tmpSMWMeanDataElement.getMeanTotalStatString(mTSWindow.units());
             int stringWidth = fmMonoFont.stringWidth(tmpString) + 20;
             
             if(xCoord <= stringWidth)

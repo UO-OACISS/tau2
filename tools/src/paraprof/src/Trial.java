@@ -238,6 +238,15 @@ public class Trial extends Thread{
 	Value tmpValue = (Value) values.elementAt(currentValueLocation);
 	return tmpValue.getValueName();
     }
+
+    public boolean isTimeMetric(){
+	String trialName = this.getCounterName();
+	trialName = trialName.toUpperCase();
+	if(trialName.indexOf("TIME") == -1)
+	    return false;
+	else
+	    return true;
+    }
   
     public synchronized void buildStaticData(File inFile){
 	//Set the currentFile, and start the thread.
@@ -418,7 +427,7 @@ public class Trial extends Thread{
 	    //Now set the counter name.
       
 	    if(counterName == null)
-		counterName = new String("Default");
+		counterName = new String("Wallclock Time");
       
 	    System.out.println("Counter name is: " + counterName);
       
