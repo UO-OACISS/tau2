@@ -133,7 +133,7 @@ CLINKFLAGS =
 # this compiler go here also; typically there are few flags required; hence 
 # there are no separate macros provided for such flags.
 #---------------------------------------------------------------------------
-CC	= $(TAU_CC)
+CC	= $(TAU_CC_FE)
 
 
 #---------------------------------------------------------------------------
