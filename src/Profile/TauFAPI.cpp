@@ -136,6 +136,9 @@ void tau_profile_exit_(char *msg)
 void tau_profile_init_(int *argc, char ***argv)
 {
   /* tau_init(*argc, *argv); */
+#ifndef TAU_MPI
+  tau_set_node(0); 
+#endif /* TAU_MPI */
   return;
 }
 
@@ -288,6 +291,9 @@ void TAU_PROFILE_INIT()
 {
   _main();
   // tau_profile_init_(argc, argv);
+#ifndef TAU_MPI
+  tau_set_node(0); 
+#endif /* TAU_MPI */
 }
 
 void TAU_PROFILE_SET_NODE(int *node)
@@ -391,6 +397,9 @@ void tau_profile_stop(int **profiler)
 
 void tau_profile_init()
 {
+#ifndef TAU_MPI
+  tau_set_node(0); 
+#endif /* TAU_MPI */
   
 }
 
@@ -498,6 +507,9 @@ void tau_profile_init__()
 {
   //_main();
   // tau_profile_init_(argc, argv);
+#ifndef TAU_MPI
+  tau_set_node(0); 
+#endif /* TAU_MPI */
 }
 
 void tau_profile_set_node__(int *node)
@@ -562,6 +574,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2001/02/14 21:58:40 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.16 2001/02/14 21:58:40 sameer Exp $ 
+ * $Revision: 1.17 $   $Date: 2001/10/23 17:16:39 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.17 2001/10/23 17:16:39 sameer Exp $ 
  ***************************************************************************/
