@@ -109,23 +109,32 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 
 #PCL##include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/PCLMakefile.stub	  #ENDIF#
 
+############# OpenMP Fortran Option ########
+#OPENMP#TAU_F90_OPT = -mp                   #ENDIF#
+#COMPAQCXX_OPENMP#TAU_F90_OPT = -omp        #ENDIF#
+#IBMXLC_OPENMP#TAU_F90_OPT = -qsmp=omp      #ENDIF#
+#GUIDE#TAU_F90_OPT =                        #ENDIF#
+#PGIOPENMP#TAU_F90_OPT = -mp                #ENDIF#
+#INTELOPENMP#TAU_F90_OPT = -openmp          #ENDIF#
+#HITACHI_OPENMP#TAU_F90_OPT =               #ENDIF#
+
 ############# Fortran Compiler #############
-#GNU_FORTRAN#TAU_F90         = g77      $(ABI)    #ENDIF#
-#SGI_FORTRAN#TAU_F90         = f90      $(ABI)    #ENDIF#
-#IBM_FORTRAN#TAU_F90         = xlf90    $(ABI)    #ENDIF#
-#IBM64_FORTRAN#TAU_F90       = xlf90    $(ABI)    #ENDIF#
-#CRAY_FORTRAN#TAU_F90        = f90      $(ABI)    #ENDIF#
-#PGI_FORTRAN#TAU_F90         = pgf90    $(ABI)    #ENDIF#
-#ABSOFT_FORTRAN#TAU_F90      = f90      $(ABI)    #ENDIF#
-#FUJITSU_FORTRAN#TAU_F90     = F90      $(ABI)    #ENDIF#
-#SUN_FORTRAN#TAU_F90         = f90      $(ABI)    #ENDIF#
-#COMPAQ_FORTRAN#TAU_F90      = f90      $(ABI)    #ENDIF#
-#KAI_FORTRAN#TAU_F90         = guidef90 $(ABI)    #ENDIF#
-#HP_FORTRAN#TAU_F90          = f90 	$(ABI)    #ENDIF#
-#HITACHI_FORTRAN#TAU_F90     = f90 	$(ABI)    #ENDIF#
-#INTEL_FORTRAN#TAU_F90       = efc 	$(ABI)    #ENDIF#
-#INTEL32_FORTRAN#TAU_F90     = ifc 	$(ABI)    #ENDIF#
-#NEC_FORTRAN#TAU_F90         = f90 	$(ABI)    #ENDIF#
+#GNU_FORTRAN#TAU_F90         = g77      $(ABI) $(TAU_F90_OPT)    #ENDIF#
+#SGI_FORTRAN#TAU_F90         = f90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#IBM_FORTRAN#TAU_F90         = xlf90    $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#IBM64_FORTRAN#TAU_F90       = xlf90    $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#CRAY_FORTRAN#TAU_F90        = f90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#PGI_FORTRAN#TAU_F90         = pgf90    $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#ABSOFT_FORTRAN#TAU_F90      = f90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#FUJITSU_FORTRAN#TAU_F90     = F90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#SUN_FORTRAN#TAU_F90         = f90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#COMPAQ_FORTRAN#TAU_F90      = f90      $(ABI)  $(TAU_F90_OPT)  #ENDIF#
+#KAI_FORTRAN#TAU_F90         = guidef90 $(ABI) $(TAU_F90_OPT)   #ENDIF#
+#HP_FORTRAN#TAU_F90          = f90 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
+#HITACHI_FORTRAN#TAU_F90     = f90 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
+#INTEL_FORTRAN#TAU_F90       = efc 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
+#INTEL32_FORTRAN#TAU_F90     = ifc 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
+#NEC_FORTRAN#TAU_F90         = f90 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
 
 
 ############# Profiling Options #############
