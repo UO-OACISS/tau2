@@ -193,7 +193,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             group.add(button);
             subMenu.add(button);
 
-            button = new JRadioButtonMenuItem("Number of Subroutines", false);
+            button = new JRadioButtonMenuItem("Number of Child Calls", false);
             button.addActionListener(this);
             group.add(button);
             subMenu.add(button);
@@ -361,7 +361,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     this.setHeader();
                     sortLocalData();
                     panel.repaint();
-                } else if (arg.equals("Number of Subroutines")) {
+                } else if (arg.equals("Number of Child Calls")) {
                     dataSorter.setValueType(ValueType.NUMSUBR);
                     this.setHeader();
                     sortLocalData();

@@ -355,7 +355,7 @@ public class PPFunctionProfile implements Comparable {
     public static String getStatStringHeading(String metricType) {
         return UtilFncs.lpad("%Total " + metricType, 13) + UtilFncs.lpad(metricType, 16)
                 + UtilFncs.lpad("Total " + metricType, 18) + UtilFncs.lpad("#Calls", 14)
-                + UtilFncs.lpad("#Subrs", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
+                + UtilFncs.lpad("#Child Calls", 14) + UtilFncs.lpad("Total " + metricType + "/Call", 21) + "   ";
     }
 
     public String toString() {

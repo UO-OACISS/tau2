@@ -31,9 +31,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.20 2005/03/08 01:11:17 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.21 2005/03/09 18:07:49 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.20 $
+ * @version	$Revision: 1.21 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -589,6 +589,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             maxValue = thread.getMaxInclusivePerCall(metric);
         } else if (option == CallGraphOption.EXCLUSIVE_PER_CALL) {
             maxValue = thread.getMaxExclusivePerCall(metric);
+        } else if (option == CallGraphOption.STATIC) {
+            maxValue = 1;
         } else {
             throw new ParaProfException ("Unexpected CallGraphOption : " + option);
         }
@@ -611,6 +613,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             value = fp.getInclusivePerCall(metric) / maxValue;
         } else if (option == CallGraphOption.EXCLUSIVE_PER_CALL) {
             value = fp.getExclusivePerCall(metric) / maxValue;
+        } else if (option == CallGraphOption.STATIC) {
+            maxValue = 1;
         } else {
             throw new ParaProfException ("Unexpected CallGraphOption : " + option);
         }

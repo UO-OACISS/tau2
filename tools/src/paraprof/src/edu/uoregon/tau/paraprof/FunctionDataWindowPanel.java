@@ -15,9 +15,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.12 2005/03/08 01:11:18 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.13 2005/03/09 18:07:50 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -411,6 +411,8 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                         popup3.show(this, evt.getX(), evt.getY());
                 } else {
                     if (xCoord > barXCoord) { //barXCoord should have been set during the last render.
+                        
+
                         ThreadDataWindow threadDataWindow = new ThreadDataWindow(ppTrial,
                                 ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
                                 ppFunctionProfile.getThreadID());

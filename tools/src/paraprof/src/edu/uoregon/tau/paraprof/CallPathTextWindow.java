@@ -7,13 +7,14 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import edu.uoregon.tau.dms.dss.*;
+import edu.uoregon.tau.paraprof.enums.*;
 
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.16 2005/03/08 01:11:17 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.17 2005/03/09 18:07:50 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -43,9 +44,90 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     private boolean name = false; //true: sort by name,false: sort by value.
     private int order = 0; //0: descending order,1: ascending order.
-    private int valueType = 2; //2-exclusive,4-inclusive,6-number of
+    //private int valueType = 2; //2-exclusive,4-inclusive,6-number of
     // calls,8-number of subroutines,10-per call value.
     private int units = 0; //0-microseconds,1-milliseconds,2-seconds.
+    
+    
+    public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
+            DataSorter dataSorter, int windowType) {
+
+        this.trial = trial;
+        this.nodeID = nodeID;
+        this.contextID = contextID;
+        this.threadID = threadID;
+        this.dataSorter = dataSorter;
+        this.windowType = windowType;
+
+        setLocation(0, 0);
+        setSize(800, 600);
+
+        //Now set the title.
+        if (windowType == 0) {
+            this.setTitle("Mean Call Path Data - " + trial.getTrialIdentifier(true));
+        } else if (windowType == 1) {
+            this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
+                    + trial.getTrialIdentifier(true));
+            //CallPathUtilFuncs.trimCallPathData(trial.getDataSource(), trial.getDataSource().getThread(nodeID, contextID, threadID));
+        } else
+            this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
+
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
+            }
+        });
+
+        //Set the help window text if required.
+        if (ParaProf.helpWindow.isVisible()) {
+            this.help(false);
+        }
+
+
+        setupMenus();
+
+       
+
+        //####################################
+        //Create and add the components.
+        //####################################
+        //Setting up the layout system for the main window.
+        Container contentPane = getContentPane();
+        GridBagLayout gbl = new GridBagLayout();
+        contentPane.setLayout(gbl);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+
+        edu.uoregon.tau.dms.dss.Thread thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
+
+        
+        if (windowType == 0 || windowType == 2) {
+            thread = trial.getDataSource().getMeanData();
+        }
+        
+        panel = new CallPathTextWindowPanel(trial, thread, this, windowType);
+        //The scroll panes into which the list shall be placed.
+        sp = new JScrollPane(panel);
+        JScrollBar vScollBar = sp.getVerticalScrollBar();
+        vScollBar.setUnitIncrement(35);
+
+        //Now add the componants to the main screen.
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        addCompItem(sp, gbc, 0, 0, 1, 1);
+        
+        
+        sortLocalData();
+        
+        ParaProf.incrementNumWindows();
+
+    }
+
+  
     
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
@@ -149,12 +231,17 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         group.add(button);
         subMenu.add(button);
 
-        button = new JRadioButtonMenuItem("Number of Subroutines", false);
+        button = new JRadioButtonMenuItem("Number of Child Calls", false);
         button.addActionListener(this);
         group.add(button);
         subMenu.add(button);
 
-        button = new JRadioButtonMenuItem("Per Call Value", false);
+        button = new JRadioButtonMenuItem("Inclusive per Call", false);
+        button.addActionListener(this);
+        group.add(button);
+        subMenu.add(button);
+
+        button = new JRadioButtonMenuItem("Exclusive per Call", false);
         button.addActionListener(this);
         group.add(button);
         subMenu.add(button);
@@ -235,91 +322,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         setJMenuBar(mainMenu);
     }
     
-    public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
-            DataSorter dataSorter, int windowType) {
-
-        this.trial = trial;
-        this.nodeID = nodeID;
-        this.contextID = contextID;
-        this.threadID = threadID;
-        this.dataSorter = dataSorter;
-        this.windowType = windowType;
-
-        setLocation(0, 0);
-        setSize(800, 600);
-
-        //Now set the title.
-        if (windowType == 0) {
-            this.setTitle("Mean Call Path Data - " + trial.getTrialIdentifier(true));
-        } else if (windowType == 1) {
-            this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                    + trial.getTrialIdentifier(true));
-            //CallPathUtilFuncs.trimCallPathData(trial.getDataSource(), trial.getDataSource().getThread(nodeID, contextID, threadID));
-        } else
-            this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
-
-        //Add some window listener code
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                thisWindowClosing(evt);
-            }
-        });
-
-        //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
-            this.help(false);
-        }
-
-        //Sort the local data.
-        sortLocalData();
-
-        setupMenus();
-
-        //####################################
-        //Create and add the components.
-        //####################################
-        //Setting up the layout system for the main window.
-        Container contentPane = getContentPane();
-        GridBagLayout gbl = new GridBagLayout();
-        contentPane.setLayout(gbl);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        //######
-        //Panel and ScrollPane definition.
-        //######
-
-        edu.uoregon.tau.dms.dss.Thread thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
-
-        
-        if (windowType == 0 || windowType == 2) {
-            thread = trial.getDataSource().getMeanData();
-        }
-        
-        panel = new CallPathTextWindowPanel(trial, thread, this, windowType);
-        //The scroll panes into which the list shall be placed.
-        sp = new JScrollPane(panel);
-        JScrollBar vScollBar = sp.getVerticalScrollBar();
-        vScollBar.setUnitIncrement(35);
-        this.setHeader();
-        //######
-        //End - Panel and ScrollPane definition.
-        //######
-
-        //Now add the componants to the main screen.
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        addCompItem(sp, gbc, 0, 0, 1, 1);
-        //####################################
-        //End - Create and add the components.
-        //####################################
-        ParaProf.incrementNumWindows();
-
-    }
-
-  
+   
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
@@ -356,32 +359,32 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                     panel.resetAllDrawObjects();
                     panel.repaint();
                 } else if (arg.equals("Exclusive")) {
-                    valueType = 2;
-                    this.setHeader();
+                    dataSorter.setValueType(ValueType.EXCLUSIVE);
                     sortLocalData();
                     panel.resetAllDrawObjects();
                     panel.repaint();
                 } else if (arg.equals("Inclusive")) {
-                    valueType = 4;
-                    this.setHeader();
+                    dataSorter.setValueType(ValueType.INCLUSIVE);
                     sortLocalData();
                     panel.resetAllDrawObjects();
                     panel.repaint();
                 } else if (arg.equals("Number of Calls")) {
-                    valueType = 6;
-                    this.setHeader();
+                    dataSorter.setValueType(ValueType.NUMCALLS);
                     sortLocalData();
                     panel.resetAllDrawObjects();
                     panel.repaint();
-                } else if (arg.equals("Number of Subroutines")) {
-                    valueType = 8;
-                    this.setHeader();
+                } else if (arg.equals("Number of Child Calls")) {
+                    dataSorter.setValueType(ValueType.NUMSUBR);
                     sortLocalData();
                     panel.resetAllDrawObjects();
                     panel.repaint();
-                } else if (arg.equals("Per Call Value")) {
-                    valueType = 10;
-                    this.setHeader();
+                } else if (arg.equals("Inclusive per Call")) {
+                    dataSorter.setValueType(ValueType.INCLUSIVE_PER_CALL);
+                    sortLocalData();
+                    panel.resetAllDrawObjects();
+                    panel.repaint();
+                } else if (arg.equals("Exclusive per Call")) {
+                    dataSorter.setValueType(ValueType.EXCLUSIVE_PER_CALL);
                     sortLocalData();
                     panel.resetAllDrawObjects();
                     panel.repaint();
@@ -518,22 +521,29 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //Updates this window's data copy.
     private void sortLocalData() {
         //The name selection behaves slightly differently. Thus the check for it.
+
+        if (name)
+            dataSorter.setSortType(SortType.NAME);
+        else
+            dataSorter.setSortType(SortType.VALUE);
+            
+        dataSorter.setDescendingOrder(descendingOrder.isSelected());
+        dataSorter.setSelectedMetricID(trial.getDefaultMetricID());
+
+        this.setHeader();
+
         if (name) {
-            if (windowType == 0)
+            if (windowType == 0 || windowType == 1) {
                 list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
-            else if (windowType == 1)
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
-            else {
+            } else {
                 list = new Vector();
                 for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();)
                     list.add(it.next());
             }
         } else {
-            if (windowType == 0)
+            if (windowType == 0 || windowType == 1) {
                 list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
-            else if (windowType == 1)
-                list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID);
-            else {
+            } else {
                 list = new Vector();
                 for (Iterator it = trial.getDataSource().getFunctions(); it.hasNext();)
                     list.add(it.next());
@@ -554,9 +564,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         return windowType;
     }
 
-    public int getValueType() {
-        return valueType;
-    }
+   
 
     public int units() {
         return units;
@@ -614,9 +622,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public String getHeaderString() {
-        return "Metric Name: " + (trial.getMetricName(trial.getDefaultMetricID())) + "\n" + "Sorted By: "
-                + UtilFncs.getValueTypeString(valueType) + "\n" + "Units: "
-                + UtilFncs.getUnitsString(units, trial.isTimeMetric(), trial.isDerivedMetric()) + "\n";
+        return "Metric Name: " + (trial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Sorted By: "
+                + dataSorter.getValueType() + "\n" + "Units: "
+                + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
     }
 
     //######

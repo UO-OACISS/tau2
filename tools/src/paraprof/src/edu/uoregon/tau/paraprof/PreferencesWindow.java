@@ -5,7 +5,6 @@
  * Author: Robert Bell 
  * Description:
  * 
- * There is one "Preferences" object associated with each trial (not anymore!)
  */
 
 package edu.uoregon.tau.paraprof;

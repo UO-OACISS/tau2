@@ -13,9 +13,9 @@ import edu.uoregon.tau.paraprof.enums.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.13 2005/03/08 01:11:18 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.14 2005/03/09 18:07:50 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -27,22 +27,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         this.function = function;
         int windowWidth = 650;
         int windowHeight = 550;
-
-//        //Grab the screen size.
-//        Toolkit tk = Toolkit.getDefaultToolkit();
-//        Dimension screenDimension = tk.getScreenSize();
-//        int screenHeight = screenDimension.height;
-//        int screenWidth = screenDimension.width;
-//        if (windowWidth > screenWidth)
-//            windowWidth = screenWidth;
-//        if (windowHeight > screenHeight)
-//            windowHeight = screenHeight;
-//        
-//        //Set the window to come up in the center of the screen.
-//        int xPosition = (screenWidth - windowWidth) / 2;
-//        int yPosition = (screenHeight - windowHeight) / 2;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
-        //setLocation(xPosition, yPosition);
 
         //Now set the title.
         this.setTitle("Function Data Window: " + trial.getTrialIdentifier(true));
@@ -145,7 +130,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         }
     }
 
-    public void setupMenus() {
+    private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
         JMenu subMenu = null;
         JMenuItem menuItem = null;
@@ -178,7 +163,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
         fileMenu.addMenuListener(this);
 
-        // options menu
         optionsMenu = new JMenu("Options");
 
         JCheckBoxMenuItem box = null;
@@ -204,7 +188,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         showValuesAsPercent.addActionListener(sortData);
         optionsMenu.add(showValuesAsPercent);
 
-        // units submenu
         unitsSubMenu = new JMenu("Select Units");
         group = new ButtonGroup();
 
@@ -233,8 +216,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
         //Set the value type options.
         subMenu = new JMenu("Select Metric...");
         group = new ButtonGroup();
-        JMenu subSubMenu;
-
         
         subMenu.add(createMetricMenu(ValueType.EXCLUSIVE, dataSorter.getValueType() == ValueType.EXCLUSIVE
                 || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT, group));
@@ -268,7 +249,6 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
 
         optionsMenu.add(subMenu);
 
-        //End - Set the value type options.
 
         box = new JCheckBoxMenuItem("Display Sliders", false);
         box.addActionListener(this);
