@@ -32,11 +32,11 @@ II) Platforms :
    for R10000 based systems and this is the recommended platform for 
    low level hardware profiling for say cache analysis. The default time 
    based profiling is available on a variety of other platforms.
-	b) LINUX PCs. Tested with KAI compiler. 
-	c) Sun Solaris2. Tested with g++.
+	b) LINUX PCs. Tested with KAI compiler, g++ (-useropt=-fguiding-decls) 
+	c) Sun Solaris2. Tested with g++ (./configure -useropt=-fguiding-decls)
 	d) HP PA-RISC. Tested with g++. 
-	e) Intel Teraflop Machine. Tested with PGI C++ cross compilers.
-	f) Cray T3E. Tested with Cray C++ compiler.
+	e) Cray T3E. Tested with Cray C++ compiler, and KAI KCC.
+	f) DEC Alpha. Tested with g++.
    Other platforms will be supported and it may work with other systems
    with minor modifications.
 	
@@ -115,6 +115,8 @@ Note: By default if
    % ./configure -c++=CC -useropt='-64 -I/local/apps/STL/'
    or
    % ./configure -TRACE -PROFILE 
+   or with g++ 2.8.1+
+   % ./configure -useropt=-fguiding-decls
   Configure changes Makefiles in all subdirectories. It replaces system 
   dependent options and profiling options. The compilation flags associated
   with the above profiling options are :
@@ -127,6 +129,7 @@ Note: By default if
   PROFILECALLS			-DPROFILE_CALLS
   SGITIMERS			-DSGI_TIMERS
   TRACE				-DTRACING_ON
+  pthread			-DPTHREADS
   ----------------------------------------------------------------
 
   These flags are also changed in the examples/ directory. It is 
@@ -184,7 +187,14 @@ Note: By default if
    and tracing options and provides the libraries that need to be included.
    See the ./include/Makefile for details on how to use this. 
 
+6. Support for pthreads
+   Pthreads are supported on Cray, SGI and LINUX currently.
 
+7. C API
+   C Programs can be profiled using TAU. Instead of TAU_PROFILE() macro
+   explicit TAU_PROFILE_TIMER() macros with start/stop interface need to be 
+   used. Mixed language programming doesn't seem to work on Cray T3E. Tested
+   on Linux, SGI.
 
 
 
