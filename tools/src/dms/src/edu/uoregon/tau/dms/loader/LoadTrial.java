@@ -365,6 +365,10 @@ public class LoadTrial implements ParaProfObserver {
 	    trialName = new String("");
 	}
 
+	if (fixNames == null) {
+	    fixNames = new Boolean(false);
+	}
+
 	LoadTrial trans = new LoadTrial(configFile, sourceFile);
 	trans.checkForExp(experimentID);
 	if (trialID != null) {
