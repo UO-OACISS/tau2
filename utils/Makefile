@@ -17,7 +17,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=/home/ftg1/sameer/tau2
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
@@ -51,6 +51,7 @@ WARNINGSOPT	= -w
 #CRAYCC#WARNINGSOPT= -DCRAYCC  #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm  #ENDIF#
 #PGI#CEXTRA = -DPGI -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
+#FUJITSU#CEXTRA = -DFUJITSU -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 CWARNING	= $(WARNINGSOPT)
 
 

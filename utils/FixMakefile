@@ -104,6 +104,10 @@ fi
 	echo "s@^USER_OPT=\(.*\)@USER_OPT=$useropt@g" >> $sedout
         ;;
 
+     extradir=*)
+        extradir=`echo $1 | sed -e 's/^extradir=//' `
+	echo "s@^EXTRADIR=\(.*\)@EXTRADIR=$extradir@g" >> $sedout
+        ;;
 ###############################################################
 # Set the TAUROOT variable
 ###############################################################
@@ -272,6 +276,10 @@ fi
 	;;
      PGICC) 
 	echo NOTE: Using --prelink_objects for PGI 3.0+ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     FUJITSU) 
+	echo NOTE: Using Fujitsu FCC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      NEXT_CLIB)

@@ -40,7 +40,7 @@
 #ifdef TAU_DOT_H_LESS_HEADERS 
 # include <iostream>
 # include <map>
-// using namespace std;
+using namespace std;
 #else 
 # include <iostream.h>
 # include <map.h>
@@ -61,11 +61,15 @@
 # include <algobase>
 using namespace std;
 #endif
-#ifdef POOMA_TFLOP
+#ifdef POOMA_TFLOP 
 extern "C" int getopt(int, char *const *, const char *);
 extern char *optarg;
 extern int optind, opterr, optopt;
 #endif
+
+#ifdef FUJITSU
+#include <Profile/fujitsu.h>
+#endif /* FUJITSU */
 
 
 
@@ -2925,7 +2929,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 1999/06/20 17:38:05 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.14 1999/06/20 17:38:05 sameer Exp $                                                   
+ * $Revision: 1.15 $   $Date: 1999/06/23 19:37:02 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.15 1999/06/23 19:37:02 sameer Exp $                                                   
  ***************************************************************************/
 

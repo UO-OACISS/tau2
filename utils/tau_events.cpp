@@ -37,6 +37,7 @@
 #ifdef TAU_DOT_H_LESS_HEADERS 
 #include <vector>
 #include <map>
+using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 # include <vector.h>
 # include <map.h>

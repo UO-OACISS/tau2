@@ -24,6 +24,10 @@
 # include <unistd.h>
 #endif
 
+#ifdef FUJITSU
+# include <Profile/fujitsu.h>
+#endif
+
 # include <string.h>
 
 # define TRACING_ON
