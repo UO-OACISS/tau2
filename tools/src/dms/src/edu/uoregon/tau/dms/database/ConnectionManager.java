@@ -1,3 +1,13 @@
+/* 
+   Name:       ConnectionManager.java
+   Author:     Robert Bell, Kevin Huck
+  
+  
+   Description:
+
+   Things to do:
+*/
+
 package edu.uoregon.tau.dms.database;
 
 import java.io.BufferedReader;
@@ -5,8 +15,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.sql.SQLException;
 import java.io.IOException;
-
-/*** Some default setups for system ***/
 
 public class ConnectionManager{
 
