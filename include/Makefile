@@ -331,7 +331,7 @@ FWRAPPER	       = TauFMpi.o
 #SMARTS##include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
 
-#GNU#TAU_GCCLIB	= -lgcc_s #ENDIF#
+TAU_GCCLIB	= -lgcc_s 
 #BGL#TAU_GCCLIB	= -lgcc #ENDIF#
 #GNU#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) -lstdc++ $(TAU_GCCLIB) #ENDIF#
 #PATHSCALE_FORTRAN#TAU_FORTRANLIBS       = -lpathfstart -lpathfortran #ENDIF#
