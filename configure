@@ -694,6 +694,7 @@ do
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+    echo "-muse ................................. Specify the use of MAGNET/MUSE." 
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
