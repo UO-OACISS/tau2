@@ -302,6 +302,7 @@ int main(int argc, char **argv)
   BPatch_function *inFunc;
   BPatch_function *enterstub = appImage->findFunction("TauRoutineEntry");
   BPatch_function *exitstub = appImage->findFunction("TauRoutineExit");
+  BPatch_function *terminationstub = appImage->findFunction("TauProgramTermination");
   BPatch_Vector<BPatch_snippet *> initArgs;
   
   char modulename[256];
@@ -396,6 +397,24 @@ int main(int argc, char **argv)
     } // module constraint
 
   } // for modules
+
+  BPatch_function *exitpoint = appImage->findFunction("_exit");
+
+  if (exitpoint == NULL) {
+    fprintf(stderr, "UNABLE TO FIND exit() \n");
+    // exit(1);
+  }
+  else {
+
+    /* When _exit is invoked, call TauProgramTermination routine */
+    BPatch_Vector<BPatch_snippet *> *exitargs = new BPatch_Vector<BPatch_snippet *>();
+    BPatch_constExpr *Name = new BPatch_constExpr("_exit");
+    exitargs->push_back(Name);
+    invokeRoutineInFunction(appThread, appImage, exitpoint, BPatch_entry, terminationstub , exitargs);
+    delete exitargs;
+    delete Name;
+  }
+
 
 
   dprintf("Executing...\n");
