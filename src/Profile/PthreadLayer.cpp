@@ -34,7 +34,11 @@
 
 //#define DEBUG_PROF
 #include <pthread.h>
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
 
 
@@ -164,8 +168,8 @@ int PthreadLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1999/06/18 17:43:54 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.2 1999/06/18 17:43:54 sameer Exp $
+ * $Revision: 1.3 $   $Date: 1999/06/20 17:34:39 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.3 1999/06/20 17:34:39 sameer Exp $
  ***************************************************************************/
 
 

@@ -38,8 +38,12 @@
 #include <iostream>
 using namespace std;
 #else
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
-#endif
+#endif /* TAU_DOT_H_LESS_HEADERS */
+#endif /* POOMA_USE_STANDARD_HEADERS */
 
 #include <stdio.h> 
 #include <fcntl.h>
@@ -79,14 +83,17 @@ Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
 // Explicit Instantiations for templated entities needed for ASCI Red
 //////////////////////////////////////////////////////////////////////
 
-#ifdef POOMA_TFLOP
-template void vector<FunctionInfo *>::insert_aux(vector<FunctionInfo *>::pointer, FunctionInfo *const &);
-#ifndef POOMA_STDSTL
+#ifdef PGI
+template
+void vector<FunctionInfo *>::insert_aux(vector<FunctionInfo *>::pointer, FunctionInfo *const &);
 // need a few other function templates instantiated
-template FunctionInfo** copy_backward(FunctionInfo**,FunctionInfo**,FunctionInfo**);
-template FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
-#endif // not POOMA_STDSTL
-#endif //POOMA_TFLOP
+template
+FunctionInfo** copy_backward(FunctionInfo**,FunctionInfo**,FunctionInfo**);
+template
+FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
+//template <>
+//std::basic_ostream<char, std::char_traits<char> > & std::operator<< (std::basic_ostream<char, std::char_traits<char> > &, const char * );
+#endif /* PGI */
 
  
 //////////////////////////////////////////////////////////////////////
@@ -705,8 +712,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 1999/05/04 22:33:08 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.22 1999/05/04 22:33:08 sameer Exp $ 
+ * $Revision: 1.23 $   $Date: 1999/06/20 17:34:39 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.23 1999/06/20 17:34:39 sameer Exp $ 
  ***************************************************************************/
 
 	

@@ -32,7 +32,11 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
 
 //////////////////////////////////////////////////////////////////////
@@ -113,8 +117,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/08/14 15:36:36 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.2 1998/08/14 15:36:36 sameer Exp $
+ * $Revision: 1.3 $   $Date: 1999/06/20 17:34:40 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.3 1999/06/20 17:34:40 sameer Exp $
  ***************************************************************************/
 
 

@@ -20,7 +20,7 @@ CXX		= $(TAU_CXX)
 CC		= $(TAU_CC)
 #CC		= cc 
 
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) -I/usr/local/packages/mpich/include
 
 RM		= /bin/rm -f
 

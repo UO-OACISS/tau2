@@ -37,7 +37,11 @@
 #include <iostream>
 using namespace std;
 #else
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #endif
 
 #include <stdio.h> 
@@ -252,6 +256,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 1999/06/18 17:41:54 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.16 1999/06/18 17:41:54 sameer Exp $ 
+ * $Revision: 1.17 $   $Date: 1999/06/20 17:34:38 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.17 1999/06/20 17:34:38 sameer Exp $ 
  ***************************************************************************/

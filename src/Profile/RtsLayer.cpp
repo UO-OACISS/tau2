@@ -42,7 +42,11 @@
 #include <iostream>
 using namespace std;
 #else
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #endif
 
 #include <stdio.h> 
@@ -436,7 +440,7 @@ string RtsLayer::PrimaryGroup(const char *ProfileGroupName)
   string separators = " |"; 
   int start, stop, n;
 
-  start = groups.find_first_not_of(separators);
+  start = groups.find_first_not_of(separators, 0);
   n = groups.length();
   stop = groups.find_first_of(separators, start); 
 
@@ -585,6 +589,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 1999/05/04 22:33:09 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.8 1999/05/04 22:33:09 sameer Exp $ 
+ * $Revision: 1.9 $   $Date: 1999/06/20 17:34:40 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.9 1999/06/20 17:34:40 sameer Exp $ 
  ***************************************************************************/

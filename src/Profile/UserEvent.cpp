@@ -46,11 +46,18 @@
 #include <fcntl.h>
 
 //#include <math.h>
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 
-#ifndef TAU_STDCXXLIB // It'd be better to use #ifdef SGICC 
-//template void vector<TauUserEvent *,alloc>::insert_aux(vector<TauUserEvent *,alloc>::iterator, TauUserEvent *const &);
-#endif // TAU_STDCXXLIB
+
+#ifdef PGI
+template void vector<TauUserEvent *>::insert_aux(vector<TauUserEvent *>::iterator, TauUserEvent *const &);
+template TauUserEvent** copy_backward(TauUserEvent**,TauUserEvent**,TauUserEvent**);
+template TauUserEvent** uninitialized_copy(TauUserEvent**,TauUserEvent**,TauUserEvent**);
+#endif // PGI
 
 vector<TauUserEvent*>& TheEventDB(int threadid)
 {
@@ -399,6 +406,6 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 1998/09/24 16:55:00 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.6 1998/09/24 16:55:00 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 1999/06/20 17:34:41 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.7 1999/06/20 17:34:41 sameer Exp $ 
  ***************************************************************************/

@@ -26,7 +26,11 @@
 **	Documentation	: See http://www.acl.lanl.gov/tau	          **
 ***************************************************************************/
 
+#ifdef TAU_DOT_H_LESS_HEADERS 
+#include <iostream>
+#else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
 
 ///////////////////////////////////////////////////////////////////////////
@@ -43,8 +47,6 @@ extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
   // since we're using new, we should set InitData to true in FunctionInfoInit
   f = new FunctionInfo(fname, type, group, fname, true);
   p = new Profiler(f, group, true);
-
-  printf("Inside %s\n", fname);
 
   return (void *) p;
 }
@@ -176,7 +178,7 @@ extern "C" void tau_event_disable_stddev(void *ue)
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 1999/06/18 17:45:08 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.5 1999/06/18 17:45:08 sameer Exp $
+ * $Revision: 1.6 $   $Date: 1999/06/20 17:34:40 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.6 1999/06/20 17:34:40 sameer Exp $
  ***************************************************************************/
 

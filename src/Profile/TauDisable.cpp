@@ -70,9 +70,11 @@ void tau_register_thread_(void)
 }
 
 /* Cray F90 specific extensions */
+#ifdef CRAYKAI
 void TAU_REGISTER_THREAD(void)
 {
 }
+#endif /* CRAYKAI */
 
 void tau_trace_sendmsg_(int *type, int *destination, int *length)
 {
@@ -99,6 +101,7 @@ void tau_report_thread_statistics_(void)
 }
 
 /* Cray F90 specific extensions */
+#ifdef CRAYKAI
 void _main();
 void TAU_PROFILE_TIMER(void **ptr, char *fname, int *flen)
 {
@@ -152,6 +155,7 @@ void TAU_REPORT_STATISTICS(void)
 void TAU_REPORT_THREAD_STATISTICS(void)
 {
 }
+#endif /* CRAYKAI */
 
 ////////////////////////////////////////////////////////////
 // Dummy C wrappers
@@ -262,6 +266,6 @@ void tau_event_disable_stddev(void *ue)
 
 /***************************************************************************
  * $RCSfile: TauDisable.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1999/06/18 21:51:55 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.1 1999/06/18 21:51:55 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 1999/06/20 17:34:40 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.2 1999/06/20 17:34:40 sameer Exp $ 
  ***************************************************************************/

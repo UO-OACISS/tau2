@@ -24,7 +24,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=/home/grads/sameer/gar/rs/tau2cray
+TAUROOT=/home/users/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -47,7 +47,7 @@ CEXTRA =
 
 TAUINC	      = -I$(TAUROOT)/include 
 
-CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC) 
+CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
@@ -91,7 +91,8 @@ TARGET	      = libtau$(TAU_OPTIONS)$(LSX)
 
 TAU_DISABLE   = libTauDisable$(LSX)
 
-all:		$(TARGET) $(TAU_DISABLE)	
+#all:		$(TARGET) $(TAU_DISABLE)  $(TAUHELPER)
+all:		$(TARGET) $(TAU_DISABLE)  
 
 $(TARGET):	$(OBJS)
 		$(AR) $(ARFLAGS) $(TARGET) $(OBJS) $(EXTRAOBJS)
@@ -112,7 +113,9 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE)
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 
-install:	$(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) 
+#install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(TAUHELPER)
+install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) 
+		
 
 Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -156,6 +159,9 @@ TauMapping.o   : TauMapping.cpp $(HDRS)
 TauDisable.o 	: TauDisable.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+$(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
+
 clean : 
-		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(EXTRAOBJS)
+		$(RM) $(OBJS) $(TARGET) $(TAU_DISABLE) $(EXTRAOBJS) *.ii *.ti ti_files/*
 

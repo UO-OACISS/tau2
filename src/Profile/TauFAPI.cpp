@@ -128,12 +128,14 @@ void tau_register_thread_(void)
   return;
 }
 
+#ifdef CRAYKAI
 /* Cray F90 specific extensions */
 void TAU_REGISTER_THREAD(void)
 {
   tau_register_thread();
 }
-#endif 
+#endif /* CRAYKAI */
+#endif /* PTHREADS || TULIPTHREADS */
 
 void tau_trace_sendmsg_(int *type, int *destination, int *length)
 {
@@ -183,6 +185,7 @@ void tau_report_thread_statistics_(void)
 }
 
 /* Cray F90 specific extensions */
+#ifdef CRAYKAI
 void _main();
 void TAU_PROFILE_TIMER(void **ptr, char *fname, int *flen)
 {
@@ -292,11 +295,12 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 {
   tau_report_thread_statistics();
 }
+#endif /* CRAYKAI */
 
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 1999/06/18 17:46:32 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.6 1999/06/18 17:46:32 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 1999/06/20 17:34:41 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.7 1999/06/20 17:34:41 sameer Exp $ 
  ***************************************************************************/
