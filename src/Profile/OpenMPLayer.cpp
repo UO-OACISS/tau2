@@ -54,6 +54,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 
 omp_lock_t OpenMPLayer::tauDBmutex;
+omp_lock_t OpenMPLayer::tauEnvmutex;
 
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
@@ -142,11 +143,46 @@ int OpenMPLayer::UnLockDB(void)
   return 1;
 }  
 
+////////////////////////////////////////////////////////////////////////
+int OpenMPLayer::InitializeEnvMutexData(void)
+{
+  // For locking functionEnv 
+  // Initialize the mutex
+  omp_init_lock(&OpenMPLayer::tauEnvmutex);
+  //cout <<" Initialized the functionEnv Mutex data " <<endl;
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// LockEnv locks the mutex protecting TheFunctionEnv() global database of 
+// functions. This is required to ensure that push_back() operation 
+// performed on this is atomic (and in the case of tracing this is 
+// followed by a GetFunctionID() ). This is used in 
+// FunctionInfo::FunctionInfoInit().
+////////////////////////////////////////////////////////////////////////
+int OpenMPLayer::LockEnv(void)
+{
+  static int initflag=InitializeEnvMutexData();
+  // Lock the functionEnv mutex
+  omp_set_lock(&OpenMPLayer::tauEnvmutex);
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// UnLockEnv() unlocks the mutex tauEnvMutex used by the above lock operation
+////////////////////////////////////////////////////////////////////////
+int OpenMPLayer::UnLockEnv(void)
+{
+  // Unlock the functionEnv mutex
+  omp_unset_lock(&OpenMPLayer::tauEnvmutex);
+  return 1;
+}  
+
 
 /***************************************************************************
  * $RCSfile: OpenMPLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2002/05/08 11:10:54 $
- * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.2 2002/05/08 11:10:54 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2005/01/05 01:59:17 $
+ * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.3 2005/01/05 01:59:17 sameer Exp $
  ***************************************************************************/
 
 

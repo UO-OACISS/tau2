@@ -59,8 +59,10 @@ using namespace NAMESPACE;
 
 #ifdef SMARTS
 Mutex     TulipThreadLayer::tauDBMutex;  
+Mutex     TulipThreadLayer::tauEnvMutex;  
 #else // SMARTS
 Tulip_Mutex     TulipThreadLayer::tauDBMutex;  
+Tulip_Mutex     TulipThreadLayer::tauEnvMutex;  
 #endif // SMARTS
 
 
@@ -156,11 +158,42 @@ int TulipThreadLayer::UnLockDB(void)
   return 1;
 }  
 
+////////////////////////////////////////////////////////////////////////
+int TulipThreadLayer::InitializeEnvMutexData(void)
+{
+  // For locking functionEnv
+  return 1;
+}
 
+
+////////////////////////////////////////////////////////////////////////
+// LockEnv locks the mutex protecting TheFunctionEnv() global database of 
+// functions. This is required to ensure that push_back() operation 
+// performed on this is atomic (and in the case of tracing this is 
+// followed by a GetFunctionID() ). This is used in 
+// FunctionInfo::FunctionInfoInit().
+////////////////////////////////////////////////////////////////////////
+int TulipThreadLayer::LockEnv(void)
+{
+  static int initflag=InitializeEnvMutexData();
+  // Lock the functionEnv mutex
+  tauEnvMutex.lock();
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// UnLockEnv() unlocks the mutex tauEnvMutex used by the above lock operation
+////////////////////////////////////////////////////////////////////////
+int TulipThreadLayer::UnLockEnv(void)
+{
+  // Unlock the functionEnv mutex
+  tauEnvMutex.unlock();
+  return 1;
+}  
 /***************************************************************************
  * $RCSfile: TulipThreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/09/22 01:11:40 $
- * POOMA_VERSION_ID: $Id: TulipThreadLayer.cpp,v 1.2 1998/09/22 01:11:40 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2005/01/05 01:59:17 $
+ * POOMA_VERSION_ID: $Id: TulipThreadLayer.cpp,v 1.3 2005/01/05 01:59:17 sameer Exp $
  ***************************************************************************/
 
 

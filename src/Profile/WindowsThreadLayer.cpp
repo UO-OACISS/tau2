@@ -44,6 +44,7 @@ using namespace std;
 DWORD	WindowsThreadLayer::tauWindowsthreadId;
 HANDLE	WindowsThreadLayer::tauThreadcountMutex; 
 HANDLE	WindowsThreadLayer::tauDBMutex;
+HANDLE	WindowsThreadLayer::tauEnvMutex;
 
 
 int WindowsThreadLayer::tauThreadCount = 0;
@@ -180,6 +181,55 @@ int WindowsThreadLayer::UnLockDB(void)
 {
   // Unlock the functionDB mutex
   ReleaseMutex(tauDBMutex);
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+int WindowsThreadLayer::InitializeEnvMutexData(void)
+{
+  // For locking functionEnv 
+  tauEnvMutex = CreateMutex(NULL, FALSE, NULL);
+  
+  //cout <<" Initialized the functionEnv Mutex data " <<endl;
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// LockEnv locks the mutex protecting TheFunctionEnv() global database of 
+// functions. This is required to ensure that push_back() operation 
+// performed on this is atomic (and in the case of tracing this is 
+// followed by a GetFunctionID() ). This is used in 
+// FunctionInfo::FunctionInfoInit().
+////////////////////////////////////////////////////////////////////////
+int WindowsThreadLayer::LockEnv(void)
+{
+  static int initflag=InitializeEnvMutexData();
+  DWORD WaitCheckLEnv;
+  
+  // Lock the functionEnv mutex  
+  WaitCheckLEnv = WaitForSingleObject(tauEnvMutex, INFINITE);
+  if(WaitCheckLEnv == WAIT_OBJECT_0)
+	  return 1;
+
+  else
+  {
+	  //The mutex was abandoned for some reason.  Signal it to the user
+	  //and then exit.
+	  cout << "The mutex was abandoned" << endl;
+	  //Note to myself ... check to make sure that it is ok to return 0 here.
+	  return 0;
+  }
+
+}
+
+////////////////////////////////////////////////////////////////////////
+// UnLockEnv() unlocks the mutex tauEnvMutex used by the above lock operation
+////////////////////////////////////////////////////////////////////////
+int WindowsThreadLayer::UnLockEnv(void)
+{
+  // Unlock the functionEnv mutex
+  ReleaseMutex(tauEnvMutex);
   return 1;
 }
 

@@ -213,6 +213,40 @@ int JavaThreadLayer::UnLockDB(void)
 }  
 
 ////////////////////////////////////////////////////////////////////////
+int JavaThreadLayer::InitializeEnvMutexData(void)
+{
+  // For locking functionDB 
+  tauEnvMutex =  tau_jvmpi_interface->RawMonitorCreate("Env lock");
+  
+  //cout <<" Initialized the Env Mutex data " <<endl;
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// LockEnv locks the mutex protecting TheFunctionDB() global database of 
+// functions. This is required to ensure that push_back() operation 
+// performed on this is atomic (and in the case of tracing this is 
+// followed by a GetFunctionID() ). This is used in 
+// FunctionInfo::FunctionInfoInit().
+////////////////////////////////////////////////////////////////////////
+int JavaThreadLayer::LockEnv(void)
+{
+  static int initflag=InitializeEnvMutexData();
+  // Lock the functionDB mutex
+  tau_jvmpi_interface->RawMonitorEnter(tauEnvMutex);
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// UnLockDB() unlocks the mutex tauDBMutex used by the above lock operation
+////////////////////////////////////////////////////////////////////////
+int JavaThreadLayer::UnLockEnv(void)
+{
+  // Unlock the Env mutex
+  tau_jvmpi_interface->RawMonitorExit(tauEnvMutex);
+  return 1;
+}  
+////////////////////////////////////////////////////////////////////////
 // TotalThreads returns the number of active threads 
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::TotalThreads(void)
@@ -234,8 +268,8 @@ int JavaThreadLayer::TotalThreads(void)
 
 /***************************************************************************
  * $RCSfile: JavaThreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2000/03/19 00:22:25 $
- * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.1 2000/03/19 00:22:25 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2005/01/05 01:59:17 $
+ * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.2 2005/01/05 01:59:17 sameer Exp $
  ***************************************************************************/
 
 

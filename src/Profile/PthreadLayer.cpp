@@ -168,10 +168,45 @@ int PthreadLayer::UnLockDB(void)
 }  
 
 
+////////////////////////////////////////////////////////////////////////
+int PthreadLayer::InitializeEnvMutexData(void)
+{
+  // For locking functionEnv 
+  pthread_mutexattr_init(&tauDBAttr);  
+  pthread_mutex_init(&tauEnvMutex, &tauDBAttr); 
+  
+  //cout <<" Initialized the functionEnv Mutex data " <<endl;
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// LockEnv locks the mutex protecting TheFunctionEnv() global database of 
+// functions. This is required to ensure that push_back() operation 
+// performed on this is atomic (and in the case of tracing this is 
+// followed by a GetFunctionID() ). This is used in 
+// FunctionInfo::FunctionInfoInit().
+////////////////////////////////////////////////////////////////////////
+int PthreadLayer::LockEnv(void)
+{
+  static int initflag=InitializeEnvMutexData();
+  // Lock the functionEnv mutex
+  pthread_mutex_lock(&tauEnvMutex);
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// UnLockEnv() unlocks the mutex tauEnvMutex used by the above lock operation
+////////////////////////////////////////////////////////////////////////
+int PthreadLayer::UnLockEnv(void)
+{
+  // Unlock the functionEnv mutex
+  pthread_mutex_unlock(&tauEnvMutex);
+  return 1;
+}  
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2000/05/18 22:23:16 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.5 2000/05/18 22:23:16 sameer Exp $
+ * $Revision: 1.6 $   $Date: 2005/01/05 01:59:17 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.6 2005/01/05 01:59:17 sameer Exp $
  ***************************************************************************/
 
 

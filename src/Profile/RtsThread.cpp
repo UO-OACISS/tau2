@@ -244,12 +244,55 @@ void RtsLayer::UnLockDB(void)
   return;
 }
 
+//////////////////////////////////////////////////////////////////////
+// This ensure that the FunctionEnv (global) is locked while updating
+//////////////////////////////////////////////////////////////////////
+
+void RtsLayer::LockEnv(void)
+{
+#ifdef PTHREADS
+  PthreadLayer::LockEnv();
+#elif TAU_SPROC
+  SprocLayer::LockEnv();
+#elif  TAU_WINDOWS
+  WindowsThreadLayer::LockEnv();
+#elif  TULIPTHREADS
+  TulipThreadLayer::LockEnv();
+#elif  JAVA
+  JavaThreadLayer::LockEnv();
+#elif TAU_OPENMP
+  OpenMPLayer::LockEnv();
+#endif // PTHREADS
+  return ; // do nothing if threads are not used
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// This ensure that the FunctionEnv (global) is locked while updating
+//////////////////////////////////////////////////////////////////////
+void RtsLayer::UnLockEnv(void)
+{
+#ifdef PTHREADS
+  PthreadLayer::UnLockEnv();
+#elif TAU_SPROC
+  SprocLayer::UnLockEnv();
+#elif  TAU_WINDOWS
+  WindowsThreadLayer::UnLockEnv();
+#elif  TULIPTHREADS
+  TulipThreadLayer::UnLockEnv();
+#elif JAVA
+  JavaThreadLayer::UnLockEnv();
+#elif TAU_OPENMP
+  OpenMPLayer::UnLockEnv();
+#endif // PTHREADS
+  return;
+}
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: bertie $
- * $Revision: 1.17 $   $Date: 2002/03/10 23:58:17 $
- * VERSION: $Id: RtsThread.cpp,v 1.17 2002/03/10 23:58:17 bertie Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
+ * $Revision: 1.18 $   $Date: 2005/01/05 01:59:17 $
+ * VERSION: $Id: RtsThread.cpp,v 1.18 2005/01/05 01:59:17 sameer Exp $
  ***************************************************************************/
 
 

@@ -166,6 +166,7 @@ int SprocLayer::InitializeThreadData(void)
     perror("TAU ERROR: SprocLayer.cpp InitializeThreadData(): Arena /dev/zero not initialized!");
 
   tauDBMutex = usnewsema(tauArena, 1);
+  tauEnvMutex = usnewsema(tauArena, 1);
   tauThreadCountMutex = usnewsema(tauArena, 1);
 
 
@@ -210,11 +211,47 @@ int SprocLayer::UnLockDB(void)
   return 1;
 }  
 
+////////////////////////////////////////////////////////////////////////
+int SprocLayer::InitializeEnvMutexData(void)
+{
+  // For locking functionEnv 
+  
+  DEBUGPROFMSG("Initialized the functionEnv Mutex data " <<endl;);
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// LockEnv locks the mutex protecting TheFunctionEnv() global database of 
+// functions. This is required to ensure that push_back() operation 
+// performed on this is atomic (and in the case of tracing this is 
+// followed by a GetFunctionID() ). This is used in 
+// FunctionInfo::FunctionInfoInit().
+////////////////////////////////////////////////////////////////////////
+int SprocLayer::LockEnv(void)
+{
+  static int initflag=InitializeEnvMutexData();
+  if (uspsema(tauEnvMutex) == -1)
+    perror("TAU ERROR: SprocLayer.cpp: SprocLayer::LockEnv uspsema"); 
+
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+// UnLockEnv() unlocks the mutex tauEnvMutex used by the above lock operation
+////////////////////////////////////////////////////////////////////////
+int SprocLayer::UnLockEnv(void)
+{
+  // Unlock the functionEnv mutex
+  if (usvsema(tauEnvMutex) == -1)
+    perror("TAU ERROR: SprocLayer.cpp: SprocLayer::UnLockEnv usvsema"); 
+  return 1;
+}  
+
 
 /***************************************************************************
  * $RCSfile: SprocLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2001/06/20 20:50:57 $
- * POOMA_VERSION_ID: $Id: SprocLayer.cpp,v 1.1 2001/06/20 20:50:57 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2005/01/05 01:59:17 $
+ * POOMA_VERSION_ID: $Id: SprocLayer.cpp,v 1.2 2005/01/05 01:59:17 sameer Exp $
  ***************************************************************************/
 
 
