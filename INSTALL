@@ -59,8 +59,10 @@ Usage: configure [OPTIONS]
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
 -smarts .................. Use SMARTS API for threads (use with above).
 -pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
+-papi=<dir> ............... Specify location of PAPI (Performance API).
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
 -jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+).
+-dyninst=<dir> ................... Specify location of DynInst Package.
 -mpiinc=<dir> ............. Specify location of MPI include dir and use
                            the TAU MPI Profiling and Tracing Interface.
 -mpilib=<dir> ............. Specify location of MPI library dir and use
@@ -137,6 +139,15 @@ The following  command-line options are available to configure:
    PCL_EVENT to PCL_FP_INSTR (for example). Refer to the TAU User's Guide or
    PCL Documentation (pcl.h) for other event names.
    [ Ref : http://www.fz-juelich.de/zam/PCL ]
+
+-papi=<directory>
+
+   Specifies the location of the installed PAPI (Performance API) root 
+   directory. PAPI specifies a standard application programming interface (API)    for accessing hardware performance counters available on most modern 
+   microprocessors similar. To measure floating point instructions, set the
+   environment variable PAPI_EVENT to PAPI_FP_INS (for example). Refer to the
+   TAU User's Guide or PAPI Documentation for other event names.
+   [ Ref : http://icl.cs.utk.edu/projects/papi/api/ ]
    
 -jdk=<directory>
    Specifies the location of the Java 2 development kit (jdk1.2+). See
