@@ -528,6 +528,16 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		this.outputToFile("count: "+count);
 		this.outputToFile("userSecPerCallCount: "+userSecPerCallCount);
 	    }
+
+		// set the totals for all but percentages - need to do those later...
+		globalMappingElement.setTotalNumberOfCalls(numberOfCallsTotal);
+		globalMappingElement.setTotalNumberOfSubRoutines(numberOfSubroutinesTotal);
+		for(int i=0;i<numberOfMetrics;i++){
+		    globalMappingElement.setTotalExclusiveValue(i, exclusiveTotal[i]);
+		    globalMappingElement.setTotalInclusiveValue(i, inclusiveTotal[i]);
+			globalMappingElement.setTotalUserSecPerCall(i, userSecPerCallValueTotal[i]);
+		}
+		
 	    if(count!=0){
 		//Since we only need to do the numberOfCalls and numberOfSubroutines for
 		//the first metric, do it first (outside the loop).
@@ -599,25 +609,25 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		this.outputToFile("GlobalMappingElement: " + globalMappingElement.getMappingName() + "(Percent)");
 	    }
 	    for(int i=0;i<numberOfMetrics;i++){
-		double meanExclusivePercentValue = 0.0;
-    	if (maxMeanInclusiveValue[i] != 0.0) {
-			meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
-		}
-		globalMappingElement.setMeanExclusivePercentValue(i,meanExclusivePercentValue);
-		if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue)
-		    globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue);
-		double meanInclusivePercentValue = 0.0;
-		if (maxMeanInclusiveValue[i] != 0.0) {
-			meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
-		}
-		globalMappingElement.setMeanInclusivePercentValue(i,meanInclusivePercentValue);
-		if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue)
-		    globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue);
-		
-		if(this.debug){
-		    this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue);
-		    this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue);
-		}
+			double meanExclusivePercentValue = 0.0;
+    		if (maxMeanInclusiveValue[i] != 0.0) {
+				meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+			}
+			globalMappingElement.setMeanExclusivePercentValue(i,meanExclusivePercentValue);
+			if(globalMapping.getMaxMeanExclusivePercentValue(i) < meanExclusivePercentValue)
+		    	globalMapping.setMaxMeanExclusivePercentValue(i, meanExclusivePercentValue);
+			double meanInclusivePercentValue = 0.0;
+			if (maxMeanInclusiveValue[i] != 0.0) {
+				meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
+			}
+			globalMappingElement.setMeanInclusivePercentValue(i,meanInclusivePercentValue);
+			if(globalMapping.getMaxMeanInclusivePercentValue(i) < meanInclusivePercentValue)
+		    	globalMapping.setMaxMeanInclusivePercentValue(i, meanInclusivePercentValue);
+			
+			if(this.debug){
+		    	this.outputToFile("meanExclusivePercentValue["+i+"]: "+meanExclusivePercentValue);
+		    	this.outputToFile("meanInclusivePercentValue["+i+"]: "+meanInclusivePercentValue);
+			}
 	    }
 	    globalMappingElement.setMeanValuesSet(true);
 	    if(this.debug){
