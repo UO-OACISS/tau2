@@ -187,6 +187,10 @@ fi
         extradir=`echo $1 | sed -e 's/^extradir=//' `
 	echo "s@^EXTRADIR=\(.*\)@EXTRADIR=$extradir@g" >> $sedout
         ;;
+     extradircxx=*)
+        extradircxx=`echo $1 | sed -e 's/^extradircxx=//' `
+	echo "s@^EXTRADIRCXX=\(.*\)@EXTRADIRCXX=$extradircxx@g" >> $sedout
+        ;;
 ###############################################################
 # Set the TAUROOT variable
 ###############################################################
@@ -635,6 +639,10 @@ fi
 	;;
      PPC64)
 	echo "NOTE: *** IBM pSeries Linux environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGL)
+	echo "NOTE: *** IBM BlueGene/L development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      T3D)

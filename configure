@@ -1056,6 +1056,14 @@ case $machine in
      fi
      ;;
   
+   bgl)
+    if [ $cxx_compiler = default ]
+    then
+      cxx_compiler=blrts_xlC
+      c_compiler=blrts_xlc
+    fi
+    ;;
+
    hitachi)
      if [ $cxx_compiler = default ]
        then
@@ -1307,7 +1315,7 @@ if [ $machine = apple ]
   fi
 fi
 
-if [ $machine = ppc64 ]
+if [ $machine = ppc64 -o $machine = bgl ]
 then
   if [ $cxx_compiler = g++ ]
   then
@@ -1413,9 +1421,10 @@ case $cxx_compiler in
         fi
       fi
       ibmxlc=yes
+      extradircxx=`which $cxx_compiler | sed s/$cxx_compiler/../`
+      extradir=`which xlf90 | sed s/xlf90/../`
       if [ $fortran_compiler = no ] 
       then
-        extradir=`which xlf90 | sed s/xlf90/../`
 	if [ "$machine" = "ibm64" -o "$machine" = "ibm64linux" ]
         then
           fixmakeargs="$fixmakeargs IBM64_FORTRAN"
@@ -1726,6 +1735,9 @@ then
           additional_mpiincs='-I/usr/lpp/ssp/css/include'
         fi
 	additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+        ;;
+  bgl)
+	mpiinc=/bgl/BlueLight/ppcfloor/bglsys/include
         ;;
   i386_linux) 
 	mpiinc=/usr/local/packages/mpich/include
@@ -2067,6 +2079,10 @@ then
           additional_mpilibs='-L/usr/lpp/ppe.poe/lib/threads -L/usr/lpp/ssp/css/lib -llapi_r'
         fi
 	;;
+  bgl)
+        mpilib=/bgl/BlueLight/ppcfloor/bglsys/lib
+	additional_mpilibs='-lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts'
+        ;;
   i386_linux) 
 	mpilib=/usr/local/packages/mpich
    	;;
@@ -2178,12 +2194,18 @@ then
       fi
     else
       #echo "libmpi.* not found!! Checking for mpich.*..."
-      if [ -r $mpilib/libmpich.a -o -r $mpilib/libpmpich.so ]
+      if [ -r $mpilib/libmpich.*a -o -r $mpilib/libpmpich.so ]
       then 
         #echo "MPICH found "
         if [ $mpilibrary = no ]
         then 
-  	  mpilibrary=-lmpich
+	  if [ -r $mpilib/libmpich.rts.a ]
+	  then
+	  # For BG/L 
+	    mpilibrary="-lmpich.rts $additional_mpilibs"
+          else
+  	    mpilibrary=-lmpich
+          fi
         fi
       
         if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] 
@@ -2341,7 +2363,7 @@ then
   fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt $fixmakeargs"
 fi
 
-fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir $fixmakeargs"
+fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir extradircxx=$extradircxx $fixmakeargs"
 
 ######################################################################
 # discover the paths for standard system include directories
@@ -2501,7 +2523,7 @@ fi
 if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ ]   
   then
     fixmakeargs="$fixmakeargs GNU"
-    if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = ibm64linux ]
+    if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = ibm64linux ]
     then
       tauoptions="${tauoptions}-gnu"
     fi
@@ -2553,13 +2575,17 @@ case $machine in
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
-     ppc64)
+     bgl|ppc64)
 	echo "Found an IBM PPC-64 Linux configuration definition"
 	fixmakeargs="arch=$machine PPC64 $fixmakeargs"
 	if [ $papi = yes ]
  	  then
 	    fixmakeargs="$fixmakeargs PPC64PAPI"
 	fi
+	if [ $machine = bgl ] 
+          then
+	    fixmakeargs="$fixmakeargs BGL"
+        fi
         ;; 
 
      ia64)
