@@ -80,7 +80,7 @@ public class StaticMainWindowData
     Vector tmpThreadDataList;
     
     //Get a reference to the global data.
-    Vector tmpVector = trial.getStaticServerList();
+    Vector tmpVector = trial.getNodes();
     
     //Clear the sMWGeneralData list for safety.
     sMWGeneralData.removeAllElements();
@@ -211,7 +211,7 @@ public class StaticMainWindowData
       
       
       //Get a reference to the global data.
-      tmpVector = trial.getStaticServerList();
+      tmpVector = trial.getNodes();
       
       for(Enumeration e1 = tmpVector.elements(); e1.hasMoreElements() ;)
       {
@@ -296,7 +296,7 @@ public class StaticMainWindowData
     
     
     //Get a reference to the global data.
-    tmpVector = trial.getStaticServerList();
+    tmpVector = trial.getNodes();
     
     for(Enumeration e1 = tmpVector.elements(); e1.hasMoreElements() ;)
     {
@@ -552,7 +552,7 @@ public class StaticMainWindowData
   public Vector getSMWUEThreadData(int inServer, int inContext, int inThread)
   {
     //First, obtain the appropriate server.
-    Vector tmpVector = trial.getStaticServerList();
+    Vector tmpVector = trial.getNodes();
     
     //Find the correct global thread data element.
     GlobalServer tmpGSUE = null;

@@ -47,7 +47,7 @@ public class MeanDataWindowPanel extends JPanel implements ActionListener, Mouse
       //Add this object as a mouse listener.
       addMouseListener(this);
       
-      staticNodeList = inTrial.getStaticServerList();
+      staticNodeList = inTrial.getNodes();
 
       trial = inTrial;
       mDWindow = inMDWindow;

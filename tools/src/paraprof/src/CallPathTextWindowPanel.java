@@ -210,7 +210,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		int d3 = 0;
 
 		//Find the correct global thread data element.
-		staticServerList = trial.getStaticServerList();
+		staticServerList = trial.getNodes();
 		globalServer = (GlobalServer) staticServerList.elementAt(node);
 		Vector tmpRef = globalServer.getContextList();
 		globalContext = (GlobalContext) tmpRef.elementAt(context);

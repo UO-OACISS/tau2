@@ -96,7 +96,7 @@ public class CallPathUtilFuncs{
 	//which do not exist. Makes lookup much faster.
 	
 	//Find the correct global thread data element.
-	staticServerList = trial.getStaticServerList();
+	staticServerList = trial.getNodes();
 	globalServer = (GlobalServer) staticServerList.elementAt(node);
 	Vector tmpRef = globalServer.getContextList();
 	globalContext = (GlobalContext) tmpRef.elementAt(context);

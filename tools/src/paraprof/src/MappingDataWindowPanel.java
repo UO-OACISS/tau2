@@ -51,7 +51,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    trial = inTrial;
 	    mDWindow = inMDWindow;
  	    gME = ((GlobalMapping)trial.getGlobalMapping()).getGlobalMappingElement(inMappingID, 0);
- 	    mappingName = tmpGME.getMappingName();
+ 	    mappingName = gME.getMappingName();
 	    mappingID = gME.getGlobalID();
       
 	    //Add items to the popu menu.
@@ -75,11 +75,15 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 
     public void paintComponent(Graphics g){
 	try{
-	    super.paintComponent(g);
+	    super.paintComponent(g);	    
+	    Graphics2D g2D = (Graphics2D) g;
+
+	    double value = 0.0;
+	    double maxValue = 0.0;
+	    int stringWidth = 0;
+	    int yCoord = 0;
 	    
-	    Graphics2D g2 = (Graphics2D) g;
-	    
-	    Rectangle clipRect = g.getClipBounds();
+	    Rectangle clipRect = g2D.getClipBounds();
 	    
 	    int yBeg = (int) clipRect.getY();
 	    int yEnd = (int) (yBeg + clipRect.getHeight());
@@ -90,8 +94,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		
 		//Create font.
 		Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), 12);
-		g.setFont(font);
-		FontMetrics fmFont = g.getFontMetrics(font);
+		g2D.setFont(font);
+		FontMetrics fmFont = g2D.getFontMetrics(font);
 		
 		//Set up the bar details.
 		
@@ -118,8 +122,8 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    
 	    //Create font.
 	    Font font = new Font(trial.getPreferences().getJRacyFont(), trial.getPreferences().getFontStyle(), barHeight);
-	    g.setFont(font);
-	    fmFont = g.getFontMetrics(font);
+	    g2D.setFont(font);
+	    fmFont = g2D.getFontMetrics(font);
 	    
 	    int tmpXWidthCalc = 0;
 	    //An XCoord used in drawing the bars.
@@ -130,41 +134,41 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    case 0:
 		if(mDWindow.isPercent()){
 		    maxValue = gME.getMaxInclusivePercentValue(trial.getCurValLoc());
-		    tmpDataValue = gME.getMeanInclusivePercentValue(trial.getCurValLoc());
+		    value = gME.getMeanInclusivePercentValue(trial.getCurValLoc());
 		}
 		else{
 		    maxValue = gME.getMaxInclusiveValue(trial.getCurValLoc());
-		    tmpDataValue = gME.getMeanInclusiveValue(trial.getCurValLoc());
+		    value = gME.getMeanInclusiveValue(trial.getCurValLoc());
 		}
 		break;			    
 	    case 1:
 		if(mDWindow.isPercent()){
 		    maxValue = gME.getMaxExclusivePercentValue(trial.getCurValLoc());
-		    tmpDataValue = gME.getMeanExclusivePercentValue(trial.getCurValLoc());
+		    value = gME.getMeanExclusivePercentValue(trial.getCurValLoc());
 		}
 		else{
 		    maxValue = gME.getMaxExclusiveValue(trial.getCurValLoc());
-		    tmpDataValue = gME.getMeanExclusiveValue(trial.getCurValLoc());
+		    value = gME.getMeanExclusiveValue(trial.getCurValLoc());
 		}
 		break;
 	    case 2:
 		maxValue = gME.getMaxNumberOfCalls();
-		tmpDataValue = gME.getMeanNumberOfCalls();
+		value = gME.getMeanNumberOfCalls();
 		break;
 	    case 3:
 		maxValue = gME.getMaxNumberOfSubRoutines();
-		tmpDataValue = gME.getMeanNumberOfSubRoutines();
+		value = gME.getMeanNumberOfSubRoutines();
 		break;
 	    case 4:
 		maxValue = gME.getMaxUserSecPerCall(trial.getCurValLoc());
-		tmpDataValue = gME.getMeanUserSecPerCall(trial.getCurValLoc());
+		value = gME.getMeanUserSecPerCall(trial.getCurValLoc());
 		break;
 	    default:
 		ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
 	    }
 
 	    if(mDWindow.isPercent()){
-		stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxValue, defaultNumberPrecision) + "%");
+		stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxValue, ParaProf.defaultNumberPrecision) + "%");
 		barXCoord = barXCoord + stringWidth;
 	    }
 	    else{
@@ -178,75 +182,9 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    //******************************
 	    //Do the mean bar.
 	    //******************************
-	    
-	    //Build the node,context,thread string.
-	    String s1 = "mean";
 	    if((yCoord >= yBeg) && (yCoord <= yEnd)){
 		yCoord = yCoord + (barSpacing);
-		int xLength;
-		double tmpDouble;
-		tmpDouble = (tmpDataValue / maxValue);
-		xLength = (int) (tmpDouble * defaultBarLength);
-		if(xLength == 0)
-		    xLength = 1;
-		
-		//Now set the color values for drawing!
-		//Get the appropriate color.
-		tmpColor = tmpGME.getMappingColor();
-		g.setColor(tmpColor);
-		
-		if((xLength > 2) && (barHeight > 2)){ //Otherwise, do not use boxes ... not enough room.
-		    g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-		    
-		    if(mappingID == (trial.getColorChooser().getHighlightColorMappingID())){
-			g.setColor(trial.getColorChooser().getHighlightColor());
-			g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-			g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-		    }
-		    else if((tmpGME.isGroupMember(trial.getColorChooser().getGHCMID()))){
-			g.setColor(trial.getColorChooser().getGroupHighlightColor());
-			g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-			g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-		    }
-		    else{
-			g.setColor(Color.black);
-			g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-		    }
-		}
-		else{
-		    if(mappingID == (trial.getColorChooser().getHighlightColorMappingID()))
-			g.setColor(trial.getColorChooser().getHighlightColor());
-		    else if((tmpGME.isGroupMember(trial.getColorChooser().getGHCMID())))
-			g.setColor(trial.getColorChooser().getGroupHighlightColor());
-		    else{
-			tmpColor = tmpGME.getMappingColor();
-			g.setColor(tmpColor);
-		    }
-		    
-		    g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
-		}
-		
-		//Now print the percentage to the left of the bar.
-		g.setColor(Color.black);
-		//Need to figure out how long the percentage string will be.
-		if((mDWindow.isPercent()) && ((mDWindow.getMetric())<2))					
-		    tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
-		else
-		    tmpString = UtilFncs.getOutputString(mDWindow.units(),tmpDataValue);
-		stringWidth = fmFont.stringWidth(tmpString);
-		//Now draw the percent value to the left of the bar.
-		stringStart = barXCoord - xLength - stringWidth - 5;
-		g.drawString(tmpString, stringStart, yCoord);
-		
-		//Now print the node,context,thread to the right of the bar.
-		tmpString = s1;
-		g.drawString(tmpString, (barXCoord + 5), yCoord);
-		
-		//Figure out how wide that string was for x coord reasons.
-		stringWidth =  (barXCoord + fmFont.stringWidth(s1) + 5); 
-		if(tmpXWidthCalc < stringWidth){
-		    tmpXWidthCalc = stringWidth + 15;
-		}
+		drawBar(g2D, fmFont, value, maxValue, "mean", barXCoord, yCoord, barHeight, groupMember);
 	    }
 	    //******************************
 	    //End - Do the mean bar.
@@ -259,125 +197,55 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    for(Enumeration e1 = (mDWindow.getStaticMainWindowSystemData()).elements(); e1.hasMoreElements() ;){
 		//Get the name of the server.
 		tmpSMWServer = (SMWServer) e1.nextElement();
-		
-		//Setting the context counter to zero ... this is really required.
 		contextNumber = 0;
 		tmpContextList = tmpSMWServer.getContextList();
 		for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;){
 		    //Get the next context.
 		    tmpSMWContext = (SMWContext) e2.nextElement();
-		    
-		    //Now draw the thread stuff for this context.
 		    tmpThreadList = tmpSMWContext.getThreadList();
-		    
 		    //Setting the context counter to zero ... this is really required as well. :-)
 		    threadNumber = 0;
 		    for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;){
-			//Build the node,context,thread string.
-			s1 = "n,c,t   " + serverNumber + "," + contextNumber + "," + threadNumber;
-			
 			tmpSMWThread = (SMWThread) e3.nextElement();
 			tmpThreadDataElementList = tmpSMWThread.getThreadDataList();
 			
 			for(Enumeration e4 = tmpThreadDataElementList.elements(); e4.hasMoreElements() ;){
 			    tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
 			    
-			    switch(mDWindow.getMetric()){
-			    case 0:
-				if(mDWindow.isPercent())
-				    tmpDataValue = tmpSMWThreadDataElement.getInclusivePercentValue();
-				else
-				    tmpDataValue = tmpSMWThreadDataElement.getInclusiveValue();
-				break;			    
-			    case 1:
-				if(mDWindow.isPercent())
-				    tmpDataValue = tmpSMWThreadDataElement.getExclusivePercentValue();
-				else
-				    tmpDataValue = tmpSMWThreadDataElement.getExclusiveValue();
-				break;
-			    case 2:
-				tmpDataValue = tmpSMWThreadDataElement.getNumberOfCalls();
-				break;
-			    case 3:
-				tmpDataValue = tmpSMWThreadDataElement.getNumberOfSubRoutines();
-				break;
-			    case 4:
-				tmpDataValue = tmpSMWThreadDataElement.getUserSecPerCall();
-				break;
-			    default:
-				ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
-			    }
-			    
 			    if((tmpSMWThreadDataElement.getMappingID()) == mappingID){
+				switch(mDWindow.getMetric()){
+				case 0:
+				    if(mDWindow.isPercent())
+					value = tmpSMWThreadDataElement.getInclusivePercentValue();
+				    else
+					value = tmpSMWThreadDataElement.getInclusiveValue();
+				    break;			    
+				case 1:
+				    if(mDWindow.isPercent())
+					value = tmpSMWThreadDataElement.getExclusivePercentValue();
+				    else
+					value = tmpSMWThreadDataElement.getExclusiveValue();
+				    break;
+				case 2:
+				    value = tmpSMWThreadDataElement.getNumberOfCalls();
+				    break;
+				case 3:
+				    value = tmpSMWThreadDataElement.getNumberOfSubRoutines();
+				    break;
+				case 4:
+				    value = tmpSMWThreadDataElement.getUserSecPerCall();
+				    break;
+				default:
+				    ParaProf.systemError(null, null, "Unexpected type - MDWP value: " + mDWindow.getMetric());
+				}
+				
 				//For consistancy in drawing, the y coord is updated at the beggining of the loop.
 				yCoord = yCoord + (barSpacing);
 				
 				//Now select whether to draw this thread based on clip rectangle.
 				if((yCoord >= yBeg) && (yCoord <= yEnd)){
-				    int xLength;
-				    double tmpDouble;
-				    tmpDouble = (tmpDataValue / maxValue);
-				    xLength = (int) (tmpDouble * defaultBarLength);
-				    if(xLength == 0)
-					xLength = 1;
-				    
-				    //Now set the color values for drawing!
-				    //Get the appropriate color.
-				    tmpColor = tmpSMWThreadDataElement.getMappingColor();
-				    g.setColor(tmpColor);
-				    
-				    if((xLength > 2) && (barHeight > 2)){ //Otherwise, do not use boxes ... not enough room.
-					g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
-					
-					if((tmpSMWThreadDataElement.getMappingID()) == (trial.getColorChooser().getHighlightColorMappingID())){
-					    g.setColor(trial.getColorChooser().getHighlightColor());
-					    g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-					    g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-					}
-					else if((tmpSMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID()))){
-					    g.setColor(trial.getColorChooser().getGroupHighlightColor());
-					    g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-					    g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
-					}
-					else{
-					    g.setColor(Color.black);
-					    g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-					}
-				    }
-				    else{
-					if(mappingID == (trial.getColorChooser().getHighlightColorMappingID()))
-					    g.setColor(trial.getColorChooser().getHighlightColor());
-					else if((tmpSMWThreadDataElement.isGroupMember(trial.getColorChooser().getGHCMID())))
-					    g.setColor(trial.getColorChooser().getGroupHighlightColor());
-					else{
-					    tmpColor = tmpSMWThreadDataElement.getMappingColor();
-					    g.setColor(tmpColor);
-					}
-					
-					g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
-				    }
-				    
-				    g.setColor(Color.black);
-				    if((mDWindow.isPercent()) && ((mDWindow.getMetric())<2))					
-					tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, defaultNumberPrecision)) + "%";
-				    else
-					tmpString = UtilFncs.getOutputString(mDWindow.units(),tmpDataValue);
-				    stringWidth = fmFont.stringWidth(tmpString);
-				    stringStart = barXCoord - xLength - stringWidth - 5;
-				    g.drawString(tmpString, stringStart, yCoord);
-				    
-				    //Now print the node,context,thread to the right of the bar.
-				    tmpString = s1;
-				    g.drawString(tmpString, (barXCoord + 5), yCoord);
-				    
-				    //Figure out how wide that string was for x coord reasons.
-				    stringWidth =  (barXCoord + fmFont.stringWidth(s1) + 5); 
-				    if(tmpXWidthCalc < stringWidth){
-					tmpXWidthCalc = stringWidth + 15;
-				    }
-				    
-				    //Update the drawing coordinates.
-				    tmpSMWThreadDataElement.setMDWDrawCoords(stringStart, stringWidth, (yCoord - barHeight), yCoord);
+				    drawBar(g2D, fmFont, value, maxValue, "n,c,t " + serverNumber + "," + contextNumber + "," + threadNumber,
+					    barXCoord, yCoord, barHeight, groupMember);
 				}
 			    }
 			}
@@ -406,11 +274,41 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	}
     }
 
-    private void drawBar(Graphics g, double value, double maxValue, int barXCoord, int barHeight, boolean groupMember){
+    //Computes the number of threads this mapping exists on.
+    //Computation only occurs in the first call.
+    private int activeThreads(){
+	if(aT==-1){
+	    for(Enumeration e1 = (mDWindow.getStaticMainWindowSystemData()).elements(); e1.hasMoreElements() ;){
+		//Get the name of the server.
+		tmpSMWServer = (SMWServer) e1.nextElement();
+		tmpContextList = tmpSMWServer.getContextList();
+		for(Enumeration e2 = tmpContextList.elements(); e2.hasMoreElements() ;){
+		    tmpSMWContext = (SMWContext) e2.nextElement();
+		    tmpThreadList = tmpSMWContext.getThreadList();
+		    for(Enumeration e3 = tmpThreadList.elements(); e3.hasMoreElements() ;){
+			tmpSMWThread = (SMWThread) e3.nextElement();
+			tmpThreadDataElementList = tmpSMWThread.getThreadDataList();
+			for(Enumeration e4 = tmpThreadDataElementList.elements(); e4.hasMoreElements() ;){
+			    tmpSMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+			    if((tmpSMWThreadDataElement.getMappingID()) == mappingID)
+				aT++;
+				
+
+
+
+
+
+
+	}
+	else
+	    return aT;
+    }
+
+    private void drawBar(Graphics2D g2D, FontMetrics fmFont, double value, double maxValue, String text,
+			 int barXCoord, int yCoord, int barHeight, boolean groupMember){
 	int xLength = 0;
 	double d = 0.0;
 	double sum = 0.0;
-	Color color = null;
 	String s = null;
 	int stringWidth = 0;
 	int stringStart = 0;
@@ -419,64 +317,49 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	xLength = (int) (d * defaultBarLength);
 	if(xLength == 0)
 	    xLength = 1;
-	
-	//Now set the color values for drawing!
-	//Get the appropriate color.
-	color = gME.getMappingColor();
-	g.setColor(color);
-	
+
 	if((xLength > 2) && (barHeight > 2)){
-	    g.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
+	    g2D.setColor(gME.getMappingColor());
+	    g2D.fillRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 1, barHeight - 1);
 	    
 	    if(mappingID == (trial.getColorChooser().getHighlightColorMappingID())){
-		g.setColor(trial.getColorChooser().getHighlightColor());
-		g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-		g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+		g2D.setColor(trial.getColorChooser().getHighlightColor());
+		g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+		g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 	    }
 	    else if(groupMember){
-		g.setColor(trial.getColorChooser().getGroupHighlightColor());
-		g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
-		g.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
+		g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
+		g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+		g2D.drawRect(barXCoord - xLength + 1, (yCoord - barHeight) + 1, xLength - 2, barHeight - 2);
 	    }
 	    else{
-		g.setColor(Color.black);
-		g.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
+		g2D.setColor(Color.black);
+		g2D.drawRect(barXCoord - xLength, (yCoord - barHeight), xLength, barHeight);
 	    }
 	}
 	else{
 	    if(mappingID == (trial.getColorChooser().getHighlightColorMappingID()))
-		g.setColor(trial.getColorChooser().getHighlightColor());
-	    else if((tmpGME.isGroupMember(trial.getColorChooser().getGHCMID())))
-		g.setColor(trial.getColorChooser().getGroupHighlightColor());
+		g2D.setColor(trial.getColorChooser().getHighlightColor());
+	    else if((gME.isGroupMember(trial.getColorChooser().getGHCMID())))
+		g2D.setColor(trial.getColorChooser().getGroupHighlightColor());
 	    else{
-		tmpColor = tmpGME.getMappingColor();
-		g.setColor(tmpColor);
+		g2D.setColor(gME.getMappingColor());
 	    }
-	    
-	    g.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
+	    g2D.fillRect((barXCoord - xLength), (yCoord - barHeight), xLength, barHeight);
 	}
 	
 	//Now print the percentage to the left of the bar.
-	g.setColor(Color.black);
+	g2D.setColor(Color.black);
 	//Need to figure out how long the percentage string will be.
 	if((mDWindow.isPercent()) && ((mDWindow.getMetric())<2))					
-	    tmpString = (UtilFncs.adjustDoublePresision(tmpDataValue, ParaProf.defaultNumberPrecision)) + "%";
+	    s = (UtilFncs.adjustDoublePresision(value, ParaProf.defaultNumberPrecision)) + "%";
 	else
-	    tmpString = UtilFncs.getOutputString(mDWindow.units(),tmpDataValue);
-	stringWidth = fmFont.stringWidth(tmpString);
+	    s = UtilFncs.getOutputString(mDWindow.units(),value);
+	stringWidth = fmFont.stringWidth(s);
 	//Now draw the percent value to the left of the bar.
 	stringStart = barXCoord - xLength - stringWidth - 5;
-	g.drawString(tmpString, stringStart, yCoord);
-	
-	//Now print the node,context,thread to the right of the bar.
-	tmpString = s1;
-	g.drawString(tmpString, (barXCoord + 5), yCoord);
-	
-	//Figure out how wide that string was for x coord reasons.
-	stringWidth =  (barXCoord + fmFont.stringWidth(s1) + 5); 
-	if(tmpXWidthCalc < stringWidth){
-	    tmpXWidthCalc = stringWidth + 15;
-	}
+	g2D.drawString(s, stringStart, yCoord);
+	g2D.drawString(text, (barXCoord + 5), yCoord);
     }
 
     //******************************
@@ -490,26 +373,18 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
 		if(arg.equals("Change Function Color")){ 
-		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		    
-		    Color tmpCol = tmpGME.getMappingColor();
+		    Color tmpCol = gME.getMappingColor();
 		    
 		    JColorChooser tmpJColorChooser = new JColorChooser();
 		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
 				if(tmpCol != null){
-				    tmpGME.setSpecificColor(tmpCol);
-				    tmpGME.setColorFlag(true);
-				    
+				    gME.setSpecificColor(tmpCol);
+				    gME.setColorFlag(true);
 				    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 				}
 			    }
-		
 		else if(arg.equals("Reset to Generic Color")){ 
-		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		    
-		    tmpGME.setColorFlag(false);
+		    gME.setColorFlag(false);
 		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 		}
 	    }
@@ -542,22 +417,21 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	computeDefaultBarLength();
 	this.repaint();
     }
-    
-    public Dimension getPreferredSize(){
-	return new Dimension(xPanelSize, (yPanelSize + 10));}
-    
+
     public void computeDefaultBarLength(){
 	try{
 	    double sliderValue = (double) mDWindow.getSliderValue();
 	    double sliderMultiple = mDWindow.getSliderMultiple();
 	    double result = 250*sliderValue*sliderMultiple;
-	    
 	    defaultBarLength = (int) result;
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "MDWP06");
 	}
     }
+    
+    public Dimension getPreferredSize(){
+	return new Dimension(xPanelSize, (yPanelSize + 10));}
 
     //******************************
     //Instance data.
@@ -573,8 +447,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     private int barSpacing = -1;
     private int defaultBarLength = 250;
     private int maxXLength = 0;
-    private double maxValue = 0.0;
-    private groupMember = false;
+    private boolean groupMember = false;
     private int serverNumber = -1;
     private int contextNumber = -1;
     private int threadNumber = -1;

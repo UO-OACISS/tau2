@@ -34,7 +34,7 @@ public class Trial extends Thread{
 	parentExperiment = inParentExp;
 	globalMapping = new GlobalMapping(this);
 	systemEvents = new SystemEvents();
-	StaticServerList = new Vector();
+	nodes = new Vector();
 	counterName = null;
 	isUserEventHeadingSet = false;
     }
@@ -121,14 +121,48 @@ public class Trial extends Thread{
     }
   
     public String toString(){
-	return trialName;
+	return trialName;}
+  
+     public Vector getNodes(){
+	return nodes;}
+
+    //Returns an array of length 3 which contains the maximum number
+    //of nodes, contexts and threads reached. This is not a total,
+    //except in the case of the number of nodes.
+    //This method is useful for determining an upper bound on the
+    //string sizes being displayed in ParaProf's different windows.
+    //Computation will only occur during the first call to this method.
+    //Subsequent calls will return the results obtained from the first
+    //call.
+    public int[] getMaxNCTNumbers(){
+	if(nct==null){
+	    nct = new int[3];
+	    for(int i=0;i<3;i++){
+		nct[i]=0;}
+	    GlobalServer gs = null;
+	    GlobalContext gc = null;
+	    GlobalThread gt = null;
+	    Vector cv = null;
+	    Vector tv = null;
+	    
+	    nct[0] = nodes.size();
+	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
+		gs = (GlobalServer) e1.nextElement();
+		cv = gs.getContextList();
+		if(cv.size()>nct[1])
+		    nct[1]=cv.size();
+		for(Enumeration e2 = cv.elements(); e2.hasMoreElements() ;){
+		    gc = (GlobalContext) e2.nextElement();
+		    tv = gc.getThreadList();
+		    if(tv.size()>nct[2])
+			nct[2]=tv.size();
+		}
+	    }
+	}
+	return nct;
     }
-  
-    public Vector getStaticServerList(){
-	return StaticServerList;
-    }
-  
-  
+    
+
     //###################################
     //Functions that control the obtaining and the openning
     //and closing of the static main window for
@@ -347,7 +381,7 @@ public class Trial extends Thread{
 		Vector tmpThreadDataList;
 	  
 		//Get a reference to the global data.
-		Vector tmpVector = getStaticServerList();
+		Vector tmpVector = getNodes();
 	  
 		for(Enumeration e3 = tmpVector.elements(); e3.hasMoreElements() ;){
 		    tmpGlobalServer = (GlobalServer) e3.nextElement();
@@ -580,7 +614,7 @@ public class Trial extends Thread{
 					//Add the current context.
 					currentGlobalServer.addContext(currentGlobalContext);
 					//Add the current server.
-					StaticServerList.addElement(currentGlobalServer);
+					nodes.addElement(currentGlobalServer);
 					
 					//Update last context and last node.
 					lastContext = context;
@@ -657,7 +691,7 @@ public class Trial extends Thread{
 			}
 			else{
 			    //Find the correct global thread data element.
-			    GlobalServer tmpGS = (GlobalServer) StaticServerList.elementAt(node);
+			    GlobalServer tmpGS = (GlobalServer) nodes.elementAt(node);
 			    Vector tmpGlobalContextList = tmpGS.getContextList();
 			    GlobalContext tmpGC = (GlobalContext) tmpGlobalContextList.elementAt(context);
 			    Vector tmpGlobalThreadList = tmpGC.getThreadList();
@@ -700,7 +734,7 @@ public class Trial extends Thread{
 			thread = getNCT(2,inputString, false);
 			
 			//Find the correct global thread data element.
-			GlobalServer tmpGS = (GlobalServer) StaticServerList.elementAt(node);
+			GlobalServer tmpGS = (GlobalServer) nodes.elementAt(node);
 			Vector tmpGlobalContextList = tmpGS.getContextList();
 			GlobalContext tmpGC = (GlobalContext) tmpGlobalContextList.elementAt(context);
 			Vector tmpGlobalThreadList = tmpGC.getThreadList();
@@ -772,7 +806,7 @@ public class Trial extends Thread{
 				    //the below for-loop is only run once on each THREAD NODE.
 				    
 				    //Find the correct global thread data element.
-				    tmpGSUE = (GlobalServer) StaticServerList.elementAt(ued.node);
+				    tmpGSUE = (GlobalServer) nodes.elementAt(ued.node);
 				    tmpGlobalContextListUE = tmpGSUE.getContextList();
 				    tmpGCUE = (GlobalContext) tmpGlobalContextListUE.elementAt(ued.context);
 				    tmpGlobalThreadListUE = tmpGCUE.getThreadList();
@@ -1412,7 +1446,7 @@ public class Trial extends Thread{
 	Vector tmpThreadDataList;
     
 	//Get a reference to the global data.
-	Vector tmpVector = this.getStaticServerList();
+	Vector tmpVector = this.getNodes();
     
 	for(Enumeration e3 = tmpVector.elements(); e3.hasMoreElements() ;){
 	    tmpGlobalServer = (GlobalServer) e3.nextElement();
@@ -1844,7 +1878,7 @@ public class Trial extends Thread{
     private int currentValueWriteLocation = 0;    
   
     private GlobalMapping globalMapping;
-    private Vector StaticServerList;
+    private Vector nodes;
     private String counterName;
     private boolean isUserEventHeadingSet;
     boolean groupNamesCheck = false;
@@ -1855,7 +1889,8 @@ public class Trial extends Thread{
 
     private int numberOfMappings = -1;
     private int numberOfUserEvents = -1;
-    private int totalNumberOfThreads = 0; 
+    private int totalNumberOfThreads = 0;
+    private int[] nct = null;
   
     //Max mean values.
     private Vector maxMeanInclusiveValueList = new Vector();

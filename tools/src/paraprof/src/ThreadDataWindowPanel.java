@@ -69,7 +69,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
       //Find the correct global thread.
       //This should remain constant throughout the life of this window. Thus, it is
       //safe to grab it here, and not have to grab in every paint component call.
-      GlobalServer tmpGS = (GlobalServer) (trial.getStaticServerList()).elementAt(serverNumber);
+      GlobalServer tmpGS = (GlobalServer) (trial.getNodes()).elementAt(serverNumber);
       Vector tmpGlobalContextList = tmpGS.getContextList();
       GlobalContext tmpGC = (GlobalContext) tmpGlobalContextList.elementAt(contextNumber);
       Vector tmpGlobalThreadList = tmpGC.getThreadList();
