@@ -9,10 +9,11 @@
 
 Change log:
 ------------
-Version 2.7 Beta changes (from 2.6):
+Version 2.7 changes (from 2.6):
 1. Added Support for JAVA (JDK 1.2+).
 2. Added support for DYNINST Dynamic Instrumentation Package from U. Maryland.
 3. Added support for SUN 5.0 CC, F90 compilers
+4. Added support for Microsoft Windows. 
  
 Version 2.6 changes (from 2.5):
 1. TAU Mapping API introduced.
