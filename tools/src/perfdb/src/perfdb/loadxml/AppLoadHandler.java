@@ -63,7 +63,7 @@ public void startElement(String url, String name, String qname, Attributes attrL
 		currentElement = "version";
 	} else if( name.equalsIgnoreCase("language") ) {
 		currentElement = "language";
-	} else if( name.equalsIgnoreCase("para_diag") ) {
+	} else if( name.equalsIgnoreCase("paradigm") ) {
 		currentElement = "paradiagm";
 	} else if( name.equalsIgnoreCase("usage") ) {
 		currentElement = "usage";
@@ -117,7 +117,7 @@ public void endElement(String url, String name, String qname) {
 	    	buf = new StringBuffer();
 	    	buf.append("insert into");
 	    	buf.append(" " + APP_TABLE + " ");
-	    	buf.append("(name, version, description, language, para_diag, usage_text, execution_options)");
+	    	buf.append("(name, version, description, language, paradigm, usage_text, execution_options)");
 	    	buf.append(" values ");
 	    	buf.append("('" + this.name + "', '" + version + "', '" 
 		       + desc + "', '" + lang + "', '" + paradiag + "', '" + usage + "', '" + exeopt + "'); ");       

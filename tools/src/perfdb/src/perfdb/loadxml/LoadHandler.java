@@ -35,6 +35,8 @@ public class LoadHandler extends DefaultHandler {
     protected String appid = "";
     protected String expid = "";
     protected String probsize = "";
+    protected String trialName = "";
+    protected String userData = "";
 
     protected String currentElement = "";
     protected String documentName = "";
@@ -426,6 +428,10 @@ public class LoadHandler extends DefaultHandler {
 
 	else if (currentElement.equals("ProblemSize")) probsize = tempcode;
 
+	else if (currentElement.equals("TrialName")) trialName = tempcode;
+
+	else if (currentElement.equals("UserData")) userData = tempcode;
+
 	else if (currentElement.equals("Trialtime")) trialTime = tempcode;
 	
 	else if (currentElement.equals("FunAmt")) {
@@ -480,19 +486,21 @@ public class LoadHandler extends DefaultHandler {
 	    	buf.append("insert into ");
 	    	buf.append(getTrialTable());
 	    	if (probsize==""){	
-	    		buf.append(" (experiment, time, node_count, contexts_per_node, threads_per_context)");
+	    		buf.append(" (experiment, name, time, node_count, contexts_per_node, threads_per_context, userdata)");
 	    		buf.append(" values ");
-	    		buf.append("(" + expid + ", '" + trialTime 
+	    		buf.append("(" + expid + ", '" + trialName + "', '" + trialTime 
 			   	+ "', "  + nodenum 
 			   	+ ", " + contextpnode
-			   	+ ", " + threadpcontext + "); ");       
+			   	+ ", " + threadpcontext 
+				+ ", '" + userData + "'); ");       
 	    	} else {
-	    		buf.append(" (experiment, time, problem_size, node_count, contexts_per_node, threads_per_context)");
+	    		buf.append(" (experiment, name, time, problem_size, node_count, contexts_per_node, threads_per_context, userdata)");
 	    		buf.append(" values ");
-	    		buf.append("(" + expid + ", '" + trialTime 
+	    		buf.append("(" + expid + ", '" + trialName + "', '" + trialTime 
 			   	+ "', " + probsize + ", " + nodenum 
 			   	+ ", " + contextpnode
-			   	+ ", " + threadpcontext + "); ");       
+			   	+ ", " + threadpcontext 
+				+ ", '" + userData + "'); ");       
 	    	}
 	   		// System.out.println(buf.toString());
 	    	try{	
