@@ -1,0 +1,21 @@
+
+# It is recommended that you create a tablespace for perfdmf:
+# e.g.
+
+create tablespace perfdmf
+datafile '/path/to/somewhere' size 500m reuse;
+
+# Then, create a user that has this tablespace as default:
+# e.g.
+
+create user amorris identified by db;
+grant create session to amorris;
+grant create table to amorris;
+grant create sequence to amorris;
+grant create trigger to amorris;
+alter user amorris quota unlimited on perfdmf;
+alter user amorris default tablespace perfdmf;
+
+# PerfDMF is set up to use the Oracle Thin Java driver.  You will have
+# to obtain this jar file for your database.  In our case, it was
+# ojdbc14.jar
