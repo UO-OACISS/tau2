@@ -4,16 +4,17 @@ import edu.uoregon.tau.dms.database.DB;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.io.Serializable;
 
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.5 2004/10/13 21:07:05 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.6 2004/10/27 21:34:30 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
  */
-public class Metric extends Object {
+public class Metric implements Serializable {
     private int metricID;
     private int trialID;
     private String name;
@@ -51,6 +52,10 @@ public class Metric extends Object {
      * @return	the name of the metric
      */
     public String getName() {
+	return name;
+    }
+
+    public String toString() {
 	return name;
     }
 

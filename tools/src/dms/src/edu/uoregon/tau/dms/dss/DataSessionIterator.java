@@ -1,6 +1,7 @@
 package edu.uoregon.tau.dms.dss;
 
 import java.util.*;
+import java.io.Serializable;
 
 /**
  * Description: Implements the standard list interface.
@@ -13,11 +14,11 @@ import java.util.*;
  * AFTER decrementing index. Thus, alternating calls to next and previous
  * return the same element. As required by the ListIterator specification.
  *
- * <P>CVS $Id: DataSessionIterator.java,v 1.1 2004/05/05 17:43:30 khuck Exp $</P>
+ * <P>CVS $Id: DataSessionIterator.java,v 1.2 2004/10/27 21:34:30 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
-public class DataSessionIterator implements ListIterator{
+public class DataSessionIterator implements Serializable, ListIterator {
 
 	public DataSessionIterator () {
 		structureType = CUSTOM;

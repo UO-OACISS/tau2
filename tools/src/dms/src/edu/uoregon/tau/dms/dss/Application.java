@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Vector;
+import java.io.Serializable;
 
 /**
  * Holds all the data for an application in the database.  This 
@@ -13,7 +14,7 @@ import java.util.Vector;
  * an application from which the TAU performance data has been generated.
  * An application has one or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.4 2004/10/13 21:07:05 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.5 2004/10/27 21:34:30 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since 0.1
@@ -21,7 +22,7 @@ import java.util.Vector;
  * @see		DataSession#setApplication
  * @see		Experiment
  */
-public class Application {
+public class Application implements Serializable {
     private int applicationID;
     private String name;
     private String version;
@@ -47,6 +48,10 @@ public class Application {
      * @return	the name of the application
      */
     public String getName() {
+	return name;
+    }
+
+    public String toString() {
 	return name;
     }
 

@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.util.Vector;
 import java.util.Enumeration;
 import java.lang.String;
+import java.io.Serializable;
 
 /**
  * Holds all the data for a trial in the database.
@@ -19,7 +20,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.8 2004/10/13 21:07:05 amorris Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.9 2004/10/27 21:34:30 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -30,7 +31,7 @@ import java.lang.String;
  * @see		IntervalEvent
  * @see		AtomicEvent
  */
-public class Trial {
+public class Trial implements Serializable {
     private int trialID;
     private int experimentID;
     private int applicationID;
@@ -77,6 +78,10 @@ public class Trial {
      * @return	the name of the trial
      */
     public String getName() {
+	return name;
+    }
+
+    public String toString() {
 	return name;
     }
 

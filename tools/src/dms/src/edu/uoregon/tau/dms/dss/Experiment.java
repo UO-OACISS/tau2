@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Vector;
+import java.io.Serializable;
 
 /**
  * Holds all the data for an experiment in the database.  
@@ -14,7 +15,7 @@ import java.util.Vector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.4 2004/10/13 21:07:05 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.5 2004/10/27 21:34:30 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -23,7 +24,7 @@ import java.util.Vector;
  * @see		Application
  * @see		Trial
  */
-public class Experiment {
+public class Experiment implements Serializable {
     private int experimentID;
     private int applicationID;
     private String name;
@@ -76,6 +77,10 @@ public class Experiment {
      * @return	the name of the experiment
      */
     public String getName() {
+	return name;
+    }
+	
+    public String toString() {
 	return name;
     }
 	
