@@ -5,7 +5,6 @@ cc It works with the Cray T3E F90 compiler with TAU.
 cc-----------------------------------------------------------------------------
 
       subroutine HELLOWORLD(iVal)
-      include 'Profile/TauFAPI.h'
         integer iVal
         integer profiler(2)
         save    profiler
@@ -19,8 +18,7 @@ cc       HelloWorld = iVal
       end
 
       program main
-      include 'Profile/TauFAPI.h'
-        integer group(2), error, x, i
+        integer i
         integer profiler(2)
 	save profiler
         call TAU_PROFILE_INIT()
@@ -28,7 +26,7 @@ cc       HelloWorld = iVal
         call TAU_PROFILE_START(profiler)
         call TAU_PROFILE_SET_NODE(0)
 
-      write(6,*) "hello world"
+      print *, "test program"
 
         do 10, i = 1, 10
         call HELLOWORLD(i)
