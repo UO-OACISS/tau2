@@ -340,6 +340,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 		else if(arg.equals("Edit ParaProf Preferences!")){
 		    trial.getPreferences().showPreferencesWindow();
 		}
+		else if(arg.equals("Save Image")){
+		    ParaProfImageOutput imageOutput = new ParaProfImageOutput();
+		    imageOutput.saveImage((ParaProfImageInterface) panel);
+		}
 		else if(arg.equals("Close This Window")){
 		    closeThisWindow();
 		}
@@ -603,6 +607,17 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     
     public int units(){
 	return units;}
+
+    public Dimension getViewportSize(){
+	return sp.getViewport().getExtentSize();}
+
+    public Rectangle getViewRect(){
+	return sp.getViewport().getViewRect();}
+
+    public void setVerticalScrollBarPosition(int position){
+	JScrollBar scrollBar = sp.getVerticalScrollBar();
+	scrollBar.setValue(position);
+    }
 
     //######
     //Panel header.

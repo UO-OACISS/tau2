@@ -54,13 +54,24 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    addMouseListener(this);
       
 	    //Add items to the popu menu.
-	    JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
-	    mappingDetailsItem.addActionListener(this);
-	    popup.add(mappingDetailsItem);
-      
-	    JMenuItem changeColorItem = new JMenuItem("Change Function Color");
-	    changeColorItem.addActionListener(this);
-	    popup.add(changeColorItem);
+	    if(windowType == 2){
+		JMenuItem mappingDetailsItem = new JMenuItem("Show Userevent Details");
+		mappingDetailsItem.addActionListener(this);
+		popup.add(mappingDetailsItem);
+		
+		JMenuItem changeColorItem = new JMenuItem("Change Userevent Color");
+		changeColorItem.addActionListener(this);
+		popup.add(changeColorItem);
+	    }
+	    else{
+		JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
+		mappingDetailsItem.addActionListener(this);
+		popup.add(mappingDetailsItem);
+		
+		JMenuItem changeColorItem = new JMenuItem("Change Function Color");
+		changeColorItem.addActionListener(this);
+		popup.add(changeColorItem);
+	    }
       
 	    JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
 	    maskMappingItem.addActionListener(this);
@@ -98,29 +109,45 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	g2.translate(pf.getImageableX(), pf.getImageableY());
 	g2.draw(new Rectangle2D.Double(0,0, pf.getImageableWidth(), pf.getImageableHeight()));
     
-	drawPage(g2, true);
+	renderIt(g2, 2, false);
     
 	return Printable.PAGE_EXISTS;
     }  
 
     public void renderIt(Graphics2D g2D, int instruction, boolean header){ //Got to here!!!!!
 	try{
+	    if(this.debug()){
+		System.out.println("####################################");
+		System.out.println("StatWindowPanel.renderIt(...)");
+		System.out.println("####################################");
+	    }
+
+	    list = sWindow.getData();
+
+	    //With group support present, it is possible that the number of mappings in
+	    //our data list is zero.  If so, just return.
+	    if((list.size()) == 0)
+		return;
+
+	    //######
+	    //Some declarations.
+	    //######
 	    SMWThreadDataElement sMWThreadDataElement = null;
 	    Color tmpColor;
 	    int yCoord = 0;
+	    String tmpString = null;
+	    String dashString = "";
+	    int tmpXWidthCalc = 0;
+	    //######
+	    //Some declarations.
+	    //######
 	    
 	    //In this window, a Monospaced font has to be used.  This will probably not be the same
 	    //font as the rest of ParaProf.  As a result, some extra work will have to be done to calculate
 	    //spacing.
 	    int fontSize = trial.getPreferences().getBarHeight();
 	    spacing = trial.getPreferences().getBarSpacing();
-      
-	    int tmpXWidthCalc = 0;
-      
-	    String tmpString = null;
-	    String dashString = "";
-      
-	    //Create font.
+ 	    //Create font.
 	    MonoFont = new Font("Monospaced", trial.getPreferences().getFontStyle(), fontSize);
 	    //Compute the font metrics.
 	    fmMonoFont = g2D.getFontMetrics(MonoFont);
@@ -131,20 +158,25 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    if(spacing <= (maxFontAscent + maxFontDescent)){
 		spacing = spacing + 1;
 	    }
-	    
-	    list = sWindow.getData();
-	    //With group support present, it is possible that the number of mappings in
-	    //our data list is zero.  If so, just return.
-	    if((list.size()) == 0)
-		return;
-   
-	    Rectangle clipRect = g2D.getClipBounds();
-	    int yBeg = (int) clipRect.getY();
-	    int yEnd = (int) (yBeg + clipRect.getHeight());
-	    int startThreadElement = 0;
-	    int endThreadElement = 0;
-      
-	    //Draw the heading!
+
+	    //######
+	    //Draw the header if required.
+	    //######
+	    if(header){
+		yCoord = yCoord + (spacing);
+		String headerString = sWindow.getHeaderString();
+		//Need to split the string up into its separate lines.
+		StringTokenizer st = new StringTokenizer(headerString, "'\n'");
+		while(st.hasMoreTokens()){
+		    g2D.drawString(st.nextToken(), 15, yCoord);
+		    yCoord = yCoord + (spacing);
+		}
+		lastHeaderEndPosition = yCoord;
+	    }
+	    //######
+	    //End - Draw the header if required.
+	    //######
+
 	    switch(windowType){
 	    case 0:
 		if(trial.isTimeMetric())
@@ -190,39 +222,63 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    //Draw the second dashed string.
 	    g2D.drawString(dashString, 20, yCoord);
 	    
-	    startLocation = yCoord;
+	    if(instruction==0)
+		startLocation = yCoord;
 	    
 	    //Set up some panel dimensions.
 	    newYPanelSize = yCoord + ((list.size() + 1) * spacing);
 	    
-	    startThreadElement = ((yBeg - yCoord) / spacing) - 1;
-	    endThreadElement  = ((yEnd - yCoord) / spacing) + 1;
+
+	    int yBeg = 0;
+	    int yEnd = 0;
+	    int startElement = 0;
+	    int endElement = 0;
+	    Rectangle clipRect = null;
+	    Rectangle viewRect = null;
 	    
-	    if((yCoord > yBeg) || (yCoord > yEnd)){
-		if(yCoord > yBeg){
-		    startThreadElement = 0;
+	    if(instruction==0||instruction==1){
+		if(instruction==0){
+		    clipRect = g2D.getClipBounds();
+		    yBeg = (int) clipRect.getY();
+		    yEnd = (int) (yBeg + clipRect.getHeight());
+		    /*
+		      System.out.println("Clipping Rectangle: xBeg,xEnd: "+clipRect.getX()+","+((clipRect.getX())+(clipRect.getWidth()))+
+		      " yBeg,yEnd: "+clipRect.getY()+","+((clipRect.getY())+(clipRect.getHeight())));
+		    */
 		}
+		else{
+		    viewRect = sWindow.getViewRect();
+		    yBeg = (int) viewRect.getY();
+		    yEnd = (int) (yBeg + viewRect.getHeight());
+		    /*
+		      System.out.println("Viewing Rectangle: xBeg,xEnd: "+viewRect.getX()+","+((viewRect.getX())+(viewRect.getWidth()))+
+					   " yBeg,yEnd: "+viewRect.getY()+","+((viewRect.getY())+(viewRect.getHeight())));
+		    */
+		}
+		startElement = ((yBeg - yCoord) / spacing) - 1;
+		endElement  = ((yEnd - yCoord) / spacing) + 1;
+
+		if(startElement < 0)
+		    startElement = 0;
 		
-		if(yCoord > yEnd){
-		    endThreadElement = 0;
-		}
+		if(endElement < 0)
+		    endElement = 0;
+		
+		if(startElement > (list.size() - 1))
+		    startElement = (list.size() - 1);
+		
+		if(endElement > (list.size() - 1))
+		    endElement = (list.size() - 1);
+		
+		if(instruction==0)
+		    yCoord = yCoord + (startElement * spacing);
 	    }
-	    
-	    if(startThreadElement < 0)
-		startThreadElement = 0;
-	    
-	    if(endThreadElement < 0)
-		endThreadElement = 0;
-	    
-	    if(startThreadElement > (list.size() - 1))
-		startThreadElement = (list.size() - 1);
-            
-	    if(endThreadElement > (list.size() - 1))
-		endThreadElement = (list.size() - 1);
-	    
-	    yCoord = yCoord + (startThreadElement * spacing);
-	    
-	    for(int i = startThreadElement; i <= endThreadElement; i++){ 
+	    else if(instruction==2 || instruction==3){
+		startElement = 0;
+		endElement = ((list.size()) - 1);
+	    }
+
+	    for(int i = startElement; i <= endElement; i++){ 
 		sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(i);
 		switch(windowType){
 		case 0:
@@ -310,18 +366,46 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 			tmpRef.show();
 		    }
 		}
+		if(arg.equals("Show Userevent Details")){
+		    
+		    if(clickedOnObject instanceof SMWThreadDataElement){
+			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
+			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
+			trial.getColorChooser().setUserEventHighlightColorID(sMWThreadDataElement.getMappingID());
+			UserEventWindow tmpRef = new UserEventWindow(trial, sMWThreadDataElement.getMappingID(), trial.getStaticMainWindow().getSMWData(), this.debug());
+			trial.getSystemEvents().addObserver(tmpRef);
+			tmpRef.show();
+		    }
+		}
 		else if(arg.equals("Change Function Color")){ 
 		    int mappingID = -1;
-		    
+		    GlobalMappingElement tmpGME = null;
 		    //Get the clicked on object.
 		    if(clickedOnObject instanceof SMWThreadDataElement)
 			mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 		    
 		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		    tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		     Color tmpCol = tmpGME.getColor();
+		     JColorChooser tmpJColorChooser = new JColorChooser();
+		     tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
+		     if(tmpCol != null){
+			 tmpGME.setSpecificColor(tmpCol);
+			 tmpGME.setColorFlag(true);
+			 
+			 trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		     }
+		}
+		else if(arg.equals("Change Userevent Color")){ 
+		    int mappingID = -1;
+		    GlobalMappingElement tmpGME = null;
+		    //Get the clicked on object.
+		    if(clickedOnObject instanceof SMWThreadDataElement)
+			mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 		    
+		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
+		    tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
 		    Color tmpCol = tmpGME.getColor();
-		    
 		    JColorChooser tmpJColorChooser = new JColorChooser();
 		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
 		    if(tmpCol != null){
@@ -331,16 +415,19 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
 		    }
 		}
-		
 		else if(arg.equals("Reset to Generic Color")){ 
 		    int mappingID = -1;
+		    GlobalMappingElement tmpGME = null;
 		    
 		    //Get the clicked on object.
 		    if(clickedOnObject instanceof SMWThreadDataElement)
 			mappingID = ((SMWThreadDataElement) clickedOnObject).getMappingID();
 		    
 		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		    if(windowType==2)
+			tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 2);
+		    else
+			tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
 		    
 		    tmpGME.setColorFlag(false);
 		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
@@ -367,7 +454,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    //Get the location of the mouse.
 	    int xCoord = evt.getX();
 	    int yCoord = evt.getY();
-	    
+
 	    int fontSize = trial.getPreferences().getBarHeight();
 	    
 	    //Get the number of times clicked.
@@ -377,46 +464,39 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
 	    int tmpInt2 = tmpInt1 / spacing;
 	    int tmpInt3 = (tmpInt2 + 1) * spacing;
 	    int tmpInt4 = tmpInt3 - maxFontAscent;
-	    
+
 	    if((tmpInt1 >= tmpInt4) && (tmpInt1 <= tmpInt3)){
 		if(tmpInt2 < (list.size())){
 		    sMWThreadDataElement = (SMWThreadDataElement) list.elementAt(tmpInt2);
 		    
-		    if(fmMonoFont != null){
-			switch(windowType){
-			case 0:
-			    tmpString = sMWThreadDataElement.getMeanTotalStatString(sWindow.units(),ParaProf.defaultNumberPrecision);
-			    break;
-			case 1:
-			    tmpString = sMWThreadDataElement.getTStatString(sWindow.units(),ParaProf.defaultNumberPrecision);
-			    break;
-			case 2:
-			    tmpString = sMWThreadDataElement.getUserEventStatString(ParaProf.defaultNumberPrecision);
-			    break;
-			default:
-			    UtilFncs.systemError(null, null, "Unexpected window type - SWP value: " + (windowType));
-			}
-			
-			int stringWidth = fmMonoFont.stringWidth(tmpString) + 20;
-			
-			if(xCoord <= stringWidth){
-			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-				//Set the clickedSMWDataElement.
-				clickedOnObject = sMWThreadDataElement;
-				popup.show(this, evt.getX(), evt.getY());
+		    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+			//Set the clickedSMWDataElement.
+			clickedOnObject = sMWThreadDataElement;
+			popup.show(this, evt.getX(), evt.getY());
+		    }
+		    else{
+			//Want to set the clicked on mapping to the current highlight color or, if the one
+			//clicked on is already the current highlighted one, set it back to normal.
+			if(windowType==2){
+			    if((trial.getColorChooser().getUserEventHightlightColorID()) == -1){
+				trial.getColorChooser().setUserEventHighlightColorID(sMWThreadDataElement.getMappingID());
 			    }
 			    else{
-				//Want to set the clicked on mapping to the current highlight color or, if the one
-				//clicked on is already the current highlighted one, set it back to normal.
-				if((trial.getColorChooser().getHighlightColorID()) == -1){
+				if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
+				    trial.getColorChooser().setUserEventHighlightColorID(sMWThreadDataElement.getMappingID());
+				else
+				    trial.getColorChooser().setUserEventHighlightColorID(-1);
+			    }
+			}
+			else{
+			    if((trial.getColorChooser().getHighlightColorID()) == -1){
+				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
+			    }
+			    else{
+				if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
 				    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-				}
-				else{
-				    if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
-					trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-				    else
-					trial.getColorChooser().setHighlightColorID(-1);
-				}
+				else
+				    trial.getColorChooser().setHighlightColorID(-1);
 			    }
 			}
 		    }
@@ -434,6 +514,22 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     public void mouseExited(MouseEvent evt){}
     //######
     //End - MouseListener.
+    //######
+
+    //######
+    //ParaProfImageInterface
+    //######
+    public Dimension getImageSize(boolean fullScreen, boolean header){
+	Dimension d = null;
+	if(fullScreen)
+	    d = this.getPreferredSize();
+	else
+	    d = sWindow.getSize();
+	d.setSize(d.getWidth(),d.getHeight()+lastHeaderEndPosition);
+	return d;
+    }
+    //######
+    //End - ParaProfImageInterface
     //######
 
     //####################################
@@ -477,6 +573,8 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
   
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
+
+    private int lastHeaderEndPosition = 0;
 
     private boolean debug = false; //Off by default.private boolean debug = false; //Off by default.
     //####################################
