@@ -328,8 +328,11 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     //######
     //ParaProfImageInterface
     //######
-    public Dimension getImageSize(){
-	return this.getPreferredSize();
+    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+	if(fullScreen)
+	    return this.getPreferredSize();
+	else
+	    return uEWindow.getSize();
     }
     //######
     //End - ParaProfImageInterface

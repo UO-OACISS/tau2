@@ -450,8 +450,11 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
     //######
     //ParaProfImageInterface
     //######
-    public Dimension getImageSize(){
-	return this.getPreferredSize();
+    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+	if(fullScreen)
+	    return this.getPreferredSize();
+	else
+	    return mLWindow.getSize();
     }
     //######
     //End - ParaProfImageInterface

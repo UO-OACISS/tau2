@@ -40,22 +40,6 @@ public class UtilFncs{
 	return Double.parseDouble(result);
     }
     
-    public static String getTestString(double inDouble, int precision){
-      
-	//This method comes up with a rough estimation.  The drawing windows do not
-	//need to be absolutely accurate.
-      
-	String returnString = "";
-	for(int i=0;i<precision;i++){
-	    returnString = returnString + " ";
-	}
-      
-	long tmpLong = Math.round(inDouble);
-	returnString = Long.toString(tmpLong) + returnString;
-      
-	return returnString;
-    }
-
     //This method is used in a number of windows to determine the actual output string
     //displayed. Current types are:
     //0 - microseconds

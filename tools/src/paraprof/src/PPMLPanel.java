@@ -130,7 +130,7 @@ public class PPMLPanel extends JPanel implements ActionListener{
     //####################################
 
     //####################################
-    //Pivate Section.
+    //Private Section.
     //####################################
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h){
 	try{
@@ -147,7 +147,7 @@ public class PPMLPanel extends JPanel implements ActionListener{
     }
     
     //####################################
-    //End - Pivate Section.
+    //End - Private Section.
     //####################################
     
     //####################################

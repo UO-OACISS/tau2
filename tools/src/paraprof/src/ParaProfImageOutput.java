@@ -17,10 +17,10 @@ import java.io.*;
 import javax.swing.*;
 import javax.imageio.*;
 import javax.imageio.stream.*;
-import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.print.*;
 import java.awt.geom.*;
+import java.beans.*;
 
 public class ParaProfImageOutput{
 
@@ -31,55 +31,88 @@ public class ParaProfImageOutput{
 	try{
 	    
 	    //Ask the user for a filename and location.
-	    JFileChooser tmpFileChooser = new JFileChooser();
-	    tmpFileChooser.setDialogTitle("Save Image File");
+	    JFileChooser fileChooser = new JFileChooser();
+	    fileChooser.setDialogTitle("Save Image File");
 	    //Set the directory.
-	    tmpFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+	    fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+	    //Get the current file filters.
+	    javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
+	    for(int i=0;i<fileFilters.length;i++)
+		fileChooser.removeChoosableFileFilter(fileFilters[i]);
+	    fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter("png"));
+	    fileChooser.addChoosableFileFilter(new ParaProfImageFormatFileFilter("jpg"));
+	    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-	    tmpFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-	    int resultValue = tmpFileChooser.showSaveDialog((Component)ref);
-	    System.out.println("Saving image ...");
+	    ParaProfImageOptionsPanel paraProfImageOptionsPanel = new ParaProfImageOptionsPanel((Component) ref);
+	    fileChooser.setAccessory(paraProfImageOptionsPanel);
+	    int resultValue = fileChooser.showSaveDialog((Component)ref);
 	    if(resultValue == JFileChooser.APPROVE_OPTION){
-		//Try and get the file.
-		File f = tmpFileChooser.getSelectedFile();
-		String tmpString = f.getCanonicalPath();    
-		
-		Dimension d = ref.getImageSize();
-		BufferedImage bi = new BufferedImage((int)d.getWidth(), (int)d.getHeight(), BufferedImage.TYPE_INT_RGB);
-		Graphics2D g2D = bi.createGraphics();
-		
-		//Paint the background white.
-		g2D.setColor(Color.white);
-		g2D.fillRect(0, 0, (int)d.getWidth(), (int)d.getHeight());
-		
-		//Reset the drawing color to black.  The renderIt methods expect it.
-		g2D.setColor(Color.black);
-		
-		//Draw to this graphics object.
-		ref.renderIt(g2D, 1);
+		System.out.println("Saving image ...");
+		//Get both the file and FileFilter.
+		File f = fileChooser.getSelectedFile();
+		javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
+		String path = f.getCanonicalPath();
+		//Append extension if required.
 
-		//Now write the image to file.
-		String format = "JPG";
-		ImageWriter writer = null;
-		Iterator iter = ImageIO.getImageWritersByFormatName(format);
-		if(iter.hasNext()){
-		    writer = (ImageWriter) iter.next();
+		//Only create if we recognize the format.
+		ParaProfImageFormatFileFilter paraProfImageFormatFileFilter = null;
+		if(fileFilter instanceof ParaProfImageFormatFileFilter){
+		    paraProfImageFormatFileFilter = (ParaProfImageFormatFileFilter)fileFilter;
+		    String extension = ParaProfImageFormatFileFilter.getExtension(f);
+		    //Could probably collapse this if/else based on the order of evaluation of arguments (ie, to make sure
+		    //the extension is not null before trying to call equals on it).  However, it is easier to understand
+		    //what is going on this way.
+		    if(extension==null){
+			path = path+"."+paraProfImageFormatFileFilter.getExtension();
+			f = new File(path);
+		    }
+		    else if(!(extension.equals("png")||extension.equals("jpg"))){
+			path = path+"."+paraProfImageFormatFileFilter.getExtension();
+			f = new File(path);
+		    }
+
+		    Dimension d = ref.getImageSize(paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader());
+		    BufferedImage bi = new BufferedImage((int)d.getWidth(), (int)d.getHeight(), BufferedImage.TYPE_INT_RGB);
+		    Graphics2D g2D = bi.createGraphics();
+		    
+		    //Paint the background white.
+		    g2D.setColor(Color.white);
+		    g2D.fillRect(0, 0, (int)d.getWidth(), (int)d.getHeight());
+		    
+		    //Reset the drawing color to black.  The renderIt methods expect it.
+		    g2D.setColor(Color.black);
+		    
+		    //Draw to this graphics object.
+		    if(paraProfImageOptionsPanel.isFullScreen())
+			ref.renderIt(g2D, 1);
+		    else
+			ref.renderIt(g2D, 0);
+		    
+		    //Now write the image to file.
+		    ImageWriter writer = null;
+		    Iterator iter = ImageIO.getImageWritersByFormatName(paraProfImageFormatFileFilter.getExtension().toUpperCase());
+		    if(iter.hasNext()){
+			writer = (ImageWriter) iter.next();
+		    }
+		    ImageOutputStream imageOut = ImageIO.createImageOutputStream(f);
+		    writer.setOutput(imageOut);
+		    IIOImage iioImage = new IIOImage(bi,null,null);
+		    
+		    
+		    //Try setting quality.
+		    ImageWriteParam iwp = writer.getDefaultWriteParam();
+		    iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+		    iwp.setCompressionQuality(paraProfImageOptionsPanel.getImageQuality());
+		    System.out.println("Qulity is: " + iwp.getCompressionQuality());
+		    
+		    writer.write(null, iioImage, iwp);
+		    
+		    System.out.println("Done saving image.");
 		}
-		ImageOutputStream imageOut = ImageIO.createImageOutputStream(f);
-		writer.setOutput(imageOut);
-		IIOImage iioImage = new IIOImage(bi,null,null);
-
-
-		//Try setting quality.
-		ImageWriteParam iwp = writer.getDefaultWriteParam();
-		float compressionQuality = 0.25F;
-		iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-		iwp.setCompressionQuality(compressionQuality);
-		System.out.println("Qulity is: " + iwp.getCompressionQuality());
-
-		writer.write(null, iioImage, iwp);
-
-		System.out.println("Done saving image.");
+		else{
+		    if(UtilFncs.debug)
+			System.out.println("Aborted saving image ... not a recognized type!");
+		}
 	    }
 	    else{
 		if(UtilFncs.debug)

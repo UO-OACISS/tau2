@@ -305,232 +305,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
 	return S;
     }
-    
-    //******************************
-    //Event listener code!!
-    //******************************
-  
-  
-    //ActionListener code.
-    public void actionPerformed(ActionEvent evt)
-    {
-	try{
-	    Object EventSrc = evt.getSource();
-      
-	    if(EventSrc instanceof JMenuItem){
-		String arg = evt.getActionCommand();
-		if(arg.equals("Show Function Details")){
-		    //Bring up an expanded data window for this mapping, and set this mapping as highlighted.
-		    trial.getColorChooser().setHighlightColorID(clickedOnObject.getMappingID());
-		    MappingDataWindow tmpRef = new MappingDataWindow(trial, clickedOnObject.getMappingID(), (sMWindow.getSMWData()), this.debug());
-		    trial.getSystemEvents().addObserver(tmpRef);
-		    tmpRef.show();
-		}
-		else if(arg.equals("Change Function Color")){ 
-		    int mappingID = clickedOnObject.getMappingID();
-		    
-		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		    
-		    Color tmpCol = tmpGME.getColor();
-		    
-		    JColorChooser tmpJColorChooser = new JColorChooser();
-		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
-		    if(tmpCol != null){
-			tmpGME.setSpecificColor(tmpCol);
-			tmpGME.setColorFlag(true);
-			
-			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-		    }
-		}
-		
-		else if(arg.equals("Reset to Generic Color")){
-		    int mappingID = clickedOnObject.getMappingID();
-		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		    tmpGME.setColorFlag(false);
-		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
-		}
-		else if(arg.equals("Highlight this Function")){   
-		    trial.getColorChooser().setHighlightColorID(clickedOnObject.getMappingID());
-		}
-		else if(arg.equals("Un-Highlight this Function")){   
-		    trial.getColorChooser().setHighlightColorID(-1);}
-		else if(arg.equals("Show Total Statistics Windows")){
-		    StatWindow tmpRef = new StatWindow(trial, node, context,
-						       thread, sMWindow.getSMWData(),
-						       1, this.debug());
-		    trial.getSystemEvents().addObserver(tmpRef);
-		    tmpRef.show();
-		}
-		else if(arg.equals("Show Total User Event Statistics Windows")){
-		    StatWindow tmpRef = new StatWindow(trial, node, context,
-						       thread, sMWindow.getSMWData(),
-						       2, this.debug());
-		    trial.getSystemEvents().addObserver(tmpRef);
-		    tmpRef.show();
-		}
-		else if(arg.equals("Show Call Path Thread Relations")){
-		    CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(node,context,thread));
-		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, node, context,
-								       thread, sMWindow.getSMWData(),
-								       false, this.debug());
-		    trial.getSystemEvents().addObserver(tmpRef);
-		    tmpRef.show();
-		}
-	    }
-	}
-	catch(Exception e){
-	    UtilFncs.systemError(e, null, "SMWP04");}
-    }
-    
-    
-    //**********
-    //Mouse listeners for this panel.
-    public void mouseClicked(MouseEvent evt){
-	try{
-	    //Get the location of the mouse.
-	    xCoord = evt.getX();
-	    yCoord = evt.getY();
-      
-	    //Get the number of times clicked.
-	    int clickCount = evt.getClickCount();
-      
-	    //**********
-	    //Check to see if the click occured in the mean values bar.
-	    if(!(list[1].isEmpty())){
-		sMWThreadDataElement = (SMWThreadDataElement) list[1].elementAt(0);
-        
-		if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
-		    //We are inside the mean values bar.  So, cycle through the elements.
-		    for(Enumeration gM1 = list[1].elements(); gM1.hasMoreElements() ;){
-			sMWThreadDataElement = (SMWThreadDataElement) gM1.nextElement();
-			//Now we are going accross in the X direction.
-			if(xCoord < barXStart){
-			    //Bring up the thread data window for this thread object!
-			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
-				ThreadDataWindow tmpRef = new ThreadDataWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
-				trial.getSystemEvents().addObserver(tmpRef);
-				tmpRef.show();
-			    }
-			    else{
-				//Bring up the total stat window here!
-				StatWindow tmpRef = new StatWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
-				trial.getSystemEvents().addObserver(tmpRef);
-				tmpRef.show();
-			    }
-			    return;
-			}
-			else if(xCoord < sMWThreadDataElement.getXEnd()){
-			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-				//Set the clickedSMWThreadDataElement.
-				clickedOnObject = sMWThreadDataElement;
-				popup.show(this, evt.getX(), evt.getY());
-				return;
-			    }
-			    else{
-				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-				MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()), this.debug());
-				trial.getSystemEvents().addObserver(tmpRef);
-				tmpRef.show();
-			    }
-			    return;
-			}     
-		    }
-		}
-	    }
-	    //End - Check to see if the click occured in the mean values bar.
-	    //**********
-      
-	    //**********
-	    //Check for clicking in the rest of the window.
-	    for(Enumeration e1 = list[0].elements(); e1.hasMoreElements() ;){
-		sMWServer = (SMWServer) e1.nextElement();
-		if(yCoord <= (sMWServer.getYDrawCoord())){
-		    //Enter the context loop for this server.
-		    contextList = sMWServer.getContextList();
-		    for(Enumeration e2 = contextList.elements(); e2.hasMoreElements() ;){
-			sMWContext = (SMWContext) e2.nextElement();
-			if(yCoord <= (sMWContext.getYDrawCoord())){
-			    //Enter the thread loop for this context.
-			    threadList = sMWContext.getThreadList();
-			    for(Enumeration e3 = threadList.elements(); e3.hasMoreElements() ;){
-				sMWThread = (SMWThread) e3.nextElement();
-				if(yCoord <= (sMWThread.getYDrawCoord())){
-				    //Now enter the thread loop for this thread.
-				    threadDataList = sMWThread.getFunctionList();
-				    sMWThreadDataElementCounter = 0;
-				    for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
-					sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
-					//Now we are going accross in the X direction.
-					if(xCoord < barXStart){
-					    //Make sure that the mouse is not above or below the bar
-					    //for this thread.  The y values from the first thread data
-					    //object will indicate this.
-					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
-						//Bring up the thread data window for this thread object!
-						if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
-						    ThreadDataWindow tmpRef = new ThreadDataWindow(trial, sMWThreadDataElement.getNodeID(),
-												   sMWThreadDataElement.getContextID(),
-												   sMWThreadDataElement.getThreadID(),
-												   sMWindow.getSMWData(),
-												   1, this.debug());                  
-						    trial.getSystemEvents().addObserver(tmpRef);
-						    tmpRef.show();
-						}
-						else{
-						    popup2.show(this, evt.getX(), evt.getY());
-						    node = sMWThreadDataElement.getNodeID();
-						    context = sMWThreadDataElement.getContextID();
-						    thread = sMWThreadDataElement.getThreadID();
-						    return;
-						}
-					    }
-					    return;
-					}
-					else if(xCoord < sMWThreadDataElement.getXEnd()){
-					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
-						if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-						    //Set the clickedSMWDataElement.
-						    clickedOnObject = sMWThreadDataElement;
-						    popup.show(this, evt.getX(), evt.getY());
-						    return;
-						}
-						else{
-						    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-						    MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(),
-												     (sMWindow.getSMWData()), this.debug());
-						    trial.getSystemEvents().addObserver(tmpRef);
-						    tmpRef.show();
-						}
-						return;
-					    }
-					}
-					else{
-					    //Update the counter.
-					    sMWThreadDataElementCounter = (sMWThreadDataElementCounter + 1);
-					}
-				    }
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	    //End - Check for clicking in the rest of the window.
-	    //**********
-	} 
-	catch(Exception e){
-	    UtilFncs.systemError(e, null, "SMWP05");
-	}
-    }
-    public void mousePressed(MouseEvent evt){}
-    public void mouseReleased(MouseEvent evt){}
-    public void mouseEntered(MouseEvent evt){}
-    public void mouseExited(MouseEvent evt){}
-    //End - Mouse listeners for this panel.
-    //**********
-   
+
     public void paintComponent(Graphics g){
 	try{
 	    super.paintComponent(g);
@@ -963,40 +738,280 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }
 
-    public Dimension getImageSize(){
-	return this.getPreferredSize();
-    }
+    //####################################
+    //Interface code.
+    //####################################
     
-    //******************************
-    //PopupMenuListener code.
-    //******************************
-    public void popupMenuWillBecomeVisible(PopupMenuEvent evt){
-	try
-	    {
-		if(trial.userEventsPresent()){
-		    tUESWItem.setEnabled(true);
+    //######
+    //ActionListener.
+    //######
+    public void actionPerformed(ActionEvent evt){
+	try{
+	    Object EventSrc = evt.getSource();
+      
+	    if(EventSrc instanceof JMenuItem){
+		String arg = evt.getActionCommand();
+		if(arg.equals("Show Function Details")){
+		    //Bring up an expanded data window for this mapping, and set this mapping as highlighted.
+		    trial.getColorChooser().setHighlightColorID(clickedOnObject.getMappingID());
+		    MappingDataWindow tmpRef = new MappingDataWindow(trial, clickedOnObject.getMappingID(), (sMWindow.getSMWData()), this.debug());
+		    trial.getSystemEvents().addObserver(tmpRef);
+		    tmpRef.show();
 		}
-		else{
-		    tUESWItem.setEnabled(false);
+		else if(arg.equals("Change Function Color")){ 
+		    int mappingID = clickedOnObject.getMappingID();
+		    
+		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
+		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		    
+		    Color tmpCol = tmpGME.getColor();
+		    
+		    JColorChooser tmpJColorChooser = new JColorChooser();
+		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
+		    if(tmpCol != null){
+			tmpGME.setSpecificColor(tmpCol);
+			tmpGME.setColorFlag(true);
+			
+			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    }
 		}
+		
+		else if(arg.equals("Reset to Generic Color")){
+		    int mappingID = clickedOnObject.getMappingID();
+		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
+		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		    tmpGME.setColorFlag(false);
+		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		}
+		else if(arg.equals("Highlight this Function")){   
+		    trial.getColorChooser().setHighlightColorID(clickedOnObject.getMappingID());
+		}
+		else if(arg.equals("Un-Highlight this Function")){   
+		    trial.getColorChooser().setHighlightColorID(-1);}
+		else if(arg.equals("Show Total Statistics Windows")){
+		    StatWindow tmpRef = new StatWindow(trial, node, context,
+						       thread, sMWindow.getSMWData(),
+						       1, this.debug());
+		    trial.getSystemEvents().addObserver(tmpRef);
+		    tmpRef.show();
+		}
+		else if(arg.equals("Show Total User Event Statistics Windows")){
+		    StatWindow tmpRef = new StatWindow(trial, node, context,
+						       thread, sMWindow.getSMWData(),
+						       2, this.debug());
+		    trial.getSystemEvents().addObserver(tmpRef);
+		    tmpRef.show();
+		}
+		else if(arg.equals("Show Call Path Thread Relations")){
+		    CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(node,context,thread));
+		    CallPathTextWindow tmpRef = new CallPathTextWindow(trial, node, context,
+								       thread, sMWindow.getSMWData(),
+								       false, this.debug());
+		    trial.getSystemEvents().addObserver(tmpRef);
+		    tmpRef.show();
+		}
+	    }
+	}
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "SMWP04");}
+    }
+    //######
+    //End - ActionListener.
+    //######
 
-		if(trial.callPathDataPresent()){
-		    threadCallpathItem.setEnabled(true);
-		}
-		else{
-		    threadCallpathItem.setEnabled(true);
+    //######
+    //MouseListener
+    //######
+    public void mouseClicked(MouseEvent evt){
+	try{
+	    //Get the location of the mouse.
+	    xCoord = evt.getX();
+	    yCoord = evt.getY();
+      
+	    //Get the number of times clicked.
+	    int clickCount = evt.getClickCount();
+      
+	    //######
+	    //Check to see if the click occured in the mean values bar.
+	    //######
+	    if(!(list[1].isEmpty())){
+		sMWThreadDataElement = (SMWThreadDataElement) list[1].elementAt(0);
+        
+		if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
+		    //We are inside the mean values bar.  So, cycle through the elements.
+		    for(Enumeration gM1 = list[1].elements(); gM1.hasMoreElements() ;){
+			sMWThreadDataElement = (SMWThreadDataElement) gM1.nextElement();
+			//Now we are going accross in the X direction.
+			if(xCoord < barXStart){
+			    //Bring up the thread data window for this thread object!
+			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
+				ThreadDataWindow tmpRef = new ThreadDataWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
+				trial.getSystemEvents().addObserver(tmpRef);
+				tmpRef.show();
+			    }
+			    else{
+				//Bring up the total stat window here!
+				StatWindow tmpRef = new StatWindow(trial, -1, -1, -1, sMWindow.getSMWData(), 0, this.debug());
+				trial.getSystemEvents().addObserver(tmpRef);
+				tmpRef.show();
+			    }
+			    return;
+			}
+			else if(xCoord < sMWThreadDataElement.getXEnd()){
+			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+				//Set the clickedSMWThreadDataElement.
+				clickedOnObject = sMWThreadDataElement;
+				popup.show(this, evt.getX(), evt.getY());
+				return;
+			    }
+			    else{
+				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
+				MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), (sMWindow.getSMWData()), this.debug());
+				trial.getSystemEvents().addObserver(tmpRef);
+				tmpRef.show();
+			    }
+			    return;
+			}     
+		    }
 		}
 	    }
-	catch(Exception e)
-	    {
-		UtilFncs.systemError(e, null, "SMW03");
+	    //######
+	    //End - Check to see if the click occured in the mean values bar.
+	    //######
+      
+	    //######
+	    //Check for clicking in the rest of the window.
+	    //######
+	    for(Enumeration e1 = list[0].elements(); e1.hasMoreElements() ;){
+		sMWServer = (SMWServer) e1.nextElement();
+		if(yCoord <= (sMWServer.getYDrawCoord())){
+		    //Enter the context loop for this server.
+		    contextList = sMWServer.getContextList();
+		    for(Enumeration e2 = contextList.elements(); e2.hasMoreElements() ;){
+			sMWContext = (SMWContext) e2.nextElement();
+			if(yCoord <= (sMWContext.getYDrawCoord())){
+			    //Enter the thread loop for this context.
+			    threadList = sMWContext.getThreadList();
+			    for(Enumeration e3 = threadList.elements(); e3.hasMoreElements() ;){
+				sMWThread = (SMWThread) e3.nextElement();
+				if(yCoord <= (sMWThread.getYDrawCoord())){
+				    //Now enter the thread loop for this thread.
+				    threadDataList = sMWThread.getFunctionList();
+				    sMWThreadDataElementCounter = 0;
+				    for(Enumeration e4 = threadDataList.elements(); e4.hasMoreElements() ;){
+					sMWThreadDataElement = (SMWThreadDataElement) e4.nextElement();
+					//Now we are going accross in the X direction.
+					if(xCoord < barXStart){
+					    //Make sure that the mouse is not above or below the bar
+					    //for this thread.  The y values from the first thread data
+					    //object will indicate this.
+					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
+						//Bring up the thread data window for this thread object!
+						if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
+						    ThreadDataWindow tmpRef = new ThreadDataWindow(trial, sMWThreadDataElement.getNodeID(),
+												   sMWThreadDataElement.getContextID(),
+												   sMWThreadDataElement.getThreadID(),
+												   sMWindow.getSMWData(),
+												   1, this.debug());                  
+						    trial.getSystemEvents().addObserver(tmpRef);
+						    tmpRef.show();
+						}
+						else{
+						    popup2.show(this, evt.getX(), evt.getY());
+						    node = sMWThreadDataElement.getNodeID();
+						    context = sMWThreadDataElement.getContextID();
+						    thread = sMWThreadDataElement.getThreadID();
+						    return;
+						}
+					    }
+					    return;
+					}
+					else if(xCoord < sMWThreadDataElement.getXEnd()){
+					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
+						if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+						    //Set the clickedSMWDataElement.
+						    clickedOnObject = sMWThreadDataElement;
+						    popup.show(this, evt.getX(), evt.getY());
+						    return;
+						}
+						else{
+						    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
+						    MappingDataWindow tmpRef = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(),
+												     (sMWindow.getSMWData()), this.debug());
+						    trial.getSystemEvents().addObserver(tmpRef);
+						    tmpRef.show();
+						}
+						return;
+					    }
+					}
+					else{
+					    //Update the counter.
+					    sMWThreadDataElementCounter = (sMWThreadDataElementCounter + 1);
+					}
+				    }
+				}
+			    }
+			}
+		    }
+		}
 	    }
+	    //######
+	    //End - Check for clicking in the rest of the window.
+	    //######
+	} 
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "SMWP05");
+	}
+    }
+    public void mousePressed(MouseEvent evt){}
+    public void mouseReleased(MouseEvent evt){}
+    public void mouseEntered(MouseEvent evt){}
+    public void mouseExited(MouseEvent evt){}
+    //######
+    //End - MouseListener
+    //######
+
+    //######
+    //ParaProfImageInterface
+    //######
+    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+	if(fullScreen)
+	    return this.getPreferredSize();
+	else
+	    return sMWindow.getSize();
+    }
+    //######
+    //End - ParaProfImageInterface
+    //######
+    
+    //######
+    //PopupMenuListener code.
+    //######
+    public void popupMenuWillBecomeVisible(PopupMenuEvent evt){
+	try{
+	    if(trial.userEventsPresent()){
+		tUESWItem.setEnabled(true);
+	    }
+	    else{
+		tUESWItem.setEnabled(false);
+	    }
+	    
+	    if(trial.callPathDataPresent()){
+		threadCallpathItem.setEnabled(true);
+	    }
+	    else{
+		threadCallpathItem.setEnabled(true);
+	    }
+	}
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "SMW03");
+	}
     }
     public void popupMenuWillBecomeInvisible(PopupMenuEvent evt){}
     public void popupMenuCanceled(PopupMenuEvent evt){}
-    //******************************
-    //End - PopupMenuListener code.
-    //****************************** 
+    //######
+    //PopupMenuListener code.
+    //######
   
     public void changeInMultiples(){
 	computeDefaultBarLength();
@@ -1007,22 +1022,19 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	return new Dimension(xPanelSize, yPanelSize);
     }
   
-    public void computeDefaultBarLength()
-    {
-	try
-	    {
-		double sliderValue = (double) sMWindow.getSliderValue();
-		double sliderMultiple = sMWindow.getSliderMultiple();
-		double result = 500*sliderValue*sliderMultiple;
-      
-		defaultBarLength = (int) result;
-	    }
-	catch(Exception e)
-	    {
-		UtilFncs.systemError(e, null, "SMWP07");
-	    }
+    public void computeDefaultBarLength(){
+	try{
+	    double sliderValue = (double) sMWindow.getSliderValue();
+	    double sliderMultiple = sMWindow.getSliderMultiple();
+	    double result = 500*sliderValue*sliderMultiple;
+	    
+	    defaultBarLength = (int) result;
+	}
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "SMWP07");
+	}
     }
-
+    
     public void setDebug(boolean debug){
 	this.debug = debug;}
     

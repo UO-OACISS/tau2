@@ -96,27 +96,39 @@ public class CallPathUtilFuncs{
 		    if((!(gme.isCallPathObject())) && (gtde!=null)){
 			l2 = gme.getParentsIterator();
 			while(l2.hasNext()){
+			    //Get parent's id.
 			    listValue = (Integer)l2.next();
-			    if(((listValue.intValue())<(functionList.size()))&&(functionList.elementAt(listValue.intValue())!=null)){
-				int location = gtde.addParent(listValue.intValue());
-				l3 = gme.getCallPathIDParents(listValue.intValue());
-				while(l3.hasNext()){
-				    int pathID = ((Integer)l3.next()).intValue();
-				    if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null))
-					gtde.addParentCallPathID(location, pathID);
+			    //Get list of parent's callpath ids.
+			    l3 = gme.getCallPathIDParents(listValue.intValue());
+			    //Only add this parent if there is an existing callpath id to which
+			    //this rigthfully parent belongs. 
+			    while(l3.hasNext()){
+				int pathID = ((Integer)l3.next()).intValue();
+				if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null)){
+				    //Since the callpath is present the parent must be present on this thread.
+				    //The following is therefore safe.
+				    int location = gtde.addParent(listValue.intValue());
+				    //Now add the callpath itself.
+				    gtde.addParentCallPathID(location, pathID);
 				}
 			    }
 			}
 			l2 = gme.getChildrenIterator();
 			while(l2.hasNext()){
+			    //Get child's id.
 			    listValue = (Integer)l2.next();
-			    if(((listValue.intValue())<(functionList.size()))&&(functionList.elementAt(listValue.intValue())!=null)){
-				int location = gtde.addChild(listValue.intValue());
-				l3 = gme.getCallPathIDChildren(listValue.intValue());
-				while(l3.hasNext()){
-				    int pathID = ((Integer)l3.next()).intValue();
-				    if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null))
-					gtde.addChildCallPathID(location, pathID);
+			    //Get list of child's callpath ids.
+			    l3 = gme.getCallPathIDChildren(listValue.intValue());
+			    //Only add this child if there is an existing callpath id to which
+			    //this rigthfully child belongs.
+			    while(l3.hasNext()){
+				int pathID = ((Integer)l3.next()).intValue();
+				if((pathID<functionList.size())&&(functionList.elementAt(pathID)!=null)){
+				    //Since the callpath is present the child must be present on this thread.
+				    //The following is therefore safe.
+				    int location = gtde.addChild(listValue.intValue());
+				    //Now add the callpath itself.
+				    gtde.addChildCallPathID(location, pathID);
 				}
 			    }
 			}

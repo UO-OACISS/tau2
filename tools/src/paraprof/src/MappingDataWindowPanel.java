@@ -169,7 +169,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		}
 
 	    if(mDWindow.isPercent()){
-		stringWidth = fmFont.stringWidth(UtilFncs.getTestString(maxValue, ParaProf.defaultNumberPrecision) + "%");
+		stringWidth = fmFont.stringWidth(UtilFncs.adjustDoublePresision(maxValue, ParaProf.defaultNumberPrecision) + "%");
 		barXCoord = barXCoord + stringWidth;
 	    }
 	    else{
@@ -419,8 +419,11 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     //######
     //ParaProfImageInterface
     //######
-    public Dimension getImageSize(){
-	return this.getPreferredSize();
+    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+	if(fullScreen)
+	    return this.getPreferredSize();
+	else
+	    return mDWindow.getSize();
     }
     //######
     //End - ParaProfImageInterface

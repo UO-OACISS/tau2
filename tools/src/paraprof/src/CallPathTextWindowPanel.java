@@ -23,7 +23,7 @@ import javax.swing.*;
 import java.awt.geom.*;
 import javax.swing.event.*;
 
-public class CallPathTextWindowPanel extends JPanel implements ActionListener, Printable, ParaProfImageInterface{
+public class CallPathTextWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
     
     public CallPathTextWindowPanel(ParaProfTrial trial,
 				   int nodeID,
@@ -236,7 +236,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		Vector functionList = null;
 		GlobalThreadDataElement gtde = null;
 		SMWThreadDataElement smwtde = null;
-		double max = 0.0;
+		CallPathDrawObject callPathDrawObject = null;
 		double d1 = 0.0;
 		double d2 = 0.0;
 		int d3 = 0;
@@ -245,171 +245,208 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 		functionList = thread.getFunctionList();
 
 		//######
-		//Set panel size.
-		//Now we have reached here, we can calculate the size this panel
-		//needs to be.  We might have to call a revalidate to increase
-		//its size.
+		//Populate drawObjects vector.
+		//This should only happen once.
 		//######
-		int yHeightNeeded = 0;
-		int xWidthNeeded = 0;
-		yHeightNeeded = yHeightNeeded + (spacing);
-		yHeightNeeded = yHeightNeeded + (spacing);
-		yHeightNeeded = yHeightNeeded + (spacing);
-		l1 = cPTWindow.getDataIterator();
-		while(l1.hasNext()){
-		    smwtde = (SMWThreadDataElement) l1.next();
-		    //Don't draw callpath mapping objects.
-		    if(!(smwtde.isCallPathObject())){
-			l2 = smwtde.getParentsIterator();
-			while(l2.hasNext()){
-			    listValue = (Integer)l2.next();
-			    yHeightNeeded = yHeightNeeded + (spacing);
-			    l3 = smwtde.getCallPathIDParents(listValue.intValue());
-			    d1 = 0.0;
-			    d2 = 0.0;
-			    while(l3.hasNext()){
-				gtde = (GlobalThreadDataElement) functionList.elementAt((((Integer)l3.next()).intValue()));
-				d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
-				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
+		if(drawObjects==null){
+		    drawObjects = new Vector();
+		    //Add five spacer objects representing the column headings.
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+		    drawObjects.add(new CallPathDrawObject(null, false, true));
+
+		    l1 = cPTWindow.getDataIterator();
+		    while(l1.hasNext()){
+			smwtde = (SMWThreadDataElement) l1.next();
+			//Don't draw callpath mapping objects.
+			if(!(smwtde.isCallPathObject())){
+			    l2 = smwtde.getParentsIterator();
+			    while(l2.hasNext()){
+				listValue = (Integer)l2.next();
+				l3 = smwtde.getCallPathIDParents(listValue.intValue());
+				d1 = 0.0;
+				d2 = 0.0;
+				d3 = 0;
+				while(l3.hasNext()){
+				    int tmpInt = ((Integer)l3.next()).intValue();
+				    gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
+				    d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
+				    d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
+				    d3=d3+gtde.getNumberOfCalls();
+				}
+				callPathDrawObject = new CallPathDrawObject(thread.getFunction(listValue.intValue()), true, false);
+				callPathDrawObject.setExclusiveValue(d1);
+				callPathDrawObject.setInclusiveValue(d2);
+				callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
+				callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
+				drawObjects.add(callPathDrawObject);
 			    }
-			    max = setMax(max,d1,d2);
+			    callPathDrawObject = new CallPathDrawObject(thread.getFunction(smwtde.getMappingID()), false, false);
+			    callPathDrawObject.setExclusiveValue(smwtde.getExclusiveValue());
+			    callPathDrawObject.setInclusiveValue(smwtde.getInclusiveValue());
+			    callPathDrawObject.setNumberOfCalls(smwtde.getNumberOfCalls());
+			    drawObjects.add(callPathDrawObject);
+			    l2 = smwtde.getChildrenIterator();
+			    while(l2.hasNext()){
+				listValue = (Integer)l2.next();
+				l3 = smwtde.getCallPathIDChildren(listValue.intValue());
+				d1 = 0.0;
+				d2 = 0.0;
+				d3 = 0;
+				while(l3.hasNext()){
+				    int tmpInt = ((Integer)l3.next()).intValue();
+				    gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
+				    d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
+				    d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
+				    d3=d3+gtde.getNumberOfCalls();
+				    s=s+":["+tmpInt+"]";
+				}
+				callPathDrawObject = new CallPathDrawObject(thread.getFunction(listValue.intValue()), true, false);
+				callPathDrawObject.setExclusiveValue(d1);
+				callPathDrawObject.setInclusiveValue(d2);
+				callPathDrawObject.setNumberOfCallsFromCallPathObjects(d3);
+				callPathDrawObject.setNumberOfCalls(gtde.getNumberOfCalls());
+				drawObjects.add(callPathDrawObject);
+			    }
+			    drawObjects.add(new CallPathDrawObject(null, false, true));
+			    drawObjects.add(new CallPathDrawObject(null, false, true));
 			}
-			d1=smwtde.getExclusiveValue();
-			d2=smwtde.getInclusiveValue();
-			max = setMax(max,d1,d2);
+		    }
+		}
+		//######
+		//End - Populate drawObjects vector.
+		//######
+		
+		//######
+		//Set panel size. 
+		//######
+		if(this.calculatePanelSize()){
+		    for(Enumeration e = drawObjects.elements(); e.hasMoreElements() ;){
+			callPathDrawObject = (CallPathDrawObject) e.nextElement();
 			yHeightNeeded = yHeightNeeded + (spacing);
-			l2 = smwtde.getChildrenIterator();
-			while(l2.hasNext()){
-			    listValue = (Integer)l2.next();
-			    yHeightNeeded = yHeightNeeded + (spacing);
-			    l3 = smwtde.getCallPathIDChildren(listValue.intValue());
-			    d1 = 0.0;
-			    d2 = 0.0;
-			    while(l3.hasNext()){
-				gtde = (GlobalThreadDataElement) functionList.elementAt((((Integer)l3.next()).intValue()));
-				d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
-				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
-			    }
-			    max = setMax(max,d1,d2);
-			    yHeightNeeded = yHeightNeeded + (spacing);
-			    yHeightNeeded = yHeightNeeded + (spacing);
+			max = setMax(max,callPathDrawObject.getExclusiveValue(),callPathDrawObject.getInclusiveValue());
+			if(!callPathDrawObject.isSpacer()){
+			    length = fmMonoFont.stringWidth(callPathDrawObject.getMappingName()) + 10;
+			    if(xWidthNeeded<length)
+				xWidthNeeded = length;
 			}
 		    }
-		}
 
-		int check = 0;
-		int base = 20;
-		int startPosition = fmMonoFont.stringWidth("--> ") + base;
-		int stringWidth = (fmMonoFont.stringWidth(UtilFncs.getTestString(max,defaultNumberPrecision)))+5;
-		check = fmMonoFont.stringWidth("Exclusive");
-		if(stringWidth<check)
-		    stringWidth = check+5;
-		int numCallsWidth = (fmMonoFont.stringWidth(Integer.toString(thread.getMaxNumberOfCalls())))+5;
-		check = fmMonoFont.stringWidth("Calls/Tot.Calls");
-		if(numCallsWidth<check)
-		    numCallsWidth = check+5;
-		int excPos = startPosition;
-		int incPos = excPos+stringWidth;
-		int callsPos1 = incPos+stringWidth;
-		int callsPos2 = callsPos1+numCallsWidth;
-		int namePos = callsPos2+numCallsWidth;
-
-		//Still need to figure out how long the names might be.
-		l1 = (ParaProfIterator)gm.getMappingIterator(0);
-		while(l1.hasNext()){
-		    int length = 0;
-		    gme1 = (GlobalMappingElement) l1.next();
-		    if(!(gme1.isCallPathObject())){
-			length = (gme1.getMappingName()).length();
-			if(xWidthNeeded<length)
-			    xWidthNeeded = length;
+		    base = 20;
+		    startPosition = fmMonoFont.stringWidth("--> ") + base;
+		    stringWidth = (fmMonoFont.stringWidth(UtilFncs.getOutputString(cPTWindow.units(),max,defaultNumberPrecision)))+10;
+		    System.out.println("String: " + UtilFncs.getOutputString(cPTWindow.units(),max,defaultNumberPrecision));
+		    check = fmMonoFont.stringWidth("Exclusive");
+		    if(stringWidth<check)
+			stringWidth = check+5;
+		    numCallsWidth = (fmMonoFont.stringWidth(Integer.toString(thread.getMaxNumberOfCalls())))+10;
+		    check = fmMonoFont.stringWidth("Calls/Tot.Calls");
+		    if(numCallsWidth<check)
+			numCallsWidth = check+5;
+		    excPos = startPosition;
+		    incPos = excPos+stringWidth;
+		    callsPos1 = incPos+stringWidth;
+		    callsPos2 = callsPos1+numCallsWidth;
+		    namePos = callsPos2+numCallsWidth;
+		    //Add this to the positon of the name plus a little extra.
+		    xWidthNeeded = xWidthNeeded+namePos+20;
+		    
+		    boolean sizeChange = false;   
+		    //Resize the panel if needed.
+		    if(xWidthNeeded > xPanelSize){
+			xPanelSize = xWidthNeeded+10;
+			sizeChange = true;
 		    }
-		}
-		//Add this to the positon of the name plus a little extra.
-		xWidthNeeded = xWidthNeeded+namePos+5;
+		    if(yHeightNeeded > yPanelSize){
+			yPanelSize = yHeightNeeded+10;
+			sizeChange = true;
+		    }
+		    if(sizeChange && instruction==0)
+			revalidate();
 
-		boolean sizeChange = false;   
-		//Resize the panel if needed.
-		if(xWidthNeeded > xPanelSize){
-		    xPanelSize = xWidthNeeded+10;
-		    sizeChange = true;
+		    this.setCalculatePanelSize(false);
 		}
-		if(yHeightNeeded > yPanelSize){
-		    yPanelSize = yHeightNeeded+10;
-		    sizeChange = true;
-		}
-		if(sizeChange && instruction==0)
-		    revalidate();
 		//######
 		//End - Set panel size. 
 		//######
 
-		yCoord = yCoord + (spacing);
+		int yBeg = 0;
+		int yEnd = 0;
+		int startElement = 0;
+		int endElement = 0;
+		Rectangle clipRect = null;
+		
+		
+		if(instruction==1 || instruction==2){
+		    startElement = 0;
+		    endElement = ((drawObjects.size()) - 1);
+		}
+		else{
+		    clipRect = g2D.getClipBounds();
+		    yBeg = (int) clipRect.getY();
+		    yEnd = (int) (yBeg + clipRect.getHeight());
+		    
+		    startElement = ((yBeg - yCoord) / spacing) - 1;
+		    endElement  = ((yEnd - yCoord) / spacing) + 1;
+		    
+		    if(startElement < 0)
+			startElement = 0;
+		    
+		    if(endElement < 0)
+			endElement = 0;
+		    
+		    if(startElement > (drawObjects.size() - 1))
+			startElement = (drawObjects.size() - 1);
+		    
+		    if(endElement > (drawObjects.size() - 1))
+			endElement = (drawObjects.size() - 1);
+		    
+		    yCoord = yCoord + (startElement * spacing);
+		}
+		
+		/*
+		//At this point we can determine the size this panel will
+		//require. If we need to resize, don't do any more drawing,
+		//just call revalidate. Make sure we check the instruction value as we only want to
+		//revalidate if we are drawing to the screen.
+		if(resizePanel(fmFont, barXCoord, list, startElement, endElement) && instruction==0){
+		    this.revalidate();
+		    return;
+		}
+		*/
+		
 		g2D.setColor(Color.black);
-		g2D.drawString("Exclusive", excPos, yCoord);
-		g2D.drawString("Inclusive", incPos, yCoord);
-		g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
-		g2D.drawString("Name[id]", namePos, yCoord);
-		yCoord = yCoord + (spacing);
-		g2D.drawString("--------------------------------------------------------------------------------", excPos, yCoord);
-		yCoord = yCoord + (spacing);
-		l1 = cPTWindow.getDataIterator();
-		while(l1.hasNext()){
-		    smwtde = (SMWThreadDataElement) l1.next();
-		    //Don't draw callpath mapping objects.
-		    if(!(smwtde.isCallPathObject())){
-			l2 = smwtde.getParentsIterator();
-			while(l2.hasNext()){
-			    listValue = (Integer)l2.next();
-			    l3 = smwtde.getCallPathIDParents(listValue.intValue());
-			    d1 = 0.0;
-			    d2 = 0.0;
-			    d3 = 0;
-			    while(l3.hasNext()){
-				int tmpInt = ((Integer)l3.next()).intValue();
-				gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
-				d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
-				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
-				d3=d3+gtde.getNumberOfCalls();
-			    }
-			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1,ParaProf.defaultNumberPrecision), excPos, yCoord);
-			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2,ParaProf.defaultNumberPrecision), incPos, yCoord);
-			    g2D.drawString(d3+"/"+smwtde.getNumberOfCalls(), callsPos1, yCoord);
-			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
-			    g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
-			    yCoord = yCoord + (spacing);
-			}
-			d1 = smwtde.getExclusiveValue(); 
-			d2 = smwtde.getInclusiveValue();
-			g2D.drawString("--> "+ (UtilFncs.getOutputString(cPTWindow.units(),d1,ParaProf.defaultNumberPrecision)), base, yCoord);
-			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2,ParaProf.defaultNumberPrecision), incPos, yCoord);
-			g2D.drawString(Integer.toString(smwtde.getNumberOfCalls()), callsPos1, yCoord);
-			g2D.drawString(smwtde.getMappingName()+"["+smwtde.getMappingID()+"]", namePos, yCoord);
+		for(int i = startElement; i <= endElement; i++){
+		    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
+		    if(i==1){
+			g2D.drawString("Exclusive", excPos, yCoord);
+			g2D.drawString("Inclusive", incPos, yCoord);
+			g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
+			g2D.drawString("Name[id]", namePos, yCoord);
+		    }
+		    else if(i==3){
+			g2D.drawString("--------------------------------------------------------------------------------", excPos, yCoord);
+		    }
+		    else if(!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()){
+			g2D.drawString("--> "+ (UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getExclusiveValue(),
+									 ParaProf.defaultNumberPrecision)), base, yCoord);
+			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getInclusiveValue(),
+								ParaProf.defaultNumberPrecision),incPos, yCoord);
+			g2D.drawString(Integer.toString(callPathDrawObject.getNumberOfCalls()), callsPos1, yCoord);
+			g2D.drawString(callPathDrawObject.getMappingName()+"["+callPathDrawObject.getMappingID()+"]", namePos, yCoord);
 			yCoord = yCoord + (spacing);
-			l2 = smwtde.getChildrenIterator();
-			while(l2.hasNext()){
-			    listValue = (Integer)l2.next();
-			    l3 = smwtde.getCallPathIDChildren(listValue.intValue());
-			    d1 = 0.0;
-			    d2 = 0.0;
-			    d3 = 0;
-			    while(l3.hasNext()){
-				int tmpInt = ((Integer)l3.next()).intValue();
-				gtde = (GlobalThreadDataElement) functionList.elementAt(tmpInt);
-				d1=d1+gtde.getExclusiveValue(trial.getSelectedMetricID());
-				d2=d2+gtde.getInclusiveValue(trial.getSelectedMetricID());
-				d3=d3+gtde.getNumberOfCalls();
-				s=s+":["+tmpInt+"]";
-			    }
-			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d1,ParaProf.defaultNumberPrecision), excPos, yCoord);
-			    g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),d2,ParaProf.defaultNumberPrecision), incPos, yCoord);
-			    gtde = (GlobalThreadDataElement) functionList.elementAt(listValue.intValue());
-			    g2D.drawString(d3+"/"+gtde.getNumberOfCalls(), callsPos1, yCoord);
-			    g2D.drawString(gtde.getMappingName()+"["+gtde.getMappingID()+"]", namePos, yCoord);
-			    yCoord = yCoord + (spacing);
-			}
-			
-			yCoord = yCoord + (spacing);
+		    }
+		    else if(callPathDrawObject.isSpacer())
+			yCoord = yCoord + spacing;
+		    else{
+			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getExclusiveValue(),
+								ParaProf.defaultNumberPrecision), excPos, yCoord);
+			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getInclusiveValue(),
+								ParaProf.defaultNumberPrecision), incPos, yCoord);
+			g2D.drawString(callPathDrawObject.getNumberOfCallsFromCallPathObjects()+"/"+callPathDrawObject.getNumberOfCalls(), callsPos1, yCoord);
+			g2D.drawString(callPathDrawObject.getMappingName()+"["+callPathDrawObject.getMappingID()+"]", namePos, yCoord);
 			yCoord = yCoord + (spacing);
 		    }
 		}
@@ -428,12 +465,109 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
 	return max;
     }
 	
-    public void actionPerformed(ActionEvent evt){}
+    //####################################
+    //Interface code.
+    //####################################
 
-    public Dimension getImageSize(){
-	return this.getPreferredSize();
-    }
+    //######
+    //ActionListener.
+    //######
+    public void actionPerformed(ActionEvent evt){}
+    //######
+    //End - ActionListener.
+    //######
+
+    //######
+    //MouseListener
+    //######
+    public void mouseClicked(MouseEvent evt){
+	try{
+	    /*
+	    SMWThreadDataElement sMWThreadDataElement = null;
+	    //Get the location of the mouse.
+	    int xCoord = evt.getX();
+	    int yCoord = evt.getY();
+	    
+	    //Get the number of times clicked.
+	    int clickCount = evt.getClickCount();
+	    for(Enumeration e1 = list.elements(); e1.hasMoreElements() ;){
+		sMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
+		
+		if(yCoord <= (sMWThreadDataElement.getYEnd())){
+		    if((yCoord >= (sMWThreadDataElement.getYBeg())) && (xCoord >= (sMWThreadDataElement.getXBeg()))
+		       && (xCoord <= (sMWThreadDataElement.getXEnd()))){
+			if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+			    //Set the clickedSMWMeanDataElement.
+			    clickedOnObject = sMWThreadDataElement;
+			    popup.show(this, evt.getX(), evt.getY());
+			    
+			    //Return from this function.
+			    return;
+			}
+			else{
+			    //Want to set the clicked on mapping to the current highlight color or, if the one
+			    //clicked on is already the current highlighted one, set it back to normal.
+			    if((trial.getColorChooser().getHighlightColorID()) == -1){
+				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
+			    }
+			    else{
+				if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
+				    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
+				else
+				    trial.getColorChooser().setHighlightColorID(-1);
+			    }
+			}
+			//Nothing more to do ... return.
+			return;
+		    }
+		    else{
+			//If we get here, it means that we are outside the mapping draw area.  That is, we
+			//are either to the left or right of the draw area, or just above it.
+			//It is better to return here as we do not want the system to cycle through the
+			//rest of the objects, which would be pointless as we know that it will not be
+			//one of the others.  Significantly improves performance.
+			return;
+		    }
+		}
+	    }
+	    */
+	}
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "TDWP05");
+	}
+    }  
+
+    public void mousePressed(MouseEvent evt) {}
+    public void mouseReleased(MouseEvent evt) {}
+    public void mouseEntered(MouseEvent evt) {}
+    public void mouseExited(MouseEvent evt) {}
+    //######
+    //End - MouseListener
+    //######
  
+    //######
+    //ParaProfImageInterface
+    //######
+    public Dimension getImageSize(boolean fullScreen, boolean prependHeader){
+	if(fullScreen)
+	    return this.getPreferredSize();
+	else
+	    return cPTWindow.getSize();
+    }
+    //######
+    //End - ParaProfImageInterface
+    //######
+
+    //####################################
+    //End - Interface code.
+    //####################################
+    
+    private void setCalculatePanelSize(boolean calculatePanelSize){
+	this.calculatePanelSize = calculatePanelSize;}
+
+    private boolean calculatePanelSize(){
+	return calculatePanelSize;};
+
     public Dimension getPreferredSize(){
 	return new Dimension(xPanelSize, (yPanelSize + 10));
     }
@@ -448,12 +582,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
     //####################################
     int xPanelSize = 800;
     int yPanelSize = 600;
-  
-    //Some drawing details.
-    int startLocation = 0;
-    int maxFontAscent = 0;
-    int maxFontDescent = 0;
-    int spacing = 0;
+    boolean calculatePanelSize = true;
   
     int nodeID = -1;
     int contextID = -1;
@@ -463,6 +592,28 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
     boolean global = false;
     Font MonoFont = null;
     FontMetrics fmMonoFont = null;
+
+    //Some drawing details.
+    Vector drawObjects = null;
+    int startLocation = 0;
+    int maxFontAscent = 0;
+    int maxFontDescent = 0;
+    int spacing = 0;
+
+    int check = 0;
+    int base = 0;
+    int startPosition = 0;
+    int stringWidth = 0;
+    int numCallsWidth = 0;
+    int excPos = 0;
+    int incPos = 0;
+    int callsPos1 = 0;
+    int callsPos2 = 0;
+    int namePos = 0;
+    double max = 0.0;
+    int yHeightNeeded = 0;
+    int xWidthNeeded = 0;
+    int length = 0;
 
     private boolean debug = false; //Off by default.
     //####################################
