@@ -4,12 +4,11 @@ import dms.perfdb.*;
 import java.util.*;
 import java.sql.*;
 import java.util.Date;
-import paraprof.ParaProfTrial;
 
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.9 2004/03/31 18:32:08 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.10 2004/04/02 00:56:05 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -545,8 +544,8 @@ public class PerfDBSession extends DataSession {
  * @return the database index ID of the saved trial record
  */
 
-	public int saveParaProfTrial(DataSession dataSession, Trial paraProfTrial) {
-		GlobalMapping mapping = dataSession.getGlobalMapping();
+	public int saveParaProfTrial(Trial trial) {
+		GlobalMapping mapping = trial.getDataSession().getGlobalMapping();
 	
 		//Build an array of group names.  This speeds lookup of group names.
 		Vector groups = mapping.getMapping(1);
@@ -558,7 +557,7 @@ public class PerfDBSession extends DataSession {
 		}
 
 		// get the metric count
-		metrics = paraProfTrial.getMetrics();
+		metrics = trial.getMetrics();
 		int metricCount = metrics.size();
 
 		// create the Vectors to store the data
@@ -638,7 +637,7 @@ public class PerfDBSession extends DataSession {
 	    }
 
 	    StringBuffer groupsStringBuffer = new StringBuffer(10);
-	    Vector nodes = dataSession.getNCT().getNodes();
+	    Vector nodes = trial.getDataSession().getNCT().getNodes();
 	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
 		Node node = (Node) e1.nextElement();
 		Vector contexts = node.getContexts();
@@ -697,7 +696,7 @@ public class PerfDBSession extends DataSession {
 
 		// output the trial data, which also saves the functions, 
 		// function data, user events and user event data
-		int newTrialID = paraProfTrial.saveTrial(db);
+		int newTrialID = trial.saveTrial(db);
 		if (functions != null && functions.size() > 0) {
 			Hashtable newFunHash = saveFunctions(newTrialID);
 			saveFunctionData(newFunHash, metrics);
