@@ -53,6 +53,8 @@ class RtsLayer
 	static TauGroup_t & TheProfileMask(void);
 
  	static bool& TheEnableInstrumentation(void);
+
+ 	static bool& TheShutdown(void);
 	
 	static int& TheNode(void);
   
@@ -133,6 +135,6 @@ class RtsLayer
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2002/01/15 21:30:11 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.13 2002/01/15 21:30:11 sameer Exp $ 
+ * $Revision: 1.14 $   $Date: 2002/01/16 00:39:07 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.14 2002/01/16 00:39:07 sameer Exp $ 
  ***************************************************************************/
