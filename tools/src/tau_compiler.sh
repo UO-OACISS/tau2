@@ -332,6 +332,14 @@ for arg in "$@"
 			argsRemaining="$argsRemaining $arg"
 			;;
 
+		-M*)
+# We ignore -M processing step for making dependencies
+#			echoIfDebug "tau_compiler.sh> Ignoring -M* compilation step for making dependencies"
+			disablePdtStep=$TRUE
+			gotoNextStep=$FALSE
+			errorStatus=$TRUE
+			;;
+
 
 		*.o)
 			objectOutputFile="$arg"
