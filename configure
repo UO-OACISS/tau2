@@ -708,10 +708,10 @@ case $cxx_compiler in
    pgCC)
       echo "Default C++ compiler will be PGI pgCC C++ Compiler"
       pgi=yes
-      pgiflag=`pgCC -help | head -1 | grep 1. | wc -l`
+      pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l`
       if [ $pgiflag = 1 ] 
       then
-	echo  "Using PGI ver 1.6/1.7 Compiler"
+	echo  "Using PGI ver 1.7 Compiler"
         fixmakeargs="$fixmakeargs PGI PGI1.7"
       else
         fixmakeargs="$fixmakeargs PGI PGICC"
