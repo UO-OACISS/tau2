@@ -12,6 +12,7 @@ Change log:
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
 2. Added better support for Dyninst.
+3. Added support for CPUTIME (pthread/Linux). 
 
 Version 2.7 changes (from 2.6):
 1. Added Support for JAVA (JDK 1.2+).

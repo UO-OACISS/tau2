@@ -72,6 +72,7 @@ Usage: configure [OPTIONS]
 -PROFILESTATS .................. Enable standard deviation calculation.
 -PROFILECOUNTERS .... Use Hardware Performance Counters (default time).
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
+-CPUTIME .......... Use usertime+system time instead of wallclock time.
 -noex .................. Use no exceptions while compiling the library.
 -help ...................................... display this help message.
 ***********************************************************************
@@ -193,6 +194,13 @@ The following  command-line options are available to configure:
    Specifies use of the free running nano-second resolution on-chip timer on 
    the MIPS R10000. This timer has a lower overhead than the default timer on 
    SGI, and is recommended for SGIs. 
+
+-CPUTIME
+   Uses usertime + system time instead of wallclock time. It gives the CPU
+   time spent in the routines. If -pthread is used along with this, then the
+   value depends on whether the OS spawns threads as user or kernel level 
+   threads. On Linux, it'll show the correct time per thread, but on SGI it
+   will not as pthreads are not visible to the kernel. 
    
 -TRACE
    
