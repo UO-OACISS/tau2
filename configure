@@ -2870,6 +2870,8 @@ for i in $exampleslist
     sed -f $sedex < $pr/${i} > $pr/${i}~~0
     mv $pr/${i}~~0 $pr/${i}
 done
+# Copy over the Makefile so make clean works
+cp include/Makefile $machine/lib/Makefile.tau$tauoptions
 echo .
 
 # If it is default, restore to original state
