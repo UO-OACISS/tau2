@@ -185,8 +185,9 @@ int moduleConstraint(char *fname)
   int len = strlen(fname);
 
   if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
-     /* ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
- */     (strcmp(fname, "LIBRARY_MODULE") == 0))
+     ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
+     ((fname[len-3] == '.') && (fname[len-2] == 'c') && (fname[len-1] == 'c')) || 
+      (strcmp(fname, "LIBRARY_MODULE") == 0))
   {
     return true;
   }
