@@ -1,7 +1,7 @@
-cc TestInit_F
+cc hello.f
 cc --------
-cc This file contains code for testing the Fortran interface to just the
-cc HPC++ init and exit functions.
+cc This file contains code for testing the Fortran interface to TAU
+cc It works with the Cray T3E F90 compiler with TAU.
 cc-----------------------------------------------------------------------------
 
       subroutine HELLOWORLD(iVal)
