@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.8 2004/06/09 21:17:55 khuck Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.9 2004/06/16 23:52:15 bertie Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -34,12 +34,16 @@ public class PerfDMFSession extends DataSession {
 
 // Initialization / termination routines
 
-	public void initialize (Object obj) {
+    public void initialize (Object obj){
+	initialize (obj, true);
+    }
+
+	public void initialize (Object obj, boolean prompt) {
 		configFileName = new String((String)(obj));
 		// initialize the connection to the database,
 		// using the configuration settings.
 		try {
-			connector = new ConnectionManager(configFileName);
+			connector = new ConnectionManager(configFileName, prompt);
 			connector.connect();
 			db = connector.getDB();
 		} catch ( Exception e ) {
