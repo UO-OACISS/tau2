@@ -48,7 +48,6 @@ fi
 
 java \
 -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
-perfdb.loadxml.Main \
--c loadschema \
+perfdb.loadxml.LoadSchema \
 -g ${PERFDB_HOME}/data/perfdb.cfg \
 -s ${PERFDB_HOME}/data/dbschema.txt $@

@@ -48,6 +48,5 @@ fi
 
 java \
 -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
-perfdb.loadxml.Main \
--c loadtrial \
+perfdb.loadxml.LoadTrial \
 -g ${PERFDB_HOME}/data/perfdb.cfg $@
