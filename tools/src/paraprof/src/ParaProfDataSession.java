@@ -461,9 +461,12 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
     public void addObserver(ParaProfObserver observer){
 	observers.add(observer);}
 
+    public void removeObserver(ParaProfObserver observer){
+	observers.remove(observer);}
+
     public void notifyObservers(){
 	for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
-	    ((ParaProfObserver) e.nextElement()).update();
+	    ((ParaProfObserver) e.nextElement()).update(this);
     }
     //######
     //End - Methods that manage the ParaProfObservers.

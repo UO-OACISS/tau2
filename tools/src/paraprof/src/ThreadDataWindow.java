@@ -217,14 +217,14 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    box = new JCheckBoxMenuItem("Display Sliders", false);
 	    box.addActionListener(this);
 	    optionsMenu.add(box);
+
+	    showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+	    showPathTitleInReverse.addActionListener(this);
+	    optionsMenu.add(showPathTitleInReverse);
 	    
-	    box = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
-	    box.addActionListener(this);
-	    optionsMenu.add(box);
-	    
-	    box = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
-	    box.addActionListener(this);
-	    optionsMenu.add(box);
+	    showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+	    showMetaData.addActionListener(this);
+	    optionsMenu.add(showMetaData);
 	    
 	    optionsMenu.addMenuListener(this);
 	    //######
@@ -467,10 +467,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 		else if(arg.equals("Show Path Title in Reverse")){
 		    if(windowType==0)
 			this.setTitle("Mean Data Window: " + 
-				      trial.getTrialIdentifier(((JCheckBoxMenuItem)optionsMenu.getItem(6)).isSelected()));
+				      trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
 		    else
 			this.setTitle("n,c,t, " + nodeID + "," + contextID + "," 
-				      + threadID + " - " + trial.getTrialIdentifier(((JCheckBoxMenuItem)optionsMenu.getItem(6)).isSelected()));
+				      + threadID + " - " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
 		}
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
@@ -650,7 +650,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     //without resetting the actual header. Printing and image generation
     //use this functionality for example.
     public void setHeader(){
-	if(((JCheckBoxMenuItem)optionsMenu.getItem(7)).isSelected()){
+	if(showMetaData.isSelected()){
 	    JTextArea jTextArea = new JTextArea();
 	    jTextArea.setLineWrap(true);
 	    jTextArea.setWrapStyleWord(true);
@@ -803,6 +803,8 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     private JCheckBoxMenuItem descendingOrder = null;
     private JCheckBoxMenuItem showValuesAsPercent = null;
     private JCheckBoxMenuItem displaySliders = null;
+    private JCheckBoxMenuItem  showPathTitleInReverse = null;
+    private JCheckBoxMenuItem  showMetaData = null;
     private JMenuItem groupLedger = null;
     private JMenuItem usereventLedger = null;
     private JMenuItem callPathRelations = null;

@@ -1,4 +1,3 @@
-
 /* 
    ParaProf.java
 
@@ -17,7 +16,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import paraprof.*;
 
-public class ParaProf implements ActionListener{
+public class ParaProf implements ActionListener, ParaProfObserver{
     //**********
     //Some system wide state variables.
     static String profilePathName = null;       //This contains the path to the currently loaded profile data.
@@ -40,9 +39,6 @@ public class ParaProf implements ActionListener{
     static boolean runHasBeenOpened = false;
      //**********
     
-    static boolean notify = true;
-    static ParaProfTrial trial = null;
-
     private int type = -1;
     String filePrefix = null;
     
@@ -85,15 +81,13 @@ public class ParaProf implements ActionListener{
 	    //Create a default experiment.
 	    ParaProfExperiment experiment = app.addExperiment();
 	    experiment.setName("Default Exp");
-
-	    ParaProf.trial = new ParaProfTrial(null, 0);
-	    ParaProf.trial.setName("Default Trial");
+	    ParaProfTrial trial = null;
 	    FileList fl = new FileList();
 	    Vector v = null;
-	    boolean showTrial = false;
 	    if(type!=-1){
-		ParaProf.trial = new ParaProfTrial(null, type);
-		ParaProf.trial.setName("Default Trial");
+		trial = new ParaProfTrial(null, type);
+		trial.addObserver(this);
+		trial.setName("Default Trial");
 		switch(type){
 		case 0:
 		    if(filePrefix==null)
@@ -117,10 +111,9 @@ public class ParaProf implements ActionListener{
 		    break;
 		}
 		if(v.size()>0){
-		    ParaProf.trial.setPaths(fl.getPath());
-		    ParaProf.trial.initialize(v);
-		    experiment.addTrial(ParaProf.trial);
-		    showTrial = true;
+		    trial.setPaths(fl.getPath());
+		    trial.initialize(v);
+		    experiment.addTrial(trial);
 		}
 		else{
 		    System.out.println("No profile files found in the current directory.");
@@ -133,24 +126,26 @@ public class ParaProf implements ActionListener{
 		else
 		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, UtilFncs.debug);
 		if(v.size()>0){
-		    ParaProf.trial.setPaths(fl.getPath());
-		    ParaProf.trial.initialize(v);
-		    experiment.addTrial(ParaProf.trial);
-		    showTrial = true;
+		    trial = new ParaProfTrial(null, 0);
+		    trial.addObserver(this);
+		    trial.setName("Default Trial");
+		    trial.setPaths(fl.getPath());
+		    trial.initialize(v);
+		    experiment.addTrial(trial);
 		}
 		else{
 		    //Try finding profile.*.*.* files.
-		    ParaProf.trial = new ParaProfTrial(null, 1);
-		    ParaProf.trial.setName("Default Trial");
+		    trial = new ParaProfTrial(null, 1);
+		    trial.addObserver(this);
+		    trial.setName("Default Trial");
 		    if(filePrefix==null) 
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", UtilFncs.debug);
 		    else
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, UtilFncs.debug);
 		    if(v.size()>0){
-			ParaProf.trial.setPaths(fl.getPath());
+			trial.setPaths(fl.getPath());
 			trial.initialize(v);
-			experiment.addTrial(ParaProf.trial);
-			showTrial = true;
+			experiment.addTrial(trial);
 		    }
 		    else{
 			System.out.println("No profile files found in the current directory.");
@@ -168,15 +163,6 @@ public class ParaProf implements ActionListener{
 	}
     }
 
-    public static void start(){
-	if(ParaProf.notify){
-	    //ParaProf.paraProfManager.populateStandardApplications();
-	    ParaProf.paraProfManager.expandDefaultParaProfTrialNode();
-	    ParaProf.trial.showMainWindow();
-	}
-	ParaProf.notify = false;
-    }
-  
     public void actionPerformed(ActionEvent evt){
 	Object EventSrc = evt.getSource();
     	if(EventSrc instanceof javax.swing.Timer){
@@ -185,6 +171,20 @@ public class ParaProf implements ActionListener{
 	    System.out.println("The amount of memory free to the system is: " + runtime.freeMemory());
 	}
     }
+
+    //######
+    //ParaProfObserver interface.
+    //######
+    public void update(Object obj){
+	//We are only ever watching an instance of ParaProfTrial.
+	ParaProfTrial trial = (ParaProfTrial) obj;
+	ParaProf.paraProfManager.showTrialMetrics(trial);
+	trial.showMainWindow();
+    }
+    public void update(){}
+    //######
+    //End - Observer.
+    //######
 
     public static String getInfoString(){
 	return new String("ParaProf Version 1.2 ... The Paraducks Group!");}

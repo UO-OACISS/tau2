@@ -717,9 +717,59 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	}
     }
   
-    public void expandDefaultParaProfTrialNode(){
-	if(defaultParaProfTrialNode != null)
-	    tree.expandPath(new TreePath(defaultParaProfTrialNode.getPath()));
+    public void showTrialMetrics(ParaProfTrial trial){
+	/*
+	for(int i=standard.getChildCount(); i>0; i--){
+	    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) standard.getChildAt(i-1)));
+	}
+	ListIterator l = ParaProf.applicationManager.getApplicationList();
+	while (l.hasNext()){
+	    ParaProfApplication application = (ParaProfApplication)l.next();
+	    DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+	    application.setDMTN(applicationNode);
+	    
+	    //Add experiments to this application.
+	    ListIterator l2 = application.getExperimentList();
+	    while (l2.hasNext()){
+		ParaProfExperiment experiment = (ParaProfExperiment)l2.next();
+		DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+		experiment.setDMTN(experimentNode);
+
+		//Add trials to this experiment.
+		ListIterator l3 = experiment.getTrialList();
+		while (l3.hasNext()){
+		    ParaProfTrial trial = (ParaProfTrial)l3.next();
+		    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+		    trial.setDMTN(trialNode);
+		    if(trial.getID()==0){
+			if(!trial.loading()){
+			    ListIterator l4 = trial.getMetricList();
+			    while (l4.hasNext()){
+				Metric metric = (Metric)l4.next();
+				DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+				metric.setDMTN(metricNode);
+				trialNode.add(metricNode);
+			    }
+			    tree.expandPath(path);
+			    jSplitPane.setRightComponent(getTable(userObject));
+			    jSplitPane.setDividerLocation(0.5);
+			}
+			else{
+			    tree.expandPath(path);
+			    jSplitPane.setRightComponent(new JScrollPane(this.getLoadingTrialPanel(userObject)));
+			    jSplitPane.setDividerLocation(0.5);
+			}
+		    }
+
+		    experimentNode.add(trialNode);
+		}
+		//Done - Add trials to this experiment.
+		applicationNode.add(experimentNode);
+	    }
+	    //Done - Add experiments to this application.
+	    treeModel.insertNodeInto(applicationNode, standard, standard.getChildCount());
+	}
+	*/
     }
     
     //Respond correctly when this window is closed.

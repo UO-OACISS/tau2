@@ -223,6 +223,14 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	    box = new JCheckBoxMenuItem("Display Sliders", false);
 	    box.addActionListener(this);
 	    optionsMenu.add(box);
+
+	    showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+	    showPathTitleInReverse.addActionListener(this);
+	    optionsMenu.add(showPathTitleInReverse);
+	    
+	    showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+	    showMetaData.addActionListener(this);
+	    optionsMenu.add(showMetaData);
 	    
 	    box = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
 	    box.addActionListener(this);
@@ -463,7 +471,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 			displaySiders(false);
 		}
 		else if(arg.equals("Show Path Title in Reverse"))
-		    this.setTitle("Function Data Window: " + trial.getTrialIdentifier(((JCheckBoxMenuItem)optionsMenu.getItem(6)).isSelected()));
+		    this.setTitle("Function Data Window: " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
 		else if(arg.equals("Show Meta Data in Panel"))
 		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
@@ -631,7 +639,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //without resetting the actual header. Printing and image generation
     //use this functionality for example.
     public void setHeader(){
-	if(((JCheckBoxMenuItem)optionsMenu.getItem(7)).isSelected()){
+	if(showMetaData.isSelected()){
 	    JTextArea jTextArea = new JTextArea();
 	    jTextArea.setLineWrap(true);
 	    jTextArea.setWrapStyleWord(true);
@@ -780,6 +788,8 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     private JCheckBoxMenuItem descendingOrder = null;
     private JCheckBoxMenuItem showValuesAsPercent = null;
     private JCheckBoxMenuItem displaySliders = null;
+    private JCheckBoxMenuItem  showPathTitleInReverse = null;
+    private JCheckBoxMenuItem  showMetaData = null;
     private JMenuItem groupLedger = null;
     private JMenuItem usereventLedger = null;
     private JMenuItem callPathRelations = null;

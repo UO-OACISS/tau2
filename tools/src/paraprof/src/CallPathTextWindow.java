@@ -211,6 +211,14 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    box.addActionListener(this);
 	    optionsMenu.add(box);
 	    
+	    showPathTitleInReverse = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
+	    showPathTitleInReverse.addActionListener(this);
+	    optionsMenu.add(showPathTitleInReverse);
+	    
+	    showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
+	    showMetaData.addActionListener(this);
+	    optionsMenu.add(showMetaData);
+	    
 	    box = new JCheckBoxMenuItem("Show Path Title in Reverse", true);
 	    box.addActionListener(this);
 	    optionsMenu.add(box);
@@ -298,10 +306,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	    //######
 	    panel = new CallPathTextWindowPanel(trial, nodeID, contextID, threadID, this, global);
 	    //The scroll panes into which the list shall be placed.
-	    JScrollPane sp = new JScrollPane(panel);
+	    sp = new JScrollPane(panel);
 	    JScrollBar vScollBar = sp.getVerticalScrollBar();
 	    vScollBar.setUnitIncrement(35);
-	    sp.setPreferredSize(new Dimension(500, 450));
+	    this.setHeader();
 	    //######
 	    //End - Panel and ScrollPane definition.
 	    //######
@@ -328,7 +336,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //######
     //ActionListener.
     //######
-        public void actionPerformed(ActionEvent evt){
+    public void actionPerformed(ActionEvent evt){
 	try{
 	    Object EventSrc = evt.getSource();
 	    
@@ -423,6 +431,15 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 		    units = 3;
 		    panel.repaint();
 		}
+		else if(arg.equals("Show Path Title in Reverse")){
+		    if(global)
+			this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
+		    else
+			this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + 
+				      threadID + " - " + trial.getTrialIdentifier(showPathTitleInReverse.isSelected()));
+		}
+		else if(arg.equals("Show Meta Data in Panel"))
+		    this.setHeader();
 		else if(arg.equals("Show Function Ledger")){
 		    (new MappingLedgerWindow(trial, 0)).show();
 		}
@@ -603,6 +620,34 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     void thisWindowClosing(java.awt.event.WindowEvent e){
 	closeThisWindow();
     }
+
+    //######
+    //Panel header.
+    //######
+    //This process is separated into two functions to provide the option
+    //of obtaining the current header string being used for the panel
+    //without resetting the actual header. Printing and image generation
+    //use this functionality for example.
+    public void setHeader(){
+	if(showMetaData.isSelected()){
+	    JTextArea jTextArea = new JTextArea();
+	    jTextArea.setLineWrap(true);
+	    jTextArea.setWrapStyleWord(true);
+	    jTextArea.setEditable(false);
+	    jTextArea.append(this.getHeaderString());
+	    sp.setColumnHeaderView(jTextArea);
+	}
+	else
+	    sp.setColumnHeaderView(null);
+    }
+
+    public String getHeaderString(){
+	return "Metric Name: " + (trial.getMetricName(trial.getSelectedMetricID()))+"\n" +
+	    "Units: "+UtilFncs.getUnitsString(units, trial.isTimeMetric())+"\n";
+    }
+    //######
+    //End - Panel header.
+    //######
   
     void closeThisWindow(){ 
 	try{
@@ -628,8 +673,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
-    private CallPathTextWindowPanel panel;
-    private StaticMainWindowData sMWData;
+    private StaticMainWindowData sMWData = null;
     private boolean global = false;
     private int windowType = 1; //0: mean data,1: function data.
                                 //Note that in this window, windowType
@@ -643,9 +687,14 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private JCheckBoxMenuItem descendingOrder = null;
     private JCheckBoxMenuItem showValuesAsPercent = null;
     private JCheckBoxMenuItem displaySliders = null;
+    private JCheckBoxMenuItem  showPathTitleInReverse = null;
+    private JCheckBoxMenuItem  showMetaData = null;
     private JMenuItem groupLedger = null;
     private JMenuItem usereventLedger = null;
     private JMenuItem callPathRelations = null;
+
+    private JScrollPane sp = null;
+    private CallPathTextWindowPanel panel = null;
 
     private Vector list = null;
 

@@ -288,12 +288,11 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
     //######
     //ParaProfObserver interface.
     //######
-    public void update(Object obj){}
-    public void update(){
-	System.out.println("In update ... should be done.");
+    public void update(Object obj){
 	dataSession.terminate();
 	this.setLoading(false);
-	
+
+	//Set the colours.
 	clrChooser.setColors(dataSession.getGlobalMapping(), -1);
 	
 	//Set the metrics.
@@ -303,14 +302,33 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
 	    metric.setName(dataSession.getMetricName(i));
 	    metric.setTrial(this);
 	}
-	
-	ParaProf.start();
-	
+
 	if(this.dBTrial())
 	    ParaProf.paraProfManager.addMetricTreeNodes(this);
+	
+	//Notify any observers of this trial that the Data Session is done.
+	this.notifyObservers();
     }
+    public void update(){}
     //######
     //End - Observer.
+    //######
+
+    //######
+    //Methods that manage the ParaProfObservers.
+    //######
+    public void addObserver(ParaProfObserver observer){
+	observers.add(observer);}
+
+    public void removeObserver(ParaProfObserver observer){
+	observers.remove(observer);}
+
+    public void notifyObservers(){
+	for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
+	    ((ParaProfObserver) e.nextElement()).update(this);
+    }
+    //######
+    //End - Methods that manage the ParaProfObservers.
     //######
   
     //####################################
@@ -333,6 +351,8 @@ public class ParaProfTrial extends Trial implements ParaProfObserver{
     private int selectedMetricID = 0;
 
     private Vector metrics = new Vector();
+
+    private Vector observers = new Vector();
     //####################################
     //Instance data.
     //####################################
