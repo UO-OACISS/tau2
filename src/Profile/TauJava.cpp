@@ -39,12 +39,7 @@
 #endif //TAU_WINDOWS
 
 
-// Note: Don't remove any GetTid() calls as they may be used for registeration
-// of the thread.
-
-static JVMPI_Interface *tau_jvmpi_interface;
-int TauJavaLayer::NumThreads = 0;
-#define CALL(routine) (tau_jvmpi_interface->routine)
+#define CALL(routine) (JavaThreadLayer::tau_jvmpi_interface->routine)
 
 // profiler agent entry point
 extern "C" {
@@ -54,26 +49,31 @@ extern "C" {
     fprintf(stdout, "TAU> initializing ..... \n");
 #endif /* DEBUG_PROF */
     // get jvmpi interface pointer
-    if ((jvm->GetEnv((void **)&tau_jvmpi_interface, JVMPI_VERSION_1)) < 0) {
+    if ((jvm->GetEnv((void **)&JavaThreadLayer::tau_jvmpi_interface, JVMPI_VERSION_1)) < 0) {
       fprintf(stdout, "TAU> error in obtaining jvmpi interface pointer\n"
 );
       return JNI_ERR;
     }
 
-    // initialize jvmpi interface
-    tau_jvmpi_interface->NotifyEvent = TauJavaLayer::NotifyEvent;
-    // enabling class load event notification
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_CLASS_LOAD, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_METHOD_ENTRY, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_METHOD_EXIT, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_THREAD_START, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_THREAD_END, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_JVM_SHUT_DOWN, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_DATA_DUMP_REQUEST, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_DATA_RESET_REQUEST, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_GC_START, NULL);
-    tau_jvmpi_interface->EnableEvent(JVMPI_EVENT_GC_FINISH, NULL);
+    // Store the VM identity
+    JavaThreadLayer::tauVM = jvm; 
 
+    // initialize jvmpi interface
+    JavaThreadLayer::tau_jvmpi_interface->NotifyEvent = 
+      TauJavaLayer::NotifyEvent;
+    // enabling class load event notification
+    CALL(EnableEvent)(JVMPI_EVENT_CLASS_LOAD, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_METHOD_ENTRY, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_METHOD_EXIT, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_THREAD_START, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_THREAD_END, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_JVM_SHUT_DOWN, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_DATA_DUMP_REQUEST, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_DATA_RESET_REQUEST, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_GC_START, NULL);
+    CALL(EnableEvent)(JVMPI_EVENT_GC_FINISH, NULL);
+
+// Give TAU some room for its data structures. 
 #if (!defined(TAU_WINDOWS))
     if ((sbrk(1024*1024*4)) == (void *) -1) {
       fprintf(stdout, "TAU>ERROR: sbrk failed\n");
@@ -142,13 +142,12 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 #ifdef DEBUG_PROF
     fprintf(stdout, "TAU> Class Load : %s\n", event->u.class_load.class_name);
 #endif /* DEBUG_PROF */
-  int tid = GetTid(event);
+  int tid = JavaThreadLayer::GetThreadId(event->env_id);
   static int j = TAU_MAPPING_PROFILE_SET_NODE(0, tid);
   
   for (i = 0; i < event->u.class_load.num_methods; i++)
   {
     /* Create FunctionInfo objects for each of these methods */
-
 
 #ifdef TRACING_ON
     sprintf(funcname, "%s  %s", event->u.class_load.class_name, 
@@ -174,29 +173,9 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 	
 }
 
-int TauJavaLayer::GetTid(JVMPI_Event *event)
-{
-  int *tid = (int *) CALL(GetThreadLocalStorage)(event->env_id);
-  if (tid == (int *) NULL)
-  {
-       tid = RegisterThread(event);
-       if ((*tid) == 0)
-       {	 
-         CreateTopLevelRoutine("THREAD=JVM-MainThread; THREAD GROUP=system", 
-	 	" ", "THREAD", (*tid));
-       }
-       else
-       {	 
-         CreateTopLevelRoutine("THREAD=JVM-InternalThread; THREAD GROUP=system", 	  	" ", "THREAD", (*tid));
-       }
-	
-  }
-  return (*tid);
-} 
-
 void TauJavaLayer::MethodEntry(JVMPI_Event *event)
 {
-  int tid = GetTid(event);
+  int tid = JavaThreadLayer::GetThreadId(event->env_id);
   TAU_MAPPING_OBJECT(TauMethodName);
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
   
@@ -212,7 +191,7 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event)
 
 void TauJavaLayer::MethodExit(JVMPI_Event *event)
 {
-  int tid = GetTid(event);
+  int tid = JavaThreadLayer::GetThreadId(event->env_id);
 
   TAU_MAPPING_PROFILE_STOP(tid);
 
@@ -220,27 +199,6 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event)
   fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
 	 	(long) event->u.method.method_id, tid);
 #endif /* DEBUG_PROF */
-}
-
-int * TauJavaLayer::RegisterThread(JVMPI_Event *event)
-{ /* returns tid pointer */
-  JVMPI_RawMonitor numthreads_lock = CALL(RawMonitorCreate)("num threads lock");
-  /* Set up the thread id */
-  int *tid = (int *) malloc (sizeof (int));
-  CALL(RawMonitorEnter)(numthreads_lock);
-  if (TauJavaLayer::NumThreads == TAU_MAX_THREADS)
-  {
-    fprintf(stderr, "TAU>ERROR number of threads exceeds TAU_MAX_THREADS\n");
-    fprintf(stderr, "Change TAU_MAX_THREADS parameter in <tau>/include/Profile/Profiler.h\n");
-    fprintf(stderr, "And make install. Current value is %d\n", TauJavaLayer::NumThreads);
-    fprintf(stderr, "******************************************************************\n");
-    CALL(ProfilerExit)(1);
-  }
-  (*tid) = TauJavaLayer::NumThreads++;
-  CALL(RawMonitorExit)(numthreads_lock);
-  CALL(SetThreadLocalStorage)(event->env_id, tid); 
-  return tid;
-
 }
 
 void TauJavaLayer::CreateTopLevelRoutine(char *name, char *type, char *groupname, 
@@ -262,7 +220,7 @@ void TauJavaLayer::CreateTopLevelRoutine(char *name, char *type, char *groupname
 
 void TauJavaLayer::ThreadStart(JVMPI_Event *event)
 {
-  int * ptid = RegisterThread(event);
+  int * ptid = JavaThreadLayer::RegisterThread(event->env_id);
   int tid = *ptid;
 
 #ifdef DEBUG_PROF
@@ -278,7 +236,7 @@ void TauJavaLayer::ThreadStart(JVMPI_Event *event)
 
 void TauJavaLayer::ThreadEnd(JVMPI_Event *event)
 {
-  int tid = GetTid(event);
+  int tid = JavaThreadLayer::GetThreadId(event->env_id);
 #ifdef DEBUG_PROF
   fprintf(stdout, "TAU> Thread End : id = %d \n", tid);
 #endif /* DEBUG_PROF */
@@ -288,14 +246,14 @@ void TauJavaLayer::ThreadEnd(JVMPI_Event *event)
 
 void TauJavaLayer::ShutDown(JVMPI_Event *event)
 {
-  int tid = GetTid(event);
+  int tid = JavaThreadLayer::GetThreadId(event->env_id);
   JVMPI_RawMonitor shutdown_lock = CALL(RawMonitorCreate)("Shutdown lock");
 #ifdef DEBUG_PROF
   fprintf(stdout, "TAU> JVM SHUT DOWN : id = %d \n", tid);
 #endif 
 
   CALL(RawMonitorEnter)(shutdown_lock);
-  for(int i = 0; i < TauJavaLayer::NumThreads; i++)
+  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++)
   {
     TAU_MAPPING_PROFILE_EXIT("Forcing Disk Dump of Performance Data",i);
   }
@@ -303,6 +261,15 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
 
   
 }
+
+
 /* EOF : TauJava.cpp */
 
+
+
+/***************************************************************************
+ * $RCSfile: TauJava.cpp,v $   $Author: sameer $
+ * $Revision: 1.13 $   $Date: 2000/03/19 00:18:59 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.13 2000/03/19 00:18:59 sameer Exp $
+ ***************************************************************************/
 
