@@ -319,7 +319,6 @@ class RtsLayer
   	static int 	SetEventCounter(void);
   	static double 	GetEventCounter(void);
 
-	inline 
 	static double   getUSecD(void); 
 
         // Set the node no.
@@ -395,7 +394,7 @@ class RtsLayer
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: klindlan $
- * $Revision: 1.1.1.1 $   $Date: 1997/11/26 20:04:29 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.1.1.1 1997/11/26 20:04:29 klindlan Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.2 $   $Date: 1997/11/26 23:38:14 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.2 1997/11/26 23:38:14 sameer Exp $ 
  ***************************************************************************/
