@@ -68,6 +68,9 @@ extern "C" {
     // initialize jvmpi interface
     JavaThreadLayer::tau_jvmpi_interface->NotifyEvent = 
       TauJavaLayer::NotifyEvent;
+
+    TauJavaLayer::Init(options);
+
     // enabling class load event notification
     if (!TheTauExcludeMethodsFlag())
     {
@@ -91,7 +94,6 @@ extern "C" {
     }
 #endif //TAU_WINDOWS
 
-    TauJavaLayer::Init(options);
     TauJavaLayer::Init("exclude=TAU/Profile,TAU.Profile");
 
 #ifdef DEBUG_PROF 
@@ -434,7 +436,7 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2005/01/20 00:45:17 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.25 2005/01/20 00:45:17 sameer Exp $
+ * $Revision: 1.26 $   $Date: 2005/01/20 01:21:06 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.26 2005/01/20 01:21:06 sameer Exp $
  ***************************************************************************/
 
