@@ -1497,7 +1497,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    ParaProf.helpWindow.writeText("1) JDBC driver issue:" +
 					  " The JDBC driver is required in your classpath. If you ran ParaProf using" +
 					  " the shell script provided in tau (paraprof), then the default." +
-					  " loaction used is $LOCATION_OF_TAU_ROOT/$ARCH/lib.");
+					  " location used is $LOCATION_OF_TAU_ROOT/$ARCH/lib.");
 	    ParaProf.helpWindow.writeText("");
 	    ParaProf.helpWindow.writeText(" If you ran ParaProf manually, make sure that the location of" +
 					  " the JDBC driver is in your classpath (you can set this in your." +
