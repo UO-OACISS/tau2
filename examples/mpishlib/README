@@ -1,0 +1,15 @@
+Demonstrates the use of MPI wrapper library in instrumenting
+a shared object. TAU needs to be configured with 
+-mpiinc=<dir> and -mpilib=<dir> flags. 
+
+Application:
+------------
+cpi.cpp builds the main application, ring.cpp builds libring.so and we use
+the TAU MPI wrapper library as well. To use this set LD_LIBRARY_PATH in your 
+.cshrc file for mpirun. 
+setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH\:<taudir>/examples/mpishlib
+
+% mpirun -np <n> cpi 
+
+executes the application and generates the performance data. Functions in 
+cpi.cpp, ring.cpp and MPI routines are instrumented. 
