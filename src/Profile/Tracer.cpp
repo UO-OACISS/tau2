@@ -192,8 +192,11 @@ static void init_wrap_up()
 /* -- initialize SW monitor and open trace file(s) ----------- */
 /* -- TraceEvInit should be called in every trace routine to ensure that 
    the trace file is initialized -- */
-void TraceEvInit(int tid)
+int TraceEvInit(int tid)
 {
+  int retvalue = 0; 
+  /* by default this is what is returned. No trace records were generated */
+   
   if ( !(TraceInitialized[tid]) && (RtsLayer::myNode() > -1)) 
   /* node has been set*/ 
   { 
@@ -232,6 +235,7 @@ void TraceEvInit(int tid)
       if (TauCurrentEvent[tid] == 0) 
       { 
         TraceEvent(PCXX_EV_INIT, pcxx_ev_class, tid);
+        retvalue ++; /* one record generated */
       }
       else
       { /* error */ 
@@ -240,8 +244,12 @@ void TraceEvInit(int tid)
     } /* first record was not INIT */
     
     if ( pcxx_ev_class & PCXX_EC_TRACER )
+    { /* generate a wallclock time record */
       TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
+      retvalue ++;
+    }
   }
+  return retvalue; 
 }
 
  /* This routine is typically invoked when multiple SET_NODE calls are 
@@ -276,8 +284,26 @@ void TraceUnInitialize(int tid)
 /* -- write event to buffer ---------------------------------- */
 void TraceEvent(long int ev, long long par, int tid, unsigned long long ts, int use_ts)
 {
-  TraceEvInit(tid);
+  int i;
+  int records_created = TraceEvInit(tid);
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
+
+  if (records_created)
+  {
+#ifdef DEBUG
+    printf("TraceEvent(): TID %d records_created in TraceEvInit = %d\n",
+	RtsLayer::myThread(), records_created);
+#endif /* DEBUG */
+    /* one or more records were created in TraceEvInit. We must initialize
+    the timestamps of those records to the current timestamp. */
+    if (use_ts)
+    { /* we're asked to use the timestamp. Initialize with this ts */
+      for (i = 0; i < records_created; i++)
+      { /* set the timestamp accordingly */
+        TraceBuffer[tid][i].ti = ts; 
+      }
+    }
+  }
   if (!(TraceInitialized[tid]) && (TauCurrentEvent[tid] == 0)) 
   /* not initialized  and its the first time */
   { 
