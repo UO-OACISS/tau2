@@ -42,17 +42,17 @@ public class ConnectionManager {
 		System.out.println("\r\n");
     }
 
-	public void initialize(String configFileName, String password) {
-		if (parser.getDBType().compareTo("mysql") == 0)
-			perfdbAcct = "user=" + parser.getDBUserName() + "&password=" + password;	
-		else
-			perfdbAcct = "user=" + parser.getDBUserName() + ";password=" + password;	
-		dbschema = parser.getDBSchema();
-	}
-
-	public ParseConfig getParseConfig () {
-			return parser;
-	}
+    public void initialize(String configFileName, String password) {
+	if (parser.getDBType().compareTo("mysql") == 0)
+	    perfdbAcct = "user=" + parser.getDBUserName() + "&password=" + password;	
+	else
+	    perfdbAcct = "user=" + parser.getDBUserName() + ";password=" + password;	
+	dbschema = parser.getDBSchema();
+    }
+    
+    public ParseConfig getParseConfig () {
+	return parser;
+    }
 
     public void connect() {
         try {
@@ -151,7 +151,7 @@ public class ConnectionManager {
     }
 
 	public String getPassword () {
-		String tmpString = new String (parser.getDBPasswd());	
+		String tmpString = parser.getDBPasswd();	
 		if (tmpString == null) {
 			try {
 				PasswordField passwordField = new PasswordField();
