@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.23 2004/04/16 14:25:43 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.24 2004/04/19 17:32:23 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -21,6 +21,10 @@ public class PerfDBSession extends DataSession {
 
 	public PerfDBSession () {
 		super();
+	}
+
+	public DB db() {
+		return db;
 	}
 
 // Initialization / termination routines
