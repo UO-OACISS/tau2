@@ -1,7 +1,7 @@
 /******************************************************************* 
  *                                                                 *
  *       	Tuning and Analysis Utilities Credits  		   *
- *                           Version 2.9                           *
+ *                           Version 2.10                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -19,17 +19,17 @@
 TAU Portable Profiling:
 -----------------------
 Sameer Shende, Los Alamos National Laboratory, University of Oregon
+Robert Michael Ansell Bell, University of Oregon
 Kathleen Lindlan, University of Oregon
 Ariya Lohavanichbutr, University of Oregon
-Robert Michael Ansell-Bell, University of Oregon
 Peter Beckman, Los Alamos National Laboratory
 Steve Karmesin, Los Alamos National Laboratory
 Bernd Mohr, Research Centre Jülich, ZAM, Germany
 
 Principal Investigators:
 ------------------------
-Prof. Janice Cuny, University of Oregon
 Prof. Allen Malony, University of Oregon
+Prof. Janice Cuny, University of Oregon
 
 Thanks to: 
 ----------
