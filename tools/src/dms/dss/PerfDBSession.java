@@ -38,7 +38,7 @@ public class PerfDBSession extends DataSession {
 		Vector apps = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct appid, appname, version, description from applications");
+		buf.append("select distinct appid, appname, version, description from Applications");
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -66,7 +66,7 @@ public class PerfDBSession extends DataSession {
 		Vector exps = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct expid, appid from experiments ");
+		buf.append("select distinct expid, appid from Experiments ");
 		if (application != null)
 			buf.append("where appid = " + application.getID());
 		// System.out.println(buf.toString());
@@ -94,7 +94,7 @@ public class PerfDBSession extends DataSession {
 		Vector trials = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.metric, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from trials t inner join experiments e on t.expid = e.expid ");
+		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.metric, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from Trials t inner join Experiments e on t.expid = e.expid ");
 		if (application != null) {
 			buf.append("where e.appid = " + application.getID());
 			if (experiment != null) {
@@ -138,7 +138,7 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		Application app = null;
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct appid, appname, version, description from applications ");
+		buf.append("select distinct appid, appname, version, description from Applications ");
 		buf.append("where appid = " + id);
 		// System.out.println(buf.toString());
 
@@ -164,7 +164,7 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		Application app = null;
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct appid, appname, version, description from applications");
+		buf.append("select distinct appid, appname, version, description from Applications");
 		buf.append(" where appname = '" + name + "'");
 		if (version != null) {
 			buf.append(" and version = " + version);
@@ -194,7 +194,7 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		Experiment exp = null;
-		buf.append("select distinct expid, appid from experiments");
+		buf.append("select distinct expid, appid from Experiments");
 		if (application != null) {
 			buf.append(" where appid = " + application.getID());
 			buf.append(" and expid = " + id);
@@ -225,7 +225,7 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		Trial trial = null;
-		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.metric, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from trials t inner join experiments e on t.expid = e.expid");
+		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.metric, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from Trials t inner join Experiments e on t.expid = e.expid");
 		if (application != null) {
 			buf.append(" where e.appid = " + application.getID());
 			if (experiment != null) {
@@ -273,7 +273,7 @@ public class PerfDBSession extends DataSession {
 		if (trials == null) {
 			// create a string to hit the database
 			StringBuffer buf = new StringBuffer();
-			buf.append("select sum(t.nodenum) from trials t inner join experiments e on t.expid = e.expid ");
+			buf.append("select sum(t.nodenum) from Trials t inner join Experiments e on t.expid = e.expid ");
 			if (application != null) {
 				buf.append("where e.appid = " + application.getID());
 				if (experiment != null) {
@@ -318,7 +318,7 @@ public class PerfDBSession extends DataSession {
 		if (trials == null) {
 			// create a string to hit the database
 			StringBuffer buf = new StringBuffer();
-			buf.append("select sum(t.contextpnode) from trials t inner join experiments e on t.expid = e.expid ");
+			buf.append("select sum(t.contextpnode) from Trials t inner join Experiments e on t.expid = e.expid ");
 			if (application != null) {
 				buf.append("where e.appid = " + application.getID());
 				if (experiment != null) {
@@ -363,7 +363,7 @@ public class PerfDBSession extends DataSession {
 		if (trials == null) {
 			// create a string to hit the database
 			StringBuffer buf = new StringBuffer();
-			buf.append("select sum(t.threadpcontext) from trials t inner join experiments e on t.expid = e.expid ");
+			buf.append("select sum(t.threadpcontext) from Trials t inner join Experiments e on t.expid = e.expid ");
 			if (application != null) {
 				buf.append("where e.appid = " + application.getID());
 				if (experiment != null) {
@@ -417,10 +417,10 @@ public class PerfDBSession extends DataSession {
 		buf.append("f.fungroup, f.trialid, e.expid, e.appid, ");
 		buf.append("ms.inclperc, ms.incl, ms.exclperc, ms.excl, ms.call, ms.subrs, ms.inclpcall, ");
 		buf.append("ts.inclperc, ts.incl, ts.exclperc, ts.excl, ts.call, ts.subrs, ts.inclpcall ");
-		buf.append("from funindex f inner join trials t on f.trialid = t.trialid ");
-		buf.append("inner join experiments e on e.expid = t.expid ");
-		buf.append("inner join meansummary ms on f.funindexid = ms.funindexid ");
-		buf.append("inner join totalsummary ts on f.funindexid = ts.funindexid ");
+		buf.append("from FunIndex f inner join Trials t on f.trialid = t.trialid ");
+		buf.append("inner join Experiments e on e.expid = t.expid ");
+		buf.append("inner join Meansummary ms on f.funindexid = ms.funindexid ");
+		buf.append("inner join Totalsummary ts on f.funindexid = ts.funindexid ");
 		boolean gotWhile = false;
 		if (application != null) {
 			buf.append(" where e.appid = " + application.getID());
@@ -505,10 +505,10 @@ public class PerfDBSession extends DataSession {
 		buf.append("e.expid, e.appid, ");
 		buf.append("ms.inclperc, ms.incl, ms.exclperc, ms.excl, ms.call, ms.subrs, ms.inclpcall, ");
 		buf.append("ts.inclperc, ts.incl, ts.exclperc, ts.excl, ts.call, ts.subrs, ts.inclpcall ");
-		buf.append("from funindex f inner join trials t on f.trialid = t.trialid ");
-		buf.append("inner join experiments e on e.expid = t.expid ");
-		buf.append("inner join meansummary ms on f.funindexid = ms.funindexid ");
-		buf.append("inner join totalsummary ts on f.funindexid = ts.funindexid ");
+		buf.append("from FunIndex f inner join Trials t on f.trialid = t.trialid ");
+		buf.append("inner join Experiments e on e.expid = t.expid ");
+		buf.append("inner join Meansummary ms on f.funindexid = ms.funindexid ");
+		buf.append("inner join Totalsummary ts on f.funindexid = ts.funindexid ");
 		buf.append(" where f.funindexid = " + id);
 		// System.out.println(buf.toString());
 
@@ -562,11 +562,11 @@ public class PerfDBSession extends DataSession {
 		buf.append("select distinct p.inclperc, p.incl, p.exclperc, p.excl, ");
 		buf.append("p.call, p.subrs, p.inclpcall, ");
 		buf.append("t.trialid, l.nodeid, l.contextid, l.threadid, l.funindexid ");
-		buf.append("from pprof p ");
-		buf.append("inner join locationindex l on p.locid = l.locid ");
-		buf.append("inner join funindex f on f.funindexid = l.funindexid ");
-		buf.append("inner join trials t on f.trialid = t.trialid ");
-		buf.append("inner join experiments e on e.expid = t.expid ");
+		buf.append("from Pprof p ");
+		buf.append("inner join LocationIndex l on p.locid = l.locid ");
+		buf.append("inner join FunIndex f on f.funindexid = l.funindexid ");
+		buf.append("inner join Trials t on f.trialid = t.trialid ");
+		buf.append("inner join Experiments e on e.expid = t.expid ");
 		boolean gotWhile = false;
 		if (application != null) {
 			buf.append(" where e.appid = " + application.getID());

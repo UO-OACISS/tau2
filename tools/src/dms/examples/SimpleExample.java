@@ -29,36 +29,41 @@ public class SimpleExample {
 		// Get the list of trials
 		ListIterator trials;
 		trials = session.getTrialList();
-		Trial trial = null;
+		Trial myTrial = null;
 
 		while (trials.hasNext()) {
-			trial = (Trial)trials.next();
-			if (trial.getMetric().compareTo("time") == 0 ){
-				session.setTrial(trial);
+			myTrial = (Trial)trials.next();
+			if (myTrial.getMetric().compareTo("time") == 0 ){
+				session.setTrial(myTrial);
 				break;
 			}
 		}
 
 		ListIterator myIterator;
 		// Get the data
+		System.out.print("Getting function data...");
 		myIterator = session.getFunctionData();
-		FunctionDataObject fundo;
+		System.out.println(" done.");
+		FunctionDataObject functionDataObject;
+		Function function;
 		String name, group;
-		int t, n, c, h;
+		int functionID, trial, node, context, thread;
 		double inclusivePercentage;
 
 		System.out.println ("Inclusive Percentages:");
 		System.out.println ("Trial, Node, Context, Thread, Name, Group, Value:");
 		while (myIterator.hasNext()) {
-			fundo = (FunctionDataObject)(myIterator.next());
-			name = session.getFunction(fundo.getFunctionID()).getName();
-			group = session.getFunction(fundo.getFunctionID()).getGroup();
-			t = session.getFunction(fundo.getFunctionID()).getTrialID();
-			n = fundo.getNodeID();
-			c = fundo.getContextID();
-			h = fundo.getThreadID();
-			inclusivePercentage = fundo.getInclusivePercentage();
-			System.out.println (t + ", " + n + ", " + c + ", " + t + ", " + name + ", " + group + " = " + fundo.getInclusivePercentage());
+			functionDataObject = (FunctionDataObject)(myIterator.next());
+			functionID = functionDataObject.getFunctionID();
+			function = session.getFunction(functionID);
+			name = function.getName();
+			group = function.getGroup();
+			trial = function.getTrialID();
+			node = functionDataObject.getNodeID();
+			context = functionDataObject.getContextID();
+			thread = functionDataObject.getThreadID();
+			inclusivePercentage = functionDataObject.getInclusivePercentage();
+			System.out.println (trial + ", " + node + ", " + context + ", " + thread + ", " + name + ", " + group + " = " + inclusivePercentage);
 
 		}
 
