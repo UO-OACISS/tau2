@@ -171,15 +171,17 @@ bool areFileIncludeExcludeListsEmpty(void)
 /* -------------------------------------------------------------------------- */
 bool matchName(const string& str1, const string& str2)
 {
-  int length1, length2, size_to_compare;
+  /* OLD int size_to_compare;
   const char *s1;
+  int length1, length2;
   length1 = str1.length();
   length2 = str2.length();
 
   size_to_compare = (length1 < length2) ? length1 : length2;
  
-  // OLD 
-  //if (strncmp(str1.c_str(), str2.c_str(), size_to_compare) == 0)
+  if (strncmp(str1.c_str(), str2.c_str(), size_to_compare) == 0) */
+
+
   /* Use '#' as the wildcard kleene star operator character */
   if (wildcardCompare((char *)(str1.c_str()), (char *)(str2.c_str()), '#'))
     return true;
@@ -367,6 +369,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2004/05/31 15:49:51 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.7 2004/05/31 15:49:51 sameer Exp $
+ * $Revision: 1.8 $   $Date: 2004/05/31 17:19:22 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.8 2004/05/31 17:19:22 sameer Exp $
  ***************************************************************************/
