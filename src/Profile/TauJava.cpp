@@ -43,7 +43,9 @@ static JVMPI_Interface *tau_jvmpi_interface;
 extern "C" {
   JNIEXPORT jint JNICALL JVM_OnLoad(JavaVM *jvm, char *options, void *reserved)
 {
+#ifdef DEBUG_PROF
     fprintf(stderr, "TAU> initializing ..... \n");
+#endif /* DEBUG_PROF */
     // get jvmpi interface pointer
     if ((jvm->GetEnv((void **)&tau_jvmpi_interface, JVMPI_VERSION_1)) < 0) {
       fprintf(stderr, "TAU> error in obtaining jvmpi interface pointer\n"
@@ -64,7 +66,9 @@ extern "C" {
       fprintf(stderr, "TAU>ERROR: sbrk failed\n");
       exit(1);
     }
+#ifdef DEBUG_PROF 
     fprintf(stderr, "TAU> .... ok \n\n");
+#endif /* DEBUG_PROF */
     return JNI_OK;
   }
 }
@@ -98,7 +102,9 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
 void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 {
   int i;
+#ifdef DEBUG_PROF
     fprintf(stderr, "TAU> Class Load : %s\n", event->u.class_load.class_name);
+#endif /* DEBUG_PROF */
   static int j = TAU_PROFILE_SET_NODE(0);
 
   for (i = 0; i < event->u.class_load.num_methods; i++)
@@ -109,11 +115,13 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 		       event->u.class_load.methods[i].method_signature,
 	  (long)  event->u.class_load.methods[i].method_id, 
 		     event->u.class_load.class_name); 
+#ifdef DEBUG_PROF 
     printf("TAU> method: %s, sig: %s, id: %ld, class: %s\n",
 		event->u.class_load.methods[i].method_name,
         	event->u.class_load.methods[i].method_signature,
            		event->u.class_load.methods[i].method_id,
                        event->u.class_load.class_name);
+#endif /* DEBUG_PROF */
     /* name, type, key, group name  are the four arguments above */
   }
 	
@@ -122,60 +130,42 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 void TauJavaLayer::MethodEntry(JVMPI_Event *event)
 {
   TAU_MAPPING_OBJECT(TauMethodName);
-  fprintf(stderr, "TAU> Method Entry :%ld \n", 
-	 	(long) event->u.method.method_id);
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
-  if (TauMethodName == (FunctionInfo *) NULL)
-  {
-    printf("TauJavaLayer::MethodEntry TauMethodName is NULL");
-    exit(1);
-  }
-  else 
-  { 
-    fprintf(stderr, "TAU> Method Entry %s %s:%ld \n", 
+  
+  TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName);
+  TAU_MAPPING_PROFILE_START(TauTimer);
+
+#ifdef DEBUG_PROF 
+  fprintf(stderr, "TAU> Method Entry %s %s:%ld \n", 
   		TauMethodName->GetName(), TauMethodName->GetType(), 
 	 	(long) event->u.method.method_id);
-  }
-
-  Profiler *p = new Profiler(TauMethodName, TauMethodName->GetProfileGroup(),true); 
-  if (p == (Profiler *) NULL) 
-  { 
-    printf("TauJavaLayer::MethodEntry Profiler is NULL");
-    exit(1);
-  }
-  p->Start();
-/*
-  TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName);
-  TauTimer.Start();
-*/
-  
- // TAU_MAPPING_PROFILE_START(TauTimer);
-
+#endif /* DEBUG_PROF */
 }
 
 void TauJavaLayer::MethodExit(JVMPI_Event *event)
 {
+
+  TAU_MAPPING_PROFILE_STOP();
+
+#ifdef DEBUG_PROF
   fprintf(stderr, "TAU> Method Exit : %ld\n",
 	 	(long) event->u.method.method_id);
-
-
-
-  Profiler *p = Profiler::CurrentProfiler[0]; 
-  p->Stop();
-
-
-
+#endif /* DEBUG_PROF */
 }
 
 void TauJavaLayer::ThreadStart(JVMPI_Event *event)
 {
+#ifdef DEBUG_PROF
     fprintf(stderr, "TAU> Thread Start : \n");
+#endif /* DEBUG_PROF */
 
 }
 
 void TauJavaLayer::ThreadEnd(JVMPI_Event *event)
 {
+#ifdef DEBUG_PROF
     fprintf(stderr, "TAU> Thread End : \n");
+#endif /* DEBUG_PROF */
 //    TAU_PROFILE_EXIT("END...");
 }
 
