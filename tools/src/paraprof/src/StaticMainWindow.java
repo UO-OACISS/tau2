@@ -159,6 +159,12 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
         testItem.addActionListener(this);
         openMenu.add(testItem);
         
+				//Testing the image stuff.
+				JMenuItem imageItem = new JMenuItem("testImage");
+        imageItem.addActionListener(this);
+        openMenu.add(imageItem);
+        
+
       fileMenu.add(openMenu);
       //End submenu.
       
@@ -565,6 +571,12 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 						//DSSTraditionalTAUProfile test = new DSSTraditionalTAUProfile();
 						//test.loadData(new DMSAccessSession());
         }
+				else if(arg.equals("testImage"))
+        {
+						//DSSTraditionalTAUProfile test = new DSSTraditionalTAUProfile();
+						//test.loadData(new DMSAccessSession());
+        }
+				
         else if(arg.equals("To A ParaProf Output File"))
         {
           

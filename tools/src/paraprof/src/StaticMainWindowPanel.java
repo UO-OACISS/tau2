@@ -669,8 +669,10 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
   
   public void paintComponent(Graphics g)
   {
-    try
-    {
+
+
+			try
+					{
       super.paintComponent(g);
       
       //Set the numberOfColors variable.
@@ -1263,6 +1265,9 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
       ParaProf.systemError(e, null, "SMWP06");
     }
   }
+
+		public void doTheDew(Graphics2D inGraphics2D){
+		}
   
   //******************************
   //PopupMenuListener code.
