@@ -44,8 +44,16 @@ void getReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
 	 ((*rit)->storageClass() != pdbItem::ST_EXT)) 
     {
-      // It is a "target" so give it a second arg of true.
-      itemvec.push_back(new itemRef(*rit, true));
+	if (((*rit)->parentClass()) == 0) 
+	{ 
+	  // There's no parent class. No need to add CT(*this)
+          itemvec.push_back(new itemRef(*rit, true));
+	}
+	else
+	{
+          itemvec.push_back(new itemRef(*rit, false));
+	  // false puts CT(*this)
+	}
 #ifdef DEBUG
       cout << (*rit)->fullName() <<endl;
 #endif
@@ -338,10 +346,9 @@ int instrumentFile(PDB& pdb, pdbFile* f, string& outfile)
 	    ostr <<"  TAU_PROFILE(\"" << (*it)->item->fullName() ;
 	    if (!((*it)->isTarget))
 	    { // it is a template member. Help it by giving an additional ()
-	      ostr <<"()" ;
 	    // if the item is a member function or a static member func give
 	    // it a class name using CT
-	      ostr <<"\", \"CT(*this)\", ";
+	      ostr <<"\", CT(*this), ";
 	    } 
  	    else // it is not a class member 
 	    { 
