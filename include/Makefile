@@ -198,7 +198,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
 #HPGNU#PROFILEOPT21	       = -fPIC #ENDIF#
 #HITACHI#PROFILEOPT21	       = -DTAU_HITACHI #ENDIF#
-#SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -D_XOPEN_SOURCE -DTAU_AIX #ENDIF#
+#SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -DTAU_AIX #ENDIF#
 #USE_IBMXLC#PROFILEOPT21	       = -DTAU_DOT_H_LESS_HEADERS -DTAU_XLC#ENDIF#
 #PCLPTHREAD#PROFILEOPT22	       = -DPCL_MUTEX_LOCK #ENDIF#
 #JAVA#PROFILEOPT23	       = -DJAVA 		#ENDIF#
@@ -301,8 +301,14 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #INTELOPENMP#TAU_LINKER_OPT5 = -openmp #ENDIF#
 
 #USE_IBMXLC#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
+#GNU#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
 #KAI#TAU_IBM_PYTHON_SHFLAG = --backend -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp --backend -Wl,-einitpytau#ENDIF#
 #ACC#TAU_HPUX_PYTHON_SHFLAG = -lstd_v2 -lCsup_v2 -lm -lcl -lc #ENDIF#
+
+#USE_IBMXLC#TAU_IBM_LD_FLAGS = -binitfini:poe_remote_main -brtl #ENDIF#
+#GNU#TAU_IBM_LD_FLAGS = -Wl,-binitfini:poe_remote_main -Wl,-brtl #ENDIF#
+#KAI#TAU_IBM_LD_FLAGS = --backend -binitfini:poe_remote_main --backend -brtl #ENDIF#
+
 
 #PYTHON#TAU_IBM_SHFLAGS = $(TAU_IBM_PYTHON_SHFLAG) #ENDIF#
 #PYTHON#TAU_HPUX_SHFLAGS = $(TAU_HPUX_PYTHON_SHFLAG) #ENDIF#
@@ -315,6 +321,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 
 ##############################################
 # Build TAU_LINKER_SHOPTS
+#GNU#TAU_IBM_LINKER_SHOPTS=-Wl,-brtl -Wl,-bexpall #ENDIF#
 #USE_IBMXLC#TAU_IBM_LINKER_SHOPTS= -brtl -bexpall #ENDIF#
 #KAI#TAU_IBM_LINKER_SHOPTS= --backend -brtl #ENDIF#
 #SP1#TAU_LINKER_SHOPTS= $(TAU_IBM_LINKER_SHOPTS) #ENDIF#
@@ -404,7 +411,7 @@ TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
 ## IBM SPECIFIC CHANGES TO TAU_MPI_LIBS
-#SP1#TAU_LDFLAGS  = -binitfini:poe_remote_main #ENDIF#
+#SP1#TAU_LDFLAGS  = $(TAU_IBM_LD_FLAGS) #ENDIF#
 #SP1#TAU_MPI_LIBS    = $(TAU_MPI_LIB)  -L$(TAU_MPILIB_DIR)/ip  -lvtd$(TAU_MPI_R_SUFFIX) #ENDIF#
 #SP1#TAU_MPI_FLIBS   = $(TAU_MPI_FLIB) -L$(TAU_MPILIB_DIR)/ip  -lvtd$(TAU_MPI_R_SUFFIX) #ENDIF#
 
