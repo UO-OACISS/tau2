@@ -287,6 +287,13 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 
 #ifdef TAU_MPI
 TAU_REGISTER_EVENT(sendevent,"Message size sent to all nodes");
+TAU_REGISTER_EVENT(recvevent,"Message size received from all nodes");
+TAU_REGISTER_EVENT(bcastevent,"Message size for broadcast");
+TAU_REGISTER_EVENT(reduceevent,"Message size for reductions");
+TAU_REGISTER_EVENT(alltoallevent,"Message size for all-to-all");
+TAU_REGISTER_EVENT(scatterevent,"Message size for scatter");
+TAU_REGISTER_EVENT(gatherevent,"Message size for gather");
+
 TauUserEvent**& TheMsgVolEvent()
 {
   static TauUserEvent **u = 0; 
@@ -297,14 +304,17 @@ TauUserEvent **u;
 */
 int register_events(void)
 {
+#ifdef TAU_EACH_SEND
   char str[256];
   int i;
+
   TheMsgVolEvent() = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*tau_totalnodes(0,0));
   for (i =0; i < tau_totalnodes(0,0); i++)
   {
     sprintf(str, "Message size sent to node %d", i);
     TheMsgVolEvent()[i] = (TauUserEvent *) new TauUserEvent((const char *)str);
   }
+#endif /* TAU_EACH_SEND */
   return 0;
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -316,22 +326,54 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
         RtsLayer::myNode(), type, destination, length);
 #endif /* DEBUG_PROF */
   TAU_EVENT(sendevent, length);
+#ifdef TAU_EACH_SEND
   TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
+#endif /* TAU_EACH_SEND */
   TAU_TRACE_SENDMSG(type, destination, length);
 }
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_recvmsg(int type, int source, int length)
+{
+  TAU_EVENT(recvevent, length);
+  TAU_TRACE_RECVMSG(type, source, length);
+}
 
+extern "C" void Tau_bcast_data(int data)
+{
+  TAU_EVENT(bcastevent, data);
+}
+
+extern "C" void Tau_reduce_data(int data)
+{
+  TAU_EVENT(reduceevent, data);
+}
+
+extern "C" void Tau_alltoall_data(int data)
+{
+  TAU_EVENT(alltoallevent, data);
+}
+
+extern "C" void Tau_scatter_data(int data)
+{
+  TAU_EVENT(scatterevent, data);
+}
+
+extern "C" void Tau_gather_data(int data)
+{
+  TAU_EVENT(gatherevent, data);
+}
 #else /* !TAU_MPI */
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
 {
   TAU_TRACE_SENDMSG(type, destination, length);
 }
-#endif /* TAU_MPI */
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 {
   TAU_TRACE_RECVMSG(type, source, length);
 }
+#endif /* TAU_MPI */
 
 ///////////////////////////////////////////////////////////////////////////
 // User Defined Events 
@@ -429,7 +471,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.34 $   $Date: 2003/07/22 17:39:52 $
- * VERSION: $Id: TauCAPI.cpp,v 1.34 2003/07/22 17:39:52 sameer Exp $
+ * $Revision: 1.35 $   $Date: 2003/11/12 04:29:53 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.35 2003/11/12 04:29:53 sameer Exp $
  ***************************************************************************/
 
