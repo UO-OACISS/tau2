@@ -41,8 +41,8 @@ TULIPDIR=/users/sameer/s
 #MIPSR8K#ISA          = -mips4             #ENDIF#
 
 ############# Standard Defines ##############
-CC = $(CONFIG_CC) $(ABI) $(ISA)
-CXX = $(CONFIG_CXX) $(ABI) $(ISA)
+TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
+TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 DEFINES =
 INSTALL = /bin/cp
 SHELL = /bin/sh
