@@ -541,7 +541,7 @@ void Profiler::dumpFunctionNames()
   
   //Rename from the temp filename.
   dumpfile = new char[1024];
-  sprintf(dumpfile,"%s/dump_filenames_n,c-.%d.%d",dirname, RtsLayer::myNode(),
+  sprintf(dumpfile,"%s/dump_functionnames_n,c.%d.%d",dirname, RtsLayer::myNode(),
                 RtsLayer::myContext());
   rename(filename, dumpfile);
 }
@@ -1874,9 +1874,9 @@ void Profiler::CallStackTrace(int tid)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.68 $   $Date: 2002/03/28 01:12:19 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.68 2002/03/28 01:12:19 bertie Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.69 $   $Date: 2002/03/28 02:06:39 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.69 2002/03/28 02:06:39 sameer Exp $ 
  ***************************************************************************/
 
 	
