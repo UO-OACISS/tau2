@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.10 2005/01/19 02:33:26 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.11 2005/01/31 23:11:08 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -394,7 +394,7 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                 } else if (arg.equals("Show Help Window")) {
                     this.help(true);
                 } else {
-                    throw new RuntimeException("Menu system not implemented properly");
+                    throw new ParaProfException("Menu system not implemented properly: " + arg);
                 }
             } else if (EventSrc == sliderMultiple) {
                 panel.changeInMultiples();

@@ -23,7 +23,7 @@ public class ParaProfImageOutput {
     public ParaProfImageOutput() {
     }
 
-    public void saveImage(ParaProfImageInterface ref) throws ParaProfException, IOException {
+    public void saveImage(ParaProfImageInterface ref) throws IOException {
 
         //Ask the user for a filename and location.
         JFileChooser fileChooser = new JFileChooser();

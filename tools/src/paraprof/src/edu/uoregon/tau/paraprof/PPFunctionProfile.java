@@ -227,8 +227,7 @@ public class PPFunctionProfile implements Comparable {
             else
                 return this.getThreadID() - ppFunctionProfile.getThreadID();
         default:
-            //throw new ParaProfException("Unexpected sort type: " + sortType);
-            throw new RuntimeException("Unexpected sort type: " + sortType);
+            throw new ParaProfException("Unexpected sort type: " + sortType);
         }
     }
 

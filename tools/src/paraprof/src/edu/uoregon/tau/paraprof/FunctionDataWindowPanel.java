@@ -14,9 +14,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.10 2005/01/19 02:33:26 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.11 2005/01/31 23:11:08 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -102,7 +102,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
 
   
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) throws ParaProfException {
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
 

@@ -8,14 +8,13 @@ import javax.swing.JComponent;
 import java.awt.Color;
 
 /**
- * ColorBar.java
  * This component sits atop the call graph window displaying a bar of colors (the scale).
  * It also contains the static functions for getting a color given a value 0..1
  *  
  * 
- * <P>CVS $Id: ColorBar.java,v 1.4 2005/01/12 01:36:26 amorris Exp $</P>
+ * <P>CVS $Id: ColorBar.java,v 1.5 2005/01/31 23:11:08 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.4 $
+ * @version	$Revision: 1.5 $
  * @see CallGraphWindow
  */
 public class ColorBar extends JComponent {

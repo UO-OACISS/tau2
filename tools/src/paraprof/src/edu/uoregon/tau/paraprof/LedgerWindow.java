@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.9 2005/01/19 02:33:26 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.10 2005/01/31 23:11:08 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -117,7 +117,7 @@ public class LedgerWindow extends JFrame implements ActionListener, MenuListener
         setJMenuBar(mainMenu);
     }
 
-    public LedgerWindow(ParaProfTrial trial, int windowType) throws ParaProfException {
+    public LedgerWindow(ParaProfTrial trial, int windowType) {
         this.trial = trial;
         this.windowType = windowType;
 

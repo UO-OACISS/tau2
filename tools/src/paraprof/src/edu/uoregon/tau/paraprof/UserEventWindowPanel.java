@@ -72,7 +72,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     }
     
     
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) throws ParaProfException {
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         list = window.getData();
 

@@ -204,7 +204,7 @@ public class PPUserEventProfile implements Comparable {
             else
                 return this.getThreadID() - ppUserEventProfile.getThreadID();
         default:
-            throw new RuntimeException("Unexpected sort type: " + sortType);
+            throw new ParaProfException("Unexpected sort type: " + sortType);
         }
     }
 

@@ -17,9 +17,9 @@ import java.text.*;
  * HistogramWindowPanel
  * This is the panel for the HistogramWindow.
  *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.8 2005/01/10 20:12:26 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.9 2005/01/31 23:11:08 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  * @see		HistogramWindow
  */
 public class HistogramWindowPanel extends JPanel implements Printable, ParaProfImageInterface {
@@ -103,7 +103,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
         return d;
     }
 
-    private void processData() throws ParaProfException {
+    private void processData() {
         data = window.getData();
 
         maxValue = 0;
@@ -160,8 +160,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
 
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader)
-            throws ParaProfException {
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
 
         processData();
 

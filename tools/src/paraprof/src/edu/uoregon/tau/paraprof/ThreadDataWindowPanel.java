@@ -86,8 +86,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         }
     }
 
-    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader)
-            throws ParaProfException {
+    public void renderIt(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         list = window.getData();
 
         //######

@@ -30,7 +30,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
         if (nodeID == -1 && userEventWindow) {
             // There is no User Event data for mean
-            throw new RuntimeException("There is no User Event data for mean");
+            throw new ParaProfException("There is no User Event data for mean");
         }
 
         //Now set the title.

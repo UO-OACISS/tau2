@@ -197,7 +197,7 @@ public class DerivedMetrics {
             }
             break;
         default:
-            throw new RuntimeException("Unexpected operation type: " + op);
+            throw new ParaProfException("Unexpected operation type: " + op);
         }
         return d;
     }

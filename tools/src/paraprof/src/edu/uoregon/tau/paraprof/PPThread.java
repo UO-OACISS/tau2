@@ -127,7 +127,7 @@ public class PPThread {
             maxValue = maxInclusivePerCall;
             break;
         default:
-            throw new RuntimeException("Invalid Value Type: " + valueType);
+            throw new ParaProfException("Invalid Value Type: " + valueType);
         }
         return maxValue;   
         

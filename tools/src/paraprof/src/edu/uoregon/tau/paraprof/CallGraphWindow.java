@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.18 2005/01/21 19:21:09 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.19 2005/01/31 23:11:08 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -1745,9 +1745,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
     public void mouseClicked(MouseEvent evt) {
         try {
             // Get Cell under Mousepointer
-            int x = evt.getX(), y = evt.getY();
 
-            GraphCell gc = getGraphCellForLocation(evt.getX(), evt.getY());
+            // scale the x and y (we could be zoomed in or out)
+            double x = evt.getX() / scale;
+            double y = evt.getY() / scale;
+            
+            GraphCell gc = getGraphCellForLocation((int)x, (int)y);
 
             if (gc != null) {
                 Function f = ((Function) gc.getFunction());

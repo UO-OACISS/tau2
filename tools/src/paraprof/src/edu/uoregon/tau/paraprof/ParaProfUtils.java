@@ -83,7 +83,7 @@ public class ParaProfUtils {
             value = ppFunctionProfile.getInclusivePerCall();
             break;
         default:
-            throw new RuntimeException("Invalid Value Type: " + valueType);
+            throw new ParaProfException("Invalid Value Type: " + valueType);
         }
         return value;
     }
@@ -115,13 +115,13 @@ public class ParaProfUtils {
 //            maxValue = function.getMaxInclusivePerCall(ppTrial.getSelectedMetricID());
 //            break;
 //        default:
-//            throw new RuntimeException("Invalid Value Type: " + valueType);
+//            throw new ParaProfException("Invalid Value Type: " + valueType);
 //        }
 //        return maxValue;
 //    }
 
 //    public static double getMaxThreadValue(edu.uoregon.tau.dms.dss.Thread thread, int valueType,
-//            boolean percent, ParaProfTrial ppTrial) throws ParaProfException {
+//            boolean percent, ParaProfTrial ppTrial) {
 //        double maxValue = 0;
 //        switch (valueType) {
 //        case 2:
