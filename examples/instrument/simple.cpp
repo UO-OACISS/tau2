@@ -141,8 +141,10 @@ int main(int argc, char *argv[])
   NoTempl X;
   TemplClass<double> Y;
   TemplClass<char> C;
+#ifdef NEWCC
   int idim = 1;
   double ddim = 3.0;
+#endif
 
 
 
