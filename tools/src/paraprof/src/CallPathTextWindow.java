@@ -582,6 +582,14 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     public int units(){
 	return units;}
 
+    public Dimension getViewportSize(){
+	return sp.getViewport().getExtentSize();}
+
+    public void setVerticalScrollBarPosition(int position){
+	JScrollBar scrollBar = sp.getVerticalScrollBar();
+	scrollBar.setValue(position);
+    }
+
     private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h){
 	try{
 	    gbc.gridx = x;

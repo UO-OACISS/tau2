@@ -49,17 +49,21 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	    addMouseListener(this);
       
 	    //Add items to the popu menu.
-	    JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
-	    mappingDetailsItem.addActionListener(this);
-	    popup.add(mappingDetailsItem);
+	    JMenuItem  jMenuItem = new JMenuItem("Show Function Details");
+	    jMenuItem.addActionListener(this);
+	    popup.add(jMenuItem);
+
+	    jMenuItem = new JMenuItem("Find Function");
+	    jMenuItem.addActionListener(this);
+	    popup.add(jMenuItem);
       
-	    JMenuItem changeColorItem = new JMenuItem("Change Function Color");
-	    changeColorItem.addActionListener(this);
-	    popup.add(changeColorItem);
+	    jMenuItem = new JMenuItem("Change Function Color");
+	    jMenuItem.addActionListener(this);
+	    popup.add(jMenuItem);
       
-	    JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
-	    maskMappingItem.addActionListener(this);
-	    popup.add(maskMappingItem);
+	    jMenuItem = new JMenuItem("Reset to Generic Color");
+	    jMenuItem.addActionListener(this);
+	    popup.add(jMenuItem);
 
 	}
 	catch(Exception e){
@@ -396,7 +400,14 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getInclusiveValue(),
 								ParaProf.defaultNumberPrecision),incPos, yCoord);
 			g2D.drawString(Integer.toString(callPathDrawObject.getNumberOfCalls()), callsPos1, yCoord);
-			g2D.drawString(callPathDrawObject.getMappingName()+"["+callPathDrawObject.getMappingID()+"]", namePos, yCoord);
+			int mappingID = callPathDrawObject.getMappingID();
+			if(trial.getColorChooser().getHighlightColorID() == mappingID){
+			    g2D.setColor(Color.red);
+			    g2D.drawString(callPathDrawObject.getMappingName()+"["+mappingID+"]", namePos, yCoord);
+			    g2D.setColor(Color.black);
+			}
+			else
+			    g2D.drawString(callPathDrawObject.getMappingName()+"["+mappingID+"]", namePos, yCoord);
 			yCoord = yCoord + (spacing);
 		    }
 		    else if(callPathDrawObject.isSpacer())
@@ -407,7 +418,14 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 			g2D.drawString(UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getInclusiveValue(),
 								ParaProf.defaultNumberPrecision), incPos, yCoord);
 			g2D.drawString(callPathDrawObject.getNumberOfCallsFromCallPathObjects()+"/"+callPathDrawObject.getNumberOfCalls(), callsPos1, yCoord);
-			g2D.drawString(callPathDrawObject.getMappingName()+"["+callPathDrawObject.getMappingID()+"]", namePos, yCoord);
+			int mappingID = callPathDrawObject.getMappingID();
+			if(trial.getColorChooser().getHighlightColorID() == mappingID){
+			    g2D.setColor(Color.red);
+			    g2D.drawString(callPathDrawObject.getMappingName()+"["+callPathDrawObject.getMappingID()+"]", namePos, yCoord);
+			    g2D.setColor(Color.black);
+			}
+			else
+			   g2D.drawString(callPathDrawObject.getMappingName()+"["+callPathDrawObject.getMappingID()+"]", namePos, yCoord); 
 			yCoord = yCoord + (spacing);
 		    }
 		}
@@ -442,50 +460,55 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	    if(EventSrc instanceof JMenuItem){
 		String arg = evt.getActionCommand();
 		if(arg.equals("Show Function Details")){
-		    
 		    if(clickedOnObject instanceof CallPathDrawObject){
 			callPathDrawObject = (CallPathDrawObject) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 			trial.getColorChooser().setHighlightColorID(callPathDrawObject.getMappingID());
-			MappingDataWindow tmpRef = new MappingDataWindow(trial, callPathDrawObject.getMappingID(), trial.getStaticMainWindow().getSMWData(), this.debug());
-			trial.getSystemEvents().addObserver(tmpRef);
-			tmpRef.show();
+			MappingDataWindow  mappingDataWindow = new MappingDataWindow(trial,callPathDrawObject.getMappingID(),
+										     trial.getStaticMainWindow().getSMWData(), this.debug());
+			trial.getSystemEvents().addObserver(mappingDataWindow);
+			mappingDataWindow.show();
+		    }
+		}
+		else if(arg.equals("Find Function")){ 
+		    if(clickedOnObject instanceof CallPathDrawObject){
+			int mappingID = ((CallPathDrawObject) clickedOnObject).getMappingID();
+			int size = drawObjects.size();
+			for(int i=0;i<size;i++){
+			    callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
+			    if((callPathDrawObject.getMappingID()==mappingID)&&(!callPathDrawObject.isParentChild())){
+				Dimension dimension = cPTWindow.getViewportSize();
+				System.out.println("Found Function at index: " + i);
+				System.out.println("Width: " + dimension.getWidth() + "," + "Height: " + dimension.getHeight());
+				cPTWindow.setVerticalScrollBarPosition((i*(trial.getPreferences().getBarSpacing()))-((int)dimension.getHeight()/2));
+				trial.getColorChooser().setHighlightColorID(mappingID);
+				return;
+			    }
+			}
 		    }
 		}
 		else if(arg.equals("Change Function Color")){ 
-		    int mappingID = -1;
-		    
-		    //Get the clicked on object.
-		    if(clickedOnObject instanceof CallPathDrawObject)
-			mappingID = ((CallPathDrawObject) clickedOnObject).getMappingID();
-		    
-		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		    
-		    Color tmpCol = tmpGME.getColor();
-		    
-		    JColorChooser tmpJColorChooser = new JColorChooser();
-		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
-		    if(tmpCol != null){
-			tmpGME.setSpecificColor(tmpCol);
-			tmpGME.setColorFlag(true);
-			
-			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    if(clickedOnObject instanceof CallPathDrawObject){
+			int mappingID = ((CallPathDrawObject) clickedOnObject).getMappingID();
+			GlobalMapping globalMapping = trial.getGlobalMapping();
+			GlobalMappingElement  globalMappingElement = (GlobalMappingElement) globalMapping.getGlobalMappingElement(mappingID, 0);
+			Color color = globalMappingElement.getColor();
+			color = (new JColorChooser()).showDialog(this, "Please select a new color", color);
+			if(color != null){
+			    globalMappingElement.setSpecificColor(color);
+			    globalMappingElement.setColorFlag(true);
+			    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+			}
 		    }
 		}
-		
 		else if(arg.equals("Reset to Generic Color")){ 
-		    int mappingID = -1;
-		    
-		    //Get the clicked on object.
-		    if(clickedOnObject instanceof CallPathDrawObject)
-			mappingID = ((CallPathDrawObject) clickedOnObject).getMappingID();
-		    
-		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
-		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
-		    
-		    tmpGME.setColorFlag(false);
-		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    if(clickedOnObject instanceof CallPathDrawObject){
+			int mappingID = ((CallPathDrawObject) clickedOnObject).getMappingID();
+			GlobalMapping globalMapping = trial.getGlobalMapping();
+			GlobalMappingElement  globalMappingElement = (GlobalMappingElement) globalMapping.getGlobalMappingElement(mappingID, 0);
+			globalMappingElement.setColorFlag(false);
+			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    }
 		}
 	    }
 	}
