@@ -19,11 +19,10 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-#FFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
-FFLAGS        	= $(TAU_INCLUDE) -DPROFILING_ON 
+FFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) 
 
-LIBS            = $(TAU_LIBS)  -lpthread
-# For SGI Origin add -lfortran -lftn
+LIBS            = $(TAU_LIBS)  $(TAU_FORTRANLIBS)
+#LIBS            = $(TAU_DISABLE)  $(TAU_FORTRANLIBS)
 
 LDFLAGS	      	= $(USER_OPT) 
 
@@ -33,7 +32,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-F77		= f90
+F77		= f90 
 
 TARGET	      	= hello
 
