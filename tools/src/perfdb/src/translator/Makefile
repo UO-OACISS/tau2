@@ -1,3 +1,6 @@
+TAUROOT=
+PERFDB_HOME=$(TAUROOT)/tools/src/perfdb
+
 PACKAGE	= translator
 
 SOURCE	= \

@@ -4,6 +4,8 @@
 #  Section 1: Directories.
 #
 #***************************************************************************
+TAUROOT=
+PERFDB_HOME=$(TAUROOT)/tools/src/perfdb
 CLASS_DIR        = $(PERFDB_HOME)/classes
 MAKE_DIR         = $(PERFDB_HOME)/make
 JAR_DIR          = $(PERFDB_HOME)/jars
@@ -146,8 +148,7 @@ buildall : $(PLIST_BUILD)
 
 # Create given jar file by invoking its Makefile 
 %.jar :
-	$(MAKE) -k -f $(patsubst %,$(JAR_DIR)/Makefile.%,$@) $@.JAR
-
+	$(MAKE) -k -f $(JAR_DIR)/Makefile $@.JAR
 
 # Create all jar files 
 jar : $(JARS)

@@ -352,6 +352,28 @@ public class Configure {
     public String getConfigFileName(){
 	return configFileName;}
 
+/* Test that the database exists, and if it doesn't, create it! */
+	public createDB() {
+	    perfdb.ConnectionManager connector;
+		DB db = null;
+		try {
+            connector = new perfdb.ConnectionManager(configFileName);
+            connector.connect();
+            db = connector.getDB();
+			String query = new String ("select * from application;");
+			ResultSet resultSet = db.executeQuery(query);
+			resultSet.close();
+			connector.dbclose();
+        } catch ( Exception e ) {
+		// assume that if we got here, there is no database.
+		// create the database
+		// build the database
+		perfdb.loadxml.Main demo = new perfdb.loadxml.Main(configFileName);
+		demo.getConnector().connect();
+		demo.getConnector().getParentSchema(db_schemafile);
+		demo.getConnector().dbclose();
+        }
+	}
 
     /*** Beginning of main program. ***/
 
@@ -378,6 +400,9 @@ public class Configure {
 				
 	// Write the configuration file to ${PerfDB_Home}/bin/perfdb.cfg
 	config.writeConfigFile();
+
+	// check to see if the database is there...
+	config.createDB();
     }
 }
 
