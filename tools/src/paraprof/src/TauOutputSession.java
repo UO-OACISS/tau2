@@ -18,8 +18,11 @@ import java.io.*;
 import java.util.*;
 import dms.dss.*;
 
-public class TauOutputSession extends DataSession{
+public class TauOutputSession extends ParaProfDataSession{
 
+    public TauOutputSession(){
+	super();
+    }
 
     /**
      * Terminate the DataSession object.
@@ -262,317 +265,18 @@ public class TauOutputSession extends DataSession{
 	}
     }
     
-    public NCT getNCT(){
-	return nct;}
-
-    public Vector getMetrics(){
-	return metrics;}
-
-    public GlobalMapping getGlobalMapping(){
-	return globalMapping;}
-
-    public Vector getMaxMeanExclusiveList(){
-	return maxMeanExclusiveValueList;}
-
-    public Vector getMaxMeanInclusiveList(){
-	return maxMeanInclusiveValueList;}
-
-    public Vector getMaxMeanInclusivePercentList(){
-	return maxMeanInclusivePercentValueList;}
-
-    public Vector getMaxMeanExclusivePercentList(){
-	return maxMeanExclusivePercentValueList;}
-  
-    public Vector getMaxMeanUserSecPerCallList(){
-	return maxMeanUserSecPerCallList;}
-
-    public double getMaxMeanExclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanExclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanInclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanInclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanInclusivePercentValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanInclusivePercentValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanExclusivePercentValue(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanExclusivePercentValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public double getMaxMeanNumberOfCalls(){
-	return maxMeanNumberOfCalls;}
-  
-    public double getMaxMeanNumberOfSubRoutines(){
-	return maxMeanNumberOfSubRoutines;}
-  
-    public double getMaxMeanUserSecPerCall(int dataValueLocation){
-	Double tmpDouble = (Double) maxMeanUserSecPerCallList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-
-    public int getNumberOfMappings(){
-	return numberOfMappings;}
-
-    public int getNumberOfUserEvents(){
-	return numberOfUserEvents;}
-    
-    public boolean groupNamesPresent(){
-	return groupNamesPresent;}
-
-    public boolean userEventsPresent(){
-	return userEventsPresent;}
-  
-    public boolean callPathDataPresent(){
-	return callPathDataPresent;}
-    
     //####################################
     //Private Section.
     //####################################
 
     //######
-    //Pprof.dat string processing methods.
-    //######
-    private boolean noue(String s){
-	int stringPosition = 0;
-	char tmpChar = s.charAt(stringPosition);
-	while(tmpChar!='\u0020'){
-	    stringPosition++;
-	    tmpChar = s.charAt(stringPosition);
-	}
-	stringPosition++;
-	tmpChar = s.charAt(stringPosition);
-	if(tmpChar=='u')
-	    return true;
-	else
-	    return false;
-    }
-
-    private boolean checkForExcInc(String inString, boolean exclusive, boolean checkString){
-	boolean result = false;
-    
-	try{
-	    //In this function I need to be careful.  If the mapping name contains "excl", I
-	    //might interpret this line as being the exclusive line when in fact it is not.
-      
-	    if(checkString){
-		StringTokenizer checkTokenizer = new StringTokenizer(inString," ");
-		String tmpString2 = checkTokenizer.nextToken();
-		if((tmpString2.indexOf(",")) == -1)
-		    return result;
-	    }
-      
-	    //Now, we want to grab the substring that occurs AFTER the SECOND '"'.
-	    //At present, pprof does not seem to allow an '"' in the mapping name.  So
-	    //, I can be assured that I will not find more than two before the "excl" or "incl".
-	    StringTokenizer checkQuotesTokenizer = new StringTokenizer(inString,"\"");
-      
-	    //Need to get the third token.  Could do it in a loop, just as quick this way.
-	    String tmpString = checkQuotesTokenizer.nextToken();
-	    tmpString = checkQuotesTokenizer.nextToken();
-	    tmpString = checkQuotesTokenizer.nextToken();
-      
-	    //Ok, now, the string in tmpString should include at least "excl" or "incl", and
-	    //also, the first token should be either "excl" or "incl".
-	    StringTokenizer checkForExclusiveTokenizer = new StringTokenizer(tmpString, " \t\n\r");
-	    tmpString = checkForExclusiveTokenizer.nextToken();
-      
-	    //At last, do the check.  
-	    if(exclusive){
-		if(tmpString.equals("excl"))
-		    result = true;
-	    }
-	    else{
-		if(tmpString.equals("incl"))
-		    result = true;
-	    }
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD04");}
-	return result;
-    }
-
-    private void getFunctionDataLine1(String string){
-	try{
-	    StringTokenizer st1 = new StringTokenizer(string, "\"");
-	    st1.nextToken();
-	    functionDataLine1.s0 = st1.nextToken(); //Name
-	    
-	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
-	    st2.nextToken();
-	    functionDataLine1.d0 = Double.parseDouble(st2.nextToken()); //Value
-	    functionDataLine1.d1 = Double.parseDouble(st2.nextToken()); //Percent value
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD08");
-	}
-    }
-
-    private void getFunctionDataLine2(String string){ 
-	try{
-	    StringTokenizer getMappingIDTokenizer = new StringTokenizer(string, " \t\n\r");
-	    getMappingIDTokenizer.nextToken();
-	    getMappingIDTokenizer.nextToken();
-	    getMappingIDTokenizer.nextToken();
-	    
-	    functionDataLine2.i0 = (int) Double.parseDouble(getMappingIDTokenizer.nextToken()); //Number of calls
-	    functionDataLine2.i1 = (int) Double.parseDouble(getMappingIDTokenizer.nextToken()); //Number of subroutines
-	    functionDataLine2.d0 = Double.parseDouble(getMappingIDTokenizer.nextToken()); //User seconds per call
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD10");
-	}
-    }
-
-    private void getUserEventData(String string){
-	try{
-	    StringTokenizer st1 = new StringTokenizer(string, "\"");
-	    st1.nextToken();
-	    usereventDataLine.s0 = st1.nextToken();
-
-	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
-	    usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number of calls.
-	    usereventDataLine.d0 = Double.parseDouble(st2.nextToken()); //Max
-	    usereventDataLine.d1 = Double.parseDouble(st2.nextToken()); //Min
-	    usereventDataLine.d2 = Double.parseDouble(st2.nextToken()); //Mean
-	    usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation.
-	}
-	catch(Exception e){
-	    System.out.println("An error occured!");
-	    e.printStackTrace();
-	}
-    }
-
-    private String getGroupNames(String string){
-	try{  
-	    StringTokenizer getMappingNameTokenizer = new StringTokenizer(string, "\"");
- 	    getMappingNameTokenizer.nextToken();
-	    getMappingNameTokenizer.nextToken();
-	    String str = getMappingNameTokenizer.nextToken();
-        
-	    //Just do the group check once.
-	    if(!groupNamesCheck){
-		//If present, "GROUP=" will be in this token.
-		int tmpInt = str.indexOf("GROUP=");
-		if(tmpInt > 0){
-		    groupNamesPresent = true;
-		}
-		groupNamesCheck = true;
-	    }
-	    
-	    if(groupNamesPresent){
-		 str = getMappingNameTokenizer.nextToken();
-		    return str;
-	    }
-	    //If here, this profile file does not track the group names.
-	    return null;
-	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD12");
-	}
-	return null;
-    }
-  
-    private int getNumberOfUserEvents(String string){
-	try{
-	    StringTokenizer st = new StringTokenizer(string, " \t\n\r");
-	    return Integer.parseInt(st.nextToken());
-  	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD16");
-	}
-	return -1;
-    }
-
-    private int[] getNCT(String string){
-	int[] nct = new int[3];
-	StringTokenizer st = new StringTokenizer(string, " ,\t\n\r");
-	nct[0] = Integer.parseInt(st.nextToken());
-	nct[1] = Integer.parseInt(st.nextToken());
-	nct[2] = Integer.parseInt(st.nextToken());
-	return nct;
-    }
-  
-    private String getCounterName(String inString){
-	try{
-	    String tmpString = null;
-	    int tmpInt = inString.indexOf("_MULTI_");
-      
-	    if(tmpInt > 0){
-		//We are reading data from a multiple counter run.
-		//Grab the counter name.
-		tmpString = inString.substring(tmpInt+7);
-		return tmpString;
-	    }
-      	    //We are not reading data from a multiple counter run.
-	    return tmpString; 
-      	}
-	catch(Exception e){
-	    ParaProf.systemError(e, null, "SSD26");
-	}
-    
-	return null;
-    }
-    //######
-    //End - Pprof.dat string processing methods.
+    //profile.*.*.* string processing methods.
     //######
 
-    private void increaseVectorStorage(){
-	maxMeanInclusiveValueList.add(new Double(0));
-	maxMeanExclusiveValueList.add(new Double(0));
-	maxMeanInclusivePercentValueList.add(new Double(0));
-	maxMeanExclusivePercentValueList.add(new Double(0));
-	maxMeanUserSecPerCallList.add(new Double(0));
-    }
+    //######
+    //End - profile.*.*.* string processing methods.
+    //######
 
-    private Metric addMetric(){
-	Metric newMetric = new Metric();
-	newMetric.setID((metrics.size()));
-	metrics.add(newMetric);
-	return newMetric;
-    }
-
-    private void setMaxMeanInclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    private void setMaxMeanExclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    private void setMaxMeanInclusivePercentValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusivePercentValueList.add(dataValueLocation, tmpDouble);}
-  
-    private void setMaxMeanExclusivePercentValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusivePercentValueList.add(dataValueLocation, tmpDouble);}
-
-    private void setMaxMeanNumberOfCalls(double inDouble){
-	maxMeanNumberOfCalls = inDouble;}
-  
-    private void setMaxMeanNumberOfSubRoutines(double inDouble){
-	maxMeanNumberOfSubRoutines = inDouble;}
-
-    private void setMaxMeanUserSecPerCall(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	maxMeanUserSecPerCallList.add(dataValueLocation, tmpDouble);}
-  
-    private void setNumberOfMappings(int numberOfMappings){
-	this.numberOfMappings = numberOfMappings;}
-
-    private void setNumberOfUserEvents(int numberOfUserEvents){
-	this.numberOfUserEvents = numberOfUserEvents;}
-
-    private void setGroupNamesPresent(boolean groupNamesPresent){
-	this.groupNamesPresent = groupNamesPresent;}
-  
-    private void setUserEventsPresent(boolean userEventsPresent){
-	this.userEventsPresent = userEventsPresent;}
-
-    private void setCallPathDataPresent(boolean callPathDataPresent){
-	this.callPathDataPresent = callPathDataPresent;}
     //####################################
     //End - Private Section.
     //####################################
@@ -580,32 +284,7 @@ public class TauOutputSession extends DataSession{
     //####################################
     //Instance data.
     //####################################
-    private boolean firstRead = true;
-    private boolean groupNamesCheck = false;
-    private LineData functionDataLine1 = new LineData();
-    private LineData functionDataLine2 = new LineData();
-    private LineData  usereventDataLine = new LineData();
-    
-    private int numberOfMappings = 0;
-    private int numberOfUserEvents = 0;
-    private int totalNumberOfContexts = -1;
-    private int totalNumberOfThreads = -1;
-    private boolean groupNamesPresent = false;
-    private boolean userEventsPresent = false;
-    private boolean callPathDataPresent = false;
 
-    private GlobalMapping globalMapping = new GlobalMapping();
-    private NCT nct = new NCT();
-    private Vector metrics = new Vector();
-
-    private Vector maxMeanInclusiveValueList = new Vector();
-    private Vector maxMeanExclusiveValueList = new Vector();
-    private Vector maxMeanInclusivePercentValueList = new Vector();
-    private Vector maxMeanExclusivePercentValueList = new Vector();
-    private double maxMeanNumberOfCalls = 0;
-    private double maxMeanNumberOfSubRoutines = 0;
-    private Vector maxMeanUserSecPerCallList = new Vector();
-    
     //####################################
     //End - Instance data.
     //####################################

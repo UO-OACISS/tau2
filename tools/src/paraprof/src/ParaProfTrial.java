@@ -29,7 +29,21 @@ public class ParaProfTrial extends Trial{
     }
 
     public void initialize(Object obj){
-	dataSession = new TauPprofOutputSession();
+	switch(type){
+	case 0:
+	    dataSession = new TauPprofOutputSession();
+	    break;
+	case 1:
+	    dataSession = new TauOutputSession();
+	    break;
+	case 2:
+	    break;
+	case 3:
+	    break;
+	default:
+	    break;
+	}
+
 	dataSession.initialize(obj);
 
 	//Now grab all the data.
@@ -336,8 +350,7 @@ public class ParaProfTrial extends Trial{
     //Instance data.
     //####################################
     int type = -1;
-    //TauOutputSession 
-    TauPprofOutputSession dataSession = null;
+    ParaProfDataSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     private Vector metrics = null;
