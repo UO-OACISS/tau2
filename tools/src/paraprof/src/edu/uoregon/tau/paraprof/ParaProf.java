@@ -45,7 +45,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     //######
     //Command line options related.
     //######
-    public static String USAGE = "USAGE: paraprof [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-p,--filenameprefix} filenameprefix] [{-i --fixnames}] [{-d,--debug} debug]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, gprof, psrun, sddf (svpablo)\n";
+    public static String USAGE = "USAGE: paraprof [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-p,--filenameprefix} filenameprefix] [{-i --fixnames}] [{-d,--debug} debug]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, mpip, hpm, gprof, psrun, sddf (svpablo)\n";
     private static int fileType = -1; //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun 
     private static boolean dump = false;
     private static int dumptype = -1;
@@ -174,43 +174,126 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    //######
 	    //End - Static Initialization
 	    //######
-
+	    System.out.println("fileType:"+fileType );
 	    if(fileType!=-1){
 		switch(fileType){
-		case 0:
-		    dataSession = new TauPprofOutputSession();
-		    if(filePrefix==null)
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "pprof", UtilFncs.debug);
-		    else
+		    case 0:
+			dataSession = new TauPprofOutputSession();
+			if(sourceFile==null){
+			    if(filePrefix==null)
+				v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "pprof", UtilFncs.debug);
+			    else
+				v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
+			}
+			else{
+			    v = new Vector();
+			    File file = new File(sourceFile);
+			    if(file.exists()){
+				File[] files = new File[1];
+				files[0] = file;
+				v.add(files);
+				fl.setFileList(v);
+				fl.setPath(file.getPath());
+			    }
+			}
+			break;
+		    case 1:
+			dataSession = new TauOutputSession();
+			if(sourceFile==null){
+			    if(filePrefix==null)
+				v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", UtilFncs.debug);
+			    else
+				v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
+			}
+			else{
+			    v = new Vector();
+			    File file = new File(sourceFile);
+			    if(file.exists()){
+				File[] files = new File[1];
+				files[0] = file;
+				v.add(files);
+				fl.setFileList(v);
+				fl.setPath(file.getPath());
+			    }
+			}
+			break;
+		    case 2:
+			dataSession = new DynaprofOutputSession();
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
-		    break;
-		case 1:
-		    dataSession = new TauOutputSession();
-		    if(filePrefix==null)
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", UtilFncs.debug);
-		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
-		    break;
-		case 2:
-		    dataSession = new DynaprofOutputSession();
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
-		    break;
-		case 5:
-		    System.out.println("case 5");
-		    dataSession = new GprofOutputSession(fixNames);
-		    if(filePrefix==null){
-			System.out.println("1- About to call FileList.getFileList(...)!");
-			System.out.println("1-sourceFile: "+sourceFile);
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, UtilFncs.debug);}
-		    else{
-			System.out.println("2 - About to call FileList.getFileList(...)!");
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, sourceFile, UtilFncs.debug);}
-		    break;
-		default:
-		    v = new Vector();
-		    System.out.println("Unrecognized file type.");
-		    System.out.println("Use ParaProf's manager window to load them manually.");
-		    break;
+			break;
+		    case 3:
+			dataSession = new MpiPOutputSession();
+			v = new Vector();
+			if(sourceFile!=null){
+			    File file = new File(sourceFile);
+			    if(file.exists()){
+				File[] files = new File[1];
+				files[0] = file;
+				v.add(files);
+				fl.setFileList(v);
+				fl.setPath(file.getPath());
+			    }
+			}
+			break;
+		    case 4:
+			dataSession = new HPMToolkitDataSession();
+			v = new Vector();
+			if(sourceFile==null){
+			    if(filePrefix!=null)
+				v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
+			}
+			else{
+			    File file = new File(sourceFile);
+			    if(file.exists()){
+				File[] files = new File[1];
+				files[0] = file;
+				v.add(files);
+				fl.setFileList(v);
+				fl.setPath(file.getPath());
+			    }
+			}
+			break;
+		    case 5:
+			dataSession = new GprofOutputSession(fixNames);
+			v = new Vector();
+			if(sourceFile==null){
+			    if(filePrefix!=null)
+				v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
+			}
+			else{
+			    File file = new File(sourceFile);
+			    if(file.exists()){
+				File[] files = new File[1];
+				files[0] = file;
+				v.add(files);
+				fl.setFileList(v);
+				fl.setPath(file.getPath());
+			    }
+			}
+			break;
+		    case 6:
+			dataSession = new PSRunDataSession();
+			v = new Vector();
+			if(sourceFile==null){
+			    if(filePrefix!=null)
+				v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, filePrefix, UtilFncs.debug);
+			}
+			else{
+			    File file = new File(sourceFile);
+			    if(file.exists()){
+				File[] files = new File[1];
+				files[0] = file;
+				v.add(files);
+				fl.setFileList(v);
+				fl.setPath(file.getPath());
+			    }
+			}
+			break;
+		    default:
+			v = new Vector();
+			System.out.println("Unrecognized file type.");
+			System.out.println("Use ParaProf's manager window to load them manually.");
+			break;
 		}
 		if(v.size()>0){
 		    trial = new ParaProfTrial(fileType);
@@ -232,10 +315,23 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		}
 	    }
 	    else{
-		if(filePrefix==null)
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", UtilFncs.debug);
-		else
-		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, UtilFncs.debug);
+		if(sourceFile==null){
+		    if(filePrefix==null)
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", UtilFncs.debug);
+		    else
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, UtilFncs.debug);
+		}
+		else{
+		    v = new Vector();
+		    File file = new File(sourceFile);
+		    if(file.exists()){
+			File[] files = new File[1];
+			files[0] = file;
+			v.add(files);
+			fl.setFileList(v);
+			fl.setPath(file.getPath());
+		    }
+		}
 		if(v.size()>0){
 		    dataSession = new TauPprofOutputSession();
 		    trial = new ParaProfTrial(0);
@@ -253,10 +349,23 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		}
 		else{
 		    //Try finding profile.*.*.* files.
-		    if(filePrefix==null) 
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", UtilFncs.debug);
-		    else
-			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, UtilFncs.debug);
+		    if(sourceFile==null){
+			if(filePrefix==null)
+			    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", UtilFncs.debug);
+			else
+			    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, UtilFncs.debug);
+		    }
+		    else{
+			v = new Vector();
+			File file = new File(sourceFile);
+			if(file.exists()){
+			    File[] files = new File[1];
+			    files[0] = file;
+			    v.add(files);
+			    fl.setFileList(v);
+			    fl.setPath(file.getPath());
+			}
+		    }
 		    if(v.size()>0){
 			dataSession = new TauOutputSession();
 			trial = new ParaProfTrial(1);
@@ -422,7 +531,7 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	CmdLineParser.Option debugOpt = parser.addBooleanOption('d', "debug");
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
         CmdLineParser.Option sourcefileOpt = parser.addStringOption('s', "sourcefile");
-	CmdLineParser.Option prefixOpt = parser.addStringOption('p', "prefix");
+	CmdLineParser.Option prefixOpt = parser.addStringOption('p', "--filenameprefix");
 	CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
 	CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
 	try {
@@ -442,7 +551,6 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	Boolean fixNames = (Boolean)parser.getOptionValue(fixOpt);
 	
 	if(help!=null && help.booleanValue()){
-	    System.out.println("In help!");
 	    System.err.println(ParaProf.USAGE);
 	    exitParaProf(-1);
     	}
@@ -453,10 +561,6 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	if(debug!=null){
 	    UtilFncs.debug = debug.booleanValue();
 	    UtilFncs.objectDebug.debug = debug.booleanValue();
-	}
-
-	if (sourceFile!=null) {
-	    System.out.println("Source file: "+sourceFile);
 	}
 
 	if(fileTypeString != null){
@@ -487,6 +591,17 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    	System.err.println(USAGE);
 	    	exitParaProf(-1);
 	    }
+	}
+
+	if(((sourceFile!=null)||(filePrefix!=null))&&(fileType==-1)){
+	    System.out.println("Error: If you specify either a source file or a prefix, you must specify a file type as well!");
+	    System.err.println(USAGE);
+	    exitParaProf(-1);
+	}
+	if((fileType==2||fileType==3)&&sourceFile==null){
+	    System.out.println("Error: If you specify either dynaprof or mpip, you must specify a source file as well!");
+	    System.err.println(USAGE);
+	    exitParaProf(-1);
 	}
 	//######
 	//End - Process command line arguments.
