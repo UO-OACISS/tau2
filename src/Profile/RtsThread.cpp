@@ -69,11 +69,8 @@ int RtsLayer::myThread(void)
 #elif  TULIPTHREADS
   return TulipThreadLayer::GetThreadId();
 #elif JAVA
-  // Java should not call this routine. tids should be in TauJava.cpp layer
-  // only in Java 
-  //cout <<"ERROR : Java shouldn't call RtsLayer::myThread() returns -1 \n";
-  //return -1;
-  return 0; // Be forgiving. This way a C++ app can use the .so as well.
+  return JavaThreadLayer::GetThreadId(); 
+	// C++ app shouldn't use this unless there's a VM
 #else  // if no other thread package is available 
   return 0;
 #endif // PTHREADS
@@ -93,6 +90,7 @@ void RtsLayer::RegisterThread()
 #elif  TULIPTHREADS
   TulipThreadLayer::RegisterThread();
 #endif // PTHREADS
+// Note: Java thread registration is done at the VM layer in TauJava.cpp
   return;
 }
 
@@ -108,6 +106,8 @@ void RtsLayer::LockDB(void)
   WindowsThreadLayer::LockDB();
 #elif  TULIPTHREADS
   TulipThreadLayer::LockDB();
+#elif  JAVA
+  JavaThreadLayer::LockDB();
 #endif // PTHREADS
   return ; // do nothing if threads are not used
 }
@@ -124,6 +124,8 @@ void RtsLayer::UnLockDB(void)
   WindowsThreadLayer::UnLockDB();
 #elif  TULIPTHREADS
   TulipThreadLayer::UnLockDB();
+#elif JAVA
+  JavaThreadLayer::UnLockDB();
 #endif // PTHREADS
   return;
 }
@@ -131,9 +133,9 @@ void RtsLayer::UnLockDB(void)
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: bertie $
- * $Revision: 1.8 $   $Date: 1999/10/27 21:16:38 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.8 1999/10/27 21:16:38 bertie Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
+ * $Revision: 1.9 $   $Date: 2000/03/20 20:03:09 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.9 2000/03/20 20:03:09 sameer Exp $
  ***************************************************************************/
 
 
