@@ -66,6 +66,9 @@ TAU_PREFIX_INSTALL_DIR=
 #GNU#IBM_ABI	     	     = $(IBM_GNU_ABI) 	  #ENDIF#
 #SP1# ABI		     = $(IBM_ABI)	  #ENDIF#
 #######################################################################
+F90_ABI	= $(ABI) 
+#IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
+#######################################################################
 
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
@@ -128,22 +131,22 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #HITACHI_OPENMP#TAU_F90_OPT =               #ENDIF#
 
 ############# Fortran Compiler #############
-#GNU_FORTRAN#TAU_F90         = g77      $(ABI) $(TAU_F90_OPT)    #ENDIF#
-#SGI_FORTRAN#TAU_F90         = f90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#IBM_FORTRAN#TAU_F90         = xlf90    $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#IBM64_FORTRAN#TAU_F90       = xlf90    $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#CRAY_FORTRAN#TAU_F90        = f90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#PGI_FORTRAN#TAU_F90         = pgf90    $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#ABSOFT_FORTRAN#TAU_F90      = f90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#FUJITSU_FORTRAN#TAU_F90     = F90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#SUN_FORTRAN#TAU_F90         = f90      $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#COMPAQ_FORTRAN#TAU_F90      = f90      $(ABI)  $(TAU_F90_OPT)  #ENDIF#
-#KAI_FORTRAN#TAU_F90         = guidef90 $(ABI) $(TAU_F90_OPT)   #ENDIF#
-#HP_FORTRAN#TAU_F90          = f90 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
-#HITACHI_FORTRAN#TAU_F90     = f90 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
-#INTEL_FORTRAN#TAU_F90       = efc 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
-#INTEL32_FORTRAN#TAU_F90     = ifc 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
-#NEC_FORTRAN#TAU_F90         = f90 	$(ABI) $(TAU_F90_OPT)   #ENDIF#
+#GNU_FORTRAN#TAU_F90         = g77      $(F90_ABI) $(TAU_F90_OPT)    #ENDIF#
+#SGI_FORTRAN#TAU_F90         = f90      $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#IBM_FORTRAN#TAU_F90         = xlf90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#IBM64_FORTRAN#TAU_F90       = xlf90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#CRAY_FORTRAN#TAU_F90        = f90      $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#PGI_FORTRAN#TAU_F90         = pgf90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#ABSOFT_FORTRAN#TAU_F90      = f90      $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#FUJITSU_FORTRAN#TAU_F90     = F90      $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#SUN_FORTRAN#TAU_F90         = f90      $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#COMPAQ_FORTRAN#TAU_F90      = f90      $(F90_ABI)  $(TAU_F90_OPT)  #ENDIF#
+#KAI_FORTRAN#TAU_F90         = guidef90 $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#HP_FORTRAN#TAU_F90          = f90 	$(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#HITACHI_FORTRAN#TAU_F90     = f90 	$(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#INTEL_FORTRAN#TAU_F90       = efc 	$(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#INTEL32_FORTRAN#TAU_F90     = ifc 	$(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#NEC_FORTRAN#TAU_F90         = f90 	$(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 
 ############# Portable F90 Options #############
 #IBM64_FORTRAN#TAU_F90_FIXED      = -qfixed  #ENDIF#
@@ -259,8 +262,15 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
 #GNU_FORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
 #SGI_FORTRAN#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
-#IBM_FORTRAN#TAU_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
-#IBM64_FORTRAN#TAU_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
+#USE_IBMXLC#TAU_IBM_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
+#GNU#TAU_IBM_FORTRANLIBS	       =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
+#KAI#TAU_IBM_FORTRANLIBS	       =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
+#IBM_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM_FORTRANLIBS) #ENDIF#
+
+#USE_IBMXLC#TAU_IBM64_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
+#GNU#TAU_IBM64_FORTRANLIBS      =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 -Wl,-b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
+#KAI#TAU_IBM64_FORTRANLIBS      =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 --backend -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
+#IBM64_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM64_FORTRANLIBS) #ENDIF#
 
 #CRAY_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902 -lpgftnrtl #ENDIF#
