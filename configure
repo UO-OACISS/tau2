@@ -1087,13 +1087,13 @@ if [ $tulipthread = yes ]
   then
     fixmakeargs="$fixmakeargs TULIPTHREADS tulipdir=$tulipdir"
     echo "$machine: TULIPDIR = $tulipdir" >> ./build/Config.info
-    tauoptions="${tauoptions}-tulip"
-fi
-
-if [ $smarts = yes ]
+  if [ $smarts = yes ]
   then
     fixmakeargs="$fixmakeargs SMARTS"
     tauoptions="${tauoptions}-smarts"
+  fi
+  else
+    tauoptions="${tauoptions}-tulip"
 fi
 
 if [ $trace = yes ]
