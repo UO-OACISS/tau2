@@ -3801,7 +3801,7 @@ fi
 
 # Modify the Makefiles so include/Makefile is replaced by the TAU options 
 # for specific examples
-echo "s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/$machine/lib/Makefile.tau$tauoptions@g" > utils/sedexamples.out
+echo "s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/$architecture/lib/Makefile.tau$tauoptions@g" > utils/sedexamples.out
 #echo "s@include/Makefile@$machine/lib/Makefile.tau$tauoptions@g" >utils/sedexamples.out
 sedex="./utils/sedexamples.out"
 
