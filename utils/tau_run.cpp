@@ -33,6 +33,7 @@
 int debugPrint = 0;
 
 template class BPatch_Vector<BPatch_variableExpr*>;
+void checkCost(BPatch_snippet snippet);
 
 BPatch *bpatch;
 
@@ -116,8 +117,63 @@ void Initialize(BPatch_thread *appThread, BPatch_image *appImage,
   }
 
   BPatch_funcCallExpr call_Expr(*call_func, initArgs);
+  // checkCost(call_Expr);
   appThread->oneTimeCode(call_Expr);
 }
+
+// FROM TEST3
+
+// check that the cost of a snippet is sane.  Due to differences between
+//   platforms, it is impossible to check this exactly in a machine independent
+//   manner.
+void checkCost(BPatch_snippet snippet)
+{
+    float cost;
+    BPatch_snippet copy;
+
+    // test copy constructor too.
+    copy = snippet;
+
+    cost = snippet.getCost();
+    if (cost < 0.0) {
+        printf("*Error*: negative snippet cost\n");
+    } else if (cost == 0.0) {
+        printf("*Warning*: zero snippet cost\n");
+    } else if (cost > 0.01) {
+        printf("*Error*: snippet cost of %f, exceeds max expected of 0.1",
+            cost);
+    }
+
+}
+
+int errorPrint = 0; // external "dyninst" tracing
+void errorFunc1(BPatchErrorLevel level, int num, const char **params)
+{
+    if (num == 0) {
+        // conditional reporting of warnings and informational messages
+        if (errorPrint) {
+            if (level == BPatchInfo)
+              { if (errorPrint > 1) printf("%s\n", params[0]); }
+            else
+                printf("%s", params[0]);
+        }
+    } else {
+        // reporting of actual errors
+        char line[256];
+        const char *msg = bpatch->getEnglishErrorString(num);
+        bpatch->formatErrorString(line, sizeof(line), msg, params);
+        
+        if (num != expectError) {
+            printf("Error #%d (level %d): %s\n", num, level, line);
+        
+            // We consider some errors fatal.
+            if (num == 101) {
+               exit(-1);
+            }
+        }
+    }
+}
+// END OF TEST3 code
  
 //
 // entry point 
@@ -152,9 +208,17 @@ int main(int argc, char **argv)
 
 
   // Register a callback function that prints any error messages
-  bpatch->registerErrorCallback(errorFunc);
+  bpatch->registerErrorCallback(errorFunc1);
 
+  dprintf("Before createProcess\n");
+  bpatch->setDebugParsing(false);
   appThread = bpatch->createProcess(argv[1], &argv[1] , NULL);
+  dprintf("After createProcess\n");
+  if (!appThread)
+  { 
+    dprintf("tau_run> createProcess failed\n");
+    exit(1);
+  }
   BPatch_image *appImage = appThread->getImage();
 
   if (appThread == NULL)
@@ -201,6 +265,9 @@ int main(int argc, char **argv)
   for (j=0; j < m->size(); j++) {
     sprintf(modulename, "Module %s\n", (*m)[j]->getName(buf, 1024));
     BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
+    dprintf("%s", modulename);
+
+
 
     if ((strcmp(buf, "DEFAULT_MODULE") == 0) || 
 	(strcmp(buf, "LIBRARY_MODULE") == 0) )
@@ -233,10 +300,8 @@ int main(int argc, char **argv)
           // callee_args->push_back(constName);
     
           inFunc = (*p)[i];
-          invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_entry, enter, 
-    	callee_args);
-          invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_exit, exit, 
-    	callee_args);
+          invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_entry, enter, callee_args);
+          invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_exit, exit, callee_args);
           // clean up the expression and the args
           
     
@@ -244,7 +309,6 @@ int main(int argc, char **argv)
           delete constExpr;
         } // routines that are ok to instrument
       } // for procedures 
-
 
     } // module constraint
 
@@ -255,8 +319,19 @@ int main(int argc, char **argv)
   BPatch_constExpr funcName(functions);
   initArgs.push_back(&funcName);
 
+
   Initialize(appThread, appImage, initArgs);
+  dprintf("After Initialize\n");
   appThread->continueExecution();
+  while (!appThread->isTerminated())
+        bpatch->waitForStatusChange();
+
+    if (appThread->isTerminated()) {
+        dprintf("End of application\n");
+    }
+
+
+
 
   return 0;
 }
