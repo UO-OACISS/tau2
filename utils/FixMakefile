@@ -112,6 +112,11 @@ fi
 	echo "s,^PDTDIR=.*$,PDTDIR=$pdtdir,g" >> $sedout
 	;;
 
+     pdtcxx=*)
+        pdtcxx=`echo $1 | sed -e 's/^pdtcxx=//'`
+	echo "s,^PDT_CXX=.*$,PDT_CXX=$pdtcxx,g" >> $sedout
+	;;
+
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
@@ -325,6 +330,10 @@ fi
 	;;
      PDTSGICC)
 	echo NOTE: Using -LANG:std option for tau_instrumentor
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PDTCXX)
+	echo NOTE: Using a different compiler for tau_instrumentor
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      ENABLE32BIT)

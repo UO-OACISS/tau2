@@ -55,6 +55,8 @@ Usage: configure [OPTIONS]
        options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++].
 -cc=<compiler> ................................ specify the C compiler.
                                   options [cc|gcc|KCC|pgcc|guidec|xlc].
+-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
+           options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++].
 -fortran=<compiler> ..................... specify the Fortran compiler.
  options [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|kai].
 -useropt='<parameters>' ............... list of commandline parameters.
@@ -64,6 +66,8 @@ Usage: configure [OPTIONS]
 -smarts .................. Use SMARTS API for threads (use with above).
 -openmp ........................................... Use OpenMP threads.
 -opari=<dir>... Specify location of Opari OpenMP tool (use with above).
+-opari_region ......... Report performance data for all OpenMP regions.
+-opari_construct ... Report performance data for all OpenMP constructs.
 -pcl=<dir> ..... Specify location of PCL (Performance Counter Library).
 -papi=<dir> ............... Specify location of PAPI (Performance API).
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
@@ -85,7 +89,6 @@ Usage: configure [OPTIONS]
 -PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation.
 -noex .................. Use no exceptions while compiling the library.
 -help ...................................... display this help message.
-
 ***********************************************************************
 
 The following  command-line options are available to configure:
@@ -116,6 +119,13 @@ The following  command-line options are available to configure:
    Specifies the name of the C compiler. Supported C compilers include cc, 
    gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu), xlc (from IBM), and 
    KCC (from KAI/Intel).
+
+-pdt_c++=<C++ Compiler> 
+   Specifies a different C++ compiler for PDT (tau_instrumentor). This is 
+   typically used when the library is compiled with a C++ compiler 
+   (specified with -c++) and the tau_instrumentor is compiled with a different 
+   <pdt_c++> compiler. For e.g., -c++=pgCC -cc=pgcc -pdt_c++=KCC -openmp ... 
+   uses PGI's OpenMP compilers for TAU's library and KCC for tau_instrumentor.
    
 -fortran=<Fortran Compiler>
    
@@ -146,9 +156,17 @@ The following  command-line options are available to configure:
 -opari=<dir>
    Specifies the location of the Opari OpenMP directive rewriting tool. 
    The use of Opari source-to-source instrumentor in conjunction with
-   TAU exposes OpenMP events for instrumentation. 
+   TAU exposes OpenMP events for instrumentation. See examples/opari directory.
    [ Ref: http://www.fz-juelich.de/zam/kojak/opari/ ]
    
+-opari_region 
+   Report performance data for only OpenMP regions and not constructs. 
+   By default, both regions and constructs are profiled with Opari.
+
+-opari_construct 
+   Report performance data for only OpenMP constructs and not regions.
+   By default, both regions and constructs are profiled with Opari.
+
 -pdt=<directory>
    
    Specifies the location of the installed PDT (Program Database Toolkit) root 

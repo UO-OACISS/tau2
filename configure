@@ -112,6 +112,7 @@ arguments=$*
 # Default compilers and options
 c_compiler=default
 cxx_compiler=default
+pdt_cxx_compiler=default
 fixmakeargs=""
 pcxxopt=-g
 useropt=
@@ -201,6 +202,17 @@ do
       else
       echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC' and 'c++'"
 #      exit 1
+    fi
+    shift
+    ;;
+
+  -pdt_c++=*)
+    myarg=`echo $arg | sed 's/-pdt_c++=//'`
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ ]
+      then
+        pdt_cxx_compiler=$myarg
+      else
+      echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC' and 'c++'"
     fi
     shift
     ;;
@@ -513,6 +525,8 @@ do
     echo "       options [CC|KCC|g++|xlC|cxx|NCC|egcs|pgCC|FCC|guidec++|aCC|c++]."
     echo "-cc=<compiler> ................................ specify the C compiler."
     echo "                                  options [cc|gcc|KCC|pgcc|guidec|xlc]."
+    echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
+    echo "           options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo " options [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|kai]."
     echo "-useropt='<parameters>' ............... list of commandline parameters."
@@ -1726,8 +1740,19 @@ if [ $papi = yes ]
 fi
 
 if [ $pdt = yes ]
+then
+  fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
+  if [ $pdt_cxx_compiler != default ]
   then
-    fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
+    fixmakeargs="$fixmakeargs PDTCXX pdtcxx=$pdt_cxx_compiler"
+    if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
+    then
+      if [ $pdt_cxx_compiler = CC ]
+      then
+        fixmakeargs="$fixmakeargs PDTSGICC"
+      fi
+    fi
+  fi
 fi
 
 if [ $java = yes ]
