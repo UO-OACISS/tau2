@@ -145,6 +145,13 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    FileList fl = new FileList();
 	    Vector v = null;
 
+	    //######
+	    //Static Initilization
+	    //######
+	    ParaProf.helpWindow = new HelpWindow(UtilFncs.debug);
+	    //######
+	    //End - Static Initilization
+	    //######
 
 	    //######
 	    //Static Initilization
