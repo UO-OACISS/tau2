@@ -540,6 +540,16 @@ TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC)
 
 TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB)
 #############################################
+# TAU COMPILER SHELL SCRIPT OPTIONS
+TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
+        -optPdtCOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
+        -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
+        -optTauInstr="$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_instrumentor"
+        -optCompileOpts="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
+        -optLinkingOpts="$(TAU_MPI_LIBS) $(TAU_LIBS) $(TAU_CXXLIBS)"
+#############################################
+TAU_COMPILER=$(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/bin/taucompiler.sh $(TAUCOMPILEROPTS)
+#############################################
 # These options could be included in the application Makefile as 
 #CFLAGS        	= $(TAUDEFS) $(TAUINC)
 #
