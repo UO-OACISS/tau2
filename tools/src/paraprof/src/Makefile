@@ -6,11 +6,14 @@
 
 default: ParaProf.jar
 
-ParaProf.jar:
-	javac *.java
+ParaProf.jar: ../../dms.jar
+	javac -classpath ../../dms/dms.jar *.java
 	mv *.class ./paraprof
 	jar -cmvf manifest.txt ParaProf.jar paraprof
 	mv ParaProf.jar ../bin
+
+../../dms.jar:
+	cd ../../dms/;make;cd ../paraprof/src
 
 clean:
 	rm -f paraprof/*.class

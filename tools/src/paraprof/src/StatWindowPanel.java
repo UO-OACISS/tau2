@@ -34,12 +34,12 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     }
   
   
-    public StatWindowPanel(Trial inTrial, int nodeID, int contextID, int threadID, StatWindow sWindow, int windowType){
+    public StatWindowPanel(ParaProfTrial inParaProfTrial, int nodeID, int contextID, int threadID, StatWindow sWindow, int windowType){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
 
-	    trial = inTrial;
+	    trial = inParaProfTrial;
 	    this.nodeID = nodeID;
 	    this.contextID = contextID;
 	    this.threadID = threadID;
@@ -452,7 +452,7 @@ public class StatWindowPanel extends JPanel implements ActionListener, MouseList
     private int maxFontDescent = 0;
     private int spacing = 0;
   
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;

@@ -23,7 +23,7 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener
   //Instance data.
   //******************************
   
-  private Trial trial = null;
+  private ParaProfTrial trial = null;
   
   
   int xPanelSize = 600;
@@ -38,9 +38,9 @@ public class PrefSpacingPanel extends JPanel implements ChangeListener
   
   Color tmpColor;
   
-  public PrefSpacingPanel(Trial inTrial)
+  public PrefSpacingPanel(ParaProfTrial inParaProfTrial)
   { 
-    trial = inTrial;
+    trial = inParaProfTrial;
     
     setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
     setPreferredSize(new java.awt.Dimension(xPanelSize, yPanelSize));

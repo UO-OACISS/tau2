@@ -28,7 +28,7 @@ import javax.swing.event.*;
 
 public class SMWThreadDataElement implements Comparable{
     //Constructor.
-    public SMWThreadDataElement(Trial trial, int nodeID, int contextID, int threadID, Object obj){ 
+    public SMWThreadDataElement(ParaProfTrial trial, int nodeID, int contextID, int threadID, Object obj){ 
 	
 	this.trial = trial;
 	this.nodeID = nodeID;
@@ -324,7 +324,7 @@ public class SMWThreadDataElement implements Comparable{
     //Instance data.
     //####################################
   
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;

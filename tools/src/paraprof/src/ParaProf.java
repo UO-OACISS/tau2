@@ -17,8 +17,7 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.colorchooser.*;
 
-public class ParaProf implements ActionListener
-{
+public class ParaProf implements ActionListener{
     //**********
     //Some system wide state variables.
     static boolean debugIsOn = false;         //Flip this if debugging output is required.
@@ -79,19 +78,19 @@ public class ParaProf implements ActionListener
 	    File testForPprofDat = new File("pprof.dat");
 	    
 	    boolean foundSomething = false;
-	    Trial trial = null;
+	    ParaProfTrial trial = null;
 	    if(testForPprofDat.exists()){
 		System.out.println("Found pprof.dat!");
 		
 		//setTitle("ParaProf: " + ParaProf.profilePathName);
 		
 		//Create a default application.
-		Application app = ParaProf.applicationManager.addApplication();
-		app.setApplicationName("Default App");
+		ParaProfApplication app = ParaProf.applicationManager.addParaProfApplication();
+		app.setParaProfApplicationName("Default App");
 		
 		//Create a default experiment.
-		Experiment exp = app.addExperiment();
-		exp.setExperimentName("Default Exp");
+		ParaProfExperiment exp = app.addParaProfExperiment();
+		exp.setParaProfExperimentName("Default Exp");
 		
 		//Add the trial for this pprof.dat file to the experiment.
 		String tmpString1 = null;
@@ -100,20 +99,20 @@ public class ParaProf implements ActionListener
 		
 		tmpString1 = testForPprofDat.getCanonicalPath();
 		tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
-		tmpString3 = "Default Trial" + " : " + tmpString2;
+		tmpString3 = "Default ParaProfTrial" + " : " + tmpString2;
 		
-		trial = exp.addTrial();
+		trial = exp.addParaProfTrial();
 		
 		trial.setProfilePathName(tmpString1);
 		trial.setProfilePathName(tmpString2);
-		trial.setTrialName(tmpString3);
+		trial.setParaProfTrialName(tmpString3);
 		
 		trial.buildStaticData(testForPprofDat);
 		foundSomething = true;
 	    }
 	    else{
 		File file = new File(".");
-		Experiment exp = null;
+		ParaProfExperiment exp = null;
 		
 		String filePath = file.getCanonicalPath();
 		File [] list = file.listFiles();
@@ -133,12 +132,12 @@ public class ParaProf implements ActionListener
 				    //setTitle("ParaProf: " + ParaProf.profilePathName);
 				    
 				    //Create a default application.
-				    Application app = ParaProf.applicationManager.addApplication();
-				    app.setApplicationName("Default App");
+				    ParaProfApplication app = ParaProf.applicationManager.addParaProfApplication();
+				    app.setParaProfApplicationName("Default App");
 				    
 				    //Create a default experiment.
-				    exp = app.addExperiment();
-				    exp.setExperimentName("Default Exp");
+				    exp = app.addParaProfExperiment();
+				    exp.setParaProfExperimentName("Default Exp");
 				    
 				    //Add the experiment run for this pprof.dat file to the experiment.
 				    String tmpString1 = null;
@@ -147,13 +146,13 @@ public class ParaProf implements ActionListener
 				    
 				    tmpString1 = filePath;
 				    tmpString2 = ParaProf.applicationManager.getPathReverse(tmpString1);
-				    tmpString3 = "Default Trial" + " : " + tmpString2;
+				    tmpString3 = "Default ParaProfTrial" + " : " + tmpString2;
 				    
-				    trial = exp.addTrial();
+				    trial = exp.addParaProfTrial();
 				    
 				    trial.setProfilePathName(tmpString1);
 				    trial.setProfilePathName(tmpString2);
-				    trial.setTrialName(tmpString3);
+				    trial.setParaProfTrialName(tmpString3);
 				    
 				    trial.buildStaticData(testFile);
 				    
@@ -179,7 +178,7 @@ public class ParaProf implements ActionListener
 		trial.showMainWindow();
 	    
 	    ParaProfManager jRM = new ParaProfManager();
-	    jRM.expandDefaultTrialNode();
+	    jRM.expandDefaultParaProfTrialNode();
 	}
 	catch (Exception e) {
     

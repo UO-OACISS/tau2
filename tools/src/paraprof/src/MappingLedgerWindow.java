@@ -31,7 +31,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
 	}
     }
   
-    public MappingLedgerWindow(Trial trial, int windowType){
+    public MappingLedgerWindow(ParaProfTrial trial, int windowType){
 	try{
 	    
 	    this.trial = trial;
@@ -334,7 +334,7 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Menu
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private int windowType = -1; //0:function, 1:group, 2:userevent.
 
     private JMenu windowsMenu = null;

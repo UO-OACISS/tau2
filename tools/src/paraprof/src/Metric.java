@@ -11,43 +11,48 @@ package paraprof;
 import javax.swing.tree.*;
 
 public class Metric{
-  public Metric(Trial inParentTrial){
-    parentTrial = inParentTrial;}
+    public Metric(){}
     
-  public Trial getParentTrial(){
-    return parentTrial;}
-  
-  public void setDMTN(DefaultMutableTreeNode inNode){
-    nodeRef = inNode;}
-  
-  public DefaultMutableTreeNode getDMTN(){
-    return nodeRef;}
-  
-  public void setMetricName(String inMetricName){
-    metricName = inMetricName;}
-  
-  public String getMetricName(){
-    return metricName;}
-  
-  public void setMetricID(int inMetricID){
-    metricID = inMetricID;
-    //Since the parentTrial is set in the constructor,
-    //it is not null.  Therefore we can safely set the experimentIDString.
-    metricIDString = parentTrial.getTrialIDString() + metricID;
-  }
-  
-  public int getMetricID(){
-    return metricID;}
-  
-  public String getMetricIDString(){
-    return metricIDString;}
+    public void setParentParaProfTrial(ParaProfTrial parentParaProfTrial){
+	this.parentParaProfTrial = parentParaProfTrial;}
+
+    public ParaProfTrial getParentParaProfTrial(){
+	return parentParaProfTrial;}
     
-  public String toString(){
-    return metricIDString + " - " + metricName;}
-  
-  Trial parentTrial = null;
-  DefaultMutableTreeNode nodeRef = null;
-  private String metricName = null;
-  private int metricID = -1;
-  private String metricIDString = null;
+    public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode){
+	this.defaultMutableTreeNode = defaultMutableTreeNode;}
+    
+    public DefaultMutableTreeNode getDMTN(){
+	return defaultMutableTreeNode;}
+    
+    public void setName(String name){
+	this.name = name;}
+    
+    public String getName(){
+	return name;}
+    
+    public void setID(int id){
+	this.id = id;}
+    
+    public int getID(){
+	return id;}
+    
+    public String getIDString(){
+	if(parentParaProfTrial!=null)
+	    return parentParaProfTrial.getParaProfTrialIDString() + id + " - " + name;
+	else
+	    return id + " - " + name;
+    }
+    
+    public String toString(){
+	if(parentParaProfTrial!=null)
+	    return parentParaProfTrial.getParaProfTrialIDString() + id + " - " + name;
+	else
+	    return id + " - " + name;
+    }
+    
+    ParaProfTrial parentParaProfTrial = null;
+    DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private String name = null;
+    private int id = -1;
 }

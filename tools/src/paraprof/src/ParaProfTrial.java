@@ -1,5 +1,5 @@
 /*
-  Trial.java
+  ParaProfTrial.java
   
   
   Title:      ParaProf
@@ -28,92 +28,57 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 
-public class Trial{
-    //Constructor.
-    public Trial(Experiment inParentExp){
-	parentExperiment = inParentExp;
-	globalMapping = new GlobalMapping(this);
-	systemEvents = new SystemEvents();
-	nodes = new Vector();
-	counterName = null;
-	isUserEventHeadingSet = false;
-    }
+public class ParaProfTrial extends Trial{
+    public ParaProfTrial(ParaProfExperiment parentExperiment){
+	
+	this.parentExperiment = parentExperiment;}
   
-    public Experiment getParentExperiment(){
-	return parentExperiment;
-    }
+    public ParaProfExperiment getParentParaProfExperiment(){
+	return parentParaProfExperiment;}
   
-    public void setDMTN(DefaultMutableTreeNode inNode){
-	nodeRef = inNode;
-    }
+    public void setDMTN(DefaultMutableTreeNode defaultMutableTreeNode){
+	this.defaultMutableTreeNode = defaultMutableTreeNode;}
   
     public DefaultMutableTreeNode getDMTN(){
-	return nodeRef;
-    }
+	return defaultMutableTreeNode;}
   
-    public void setTrialName(String inString){
-	trialName = inString;
-    }
+    public String getIDString(){
+	return (parentExperiment.getIDString()) + (super.getID());}
   
-    public String getTrialName(){
-	return trialName;
-    }
-  
-    public void setTrialID(int inTrialID){
-	trialID = inTrialID;
-	//Since the parentApplication is set in the constructor,
-	//it is not null.  Therefore we can safely set the experimentIDString.
-	trialIDString = parentExperiment.getExperimentIDString() + trialID;
-    }
-  
-    public int getTrialID(){
-	return trialID;
-    }
-  
-    public String getTrialIDString(){
-	return trialIDString;
-    }
-  
-    public Value addValue(){
-	Value newValue = new Value(this);
-	newValue.setValueID((values.size()));
-	values.add(newValue);
-	return newValue;
+    public Metric addMetric(){
+	Metric newMetric = new Metric();
+	newMetric.setTrial(this);
+	newMetric.setID((metrics.size()));
+	metrics.add(newMetric);
+	return newMetric;
     }
   
     public ColorChooser getColorChooser(){
-	return clrChooser;
-    }
+	return clrChooser;}
   
     public Preferences getPreferences(){
-	return preferences;
-    }
+	return preferences;}
   
-    public void setProfilePathName(String inString){
-	profilePathName = inString;
-    }
+    public void setProfilePathName(String profilePathName){
+	this.profilePathName = profilePathName;}
   
-    public void setProfilePathNameReverse(String inString){
-	profilePathNameReverse = inString;
-    }
+    public void setProfilePathNameReverse(String profilePathNameReverse){
+	this.profilePathNameReverse = profilePathNameReverse;}
   
     public String getProfilePathName(){
-	return profilePathName;
-    }
+	return profilePathName;}
   
     public String getProfilePathNameReverse(){
-	return profilePathNameReverse;
-    }
+	return profilePathNameReverse;}
   
-    public Vector getValues(){
-	return values;
-    }
+    public Vector getMetrics(){
+	return metrics;}
   
-    public int getValuePosition(String inString){
+    public int getMetricPosition(String string){
 	int counter = 0;
-	for(Enumeration e = values.elements(); e.hasMoreElements() ;){
-	    Value tmpValue = (Value) e.nextElement();
-	    if((tmpValue.getValueName()).equals(inString))
+	for(Enumeration e = metrics.elements(); e.hasMoreElements() ;){
+	    Metric metric = (Metric) e.nextElement();
+	    if((metric.getName()).equals(string))
 		return counter;
 	    counter++;
 	}
@@ -212,8 +177,7 @@ public class Trial{
     //this trial.
     //####################################
     public StaticMainWindow getStaticMainWindow(){
-	return sMW;
-    }
+	return sMW;}
   
     public void showMainWindow(){
   
@@ -240,16 +204,13 @@ public class Trial{
     //####################################
   
     public SystemEvents getSystemEvents(){
-	return systemEvents;
-    }
+	return systemEvents;}
   
     public void setCurValLoc(int inValueLocation){
-	currentValueLocation = inValueLocation;
-    }
+	currentValueLocation = inValueLocation;}
   
     public int getCurValLoc(){
-	return currentValueLocation;
-    }
+	return currentValueLocation;}
   
   
     public void addDefaultToVectors(){
@@ -258,8 +219,6 @@ public class Trial{
 	maxMeanInclusivePercentValueList.add(new Double(0));
 	maxMeanExclusivePercentValueList.add(new Double(0));
 	maxMeanUserSecPerCallList.add(new Double(0));
-	totalMeanInclusiveValueList.add(new Double(0));
-	totalMeanExclusiveValueList.add(new Double(0));
     }
   
     //The following funtion initializes the GlobalMapping object.
@@ -272,14 +231,12 @@ public class Trial{
 	}
     }
   
-    //Rest of the public functions.
     GlobalMapping getGlobalMapping(){
-	return globalMapping;
-    }
+	return globalMapping;}
   
     public String getCounterName(){
-	Value tmpValue = (Value) values.elementAt(currentValueLocation);
-	return tmpValue.getValueName();
+	Metric metric = (Metric) metrics.elementAt(currentValueLocation);
+	return metric.getName();
     }
 
     public boolean isTimeMetric(){
@@ -298,15 +255,36 @@ public class Trial{
     //items that are easier to calculate whilst building the global
     //lists
     //####################################
-    public boolean firstRead(){
-	return firstRead;}
+    private void setNumberOfMappings(int numberOfMappings){
+	this.numberOfMappings = numberOfMappings;}
 
     public int getNumberOfMappings(){
 	return numberOfMappings;}
-  
+
+    private void setNumberOfUserEvents(int numberOfUserEvents){
+	this.numberOfUserEvents = numberOfUserEvents;}
+
     public int getNumberOfUserEvents(){
 	return numberOfUserEvents;}
+
+    private void setGroupNamesPresent(boolean groupNamesPresent){
+	this.groupNamesPresent = groupNamesPresent;}
+    
+    public boolean groupNamesPresent(){
+	return groupNamesPresent;}
   
+    private void setUserEventsPresent(boolean userEventsPresent){
+	this.userEventsPresent = userEventsPresent;}
+  
+    public boolean userEventsPresent(){
+	return userEventsPresent;}
+
+    private void setCallPathDataPresent(boolean callPathDataPresent){
+	this.callPathDataPresent = callPathDataPresent;}
+  
+    public boolean callPathDataPresent(){
+	return callPathDataPresent;}
+
     public void setMaxMeanInclusiveValue(int dataValueLocation, double inDouble){
 	Double tmpDouble = new Double(inDouble);
 	maxMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
@@ -358,87 +336,31 @@ public class Trial{
     public double getMaxMeanUserSecPerCall(int dataValueLocation){
 	Double tmpDouble = (Double) maxMeanUserSecPerCallList.elementAt(dataValueLocation);
 	return tmpDouble.doubleValue();}
-    
-    
-    public void setTotalMeanInclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	totalMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    public double getTotalMeanInclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) totalMeanInclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-  
-    public void setTotalMeanExclusiveValue(int dataValueLocation, double inDouble){
-	Double tmpDouble = new Double(inDouble);
-	totalMeanExclusiveValueList.add(dataValueLocation, tmpDouble);}
-  
-    public double getTotalMeanExclusiveValue(int dataValueLocation){
-	Double tmpDouble = (Double) totalMeanExclusiveValueList.elementAt(dataValueLocation);
-	return tmpDouble.doubleValue();}
-  
-    public boolean groupNamesPresent(){
-	return groupNamesPresent;
-    }
-  
-    private void setUserEventsPresent(boolean inBoolean){
-	userEventsPresent = inBoolean;
-    }
-  
-    public boolean userEventsPresent(){
-	return userEventsPresent;
-    }
-
-    private void setCallPathDataPresent(boolean inBoolean){
-	callPathDataPresent = inBoolean;
-    }
-  
-    public boolean callPathDataPresent(){
-	return callPathDataPresent;
-    }
-    //******************************
+    //####################################
     //End - Useful functions to help the drawing windows.
-    //******************************
+    //####################################
   
-  
-    //******************************
+    //####################################
     //Instance data.
-    //******************************
-    Experiment parentExperiment = null;
-    DefaultMutableTreeNode nodeRef = null;
-    private String trialName = null;
-    private int trialID = -1;
-    private String trialIDString = null;
+    //####################################
+    ParaProfExperiment parentExperiment = null;
+    DefaultMutableTreeNode defaultMutableTreeNode = null;
+    private Vector metrics = new Vector();
   
-    private Vector values = new Vector();
-  
-    private SystemEvents systemEvents = null;
+    private SystemEvents systemEvents = new SystemEvents();
     private StaticMainWindow sMW = null;
     private ColorChooser clrChooser = new ColorChooser(this, null);
     private Preferences  preferences = new  Preferences(this, null);
   
-    //The file that the is currently being worked on by the
-    //running thread.
-    private File currentFile = null;
-  
-    //Flag indicating whether we have already processed a file in
-    //this trial.  This cuts down on repeated work.
-    private boolean firstRead = true;    
-  
     private String profilePathName = null;
     private String profilePathNameReverse = null;
-    //private Vector valueNameList = new Vector(); 
     private int currentValueLocation = 0;
-    private int currentValueWriteLocation = 0;    
   
     private GlobalMapping globalMapping;
-    private Vector nodes;
-    private String counterName;
-    private boolean isUserEventHeadingSet;
-    boolean groupNamesCheck = false;
+    private Vector nodes = new Vector();
     boolean groupNamesPresent = false;
     boolean userEventsPresent = false;
     boolean callPathDataPresent = false;
-    int bSDCounter;
 
     private int numberOfMappings = -1;
     private int numberOfUserEvents = -1;
@@ -454,34 +376,7 @@ public class Trial{
     private double maxMeanNumberOfCalls = 0;
     private double maxMeanNumberOfSubRoutines = 0;
     private Vector maxMeanUserSecPerCallList = new Vector();
-  
-    private Vector totalMeanInclusiveValueList = new Vector();
-    private Vector totalMeanExclusiveValueList = new Vector();
-  
-  
-    //******************************
-    //End - Instance data.
-    //******************************
-
+    //####################################
+    //Instance data.
+    //####################################
 }
-
-class UserEventData{
-    public int node = -1;
-    public int context = -1;
-    public int threadID = -1;
-    public int id = -1;
-    public String name = null;
-    public int noc = -1;
-    public double max = -1.0;
-    public double min = -1.0;
-    public double mean = -1.0;
-    public double std = -1.0;
-}
-
-class UnexpectedStateException extends Exception{
-    public UnexpectedStateException(){}
-    public UnexpectedStateException(String err){
-	super("UnexpectedStateException - message: " + err);
-    }
-}
-

@@ -35,7 +35,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
 	}
     }
   
-    public UserEventWindowPanel(Trial trial, int mappingID, UserEventWindow uEWindow){
+    public UserEventWindowPanel(ParaProfTrial trial, int mappingID, UserEventWindow uEWindow){
 	try{
 
 	    this.trial = trial;
@@ -373,7 +373,7 @@ public class UserEventWindowPanel extends JPanel implements ActionListener, Mous
     private int textOffset = 60;
     private int maxXLength = 0;
     private boolean groupMember = false;
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private MappingDataWindow uEwindow = null;
     private SMWThreadDataElement tmpSMWThreadDataElement = null;
     int xPanelSize = 0;

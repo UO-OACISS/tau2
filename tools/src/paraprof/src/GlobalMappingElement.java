@@ -18,9 +18,7 @@ import java.text.*;
 
 public class GlobalMappingElement implements Serializable, Comparable{
     //Constructors.
-    public GlobalMappingElement(Trial trial){
-	this.trial = trial;
-    }
+    public GlobalMappingElement(){}
     
     public void incrementStorage(){
 	int currentLength = doubleList.length;
@@ -31,21 +29,17 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	doubleList = newArray;
     }
   
-    public void setMappingName(String inMappingName){
-	mappingName = inMappingName;
-    }
+    public void setMappingName(String mappingName){
+	this.mappingName = mappingName;}
   
     public String getMappingName(){
-	return mappingName;
-    }
+	return mappingName;}
   
-    public void setGlobalID(int inGlobalID){
-	globalID = inGlobalID;
-    }
+    public void setGlobalID(int globalID){
+	this.globalID = globalID;}
   
     public int getGlobalID(){
-	return globalID;
-    }
+	return globalID;}
   
     public void addGroup(int id){
 	if(groups==null)
@@ -64,22 +58,12 @@ public class GlobalMappingElement implements Serializable, Comparable{
     }
 
     public boolean isGroupMember(int inGroupID){
-	GlobalMapping tmpGM = trial.getGlobalMapping();
-    
-	boolean tmpBool = tmpGM.getIsAllExceptGroupOn();
-	boolean tmpBoolResult = false;
-    
 	for(int i=0;i<numberOfGroups;i++){
 	    if(groups[i] == inGroupID){
-		tmpBoolResult = true;
-		break;
+		return true;
 	    }
 	}
-	
-	if(!tmpBool)
-	    return tmpBoolResult;
-	else
-	    return (!tmpBoolResult);
+	return false;
     }
 
     public void addParent(int id,int pathID){
@@ -159,33 +143,25 @@ public class GlobalMappingElement implements Serializable, Comparable{
     public boolean isCallPathObject(){
 	return callPathObject;}
     
-    public void setColorFlag(boolean inBoolean){
-	colorFlag = inBoolean;
-    }
+    public void setColorFlag(boolean colorFlag){
+	this.colorFlag = colorFlag;}
   
     public boolean isColorFlagSet(){
-	return colorFlag;
-    }
+	return colorFlag;}
   
-    public void setGenericColor(Color inColor){
-	genericMappingColor = inColor;
-    }
+    public void setMappingColor(Color color){
+	mappingColor = color;}
   
-    public void setSpecificColor(Color inColor){
-	specificMappingColor = inColor;
-    }
+    public void setSpecificColor(Color color){
+	specificMappingColor = color;}
   
     public Color getMappingColor(){
 	if(colorFlag)
 	    return specificMappingColor;
 	else
-	    return genericMappingColor;
+	    return mappingColor;
     }
   
-    public Color getGenericColor(){
-	return genericMappingColor;
-    }
-
     public void setMaxValues(){
 	System.out.println("MUST FILL IN THIS METHOD - GlobalMappingElement.setMaxValues");
     }
@@ -417,43 +393,30 @@ public class GlobalMappingElement implements Serializable, Comparable{
 	return position;
     }
     
-    public void setMeanValuesSet(boolean inBoolean)
-    {
-	meanValuesSet = inBoolean;
-    }
+    public void setMeanValuesSet(boolean inBoolean){
+	meanValuesSet = inBoolean;}
   
-    public boolean getMeanValuesSet()
-    {
-	return meanValuesSet;
-    }
+    public boolean getMeanValuesSet(){
+	return meanValuesSet;}
   
-    public void setDrawCoords(int inXBeg, int inXEnd, int inYBeg, int inYEnd)
-    {
+    public void setDrawCoords(int inXBeg, int inXEnd, int inYBeg, int inYEnd){
 	xBeginPosition = inXBeg;
 	xEndPosition = inXEnd;
 	yBeginPosition = inYBeg;
 	yEndPosition = inYEnd;
     }
   
-    public int getXBeg()
-    {
-	return xBeginPosition;
-    }
+    public int getXBeg(){
+	return xBeginPosition;}
   
-    public int getXEnd()
-    {
-	return xEndPosition;
-    }
+    public int getXEnd(){
+	return xEndPosition;}
   
-    public int getYBeg()
-    {
-	return yBeginPosition;
-    }
+    public int getYBeg(){
+	return yBeginPosition;}
   
-    public int getYEnd()
-    {
-	return yEndPosition;
-    }
+    public int getYEnd(){
+	return yEndPosition;}
   
     //Functions used to calculate the mean values for derived values (such as flops)
     public void setTotalExclusiveValue(double inDouble){
@@ -485,8 +448,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
   
   
     public int compareTo(Object inObject){
-	return mappingName.compareTo((String)inObject);
-    }
+	return mappingName.compareTo((String)inObject);}
 
     private void insertDouble(int dataValueLocation, int offset, double inDouble){
 	int actualLocation = (dataValueLocation*14)+offset;
@@ -511,7 +473,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
   
     //Instance elmements.
   
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
   
     //Global Mapping reference.
     private String mappingName = null;
@@ -527,7 +489,7 @@ public class GlobalMappingElement implements Serializable, Comparable{
 
     //Color Settings.
     private boolean colorFlag = false;
-    private Color genericMappingColor = null;
+    private Color mappingColor = null;
     private Color specificMappingColor = null;
   
     private double[] doubleList = new double[14];

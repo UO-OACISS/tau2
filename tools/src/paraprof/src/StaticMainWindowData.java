@@ -14,7 +14,7 @@ import java.lang.*;
 
 public class StaticMainWindowData{
 
-    public StaticMainWindowData(Trial trial){
+    public StaticMainWindowData(ParaProfTrial trial){
 	this.trial = trial;
     }
     
@@ -235,7 +235,7 @@ public class StaticMainWindowData{
     //####################################
     //Instance Data.
     //####################################
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private Vector sMWGeneralData = new Vector();
     //####################################
     //End - Instance Data.

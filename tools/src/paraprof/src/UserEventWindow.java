@@ -31,7 +31,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
 	}
     }
   
-    public UserEventWindow(Trial trial, int mappingID, StaticMainWindowData sMWData){
+    public UserEventWindow(ParaProfTrial trial, int mappingID, StaticMainWindowData sMWData){
 	try{
 	    this.mappingID = mappingID;
 	    this.trial = trial;
@@ -469,7 +469,7 @@ public class UserEventWindow extends JFrame implements ActionListener, MenuListe
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private StaticMainWindowData sMWData = null;
     Vector sMWGeneralData = null;
     private int mappingID = -1;

@@ -35,7 +35,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	}
     }
   
-    public MappingDataWindowPanel(Trial trial, int mappingID, MappingDataWindow mDWindow){
+    public MappingDataWindowPanel(ParaProfTrial trial, int mappingID, MappingDataWindow mDWindow){
 	try{
 
 	    this.trial = trial;
@@ -454,7 +454,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
     private int textOffset = 60;
     private int maxXLength = 0;
     private boolean groupMember = false;
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private MappingDataWindow mDWindow = null;
     private SMWThreadDataElement tmpSMWThreadDataElement = null;
     int xPanelSize = 0;

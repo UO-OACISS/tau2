@@ -31,7 +31,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 	}
     }
     
-    public StatWindow(Trial trial,
+    public StatWindow(ParaProfTrial trial,
 			   int nodeID,
 			   int contextID,
 			   int threadID,
@@ -451,7 +451,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private StaticMainWindowData sMWData;
     private int nodeID = -1;
     private int contextID = -1;

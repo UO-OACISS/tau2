@@ -31,7 +31,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
 	}
     }
   
-    public MappingDataWindow(Trial trial, int mappingID, StaticMainWindowData sMWData){
+    public MappingDataWindow(ParaProfTrial trial, int mappingID, StaticMainWindowData sMWData){
 	try{
 	    this.mappingID = mappingID;
 	    this.trial = trial;
@@ -541,7 +541,7 @@ public class MappingDataWindow extends JFrame implements ActionListener, MenuLis
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private StaticMainWindowData sMWData = null;
     Vector sMWGeneralData = null;
     private int mappingID = -1;

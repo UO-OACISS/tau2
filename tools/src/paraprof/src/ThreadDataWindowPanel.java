@@ -33,7 +33,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	
     }
 
-    public ThreadDataWindowPanel(Trial trial,
+    public ThreadDataWindowPanel(ParaProfTrial trial,
 				 int nodeID,
 				 int contextID,
 				 int threadID,
@@ -609,7 +609,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 
     private int maxXLength = 0;
   
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;

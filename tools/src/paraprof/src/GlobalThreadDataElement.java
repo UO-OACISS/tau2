@@ -17,10 +17,7 @@ public class GlobalThreadDataElement{
     //####################################
     //Contructor(s).
     //####################################
-    public GlobalThreadDataElement(Trial trial, boolean ue){
-	this.trial = trial;
-	mappingID = -1;
-    
+    public GlobalThreadDataElement(GlobalMappingElement globalMappingElement, boolean ue){
 	if(ue){
 	    userevent = true;
 	    doubleList = new double[3];
@@ -36,12 +33,11 @@ public class GlobalThreadDataElement{
     //####################################
     //Public section.
     //####################################
+    public int getMappingID(){
+	return globalMappingElement.getGlobalID();}
+
     public String getMappingName(){
-	GlobalMappingElement tmpGME = (GlobalMappingElement) (trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
-	return tmpGME.getMappingName();}
-  
-    public void setMappingID(int inMappingID){
-	mappingID = inMappingID;}
+	return globalMappingElement.getMappingName();}
   
     public void setMappingExists(){
 	mappingExists = true;}
@@ -49,13 +45,8 @@ public class GlobalThreadDataElement{
     public boolean getMappingExists(){
 	return mappingExists;}
   
-    public int getMappingID(){
-	return mappingID;}
-
     public boolean isGroupMember(int groupID){
-	GlobalMappingElement tmpGME = (GlobalMappingElement) (trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
-	return tmpGME.isGroupMember(groupID);
-    }
+	return globalMappingElement.isGroupMember(groupID);}
   
     public void setInclusiveValue(int dataValueLocation, double inDouble){
 	this.insertDouble(dataValueLocation,0,inDouble);}
@@ -104,7 +95,7 @@ public class GlobalThreadDataElement{
 	return 97;
     }
   
-    public static String getTStatStringHeading(Trial trial){
+    public static String getTStatStringHeading(ParaProfTrial trial){
 	String metricType = null;
 	if(trial.isTimeMetric())
 	    metricType = "time";
@@ -260,14 +251,10 @@ public class GlobalThreadDataElement{
   
     //User event interface.
     public String getUserEventName(){
-	GlobalMappingElement tmpGME = (GlobalMappingElement) (trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 2);
-	return tmpGME.getMappingName();}
-  
-    public void setUserEventID(int inUserEventID){
-	mappingID = inUserEventID;}
+	return globalMappingElement.getMappingName();}
   
     public int getUserEventID(){
-	return mappingID;}
+	return globalMappingElement.getGlobalID();}
   
     public void setUserEventNumberValue(int inInt){
 	userEventNumberValue = inInt;
@@ -415,9 +402,7 @@ public class GlobalThreadDataElement{
     }
     
     public boolean isCallPathObject(){
-	GlobalMappingElement tmpGME = (GlobalMappingElement) (trial.getGlobalMapping()).getGlobalMappingElement(mappingID, 0);
-	return tmpGME.isCallPathObject();
-    }
+	return globalMappingElement.isCallPathObject();}
 
     public int addParent(int id){
 	//This function is used in the building
@@ -588,8 +573,7 @@ public class GlobalThreadDataElement{
     //####################################
     //Instance data.
     //####################################
-    int mappingID;
-    private Trial trial = null;
+    GlobalMappingElement globalMappingElement = null;
     boolean mappingExists = false;
     private double[] doubleList;
     private int numberOfCalls = 0;

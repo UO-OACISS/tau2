@@ -39,7 +39,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	}
     }
   
-    public StaticMainWindowPanel(Trial trial, StaticMainWindow sMWindow){
+    public StaticMainWindowPanel(ParaProfTrial trial, StaticMainWindow sMWindow){
 	try{
 	    //Set the default tool tip for this panel.
 	    this.setToolTipText("ParaProf bar graph draw window!");
@@ -1197,7 +1197,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     StaticMainWindow sMWindow = null;
     private Vector[] list = new Vector[2]; //list[0]:The result of a call to getSMWGeneralData in StaticMainWindowData
                                            //list[1]:The result of a call to getMeanData in StaticMainWindowData

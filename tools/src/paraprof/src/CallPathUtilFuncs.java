@@ -69,7 +69,7 @@ public class CallPathUtilFuncs{
 	}
     }
 
-    public static void trimCallPathData(Trial trial,
+    public static void trimCallPathData(ParaProfTrial trial,
 				 int nodeID,
 				 int contextID,
 				 int threadID){

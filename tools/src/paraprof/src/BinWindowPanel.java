@@ -41,7 +41,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    }
     }
   
-    public BinWindowPanel(Trial trial, BinWindow bWindow, boolean normal, int mappingID)
+    public BinWindowPanel(ParaProfTrial trial, BinWindow bWindow, boolean normal, int mappingID)
     {
 	try{
 	    //Set the default tool tip for this panel.
@@ -493,7 +493,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
     //******************************
     //Instance data.
     //******************************
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     BinWindow bWindow = null;
     boolean normalBin = true;
     int mappingID = -1;

@@ -19,11 +19,11 @@ import javax.swing.event.*;
 
 public class ColorChooser implements WindowListener
 {
-  public ColorChooser(Trial inTrial, SavedPreferences inSavedPreferences)
+  public ColorChooser(ParaProfTrial inParaProfTrial, SavedPreferences inSavedPreferences)
   {
     
     try{
-      trial = inTrial;
+      trial = inParaProfTrial;
       
       if(inSavedPreferences != null)
       {
@@ -380,7 +380,7 @@ public class ColorChooser implements WindowListener
 
 
   //Instance Data.
-  private Trial trial = null;
+  private ParaProfTrial trial = null;
   Vector globalColors = new Vector();
   Vector mappingGroupColors = new Vector();
   
@@ -398,7 +398,7 @@ public class ColorChooser implements WindowListener
     
 class ColorChooserFrame extends JFrame implements ActionListener
 { 
-  public ColorChooserFrame(Trial inTrial, ColorChooser inColorChooser)
+  public ColorChooserFrame(ParaProfTrial inParaProfTrial, ColorChooser inColorChooser)
   {
     
     try{
@@ -406,7 +406,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
       setLocation(new Point(100, 100));
       setSize(new Dimension(850, 450));
       
-      trial = inTrial;
+      trial = inParaProfTrial;
       colorChooserRef = inColorChooser;
       numberOfColors = trial.getColorChooser().getNumberOfColors();
       
@@ -594,7 +594,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
         
         //Update the GlobalMapping.
         GlobalMapping gMRef = trial.getGlobalMapping();
-        gMRef.updateGenericColors(0);
+        gMRef.setColors(colorChooserRef,0);
         
         //Update the listeners.
         trial.getSystemEvents().updateRegisteredObjects("colorEvent");
@@ -610,7 +610,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
         
         //Update the GlobalMapping.
         GlobalMapping gMRef = trial.getGlobalMapping();
-        gMRef.updateGenericColors(1);
+        gMRef.setColors(colorChooserRef,1);
         
         //Update the listeners.
         trial.getSystemEvents().updateRegisteredObjects("colorEvent");
@@ -629,7 +629,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
             
             //Update the GlobalMapping.
             GlobalMapping gMRef = trial.getGlobalMapping();
-            gMRef.updateGenericColors(0);
+            gMRef.setColors(colorChooserRef,0);
           }
           else if((values[i]) < (trial.getColorChooser().getNumberOfColors()) + (trial.getColorChooser().getNumberOfMappingGroupColors()))
           {
@@ -639,7 +639,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
             
             //Update the GlobalMapping.
             GlobalMapping gMRef = trial.getGlobalMapping();
-            gMRef.updateGenericColors(1);
+            gMRef.setColors(colorChooserRef,1);
           }
         }
         
@@ -676,7 +676,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
             
             //Update the GlobalMapping.
             GlobalMapping gMRef = trial.getGlobalMapping();
-            gMRef.updateGenericColors(0);
+            gMRef.setColors(colorChooserRef,0);
           }
           else
           {
@@ -684,7 +684,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
             
             //Update the GlobalMapping.
             GlobalMapping gMRef = trial.getGlobalMapping();
-            gMRef.updateGenericColors(1);
+            gMRef.setColors(colorChooserRef,1);
           }
         }
         
@@ -704,8 +704,8 @@ class ColorChooserFrame extends JFrame implements ActionListener
         
         //Update the GlobalMapping.
         GlobalMapping gMRef = trial.getGlobalMapping();
-        gMRef.updateGenericColors(0);
-        gMRef.updateGenericColors(1);
+        gMRef.setColors(colorChooserRef,0);
+        gMRef.setColors(colorChooserRef,1);
         
         //Update the listeners.
         trial.getSystemEvents().updateRegisteredObjects("colorEvent");
@@ -755,7 +755,7 @@ class ColorChooserFrame extends JFrame implements ActionListener
   //******************************
   //Instance data!
   //******************************
-  private Trial trial = null;
+  private ParaProfTrial trial = null;
   ColorChooser colorChooserRef;
   private ColorSelectionModel clrModel;
   JColorChooser clrChooser;
@@ -776,8 +776,8 @@ class ColorChooserFrame extends JFrame implements ActionListener
 
 class CustomCellRenderer implements ListCellRenderer
 {
-  CustomCellRenderer(Trial inTrial){
-    trial = inTrial;
+  CustomCellRenderer(ParaProfTrial inParaProfTrial){
+    trial = inParaProfTrial;
   }
   
   public Component getListCellRendererComponent(final JList list, final Object value,
@@ -902,5 +902,5 @@ class CustomCellRenderer implements ListCellRenderer
   }
   
   //Instance Data.
-  private Trial trial = null;
+  private ParaProfTrial trial = null;
 }

@@ -22,7 +22,7 @@ public class Preferences extends JFrame implements ActionListener, Observer{
     //******************************
     //Instance data.
     //******************************
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     
     //References for some of the components for this frame.
     private PrefSpacingPanel pSPanel;
@@ -68,8 +68,8 @@ public class Preferences extends JFrame implements ActionListener, Observer{
     //******************************
     //End - Instance data.
     //******************************
-    public Preferences(Trial inTrial, SavedPreferences inSavedPreferences){ 
-	trial = inTrial;
+    public Preferences(ParaProfTrial inParaProfTrial, SavedPreferences inSavedPreferences){ 
+	trial = inParaProfTrial;
 	if(inSavedPreferences != null){ 
 	    //******************************
 	    //Set the saved values.

@@ -24,7 +24,7 @@ public class PrefColorPanel extends JPanel implements ChangeListener
   //Instance data.
   //******************************
   
-  private Trial trial = null;
+  private ParaProfTrial trial = null;
   
   int xPanelSize = 600;
   int yPanelSize = 200;
@@ -38,10 +38,10 @@ public class PrefColorPanel extends JPanel implements ChangeListener
   
   Color tmpColor;
   
-  public PrefColorPanel(Trial inTrial)
+  public PrefColorPanel(ParaProfTrial inParaProfTrial)
   {
     
-    trial = inTrial; 
+    trial = inParaProfTrial; 
     
     setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
     setPreferredSize(new java.awt.Dimension(xPanelSize, yPanelSize));

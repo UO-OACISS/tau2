@@ -31,7 +31,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 	}
     }
   
-    public CallPathTextWindow(Trial trial, int nodeID, int contextID, int threadID, 
+    public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID, 
 			      StaticMainWindowData sMWData, 
 			      boolean global){
 	try{
@@ -441,7 +441,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;

@@ -18,11 +18,11 @@ import java.awt.print.*;
 
 public class StaticMainWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener{ 
   
-  public StaticMainWindow(Trial inTrial){
+  public StaticMainWindow(ParaProfTrial inParaProfTrial){
       try{
 	  
 	  //This window needs to maintain a reference to its trial.
-	  trial = inTrial;
+	  trial = inParaProfTrial;
 	  
 
 	  //####################################
@@ -503,7 +503,7 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     //####################################
     //Instance data.
     //####################################    
-    Trial trial = null;
+    ParaProfTrial trial = null;
     
     //Create a file chooser to allow the user to select files for loading data.
     JFileChooser fileChooser = new JFileChooser();

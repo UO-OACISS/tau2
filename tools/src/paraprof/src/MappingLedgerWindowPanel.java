@@ -38,7 +38,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 	
     }
   
-    public MappingLedgerWindowPanel(Trial trial, MappingLedgerWindow mLWindow, int windowType){
+    public MappingLedgerWindowPanel(ParaProfTrial trial, MappingLedgerWindow mLWindow, int windowType){
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
@@ -495,7 +495,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
     private int barHeight = -1;
     private int barSpacing = -1;
   
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private MappingLedgerWindow mLWindow = null;
     private int windowType = -1;
     private Vector list = null;

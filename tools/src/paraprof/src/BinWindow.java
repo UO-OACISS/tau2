@@ -36,9 +36,9 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
 	}
     }
     
-    public BinWindow(Trial inTrial, StaticMainWindowData inSMWData, boolean normal, int mappingID){
+    public BinWindow(ParaProfTrial inParaProfTrial, StaticMainWindowData inSMWData, boolean normal, int mappingID){
 	try{
-	    trial = inTrial;
+	    trial = inParaProfTrial;
 	    sMWData = inSMWData;
 	    
 
@@ -312,7 +312,7 @@ public class BinWindow extends JFrame implements ActionListener, MenuListener, O
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     private StaticMainWindowData sMWData = null;
     private int nodeID = -1;
     private int contextID = -1;

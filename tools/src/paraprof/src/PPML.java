@@ -15,10 +15,10 @@ public class PPML{
 
     public PPML(){}
 
-    public static Value applyOperation(Trial trial, String tmpString1, String tmpString2, String inOperation){
+    public static Metric applyOperation(ParaProfTrial trial, String tmpString1, String tmpString2, String inOperation){
 	  
-	int opA = trial.getValuePosition(tmpString1);
-	int opB = trial.getValuePosition(tmpString2);
+	int opA = trial.getMetricPosition(tmpString1);
+	int opB = trial.getMetricPosition(tmpString2);
 
 	String tmpString3 = null;
     
@@ -44,9 +44,9 @@ public class PPML{
 	    System.out.println("Wrong operation type");
 	}
       
-	Value newValue = trial.addValue();
-	newValue.setValueName(tmpString3);
-	int currentValueLocation = newValue.getValueID();
+	Metric newMetric = trial.addMetric();
+	newMetric.setName(tmpString3);
+	int currentValueLocation = newMetric.getID();
 	trial.setCurValLoc(currentValueLocation);
 
 	ListIterator l = trial.getGlobalMapping().getMappingIterator(0);
@@ -167,26 +167,24 @@ public class PPML{
 	}
 	
 	l = trial.getGlobalMapping().getMappingIterator(0);
+	double exclusiveTotal = 0.0;
 	while(l.hasNext()){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
 	    if((globalMappingElement.getCounter()) != 0){
 		double d = (globalMappingElement.getTotalExclusiveValue())/(globalMappingElement.getCounter());
 		//Increment the total values.
-		trial.setTotalMeanExclusiveValue(trial.getCurValLoc(),(trial.getTotalMeanExclusiveValue(trial.getCurValLoc())) + d);
+		exclusiveTotal+=d;
 		globalMappingElement.setMeanExclusiveValue(trial.getCurValLoc(), d);
 		if((trial.getMaxMeanExclusiveValue(trial.getCurValLoc()) < d))
 		    trial.setMaxMeanExclusiveValue(trial.getCurValLoc(), d);
 		
 		d = (globalMappingElement.getTotalInclusiveValue())/(globalMappingElement.getCounter());
-		//Increment the total values.
-		trial.setTotalMeanInclusiveValue(trial.getCurValLoc(),(trial.getTotalMeanInclusiveValue(trial.getCurValLoc())) + d);
 		globalMappingElement.setMeanInclusiveValue(trial.getCurValLoc(), d);
 		if((trial.getMaxMeanInclusiveValue(trial.getCurValLoc()) < d))
 		    trial.setMaxMeanInclusiveValue(trial.getCurValLoc(), d);
 	    }
 	}
 		
-	double exclusiveTotal = trial.getTotalMeanExclusiveValue(trial.getCurValLoc());
 	double inclusiveMax = trial.getMaxMeanInclusiveValue(trial.getCurValLoc());
 
 	l = trial.getGlobalMapping().getMappingIterator(0);
@@ -208,7 +206,7 @@ public class PPML{
 	    }
 	    
 	}
-	return newValue;
+	return newMetric;
     }
 
     public static double apply(int op, double arg1, double arg2){

@@ -25,7 +25,7 @@ import javax.swing.event.*;
 
 public class CallPathTextWindowPanel extends JPanel implements ActionListener, Printable, ParaProfImageInterface{
     
-    public CallPathTextWindowPanel(Trial trial,
+    public CallPathTextWindowPanel(ParaProfTrial trial,
 				   int nodeID,
 				   int contextID,
 				   int threadID,
@@ -455,7 +455,7 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, P
     int nodeID = -1;
     int contextID = -1;
     int threadID = -1;
-    private Trial trial = null;
+    private ParaProfTrial trial = null;
     CallPathTextWindow cPTWindow = null;
     boolean global = false;
     Font MonoFont = null;

@@ -25,9 +25,7 @@ import javax.swing.event.*;
 
 public class GlobalMapping{
 
-    public GlobalMapping(Trial trial){
-	this.trial = trial;
-
+    public GlobalMapping(){
 	mappings[0] = new Vector();
 	mappings[1] = new Vector();
 	mappings[2] = new Vector();
@@ -52,17 +50,9 @@ public class GlobalMapping{
 	    //still being able to use the id as a location into the mapping for
 	    //efficient lookup.
 	    mappingID = mappings[mappingSelection].size();
-	    GlobalMappingElement globalMappingElement = new GlobalMappingElement(trial);
+	    GlobalMappingElement globalMappingElement = new GlobalMappingElement();
 	    globalMappingElement.setMappingName(mappingName);
 	    globalMappingElement.setGlobalID(mappingID);
-
-	    ColorChooser c = trial.getColorChooser();
-	    int numOfColors = c.getNumberOfColors();
-	    int numOfGroupColors = c.getNumberOfMappingGroupColors();
-	    if((mappingSelection == 0) || (mappingSelection == 2))
-		globalMappingElement.setGenericColor(c.getColorInLocation(mappingID % numOfColors));
-	    else
-		globalMappingElement.setGenericColor(c.getMappingGroupColorInLocation(mappingID % numOfGroupColors));
 
 	    mappings[mappingSelection].addElement(globalMappingElement);
 
@@ -194,30 +184,38 @@ public class GlobalMapping{
     //End - Functions managing the sortedMapppings.
     //######
 
-    public void updateGenericColors(int mappingSelection){
-	if(mappingSelection == 0){
-	    int tmpInt = trial.getColorChooser().getNumberOfColors();
+    public void setColors(ColorChooser c, int mappingSelection){
+	//If the mapping selection is equal to -1, then set the colors in all the mappings,
+	//otherwise, just set the ones for the specified mapping.
+
+	if((mappingSelection == -1) || (mappingSelection == 0)){
+	    int numberOfColors = c.getNumberOfColors();
 	    for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
-		int mappingID = globalMappingElement.getGlobalID();
-		globalMappingElement.setGenericColor(trial.getColorChooser().getColorInLocation(mappingID % tmpInt));
+		globalMappingElement.setMappingColor(c.getColorInLocation((globalMappingElement.getGlobalID()) % numberOfColors));
 	    }
 	}
-	else{
-	    int tmpInt = trial.getColorChooser().getNumberOfMappingGroupColors();
+	
+	if((mappingSelection == -1) || (mappingSelection == 1)){
+	    int numberOfColors = c.getNumberOfMappingGroupColors();
 	    for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;){
 		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
-		int mappingID = globalMappingElement.getGlobalID();
-		globalMappingElement.setGenericColor(trial.getColorChooser().getMappingGroupColorInLocation(mappingID % tmpInt));
+		globalMappingElement.setMappingColor(c.getMappingGroupColorInLocation((globalMappingElement.getGlobalID()) % numberOfColors));
 	    }
-	}   
+	}
+
+	if((mappingSelection == -1) || (mappingSelection == 2)){
+	    int numberOfColors = c.getNumberOfColors();
+	    for(Enumeration e = mappings[mappingSelection].elements(); e.hasMoreElements() ;){
+		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
+		globalMappingElement.setMappingColor(c.getColorInLocation((globalMappingElement.getGlobalID()) % numberOfColors));
+	    }
+	}
     }
 
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
-  
     //An array of Vectors each of which holds GlobalMappingElements.
     private Vector[] mappings = new Vector[3];
     //An array of Vectors each of which holds GlobalSortedMappingElements.
