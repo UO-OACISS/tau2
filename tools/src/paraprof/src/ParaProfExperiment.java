@@ -17,6 +17,37 @@ public class ParaProfExperiment extends Experiment{
     public ParaProfExperiment(){
 	super();}
 
+    public ParaProfExperiment(Experiment experiment){
+	super();
+	this.setID(experiment.getID());
+	this.setApplicationID(experiment.getApplicationID());
+	this.setName(experiment.getName());
+	this.setUserData(experiment.getUserData());
+	this.setSystemName(experiment.getSystemName());
+	this.setSystemMachineType(experiment.getSystemMachineType());
+	this.setSystemArch(experiment.getSystemArch());
+	this.setSystemOS(experiment.getSystemOS());
+	this.setSystemMemorySize(experiment.getSystemMemorySize());
+	this.setSystemProcessorAmount(experiment.getSystemProcessorAmount());
+	this.setSystemL1CacheSize(experiment.getSystemL1CacheSize());
+	this.setSystemL2CacheSize(experiment.getSystemL2CacheSize());
+	this.setSystemUserData(experiment.getSystemUserData());
+	this.setConfigurationPrefix(experiment.getConfigPrefix());
+	this.setConfigurationArchitecture(experiment.getConfigArchitecture());
+	this.setConfigurationCpp(experiment.getConfigCpp());
+	this.setConfigurationCc(experiment.getConfigCc());
+	this.setConfigurationJdk(experiment.getConfigJdk());
+	this.setConfigurationProfile(experiment.getConfigProfile());
+	this.setConfigurationUserData(experiment.getConfigUserData());
+	this.setCompilerCppName(experiment.getCompilerCppName());
+	this.setCompilerCppVersion(experiment.getCompilerCppVersion());
+	this.setCompilerCcName(experiment.getCompilerCcName());
+	this.setCompilerCcVersion(experiment.getCompilerCcVersion());
+	this.setCompilerJavaDirpath(experiment.getCompilerJavaDirpath());
+	this.setCompilerJavaVersion(experiment.getCompilerJavaVersion());
+	this.setCompilerUserData(experiment.getCompilerUserData());
+    }
+
     public void setApplication(ParaProfApplication application){
 	this.application = application;}
 
