@@ -79,7 +79,7 @@ public class DataSessionThreadControl implements Runnable{
 	    System.out.println("######");
 	}
 	for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
-	    ((ParaProfObserver) e.nextElement()).update(this);
+	    ((ParaProfObserver) e.nextElement()).update(dataSession);
     }
     //######
     //End - Methods that manage the ParaProfObservers.
