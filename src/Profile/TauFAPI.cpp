@@ -28,6 +28,7 @@
 
 /* Fortran Wrapper layer for TAU Portable Profiling */
 #include <stdio.h>
+#include <ctype.h>
 #include "Profile/ProfileGroups.h"
 
 /* 
@@ -43,23 +44,33 @@ void tau_init(int, char **);
 void tau_set_node(int);
 void tau_set_context(int);
 void tau_register_thread(void);
+void tau_trace_sendmsg(int type, int destination, int length);
+void tau_trace_recvmsg(int type, int source, int length);
+void * tau_get_userevent(char *name);
+void tau_userevent(void *ue, double data);
+void tau_report_statistics(void);
+void tau_report_thread_statistics(void);
 
 /*****************************************************************************
 * The following routines are called by the Fortran program and they in turn
 * invoke the corresponding C routines. 
 *****************************************************************************/
-void tau_profile_timer_(void **ptr, char *fname, int *flen, char *type, int *tlen, unsigned int *group)
+void tau_profile_timer_(void **ptr, char *fname, int *flen)
 {
 #ifdef DEBUG_PROF
-  printf("Inside tau_profile_timer_ fname=%s, type=%s *ptr = %x\n", 
-    fname, type, *ptr);
+  printf("Inside tau_profile_timer_ fname=%s\n", fname);
 #endif /* DEBUG_PROF */
-  fname[*flen] = '\0';
-  type[*tlen]  = '\0';
-
   if (*ptr == 0) 
-  { 
-    *ptr = tau_get_profiler(fname, type, *group);
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(fname[i]))
+      { 
+        fname[i] = '\0';
+        break;
+      }
+    }
+    *ptr = tau_get_profiler(fname, " ", TAU_DEFAULT);
   }
 
 #ifdef DEBUG_PROF 
@@ -92,9 +103,9 @@ void tau_profile_exit_(char *msg)
   return;
 }
 
-void tau_profile_init_(int *argc, char **argv)
+void tau_profile_init_(int *argc, char ***argv)
 {
-  tau_init(*argc, argv);
+  /* tau_init(*argc, *argv); */
   return;
 }
 
@@ -123,18 +134,73 @@ void TAU_REGISTER_THREAD(void)
   tau_register_thread();
 }
 #endif 
-/* Cray F90 specific extensions */
-void _main();
-void TAU_PROFILE_TIMER(void **ptr, char *fname, int *flen, char *type, int *tlen, unsigned int *group)
-{
-#ifdef DEBUG_PROF
-  printf("Inside tau_profile_timer_ fname=%s, type=%s *ptr = %x\n", 
-    fname, type, *ptr);
-#endif /* DEBUG_PROF */
 
+void tau_trace_sendmsg_(int *type, int *destination, int *length)
+{
+  tau_trace_sendmsg(*type, *destination, *length);
+}
+
+void tau_trace_recvmsg_(int *type, int *source, int *length)
+{
+  tau_trace_recvmsg(*type, *source, *length);
+}
+
+void tau_register_event_(void **ptr, char *event_name, int *flen)
+{
 
   if (*ptr == 0) 
-  { 
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(event_name[i]))
+      { 
+        event_name[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("tau_get_userevent() \n");
+#endif /* DEBUG_PROF */
+    *ptr = tau_get_userevent(event_name);
+  }
+  return;
+
+}
+
+void tau_event_(void **ptr, double *data)
+{
+  tau_userevent(*ptr, *data);
+}
+
+void tau_report_statistics_(void)
+{
+  tau_report_statistics();
+}
+
+void tau_report_thread_statistics_(void)
+{
+  tau_report_thread_statistics();
+}
+
+/* Cray F90 specific extensions */
+void _main();
+void TAU_PROFILE_TIMER(void **ptr, char *fname, int *flen)
+{
+//#ifdef DEBUG_PROF
+//  printf("flen = %d\n", *flen);
+//#endif /* DEBUG_PROF */
+  
+
+  if (*ptr == 0) 
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(fname[i]))
+      { 
+        fname[i] = '\0';
+        break;
+      }
+    }
 #ifdef DEBUG_PROF
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
@@ -160,13 +226,14 @@ void TAU_PROFILE_STOP(void **profiler)
 
 void TAU_PROFILE_EXIT(char *msg)
 {
+  printf("TAU_PROFILE_EXIT");
   tau_profile_exit_(msg);
 }
 
 void TAU_PROFILE_INIT()
 {
   _main();
-  //tau_profile_init_(argc, argv);
+  // tau_profile_init_(argc, argv);
 }
 
 void TAU_PROFILE_SET_NODE(int *node)
@@ -178,10 +245,58 @@ void TAU_PROFILE_SET_CONTEXT(int *context)
 {
   tau_profile_set_context_(context);
 }
+
+void TAU_TRACE_SENDMSG(int *type, int *destination, int *length)
+{
+  tau_trace_sendmsg(*type, *destination, *length);
+}
+
+void TAU_TRACE_RECVMSG(int *type, int *source, int *length)
+{
+  tau_trace_recvmsg(*type, *source, *length);
+}
+
+void TAU_REGISTER_EVENT(void **ptr, char *event_name, int *flen)
+{
+
+  if (*ptr == 0) 
+  {  // remove garbage characters from the end of name
+    for(int i=0; i<1024; i++)
+    {
+      if (!isprint(event_name[i]))
+      { 
+        event_name[i] = '\0';
+        break;
+      }
+    }
+#ifdef DEBUG_PROF
+    printf("tau_get_userevent() \n");
+#endif /* DEBUG_PROF */
+    *ptr = tau_get_userevent(event_name);
+  }
+  return;
+
+}
+
+void TAU_EVENT(void **ptr, double *data)
+{
+  tau_userevent(*ptr, *data);
+}
+
+void TAU_REPORT_STATISTICS(void)
+{
+  tau_report_statistics();
+}
+
+void TAU_REPORT_THREAD_STATISTICS(void)
+{
+  tau_report_thread_statistics();
+}
+
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 1999/05/04 22:33:10 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.5 1999/05/04 22:33:10 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 1999/06/18 17:46:32 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.6 1999/06/18 17:46:32 sameer Exp $ 
  ***************************************************************************/
