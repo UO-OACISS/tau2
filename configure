@@ -120,9 +120,11 @@ tcltkfile="/"
 kai=no
 stdcxxlib=no
 inteltflop=no
+profile=no
 profilecounters=no
 profilestats=no
 profilecalls=no
+trace=no
 debugprof=no
 use_pcxx=no
 use_hpcxx=no
@@ -277,18 +279,31 @@ do
     shift
     ;;
 
+  -PROFILE)
+    profile=yes
+    shift
+    ;;
+
   -PROFILECOUNTERS)
+    profile=yes
     profilecounters=yes
     shift
     ;;
 
   -PROFILECALLS)
+    profile=yes
     profilecalls=yes
     shift
     ;;
 
   -PROFILESTATS)
+    profile=yes
     profilestats=yes
+    shift
+    ;;
+
+  -TRACE)
+    trace=yes
     shift
     ;;
 
@@ -578,7 +593,11 @@ esac
 
 ######################################################################
 # Set default Profiling Options in Makefiles
-fixmakeargs="$fixmakeargs PROFILE"
+if [ $profile = yes ]
+  then
+    fixmakeargs="$fixmakeargs PROFILE"
+fi
+
 if [ $profilecalls = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILECALLS"
@@ -587,6 +606,11 @@ fi
 if [ $profilestats = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILESTATS"
+fi
+
+if [ $trace = yes ]
+  then
+    fixmakeargs="$fixmakeargs TRACE"
 fi
 
 if [ $machine = sgi8k -a $profilecounters = yes ]
