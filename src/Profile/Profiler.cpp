@@ -934,6 +934,10 @@ int Profiler::StoreData(int tid){
   FILE* fp;
   char *dirname;
   int numFunc, numEvents;
+  
+  double * tmpDoubleExcl;
+  double * tmpDoubleIncl;
+
 #endif //PROFILING_ON
 
   DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
@@ -987,7 +991,7 @@ int Profiler::StoreData(int tid){
       numFunc = TheFunctionDB().size();
       
       //Setting the header to the correct name.
-      sprintf(header,"%d %s_templated_functions\n", numFunc, tmpChar);
+      sprintf(header,"%d templated_functions_MULTI_%s\n", numFunc, tmpChar);
   
       strcat(header,"# Name Calls Subrs Excl Incl ");
 
@@ -998,9 +1002,26 @@ int Profiler::StoreData(int tid){
 
       
 
+      for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
+        {
+	  tmpDoubleExcl = (*it)->GetExclTime(tid);
+	  tmpDoubleIncl = (*it)->GetInclTime(tid);
 
+	  DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping "
+		       << (*it)->GetName()<< " "  << (*it)->GetType() << " Calls : "
+		       << (*it)->GetCalls(tid) << " Subrs : "<< (*it)->GetSubrs(tid)
+		       << " Excl : " << tmpDoubleExcl[i] << " Incl : "
+		       << tmpDoubleIncl[i] << endl;);
+	  
+	  fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(),
+		  (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid),
+		  tmpDoubleExcl[i], tmpDoubleIncl[i]);
 
+	  fprintf(fp,"0 \n"); // Indicating - profile calls is turned off
+	}
 
+      fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
+  
       RtsLayer::UnLockDB();
       
       numEvents = 0;
@@ -1187,8 +1208,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.57 $   $Date: 2002/03/11 08:31:34 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.57 2002/03/11 08:31:34 bertie Exp $ 
+ * $Revision: 1.58 $   $Date: 2002/03/11 09:55:38 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.58 2002/03/11 09:55:38 bertie Exp $ 
  ***************************************************************************/
 
 	
