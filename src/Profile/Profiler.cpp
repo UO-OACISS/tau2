@@ -371,6 +371,11 @@ void Profiler::Stop(int tid)
         }
 #endif /* TAU_COMPENSATE && PROFILING_ON */
 #else //TAU_MULTIPLE_COUNTERS
+	// first initialize the CurrentTime
+	for (i=0; i < MAX_TAU_COUNTERS; i++)
+	{
+	  CurrentTime[i] = 0;
+	}
 	//Get the current counter values.
 	RtsLayer::getUSecD(tid, CurrentTime);
 
@@ -2631,8 +2636,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.93 $   $Date: 2004/05/19 14:10:16 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.93 2004/05/19 14:10:16 sameer Exp $ 
+ * $Revision: 1.94 $   $Date: 2004/05/27 00:33:52 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.94 2004/05/27 00:33:52 sameer Exp $ 
  ***************************************************************************/
 
 	
