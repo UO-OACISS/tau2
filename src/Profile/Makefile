@@ -345,6 +345,9 @@ TauMuseFilters.o : TauMuseFilters.cpp $(HDRS)
 TauMuseHandlers.o : TauMuseHandlers.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauMusePackages.o : TauMusePackages.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 TauCompensate.o : TauCompensate.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
