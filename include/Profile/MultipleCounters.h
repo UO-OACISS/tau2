@@ -37,6 +37,7 @@ class MultipleCounterLayer
   static bool initializeMultiCounterLayer(void);
   static bool * getCounterUsedList();
   static bool getCounterUsed(int inPosition);
+  static int  getNumberOfCountersUsed(void);
   static void setCounterUsed(bool inValue, int inPosition);
   static void getCounters(int tid, double values[]);
   static char * getCounterNameAt(int position);

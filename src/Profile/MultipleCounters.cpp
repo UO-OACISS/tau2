@@ -221,9 +221,10 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 	  functionPosition++;
 	  //Update the number of active functions.
 	  numberOfActiveFunctions++;
+	  //cout <<"numberOfActiveFunctions = "<<numberOfActiveFunctions<<endl;
 
-	  //cout << "Adding function to position: " 
-	  //     << e << " of the init array." << endl;
+	  // cout << "Adding function to position: " 
+	  //      << e << " of the init array." << endl;
       }
       else{
 	//cout << "Not function to position: " 
@@ -237,11 +238,12 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     if(numberOfActiveFunctions == 0)
       cout << "Warning: No multi counter fncts active ... are the env variables COUNTER<1-N> set?" << endl;
 #ifdef TRACING_ON
-   counterEvents = new TauUserEvent * [numberOfActiveFunctions] ; 
+   int countersUsed = getNumberOfCountersUsed();
+   counterEvents = new TauUserEvent * [countersUsed] ; 
    /* We obtain the timestamp from COUNTER1, so we only need to trigger 
       COUNTER2-N or i=1 through no. of active functions not through 0 */
    RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
-   for (int i = 1; i < numberOfActiveFunctions; i++)
+   for (int i = 1; i < countersUsed; i++)
    {
      counterEvents[i] = new TauUserEvent(names[i], true);
      /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/ 
@@ -505,7 +507,9 @@ bool MultipleCounterLayer::papiMCLInit(int functionPosition){
 	      counter++;
 	    }
 	    MultipleCounterLayer::names[i][counter]='\0';
+#ifdef DEBUG_PROF
 	    cout << "Adjusted counter name is: " << names[i] << endl;
+#endif /* DEBUG_PROF */
 	  }
 	  PapiLayer::multiCounterPapiInit();
 	  int tmpCode = PapiLayer::map_eventnames(MultipleCounterLayer::names[i]);
@@ -890,14 +894,31 @@ void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){
 #endif //TAU_LINUX_TIMERS
 }
 
+/////////////////////////////////////////////////
+// Get number of counters
+/////////////////////////////////////////////////
+int MultipleCounterLayer::getNumberOfCountersUsed(void)
+{
+  int i, numberOfCounters=0;
+  for(i=0;i<MAX_TAU_COUNTERS;i++){
+    char *tmpChar = getCounterNameAt(i);
+    if((tmpChar != NULL) && (MultipleCounterLayer::getCounterUsed(i))){
+      numberOfCounters++;
+    }
+  }
+  return numberOfCounters; 
+}
+
 #if ( defined(TAU_MULTIPLE_COUNTERS) && defined(TRACING_ON))
+
 /////////////////////////////////////////////////
 // Trigger user defined events associated with each counter 
 /////////////////////////////////////////////////
 void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, double *values, int tid)
 {
   int i;
-  for (i = 1; i < numberOfActiveFunctions; i++)
+  static int countersUsed = MultipleCounterLayer::getNumberOfCountersUsed();
+  for (i = 1; i < countersUsed; i++)
   { /* for each event */
     TraceEvent(counterEvents[i]->GetEventId(), (long long) values[i], tid, timestamp, 1);
     // 1 in the last parameter is for use timestamp 
