@@ -18,6 +18,7 @@
 # include <fcntl.h>
 # include <signal.h>
 # include <unistd.h>
+# include <time.h>
 # include <Profile/Profiler.h>
 
 
@@ -25,7 +26,8 @@
 # define PCXX_EVENT_SRC 
 # include "Profile/pcxx_events.h"
 
-extern "C" time_t time(time_t * t);
+/* extern "C" time_t time(time_t * t);
+ use time.h */
 
 unsigned long int pcxx_ev_class = PCXX_EC_TRACER | PCXX_EC_TIMER;
 
