@@ -16,17 +16,18 @@ public class Configure {
 
 	// todo - remove these defaults
 	// todo - consider using a hash table!
-	private String perfdb_home = "/home/khuck/research/PerfDB";
-	private String jdbc_db_jarfile = "/home/khuck/research/PerfDB/jars/postgresql.jar";
+	private String perfdb_home = "";
+	private String jdbc_db_jarfile = "postgresql.jar";
 	private String jdbc_db_driver = "org.postgresql.Driver";
 	private String jdbc_db_type = "postgresql";
 	private String db_hostname = "localhost";
 	private String db_portnum = "5432";
 	private String db_dbname = "perfdb";
-	private String db_username = "khuck";
-	private String db_password = "encrypted_password";
-	private String db_schemafile = "/home/khuck/research/PerfDB/db/dbschema.txt";
-	private String xml_parser = "/home/khuck/research/PerfDB/jars/xerces.jar";
+	private String db_username = "";
+	private String db_password = "";
+	private String db_schemafile = "dbschema.txt";
+	private String xml_parser = "xerces.jar";
+	private ParseConfig parser;
 
 	private String configFileName;
 
@@ -51,14 +52,6 @@ public class Configure {
 		System.out.println(Greeting);
 
 		try {
-				/*
-			// Prompt for home directory
-			System.out.println(PDBHomePrompt);
-			// todo - the default is pwd/..
-			String tmpString = reader.readLine();
-			if (tmpString.length() > 0) perfdb_home = tmpString;
-			*/
-
 			// Check to see if the configuration file exists
 			configFileName = configFileNameIn;
 			File configFile = new File(configFileName);
@@ -86,63 +79,19 @@ public class Configure {
 
     public void ParseConfigFile() throws IOException, FileNotFoundException {
 		System.out.println("Parsing config file...");
-	    BufferedReader configReader = new BufferedReader(new FileReader(configFileName));
-		String inputString;
-		// parse the file, line by line.
-	    while ((inputString = configReader.readLine())!= null){
-			// ignore blank lines
-			if (inputString.length() > 0) {
-				// System.out.println(inputString);
-				// ignore comment lines
-				// todo - find out why tokenizing won't compile!
-				/*
-		       	StringTokenizer checkCommentTokenizer = new StringTokenizer(inputString,"#");
-				inputString = checkCommentTokenizer.nextToken();
-				if (inputString[0] != '#') {
-					ParseConfigField(inputString);
-				}
-				*/
-			}
-		}
+	    parser = new ParseConfig(configFileName);
+			perfdb_home = parser.getPerfDBHome();
+			jdbc_db_jarfile = parser.getJDBCJarFile();
+			jdbc_db_driver = parser.getJDBCDriver();
+			jdbc_db_type = parser.getDBType();
+			db_hostname = parser.getDBHost();
+			db_portnum = parser.getDBPort();
+			db_dbname = parser.getDBName();
+			db_username = parser.getDBUserName();
+			db_password = parser.getDBPasswd();
+			db_schemafile = parser.getDBSchema();
+			xml_parser = parser.getXMLSAXParser();
 	}
-
-	/** ParseConfigField method
-	 *  This method tokenizes a single line from the configuration file,
-	 *  and stores the data in the appropriate member variable.
-	 */
-
-	/*
-    public void ParseConfigField(String inputString) {
-		StringTokenizer checkCommentTokenizer = new StringTokenizer(inputString,":");
-		String fieldName = checkCommentTokenizer.nextToken();
-		if (fieldName.compareTo("perfdb_home") == 0) {
-			perfdb_home = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("jdbc_db_jarfile") == 0) {
-			jdbc_db_jarfile = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("jdbc_db_driver") == 0) {
-			jdbc_db_driver = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("jdbc_db_type") == 0) {
-			jdbc_db_type = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("db_hostname") == 0) {
-			db_hostname = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("db_portnum") == 0) {
-			db_portnum = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("db_dbname") == 0) {
-			db_dbname = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("db_username") == 0) {
-			db_username = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("db_password") == 0) {
-			db_password = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("db_schemafile") == 0) {
-			db_schemafile = checkCommentTokenizer.nextToken();
-		} else if (fieldName.compareTo("xml_parser") == 0) {
-			xml_parser = checkCommentTokenizer.nextToken();
-		} else {
-			System.out.println("Unknown data value " + fieldName + " in configuration file.\nIt will be ignored.");
-		}
-
-	}
-	*/
 
 	/** PromptForData method
 	 *  This method prompts the user for each of the data fields
@@ -259,7 +208,7 @@ public class Configure {
 			if (!configFile.exists()) {
 				configFile.createNewFile();
 			}
-			BufferedWriter configWriter = new BufferedWriter(new FileWriter(configFile + ".output"));
+			BufferedWriter configWriter = new BufferedWriter(new FileWriter(configFile));
 			configWriter.write("# This is the configuration file for the PerfDBF tools & API\n");
 			configWriter.write("# Items are listed as name:value, one per line.\n");
 			configWriter.write("# Comment lines begin with a '#' symbol.\n");
@@ -307,7 +256,7 @@ public class Configure {
 			configWriter.newLine();
 
 			configWriter.write("# Database XML parser jar file - note: the path is absolulte\n");
-			configWriter.write("xml_parser:" + xml_parser + "\n");
+			configWriter.write("xml_sax_parser:" + xml_parser + "\n");
 			configWriter.newLine();
 
 			configWriter.close();

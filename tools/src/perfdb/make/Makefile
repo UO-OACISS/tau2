@@ -88,7 +88,7 @@ PLIST_BUILD     = $(patsubst %,$(SOURCE_DIR)/%/.build,$(PACKAGE_LIST))
 
 
 # Applied when make is called without targets. 
-default : buildall
+default : buildall jar
 
 
 # Building a .class file from a .java file

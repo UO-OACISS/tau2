@@ -7,8 +7,4 @@ JAR_CONTENT = \
 	perfdb/util/io  \
 	perfdb/dbmanager \
 
-#MANIFEST = manifest.txt
-
-include $(PERFDB_HOME)/Makefile
-
-
+include ${PERFDB_HOME}/make/Makefile
