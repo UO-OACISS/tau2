@@ -6,7 +6,7 @@ cc-----------------------------------------------------------------------------
 
       subroutine HELLOWORLD(iVal)
         integer iVal
-        integer profiler(2)
+        integer profiler(2) / 0, 0 /
         save    profiler
 
         call TAU_PROFILE_TIMER(profiler,'HelloWorld()')
@@ -19,8 +19,9 @@ cc       HelloWorld = iVal
 
       program main
         integer i
-        integer profiler(2)
-	save profiler
+        integer profiler(2) / 0, 0 /
+        save    profiler
+
         call TAU_PROFILE_INIT()
         call TAU_PROFILE_TIMER(profiler, 'main()')
         call TAU_PROFILE_START(profiler)
