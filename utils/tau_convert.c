@@ -1399,6 +1399,7 @@ int main (int argc, char *argv[])
       long long phRecv= 0;
       long long tempTid = 0;
       long long tempNid = 0;
+      long long endBurstTime = 0;
       int sendTid,recvTid;
       int tempTag, tempLen;
       bool looking;
@@ -1516,7 +1517,7 @@ int main (int argc, char *argv[])
 	    prvPCF[erec->ev-1] = 1;
 	  }
 	  if(strcmp((GetEventName(erec->ev,&hasParam)), "\"MPI_Recv()  \"") ==0){
-	    long long endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
+	    endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
 	    fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:3\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
 	  }
 	  break;
@@ -1527,16 +1528,16 @@ int main (int argc, char *argv[])
 	    prvPCF[erec->ev-1] = 1;
 	  }
 	  if(strcmp((GetEventName(erec->ev,&hasParam)), "\"MPI_Send()  \"") ==0){
-	    long long endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
+	    endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
 	    fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:1\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
 	  }
 	  else if(strcmp((GetEventName(erec->ev,&hasParam)),"\"MPI_Recv()  \"") ==0){
-	    long long endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
+	    endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
 	    fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:1\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
 	  }
 	  break;
 	case 3:
-	  long long endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
+	  endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
 	  fprintf(outfp, "1:%d:1:%d:%d:%llu:%llu:1\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
 	  break;
 	  
