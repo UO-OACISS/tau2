@@ -44,6 +44,7 @@ Version 2.9 changes (from 2.8):
 30. Added support for F90 in tau_instrumentor. 
 31. Added support for abnormal exit in C [UPS].
 32. Added support for Opari-1.1 [flush_enter/exit calls].
+33. Added MPI wrapper layer for SGI Fortran [SAGE]. 
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
