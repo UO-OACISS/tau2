@@ -10,7 +10,7 @@ By default, you will be able to use the gettimeofday function only.
 However, you can configure TAU with addition options as usual, thus allowing
 the selection of multiple counters.  For example:
 
-[tau2]./configure -MULTIPLECOUNTERS -LINUXTIMERS -CPUTIME -papi=/"your location of papi
+[tau2]./configure -MULTIPLECOUNTERS -LINUXTIMERS -CPUTIME -papi=<papi_directory>
 
 will allow you to use linux timers, cpu time, and all papi metrics.
 
@@ -20,7 +20,7 @@ denoting which metrics you wish to use for any given run.  You can set
 up to 25 counters (depending on your hardware).  The following example uses
 PAPI_FP_INS for papi floating point instructions, GET_TIME_OF_DAY for the
 standard gettimeofday function, CPU_TIME for cpu time, LINUX_TIMERS
-for linux timers, and PAPI_L1_DCM for L1 data cache misses.
+for linux timers, and PAPI_L1_DCM for L1 data cache misses (See note below).
 
 
 [tau2/examples/multicounter]$ setenv COUNTER1 PAPI_FP_INS
@@ -30,7 +30,7 @@ for linux timers, and PAPI_L1_DCM for L1 data cache misses.
 [tau2/examples/multicounter]$ setenv COUNTER5 PAPI_L1_DCM
 [tau2/examples/multicounter]$ ./simple
 
-You will then have four directories containing data for each of the
+You will then have five directories containing data for each of the
 selected metrics:
 
 [tau2/examples/multicounter]$ ls -la
@@ -99,3 +99,22 @@ NODE 0;CONTEXT 0;THREAD 0:
 
 Simply resetting the counters will give you cause the system to track different
 metrics.
+
+
+LIST OF COUNTERS:
+-----------------
+Set the following values for the COUNTER<1-25> environment variables.
+GET_TIME_OF_DAY    --- For the default profiling option using gettimeofday()
+SGI_TIMERS         --- For -SGITIMERS configuration option under IRIX
+LINUX_TIMERS       --- For -LINUXTIMERS configuration option under Linux
+CPU_TIME           --- For user+system time from getrusage() call with -CPUTIME
+P_WALL_CLOCK_TIME  --- For PAPI's WALLCLOCK time using -PAPIWALLCLOCK
+P_VIRTUAL_TIME     --- For PAPI's process virtual time using -PAPIVIRTUAL
+
+and PAPI/PCL options that can be found in the TAU user's guide or on their 
+respective websites. For e.g.,
+PCL_FP_INSTR       --- For floating point operations using PCL (-pcl=<dir>)
+PAPI_FP_INS        --- For floating point operations using PAPI (-papi=<dir>)
+
+
+
