@@ -36,7 +36,7 @@ USER_OPT=-g
 TAUROOT=/home/grads/sameer/tau2
 TULIPDIR=/users/sameer/s
 TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
-TAU_OPTIONS=-sgitimers-pthread-kcc
+TAU_OPTIONS=
 #######################################################################
  
 #ENABLE64BIT#ABI 	     = -64		  #ENDIF#
@@ -85,7 +85,7 @@ LSX = .a
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
-#SMARTS#include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
+#SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
