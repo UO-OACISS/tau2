@@ -149,6 +149,7 @@ long* TauFormulateComparisonArray(Profiler *p)
 /* if I'm in phase, go upto the profiler that has a phase. if you don't find
 one then it is the top level profiler */
     ary[1] = (long) current->ThisFunction; 
+    current = current->ParentProfiler;
     while (current != NULL)
     {
       ary[2] = (long) current->ThisFunction; 
@@ -323,6 +324,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2005/01/11 00:45:40 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.16 2005/01/11 00:45:40 sameer Exp $ 
+ * $Revision: 1.17 $   $Date: 2005/01/11 01:41:02 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.17 2005/01/11 01:41:02 sameer Exp $ 
  ***************************************************************************/
