@@ -223,7 +223,10 @@ void Profiler::Start(void)
 	
 	// First, increment the number of calls
 	ThisFunction->IncrNumCalls();
-	
+        // now increment parent's NumSubrs()
+        if (ParentProfiler != 0)
+          ParentProfiler->ThisFunction->IncrNumSubrs();	
+
 	// Next, if this function is not already on the call stack, put it
 	if (ThisFunction->GetAlreadyOnStack() == false)   { 
 	  AddInclFlag = true; 
@@ -863,11 +866,151 @@ bool RtsLayer::isCtorDtor(const char *name)
 
 //////////////////////////////////////////////////////////////////////
 
+
+// should be #ifdef PROFILE_CALLSTACK
+#ifdef PROFILE_CALLS
+
+/*-------------------------------------------------------------------
+|
+|  Profiler::CallStackTrace()
+|  =========================
+|
+|  Author:  Mike Kaufman
+|           mikek@cs.uoregon.edu
+|
+|  Date:    11/4/1997
+|
+|  output stack of active Profiler objects
+|
+*/
+void Profiler::CallStackTrace()
+{
+  char      *dirname;            // directory name of output file
+  char      fname[1024];         // output file name 
+  char      errormsg[1024];      // error message buffer
+  FILE      *fp;
+  Profiler  *curr;               // current Profiler object in stack traversal
+  double    now;                 // current wallclock time 
+  double    totalTime;           // now - profiler's start time
+  double    prevTotalTime;       // inclusive time of last Profiler object 
+                                 //   stack
+  static int ncalls = 0;         // number of times CallStackTrace()
+                                 //   has been called
+  
+
+  // get wallclock time
+  now = RtsLayer::getUSecD();  
+
+  // increment num of calls to trace
+  ncalls++;
+
+  // set up output file
+  if ((dirname = getenv("PROFILEDIR")) == NULL)
+  {
+    dirname = new char[8];
+    strcpy (dirname, ".");
+  }
+  
+  // create file name string
+  sprintf(fname, "%s/callstack.%d.%d.%d", dirname, RtsLayer::myNode(),
+	  RtsLayer::myContext(), RtsLayer::myThread());
+  
+
+  // traverse stack and set all FunctionInfo's *_cs fields to zero
+  curr = CurrentProfiler[RtsLayer::myThread()];
+  while (curr != 0)
+  {
+    curr->ThisFunction->ExclTime_cs = curr->ThisFunction->GetExclTime();
+    curr = curr->ParentProfiler;
+  }  
+
+  prevTotalTime = 0;
+  // calculate time info
+  curr = CurrentProfiler[RtsLayer::myThread()];
+  while (curr != 0 )
+  {
+    totalTime = now - curr->StartTime;
+ 
+    // set profiler's inclusive time
+    curr->InclTime_cs = totalTime;
+
+
+    // WE NEED TO #define PROFILE_CALLS or PROFILE_CALLSTACK or something
+    // calc Profiler's exclusive time
+    curr->ExclTime_cs = totalTime + curr->ExclTimeThisCall
+                      - prevTotalTime;
+     
+    if (curr->AddInclFlag == true)
+    {
+      // calculate inclusive time for profiler's FunctionInfo
+      curr->ThisFunction->InclTime_cs = curr->ThisFunction->GetInclTime()  
+                                      + totalTime;
+    }
+    
+    // calculate exclusive time for each profiler's FunctionInfo
+    curr->ThisFunction->ExclTime_cs += totalTime - prevTotalTime;
+
+    // keep total of inclusive time
+    prevTotalTime = totalTime;
+ 
+    // next profiler
+    curr = curr->ParentProfiler;
+
+  }
+ 
+  // open file
+  if (ncalls == 1)
+    fp = fopen(fname, "w+");
+  else
+    fp = fopen(fname, "a");
+  if (fp == NULL)  // error opening file
+  {
+    sprintf(errormsg, "Error:  Could not create %s", fname);
+    perror(errormsg);
+    return;
+  }
+
+  if (ncalls == 1)
+  {
+    fprintf(fp,"%s%s","Name Type Calls Subrs Prof-Incl ",
+            "Prof-Excl Func-Incl Func-Excl\n");
+    fprintf(fp, 
+            "-------------------------------------------------------------\n");
+  }
+  else
+    fprintf(fp, "\n");
+
+  // output call stack info
+  curr = CurrentProfiler[RtsLayer::myThread()];
+  while (curr != 0 )
+  {
+    fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G %.16G %.16G\n",
+            curr->ThisFunction->GetName(),  curr->ThisFunction->GetType(),
+            curr->ThisFunction->GetCalls(), curr->ThisFunction->GetSubrs(),
+            curr->InclTime_cs, curr->ExclTime_cs,
+            curr->ThisFunction->InclTime_cs, curr->ThisFunction->ExclTime_cs);
+
+    curr = curr->ParentProfiler;
+    
+  } 
+
+  // close file
+  fclose(fp);
+
+}
+/*-----------------------------------------------------------------*/
+#endif //PROFILE_CALLS
+
+
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1997/11/28 22:04:48 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.2 1997/11/28 22:04:48 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: mikek $
+ * $Revision: 1.3 $   $Date: 1997/12/05 20:38:57 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.3 1997/12/05 20:38:57 mikek Exp $ 
  ***************************************************************************/
 
 	
+
+
+
+
 
