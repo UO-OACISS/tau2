@@ -264,6 +264,9 @@ public abstract class ParaProfDataSession  extends DataSession{
 	return newMetric;
     }
 
+    protected void setMetrics(Vector metrics){
+	this.metrics = metrics;}
+
     protected void setProfileStatsPresent(boolean profileStatsPresent){
 	this.profileStatsPresent = profileStatsPresent;}
 

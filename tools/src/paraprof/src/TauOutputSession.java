@@ -249,31 +249,17 @@ public class TauOutputSession extends ParaProfDataSession{
 			    globalMappingElement.incrementTotalExclusiveValue(functionDataLine.d0);
 			    globalMappingElement.incrementTotalInclusiveValue(functionDataLine.d1);
 			    
-			    //Set the max values.
+			    //Set the max values (thread max values are calculated in the Thread class).
 			    if((globalMappingElement.getMaxExclusiveValue(metric)) < functionDataLine.d0)
 				globalMappingElement.setMaxExclusiveValue(metric, functionDataLine.d0);
-			    if((thread.getMaxExclusiveValue(metric)) < functionDataLine.d0)
-				thread.setMaxExclusiveValue(metric, functionDataLine.d0);
-			    
 			    if((globalMappingElement.getMaxInclusiveValue(metric)) < functionDataLine.d1)
 				globalMappingElement.setMaxInclusiveValue(metric, functionDataLine.d1);
-			    if((thread.getMaxInclusiveValue(metric)) < functionDataLine.d1)
-				thread.setMaxInclusiveValue(metric, functionDataLine.d1);
-			    
 			    if(globalMappingElement.getMaxNumberOfCalls() < functionDataLine.i0)
 				globalMappingElement.setMaxNumberOfCalls(functionDataLine.i0);
-			    if(thread.getMaxNumberOfCalls() < functionDataLine.i0)
-				thread.setMaxNumberOfCalls(functionDataLine.i0);
-			    
 			    if(globalMappingElement.getMaxNumberOfSubRoutines() < functionDataLine.i1)
 				globalMappingElement.setMaxNumberOfSubRoutines(functionDataLine.i1);
-			    if(thread.getMaxNumberOfSubRoutines() < functionDataLine.i1)
-				thread.setMaxNumberOfSubRoutines(functionDataLine.i1);
-			    
 			    if(globalMappingElement.getMaxUserSecPerCall(metric) < usecCall)
 				globalMappingElement.setMaxUserSecPerCall(metric, usecCall);
-			    if(thread.getMaxUserSecPerCall(metric) < usecCall)
-				thread.setMaxUserSecPerCall(metric, usecCall);
 			    
 			    if(!(globalMappingElement.groupsSet())){
 				if(this.firstMetric()){ 

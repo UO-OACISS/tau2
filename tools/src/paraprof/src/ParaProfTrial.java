@@ -39,6 +39,12 @@ public class ParaProfTrial extends Trial{
 	    this.setNumContextsPerNode(trial.getNumContextsPerNode());
 	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
 	    this.setUserData(trial.getUserData());
+	    int numberOfMetrics = trial.getMetricCount();
+	    metrics = new Vector();
+	    for(int i=0;i<numberOfMetrics;i++){
+		Metric metric = this.addMetric();
+		metric.setName(trial.getMetric(i));
+	    }
 	}
 	this.type = type;
     }
@@ -66,8 +72,17 @@ public class ParaProfTrial extends Trial{
 	default:
 	    break;
 	}
-
-	dataSession.initialize(obj);
+	
+	if(type==4){
+	    //Need to pass in the metrics present for database sources.
+	    //Not easy to obtain this information from a PerfDBSession.
+	    Vector v = new Vector();
+	    v.add(obj);
+	    v.add(metrics);
+	    dataSession.initialize(v);
+	}
+	else
+	    dataSession.initialize(obj);
 
 	//Now grab all the data.
 	metrics = dataSession.getMetrics();
