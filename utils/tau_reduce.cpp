@@ -657,8 +657,8 @@ void acceptRules(){
     }//if    
     
     while(fgets(line,sizeof(line),fp)!=NULL){
-      //check to see if line is a comment--if so, ignore it
-      if(line[0]!='#'){
+      //check to see if line is a comment, newline, or space--if so, ignore it
+      if(line[0]!='#'&&line[0]!='\n'&&line[0]!=' '){
 	if(verbose)
 	  printf("___________________________________________________________\n%s",line);
 	numstmts=0;
@@ -866,7 +866,7 @@ int main (int argc, char *argv[]){
 
 /***************************************************************************
  * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
- * $Revision: 1.5 $   $Date: 2002/07/26 16:51:12 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.5 2002/07/26 16:51:12 ntrebon Exp $
+ * $Revision: 1.6 $   $Date: 2002/07/26 20:05:00 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.6 2002/07/26 20:05:00 ntrebon Exp $
  ***************************************************************************/
 

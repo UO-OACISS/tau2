@@ -85,6 +85,7 @@ usec < 1000 & numcalls = 1
 usecs/call < 1000
 percent < 5
 
-NOTE: Any line in the rule file that begins with a # is a comment line. 
+NOTE: Any line in the rule file that begins with a # is a comment line. For
+clarity, blank lines may be inserted in between rules.
 
 
