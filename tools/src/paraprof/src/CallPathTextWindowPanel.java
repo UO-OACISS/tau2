@@ -117,11 +117,13 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener{
 		    }
 		}
 		
-		yHeightNeeded = yHeightNeeded + (spacing);
-		l1 = gm.getMappingIterator(0);
-		while(l1.hasNext()){
-		    gme1 = (GlobalMappingElement) l1.next();
+		if(ParaProf.debugIsOn){
 		    yHeightNeeded = yHeightNeeded + (spacing);
+		    l1 = gm.getMappingIterator(0);
+		    while(l1.hasNext()){
+			gme1 = (GlobalMappingElement) l1.next();
+			yHeightNeeded = yHeightNeeded + (spacing);
+		    }
 		}
 		
 		boolean sizeChange = false;   
