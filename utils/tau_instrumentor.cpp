@@ -65,9 +65,22 @@ struct itemRef {
 
 static bool locCmp(const itemRef* r1, const itemRef* r2) {
   if ( r1->line == r2->line )
-    return r1->col < r2->col;
+  {
+    if (r1->col == r2->col)
+    { /* they're both equal */
+      if (r1->kind == BODY_BEGIN) return true; 
+      if (r2->kind == BODY_BEGIN) return false; 
+      return true; 
+    }
+    else
+    { /* col numbers are different */
+      return r1->col < r2->col;
+    }
+  }
   else
+  {
     return r1->line < r2->line;
+  }
 }
 
 static bool itemEqual(const itemRef* r1, const itemRef* r2) {
@@ -899,6 +912,13 @@ int instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, s
 #define WRITE_SPACE(os, c) { char ch = c; if (!((ch == ' ') || (ch == '\t'))) ch = ' '; \
 				os << ch; }
 
+#define WRITE_TAB(os, column) if (column == 1) os<<"\t";
+
+/* In Fortran programs, it is a bad idea to begin the first column with a C
+ * as it can be confused with a comment. So, we should check and see if the
+ * "call TAU_PROFILE..." statement starts on the first column and if so, we 
+ * should introduce a tab there. Hence, the need for the WRITE_TAB macro */
+
 
 /* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
@@ -1009,11 +1029,16 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 	  	  WRITE_SPACE(ostr,inbuf[i])
 		}
+
+		WRITE_TAB(ostr,(*it)->col);
 		ostr <<"integer profiler(2)"<<endl;
 		/* spaces */
      		for (int space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
+
+		WRITE_TAB(ostr,(*it)->col);
 		ostr <<"save profiler"<<endl<<endl;
+
      		for (int space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG)
@@ -1021,22 +1046,27 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #ifdef DEBUG
 	  	  cout <<"Routine is main fortran program "<<endl;
 #endif /* DEBUG */
+		  WRITE_TAB(ostr,(*it)->col);
 		  ostr <<"call TAU_PROFILE_INIT()"<<endl;
 		  isProgram = true;
 		  /* put spaces on the next line */
      		  for (int space = 0; space < (*it)->col-1 ; space++) 
 		    WRITE_SPACE(ostr, inbuf[space]) 
+
+		  WRITE_TAB(ostr,(*it)->col);
 		  ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
 		    (*it)->item->fullName()<< "')"<<endl;
 		}
 		else { /* For all routines */
 		  if (strcmp(group_name.c_str(), "TAU_USER") != 0)
   		  { /* Write the following lines only when -DTAU_GROUP=string is defined */
+		    WRITE_TAB(ostr,(*it)->col);
 		    ostr<<"call TAU_PROFILE_TIMER(profiler,'" <<
     		       group_name.substr(10)<<">"<< (*it)->item->fullName()<< "')"<<endl;
 		  }
 		  else 
 		  { /* group_name is not defined, write the default fullName of the routine */
+		    WRITE_TAB(ostr,(*it)->col);
 		    ostr <<"call TAU_PROFILE_TIMER(profiler,'" <<
 		      (*it)->item->fullName()<< "')"<<endl;
 		  }
@@ -1044,6 +1074,8 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		/* spaces */
      		for (int space = 0; space < (*it)->col-1 ; space++) 
 		  WRITE_SPACE(ostr, inbuf[space]) 
+
+		WRITE_TAB(ostr,(*it)->col);
 		ostr <<"call TAU_PROFILE_START(profiler)"<<endl;
 
 		/* write the original statement */
@@ -1093,6 +1125,7 @@ int instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  ostr << "          ";
 		}
 	
+		WRITE_TAB(ostr,(*it)->col);
 		ostr <<"call TAU_PROFILE_STOP(profiler)"<<endl;
 
      		for (int space = 0; space < (*it)->col-1 ; space++) 
@@ -1387,8 +1420,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.46 $   $Date: 2003/10/21 18:40:47 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.46 2003/10/21 18:40:47 sameer Exp $
+ * $Revision: 1.47 $   $Date: 2003/10/23 20:11:33 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.47 2003/10/23 20:11:33 sameer Exp $
  ***************************************************************************/
 
 
