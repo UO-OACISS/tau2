@@ -29,15 +29,15 @@ ARFLAGS		= rcv
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-TARGET		= libTauMpi$(TAU_OPTIONS)$(LSX)
+TAU_TARGET		= libTauMpi$(TAU_OPTIONS)$(LSX)
 ##############################################
 
-all : 		$(TARGET)
+all : 		$(TAU_TARGET)
 
-install:	$(INSTALLDEST)/$(TARGET) 
+install:	$(INSTALLDEST)/$(TAU_TARGET) 
 
-$(TARGET) : 	TauMpi.o $(FWRAPPER)
-	$(AR) $(ARFLAGS) $(TARGET) TauMpi.o $(FWRAPPER)
+$(TAU_TARGET) : 	TauMpi.o $(FWRAPPER)
+	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o $(FWRAPPER)
 
 TauMpi.o :	TauMpi.c
 	$(CC) $(CFLAGS) -c TauMpi.c
@@ -45,11 +45,11 @@ TauMpi.o :	TauMpi.c
 TauFMpi.o: 	TauFMpi.c
 	$(CC) $(CFLAGS) -c TauFMpi.c
 
-$(INSTALLDEST)/$(TARGET): $(TARGET)
+$(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 clean: 	
-	$(RM) core TauMpi.o $(TARGET)
+	$(RM) core TauMpi.o $(TAU_TARGET)
 ##############################################

@@ -7,6 +7,10 @@
 #     define _havehosttype_
 ARCHt3e
 #else
+#   ifdef __crayx1
+#     define _havehosttype_
+ARCHcrayx1
+#else
 #   ifdef CRAY-C90            /* CRAYTEST */
 #     define _havehosttype_   /* CRAYTEST */
 ARCHc90                       /* CRAYTEST */
@@ -14,4 +18,5 @@ ARCHc90                       /* CRAYTEST */
 #     define _havehosttype_   /* CRAYTEST */
 ARCHcray                      /* CRAYTEST */
 #   endif /* CRAY-C90 */      /* CRAYTEST */
+#   endif /* cray x1  */
 #   endif

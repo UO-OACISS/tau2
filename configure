@@ -753,7 +753,7 @@ fi
 # Choose the c++ and cc compiler
 
 case $machine in
-   tc2000 | ksr1 | c90 | cray | t3e)
+   tc2000 | ksr1 | c90 | cray | t3e | crayx1 )
      if [ $cxx_compiler = default ]
        then
          cxx_compiler=CC
@@ -911,6 +911,11 @@ fi
 if [ $machine = t3e -a $cxx_compiler = CC ] 
   then
     fixmakeargs="$fixmakeargs CRAYCC"
+fi
+
+if [ $machine = crayx1 -a $cxx_compiler = CC ]
+  then
+    fixmakeargs="$fixmakeargs CRAYX1CC"
 fi
 
 ######################################################################
