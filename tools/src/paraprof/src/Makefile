@@ -4,19 +4,19 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-BASE_SOURCES=ApplicationManager.java GlobalMappingElement.java PPMLPanel.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
-             BinWindow.java GlobalSortedMappingElement.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
-             BinWindowPanel.java GlobalThreadDataElement.java ParaProfApplication.java PrefColorPanel.java SystemEvents.java \
+BASE_SOURCES=ApplicationManager.java PPMLPanel.java ParaProfTreeCellRenderer.java StaticMainWindowData.java \
+             BinWindow.java ParaProf.java ParaProfTrial.java StaticMainWindowPanel.java \
+             BinWindowPanel.java ParaProfApplication.java PrefColorPanel.java SystemEvents.java \
              CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java ParaProfDBSession.java PrefSpacingPanel.java TauOutputSession.java \
              CallPathTextWindowPanel.java LineData.java ParaProfDataSession.java Preferences.java TauPprofOutputSession.java \
-             CallPathUtilFuncs.java MappingDataWindow.java ParaProfError.java Thread.java \
+             CallPathUtilFuncs.java MappingDataWindow.java \
              ColorChooser.java MappingDataWindowPanel.java ParaProfExperiment.java ThreadDataWindow.java \
              ColorPair.java MappingLedgerWindow.java ParaProfImageInterface.java ParaProfImageOptionsPanel.java ParaProfImageFormatFileFilter.java \
-             SMWThread.java ThreadDataWindowPanel.java Context.java MappingLedgerWindowPanel.java SMWThreadDataElement.java \
-             UserEventWindow.java DBConfiguration.java Metric.java ParaProfIterator.java SavedPreferences.java UserEventWindowPanel.java \
-             DynaprofOutputSession.java NCT.java ParaProfManager.java StatWindow.java UtilFncs.java \
-             Node.java ParaProfManagerTableModel.java StatWindowPanel.java Mapping.java ParaProfLisp.java ParaProfLispPrimitives.java \
-             GlobalMapping.java PPML.java ParaProfObserver.java StaticMainWindow.java ParaProfTreeNodeUserObject.java XMLSupport.java
+             SMWThread.java ThreadDataWindowPanel.java MappingLedgerWindowPanel.java SMWThreadDataElement.java \
+             UserEventWindow.java DBConfiguration.java Metric.java SavedPreferences.java UserEventWindowPanel.java \
+             DynaprofOutputSession.java ParaProfManager.java StatWindow.java \
+             ParaProfManagerTableModel.java StatWindowPanel.java ParaProfLisp.java ParaProfLispPrimitives.java \
+             PPML.java ParaProfObserver.java StaticMainWindow.java ParaProfTreeNodeUserObject.java XMLSupport.java
 
 NEW_SOURCES=$(BASE_SOURCES) FileList.java ParaProfImageOutput.java
 
