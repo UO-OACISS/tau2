@@ -49,6 +49,7 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////
 // How deep should the callpath be? The default value is 2
 //////////////////////////////////////////////////////////////////////
+int TauCalibrateTimerOverheads(void);
 int& TauGetCallPathDepth(void)
 {
   char *depth; 
@@ -58,6 +59,7 @@ int& TauGetCallPathDepth(void)
     if ((depth = getenv("TAU_CALLPATH_DEPTH")) != NULL)
     {
       value = atoi(depth);
+      TauCalibrateTimerOverheads();
       if (value > 1) 
       {
         return value;
@@ -71,6 +73,7 @@ int& TauGetCallPathDepth(void)
     else 
     {
       value = TAU_DEFAULT_CALLPATH_DEPTH;
+      TauCalibrateTimerOverheads();
       return value;
     }
   }
@@ -149,6 +152,23 @@ string * TauFormulateNameString(Profiler *p)
 inline bool TauCallPathShouldBeProfiled(string *s)
 { 
   return true; // for now profile all callpaths
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// Calibrate TimerOverheads
+//////////////////////////////////////////////////////////////////////
+int TauCalibrateTimerOverheads(void)
+{
+  TAU_PROFILE_TIMER(tnull, ".TAU null timer overhead", " ", TAU_DEFAULT);
+  TAU_PROFILE_TIMER(tone,  ".TAU single timer overhead", " ", TAU_DEFAULT);
+
+  TAU_PROFILE_START(tone);
+    /* nested */
+    TAU_PROFILE_START(tnull);
+    TAU_PROFILE_STOP(tnull);
+  TAU_PROFILE_STOP(tone);
+  return 0;
 }
 
 
@@ -244,6 +264,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2003/05/13 23:51:54 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.9 2003/05/13 23:51:54 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 2004/01/06 01:02:59 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.10 2004/01/06 01:02:59 sameer Exp $ 
  ***************************************************************************/
