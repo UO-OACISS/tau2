@@ -102,7 +102,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 TauGroup_t& RtsLayer::TheProfileMask(void)
 { // to avoid initialization problems of non-local static variables
-  static unsigned int ProfileMask = TAU_DEFAULT;
+  static TauGroup_t ProfileMask = TAU_DEFAULT;
 
   return ProfileMask;
 }
@@ -133,7 +133,7 @@ int& RtsLayer::TheContext(void)
 
 /////////////////////////////////////////////////////////////////////////
 
-unsigned int RtsLayer::enableProfileGroup(unsigned int ProfileGroup) {
+TauGroup_t RtsLayer::enableProfileGroup(TauGroup_t ProfileGroup) {
   TheProfileMask() |= ProfileGroup; // Add it to the mask
   DEBUGPROFMSG("enableProfileGroup " << ProfileGroup <<" Mask = " 
 	<< TheProfileMask() << endl;);
@@ -142,7 +142,7 @@ unsigned int RtsLayer::enableProfileGroup(unsigned int ProfileGroup) {
 
 /////////////////////////////////////////////////////////////////////////
 
-unsigned int RtsLayer::disableProfileGroup(unsigned int ProfileGroup) {
+TauGroup_t RtsLayer::disableProfileGroup(TauGroup_t ProfileGroup) {
   if (TheProfileMask() & ProfileGroup) { // if it is already set 
     TheProfileMask() ^= ProfileGroup; // Delete it from the mask
     DEBUGPROFMSG("disableProfileGroup " << ProfileGroup <<" Mask = " 
@@ -153,7 +153,7 @@ unsigned int RtsLayer::disableProfileGroup(unsigned int ProfileGroup) {
 
 /////////////////////////////////////////////////////////////////////////
 
-unsigned int RtsLayer::resetProfileGroup(void) {
+TauGroup_t RtsLayer::resetProfileGroup(void) {
   TheProfileMask() = 0;
   return TheProfileMask();
 }
@@ -189,8 +189,8 @@ int RtsLayer::setMyContext(int ContextId) {
 
 /////////////////////////////////////////////////////////////////////////
 
-bool RtsLayer::isEnabled(unsigned int ProfileGroup) {
-unsigned int res =  ProfileGroup & TheProfileMask() ;
+bool RtsLayer::isEnabled(TauGroup_t ProfileGroup) {
+TauGroup_t res =  ProfileGroup & TheProfileMask() ;
 
   if (res > 0)
     return true;
@@ -867,6 +867,6 @@ int RtsLayer::DumpEDF(int tid)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.25 $   $Date: 2001/01/05 22:22:39 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.25 2001/01/05 22:22:39 sameer Exp $ 
+ * $Revision: 1.26 $   $Date: 2001/02/28 00:04:36 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.26 2001/02/28 00:04:36 sameer Exp $ 
  ***************************************************************************/
