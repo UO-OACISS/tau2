@@ -3,8 +3,6 @@ instrumentation and measurement options.
 
 instrument 	- This contains a simple C++ example that shows how TAU's
 		  API can be used for manually instrumenting a C++ program.
-		  It highlights instrumentation for templates and user 
-		  defined events.
 
 threads		- A simple multi-threaded program that shows how the main
 	 	  function of a thread is instrumented. Performance data 
