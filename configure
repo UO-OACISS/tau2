@@ -1041,6 +1041,26 @@ case $machine in
      fi
      ;;
 
+
+   cygwin) 
+     if [ $cxx_compiler = default ]
+       then
+         cxx_compiler=g++
+     fi
+
+     # To fix the  make install  clash with INSTALL file in file systems 
+     # that are case insensitive. Move INSTALL file to INSTALL.txt 
+     if [ -f INSTALL ]
+       then
+	mv INSTALL INSTALL.txt
+     fi
+
+     if [ $c_compiler = default ]
+       then
+         c_compiler=gcc             
+     fi
+     ;;
+
    alpha)
      if [ $cxx_compiler = default ]
        then
