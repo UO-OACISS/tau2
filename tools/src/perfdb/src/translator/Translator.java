@@ -32,7 +32,7 @@ public class Translator implements Serializable{
     private boolean isUserEventHeadingSet;
 
     //constructor
-    public Translator(String sourcename, String targetname, String configFileName){
+    public Translator(String configFileName, String sourcename, String targetname) {
 
 	readPprof = new File(sourcename);
 
@@ -108,7 +108,7 @@ public class Translator implements Serializable{
 	    //intermediate strings
 	    String inputString;
 	    String tokenString;
-	    String functionNameString;
+	    
 	    String userEventNameString;
 
 	    StringTokenizer genericTokenizer;
@@ -116,6 +116,7 @@ public class Translator implements Serializable{
 	    int functionID = -1;
 	    int userEventID = -1;
 	    String functionName;
+	    String functionGroup;
 	    int node = -1;
 	    int context = -1;
 	    int thread = -1;
@@ -164,12 +165,18 @@ public class Translator implements Serializable{
 				counter++;
 				if(checkForExclusiveWithTOrM(inputString)){
 				    
-				    functionNameString = getFunctionName(inputString);
+				    functionName = getFunctionName(inputString);
 
 				    functionID = getFunctionID(inputString);
-				    				    
-				    if(!(globalMapping.setFunctionNameAt(functionNameString, functionID)))
+				   				    				    
+				    if(!(globalMapping.setFunctionNameAt(functionName, functionID)))
 				       	System.out.println("There was an error adding function to the global mapping");
+
+				    if (isAGroupMember(inputString)){
+					functionGroup = getFunctionGroup(inputString);
+					if(!(globalMapping.setFunctionGroupAt(functionGroup, functionID)))
+					    System.out.println("There was an error adding function to the global mapping");
+				    }
 				    
 				    value = getValue(inputString);				    
 				    percentValue = getPercentValue(inputString);
@@ -267,6 +274,11 @@ public class Translator implements Serializable{
 				    //Grab the function ID.
 				    functionID = getFunctionID(inputString);
 				    functionName = getFunctionName(inputString);
+				   				   
+				    if (isAGroupMember(inputString)){
+					functionGroup = getFunctionGroup(inputString);
+				    }
+				    else functionGroup = null;
 
 				    //Grab the value.
 				    value = getValue(inputString);
@@ -339,6 +351,7 @@ public class Translator implements Serializable{
 						tmpGTDE = new GlobalThreadDataElement();
 						tmpGTDE.setFunctionID(functionID);
 						tmpGTDE.setFunctionName(functionName);
+						tmpGTDE.setFunctionGroup(functionGroup);
 						currentGlobalThread.addThreadDataElement(tmpGTDE, functionID);
 					    }
 					    tmpGTDE.setFunctionExists();
@@ -410,6 +423,7 @@ public class Translator implements Serializable{
 						tmpGTDE = new GlobalThreadDataElement();
 						tmpGTDE.setFunctionID(functionID);
 						tmpGTDE.setFunctionName(functionName);
+						tmpGTDE.setFunctionGroup(functionGroup);
 						currentGlobalThread.addThreadDataElement(tmpGTDE, functionID);
 					    }
 
@@ -434,6 +448,7 @@ public class Translator implements Serializable{
 					    tmpGTDE = new GlobalThreadDataElement();
 					    tmpGTDE.setFunctionID(functionID);
 					    tmpGTDE.setFunctionName(functionName);
+					    tmpGTDE.setFunctionGroup(functionGroup);
 					    currentGlobalThread.addThreadDataElement(tmpGTDE, functionID);
 					}
 										
@@ -448,6 +463,10 @@ public class Translator implements Serializable{
 					 //Grab the function ID.
 					 functionID = getFunctionID(inputString);
 					 functionName = getFunctionName(inputString);
+					 if (isAGroupMember(inputString))
+					     functionGroup = getFunctionGroup(inputString);
+					 else 
+					     functionGroup = null;
 
 					 //Grab the value.
 					 value = getValue(inputString);
@@ -482,6 +501,7 @@ public class Translator implements Serializable{
 					     tmpGTDE = new GlobalThreadDataElement();
 					     tmpGTDE.setFunctionID(functionID);
 					     tmpGTDE.setFunctionName(functionName);
+					     tmpGTDE.setFunctionGroup(functionGroup);
 					     currentGlobalThread.addThreadDataElement(tmpGTDE, functionID);
 					 }
 
@@ -618,7 +638,7 @@ public class Translator implements Serializable{
     }// end of the method.
 
 
-    public void writeXmlFiles(){
+    public void writeXmlFiles(String probsize, String appid, String expid){
 
 	GlobalNode nodeObject;
 	Vector ContextList;
@@ -640,7 +660,6 @@ public class Translator implements Serializable{
 	GlobalMappingElement globalmappingObject;
 
 	try{
-	    String probsize;	 
 	    String sys = "";
 	    String config = "";
 	    String instru = "";
@@ -652,77 +671,80 @@ public class Translator implements Serializable{
 
 	    BufferedReader ireader = new BufferedReader(new InputStreamReader(System.in));
 
-	    System.out.println("Please tell me the problem size");
-	    probsize = ireader.readLine().trim();
-	    if (probsize.length()==0) probsize = "-1";
+		if (probsize == null) {
+	    	System.out.println("Please tell me the problem size");
+	    	probsize = ireader.readLine().trim();
+	    	if (probsize.length()==0) probsize = "-1";
+		}
 
-	    System.out.println("Please tell me the ID of the application this trial belongs to.");
-	    String appid  = ireader.readLine().trim();
+		if (appid == null) {
+	    	System.out.println("Please tell me the ID of the application this trial belongs to.");
+	    	appid  = ireader.readLine().trim();
+		}
 
 	    if (appid.length()>0) 
-		appid =  checkForApp(appid);
+			appid =  checkForApp(appid);
 	    else {
-	    		
-		System.out.println("If you don't know the exact application ID, please tell me the application group the trial belongs to:");
-		appname = ireader.readLine().trim();
-		System.out.println("Please tell me the application version");
-		version = ireader.readLine().trim();
-
-		appid = checkForApp(appname, version);
+			System.out.println("If you don't know the exact application ID, please tell me the application group the trial belongs to:");
+			appname = ireader.readLine().trim();
+			System.out.println("Please tell me the application version");
+			version = ireader.readLine().trim();
+			appid = checkForApp(appname, version);
 	    }
 	
 	    if (appid==null){
-		System.out.println("Cannot find such an application. Quit translanting.");
-		System.exit(-1);
+			System.out.println("Cannot find such an application. Quit translanting.");
+			System.exit(-1);
 	    }
 		
-	    System.out.println("Please tell me the ID of the experiment group this trial belongs to.");
-	    String expid  = ireader.readLine().trim();
+		if (expid == null){
+	    	System.out.println("Please tell me the ID of the experiment group this trial belongs to.");
+	    	expid  = ireader.readLine().trim();
+		}
 	    
 	    if (expid.length()>0) 
-		expid =  checkForEnv(expid);
+			expid =  checkForEnv(expid);
 	    else {
+			System.out.println("If you don't know the exact experiment ID number, please tell me the location of environment files,");
+			// System.out.println("in the form of machinename:absolutepath, ");
 
-		System.out.println("If you don't know the exact experiment ID number, please tell me the location of environment files,");
-		// System.out.println("in the form of machinename:absolutepath, ");
+			System.out.println("if they are different from ./Sys_Info.xml, ./Config_Info.xml, ./Instru_Info.xml and ./Compiler_Info.xml respectively.");
 
-		System.out.println("if they are different from ./Sys_Info.xml, ./Config_Info.xml, ./Instru_Info.xml and ./Compiler_Info.xml respectively.");
+			System.out.println("System information:");
+			sys = ireader.readLine().trim();
+			if (sys.trim().length()==0)
+		    	ff = new File("Sys_Info.xml");
+			else ff = new File(sys);
+			sys = hostname + ":" + ff.getAbsolutePath();
 
-		System.out.println("System information:");
-		sys = ireader.readLine().trim();
-		if (sys.trim().length()==0)
-		    ff = new File("Sys_Info.xml");
-		else ff = new File(sys);
-		sys = hostname + ":" + ff.getAbsolutePath();
-
-		System.out.println("Configuration information:");
-		config = ireader.readLine().trim();
-		if (config.trim().length()==0)
-		    ff = new File("Config_Info.xml");
-		else ff = new File(config);	
-		config = hostname + ":" + ff.getAbsolutePath();
+			System.out.println("Configuration information:");
+			config = ireader.readLine().trim();
+			if (config.trim().length()==0)
+		    	ff = new File("Config_Info.xml");
+			else ff = new File(config);	
+			config = hostname + ":" + ff.getAbsolutePath();
 	    
-		System.out.println("Instrumentation information:");    
-		instru = ireader.readLine().trim();
-		if (instru.trim().length()==0)
-		    ff = new File("Instru_Info.xml");
-		else ff = new File(instru); 	
-		instru = hostname + ":" + ff.getAbsolutePath();
+			System.out.println("Instrumentation information:");    
+			instru = ireader.readLine().trim();
+			if (instru.trim().length()==0)
+		    	ff = new File("Instru_Info.xml");
+			else ff = new File(instru); 	
+			instru = hostname + ":" + ff.getAbsolutePath();
 
-		System.out.println("Compiler information:");
-		compiler = ireader.readLine().trim();
-		if (compiler.trim().length()==0)
-		    ff = new File("Compiler_Info.xml");
-		else ff = new File(compiler);	
-		compiler = hostname + ":" + ff.getAbsolutePath();
+			System.out.println("Compiler information:");
+			compiler = ireader.readLine().trim();
+			if (compiler.trim().length()==0)
+		    	ff = new File("Compiler_Info.xml");
+			else ff = new File(compiler);	
+			compiler = hostname + ":" + ff.getAbsolutePath();
 
-		expid = checkForEnv(sys, config, compiler, instru, appid);
+			expid = checkForEnv(sys, config, compiler, instru, appid);
 	    }
 
-	if (expid == null) {
-		System.out.println("Cannot find such an experiment that is in accordance with the information you provided above. Quit translanting.");
-		System.exit(-1);
-	}
+		if (expid == null) {
+			System.out.println("Cannot find such an experiment that is in accordance with the information you provided above. Quit translanting.");
+			System.exit(-1);
+		}
 	else{
 	    //System.out.println("the experiment id is "+expid);
 
@@ -797,6 +819,8 @@ public class Translator implements Serializable{
   				
 				writeFunID(xwriter, funObject.getFunctionID());
 				
+				writeFunGroup(xwriter, funObject.getFunctionGroup());
+				
 				writeInclPerc(xwriter,funObject.getInclPercValue());
 				
 				writeIncl(xwriter,funObject.getInclValue());
@@ -858,7 +882,7 @@ public class Translator implements Serializable{
 		    
 		    writeTotalFunID(xwriter, globalmappingObject.getGlobalID());
 
-		    // total stuff
+		    writeTotalFunGroup(xwriter, globalmappingObject.getFunctionGroup());
 		   
 		    writeTotalInclPerc(xwriter, globalmappingObject.getTotalInclusivePercentValue());
 
@@ -900,7 +924,8 @@ public class Translator implements Serializable{
 
 		    writeMeanFunID(xwriter, globalmappingObject.getGlobalID());
 
-		    
+		    writeMeanFunGroup(xwriter, globalmappingObject.getFunctionGroup());
+
 		    writeMeanInclPerc(xwriter,globalmappingObject.getMeanInclusivePercentValue());
  
 		   
@@ -1184,7 +1209,7 @@ public class Translator implements Serializable{
        		tmpString = getFunctionNameTokenizer.nextToken();
 			
 			//Now return the second string.
-       		return tmpString;
+       		return tmpString.trim();
        	}
        	catch(Exception e)
        	{
@@ -1223,6 +1248,64 @@ public class Translator implements Serializable{
        	}
 		
        	return -1;
+    }
+
+    boolean isAGroupMember(String inString){
+	try{
+	    String tmpString;
+		       		
+	    StringTokenizer getFunctionGroupTokenizer = new StringTokenizer(inString, "\"");
+						
+	    if (getFunctionGroupTokenizer.countTokens()>3){
+		//Grab the first token.
+       		tmpString = getFunctionGroupTokenizer.nextToken();
+			
+		//Grab the second token.
+       		tmpString = getFunctionGroupTokenizer.nextToken();
+			
+		//Grab the third token.
+       		tmpString = getFunctionGroupTokenizer.nextToken();
+
+		return tmpString.trim().endsWith("GROUP=");
+	    }
+       	}
+       	catch(Exception e)
+	    {
+       		e.printStackTrace();	
+	    }
+		
+       	return false;
+    }
+
+
+    String getFunctionGroup(String inString)
+    {
+       	try{
+       		String tmpString;
+		       		
+       		StringTokenizer getFunctionGroupTokenizer = new StringTokenizer(inString, "\"");
+						
+		//Grab the first token.
+       		tmpString = getFunctionGroupTokenizer.nextToken();
+			
+		//Grab the second token.
+       		tmpString = getFunctionGroupTokenizer.nextToken();
+			
+		//Grab the third token.
+       		tmpString = getFunctionGroupTokenizer.nextToken();
+
+		//Grab the fourth token.
+       		tmpString = getFunctionGroupTokenizer.nextToken();
+
+		//Now return the fourth string.
+       		return tmpString.trim();
+       	}
+       	catch(Exception e)
+       	{
+       		e.printStackTrace();	
+	}
+		
+       	return null;
     }
 	
     double getValue(String inString)
@@ -1755,6 +1838,22 @@ public class Translator implements Serializable{
        	}
     }
 
+    public void writeFunGroup(BufferedWriter writer, String funGroup){
+	try{
+
+	    String tmpString;
+	    tmpString = "\t\t<fungroup>"+funGroup+"</fungroup>";
+	    writer.write(tmpString, 0, tmpString.length());
+	    writer.newLine();
+
+	}
+	catch(Exception e)
+       	{
+       		e.printStackTrace();	
+		
+       	}
+    }
+
     public void writeInclPerc(BufferedWriter writer, double InclPercValue){
 	try{
 	    String tmpString;
@@ -1985,7 +2084,20 @@ public class Translator implements Serializable{
        	}
     }
 
-    
+    public void writeTotalFunGroup(BufferedWriter writer, String funGroup ){
+	try{
+
+	    String tmpString;
+	    tmpString = "\t\t<fungroup>"+funGroup+"</fungroup>";
+	    writer.write(tmpString, 0, tmpString.length());
+	    writer.newLine();
+	}
+        catch(Exception e) {
+       		e.printStackTrace();	
+		
+       	}
+    }
+
     public void writeTotalInclPerc(BufferedWriter writer, double inclperc){
 	try{
 	    
@@ -2136,6 +2248,20 @@ public class Translator implements Serializable{
 	}
 	catch(Exception e)
        	{
+       		e.printStackTrace();	
+		
+       	}
+    }
+
+    public void writeMeanFunGroup(BufferedWriter writer, String funGroup ){
+	try{
+
+	    String tmpString;
+	    tmpString = "\t\t<fungroup>"+funGroup+"</fungroup>";
+	    writer.write(tmpString, 0, tmpString.length());
+	    writer.newLine();
+	}
+        catch(Exception e) {
        		e.printStackTrace();	
 		
        	}
@@ -2363,7 +2489,7 @@ public class Translator implements Serializable{
 	//******************************
 
     static public void main(String[] args){
-	String USAGE = "USAGE: Translator configfilename sourcefilename destinationname";
+	String USAGE = "USAGE: Translator configfilename sourcefilename destinationname [problem_size] [application_id] [experiment_id]";
 	if (args.length == 0) {
                 System.err.println(USAGE);
                 System.exit(-1);
@@ -2371,7 +2497,15 @@ public class Translator implements Serializable{
 
 	Translator trans = new Translator(args[0], args[1], args[2]);
 	trans.buildPprof(); 
-	trans.writeXmlFiles();
+	int ctr = 3;
+	String problemSize = null, appid = null, expid = null;
+	if (ctr < args.length)
+		problemSize = args[ctr++];
+	if (ctr < args.length)
+		appid = args[ctr++];
+	if (ctr < args.length)
+		expid = args[ctr++];
+	trans.writeXmlFiles(problemSize, appid, expid);
 	System.out.println("Done - Translating pprof.dat into pprof.xml!");
     }
 } 

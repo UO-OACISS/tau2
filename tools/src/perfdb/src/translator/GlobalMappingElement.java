@@ -9,7 +9,8 @@ public class GlobalMappingElement implements Serializable
  
 	//Global Mapping reference.
 	String functionName;
-	int globalID;			//Global ID for this function name.		
+	int globalID;			//Global ID for this function name.
+        String functionGroup=null;
 	
 	double meanExclusiveValue;
 	double totalExclusiveValue;
@@ -73,7 +74,16 @@ public class GlobalMappingElement implements Serializable
 		return functionName;
 	}
 
+        public void setFunctionGroup(String funcGroup){	    
+	    functionGroup = funcGroup;
+        }
 	
+        public String getFunctionGroup(){
+	    if (functionGroup == null)
+		return "";
+	    else return functionGroup;
+        }
+
 	public void setGlobalID(int inGlobalID)
 	{
 		globalID = inGlobalID;

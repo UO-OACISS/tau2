@@ -13,6 +13,7 @@ public class GlobalThreadDataElement implements Serializable
 	//Function ID
 	int functionID;
         String functionName;
+        String functionGroup = null;
 	
 	//Named data values.
 	private double inclValue;
@@ -93,6 +94,16 @@ public class GlobalThreadDataElement implements Serializable
 	{
 		return functionName;
 	}
+
+        public void setFunctionGroup(String funcGroup){
+	    functionGroup = funcGroup;
+        }
+
+    public String getFunctionGroup(){
+	if (functionGroup == null)
+	    return "";
+	else return functionGroup;
+    }
 	
 	public void setInclValue(double inInclValue)
 	{
@@ -259,6 +270,7 @@ public class GlobalThreadDataElement implements Serializable
 
 
 }
+
 
 
 

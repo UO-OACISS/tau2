@@ -54,6 +54,7 @@ public class LoadHandler extends DefaultHandler {
 
     protected String funid = "";
     protected String funname = "";
+    protected String fungroup = "";
     protected String funIndex = "";
     protected String locid = "";
 
@@ -67,6 +68,7 @@ public class LoadHandler extends DefaultHandler {
     
     protected String uename = "";
     protected String ueid = "";
+    protected String uegroup = "UE";
     protected String numofsamples = "";
     protected String maxvalue = "";
     protected String minvalue = "";
@@ -320,6 +322,9 @@ public class LoadHandler extends DefaultHandler {
 	if( name.equalsIgnoreCase("funID") ) {
 	    currentElement = "funID";
 	}
+	if (name.equalsIgnoreCase("fungroup")){
+	    currentElement = "fungroup";
+	}
 	if( name.equalsIgnoreCase("inclperc") ) {
 	    currentElement = "inclperc";
 	}
@@ -486,6 +491,8 @@ public class LoadHandler extends DefaultHandler {
 	
 	if (currentElement.equals("funname")) funname += tempcode; 
       
+	if (currentElement.equals("fungroup")) fungroup += tempcode;
+
 	if (currentElement.equals("funID")) funid = tempcode;
 	
 	if (currentElement.equals("inclperc")) inclperc = tempcode;
@@ -556,7 +563,9 @@ public class LoadHandler extends DefaultHandler {
 		if (funArray[tempInt] == null){
 
 		    funIndexCounter++;
-		    String ftempStr = String.valueOf(funIndexCounter)+"\t"+funid+"\t"+funname+"\t"+getTrialId();
+		    if (fungroup.trim().length() == 0) // the function doesn't belong to any group.
+			fungroup = "NA";
+		    String ftempStr = String.valueOf(funIndexCounter)+"\t"+funid+"\t"+funname+"\t"+fungroup+"\t"+getTrialId();
 		    fwriter.write(ftempStr, 0, ftempStr.length());
 		    fwriter.newLine();
 								
@@ -577,6 +586,7 @@ public class LoadHandler extends DefaultHandler {
 	    }
 	    
 	    funname = "";
+	    fungroup = "";
 	}	
 
 	if (name.equalsIgnoreCase("userevent")){
@@ -586,7 +596,7 @@ public class LoadHandler extends DefaultHandler {
 		if (funArray[ueidInt+funAmt] == null){
 		    
 		    funIndexCounter++;
-		    String ftempStr = String.valueOf(funIndexCounter)+"\t"+ueid+"\t"+uename+"\t"+getTrialId();
+		    String ftempStr = String.valueOf(funIndexCounter)+"\t"+ueid+"\t"+uename+"\t"+uegroup+"\t"+getTrialId();
 		    fwriter.write(ftempStr, 0, ftempStr.length());
 		    fwriter.newLine();
 					    
@@ -623,6 +633,7 @@ public class LoadHandler extends DefaultHandler {
 	    }
 	    
 	    funname = "";
+	    fungroup = "";
 	}	
 
 	if (name.equalsIgnoreCase("meanfunction")) {
@@ -639,6 +650,7 @@ public class LoadHandler extends DefaultHandler {
 	    }
 
 	    funname = "";
+	    fungroup = "";
 	}	
 
 	if (name.equalsIgnoreCase("Onetrial")) {

@@ -47,6 +47,7 @@ CREATE TABLE FunIndex (
 	FunIndexID      SERIAL           NOT NULL    PRIMARY KEY,
 	FunID           INT,
 	FunName         TEXT		 NOT NULL,
+	FunGroup        VARCHAR(50),
 	TrialID         INT              NOT NULL,
 	CONSTRAINT ffkey FOREIGN KEY(TrialID) REFERENCES Trials(TrialID) ON DELETE CASCADE ON UPDATE CASCADE
 );

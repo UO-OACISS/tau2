@@ -59,6 +59,7 @@ public class ParseConfig {
 	if (i>0)
 	    return aLine.substring(0,i).trim();
 	else{     
+	    System.out.println(aLine);
 	    System.out.println("This is an abnormal term. The correct form is name:value.");
 	    return null;
 	}

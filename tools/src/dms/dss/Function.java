@@ -4,6 +4,7 @@ public class Function {
 	private int functionIndexID;
 	private int functionID;
 	private String name;
+	private String group;
 	private int trialID;
 	private int experimentID;
 	private int applicationID;
@@ -20,6 +21,10 @@ public class Function {
 
 	public void setName (String name) {
 		this.name = name;
+	}
+
+	public void setGroup (String group) {
+		this.group = group;
 	}
 
 	public void setTrialID (int id) {
@@ -52,6 +57,10 @@ public class Function {
 
 	public String getName () {
 		return this.name;
+	}
+
+	public String getGroup () {
+		return this.group;
 	}
 
 	public int getTrialID () {

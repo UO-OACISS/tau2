@@ -413,8 +413,8 @@ public class PerfDBSession extends DataSession {
 		Vector funs = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct f.funindexid, f.funid, f.funname, f.trialid, ");
-		buf.append("e.expid, e.appid, ");
+		buf.append("select distinct f.funindexid, f.funid, f.funname, ");
+		buf.append("f.fungroup, f.trialid, e.expid, e.appid, ");
 		buf.append("ms.inclperc, ms.incl, ms.exclperc, ms.excl, ms.call, ms.subrs, ms.inclpcall, ");
 		buf.append("ts.inclperc, ts.incl, ts.exclperc, ts.excl, ts.call, ts.subrs, ts.inclpcall ");
 		buf.append("from funindex f inner join trials t on f.trialid = t.trialid ");
@@ -457,28 +457,29 @@ public class PerfDBSession extends DataSession {
 				fun.setIndexID(resultSet.getInt(1));
 				fun.setFunctionID(resultSet.getInt(2));
 				fun.setName(resultSet.getString(3));
-				fun.setTrialID(resultSet.getInt(4));
-				fun.setExperimentID(resultSet.getInt(5));
-				fun.setApplicationID(resultSet.getInt(6));
+				fun.setGroup(resultSet.getString(4));
+				fun.setTrialID(resultSet.getInt(5));
+				fun.setExperimentID(resultSet.getInt(6));
+				fun.setApplicationID(resultSet.getInt(7));
 				// get the mean summary data
 				FunctionDataObject funMS = new FunctionDataObject();
-				funMS.setInclusivePercentage(resultSet.getDouble(7));
-				funMS.setInclusive(resultSet.getDouble(8));
-				funMS.setExclusivePercentage(resultSet.getDouble(9));
-				funMS.setExclusive(resultSet.getDouble(10));
-				funMS.setNumCalls((int)(resultSet.getDouble(11)));
-				funMS.setNumSubroutines((int)(resultSet.getDouble(12)));
-				funMS.setInclusivePerCall(resultSet.getDouble(13));
+				funMS.setInclusivePercentage(resultSet.getDouble(8));
+				funMS.setInclusive(resultSet.getDouble(9));
+				funMS.setExclusivePercentage(resultSet.getDouble(10));
+				funMS.setExclusive(resultSet.getDouble(11));
+				funMS.setNumCalls((int)(resultSet.getDouble(12)));
+				funMS.setNumSubroutines((int)(resultSet.getDouble(13)));
+				funMS.setInclusivePerCall(resultSet.getDouble(14));
 				fun.setMeanSummary(funMS);
 				// get the total summary data
 				FunctionDataObject funTS = new FunctionDataObject();
-				funTS.setInclusivePercentage(resultSet.getDouble(14));
-				funTS.setInclusive(resultSet.getDouble(15));
-				funTS.setExclusivePercentage(resultSet.getDouble(16));
-				funTS.setExclusive(resultSet.getDouble(17));
-				funTS.setNumCalls((int)(resultSet.getDouble(18)));
-				funTS.setNumSubroutines((int)(resultSet.getDouble(19)));
-				funTS.setInclusivePerCall(resultSet.getDouble(20));
+				funTS.setInclusivePercentage(resultSet.getDouble(15));
+				funTS.setInclusive(resultSet.getDouble(16));
+				funTS.setExclusivePercentage(resultSet.getDouble(17));
+				funTS.setExclusive(resultSet.getDouble(18));
+				funTS.setNumCalls((int)(resultSet.getDouble(19)));
+				funTS.setNumSubroutines((int)(resultSet.getDouble(20)));
+				funTS.setInclusivePerCall(resultSet.getDouble(21));
 				fun.setTotalSummary(funTS);
 				funs.addElement(fun);
 				functionHash.put(new Integer(fun.getIndexID()), fun);

@@ -43,21 +43,22 @@ public class SimpleExample {
 		// Get the data
 		myIterator = session.getFunctionData();
 		FunctionDataObject fundo;
-		String name;
+		String name, group;
 		int t, n, c, h;
 		double inclusivePercentage;
 
 		System.out.println ("Inclusive Percentages:");
-		System.out.println ("Trial, Node, Context, Thread, Name, Value:");
+		System.out.println ("Trial, Node, Context, Thread, Name, Group, Value:");
 		while (myIterator.hasNext()) {
 			fundo = (FunctionDataObject)(myIterator.next());
 			name = session.getFunction(fundo.getFunctionID()).getName();
+			group = session.getFunction(fundo.getFunctionID()).getGroup();
 			t = session.getFunction(fundo.getFunctionID()).getTrialID();
 			n = fundo.getNodeID();
 			c = fundo.getContextID();
 			h = fundo.getThreadID();
 			inclusivePercentage = fundo.getInclusivePercentage();
-			System.out.println (t + ", " + n + ", " + c + ", " + t + ", " + name + " = " + fundo.getInclusivePercentage());
+			System.out.println (t + ", " + n + ", " + c + ", " + t + ", " + name + ", " + group + " = " + fundo.getInclusivePercentage());
 
 		}
 

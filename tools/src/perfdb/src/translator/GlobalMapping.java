@@ -54,6 +54,27 @@ public class GlobalMapping implements Serializable
 		//Successful ... return true.
 		return true;
 	}
+
+       
+       public boolean setFunctionGroupAt(String functionGroup, int inPosition)
+	{
+		//First check to make sure that inPosition is not greater than the number of
+		//functions present (minus one of course for vector numbering).
+		if(inPosition > (this.getNumberOfFunctions() - 1))
+		{
+			return false;
+		}
+		
+		//If here, the size of inPosition is ok.
+		//Therefore grab the element at that position.
+		GlobalMappingElement tmpGME = (GlobalMappingElement) nameIDMapping.elementAt(inPosition);
+		
+		//Set the name.
+		tmpGME.setFunctionGroup(functionGroup);
+		
+		//Successful ... return true.
+		return true;
+	}
 	
 	public boolean setMeanExclusiveValueAt(double inMeanExclusiveValue, int inPosition)
 	{
