@@ -268,7 +268,7 @@ echo " " > wishver
     if [ $papi = yes ]
     then
 # Add PAPI
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -PAPIWALLCLOCK -PAPIVIRTUAL"
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL"
       ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PAPIWALLCLOCK -PAPIVIRTUAL <wishver
       make clean; make install
 # Add -TRACE -papi multiplecounters to it
