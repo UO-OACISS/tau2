@@ -62,9 +62,12 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 /* TAU_MAPPING_LINK gets in a var the function info object associated with the 
    given key (Group) 
 */
+/*
+This error should be reported when FuncInfoVar is NULL
+	  //printf("ERROR: TAU_MAPPING_LINK map returns NULL FunctionInfo *\n"); \
+*/
 #define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); \
 	if (FuncInfoVar == (FunctionInfo *)NULL) { \
-	  printf("ERROR: TAU_MAPPING_LINK map returns NULL FunctionInfo *\n"); \
  	  return; \
         } 
 
