@@ -169,6 +169,9 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     public String toString(){ 
 	return super.getName();}
 
+    public ParaProfDataSession getParaProfDataSession(){
+	return dataSession;}
+
     //####################################
     //Interface code.
     //####################################

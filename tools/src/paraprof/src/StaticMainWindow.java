@@ -97,6 +97,10 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 	  menuItem.addActionListener(this);
 	  subMenu.add(menuItem);
 
+	  menuItem = new JMenuItem("Save to txt File");
+	  menuItem.addActionListener(this);
+	  subMenu.add(menuItem);
+
 	  menuItem = new JMenuItem("Save Image");
 	  menuItem.addActionListener(this);
 	  subMenu.add(menuItem);
@@ -331,6 +335,22 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
 			XMLSupport xMLSupport = new XMLSupport(trial);
 			xMLSupport.writeXmlFiles(trial.getSelectedMetricID(),file);
 			System.out.println("Done saving XML file ...");
+		    }
+		}
+		else if(arg.equals("Save to txt File")){
+		    //Ask the user for a filename and location.
+		    JFileChooser fileChooser = new JFileChooser();
+		    fileChooser.setDialogTitle("Save txt File");
+		    //Set the directory.
+		    fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		    int resultValue = fileChooser.showSaveDialog(this);
+		    if(resultValue == JFileChooser.APPROVE_OPTION){
+			System.out.println("Saving txt file ...");
+			//Get both the file.
+			File file = fileChooser.getSelectedFile();
+			UtilFncs.outputData(trial.getParaProfDataSession(),file,this);
+			System.out.println("Done saving txt file ...");
 		    }
 		}
 		else if(arg.equals("Save Image")){

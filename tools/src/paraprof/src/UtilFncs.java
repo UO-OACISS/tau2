@@ -198,7 +198,7 @@ public class UtilFncs{
 		else{
 		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
 			JOptionPane.showMessageDialog(paraProfError.component,
-						      "ParaProf Error", paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
+						      paraProfError.popupString, "ParaProf Error", JOptionPane.ERROR_MESSAGE);
 		    if(paraProfError.location!=null)
 			System.out.println("Location: " + paraProfError.location);
 		    if(paraProfError.s0!=null)
@@ -223,5 +223,253 @@ public class UtilFncs{
     }
     //####################################
     //End - Error handling.
+    //####################################
+
+    //####################################
+    //Test system state functions.
+    //These functions are used to test
+    //the current state of the system. 
+    //####################################
+
+    //Print the passed in data session data out to a file or to the console.
+    //If the passed in File object is null, data is printed to the console. Component can be null.
+    public static void outputData(ParaProfDataSession dataSession, File file, Component component){
+	try{
+	    boolean toFile = false;
+	    PrintWriter out = null;
+	    Vector list = null;
+	    GlobalMapping globalMapping = dataSession.getGlobalMapping();
+	    int numberOfMetrics = dataSession.getNumberOfMetrics();
+	    StringBuffer output = new StringBuffer(1000);
+	    
+	    if(file!=null){
+		out = new PrintWriter(new FileWriter(file));
+		toFile=true;
+	    }
+
+	    //######
+	    //Metric data.
+	    //######
+	    if(toFile){
+		out.println("<metrics>");
+		out.println("<numofmetrics>"+numberOfMetrics+"</numofmetrics>");
+	    }
+	    else{
+		System.out.println("<metrics>");
+		System.out.println("<numofmetrics>"+numberOfMetrics+"</numofmetrics>");
+	    }
+	    for(int metric=0;metric<numberOfMetrics;metric++){
+		    if(toFile)
+			out.println(dataSession.getMetricName(metric));
+		    else
+			System.out.println(dataSession.getMetricName(metric));
+	    }
+	    if(toFile)
+		out.println("</metrics>");
+	    else
+		System.out.println("</metrics>");
+	    //######
+	    //End - Metric data.
+	    //######
+	    
+	    //####################################
+	    //Global Data.
+	    //####################################
+	    
+	    //######
+	    //Function data.
+	    //######
+	    list = globalMapping.getMapping(0);
+	    
+	    //Name to ID map.
+	    if(toFile){
+		out.println("<funnameidmap>");
+		out.println("<numoffunctions>"+list.size()+"</numoffunctions>");
+	    }
+	    else{
+		System.out.println("<funnameidmap>");
+		System.out.println("<numoffunctions>"+list.size()+"</numoffunctions>");
+	    }
+	    for(Enumeration e = list.elements(); e.hasMoreElements() ;){
+		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
+		if(toFile)
+		    out.println("\""+globalMappingElement.getMappingName()+"\""+globalMappingElement.getMappingID());
+		else
+		    System.out.println("\""+globalMappingElement.getMappingName()+"\""+globalMappingElement.getMappingID());
+	    }
+	    if(toFile)
+		out.println("</funnameidmap>");
+	    else
+		System.out.println("</funnameidmap>");
+
+	    if(toFile)
+		out.println("id mincl(..) mexcl(..) minclp(..) mexclp(..) museccall(..) mnoc mnos");
+	    else
+		System.out.println("id mincl(..) mexcl(..) minclp(..) mexclp(..) museccall(..) mnoc mnos");
+	    for(Enumeration e = list.elements(); e.hasMoreElements() ;){
+		output.delete(0,output.length());
+		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
+		output.append(globalMappingElement.getMappingID()+" ");
+		for(int metric=0;metric<numberOfMetrics;metric++){
+		    output.append(globalMappingElement.getMeanInclusiveValue(metric)+" ");
+		    output.append(globalMappingElement.getMeanExclusiveValue(metric)+" ");
+		    output.append(globalMappingElement.getMeanInclusivePercentValue(metric)+" ");
+		    output.append(globalMappingElement.getMeanExclusivePercentValue(metric)+" ");
+		    output.append(globalMappingElement.getMeanUserSecPerCall(metric)+" ");
+		}
+		output.append(globalMappingElement.getMeanNumberOfCalls()+" ");
+		output.append(globalMappingElement.getMeanNumberOfSubRoutines()+"");
+		if(toFile)
+		    out.println(output);
+		else
+		    System.out.println(output);
+	    }
+	    //######
+	    //End - Function data.
+	    //######
+
+	    //######
+	    //User event data.
+	    //######
+	    list = globalMapping.getMapping(2);
+	    //Name to ID map.
+	    if(toFile){
+		out.println("<usereventnameidmap>");
+		out.println("<numofuserevents>"+list.size()+"</numofuserevents>");
+	    }
+	    else{
+		System.out.println("<usereventnameidmap>");
+		System.out.println("<numofuserevents>"+list.size()+"</numofuserevents>");
+	    }
+	    for(Enumeration e = list.elements(); e.hasMoreElements() ;){
+		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
+		if(toFile)
+		    out.println("\""+globalMappingElement.getMappingName()+"\""+globalMappingElement.getMappingID());
+		else
+		    System.out.println("\""+globalMappingElement.getMappingName()+"\""+globalMappingElement.getMappingID());
+	    }
+	    if(toFile)
+		out.println("</usereventnameidmap>");
+	    else
+		System.out.println("</usereventnameidmap>");
+	    //######
+	    //End - User event data.
+	    //######
+
+	    //####################################
+	    //End - Global Data.
+	    //####################################
+
+	    //######
+	    //Thread data.
+	    //######
+	    if(toFile){
+		out.println("<threaddata>");
+		out.println("funid incl(..) excl(..) inclp(..) exclp(..) useccall(..) mnoc mnos");
+		out.println("usereventid num min max mean");
+		out.println("<numofthreads>"+dataSession.getNCT().getTotalNumberOfThreads()+"</numofthreads>");
+	    }
+	    else{
+		System.out.println("<threaddata>");
+		System.out.println("id incl(..) excl(..) inclp(..) exclp(..) useccall(..) noc nos");
+		System.out.println("usereventid num min max mean");
+		System.out.println("<numofthreads>"+dataSession.getNCT().getTotalNumberOfThreads()+"</numofthreads>");
+	    }
+	    
+	    String test = null;
+
+	    for(Enumeration e1 = dataSession.getNCT().getNodes().elements(); e1.hasMoreElements() ;){
+		Node node = (Node) e1.nextElement();
+		for(Enumeration e2 = node.getContexts().elements(); e2.hasMoreElements() ;){
+		    Context context = (Context) e2.nextElement();
+		    for(Enumeration e3 = context.getThreads().elements(); e3.hasMoreElements() ;){
+			Thread thread = (Thread) e3.nextElement();
+			ListIterator l = null;
+			if(toFile)
+			    out.println("<thread>"+thread.getNodeID()+","+thread.getContextID()+","+thread.getThreadID()+"</thread");
+			else
+			    System.out.println("<thread>"+thread.getNodeID()+","+thread.getContextID()+","+thread.getThreadID()+"</thread");
+			if(toFile)
+			    out.println("<functiondata>");
+			else
+			    System.out.println("<functiondata>");
+			l = thread.getFunctionListIterator();
+			while(l.hasNext()){
+			    output.delete(0,output.length());
+			    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
+			    if(globalThreadDataElement!=null){
+				output.append(globalThreadDataElement.getMappingID()+" ");
+				for(int metric=0;metric<numberOfMetrics;metric++){
+				    output.append(globalThreadDataElement.getInclusiveValue(metric)+" ");
+				    output.append(globalThreadDataElement.getExclusiveValue(metric)+" ");
+				    output.append(globalThreadDataElement.getInclusivePercentValue(metric)+" ");
+				    output.append(globalThreadDataElement.getExclusivePercentValue(metric)+" ");
+				    output.append(globalThreadDataElement.getUserSecPerCall(metric)+" ");
+				}
+				output.append(globalThreadDataElement.getNumberOfCalls()+" ");
+				output.append(globalThreadDataElement.getNumberOfSubRoutines()+"");
+				if(toFile)
+				    out.println(output);
+				else
+				    System.out.println(output);
+			    }
+			}
+			if(toFile)
+			    out.println("</functiondata>");
+			else
+			    System.out.println("</functiondata>");
+			if(toFile)
+			    out.println("<usereventdata>");
+			else
+			    System.out.println("<usereventdata>");
+			l = thread.getUsereventListIterator();
+			while(l.hasNext()){
+			    output.delete(0,output.length());
+			    GlobalThreadDataElement globalThreadDataElement = (GlobalThreadDataElement) l.next();
+			    if(globalThreadDataElement!=null){
+				output.append(globalThreadDataElement.getMappingID()+" ");
+				for(int metric=0;metric<numberOfMetrics;metric++){
+				    output.append(globalThreadDataElement.getUserEventNumberValue()+" ");
+				    output.append(globalThreadDataElement.getUserEventMinValue()+" ");
+				    output.append(globalThreadDataElement.getUserEventMaxValue()+" ");
+				    output.append(globalThreadDataElement.getUserEventMeanValue()+"");
+				}
+				if(toFile)
+				    out.println(output);
+				else
+				    System.out.println(output);
+			    }
+			}
+			if(toFile)
+			    out.println("</usereventdata>");
+			else
+			    System.out.println("</usereventdata>");
+		    }
+		}
+	    }
+	    
+	    if(toFile)
+		out.println("</threaddata>");
+	    else
+		System.out.println("</threaddata>");
+	    //######
+	    //End - Thread data.
+	    //######
+	    
+	    //Flush output buffer and close file if required.
+	    if(out!=null){
+		out.flush();
+		out.close();
+	    }
+
+	}
+	catch(Exception exception){
+	    UtilFncs.systemError(new ParaProfError("UF05", "File write error! Check console for details.",
+						   "An error occured whilst trying to save txt file.",null,
+						   exception, component, null, null, true, false, false), null, null);
+	}
+    }
+    //####################################
+    //End - Test system state functions.
     //####################################
 }

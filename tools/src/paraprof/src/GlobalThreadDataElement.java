@@ -252,12 +252,6 @@ public class GlobalThreadDataElement implements Mapping{
     //User event interface.
     public boolean userevent(){
 	return userevent;}
-
-    public String getUserEventName(){
-	return globalMappingElement.getMappingName();}
-  
-    public int getUserEventID(){
-	return globalMappingElement.getMappingID();}
   
     public void setUserEventNumberValue(int inInt){
 	userEventNumberValue = inInt;

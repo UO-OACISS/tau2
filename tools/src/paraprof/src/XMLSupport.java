@@ -159,7 +159,7 @@ public class XMLSupport{
 				    /* @@@ Commented out as is questionable functionality.  Add back in for legacy support.
 				    writeString(xwriter,15,userevent.getUserEventName());
 				    */
-				    writeInt(xwriter,12,userevent.getUserEventID());
+				    writeInt(xwriter,12,userevent.getMappingID());
 				    writeInt(xwriter,13,userevent.getUserEventNumberValue());
 				    writeDouble(xwriter,7,userevent.getUserEventMaxValue());
 				    writeDouble(xwriter,8,userevent.getUserEventMinValue());
