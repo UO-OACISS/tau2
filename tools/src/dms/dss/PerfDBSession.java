@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.22 2003/08/12 00:25:18 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.23 2003/08/12 23:37:53 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	%I%, %G%
  */
@@ -146,6 +146,34 @@ public class PerfDBSession extends DataSession {
 	}
 
 	// returns Vector of Trial objects
+	private void getTrialMetrics(Trial trial) {
+		// create a string to hit the database
+		StringBuffer buf = new StringBuffer();
+		buf.append("select distinct m.name ");
+		buf.append("from metric m ");
+		buf.append("inner join xml_file x on x.metric = m.id ");
+		buf.append("where x.trial = ");
+		buf.append(trial.getID());
+		buf.append(";");
+		// System.out.println(buf.toString());
+
+		// get the results
+		try {
+	    	ResultSet resultSet = db.executeQuery(buf.toString());	
+	    	while (resultSet.next() != false) {
+				String name = new String();
+				name = resultSet.getString(1);
+				trial.addMetric(name);
+	    	}
+			resultSet.close(); 
+		}catch (Exception ex) {
+	    	ex.printStackTrace();
+	    	return;
+		}
+		return;
+	}
+
+	// returns Vector of Trial objects
 	public Vector getTrialList(String whereClause) {
 		Vector trials = new Vector();
 		// create a string to hit the database
@@ -179,6 +207,14 @@ public class PerfDBSession extends DataSession {
 	    	return null;
 		}
 		
+		// get the function details
+		Enumeration enum = trials.elements();
+		Trial trial;
+		while (enum.hasMoreElements()) {
+			trial = (Trial)enum.nextElement();
+			getTrialMetrics(trial);
+		}
+
 		return trials;
 	}
 
