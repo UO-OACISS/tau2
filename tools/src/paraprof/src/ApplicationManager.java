@@ -26,6 +26,9 @@ public class ApplicationManager extends Observable{
   
     public Vector getApplications(){
 	return applications;}
+
+    public ListIterator getApplicationList(){
+	return new ParaProfIterator(applications);}
   
     public boolean isEmpty(){
 	if((applications.size()) == 0)

@@ -171,7 +171,7 @@ public class ParaProf implements ActionListener{
 
     public static void start(){
 	if(ParaProf.notify){
-	    ParaProf.paraProfManager.populateStandardApplications();
+	    //ParaProf.paraProfManager.populateStandardApplications();
 	    ParaProf.paraProfManager.expandDefaultParaProfTrialNode();
 	    ParaProf.trial.showMainWindow();
 	}

@@ -97,6 +97,9 @@ public class ParaProfExperiment extends Experiment{
     public Vector getTrials(){
 	return trials;}
 
+    public ListIterator getTrialList(){
+	return new ParaProfIterator(trials);}
+
     public ParaProfTrial getTrial(int trialID){
 	return (ParaProfTrial) trials.elementAt(trialID);}
   

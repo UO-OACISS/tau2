@@ -258,6 +258,21 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    if(userObject.toString().equals("Standard Applications")){
 		jSplitPane.setRightComponent(getPanelHelpMessage(1));
 		jSplitPane.setDividerLocation(0.5);
+		//Refresh the application list.
+		System.out.println("Loading application list ...");
+		for(int i=standard.getChildCount(); i>0; i--){
+		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
+		}
+		ListIterator l = ParaProf.applicationManager.getApplicationList();
+		while (l.hasNext()){
+		    ParaProfApplication application = (ParaProfApplication)l.next();
+		    DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+		    application.setDMTN(applicationNode);
+		    treeModel.insertNodeInto(applicationNode, standard, dbApps.getChildCount());
+		}
+		System.out.println("Done loading application list.");
+		tree.expandPath(path);
+		return;
 	    }
 	    else if(userObject.toString().equals("Runtime Applications")){
 		jSplitPane.setRightComponent(getPanelHelpMessage(2));
@@ -334,6 +349,20 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    perfDBSession.terminate();
 		    System.out.println("Done loading experiment list.");
 		}
+		else{
+		    System.out.println("Loading experiment list ...");
+		    for(int i=selectedNode.getChildCount(); i>0; i--){
+			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+		    }
+		    ListIterator l = application.getExperimentList();
+		    while (l.hasNext()){
+			ParaProfExperiment experiment = (ParaProfExperiment)l.next();
+			DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
+			experiment.setDMTN(experimentNode);
+			treeModel.insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
+		    }
+		    System.out.println("Done loading experiment list.");
+		}
 		tree.expandPath(path);
 		jSplitPane.setRightComponent(getTable(userObject));
 		jSplitPane.setDividerLocation(0.5);
@@ -367,6 +396,21 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		perfDBSession.terminate();
 		System.out.println("Done loading trial list.");
 	    }
+	    else{
+		System.out.println("Loading trial list ...");
+		for(int i=selectedNode.getChildCount(); i>0; i--){
+		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+		}
+		ListIterator l = experiment.getTrialList();
+		while (l.hasNext()){
+		    ParaProfTrial trial = (ParaProfTrial)l.next();
+		    DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(trial);
+		    trial.setDMTN(trialNode);
+		    treeModel.insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+		}
+		System.out.println("Done loading trial list.");
+	    }
+
 	    tree.expandPath(path);
 	    jSplitPane.setRightComponent(getTable(userObject));
 	    jSplitPane.setDividerLocation(0.5);
@@ -398,37 +442,40 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    //Add to the list of loaded trials.
 		    loadedTrials.add(trial);
 		}
-		
-		if(!trial.loading()){
-		    //Refresh the metrics list.
-		    for(int i=selectedNode.getChildCount(); i>0; i--){
-			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
-		    }
-		    
-		    for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
-			Metric metric = (Metric) e.nextElement();
-			metric.setDBMetric(true);
-			DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
-			metric.setDMTN(metricNode);
-			metricNode.setAllowsChildren(false);
-			treeModel.insertNodeInto(metricNode, selectedNode, selectedNode.getChildCount());
-		    }
-		}
 	    }
-	    tree.expandPath(path);
-	    jSplitPane.setRightComponent(getTable(userObject));
-	    jSplitPane.setDividerLocation(0.5);
+
+	    //At this point, in both the db and non-db cases, the trial
+	    //is either loading or not.  Check this before displaying.
+	    if(!trial.loading()){
+		System.out.println("Loading metric list ...");
+		for(int i=selectedNode.getChildCount(); i>0; i--){
+		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+		}
+		ListIterator l = trial.getMetricList();
+		while (l.hasNext()){
+		    Metric metric = (Metric)l.next();
+		    DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+		    metric.setDMTN(metricNode);
+		    treeModel.insertNodeInto(metricNode, selectedNode, selectedNode.getChildCount());
+		}
+		System.out.println("Done loading metric list.");
+
+		tree.expandPath(path);
+		jSplitPane.setRightComponent(getTable(userObject));
+		jSplitPane.setDividerLocation(0.5);
+	    }
+	    else{
+		tree.expandPath(path);
+		jSplitPane.setRightComponent(new JScrollPane(this.getLoadingTrialPanel(userObject)));
+		jSplitPane.setDividerLocation(0.5);
+	    }	    
 	}
 	else if(userObject instanceof Metric){
+	    ParaProfTrial paraProfTrial  =  (ParaProfTrial) parentNode.getUserObject();
+	    Metric metric = (Metric) userObject;
 	    jSplitPane.setRightComponent(getTable(userObject));
 	    jSplitPane.setDividerLocation(0.5);
-	    //Note that the parent user object should be an intance of trial.
-	    //Check though!
-	    Object tmpObject =  parentNode.getUserObject();
-	    if(tmpObject instanceof ParaProfTrial)
-		showMetric((ParaProfTrial) tmpObject, (Metric) userObject);
-	    else
-		ParaProf.systemError(null, null, "jRM02 - Logic Error");
+	    this.showMetric(paraProfTrial, metric);
 	}
     }
     //######
@@ -465,6 +512,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    metricNode.setAllowsChildren(false);
 	    treeModel.insertNodeInto(metricNode, defaultMutableTreeNode, defaultMutableTreeNode.getChildCount());
 	}
+
+	jSplitPane.setRightComponent(getTable(trial));
+	jSplitPane.setDividerLocation(0.5);
     }
 
     public void setDatabasePassword(String password){
@@ -521,6 +571,39 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 
     private Component getTable(Object obj){
 	return (new JScrollPane(new JTable(new ParaProfManagerTableModel(obj, treeModel))));}
+
+    private Component getLoadingTrialPanel(Object obj){
+	JPanel jPanel = new JPanel();
+	GridBagLayout gbl = new GridBagLayout();
+	jPanel.setLayout(gbl);
+	GridBagConstraints gbc = new GridBagConstraints();
+	gbc.insets = new Insets(0, 0, 0, 0);
+
+	JLabel jLabel = new JLabel("Trial loading ... Please wait!");
+
+ 	gbc.fill = GridBagConstraints.NONE;
+	gbc.anchor = GridBagConstraints.NORTH;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	gbc.gridx = 0;
+	gbc.gridy = 0;
+	gbc.gridwidth = 1;
+	gbc.gridheight = 1;
+	jPanel.add(this.getTable(obj),gbc);
+
+	gbc.fill = GridBagConstraints.BOTH;
+	gbc.anchor = GridBagConstraints.CENTER;
+	gbc.weightx = 0;
+	gbc.weighty = 0;
+	gbc.gridx = 0;
+	gbc.gridy = 1;
+	gbc.gridwidth = 1;
+	gbc.gridheight = 1;
+	jPanel.add(jLabel,gbc);
+
+	return jPanel;
+    }
+
     //####################################
     //End - Component functions.
     //####################################
@@ -633,51 +716,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    ParaProf.systemError(e, null, "jRM04");
 	}
     }
-  
-    public void populateStandardApplications(){
-	DefaultMutableTreeNode applicationNode = null;
-	DefaultMutableTreeNode experimentNode = null;
-	DefaultMutableTreeNode trialNode = null;
-	DefaultMutableTreeNode metricNode = null;
-    
-	int cnt1 = 0;
-	int cnt2 = 0;
-	int cnt3 = 0;
-	int cnt4 = 0;
-	for(Enumeration e1 = (ParaProf.applicationManager.getApplications()).elements(); e1.hasMoreElements() ;){
-	    ParaProfApplication application = (ParaProfApplication) e1.nextElement();
-	    applicationNode = new DefaultMutableTreeNode(application);
-	    application.setDMTN(applicationNode);
-	    for(Enumeration e2 = (application.getExperiments()).elements(); e2.hasMoreElements() ;){  
-		ParaProfExperiment experiment = (ParaProfExperiment) e2.nextElement();
-		experimentNode = new DefaultMutableTreeNode(experiment);
-		experiment.setDMTN(experimentNode);
- 		//Populate the trials for this experiemnt.
-		for(Enumeration e3 = (experiment.getTrials()).elements(); e3.hasMoreElements() ;){
-		    ParaProfTrial trial = (ParaProfTrial) e3.nextElement();
-		    trialNode = new DefaultMutableTreeNode(trial);
-		    trial.setDMTN(trialNode);
- 		    //Populate the metrics list for this trial.
-		    for(Enumeration e4 = (trial.getMetrics()).elements(); e4.hasMoreElements() ;){
-			Metric metric = (Metric) e4.nextElement();
-			metricNode = new DefaultMutableTreeNode(metric);
-			metric.setDMTN(metricNode);
-			metricNode.setAllowsChildren(false);
-			trialNode.add(metricNode);
-			cnt4++;
-		    }
-		    experimentNode.add(trialNode);
-		    if(cnt3 == 0)
-			defaultParaProfTrialNode = trialNode;
-		    cnt3++;
-		}
-		cnt2++;
-	    }
-	    applicationNode.add(experimentNode);
-	    standard.add(applicationNode);
-	    cnt1++;
-	}
-    } 
   
     public void expandDefaultParaProfTrialNode(){
 	if(defaultParaProfTrialNode != null)

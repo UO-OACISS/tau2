@@ -57,6 +57,9 @@ public class ParaProfApplication extends Application{
   
     public Vector getExperiments(){
 	return experiments;}
+
+    public ListIterator getExperimentList(){
+	return new ParaProfIterator(experiments);}
   
     public ParaProfExperiment addExperiment(){
 	ParaProfExperiment experiment = new ParaProfExperiment();
