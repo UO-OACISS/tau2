@@ -308,11 +308,15 @@ int main(int argc, char **argv){
 	fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
 	argv++;
       }//if
-      else if (strncasecmp (argv[1], "-f", 3) == 0){ // Load the selective instrumentation file
+      else if (strncasecmp (argv[1], "-f", 2) == 0){ // Load the selective instrumentation file
 	processInstrumentationRequests(argv[2]);
 	dprintf("Loading instrumentation requests file %s\n", argv[2]);
 	argv += 2;
       }//if
+      else if (strncasecmp (argv[1], "-v", 2) == 0) { 
+       debugPrint = 1; /* Verbose option set */
+       argv++;
+      }
       else{ //oops! we got an unrecognized argument!
 	errflag=1;
       }//else
