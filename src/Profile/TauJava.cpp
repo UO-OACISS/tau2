@@ -104,7 +104,7 @@ char *s2;
   printf("Inside TauJavaLayer::Init options = %s\n",options);
 #endif // DEBUG_PROF
 
-  if(strlen(options))
+  if(options && strlen(options))
   {
 #ifdef DEBUG_PROF
     fprintf(stdout,"Init: options = %s, len=%d\n", options, strlen(options));
@@ -279,16 +279,16 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event)
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
   
   // If the method is not masked, (has non-zero group id), execute it
-  if(TauMethodName->GetProfileGroup()) { 
+  if(TauMethodName && TauMethodName->GetProfileGroup()) { 
     TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
     TAU_MAPPING_PROFILE_START(TauTimer, tid);
 
-  }
 #ifdef DEBUG_PROF 
   fprintf(stdout, "TAU> Method Entry %s %s:%ld TID = %d\n", 
   		TauMethodName->GetName(), TauMethodName->GetType(), 
 	 	(long) event->u.method.method_id, tid);
 #endif /* DEBUG_PROF */
+  }
 }
 
 void TauJavaLayer::MethodExit(JVMPI_Event *event)
@@ -298,13 +298,13 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event)
   TAU_MAPPING_OBJECT(TauMethodName=NULL);
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
   
-  if(TauMethodName->GetProfileGroup()) { // stop only if it has a finite group 
+  if(TauMethodName && TauMethodName->GetProfileGroup()) { // stop only if it has a finite group 
     TAU_MAPPING_PROFILE_STOP(tid);
-  }
 #ifdef DEBUG_PROF
   fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
 	 	(long) event->u.method.method_id, tid);
 #endif /* DEBUG_PROF */
+  }
 }
 
 void TauJavaLayer::CreateTopLevelRoutine(char *name, char *type, char *groupname, 
@@ -411,8 +411,8 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 
 /***************************************************************************
- * $RCSfile: TauJava.cpp,v $   $Author: tjaqua $
- * $Revision: 1.21 $   $Date: 2001/02/16 23:54:17 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.21 2001/02/16 23:54:17 tjaqua Exp $
+ * $RCSfile: TauJava.cpp,v $   $Author: sameer $
+ * $Revision: 1.22 $   $Date: 2003/11/11 01:12:31 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.22 2003/11/11 01:12:31 sameer Exp $
  ***************************************************************************/
 
