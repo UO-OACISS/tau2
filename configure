@@ -1920,6 +1920,14 @@ then
   fi
 fi
 	
+if [ $machine = hitachi ]
+then
+  if [ $openmp = yes ]
+  then
+    fixmakeargs="$fixmakeargs HITACHI_OPENMP"
+  fi
+fi
+
 if [ $cxx_compiler = cxx ]
 then
   if [ $openmp = yes ]

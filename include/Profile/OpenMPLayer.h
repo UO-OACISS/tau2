@@ -39,6 +39,9 @@
 #ifdef TAU_OPENMP
 extern "C" {
 #include <omp.h>
+#ifndef _OPENMP
+#define _OPENMP
+#endif /* _OPENMP */
 }
 class OpenMPLayer 
 { // Layer for RtsLayer to interact with OpenMP
@@ -67,8 +70,8 @@ class OpenMPLayer
 
 /***************************************************************************
  * $RCSfile: OpenMPLayer.h,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2001/03/08 23:52:01 $
- * POOMA_VERSION_ID: $Id: OpenMPLayer.h,v 1.2 2001/03/08 23:52:01 sameer Exp $
+ * $Revision: 1.3 $   $Date: 2002/05/08 11:10:55 $
+ * POOMA_VERSION_ID: $Id: OpenMPLayer.h,v 1.3 2002/05/08 11:10:55 sameer Exp $
  ***************************************************************************/
 
 

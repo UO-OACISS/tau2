@@ -78,9 +78,9 @@ int OpenMPLayer::RegisterThread(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::GetThreadId(void) 
 {
-#ifdef _OPENMP
+#ifdef TAU_OPENMP
   return omp_get_thread_num();
-#endif /* OPENMP */
+#endif /* TAU_OPENMP */
 
 }
 
@@ -91,9 +91,9 @@ int OpenMPLayer::GetThreadId(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::TotalThreads(void) 
 {
-#ifdef _OPENMP
+#ifdef TAU_OPENMP
   return omp_get_num_threads();
-#endif /* OPENMP */
+#endif /* TAU_OPENMP */
 
 }
 
@@ -145,8 +145,8 @@ int OpenMPLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: OpenMPLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2000/06/09 22:08:12 $
- * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.1 2000/06/09 22:08:12 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2002/05/08 11:10:54 $
+ * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.2 2002/05/08 11:10:54 sameer Exp $
  ***************************************************************************/
 
 

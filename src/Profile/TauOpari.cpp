@@ -9,8 +9,13 @@
 #include <stdlib.h>
 
 //#define DEBUG_PROF 1
-#include "pomp_lib.h"
 #include <Profile/Profiler.h>
+#ifdef TAU_OPENMP
+#ifndef _OPENMP
+#define _OPENMP
+#endif /* _OPENMP */
+#endif /* TAU_OPENMP */
+#include "pomp_lib.h"
 
 /* These two defines specify if we want region based views or construct based
 views or both */
@@ -540,10 +545,10 @@ int tau_openmp_init(void)
   return 0;
 }
 
-static int tau_openmp_initialized = tau_openmp_init();
 
 void TauStartOpenMPRegionTimer(struct ompregdescr *r)
 {
+  static int tau_openmp_initialized = tau_openmp_init();
 /* For any region, create a mapping between a region r and timer t and
    start the timer. */
 
@@ -1239,8 +1244,8 @@ int  pomp_test_nest_lock(omp_nest_lock_t *s) {
 
 /***************************************************************************
  * $RCSfile: TauOpari.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2002/03/27 21:55:25 $
- * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.7 2002/03/27 21:55:25 sameer Exp $
+ * $Revision: 1.8 $   $Date: 2002/05/08 11:10:55 $
+ * POOMA_VERSION_ID: $Id: TauOpari.cpp,v 1.8 2002/05/08 11:10:55 sameer Exp $
  ***************************************************************************/
 
 
