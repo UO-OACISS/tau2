@@ -124,6 +124,9 @@ RtsThread.o 	: RtsThread.cpp $(HDRS)
 pcxx_events.o   : pcxx_events.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+Tracer.o   	: Tracer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
