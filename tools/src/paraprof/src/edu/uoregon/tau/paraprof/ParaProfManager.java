@@ -1450,31 +1450,19 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     }
 
     public void populateTrialMetrics(ParaProfTrial trial) {
-        //Check to see if this trial needs to be uploaded to the database.
+ 
         if (trial.upload()) {
-            System.out.println("Uploading trial: " + trial.getApplicationID() + ","
-                    + trial.getExperimentID() + "," + trial.getID()
-                    + " to the database. Please wait ...");
-            DatabaseAPI databaseAPI = this.getDBSession();
-            if (databaseAPI != null) {
-                trial.setID(databaseAPI.saveParaProfTrial(trial, -1));
-                databaseAPI.terminate();
-            }
-            trial.setUpload(false);
-            System.out.println("Done uploading trial: " + trial.getApplicationID() + ","
-                    + trial.getExperimentID() + "," + trial.getID());
             //Add to the list of loaded trials.
             loadedTrials.add(trial);
-            //Now safe to set this to be a dbTrial.
-            trial.setDBTrial(true);
         }
 
-        if (trial.dBTrial())
+        if (trial.dBTrial()) {
             this.expandTrial(2, trial.getApplicationID(), trial.getExperimentID(), trial.getID(),
                     null, null, trial);
-        else
+        } else {
             this.expandTrial(0, trial.getApplicationID(), trial.getExperimentID(), trial.getID(),
                     null, null, trial);
+        }
     }
 
     public DefaultMutableTreeNode expandApplicationType(int type, int applicationID,

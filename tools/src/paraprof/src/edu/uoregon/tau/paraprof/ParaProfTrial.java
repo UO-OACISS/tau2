@@ -346,11 +346,25 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
             
             //Set this trial's loading flag to false.
             this.setLoading(false);
-
+           
+            //upload to database if necessary
             
-            
-            
-            ParaProf.paraProfManager.populateTrialMetrics(this);
+            //Check to see if this trial needs to be uploaded to the database.
+            if (this.upload()) {
+                DatabaseAPI databaseAPI = ParaProf.paraProfManager.getDBSession();
+                if (databaseAPI != null) {
+                    this.setID(databaseAPI.saveParaProfTrial(this, -1));
+                    databaseAPI.terminate();
+                }
+                this.setUpload(false);
+               
+                //Now safe to set this to be a dbTrial.
+                this.setDBTrial(true);
+            } else {
+                
+                ParaProf.paraProfManager.populateTrialMetrics(this);
+   
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
