@@ -124,6 +124,7 @@ TAU_SHLIBX		= .so
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
+#APPLECXX#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 #USE_IBMXLC#AR_SHFLAGS          = -G 		#ENDIF#
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
@@ -131,6 +132,8 @@ TAU_SHLIBX		= .so
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
+TAU_RANLIB = echo "Built $(TARGET)" 
+#APPLECXX#TAU_RANLIB = ranlib $(TARGET) #ENDIF#
 
 ##############################################
 # If JAVA or DYNINST is defined, TAU_DSO is defined
@@ -152,6 +155,8 @@ all:		$(TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI)
 $(TARGET):	$(OBJS)
 		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TARGET) $(OBJS) $(EXTRAOBJS)
+		$(TAU_RANLIB)
+		
 
 $(TAU_SHLIB): 	$(TARGET) $(OBJS)
 		$(PRELINK_PHASE)
