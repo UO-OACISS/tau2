@@ -859,9 +859,11 @@ public class ExperimentRun implements Serializable
 								return;
 							}
 						}
+
+						if(firstRun){
 						//Now initialize the global mapping with the correct number of mappings for mapping position 0.
 						initializeGlobalMapping(Integer.parseInt(tokenString), 0);
-						
+						}
 						//Set the counter name.
 						counterName = getCounterName(inputString);
 						
