@@ -37,7 +37,10 @@ Version 2.9 changes (from 2.8):
 25. Added support for dynamically assigning group names [SAMRAI].
 26. Added support for evaluating perturbation of TAU_DB_DUMP() [Uintah].
 27. Added support for C in tau_instrumentor.
-28. Fixed RtsLayer bug for PDT based instrumentation of multi-threaded C++ apps.
+28. Fixed RtsLayer bug for PDT based instrumentation of multi-threaded C++ 
+    applications.
+29. Added -noinline flag to tau_instrumentor to suppress instrumentation of 
+    inlined functions [POOMA].
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
