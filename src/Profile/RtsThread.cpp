@@ -72,6 +72,8 @@ int RtsLayer::myThread(void)
 {
 #ifdef PTHREADS
   return PthreadLayer::GetThreadId();
+#elif  TAU_SPROC
+  return SprocLayer::GetThreadId();
 #elif  TAU_WINDOWS
   return WindowsThreadLayer::GetThreadId();
 #elif  TULIPTHREADS
@@ -95,6 +97,8 @@ void RtsLayer::RegisterThread()
 {
 #ifdef PTHREADS
   PthreadLayer::RegisterThread();
+#elif TAU_SPROC
+  SprocLayer::RegisterThread();
 #elif  TAU_WINDOWS
   WindowsThreadLayer::RegisterThread();
 #elif  TULIPTHREADS
@@ -185,6 +189,8 @@ void RtsLayer::LockDB(void)
 {
 #ifdef PTHREADS
   PthreadLayer::LockDB();
+#elif TAU_SPROC
+  SprocLayer::LockDB();
 #elif  TAU_WINDOWS
   WindowsThreadLayer::LockDB();
 #elif  TULIPTHREADS
@@ -205,6 +211,8 @@ void RtsLayer::UnLockDB(void)
 {
 #ifdef PTHREADS
   PthreadLayer::UnLockDB();
+#elif TAU_SPROC
+  SprocLayer::UnLockDB();
 #elif  TAU_WINDOWS
   WindowsThreadLayer::UnLockDB();
 #elif  TULIPTHREADS
@@ -221,8 +229,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2001/03/08 23:55:51 $
- * VERSION: $Id: RtsThread.cpp,v 1.15 2001/03/08 23:55:51 sameer Exp $
+ * $Revision: 1.16 $   $Date: 2001/06/20 20:31:51 $
+ * VERSION: $Id: RtsThread.cpp,v 1.16 2001/06/20 20:31:51 sameer Exp $
  ***************************************************************************/
 
 

@@ -62,7 +62,6 @@ void TauInitCode(char *arg, int isMPI)
   int tid = 0;
   TAU_MONITOR_ENTER(0);
   int functionId = 0;
-  int id;
 
   /* iterate for each routine name */
   name = strtok(arg, "|");
@@ -84,6 +83,7 @@ void TauInitCode(char *arg, int isMPI)
     }
     TauDynFI.push_back(taufi); 
 #else /* TAUDYNVEC */
+    int id;
     id = functionId - 1; /* start from 0 */
     TauFuncNameVec.push_back(string(name));  /* Save the name with id */
     dprintf("TauFuncNameVec[%d] = %s\n", id, TauFuncNameVec[id].c_str()); 
@@ -199,6 +199,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2001/03/20 22:01:24 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.12 2001/03/20 22:01:24 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 2001/06/20 20:31:51 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.13 2001/06/20 20:31:51 sameer Exp $ 
  ***************************************************************************/
