@@ -9,6 +9,10 @@
 
 Change log:
 ------------
+Version 2.2 changes (from 2.1):
+1. Added callstack profile viewing tool
+2. Blitz++ compatibility changes.
+
 Version 2.1 changes (from 2.0):
 1. Better colors in racy
 2. Support for T3E.
