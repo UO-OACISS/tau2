@@ -21,7 +21,7 @@ CC		= $(TAU_CC)
 
 FFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) 
 
-LIBS            = $(TAU_LIBS)  $(TAU_FORTRANLIBS)
+LIBS            =  $(TAU_LIBS)  $(TAU_FORTRANLIBS)  $(LEXTRA1)
 #LIBS            = $(TAU_DISABLE)  $(TAU_FORTRANLIBS)
 
 LDFLAGS	      	= $(USER_OPT) 
@@ -32,7 +32,7 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -f
 
-F77		= f90 
+F77		= pgf90 
 
 TARGET	      	= hello
 
