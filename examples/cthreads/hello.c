@@ -4,11 +4,21 @@
 #include <unistd.h>
 #include <Profile/Profiler.h>
 
+int user_square(int count)
+{
+  TAU_REGISTER_EVENT(ue1, "UserSquare Event");
+  TAU_EVENT(ue1, count * count);
+  return 0;
+}
+
 int fourth(void)
 {
+  int i;
   TAU_PROFILE_TIMER(tautimer,"fourth()", "int ()", TAU_DEFAULT);
   TAU_PROFILE_START(tautimer);
   printf("Reached fourth\n");
+  for (i = 0; i < 100; i++)
+    user_square(i);
   TAU_PROFILE_STOP(tautimer);
   return 0;
 }
@@ -67,7 +77,7 @@ void * threaded_func(void *data)
 
 int main (int argc, char **argv)
 {
-  int ret;
+  int ret, i;
   pthread_attr_t  attr;
   pthread_t	  tid;
   TAU_PROFILE_TIMER(tautimer,"main()", "int (int, char **)", TAU_DEFAULT);
@@ -79,6 +89,8 @@ int main (int argc, char **argv)
   
   printf("Started Main...\n");
 
+  for (i = 0; i < 10; i++)
+	user_square(i);
   if (ret = pthread_create(&tid, NULL, threaded_func, NULL) ) 
   { 
     printf(" pthread_create fails ret = %d\n", ret); 
@@ -94,6 +106,8 @@ int main (int argc, char **argv)
     exit(1); 
   }
 
+  /* prior to exiting, print statistics related to user defined events */
+  TAU_REPORT_THREAD_STATISTICS();
   printf("Exiting main...\n");
   TAU_PROFILE_STOP(tautimer);
   return 0;
