@@ -10,28 +10,18 @@
 ##                  pC++/Sage++  Copyright (C) 1993,1995             ##
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
-
+ 
 TAUROOTDIR	= ../..
 
 include $(TAUROOTDIR)/include/Makefile
-
-MPICHDIR 	= /usr/local/packages/mpich
-
-MPICHARCH	= LINUX/ch_p4
 
 CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-#CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) -I/usr/local/packages/mpich/include
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)
 
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)  -I$(MPICHDIR)/include
-
-#LIBS            = $(TAU_LIBS) -L/usr/local/packages/mpich/lib/LINUX/ch_p4 -lmpich $(LEXTRA1)
-
-LIBS            = $(TAU_LIBS) -L$(MPICHDIR)/lib/$(MPICHARCH) -lmpich $(LEXTRA1)
-
-#LIBS            = $(TAU_LIBS) -lmpi
+LIBS            = $(TAU_MPI_LIBS) $(TAU_LIBS) $(LEXTRA1) 
 
 LDFLAGS	      	= $(USER_OPT)
 
