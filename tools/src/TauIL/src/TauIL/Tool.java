@@ -68,7 +68,7 @@ public class Tool {
     }
 
     public static void usage() {
-	System.err.println("Usage: Tool [-hiuv] [-D macro[=value]] inst-spec");
+	System.err.println("Usage: tau_analyze [-hiuv] [-D macro[=value]] inst-spec");
 	System.err.println("Options:");
 	System.err.println(" -h               : display usage dialogue");
 	System.err.println(" -i               : prints step by step processing information");
@@ -82,7 +82,7 @@ public class Tool {
     }
 
     public static void version() {
-	System.err.println("Tool v" + version[0] + "." + version[1] + version[2]);
+	System.err.println("tau_analyze v" + version[0] + "." + version[1] + version[2]);
 	TauIL.version();
 	System.err.println();
 	System.err.println("Written by Tyrel Datwyler, 2003");
