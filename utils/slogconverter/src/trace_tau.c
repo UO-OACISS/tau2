@@ -139,6 +139,7 @@ struct event_stack *top=NULL;
 
 /*/Linked list for arrow objects*/
 struct event_stack *arrowTop=NULL;
+struct event_stack *arrowBot=NULL;
 
 /*/The current color to apply to an event or state*/
 int curcolor=0;
@@ -1375,11 +1376,16 @@ char *name = "message";
 
 }
 struct event_stack *arrowBase = NULL;
+/*Same, but for arrowBot*/
+struct event_stack *arrowBaseR = NULL;
+int numbroke = 0;
+int totbroke = 0;
 /***************************************************************************
  * Description: SendMessage is called when a message is sent by a process.
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
+
 int SendMessage( void *userData, double time, 
 		unsigned int sourceNodeToken,
 		unsigned int sourceThreadToken, 
@@ -1388,13 +1394,122 @@ int SendMessage( void *userData, double time,
 		unsigned int messageSize,
 		unsigned int messageTag )
 {
- 
-		 
-	struct event_stack *temp;
+struct event_stack *temp;
+	int found = 0;
+	DRAW_Category  *type;
+	DRAW_Primitive *prime;
+
+	int             type_idx;
+	int             num_vertices;
+	int             infovals[2];
+	int             idx;
+	int skipcom = 0;
+if(numbroke > 0)
+{
+	temp = arrowBaseR;
+
 	
-    temp=
-  (struct event_stack *)malloc(sizeof(struct event_stack));
-    temp->sid=messageTag+maxidx;
+	while(found == 0)
+	{
+		if(temp == NULL)
+		{
+		skipcom = 1;
+		/*printf("VERY BROKEN ARROW!\n");*/
+		break;
+		}
+		
+		if((sourceNodeToken == temp->nid) && (sourceThreadToken == temp->tid) &&
+		(destinationNodeToken == temp->dnid) && (destinationThreadToken == temp->dtid) &&
+		(messageTag+maxidx == temp->sid) && (messageSize == temp->size))
+		{
+			found = 1;
+			
+			if(temp->next != NULL)
+				temp->next->last = temp->last;
+			
+			if(temp->last != NULL && temp->next != NULL)
+				temp->last->next = temp->next; 
+				
+			if(temp->last == NULL)
+				arrowBot = temp->next;
+			if(temp->next == NULL)
+			  {
+			    if(temp->last != NULL)
+			      temp->last->next = NULL;
+
+			    arrowBaseR = temp->last;
+			  }
+			
+			((TRACE_file)userData)->arrow_count--;
+			numbroke--;
+			/*printf("BROKEN ARROWS SEND: Current: %d, Total: %d\n", numbroke,totbroke);*/
+		}
+		else
+		{
+			temp = temp->last;
+		}
+		
+	}
+	if(skipcom==0)
+	{
+	type_idx = temp->sid;
+	num_vertices = 2; 
+
+	/* Search for the valid Category in the category table */
+	type = NULL;
+	for ( idx = 0; idx < tot_types; idx++ ) {
+		if ( ((TRACE_file)userData)->types[ idx ]->hdr->index == type_idx ) {
+		type = ((TRACE_file)userData)->types[ idx ];
+		break;
+		}
+	}
+
+
+	infovals[0] = messageTag;
+	infovals[1] = messageSize;
+	
+	/* Allocate a new Primitive, times swapped */
+	prime = Primitive_alloc( num_vertices );
+	prime->endtime  = temp->intime;
+	prime->starttime    = time*clockP;
+	prime->type_idx  = type_idx;
+    
+	
+
+	prime->num_info  = 8;
+	prime->info      = (char *) malloc(prime->num_info * sizeof(char) );
+	memcpy( prime->info, infovals, prime->num_info);
+
+#if ! defined( WORDS_BIGENDIAN )
+	bswp_byteswap( 2, sizeof( int ), prime->info );
+#endif
+	prime->num_tcoords = num_vertices;
+	prime->num_ycoords = num_vertices;
+	prime->ycoords[ 0 ] = GlobalID(temp->nid,temp->tid);
+	prime->tcoords[ 1 ] = temp->intime;
+	prime->ycoords[ 1 ] = GlobalID(temp->dnid,temp->dtid);
+	prime->tcoords[ 0 ] = time*clockP;
+	Primitive_free( ((TRACE_file)userData)->prime );
+	((TRACE_file)userData)->prime = prime;
+
+    
+
+	free(temp);
+  
+	currentkind = (int)TRACE_PRIMITIVE_DRAWABLE;
+	dprintf("Current: %d\n",currentkind);
+	thispeak = 1;
+	return 0;
+	
+	}
+}
+
+
+	/*struct event_stack *temp;*/
+	/*printf("Send, normal function\n");*/
+	temp=
+	(struct event_stack *)malloc(sizeof(struct event_stack));
+	temp->sid=messageTag+maxidx;
 	temp->tid = sourceThreadToken;
 	temp->nid = sourceNodeToken;
 	
@@ -1403,7 +1518,7 @@ int SendMessage( void *userData, double time,
 	temp->size = messageSize;
 	
 	temp->intime = time*clockP;
-    temp->next=arrowTop;
+	temp->next=arrowTop;
 	temp->last=NULL;
 	
 	
@@ -1423,8 +1538,10 @@ int SendMessage( void *userData, double time,
 
 	arrowTop=temp; 
 	((TRACE_file)userData)->arrow_count++;
-  thispeak = 0;
-  return 0;
+	thispeak = 0;
+	return 0;
+
+
 }
 
 /***************************************************************************
@@ -1443,14 +1560,13 @@ int RecvMessage( void *userData, double time,
 	
 	struct event_stack *temp = arrowBase;
 	int found = 0;
-		DRAW_Category  *type;
-    DRAW_Primitive *prime;
+	DRAW_Category  *type;
+	DRAW_Primitive *prime;
 
-    int             type_idx;
-    int             num_vertices;
-    int             infovals[2];
-    int             idx;
-	
+	int             type_idx;
+	int             num_vertices;
+	int             infovals[2];
+	int             idx;
   dprintf("RecvMessage: time %g,source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", 
 		  time, 
 		  sourceNodeToken, sourceThreadToken,
@@ -1463,7 +1579,7 @@ dprintf("%d arrows!\n", ((TRACE_file)userData)->arrow_count);
 	
 	while(found == 0)
 	{
-		if(temp == NULL){printf("BROKEN ARROW!\n"); break;}
+		if(temp == NULL){ break;}
 		
 		if((sourceNodeToken == temp->nid) && (sourceThreadToken == temp->tid) &&
 		(destinationNodeToken == temp->dnid) && (destinationThreadToken == temp->dtid) &&
@@ -1496,59 +1612,96 @@ dprintf("%d arrows!\n", ((TRACE_file)userData)->arrow_count);
 		
 	}
 	
+	if(temp==NULL)
+	{	
+		numbroke++;
+		totbroke++;
+		dprintf("BROKEN ARROWS RECV: Current: %d, Total: %d\n", numbroke,totbroke);
+		
+	
+		temp=
+		(struct event_stack *)malloc(sizeof(struct event_stack));
+		temp->sid=messageTag+maxidx;
+		temp->tid = sourceThreadToken;
+		temp->nid = sourceNodeToken;
+	
+		temp->dnid = destinationNodeToken;
+		temp->dtid = destinationThreadToken;
+		temp->size = messageSize;
+	
+		temp->intime = time*clockP;
+		temp->next=arrowBot;
+		temp->last=NULL;
+	
+	
+		dprintf("RecvMessage: time %g, source nid %d tid %d, destination nid %d tid %d, size %d, tag %d\n", 
+		  time, 
+		  sourceNodeToken, sourceThreadToken,
+		  destinationNodeToken, destinationThreadToken,
+		  messageSize, messageTag);
+	
+		if(arrowBot != NULL)
+		{
+			arrowBot->last=temp;
+		}
+	
+		if(arrowBaseR == NULL)
+		  arrowBaseR = temp;
+
+		arrowBot=temp; 
+		((TRACE_file)userData)->arrow_count++;
+		thispeak = 0;
+		return 0;
+	}
 	
 	type_idx = temp->sid;
+	num_vertices = 2; 
 
-
-
-    num_vertices = 2; 
-
-    /* Search for the valid Category in the category table */
-    type = NULL;
-    for ( idx = 0; idx < tot_types; idx++ ) {
-        if ( ((TRACE_file)userData)->types[ idx ]->hdr->index == type_idx ) {
-            type = ((TRACE_file)userData)->types[ idx ];
-            break;
-        }
-    }
+	/* Search for the valid Category in the category table */
+	type = NULL;
+	for ( idx = 0; idx < tot_types; idx++ ) {
+		if ( ((TRACE_file)userData)->types[ idx ]->hdr->index == type_idx ) {
+		type = ((TRACE_file)userData)->types[ idx ];
+		break;
+		}
+	}
 
 
 	infovals[0] = messageTag;
 	infovals[1] = messageSize;
 	
-    /* Allocate a new Primitive */
-    prime = Primitive_alloc( num_vertices );
-    prime->starttime  = temp->intime;
-    prime->endtime    = time*clockP;
-    prime->type_idx  = type_idx;
+	/* Allocate a new Primitive */
+	prime = Primitive_alloc( num_vertices );
+	prime->starttime  = temp->intime;
+	prime->endtime    = time*clockP;
+	prime->type_idx  = type_idx;
     
 	
 
-        prime->num_info  = 8;
-        prime->info      = (char *) malloc(prime->num_info * sizeof(char) );
-        memcpy( prime->info, infovals, prime->num_info);
+	prime->num_info  = 8;
+	prime->info      = (char *) malloc(prime->num_info * sizeof(char) );
+	memcpy( prime->info, infovals, prime->num_info);
 
 #if ! defined( WORDS_BIGENDIAN )
-        bswp_byteswap( 2, sizeof( int ), prime->info );
+	bswp_byteswap( 2, sizeof( int ), prime->info );
 #endif
-    prime->num_tcoords = num_vertices;
-    prime->num_ycoords = num_vertices;
+	prime->num_tcoords = num_vertices;
+	prime->num_ycoords = num_vertices;
 	prime->ycoords[ 0 ] = GlobalID(temp->nid,temp->tid);
 	prime->tcoords[ 0 ] = temp->intime;
 	prime->ycoords[ 1 ] = GlobalID(temp->dnid,temp->dtid);
 	prime->tcoords[ 1 ] = time*clockP;
 	Primitive_free( ((TRACE_file)userData)->prime );
-    ((TRACE_file)userData)->prime = prime;
+	((TRACE_file)userData)->prime = prime;
 
     
 
 	free(temp);
   
-  currentkind = (int)TRACE_PRIMITIVE_DRAWABLE;
-  dprintf("Current: %d\n",currentkind);
-
-thispeak = 1;
-  return 0;
+	currentkind = (int)TRACE_PRIMITIVE_DRAWABLE;
+	dprintf("Current: %d\n",currentkind);
+	thispeak = 1;
+	return 0;
 }
 
 
