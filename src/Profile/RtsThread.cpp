@@ -41,6 +41,12 @@ using namespace std;
 #include "Profile/Profiler.h"
 #include "Profile/OpenMPLayer.h"
 
+#ifdef TRACING_ON
+#define PCXX_EVENT_SRC
+#include "Profile/pcxx_events.h"
+#endif // TRACING_ON
+
+
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
 //////////////////////////////////////////////////////////////////////
@@ -99,6 +105,7 @@ void RtsLayer::RegisterThread()
   return;
 }
 
+
 //////////////////////////////////////////////////////////////////////
 // RegisterFork is called before any other profiling function in a 
 // process that is forked off (child process)
@@ -108,6 +115,8 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
   vector<FunctionInfo*>::iterator it;
   Profiler *current;
 
+  TAU_PROFILE_SET_NODE(nodeid);
+  // First, set the new id 
   if (opcode == TAU_EXCLUDE_PARENT_DATA)
   {
   // If opcode is TAU_EXCLUDE_PARENT_DATA then we clear out the 
@@ -151,13 +160,16 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 	 current = current->ParentProfiler;
        } // Until the top of the stack
 #endif   // PROFILING_ON
-	 // Put logic for TRACING here. 
+#ifdef TRACING_ON    
+       DEBUGPROFMSG("Tracing Correct: "<<endl;);
+       TraceUnInitialize(tid); // Zap the earlier contents of the trace buffer  
+       TraceCallStack(tid, Profiler::CurrentProfiler[tid]); 
+#endif   // TRACING_ON
      } // for tid loop
      // DONE! 
    }
    // If it is TAU_INCLUDE_PARENT_DATA then there's no need to do anything.
    // fork would copy over all the parent data as it is. 
-   TAU_PROFILE_SET_NODE(nodeid);
 }
 	 
 	
@@ -206,8 +218,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2000/10/11 18:38:52 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.11 2000/10/11 18:38:52 sameer Exp $
+ * $Revision: 1.12 $   $Date: 2000/10/12 19:07:00 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.12 2000/10/12 19:07:00 sameer Exp $
  ***************************************************************************/
 
 
