@@ -4,12 +4,12 @@ import dms.perfdb.*;
 import java.util.*;
 import java.sql.*;
 import java.util.Date;
-//import paraprof.*;
+import paraprof.*;
 
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.7 2004/03/31 09:39:10 bertie Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.8 2004/03/31 18:08:16 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -431,13 +431,15 @@ public class PerfDBSession extends DataSession {
 	// override the saveTrial method
 	public int saveTrial () {
 		int newTrialID = trial.saveTrial(db);
-		saveFunctions(newTrialID);
-		saveUserEvents(newTrialID);
+		Hashtable newFunHash = saveFunctions(newTrialID);
+		saveFunctionData(newFunHash, metrics);
+		Hashtable newUEHash = saveUserEvents(newTrialID);
+		saveUserEventData(newUEHash);
 		return newTrialID;
 	}
 
 	// save the functions
-	private void saveFunctions(int newTrialID) {
+	private Hashtable saveFunctions(int newTrialID) {
 		Hashtable newFunHash = new Hashtable();
 		Enumeration enum = functions.elements();
 		Function function;
@@ -446,7 +448,7 @@ public class PerfDBSession extends DataSession {
 			int newFunctionID = function.saveFunction(db, newTrialID, metrics);
 			newFunHash.put (new Integer(function.getIndexID()), new Integer(newFunctionID));
 		}
-		saveFunctionData(newFunHash, metrics);
+		return newFunHash;
 	}
 
 	// save the function data
@@ -461,7 +463,7 @@ public class PerfDBSession extends DataSession {
 	}
 
 	// save the functions
-	private void saveUserEvents(int newTrialID) {
+	private Hashtable saveUserEvents(int newTrialID) {
 		Hashtable newUEHash = new Hashtable();
 		Enumeration enum = userEvents.elements();
 		UserEvent userEvent;
@@ -470,7 +472,7 @@ public class PerfDBSession extends DataSession {
 			int newUserEventID = userEvent.saveUserEvent(db, newTrialID);
 			newUEHash.put (new Integer(userEvent.getUserEventID()), new Integer(newUserEventID));
 		}
-		saveUserEventData(newUEHash);
+		return newUEHash;
 	}
 
 	// save the function data
@@ -542,7 +544,7 @@ public class PerfDBSession extends DataSession {
  * @param paraProfTrial
  * @return the database index ID of the saved trial record
  */
-/*
+
 	public int saveParaProfTrial(ParaProfTrial paraProfTrial) {
 		GlobalMapping mapping = paraProfTrial.getGlobalMapping();
 	
@@ -563,10 +565,15 @@ public class PerfDBSession extends DataSession {
 		paraProfTrial.setNumContextsPerNode(maxNCT[1]+1);
 		paraProfTrial.setNumThreadsPerContext(maxNCT[2]+1);
 
-		// output the trial data
-		int newTrialID = paraProfTrial.saveTrial(db);
+		// get the metric count
+		metrics = paraProfTrial.getMetrics();
+		int metricCount = metrics.size();
 
+		// create the Vectors to store the data
 		functions = new Vector();
+		functionData = new Vector();
+		userEvents = new Vector();
+		userEventData = new Vector();
 
 		// create the functions
 		for(Enumeration e = mapping.getMapping(0).elements(); e.hasMoreElements() ;) {
@@ -576,7 +583,8 @@ public class PerfDBSession extends DataSession {
 				Function function = new Function(this);
 				function.setName(element.getMappingName());
 				function.setFunctionID(element.getMappingID());
-				function.setTrialID(newTrialID);
+				function.setIndexID(element.getMappingID());
+				// function.setTrialID(newTrialID);
 				// build the group name
 				int[] groupIDs = element.getGroups();
 				StringBuffer buf = new StringBuffer();
@@ -585,21 +593,58 @@ public class PerfDBSession extends DataSession {
 					buf.append(groupNames[groupIDs[i]]);
 				}
 				function.setGroup(buf.toString());
+				// debugging...
+				System.out.println("Added function: " + function.getName());
 				// put the function in the vector
 				functions.add(function);
+
+				// get the total data
+				for (int i = 0 ; i < metricCount ; i++) {
+					FunctionDataObject funTS = new FunctionDataObject();
+					FunctionDataObject funMS = new FunctionDataObject();
+		    		funTS.setNumCalls((int)element.getTotalNumberOfCalls());
+		    		funTS.setNumSubroutines((int)element.getTotalNumberOfSubRoutines());
+		    		funTS.setInclusivePercentage(i, element.getTotalInclusivePercentValue(i));
+		    		funTS.setInclusive(i, element.getTotalInclusiveValue(i));
+		    		funTS.setExclusivePercentage(i, element.getTotalExclusivePercentValue(i));
+		    		funTS.setExclusive(i, element.getTotalExclusiveValue(i));
+		    		funTS.setInclusivePerCall(i, element.getTotalUserSecPerCall(i));
+		    		funMS.setNumCalls((int)element.getMeanNumberOfCalls());
+		    		funMS.setNumSubroutines((int)element.getMeanNumberOfSubRoutines());
+		    		funMS.setInclusivePercentage(i, element.getMeanInclusivePercentValue(i));
+		    		funMS.setInclusive(i, element.getMeanInclusiveValue(i));
+		    		funMS.setExclusivePercentage(i, element.getMeanExclusivePercentValue(i));
+		    		funMS.setExclusive(i, element.getMeanExclusiveValue(i));
+		    		funMS.setInclusivePerCall(i, element.getMeanUserSecPerCall(i));
+					function.addTotalSummary(funTS);
+					function.addMeanSummary(funMS);
+				}
 	    	}
 	    }
-	    
-		
-	    //Write out userevent name to id mapping.
-	    writeBeginObject(xwriter,21);
-	    for(Enumeration e = globalMapping.getMapping(2).elements(); e.hasMoreElements() ;){
-		GlobalMappingElement globalMappingElement = (GlobalMappingElement) e.nextElement();
-		if(globalMappingElement!=null)
-		    writeNameIDMap(xwriter,globalMappingElement.getMappingName(),globalMappingElement.getMappingID());
+
+		// create the user events
+		for(Enumeration e = mapping.getMapping(2).elements(); e.hasMoreElements() ;) {
+			GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
+			if(element!=null) {
+				// create a user event
+				UserEvent userEvent = new UserEvent();
+				userEvent.setName(element.getMappingName());
+				// userEvent.setTrialID(newTrialID);
+				// build the group name
+				int[] groupIDs = element.getGroups();
+				StringBuffer buf = new StringBuffer();
+				for (int i = 0; i < element.getNumberOfGroups() ; i++) {
+					if (i > 0) buf.append ("|");
+					buf.append(groupNames[groupIDs[i]]);
+				}
+				userEvent.setGroup(buf.toString());
+				// debugging...
+				System.out.println("Added user event: " + userEvent.getName());
+				// put the userEvent in the vector
+				userEvents.add(userEvent);
+	    	}
 	    }
-	    writeEndObject(xwriter,21);
-	    
+
 	    StringBuffer groupsStringBuffer = new StringBuffer(10);
 	    Vector nodes = paraProfTrial.getNCT().getNodes();
 	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
@@ -609,57 +654,48 @@ public class PerfDBSession extends DataSession {
 		    Context context = (Context) e2.nextElement();
 		    Vector threads = context.getThreads();
 		    for(Enumeration e3 = threads.elements(); e3.hasMoreElements() ;){
-			Thread thread = (Thread) e3.nextElement();
+			paraprof.Thread thread = (paraprof.Thread) e3.nextElement();
 			Vector functions = thread.getFunctionList();
 			Vector userevents = thread.getUsereventList();
-			//Write out the node,context and thread ids.
-			writeIDs(xwriter,thread.getNodeID(),thread.getContextID(),thread.getThreadID());
 			//Write out function data for this thread.
 			for(Enumeration e4 = functions.elements(); e4.hasMoreElements() ;){
 			    GlobalThreadDataElement function = (GlobalThreadDataElement) e4.nextElement();
 			    if (function!=null){
-				writeBeginObject(xwriter,16);
-				// @@@ Commented out as is questionable functionality.  Add back in for legacy support.
-				// writeFunctionName(xwriter,function.getMappingName());
-				//
-				writeInt(xwriter,11,function.getMappingID());
-				//Build group string.
-				groupsStringBuffer.delete(0,groupsStringBuffer.length());
-				int[] groupIDs = function.getGroups();
-				for(int i=0;i<groupIDs.length;i++){
-				    if(i==0)
-					groupsStringBuffer.append(groupNames[groupIDs[i]]);
-				    else
-					groupsStringBuffer.append(":"+groupNames[groupIDs[i]]);
-				}
-				writeString(xwriter,14,groupsStringBuffer.toString());
-				writeDouble(xwriter,0,function.getInclusivePercentValue(metricID));
-				writeDouble(xwriter,1,function.getInclusiveValue(metricID));
-				writeDouble(xwriter,2,function.getExclusivePercentValue(metricID));
-				writeDouble(xwriter,3,function.getExclusiveValue(metricID));
-				writeDouble(xwriter,5,function.getNumberOfCalls());
-				writeDouble(xwriter,6,function.getNumberOfSubRoutines());
-				writeDouble(xwriter,4,function.getUserSecPerCall(metricID));
-				writeEndObject(xwriter,16);
+					FunctionDataObject fdo = new FunctionDataObject();
+					fdo.setNode(thread.getNodeID());
+					fdo.setContext(thread.getContextID());
+					fdo.setThread(thread.getThreadID());
+					fdo.setFunctionIndexID(function.getMappingID());
+					fdo.setNumCalls(function.getNumberOfCalls());
+					fdo.setNumSubroutines(function.getNumberOfSubRoutines());
+					// fdo.setInclusivePerCall(function.getUserSecPerCall());
+					for (int i = 0 ; i < metricCount ; i++) {
+						fdo.setInclusive(i, function.getInclusiveValue(i));
+						fdo.setExclusive(i, function.getExclusiveValue(i));
+						fdo.setInclusivePercentage(i, function.getInclusivePercentValue(i));
+						fdo.setExclusivePercentage(i, function.getExclusivePercentValue(i));
+						fdo.setInclusivePerCall(i, function.getUserSecPerCall(i));
+					}
+					functionData.add(fdo);
 			    }
 			}
+
 			//Write out user event data for this thread.
 			if(userevents!=null){
 			    for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
 				GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
 				if (userevent!=null){
-				    writeBeginObject(xwriter,17);
-				    // @@@ Commented out as is questionable functionality.  Add back in for legacy support.
-				    // writeString(xwriter,15,userevent.getUserEventName());
-				    //
-				    writeInt(xwriter,12,userevent.getMappingID());
-				    writeInt(xwriter,13,userevent.getUserEventNumberValue());
-				    writeDouble(xwriter,7,userevent.getUserEventMaxValue());
-				    writeDouble(xwriter,8,userevent.getUserEventMinValue());
-				    writeDouble(xwriter,9,userevent.getUserEventMeanValue());
-				    //writeDouble(xwriter,10,userevent.getUserEventStdDevValue());@@@Commented out due to lack of ParaProf data support. Should probably add methods which
-				    //generate this data. @@@
-				    writeBeginObject(xwriter,17);
+					UserEventDataObject udo = new UserEventDataObject();
+				    udo.setUserEventID(userevent.getMappingID());
+					udo.setNode(thread.getNodeID());
+					udo.setContext(thread.getContextID());
+					udo.setThread(thread.getThreadID());
+				    udo.setProfileID(userevent.getUserEventNumberValue());
+				    udo.setMaximumValue(userevent.getUserEventMaxValue());
+				    udo.setMinimumValue(userevent.getUserEventMinValue());
+				    udo.setMeanValue(userevent.getUserEventMeanValue());
+				    // udo.setStandardDeviation(userevent.getUserEventStdDevValue());
+					userEventData.add(udo);
 				}
 			    }
 			}
@@ -667,9 +703,21 @@ public class PerfDBSession extends DataSession {
 		}    
 	    }
 
-		
-
+		// output the trial data, which also saves the functions, 
+		// function data, user events and user event data
+		int newTrialID = paraProfTrial.saveTrial(db);
+		if (functions != null && functions.size() > 0) {
+			Hashtable newFunHash = saveFunctions(newTrialID);
+			saveFunctionData(newFunHash, metrics);
+		}
+		if (userEvents != null && userEvents.size() > 0) {
+			Hashtable newUEHash = saveUserEvents(newTrialID);
+			if (userEventData != null && userEventData.size() > 0) {
+				saveUserEventData(newUEHash);
+			}
+		}
 		return newTrialID;
 	    
-		}*/
+    }
 };
+
