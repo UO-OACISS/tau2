@@ -29,7 +29,7 @@ ARFLAGS		= rcv
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-TARGET		= libTauMpi.a
+TARGET		= libTauMpi$(TAU_OPTIONS)$(LSX)
 ##############################################
 
 all : 		$(TARGET)

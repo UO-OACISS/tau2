@@ -106,9 +106,9 @@ TARGET	      = libtau$(TAU_OPTIONS)$(LSX)
 TAU_DISABLE   = libTauDisable$(LSX)
 
 ##############################################
-#MPI#MPI_WRAPPER   = libTauMpi$(LSX)  #ENDIF#
+#MPI#MPI_WRAPPER   = libTauMpi$(TAU_OPTIONS)$(LSX)  #ENDIF#
 #MPI#MPI_WRAPPER_O = TauMpi.o  #ENDIF#
-#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(LSX)  #ENDIF#
+#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX)  #ENDIF#
 ##############################################
 
 
@@ -146,7 +146,7 @@ $(TAU_SHLIB): 	$(OBJS)
 $(TAU_DISABLE): TauDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
 
-libTauMpi$(LSX): 
+libTauMpi$(TAU_OPTIONS)$(LSX): 
 		$(MAKE) -f Makefile.wrapper 
 
 $(INSTALLDEST)/$(TARGET): $(TARGET)
@@ -168,7 +168,7 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
                    else mkdir $(INSTALLDEST) ;fi
 		$(INSTALL) $? $(INSTALLDEST)
 		
-$(INSTALLDEST)/libTauMpi$(LSX): libTauMpi$(LSX)
+$(INSTALLDEST)/libTauMpi$(TAU_OPTIONS)$(LSX): libTauMpi$(TAU_OPTIONS)$(LSX)
 		$(MAKE) -f Makefile.wrapper install
 
 install:	 $(INSTALLDEST)/$(TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL)
