@@ -221,8 +221,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2000/10/12 19:33:09 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.13 2000/10/12 19:33:09 sameer Exp $
+ * $Revision: 1.14 $   $Date: 2000/10/12 19:33:56 $
+ * VERSION: $Id: RtsThread.cpp,v 1.14 2000/10/12 19:33:56 sameer Exp $
  ***************************************************************************/
 
 
