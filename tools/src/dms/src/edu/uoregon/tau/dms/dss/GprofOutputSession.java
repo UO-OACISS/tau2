@@ -116,7 +116,12 @@ public class GprofOutputSession extends ParaProfDataSession{
 			}
 			
 			if(callPathSection){
-			    if(inputString.charAt(0)=='['){
+				if((inputString.indexOf("index") == 0) && 
+				   (inputString.endsWith("index"))) {
+				   // this line has the lengths of the fields.
+				   // we need this.
+				   getFieldLengths(inputString);
+				} else if(inputString.charAt(0)=='['){
 				self = getSelfLineData(inputString);
 				parent=false;
 			    }
@@ -179,10 +184,18 @@ public class GprofOutputSession extends ParaProfDataSession{
 				parent=true;
 			    }
 			    else if(inputString.charAt(length-1)==']'){
-				if(parent)
-				    parents.add(getParentLineData(inputString));
-				else
-				    children.add(getChildLineData(inputString));
+					// check for cycle line
+					if (inputString.indexOf("<cycle") >= 0) {
+						if(parent)
+				    		parents.add(getCycleLineData(inputString));
+						else
+				    		children.add(getCycleLineData(inputString));
+					} else {
+						if(parent)
+				    		parents.add(getParentLineData(inputString));
+						else
+				    		children.add(getChildLineData(inputString));
+					}
 			    }
 			}
 			else if(inputString.charAt(length-1)==']'){
@@ -227,6 +240,35 @@ public class GprofOutputSession extends ParaProfDataSession{
     //######
     //Gprof.dat string processing methods.
     //######
+
+	private void getFieldLengths(String string) {
+
+	/* parse a line that looks like:
+index  %time    self descendants  called+self    name       index
+[xxxx] 100.0 xxxx.xx xxxxxxxx.xx xxxxxxx+xxxxxxx ssssss...
+	*/
+	    StringTokenizer st = new StringTokenizer(string, " \t\n\r");
+		String index = st.nextToken();
+		String percent = st.nextToken();
+		String self = st.nextToken();
+		String descendants = st.nextToken();
+		String called = st.nextToken();
+		String name = st.nextToken();
+		// this should be 0, left justified
+		indexStart = string.indexOf(index);
+		// this should be about 7, right justified
+		percentStart = string.indexOf(percent);
+		// this should be about 13, right justified
+		selfStart = string.indexOf(percent) + percent.length() + 1;
+		// this should be about 21, right justified
+		descendantsStart = string.indexOf(self) + self.length() + 1;
+		// this should be about 33, left justified
+		calledStart = string.indexOf(descendants) + descendants.length() + 1;
+		// this should be about 49, left justified
+		nameStart = string.indexOf(name);
+		return;
+	}
+
     private LineData getSelfLineData(String string){
 	LineData lineData = new LineData();
 	try{
@@ -288,6 +330,8 @@ public class GprofOutputSession extends ParaProfDataSession{
 		}
 	    
 	    lineData.s0 = st.nextToken(); //Name
+		while (st.hasMoreTokens())
+	    	lineData.s0 += " " + st.nextToken(); //Name
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "GOS02");
@@ -309,13 +353,100 @@ public class GprofOutputSession extends ParaProfDataSession{
 		// time spent within calls to self from parent.
 	    lineData.d1 = Double.parseDouble(st1.nextToken());
 	    
-	   	StringTokenizer st2 = new StringTokenizer(st1.nextToken(), "/");
-		// the number of times self was called from parent 
-	    lineData.i0 = Integer.parseInt(st2.nextToken());
-		// the total number of nonrecursive calls to self from all its parents
-	    lineData.i1 = Integer.parseInt(st2.nextToken());
+		// For cycles, there is no ratio. To check for cycles, check
+		// to see if there is a ratio.
+		String tmpStr = st1.nextToken();
+		if (tmpStr.indexOf("/") >= 0) {
+	   		StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
+			// the number of times self was called from parent 
+	    	lineData.i0 = Integer.parseInt(st2.nextToken());
+			// the total number of nonrecursive calls to self from all 
+			// its parents
+	    	lineData.i1 = Integer.parseInt(st2.nextToken());
+		} else {
+	    	lineData.i0 = Integer.parseInt(tmpStr);
+	    	lineData.i1 = Integer.parseInt(tmpStr);
+		}
 
 	    lineData.s0 = st1.nextToken(); //Name
+		while (st1.hasMoreTokens())
+	    	lineData.s0 += " " + st1.nextToken(); //Name
+	}
+	catch(Exception e){
+		System.out.println("***\n" + string + "\n***");
+		e.printStackTrace();
+		UtilFncs.systemError(e, null, "GOS03");
+	}
+	return lineData;
+    }
+
+    private LineData getCycleLineData(String string){
+	LineData lineData = new LineData();
+	try{
+	    StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
+		// unlike the other line parsers, this function assumed a fixed
+		// location for values.  That may be erroneous, but I think that
+		// is the format for gprof output. Sample lines:
+		/*
+index  % time    self  children called     name
+                                             <spontaneous>
+                 0.16     1.77    1/1        start [1]
+[2]    100.00    0.16     1.77    1      main [2]
+                 1.77        0    1/1        a <cycle 1> [5]
+----------------------------------------
+                 1.77        0    1/1        main [2]
+[3]     91.71    1.77        0    1+5    <cycle 1 as a whole> [3]
+                 1.02        0    3          b <cycle 1> [4]
+                 0.75        0    2          a <cycle 1> [5]
+                    0        0    6/6        c [6]
+----------------------------------------
+                                  3          a <cycle 1> [5]
+[4]     52.85    1.02        0    0      b <cycle 1> [4]
+                                  2          a <cycle 1> [5]
+                    0        0    3/6        c [6]
+----------------------------------------
+                 1.77        0    1/1        main [2]
+                                  2          b <cycle 1> [4]
+[5]     38.86    0.75        0    1      a <cycle 1> [5]
+                                  3          b <cycle 1> [4]
+                    0        0    3/6        c [6]
+----------------------------------------
+                    0        0    3/6        b <cycle 1> [4]
+                    0        0    3/6        a <cycle 1> [5]
+[6]      0.00       0        0    6      c [6]
+                0.02        0.09    2379             hypre_SMGRelax <cycle 2> [11]
+-----------------------------------------------
+----------------------------------------
+		*/
+	    
+		String tmpStr = string.substring(selfStart,descendantsStart).trim();
+		if (tmpStr.length() > 0)
+	    	lineData.d0 = Double.parseDouble(tmpStr);
+		else
+	    	lineData.d0 = 0.0;
+
+		tmpStr = string.substring(descendantsStart,calledStart).trim();
+		if (tmpStr.length() > 0)
+	    	lineData.d1 = Double.parseDouble(tmpStr);
+		else
+	    	lineData.d1 = 0.0;
+
+		// check for a ratio
+		tmpStr = string.substring(calledStart,nameStart).trim();
+		if (tmpStr.indexOf("/") >= 0) {
+	   		StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
+			// the number of times self was called from parent 
+	    	lineData.i0 = Integer.parseInt(st2.nextToken());
+			// the total number of nonrecursive calls to self from all 
+			// its parents
+	    	lineData.i1 = Integer.parseInt(st2.nextToken());
+		} else {
+    		lineData.i0 = Integer.parseInt(tmpStr);
+    		lineData.i1 = lineData.i0;
+		}
+
+		// the rest is the name
+	    lineData.s0 = string.substring(40,string.length()).trim();
 	}
 	catch(Exception e){
 		System.out.println("***\n" + string + "\n***");
@@ -339,15 +470,25 @@ public class GprofOutputSession extends ParaProfDataSession{
 		// of the total time spent in calls to child from self
 	    lineData.d1 = Double.parseDouble(st1.nextToken());
 	    
-		// This ratio is used to determine how much of self and 
-		// children time gets credited to parent.
-	   	StringTokenizer st2 = new StringTokenizer(st1.nextToken(), "/");
-		// get the number of calls to child from self
-	    lineData.i0 = Integer.parseInt(st2.nextToken());
-		// get the total number of nonrecursive calls to report. 
-	    lineData.i1 = Integer.parseInt(st2.nextToken());
+		// for cycles, there is no ratio. To check for cycles, check
+		// to see if there is a ratio.
+		String tmpStr = st1.nextToken();
+		if (tmpStr.indexOf("/") >= 0) {
+			// This ratio is used to determine how much of self and 
+			// children time gets credited to parent.
+	   		StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
+			// get the number of calls to child from self
+	    	lineData.i0 = Integer.parseInt(st2.nextToken());
+			// get the total number of nonrecursive calls to report. 
+	    	lineData.i1 = Integer.parseInt(st2.nextToken());
+		} else {
+	    	lineData.i0 = Integer.parseInt(tmpStr);
+	    	lineData.i1 = Integer.parseInt(tmpStr);
+		}
 
 	    lineData.s0 = st1.nextToken(); //Name
+		while (st1.hasMoreTokens())
+	    	lineData.s0 += " " + st1.nextToken(); //Name
 	}
 	catch(Exception e){
 		System.out.println("***\n" + string + "\n***");
@@ -365,13 +506,22 @@ public class GprofOutputSession extends ParaProfDataSession{
 	    lineData.d0 = Double.parseDouble(st.nextToken());
 	    lineData.d1 = Double.parseDouble(st.nextToken());
 	    lineData.d2 = Double.parseDouble(st.nextToken());
-	    lineData.i0 = Integer.parseInt(st.nextToken());
-	    lineData.d3 = Double.parseDouble(st.nextToken());
-	    lineData.d4 = Double.parseDouble(st.nextToken());
+	    if(st.countTokens()>5) {
+	    	lineData.i0 = Integer.parseInt(st.nextToken());
+	    	lineData.d3 = Double.parseDouble(st.nextToken());
+	    	lineData.d4 = Double.parseDouble(st.nextToken());
+		} else {
+	    	lineData.i0 = 1;
+	    	lineData.d3 = lineData.d2;
+	    	lineData.d4 = lineData.d2;
+		}
 	    
 	    lineData.s0 = st.nextToken(); //Name
+		while (st.hasMoreTokens())
+	    	lineData.s0 += " " + st.nextToken(); //Name
 	}
 	catch(Exception e){
+		System.out.println(string);
 	    UtilFncs.systemError(e, null, "GOS04");
 	}
 	return lineData;
@@ -381,6 +531,13 @@ public class GprofOutputSession extends ParaProfDataSession{
     //######
     //End - Gprof.dat string processing methods.
     //######
+
+	private int indexStart = 0;
+	private int percentStart = 0;
+	private int selfStart = 0;
+	private int descendantsStart = 0;
+	private int calledStart = 0;
+	private int nameStart = 0;
 
     //####################################
     //End - Private Section.
