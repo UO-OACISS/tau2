@@ -49,3 +49,16 @@ link command line for an application to work with Dyninst currently. This
 limitation may be eased in the future releases. 
 
 
+To use TAU and Dyninst with pthreads
+% configure -dyninst=$DYNINST_ROOT -pthread
+% make install
+% cd examples/dyninstthreads
+% make
+% tau_run hello
+
+See hello.cpp to see how the routine that is spawned by pthread_create needs
+to be hand instrumented currently. Also, this name has to be specified to 
+tau_run so it doesn't instrument it. grep for threaded_func in utils/tau_run.cpp
+There's a problem with Linux/Dyninst that the exit of the threaded function cannot be
+instrumented and it hangs the application. So, we've to resort to source code instrumentation.
+
