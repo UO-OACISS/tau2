@@ -198,6 +198,7 @@ tauoptions=
 pdt_root_dir="."
 pdt=no
 vtf=no
+slog2=no
 opari=no
 epilog=no
 opari_region=no
@@ -505,6 +506,19 @@ do
       fi
     shift
     ;;
+
+  -slog2=*)
+      slog2=yes
+      trace=yes
+      slog2dir=`echo $arg | sed -e 's/-slog2=//'`
+      if [ ! -d $slog2dir ]
+      then
+        echo "Error: Cannot access SLOG2 directory $slog2dir"
+        exit 1
+      fi
+    shift
+    ;;
+
 
   -pcxxopt=*)
     pcxxopt=`echo $arg | sed -e 's/-pcxxopt=//' -e 's/ /_/g'`
@@ -2967,6 +2981,17 @@ fi
 if [ $vtf = yes ]
 then
   fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
+fi
+
+if [ $slog2 = yes ]
+then
+  fixmakeargs="$fixmakeargs SLOG2 slog2dir=$slog2dir"
+  jdkdir=`which javac | sed s/javac/../`
+  if [ "x$jdkdir" = "x" ]
+  then
+    echo "You need javac in your path while using SLOG2. Please re-configure TAU."
+  fi
+  fixmakeargs="$fixmakeargs jdkdir=$jdkdir"
 fi
 
 if [ $pdt = yes ]
