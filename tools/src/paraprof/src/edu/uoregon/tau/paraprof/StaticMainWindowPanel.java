@@ -71,9 +71,12 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
       
-	    jMenuItem = new JMenuItem("Show Total User Event Statistics Windows");
-	    jMenuItem.addActionListener(this);
-	    popup2.add(jMenuItem);
+
+	    if (trial.userEventsPresent()) {
+		jMenuItem = new JMenuItem("Show Total User Event Statistics Windows");
+		jMenuItem.addActionListener(this);
+		popup2.add(jMenuItem);
+	    }
 
 	    jMenuItem = new JMenuItem("Show Call Path Thread Relations");
 	    jMenuItem.addActionListener(this);
