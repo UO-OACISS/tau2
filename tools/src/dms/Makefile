@@ -14,16 +14,14 @@ classes/dms/dss/*.class: dss/*.java
 ./examples/SimpleExample.class: dms.jar ./examples/SimpleExample.java
 	javac -d ./examples -classpath ./classes:./dms.jar ./examples/SimpleExample.java
 
-.buildtest: examples/TestPerfDBSession.class
-	examples/testBuild >& .buildtest
-	tail .buildtest
+buildtest: examples/TestPerfDBSession.class
+	examples/testBuild
 
 clean:
 	rm -rf dms.jar classes/dms examples/*.class .buildtest .simple doc/[a-z]*
 
-.simple: examples/SimpleExample.class
-	examples/testSimpleExample >& .simple
-	tail .simple
+simple: examples/SimpleExample.class
+	examples/testSimpleExample
 
 javadoc: ./dss/*.java ./dss/package.html
 	javadoc -d ./doc -classpath ./classes:./../perfdb/jars/perfdb.jar ./dss/*.java	

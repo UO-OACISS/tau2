@@ -2605,6 +2605,16 @@ sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$
 chmod a+rx ${tauroot}/${architecture}/bin/perfdb_translate
 echo "TAU: installed perfdb_translate in ${tauroot}/${architecture}/bin"
 
+cat ${tauroot}/tools/src/dms/examples/testBuild.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/tools/src/dms/examples/testBuild
+chmod a+rx ${tauroot}/tools/src/dms/examples/testBuild
+
+cat ${tauroot}/tools/src/dms/examples/testSimpleExample.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${tauroot}/tools/src/dms/examples/testSimpleExample
+chmod a+rx ${tauroot}/tools/src/dms/examples/testSimpleExample
+
 
 
 # -- determine Tcl/Tk version
