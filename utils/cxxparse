@@ -22,8 +22,7 @@ else
   if [ $HOSTTYPE = i386-linux -o $HOSTTYPE = i386 ]
     then
 # machine options for KCC on linux
-  MACHOPT="--strict \
-        --typename \
+  MACHOPT="--typename \
         --implicit_typename \
         -D__noinline="" \
         -D_XOPEN_SOURCE \
