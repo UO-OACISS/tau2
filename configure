@@ -131,6 +131,8 @@ extradir=
 awe=no
 pthread=no
 muse=no
+muse_event=no
+muse_multiple=no
 comm=yes
 sproc=no
 noex=no
@@ -331,6 +333,16 @@ do
 
   -muse)
       muse=yes
+    shift
+    ;;
+
+  -muse_event)
+      muse_event=yes
+    shift
+    ;;
+
+  -muse_multiple)
+      muse_multiple=yes
     shift
     ;;
 
@@ -716,6 +728,10 @@ do
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-muse ................................. Specify the use of MAGNET/MUSE." 
+    echo "-muse_event ............................Specify the use of MAGNET/MUSE."
+    echo "			          w/ non-monotonically increasing values." 
+    echo "-muse_multiple......................... Specify the use of MAGNET/MUSE." 
+    echo "				      w/ monotonically increasing values." 
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
@@ -2304,6 +2320,18 @@ if [ $muse = yes ]
   then
     fixmakeargs="$fixmakeargs MUSE"
     tauoptions="${tauoptions}-muse"
+fi
+
+if [ $muse_event = yes ]
+  then
+    fixmakeargs="$fixmakeargs MUSE_EVENT"
+    tauoptions="${tauoptions}-muse_event"
+fi
+
+if [ $muse_multiple = yes ]
+  then
+    fixmakeargs="$fixmakeargs MUSE_MULTIPLE"
+    tauoptions="${tauoptions}-muse_multiple"
 fi
 
 if [ $sproc = yes ]

@@ -380,6 +380,14 @@ fi
 	echo NOTE: Using MAGNET/MUSE with TAU
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     MUSE_EVENT)
+	echo NOTE: Using MAGNET/MUSE EVENT with TAU
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     MUSE_MULTIPLE)
+	echo NOTE: Using MAGNET/MUSE MULTIPLE with TAU
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      USE_SGINCC)
 	echo NOTE: Using the SGI NCC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
