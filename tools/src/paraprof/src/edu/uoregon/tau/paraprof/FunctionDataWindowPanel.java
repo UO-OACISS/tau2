@@ -14,9 +14,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindowPanel
  * This is the panel for the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.7 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindowPanel.java,v 1.8 2005/01/10 20:12:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		FunctionDataWindow
  */
 public class FunctionDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable,
@@ -125,8 +125,14 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
         FontMetrics fmFont = g2D.getFontMetrics(font);
 
         //Get the max value for this function
-        double maxValue = ParaProfUtils.getMaxValue(function, window.getValueType(), window.isPercent(), ppTrial);
-
+        
+        
+//        double maxValue = ParaProfUtils.getMaxValue(function, window.getValueType(), window.isPercent(), ppTrial);
+        double maxValue = window.getMaxValue();
+        
+        
+        //System.out.println ("maxValue = " + maxValue);
+        
         // too bad these next few lines are bullshit 
         // (you can't determine the max width by looking at the max value)  1.0E99 > 43.34534, but is thinner
         if (window.isPercent()) {
@@ -225,7 +231,7 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                 barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + ","
                         + (ppFunctionProfile.getContextID()) + "," + (ppFunctionProfile.getThreadID());
             }
-
+            
             drawBar(g2D, fmFont, value, maxValue, barString, barXCoord, yCoord, barHeight, groupMember);
         }
     }
@@ -344,9 +350,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
                 } else if (arg.equals("Show Call Path Thread Relations")) {
                     if (clickedOnObject instanceof PPFunctionProfile) {
                         ppFunctionProfile = (PPFunctionProfile) clickedOnObject;
-                        CallPathUtilFuncs.trimCallPathData(ppTrial.getDataSource(), ppTrial.getDataSource().getThread(
-                                ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
-                                ppFunctionProfile.getThreadID()));
                         CallPathTextWindow callPathTextWindow = new CallPathTextWindow(ppTrial,
                                 ppFunctionProfile.getNodeID(), ppFunctionProfile.getContextID(),
                                 ppFunctionProfile.getThreadID(), window.getDataSorter(), 1);
@@ -356,8 +359,6 @@ public class FunctionDataWindowPanel extends JPanel implements ActionListener, M
 
                 } else if (arg.equals("Show Thread Call Graph")) {
                     PPThread ppThread = (PPThread) clickedOnObject;
-                    CallPathUtilFuncs.trimCallPathData(ppTrial.getDataSource(), ppTrial.getDataSource().getThread(
-                            ppThread.getNodeID(), ppThread.getContextID(), ppThread.getThreadID()));
 
                     CallGraphWindow tmpRef = new CallGraphWindow(ppTrial, ppThread.getNodeID(),
                             ppThread.getContextID(), ppThread.getThreadID(), window.getDataSorter());

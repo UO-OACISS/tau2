@@ -46,22 +46,22 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
             edu.uoregon.tau.dms.dss.Thread thread;
             thread = trial.getDataSource().getMeanData(); 
             
-            if (thread.getMaxExclusivePercent(trial.getSelectedMetricID()) > 100) {
-                exclusivePercentOver100 = true;
-                percent = false;
-            }
+          
+
+            ppThread = new PPThread(thread, trial);
 
         } else {
 
             edu.uoregon.tau.dms.dss.Thread thread;
             thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
 
-            if (thread.getMaxExclusivePercent(trial.getSelectedMetricID()) > 100) {
-                exclusivePercentOver100 = true;
-                percent = false;
-            }
+           
+
+            ppThread = new PPThread(thread, trial);
+
         }
 
+        
         setLocation(new java.awt.Point(300, 200));
         setSize(new java.awt.Dimension(700, 450));
         //Now set the title.
@@ -587,11 +587,25 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     //Updates this window's data copy.
     private void sortLocalData() {
         //The name selection behaves slightly differently. Thus the check for it.
+//        if (name) {
+//            list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, order);
+//        } else {
+//            list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, valueType + order);
+//        }
+
+    
         if (name) {
-            list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, order);
+            list = ppThread.getSortedFunctionProfiles(order, false);
         } else {
-            list = dataSorter.getFunctionProfiles(nodeID, contextID, threadID, valueType + order);
+            list = ppThread.getSortedFunctionProfiles(valueType + order, false);
         }
+
+
+        if (ppThread.getMaxExclusivePercent() > 100) {
+            exclusivePercentOver100 = true;
+            percent = false;
+        }
+
     }
 
     public Vector getData() {
@@ -748,6 +762,13 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
     }
 
     //Instance data.
+    
+    
+    public PPThread getPPThread() {
+        return ppThread;
+    }
+    
+    private PPThread ppThread;
     private ParaProfTrial trial = null;
     private DataSorter dataSorter = null;
     private int nodeID = -1;

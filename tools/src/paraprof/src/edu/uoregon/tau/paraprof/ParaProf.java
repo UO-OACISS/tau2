@@ -12,11 +12,11 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.26 2005/01/06 22:49:44 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.27 2005/01/10 20:12:27 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  */
 public class ParaProf implements ActionListener {
 
@@ -55,7 +55,6 @@ public class ParaProf implements ActionListener {
          * UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
          * catch (Exception e) { }
          */
-        //End uncomment!
     }
 
     private static void usage() {

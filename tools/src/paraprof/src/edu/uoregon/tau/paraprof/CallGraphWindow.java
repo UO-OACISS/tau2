@@ -35,9 +35,9 @@ import java.awt.print.*;
  * CallGraphWindow.java
  * This window displays the callpath data as a graph.
  *   
- * <P>CVS $Id: CallGraphWindow.java,v 1.12 2005/01/07 19:56:43 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.13 2005/01/10 20:12:26 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, MenuListener, MouseListener,
         KeyListener, ChangeListener, Observer, ParaProfImageInterface, Printable {
@@ -507,7 +507,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             if (fp == null) // skip it if this thread didn't call this function
                 continue;
 
-            if (!fp.isCallPathObject()) { // skip callpath functions (we only want the actual functions)
+            if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
 
                 Vertex v = new Vertex(fp, getWidth(fp, maxWidthValue));
                 v.color = (float) getValue(fp, this.colorOption, maxColorValue);
@@ -524,7 +524,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             if (fp == null) // skip it if this thread didn't call this function
                 continue;
 
-            if (!fp.isCallPathObject()) { // skip callpath functions (we only want the actual functions)
+            if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
 
                 // get the vertex for this FunctionProfile 
                 Vertex root = (Vertex) vertexMap.get(fp);
@@ -618,7 +618,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             if (fp == null)
                 continue;
 
-            if (!fp.isCallPathObject()) {
+            if (!fp.isCallPathFunction()) {
 
                 Vertex vertex = (Vertex) vertexMap.get(fp);
 
@@ -636,7 +636,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             if (fp == null)
                 continue;
 
-            if (!fp.isCallPathObject()) {
+            if (!fp.isCallPathFunction()) {
 
                 Vertex vertex = (Vertex) vertexMap.get(fp);
 
@@ -651,7 +651,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             if (fp == null)
                 continue;
 
-            if (!fp.isCallPathObject()) {
+            if (!fp.isCallPathFunction()) {
 
                 Vertex vertex = (Vertex) vertexMap.get(fp);
                 vertex.visited = false;

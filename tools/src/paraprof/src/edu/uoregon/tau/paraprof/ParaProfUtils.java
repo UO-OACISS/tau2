@@ -10,7 +10,7 @@ public class ParaProfUtils {
     private ParaProfUtils() {
         // This constructor will never be invoked
     }
-    
+
     public static void print(Printable printable) {
         PrinterJob job = PrinterJob.getPrinterJob();
         PageFormat defaultFormat = job.defaultPage();
@@ -18,13 +18,13 @@ public class ParaProfUtils {
         if (defaultFormat != selectedFormat) { // only proceed if the user did not select cancel
             job.setPrintable(printable, selectedFormat);
             //if (job.getPrintService() != null) {
-                if (job.printDialog()) { // only proceed if the user did not select cancel
-                    try {
-                        job.print();
-                    } catch (PrinterException e) {
-                        ParaProfUtils.handleException(e);
-                    }
+            if (job.printDialog()) { // only proceed if the user did not select cancel
+                try {
+                    job.print();
+                } catch (PrinterException e) {
+                    ParaProfUtils.handleException(e);
                 }
+            }
             //}
         }
 
@@ -58,8 +58,7 @@ public class ParaProfUtils {
         new ParaProfErrorDialog(e);
     }
 
-    public static double getValue(PPFunctionProfile ppFunctionProfile, int valueType, boolean percent)
-            throws ParaProfException {
+    public static double getValue(PPFunctionProfile ppFunctionProfile, int valueType, boolean percent) {
         double value = 0;
         switch (valueType) {
         case 2:
@@ -84,73 +83,72 @@ public class ParaProfUtils {
             value = ppFunctionProfile.getInclusivePerCall();
             break;
         default:
-            throw new ParaProfException("Invalid Value Type: " + valueType);
+            throw new RuntimeException("Invalid Value Type: " + valueType);
         }
         return value;
     }
 
-    public static double getMaxValue(Function function, int valueType, boolean percent, ParaProfTrial ppTrial)
-            throws ParaProfException {
-        double maxValue = 0;
-        switch (valueType) {
-        case 2:
-            if (percent) {
-                maxValue = function.getMaxExclusivePercent(ppTrial.getSelectedMetricID());
-            } else {
-                maxValue = function.getMaxExclusive(ppTrial.getSelectedMetricID());
-            }
-            break;
-        case 4:
-            if (percent) {
-                maxValue = function.getMaxInclusivePercent(ppTrial.getSelectedMetricID());
-            } else {
-                maxValue = function.getMaxInclusive(ppTrial.getSelectedMetricID());
-            }
-            break;
-        case 6:
-            maxValue = function.getMaxNumCalls();
-            break;
-        case 8:
-            maxValue = function.getMaxNumSubr();
-            break;
-        case 10:
-            maxValue = function.getMaxInclusivePerCall(ppTrial.getSelectedMetricID());
-            break;
-        default:
-            throw new ParaProfException("Invalid Value Type: " + valueType);
-        }
-        return maxValue;
-    }
+//    public static double getMaxValue(Function function, int valueType, boolean percent, ParaProfTrial ppTrial) {
+//        double maxValue = 0;
+//        switch (valueType) {
+//        case 2:
+//            if (percent) {
+//                maxValue = function.getMaxExclusivePercent(ppTrial.getSelectedMetricID());
+//            } else {
+//                maxValue = function.getMaxExclusive(ppTrial.getSelectedMetricID());
+//            }
+//            break;
+//        case 4:
+//            if (percent) {
+//                maxValue = function.getMaxInclusivePercent(ppTrial.getSelectedMetricID());
+//            } else {
+//                maxValue = function.getMaxInclusive(ppTrial.getSelectedMetricID());
+//            }
+//            break;
+//        case 6:
+//            maxValue = function.getMaxNumCalls();
+//            break;
+//        case 8:
+//            maxValue = function.getMaxNumSubr();
+//            break;
+//        case 10:
+//            maxValue = function.getMaxInclusivePerCall(ppTrial.getSelectedMetricID());
+//            break;
+//        default:
+//            throw new RuntimeException("Invalid Value Type: " + valueType);
+//        }
+//        return maxValue;
+//    }
 
-    public static double getMaxThreadValue(edu.uoregon.tau.dms.dss.Thread thread, int valueType,
-            boolean percent, ParaProfTrial ppTrial) throws ParaProfException {
-        double maxValue = 0;
-        switch (valueType) {
-        case 2:
-            if (percent)
-                maxValue = thread.getMaxExclusivePercent(ppTrial.getSelectedMetricID());
-            else
-                maxValue = thread.getMaxExclusive(ppTrial.getSelectedMetricID());
-            break;
-        case 4:
-            if (percent)
-                maxValue = thread.getMaxInclusivePercent(ppTrial.getSelectedMetricID());
-            else
-                maxValue = thread.getMaxInclusive(ppTrial.getSelectedMetricID());
-            break;
-        case 6:
-            maxValue = thread.getMaxNumCalls();
-            break;
-        case 8:
-            maxValue = thread.getMaxNumSubr();
-            break;
-        case 10:
-            maxValue = thread.getMaxInclusivePerCall(ppTrial.getSelectedMetricID());
-            break;
-        default:
-            throw new ParaProfException("Invalid Value Type: " + valueType);
-        }
-        return maxValue;
-    }
+//    public static double getMaxThreadValue(edu.uoregon.tau.dms.dss.Thread thread, int valueType,
+//            boolean percent, ParaProfTrial ppTrial) throws ParaProfException {
+//        double maxValue = 0;
+//        switch (valueType) {
+//        case 2:
+//            if (percent)
+//                maxValue = thread.getMaxExclusivePercent(ppTrial.getSelectedMetricID());
+//            else
+//                maxValue = thread.getMaxExclusive(ppTrial.getSelectedMetricID());
+//            break;
+//        case 4:
+//            if (percent)
+//                maxValue = thread.getMaxInclusivePercent(ppTrial.getSelectedMetricID());
+//            else
+//                maxValue = thread.getMaxInclusive(ppTrial.getSelectedMetricID());
+//            break;
+//        case 6:
+//            maxValue = thread.getMaxNumCalls();
+//            break;
+//        case 8:
+//            maxValue = thread.getMaxNumSubr();
+//            break;
+//        case 10:
+//            maxValue = thread.getMaxInclusivePerCall(ppTrial.getSelectedMetricID());
+//            break;
+//        default:
+//            throw new ParaProfException("Invalid Value Type: " + valueType);
+//        }
+//        return maxValue;
+//    }
 
 }

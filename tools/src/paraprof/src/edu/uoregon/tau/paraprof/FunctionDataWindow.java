@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * FunctionDataWindow
  * This is the FunctionDataWindow.
  *  
- * <P>CVS $Id: FunctionDataWindow.java,v 1.7 2005/01/07 19:56:44 amorris Exp $</P>
+ * <P>CVS $Id: FunctionDataWindow.java,v 1.8 2005/01/10 20:12:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		FunctionDataWindowPanel
  */
 public class FunctionDataWindow extends JFrame implements ActionListener, MenuListener, Observer,
@@ -390,6 +390,8 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString());
                 } else if (arg.equals("Show Help Window")) {
                     this.help(true);
+                } else {
+                    throw new RuntimeException("Menu system not implemented properly");
                 }
             } else if (EventSrc == sliderMultiple) {
                 panel.changeInMultiples();
@@ -488,8 +490,28 @@ public class FunctionDataWindow extends JFrame implements ActionListener, MenuLi
             list = dataSorter.getFunctionData(function, 30 + order, true);
         else
             list = dataSorter.getFunctionData(function, valueType + order, true);
+        
+    
+        maxValue = 0;
+        for (Iterator it = list.iterator(); it.hasNext(); ) {
+            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
+            
+            
+            double value = ParaProfUtils.getValue(ppFunctionProfile, this.getValueType(), this.isPercent());
+
+            maxValue = Math.max(maxValue,value);
+            
+        }
+        
     }
 
+    
+    private double maxValue;
+    
+    public double getMaxValue() {
+        return maxValue;
+    }
+    
     public Vector getData() {
         return list;
     }

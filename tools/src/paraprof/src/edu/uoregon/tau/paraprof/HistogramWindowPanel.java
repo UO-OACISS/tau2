@@ -17,9 +17,9 @@ import java.text.*;
  * HistogramWindowPanel
  * This is the panel for the HistogramWindow.
  *  
- * <P>CVS $Id: HistogramWindowPanel.java,v 1.7 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindowPanel.java,v 1.8 2005/01/10 20:12:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		HistogramWindow
  */
 public class HistogramWindowPanel extends JPanel implements Printable, ParaProfImageInterface {
@@ -201,8 +201,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
         int maxFontAscent = fontMetrics.getMaxAscent();
         int maxFontDescent = fontMetrics.getMaxDescent();
 
-        int numBins = window.getNumBins();
-        int rectWidth = 550 / window.getNumBins();
+        int rectWidth = 550 / bins.length;
 
         g2D.setColor(Color.black);
 
@@ -233,12 +232,12 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
 
         int spacing = (rectWidth / 10) / 2;
 
-        int endOfChart = rectWidth * numBins + xOffset + 4 - spacing;
+        int endOfChart = rectWidth * bins.length + xOffset + 4 - spacing;
 
         g2D.drawLine(xOffset, 400 + yOffset, xOffset, yOffset);
         g2D.drawLine(xOffset, 400 + yOffset, endOfChart, 400 + yOffset);
 
-        for (int i = 1; i < numBins + 1; i++) {
+        for (int i = 1; i < bins.length + 1; i++) {
             g2D.drawLine(xOffset + 4 + i * rectWidth - spacing, 400 + yOffset, xOffset + 4 + i * rectWidth
                     - spacing, 405 + yOffset);
         }
@@ -252,7 +251,7 @@ public class HistogramWindowPanel extends JPanel implements Printable, ParaProfI
 
         xPanelSize = endOfChart + 10;
 
-        for (int i = 0; i < numBins; i++) {
+        for (int i = 0; i < bins.length; i++) {
             if (bins[i] != 0) {
                 double tmp1 = bins[i];
 

@@ -293,7 +293,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
         //dataSource.setMeanDataOLD(metricID);
 
         dataSource.setMeanData(metricID, metricID);
-        dataSource.getMeanData().setThreadDataAllMetrics();
+        //dataSource.getMeanData().setThreadDataAllMetrics();
 
     }
 

@@ -11,62 +11,21 @@ import edu.uoregon.tau.dms.dss.*;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.13 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.14 2005/01/10 20:12:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
 public class CallPathTextWindow extends JFrame implements ActionListener, MenuListener, Observer {
 
-    public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
-            DataSorter dataSorter, int windowType) {
-
-        this.trial = trial;
-        this.nodeID = nodeID;
-        this.contextID = contextID;
-        this.threadID = threadID;
-        this.dataSorter = dataSorter;
-        this.windowType = windowType;
-
-        setLocation(0, 0);
-        setSize(800, 600);
-
-        //Now set the title.
-        if (windowType == 0) {
-            this.setTitle("Mean Call Path Data - " + trial.getTrialIdentifier(true));
-        } else if (windowType == 1) {
-            this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
-                    + trial.getTrialIdentifier(true));
-            CallPathUtilFuncs.trimCallPathData(trial.getDataSource(), trial.getDataSource().getThread(nodeID, contextID, threadID));
-        } else
-            this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
-
-        //Add some window listener code
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                thisWindowClosing(evt);
-            }
-        });
-
-        //Set the help window text if required.
-        if (ParaProf.helpWindow.isVisible()) {
-            this.help(false);
-        }
-
-        //Sort the local data.
-        sortLocalData();
-
-        //####################################
-        //Code to generate the menus.
-        //####################################
+    
+    private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
         JMenu subMenu = null;
         JMenuItem menuItem = null;
 
-        //######
         //File menu.
-        //######
         JMenu fileMenu = new JMenu("File");
 
         //Save menu.
@@ -101,13 +60,8 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         fileMenu.add(menuItem);
 
         fileMenu.addMenuListener(this);
-        //######
-        //End - File menu.
-        //######
 
-        //######
         //Options menu.
-        //######
         optionsMenu = new JMenu("Options");
 
         JCheckBoxMenuItem box = null;
@@ -202,13 +156,8 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         optionsMenu.add(box);
 
         optionsMenu.addMenuListener(this);
-        //######
-        //End - Options menu.
-        //######
 
-        //######
         //Windows menu
-        //######
         windowsMenu = new JMenu("Windows");
 
         menuItem = new JMenuItem("Show ParaProf Manager");
@@ -236,13 +185,8 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         windowsMenu.add(menuItem);
 
         windowsMenu.addMenuListener(this);
-        //######
-        //End - Windows menu
-        //######
 
-        //######
         //Help menu.
-        //######
         JMenu helpMenu = new JMenu("Help");
 
         menuItem = new JMenuItem("Show Help Window");
@@ -254,9 +198,6 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         helpMenu.add(menuItem);
 
         helpMenu.addMenuListener(this);
-        //######
-        //End - Help menu.
-        //######
 
         //Now, add all the menus to the main menu.
         mainMenu.add(fileMenu);
@@ -265,9 +206,47 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         mainMenu.add(helpMenu);
 
         setJMenuBar(mainMenu);
-        //####################################
-        //End - Code to generate the menus.
-        //####################################
+    }
+    
+    public CallPathTextWindow(ParaProfTrial trial, int nodeID, int contextID, int threadID,
+            DataSorter dataSorter, int windowType) {
+
+        this.trial = trial;
+        this.nodeID = nodeID;
+        this.contextID = contextID;
+        this.threadID = threadID;
+        this.dataSorter = dataSorter;
+        this.windowType = windowType;
+
+        setLocation(0, 0);
+        setSize(800, 600);
+
+        //Now set the title.
+        if (windowType == 0) {
+            this.setTitle("Mean Call Path Data - " + trial.getTrialIdentifier(true));
+        } else if (windowType == 1) {
+            this.setTitle("Call Path Data " + "n,c,t, " + nodeID + "," + contextID + "," + threadID + " - "
+                    + trial.getTrialIdentifier(true));
+            //CallPathUtilFuncs.trimCallPathData(trial.getDataSource(), trial.getDataSource().getThread(nodeID, contextID, threadID));
+        } else
+            this.setTitle("Call Path Data Relations - " + trial.getTrialIdentifier(true));
+
+        //Add some window listener code
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                thisWindowClosing(evt);
+            }
+        });
+
+        //Set the help window text if required.
+        if (ParaProf.helpWindow.isVisible()) {
+            this.help(false);
+        }
+
+        //Sort the local data.
+        sortLocalData();
+
+        setupMenus();
 
         //####################################
         //Create and add the components.
@@ -285,6 +264,11 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
         edu.uoregon.tau.dms.dss.Thread thread = trial.getDataSource().getThread(nodeID, contextID, threadID);
 
+        
+        if (windowType == 0 || windowType == 2) {
+            thread = trial.getDataSource().getMeanData();
+        }
+        
         panel = new CallPathTextWindowPanel(trial, thread, this, windowType);
         //The scroll panes into which the list shall be placed.
         sp = new JScrollPane(panel);
@@ -308,13 +292,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     }
 
-    //####################################
-    //Interface code.
-    //####################################
-
-    //######
-    //ActionListener.
-    //######
+  
     public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();

@@ -646,7 +646,13 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
             int maxBarLength;
 
             function = meanPPFunctionProfile.getFunction();
-            maxForThisFunc = function.getMaxExclusive(meanPPFunctionProfile.getTrial().getSelectedMetricID());
+            //maxForThisFunc = function.getMaxExclusive(meanPPFunctionProfile.getTrial().getSelectedMetricID());
+            maxForThisFunc = window.getDataSorter().getMaxExclusives()[function.getID()];
+                
+                
+                //maxForThisFunc wifunction.getMaxExclusive(meanPPFunctionProfile.getTrial().getSelectedMetricID());
+
+            
             maxBarLength = (int) (((maxForThisFunc / window.getDataSorter().getMaxExclusiveSum()) * barLength));
 
             if (function != ppFunctionProfile.getFunction()) {

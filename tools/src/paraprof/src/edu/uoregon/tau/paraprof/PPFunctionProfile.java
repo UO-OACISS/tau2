@@ -99,23 +99,7 @@ public class PPFunctionProfile implements Comparable {
     }
 
     //Parent/child interface.
-    public Iterator getParents() {
-        return functionProfile.getParents();
-    }
-
-    public Iterator getChildren() {
-        return functionProfile.getChildren();
-    }
-
-    public Iterator getParentCallPathIterator(Function parent) {
-        return functionProfile.getParentCallPathIterator(parent);
-    }
-
-    public Iterator getChildCallPathIterator(Function child) {
-        return functionProfile.getChildCallPathIterator(child);
-    }
-
-    
+       
     public Iterator getChildProfiles() {
         return functionProfile.getChildProfiles();
     }

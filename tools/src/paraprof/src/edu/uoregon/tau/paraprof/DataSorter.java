@@ -9,9 +9,9 @@ import edu.uoregon.tau.dms.dss.*;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.6 2005/01/07 19:56:44 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.7 2005/01/10 20:12:26 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 public class DataSorter {
 
@@ -22,7 +22,8 @@ public class DataSorter {
     public Vector getUserEventProfiles(int nodeID, int contextID, int threadID, int sortType) {
 
         UserEventProfile userEventProfile = null;
-        Vector list = ((edu.uoregon.tau.dms.dss.Thread) trial.getDataSource().getThread(nodeID, contextID, threadID)).getUserEventProfiles();
+        Vector list = ((edu.uoregon.tau.dms.dss.Thread) trial.getDataSource().getThread(nodeID, contextID,
+                threadID)).getUserEventProfiles();
 
         Vector newList = new Vector();
 
@@ -72,7 +73,7 @@ public class DataSorter {
 
         edu.uoregon.tau.dms.dss.Thread thread = trial.getDataSource().getMeanData();
 
-        PPThread ppThread = new PPThread(thread);
+        PPThread ppThread = new PPThread(thread, this.trial);
 
         for (Enumeration e4 = thread.getFunctionProfiles().elements(); e4.hasMoreElements();) {
             FunctionProfile functionProfile = (FunctionProfile) e4.nextElement();
@@ -88,6 +89,8 @@ public class DataSorter {
         // reset this in case we are switching metrics
         maxExclusiveSum = 0;
 
+        maxExclusives = new double[trial.getDataSource().getNumFunctions()];
+
         for (Iterator it = trial.getDataSource().getNodes(); it.hasNext();) {
             Node node = (Node) it.next();
             for (Iterator it2 = node.getContexts(); it2.hasNext();) {
@@ -100,7 +103,7 @@ public class DataSorter {
                     //out all functions on a particular thread. The default at present is not to add.
 
                     int counter = 0; //Counts the number of PPFunctionProfile that are actually added.
-                    ppThread = new PPThread(thread);
+                    ppThread = new PPThread(thread, this.trial);
 
                     double sum = 0.0;
 
@@ -109,8 +112,7 @@ public class DataSorter {
                     for (Enumeration e4 = thread.getFunctionProfiles().elements(); e4.hasMoreElements();) {
                         FunctionProfile functionProfile = (FunctionProfile) e4.nextElement();
                         if ((functionProfile != null) && (trial.displayFunction(functionProfile.getFunction()))) {
-                            PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(trial,
-                                    thread,
+                            PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(trial, thread,
                                     functionProfile);
                             ppFunctionProfile.setSortType(sortType);
                             ppThread.addFunction(ppFunctionProfile);
@@ -118,6 +120,9 @@ public class DataSorter {
 
                             sum += ppFunctionProfile.getExclusiveValue();
 
+                            maxExclusives[functionProfile.getFunction().getID()] = Math.max(
+                                    maxExclusives[functionProfile.getFunction().getID()],
+                                    ppFunctionProfile.getExclusiveValue());
                         }
                     }
 
@@ -209,6 +214,12 @@ public class DataSorter {
         return maxExclusiveSum;
     }
 
+    
+    public double[] getMaxExclusives() {
+        return maxExclusives;
+    }
+    
     private ParaProfTrial trial = null;
     private double maxExclusiveSum = 0;
+    private double maxExclusives[];
 }

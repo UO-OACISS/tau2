@@ -83,25 +83,33 @@ public class DerivedMetrics {
             newMetric.setName(newMetricName);
             newMetric.setDerivedMetric(true);
             int metric = newMetric.getID();
-            trialOpA.setSelectedMetricID(metric);
+//            trialOpA.setSelectedMetricID(metric);
 
             Iterator l = trialOpA.getDataSource().getFunctions();
 
-            //TODO: I'm confused as to whether or not these both need to be
-            // done, shouldn't the bottom one do the top stuff anyway?
-            while (l.hasNext()) {
-                Function f = (Function) l.next();
-                f.incrementStorage();
-            }
 
             edu.uoregon.tau.dms.dss.Thread meanThread;
             
             meanThread = trialOpA.getDataSource().getMeanData();
-            
             meanThread.incrementStorage();
+
+            edu.uoregon.tau.dms.dss.Thread totalThread;
+            
+            totalThread = trialOpA.getDataSource().getTotalData();
+            
+            totalThread.incrementStorage();
             
             
             l = meanThread.getFunctionProfileIterator();
+            while (l.hasNext()) {
+                FunctionProfile functionProfile = (FunctionProfile) l.next();
+                if (functionProfile != null) {
+                    functionProfile.incrementStorage();
+                }
+            }
+
+
+            l = totalThread.getFunctionProfileIterator();
             while (l.hasNext()) {
                 FunctionProfile functionProfile = (FunctionProfile) l.next();
                 if (functionProfile != null) {
@@ -145,8 +153,8 @@ public class DerivedMetrics {
 
                                 functionProfile.setExclusive(metric, result);
 
-                                if ((function.getMaxExclusive(metric)) < result)
-                                    function.setMaxExclusive(metric, result);
+//                                if ((function.getMaxExclusive(metric)) < result)
+//                                    function.setMaxExclusive(metric, result);
 
                                 d1 = functionProfile.getInclusive(opA);
                                 if (!constant) {
@@ -159,15 +167,15 @@ public class DerivedMetrics {
 
                                 functionProfile.setInclusivePerCall(metric, functionProfile.getInclusive(metric) / functionProfile.getNumCalls());
 
-                                if ((result > thread.getMaxInclusive(metric))) {
-                                    thread.setMaxInclusive(metric, result);
-                                }
+//                                if ((result > thread.getMaxInclusive(metric))) {
+//                                    thread.setMaxInclusive(metric, result);
+//                                }
 
-                                if ((function.getMaxInclusive(metric)) < result)
-                                    function.setMaxInclusive(metric, result);
+//                                if ((function.getMaxInclusive(metric)) < result)
+//                                    function.setMaxInclusive(metric, result);
                             }
                         }
-                        thread.setThreadData(metric);
+                        //thread.setThreadData(metric);
                     }
                 }
             }

@@ -12,9 +12,9 @@ import edu.uoregon.tau.dms.dss.*;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.7 2005/01/06 22:49:43 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.8 2005/01/10 20:12:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  * @see		HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener {
@@ -473,7 +473,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         closeThisWindow();
     }
 
-    void closeThisWindow() {
+    public void closeThisWindow() {
         try {
             setVisible(false);
             ppTrial.getSystemEvents().deleteObserver(this);
@@ -492,6 +492,11 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         if (valueType > 5)
             return 0;
         return units;
+    }
+
+    public void setNumBins(int numBins) {
+        this.numBins =  numBins;
+        panel.repaint();
     }
 
     public int getNumBins() {

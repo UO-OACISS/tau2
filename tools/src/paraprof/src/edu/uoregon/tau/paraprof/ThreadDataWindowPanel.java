@@ -2,7 +2,9 @@
  * 
  * ThreadDataWindowPanel.java
  * 
- * Title: ParaProf Author: Robert Bell Description:
+ * Title: ParaProf 
+ * Author: Robert Bell 
+ * Description:
  */
 
 package edu.uoregon.tau.paraprof;
@@ -125,8 +127,11 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
         //Set max values.
         //######
 
-        maxValue = ParaProfUtils.getMaxThreadValue(thread, window.getValueType(), window.isPercent(), trial);
+        //maxValue = ParaProfUtils.getMaxThreadValue(thread, window.getValueType(), window.isPercent(), trial);
 
+        maxValue = window.getPPThread().getMaxValue(window.getValueType(), window.isPercent());
+
+        
         if (window.isPercent()) {
             stringWidth = fmFont.stringWidth(UtilFncs.getOutputString(0, maxValue, 6) + "%");
             barXCoord = barXCoord + stringWidth;

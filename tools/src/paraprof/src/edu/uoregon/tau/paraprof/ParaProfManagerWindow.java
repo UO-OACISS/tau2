@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.5 2005/01/06 23:18:10 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.6 2005/01/10 20:12:27 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -960,7 +960,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             jTextArea.append("ParaProf Manager\n\n");
             jTextArea.append("This is the Standard application section:\n\n");
             jTextArea.append("Standard - The classic ParaProf mode.  Data sets that are loaded at startup are placed"
-                    + "under the default application automatically. Please see the ParaProf documentation for mre details.\n");
+                    + " under the default application automatically. Please see the ParaProf documentation for mre details.\n");
             break;
         case 2:
             jTextArea.append("ParaProf Manager\n\n");
