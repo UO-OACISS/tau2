@@ -1,0 +1,8 @@
+This directory contains the executable files such as lu.W.4 and sp.W.4.
+Set the environment variable PROFILEDIR or TRACEDIR to point to the directory
+where profile or trace files should be created respectively. By default these
+are created in the current directory.
+
+% mpirun -np 4 lu.W.4
+executes lu.W.4 on four processors.
+
