@@ -63,15 +63,17 @@ Usage: configure [OPTIONS]
          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
                                                           icpc|pathCC].
 -cc=<compiler> ................................ specify the C compiler.
-                      options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc].
+                     options [cc|gcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc].
 -pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
     options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
-  	            kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
+                  kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
 -useropt='<parameters>' ............... list of commandline parameters.
 -prefix=<dir> ................ Specify a target installation directory.
 -exec-prefix=<arch> .......... Specify a target architecture directory.
+-arch=<architecture> ................... Specify a target architecture.
+   options       [bgl|ibm64|ibm64linux|solaris2-64|sgin32|sgi64|sgio32]
 -pthread .................................. Use pthread thread package.
 -sproc .................................. Use SGI sproc thread package.
 -tulipthread=<dir> .......... Specify location of Tulip/Smarts package.
@@ -153,7 +155,7 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    and -cc=powerpc64-linux-gcc for GNU g++ 64 bits. The compilers are installed in 
    /usr/bin/g++ for 32 bits and /opt/cross/bin/powerpc64-linux-g++ for 64 bit g++ 
    respectively. Under IBM Linux Power4, we use xlf90 as the default Fortran compiler with 
-   g++/gcc and xlC/xlc.
+   g++/gcc and xlC/xlc. For IBM BlueGene/L, we recommend using the -arch=bgl option. 
 
    
 -c++=<C++ compiler>
