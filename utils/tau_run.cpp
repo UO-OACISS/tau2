@@ -177,6 +177,12 @@ void errorFunc1(BPatchErrorLevel level, int num, const char **params)
         }
     }
 }
+
+// We've a null error function when we don't want to display an error
+void errorFuncNull(BPatchErrorLevel level, int num, const char **params)
+{
+  // It does nothing.
+} 
 // END OF TEST3 code
  
 // Constraints for instrumentation 
@@ -217,6 +223,35 @@ int routineConstraint(char *fname)
   }
 }
 
+// 
+// check if the application has an MPI library routine MPI_Comm_rank
+// 
+int checkIfMPI(BPatch_image * appImage, BPatch_function * & mpiinit,
+		BPatch_function * & mpiinitstub)
+{
+
+  mpiinit 	= appImage->findFunction("PMPI_Comm_rank");
+  mpiinitstub 	= appImage->findFunction("TauMPIInitStub");
+
+  if (mpiinitstub == (BPatch_function *) NULL) {
+    printf("*** TauMPIInitStub not found! \n");
+  }
+  
+  if (mpiinit == (BPatch_function *) NULL) {
+    dprintf("*** PMPI_Comm_rank not found looking for MPI_Comm_rank...\n");
+    mpiinit = appImage->findFunction("MPI_Comm_rank");
+  }
+  
+  if (mpiinit == (BPatch_function *) NULL) { 
+    dprintf("*** MPI_Comm_rank also not found. This is not an MPI Application! \n");
+    return 0;  // It is not an MPI application
+  }
+  else
+    return 1;   // Yes, it is an MPI application.
+  
+}
+
+
 //
 // entry point 
 //
@@ -227,6 +262,8 @@ int main(int argc, char **argv)
   bool loadlib=false;
   char fname[FUNCNAMELEN], libname[FUNCNAMELEN];
   BPatch_thread *appThread;
+  BPatch_function *mpiinit;
+  BPatch_function *mpiinitstub;
   bpatch = new BPatch; // create a new version. 
   string functions;
 
@@ -350,7 +387,25 @@ int main(int argc, char **argv)
 
   // form the args to InitCode
   BPatch_constExpr funcName(functions.c_str());
+
+  // We need to find out if the application is an MPI app. If it is, we 
+  // should send it 1 for isMPI so TAU_PROFILE_SET_NODE needn't be executed.
+  // If, however, it is a sequential program then it should be sent 0 for isMPI.
+ 
+  // When we look for MPI calls, we shouldn't display an error message for
+  // not find MPI_Comm_rank in the case of a sequential app. So, we turn the
+  // Error callback to be Null and turn back the error settings later. This
+  // way, it works for both MPI and sequential tasks. 
+  
+  bpatch->registerErrorCallback(errorFuncNull); // turn off error reporting
+
+  BPatch_constExpr isMPI(checkIfMPI(appImage, mpiinit, mpiinitstub));
+
+
+  bpatch->registerErrorCallback(errorFunc1); // turn it back on
+
   initArgs.push_back(&funcName);
+  initArgs.push_back(&isMPI);
 
 
   Initialize(appThread, appImage, initArgs);
@@ -426,7 +481,19 @@ int main(int argc, char **argv)
     delete Name;
   }
 
-
+  
+  if (mpiinit == NULL) { 
+    dprintf("*** MPI_Comm_rank not found. This is not an MPI Application! \n");
+  }
+  else { /* we've found either MPI_Comm_rank or PMPI_Comm_rank! */
+   dprintf("FOUND MPI_Comm_rank or PMPI_Comm_rank! \n");
+   BPatch_Vector<BPatch_snippet *> *mpistubargs = new BPatch_Vector<BPatch_snippet *>();
+   BPatch_paramExpr paramRank(1);
+   
+   mpistubargs->push_back(&paramRank);
+   invokeRoutineInFunction(appThread, appImage, mpiinit, BPatch_exit, mpiinitstub, mpistubargs);
+   delete mpistubargs;
+  }
 
   dprintf("Executing...\n");
   appThread->continueExecution();
