@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1997  						   	   **
+**    Copyright 1999  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
