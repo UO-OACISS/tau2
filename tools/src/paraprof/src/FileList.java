@@ -23,7 +23,7 @@ public class FileList{
     //be chosen. Thus, if files.length > 1, it must contain only files.  If files.length == 1 then
     //it can be a file or a directory.
     //Returns a MetricFileList array of length 0 if no files are obtained.
-    public Vector getFileList(Component component, int type, boolean debug){
+    public Vector getFileList(File f, Component component, int type, boolean debug){
 	Vector result = new Vector();
 
 	//Check to see if type is valid.
@@ -37,11 +37,17 @@ public class FileList{
 	    File[] selection = null;
 	    File[] files = new File[0];
 	    File  file = null;
+	    JFileChooser jFileChooser = null;
 
-	    JFileChooser jFileChooser = new JFileChooser(System.getProperty("user.dir"));
-	    jFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-	    jFileChooser.setMultiSelectionEnabled(true);
-	    if((jFileChooser.showOpenDialog(component)) == JFileChooser.APPROVE_OPTION){
+	    //If a file was not passed in, prompt user for a selection.
+	    if(f==null){
+		jFileChooser = new JFileChooser(System.getProperty("user.dir"));
+		jFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		jFileChooser.setMultiSelectionEnabled(true);
+		if((jFileChooser.showOpenDialog(component)) != JFileChooser.APPROVE_OPTION){
+		    System.out.println("File selection cancelled by user!");
+		    return new Vector();
+		}
 		//User clicked the approve option.  Grab the selection.
 		selection = jFileChooser.getSelectedFiles(); //Note that multiple selection must have been enabled.
 		//Validate the selection.  See above method description for an explanation.
@@ -59,48 +65,50 @@ public class FileList{
 			}
 		    }
 		}
-		
-		//If hear, selection is valid.
-		if(selection.length == 1){
-		    if(selection[0].isDirectory()){
-			if(type==0 || type==1){
-			    //First try and find a pprof.dat file in the selected directory.
-			    files = this.helperGetFileList(selection[0], type, debug);
-			    if(files.length > 0)
-				result.add(files);
-			    else{
-				files = selection[0].listFiles();
-				Vector v = new Vector();
-				for(int i = 0;i<files.length;i++){
-				    if(files[i] != null){
-					if((files[i].isDirectory())&&(files[i].getName().indexOf("MULTI__") != -1))
-					    v.add(files[i]);
-				    }
+	    }
+	    else{
+		selection = new File[1];
+		selection[0] = f;
+	    }
+	    
+	    //If hear, selection is valid.
+	    if(selection.length == 1){
+		if(selection[0].isDirectory()){
+		    if(type==0 || type==1){
+			//First try and find a pprof.dat file in the selected directory.
+			files = this.helperGetFileList(selection[0], type, debug);
+			if(files.length > 0)
+			    result.add(files);
+			else{
+			    files = selection[0].listFiles();
+			    Vector v = new Vector();
+			    for(int i = 0;i<files.length;i++){
+				if(files[i] != null){
+				    if((files[i].isDirectory())&&(files[i].getName().indexOf("MULTI__") != -1))
+					v.add(files[i]);
 				}
-				int length = v.size();
-				if(length!=0){
-				    for(int i=0;i<length;i++){
-					file = (File)(v.elementAt(i));
-					files = this.helperGetFileList(file, type, debug);
-					if(files!=null)
-					    result.add(files);
-				    }
+			    }
+			    int length = v.size();
+			    if(length!=0){
+				for(int i=0;i<length;i++){
+				    file = (File)(v.elementAt(i));
+				    files = this.helperGetFileList(file, type, debug);
+				    if(files!=null)
+					result.add(files);
 				}
 			    }
 			}
 		    }
-		    else{
-			if(type==0 || type==1)
-			    result.add(selection);
-		    }
 		}
-		else{ //More than one file in selection (already checked for zero).
-		    if(type==1)
+		else{
+		    if(type==0 || type==1)
 			result.add(selection);
 		}
 	    }
-	    else
-		System.out.println("File selection cancelled by user.");
+	    else{ //More than one file in selection (already checked for zero).
+		if(type==1)
+		    result.add(selection);
+	    }
 	    return result;
 	}
 	catch(NullPointerException e){
@@ -341,7 +349,7 @@ public class FileList{
 	try{
 	    FileList fl = new FileList();
 	    File[] files = null;
-	    Vector v = fl.getFileList(null,type,debug);
+	    Vector v = fl.getFileList(null, null,type,debug);
 	    System.out.println("####################################");
 	    System.out.println("Files found:");
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){

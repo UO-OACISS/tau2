@@ -78,10 +78,11 @@ public class ParaProf implements ActionListener{
 	    ParaProfExperiment experiment = app.addExperiment();
 	    experiment.setName("Default Exp");
 
-	    ParaProfTrial trial = null;
+	    ParaProfTrial trial = new ParaProfTrial();
+	    trial.setName("Default Trial");
 	    
 	    FileList fl = new FileList();
-	    Vector v = fl.getFileList(null, 0 ,ParaProf.debugIsOn);
+	    Vector v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 ,ParaProf.debugIsOn);
 	    File[] files = null;
 
 	    boolean dataAdded = false;
@@ -95,9 +96,6 @@ public class ParaProf implements ActionListener{
 	    }
 	    
 	    if(dataAdded){
-		//Create the trial.
-		trial = new ParaProfTrial();
-		trial.setName("Default Trial");
 		experiment.addTrial(trial);
 		trial.showMainWindow();
 	    }

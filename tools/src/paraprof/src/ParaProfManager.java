@@ -758,7 +758,7 @@ public class ParaProfManager extends JFrame implements ActionListener{
 		type = 3;
 	    
 	    FileList fl = new FileList();
-	    Vector v = fl.getFileList(this, type,ParaProf.debugIsOn);
+	    Vector v = fl.getFileList(null, this, type,ParaProf.debugIsOn);
 	    File[] files = null;
 
 	    switch(type){
