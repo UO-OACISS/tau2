@@ -125,5 +125,6 @@ multicounters   - Illustrates the use of multiple measurement options configured
 
 selectiveAccess - Illustrates the use of TAU API for runtime access of TAU
 	  	  performance data. A program can get information about routines
-		  executing in its context.
+		  executing in its context. This can be used in conjunction with
+		  multiple counters. 
 
