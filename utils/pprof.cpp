@@ -28,6 +28,8 @@
  * Version 2.7  Added support for Dynamic profiling 
  * Version 2.8  Added no. of subroutines data 
  * Version 2.9  Added no. of subrs and stddev to dump mode
+ * Version 2.91 Separate column heading for stddev in dump mode, 
+ *              delete stddev column for mean
  */
 
 # include <stdio.h>
@@ -1195,20 +1197,20 @@ static void PrintFuncTab (struct p_prof_elem *tab, double total, int max)
   if (hwcounters == false) {
     printf ("---------------------------------------------------------------------------------------\n");
     printf ("%%Time    Exclusive    Inclusive    #Call   #Subrs  Inclusive ");
-    if (profilestats) printf("Standard  ");
+    if (profilestats) printf("  Standard ");
     printf("Name\n");
-    printf ("              msec   total msec                    usec/call  ");
-    if (profilestats) printf("deviation ");
+    printf ("              msec   total msec                    usec/call ");
+    if (profilestats) printf(" deviation ");
     printf("\n");
     printf ("---------------------------------------------------------------------------------------\n");
   } // timing data
   else {
     printf ("---------------------------------------------------------------------------------------\n");
-    printf ("%%Time    Exclusive  Inclusive    #Call   #Subrs Count/Call  ");
-    if (profilestats) printf("Standard  ");
+    printf ("%%Time   Exclusive   Inclusive    #Call   #Subrs Count/Call ");
+    if (profilestats) printf("  Standard ");
     printf("Name\n");
-    printf ("            counts  total counts                            ");
-    if (profilestats) printf("deviation ");
+    printf ("           counts total counts                            ");
+    if (profilestats) printf("  deviation ");
     printf("\n");
     printf ("---------------------------------------------------------------------------------------\n");
 
@@ -1427,12 +1429,20 @@ static void PrintFuncTabOrig (struct p_prof_elem *tab, double total, int max)
       } /* counters */
     } /* o_cumusec > 0 */
     else {
-#ifdef USE_LONG 
-      printf ("  0.0           0           0 %8ld %8ld          0 -others-\n",
+//#ifdef USE_LONG 
+//      printf ("  0.0           0           0 %8ld %8ld          0 -others-\n",
+//#else // DEFAULT double 
+//      printf ("  0.0           0           0 %8G %8G          0 -others-\n",
+//#endif // USE_LONG
+//        o_numcalls, o_numsubrs);
+#ifdef USE_LONG
+        printf ("%5.1f  %10.4G  %10.4G %8ld %8ld %10.0f -others-\n",
 #else // DEFAULT double 
-      printf ("  0.0           0           0 %8G %8G          0 -others-\n",
-#endif // USE_LONG
-        o_numcalls, o_numsubrs);
+        printf ("%5.1f  %10.4G  %10.4G %8G %8G %10.0f -others-\n",
+#endif // USE_LONG 
+          o_cumusec / total * 100.0,
+          o_usec, o_cumusec,
+          o_numcalls, o_numsubrs, o_cumusec / o_numcalls);
     }
   }
 }
@@ -1491,17 +1501,30 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
           ToTimeStr (tab[i].usec, buf1), ToTimeStr (tab[i].cumusec, buf2),
           tab[i].numcalls, tab[i].numsubrs, 
           tab[i].cumusec / tab[i].numcalls);
-	  if(profilestats) printf("%10.4G ", tab[i].stddeviation);
+	  //if(profilestats) printf("%10.4G ", tab[i].stddeviation);
+	  if(profilestats && (strcmp(id_str, "m")!=0)) printf("%10.4G ", tab[i].stddeviation);
           printf("%s\n", tab[i].name);
       }
       else {
+//#ifdef USE_LONG
+//        printf ("  0.0         0         0 %8d          0 %s\n",
+//#else // DEFAULT double 
+//        printf ("  0.0         0         0 %8G          0 %s\n",
+//	#endif // USE_LONG 
+//          tab[i].numcalls,
+//          tab[i].name);
 #ifdef USE_LONG
-        printf ("  0.0         0         0 %8d          0 %s\n",
+        printf ("%5.1f %s %s %8d %8d %10.0f ",
 #else // DEFAULT double 
-        printf ("  0.0         0         0 %8G          0 %s\n",
+        printf ("%5.1f %s %s %8G %8G %10.0f ",
 #endif // USE_LONG 
-          tab[i].numcalls,
-          tab[i].name);
+          tab[i].cumusec / total * 100.0,
+          ToTimeStr (tab[i].usec, buf1), ToTimeStr (tab[i].cumusec, buf2),
+          tab[i].numcalls, tab[i].numsubrs, 
+          tab[i].cumusec / tab[i].numcalls);
+	  //if(profilestats) printf("%10.4G ", tab[i].stddeviation);
+	  if(profilestats && (strcmp(id_str, "m")!=0)) printf("%10.4G ", tab[i].stddeviation);
+          printf("%s\n", tab[i].name);
       }
     printed_anything = 1; /* set flag */
     }
@@ -1526,7 +1549,8 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
         o_cumusec / total * 100.0,
         ToTimeStr (o_usec, buf1), ToTimeStr (o_cumusec, buf2),
         o_numcalls, o_numsubrs, o_cumusec / o_numcalls);
-        if(profilestats) printf("%10.4G ", o_stddeviation);
+	//if(profilestats) printf("%10.4G ", o_stddeviation);
+        if(profilestats && (strcmp(id_str, "m")!=0)) printf("%10.4G ", o_stddeviation);
 	printf("-other-\n");
     }
     else {
@@ -2450,15 +2474,18 @@ int main (int argc, char *argv[])
 	  if(hwcounters) {
 	    printf ("default.dep\n%d templated_functions_hw_counters -stddev\n", numfunc);
 	    printf ("%%time       counts total counts    #call   #subrs count/call     stddev name\n");
+	    printf ("%%time       counts total counts    #call   #subrs count/call name\n");
 	  } else{
 	    printf ("default.dep\n%d templated_functions -stddev\n", numfunc);
 	    printf ("%%time         msec   total msec    #call   #subrs  usec/call     stddev name\n");
+	    printf ("%%time         msec   total msec    #call   #subrs  usec/call name\n");
 	  }
 	} else //not profilestats
 	  { 
 	    if(hwcounters) {
 	      printf ("default.dep\n%d templated_functions_hw_counters\n", numfunc);
-	      printf ("%%time       counts total counts    #call   #subrs count/call ame\n");
+	      printf ("%%time       counts total counts    #call   #subrs count/call name\n");
+	      printf ("%%time       counts total counts    #call   #subrs count/call name\n");
 	    } else {
 	      printf ("default.dep\n%d templated_functions\n", numfunc);
 	      printf ("%%time         msec   total msec    #call   #subrs  usec/call name\n");
@@ -2496,7 +2523,7 @@ int main (int argc, char *argv[])
       exit (0); /* exit after printing list */
     } else if ( dump ) {
          printf ("%s\n%d functions\n", depfile, numfunc);
-	 printf ("%%time         msec   total msec    #call   #subrs  usec/call name\n");
+	 printf ("%%time         msec   total_msec    #call   #subrs  usec/call name\n");
     }
   }
 
@@ -2547,8 +2574,8 @@ int main (int argc, char *argv[])
   exit (0);
 }
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 1998/03/20 21:25:24 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.3 1998/03/20 21:25:24 sameer Exp $                                                   
+ * $RCSfile: pprof.cpp,v $   $Author: ariyal $
+ * $Revision: 1.4 $   $Date: 1998/04/20 22:45:30 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.4 1998/04/20 22:45:30 ariyal Exp $                                                   
  ***************************************************************************/
 
