@@ -1,12 +1,42 @@
-TAU Instrumentation Language (TauIL v0.2)
+TAU Instrumentation Language TODO List
 -----------------------------------------------------------------
 
-1.) Implement parser error recovery.
+Priority  -      1<--------3--------5--------7-------->10 
+		 |         |        |        |          |
+               (low)  (new idea) (feature) (bug)     (high)       
 
-2.) Implement error and warning reporting code.
+1.) Implement parser error recovery (the auto-generated scheme sucks). (8)
+
+2.) Implement error and warning reporting code (Exists, needs to be added to
+    code in conjunction with error recovery and reporting). (6)
 
 3.) Update abstract syntax rewriting code to direct ouput to a PrintStream.
+    Current implementation recursively builds a string. Large syntax trees
+    would result in very large strings. Hence would be better to write to
+    destination immediately. (4)
 
-4.) Update to use profile.*.*.* files instead of pprof dump files.
+4.) Update to use profile.*.*.* files instead of pprof dump files. Rather
+    should allow both, but assume profile.*.*.* files as default. (4)
 
-5.) Add support for multiple counters.
+5.) Add support for multiple counters. (6)
+
+6.) Advanced example. Show use of macros, repository of common instrumentation
+    scenarios, scenarios other than removal of lightweight routines, etc. (4)
+
+7.) Add regular expression package. Current implemntation copies expressions
+    into file list, and leaves it up to the tau_instrumentor to evaluate them.
+    Therefore, regular expressions are restricted to those understood by the
+    instrumentor. (5)
+
+8.) Automation of the tool chain process. Currently requires use of cxxparse,
+    tau_instrumentor to instrument, compile, run program, tau_analyze to analyze, 
+    tau_instrumentor to instrument based on analysis, run refined program. Can
+    make the resulting Makefile for even a simple program a mess. (2)
+
+9.) More in depth coverage of tool usage in users manual. (5)
+
+10.) Make sure code is well documented. Public interface have been documented to
+     to generate API documenation with javadoc. (4)
+
+11.) Anaylze performance. In particular look at the impact large syntax trees have
+     on tool performance. (3)
