@@ -26,7 +26,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.5 2004/10/13 21:07:05 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.6 2004/10/29 20:21:29 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -397,8 +397,8 @@ public class IntervalLocationProfile extends Object {
 	    buf.append("ts.exclusive_percentage, ts.exclusive, ");
 	}
 	buf.append("ts.call, ts.subroutines, ts.inclusive_per_call ");
-	buf.append("from interval_mean_summary ms inner join ");
-	buf.append("interval_total_summary ts ");
+	buf.append("from " + db.getSchemaPrefix() + "interval_mean_summary ms inner join ");
+	buf.append(db.getSchemaPrefix() + "interval_total_summary ts ");
 	buf.append("on ms.interval_event = ts.interval_event ");
 	buf.append("and ms.metric = ts.metric ");
 	buf.append(whereClause);
@@ -450,7 +450,7 @@ public class IntervalLocationProfile extends Object {
 	    buf.append("p.inclusive, p.exclusive_percentage, p.exclusive, ");
 	}
 	buf.append("p.call, p.subroutines, p.inclusive_per_call ");
-	buf.append("from interval_event e inner join interval_location_profile p ");
+	buf.append("from " + db.getSchemaPrefix() + "interval_event e inner join " + db.getSchemaPrefix() + "interval_location_profile p ");
 	buf.append("on e.id = p.interval_event ");
 	buf.append(whereClause);
 	buf.append(" order by p.interval_event, p.node, p.context, p.thread, p.metric ");
@@ -503,9 +503,9 @@ public class IntervalLocationProfile extends Object {
 		if (saveMetricIndex < 0 || i == saveMetricIndex) {
 		    PreparedStatement statement = null;
 		    if (db.getDBType().compareTo("oracle") == 0) {
-			statement = db.prepareStatement("INSERT INTO interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		    } else {
-			statement = db.prepareStatement("INSERT INTO interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		    }
 		    statement.setInt(1, intervalEventID);
 		    statement.setInt(2, newMetricID.intValue());
@@ -524,7 +524,6 @@ public class IntervalLocationProfile extends Object {
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the interval_event mean data.");
 	    e.printStackTrace();
-	    System.exit(0);
 	}
     }
 
@@ -538,9 +537,9 @@ public class IntervalLocationProfile extends Object {
 		    PreparedStatement statement = null;
 
 		    if (db.getDBType().compareTo("oracle") == 0) {
-			statement = db.prepareStatement("INSERT INTO interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		    } else {
-			statement = db.prepareStatement("INSERT INTO interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		    }
 		    statement.setInt(1, intervalEventID);
 		    statement.setInt(2, newMetricID.intValue());
@@ -559,7 +558,6 @@ public class IntervalLocationProfile extends Object {
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the interval_event total data.");
 	    e.printStackTrace();
-	    System.exit(0);
 	}
     }
 
@@ -572,9 +570,9 @@ public class IntervalLocationProfile extends Object {
 		if (saveMetricIndex < 0 || i == saveMetricIndex) {
 		    PreparedStatement statement = null;
 		    if (db.getDBType().compareTo("oracle") == 0) {
-			statement = db.prepareStatement("INSERT INTO interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		    } else {
-			statement = db.prepareStatement("INSERT INTO interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		    }
 		    statement.setInt(1, intervalEventID);
 		    statement.setInt(2, node);
@@ -595,7 +593,6 @@ public class IntervalLocationProfile extends Object {
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the interval_event data.");
 	    e.printStackTrace();
-	    System.exit(0);
 	}
     }
 
@@ -604,9 +601,9 @@ public class IntervalLocationProfile extends Object {
 	try {
 	    PreparedStatement statement = null;
 	    if (db.getDBType().compareTo("oracle") == 0) {
-		statement = db.prepareStatement("INSERT INTO interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	    } else {
-		statement = db.prepareStatement("INSERT INTO interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	    }
 	    IntervalLocationProfile fdo;
 	    int count = 0;
@@ -643,7 +640,6 @@ public class IntervalLocationProfile extends Object {
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the interval_event data.");
 	    e.printStackTrace();
-	    System.exit(0);
 	}
     }
 }

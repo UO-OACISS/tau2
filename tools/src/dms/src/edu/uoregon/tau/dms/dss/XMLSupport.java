@@ -76,8 +76,8 @@ public class XMLSupport{
 	    xwriter.write("\t</Env>", 0, ("\t</Env>").length());
 	    xwriter.newLine();
 	    
-	    xwriter.write("\t<Trialtime>" + trial.getTime() + "</Trialtime>", 0, ("\t<Trialtime>" + trial.getTime() + "</Trialtime>").length());
-	    xwriter.newLine();
+// 	    xwriter.write("\t<Trialtime>" + trial.getTime() + "</Trialtime>", 0, ("\t<Trialtime>" + trial.getTime() + "</Trialtime>").length());
+// 	    xwriter.newLine();
 	    
 	    xwriter.write("\t<FunAmt>" + globalMapping.getNumberOfMappings(0) + "</FunAmt>", 0, ("\t<FunAmt>" + globalMapping.getNumberOfMappings(0) + "</FunAmt>").length());
 	    xwriter.newLine();

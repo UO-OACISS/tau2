@@ -413,6 +413,7 @@ public abstract class ParaProfDataSession  extends DataSession{
 	    function.setTotalNumberOfSubRoutines(subrSum);
 
 	    // mean is just the total / numThreads
+
 	    function.setMeanNumberOfCalls((double)callSum / numThreads);
 	    function.setMeanNumberOfSubRoutines((double)subrSum / numThreads);
 
@@ -516,8 +517,8 @@ public abstract class ParaProfDataSession  extends DataSession{
 	double[] exclSum = new double[numberOfMetrics];
 	double[] inclSum = new double[numberOfMetrics];
 	double[] maxInclSum = new double[numberOfMetrics];
-	int callSum = 0;
-	int subrSum = 0;
+	double callSum = 0;
+	double subrSum = 0;
 
 	for (int i=0;i<numberOfMetrics;i++) {
 	    maxInclSum[i] = 0;

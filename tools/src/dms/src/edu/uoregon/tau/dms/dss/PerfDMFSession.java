@@ -5,10 +5,11 @@ import java.util.*;
 import java.sql.*;
 import java.util.Date;
 
+
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.16 2004/10/13 21:07:05 amorris Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.17 2004/10/29 20:21:29 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -39,6 +40,7 @@ public class PerfDMFSession extends DataSession {
 	    initialize(obj, true, false);
 	}
 	catch(Exception e) {
+	    e.printStackTrace();
 	    System.exit(0);
 	} 
     }
@@ -93,6 +95,7 @@ public class PerfDMFSession extends DataSession {
 
     // returns Vector of Experiment objects
     public ListIterator getExperimentList() {
+
 	String whereClause = "";
 	if (application != null)
 	    whereClause = "WHERE application = " + application.getID();
@@ -672,7 +675,7 @@ public class PerfDMFSession extends DataSession {
 	int fcount = 0;
 	int ucount = 0;
 	// create the intervalEvents
-	System.out.print("Getting the intervalEvents:");
+	System.out.print("Creating the intervalEvents:");
 	for(Enumeration e = mapping.getMapping(0).elements(); e.hasMoreElements() ;) {
 	    GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
 	    if(element!=null) {
@@ -697,7 +700,7 @@ public class PerfDMFSession extends DataSession {
 		intervalEvents.add(intervalEvent);
 
 		// get the total data
-		System.out.print("\rGetting the intervalEvents: " + ++fcount + " intervalEvents found...");
+		System.out.print("\rCreating the intervalEvents: " + ++fcount + " intervalEvents found...");
 		IntervalLocationProfile funTS = new IntervalLocationProfile(metricCount);
 		IntervalLocationProfile funMS = new IntervalLocationProfile(metricCount);
 		for (int i = 0 ; i < metricCount ; i++) {
@@ -722,12 +725,12 @@ public class PerfDMFSession extends DataSession {
 	}
 
 	// create the user events
-	System.out.print("\nGetting user events:");
+	System.out.print("\nCreating user events:");
 	for(Enumeration e = mapping.getMapping(2).elements(); e.hasMoreElements() ;) {
 	    GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
 	    if(element!=null) {
 		System.out.print(".");
-		System.out.print("\rGetting the user events: " + ++ucount + " user events found...");
+		System.out.print("\rCreating the user events: " + ++ucount + " user events found...");
 		// create a user event
 		AtomicEvent atomicEvent = new AtomicEvent(this);
 		atomicEvent.setName(element.getMappingName());
@@ -747,7 +750,7 @@ public class PerfDMFSession extends DataSession {
 
 	fcount = 0;
 	ucount = 0;
-	System.out.print("\nGetting the intervalEvent / user event data:");
+	System.out.print("\nCreating the intervalEvent / user event data:");
 	StringBuffer groupsStringBuffer = new StringBuffer(10);
 	Vector nodes = trial.getDataSession().getNCT().getNodes();
 	for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
@@ -764,7 +767,7 @@ public class PerfDMFSession extends DataSession {
 		    for(Enumeration e4 = intervalEvents.elements(); e4.hasMoreElements() ;){
 			GlobalThreadDataElement intervalEvent = (GlobalThreadDataElement) e4.nextElement();
 			if (intervalEvent!=null){
-			    System.out.print("\rGetting the intervalEvent / user event data: " + ++fcount + " / " + ucount + " found...");
+			    System.out.print("\rCreating the intervalEvent / user event data: " + ++fcount + " / " + ucount + " found...");
 			    IntervalLocationProfile fdo = new IntervalLocationProfile(metricCount);
 			    fdo.setNode(thread.getNodeID());
 			    fdo.setContext(thread.getContextID());
@@ -789,7 +792,7 @@ public class PerfDMFSession extends DataSession {
 			for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
 			    GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
 			    if (userevent!=null){
-				System.out.print("\rGetting the intervalEvent / user event data: " + fcount + " / " + ++ucount + " found...");
+				System.out.print("\rCreating the intervalEvent / user event data: " + fcount + " / " + ++ucount + " found...");
 				AtomicLocationProfile udo = new AtomicLocationProfile();
 				udo.setAtomicEventID(userevent.getMappingID());
 				udo.setNode(thread.getNodeID());
@@ -939,7 +942,7 @@ public class PerfDMFSession extends DataSession {
     public int getNumberOfMetrics() {
 	StringBuffer buf = new StringBuffer();
 	buf.append("SELECT id, name ");
-	buf.append("FROM metric ");
+	buf.append("FROM " + db.getSchemaPrefix() + "metric ");
 	buf.append("WHERE trial = ");
 	buf.append(this.trial.getID());
 	buf.append(" ORDER BY id ");

@@ -18,7 +18,7 @@ import java.util.Vector;
  * the node, context and thread that identify the location, and the data collected for this
  * location, such as sample count, maximum value, minimum value, mean value and sum squared.  
  *
- * <P>CVS $Id: AtomicLocationProfile.java,v 1.4 2004/08/03 00:12:58 amorris Exp $</P>
+ * <P>CVS $Id: AtomicLocationProfile.java,v 1.5 2004/10/29 20:21:29 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -234,8 +234,8 @@ public class AtomicLocationProfile {
 	buf.append("p.context, p.thread, p.sample_count, ");
 	buf.append("p.maximum_value, p.minimum_value, p.mean_value, ");
 	buf.append("p.standard_deviation, e.trial ");
-	buf.append("from atomic_location_profile p ");
-	buf.append("inner join atomic_event e on e.id = p.atomic_event ");
+	buf.append("from " + db.getSchemaPrefix() + "atomic_location_profile p ");
+	buf.append("inner join " + db.getSchemaPrefix() + "atomic_event e on e.id = p.atomic_event ");
 	buf.append(whereClause);
 	buf.append(" order by p.node, p.context, p.thread, p.atomic_event");
 	// System.out.println(buf.toString());
@@ -277,8 +277,8 @@ public class AtomicLocationProfile {
 	buf.append("sum(p.sample_count), ");
 	buf.append("sum(p.maximum_value), sum(p.minimum_value), sum(p.mean_value), ");
 	buf.append("sum(p.sum_squared) ");
-	buf.append("from atomic_location_profile p ");
-	buf.append("inner join atomic_event e on e.id = p.atomic_event ");
+	buf.append("from " + db.getSchemaPrefix() + "atomic_location_profile p ");
+	buf.append("inner join " + db.getSchemaPrefix() + "atomic_event e on e.id = p.atomic_event ");
 	buf.append(whereClause);
 	buf.append(" group by p.atomic_event");
 	buf.append(" order by p.atomic_event");
@@ -314,7 +314,7 @@ public class AtomicLocationProfile {
     public void saveAtomicEventData(DB db, int atomicEventID) {
 	try {
 	    PreparedStatement statement = null;
-	    statement = db.prepareStatement("INSERT INTO atomic_location_profile (atomic_event, node, context, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+	    statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "atomic_location_profile (atomic_event, node, context, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	    statement.setInt(1, atomicEventID);
 	    statement.setInt(2, node);
 	    statement.setInt(3, context);
@@ -326,11 +326,8 @@ public class AtomicLocationProfile {
 	    statement.setDouble(9, sumSquared);
 	    statement.executeUpdate();
 	} catch (SQLException e) {
-	    // this is crap
-	    //throw e;
 	    System.out.println("An error occurred while saving the trial.");
 	    e.printStackTrace();
-	    //System.exit(0);
 	}
     }
 }

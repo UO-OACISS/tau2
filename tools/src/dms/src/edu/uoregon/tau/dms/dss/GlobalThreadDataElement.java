@@ -116,10 +116,10 @@ public class GlobalThreadDataElement implements Mapping{
 	try {
 	    return UtilFncs.lpad("%"+metricType,7) + 
 		UtilFncs.lpad(metricType,16) + 
-		UtilFncs.lpad("total "+metricType,18) +
-		UtilFncs.lpad("#calls",14) +
-		UtilFncs.lpad("#subrs",14) + 
-		UtilFncs.lpad("total "+metricType+"/call",21) 
+		UtilFncs.lpad("Total "+metricType,18) +
+		UtilFncs.lpad("#Calls",14) +
+		UtilFncs.lpad("#Subrs",14) + 
+		UtilFncs.lpad("Total "+metricType+"/Call",21) 
 		+ "   ";	    
 	} catch (Exception e) {
 	    UtilFncs.systemError(e, null, "GTDE01");

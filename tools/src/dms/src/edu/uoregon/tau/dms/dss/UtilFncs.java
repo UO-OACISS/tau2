@@ -45,25 +45,33 @@ public class UtilFncs{
     public static double adjustDoublePresision(double d, int precision){
 	String result = null;
  	try{
-	    String formatString = "##0.0";
+	    String formatString = "#.#";
 	    for(int i=0;i<(precision-1);i++){
-		formatString = formatString+"0";
+		formatString = formatString+"#";
 	    }
-	    if(d < 0.001){
-		for(int i=0;i<4;i++){
-		    formatString = formatString+"0";
-		}
-	    }
+// 	    if(d < 0.001){
+// 		for(int i=0;i<4;i++){
+// 		    formatString = formatString+"0";
+// 		}
+// 	    }
 
 	    formatString = formatString + "E0";
-	    
+	
 	    DecimalFormat dF = new DecimalFormat(formatString);
 	    result = dF.format(d);
 	}
 	catch(Exception e){
-		UtilFncs.systemError(e, null, "UF01");
+	    UtilFncs.systemError(e, null, "UF01");
 	}
-	return Double.parseDouble(result);
+	
+	
+	try {
+	    return Double.parseDouble(result);
+
+	} catch (java.lang.NumberFormatException e) {
+	    //	    System.out.println ("Uh oh! " + d);
+	    return d;
+	}
     }
 
 
@@ -269,6 +277,7 @@ public class UtilFncs{
 
 
     public static void systemError(Object obj, Component component, String string){ 
+
 	System.out.println("####################################");
 	boolean quit = true; //Quit by default.
 	if(obj != null){
@@ -279,11 +288,19 @@ public class UtilFncs{
 		    exception.printStackTrace();
 		    System.out.println("\n");
 		}
+		exception.printStackTrace();
 		System.out.println("An error was detected: " + string);
 		System.out.println(ParaProfError.contactString);
 	    }
 	    if(obj instanceof ParaProfError){
 		ParaProfError paraProfError = (ParaProfError) obj;
+
+		if(paraProfError.exp!=null){
+		    System.out.println(paraProfError.exp.toString());
+		    paraProfError.exp.printStackTrace();
+		    System.out.println("\n");
+		}
+		
 		if(UtilFncs.debug){
 		    if((paraProfError.showPopup)&&(paraProfError.popupString!=null))
 			JOptionPane.showMessageDialog(paraProfError.component,

@@ -17,7 +17,7 @@ import java.util.Vector;
  * A atomic event has particular information, including the name of the atomic event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: AtomicEvent.java,v 1.6 2004/10/13 21:07:05 amorris Exp $</P>
+ * <P>CVS $Id: AtomicEvent.java,v 1.7 2004/10/29 20:21:29 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -224,8 +224,9 @@ public class AtomicEvent {
 	StringBuffer buf = new StringBuffer();
 	buf.append("select u.id, u.trial, u.name, ");
 	buf.append("u.group_name ");
-	buf.append("from atomic_event u inner join trial t on u.trial = t.id ");
-	buf.append("inner join experiment e on t.experiment = e.id ");
+	buf.append("from " + db.getSchemaPrefix() + "atomic_event u inner join " 
+		   + db.getSchemaPrefix() + "trial t on u.trial = t.id ");
+	buf.append("inner join " + db.getSchemaPrefix() + "experiment e on t.experiment = e.id ");
 	buf.append(whereClause);
 	buf.append(" order by id ");
 	// System.out.println(buf.toString());
@@ -255,7 +256,7 @@ public class AtomicEvent {
 	int newAtomicEventID = 0;
 	try {
 	    PreparedStatement statement = null;
-	    statement = db.prepareStatement("INSERT INTO atomic_event (trial, name, group_name) VALUES (?, ?, ?)");
+	    statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "atomic_event (trial, name, group_name) VALUES (?, ?, ?)");
 	    statement.setInt(1, newTrialID);
 	    statement.setString(2, name);
 	    statement.setString(3, group);
@@ -266,14 +267,13 @@ public class AtomicEvent {
 	    else if (db.getDBType().compareTo("db2") == 0)
 		tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
 	    else if (db.getDBType().compareTo("oracle") == 0) 
-		tmpStr = "select atomic_event_id_seq.currval FROM dual";
+		tmpStr = "select " + db.getSchemaPrefix() + "atomic_event_id_seq.currval FROM dual";
 	    else
 		tmpStr = "select currval('atomic_event_id_seq');";
 	    newAtomicEventID = Integer.parseInt(db.getDataItem(tmpStr));
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the trial.");
 	    e.printStackTrace();
-	    System.exit(0);
 	}
 	return newAtomicEventID;
     }

@@ -9,7 +9,7 @@ import java.io.Serializable;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.6 2004/10/27 21:34:30 khuck Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.7 2004/10/29 20:21:29 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -96,7 +96,7 @@ public class Metric implements Serializable {
 	int newMetricID = 0;
 	try {
 	    PreparedStatement stmt1 = null;
-	    stmt1 = db.prepareStatement("INSERT INTO metric (name, trial) VALUES (?, ?)");
+	    stmt1 = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "metric (name, trial) VALUES (?, ?)");
 	    stmt1.setString(1, getName());
 	    stmt1.setInt(2, newTrialID);
 	    stmt1.executeUpdate();
@@ -108,14 +108,13 @@ public class Metric implements Serializable {
 	    else if (db.getDBType().compareTo("db2") == 0)
 		tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
 	    else if (db.getDBType().compareTo("oracle") == 0)
-		tmpStr = "select metric_id_seq.currval FROM dual";
+		tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
 	    else
 		tmpStr = "select currval('metric_id_seq');";
 	    newMetricID = Integer.parseInt(db.getDataItem(tmpStr));
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the trial.");
 	    e.printStackTrace();
-	    System.exit(0);
 	}
 	return newMetricID;
     }

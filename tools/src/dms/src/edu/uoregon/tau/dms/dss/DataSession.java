@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.6 2004/08/18 19:54:36 bertie Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.7 2004/10/29 20:21:29 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -58,18 +58,18 @@ public abstract class DataSession {
  * @see	DataSessionIterator
  * @see	Application
  */
-	abstract public ListIterator getApplicationList() ;
-	
+    abstract public ListIterator getApplicationList() ;
+    
 /**
  * Returns the Application object.
  *
  * @return	Application object, if one is set.
  * @see	Application
  */
-	public Application getApplication() {
-		return this.application;
-	}
-
+    public Application getApplication() {
+	return this.application;
+    }
+    
 /**
  * Returns a ListIterator of Experiment objects
  *
@@ -78,7 +78,7 @@ public abstract class DataSession {
  * @see	Experiment
  * @see	DataSession#setApplication
  */
-	abstract public ListIterator getExperimentList() ;
+    abstract public ListIterator getExperimentList() ;
 
 /**
  * Returns the Experiment object.
@@ -302,27 +302,26 @@ public abstract class DataSession {
 	}
 	
 	//Try getting the metric.
-	if(this.metrics!=null){
-		// int index = metrics.indexOf(metric);
-		// didn't work.  so do it manually.
-		int index = -1;
-		Enumeration e = metrics.elements();
-		for ( int i = 0 ; e.hasMoreElements() ; i++) {
-			Metric m = (Metric)e.nextElement();
-			if (m.equals(metric)) {
-				index = i;
-				break;
-			}
+	if (this.metrics!=null) {
+	    // int index = metrics.indexOf(metric);
+	    // didn't work.  so do it manually.
+	    int index = -1;
+	    Enumeration e = metrics.elements();
+	    for ( int i = 0 ; e.hasMoreElements() ; i++) {
+		Metric m = (Metric)e.nextElement();
+		if (m.equals(metric)) {
+		    index = i;
+		    break;
 		}
-		if (index == -1) {
+	    }
+	    if (index == -1) {
 	    	metric.setID(this.getNumberOfMetrics());
 	    	metrics.add(metric);
-		} else {
-			metric.setID(((Metric)(metrics.elementAt(index))).getID());
-		}
+	    } else {
+		metric.setID(((Metric)(metrics.elementAt(index))).getID());
+	    }
 	    return metric.getID();
-	}
-	else
+	} else
 	    return -1;
     }
 
@@ -370,20 +369,20 @@ public abstract class DataSession {
  *
  * @return	The metric name as a String.
  */
-	public String getMetricName(int metricID) {
-		if (this.metrics == null) {
-			if (this.trial != null) {
-				this.metrics = this.trial.getMetrics();
-			}
-		}
-		
-		//Try getting the matric name.
-		if((this.metrics!=null) && (metricID<this.metrics.size()))
-		    return ((Metric)this.metrics.elementAt(metricID)).getName();
-		else
-		    return null;
+    public String getMetricName(int metricID) {
+	if (this.metrics == null) {
+	    if (this.trial != null) {
+		this.metrics = this.trial.getMetrics();
+	    }
 	}
-
+	
+	//Try getting the metric name.
+	if((this.metrics!=null) && (metricID<this.metrics.size()))
+	    return ((Metric)this.metrics.elementAt(metricID)).getName();
+	else
+	    return null;
+    }
+    
 /**
  * Get the metric id corresponding to the given string.  The DataSession object will maintain a reference to the Vector of metric values.  To clear this reference, call setMetric(String) with null.
  *
@@ -718,14 +717,6 @@ public abstract class DataSession {
   */
 
   public void deleteExperiment (int experimentID) {}
-
-/**
-  * Saves the application
-  *
-  * @param application the application to save
-  */
-
-  public int saveApplication (Application application) {return -1;}
 
 /**
   * Saves the experiment
