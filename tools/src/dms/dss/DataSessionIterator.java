@@ -23,33 +23,46 @@ public class DataSessionIterator implements ListIterator{
 				size = listData.size();
 		}
 
+
+		//List Iterator implemetation. Additional methods follow afterwards.
+
 		public void add(Object o){
 				throw new UnsupportedOperationException();
 		}
 
 		public boolean hasNext(){
-				if(!(index >= size))
+				if(index < size)
 						return true;
 				else
 						return false;
 		}
 
 		public boolean hasPrevious(){
-				return false;
+				if(index == 0)
+						return false;
+				else
+						return true;
 		}
 
 		public Object next(){
-				//Check to make sure we are not over the end.
-				if(index >= size)
-						throw new NoSuchElementException();
-
-				//Get the object.
-				Object object = listData.elementAt(index);
 				
-				//Increment the index.
-				index++;
+				Object nextObject = null;
 
-				return object;
+				//Check to make sure we are not over the end.
+				if(index >= size){
+						throw new NoSuchElementException();
+				}
+				else{
+						//Since, by the specification, alternating calls to next and previous
+						//return the same element. We get the element first, and then increment
+						//the index.  The reverse of previous(). See instance notes below.
+						nextObject = listData.elementAt(index);
+						
+						//Increment the index.
+						index++;
+				}
+				
+				return nextObject;
 		}
 
 		public int nextIndex(){
@@ -57,7 +70,21 @@ public class DataSessionIterator implements ListIterator{
 		}
 
 		public Object previous(){
-				return null;
+
+				Object previousObject = null;
+
+				if(index == 0){
+						throw new NoSuchElementException();
+				}
+				else{
+						//Since, by the specification, alternating calls to next and previous
+						//return the same element. We decrement first, and then return.  The
+						//reverse of next(). See instance notes below.
+						index--;
+						previousObject =  listData.elementAt(index);
+				}
+
+				return previousObject;
 		}
 
 		public int previousIndex(){
@@ -72,7 +99,29 @@ public class DataSessionIterator implements ListIterator{
 				throw new UnsupportedOperationException();
 		}
 
+
+		//Methods in addition to the standard ListIterator.
+
+		//Resets the Iterator to its initial state.
+		public void reset(){
+				index = 0;
+		}
+
+		//Gives the number of elements this iterator maintains.
+		public int size(){
+				return size;
+		}
+
+
 		private Vector listData = null;
 		private int size = 0;
+		
+		//We maintain the concept of the ListIterator.  That is, there is no
+		//current element. The index is treated as lying between elements.
+		//Rather than actually doing this, the index below represents the next
+		//element. Thus when we call next(), we return the element at index
+		//BEFORE we increment. A call to previous returns the element at index
+		//AFTER decrementing index. Thus, alternating calls to next and previous
+		//return the same element. As required by the ListIterator specification.
 		private int index = 0;
 }
