@@ -175,7 +175,7 @@ void Profiler::Start(int tid)
 	// Initialization is over, now record the time it started
 #ifndef TAU_MULTIPLE_COUNTERS 
 	StartTime =  RtsLayer::getUSecD(tid) ;
-	TimeStamp = (unsigned long long) StartTime;
+	TimeStamp += (unsigned long long) StartTime;
 #else //TAU_MULTIPLE_COUNTERS
 	//Initialize the array to zero, as some of the elements will
 	//not be set by counting functions.
@@ -356,7 +356,7 @@ void Profiler::Stop(int tid)
 #ifndef TAU_MULTIPLE_COUNTERS
 	double CurrentTime = RtsLayer::getUSecD(tid);
 	double TotalTime = CurrentTime - StartTime;
-	TimeStamp = (unsigned long long) CurrentTime; 
+	TimeStamp += (unsigned long long) CurrentTime; 
 
 
 #ifdef TAU_COMPENSATE 
@@ -376,7 +376,7 @@ void Profiler::Stop(int tid)
 	  TotalTime[k] = CurrentTime[k] - StartTime[k];
 	}
 #endif // PROFILING_ON
-	TimeStamp = (unsigned long long) CurrentTime[0]; // USE COUNTER1
+	TimeStamp += (unsigned long long) CurrentTime[0]; // USE COUNTER1
 	
 #endif//TAU_MULTIPLE_COUNTERS
 
@@ -446,10 +446,18 @@ void Profiler::Stop(int tid)
 
 #ifdef PROFILE_CALLS
 	ThisFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
+#ifdef TAU_CALLPATH
+	if (CallPathFunction)
+	  CallPathFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
+#endif /* TAU_CALLPATH */
 #endif // PROFILE_CALLS
 
 #ifdef PROFILE_STATS
 	ThisFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
+#ifdef TAU_CALLPATH
+	if (CallPathFunction)
+	  CallPathFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
+#endif /* TAU_CALLPATH */
 #endif // PROFILE_STATS
 
 	if (ParentProfiler != (Profiler *) NULL) {
@@ -811,7 +819,6 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 
 #endif //PROFILING_ON
 #ifdef PROFILE_CALLS
-	long listSize, numCalls;
 	list<pair<double,double> >::iterator iter;
 #endif // PROFILE_CALLS
  	double excltime, incltime; 
@@ -1232,7 +1239,6 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
  	int numFunc, numEvents;
 #endif //PROFILING_ON
 #ifdef PROFILE_CALLS
-	long listSize, numCalls;
 	list<pair<double,double> >::iterator iter;
 #endif // PROFILE_CALLS
  	double excltime, incltime; 
@@ -2598,9 +2604,9 @@ void Profiler::AddNumChildren(long value)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: bertie $
- * $Revision: 1.90 $   $Date: 2004/01/28 21:49:53 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.90 2004/01/28 21:49:53 bertie Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.91 $   $Date: 2004/02/27 20:08:50 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.91 2004/02/27 20:08:50 sameer Exp $ 
  ***************************************************************************/
 
 	
