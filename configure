@@ -222,11 +222,11 @@ do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel ] 
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec ] 
     then
       fortran_compiler=$myarg
     else
-      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi' and 'intel' "
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', and 'nec' "
       exit 1
     fi
     shift
@@ -1063,16 +1063,21 @@ case $cxx_compiler in
         
       ;;
    c++)
-	  if [ $machine = nec ]
-	  then
-        echo "Default C++ compiler will be NEC c++ compiler"
-        fixmakeargs="$fixmakeargs USE_NECCXX"
-        tauoptions="${tauoptions}-cxx"
-      else
-        echo "Default C++ compiler will be Apple c++ compiler"
-        fixmakeargs="$fixmakeargs APPLECXX"
-        tauoptions="${tauoptions}-cxx"
-      fi 
+        if [ $machine = nec ]
+	then
+          echo "Default C++ compiler will be NEC c++ compiler"
+          fixmakeargs="$fixmakeargs USE_NECCXX"
+          tauoptions="${tauoptions}-cxx"
+          if [ $fortran_compiler = no ]
+          then 
+            extradir=`which f90 | sed s/f90/../`
+            fixmakeargs="$fixmakeargs NEC_FORTRAN"
+          fi
+        else
+          echo "Default C++ compiler will be Apple c++ compiler"
+          fixmakeargs="$fixmakeargs APPLECXX"
+          tauoptions="${tauoptions}-cxx"
+        fi 
 
       ;;
 
@@ -1158,6 +1163,12 @@ case $fortran_compiler in
       echo "Default Fortran compiler will be Fujitsu F90"
       extradir=`which FCC | sed s/FCC/../`
       fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
+      ;;
+
+   nec)
+      echo "Default Fortran compiler will be NEC f90"
+      extradir=`which f90 | sed s/f90/../`
+      fixmakeargs="$fixmakeargs NEC_FORTRAN"
       ;;
 
    sun)
