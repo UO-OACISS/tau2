@@ -146,6 +146,7 @@ profilecallstack=no
 trace=no
 debugprof=no
 sgitimers=no
+linuxtimers=no
 cputime=no
 papiwallclock=no
 papivirtual=no
@@ -453,6 +454,11 @@ do
     shift
     ;;
 
+  -LINUXTIMERS)
+    linuxtimers=yes
+    shift
+    ;;
+
   -CPUTIME)
     cputime=yes
     shift
@@ -508,6 +514,7 @@ do
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-PROFILECOUNTERS .... Use Hardware Performance Counters (default time)."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
+    echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
     echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
     echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
     echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
@@ -781,6 +788,12 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
       fixmakeargs="$fixmakeargs SGICOUNTERS"
       tauoptions="${tauoptions}-counters"
   fi
+fi
+
+if [ $linuxtimers = yes ]
+then
+  fixmakeargs="$fixmakeargs LINUXTIMERS"
+  tauoptions="${tauoptions}-linuxtimers"
 fi
 
 if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
