@@ -989,7 +989,7 @@ case $machine in
 	fixmakeargs="DEC_ALPHA $fixmakeargs"
 	;;
 
-     sgi4k | sgi8k | sgin32 | sgi64)
+     sgi4k | sgi8k | sgi32 | sgin32 | sgi64)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs"
 	if [ $c_compiler = cc ]
