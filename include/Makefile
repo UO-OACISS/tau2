@@ -310,6 +310,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 ## To use the standard F90 linker instead of TAU_LINKER + TAU_FORTRANLIBS, add
 #GNU#TAU_CXXLIBS		= -lstdc++ -lgcc_s #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
+#CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
 
 TAU_SGI_INIT = /usr/lib32/c++init.o 
 #ENABLE64BIT#TAU_SGI_INIT  = /usr/lib64/c++init.o #ENDIF#
