@@ -350,7 +350,7 @@ fi
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      USE_INTELCXX)
-	echo NOTE: Using the Intel ecpc C++ compiler
+	echo NOTE: Using the Intel C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      HITACHI)
@@ -940,7 +940,6 @@ ALPHATIMERS)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      INTELIFORT)
-	echo "NOTE: Intel efc compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 
