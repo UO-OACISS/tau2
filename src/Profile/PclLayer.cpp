@@ -18,7 +18,7 @@
 
 #include <pthread.h>
 
-long long PCL_Layer::getCounters(int tid)
+PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 {
   static ThreadValue * ThreadList[TAU_MAX_THREADS];
   
@@ -32,7 +32,8 @@ long long PCL_Layer::getCounters(int tid)
   static int PCL_CounterList[1] = {0};
   static unsigned int PCL_Mode = PCL_MODE_USER;
   PCL_CNT_TYPE ResultsList[1];
-  long long Result;
+  PCL_FP_CNT_TYPE FpResultsList[1];
+  int Result;
 
   //******************************************
   //This section is only run once.
@@ -148,7 +149,7 @@ long long PCL_Layer::getCounters(int tid)
        return -1;
      }
 
-  if( PCLread(ResultsList, 1) != PCL_SUCCESS)
+  if( PCLread(&ResultsList[0], &FpResultsList[0], 1) != PCL_SUCCESS)
     {
       cout << "There were problems reading the counters" << endl;
       if((pthread_mutex_unlock(&lock) != 0))
@@ -166,10 +167,16 @@ long long PCL_Layer::getCounters(int tid)
      }
 
   
-
-  //Update the ThreadList and return the counter value.
-  ThreadList[tid]->CounterValue = 
-    ThreadList[tid]->CounterValue + ResultsList[0];
+  if ( PCL_CounterList[0] < PCL_MFLOPS )
+  {
+    //Update the ThreadList and return the counter value.
+    ThreadList[tid]->CounterValue = ResultsList[0];
+  } 
+  else
+  { // FP result 
+    //Update the ThreadList and return the counter value.
+    ThreadList[tid]->CounterValue = FpResultsList[0];
+  }
   
   //cout << "The thread ID is: " << tid << endl;
   //cout << "The value being returned is: " << (ThreadList[tid]->CounterValue) << endl;
@@ -183,7 +190,7 @@ long long PCL_Layer::getCounters(int tid)
 /////////////////////////
 #else
 
-long long PCL_Layer::getCounters(int tid)
+PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 {
   static ThreadValue * ThreadList[TAU_MAX_THREADS];
   
@@ -194,7 +201,8 @@ long long PCL_Layer::getCounters(int tid)
   static int PCL_CounterList[1] = {0};
   static unsigned int PCL_Mode = PCL_MODE_USER;
   PCL_CNT_TYPE ResultsList[1];
-  long long Result;
+  PCL_FP_CNT_TYPE FpResultsList[1];
+  int Result;
 
   //******************************************
   //This section is only run once.
@@ -274,16 +282,28 @@ long long PCL_Layer::getCounters(int tid)
   //Reading the performance counters and
   //outputting the counter values.
   //*****************************************
-  if( PCLread(ResultsList, 1) != PCL_SUCCESS)
+  if( PCLread(&ResultsList[0], &FpResultsList[0], 1) != PCL_SUCCESS)
     {
       cout << "There were problems reading the counters" << endl;
       return -1;
     }
 
 
-  //Update the ThreadList and return the counter value.
-  ThreadList[tid]->CounterValue = 
-    ThreadList[tid]->CounterValue + ResultsList[0];
+  if ( PCL_CounterList[0] < PCL_MFLOPS )
+  {
+    //Update the ThreadList and return the counter value.
+    //ThreadList[tid]->CounterValue = 
+    //ThreadList[tid]->CounterValue + ResultsList[0];
+
+    ThreadList[tid]->CounterValue = ResultsList[0];
+  } 
+  else
+  { // FP result 
+    //Update the ThreadList and return the counter value.
+    ThreadList[tid]->CounterValue = FpResultsList[0];
+ 
+    
+  }
 
   //cout << "The thread ID is: " << tid << endl;
   //cout << "The value being returned is: " << (ThreadList[tid]->CounterValue) << endl;
