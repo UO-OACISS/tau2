@@ -40,9 +40,11 @@ extern "C" void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
 
   DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
 
-
-  f = new FunctionInfo(fname, type, group);
+  // since we're using new, we should set InitData to true in FunctionInfoInit
+  f = new FunctionInfo(fname, type, group, fname, true);
   p = new Profiler(f, group, true);
+
+  printf("Inside %s\n", fname);
 
   return (void *) p;
 }
@@ -97,6 +99,18 @@ extern "C" void tau_callstack(void)
 extern "C" void tau_register_thread(void)
 {
   TAU_REGISTER_THREAD();
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_trace_sendmsg(int type, int destination, int length)
+{
+  TAU_TRACE_SENDMSG(type, destination, length);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_trace_recvmsg(int type, int source, int length)
+{
+  TAU_TRACE_RECVMSG(type, source, length);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -155,12 +169,14 @@ extern "C" void tau_event_disable_stddev(void *ue)
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetDisableStdDev(true);
 } 
+
 ///////////////////////////////////////////////////////////////////////////
+
 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1999/05/04 22:33:09 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.4 1999/05/04 22:33:09 sameer Exp $
+ * $Revision: 1.5 $   $Date: 1999/06/18 17:45:08 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.5 1999/06/18 17:45:08 sameer Exp $
  ***************************************************************************/
 
