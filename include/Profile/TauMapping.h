@@ -46,6 +46,20 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 #define TAU_MAPPING_REGISTER(stmt, group)  { static FunctionInfo TauMapFI(stmt, " " , group, #group); \
     TheTauMapFI(group) = &TauMapFI; \
   } 
+
+/*
+#define TAU_MAPPING_CREATE(name, type, key, groupname)  { static FunctionInfo TauMapFI(name, type, key, groupname); \
+    TheTauMapFI(key) = &TauMapFI; \
+    printf("Associating %d id with name %s", key, name); \
+  } 
+*/
+#define TAU_MAPPING_CREATE(name, type, key, groupname)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, key, groupname, true); \
+    if (TauMapFI == (FunctionInfo *) NULL) { \
+	printf("ERROR: new returns NULL"); exit(1); \
+    } \
+    TheTauMapFI(key) = TauMapFI; \
+    printf("Associating %d id with name %s", key, name); \
+  } 
 /* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
    object that is used to relate a lower level layer with a higher level layer 
 */
@@ -55,7 +69,11 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 /* TAU_MAPPING_LINK gets in a var the function info object associated with the 
    given key (Group) 
 */
-#define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); 
+#define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); \
+	if (FuncInfoVar == (FunctionInfo *)NULL) { \
+	  printf("ERROR: map rets NULL"); \
+ 	  return; \
+        } 
 
 /* TAU_MAPPING_PROFILE profiles the entire routine by creating a profiler objeca
    and this behaves pretty much like TAU_PROFILE macro, except this gives in the
@@ -75,7 +93,7 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 
 /* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer 
 */
-#define TAU_MAPPING_PROFILE_STOP(Timer) Timer.Stop();
+#define TAU_MAPPING_PROFILE_STOP() Profiler::CurrentProfiler[RtsLayer::myThread()]->Stop();
 #else
 /* Create null , except the main statement which should be executed as it is*/
 #define TAU_MAPPING(stmt, group) stmt
@@ -84,7 +102,7 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 #define TAU_MAPPING_PROFILE(FuncInfoVar) 
 #define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar)
 #define TAU_MAPPING_PROFILE_START(Timer) 
-#define TAU_MAPPING_PROFILE_STOP(Timer) 
+#define TAU_MAPPING_PROFILE_STOP() 
 
 #endif /* PROFILING_ON or TRACING_ON  */
 #endif /* _TAU_MAPPING_H_ */
