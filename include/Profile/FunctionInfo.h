@@ -42,8 +42,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-
-#define STORAGE(type, variable) type  variable[TAU_MAX_THREADS] 
+#ifndef TAU_MULTIPLE_COUNTERS
+#define STORAGE(type, variable) type variable[TAU_MAX_THREADS]
+#else //TAU_MULTIPLE_COUNTERS
+#define STORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
+#endif//TAU_MULTIPLE_COUNTERS
 
 class FunctionInfo
 {
@@ -74,13 +77,19 @@ public:
 	void FunctionInfoInit(TauGroup_t PGroup, const char *PGroupName, 
 	  bool InitData, int tid );
         
-
+#ifndef TAU_MULTIPLE_COUNTERS 
 	// Tell it about a function call finishing.
 	inline void ExcludeTime(double t, int tid);
 	// Removing void IncludeTime(double t, int tid);
  	// and replacing with 
         inline void AddInclTime(double t, int tid);
 	inline void AddExclTime(double t, int tid);
+#else//TAU_MULTIPLE_COUNTERS
+	inline void ExcludeTime(double *t, int tid);
+	inline void AddInclTime(double *t, int tid);
+	inline void AddExclTime(double *t, int tid);
+#endif//TAU_MULTIPLE_COUNTERS
+
 	inline void IncrNumCalls(int tid);
         inline void IncrNumSubrs(int tid);
 	inline bool GetAlreadyOnStack(int tid);
@@ -109,10 +118,8 @@ public:
 #endif  // PROFILE_CALLSTACK
 
 private:
-
 	// A record of the information unique to this function.
 	// Statistics about calling this function.
-
 	STORAGE(long, NumCalls);
 	STORAGE(long, NumSubrs);
 	STORAGE(double, ExclTime);
@@ -138,10 +145,27 @@ public:
 	void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
 	long GetSubrs(int tid) { return NumSubrs[tid]; }
 	void SetSubrs(int tid, long subrs) { NumSubrs[tid] = subrs; }
+
+#ifndef TAU_MULTIPLE_COUNTERS
 	double GetExclTime(int tid) { return ExclTime[tid]; }
 	void SetExclTime(int tid, double excltime) { ExclTime[tid] = excltime; }
 	double GetInclTime(int tid) { return InclTime[tid]; }
 	void SetInclTime(int tid, double incltime) { InclTime[tid] = incltime; }
+#else//TAU_MULTIPLE_COUNTERS
+	//Returns the array of exclusive counter values.
+	double * GetExclTime(int tid) { return ExclTime[tid]; }
+       	void SetExclTime(int tid, double *excltime) {
+	  for(int i=0;i<MAX_TAU_COUNTERS;i++)
+	    ExclTime[tid][i] = excltime[i];
+	}
+	//Returns the array of inclusive counter values.
+	double * GetInclTime(int tid) { return InclTime[tid]; }
+	void SetInclTime(int tid, double incltime) { 
+	  for(int i=0;i<MAX_TAU_COUNTERS;i++)
+	    InclTime[tid][i] = incltime[i];
+	}
+#endif//TAU_MULTIPLE_COUNTERS
+
 	TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
 #ifdef PROFILE_STATS 
 	double GetSumExclSqr(int tid) { return SumExclSqr[tid]; }
@@ -161,6 +185,7 @@ int& TheSafeToDumpData(void);
 //
 // For efficiency, make the timing updates inline.
 //
+#ifndef TAU_MULTIPLE_COUNTERS
 inline void 
 FunctionInfo::ExcludeTime(double t, int tid)
 { // called by a function to decrease its parent functions time
@@ -179,6 +204,30 @@ FunctionInfo::AddExclTime(double t, int tid)
 {
  	ExclTime[tid] += t; // Add Total Time to Exclusive time (-ve)
 }
+#else //TAU_MULTIPLE_COUNTERS
+inline void 
+FunctionInfo::ExcludeTime(double *t, int tid)
+{ // called by a function to decrease its parent functions time
+  // exclude from it the time spent in child function
+  for(int i=0;i<MAX_TAU_COUNTERS;i++)
+    ExclTime[tid][i] -= t[i];
+}
+	
+
+inline void 
+FunctionInfo::AddInclTime(double *t, int tid)
+{
+  for(int i=0;i<MAX_TAU_COUNTERS;i++)
+    InclTime[tid][i] += t[i]; // Add Inclusive time
+}
+
+inline void
+FunctionInfo::AddExclTime(double *t, int tid)
+{
+  for(int i=0;i<MAX_TAU_COUNTERS;i++)
+    ExclTime[tid][i] += t[i]; // Add Total Time to Exclusive time (-ve)
+}
+#endif//TAU_MULTIPLE_COUNTERS
 
 inline void
 FunctionInfo::IncrNumCalls(int tid)
@@ -207,7 +256,7 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
- * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 2002/01/24 23:27:47 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.17 2002/01/24 23:27:47 sameer Exp $ 
+ * $RCSfile: FunctionInfo.h,v $   $Author: bertie $
+ * $Revision: 1.18 $   $Date: 2002/03/08 20:36:04 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.18 2002/03/08 20:36:04 bertie Exp $ 
  ***************************************************************************/
