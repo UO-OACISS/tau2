@@ -1,2 +1,15 @@
 #example rule file
+#rule grammar: FIELD OPERATOR NUMBER
+#FIELD = numcalls, numsubrs, usec, cumusec, stddev, count, totalcount,
+#        percent, usecs/call, counts/call
+#OPERATOR = <, >, =
+#NUMBER = any number (may use scientific notation, ie, 1000000 or 1e+6)
+
 usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
+
+#this rule should give same results of the previous rule--which
+#will ultimately be ignored because the results are duplicated
+TAU_USER: usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
+
+#this rule will give an error because there is no field
+TAU_DEFAULT:
