@@ -466,6 +466,8 @@ Matrix_MPI<T> Matrix_MPI<T>::operator*(Matrix_MPI<T>& arg)
           break;
 
         case SLAVE_EXPECT_BROADCAST:
+          for(i=1; i<nprocs; i++)
+	    TAU_TRACE_SENDMSG(master, i, ncols*sizeof(T));
           // receive b-vector from MPI_Broadcast
           MPI_Bcast(vctr1, ncols * sizeof(T), MPI_BYTE, master,
 		    MPI_COMM_WORLD);
@@ -521,6 +523,7 @@ void main(int argc, char** argv)
   char proc_name[MPI_MAX_PROCESSOR_NAME];
 
   
+  TAU_PROFILE("main()", "void (int, char**)", TAU_DEFAULT);
   // MPI stuff
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -530,7 +533,6 @@ void main(int argc, char** argv)
   // TAU stuff
   TAU_PROFILE_SET_NODE(myid);
   TAU_PROFILE_INIT(argc, argv);
-  TAU_PROFILE("main()", "void (int, char**)", TAU_DEFAULT);
   
   // make sure we have at least 2 processors
   if (np < 2)
