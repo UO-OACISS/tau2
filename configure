@@ -115,6 +115,7 @@ cxx_compiler=default
 fixmakeargs=""
 pcxxopt=-g
 useropt=
+mpi=no
 mpiinc=
 mpilib=
 extradir=
@@ -321,6 +322,11 @@ do
     shift
     ;;
 
+  -mpi)
+    mpi=yes
+    shift
+    ;;
+
   -mpiinc=*)
     mpiinc=`echo $arg | sed -e 's/-mpiinc=//' -e 's/ /#/g'`
     shift
@@ -476,6 +482,7 @@ do
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+)."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
+    echo "-mpi .......................... Specify use of TAU MPI wrapper library."
     echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
     echo "-mpilib=<dir> ............. Specify location of MPI library dir and use"
@@ -888,7 +895,7 @@ esac
 
 ######################################################################
 # Set MPI options
-if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" ]
+if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ]
 then
   #echo "MPI is specified"
   fixmakeargs="$fixmakeargs MPI"
@@ -902,8 +909,14 @@ then
     return ret;
   }
 EOF
+  if [ "x$mpiinc" != "x" ]
+  then
+    # echo "mpiinc is specified"
+    mpi_include=-I$mpiinc
+  fi
+     
 
-  if $cxx_compiler $useropt -I$mpiinc -c mpi_thread_test.C  1> /dev/null 2>&1
+  if $cxx_compiler $useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
   then
     echo "Thread-safe MPI interface is defined... "
     fixmakeargs="$fixmakeargs MPI_THREADED"
