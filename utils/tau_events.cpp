@@ -108,7 +108,7 @@ struct EventDescr {
     ~EventDescr() { }
 };
 
-map<const char*, EventDescr, ltstr> eventNameMap;
+map<const char*, EventDescr *, ltstr> eventNameMap;
 /* eventNameMap stores name to global event id mapping */
 
 int globalEventId = 1; /* numbers start from 1 */
@@ -146,7 +146,7 @@ int parse_edf_file(int node)
   int numevents;
   long localEventId;
   EventDescr inputev;
-  map<const char*, EventDescr, ltstr>::iterator iter;
+  map<const char*, EventDescr *, ltstr>::iterator iter;
   
   fgets (linebuf, LINEMAX, edfFiles[node]);
   sscanf (linebuf, "%d %s", &numevents, traceflag);
@@ -175,6 +175,7 @@ int parse_edf_file(int node)
     inputev.param[0] = '\0';
     if (dynamictrace) /* get eventname in quotes */
     { 
+      memset(inputev.state,0,sizeof(inputev.state));
       sscanf (linebuf, "%ld %s %d", &localEventId, inputev.state, &inputev.tag);
 #ifdef DEBUG
       printf("Got localEventId %d state %s tag %d\n", localEventId, inputev.state, inputev.tag);
@@ -207,7 +208,7 @@ int parse_edf_file(int node)
 	printf("Found %s in map \n", eventname);
 #endif /* DEBUG */
         /* add to nodeEventTable the global id of the event */
-	nodeEventTable[node][localEventId] = eventNameMap[(const char *)stlEvName].gid;
+	nodeEventTable[node][localEventId] = eventNameMap[(const char *)stlEvName]->gid;
 	delete stlEvName; /* don't need this if its already there */
 #ifdef DEBUG
 	printf("node %d local %ld global %d %s \n", node, localEventId,
@@ -221,8 +222,9 @@ int parse_edf_file(int node)
 	  eventname, globalEventId);
 #endif /* DEBUG */
 
-	eventNameMap[(const char *)stlEvName] = EventDescr(globalEventId,
-	  inputev.state, inputev.tag, inputev.param);
+	EventDescr *e = new  EventDescr(globalEventId,
+          inputev.state, inputev.tag, inputev.param);
+	eventNameMap[(const char *)stlEvName] = e;
 	// Adds a null record and creates the name key in the map
 	// Note: don't delete stlEvName - STL needs it.
 	nodeEventTable[node][localEventId] = globalEventId;
@@ -257,7 +259,7 @@ int store_merged_edffile(char *filename)
 {
   FILE *fp;
   char *errormsg;
-  map<const char*, EventDescr, ltstr>::iterator it;
+  map<const char*, EventDescr *, ltstr>::iterator it;
 
   if ((fp = fopen (filename, "w+")) == NULL) {
     errormsg = new char[strlen(filename)+32]; 
@@ -274,12 +276,12 @@ int store_merged_edffile(char *filename)
 
   for (it = eventNameMap.begin(); it != eventNameMap.end(); it++) 
   {
-    fprintf(fp, "%d %s %d %s %s", (*it).second.gid, (*it).second.state, 
-      (*it).second.tag, (*it).first, (*it).second.param);
+    fprintf(fp, "%d %s %d %s %s", (*it).second->gid, (*it).second->state, 
+      (*it).second->tag, (*it).first, (*it).second->param);
 
 #ifdef DEBUG
-    printf("BEGIN:%d %s %d %s %s:END\n", (*it).second.gid, (*it).second.state, 
-      (*it).second.tag, (*it).first, (*it).second.param);
+    printf("BEGIN:%d %s %d %s %s:END\n", (*it).second->gid, (*it).second->state, 
+      (*it).second->tag, (*it).first, (*it).second->param);
 #endif /* DEBUG */
   }  
   
