@@ -154,6 +154,7 @@ pdt=no
 dyninst=no
 java=no
 openmp=no
+ibmxlc=no
 
 # debug:
 # echo $arguments
@@ -779,6 +780,7 @@ case $cxx_compiler in
    xlC)
       echo "Default C++ compiler will be IBMs xlC C++ compiler"
       fixmakeargs="$fixmakeargs USE_IBMXLC"
+      ibmxlc=yes
       ;;
 
    NCC)
@@ -1407,6 +1409,15 @@ if [ $pgi = yes ]
       fixmakeargs="$fixmakeargs PGIOPENMP"
     fi
 fi 
+
+if [ $ibmxlc = yes ]
+then
+  if [ $openmp = yes ]
+  then
+    fixmakeargs="$fixmakeargs IBMXLC_OPENMP"
+  fi
+fi
+	
 
 if [ $fujitsu = yes ]
   then
