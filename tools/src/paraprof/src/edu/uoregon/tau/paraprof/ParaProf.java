@@ -17,7 +17,7 @@ import javax.swing.*;
 import edu.uoregon.tau.dms.dss.*;
 
 public class ParaProf implements ParaProfObserver, ActionListener{
-    //**********
+    //######
     //Some system wide state variables.
     static String homeDirectory = null;
     static File paraProfHomeDirectory = null;
@@ -25,22 +25,22 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     static int defaultNumberPrecision = 4;
     static boolean dbSupport = false;
     //End - Some system wide state variables.
-    //**********
+    //######
     
-    //**********
+    //######
     //Start or define all the persistant objects.
     static ParaProfLisp paraProfLisp = null;
-    static SavedPreferences savedPreferences = new SavedPreferences();
-    static ParaProfManager paraProfManager = new ParaProfManager();
-    static ApplicationManager applicationManager = new ApplicationManager();
-    static HelpWindow helpWindow = new HelpWindow(UtilFncs.debug);
+    static SavedPreferences savedPreferences = null;
+    static ParaProfManager paraProfManager = null;
+    static ApplicationManager applicationManager = null;
+    static HelpWindow helpWindow = null;
     //End start of persistant objects.
     
     //Useful in the system.
     private static String USAGE = "ParaProf/ParaProf (help | debug)";
     static Runtime runtime;
     static boolean runHasBeenOpened = false;
-     //**********
+    //######
     
     private int type = -1; //0:pprof, 1:profile, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun 
     private boolean dump = false;
@@ -48,17 +48,31 @@ public class ParaProf implements ParaProfObserver, ActionListener{
     String filePrefix = null;
     
     public ParaProf(){
-	try {
+	/*try {
 	    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 	} 
 	catch (Exception e) { 
-	}
+	}*/
 	//End uncomment!
     }
   
     public void startSystem(){
 	try{
 
+	    //######
+	    //Initialization of static objects takes place on a need basis. This helps prevent
+	    //the creation of a graphical system unless it is absolutly necessary. Static initializations
+	    //are marked with "Static Initilization" to make them easy to find.
+	    //######
+
+	    //######
+	    //Static Initilization
+	    //######
+	    ParaProf.savedPreferences = new SavedPreferences();
+	    //######
+	    //End - Static Initilization
+	    //######
+	    
 	    //Establish the presence of a .ParaProf directory.  This is located by default in the user's home
 	    //directory.
 	    ParaProf.paraProfHomeDirectory = new File(homeDirectory+"/.ParaProf");
@@ -101,11 +115,26 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 		System.out.println("Done creating ParaProf home directory!");
 	    }
 		
-	    paraProfLisp = new ParaProfLisp(UtilFncs.debug);
-	    //Register lisp primatives in ParaProfLisp.
+	    //######
+	    //Static Initilization
+	    //######
+	    ParaProf.paraProfLisp = new ParaProfLisp(UtilFncs.debug);
+	    //######
+	    //End - Static Initilization
+	    //######
+	    
+            //Register lisp primatives in ParaProfLisp.
 	    ParaProf.paraProfLisp.registerParaProfPrimitives();
 
-	    //Create a default application.
+	    //######
+	    //Static Initilization
+	    //######
+	    ParaProf.applicationManager = new ApplicationManager();
+	    //######
+	    //End - Static Initilization
+	    //######
+
+            //Create a default application.
 	    ParaProfApplication app = ParaProf.applicationManager.addApplication();
 	    app.setName("Default App");
 	    
@@ -115,6 +144,16 @@ public class ParaProf implements ParaProfObserver, ActionListener{
 	    ParaProfTrial trial = null;
 	    FileList fl = new FileList();
 	    Vector v = null;
+
+
+	    //######
+	    //Static Initilization
+	    //######
+	    ParaProf.paraProfManager = new ParaProfManager();
+	    //######
+	    //End - Static Initilization
+	    //######
+
 	    if(type!=-1){
 		switch(type){
 		case 0:
