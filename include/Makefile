@@ -147,6 +147,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
 #PAPI#LEXTRA	       	       = -L$(PAPIDIR)/src -lpapi #ENDIF#
+#SOL2PAPI#LEXTRA	       = $(PAPIDIR)/src/libpapi.a -lcpc #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAUROOT)/include/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
