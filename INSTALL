@@ -84,6 +84,7 @@ Usage: configure [OPTIONS]
             e.g., -mpilibrary=-lmpi_r                                  
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -pythoninc=<dir> ........ Specify location of Python include directory.
+-pythonlib=<dir> ............ Specify location of Python lib directory.
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
@@ -262,6 +263,13 @@ The following  command-line options are available to configure:
    code and use the TAU API. On the other hand, by importing tau and 
    using tau.run('<func>'), TAU can automatically generate instrumentation. See
    examples/python directory for further information.
+
+-pythonlib=<dir>
+   
+   Specifies the location of the Python lib directory. This is the directory
+   where *.py and *.pyc files (and config directory) are located. This option is 
+   mandatory for IBM when Python bindings are used. For other systems, this option 
+   may not be specified (but -pythoninc=<dir> needs to be specified). 
 
 -PROFILE 
 

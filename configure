@@ -124,6 +124,7 @@ mpilibrary=no
 additional_mpiincs=
 additional_mpilibs=
 pythoninc=
+pythonlib=
 python=no
 extradir=
 awe=no
@@ -427,6 +428,12 @@ do
     shift
     ;;
 
+  -pythonlib=*)
+    pythonlib=`echo $arg | sed -e 's/-pythonlib=//' -e 's/ /#/g'`
+    python=yes
+    shift
+    ;;
+
   -opt=*)
     pcxxopt=`echo $arg | sed -e 's/-opt=//' -e 's/ /_/g'`
     useropt="$pcxxopt"
@@ -606,6 +613,7 @@ do
     echo "            e.g., -mpilibrary=-lmpi_r                                  "
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
+    echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
@@ -2023,8 +2031,13 @@ fi
 
 if [ $python = yes ]
   then
-    fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc"
+    fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc pythonlib=$pythonlib"
     tauoptions="${tauoptions}-python"
+    if [ $machine = rs6000 -a "x$pythonlib" = "x" ] 
+    then
+      echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory is located!"
+      exit 1
+    fi
 fi
 
 if [ $pdt = yes ]

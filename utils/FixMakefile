@@ -144,6 +144,12 @@ fi
 	#echo "Using PYTHON INCLUDE DIR =" $pythoninc
 	;;
 
+     pythonlib=*)
+        pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
+	echo "s,^PYTHON_LIBDIR=.*$,PYTHON_LIBDIR=$pythonlib,g" >> $sedout
+	#echo "Using PYTHON LIB DIR =" $pythonlib
+	;;
+
      tulipdir=*)
         tulipdir=`echo $1 | sed -e 's/^tulipdir=//'`
 	echo "s,^TULIPDIR=.*$,TULIPDIR=$tulipdir,g" >> $sedout
