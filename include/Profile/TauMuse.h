@@ -20,8 +20,8 @@
 #define MAX_METRIC_LEN		100
 
 #define AF_UNIX_MODE
-//#define VAR_LOCK_DIRECTORY 	"/tmp"
-#define VAR_LOCK_DIRECTORY 	"/var/lock"
+#define VAR_LOCK_DIRECTORY 	"/tmp"
+//#define VAR_LOCK_DIRECTORY 	"/var/lock"
 
 
 struct filter_info{

@@ -22,15 +22,18 @@
 #define _TAU_HANDLER_H_
 void TauEnableTrackingMemory(void);
 void TauDisableTrackingMemory(void);
+void TauEnableTrackingMuseEvents(void);
+void TauDisableTrackingMuseEvents(void);
 void TauSetInterruptInterval(int interval);
 void TauTrackMemoryUtilization(void);
+void TauTrackMuseEvents(void);
 
 #endif /* _TAU_HANDLER_H_ */
   
 /***************************************************************************
  * $RCSfile: TauHandler.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2004/02/26 22:27:14 $
- * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.1 2004/02/26 22:27:14 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 2004/03/03 02:18:16 $
+ * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.2 2004/03/03 02:18:16 sameer Exp $ 
  ***************************************************************************/
 
 	

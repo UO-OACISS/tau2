@@ -130,6 +130,9 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_ENABLE_TRACKING_MEMORY()		TauEnableTrackingMemory()
 #define TAU_DISABLE_TRACKING_MEMORY()		TauDisableTrackingMemory()
 #define TAU_TRACK_MEMORY()			TauTrackMemoryUtilization()
+#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	TauEnableTrackingMuseEvents()
+#define TAU_DISABLE_TRACKING_MUSE_EVENTS()	TauDisableTrackingMuseEvents()
+#define TAU_TRACK_MUSE_EVENTS()			TauTrackMuseEvents()
 #define TAU_SET_INTERRUPT_INTERVAL(value)	TauSetInterruptInterval(value)
 
 #ifdef NO_RTTI
@@ -195,6 +198,9 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #define TAU_ENABLE_TRACKING_MEMORY()
 #define TAU_DISABLE_TRACKING_MEMORY()
 #define TAU_TRACK_MEMORY()
+#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	
+#define TAU_DISABLE_TRACKING_MUSE_EVENTS()
+#define TAU_TRACK_MUSE_EVENTS()		
 #define TAU_SET_INTERRUPT_INTERVAL(value)
 
 #define CT(obj)
@@ -222,6 +228,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.30 $   $Date: 2004/02/26 22:28:35 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.30 2004/02/26 22:28:35 sameer Exp $ 
+ * $Revision: 1.31 $   $Date: 2004/03/03 02:18:15 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.31 2004/03/03 02:18:15 sameer Exp $ 
  ***************************************************************************/
