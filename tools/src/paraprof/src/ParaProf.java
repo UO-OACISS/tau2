@@ -30,6 +30,7 @@ public class ParaProf implements ActionListener{
     //**********
     //Start or define all the persistant objects.
     static SavedPreferences savedPreferences = new SavedPreferences();
+    static ParaProfManager paraProfManager = new ParaProfManager();
     static ApplicationManager applicationManager = new ApplicationManager();
     static HelpWindow helpWindow = new HelpWindow();
     //End start of persistant objects.
@@ -39,6 +40,9 @@ public class ParaProf implements ActionListener{
     static Runtime runtime;
     static boolean runHasBeenOpened = false;
      //**********
+    
+    static boolean notify = true;
+    static ParaProfTrial trial = null;
 
     private int type = -1;
     String filePrefix = null;
@@ -83,14 +87,14 @@ public class ParaProf implements ActionListener{
 	    ParaProfExperiment experiment = app.addExperiment();
 	    experiment.setName("Default Exp");
 
-	    ParaProfTrial trial = new ParaProfTrial(null, 0);
-	    trial.setName("Default Trial");
+	    ParaProf.trial = new ParaProfTrial(null, 0);
+	    ParaProf.trial.setName("Default Trial");
 	    FileList fl = new FileList();
 	    Vector v = null;
 	    boolean showTrial = false;
 	    if(type!=-1){
-		trial = new ParaProfTrial(null, type);
-		trial.setName("Default Trial");
+		ParaProf.trial = new ParaProfTrial(null, type);
+		ParaProf.trial.setName("Default Trial");
 		switch(type){
 		case 0:
 		    if(filePrefix==null)
@@ -114,9 +118,9 @@ public class ParaProf implements ActionListener{
 		    break;
 		}
 		if(v.size()>0){
-		    trial.setPaths(fl.getPath());
-		    trial.initialize(v);
-		    experiment.addTrial(trial);
+		    ParaProf.trial.setPaths(fl.getPath());
+		    ParaProf.trial.initialize(v);
+		    experiment.addTrial(ParaProf.trial);
 		    showTrial = true;
 		}
 		else{
@@ -130,23 +134,23 @@ public class ParaProf implements ActionListener{
 		else
 		    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , filePrefix, ParaProf.debugIsOn);
 		if(v.size()>0){
-		    trial.setPaths(fl.getPath());
-		    trial.initialize(v);
-		    experiment.addTrial(trial);
+		    ParaProf.trial.setPaths(fl.getPath());
+		    ParaProf.trial.initialize(v);
+		    experiment.addTrial(ParaProf.trial);
 		    showTrial = true;
 		}
 		else{
 		    //Try finding profile.*.*.* files.
-		    trial = new ParaProfTrial(null, 1);
-		    trial.setName("Default Trial");
+		    ParaProf.trial = new ParaProfTrial(null, 1);
+		    ParaProf.trial.setName("Default Trial");
 		    if(filePrefix==null) 
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , "profile", ParaProf.debugIsOn);
 		    else
 			v = fl.getFileList(new File(System.getProperty("user.dir")), null, 1 , filePrefix, ParaProf.debugIsOn);
 		    if(v.size()>0){
-			trial.setPaths(fl.getPath());
+			ParaProf.trial.setPaths(fl.getPath());
 			trial.initialize(v);
-			experiment.addTrial(trial);
+			experiment.addTrial(ParaProf.trial);
 			showTrial = true;
 		    }
 		    else{
@@ -155,10 +159,6 @@ public class ParaProf implements ActionListener{
 		    }
 		}
 	    }		
-	    ParaProfManager paraProfManager = new ParaProfManager();
-	    paraProfManager.expandDefaultParaProfTrialNode();
-	    if(showTrial)
-		trial.showMainWindow();
 	}
 	catch (Exception e) {
     
@@ -167,6 +167,15 @@ public class ParaProf implements ActionListener{
 	    System.out.println("Please email this file to Robert Bell at bertie@cs.uoregon.edu ");
 	    e.printStackTrace();
 	}
+    }
+
+    public static void start(){
+	if(ParaProf.notify){
+	    ParaProf.paraProfManager.populateStandardApplications();
+	    ParaProf.paraProfManager.expandDefaultParaProfTrialNode();
+	    ParaProf.trial.showMainWindow();
+	}
+	ParaProf.notify = false;
     }
   
     public void actionPerformed(ActionEvent evt){

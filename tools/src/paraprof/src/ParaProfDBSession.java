@@ -31,19 +31,15 @@ public class ParaProfDBSession extends ParaProfDataSession{
 
     public ParaProfDBSession(){
 	super();
+	this.setMetrics(new Vector());
     }
 
-    /**
-     * Initialize the DataSession object.
-     *
-     * @param	obj	an implementation-specific object required to initialize the DataSession
-     */
-    public void initialize(Object obj){
+    public void run(){
 	try{
 	    //######
 	    //Frequently used items.
 	    //######
-	    PerfDBSession perfDBSession = (PerfDBSession) obj;
+	    PerfDBSession perfDBSession = (PerfDBSession) initializeObject;
 
 	    int metric = 0;
 	    GlobalMappingElement globalMappingElement = null;
@@ -64,7 +60,6 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    System.out.println("Processing data, please wait ......");
 	    long time = System.currentTimeMillis();
 	    
-	    this.setMetrics(perfDBSession.getMetrics());
 	    int numberOfMetrics = this.getNumberOfMetrics();
 	    for(int i=0;i<numberOfMetrics;i++)
 		this.getGlobalMapping().increaseVectorStorage();
@@ -215,6 +210,18 @@ public class ParaProfDBSession extends ParaProfDataSession{
 	    time = (System.currentTimeMillis()) - time;
 	    System.out.println("Done processing data file!");
 	    System.out.println("Time to process file (in milliseconds): " + time);
+	    
+	    //Need to notify observers that we are done.  Be careful here.
+	    //It is likely that they will modify swing elements.  Make sure
+	    //to dump request onto the event dispatch thread to ensure
+	    //safe update of said swing elements.  Remember, swing is not thread
+	    //safe for the most part.
+	    EventQueue.invokeLater(new Runnable(){
+		    public void run(){
+			ParaProfDBSession.this.notifyObservers();
+		    }
+		});
+				   
 	}
         catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD01");

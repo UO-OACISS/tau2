@@ -1,4 +1,3 @@
-
 /* 
    ParaProfManager.java
 
@@ -135,12 +134,10 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    //####################################
 	    //Create the root node.
 	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("Applications");
-  	    DefaultMutableTreeNode standard = new DefaultMutableTreeNode("Standard Applications");
-	    DefaultMutableTreeNode runtime = new DefaultMutableTreeNode("Runtime Applications");
+  	    standard = new DefaultMutableTreeNode("Standard Applications");
+	    runtime = new DefaultMutableTreeNode("Runtime Applications");
 	    dbApps = new DefaultMutableTreeNode("DB Applications");
 
-	    //Populate this node.
-	    this.populateStandardApplications(standard);
 	    root.add(standard);
 	    root.add(runtime);
 	    root.add(dbApps);
@@ -185,7 +182,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	catch(Exception e){
 	    e.printStackTrace();
 	    ParaProf.systemError(e, null, "PPM01");
-	} 
+	}
     }
 
     //####################################
@@ -398,25 +395,27 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    perfDBSession.setExperiment(trial.getExperimentID());
 		    perfDBSession.setTrial(trial.getID());
 		    trial.initialize(perfDBSession);
-		    perfDBSession.terminate();
+		    //perfDBSession.terminate();
 		    //Add to the list of loaded trials.
 		    loadedTrials.add(trial);
 		    System.out.println("Done loading trial.");
 		}
 		
-		//The trial should now have been setup.  Therefore, safe to add metrics.
-		//Refresh the metrics list.
-		for(int i=selectedNode.getChildCount(); i>0; i--){
-		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
-		}
-		
-		for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
+		//The trial should now have been setup.  Check to see if it is loading ...
+		if(!trial.loading()){
+		    //Refresh the metrics list.
+		    for(int i=selectedNode.getChildCount(); i>0; i--){
+			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i-1)));
+		    }
+		    
+		    for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
 			Metric metric = (Metric) e.nextElement();
 			metric.setDBMetric(true);
 			DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
 			metric.setDMTN(metricNode);
 			metricNode.setAllowsChildren(false);
 			treeModel.insertNodeInto(metricNode, selectedNode, selectedNode.getChildCount());
+		    }
 		}
 	    }
 	    tree.expandPath(path);
@@ -442,7 +441,9 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //######
     //TreeExpansionListener
     //######
-    public void treeCollapsed(TreeExpansionEvent event){}
+    public void treeCollapsed(TreeExpansionEvent event){
+	System.out.println("Tree collapsed");
+    }
     public void treeExpanded(TreeExpansionEvent event){}
     //######
     //End - TreeSelectionListener
@@ -451,6 +452,23 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //####################################
     //End - Interface code.
     //####################################
+
+    public void addMetricTreeNodes(ParaProfTrial trial){
+	//Refresh the metrics list.
+	DefaultMutableTreeNode defaultMutableTreeNode = trial.getDMTN();
+	for(int i=defaultMutableTreeNode.getChildCount(); i>0; i--){
+	    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) defaultMutableTreeNode.getChildAt(i-1)));
+	}
+	
+	for(Enumeration e = (trial.getMetrics()).elements(); e.hasMoreElements() ;){
+	    Metric metric = (Metric) e.nextElement();
+	    metric.setDBMetric(true);
+	    DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric);
+	    metric.setDMTN(metricNode);
+	    metricNode.setAllowsChildren(false);
+	    treeModel.insertNodeInto(metricNode, defaultMutableTreeNode, defaultMutableTreeNode.getChildCount());
+	}
+    }
 
     public void setDatabasePassword(String password){
 	this.password = password;}
@@ -619,7 +637,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	}
     }
   
-    private void populateStandardApplications(DefaultMutableTreeNode inNode){
+    public void populateStandardApplications(){
 	DefaultMutableTreeNode applicationNode = null;
 	DefaultMutableTreeNode experimentNode = null;
 	DefaultMutableTreeNode trialNode = null;
@@ -659,7 +677,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		cnt2++;
 	    }
 	    applicationNode.add(experimentNode);
-	    inNode.add(applicationNode);
+	    standard.add(applicationNode);
 	    cnt1++;
 	}
     } 
@@ -702,6 +720,8 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     //####################################
     JTree tree = null;
     DefaultTreeModel treeModel = null;
+    DefaultMutableTreeNode standard = null;
+    DefaultMutableTreeNode runtime = null;
     DefaultMutableTreeNode dbApps = null;
     JSplitPane jSplitPane = null;
   

@@ -22,7 +22,7 @@ import javax.swing.event.*;
 import javax.swing.tree.*;
 import dms.dss.*;
 
-public class ParaProfTrial extends Trial{
+public class ParaProfTrial extends Trial implements ParaProfObserver{
 
      public ParaProfTrial(int type){
 	super();
@@ -56,8 +56,12 @@ public class ParaProfTrial extends Trial{
 	    this.setNumContextsPerNode(trial.getNumContextsPerNode());
 	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
 	    this.setUserData(trial.getUserData());
+
 	    this.dataSession = new ParaProfDBSession();
 	    this.dataSession.setDebug(ParaProf.debugIsOn);
+	    int numberOfMetrics = trial.getMetricCount();
+	    for(int i=0;i<numberOfMetrics;i++)
+		dataSession.addMetric(trial.getMetricName(i));
 	}
 	this.type = type;
     }
@@ -82,17 +86,9 @@ public class ParaProfTrial extends Trial{
 	    break;
 	}
 	
+	this.setLoading(true);
+	dataSession.addObserver(this);
 	dataSession.initialize(obj);
-	dataSession.getGlobalMapping().setColors(clrChooser, -1);
-
-	//Set the metrics.
-	int numberOfMetrics = dataSession.getNumberOfMetrics();
-	for(int i=0;i<numberOfMetrics;i++){
-	    Metric metric = this.addMetric();
-	    metric.setName(dataSession.getMetricName(i));
-	    metric.setTrial(this);
-	}
-
     }
 
     public void setExperiment(ParaProfExperiment experiment){
@@ -112,6 +108,12 @@ public class ParaProfTrial extends Trial{
   
     public boolean dBTrial(){
 	return dBTrial;}
+
+    public void setLoading(boolean loading){
+	this.loading = loading;}
+
+    public boolean loading(){
+	return loading;}
   
     public String getIDString(){
 	if(experiment!=null)
@@ -192,6 +194,9 @@ public class ParaProfTrial extends Trial{
     public SystemEvents getSystemEvents(){
 	return systemEvents;}
   
+    //####################################
+    //Interface for ParaProfMetrics. 
+    //####################################
     public void setSelectedMetricID(int selectedMetricID){
 	this.selectedMetricID = selectedMetricID;}
     
@@ -229,16 +234,19 @@ public class ParaProfTrial extends Trial{
 	return this.getMetric(metricID).getName();}
 
     public Metric addMetric(){
-	Metric newMetric = new Metric();
-	newMetric.setID((metrics.size()));
-	metrics.add(newMetric);
-	return newMetric;
+	Metric metric = new Metric();
+	metric.setID((metrics.size()));
+	metrics.add(metric);
+	return metric;
     }
+    //####################################
+    //End - Interface for ParaProfMetrics. 
+    //####################################
   
     //####################################
     //Pass-though methods to the data session for this instance.
     //####################################
-    GlobalMapping getGlobalMapping(){
+    public GlobalMapping getGlobalMapping(){
 	return dataSession.getGlobalMapping();}
 
     public int getNumberOfMappings(){
@@ -273,6 +281,34 @@ public class ParaProfTrial extends Trial{
     //####################################
     //end - Pass-though methods to the data session for this instance.
     //####################################
+
+    //######
+    //ParaProfObserver interface.
+    //######
+    public void update(Object obj){}
+    public void update(){
+	System.out.println("In update ... should be done.");
+	dataSession.terminate();
+	this.setLoading(false);
+	
+	dataSession.getGlobalMapping().setColors(clrChooser, -1);
+	
+	//Set the metrics.
+	int numberOfMetrics = dataSession.getNumberOfMetrics();
+	for(int i=0;i<numberOfMetrics;i++){
+	    Metric metric = this.addMetric();
+	    metric.setName(dataSession.getMetricName(i));
+	    metric.setTrial(this);
+	}
+	
+	ParaProf.start();
+	
+	if(this.dBTrial())
+	    ParaProf.paraProfManager.addMetricTreeNodes(this);
+    }
+    //######
+    //End - Observer.
+    //######
   
     //####################################
     //Instance data.
@@ -282,6 +318,7 @@ public class ParaProfTrial extends Trial{
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     private boolean dBTrial = false;
+    private boolean loading = false;
      
     private SystemEvents systemEvents = new SystemEvents();
     private StaticMainWindow sMW = null;

@@ -14,7 +14,7 @@ import java.util.*;
 import java.io.*;
 import dms.dss.*;
 
-public abstract class ParaProfDataSession  extends DataSession{
+public abstract class ParaProfDataSession  extends DataSession implements Runnable{
     public ParaProfDataSession () {
 	super();
     }
@@ -22,6 +22,17 @@ public abstract class ParaProfDataSession  extends DataSession{
     //####################################
     //Public Section.
     //####################################
+
+    /**
+     * Initialize the DataSession object.
+     *
+     * @param	obj	an implementation-specific object required to initialize the DataSession
+     */
+    public void initialize(Object obj){
+	initializeObject = obj;
+	java.lang.Thread thread = new java.lang.Thread(this);
+	thread.start();
+    }
 
     /**
      * Terminate the DataSession object.
@@ -444,6 +455,20 @@ public abstract class ParaProfDataSession  extends DataSession{
     //End - Set mean values functions.
     //######
 
+    //######
+    //Methods that manage the ParaProfObservers.
+    //######
+    public void addObserver(ParaProfObserver observer){
+	observers.add(observer);}
+
+    public void notifyObservers(){
+	for(Enumeration e = observers.elements(); e.hasMoreElements() ;)
+	    ((ParaProfObserver) e.nextElement()).update();
+    }
+    //######
+    //End - Methods that manage the ParaProfObservers.
+    //######
+
     //####################################
     //End - Public Section.
     //####################################
@@ -506,6 +531,8 @@ public abstract class ParaProfDataSession  extends DataSession{
     //######
     //Private Section.
     //######
+    protected Object initializeObject = null;
+
     private boolean firstMetric = true;
     private boolean groupCheck = false;
     
@@ -526,6 +553,8 @@ public abstract class ParaProfDataSession  extends DataSession{
     //When in debugging mode, this class can print a lot of data.
     //Initialized in this.setDebug(...).
     private PrintWriter out = null;
+
+    private Vector observers = new Vector();
     //######
     //End - Private Section.
     //######

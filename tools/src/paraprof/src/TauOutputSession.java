@@ -34,12 +34,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	this.setMetrics(new Vector());
     }
 
-    /**
-     * Initialize the DataSession object.
-     *
-     * @param	obj	an implementation-specific object required to initialize the DataSession
-     */
-    public void initialize(Object obj){
+    public void run(){
 	try{
 	    //######
 	    //Frequently used items.
@@ -72,7 +67,7 @@ public class TauOutputSession extends ParaProfDataSession{
 	    //######
 	    //End - Frequently used items.
 	    //######
-	    v = (Vector) obj;
+	    v = (Vector) initializeObject;
 	    for(Enumeration e = v.elements(); e.hasMoreElements() ;){
 		System.out.println("Processing data, please wait ......");
 		long time = System.currentTimeMillis();
@@ -432,6 +427,16 @@ public class TauOutputSession extends ParaProfDataSession{
 		System.out.println("No callpath data found.");
 	    System.out.println("Done - Processing callpath data!");
 
+	    //Need to notify observers that we are done.  Be careful here.
+	    //It is likely that they will modify swing elements.  Make sure
+	    //to dump request onto the event dispatch thread to ensure
+	    //safe update of said swing elements.  Remember, swing is not thread
+	    //safe for the most part.
+	    EventQueue.invokeLater(new Runnable(){
+		    public void run(){
+			TauOutputSession.this.notifyObservers();
+		    }
+		});
 	}
         catch(Exception e){
 	    ParaProf.systemError(e, null, "SSD01");
