@@ -336,7 +336,6 @@ Profiler& Profiler::operator= (const Profiler& X)
 void Profiler::Stop(int tid)
 {
       unsigned long long TimeStamp = 0L; 
-      int i;
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
@@ -372,6 +371,7 @@ void Profiler::Stop(int tid)
 #endif /* TAU_COMPENSATE && PROFILING_ON */
 #else //TAU_MULTIPLE_COUNTERS
 	// first initialize the CurrentTime
+        int i;
 	for (i=0; i < MAX_TAU_COUNTERS; i++)
 	{
 	  CurrentTime[i] = 0;
@@ -2636,8 +2636,8 @@ void Profiler::AddNumChildren(long value)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.94 $   $Date: 2004/05/27 00:33:52 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.94 2004/05/27 00:33:52 sameer Exp $ 
+ * $Revision: 1.95 $   $Date: 2004/05/31 16:09:20 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.95 2004/05/31 16:09:20 sameer Exp $ 
  ***************************************************************************/
 
 	
