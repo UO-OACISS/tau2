@@ -86,6 +86,7 @@ Usage: configure [OPTIONS]
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
+-muse ................................. Specify the use of MAGNET/MUSE. 
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
@@ -364,6 +365,14 @@ The following  command-line options are available to configure:
    the process that executed it. Traces can be merged and converted using 
    tau_merge and tau_convert utilities respectively, and  visualized using 
    Vampir, a commercial trace visualization tool. [ Ref http://www.pallas.de ]
+
+-muse
+   
+   Specifies the use of MAGNET/MUSE to extract low-level information from the
+   kernel. While installing MAGNET and MUSE, a handler needs to be installed.
+   The name of the handler routine is set by the user using the environment 
+   variable TAU_MUSE_HANDLER. By default, it uses the "count" handler which 
+   counts the number of MAGNET events executed in the kernel. 
    
 -noex
    

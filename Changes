@@ -29,6 +29,7 @@ Version 2.12 changes (from 2.11):
 17. Fixed Apple's OS X sscanf bug for reading long doubles in pprof. 
 18. Added support for DyninstAPI under AIX. [NERSC]
 19. Added support for Cray X1 and AMD Opteron (ASCI Red Storm). [Cray]
+20. Added support for MAGNET/MUSE. [LANL]
 
 
 Version 2.11 changes (from 2.10):
