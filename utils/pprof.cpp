@@ -32,6 +32,11 @@
  *              delete stddev column for mean
  */
 
+#ifdef TAU_WINDOWS
+#pragma warning( disable : 4786 )
+#endif
+
+
 # include <stdio.h>
 # include <stdlib.h>
 
@@ -53,11 +58,16 @@ using namespace std;
 # include <map.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 # include <stdlib.h>
+#if (!defined(TAU_WINDOWS))
 # include <unistd.h>
+#endif //TAU_WINDOWS
 # include <string.h>
 # include <fcntl.h>
 # include <limits.h>
 # include <math.h>
+#ifdef TAU_WINDOWS
+# include <float.h>
+#endif //TAU_WINDOWS
 
 #ifdef DEC_ALPHA 
 # include <float.h>
@@ -283,8 +293,13 @@ class UserEventData {
     return *this;
   }
   UserEventData& operator+= (const UserEventData& X) {
-    maxvalue	= max (maxvalue, X.maxvalue);
+#ifdef TAU_WINDOWS
+	maxvalue	= __max (maxvalue, X.maxvalue);
+    minvalue	= __min (minvalue, X.minvalue);
+#else
+	maxvalue	= max (maxvalue, X.maxvalue);
     minvalue	= min (minvalue, X.minvalue);
+#endif	//TAU_WINDOWS
     if (numevents+X.numevents != 0) 
     {
       meanvalue 	= (meanvalue*numevents + X.meanvalue * X.numevents)/(numevents+X.numevents); 
@@ -2710,14 +2725,151 @@ int main (int argc, char *argv[])
   char *file = "profile";
   char proffile[SIZE_OF_FILENAME], *dir;
 
+#ifdef TAU_WINDOWS
+  int optind = 0;
+#else
   extern char *optarg;
   extern int optind;
+#endif //TAU_WINDOWS
+  
 
   dir = getenv("PROFILEDIR");
   if(dir != NULL) {
     file = strsave(strcat(strcat(dir,"/"),file));
   } 
+#ifdef TAU_WINDOWS
+  /* -- parse command line arguments ---------------------------------------- */
+  
+  errflag = FALSE;
+  for( int j = 1; j < argc; j++)
+  {
+	  
+	  char *argchar = argv[j];
+	  switch(argchar[0])
+	  {
+	  case '-':
+		  {
+			  switch(argchar[1])
+				{
+				case 'c': /* -- sort according to number of *C*alls -- */
+					compar = CallCmp;
+					break;
+				case 'b': /* -- sort according to number of subroutines called -- */
+					compar = SubrCmp;
+					break;
+				case 'd': /* -- *D*ump output format (for racy) -- */
+					dump = TRUE;
+					break;
+				case 'f': /* -- profile data *F*ile prefix -- */
+					//A file name given.  The next option should be the filename.
+					//Check to make sure that there is SOMETHING and
+					//that it is likely to be a filename.
+					if(argv[j + 1] == NULL)
+					{
+						//Set the error flag and break out.
+						errflag = TRUE;
+					}
+					
+					else
+					{
+						if(argv[j+1][0] == '-')
+						{
+							//The chances are that the filename was forgotten.
+							//Give a warning and then proceed as if nothing we wrong.
+							cout << "It is likely that you have forgotten to give the filename after the -f option!!!" << endl;
+							//Set file to the filename given.
+							file = argv[j + 1];
+							//Now, I need to increment i as i+1 has already been processed.
+							j = j+1;
+						}
+						//Otherwise, just act normally.
+						else
+						{
+							//Set file to the filename given.
+							file = argv[j + 1];
+							//Now, I need to increment i as i+1 has already been processed.
+							j = j+1;
+						}
+					}
 
+					break;
+				case 'l': /* -- *L*ist function table for debug purposes -- */
+					list = TRUE;
+					break;
+				case 'm': /* -- sort according to *M*illiseconds -- */
+					compar = MsecCmp;
+					break;
+				case 'e': /* -- sort according to Milliseconds (*E*xclusive per call)  -- */
+					compar = MsecPerCallCmp;
+					break;
+				case 'i': /* -- sort according to Milliseconds (*I*nclusive per call)  -- */
+					compar = CumMsecPerCallCmp;
+					break;
+				case 'n': /* -- print only first n *N*umber of funtions -- */
+					
+					//A number given.  The next option should be the number of functions.
+					//Check to make sure that there is SOMETHING and that it is likely to be a number.
+					if(argv[j + 1] == NULL)
+					{
+						//Set the error flag and break out.
+						errflag = TRUE;
+					}
+					else
+					{
+
+						
+						if(argv[j+1][0] == '-')
+						{
+							//The chances are that the number value was forgotten.
+							//Give a warning and then proceed as if nothing were wrong.
+							cout << "It is likely that you have forgotten to give the number after the -n option!!!" << endl;
+							//Set max to the number given.
+							max = atoi(argv[j + 1]);
+							//Now, I need to increment i as i+1 has already been processed.
+							j = j+1;
+							
+						}
+						//Otherwise, just act normally.
+						else
+						{
+							//Set max to the number given.
+							max = atoi(argv[j + 1]);
+							//Now, I need to increment i as i+1 has already been processed.
+							j = j+1;
+						}
+						//******A bit of debugging code!!*********
+						cout << "The number give was : " << max << endl;
+					}
+					break;
+				case 'r': /* -- *R*everse sorting order -- */
+					sign = -1;
+					break;
+				case 's': /* -- print only *S*ummary profile information -- */
+					nodeprint = FALSE;
+					break;
+				case 't': /* -- sort according to *T*otal milliseconds -- */
+					compar = CumMsecCmp; /* default mode */
+					break;
+				case 'v': /* -- sort according to standard de*V*iation --*/
+					compar = StdDevCmp;  
+					break; 
+				case 'x': /* -- dump min and ma*X* information as well (default don't) -- */
+					dumpminmax  = TRUE;
+					break;
+				default:
+					errflag = TRUE;
+					break;
+				}
+		  }
+		  break;
+	  
+	  default:
+		  errflag = TRUE;
+		  break;
+	  }
+  }  
+  
+#else  
   /* -- parse command line arguments ---------------------------------------- */
   errflag = FALSE;
   while ( (ch = getopt (argc, argv, "cbdf:lmeivn:rstx")) != EOF ) {
@@ -2769,6 +2921,10 @@ int main (int argc, char *argv[])
       break;
     }
   }
+
+#endif //TAU_WINDOWS
+
+
   if ( errflag ) {
     fprintf (stderr, "usage: %s [-c|-b|-m|-t|-e|-i|-v] [-r] [-s] [-n num] [-f filename] [-l] [node numbers]\n", argv[0]);
     fprintf(stderr," -c : Sort according to number of Calls \n");
@@ -2933,8 +3089,8 @@ int main (int argc, char *argv[])
   exit (0);
 }
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 1999/09/14 23:24:03 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.20 1999/09/14 23:24:03 sameer Exp $                                                   
+ * $RCSfile: pprof.cpp,v $   $Author: bertie $
+ * $Revision: 1.21 $   $Date: 1999/10/28 21:35:43 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.21 1999/10/28 21:35:43 bertie Exp $                                                   
  ***************************************************************************/
 
