@@ -30,10 +30,13 @@ public:
   double getUsecsPerCall();
   void setCountsPerCall(double d);
   double getCountsPerCall();
+  void setGroupNames(string s);
+  string getGroupNames();
   void printElem();
 
 protected:
   string name;
+  string groupnames;
   double numcalls;
   double numsubrs;
   double percent;
@@ -50,7 +53,7 @@ protected:
 
 /***************************************************************************
  * $RCSfile: pprof_elem.h,v $   $Author: ntrebon $
- * $Revision: 1.2 $   $Date: 2002/07/25 20:51:00 $
- * TAU_VERSION_ID: $Id: pprof_elem.h,v 1.2 2002/07/25 20:51:00 ntrebon Exp $
+ * $Revision: 1.3 $   $Date: 2002/08/05 20:19:37 $
+ * TAU_VERSION_ID: $Id: pprof_elem.h,v 1.3 2002/08/05 20:19:37 ntrebon Exp $
  ***************************************************************************/
 

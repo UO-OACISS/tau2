@@ -1,6 +1,7 @@
 #include "pprof_elem.h"
 
 pprof_elem::pprof_elem(){
+  groupnames="";
 }//constructor
 
 void pprof_elem::setName(string s){
@@ -91,18 +92,28 @@ double pprof_elem::getCountsPerCall(){
   return countspercall;
 }//getCountsPerCall()
 
+void pprof_elem::setGroupNames(string s){
+  groupnames=s;
+}//setGroupNames()
+
+string pprof_elem::getGroupNames(){
+  return groupnames;
+}//getGroupNames()
+
+
 void pprof_elem::printElem(){
   printf("NAME: %s\n",name.c_str());
   printf("\tNUMCALLS: %lG\tNUMSUBRS: %lG\tPERCENT: %lG\n",numcalls,numsubrs,percent);
   printf("\tUSEC: %lG\tCUMUSEC: %lG\tCOUNT: %lG\n",usec,cumusec,count);
   printf("\tTOTALCOUNT: %lG\tSTDDEV: %lG\n",totalcount, stddeviation);
   printf("\tUSECSPERCALL: %lG\tCOUNTSPERCALL: %lG\n",usecspercall,countspercall);
+  printf("\tGROUPNAME(S): %s\n",groupnames.c_str());
 }//printElem()
 
 
 /***************************************************************************
  * $RCSfile: pprof_elem.cpp,v $   $Author: ntrebon $
- * $Revision: 1.1 $   $Date: 2002/07/25 20:40:16 $
- * TAU_VERSION_ID: $Id: pprof_elem.cpp,v 1.1 2002/07/25 20:40:16 ntrebon Exp $
+ * $Revision: 1.2 $   $Date: 2002/08/05 20:19:37 $
+ * TAU_VERSION_ID: $Id: pprof_elem.cpp,v 1.2 2002/08/05 20:19:37 ntrebon Exp $
  ***************************************************************************/
 

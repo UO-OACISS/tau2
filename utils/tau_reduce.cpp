@@ -33,6 +33,8 @@ int apply_default_rules=1;         //should we apply default rules?  default 1
 int numstmts;                      //number of statements in a single rule
 int verbose=0;                     //verbose mode?  default 0
 int output=0;                      //do we output to a file? default 0
+int groupnames_used=0;             //groupnames used? default 0;
+int command_groupname=0;           //is this a command with a groupname? default 0;
 pprof_elem** elemArray;            //array that holds the pprof_elem objects
 string** excludedFunctions;        //to hold the function names that will be excluded
 int** countExcluded;               //array to hold number of times a function is excluded
@@ -79,6 +81,17 @@ string getFunctionName(){
   }//while
   return s;
 }//getFunctionName()
+
+//getGroupNamesFromLine() finds the GROUP="g1 | g2 ..." string in the line
+//and will return a string containing only the names of the groups.  
+string getGroupNamesFromLine(){
+  string l = line;
+  l=l.substr(l.find("\"")+1);
+  l=l.substr(0,l.find("\""));
+  //now string l is the string contained between the starting and ending 
+  //quotation marks.
+  return l;  
+}//getGroupNamesFromLine()
 
 
 //select()prints out the output that can be used to implement a select file.
@@ -169,12 +182,18 @@ void fillTable(){
   double sd;
   double unitspercall;
   string name;
+  string gnames;
   int i;
 
   //now we are at the total data.  Our first run will fill in most of the data
   //for each element.  we need to determine if the line being read in is
   //inclusive or exclusive, if there are hw counters or timing data, and if
   //there is standard deviation data.
+
+  //determine if groupnames are used
+  if(strstr(line, "GROUP=\"")!=NULL)
+    groupnames_used=1;
+ 
   for(i=0; i<number_of_functions; i++){
     //there are two line for each element.  here we process the first line.
     //first determine whether or not it is inclusive or exclusive and if it uses group names
@@ -193,7 +212,12 @@ void fillTable(){
       else{
 	sscanf(line, "%*s %lG", &tc);
 	(*elemArray[i]).setTotalCount(tc);
-      }//else	
+      }//else
+      //check to see if groupnames are used in this file
+      if(groupnames_used){
+	gnames=getGroupNamesFromLine();
+	(*elemArray[i]).setGroupNames(gnames);
+      }//if
     }//if
     else{
       if(excl){
@@ -203,7 +227,12 @@ void fillTable(){
       else{
 	sscanf(line, "%*s %lG", &c);
 	(*elemArray[i]).setCumusec(c);
-      }//else	
+      }//else
+      //check to see if groupnames are used in this file
+      if(groupnames_used){
+	gnames=getGroupNamesFromLine();
+	(*elemArray[i]).setGroupNames(gnames);
+      }//if	
     }//else
     //now read in second line of pair
     getLine();
@@ -302,11 +331,19 @@ void processCommand(int more){
   char f[32];
   char op;
   double number;
-
+  //zero out the field character array
+  for(int k=0;k<32;k++){
+    f[k]='\0';
+  }//for
   sscanf(line, "%s %c %lG", f, &op, &number);
 #ifdef DEBUG
   printf("f is %s \n", f);
 #endif /* DEBUG */
+  //did we read something in for the field?  If not give error and return
+  if(strlen(f)==0){
+    printf("Error: The field variable is empty.  Check rule, and try again.\n");
+    return;
+  }
   string field=string(f);
   if(field=="numcalls"){
     if(op=='<'){
@@ -588,12 +625,69 @@ void processCommand(int more){
   }//if
 }//processCommand()
 
+//if the rule has a group prefix, we need to process that prefix, and then 
+//remove the group prefix from the line.
+void processGroupPrefix(){
+  //first, remove the group prefix from the line
+  string rest = line;
+  string sline=line;
+  string s=rest.substr(0,rest.find(":"));
+  rest=rest.substr(s.length()+1);
+  strncpy(line, rest.c_str(), rest.length()+1);
+  //now check to see if we even have any group data -- double check?
+  if(!groupnames_used){
+    printf("ERROR: There is no groupnames data for this file. Rule that caused the error: %s\n",sline.c_str());
+    return;
+  }//if
+  //count this as a statement, so increment the count
+  numstmts++;
+  //now, increment the excluded array for all element positions that
+  //belong to group s.  NOTE: elements may belong to multiple groups,
+  //so we will use the find() routine to check.
+  for(int i=0;i<number_of_functions;i++){
+    if((*elemArray[i]).getGroupNames().find(s)!=string::npos){
+      //we think the group name is included, however we have to make sure that
+      //we actually have the groupname and that the string we are looking for 
+      //is not a substring of a larger groupname, ie if we are looking for a 
+      //a group called TAU_USER we want to make sure that any matching groups 
+      //not substrings of larger groups, such as TAU_USER_DEFAULT.  First, we 
+      //check that the first character of the found string is either at index 0, 
+      //or there is a space preceding it.  If this is true, we chop off anything
+      //that might be preceding it.  At this point, we can use sscanf() to 
+      //copy the first string up until the first whitespace into a new variable.
+      //Then, we just have to check that the two lengths are equal.
+      string gn=(*elemArray[i]).getGroupNames();
+      char gnarray[SIZE_OF_LINE];
+      strncpy(gnarray, gn.c_str(), gn.length()+1);
+      int index = gn.find(s);
+      if(index==0 || gnarray[index-1]==' '){
+	//now, check the end of the string.  
+	gn=gn.substr(index);
+	strncpy(gnarray, gn.c_str(),gn.length()+1);
+	char temp[SIZE_OF_LINE];
+	sscanf(gnarray, "%s",temp);
+	gn = temp;
+	//gn now equals the first string in gnarray--now just check to see if lengths match!
+	if(gn.length()==s.length()){
+	  (*countExcluded[i])++;
+	}//if
+      }//if
+    }//if
+  }//for
+}//processGroupPrefix()
+
 //parseRules() will determine if the rule is a simple rule or a compound
 //rule.  If it is a simple rule, then pass it to the processCommand() with
 //an argument of 0, telling processCommand() that there is no more.  Else,
 //pass a 1, telling processCommand() there is more to come.
 void parseRules(){
-  //if there's the " & " string, then we know there is atleast two rules.
+  //first, we need to see if this is a group specific command
+  //if it is, it will be the format group:rule1 [& rule2 & ...]  
+  //so, look for the ':'  if there is one, send it to procesGroupPrefix()
+  if(strstr(line, ":")!=NULL)
+    processGroupPrefix();
+
+  //now if there's the " & " string, then we know there is atleast two rules.
   //so first, increment the numstmts variable and call the processCommand()
   //function with the value of 1 passed to it, signalling that there are
   //more rules to follow.  Then, cut off the first rule in the line and
@@ -866,7 +960,7 @@ int main (int argc, char *argv[]){
 
 /***************************************************************************
  * $RCSfile: tau_reduce.cpp,v $   $Author: ntrebon $
- * $Revision: 1.6 $   $Date: 2002/07/26 20:05:00 $
- * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.6 2002/07/26 20:05:00 ntrebon Exp $
+ * $Revision: 1.7 $   $Date: 2002/08/05 20:19:37 $
+ * TAU_VERSION_ID: $Id: tau_reduce.cpp,v 1.7 2002/08/05 20:19:37 ntrebon Exp $
  ***************************************************************************/
 
