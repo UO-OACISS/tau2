@@ -245,9 +245,9 @@ void tau_report_thread_statistics_(void)
 }
 
 /* Cray F90 specific extensions */
-#ifdef CRAYKAI
+#if (defined(CRAYKAI) || defined(HP_FORTRAN))
 void _main();
-#endif /* CRAYKAI */
+#endif /* CRAYKAI || HP_FORTRAN */
 void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
 {
 
@@ -274,7 +274,7 @@ void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
 #ifdef DEBUG_PROF
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
-    *ptr = tau_get_profiler(fname, " ", TAU_DEFAULT);
+    *ptr = tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
   }
 
 #ifdef DEBUG_PROF 
@@ -307,7 +307,7 @@ void TAU_DB_DUMP(void)
 
 void TAU_PROFILE_INIT()
 {
-#ifdef CRAYKAI
+#ifdef CRAYKAI 
   _main();
 #endif /* CRAYKAI */
   // tau_profile_init_(argc, argv);
@@ -385,13 +385,17 @@ void TAU_REPORT_THREAD_STATISTICS(void)
   tau_report_thread_statistics();
 }
 
-#if (defined (TAU_XLC) || defined(TAU_AIX))
+#if (defined (TAU_XLC) || defined(TAU_AIX) || defined(HP_FORTRAN))
 void tau_profile_timer(int **profiler, char *fname, int len)
 {
   if (*profiler == 0)
   {
     // remove garbage characters from the end of name
-    if (len < 1024) fname[len] = '\0'; 
+    if (len < 1024) {
+#ifndef HP_FORTRAN
+	fname[len] = '\0'; 
+#endif /* HP_FORTRAN */
+    }
     else 	
     {
       for(int i=0; i<1024; i++)
@@ -407,7 +411,15 @@ void tau_profile_timer(int **profiler, char *fname, int len)
     printf("len = %d\n", len);
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
+#ifdef HP_FORTRAN
+    char *name = (char *) malloc(len+1); 
+    strncpy(name, fname, len);
+    name[len]='\0';
+
+    *profiler = (int *) tau_get_profiler(name, (char *)" ", TAU_DEFAULT);
+#else 
     *profiler = (int *) tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
+#endif /* HP_FORTRAN */
   }
 }
 
@@ -423,6 +435,10 @@ void tau_profile_stop(int **profiler)
 
 void tau_profile_init()
 {
+#ifdef HP_FORTRAN
+  _main();
+#endif /* HP_FORTRAN */
+
 #ifndef TAU_MPI
   tau_set_node(0); 
 #endif /* TAU_MPI */
@@ -461,7 +477,7 @@ void tau_trace_recvmessage(int *type, int *source, int *length)
   tau_trace_recvmsg(*type, *source, *length);
 }
 
-void tau_register_event(int **ptr, char *event_name, int *flen)
+void tau_register_event(int **ptr, char *event_name, int flen)
 {
 
   if (*ptr == 0)
@@ -488,7 +504,7 @@ void tau_event(int **ptr, double *data)
   tau_userevent((void *)*ptr, *data);
 }
 
-#endif /* TAU_XLC || TAU_AIX */
+#endif /* TAU_XLC || TAU_AIX || HP_FORTRAN */
 
 
 #ifdef TAU_GNU
@@ -611,6 +627,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 2001/12/27 20:16:45 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.21 2001/12/27 20:16:45 sameer Exp $ 
+ * $Revision: 1.22 $   $Date: 2002/01/09 02:02:20 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.22 2002/01/09 02:02:20 sameer Exp $ 
  ***************************************************************************/
