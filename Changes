@@ -41,6 +41,7 @@ Version 2.9 changes (from 2.8):
     applications.
 29. Added -noinline flag to tau_instrumentor to suppress instrumentation of 
     inlined functions [POOMA].
+30. Added support for F90 in tau_instrumentor. 
 
 Version 2.8 changes (from 2.7):
 1. Added support for PAPI (Perf. API for accessing HW Perf. Counters).
