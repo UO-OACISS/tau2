@@ -19,12 +19,14 @@
 #include <unistd.h>
 #endif
 
-#define NFUNCS 4*1024
-#define FUNCNAMELEN 1024
+#define FUNCNAMELEN 32*1024
 #ifdef i386_unknown_nt4_0
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
+
+#include <string>
+using namespace std;
 
 #include "BPatch.h"
 #include "BPatch_Vector.h"
@@ -185,10 +187,10 @@ int main(int argc, char **argv)
   int i,j, answer;
   int instrumented=0;
   bool loadlib=false;
-  char buf[FUNCNAMELEN], libname[FUNCNAMELEN];
+  char fname[FUNCNAMELEN], libname[FUNCNAMELEN];
   BPatch_thread *appThread;
   bpatch = new BPatch; // create a new version. 
-  char functions[NFUNCS*FUNCNAMELEN];
+  string functions;
 
   // parse the command line arguments 
   if ( argc < 2 )
@@ -267,41 +269,42 @@ int main(int argc, char **argv)
   
   char modulename[256];
   for (j=0; j < m->size(); j++) {
-    sprintf(modulename, "Module %s\n", (*m)[j]->getName(buf, FUNCNAMELEN));
+    sprintf(modulename, "Module %s\n", (*m)[j]->getName(fname, FUNCNAMELEN));
     BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
     dprintf("%s", modulename);
 
 
 
-    if ((strcmp(buf, "DEFAULT_MODULE") == 0) ||
-  	(strcmp(buf, "LIBRARY_MODULE") == 0))
+    if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
+  	(strcmp(fname, "LIBRARY_MODULE") == 0))
     { // constraint 
 
       for (i=0; i < p->size(); i++) 
       {
         // For all procedures within the module, iterate  
-        memset(buf, 0x0, FUNCNAMELEN); 
-        (*p)[i]->getName(buf, FUNCNAMELEN);
-        dprintf("Name %s\n", buf);
-        if ((strncmp(buf, "Tau", 3) == 0) || 
-            (strncmp(buf, "Profiler", 8) == 0) || 
-            (strncmp(buf, "FunctionInfo",12) == 0) ||
-            (strncmp(buf, "RtsLayer", 8) == 0) || 
-	    (strncmp(buf, "The", 3) == 0)) 
+        //memset(fname, 0x0, FUNCNAMELEN); 
+        (*p)[i]->getName(fname, FUNCNAMELEN);
+        dprintf("Name %s\n", fname);
+        if ((strncmp(fname, "Tau", 3) == 0) || 
+            (strncmp(fname, "Profiler", 8) == 0) || 
+            (strncmp(fname, "FunctionInfo",12) == 0) ||
+            (strncmp(fname, "RtsLayer", 8) == 0) || 
+	    (strncmp(fname, "The", 3) == 0)) 
         { // The above procedures shouldn't be instrumented
-           dprintf("don't instrument %s\n", buf);
+           dprintf("don't instrument %s\n", fname);
         } /* Put the constraints above */ 
         else 
         { // routines that are ok to instrument
          
-          strcat(functions,"|");
-          strcat(functions, buf);
- 	  dprintf("Assigning id %d to %s\n", instrumented, buf);
+	  functions.append("|");
+	  functions.append(fname);
+
+ 	  dprintf("Assigning id %d to %s\n", instrumented, fname);
           instrumented ++;
           BPatch_Vector<BPatch_snippet *> *callee_args = new BPatch_Vector<BPatch_snippet *>();
           BPatch_constExpr *constExpr = new BPatch_constExpr(instrumented);
 	  // Don't pass name
-          //BPatch_constExpr *constName = new BPatch_constExpr(buf);
+          //BPatch_constExpr *constName = new BPatch_constExpr(fname);
           callee_args->push_back(constExpr);
           // callee_args->push_back(constName);
     
@@ -322,7 +325,7 @@ int main(int argc, char **argv)
 
 
   // form the args to InitCode
-  BPatch_constExpr funcName(functions);
+  BPatch_constExpr funcName(functions.c_str());
   initArgs.push_back(&funcName);
 
 
