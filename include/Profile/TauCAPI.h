@@ -86,6 +86,7 @@
                                    taufirst##event = 0; }
 				
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
+#define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name); 	
 #define TAU_REPORT_STATISTICS()		Tau_report_statistics();
 #define TAU_REPORT_THREAD_STATISTICS()  Tau_report_thread_statistics();
 #define TAU_EVENT_DISABLE_MIN(event) 	Tau_event_disable_min(event);
@@ -138,6 +139,7 @@ extern void Tau_register_thread();
 extern void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 extern void * Tau_get_userevent(char *name);
 extern void Tau_userevent(void *event, double data);
+extern void Tau_set_event_name(void *event, char * name);
 extern void Tau_report_statistics(void);
 extern void Tau_report_thread_statistics(void);
 extern void Tau_event_disable_min(void *event);
@@ -182,6 +184,7 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
+#define TAU_EVENT_SET_NAME(event, name)
 #define TAU_REPORT_STATISTICS()
 #define TAU_REPORT_THREAD_STATISTICS()
 #define TAU_EVENT_DISABLE_MIN(event)
@@ -222,7 +225,7 @@ extern void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 2002/07/29 22:44:38 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.20 2002/07/29 22:44:38 sameer Exp $
+ * $Revision: 1.21 $   $Date: 2002/11/08 02:25:06 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.21 2002/11/08 02:25:06 sameer Exp $
  ***************************************************************************/
 

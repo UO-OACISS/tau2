@@ -105,6 +105,7 @@ extern "C" void Tau_stop_timer(void * function_info);
 // UserEvents
 #define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
 #define TAU_EVENT(event, data) 		 	(event).TriggerEvent(data);
+#define TAU_EVENT_SET_NAME(event, name) 	(event).SetEventName(name);
 #define TAU_EVENT_DISABLE_MIN(event) 		(event).SetDisableMin(true);
 #define TAU_EVENT_DISABLE_MAX(event) 		(event).SetDisableMax(true);
 #define TAU_EVENT_DISABLE_MEAN(event) 		(event).SetDisableMean(true);
@@ -164,6 +165,7 @@ extern "C" void Tau_stop_timer(void * function_info);
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
+#define TAU_EVENT_SET_NAME(event, name) 	
 #define TAU_EVENT_DISABLE_MIN(event)
 #define TAU_EVENT_DISABLE_MAX(event)
 #define TAU_EVENT_DISABLE_MEAN(event)
@@ -206,6 +208,6 @@ extern "C" void Tau_stop_timer(void * function_info);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.22 $   $Date: 2002/08/05 20:45:01 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.22 2002/08/05 20:45:01 sameer Exp $ 
+ * $Revision: 1.23 $   $Date: 2002/11/08 02:25:06 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.23 2002/11/08 02:25:06 sameer Exp $ 
  ***************************************************************************/

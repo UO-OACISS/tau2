@@ -59,6 +59,8 @@ class TauUserEvent {
     double  GetSumSqr(int tid = RtsLayer::myThread());
     long    GetNumEvents(int tid = RtsLayer::myThread());
     const char *  GetEventName (void) const;
+    void SetEventName(const char * newname); 
+    void SetEventName(string newname); 
     bool GetDisableMin(void);
     bool GetDisableMax(void);
     bool GetDisableMean(void);
@@ -100,6 +102,6 @@ TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2002/01/24 23:27:47 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.6 2002/01/24 23:27:47 sameer Exp $ 
+ * $Revision: 1.7 $   $Date: 2002/11/08 02:25:06 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.7 2002/11/08 02:25:06 sameer Exp $ 
  ***************************************************************************/
