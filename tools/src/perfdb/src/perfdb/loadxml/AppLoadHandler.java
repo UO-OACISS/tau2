@@ -91,7 +91,7 @@ public void characters(char[] chars, int start, int length) {
 
 	String tempstr = new String(chars, start, length);
 	
-	if (currentElement.equals("name")) name = tempstr;
+	if (currentElement.equals("name")) this.name = tempstr;
 	else if (currentElement.equals("description")) desc = tempstr;      	
 	else if (currentElement.equals("version")) version = tempstr;
 	else if (currentElement.equals("language")) lang = tempstr;
@@ -109,7 +109,7 @@ public void endElement(String url, String name, String qname) {
 	    StringBuffer buf = new StringBuffer();
 	    buf.append("select id from  ");
 	    buf.append(APP_TABLE);
-	    buf.append("  where name='" + name + "' and version='" + version + "'; ");
+	    buf.append("  where name='" + this.name + "' and version='" + version + "'; ");
 	    if (getDB().getDataItem(buf.toString()) == null){
 
 	    	buf = new StringBuffer();
@@ -117,7 +117,7 @@ public void endElement(String url, String name, String qname) {
 	    	buf.append(" " + APP_TABLE + " ");
 	    	buf.append("(name, version, description, language, para_diag, usage_text, execution_options)");
 	    	buf.append(" values ");
-	    	buf.append("('" + name + "', '" + version + "', '" 
+	    	buf.append("('" + this.name + "', '" + version + "', '" 
 		       + desc + "', '" + lang + "', '" + paradiag + "', '" + usage + "', '" + exeopt + "'); ");       
 	    	// System.out.println(buf.toString());
 	    	try {
