@@ -45,14 +45,22 @@ double& TheTauFullTimerOverhead()
 #else /* TAU_MULTIPLE_COUNTERS */
 double*& TheTauNullTimerOverhead()
 {
-  static double *over = new double[MAX_TAU_COUNTERS](0.0);
+  static double *over = new double[MAX_TAU_COUNTERS];
+
+  for (int i = 0; i < MAX_TAU_COUNTERS; i++) {
+    over[i] = 0.0;
+  }
 
   return over;
 }
 
 double*& TheTauFullTimerOverhead()
 {
-  static double *full = new double[MAX_TAU_COUNTERS](0.0);
+  static double *full = new double[MAX_TAU_COUNTERS];
+
+  for (int i = 0; i < MAX_TAU_COUNTERS; i++) {
+    full[i] = 0.0;
+  }
 
   return full;
 }
