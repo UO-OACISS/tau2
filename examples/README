@@ -48,6 +48,14 @@ mixedmode	- This example illustrates the use of PDT, hand-instrumentation
 		  call wrapper library instrumentation. Requires configuring TAU
 		  with -mpiinc=<dir> -mpilib=<dir> -pdt=<dir> -pthread options.
 
+pdt_mpi         - This directory contains C, C++ and F90 examples that 
+		  illustrate how TAU/PDT can be used with MPI. You may need to 
+		  edit the Makefiles to remove the machine specific -lgm option
+		  that is added to the LIBS definition. Requires configuring TAU
+		  with -pdt=<dir> -mpiinc=<dir> -mpilib=<dir> options. You may 
+		  also try this with the -TRACE -epilog=<dir> options to use the
+		  EPILOG tracing package (from FZJ). 
+
 selective	- This example illustrates the use of PDT, and selective 
 		  profiling using profile groups in the tau_instrumentor. 
 		  Requires configuring TAU with -pdt=<dir> -fortran=<...> 
