@@ -11,9 +11,9 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.24 2003/08/25 17:32:15 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.25 2003/08/27 17:07:38 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
- * @version	%I%, %G%
+ * @version	0.1
  */
 public class PerfDBSession extends DataSession {
 
@@ -76,7 +76,7 @@ public class PerfDBSession extends DataSession {
 				app.setParaDiag(resultSet.getString(6));
 				app.setUsage(resultSet.getString(7));
 				app.setExecutableOptions(resultSet.getString(8));
-				app.setExperimentTableName(resultSet.getString(9));
+				// app.setExperimentTableName(resultSet.getString(9));
 				applications.addElement(app);
 	    	}
 			resultSet.close(); 
@@ -118,7 +118,7 @@ public class PerfDBSession extends DataSession {
 				exp.setConfigurationInfo(resultSet.getString(4));
 				exp.setInstrumentationInfo(resultSet.getString(5));
 				exp.setCompilerInfo(resultSet.getString(6));
-				exp.setTrialTableName(resultSet.getString(7));
+				// exp.setTrialTableName(resultSet.getString(7));
 				experiments.addElement(exp);
 	    	}
 			resultSet.close(); 
@@ -148,16 +148,16 @@ public class PerfDBSession extends DataSession {
 		return new DataSessionIterator(getTrialList(whereClause.toString()));
 	}
 
-	// returns Vector of Trial objects
+	// gets the metric data for the trial
 	private void getTrialMetrics(Trial trial) {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct m.name ");
+		buf.append("select distinct m.name, m.id ");
 		buf.append("from metric m ");
 		buf.append("inner join xml_file x on x.metric = m.id ");
 		buf.append("where x.trial = ");
 		buf.append(trial.getID());
-		buf.append(";");
+		buf.append(" order by m.id;");
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -375,7 +375,7 @@ public class PerfDBSession extends DataSession {
 				funMS.setNumCalls((int)(resultSet.getDouble(5)));
 				funMS.setNumSubroutines((int)(resultSet.getDouble(6)));
 				funMS.setInclusivePerCall(metricIndex, resultSet.getDouble(7));
-				function.setMeanSummary(funMS);
+				function.addMeanSummary(funMS);
 				// get the total summary data
 				funTS.setInclusivePercentage(metricIndex, resultSet.getDouble(9));
 				funTS.setInclusive(metricIndex, resultSet.getDouble(10));
@@ -384,8 +384,8 @@ public class PerfDBSession extends DataSession {
 				funTS.setNumCalls((int)(resultSet.getDouble(13)));
 				funTS.setNumSubroutines((int)(resultSet.getDouble(14)));
 				funTS.setInclusivePerCall(metricIndex, resultSet.getDouble(15));
+				function.addTotalSummary(funTS);
 	    	}
-			function.setTotalSummary(funTS);
 			resultSet.close(); 
 		}catch (Exception ex) {
 	    	ex.printStackTrace();
@@ -850,7 +850,7 @@ public class PerfDBSession extends DataSession {
 	    	ResultSet resultSet = db.executeQuery(buf.toString());	
 	    	while (resultSet.next() != false) {
 				UserEventDataObject ueDO = new UserEventDataObject();
-				ueDO.setUserEventIndexID(resultSet.getInt(2));
+				ueDO.setUserEventID(resultSet.getInt(2));
 				ueDO.setNode(resultSet.getInt(3));
 				ueDO.setContext(resultSet.getInt(4));
 				ueDO.setThread(resultSet.getInt(5));

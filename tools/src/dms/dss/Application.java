@@ -3,10 +3,17 @@ package dms.dss;
 /**
  * Holds all the data for an application in the database.  This 
  * object is returned by the DataSession object and all of its subtypes.
+ * The Application object contains all the information associated with
+ * an application from which the TAU performance data has been generated.
+ * An application has one or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.7 2003/08/11 07:41:41 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.8 2003/08/27 17:07:37 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
+ * @since 0.1
+ * @see		DataSession#getApplicationList
+ * @see		DataSession#setApplication
+ * @see		Experiment
  */
 public class Application {
 	private int applicationID;
@@ -91,17 +98,20 @@ public class Application {
 		return executableOptions;
 	}
 
-/**
- * Gets the experiment table name of the current application object.
- *
- * @return	the experiment table name of the application
- */
+/*
 	public String getExperimentTableName() {
 		return experimentTableName;
 	}
 
+	public void setExperimentTableName(String experimentTableName) {
+		this.experimentTableName = experimentTableName;
+	}
+ */
+
 /**
  * Sets the unique identifier of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
  *
  * @param	id a unique application identifier
  */
@@ -111,6 +121,8 @@ public class Application {
 
 /**
  * Sets the name of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
  *
  * @param	name the application name
  */
@@ -120,6 +132,8 @@ public class Application {
 
 /**
  * Sets the version of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
  *
  * @param	version the application version
  */
@@ -129,6 +143,8 @@ public class Application {
 
 /**
  * Sets the description of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
  *
  * @param	description the application description
  */
@@ -138,6 +154,8 @@ public class Application {
 
 /**
  * Sets the language of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
  *
  * @param	language the application language
  */
@@ -147,6 +165,8 @@ public class Application {
 
 /**
  * Sets the para diag of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
  *
  * @param	paraDiag the application para diag
  */
@@ -156,6 +176,8 @@ public class Application {
 
 /**
  * Sets the usage of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
  *
  * @param	usage the application usage
  */
@@ -165,20 +187,13 @@ public class Application {
 
 /**
  * Sets the executable options of the current application object.
+ * <i>Note: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
  *
  * @param	executableOptions the application executable options
  */
 	public void setExecutableOptions(String executableOptions) {
 		this.executableOptions = executableOptions;
-	}
-
-/**
- * Sets the experiment table name of the current application object.
- *
- * @param	experimentTableName the application experiment table name
- */
-	public void setExperimentTableName(String experimentTableName) {
-		this.experimentTableName = experimentTableName;
 	}
 }
 

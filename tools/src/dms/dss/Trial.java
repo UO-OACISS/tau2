@@ -4,10 +4,25 @@ import java.util.*;
 
 /**
  * Holds all the data for a trial in the database.
+ * This object is returned by the DataSession class and all of its subtypes.
+ * The Trial object contains all the information associated with
+ * an trial from which the TAU performance data has been generated.
+ * A trial is associated with one experiment and one application, and has one or more
+ * functions and/or user events associated with it.  A Trial has information
+ * related to the particular run, including the number of nodes used,
+ * the number of contexts per node, the number of threads per context
+ * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.6 2003/08/11 07:41:44 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.7 2003/08/27 17:07:39 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
- * @version	%I%, %G%
+ * @version	0.1
+ * @since	0.1
+ * @see		DataSession#getTrialList
+ * @see		DataSession#setTrial
+ * @see		Application
+ * @see		Experiment
+ * @see		Function
+ * @see		UserEvent
  */
 public class Trial {
 	private int trialID;
@@ -20,86 +35,205 @@ public class Trial {
 	private int threadsPerContext;
 	private Vector metric;
 
+/**
+ * Gets the unique identifier of the current trial object.
+ *
+ * @return	the unique identifier of the trial
+ */
+	public int getID () {
+		return trialID;
+	}
+
+/**
+ * Gets the unique identifier for the experiment associated with this trial.
+ *
+ * @return	the unique identifier of the experiment
+ */
+	public int getExperimentID () {
+		return experimentID;
+	}
+
+/**
+ * Gets the unique identifier for the application associated with this trial.
+ *
+ * @return	the unique identifier of the application
+ */
+	public int getApplicationID () {
+		return applicationID;
+	}
+
+/**
+ * Gets the time required to execute this trial.
+ *
+ * @return	time required to execute this trial.
+ */
+	public String getTime () {
+		return this.time;
+	}
+
+/**
+ * Gets the problem size for this trial.
+ *
+ * @return	problem size for this trial.
+ */
+	public int getProblemSize () {
+		return this.problemSize;
+	}
+
+/**
+ * Gets the node count for this trial.
+ *
+ * @return	node count for this trial.
+ */
+	public int getNodeCount () {
+		return this.nodeCount;
+	}
+
+/**
+ * Gets the context (per node) count for this trial.
+ *
+ * @return	context count for this trial.
+ */
+	public int getNumContextsPerNode () {
+		return this.contextsPerNode;
+	}
+
+/**
+ * Gets the thread (per context) count for this trial.
+ *
+ * @return	thread count for this trial.
+ */
+	public int getNumThreadsPerContext () {
+		return this.threadsPerContext;
+	}
+
+/**
+ * Gets the number of metrics collected in this trial.
+ *
+ * @return	metric count for this trial.
+ */
+	public int getMetricCount() {
+		return this.metric.size();
+	}
+
+/**
+ * Gets the metric at the particular index.
+ *
+ * @return	a metric name.
+ */
+	public String getMetric (int metricIndex) {
+		return (String)this.metric.elementAt(metricIndex);
+	}
+
+/**
+ * Sets the unique ID associated with this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	id unique ID associated with this trial
+ */
 	public void setID (int id) {
 		this.trialID = id;
 	}
 
-	public void setExperimentID (int id) {
-		this.experimentID = id;
+/**
+ * Sets the experiment ID associated with this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	experimentID experiment ID associated with this trial
+ */
+	public void setExperimentID (int experimentID) {
+		this.experimentID = experimentID;
 	}
 
-	public void setApplicationID (int id) {
-		this.applicationID = id;
+/**
+ * Sets the application ID associated with this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	applicationID application ID associated with this trial
+ */
+	public void setApplicationID (int applicationID) {
+		this.applicationID = applicationID;
 	}
 
-	public void setTime (String id) {
-		this.time = id;
+/**
+ * Sets the time to run this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	time execution time required to run this trial
+ */
+	public void setTime (String time) {
+		this.time = time;
 	}
 
-	public void setProblemSize (int id) {
-		this.problemSize = id;
+/**
+ * Sets the problem size for this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	problemSize problem size for this trial
+ */
+	public void setProblemSize (int problemSize) {
+		this.problemSize = problemSize;
 	}
 
-	public void setNodeCount (int id) {
-		this.nodeCount = id;
+/**
+ * Sets the node count for this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	nodeCount node count for this trial
+ */
+	public void setNodeCount (int nodeCount) {
+		this.nodeCount = nodeCount;
 	}
 
-	public void setNumContextsPerNode (int id) {
-		this.contextsPerNode = id;
+/**
+ * Sets the context (per node) count for this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	contextsPerNode context count for this trial
+ */
+	public void setNumContextsPerNode (int contextsPerNode) {
+		this.contextsPerNode = contextsPerNode;
 	}
 
-	public void setNumThreadsPerContext (int id) {
-		this.threadsPerContext = id;
+/**
+ * Sets the thread (per context) count for this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	threadsPerContext thread count for this trial
+ */
+	public void setNumThreadsPerContext (int threadsPerContext) {
+		this.threadsPerContext = threadsPerContext;
 	}
 
+/**
+ * Adds a metric to this trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ * @param	metric Adds a metric to this trial
+ */
 	public void addMetric (String metric) {
 		if (this.metric == null)
 			this.metric = new Vector();
 		this.metric.addElement (metric);
 	}
 
+/**
+ * Clears the metric vector in the trial.
+ * <i> NOTE: This method is used by the DataSession object to initialize
+ * the object.  Not currently intended for use by any other code.</i>
+ *
+ */
 	public void clearMetric() {
 		this.metric = null;
 	}
 
-	public int getID () {
-		return trialID;
-	}
-
-	public int getExperimentID () {
-		return experimentID;
-	}
-
-	public int getApplicationID () {
-		return applicationID;
-	}
-
-	public String getTime () {
-		return this.time;
-	}
-
-	public int getProblemSize () {
-		return this.problemSize;
-	}
-
-	public int getNodeCount () {
-		return this.nodeCount;
-	}
-
-	public int getNumContextsPerNode () {
-		return this.contextsPerNode;
-	}
-
-	public int getNumThreadsPerContext () {
-		return this.threadsPerContext;
-	}
-
-	public int getMetricCount() {
-		return this.metric.size();
-	}
-
-	public String getMetric (int metricIndex) {
-		return (String)this.metric.elementAt(metricIndex);
-	}
 }
-

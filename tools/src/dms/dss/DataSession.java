@@ -6,9 +6,10 @@ import dms.dss.*;
 /**
  * This is the top level class for the API.
  *
- * <P>CVS $Id: DataSession.java,v 1.13 2003/08/25 18:30:28 khuck Exp $</P>
+ * <P>CVS $Id: DataSession.java,v 1.14 2003/08/27 17:07:37 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
- * @version	%I%, %G%
+ * @version	0.1
+ * @since	0.1
  */
 public abstract class DataSession {
 	protected Application application = null;

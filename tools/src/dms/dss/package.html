@@ -3,44 +3,57 @@
 <head>
 <!--
 
-  @(#)package.html	1.60 98/01/27
-
-  Copyright 1998 Sun Microsystems, Inc. 901 San Antonio Road, 
-  Palo Alto, California, 94303, U.S.A.  All Rights Reserved.
-
-  This software is the confidential and proprietary information of Sun
-  Microsystems, Inc. ("Confidential Information").  You shall not
-  disclose such Confidential Information and shall use it only in
-  accordance with the terms of the license agreement you entered into
-  with Sun.
-
-  CopyrightVersion 1.2
+  $Id: package.html,v 1.2 2003/08/27 17:07:40 khuck Exp $
 
 -->
 </head>
 <body bgcolor="white">
 
-##### THIS IS THE TEMPLATE FOR THE PACKAGE DOC COMMENTS. #####
-##### TYPE YOUR PACKAGE COMMENTS HERE.  BEGIN WITH A     #####
-##### ONE-SENTENCE SUMMARY STARTING WITH A VERB LIKE:    #####
-Provides for.... 
+Provides an API for access to TAU performance data.
+
+<p>
+The DMS package provides access to the TAU data in three forms:  
+PerfDB database, pprof.dat files, and streaming TAU data.  The user
+is expected to create an instance of a DataSession object, and refer
+to all data through the public methods of the DataSession object.
+</p>
+<p>
+The DataSession object can return one of several data objects, including
+Application, Experiment, Trial, Function, FunctionDataObject, UserEvent 
+and UserEventDataObject.
+</p>
 
 
 <h2>Package Specification</h2>
 
-##### FILL IN ANY SPECS NEEDED BY JAVA COMPATIBILITY KIT #####
+N/A
+<!--
 <ul>
   <li><a href="">##### REFER TO ANY FRAMEMAKER SPECIFICATION HERE #####</a>
 </ul>
+-->
 
 <h2>Related Documentation</h2>
 
 For overviews, tutorials, examples, guides, and tool documentation, please see:
 <ul>
-  <li><a href="">##### REFER TO NON-SPEC DOCUMENTATION HERE #####</a>
+  <li><a href="../../../examples/TestPerfDBSession.java">TestPerfDBSession.java</a>
+  <li><a href="../../../examples/SimpleExample.java">SimpleExample.java</a>
 </ul>
 
 <!-- Put @see and @since tags down here. -->
+@see dms.dss.Application
+@see dms.dss.DataSession
+@see dms.dss.DataSessionException
+@see dms.dss.DataSessionIterator
+@see dms.dss.Experiment
+@see dms.dss.Function
+@see dms.dss.FunctionDataObject
+@see dms.dss.PerfDBSession
+@see dms.dss.Trial
+@see dms.dss.UserEvent
+@see dms.dss.UserEventDataObject
+@since 0.1
 
 </body>
 </html>

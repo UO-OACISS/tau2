@@ -6,12 +6,25 @@ import dms.dss.*;
 /**
  * Description: Implements the standard list interface.
  *
- * <P>CVS $Id: DataSessionIterator.java,v 1.4 2003/08/01 21:38:22 khuck Exp $</P>
+ * We maintain the concept of the ListIterator.  That is, there is no
+ * current element. The index member variable is treated as lying between elements.
+ * Rather than actually doing this, the index below represents the next
+ * element. Thus when we call next(), we return the element at index
+ * BEFORE we increment. A call to previous returns the element at index
+ * AFTER decrementing index. Thus, alternating calls to next and previous
+ * return the same element. As required by the ListIterator specification.
+ *
+ * <P>CVS $Id: DataSessionIterator.java,v 1.5 2003/08/27 17:07:38 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
- * @version	%I%, %G%
+ * @version	0.1
  */
 public class DataSessionIterator implements ListIterator{
 
+/**
+ * Standard Constructor for the DataSessionIterator class.
+ *
+ * @param	inVector Vector object to be converted to an Iterator
+ */
 		public DataSessionIterator(Vector inVector){
 				
 				//Check to make sure that the Vector is not null.
@@ -103,11 +116,19 @@ public class DataSessionIterator implements ListIterator{
 		//Methods in addition to the standard ListIterator.
 
 		//Resets the Iterator to its initial state.
+/**
+ * Resets the Iterator to its initial state.
+ *
+ */
 		public void reset(){
 				index = 0;
 		}
 
-		//Gives the number of elements this iterator maintains.
+/**
+ * Gives the number of elements this iterator maintains.
+ *
+ * @return int number of elements in the iterator.
+ */
 		public int size(){
 				return size;
 		}
@@ -115,13 +136,5 @@ public class DataSessionIterator implements ListIterator{
 
 		private Vector listData = null;
 		private int size = 0;
-		
-		//We maintain the concept of the ListIterator.  That is, there is no
-		//current element. The index is treated as lying between elements.
-		//Rather than actually doing this, the index below represents the next
-		//element. Thus when we call next(), we return the element at index
-		//BEFORE we increment. A call to previous returns the element at index
-		//AFTER decrementing index. Thus, alternating calls to next and previous
-		//return the same element. As required by the ListIterator specification.
 		private int index = 0;
 }
