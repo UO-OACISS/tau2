@@ -48,6 +48,7 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
   //PCl init stuff.
   static int PCL_CounterList[1] = {0};
   static unsigned int PCL_Mode = PCL_MODE_USER;
+  static PCL_DESCR_TYPE descr;
   PCL_CNT_TYPE ResultsList[1];
   PCL_FP_CNT_TYPE FpResultsList[1];
   int Result;
@@ -63,6 +64,13 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
   
   if(!RunBefore)
     {
+      //Call PCLinit.
+      if(PCLinit(&descr) != PCL_SUCCESS)
+	{
+	  cout << "unable to allocate PCL handle" << endl;
+	  return;
+	}
+
       //Initializing the static thread list.
       for(int i=0;i<TAU_MAX_THREADS;i++)
 	ThreadList[i] = NULL;
@@ -90,7 +98,7 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 	}
 
       //Check if this is possible on this machine!
-      if(PCLquery(PCL_CounterList, 1, PCL_Mode) != PCL_SUCCESS)
+      if(PCLquery(descr, PCL_CounterList, 1, PCL_Mode) != PCL_SUCCESS)
 	{
 	  cout << "Requested events not possible" << endl;
 	  if((pthread_mutex_unlock(&lock) != 0))
@@ -142,7 +150,7 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 	   cout << "There was a problem locking or unlocking a resource" << endl;
 	   return -1;
 	 }
-      Result = PCLstart(PCL_CounterList, 1, PCL_Mode);
+      Result = PCLstart(descr, PCL_CounterList, 1, PCL_Mode);
       if((pthread_mutex_unlock(&lock) != 0))
 	 {
 	   cout << "There was a problem locking or unlocking a resource" << endl;
@@ -173,7 +181,7 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
        return -1;
      }
 
-  if( PCLread(&ResultsList[0], &FpResultsList[0], 1) != PCL_SUCCESS)
+  if( PCLread(descr, &ResultsList[0], &FpResultsList[0], 1) != PCL_SUCCESS)
     {
       cout << "There were problems reading the counters" << endl;
       if((pthread_mutex_unlock(&lock) != 0))
@@ -224,6 +232,7 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
   //PCl init stuff.
   static int PCL_CounterList[1] = {0};
   static unsigned int PCL_Mode = PCL_MODE_USER;
+  static PCL_DESCR_TYPE descr;
   PCL_CNT_TYPE ResultsList[1];
   PCL_FP_CNT_TYPE FpResultsList[1];
   int Result;
@@ -233,12 +242,21 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
   //******************************************
   if(!RunBefore)
     {
+      //Call PCLinit.
+      if(PCLinit(&descr) != PCL_SUCCESS)
+	{
+	  cout << "unable to allocate PCL handle" << endl;
+	  return;
+	}
+
       //Initializing the static thread list.
       for(int i=0;i<TAU_MAX_THREADS;i++)
 	ThreadList[i] = NULL;
 
+
       char * EnvironmentVariable = NULL;
       EnvironmentVariable = getenv("PCL_EVENT");
+
       if(EnvironmentVariable != NULL)
 	{
 	  PCL_CounterList[0] = map_eventnames(EnvironmentVariable); 
@@ -254,9 +272,8 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
 	  return -1;
 	}
 
-
       //Check if this is possible on this machine!
-      if(PCLquery(PCL_CounterList, 1, PCL_Mode) != PCL_SUCCESS)
+      if(PCLquery(descr, PCL_CounterList, 1, PCL_Mode) != PCL_SUCCESS)
 	{
 	  cout << "Requested events not possible" << endl;
 	  return -1;
@@ -293,7 +310,7 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
       //cout << "New thread added to the thread list." << endl;
 
       //Starting the counter.
-      Result = PCLstart(PCL_CounterList, 1, PCL_Mode);
+      Result = PCLstart(descr, PCL_CounterList, 1, PCL_Mode);
 
       if(Result != PCL_SUCCESS)
 	{
@@ -313,7 +330,7 @@ PCL_FP_CNT_TYPE PCL_Layer::getCounters(int tid)
   //Reading the performance counters and
   //outputting the counter values.
   //*****************************************
-  if( PCLread(&ResultsList[0], &FpResultsList[0], 1) != PCL_SUCCESS)
+  if( PCLread(descr, &ResultsList[0], &FpResultsList[0], 1) != PCL_SUCCESS)
     {
       cout << "There were problems reading the counters" << endl;
       return -1;
