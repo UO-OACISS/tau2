@@ -305,6 +305,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #GNU#TAU_CXXLIBS		= -lstdc++ -lgcc_s #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
 
+TAU_SGI_INIT = /usr/lib32/c++init.o 
 #ENABLE64BIT#TAU_SGI_INIT  = /usr/lib64/c++init.o #ENDIF#
 #ENABLEN32BIT#TAU_SGI_INIT = /usr/lib32/c++init.o #ENDIF#
 #ENABLE32BIT#TAU_SGI_INIT  = /usr/lib/c++init.o   #ENDIF#
