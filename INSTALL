@@ -371,9 +371,9 @@ III) Software Requirements :
     % setenv PDTDIR	    /usr/local/packages/pdtoolkit-1.0
     % setenv SMARTSDIR  /usr/local/packages/smarts-1.0
     [FOR SGI]
-    % ./configure --arch SGI64KCC --suite PP --parallel --profile --opt
+    % ./configure --arch SGI64KCC --suite PP --parallel --profile --opt --ex
     [FOR LINUX PCs]
-    % ./configure --arch LINUXKCC --suite PP --parallel --profile --opt
+    % ./configure --arch LINUXKCC --suite PP --parallel --profile --opt --ex
     % setenv SUITE PP
     % make
     % cd examples/Solvers/SimpleJacobi
