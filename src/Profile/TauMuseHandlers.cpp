@@ -158,7 +158,7 @@ int CreateProcessSchedulingEncode(char *ascii_command, int size, char *binary_co
 
 	strncpy(temp, ascii_command, MAX_ARGLEN);
 	arg = strtok(temp, " ");
-	printf("ARG:%s\n",arg);
+	/* printf("ARG:%s\n",arg); */
 	if (arg)
 	{
 
