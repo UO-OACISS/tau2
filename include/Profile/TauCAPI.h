@@ -63,7 +63,9 @@
 #define TAU_PROFILE_SET_CONTEXT(context)	Tau_set_context(context);
 #define TAU_PROFILE_CALLSTACK()			Tau_callstack();
 #define TAU_DB_DUMP()                           Tau_dump();
+#define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
 #define TAU_DB_PURGE()                          Tau_purge();
+#define TAU_GET_FUNC_NAMES(functionList, num)   Tau_the_function_list(functionList, num);
 
 /*
 #define TAU_REGISTER_EVENT(event, name)	static int tauuser##event = 1;\
@@ -115,7 +117,9 @@ extern void Tau_set_node(int node);
 extern void Tau_set_context(int context);
 extern void Tau_callstack(void);
 extern int Tau_dump(void);
+extern int Tau_dump_incr(void);
 extern void Tau_purge(void);
+extern void Tau_theFunctionList(const char **functionList, int num);
 extern void Tau_register_thread();
 extern void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 extern void * Tau_get_userevent(char *name);
@@ -151,7 +155,9 @@ extern TauGroup_t Tau_get_profile_group(char *group);
 #define TAU_PROFILE_SET_CONTEXT(context)
 #define TAU_PROFILE_CALLSTACK()
 #define TAU_DB_DUMP()
+#define TAU_DB_DUMP_INCR()
 #define TAU_DB_PURGE()
+#define TAU_GET_FUNC_NAMES(functionList, num)
 
 #define TAU_REGISTER_EVENT(event, name)
 #define TAU_EVENT(event, data)
@@ -192,8 +198,8 @@ extern TauGroup_t Tau_get_profile_group(char *group);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2002/01/15 22:27:42 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.16 2002/01/15 22:27:42 sameer Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: bertie $
+ * $Revision: 1.17 $   $Date: 2002/04/03 18:04:30 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.17 2002/04/03 18:04:30 bertie Exp $
  ***************************************************************************/
 

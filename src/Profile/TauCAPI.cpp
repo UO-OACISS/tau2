@@ -141,10 +141,23 @@ extern "C" int Tau_dump(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_dump_incr(void)
+{
+  return TAU_DB_DUMP_INCR();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_purge(void)
 {
   TAU_DB_PURGE();
 }
+
+extern "C" void Tau_the_function_list(const char **functionList, int num)
+{
+  TAU_GET_FUNC_NAMES(functionList, num);
+}
+  
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_register_thread(void)
@@ -319,8 +332,8 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2002/01/30 22:26:02 $
- * VERSION: $Id: TauCAPI.cpp,v 1.23 2002/01/30 22:26:02 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: bertie $
+ * $Revision: 1.24 $   $Date: 2002/04/03 18:02:54 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.24 2002/04/03 18:02:54 bertie Exp $
  ***************************************************************************/
 
