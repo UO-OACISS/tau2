@@ -96,7 +96,7 @@ static PCXX_EV *get_next_rec(struct trcdescr *tdes)
         /* -- no more event record: ----------------------------------------- */
         close (tdes->fd);
         tdes->fd = -1;
-        return (NULL);
+        return ( (PCXX_EV *) NULL);
       }
       else if ( (no % sizeof(PCXX_EV)) != 0 )
       {
@@ -255,9 +255,9 @@ int main(int argc, char *argv[])
     {
       trcdes[numtrc].name      = argv[i];
       trcdes[numtrc].buffer    = (PCXX_EV *) malloc (INMAX * sizeof(PCXX_EV));
-      trcdes[numtrc].erec      = NULL;
-      trcdes[numtrc].next      = NULL;
-      trcdes[numtrc].last      = NULL;
+      trcdes[numtrc].erec      = (PCXX_EV *) NULL;
+      trcdes[numtrc].next      = (PCXX_EV *) NULL;
+      trcdes[numtrc].last      = (PCXX_EV *) NULL;
       trcdes[numtrc].overflows = 0;
 
       /* -- read first event record ----------------------------------------- */

@@ -34,8 +34,13 @@
 
 # define F_EXISTS    0
 
+#ifdef TAU_DOT_H_LESS_HEADERS 
+#include <vector>
+#include <map>
+#else /* TAU_DOT_H_LESS_HEADERS */
 # include <vector.h>
 # include <map.h>
+#endif /*  TAU_DOT_H_LESS_HEADERS */
 #ifdef KAI
 using namespace std;
 #endif /* KAI*/ 

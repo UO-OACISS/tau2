@@ -24,7 +24,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/home/users/sameer/tau2
 XFORMSROOT=/local/apps/xforms/FORMS
 #######################################################################
  

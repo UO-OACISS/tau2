@@ -37,12 +37,18 @@
 
 # include <errno.h>
 # include <string.h>
+#ifdef TAU_DOT_H_LESS_HEADERS 
+# include <iostream>
+# include <map>
+// using namespace std;
+#else 
 # include <iostream.h>
+# include <map.h>
+#endif /* TAU_DOT_H_LESS_HEADERS */
 # include <stdlib.h>
 # include <unistd.h>
 # include <string.h>
 # include <fcntl.h>
-# include <map.h>
 # include <limits.h>
 # ifndef GNU
 # include <math.h>
@@ -2919,7 +2925,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 1998/09/22 01:15:01 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.13 1998/09/22 01:15:01 sameer Exp $                                                   
+ * $Revision: 1.14 $   $Date: 1999/06/20 17:38:05 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.14 1999/06/20 17:38:05 sameer Exp $                                                   
  ***************************************************************************/
 

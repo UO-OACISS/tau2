@@ -103,7 +103,7 @@ static void InitEvent (int numev)
   int i;
 
   evtable = (EVDESCR **) malloc (numev * sizeof(EVDESCR));
-  for (i=0; i<numev; i++) evtable[i] = NULL;
+  for (i=0; i<numev; i++) evtable[i] = (EVDESCR *) NULL;
   evno     = 1;
   numEvent = numev;
   numUsedEvent = 0;
@@ -385,7 +385,7 @@ static PCXX_EV *get_next_rec (struct trcdescr *tdes)
         /* -- no more event record: ----------------------------------------- */
         close (tdes->fd);
         tdes->fd = -1;
-        return (NULL);
+        return ((PCXX_EV *) NULL);
       }
       else if ( (no % sizeof(PCXX_EV)) != 0 )
       {
@@ -506,7 +506,7 @@ int main (int argc, char *argv[])
   inFile  = argv[fileIdx];
   edfFile = argv[fileIdx+1];
   if ( (fileIdx+2) == argc )
-    outFile = NULL;
+    outFile = (char *) NULL;
   else
     outFile = argv[fileIdx+2];
 
@@ -522,9 +522,9 @@ int main (int argc, char *argv[])
   {
     intrc.name      = inFile;
     intrc.buffer    = (PCXX_EV *) malloc (INMAX * sizeof(PCXX_EV));
-    intrc.erec      = NULL;
-    intrc.next      = NULL;
-    intrc.last      = NULL;
+    intrc.erec      = (PCXX_EV *) NULL;
+    intrc.next      = (PCXX_EV *) NULL;
+    intrc.last      = (PCXX_EV *) NULL;
     intrc.overflows = 0;
 
     /* -- read first event record ------------------------------------------- */
@@ -771,9 +771,9 @@ int main (int argc, char *argv[])
   }
   else
   {
-    intrc.erec      = NULL;
-    intrc.next      = NULL;
-    intrc.last      = NULL;
+    intrc.erec      = (PCXX_EV *) NULL;
+    intrc.next      = (PCXX_EV *) NULL;
+    intrc.last      = (PCXX_EV *) NULL;
     intrc.overflows = 0;
     intrc.numrec    = 1;
 
