@@ -78,6 +78,7 @@ LSX = .a
 #GNU#PROFILEOPT10              =             #ENDIF#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI1.7#PROFILEOPT12	       = -DPGI 		       #ENDIF#
+#CRAYKAI#PROFILEOPT12	       = -DCRAYKAI	       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used   #ENDIF#
 #SGICC##PROFILEOPT14	       = -ptused 	       #ENDIF#
 #PTHREAD_AVAILABLE#PROFILEOPT15 = -DPTHREADS  	       #ENDIF#
