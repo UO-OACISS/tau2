@@ -11,5 +11,5 @@ SOURCE	= \
 
 MAIN	= Translator
 
-include ${PERFDB_HOME}/make/Makefile
+include ${PERFDB_HOME}/Makefile
 

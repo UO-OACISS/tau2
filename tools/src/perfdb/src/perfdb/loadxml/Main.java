@@ -1,18 +1,32 @@
 package perfdb.loadxml;
 
-import perfdb.util.dbinterface.*;
-import perfdb.util.io.*;
-import perfdb.dbmanager.*;
-import java.io.*;
-import java.net.*;
-import java.sql.*;
+import jargs.gnu.CmdLineParser;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.sql.SQLException;
+
+import perfdb.dbmanager.ExpPartitionManager;
+import perfdb.dbmanager.FunPartitionManager;
+import perfdb.dbmanager.LocPartitionManager;
+import perfdb.dbmanager.MeanPartitionManager;
+import perfdb.dbmanager.PprofPartitionManager;
+import perfdb.dbmanager.TotalPartitionManager;
+import perfdb.dbmanager.TrialPartitionManager;
+import perfdb.util.dbinterface.DB;
 
 public class Main {
     private Load load = null;
     private DB db = null;
     
     private static String USAGE = 
-        "Main configfilename \n  (help | loadschema <schemafile> \n        | loadtrial <pprof.xml> <trial id> \n        | loadapp <App_Info.xml> \n        | loadexp <application id> <Sys_info.xml> <Config_info.xml> <Compiler_info.xml> <Instru_info.xml>)";
+        "USAGE: Main [{-h,--help}] [{-g,--configfile} filename] \n"
+		+ "    [{-c,--command} loadschema] [{-s,--schemafile} filename] \n"
+		+ "  | [{-c,--command} loadapp] [{-x,--xmlfile} filename] \n"
+		+ "  | [{-c,--command} loadexp] [{-a,--applicationid} value] [{-s,--systeminfo} filename] [{-n,--configinfo} filename] [{-m,--compilerinfo} filename] [{-i,--instrumentationinfo} filename]) \n"
+		+ "  | [{-c,--command} loadtrial] [{-x,--xmlfile} filename] [{-t,--trialid] trial id] \n";
 
     // These two flags determines whether to store an app. or exp. separately. 
     private int enable_AppPartition=0;
@@ -390,57 +404,88 @@ public class Main {
     /*** Beginning of main program. ***/
 
     public static void main(java.lang.String[] args) {
-	
-	if (args.length == 0) {
-	    System.err.println(USAGE);
-	    System.exit(-1);
+        CmdLineParser parser = new CmdLineParser();
+        CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
+        CmdLineParser.Option commandOpt = parser.addStringOption('c', "command");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option xmlfileOpt = parser.addStringOption('x', "xmlfile");
+        CmdLineParser.Option trialidOpt = parser.addStringOption('t', "trialid");
+        CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
+        CmdLineParser.Option schemafileOpt = parser.addStringOption('s', "schemafile");
+        CmdLineParser.Option compilerinfoOpt = parser.addStringOption('m', "compilerinfo");
+        CmdLineParser.Option systeminfoOpt = parser.addStringOption('y', "systeminfo");
+        CmdLineParser.Option configinfoOpt = parser.addStringOption('f', "configinfo");
+        CmdLineParser.Option instrumentationinfoOpt = parser.addStringOption('i', "instrumentationinfo");
+
+        try {
+            parser.parse(args);
+        }
+        catch ( CmdLineParser.OptionException e ) {
+            System.err.println(e.getMessage());
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
         }
 
-	int ctr = 0;
-	String command;	
-	
+        Boolean help = (Boolean)parser.getOptionValue(helpOpt);
+        String command = (String)parser.getOptionValue(commandOpt);
+        String configFile = (String)parser.getOptionValue(configfileOpt);
+        String xmlFile = (String)parser.getOptionValue(xmlfileOpt);
+        String trialID = (String)parser.getOptionValue(trialidOpt);
+        String applicationID = (String)parser.getOptionValue(applicationidOpt);
+        String schemaFile = (String)parser.getOptionValue(schemafileOpt);
+        String compilerInfo = (String)parser.getOptionValue(compilerinfoOpt);
+        String systemInfo = (String)parser.getOptionValue(systeminfoOpt);
+        String configInfo = (String)parser.getOptionValue(configinfoOpt);
+        String instrumentationInfo = (String)parser.getOptionValue(instrumentationinfoOpt);
+
+    	if (help != null && help.booleanValue()) {
+			System.err.println(USAGE);
+	    	System.exit(-1);
+    	}
+
+		if (command == null) {
+            System.err.println("Please enter a valid command.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
+		}
+
+		if (configFile == null) {
+            System.err.println("Please enter a valid config file.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
+		}
+
 	// create a new Main object, pass in the configuration file name
-	Main demo = new Main(args[ctr++]);
-	demo.getConnector().connect();
+		Main demo = new Main(configFile);
+		demo.getConnector().connect();
 
-	int exitval = 0;
+		int exitval = 0;
 	
-	while (ctr < args.length) {
-	    command = args[ctr++];
-	    if (command.equalsIgnoreCase("HELP")) {
-		System.err.println(USAGE);
-		continue;
-	    }
-	    /***** Load database schema to establish PerfDB, invoke at most one time. ******/
-	    if (command.equalsIgnoreCase("LOADSCHEMA")) {
-		demo.getConnector().genParentSchema(args[ctr++]);
-		continue;
-	    }
-	    /***** Load appliation into PerfDB *********/
-	    if (command.equalsIgnoreCase("LOADAPP")) {
-		String appid = demo.storeApp(args[ctr++]);
-		if (appid != null)
-			exitval = Integer.parseInt(appid);
-		// continue;
-	    }
-	    /***** Load experiment into PerfDB ********/
-	    if (command.equalsIgnoreCase("LOADEXP")) {
-		String expid = demo.storeExp(args[ctr], args[ctr+1], args[ctr+2], args[ctr+3], args[ctr+4]);
-		if (expid != null)
-			exitval = Integer.parseInt(expid);
-		// continue;
-	    }
-	    /***** Load a trial into PerfDB *********/
-	    if (command.equalsIgnoreCase("LOADXML") || command.equalsIgnoreCase("LOADTRIAL")) {
-		String trialid = demo.storeDocument(args[ctr], args[ctr+1]);
-		if (trialid != null)
-			exitval = Integer.parseInt(trialid);
-		// continue;
-	    }
-	}
+    	/***** Load database schema to establish PerfDB, invoke at most one time. ******/
+		if (command.equalsIgnoreCase("LOADSCHEMA")) {
+			demo.getConnector().genParentSchema(schemaFile);
+    	}
+    	/***** Load appliation into PerfDB *********/
+		else if (command.equalsIgnoreCase("LOADAPP")) {
+			String appid = demo.storeApp(xmlFile);
+			if (appid != null)
+				exitval = Integer.parseInt(appid);
+    	}
+    	/***** Load experiment into PerfDB ********/
+		else if (command.equalsIgnoreCase("LOADEXP")) {
+			String expid = demo.storeExp(applicationID, systemInfo, configInfo, compilerInfo, instrumentationInfo);
+			if (expid != null)
+				exitval = Integer.parseInt(expid);
+    	}
+    	/***** Load a trial into PerfDB *********/
+		else if (command.equalsIgnoreCase("LOADXML") || command.equalsIgnoreCase("LOADTRIAL")) {
+			String trialid = demo.storeDocument(xmlFile, trialID);
+			if (trialid != null)
+				exitval = Integer.parseInt(trialid);
+    	}
 
-	demo.getConnector().dbclose();
-	System.exit(exitval);
+		demo.getConnector().dbclose();
+		System.exit(exitval);
     }
 
 }

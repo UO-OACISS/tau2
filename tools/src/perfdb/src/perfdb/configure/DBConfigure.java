@@ -4,15 +4,30 @@
   Description: A GUI wrapper around Kevin's configure program.
 */
 
+package perfdb.configure;
 
-import java.util.*;
-import java.lang.*;
-import java.io.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.event.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
 
 public class DBConfigure extends JFrame implements ActionListener
 {
@@ -498,7 +513,7 @@ public class DBConfigure extends JFrame implements ActionListener
 		System.out.println("dBPortNum: " + dBPortNum.getText().trim());
 		System.out.println("dBName: " + dBName.getText().trim());
 		System.out.println("dBUsername: " + dBUsername.getText().trim());
-		System.out.println("dBPassword: " + dBPassword.getText().trim());
+		System.out.println("dBPassword: " + new String(dBPassword.getPassword()));
 		System.out.println("dBSchemaFile: " + dBSchemaFile.getText().trim());
 		System.out.println("dBSchemaFile: " + dBSchemaFile.getText().trim());
 		System.out.println("xMLPaser: " + xMLPaser.getText().trim());

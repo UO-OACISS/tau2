@@ -1,7 +1,8 @@
 package translator;
 
-import java.util.*;
-import java.io.*;
+import java.io.Serializable;
+import java.util.Enumeration;
+import java.util.Vector;
 
 
 public class GlobalNode implements Serializable 

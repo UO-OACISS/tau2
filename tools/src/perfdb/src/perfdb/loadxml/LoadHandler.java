@@ -1,14 +1,17 @@
 package perfdb.loadxml;
 
-import perfdb.util.dbinterface.*;
-import perfdb.dbmanager.*;
-import org.xml.sax.*;
-import org.xml.sax.helpers.*;
-import java.util.*;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-import java.lang.*;
-import java.sql.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import perfdb.util.dbinterface.DB;
 
 /*** SAX Handler which creates SQL to load a document into the database. ***/
 

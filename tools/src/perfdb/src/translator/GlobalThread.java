@@ -1,7 +1,7 @@
 package translator;
 
-import java.util.*;
-import java.io.*;
+import java.io.Serializable;
+import java.util.Vector;
 
 public class GlobalThread implements Serializable 
 {

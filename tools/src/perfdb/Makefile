@@ -9,11 +9,12 @@ PACKAGES = \
 	perfdb.configure \
 
 JARS = \
-	perfdb.jar  \
+	perfdb.jar \
 
 JARS_3RDPARTY = \
+	jargs.jar  \
 	xerces.jar  \
-	postgresql.jar  \
+	postgresql.jar \
 
 MAIN_JAR     = perfdb.jar
 

@@ -1,11 +1,15 @@
 package perfdb.configure;
 
-import perfdb.util.dbinterface.*;
-import perfdb.util.io.*;
-import perfdb.dbmanager.*;
-import java.io.*;
-import java.net.*;
-import java.sql.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import perfdb.util.dbinterface.DB;
+import perfdb.util.dbinterface.ParseConfig;
 
 public class Configure {
     private DB db = null;

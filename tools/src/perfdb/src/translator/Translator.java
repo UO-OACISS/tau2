@@ -1,8 +1,19 @@
 package translator;
 
-import java.io.*;
-import java.util.*;
-import java.net.*;
+import jargs.gnu.CmdLineParser;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.io.Serializable;
+import java.net.InetAddress;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 public class Translator implements Serializable{
 
@@ -2539,23 +2550,48 @@ public class Translator implements Serializable{
 	//******************************
 
     static public void main(String[] args){
-	String USAGE = "USAGE: Translator configfilename sourcefilename destinationname [problem_size] [application_id] [experiment_id]";
-	if (args.length == 0) {
-                System.err.println(USAGE);
-                System.exit(-1);
+		String USAGE = "USAGE: Translator [{-g,--configfile} configfilename] [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-p,--problemsize} problem_size] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id]";
+
+        CmdLineParser parser = new CmdLineParser();
+        CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option sourcefileOpt = parser.addStringOption('s', "sourcefile");
+        CmdLineParser.Option destinationfileOpt = parser.addStringOption('d', "destinationfile");
+        CmdLineParser.Option problemsizeOpt = parser.addStringOption('p', "problemsize");
+        CmdLineParser.Option experimentidOpt = parser.addStringOption('e', "experimentid");
+        CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
+
+        try {
+            parser.parse(args);
+        }
+        catch ( CmdLineParser.OptionException e ) {
+            System.err.println(e.getMessage());
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
         }
 
-	Translator trans = new Translator(args[0], args[1], args[2]);
-	trans.buildPprof(); 
-	int ctr = 3;
-	String problemSize = null, appid = null, expid = null;
-	if (ctr < args.length)
-		problemSize = args[ctr++];
-	if (ctr < args.length)
-		appid = args[ctr++];
-	if (ctr < args.length)
-		expid = args[ctr++];
-	trans.writeXmlFiles(problemSize, appid, expid);
-	System.out.println("Done - Translating pprof.dat into pprof.xml!");
+        Boolean help = (Boolean)parser.getOptionValue(helpOpt);
+        String configFile = (String)parser.getOptionValue(configfileOpt);
+        String sourceFile = (String)parser.getOptionValue(sourcefileOpt);
+        String destinationFile = (String)parser.getOptionValue(destinationfileOpt);
+        String problemSize = (String)parser.getOptionValue(problemsizeOpt);
+        String applicationID = (String)parser.getOptionValue(applicationidOpt);
+        String experimentID = (String)parser.getOptionValue(experimentidOpt);
+
+    	if (help != null && help.booleanValue()) {
+			System.err.println(USAGE);
+	    	System.exit(-1);
+    	}
+
+		if (configFile == null) {
+            System.err.println("Please enter a valid config file.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
+		}
+
+		Translator trans = new Translator(configFile, sourceFile, destinationFile);
+		trans.buildPprof(); 
+		trans.writeXmlFiles(problemSize, applicationID, experimentID);
+		System.out.println("Done - Translating pprof.dat into pprof.xml!");
     }
 } 

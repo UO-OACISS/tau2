@@ -1,7 +1,5 @@
 package perfdb.configure;
 
-import java.io.*;
-
 /**
  * This class attempts to erase characters echoed to the console.
  */
@@ -27,7 +25,7 @@ class MaskingThread extends Thread {
       while(!stop) {
          try {
             // attempt masking at this rate
-            this.sleep(1);
+            Thread.sleep(1);
          }catch (InterruptedException iex) {
             iex.printStackTrace();
          }

@@ -3,8 +3,9 @@
 PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
 XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
 JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
+JARGS_JAR=${PERFDB_HOME}/jars/jargs.jar
 
 #Translate pprof.dat into pprof.xml
 date
-java -Xmx200m -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} translator.Translator ${PERFDB_HOME}/data/perfdb.cfg ${PERFDB_HOME}/data/pprof.dat ${PERFDB_HOME}/data/pprof.xml 250 1 1
+java -Xmx200m -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} translator.Translator -g ${PERFDB_HOME}/data/perfdb.cfg -s ${PERFDB_HOME}/data/pprof.dat -d ${PERFDB_HOME}/data/pprof.xml -p 250 -a 1 -e 1
 date

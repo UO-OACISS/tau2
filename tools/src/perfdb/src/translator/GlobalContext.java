@@ -1,7 +1,7 @@
 package translator;
 
-import java.util.*;
-import java.io.*;
+import java.io.Serializable;
+import java.util.Vector;
 
 
 //Instance of this class are really only meant for the ServCon class to

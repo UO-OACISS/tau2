@@ -3,5 +3,11 @@
 PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
 XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
 JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
+JARGS_JAR=${PERFDB_HOME}/jars/jargs.jar
 
-java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadschema ${PERFDB_HOME}/data/dbschema.txt
+java \
+-cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
+perfdb.loadxml.Main \
+-c loadschema \
+-g ${PERFDB_HOME}/data/perfdb.cfg \
+-s ${PERFDB_HOME}/data/dbschema.txt

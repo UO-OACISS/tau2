@@ -1,11 +1,18 @@
 package perfdb.loadxml;
 
-import perfdb.util.dbinterface.*;
-import java.sql.*;
-import org.xml.sax.*; 
-import org.xml.sax.helpers.*; 
-import org.w3c.dom.Document;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
+
+import perfdb.util.dbinterface.DB;
 
 /** For applications or experiments, Load checks if there is a duplicate, 
     if so, reject loading. Otherwise, load them into database.  For trials, 

@@ -1,6 +1,6 @@
 package perfdb.configure;
 
-import java.io.*;
+import java.io.IOException;
 
 /**
  * This class prompts the user for a password and attempts to mask input with ""

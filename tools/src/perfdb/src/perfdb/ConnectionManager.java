@@ -1,9 +1,14 @@
 package perfdb;
 
-import perfdb.util.dbinterface.*;
-import perfdb.util.io.*;
-import java.io.*;
-import java.sql.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.sql.SQLException;
+
+import perfdb.util.dbinterface.DB;
+import perfdb.util.dbinterface.DBConnector;
+import perfdb.util.dbinterface.JDBCAcct;
+import perfdb.util.dbinterface.ParseConfig;
 
 /*** Some default setups for system ***/
 

@@ -1,7 +1,10 @@
 package perfdb.util.io;
 
-import java.io.*;
-import java.sql.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 // import perfdb.analysisutil.*;
 
 /*** Handles output of a query. ***/

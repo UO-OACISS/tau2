@@ -1,8 +1,5 @@
 package perfdb.dbmanager;
 
-import java.util.*;
-import java.sql.*;
-
 /****************************************************************
  *
  * Implements basic operations with respect to userevent table 

@@ -14,4 +14,4 @@ SOURCE  = \
 
 MAIN    = Main
 
-include ${PERFDB_HOME}/make/Makefile
+include ${PERFDB_HOME}/Makefile

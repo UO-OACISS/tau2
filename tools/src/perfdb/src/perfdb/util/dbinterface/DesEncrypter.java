@@ -1,6 +1,9 @@
 package perfdb.util.dbinterface;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 public class DesEncrypter {
         Cipher ecipher;

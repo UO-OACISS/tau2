@@ -3,12 +3,19 @@
 PERFDB_JAR=${PERFDB_HOME}/jars/perfdb.jar
 XMLSAX_JAR=${PERFDB_HOME}/jars/xerces.jar
 JDBC_JAR=${PERFDB_HOME}/jars/postgresql.jar
+JARGS_JAR=${PERFDB_HOME}/jars/jargs.jar
 
 #store pprof.xml into Postgresql
 date
-java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadtrial ${PERFDB_HOME}/data/pprof.xml 0
+java \
+-cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
+perfdb.loadxml.Main \
+-g ${PERFDB_HOME}/data/perfdb.cfg \
+-c loadtrial \
+-x ${PERFDB_HOME}/data/pprof.xml \
+-t 0
 date
-# java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadtrial ${PERFDB_HOME}/data/pprof_2.xml 1
+# java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} perfdb.loadxml.Main -g ${PERFDB_HOME}/data/perfdb.cfg -c loadtrial -x ${PERFDB_HOME}/data/pprof_2.xml -t 1
 # date
-# java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR} perfdb.loadxml.Main ${PERFDB_HOME}/data/perfdb.cfg loadtrial ${PERFDB_HOME}/data/pprof_3.xml 1
+# java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} perfdb.loadxml.Main -g ${PERFDB_HOME}/data/perfdb.cfg -c loadtrial -x ${PERFDB_HOME}/data/pprof_3.xml -t 1
 # date

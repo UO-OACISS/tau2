@@ -1,6 +1,7 @@
 package perfdb.util.dbinterface;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 /* This class is intended to read in config.txt file and parse the parameters. */
 
