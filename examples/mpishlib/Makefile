@@ -21,7 +21,7 @@ CC		= $(TAU_CC)
 
 CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) 
 
-LIBS            = ./libring.so $(TAU_MPI_LIBS) $(TAU_SHLIBS) 
+LIBS            = ./libring.so $(TAU_MPI_LIBS) $(TAU_SHLIBS) -lm
 
 LDFLAGS	      	= $(USER_OPT) $(TAU_LDFLAGS)
 
