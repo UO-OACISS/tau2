@@ -86,6 +86,7 @@ two.  While it is running, it prints some messages that tell what it is doing.
      -PROFILESTATS
      -TRACE
      -SGITIMERS
+     -pthread
 
 Note: By default if 
    % ./configure 
@@ -104,9 +105,13 @@ Note: By default if
    in the ascii format (dump of the trace). tau_merge and tau_convert tools
    can be used for this. Tracing could be used with or without Profiling. 
 
-   SGITIMERS uses fast nanosecond resolution timers on R10000 based SGI 
+   -SGITIMERS uses fast nanosecond resolution timers on R10000 based SGI 
    machines and is recommended for profiling. For tracing this option should
    only be used when compiling in -64 bit mode. 
+
+   -pthread option supports profiling for pthreads based programs. The macro
+   TAU_REGISTER_THREAD() should be used in the spawned thread prior to any 
+   profiling calls (see examples/threads).
 
    Example:
    On SGI Origin 2000, 
