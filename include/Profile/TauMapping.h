@@ -43,6 +43,9 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
     TauMapProf->Stop(); \
   } 
 
+#define TAU_MAPPING_REGISTER(stmt, group)  { static FunctionInfo TauMapFI(stmt, " " , group, #group); \
+    TheTauMapFI(group) = &TauMapFI; \
+  } 
 /* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
    object that is used to relate a lower level layer with a higher level layer 
 */
@@ -77,9 +80,9 @@ FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
 /* Create null , except the main statement which should be executed as it is*/
 #define TAU_MAPPING(stmt, group) stmt
 #define TAU_MAPPING_OBJECT(FuncInfoVar) 
-#define TAU_MAPPING_LINK (FuncInfoVar, Group) 
-#define TAU_MAPPING_PROFILE (FuncInfoVar) 
-#define TAU_MAPPING_PROFILE_TIMER (Timer, FuncInfoVar)
+#define TAU_MAPPING_LINK(FuncInfoVar, Group) 
+#define TAU_MAPPING_PROFILE(FuncInfoVar) 
+#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar)
 #define TAU_MAPPING_PROFILE_START(Timer) 
 #define TAU_MAPPING_PROFILE_STOP(Timer) 
 
