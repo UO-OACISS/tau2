@@ -236,46 +236,59 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();            
 	Object userObject = selectedNode.getUserObject();
 
-	if((parentNode.isRoot())&&(userObject.toString().equals("DB Applications"))){
-	    try{
-		if(configFile==null||password==null){//Check to see if the user has set configuration information.
-		    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
-						  "DB Configuration Error!",
-						  JOptionPane.ERROR_MESSAGE);
-		    return;
-		}
-		else{//Test to see if configurataion file exists.
-		    File file = new File(configFile);
-		    if(!file.exists()){
-			JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
-						  "DB Configuration Error!",
-						  JOptionPane.ERROR_MESSAGE);
+	if((parentNode.isRoot())){
+	    if(userObject.toString().equals("Standard Applications")){
+		jSplitPane.setRightComponent(getPanelHelpMessage(1));
+		jSplitPane.setDividerLocation(0.5);
+	    }
+	    else if(userObject.toString().equals("Runtime Applications")){
+		jSplitPane.setRightComponent(getPanelHelpMessage(2));
+		jSplitPane.setDividerLocation(0.5);
+	    }
+	    else if(userObject.toString().equals("DB Applications")){
+		try{
+		    jSplitPane.setRightComponent(getPanelHelpMessage(3));
+		    jSplitPane.setDividerLocation(0.5);
+
+		    if(configFile==null||password==null){//Check to see if the user has set configuration information.
+			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
+						      "DB Configuration Error!",
+						      JOptionPane.ERROR_MESSAGE);
 			return;
 		    }
+		    else{//Test to see if configurataion file exists.
+			File file = new File(configFile);
+			if(!file.exists()){
+			    JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
+							  "DB Configuration Error!",
+							  JOptionPane.ERROR_MESSAGE);
+			    return;
+			}
+		    }
+		    //Basic checks done, try to access the db.
+		    //Refresh the application list.
+		    System.out.println("Loading application list ...");
+		    for(int i=dbApps.getChildCount(); i>0; i--){
+			treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
+		    }
+		    PerfDBSession perfDBSession = new PerfDBSession(); 
+		    perfDBSession.initialize(configFile, password);
+		    ListIterator l = perfDBSession.getApplicationList();
+		    while (l.hasNext()){
+			ParaProfApplication application = new ParaProfApplication((Application)l.next());
+			application.setDBApplication(true);
+			DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
+			application.setDMTN(applicationNode);
+			treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
+		    }
+		    perfDBSession.terminate();
+		    System.out.println("Done loading application list.");
+		    tree.expandPath(path);
+		    return;
 		}
-		//Basic checks done, try to access the db.
-		//Refresh the application list.
-		System.out.println("Loading application list ...");
-		for(int i=dbApps.getChildCount(); i>0; i--){
-		    treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i-1)));
+		catch(Exception e){
+		    e.printStackTrace();
 		}
-		PerfDBSession perfDBSession = new PerfDBSession(); 
-		perfDBSession.initialize(configFile, password);
-		ListIterator l = perfDBSession.getApplicationList();
-		while (l.hasNext()){
-		    ParaProfApplication application = new ParaProfApplication((Application)l.next());
-		    application.setDBApplication(true);
-		    DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-		    application.setDMTN(applicationNode);
-		    treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
-		}
-		perfDBSession.terminate();
-		System.out.println("Done loading application list.");
-		tree.expandPath(path);
-		return;
-	    }
-	    catch(Exception e){
-		e.printStackTrace();
 	    }
 	}
 	else if(userObject instanceof ParaProfApplication){
@@ -440,11 +453,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	///Set the text.
 	switch(type){
 	case 0:
-	    jTextArea.append("ParaProf Manager\n\n");
-	    jTextArea.append("This window allows you to manage all of ParaProf's loaded data.\n");
-	    jTextArea.append("Data can be static (ie, not updated at runtime),"
-			     + " and loaded either remotely or locally.  You can also specify data to be uploaded at runtime.\n\n");
-	    break;
+            jTextArea.append("ParaProf Manager\n\n");
+            jTextArea.append("This window allows you to manage all of ParaProf's loaded data.\n");
+            jTextArea.append("Data can be static (ie, not updated at runtime),"
+                             + " and loaded either remotely or locally.  You can also specify data to be uploaded at runtime.\n\n");
+            break;
 	case 1:
 	    jTextArea.append("ParaProf Manager\n\n");
 	    jTextArea.append("This is the Standard application section:\n\n");
@@ -456,6 +469,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	    jTextArea.append("This is the Runtime application section:\n\n");
 	    jTextArea.append("Runtime - A new feature allowing ParaProf to update data at runtime.  Please see"
 			  + " the ParaProf documentation if the options are not clear.\n");
+	    jTextArea.append("*** THIS FEATURE IS CURRENTLY OFF ***\n");
 	    break;
 	case 3:
 	    jTextArea.append("ParaProf Manager\n\n");
