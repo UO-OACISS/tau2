@@ -84,6 +84,7 @@
 #define CT(obj)
 
 #define TAU_REGISTER_THREAD()			tau_register_thread();	
+#define TAU_REGISTER_FORK(nodeid, op) 		tau_register_fork(nodeid, op);
 
 extern void * tau_get_profiler(char *fname, char *type, TauGroup_t  group);
 extern void tau_start_timer(void *profiler);
@@ -94,6 +95,7 @@ extern void tau_set_node(int node);
 extern void tau_set_context(int context);
 extern void tau_callstack(void);
 extern void tau_register_thread();
+extern void tau_register_fork(int nodeid, enum TauFork_t opcode);
 extern void * tau_get_userevent(char *name);
 extern void tau_userevent(void *event, double data);
 extern void tau_report_statistics(void);
@@ -155,7 +157,7 @@ extern void tau_trace_recvmsg(int type, int source, int length);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2000/07/27 19:26:57 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.6 2000/07/27 19:26:57 sameer Exp $
+ * $Revision: 1.7 $   $Date: 2000/10/11 18:43:00 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.7 2000/10/11 18:43:00 sameer Exp $
  ***************************************************************************/
 

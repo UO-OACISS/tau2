@@ -54,6 +54,7 @@
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
 #define TAU_PROFILE_SET_CONTEXT(context) RtsLayer::setMyContext(context);
 
+
 #ifdef PROFILE_CALLSTACK
 #define TAU_PROFILE_CALLSTACK()    Profiler::CallStackTrace();
 #else
@@ -71,6 +72,7 @@
 #define TAU_REPORT_THREAD_STATISTICS()		TauUserEvent::ReportStatistics(true);
 
 #define TAU_REGISTER_THREAD()			RtsLayer::RegisterThread();
+#define TAU_REGISTER_FORK(id, op) 		RtsLayer::RegisterFork(id, op);
 
 #ifdef NO_RTTI
 #define CT(obj) string(#obj)
@@ -104,6 +106,7 @@
 #define TAU_REPORT_STATISTICS()
 #define TAU_REPORT_THREAD_STATISTICS()
 #define TAU_REGISTER_THREAD()
+#define TAU_REGISTER_FORK(id, op) 
 
 #define CT(obj)
 
@@ -130,6 +133,6 @@
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1998/09/24 17:07:53 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.4 1998/09/24 17:07:53 sameer Exp $ 
+ * $Revision: 1.5 $   $Date: 2000/10/11 18:43:00 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.5 2000/10/11 18:43:00 sameer Exp $ 
  ***************************************************************************/
