@@ -26,7 +26,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.6 2004/10/29 20:21:29 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.7 2004/10/29 22:43:10 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -633,7 +633,10 @@ public class IntervalLocationProfile extends Object {
 		    }
 		    newMetricID = (Integer)newMetHash.get(new Integer(++i));
 		}
-		System.out.print("\rSaving the intervalEvent data: " + ++count + " records saved...");
+		if (count % 1000 == 0) {
+		    System.out.print("\rSaving the intervalEvent data: " + count + " records saved...");
+		}
+		count++;
 	    }
 	    System.out.print("\n");
 	    statement.close();

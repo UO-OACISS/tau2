@@ -9,7 +9,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDMFSession.java,v 1.17 2004/10/29 20:21:29 amorris Exp $</P>
+ * <P>CVS $Id: PerfDMFSession.java,v 1.18 2004/10/29 22:43:10 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -767,7 +767,12 @@ public class PerfDMFSession extends DataSession {
 		    for(Enumeration e4 = intervalEvents.elements(); e4.hasMoreElements() ;){
 			GlobalThreadDataElement intervalEvent = (GlobalThreadDataElement) e4.nextElement();
 			if (intervalEvent!=null){
-			    System.out.print("\rCreating the intervalEvent / user event data: " + ++fcount + " / " + ucount + " found...");
+
+			    if (fcount % 1000 == 0) {
+				System.out.print("\rCreating the intervalEvent / user event data: " + ++fcount + " / " + ucount + " found...");
+			    }
+			    fcount++;
+
 			    IntervalLocationProfile fdo = new IntervalLocationProfile(metricCount);
 			    fdo.setNode(thread.getNodeID());
 			    fdo.setContext(thread.getContextID());
@@ -792,7 +797,12 @@ public class PerfDMFSession extends DataSession {
 			for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
 			    GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
 			    if (userevent!=null){
-				System.out.print("\rCreating the intervalEvent / user event data: " + fcount + " / " + ++ucount + " found...");
+
+				if (ucount % 1000 == 0) {
+
+				    System.out.print("\rCreating the intervalEvent / user event data: " + fcount + " / " + ucount + " found...");
+				}
+				ucount++;
 				AtomicLocationProfile udo = new AtomicLocationProfile();
 				udo.setAtomicEventID(userevent.getMappingID());
 				udo.setNode(thread.getNodeID());

@@ -18,7 +18,7 @@ import java.io.Serializable;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.10 2004/10/29 20:21:29 amorris Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.11 2004/10/29 22:43:10 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -109,7 +109,7 @@ public class Trial implements Serializable {
     }
 
     public void setField(int idx, String field) {
-	if (DBConnector.isIntegerType(fieldTypes[idx])) {
+	if (DBConnector.isIntegerType(fieldTypes[idx]) && field != null) {
 	    try {
 		int test = Integer.parseInt(field);
 	    } catch (java.lang.NumberFormatException e) {
@@ -117,7 +117,7 @@ public class Trial implements Serializable {
 	    }
 	}
 	
-	if (DBConnector.isFloatingPointType(fieldTypes[idx])) {
+	if (DBConnector.isFloatingPointType(fieldTypes[idx]) && field != null) {
 	    try {
 		double test = Double.parseDouble(field);
 	    } catch (java.lang.NumberFormatException e) {
@@ -388,7 +388,6 @@ public class Trial implements Serializable {
 	    buf.append(" order by t.id ");
 
 	    
-	    // get the results
 	    Vector trials = new Vector();
 	    ResultSet resultSet = db.executeQuery(buf.toString());	
 	    while (resultSet.next() != false) {

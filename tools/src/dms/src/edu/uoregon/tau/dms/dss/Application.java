@@ -17,7 +17,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has one or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.6 2004/10/29 20:21:29 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.7 2004/10/29 22:43:10 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since 0.1
@@ -158,7 +158,7 @@ public class Application implements Serializable {
     }
 
     public void setField(int idx, String field) {
-	if (DBConnector.isIntegerType(fieldTypes[idx])) {
+	if (DBConnector.isIntegerType(fieldTypes[idx]) && field != null) {
 	    try {
 		int test = Integer.parseInt(field);
 	    } catch (java.lang.NumberFormatException e) {
@@ -166,7 +166,7 @@ public class Application implements Serializable {
 	    }
 	}
 	
-	if (DBConnector.isFloatingPointType(fieldTypes[idx])) {
+	if (DBConnector.isFloatingPointType(fieldTypes[idx]) && field != null) {
 	    try {
 		double test = Double.parseDouble(field);
 	    } catch (java.lang.NumberFormatException e) {
