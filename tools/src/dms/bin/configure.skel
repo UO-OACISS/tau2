@@ -48,4 +48,9 @@ then
 	exit
 fi
 
+if [ ! -r ~/.ParaProf ]
+then
+	mkdir ~/.ParaProf
+fi
+
 java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} edu.uoregon.tau.dms.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH} -g ${CONFIG_FILE} $@
