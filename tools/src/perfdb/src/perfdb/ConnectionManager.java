@@ -146,6 +146,10 @@ public class ConnectionManager {
 
     }
 
+	public void genParentSchema() {
+		genParentSchema(parser.getDBSchema());
+	}
+
     public static boolean isEnd(String st){
 	return st.trim().endsWith(";");
     }
