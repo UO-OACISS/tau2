@@ -17,7 +17,7 @@ if [ ! -r ${PERFDB_JAR} ]
 then
 	echo ""
 	echo "$PERFDB_JAR not found."
-	echo "Please run make in the perfdb directory."
+	echo "Please run 'make' in the directory ${PERFDB_HOME}."
 	echo ""
 	exit 
 fi
