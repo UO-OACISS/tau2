@@ -139,6 +139,7 @@ profilecallstack=no
 trace=no
 debugprof=no
 sgitimers=no
+cputime=no
 use_pcxx=no
 use_hpcxx=no
 use_ansic=no
@@ -404,6 +405,11 @@ do
     shift
     ;;
 
+  -CPUTIME)
+    cputime=yes
+    shift
+    ;;
+
   -INTELTFLOP)
     inteltflop=yes
     shift
@@ -440,6 +446,7 @@ do
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-PROFILECOUNTERS .... Use Hardware Performance Counters (default time)."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
+    echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-help ...................................... display this help message."
     exit
@@ -705,6 +712,11 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
       fixmakeargs="$fixmakeargs SGITIMERS"
       tauoptions="${tauoptions}-sgitimers"
   fi
+fi
+
+if [ $cputime = yes ]
+  then
+    fixmakeargs="$fixmakeargs CPUTIME"
 fi
 
 if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
