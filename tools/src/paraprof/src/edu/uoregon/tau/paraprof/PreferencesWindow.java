@@ -262,6 +262,16 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         this.setTitle("ParaProf Preferences");
         this.show();
     }
+    
+    public void loadSavedPreferences() {
+        this.preferences = ParaProf.preferences;
+        if (preferences.getLoaded()) {
+            // Set preferences based on saved values.
+            paraProfFont = preferences.getParaProfFont();
+            fontStyle = preferences.getFontStyle();
+            fontSize = preferences.getFontSize();
+        }
+    }
 
     public void setSavedPreferences() {
         ParaProf.preferences.setParaProfFont(paraProfFont);
@@ -347,10 +357,11 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                         try {
                             ParaProf.loadPreferences(file);
                         } catch (Exception e) {
-                            JOptionPane.showMessageDialog(this, "Error loading preferences!", "ParaProf Preferences", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(this, "Error loading preferences!",
+                                    "ParaProf Preferences", JOptionPane.ERROR_MESSAGE);
 
                         }
-                        this.preferences = ParaProf.preferences;
+                        loadSavedPreferences();
                         setControls();
                     }
 
@@ -364,18 +375,9 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
                         File file = fileChooser.getSelectedFile();
 
-                        ParaProf.colorChooser.setSavedColors();
-                        ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManager.getLocation());
-
-                        //System.out.println ("saving manager position = " + preferences.getManagerWindowPosition());
-
-                        try {
-                            ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
-                            prefsOut.writeObject(ParaProf.preferences);
-                            prefsOut.close();
-                        } catch (Exception e) {
-                            System.err.println("An error occured while trying to save ParaProf preferences.");
-                            //e.printStackTrace();
+                        if (ParaProf.savePreferences(file) == false) {
+                            JOptionPane.showMessageDialog(this, "Error Saving preferences!",
+                                    "ParaProf Preferences", JOptionPane.ERROR_MESSAGE);
                         }
                     }
 

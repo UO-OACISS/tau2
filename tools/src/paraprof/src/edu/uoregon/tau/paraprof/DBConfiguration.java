@@ -134,7 +134,6 @@ public class DBConfiguration extends JFrame implements ActionListener {
                 jFileChooser.setDialogTitle("Select");
                 jFileChooser.setApproveButtonText("Select");
                 if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
-                    System.out.println("File selection cancelled by user!");
                     return;
                 }
                 //User clicked the approve option.

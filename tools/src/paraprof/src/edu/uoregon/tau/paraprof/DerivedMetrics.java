@@ -61,7 +61,11 @@ public class DerivedMetrics {
                 operation = 3;
                 newMetricName = " / ";
             } else {
-                System.out.println("Wrong operation type");
+                JOptionPane.showMessageDialog(ParaProf.paraProfManager,
+                        "Unsupported Operation, '" + inOperation + "'", "ParaProf Error",
+                        JOptionPane.ERROR_MESSAGE);
+
+                //System.out.println("Wrong operation type");
             }
 
             if (constant)

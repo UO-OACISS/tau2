@@ -12,18 +12,18 @@ import javax.swing.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.29 2005/03/08 01:11:19 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.30 2005/03/08 17:32:01 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.29 $
+ * @version $Revision: 1.30 $
  */
 public class ParaProf implements ActionListener {
 
     private final static String VERSION = "2.1 (with TAU 2.14.1) (01/21/2005)";
 
     
-    static ColorMap colorMap;
+    static ColorMap colorMap = new ColorMap();
     
     //System wide stuff.
     static String homeDirectory = null;
@@ -153,13 +153,7 @@ public class ParaProf implements ActionListener {
                     }
                 }
 
-                ParaProf.colorMap = ParaProf.preferences.getColorMap();
-
-                if (ParaProf.colorMap == null) {
-                    ParaProf.colorMap = new ColorMap();
-                    ParaProf.preferences.setColorMap(ParaProf.colorMap);
-                }
-                
+                ParaProf.colorMap.setMap(preferences.getAssignedColors());
                 
                 //Try and find perfdmf.cfg.
                 File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
@@ -219,12 +213,7 @@ public class ParaProf implements ActionListener {
         ParaProf.preferences.setLoaded(true);
         colorChooser = new ColorChooser(ParaProf.preferences);
 
-        ParaProf.colorMap = ParaProf.preferences.getColorMap();
-
-        if (ParaProf.colorMap == null) {
-            ParaProf.colorMap = new ColorMap();
-            ParaProf.preferences.setColorMap(ParaProf.colorMap);
-        }
+        ParaProf.colorMap.setMap(ParaProf.preferences.getAssignedColors());
 
         Vector trials = ParaProf.paraProfManager.getLoadedTrials();
         for (Iterator it = trials.iterator(); it.hasNext();) {
@@ -262,12 +251,19 @@ public class ParaProf implements ActionListener {
 //                    JOptionPane.ERROR_MESSAGE);
 //        }
         
+        savePreferences(new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf"));
+       
+        
+        System.exit(exitValue);
+    }
+
+    public static boolean savePreferences(File file) {
         
         ParaProf.colorChooser.setSavedColors();
+        ParaProf.preferences.setAssignedColors(ParaProf.colorMap.getMap());
         ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManager.getLocation());
 
 //        System.out.println ("saving manager position = " + preferences.getManagerWindowPosition());
-        File file = new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf");
 
         try {
             ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
@@ -276,12 +272,11 @@ public class ParaProf implements ActionListener {
         } catch (Exception e) {
             System.err.println("An error occured while trying to save ParaProf preferences.");
             //e.printStackTrace();
+            return false;
         }
-
-        
-        System.exit(exitValue);
+        return true;
     }
-
+    
     // Main entry point
     static public void main(String[] args) {
 

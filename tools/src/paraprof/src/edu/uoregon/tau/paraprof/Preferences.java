@@ -122,12 +122,12 @@ public class Preferences implements Serializable {
         return this.managerWindowPosition;
     }
 
-    public void setColorMap(ColorMap colorMap) {
-        this.colorMap = colorMap;
+    public void setAssignedColors(Map assignedColors) {
+        this.assignedColors = assignedColors;
     }
     
-    public ColorMap getColorMap() {
-        return this.colorMap;
+    public Map getAssignedColors() {
+        return assignedColors;
     }
     
     
@@ -145,7 +145,7 @@ public class Preferences implements Serializable {
     private String databasePassword = null;
     private String databaseConfigurationFile = null;
     private Point managerWindowPosition;
-    private ColorMap colorMap;
+    private Map assignedColors;
     
     static final long serialVersionUID = 183442743456314793L;
     
