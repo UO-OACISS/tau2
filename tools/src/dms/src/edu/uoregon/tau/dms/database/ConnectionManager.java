@@ -9,20 +9,10 @@ import java.io.IOException;
 /*** Some default setups for system ***/
 
 public class ConnectionManager{
-	
-    //perfdmfAcct is the DBMS account 
-    private String perfdmfUser;
-    private String perfdmfPass;
 
-    private String parserClass = "org.apache.xerces.parsers.SAXParser";
-	
-    // database schema file name. default one should be "~/PerfDMF/db/dbschema.txt".
-    private String dbschema;
-
-    private ParseConfig parser = null;
-
-    private DB db = null;
-
+    //####################################
+    //Contructor(s).
+    //####################################
     public ConnectionManager(String configFileName){
 	parser = new ParseConfig(configFileName);
 	String password = getPassword();
@@ -39,7 +29,13 @@ public class ConnectionManager{
 	String password = getPassword(prompt);
 	initialize(password);
     }
+    //####################################
+    //End - Contructor(s).
+    //####################################
 
+    //####################################
+    //Public section.
+    //####################################
     public void initialize(String password) {
 	perfdmfUser = parser.getDBUserName();
 	perfdmfPass = password;
@@ -139,5 +135,37 @@ public class ConnectionManager{
 	}
 	return tmpString;
     }
+    //####################################
+    //End - Public section.
+    //####################################
 
+    //####################################
+    //Protected section.
+    //####################################
+    //####################################
+    //End - Protected section.
+    //####################################
+
+    //####################################
+    //Private section.
+    //####################################
+    //####################################
+    //End - Private section.
+    //####################################
+
+    //####################################
+    //Instance data.
+    //####################################
+    private String perfdmfUser;
+    private String perfdmfPass;
+    private String parserClass = "org.apache.xerces.parsers.SAXParser";
+	
+    //Database schema file name. Default one should be: "~/PerfDMF/db/dbschema.txt".
+    private String dbschema;
+
+    private ParseConfig parser = null;
+    private DB db = null;
+    //####################################
+    //End - Instance data.
+    //####################################
 }
