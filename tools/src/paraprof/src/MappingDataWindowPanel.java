@@ -564,7 +564,6 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 		    }
 		    else
 			popup3.show(this, evt.getX(), evt.getY());
-		    return;
 		}
 		else{
 		    if(xCoord>barXCoord){ //barXCoord should have been set during the last render.

@@ -76,9 +76,6 @@ public class SMWThreadDataElement implements Comparable{
     public Color getColor(){
 	return globalMappingElement.getColor();}
   
-    public boolean getMappingExists(){
-	return globalThreadDataElement.getMappingExists();}
-  
     public boolean isGroupMember(int groupID){
 	return globalMapping.isGroupMember(this.getMappingID(), groupID, 0);}
 

@@ -213,7 +213,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				thread.addFunction(globalThreadDataElement, mappingID);
 			    }
 			    
-			    globalThreadDataElement.setMappingExists();
 			    globalThreadDataElement.setExclusiveValue(metric, functionDataLine.d0);
 			    globalThreadDataElement.setInclusiveValue(metric, functionDataLine.d3);
 			    globalThreadDataElement.setNumberOfCalls(functionDataLine.i1);
@@ -277,7 +276,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				    thread.addFunction(globalThreadDataElement, mappingID);
 				}
 				
-				globalThreadDataElement.setMappingExists();
 				//Since this is the child thread, increment the values.
 				double d1 = globalThreadDataElement.getInclusiveValue(metric);
 				double d2 = d1 + functionChildDataLine.d3;
@@ -330,8 +328,6 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				    thread.addFunction(globalThreadDataElement, mappingID);
 				}
 				
-				globalThreadDataElement.setMappingExists();
-
 				globalThreadDataElement.setExclusiveValue(metric, functionChildDataLine.d3);
 				globalThreadDataElement.setInclusiveValue(metric, functionChildDataLine.d3);
 				globalThreadDataElement.setNumberOfCalls(functionChildDataLine.i2);

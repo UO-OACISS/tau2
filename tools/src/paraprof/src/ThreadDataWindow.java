@@ -304,7 +304,7 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	    //######
 	    //Panel and ScrollPane definition.
 	    //######
-	    panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this, sMWData, windowType, this.debug());
+	    panel = new ThreadDataWindowPanel(trial, nodeID, contextID, threadID, this, windowType, this.debug());
 	    sp = new JScrollPane(panel);
 	    this.setHeader();
 	    //######
@@ -610,6 +610,10 @@ public class ThreadDataWindow extends JFrame implements ActionListener, MenuList
 	ParaProf.helpWindow.writeText("menu. In this menu you can change or reset the default colour");
 	ParaProf.helpWindow.writeText("for the mapping, or to show more details about the mapping.");
 	ParaProf.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
+    }
+
+    public StaticMainWindowData getSMWData(){
+	return sMWData;
     }
     
     //Updates this window's data copy.

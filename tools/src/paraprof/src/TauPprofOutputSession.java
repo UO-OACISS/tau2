@@ -301,7 +301,6 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 			    globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
 			    thread.addFunction(globalThreadDataElement, mappingID);
 			}
-			globalThreadDataElement.setMappingExists();
 			globalThreadDataElement.setExclusiveValue(metric, functionDataLine1.d0);
 			globalThreadDataElement.setExclusivePercentValue(metric, functionDataLine1.d1);
 			//Now check the max values on this thread.

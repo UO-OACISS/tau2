@@ -38,7 +38,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 				 int contextID,
 				 int threadID,
 				 ThreadDataWindow tDWindow,
-				 StaticMainWindowData sMWData,
 				 int windowType,
 				 boolean debug){
 	try{
@@ -54,7 +53,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 	    this.trial = trial;
 	    this.tDWindow = tDWindow;
 	    this.windowType = windowType;
-	    this.sMWData = sMWData;
 	    this.debug = debug;
 	    barLength = baseBarLength;
 	    
@@ -467,7 +465,7 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
 			trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-			MappingDataWindow mappingDataWindow = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), sMWData, this.debug());
+			MappingDataWindow mappingDataWindow = new MappingDataWindow(trial, sMWThreadDataElement.getMappingID(), tDWindow.getSMWData(), this.debug());
 			trial.getSystemEvents().addObserver(mappingDataWindow);
 			mappingDataWindow.show();
 		    }
@@ -641,7 +639,6 @@ public class ThreadDataWindowPanel extends JPanel implements ActionListener, Mou
     private int threadID = -1;
     private ThreadDataWindow tDWindow = null;
     private int windowType = -1;
-    private StaticMainWindowData sMWData = null;
     private Thread thread = null;  
     private Vector list = null;
   

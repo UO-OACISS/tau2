@@ -476,6 +476,17 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     //End - Interface code.
     //####################################
     
+    public Dimension getViewportSize(){
+	return sp.getViewport().getExtentSize();}
+
+    public Rectangle getViewRect(){
+	return sp.getViewport().getViewRect();}
+
+    public void setVerticalScrollBarPosition(int position){
+	JScrollBar scrollBar = sp.getVerticalScrollBar();
+	scrollBar.setValue(position);
+    }
+
     //######
     //Panel header.
     //######
@@ -602,11 +613,11 @@ public class StaticMainWindow extends JFrame implements ActionListener, MenuList
     private void sortLocalData(){
 	try{
 	    if(name){
-		list[0] = sMWData.getSMWGeneralData(0+order);
+		list[0] = sMWData.getAllThreadData(0+order);
 		list[1] = sMWData.getMeanData(18+order);
 	    }
 	    else{
-		list[0] = sMWData.getSMWGeneralData(2+order);
+		list[0] = sMWData.getAllThreadData(2+order);
 		list[1] = sMWData.getMeanData(20+order);
 	    }
 	}

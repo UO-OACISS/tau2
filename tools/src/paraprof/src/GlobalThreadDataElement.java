@@ -60,12 +60,6 @@ public class GlobalThreadDataElement implements Mapping{
     public int getMappingID(){
 	return globalMappingElement.getMappingID();}
 
-    public void setMappingExists(){
-	mappingExists = true;}
-  
-    public boolean getMappingExists(){
-	return mappingExists;}
-  
     public boolean isGroupMember(int groupID){
 	return globalMappingElement.isGroupMember(groupID);}
 
@@ -577,15 +571,15 @@ public class GlobalThreadDataElement implements Mapping{
     //####################################
     //Instance data.
     //####################################
-    GlobalMappingElement globalMappingElement = null;
-    boolean mappingExists = false;
+    private GlobalMappingElement globalMappingElement = null;
+    private boolean mappingExists = false;
     private double[] doubleList;
     private int numberOfCalls = 0;
     private int numberOfSubRoutines = 0;
-    int userEventNumberValue = 0;
-    boolean userevent = false;
+    private int userEventNumberValue = 0;
+    private boolean userevent = false;
 
-    Vector calls = null;
+    private Vector calls = null;
 
     private Vector parents = null;
     private Vector children = null;

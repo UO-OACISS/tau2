@@ -150,7 +150,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
     }
   
   
-    public void drawPage(Graphics2D g2D, boolean print){
+    public void drawPage(Graphics2D g2D, boolean print){/*
 	try{
 	    
 	    list = bWindow.getData();
@@ -342,12 +342,12 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	    concat.translate(55,0);
 	    
 	    
-	    /*for(int i=1; i<10; i++){
-	      double rightBound = i*increment;
-	      g2D.drawString(i + "/10th MV", 0, 0);
-	      test.preConcatenate(concat);
-	      g2D.setTransform(test);
-	      }*/
+	    //for(int i=1; i<10; i++){
+	      //double rightBound = i*increment;
+	      //g2D.drawString(i + "/10th MV", 0, 0);
+	      //test.preConcatenate(concat);
+	      //g2D.setTransform(test);
+	      //}
 	    
 	    g2D.setTransform(currentTransform);
 	    g2D.drawString("Min Value  = " + minValue, 35, 450);              
@@ -449,7 +449,7 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "SMWP06");
-	}
+	}*/
     }
   
     //******************************
@@ -509,8 +509,6 @@ public class BinWindowPanel extends JPanel implements ActionListener, MouseListe
     Vector contextList = null;
     Vector threadList = null;
     Vector threadDataList = null;
-    SMWServer sMWServer = null;
-    SMWContext sMWContext = null;
     SMWThread sMWThread = null;
     SMWThreadDataElement sMWThreadDataElement = null;
     //End - Place holder definitions.

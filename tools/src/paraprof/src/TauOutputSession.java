@@ -284,7 +284,6 @@ public class TauOutputSession extends ParaProfDataSession{
 				    thread.addFunction(globalThreadDataElement, mappingID);
 				}
 			    
-				globalThreadDataElement.setMappingExists();
 				globalThreadDataElement.setExclusiveValue(metric, functionDataLine.d0);
 				globalThreadDataElement.setInclusiveValue(metric, functionDataLine.d1);
 				globalThreadDataElement.setNumberOfCalls(functionDataLine.i0);

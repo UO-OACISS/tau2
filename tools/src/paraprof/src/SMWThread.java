@@ -18,25 +18,17 @@ public class SMWThread{
 
     public SMWThread(){}
 
-    public SMWThread(int threadID){
-	this.threadID = threadID;}
+    public SMWThread(Thread thread){
+	this.thread = thread;}
 
-    public SMWThread(SMWContext parentContext, int threadID){
-	this.parentContext = parentContext;
-	this.threadID = threadID;
-    }
+    public int getNodeID(){
+	return this.thread.getNodeID();}
 
-    public void setParentContext(SMWContext parentContext){
-	this.parentContext = parentContext;}
+    public int getContextID(){
+	return this.thread.getContextID();}
 
-    public SMWContext getParentContext(){
-	return parentContext;}
-
-    public void setThreadID(int threadID){
-	this.threadID = threadID;}
-    
     public int getThreadID(){
-	return this.threadID;}
+	return this.thread.getThreadID();}
   
     public void addFunction(SMWThreadDataElement sMWThreadDataElement){
 	functions.addElement(sMWThreadDataElement);}
@@ -57,19 +49,16 @@ public class SMWThread{
 	return new ParaProfIterator(userevents);}
   
     //Rest of the public functions.
-    public void setYDrawCoord(int inYDrawCoord){
-	yDrawCoord = inYDrawCoord;
-    }
+    public void setYDrawCoord(int yDrawCoord){
+	yDrawCoord = this.yDrawCoord;}
   
     public int getYDrawCoord(){
-	return yDrawCoord;
-    }
+	return yDrawCoord;}
     
     //####################################
     //Instance data.
     //####################################
-    SMWContext parentContext = null;
-    int threadID = -1;
+    Thread thread = null;
     Vector functions = new Vector();
     Vector userevents = new Vector();
     //To aid with drawing searches.
