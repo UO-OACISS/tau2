@@ -93,7 +93,7 @@ JDKARCH                 = linux
 DYNINST_PLATFORM 	= $(PLATFORM) 
 
 
-#PCL#include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/PCLMakefile.stub	  #ENDIF#
+#PCL##include $(TAU_PREFIX_INSTALL_DIR)/include/makefiles/PCLMakefile.stub	  #ENDIF#
 
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77      $(ABI)    #ENDIF#
@@ -118,7 +118,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #PAPIWALLCLOCK#PROFILEOPT2     = -DTAU_PAPI_WALLCLOCKTIME    #ENDIF#
 #PAPIVIRTUAL#PROFILEOPT2       = -DTAU_PAPI_VIRTUAL    #ENDIF#
 #SGICOUNTERS#PROFILEOPT3       = -DSGI_HW_COUNTERS     #ENDIF#
-#PCL#PROFILEOPT3       	       = -DTAU_PCL -D$(TARGET_SYSTEM) -I$(PCLDIR)/src #ENDIF#
+#PCL#PROFILEOPT3       	       = -DTAU_PCL -I$(PCLDIR)/include #ENDIF#
 #PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/src -I$(PAPIDIR)/include #ENDIF#
 #PCL#PCL_O       	       = PclLayer.o 	       #ENDIF#
 #PAPI#PAPI_O       	       = PapiLayer.o 	       #ENDIF#
@@ -180,7 +180,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #PGI_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
-#PCL#LEXTRA	       	       = $(LOADLIBS) 	       #ENDIF#
+#PCL#LEXTRA	       	       = -L$(PCLDIR)/lib -lpcl 	       #ENDIF#
 #PAPI#LEXTRA	       	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -lpmapi#ENDIF#
