@@ -91,9 +91,10 @@ public class Thread implements Comparable{
 	userevents.setElementAt(ref, pos);}
   
     public GlobalThreadDataElement getFunction(int id){
-	GlobalThreadDataElement globalThreadDataElement= null;
+	GlobalThreadDataElement globalThreadDataElement = null;
 	try{
-	    globalThreadDataElement = (GlobalThreadDataElement) functions.elementAt(id);
+	    if((functions!=null)&&(id<functions.size()))
+		globalThreadDataElement = (GlobalThreadDataElement) functions.elementAt(id);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "T2");
@@ -110,7 +111,8 @@ public class Thread implements Comparable{
     public GlobalThreadDataElement getUserevent(int id){
 	GlobalThreadDataElement globalThreadDataElement= null;
 	try{
-	    globalThreadDataElement = (GlobalThreadDataElement) userevents.elementAt(id);
+	    if((userevents!=null)&&(id<userevents.size()))
+		globalThreadDataElement = (GlobalThreadDataElement) userevents.elementAt(id);
 	}
 	catch(Exception e){
 	    ParaProf.systemError(e, null, "T2");

@@ -108,14 +108,9 @@ public class StaticMainWindowData{
 			thread = (Thread) e3.nextElement();
 			//Only want to add an the element with the correct mapping id.
 			if(listType==1)
-			    globalThreadDataElement = (GlobalThreadDataElement) thread.getFunctionList().elementAt(mappingID);
-			else{//User events might not have fired on this thread.
-			    Vector userEventList = thread.getUsereventList();
-			    if(userEventList!=null)
-				globalThreadDataElement = (GlobalThreadDataElement) userEventList.elementAt(mappingID);
-			    else
-				globalThreadDataElement = null;
-			}
+			    globalThreadDataElement = thread.getFunction(mappingID);
+			else
+			    globalThreadDataElement = thread.getUserevent(mappingID);
 			if(globalThreadDataElement != null){
 			    //Create a new thread data object.
 			    sMWThreadDataElement = new SMWThreadDataElement(trial, node.getNodeID(), context.getContextID(), thread.getThreadID(), globalThreadDataElement);
