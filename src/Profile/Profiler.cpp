@@ -501,7 +501,6 @@ void Profiler::theFunctionList(const char ***inPtr, int *numOfFunctions, bool ad
 {
   //static const char *const functionList[START_SIZE];
   static int numberOfFunctions = 0;
-  static int sizeOfArray = 2;
 
   if(addName){
     numberOfFunctions++;
@@ -2509,8 +2508,8 @@ void Profiler::CallStackTrace(int tid)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.78 $   $Date: 2002/10/22 18:54:53 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.78 2002/10/22 18:54:53 sameer Exp $ 
+ * $Revision: 1.79 $   $Date: 2002/11/12 19:42:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.79 2002/11/12 19:42:35 sameer Exp $ 
  ***************************************************************************/
 
 	
