@@ -436,15 +436,17 @@ public class PerfDBSession extends DataSession {
 		}
 		if (trials != null) {
 			if (gotWhile)
-				buf.append(" and");
+				buf.append(" and t.trialid in (");
 			else
-				buf.append(" where");
+				buf.append(" where t.trialid in (");
 			Trial trial;
         	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
 				trial = (Trial) en.nextElement();
-				buf.append(" t.trialid = " + trial.getID());
+				buf.append(trial.getID());
 				if (en.hasMoreElements())
-					buf.append(" and");
+					buf.append(", ");
+				else
+					buf.append(") ");
 			}
 		}
 		// System.out.println(buf.toString());
@@ -554,7 +556,8 @@ public class PerfDBSession extends DataSession {
 
 	public ListIterator getFunctionData() {
 		// get the hash of function names first
-		getFunctions();
+		if (functions == null)
+			getFunctions();
 
 		Vector functionData = new Vector();
 		// create a string to hit the database
@@ -634,21 +637,6 @@ public class PerfDBSession extends DataSession {
         	for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
 				thread = (Integer) en.nextElement();
 				buf.append(thread);
-				if (en.hasMoreElements())
-					buf.append(", ");
-				else
-					buf.append(") ");
-			}
-		}
-		if (functions != null) {
-			if (gotWhile)
-				buf.append(" and l.funindexid in (");
-			else
-				buf.append(" where l.funindexid in (");
-			Function function;
-        	for(Enumeration en = functions.elements(); en.hasMoreElements() ;) {
-				function = (Function) en.nextElement();
-				buf.append(function.getIndexID());
 				if (en.hasMoreElements())
 					buf.append(", ");
 				else
