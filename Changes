@@ -22,9 +22,10 @@ Version 2.11 changes (from 2.9):
 10. Opari and PDT related changes (examples/opari/pdt_f90) [FZJ].
 11. Added support for online access to performance data [CACR]. 
 12. Added support for LINUXTIMERS for PGI and other Linux compilers [FZJ].
-13. Changes to online access API.
+13. Changes to online access API [CACR].
 14. Improved jracy GUI [ALPS]. 
-15. Added support for EPILOG tracing package. 
+15. Added support for EPILOG tracing package [FZJ]. 
+16. Added support for Hitachi SR8000 [FZJ]. 
 
 Version 2.10 changes (from 2.9):
 1. Better support for C instrumentation [HDF5].

@@ -317,6 +317,14 @@ fi
 	echo NOTE: Using the IBM xlC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     HITACHI)
+	echo NOTE: Using the HITACHI SR8000 MPP options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HITACHI_FORTRAN)
+	echo NOTE: Using the HITACHI Fortran 90 compiler options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      IBMXLC_OPENMP)
 	echo NOTE: Using the IBM xlC OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
