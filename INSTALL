@@ -433,6 +433,7 @@ II) Platforms :
 	k) PowerPC Linux with g++.
 	l) IA-64 Linux with g++ and SGI Pro64 compilers.
 	m) Apple OS X (Darwin) with c++.
+	n) Hitachi SR8000 with KCC, Hitachi cc and f90 compilers. 
 	   
 
    TAU may work with minor modifications on other platforms.
