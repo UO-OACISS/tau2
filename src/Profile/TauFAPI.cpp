@@ -830,11 +830,18 @@ void tau_profile_timer__(void **ptr, char *fname, int flen)
 {
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
-    for(int i=0; i<strlen(fname); i++)
+    char * newname=new char[flen+1] ;
+    for (int j =0; j < flen; j++)
+      newname[j] = fname[j];
+
+    newname[flen] = '\0';
+
+
+    for(int i=0; i<strlen(newname); i++)
     {
-      if (!VALID_NAME_CHAR(fname[i]))
+      if (!VALID_NAME_CHAR(newname[i]))
       { 
-        fname[i] = '\0';
+        newname[i] = '\0';
         break;
       }
     }
@@ -842,8 +849,8 @@ void tau_profile_timer__(void **ptr, char *fname, int flen)
 #ifdef DEBUG_PROF
     printf("Tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
-    EXTRACT_GROUP(fname, flen, gr, gr_name)
-    *ptr = Tau_get_profiler(fname, " ", gr, gr_name);
+    EXTRACT_GROUP(newname, flen, gr, gr_name)
+    *ptr = Tau_get_profiler(newname, " ", gr, gr_name);
   }
 
 #ifdef DEBUG_PROF 
@@ -909,23 +916,28 @@ void tau_trace_recvmsg__(int *type, int *source, int *length)
   Tau_trace_recvmsg(*type, *source, *length);
 }
 
-void tau_register_event__(void **ptr, char *event_name, int *flen)
+void tau_register_event__(void **ptr, char *event_name, int flen)
 {
 
   if (*ptr == 0) 
   {  // remove garbage characters from the end of name
-    for(int i=0; i<1024; i++)
+    char * newname=new char[flen+1] ;
+    for (int j =0; j < flen; j++)
+      newname[j] = event_name[j];
+
+    newname[flen] = '\0';
+    for(int i=0; i<strlen(newname); i++)
     {
-      if (!VALID_NAME_CHAR(event_name[i]))
+      if (!VALID_NAME_CHAR(newname[i]))
       { 
-        event_name[i] = '\0';
+        newname[i] = '\0';
         break;
       }
     }
 #ifdef DEBUG_PROF
     printf("tau_get_userevent() \n");
 #endif /* DEBUG_PROF */
-    *ptr = Tau_get_userevent(event_name);
+    *ptr = Tau_get_userevent(newname);
   }
   return;
 
@@ -1037,6 +1049,6 @@ void tau_set_interrupt_interval__(int value)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.30 $   $Date: 2004/06/10 18:07:27 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.30 2004/06/10 18:07:27 sameer Exp $ 
+ * $Revision: 1.31 $   $Date: 2004/09/01 13:46:36 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.31 2004/09/01 13:46:36 sameer Exp $ 
  ***************************************************************************/
