@@ -25,6 +25,8 @@ public class GlobalThreadDataElement{
 	else{
 	    doubleList = new double[5];
 	}
+
+	this.globalMappingElement = globalMappingElement;
     }
     //####################################
     //End - Contructor(s).

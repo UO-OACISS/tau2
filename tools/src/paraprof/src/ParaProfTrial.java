@@ -29,6 +29,26 @@ public class ParaProfTrial extends Trial{
     public void initialize(Object obj){
 	dataSession = new TauPprofOutputSession();
 	dataSession.initialize(obj);
+
+	//Now grab all the data.
+	metrics = dataSession.getMetrics();
+	globalMapping = dataSession.getGlobalMapping();
+	nodes = dataSession.getNodes();
+	groupNamesPresent = dataSession.groupNamesPresent();
+	userEventsPresent = dataSession.userEventsPresent();
+	callPathDataPresent = dataSession.callPathDataPresent();
+
+	numberOfMappings = dataSession.getNumberOfMappings();
+	numberOfUserEvents = dataSession.getNumberOfUserEvents();
+	
+	//Max mean values.
+	maxMeanExclusiveValueList = dataSession.getMaxMeanExclusiveList();
+	maxMeanInclusiveValueList = dataSession.getMaxMeanInclusiveList();
+	maxMeanInclusivePercentValueList = dataSession.getMaxMeanInclusivePercentList();
+	maxMeanExclusivePercentValueList = dataSession.getMaxMeanExclusivePercentList();
+	maxMeanNumberOfCalls = dataSession.getMaxMeanNumberOfCalls();
+	maxMeanNumberOfSubRoutines = dataSession.getMaxMeanNumberOfSubRoutines();
+	maxMeanUserSecPerCallList = dataSession.getMaxMeanUserSecPerCallList();
     }
 
     public void setExperiment(ParaProfExperiment experiment){
@@ -352,7 +372,7 @@ public class ParaProfTrial extends Trial{
     TauPprofOutputSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
-    private Vector metrics = new Vector();
+    private Vector metrics = null;
   
     private SystemEvents systemEvents = new SystemEvents();
     private StaticMainWindow sMW = null;

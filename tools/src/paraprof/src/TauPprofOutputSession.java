@@ -411,6 +411,9 @@ public class TauPprofOutputSession extends DataSession{
 		    lineType = 5;
 		else if(noue(inputString))
 		    lineType = 6;
+
+		System.out.println("lineType:"+ lineType);
+		System.out.println(inputString);
 	    
 		//Common things to grab
 		if((lineType!=6) && (lineType!=-1)){
@@ -618,6 +621,7 @@ public class TauPprofOutputSession extends DataSession{
 			if((thread.getMaxExclusivePercentValue(metric)) < percentValue)
 			    thread.setMaxExclusivePercentValue(metric, percentValue);
 		    }
+		    break;
 		case 5:
 		    if((globalMappingElement.getMaxInclusiveValue(metric)) < value)
 			globalMappingElement.setMaxInclusiveValue(metric, value);
@@ -642,6 +646,7 @@ public class TauPprofOutputSession extends DataSession{
 		    //Get the number of calls and number of sub routines
 		    inputString = br.readLine();
 		    this.setNumberOfCSU(metric, inputString, globalMappingElement, thread, tmpGTDE);
+		    break;
 		case 6:
 		    //Just ignore the string if this is not the first check.
 		    //Assuming is that user events do not change for each counter value.
@@ -703,8 +708,13 @@ public class TauPprofOutputSession extends DataSession{
 			//Now set the userEvents flag.
 			setUserEventsPresent(true);
 		    }
+		    break;
 		default:
-		    ParaProf.systemError(null, null, "Unexpected line type - TPOS value: " + lineType);
+		    if(ParaProf.debugIsOn){
+			System.out.println("Skipping line:");
+			System.out.println(inputString);
+			System.out.println("");
+		    }
 		    break;
 		}
 		   
@@ -794,8 +804,26 @@ public class TauPprofOutputSession extends DataSession{
     public Thread getThread(int nodeID, int contextID, int threadID){
 	return (this.getContext(nodeID,contextID)).getThread(threadID);}
 
+    public Vector getMetrics(){
+	return metrics;}
+
     public GlobalMapping getGlobalMapping(){
 	return globalMapping;}
+
+    public Vector getMaxMeanExclusiveList(){
+	return maxMeanExclusiveValueList;}
+
+    public Vector getMaxMeanInclusiveList(){
+	return maxMeanInclusiveValueList;}
+
+    public Vector getMaxMeanInclusivePercentList(){
+	return maxMeanInclusivePercentValueList;}
+
+    public Vector getMaxMeanExclusivePercentList(){
+	return maxMeanExclusivePercentValueList;}
+  
+    public Vector getMaxMeanUserSecPerCallList(){
+	return maxMeanUserSecPerCallList;}
 
     public double getMaxMeanExclusiveValue(int dataValueLocation){
 	Double tmpDouble = (Double) maxMeanExclusiveValueList.elementAt(dataValueLocation);
@@ -1367,8 +1395,8 @@ public class TauPprofOutputSession extends DataSession{
     private boolean userEventsPresent = false;
     private boolean callPathDataPresent = false;
 
-    private GlobalMapping globalMapping;
-    private Vector nodes;
+    private GlobalMapping globalMapping = new GlobalMapping();
+    private Vector nodes = new Vector();
     private Vector metrics = new Vector();
 
     private Vector maxMeanInclusiveValueList = new Vector();
