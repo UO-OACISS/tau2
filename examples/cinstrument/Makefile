@@ -69,7 +69,7 @@ $(TARGET): $(TARGET).o
 
 # Use the instrumented source code to generate the object code
 $(TARGET).o : $(TARGET).inst.c 
-	$(CXX) -c $(CFLAGS) $(TARGET).inst.c  -o $(TARGET).o
+	$(CC) -c $(CFLAGS) $(TARGET).inst.c  -o $(TARGET).o
 
 # Generate the instrumented source from the original source and the pdb file
 $(TARGET).inst.c : $(TARGET).pdb $(TARGET).c $(TAUINSTR) 
