@@ -8,7 +8,7 @@
  *
  *********************************************************************/
 
-#include "ifdefs.h"
+#include "tau_platforms.h"
 
 /* Macros for min/max. To avoid <algobase> and gcc-3.0 problems, we define: */
 #define TAU_MIN(a,b) (((a)<(b))?(a):(b))
@@ -31,7 +31,7 @@ class user_event_data {
 
 /***************************************************************************
  * $RCSfile: user_event_data.h,v $   $Author: ntrebon $
- * $Revision: 1.1 $   $Date: 2002/07/25 20:40:14 $
- * TAU_VERSION_ID: $Id: user_event_data.h,v 1.1 2002/07/25 20:40:14 ntrebon Exp $
+ * $Revision: 1.2 $   $Date: 2002/07/25 20:50:00 $
+ * TAU_VERSION_ID: $Id: user_event_data.h,v 1.2 2002/07/25 20:50:00 ntrebon Exp $
  ***************************************************************************/
 

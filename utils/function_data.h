@@ -11,7 +11,7 @@
  *
  ***************************************************************************/
 
-#include "ifdefs.h"
+#include "tau_platforms.h"
 
 class function_data {
   public :
@@ -52,7 +52,7 @@ class function_data {
 
 /***************************************************************************
  * $RCSfile: function_data.h,v $   $Author: ntrebon $
- * $Revision: 1.1 $   $Date: 2002/07/25 20:40:15 $
- * TAU_VERSION_ID: $Id: function_data.h,v 1.1 2002/07/25 20:40:15 ntrebon Exp $
+ * $Revision: 1.2 $   $Date: 2002/07/25 20:50:00 $
+ * TAU_VERSION_ID: $Id: function_data.h,v 1.2 2002/07/25 20:50:00 ntrebon Exp $
  ***************************************************************************/
 

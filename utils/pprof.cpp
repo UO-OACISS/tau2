@@ -33,7 +33,7 @@
 
 # include "function_data.h"
 # include "user_event_data.h"
-# include "ifdefs.h"
+# include "tau_platforms.h"
 
 static struct p_func_descr {
 #ifdef USE_LONG
@@ -2598,6 +2598,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: ntrebon $
- * $Revision: 1.36 $   $Date: 2002/07/25 20:40:17 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.36 2002/07/25 20:40:17 ntrebon Exp $                                
+ * $Revision: 1.37 $   $Date: 2002/07/25 20:50:00 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.37 2002/07/25 20:50:00 ntrebon Exp $                                
  ***************************************************************************/
