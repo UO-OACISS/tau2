@@ -52,6 +52,8 @@
 
 #include <Profile/TulipThreadLayer.h>
 
+#include <Profile/JavaThreadLayer.h>
+
 #include <Profile/RtsLayer.h>
 
 
@@ -131,7 +133,7 @@ private:
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: bertie $
- * $Revision: 1.25 $   $Date: 2000/02/22 23:02:02 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.25 2000/02/22 23:02:02 bertie Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.26 $   $Date: 2000/03/19 00:13:10 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.26 2000/03/19 00:13:10 sameer Exp $ 
  ***************************************************************************/
