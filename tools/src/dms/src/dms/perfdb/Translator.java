@@ -4,23 +4,38 @@ import jargs.gnu.CmdLineParser;
 
 import java.io.File;
 import java.io.Serializable;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.Date;
 import java.util.Vector;
 
+import paraprof.*;
+/*
 import paraprof.ParaProfTrial;
+import paraprof.ParaProfDataSession;
+import paraprof.UtilFncs;
+*/
+import dms.dss.*;
+import java.awt.Component;
 
 public class Translator implements Serializable {
 
     private File readPprof;
     private File writeXml;
     private String trialTime;
+	private String sourceFile;
+	private Application app;
+	private Experiment exp;
+	private int expID;
 
     /* This variable connects translator to DB in order to check whether
        the app. and exp. associated with the trial data do exist there. */
-    private ConnectionManager connector;
+	DataSession dbSession = null;
+	ParaProfTrial trial = null;
 
     //constructor
     public Translator(String configFileName, String sourcename, String targetname) {
+		this.sourceFile = sourcename;
 
 		// check for the existence of file
 		readPprof = new File(sourcename);
@@ -51,56 +66,114 @@ public class Translator implements Serializable {
 	    	}
 		}
 	
-		connector = new ConnectionManager(configFileName);
+		dbSession = new PerfDBSession();
+		dbSession.initialize(configFileName);
+    }
+
+    public boolean checkForApp(String appid) {
+		app = dbSession.setApplication(Integer.parseInt(appid));
+		if (app == null)
+			return false;
+		else
+			return true;
+    }
+
+    public boolean checkForExp(String expid) {
+		this.expID = Integer.parseInt(expid);
+		exp = dbSession.setExperiment(Integer.parseInt(expid));
+		if (exp == null)
+			return false;
+		else
+			return true;
+    }
+
+	public void loadTrial(String trialName, String problemFile) {
+		/*
+	    FileList fl = new FileList();
+	    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", false);
+		if (v.size() == 0) {
+	    	v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "profile", false);
+		}
+		*/
+
+	    trial = null;
+	    Vector v = new Vector();;
+		File[] inFile = new File[1];
+		inFile[0] = new File (sourceFile);
+		v.add(inFile);
+
+	    trial = new ParaProfTrial(null, 0);
+	    trial.setName(trialName);
+	    trial.setDefaultTrial(true);
+	    trial.setPaths(System.getProperty("user.dir"));
+	    trial.setLoading(true);
+	    trial.initialize(v);
+
+		// finish setting up the trial
+		int[] maxNCT = trial.getMaxNCTNumbers();
+		trial.setNodeCount(maxNCT[0]+1);
+		trial.setNumContextsPerNode(maxNCT[1]+1);
+		trial.setNumThreadsPerContext(maxNCT[2]+1);
+		trial.setProblemDefinition(getProblemString(problemFile));
+		trial.setExperimentID(expID);
+	}
+
+	public void writeTrial() {
+		XMLSupport xmlWriter = new XMLSupport(trial);
+		xmlWriter.writeXmlFiles(0, writeXml);
+	}
+
+	public void saveTrial() {
+		DataSession session = trial.getParaProfDataSession();
+		dms.dss.Metric metric = (dms.dss.Metric)session.getMetrics().elementAt(0);
+		trial.addMetric(metric);
+		dbSession.saveTrial(trial);
+	}
+
+	public String getProblemString(String problemFile) {
+		// if the file wasn't passed in, this is an existing trial.
+		if (problemFile == null)
+			return new String("");
+
+		// open the file
+		BufferedReader reader = null;
 		try {
-			connector.connect();
+			reader = new BufferedReader (new FileReader (problemFile));
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println("Problem file not found!  Exiting...");
 			System.exit(0);
 		}
-    }
-
-    public String checkForApp(String appid) {
-		String returnVal = null;
-	
-		StringBuffer buf = new StringBuffer();
-        buf.append("select a.id from application a ");
-		buf.append("where a.id=" + appid + "; ");
-		try {
-			returnVal = connector.getDB().getDataItem(buf.toString());               
-			if (returnVal == null) {
-				System.out.println("Application ID: " + appid + " not found.");
+		// read the file, one line at a time, and do some string
+		// substitution to make sure that we don't blow up our
+		// SQL statement.  ' characters aren't allowed...
+		StringBuffer problemString = new StringBuffer();
+		String line;
+		while (true) {
+			try {
+				line = reader.readLine();
+			} catch (Exception e) {
+				line = null;
 			}
-        } catch (Exception ex) {
-			ex.printStackTrace();
-        }
-        return returnVal;
-    }
+			if (line == null) break;
+			problemString.append(line.replaceAll("'", "\'"));
+		}
 
-    public String checkForExp(String expid, String appid) {
-		String returnVal = null;
-	
-		StringBuffer buf = new StringBuffer();
-		buf.append("select id from experiment ");
-		buf.append("where id = " + expid + " and application = " + appid + "; ");
+		// close the problem file
 		try {
-			returnVal = connector.getDB().getDataItem(buf.toString());
-			if (returnVal == null) {
-				System.out.println("Experiment ID: " + expid + " with Application ID: " + appid + " not found.");
-			}
-        }catch (Exception ex) {
-			ex.printStackTrace();
-        }
-        
-        return returnVal;
-    }
+			reader.close();
+		} catch (Exception e) {
+		}
+
+		// return the string
+		return problemString.toString();
+	}
 
 	//******************************
 	//End - Helper functions for buildStatic data.
 	//******************************
 
     static public void main(String[] args){
-		String USAGE = "USAGE: perfdb_translate [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id] [{-n,--name} trial_name]";
+		String USAGE = "USAGE: perfdb_translate [{-s,--sourcefile} sourcefilename] [{-d,destinationfile} destinationname] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]";
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
@@ -110,6 +183,7 @@ public class Translator implements Serializable {
         CmdLineParser.Option experimentidOpt = parser.addStringOption('e', "experimentid");
         CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
         CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
+        CmdLineParser.Option problemOpt = parser.addStringOption('p', "problemfile");
 
         try {
             parser.parse(args);
@@ -127,6 +201,7 @@ public class Translator implements Serializable {
         String applicationID = (String)parser.getOptionValue(applicationidOpt);
         String experimentID = (String)parser.getOptionValue(experimentidOpt);
         String trialName = (String)parser.getOptionValue(nameOpt);
+        String problemFile = (String)parser.getOptionValue(problemOpt);
 
     	if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
@@ -160,29 +235,13 @@ public class Translator implements Serializable {
 
 		Translator trans = new Translator(configFile, sourceFile, destinationFile);
 		trans.checkForApp(applicationID);
-		trans.checkForExp(experimentID, applicationID);
-
-		/*
-	    FileList fl = new FileList();
-	    v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "pprof", false);
-		if (v.size() == 0) {
-	    	v = fl.getFileList(new File(System.getProperty("user.dir")), null, 0 , "profile", false);
-		}
-		*/
-
-	    ParaProfTrial trial = null;
-	    Vector v = new Vector();;
-		File[] inFile = new File[1];
-		inFile[0] = new File (sourceFile);
-		v.add(inFile);
-
-	    trial = new ParaProfTrial(null, 0);
-	    trial.setName(trialName);
-	    trial.setDefaultTrial(true);
-	    trial.setPaths(System.getProperty("user.dir"));
-	    trial.setLoading(true);
-	    trial.initialize(v);
-
-		System.out.println("Done - Translating pprof.dat into pprof.xml!");
+		trans.checkForExp(experimentID);
+		trans.loadTrial(trialName, problemFile);
+		try{java.lang.Thread.sleep(2000);}
+		catch(Exception e) {}
+		trans.saveTrial();
+		// trans.writeTrial();
+		System.out.println("Done saving trial!");
+		System.exit(0);
     }
 } 

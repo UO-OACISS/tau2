@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.1 2004/03/27 01:02:57 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.2 2004/03/31 00:44:39 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -380,7 +380,7 @@ public class Trial {
 			while (enum.hasMoreElements()) {
 				metric = (Metric)enum.nextElement();
 				stmt1.setString(1, metric.getName());
-				stmt1.setInt(2, trialID);
+				stmt1.setInt(2, newTrialID);
 				stmt1.executeUpdate();
 				tmpStr = new String();
 				if (db.getDBType().compareTo("mysql") == 0)
