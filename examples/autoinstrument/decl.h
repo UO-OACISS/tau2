@@ -20,6 +20,6 @@ int  floor (int num, int den);
 int  ceil (int num, int den);
 
 
-#endif _DECL_H
+#endif /* _DECL_H */
 
 /* EOF decl.h */
