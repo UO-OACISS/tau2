@@ -38,11 +38,11 @@ drwxr-xr-x    8 bertie   paraduck     4096 Mar 15 18:57 .
 drwxr-xr-x   26 bertie   paraduck     4096 Mar 15 18:42 ..
 drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 CPU_TIME
 drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:41 CVS
-drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 GET_TIME_OF_DAY
-drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 LINUX_TIMERS
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 MULTI__GET_TIME_OF_DAY
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 MULTI__LINUX_TIMERS
 -rw-r--r--    1 bertie   paraduck     1440 Mar 15 18:50 Makefile
-drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 PAPI_FP_INS
-drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 PAPI_L1_DCM
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 MULTI__PAPI_FP_INS
+drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 MULTI__PAPI_L1_DCM
 -rw-r--r--    1 bertie   paraduck     2214 Feb 23  2000 README
 -rwxr-xr-x    1 bertie   paraduck   131458 Mar 15 18:52 simple
 -rw-r--r--    1 bertie   paraduck     1701 Mar 15 18:21 simple.cpp
@@ -50,8 +50,8 @@ drwxr-xr-x    2 bertie   paraduck     4096 Mar 15 18:57 PAPI_L1_DCM
 
 
 Move into those directories to see that data:
-[tau2/examples/multicounter]cd PAPI_FP_INS
-[tau2/examples/multicounter/PAPI_FP_INS]pprof
+[tau2/examples/multicounter]cd MULTI__PAPI_FP_INS
+[tau2/examples/multicounter/MULTI__PAPI_FP_INS]pprof
 Reading Profile files in profile.*
 
 NODE 0;CONTEXT 0;THREAD 0:
@@ -66,8 +66,8 @@ NODE 0;CONTEXT 0;THREAD 0:
 
 
 
-[tau2/examples/multicounter]$ cd PAPI_L1_DCM/
-[tau2/examples/multicounter/PAPI_L1_DCM]$ pprof
+[tau2/examples/multicounter]$ cd MULTI__PAPI_L1_DCM/
+[tau2/examples/multicounter/MULTI__PAPI_L1_DCM]$ pprof
 Reading Profile files in profile.*
 
 NODE 0;CONTEXT 0;THREAD 0:
@@ -82,8 +82,8 @@ NODE 0;CONTEXT 0;THREAD 0:
 
 
 
-[tau2/examples/multicounter]$ cd GET_TIME_OF_DAY/
-[tau2/examples/multicounter]$ pprof
+[tau2/examples/multicounter]$ cd MULTI__GET_TIME_OF_DAY/
+[tau2/examples/multicounter/MULTI__GET_TIME_OF_DAY]$ pprof
 Reading Profile files in profile.*
 
 NODE 0;CONTEXT 0;THREAD 0:
@@ -108,10 +108,13 @@ GET_TIME_OF_DAY    --- For the default profiling option using gettimeofday()
 SGI_TIMERS         --- For -SGITIMERS configuration option under IRIX
 LINUX_TIMERS       --- For -LINUXTIMERS configuration option under Linux
 CPU_TIME           --- For user+system time from getrusage() call with -CPUTIME
+CRAY_TIMERS	   --- For cray timers
+TAU_MUSE	   --- For MAGNET User-Space Environment
+TAU_MPI_MESSAGE_SIZE - For tracking mpi send message event 
 P_WALL_CLOCK_TIME  --- For PAPI's WALLCLOCK time using -PAPIWALLCLOCK
 P_VIRTUAL_TIME     --- For PAPI's process virtual time using -PAPIVIRTUAL
 
-and PAPI/PCL options that can be found in the TAU user's guide or on their 
+PAPI/PCL options that can be found in the TAU user's guide or on their 
 respective websites. For e.g.,
 PCL_FP_INSTR       --- For floating point operations using PCL (-pcl=<dir>)
 PAPI_FP_INS        --- For floating point operations using PAPI (-papi=<dir>)
