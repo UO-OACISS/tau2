@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.2  2003/03/15 01:39:10  sameer
+// Added <limits> [HP-UX] and moved funcDB in PyTimer.cpp to inside the profileTimer routine.
+//
 // Revision 1.1  2003/02/28 23:26:51  sameer
 // Added Python Bindings to TAU [Julian Cummings, Brian Miller].
 //
@@ -28,6 +31,7 @@
 //
 // 
 
+#include <limits>
 #include <Python.h>
 
 #include "Profile/PyDatabase.h"
@@ -272,7 +276,7 @@ PyObject * pytau_dumpFuncValsIncr(PyObject *, PyObject * args)
 
 
 // version
-// $Id: PyDatabase.cpp,v 1.1 2003/02/28 23:26:51 sameer Exp $
+// $Id: PyDatabase.cpp,v 1.2 2003/03/15 01:39:10 sameer Exp $
 
 // End of file
   

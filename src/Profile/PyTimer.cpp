@@ -12,6 +12,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.2  2003/03/15 01:39:11  sameer
+// Added <limits> [HP-UX] and moved funcDB in PyTimer.cpp to inside the profileTimer routine.
+//
 // Revision 1.1  2003/02/28 23:26:52  sameer
 // Added Python Bindings to TAU [Julian Cummings, Brian Miller].
 //
@@ -37,8 +40,6 @@ struct ltstr{
 };
 
 
-/* GLOBAL database of function names */
-map<const char*, int, ltstr> funcDB;
 
 char pytau_profileTimer__name__[] = "profileTimer";
 char pytau_profileTimer__doc__[] = "access or create a TAU timer";
@@ -51,6 +52,8 @@ PyObject * pytau_profileTimer(PyObject *self, PyObject *args, PyObject *kwargs)
     char *type = "";
     char *group = "TAU_PYTHON"; 
     static char *argnames[] = { "name", "type", "group", NULL}; 
+    /* GLOBAL database of function names */
+    static map<const char*, int, ltstr> funcDB;
     map<const char *, int, ltstr>::iterator it;
 
     // Get Python arguments 
@@ -158,7 +161,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.1 2003/02/28 23:26:52 sameer Exp $
+// $Id: PyTimer.cpp,v 1.2 2003/03/15 01:39:11 sameer Exp $
 
 // End of file
   
