@@ -624,10 +624,36 @@ public class TauOutputSession extends ParaProfDataSession{
 
     private void getUserEventData(String string){
 	try{
-	    StringTokenizer st1 = new StringTokenizer(string, "\"");
-	    usereventDataLine.s0 = st1.nextToken();
 
-	    StringTokenizer st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	    // first, count the number of double-quotes to determine if the 
+	    // user event contains a double-quote
+	    int quoteCount = 0;
+	    for (int i=0; i < string.length(); i++) {
+		if (string.charAt(i) == '"')
+		    quoteCount++;
+	    }
+
+	    StringTokenizer st2;
+
+	    if (quoteCount == 2) { // proceed as usual
+		StringTokenizer st1 = new StringTokenizer(string, "\"");
+		usereventDataLine.s0 = st1.nextToken();
+		st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
+	    } else {
+
+		// there is a quote in the name of the user event
+		int count = 0;
+		int i = 0;
+		while (count < quoteCount && i < string.length()) {
+		    if (string.charAt(i) == '"')
+			count++;
+		    i++;
+		}
+	    
+		usereventDataLine.s0 = string.substring(1,i-1);
+		st2 = new StringTokenizer(string.substring(i+1), " \t\n\r");
+	    }
+
 	    usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number of calls.
 	    usereventDataLine.d0 = Double.parseDouble(st2.nextToken()); //Max
 	    usereventDataLine.d1 = Double.parseDouble(st2.nextToken()); //Min
