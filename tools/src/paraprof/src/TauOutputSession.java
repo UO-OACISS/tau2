@@ -31,6 +31,7 @@ public class TauOutputSession extends ParaProfDataSession{
 
     public TauOutputSession(){
 	super();
+	this.setMetrics(new Vector());
     }
 
     /**
@@ -78,8 +79,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		//Need to call increaseVectorStorage() on all objects that require it.
 		this.getGlobalMapping().increaseVectorStorage();
 		    
-		Metric metricRef = this.addMetric();
-		metric = metricRef.getID();
+		metric = this.getNumberOfMetrics();
 
 		//Only need to call addDefaultToVectors() if not the first run.
 		if(!(metric==0)){
@@ -170,15 +170,10 @@ public class TauOutputSession extends ParaProfDataSession{
 			//It's first token will be the number of function present.
 			tokenString = genericTokenizer.nextToken();
 		    
-			if(metricRef.getName()==null){
+			if(i==0){
 			    //Set the metric name.
 			    String metricName = getMetricName(inputString);
-			    //Now set the metric name.
-			    if(metricName == null)
-				metricName = new String("Time");
-			    System.out.println("Metric name is: " + metricName);
-			
-			    metricRef.setName(metricName);
+			    this.addMetric(metricName);
 			}
 			//####################################
 			//End - First Line
@@ -425,7 +420,7 @@ public class TauOutputSession extends ParaProfDataSession{
 		System.out.println("Done processing data!");
 		System.out.println("Time to process (in milliseconds): " + time);
 	    }
-	    //Generate mean data for this trial.
+	    //Generate mean data.
 	    this.setMeanDataAllMetrics(0,this.getNumberOfMetrics());
 
 	    System.out.println("Processing callpath data ...");

@@ -15,9 +15,20 @@ import dms.dss.*;
 public class ParaProfApplication extends Application{
 
     public ParaProfApplication(){
-	super();}
+	super();
+	this.setID(-1);
+	this.setName("");
+	this.setVersion("");
+	this.setDescription("");
+	this.setLanguage("");
+	this.setParaDiag("");
+	this.setUsage("");
+	this.setExecutableOptions("");
+	this.setUserData("");
+    }
 
     public ParaProfApplication(Application application){
+	super();
 	this.setID(application.getID());
 	this.setName(application.getName());
 	this.setVersion(application.getVersion());

@@ -23,6 +23,23 @@ import javax.swing.tree.*;
 import dms.dss.*;
 
 public class ParaProfTrial extends Trial{
+
+     public ParaProfTrial(int type){
+	super();
+	this.setID(-1);
+	this.setExperimentID(-1);
+	this.setApplicationID(-1);
+	this.setName("");
+	this.setTime("");
+	this.setProblemDefinition("");
+	this.setNodeCount(-1);
+	this.setNumContextsPerNode(-1);
+	this.setNumThreadsPerContext(-1);
+	this.setUserData("");
+	this.dataSession.setDebug(ParaProf.debugIsOn);
+	this.type = type;
+    }
+
     public ParaProfTrial(Trial trial, int type){
 	super();
 	if(trial!=null){
@@ -41,12 +58,6 @@ public class ParaProfTrial extends Trial{
 	    this.setUserData(trial.getUserData());
 	    this.dataSession = new ParaProfDBSession();
 	    this.dataSession.setDebug(ParaProf.debugIsOn);
-	    int numberOfMetrics = trial.getMetricCount();
-	    for(int i=0;i<numberOfMetrics;i++){
-		Metric metric = dataSession.addMetric();
-		metric.setName(trial.getMetric(i));
-		metric.setTrial(this);
-	    }
 	}
 	this.type = type;
     }
@@ -73,6 +84,15 @@ public class ParaProfTrial extends Trial{
 	
 	dataSession.initialize(obj);
 	dataSession.getGlobalMapping().setColors(clrChooser, -1);
+
+	//Set the metrics.
+	int numberOfMetrics = dataSession.getNumberOfMetrics();
+	for(int i=0;i<numberOfMetrics;i++){
+	    Metric metric = this.addMetric();
+	    metric.setName(dataSession.getMetricName(i));
+	    metric.setTrial(this);
+	}
+
     }
 
     public void setExperiment(ParaProfExperiment experiment){
@@ -186,6 +206,34 @@ public class ParaProfTrial extends Trial{
 	else
 	    return true;
     }
+
+    public Vector getMetrics(){
+	return metrics;}
+
+    public int getNumberOfMetrics(){
+	return metrics.size();}
+
+    public int getMetricID(String string){
+	for(Enumeration e = metrics.elements(); e.hasMoreElements() ;){
+	    Metric metric = (Metric) e.nextElement();
+	    if((metric.getName()).equals(string))
+		return metric.getID();
+	}
+	return -1;
+    }
+
+    public Metric getMetric(int metricID){
+	return (Metric) metrics.elementAt(metricID);}
+
+    public String getMetricName(int metricID){
+	return this.getMetric(metricID).getName();}
+
+    public Metric addMetric(){
+	Metric newMetric = new Metric();
+	newMetric.setID((metrics.size()));
+	metrics.add(newMetric);
+	return newMetric;
+    }
   
     //####################################
     //Pass-though methods to the data session for this instance.
@@ -210,21 +258,6 @@ public class ParaProfTrial extends Trial{
 
     public int getTotalNumberOfThreads(){
 	return dataSession.getTotalNumberOfThreads();}
-
-    public Vector getMetrics(){
-	return dataSession.getMetrics();}
-
-    public int getNumberOfMetrics(){
-	return dataSession.getNumberOfMetrics();}
-
-    public int getMetricID(String string){
-	return dataSession.getMetricID(string);}
-
-    public String getMetricName(int metricID){
-	return dataSession.getMetricName(metricID);}
-
-    public Metric addMetric(){
-	return dataSession.addMetric();}
 
     public NCT getNCT(){
 	return dataSession.getNCT();}
@@ -259,8 +292,7 @@ public class ParaProfTrial extends Trial{
     private String pathReverse = null;
     private int selectedMetricID = 0;
 
-    private GlobalMapping globalMapping;
-    private Vector nodes = new Vector();
+    private Vector metrics = new Vector();
     //####################################
     //Instance data.
     //####################################

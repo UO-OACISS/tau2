@@ -31,6 +31,7 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 
     public TauPprofOutputSession(){
 	super();
+	this.setMetrics(new Vector());
     }
 
     /**
@@ -147,9 +148,8 @@ public class TauPprofOutputSession extends ParaProfDataSession{
 
 		System.out.println("Metric name is: " + metricName);
       
-		Metric metricRef = this.addMetric();
-		metricRef.setName(metricName);
-		metric = metricRef.getID();
+		metric = this.getNumberOfMetrics();
+		this.addMetric(metricName);
 
 		bSDCounter++;
 		//####################################

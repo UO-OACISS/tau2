@@ -31,6 +31,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 
     public DynaprofOutputSession(){
 	super();
+	this.setMetrics(new Vector());
     }
 
     /**
@@ -120,10 +121,10 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 				//Metric name is second token on line.
 				genericTokenizer = new StringTokenizer(inputString, " :\t\n\r");
 				genericTokenizer.nextToken();
-				Metric metricRef = this.addMetric();
-				metricRef.setName(genericTokenizer.nextToken());
+				String metricName = genericTokenizer.nextToken();
+				this.addMetric(metricName);
 				if(this.debug())
-				    System.out.println("metric name found: " + metricRef.getName());
+				    System.out.println("metric name found: " + metricName);
 			    }
 			    if(this.debug())
 				System.out.println("Number of metrics: " + this.getNumberOfMetrics());
@@ -131,9 +132,8 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			else{
 			    if(this.debug())
 				System.out.println("No header present");
-			    Metric metricRef = this.addMetric();
-			    metric = metricRef.getID();
-			    metricRef.setName("default");
+			    this.addMetric("default");
+			    metric = 0;
 			}
 			
 			for(int j=this.getNumberOfMetrics();j>0;j--)
@@ -142,7 +142,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
 			this.setHeaderProcessed(true);
 		    }
 		    
-		    //Metrics and names should be set by now.
+		    //Metrics should be set by now.
 		    int[] nct = this.getNCT(files[i].getName());
 		    nodeID = nct[0];
 		    contextID = nct[1];
@@ -483,7 +483,7 @@ public class DynaprofOutputSession extends ParaProfDataSession{
     //####################################
     private LineData functionDataLine = new LineData();
     private LineData functionChildDataLine = new LineData();
-     private boolean headerProcessed = false;
+    private boolean headerProcessed = false;
     //####################################
     //End - Instance data.
     //####################################

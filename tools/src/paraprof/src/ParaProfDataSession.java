@@ -212,34 +212,6 @@ public abstract class ParaProfDataSession  extends DataSession{
 
     public void getFunctionDetail(Function function){};
 
-    public Vector getMetrics(){
-	return metrics;}
-
-    public int getNumberOfMetrics(){
-	return metrics.size();}
-
-    public int getMetricID(String string){
-	for(Enumeration e = metrics.elements(); e.hasMoreElements() ;){
-	    Metric metric = (Metric) e.nextElement();
-	    if((metric.getName()).equals(string))
-		return metric.getID();
-	}
-	return -1;
-    }
-
-    public Metric getMetric(int metricID){
-	return (Metric) metrics.elementAt(metricID);}
-
-    public String getMetricName(int metricID){
-	return this.getMetric(metricID).getName();}
-
-    public Metric addMetric(){
-	Metric newMetric = new Metric();
-	newMetric.setID((metrics.size()));
-	metrics.add(newMetric);
-	return newMetric;
-    }
-
     public GlobalMapping getGlobalMapping(){
 	return globalMapping;}
 
@@ -479,13 +451,17 @@ public abstract class ParaProfDataSession  extends DataSession{
     //####################################
     //Protected Section.
     //####################################
-
-    //######
-    //Set mean values functions.
-    //######
-
     protected void setMetrics(Vector metrics){
 	this.metrics = metrics;}
+
+    protected void addMetric(String metricName){
+	metrics.add(metricName);}
+
+    protected int getNumberOfMetrics(){
+	return metrics.size();}
+
+    protected String getMetricName(int metricID){
+	return (String) metrics.elementAt(metricID);}
 
     protected void setProfileStatsPresent(boolean profileStatsPresent){
 	this.profileStatsPresent = profileStatsPresent;}
@@ -545,7 +521,6 @@ public abstract class ParaProfDataSession  extends DataSession{
     private GlobalMapping globalMapping = new GlobalMapping();
     private NCT nct = new NCT();
     private int[] maxNCT = null;
-    private Vector metrics = new Vector();
 
     private boolean debug = false;
     //When in debugging mode, this class can print a lot of data.

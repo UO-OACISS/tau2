@@ -15,7 +15,35 @@ import dms.dss.*;
 public class ParaProfExperiment extends Experiment{
 
     public ParaProfExperiment(){
-	super();}
+	super();
+	this.setID(-1);
+	this.setApplicationID(-1);
+	this.setName("");
+	this.setUserData("");
+	this.setSystemName("");
+	this.setSystemMachineType("");
+	this.setSystemArch("");
+	this.setSystemOS("");
+	this.setSystemMemorySize("");
+	this.setSystemProcessorAmount("");
+	this.setSystemL1CacheSize("");
+	this.setSystemL2CacheSize("");
+	this.setSystemUserData("");
+	this.setConfigurationPrefix("");
+	this.setConfigurationArchitecture("");
+	this.setConfigurationCpp("");
+	this.setConfigurationCc("");
+	this.setConfigurationJdk("");
+	this.setConfigurationProfile("");
+	this.setConfigurationUserData("");
+	this.setCompilerCppName("");
+	this.setCompilerCppVersion("");
+	this.setCompilerCcName("");
+	this.setCompilerCcVersion("");
+	this.setCompilerJavaDirpath("");
+	this.setCompilerJavaVersion("");
+	this.setCompilerUserData("");
+    }
 
     public ParaProfExperiment(Experiment experiment){
 	super();
