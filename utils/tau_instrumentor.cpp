@@ -1,11 +1,15 @@
-#include <fstream.h>
+#include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #ifdef _OLD_HEADER_
+# include <fstream.h>
 # include <set.h>
 # include <algo.h>
 #else
+# include <fstream>
+  using std::ifstream;
+  using std::ofstream;
 # include <set>
   using std::set;
 # include <algorithm>
