@@ -33,10 +33,10 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/users/sameer/tau2
+TAUROOT=/nfs/research/parallel/sameer/gar/rs/demo/tau2
 TULIPDIR=/users/sameer/s
-TAU_PREFIX_INSTALL_DIR=/home/users/sameer/tau2
-TAU_OPTIONS=-pthread-pgi
+TAU_PREFIX_INSTALL_DIR=/nfs/research/parallel/sameer/gar/rs/demo/tau2
+TAU_OPTIONS=
 #######################################################################
  
 #ENABLE64BIT#ABI 	     = -64		  #ENDIF#
@@ -63,7 +63,7 @@ LSX = .a
 #DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF          #ENDIF#
 #STDCXXLIB#PROFILEOPT7         = -DTAU_STDCXXLIB       #ENDIF#
 #INTELTFLOP#PROFILEOPT8        = -DPOOMA_TFLOP         #ENDIF#
-#SOL2#PROFILEOPT9              = -DNO_RTTI             #ENDIF#
+#SOL2CC#PROFILEOPT9            = -DNO_RTTI             #ENDIF#
 #GNU#PROFILEOPT10              = -DNO_RTTI             #ENDIF#
 #CALLSTACK#PROFILEOPT11        = -DPROFILE_CALLSTACK   #ENDIF#
 #PGI#PROFILEOPT12	       = 		       #ENDIF#
