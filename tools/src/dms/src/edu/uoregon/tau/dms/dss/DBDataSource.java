@@ -275,23 +275,16 @@ public class DBDataSource extends DataSource {
                 userEventProfile.setUserEventMinValue(alp.getMinimumValue());
                 userEventProfile.setUserEventMeanValue(alp.getMeanValue());
                 userEventProfile.setUserEventSumSquared(alp.getSumSquared());
-
-                if ((userEvent.getMaxUserEventNumberValue()) < alp.getSampleCount())
-                    userEvent.setMaxUserEventNumberValue(alp.getSampleCount());
-                if ((userEvent.getMaxUserEventMaxValue()) < alp.getMaximumValue())
-                    userEvent.setMaxUserEventMaxValue(alp.getMaximumValue());
-                if ((userEvent.getMaxUserEventMinValue()) < alp.getMinimumValue())
-                    userEvent.setMaxUserEventMinValue(alp.getMinimumValue());
-                if ((userEvent.getMaxUserEventMeanValue()) < alp.getMeanValue())
-                    userEvent.setMaxUserEventMeanValue(alp.getMeanValue());
-                if ((userEvent.getMaxUserEventSumSquared()) < alp.getSumSquared())
-                    userEvent.setMaxUserEventSumSquared(alp.getSumSquared());
+                userEventProfile.updateMax();
+                
             }
 
             System.out.println("Processing callpath data ...");
             if (CallPathUtilFuncs.isAvailable(getTrialData().getFunctions())) {
                 setCallPathDataPresent(true);
-                CallPathUtilFuncs.buildRelations(getTrialData());
+                if (CallPathUtilFuncs.buildRelations(getTrialData()) != 0) {
+                    setCallPathDataPresent(false);
+                }
             }
 
             time = (System.currentTimeMillis()) - time;

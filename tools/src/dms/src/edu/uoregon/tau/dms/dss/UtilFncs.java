@@ -36,38 +36,37 @@ public class UtilFncs {
         return s.concat(new String(padchars, 0, len));
     }
 
-    public static double adjustDoublePresision(double d, int precision) {
-        String result = null;
-        try {
-            String formatString = "#.#";
-            for (int i = 0; i < (precision - 1); i++) {
-                formatString = formatString + "#";
-            }
-            // 	    if(d < 0.001){
-            // 		for(int i=0;i<4;i++){
-            // 		    formatString = formatString+"0";
-            // 		}
-            // 	    }
+//    public static double adjustDoublePresision(double d, int precision) {
+//        String result = null;
+//        try {
+//            String formatString = "#.#";
+//            for (int i = 0; i < (precision - 1); i++) {
+//                formatString = formatString + "#";
+//            }
+//            // 	    if(d < 0.001){
+//            // 		for(int i=0;i<4;i++){
+//            // 		    formatString = formatString+"0";
+//            // 		}
+//            // 	    }
+//
+//            formatString = formatString + "E0";
+//
+//            DecimalFormat dF = new DecimalFormat(formatString);
+//            result = dF.format(d);
+//        } catch (Exception e) {
+//            UtilFncs.systemError(e, null, "UF01");
+//        }
+//
+//        try {
+//            return Double.parseDouble(result);
+//
+//        } catch (java.lang.NumberFormatException e) {
+//            //	    System.out.println ("Uh oh! " + d);
+//            return d;
+//        }
+//    }
 
-            formatString = formatString + "E0";
-
-            DecimalFormat dF = new DecimalFormat(formatString);
-            result = dF.format(d);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "UF01");
-        }
-
-        try {
-            return Double.parseDouble(result);
-
-        } catch (java.lang.NumberFormatException e) {
-            //	    System.out.println ("Uh oh! " + d);
-            return d;
-        }
-    }
-
-    // format a double for display within 'width' chars, kind of like C-printf
-    // %G
+    // format a double for display within 'width' chars, kind of like C-printf's %G
     public static String formatDouble(double d, int width) {
 
         // first check if the regular toString is in exponential form
@@ -84,8 +83,7 @@ public class UtilFncs {
             // not exponential form
             String formatString = "";
 
-            // create a format string of the same length, (e.g. ###.### for
-            // 123.456)
+            // create a format string of the same length, (e.g. ###.### for 123.456)
             for (int i = 0; i < str.length(); i++) {
                 if (str.charAt(i) != '.')
                     formatString = formatString + "#";
@@ -95,24 +93,27 @@ public class UtilFncs {
 
             // now we reduce that format string as follows
 
-            // first, do the least of 'width' or then length of the regular
-            // toString
+            // first, do the minimum of 'width' or the length of the regular toString
+            
             int min = width;
             if (formatString.length() < min)
                 min = formatString.length();
 
-            // we don't want more than 5 digits past the decimal point
-            // this "5" would be the old ParaProf.defaultNumberPrecision
-            if (formatString.indexOf('.') + 5 < min)
-                min = formatString.indexOf('.') + 5;
+            // we don't want more than 4 digits past the decimal point
+            // this 4 would be the old ParaProf.defaultNumberPrecision
+            if (formatString.indexOf('.') + 4 < min)
+                min = formatString.indexOf('.') + 4;
 
             formatString = formatString.substring(0, min);
 
+            // remove trailing dot
+            if (formatString.charAt(formatString.length()-1) == '.')
+                formatString = formatString.substring(0,formatString.length()-2);
+            
             DecimalFormat dF = new DecimalFormat(formatString);
 
             str = dF.format(d);
-            //	    System.out.println ("value: " + d + ", width: " + width + ",
-            // returning: " + lpad(str,width));
+       	    //System.out.println ("value: " + d + ", width: " + width + ", returning: '" + lpad(str,width) + "'");
             return lpad(str, width);
 
         }
@@ -140,8 +141,6 @@ public class UtilFncs {
     public static String getOutputString(int type, double d, int width) {
         switch (type) {
         case 0:
-            //return (Double.toString(UtilFncs.adjustDoublePresision(d,
-            // width)));
             return (UtilFncs.formatDouble(d, width));
         case 1:
             return (UtilFncs.formatDouble((d / 1000), width));
@@ -235,6 +234,8 @@ public class UtilFncs {
             return "maximum number of userevents";
         case 18:
             return "mean number of userevents";
+        case 20:
+            return "Standard Deviation of User Event Value";
         default:
             UtilFncs.systemError(null, null, "Unexpected string type - UF04 value: " + type);
         }

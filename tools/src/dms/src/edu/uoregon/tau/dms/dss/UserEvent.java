@@ -58,6 +58,13 @@ public class UserEvent implements Serializable, Comparable {
         return maxUserEventSumSquared;
     }
 
+    public void setMaxUserEventStdDev(double maxUserEventStdDev) {
+        this.maxUserEventStdDev = maxUserEventStdDev;
+    }
+
+    public double getMaxUserEventStdDev() {
+        return maxUserEventStdDev;
+    }
 
 
     public int compareTo(Object inObject) {
@@ -100,6 +107,7 @@ public class UserEvent implements Serializable, Comparable {
     private double maxUserEventMaxValue = 0;
     private double maxUserEventMeanValue = 0;
     private double maxUserEventSumSquared = 0;
+    private double maxUserEventStdDev = 0;
 
 
 }

@@ -406,17 +406,7 @@ public class TauPprofDataSource extends DataSource {
                                     userEventProfile.setUserEventMeanValue(usereventDataLine.d2);
                                     userEventProfile.setUserEventSumSquared(usereventDataLine.d3);
 
-                                    if ((userEvent.getMaxUserEventNumberValue()) < usereventDataLine.i0)
-                                        userEvent.setMaxUserEventNumberValue(usereventDataLine.i0);
-                                    if ((userEvent.getMaxUserEventMaxValue()) < usereventDataLine.d0)
-                                        userEvent.setMaxUserEventMaxValue(usereventDataLine.d0);
-                                    if ((userEvent.getMaxUserEventMinValue()) < usereventDataLine.d1)
-                                        userEvent.setMaxUserEventMinValue(usereventDataLine.d1);
-                                    if ((userEvent.getMaxUserEventMeanValue()) < usereventDataLine.d2)
-                                        userEvent.setMaxUserEventMeanValue(usereventDataLine.d2);
-
-                                    if (userEvent.getMaxUserEventSumSquared() < usereventDataLine.d3)
-                                        userEvent.setMaxUserEventSumSquared(usereventDataLine.d3);
+                                    userEventProfile.updateMax();
 
                                 }
                             }

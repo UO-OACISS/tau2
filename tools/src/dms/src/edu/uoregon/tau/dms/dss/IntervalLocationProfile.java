@@ -25,7 +25,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.8 2004/12/21 00:33:32 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.9 2004/12/21 20:49:39 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

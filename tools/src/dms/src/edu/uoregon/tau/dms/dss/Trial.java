@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.13 2004/12/21 00:33:34 amorris Exp $
+ * CVS $Id: Trial.java,v 1.14 2004/12/21 20:49:40 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell

@@ -28,7 +28,7 @@ public class CallPathUtilFuncs {
         return result;
     }
 
-    public static void buildRelations(TrialData td) {
+    public static int buildRelations(TrialData td) {
         try {
             Function callPath = null;
             Function child = null;
@@ -57,7 +57,7 @@ public class CallPathUtilFuncs {
                     child = td.getFunction(childName);
                     
                     if (parent == null || child == null) {
-                        System.out.println ("Something has gone horribly wrong!");
+                        return -1;
                     }
                     
                     if (parent != null)
@@ -68,7 +68,9 @@ public class CallPathUtilFuncs {
             }
         } catch (Exception e) {
             UtilFncs.systemError(e, null, "CPUF01");
+            return -1;
         }
+        return 0;
     }
 
     

@@ -8,7 +8,7 @@ import java.sql.*;
  * This is the top level class for the Database implementation of the API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.4 2004/12/21 00:33:30 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.5 2004/12/21 20:49:39 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell

@@ -17,7 +17,7 @@ import java.util.Vector;
  * A atomic event has particular information, including the name of the atomic event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: AtomicEvent.java,v 1.8 2004/12/21 00:33:29 amorris Exp $</P>
+ * <P>CVS $Id: AtomicEvent.java,v 1.9 2004/12/21 20:49:39 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

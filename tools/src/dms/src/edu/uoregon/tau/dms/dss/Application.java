@@ -20,7 +20,7 @@ import java.sql.*;
  * an application from which the TAU performance data has been generated.
  * An application has one or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.9 2004/12/21 00:33:29 amorris Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.10 2004/12/21 20:49:39 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since 0.1

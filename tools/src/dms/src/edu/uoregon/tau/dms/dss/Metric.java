@@ -8,7 +8,7 @@ import java.io.Serializable;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.8 2004/12/21 00:33:32 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.9 2004/12/21 20:49:39 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1

@@ -104,39 +104,41 @@ public class Thread implements Comparable {
         boolean added = false;
         //Increase the function list size if required.
         FunctionProfile placeHolder = null;
-        while (id >= (functionProfiles.size())) {
+        while (id >= functionProfiles.size()) {
             functionProfiles.add(placeHolder);
         }
 
         //It is now safe to add (but do not add if there is already
         //an element here.
-        if ((functionProfiles.elementAt(id)) == null) {
+        if (functionProfiles.get(id) == null) {
             functionProfiles.setElementAt(ref, id);
             added = true;
         }
 
     }
 
-    public void addUserEvent(UserEventProfile ref) {
-        userevents.addElement(ref);
-    }
 
     public void addUserEvent(UserEventProfile ref, int id) {
         //There are two paths here.
         //1) This id has not been seen in the system before.
-        //   In this case, add to the end of functionProfiles.
+        //   In this case, add to the end of userevents.
         //2) The id has been seen in the system before.
         //   In this case, check to see if its location is
         //   not set to null in functionProfiles, and if it is not
         //   set the location to point to ref.
         boolean added = false;
-        if (id >= (userevents.size())) {
-            userevents.add(ref);
-            added = true;
-        } else {
-            if ((userevents.elementAt(id)) == null)
-                userevents.setElementAt(ref, id);
+        
+        UserEventProfile placeHolder = null;
+        while (id >= userevents.size()) {
+            userevents.add(placeHolder);
         }
+
+    
+    	if (userevents.get(id) == null) {
+    	    //userevents.setElementAt(ref,id);
+    	    userevents.set(id,ref);
+            added = true;
+    	}
     }
 
     public FunctionProfile getFunctionProfile(Function function) {
@@ -159,14 +161,14 @@ public class Thread implements Comparable {
     }
 
     public UserEventProfile getUserEvent(int id) {
-        UserEventProfile functionProfile = null;
+        UserEventProfile userEventProfile = null;
         try {
             if ((userevents != null) && (id < userevents.size()))
-                functionProfile = (UserEventProfile) userevents.elementAt(id);
+                userEventProfile = (UserEventProfile) userevents.elementAt(id);
         } catch (Exception e) {
             UtilFncs.systemError(e, null, "T3");
         }
-        return functionProfile;
+        return userEventProfile;
     }
 
     public Vector getUsereventList() {
