@@ -186,11 +186,11 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc ]
       then
         c_compiler=$myarg
       else
-      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', 'xlc', 'ecc' and 'pgcc' "
+      echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', 'xlc', 'ecc', 'icc' and 'pgcc' "
 #      exit 1
     fi
     shift
@@ -198,11 +198,11 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc ]
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx -o $myarg = xlC  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc ]
       then
         cxx_compiler=$myarg
       else
-      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', and 'c++'"
+      echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'xlC', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc' and 'c++'"
 #      exit 1
     fi
     shift
@@ -1082,6 +1082,13 @@ case $cxx_compiler in
 
       ;;
 	
+   icpc)
+      echo "Default C++ compiler will be Intel icpc C++ compiler"
+      fixmakeargs="$fixmakeargs USE_INTELCXX"
+      tauoptions="${tauoptions}-icpc"
+
+      ;;
+
    *)
       echo "ERROR Unknown C++ compiler"
       exit 1
