@@ -117,7 +117,6 @@ public class Thread implements Comparable {
 
     }
 
-
     public void addUserEvent(UserEventProfile ref, int id) {
         //There are two paths here.
         //1) This id has not been seen in the system before.
@@ -127,28 +126,23 @@ public class Thread implements Comparable {
         //   not set to null in functionProfiles, and if it is not
         //   set the location to point to ref.
         boolean added = false;
-        
+
         UserEventProfile placeHolder = null;
         while (id >= userevents.size()) {
             userevents.add(placeHolder);
         }
 
-    
-    	if (userevents.get(id) == null) {
-    	    //userevents.setElementAt(ref,id);
-    	    userevents.set(id,ref);
+        if (userevents.get(id) == null) {
+            //userevents.setElementAt(ref,id);
+            userevents.set(id, ref);
             added = true;
-    	}
+        }
     }
 
     public FunctionProfile getFunctionProfile(Function function) {
         FunctionProfile functionProfile = null;
-        try {
-            if ((functionProfiles != null) && (function.getID() < functionProfiles.size()))
-                functionProfile = (FunctionProfile) functionProfiles.elementAt(function.getID());
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "T2");
-        }
+        if ((functionProfiles != null) && (function.getID() < functionProfiles.size()))
+            functionProfile = (FunctionProfile) functionProfiles.elementAt(function.getID());
         return functionProfile;
     }
 
@@ -162,12 +156,8 @@ public class Thread implements Comparable {
 
     public UserEventProfile getUserEvent(int id) {
         UserEventProfile userEventProfile = null;
-        try {
-            if ((userevents != null) && (id < userevents.size()))
-                userEventProfile = (UserEventProfile) userevents.elementAt(id);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "T3");
-        }
+        if ((userevents != null) && (id < userevents.size()))
+            userEventProfile = (UserEventProfile) userevents.elementAt(id);
         return userEventProfile;
     }
 
@@ -180,9 +170,6 @@ public class Thread implements Comparable {
     }
 
     public void setThreadData(int metric) {
-        if (this.debug) {
-            this.outputDebugMessage("setThreadData\nmetrics:" + metric);
-        }
         this.setThreadDataHelper(metric);
         this.setPercentData(metric);
         this.setThreadDataHelper(metric);
@@ -191,10 +178,6 @@ public class Thread implements Comparable {
     public void setThreadDataAllMetrics() {
         //This needs to be made more efficient (such as that used for setting
         // the mean values).
-        if (this.debug) {
-            this.outputDebugMessage("setThreadDataAllMetrics()\nnumberOfMetrics:"
-                    + this.getNumberOfMetrics());
-        }
         for (int i = 0; i < this.getNumberOfMetrics(); i++) {
             this.setThreadDataHelper(i);
             this.setPercentData(i);
@@ -291,13 +274,10 @@ public class Thread implements Comparable {
         return debug;
     }
 
-    public void outputDebugMessage(String debugMessage) {
-        UtilFncs.objectDebug.outputToFile(this.toString() + "\n" + debugMessage);
-    }
 
     public String toString() {
-        return this.getClass().getName() + ": " + this.getNodeID() + "," + this.getContextID()
-                + "," + this.getThreadID();
+        return this.getClass().getName() + ": " + this.getNodeID() + "," + this.getContextID() + ","
+                + this.getThreadID();
     }
 
     //####################################
@@ -309,21 +289,12 @@ public class Thread implements Comparable {
     //####################################
     private void insertDouble(int metric, int offset, double inDouble) {
         int actualLocation = (metric * 5) + offset;
-        try {
-            doubleList[actualLocation] = inDouble;
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "GT01");
-        }
+        doubleList[actualLocation] = inDouble;
     }
 
     private double getDouble(int metric, int offset) {
         int actualLocation = (metric * 5) + offset;
-        try {
-            return doubleList[actualLocation];
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "GT01");
-        }
-        return -1;
+        return doubleList[actualLocation];
     }
 
     private void setThreadDataHelper(int metric) {
@@ -395,10 +366,8 @@ public class Thread implements Comparable {
                 //objects).
 
                 if (this.getNodeID() == -1) {
-                    functionProfile.setExclusivePercent(metric,
-                            function.getTotalExclusivePercent(metric));
-                    functionProfile.setInclusivePercent(metric,
-                            function.getTotalInclusivePercent(metric));
+                    functionProfile.setExclusivePercent(metric, function.getTotalExclusivePercent(metric));
+                    functionProfile.setInclusivePercent(metric, function.getTotalInclusivePercent(metric));
                 } else {
 
                     double inclusiveMax = this.getMaxInclusive(metric);

@@ -4,45 +4,47 @@ import edu.uoregon.tau.dms.dss.*;
 import jargs.gnu.CmdLineParser;
 
 public class CreateExperiment {
-    
-    private static String APP_USAGE = 
-        "USAGE: perfdmf_loadapp [{-h,--help}] {-a,--applicationid} applicationID {-n,--name} name\n";
+
+    private static String APP_USAGE = "USAGE: perfdmf_loadapp [{-h,--help}] {-a,--applicationid} applicationID {-n,--name} name\n";
 
     private DatabaseAPI session;
 
     public CreateExperiment(String configFileName) {
-	super();
-	session = new DatabaseAPI();
-	session.initialize(configFileName);
+        super();
+        session = new DatabaseAPI();
+        try {
+            session.initialize(configFileName, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
     }
 
-    /*** Parse and load an experiment. ***/   
-
+    /*** Parse and load an experiment. ***/
 
     public boolean checkForApp(int appid) {
-	Application app = session.setApplication(appid);
-	if (app == null) {
-	    System.err.println("Application id " + appid + " not found,  please enter a valid application ID.");
-	    System.exit(-1);
-	    return false;
-	} else
-	    return true;
+        Application app = session.setApplication(appid);
+        if (app == null) {
+            System.err.println("Application id " + appid + " not found,  please enter a valid application ID.");
+            System.exit(-1);
+            return false;
+        } else
+            return true;
     }
 
-
     public int createExp(String name, int appid) {
-	int expid = 0;
+        int expid = 0;
 
-	checkForApp(appid);
+        checkForApp(appid);
 
-	Experiment exp = new Experiment(0);
-	exp.setName(name);
-	exp.setApplicationID(appid);
-	session.setExperiment(exp);
-	expid = session.saveExperiment();
-	System.out.println("Created Experiment, ID: " + expid);
-	session.terminate();
-	return expid;
+        Experiment exp = new Experiment(0);
+        exp.setName(name);
+        exp.setApplicationID(appid);
+        session.setExperiment(exp);
+        expid = session.saveExperiment();
+        System.out.println("Created Experiment, ID: " + expid);
+        session.terminate();
+        return expid;
     }
 
     /*** Beginning of main program. ***/
@@ -56,53 +58,50 @@ public class CreateExperiment {
 
         try {
             parser.parse(args);
-        }
-        catch ( CmdLineParser.OptionException e ) {
+        } catch (CmdLineParser.OptionException e) {
             System.err.println(e.getMessage());
-	    System.err.println(APP_USAGE);
-	    System.exit(-1);
+            System.err.println(APP_USAGE);
+            System.exit(-1);
         }
 
-        Boolean help = (Boolean)parser.getOptionValue(helpOpt);
-        String configFile = (String)parser.getOptionValue(configfileOpt);
-        String name = (String)parser.getOptionValue(nameOpt);
-	Integer app = (Integer)parser.getOptionValue(appidOpt);
+        Boolean help = (Boolean) parser.getOptionValue(helpOpt);
+        String configFile = (String) parser.getOptionValue(configfileOpt);
+        String name = (String) parser.getOptionValue(nameOpt);
+        Integer app = (Integer) parser.getOptionValue(appidOpt);
 
+        if (help != null && help.booleanValue()) {
+            System.err.println(APP_USAGE);
+            System.exit(-1);
+        }
 
-    	if (help != null && help.booleanValue()) {
-	    System.err.println(APP_USAGE);
-	    System.exit(-1);
-    	}
-
-	if (configFile == null) {
+        if (configFile == null) {
             System.err.println("Please enter a valid config file.");
-	    System.err.println(APP_USAGE);
-	    System.exit(-1);
-	}
+            System.err.println(APP_USAGE);
+            System.exit(-1);
+        }
 
-	if (app == null) {
+        if (app == null) {
             System.err.println("Please enter a valid application id.");
-	    System.err.println(APP_USAGE);
-	    System.exit(-1);
-	}
-        int appid = ((Integer)parser.getOptionValue(appidOpt)).intValue();
+            System.err.println(APP_USAGE);
+            System.exit(-1);
+        }
+        int appid = ((Integer) parser.getOptionValue(appidOpt)).intValue();
 
-	// validate the command line options...
-	if (name == null) {
-	    System.err.println("Please enter a valid experiment name.");
-	    System.err.println(APP_USAGE);
-	    System.exit(-1);
-	}
+        // validate the command line options...
+        if (name == null) {
+            System.err.println("Please enter a valid experiment name.");
+            System.err.println(APP_USAGE);
+            System.exit(-1);
+        }
 
-	// create a new CreateExperiment object, pass in the configuration file name
-	CreateExperiment create = new CreateExperiment(configFile);
+        // create a new CreateExperiment object, pass in the configuration file name
+        CreateExperiment create = new CreateExperiment(configFile);
 
-	int exitval = 0;
-	
-    	/***** Load appliation into PerfDMF *********/
-	int expid = create.createExp(name, appid);
+        int exitval = 0;
 
-	System.exit(exitval);
+        /***** Load appliation into PerfDMF *********/
+        int expid = create.createExp(name, appid);
+
+        System.exit(exitval);
     }
 }
-

@@ -9,6 +9,7 @@
 package edu.uoregon.tau.dms.dss;
 
 import java.util.*;
+import java.sql.*;
 
 public class DBDataSource extends DataSource {
 
@@ -43,8 +44,8 @@ public class DBDataSource extends DataSource {
 
     
     
-    public void load() {
-        try {
+    public void load() throws SQLException {
+        
             //######
             //Frequently used items.
             //######
@@ -67,11 +68,11 @@ public class DBDataSource extends DataSource {
             //######
             //End - Frequently used items.
             //######
-            System.out.println("Processing data, please wait ......");
+           // System.out.println("Processing data, please wait ......");
             long time = System.currentTimeMillis();
 
             int numberOfMetrics = databaseAPI.getNumberOfMetrics();
-            System.out.println("Found " + numberOfMetrics + " metrics.");
+            //System.out.println("Found " + numberOfMetrics + " metrics.");
             for (int i = 0; i < numberOfMetrics; i++) {
                 this.addMetric(databaseAPI.getMetricName(i));
                 this.getTrialData().increaseVectorStorage();
@@ -171,7 +172,7 @@ public class DBDataSource extends DataSource {
 
             //Collections.sort(localMap);
 
-            System.out.println("About to increase storage.");
+           
 
             l = databaseAPI.getIntervalEventData();
             
@@ -308,10 +309,7 @@ public class DBDataSource extends DataSource {
             time = (System.currentTimeMillis()) - time;
             System.out.println("Done processing data file!");
             System.out.println("Time to process file (in milliseconds): " + time);
-        } catch (Exception e) {
-            e.printStackTrace();
-            UtilFncs.systemError(e, null, "SSD01");
-        }
+        
     }
 
     //####################################

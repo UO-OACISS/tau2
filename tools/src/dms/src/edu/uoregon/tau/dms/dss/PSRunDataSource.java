@@ -30,16 +30,17 @@ public class PSRunDataSource extends DataSource {
 
     private Object initializeObject;
 
-	public void cancelLoad() {
-		return;
-	}
-	public int getProgress() {
-		return 0;
-	}
+    public void cancelLoad() {
+        return;
+    }
 
-    public void load() {
-        boolean firstFile = true;
+    public int getProgress() {
+        return 0;
+    }
+
+    public void load() throws DataSourceException {
         try {
+            boolean firstFile = true;
             v = (Vector) initializeObject;
             // create our XML parser
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
@@ -112,10 +113,8 @@ public class PSRunDataSource extends DataSource {
             }
             //Generate derived data.
             this.generateDerivedData();
-
         } catch (Exception e) {
-            e.printStackTrace();
-            UtilFncs.systemError(e, null, "SSD01");
+            throw new DataSourceException(e);
         }
     }
 

@@ -1,4 +1,3 @@
-
 package edu.uoregon.tau.dms.dss;
 
 import java.util.*;
@@ -16,7 +15,6 @@ public class FunctionProfile implements Comparable {
         this.function = func;
     }
 
-
     public Function getFunction() {
         return function;
     }
@@ -25,9 +23,6 @@ public class FunctionProfile implements Comparable {
     public String getName() {
         return function.getName();
     }
-
-   
-
 
     public void setInclusive(int metric, double inDouble) {
         this.insertDouble(metric, 0, inDouble);
@@ -63,7 +58,7 @@ public class FunctionProfile implements Comparable {
 
     public void setNumCalls(double inDouble) {
         if (inDouble == 0) {
-            System.out.println ("fuck");
+            System.out.println("fuck");
         }
         numCalls = inDouble;
     }
@@ -87,9 +82,6 @@ public class FunctionProfile implements Comparable {
     public double getInclusivePerCall(int metric) {
         return this.getDouble(metric, 4);
     }
-
-
-
 
     public void addCall(double exclusive, double inclusive) {
         if (calls == null)
@@ -168,7 +160,6 @@ public class FunctionProfile implements Comparable {
         return ((Set) childCallPathSets.get(child)).iterator();
     }
 
-    
     public void addChild(FunctionProfile child) {
         if (childProfiles == null)
             childProfiles = new TreeSet();
@@ -188,21 +179,19 @@ public class FunctionProfile implements Comparable {
             return childProfiles.iterator();
         return new DssIterator();
     }
-    
+
     public Iterator getParentProfiles() {
         if (parentProfiles != null)
             return parentProfiles.iterator();
         return new DssIterator();
     }
 
-    
     public void addChild(Function child, Function callPath) {
         // example:
         // fullpath = a => b => c => d
         // child = d
         // we are c
-        
-        
+
         if (children == null)
             children = new TreeSet();
 
@@ -223,7 +212,6 @@ public class FunctionProfile implements Comparable {
         callPathSet.add(callPath);
     }
 
-
     public boolean isCallPathObject() {
         return function.isCallPathObject();
     }
@@ -237,42 +225,18 @@ public class FunctionProfile implements Comparable {
     //####################################
     private void insertDouble(int metric, int offset, double inDouble) {
         int actualLocation = (metric * 5) + offset;
-        try {
-            doubleList[actualLocation] = inDouble;
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("inDouble: " + inDouble);
-            System.out.println("metric: " + metric);
-            System.out.println("offset: " + offset);
-            System.out.println("actualLocation: " + actualLocation);
-            System.out.println("doubleList size: " + doubleList.length);
-            UtilFncs.systemError(e, null, "GTDE06");
-        }
+        doubleList[actualLocation] = inDouble;
     }
 
     private double getDouble(int metric, int offset) {
         int actualLocation = (metric * 5) + offset;
-        try {
-            return doubleList[actualLocation];
-        } catch (Exception e) {
-            e.printStackTrace();
-            e.printStackTrace();
-            System.out.println("metric: " + metric);
-            System.out.println("offset: " + offset);
-            System.out.println("actualLocation: " + actualLocation);
-            System.out.println("doubleList size: " + doubleList.length);
-            UtilFncs.systemError(e, null, "GTDE06");
-        }
-        return -1;
+        return doubleList[actualLocation];
     }
 
-
-    
     public int compareTo(Object inObject) {
-        return this.function.compareTo(((FunctionProfile)inObject).function);
+        return this.function.compareTo(((FunctionProfile) inObject).function);
     }
 
-    
     private Function function = null;
     private double[] doubleList;
     private double numCalls = 0;

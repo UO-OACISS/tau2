@@ -7,7 +7,7 @@ package edu.uoregon.tau.dms.dss;
 import java.util.*;
 
 public class CallPathUtilFuncs {
-    
+
     public CallPathUtilFuncs() {
     }
 
@@ -29,182 +29,148 @@ public class CallPathUtilFuncs {
     }
 
     public static int buildRelations(TrialData td) {
-        try {
-            Function callPath = null;
-            Function child = null;
-            Function parent = null;
-            String s = null;
-            String parentName = null;
-            String childName = null;
-            int location = -1;
+        Function callPath = null;
+        Function child = null;
+        Function parent = null;
+        String s = null;
+        String parentName = null;
+        String childName = null;
+        int location = -1;
 
-            for (Iterator it = td.getFunctions(); it.hasNext();)  {
-                callPath = (Function) it.next();
-                s = callPath.getName();
+        for (Iterator it = td.getFunctions(); it.hasNext();) {
+            callPath = (Function) it.next();
+            s = callPath.getName();
+            location = s.lastIndexOf("=>");
+            if (location > 0) {
+                childName = s.substring(location + 3, (s.length() - 2));
+                s = s.substring(0, location - 1);
                 location = s.lastIndexOf("=>");
                 if (location > 0) {
-                    childName = s.substring(location + 3, (s.length() - 2));
-                    s = s.substring(0, location - 1);
-                    location = s.lastIndexOf("=>");
-                    if (location > 0) {
-                        parentName = s.substring(location + 3);
-                    } else
-                        parentName = s;
+                    parentName = s.substring(location + 3);
+                } else
+                    parentName = s;
 
-                    
-                    //Update parent/child relationships.
-                    parent = td.getFunction(parentName);
-                    child = td.getFunction(childName);
-                    
-                    if (parent == null || child == null) {
-                        return -1;
-                    }
-                    
-                    if (parent != null)
-                        parent.addChild(child, callPath);
-                    if (child != null)
-                        child.addParent(parent, callPath);
+                //Update parent/child relationships.
+                parent = td.getFunction(parentName);
+                child = td.getFunction(childName);
+
+                if (parent == null || child == null) {
+                    return -1;
                 }
+
+                if (parent != null)
+                    parent.addChild(child, callPath);
+                if (child != null)
+                    child.addParent(parent, callPath);
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CPUF01");
-            return -1;
         }
         return 0;
     }
 
-    
-    
     public static void buildThreadRelations(TrialData td, edu.uoregon.tau.dms.dss.Thread thread) {
-        try {
 
-            if (thread.relationsBuilt())
-                return;
+        if (thread.relationsBuilt())
+            return;
 
-            for (Iterator it = thread.getFunctionListIterator(); it.hasNext();)  {
-                FunctionProfile callPath = (FunctionProfile) it.next();
-                if (callPath != null && callPath.isCallPathObject()) {
-                    
-                    String s = callPath.getName();
-                    int location = s.lastIndexOf("=>");
+        for (Iterator it = thread.getFunctionListIterator(); it.hasNext();) {
+            FunctionProfile callPath = (FunctionProfile) it.next();
+            if (callPath != null && callPath.isCallPathObject()) {
 
-                    if (location > 0) {
-                        String childName = s.substring(location + 3, (s.length() - 2));
-                        s = s.substring(0, location - 1);
-                        location = s.lastIndexOf("=>");
+                String s = callPath.getName();
+                int location = s.lastIndexOf("=>");
 
-                        String parentName = null;
+                if (location > 0) {
+                    String childName = s.substring(location + 3, (s.length() - 2));
+                    s = s.substring(0, location - 1);
+                    location = s.lastIndexOf("=>");
 
-                        if (location > 0) 
-                            parentName = s.substring(location + 3);
-                        else
-                            parentName = s;
+                    String parentName = null;
 
-                    
-                        //Update parent/child relationships.
-                        FunctionProfile parent = thread.getFunctionProfile(td.getFunction(parentName));
-                        FunctionProfile child = thread.getFunctionProfile(td.getFunction(childName));
-                    
-                        if (parent == null || child == null) {
-                            System.out.println ("Something has gone horribly wrong!");
-                        }
-                    
-                        if (parent != null)
-                            parent.addChild(child);
-                        if (child != null)
-                            child.addParent(parent);
+                    if (location > 0)
+                        parentName = s.substring(location + 3);
+                    else
+                        parentName = s;
+
+                    //Update parent/child relationships.
+                    FunctionProfile parent = thread.getFunctionProfile(td.getFunction(parentName));
+                    FunctionProfile child = thread.getFunctionProfile(td.getFunction(childName));
+
+                    if (parent == null || child == null) {
+                        
+                        //System.out.println("Something has gone horribly wrong!");
+                        return;
                     }
+
+                    if (parent != null)
+                        parent.addChild(child);
+                    if (child != null)
+                        child.addParent(parent);
                 }
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "CPUF01");
         }
     }
 
-    
-    
-    
     public static void trimCallPathData(TrialData td, edu.uoregon.tau.dms.dss.Thread thread) {
-        
-        try {
-        
-            //Create a pruned list from the global list.
-            //Want to grab a reference to the global list as
-            //this list contains null references for mappings
-            //which do not exist. Makes lookup much faster.
-            Vector threadFunctionList = thread.getFunctionList();
 
-            //Check to make sure that we have not trimmed before.
-            if (thread.trimmed())
-                return;
+        //Create a pruned list from the global list.
+        //Want to grab a reference to the global list as
+        //this list contains null references for mappings
+        //which do not exist. Makes lookup much faster.
+        Vector threadFunctionList = thread.getFunctionList();
 
-            for (Iterator l1 = td.getFunctions(); l1.hasNext();) {
-                Function function = (Function) l1.next();
-                
-                if ((function.getID()) < (threadFunctionList.size())) { // only consider those that are possible on this thread
-                    
-                    FunctionProfile fp = (FunctionProfile) threadFunctionList.elementAt(function.getID());
-                    if ((!(function.isCallPathObject())) && (fp != null)) {
-                        for (Iterator l2 = function.getParents(); l2.hasNext();) {
-                            // get parent
-                            Function parent = (Function) l2.next();
-                            
-                            // iterate through the set of the parents callpaths
-                            
-                            for (Iterator l3 = function.getParentCallPathIterator(parent); l3.hasNext();) {
+        //Check to make sure that we have not trimmed before.
+        if (thread.trimmed())
+            return;
+
+        for (Iterator l1 = td.getFunctions(); l1.hasNext();) {
+            Function function = (Function) l1.next();
+
+            if ((function.getID()) < (threadFunctionList.size())) { // only consider those that are possible on this thread
+
+                FunctionProfile fp = (FunctionProfile) threadFunctionList.elementAt(function.getID());
+                if ((!(function.isCallPathObject())) && (fp != null)) {
+                    for (Iterator l2 = function.getParents(); l2.hasNext();) {
+                        // get parent
+                        Function parent = (Function) l2.next();
+
+                        // iterate through the set of the parents callpaths
+
+                        for (Iterator l3 = function.getParentCallPathIterator(parent); l3.hasNext();) {
                             // Only add this parent if there is an existing
                             // callpath to which this rightfully parent belongs.
 
-                                Function callPath = (Function) l3.next();
-                                
-                                if ((callPath.getID() < threadFunctionList.size())
-                                        && (threadFunctionList.elementAt(callPath.getID()) != null))
-                                    fp.addParent(parent, callPath); 
-                                // Since the callpath is present, parent is, so this is safe.
-                            }
+                            Function callPath = (Function) l3.next();
+
+                            if ((callPath.getID() < threadFunctionList.size())
+                                    && (threadFunctionList.elementAt(callPath.getID()) != null))
+                                fp.addParent(parent, callPath);
+                            // Since the callpath is present, parent is, so this is safe.
                         }
-                        
-                        for (Iterator l2 = function.getChildren(); l2.hasNext();) {
+                    }
 
-                            // get child 
-                            Function child = (Function) l2.next();
-                            
-                            for (Iterator l3 = function.getChildCallPathIterator(child); l3.hasNext();) {
-                                Function callPath = (Function) l3.next();
+                    for (Iterator l2 = function.getChildren(); l2.hasNext();) {
 
-                                //Only add this child if there is an existing
-                                // callpath to which
-                                //this rightfully child belongs.
+                        // get child 
+                        Function child = (Function) l2.next();
 
-                                if ((callPath.getID() < threadFunctionList.size())
-                                        && (threadFunctionList.elementAt(callPath.getID()) != null))
-                                    fp.addChild(child, callPath);
-                            }
+                        for (Iterator l3 = function.getChildCallPathIterator(child); l3.hasNext();) {
+                            Function callPath = (Function) l3.next();
+
+                            //Only add this child if there is an existing
+                            // callpath to which
+                            //this rightfully child belongs.
+
+                            if ((callPath.getID() < threadFunctionList.size())
+                                    && (threadFunctionList.elementAt(callPath.getID()) != null))
+                                fp.addChild(child, callPath);
                         }
                     }
                 }
             }
-
-            //Set this thread to indicate that it has been trimmed.
-            thread.setTrimmed(true);
-        } catch (Exception e) {
-            //Print out the current state of this function.
-            /*
-             * System.out.println("######"); System.out.println("gme:");
-             * if(gme!=null){ System.out.println("name:" +
-             * gme.getMappingName()); System.out.println("id:" +
-             * gme.getMappingID()); } else System.out.println("gme is null");
-             * System.out.println("gtde:"); if(gtde!=null){
-             * System.out.println("name:" + gtde.getMappingName());
-             * System.out.println("id:" + gtde.getMappingID()); } else
-             * System.out.println("gtde is null");
-             * System.out.println("listValue:"); if(listValue!=null)
-             * System.out.println("value:" + listValue.intValue()); else
-             * System.out.println("listValue is null");
-             * 
-             * e.printStackTrace();
-             */
-            UtilFncs.systemError(e, null, "CPUF02");
         }
+
+        //Set this thread to indicate that it has been trimmed.
+        thread.setTrimmed(true);
+
     }
 }

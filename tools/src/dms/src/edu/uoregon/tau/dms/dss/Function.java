@@ -437,23 +437,11 @@ public class Function implements Serializable, Comparable {
     //Private section.
     //######
     private void insertDouble(int metric, int offset, double d) {
-        try {
             doubleList[(metric * 15) + offset] = d;
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "GME01");
-        }
     }
 
     private double getDouble(int metric, int offset) {
-        try {
             return doubleList[(metric * 15) + offset];
-        } catch (Exception e) {
-            System.out.println("metric: " + metric);
-            System.out.println("offset: " + offset);
-            System.out.println("doubleList.length: " + doubleList.length);
-            UtilFncs.systemError(e, null, "GME02");
-        }
-        return -1;
     }
 
     private int insertSpaces(char[] inArray, int position, int number) {
@@ -470,7 +458,6 @@ public class Function implements Serializable, Comparable {
 
     //####################################
     //Instance data.
-    //####################################
     private String name = null;
     private int id = -1;
 

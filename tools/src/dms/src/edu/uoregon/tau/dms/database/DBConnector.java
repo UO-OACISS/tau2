@@ -70,6 +70,7 @@ public class DBConnector implements DB {
                 conn.close();
             }
         } catch (SQLException ex) {
+            // ugh
             ex.printStackTrace();
         }
     }
@@ -80,6 +81,10 @@ public class DBConnector implements DB {
 
     public void commit() throws SQLException {
         conn.commit();
+    }
+    
+    public void rollback() throws SQLException {
+        conn.rollback();
     }
 
     public boolean connect(String user, String password) throws SQLException {
@@ -158,9 +163,9 @@ public class DBConnector implements DB {
 
     /*** Get the first returned value of a query. ***/
 
-    public String getDataItem(String query) {
+    public String getDataItem(String query) throws SQLException {
         //returns the value of the first column of the first row
-        try {
+       
             ResultSet resultSet = executeQuery(query);
             if (resultSet.next() == false) {
                 resultSet.close();
@@ -170,10 +175,7 @@ public class DBConnector implements DB {
                 resultSet.close();
                 return result;
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            return null;
-        }
+      
     }
 
     /*** Check if the connection to database is closed. ***/

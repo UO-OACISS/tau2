@@ -35,8 +35,7 @@ public class GprofDataSource extends DataSource {
     public int getProgress() {
         return 0;
     }
-    public void load() {
-        try {
+    public void load() throws FileNotFoundException, IOException {
             //Record time.
             long time = System.currentTimeMillis();
 
@@ -241,10 +240,6 @@ public class GprofDataSource extends DataSource {
             System.out.println("Done processing data!");
             System.out.println("Time to process (in milliseconds): " + time);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            UtilFncs.systemError(e, null, "GOS01");
-        }
     }
 
     //####################################
@@ -288,7 +283,6 @@ public class GprofDataSource extends DataSource {
 
     private LineData getSelfLineData(String string) {
         LineData lineData = new LineData();
-        try {
             StringTokenizer st = new StringTokenizer(string, " \t\n\r");
 
             //In some implementations, the self line will not give
@@ -354,15 +348,11 @@ public class GprofDataSource extends DataSource {
                     lineData.s0 += " " + tmp; //Name
             }
             lineData.s0 = fix(lineData.s0);
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "GOS02");
-        }
         return lineData;
     }
 
     private LineData getParentChildLineData(String string) {
         LineData lineData = new LineData();
-        try {
             StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
             // unlike the other line parsers, this function assumed a fixed
             // location for values. That may be erroneous, but I think that
@@ -425,11 +415,6 @@ public class GprofDataSource extends DataSource {
                 lineData.s0 = string.substring(nameStart, end).trim();
             }
             lineData.s0 = fix(lineData.s0);
-        } catch (Exception e) {
-            System.out.println("***\n" + string + "\n***");
-            e.printStackTrace();
-            UtilFncs.systemError(e, null, "GOS03");
-        }
         return lineData;
     }
 
@@ -470,7 +455,6 @@ public class GprofDataSource extends DataSource {
 
     private LineData getSummaryLineData(String string) {
         LineData lineData = new LineData();
-        try {
             StringTokenizer st = new StringTokenizer(string, " \t\n\r");
 
             lineData.d0 = Double.parseDouble(st.nextToken());
@@ -493,10 +477,6 @@ public class GprofDataSource extends DataSource {
                     lineData.s0 += " " + tmp; //Name
             }
             lineData.s0 = fix(lineData.s0);
-        } catch (Exception e) {
-            System.out.println(string);
-            UtilFncs.systemError(e, null, "GOS04");
-        }
         return lineData;
     }
 

@@ -33,8 +33,8 @@ public class DynaprofDataSource extends DataSource {
         return 0;
     }
 
-    public void load() {
-        try {
+    public void load() throws FileNotFoundException, IOException {
+        
             //######
             //Frequently used items.
             //######
@@ -378,9 +378,7 @@ public class DynaprofDataSource extends DataSource {
                 System.out.println("Time to process (in milliseconds): " + time);
 
             }
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SSD01");
-        }
+       
     }
 
     //####################################
@@ -417,7 +415,7 @@ public class DynaprofDataSource extends DataSource {
     }
 
     private void getFunctionDataLine(String string) {
-        try {
+        
             StringTokenizer st = new StringTokenizer(string, ",\t\n\r");
             functionDataLine.s0 = st.nextToken(); //name
             functionDataLine.i0 = Integer.parseInt(st.nextToken()); //number_of_children
@@ -429,23 +427,18 @@ public class DynaprofDataSource extends DataSource {
             functionDataLine.i2 = Integer.parseInt(st.nextToken()); //incl.calls
             functionDataLine.d4 = Double.parseDouble(st.nextToken()); //incl.min
             functionDataLine.d5 = Double.parseDouble(st.nextToken()); //incl.max
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SSD08");
-        }
+       
     }
 
     private void getFunctionChildDataLine(String string) {
-        try {
+       
             StringTokenizer st = new StringTokenizer(string, ",\t\n\r");
             functionChildDataLine.s0 = st.nextToken(); //name
             functionChildDataLine.d3 = Double.parseDouble(st.nextToken()); //incl.total
             functionChildDataLine.i2 = Integer.parseInt(st.nextToken()); //incl.calls
             functionChildDataLine.d4 = Double.parseDouble(st.nextToken()); //incl.min
             functionChildDataLine.d5 = Double.parseDouble(st.nextToken()); //incl.max
-        } catch (Exception e) {
-            System.out.println("An error occurred!");
-            e.printStackTrace();
-        }
+        
     }
 
     private void setHeaderProcessed(boolean headerProcessed) {

@@ -5,7 +5,8 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import java.io.*;
-
+import java.sql.*
+;
 public abstract class DataSource {
 
     public DataSource() {
@@ -13,7 +14,7 @@ public abstract class DataSource {
         this.setNCT(new NCT());
     }
 
-    abstract public void load() throws FileNotFoundException, IOException;
+    abstract public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException;
 
     abstract public int getProgress();
 

@@ -31,107 +31,101 @@ public class SPPMDataSource extends DataSource {
         return 0;
     }
 
-    public void load() {
+    public void load() throws FileNotFoundException, IOException {
         boolean firstFile = true;
-        try {
-            v = (Vector) initializeObject;
-            System.out.println(v.size() + " files");
-            for (Enumeration e = v.elements(); e.hasMoreElements();) {
-                files = (File[]) e.nextElement();
-                for (int i = 0; i < files.length; i++) {
-                    System.out.println("Processing data file, please wait ......");
-                    long time = System.currentTimeMillis();
+        v = (Vector) initializeObject;
+        System.out.println(v.size() + " files");
+        for (Enumeration e = v.elements(); e.hasMoreElements();) {
+            files = (File[]) e.nextElement();
+            for (int i = 0; i < files.length; i++) {
+                System.out.println("Processing data file, please wait ......");
+                long time = System.currentTimeMillis();
 
-                    // initialize our data structures
-                    methodIndexes = new Hashtable();
-                    cpuTime = new double[20];
-                    wallTime = new double[20];
-                    calls = new int[20];
-                    subroutines = new int[20];
+                // initialize our data structures
+                methodIndexes = new Hashtable();
+                cpuTime = new double[20];
+                wallTime = new double[20];
+                calls = new int[20];
+                subroutines = new int[20];
 
-                    // reset the counters
-                    deltaCount = 0;
-                    timestepCount = 0;
+                // reset the counters
+                deltaCount = 0;
+                timestepCount = 0;
 
-                    FileInputStream fileIn = new FileInputStream(files[i]);
-                    InputStreamReader inReader = new InputStreamReader(fileIn);
-                    br = new BufferedReader(inReader);
+                FileInputStream fileIn = new FileInputStream(files[i]);
+                InputStreamReader inReader = new InputStreamReader(fileIn);
+                br = new BufferedReader(inReader);
 
-                    // increment the node counter - there's a file for each
-                    // node.
-                    nodeID++;
+                // increment the node counter - there's a file for each
+                // node.
+                nodeID++;
 
-                    //####################################
-                    //First Line
-                    //####################################
-                    //This line is not required. Check to make sure that it is
-                    // there however.
-                    inputString = br.readLine();
-                    if (inputString == null)
-                        return;
-                    //####################################
-                    //End - First Line
-                    //####################################
+                //####################################
+                //First Line
+                //####################################
+                //This line is not required. Check to make sure that it is
+                // there however.
+                inputString = br.readLine();
+                if (inputString == null)
+                    return;
+                //####################################
+                //End - First Line
+                //####################################
 
-                    // find the statistical data
-                    while ((inputString = br.readLine()) != null) {
-                        if (inputString.length() == 0) {
-                            // do nothing
-                        } else if (inputString.trim().startsWith(
-                                "==================> Begin Double Timestep")) {
-                            // this is the beginning of a timestep. We will get
-                            // some data in the
-                            // next couple of lines. For now, get the timestep
-                            // index.
-                            processTimestepHeader(inputString);
-                        } else if (inputString.trim().indexOf("threads update a") >= 0) {
-                            processThreadCount(inputString);
-                        } else if (inputString.trim().startsWith("DELTA-HYD cpu, wall, ratio:")) {
-                            processEvent(inputString, 0);
-                            deltaCount++;
-                        } else if (inputString.trim().startsWith("TSTEP-HYD cpu, wall, ratio:")) {
-                            processEvent(inputString, deltaCount);
-                            timestepCount++;
-                            deltaCount = 0;
-                        } else if (inputString.trim().startsWith("TOTAL-HYD cpu, wall, ratio:")
-                                && inputString.trim().indexOf("Finished Calculation") >= 0) {
-                            processEvent(inputString, timestepCount);
-                        } else {
-                            // do nothing
-                        }
+                // find the statistical data
+                while ((inputString = br.readLine()) != null) {
+                    if (inputString.length() == 0) {
+                        // do nothing
+                    } else if (inputString.trim().startsWith("==================> Begin Double Timestep")) {
+                        // this is the beginning of a timestep. We will get
+                        // some data in the
+                        // next couple of lines. For now, get the timestep
+                        // index.
+                        processTimestepHeader(inputString);
+                    } else if (inputString.trim().indexOf("threads update a") >= 0) {
+                        processThreadCount(inputString);
+                    } else if (inputString.trim().startsWith("DELTA-HYD cpu, wall, ratio:")) {
+                        processEvent(inputString, 0);
+                        deltaCount++;
+                    } else if (inputString.trim().startsWith("TSTEP-HYD cpu, wall, ratio:")) {
+                        processEvent(inputString, deltaCount);
+                        timestepCount++;
+                        deltaCount = 0;
+                    } else if (inputString.trim().startsWith("TOTAL-HYD cpu, wall, ratio:")
+                            && inputString.trim().indexOf("Finished Calculation") >= 0) {
+                        processEvent(inputString, timestepCount);
+                    } else {
+                        // do nothing
                     }
-
-                    //Close the file.
-                    br.close();
-
-                    saveMappings();
-
-                    if (UtilFncs.debug) {
-                        System.out.println("The total number of threads is: "
-                                + this.getNCT().getTotalNumberOfThreads());
-                        System.out.println("The number of mappings is: "
-                                + this.getTrialData().getNumFunctions());
-                        System.out.println("The number of user events is: "
-                                + this.getTrialData().getNumUserEvents());
-                    }
-
-                    //Set firstRead to false.
-                    this.setFirstMetric(false);
-
-                    time = (System.currentTimeMillis()) - time;
-                    System.out.println("Done processing data file!");
-                    System.out.println("Time to process file (in milliseconds): " + time);
                 }
+
+                //Close the file.
+                br.close();
+
+                saveMappings();
+
+                if (UtilFncs.debug) {
+                    System.out.println("The total number of threads is: "
+                            + this.getNCT().getTotalNumberOfThreads());
+                    System.out.println("The number of mappings is: " + this.getTrialData().getNumFunctions());
+                    System.out.println("The number of user events is: "
+                            + this.getTrialData().getNumUserEvents());
+                }
+
+                //Set firstRead to false.
+                this.setFirstMetric(false);
+
+                time = (System.currentTimeMillis()) - time;
+                System.out.println("Done processing data file!");
+                System.out.println("Time to process file (in milliseconds): " + time);
             }
-
-            //Generate derived data.
-            this.generateDerivedData();
-            //Remove after testing is complete.
-            //this.setMeanDataAllMetrics(0);
-
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SSD01");
         }
+
+        //Generate derived data.
+        this.generateDerivedData();
+        //Remove after testing is complete.
+        //this.setMeanDataAllMetrics(0);
+
     }
 
     //####################################
@@ -182,7 +176,7 @@ public class SPPMDataSource extends DataSource {
             string = st1.nextToken(); // Timestep
             // get the value
             lineData.i0 = Integer.parseInt(st1.nextToken().trim()); // timestep
-                                                                    // ID
+            // ID
             // System.out.println (lineData.i0);
         } catch (Exception e) {
             System.out.println("An error occurred while parsing the header!");
@@ -196,7 +190,7 @@ public class SPPMDataSource extends DataSource {
             StringTokenizer st1 = new StringTokenizer(string, " ");
             // get the first value
             lineData.i1 = Integer.parseInt(st1.nextToken().trim()); // thread
-                                                                    // count
+            // count
             // System.out.println (lineData.i1);
         } catch (Exception e) {
             System.out.println("An error occurred while parsing the header!");
@@ -210,23 +204,23 @@ public class SPPMDataSource extends DataSource {
             lineData.s0 = st1.nextToken().trim(); // procedure name
             lineData.s1 = st1.nextToken().trim(); // first metric
             lineData.s1 = lineData.s1.replaceAll(",", ""); // remove the
-                                                           // trailing comma
+            // trailing comma
             lineData.s2 = st1.nextToken().trim(); // second metric
             lineData.s2 = lineData.s2.replaceAll(",", ""); // remove the
-                                                           // trailing comma
+            // trailing comma
             lineData.s3 = st1.nextToken().trim(); // third metric
             lineData.s3 = lineData.s3.replaceAll(":", ""); // remove the
-                                                           // trailing colon
+            // trailing colon
             lineData.d0 = Double.parseDouble(st1.nextToken().trim()); // first
-                                                                      // metric
-                                                                      // value
+            // metric
+            // value
             lineData.d0 = lineData.d0 / lineData.i1; // divde by #threads
             lineData.d1 = Double.parseDouble(st1.nextToken().trim()); // second
-                                                                      // metric
-                                                                      // value
+            // metric
+            // value
             lineData.d2 = Double.parseDouble(st1.nextToken().trim()); // third
-                                                                      // metric
-                                                                      // value
+            // metric
+            // value
             while (st1.hasMoreTokens()) {
                 String tmpToken = st1.nextToken().trim();
                 if (tmpToken.equals("@")) // don't add the clock time

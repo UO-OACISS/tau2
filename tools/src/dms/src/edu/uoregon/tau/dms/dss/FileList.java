@@ -74,7 +74,7 @@ public class FileList{
 	//Check to see if type is valid.
 	if(type>6 && (type <= 100 || type > 101)){
 	    System.out.println("Unexpected Type -  " + type + ":");
-	    System.out.println("Location - ParaProfManager.getFileList(...) 0");
+	    System.out.println("Location - ParaProfManagerWindow.getFileList(...) 0");
 	    return new Vector();
 	}
 
@@ -172,35 +172,35 @@ public class FileList{
 	}
 	catch(NullPointerException e){
 	    System.out.println("An error occurred getting file list:");
-            System.out.println("Location - ParaProfManager.getFileList(...)");
+            System.out.println("Location - ParaProfManagerWindow.getFileList(...)");
             if(debug)
                 e.printStackTrace();
 	    return new Vector();
         }
 	catch(SecurityException e){
             System.out.println("An error occurred getting file list:");
-            System.out.println("Location - ParaProfManager.getFileList(...)");
+            System.out.println("Location - ParaProfManagerWindow.getFileList(...)");
             if(debug)
                 e.printStackTrace();
             return new Vector();
         }
 	catch(IllegalArgumentException e){
 	    System.out.println("An error occurred getting file list:");
-            System.out.println("Location - ParaProfManager.getFileList(...)");
+            System.out.println("Location - ParaProfManagerWindow.getFileList(...)");
             if(debug)
                 e.printStackTrace();
 	    return new Vector();
         }
 	catch(ArrayIndexOutOfBoundsException e){
             System.out.println("An error occurred getting file list:");
-            System.out.println("Location - ParaProfManager.getFileList(...)");
+            System.out.println("Location - ParaProfManagerWindow.getFileList(...)");
             if(debug)
                 e.printStackTrace();
             return new Vector();
         }
 // 	catch(HeadlessException e){
 // 	    System.out.println("An error occurred getting file list:");
-//             System.out.println("Location - ParaProfManager.getFileList(...)");
+//             System.out.println("Location - ParaProfManagerWindow.getFileList(...)");
 // 	    if(debug)
 //                 e.printStackTrace();
 // 	    return new Vector();
@@ -278,34 +278,34 @@ public class FileList{
 		}
 		else{
 		    System.out.println("Unexpected Type -  " + type + ":");
-		    System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+		    System.out.println("Location - ParaProfManagerWindow.helperGetFileList(...)");
 		}
 		return files;
 	    }
 	    catch(NullPointerException e){
 		System.out.println("An error occurred getting file list:");
-		System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+		System.out.println("Location - ParaProfManagerWindow.helperGetFileList(...)");
 		if(debug)
 		    e.printStackTrace();
 		return new File[0];
 	    }
 	    catch(SecurityException e){
                 System.out.println("An error occurred getting file list:");
-                System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+                System.out.println("Location - ParaProfManagerWindow.helperGetFileList(...)");
 		if(debug)
                     e.printStackTrace();
 		return new File[0];
             }
 	    catch(IllegalArgumentException e){
 		System.out.println("An error occurred getting file list:");
-                System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+                System.out.println("Location - ParaProfManagerWindow.helperGetFileList(...)");
                 if(debug)
                     e.printStackTrace();
 		return new File[0];
             }
 	    catch(IOException e){
 		System.out.println("An error occurred getting file list:");
-                System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+                System.out.println("Location - ParaProfManagerWindow.helperGetFileList(...)");
 		if(debug)
 		    e.printStackTrace();
 		return new File[0];
@@ -428,7 +428,7 @@ public class FileList{
 	}
 	catch(SecurityException e){
 	    System.out.println("An error occurred getting file list:");
-	    System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+	    System.out.println("Location - ParaProfManagerWindow.helperGetFileList(...)");
 	    if(debug)
 		e.printStackTrace();
 	}
@@ -440,13 +440,13 @@ public class FileList{
         }
 	catch(IllegalArgumentException e){
 	    System.out.println("An error occurred getting file list:");
-	    System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+	    System.out.println("Location - ParaProfManagerWindow.helperGetFileList(...)");
 	    if(debug)
 		e.printStackTrace();
 	}
 	catch(IOException e){
 	    System.out.println("An error occurred getting file list:");
-	    System.out.println("Location - ParaProfManager.helperGetFileList(...)");
+	    System.out.println("Location - ParaProfManagerWindow.helperGetFileList(...)");
 	    if(debug)
 		e.printStackTrace();
 	}

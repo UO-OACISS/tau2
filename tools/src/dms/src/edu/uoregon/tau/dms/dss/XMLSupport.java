@@ -333,179 +333,179 @@ public class XMLSupport {
 //        }
     //}
 
-    public void writeComputationModel(BufferedWriter writer, int node,
-            int context, int thread) {
-
-        try {
-            writer.write("\t<ComputationModel>", 0,
-                         ("\t<ComputationModel>").length());
-            writer.newLine();
-
-            String tmpString;
-            tmpString = "\t   <node level=\"Top\" statis_info=\"sum\">" + node
-                    + "</node>";
-            writer.write(tmpString, 0, tmpString.length());
-            writer.newLine();
-            tmpString = "\t   <context level=\"Secondary\" statis_info=\"contextPnode\">"
-                    + context + "</context>";
-            writer.write(tmpString, 0, tmpString.length());
-            writer.newLine();
-            tmpString = "\t   <thread level=\"Lowest\" statis_info=\"threadPcontext\">"
-                    + thread + "</thread>";
-            writer.write(tmpString, 0, tmpString.length());
-            writer.newLine();
-            writer.write("\t</ComputationModel>", 0,
-                         "\t</ComputationModel>".length());
-            writer.newLine();
-        } catch (Exception e) {
-            xmlWriteError.location = "writeComputationModel(BufferedWriter writer, int node, int context, int thread)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-    }
-
-    public void writeIDs(BufferedWriter writer, int node, int context,
-            int thread) {
-
-        try {
-            String tmpString;
-            tmpString = "\t   <nodeID>" + node + "</nodeID>";
-            writer.write(tmpString, 0, tmpString.length());
-            writer.newLine();
-            tmpString = "\t   <contextID>" + context + "</contextID>";
-            writer.write(tmpString, 0, tmpString.length());
-            writer.newLine();
-            tmpString = "\t   <threadID>" + thread + "</threadID>";
-            writer.write(tmpString, 0, tmpString.length());
-            writer.newLine();
-
-        } catch (Exception e) {
-            xmlWriteError.location = "writeIDs(BufferedWriter writer, int node, int context, int thread)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-
-    }
-
-    public void writeBeginObject(BufferedWriter writer, int type) {
-        try {
-            writer.write(this.lookupBegin[type], 0,
-                         this.lookupBegin[type].length());
-            writer.newLine();
-        } catch (Exception e) {
-            xmlWriteError.location = "writeBeginObject(BufferedWriter writer, int type)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-    }
-
-    public void writeEndObject(BufferedWriter writer, int type) {
-        try {
-            writer.write(this.lookupEnd[type], 0, this.lookupEnd[type].length());
-            writer.newLine();
-        } catch (Exception e) {
-            xmlWriteError.location = "writeEndObject(BufferedWriter writer, int type)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-    }
-
-    public void writeFunctionName(BufferedWriter writer, String funname) {
-        try {
-            String tmpString;
-            funname = replace(funname, "&", "&amp;");
-            funname = replace(funname, "<", "&lt;");
-            funname = replace(funname, ">", "&gt;");
-            tmpString = "\t\t<funname>" + funname + "</funname>";
-            writer.write(tmpString, 0, tmpString.length());
-            writer.newLine();
-        } catch (Exception e) {
-            xmlWriteError.location = "writeFunctionName(BufferedWriter writer, String funname)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-
-    }
-
-    public void writeNameIDMap(BufferedWriter writer, String funname, int id) {
-        try {
-            String tmpString;
-            funname = replace(funname, "&", "&amp;");
-            funname = replace(funname, "<", "&lt;");
-            funname = replace(funname, ">", "&gt;");
-            tmpString = "\t\t<nameid>" + "\"" + funname + "\"" + id
-                    + "</nameid>";
-            writer.write(tmpString, 0, tmpString.length());
-            writer.newLine();
-        } catch (Exception e) {
-            xmlWriteError.location = "writeFunctionName(BufferedWriter writer, String funname)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-
-    }
-
-    public void writeString(BufferedWriter writer, int type, String s1) {
-        try {
-            String s2 = this.lookupBegin[type] + s1 + this.lookupEnd[type];
-            writer.write(s2, 0, s2.length());
-            writer.newLine();
-        } catch (Exception e) {
-            xmlWriteError.location = "writeString(BufferedWriter writer, int type, String s1)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-    }
-
-    public void writeInt(BufferedWriter writer, int type, int i) {
-        try {
-            String s = this.lookupBegin[type] + i + this.lookupEnd[type];
-            writer.write(s, 0, s.length());
-            writer.newLine();
-        } catch (Exception e) {
-            xmlWriteError.location = "writeInt(BufferedWriter writer, int type, int i)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-
-    }
-
-    public void writeDouble(BufferedWriter writer, int type, double d) {
-        try {
-            String s = this.lookupBegin[type] + d + this.lookupEnd[type];
-            writer.write(s, 0, s.length());
-            writer.newLine();
-        } catch (Exception e) {
-            xmlWriteError.location = "writeDouble(BufferedWriter writer, int type, double d)";
-            UtilFncs.systemError(xmlWriteError, null, null);
-        }
-
-    }
-
-    public String getMetric(String str) {
-        if (str.length() > 26)
-            return (str.substring(26, str.length()));
-        else
-            return new String("");
-    }
-
-    public String replace(String str, String lstr, String rstr) {
-        String tempStr = "";
-        int i;
-        while ((i = str.indexOf(lstr)) != -1) {
-            if (i > 0)
-                tempStr += str.substring(0, i);
-            tempStr += rstr;
-            str = str.substring(i + 1);
-        }
-        tempStr += str;
-        return tempStr;
-    }
-
-    public String getFunAmt(String inString) {
-        try {
-            String tmpString;
-            StringTokenizer funAmtTokenizer = new StringTokenizer(inString,
-                    " \t\n\r");
-            tmpString = funAmtTokenizer.nextToken();
-            return tmpString;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+//    public void writeComputationModel(BufferedWriter writer, int node,
+//            int context, int thread) {
+//
+//        try {
+//            writer.write("\t<ComputationModel>", 0,
+//                         ("\t<ComputationModel>").length());
+//            writer.newLine();
+//
+//            String tmpString;
+//            tmpString = "\t   <node level=\"Top\" statis_info=\"sum\">" + node
+//                    + "</node>";
+//            writer.write(tmpString, 0, tmpString.length());
+//            writer.newLine();
+//            tmpString = "\t   <context level=\"Secondary\" statis_info=\"contextPnode\">"
+//                    + context + "</context>";
+//            writer.write(tmpString, 0, tmpString.length());
+//            writer.newLine();
+//            tmpString = "\t   <thread level=\"Lowest\" statis_info=\"threadPcontext\">"
+//                    + thread + "</thread>";
+//            writer.write(tmpString, 0, tmpString.length());
+//            writer.newLine();
+//            writer.write("\t</ComputationModel>", 0,
+//                         "\t</ComputationModel>".length());
+//            writer.newLine();
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeComputationModel(BufferedWriter writer, int node, int context, int thread)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//    }
+//
+//    public void writeIDs(BufferedWriter writer, int node, int context,
+//            int thread) {
+//
+//        try {
+//            String tmpString;
+//            tmpString = "\t   <nodeID>" + node + "</nodeID>";
+//            writer.write(tmpString, 0, tmpString.length());
+//            writer.newLine();
+//            tmpString = "\t   <contextID>" + context + "</contextID>";
+//            writer.write(tmpString, 0, tmpString.length());
+//            writer.newLine();
+//            tmpString = "\t   <threadID>" + thread + "</threadID>";
+//            writer.write(tmpString, 0, tmpString.length());
+//            writer.newLine();
+//
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeIDs(BufferedWriter writer, int node, int context, int thread)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//
+//    }
+//
+//    public void writeBeginObject(BufferedWriter writer, int type) {
+//        try {
+//            writer.write(this.lookupBegin[type], 0,
+//                         this.lookupBegin[type].length());
+//            writer.newLine();
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeBeginObject(BufferedWriter writer, int type)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//    }
+//
+//    public void writeEndObject(BufferedWriter writer, int type) {
+//        try {
+//            writer.write(this.lookupEnd[type], 0, this.lookupEnd[type].length());
+//            writer.newLine();
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeEndObject(BufferedWriter writer, int type)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//    }
+//
+//    public void writeFunctionName(BufferedWriter writer, String funname) {
+//        try {
+//            String tmpString;
+//            funname = replace(funname, "&", "&amp;");
+//            funname = replace(funname, "<", "&lt;");
+//            funname = replace(funname, ">", "&gt;");
+//            tmpString = "\t\t<funname>" + funname + "</funname>";
+//            writer.write(tmpString, 0, tmpString.length());
+//            writer.newLine();
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeFunctionName(BufferedWriter writer, String funname)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//
+//    }
+//
+//    public void writeNameIDMap(BufferedWriter writer, String funname, int id) {
+//        try {
+//            String tmpString;
+//            funname = replace(funname, "&", "&amp;");
+//            funname = replace(funname, "<", "&lt;");
+//            funname = replace(funname, ">", "&gt;");
+//            tmpString = "\t\t<nameid>" + "\"" + funname + "\"" + id
+//                    + "</nameid>";
+//            writer.write(tmpString, 0, tmpString.length());
+//            writer.newLine();
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeFunctionName(BufferedWriter writer, String funname)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//
+//    }
+//
+//    public void writeString(BufferedWriter writer, int type, String s1) {
+//        try {
+//            String s2 = this.lookupBegin[type] + s1 + this.lookupEnd[type];
+//            writer.write(s2, 0, s2.length());
+//            writer.newLine();
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeString(BufferedWriter writer, int type, String s1)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//    }
+//
+//    public void writeInt(BufferedWriter writer, int type, int i) {
+//        try {
+//            String s = this.lookupBegin[type] + i + this.lookupEnd[type];
+//            writer.write(s, 0, s.length());
+//            writer.newLine();
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeInt(BufferedWriter writer, int type, int i)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//
+//    }
+//
+//    public void writeDouble(BufferedWriter writer, int type, double d) {
+//        try {
+//            String s = this.lookupBegin[type] + d + this.lookupEnd[type];
+//            writer.write(s, 0, s.length());
+//            writer.newLine();
+//        } catch (Exception e) {
+//            xmlWriteError.location = "writeDouble(BufferedWriter writer, int type, double d)";
+//            UtilFncs.systemError(xmlWriteError, null, null);
+//        }
+//
+//    }
+//
+//    public String getMetric(String str) {
+//        if (str.length() > 26)
+//            return (str.substring(26, str.length()));
+//        else
+//            return new String("");
+//    }
+//
+//    public String replace(String str, String lstr, String rstr) {
+//        String tempStr = "";
+//        int i;
+//        while ((i = str.indexOf(lstr)) != -1) {
+//            if (i > 0)
+//                tempStr += str.substring(0, i);
+//            tempStr += rstr;
+//            str = str.substring(i + 1);
+//        }
+//        tempStr += str;
+//        return tempStr;
+//    }
+//
+//    public String getFunAmt(String inString) {
+//        try {
+//            String tmpString;
+//            StringTokenizer funAmtTokenizer = new StringTokenizer(inString,
+//                    " \t\n\r");
+//            tmpString = funAmtTokenizer.nextToken();
+//            return tmpString;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 
     //####################################
     //Instance data.
@@ -540,10 +540,10 @@ public class XMLSupport {
     //Error outupt.
     //######
     //For errors writing to the xml file.
-    private ParaProfError xmlWriteError = new ParaProfError("",
-            "XML Write Error: See console for details.",
-            "An error occurred while writing XML file. Operation aborted!",
-            "Note: Dependent operations also aborted.", null, false);
+//    private ParaProfError xmlWriteError = new ParaProfError("",
+//            "XML Write Error: See console for details.",
+//            "An error occurred while writing XML file. Operation aborted!",
+//            "Note: Dependent operations also aborted.", null, false);
 
     //####################################
     //End - Instance data.

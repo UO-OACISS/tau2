@@ -114,7 +114,15 @@ public void endElement(String url, String name, String qname) {
 	    buf.append("select id from  ");
 	    buf.append(APP_TABLE);
 	    buf.append("  where name='" + this.name + "' and version='" + version + "'; ");
-	    if (getDB().getDataItem(buf.toString()) == null){
+
+	    String value = null;
+		try {
+		    value = getDB().getDataItem(buf.toString());
+		} catch (SQLException e) {
+		}
+
+	    
+	    if (value == null){
 
 	    	buf = new StringBuffer();
 	    	buf.append("insert into");

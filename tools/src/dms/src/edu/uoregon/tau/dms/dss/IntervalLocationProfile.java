@@ -25,7 +25,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.12 2004/12/23 00:25:51 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.13 2004/12/29 00:00:45 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -374,7 +374,8 @@ public class IntervalLocationProfile extends Object {
     }
 
     // returns a Vector of IntervalEvents
-    public static void getIntervalEventDetail(DB db, IntervalEvent intervalEvent, String whereClause) {
+    public static void getIntervalEventDetail(DB db, IntervalEvent intervalEvent, String whereClause)
+            throws SQLException {
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select ms.interval_event, ");
@@ -405,40 +406,36 @@ public class IntervalLocationProfile extends Object {
         // System.out.println(buf.toString());
 
         // get the results
-        try {
-            ResultSet resultSet = db.executeQuery(buf.toString());
-            int metricIndex = 0;
-            IntervalLocationProfile eMS = new IntervalLocationProfile();
-            IntervalLocationProfile eTS = new IntervalLocationProfile();
-            while (resultSet.next() != false) {
-                // get the mean summary data
-                eMS.setIntervalEventID(resultSet.getInt(1));
-                eMS.setInclusivePercentage(metricIndex, resultSet.getDouble(2));
-                eMS.setInclusive(metricIndex, resultSet.getDouble(3));
-                eMS.setExclusivePercentage(metricIndex, resultSet.getDouble(4));
-                eMS.setExclusive(metricIndex, resultSet.getDouble(5));
-                eMS.setNumCalls(resultSet.getDouble(6));
-                eMS.setNumSubroutines(resultSet.getDouble(7));
-                eMS.setInclusivePerCall(metricIndex, resultSet.getDouble(8));
-                // get the total summary data
-                eTS.setInclusivePercentage(metricIndex, resultSet.getDouble(10));
-                eTS.setInclusive(metricIndex, resultSet.getDouble(11));
-                eTS.setExclusivePercentage(metricIndex, resultSet.getDouble(12));
-                eTS.setExclusive(metricIndex, resultSet.getDouble(13));
-                eTS.setNumCalls(resultSet.getDouble(14));
-                eTS.setNumSubroutines(resultSet.getDouble(15));
-                eTS.setInclusivePerCall(metricIndex, resultSet.getDouble(16));
-                metricIndex++;
-            }
-            intervalEvent.setMeanSummary(eMS);
-            intervalEvent.setTotalSummary(eTS);
-            resultSet.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        int metricIndex = 0;
+        IntervalLocationProfile eMS = new IntervalLocationProfile();
+        IntervalLocationProfile eTS = new IntervalLocationProfile();
+        while (resultSet.next() != false) {
+            // get the mean summary data
+            eMS.setIntervalEventID(resultSet.getInt(1));
+            eMS.setInclusivePercentage(metricIndex, resultSet.getDouble(2));
+            eMS.setInclusive(metricIndex, resultSet.getDouble(3));
+            eMS.setExclusivePercentage(metricIndex, resultSet.getDouble(4));
+            eMS.setExclusive(metricIndex, resultSet.getDouble(5));
+            eMS.setNumCalls(resultSet.getDouble(6));
+            eMS.setNumSubroutines(resultSet.getDouble(7));
+            eMS.setInclusivePerCall(metricIndex, resultSet.getDouble(8));
+            // get the total summary data
+            eTS.setInclusivePercentage(metricIndex, resultSet.getDouble(10));
+            eTS.setInclusive(metricIndex, resultSet.getDouble(11));
+            eTS.setExclusivePercentage(metricIndex, resultSet.getDouble(12));
+            eTS.setExclusive(metricIndex, resultSet.getDouble(13));
+            eTS.setNumCalls(resultSet.getDouble(14));
+            eTS.setNumSubroutines(resultSet.getDouble(15));
+            eTS.setInclusivePerCall(metricIndex, resultSet.getDouble(16));
+            metricIndex++;
         }
+        intervalEvent.setMeanSummary(eMS);
+        intervalEvent.setTotalSummary(eTS);
+        resultSet.close();
     }
 
-    public static Vector getIntervalEventData(DB db, int metricCount, String whereClause) {
+    public static Vector getIntervalEventData(DB db, int metricCount, String whereClause) throws SQLException {
         StringBuffer buf = new StringBuffer();
         buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
         buf.append("p.inclusive_percentage, ");
@@ -449,8 +446,8 @@ public class IntervalLocationProfile extends Object {
             buf.append("p.inclusive, p.exclusive_percentage, p.exclusive, ");
         }
         buf.append("p.call, p.subroutines, p.inclusive_per_call ");
-        buf.append("from " + db.getSchemaPrefix() + "interval_event e inner join "
-                + db.getSchemaPrefix() + "interval_location_profile p ");
+        buf.append("from " + db.getSchemaPrefix() + "interval_event e inner join " + db.getSchemaPrefix()
+                + "interval_location_profile p ");
         buf.append("on e.id = p.interval_event ");
         buf.append(whereClause);
         buf.append(" order by p.interval_event, p.node, p.context, p.thread, p.metric ");
@@ -459,178 +456,149 @@ public class IntervalLocationProfile extends Object {
         int size = 0;
         Vector intervalLocationProfiles = new Vector();
         // get the results
-        try {
-            System.out.println ("Executing Statement");
-            ResultSet resultSet = db.executeQuery(buf.toString());
-            System.out.println ("Statement Executed");
-            while (resultSet.next() != false) {
-                DatabaseAPI.itemsDone++;
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        while (resultSet.next() != false) {
+            DatabaseAPI.itemsDone++;
 
-                int metricIndex = 0;
-                IntervalLocationProfile intervalLocationProfile = new IntervalLocationProfile();
-                intervalLocationProfile.setIntervalEventID(resultSet.getInt(1));
-                intervalLocationProfile.setNode(resultSet.getInt(3));
-                intervalLocationProfile.setContext(resultSet.getInt(4));
-                intervalLocationProfile.setThread(resultSet.getInt(5));
+            int metricIndex = 0;
+            IntervalLocationProfile intervalLocationProfile = new IntervalLocationProfile();
+            intervalLocationProfile.setIntervalEventID(resultSet.getInt(1));
+            intervalLocationProfile.setNode(resultSet.getInt(3));
+            intervalLocationProfile.setContext(resultSet.getInt(4));
+            intervalLocationProfile.setThread(resultSet.getInt(5));
+            intervalLocationProfile.setInclusivePercentage(metricIndex, resultSet.getDouble(6));
+            intervalLocationProfile.setInclusive(metricIndex, resultSet.getDouble(7));
+            intervalLocationProfile.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
+            intervalLocationProfile.setExclusive(metricIndex, resultSet.getDouble(9));
+            intervalLocationProfile.setNumCalls(resultSet.getDouble(10));
+            intervalLocationProfile.setNumSubroutines(resultSet.getDouble(11));
+            intervalLocationProfile.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
+            for (int i = 1; i < metricCount; i++) {
+                if (resultSet.next() == false) {
+                    break;
+                }
+                metricIndex++;
                 intervalLocationProfile.setInclusivePercentage(metricIndex, resultSet.getDouble(6));
                 intervalLocationProfile.setInclusive(metricIndex, resultSet.getDouble(7));
                 intervalLocationProfile.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
                 intervalLocationProfile.setExclusive(metricIndex, resultSet.getDouble(9));
-                intervalLocationProfile.setNumCalls(resultSet.getDouble(10));
-                intervalLocationProfile.setNumSubroutines(resultSet.getDouble(11));
                 intervalLocationProfile.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
-                for (int i = 1; i < metricCount; i++) {
-                    if (resultSet.next() == false) {
-                        break;
-                    }
-                    metricIndex++;
-                    intervalLocationProfile.setInclusivePercentage(metricIndex,
-                            resultSet.getDouble(6));
-                    intervalLocationProfile.setInclusive(metricIndex, resultSet.getDouble(7));
-                    intervalLocationProfile.setExclusivePercentage(metricIndex,
-                            resultSet.getDouble(8));
-                    intervalLocationProfile.setExclusive(metricIndex, resultSet.getDouble(9));
-                    intervalLocationProfile.setInclusivePerCall(metricIndex,
-                            resultSet.getDouble(12));
-                }
-                intervalLocationProfiles.addElement(intervalLocationProfile);
             }
-            resultSet.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
+            intervalLocationProfiles.addElement(intervalLocationProfile);
         }
+        resultSet.close();
         return (intervalLocationProfiles);
     }
 
-    public void saveMeanSummary(DB db, int intervalEventID, Hashtable newMetHash,
-            int saveMetricIndex) {
-        try {
-            // get the IntervalEvent details
-            int i = 0;
-            Integer newMetricID = (Integer) newMetHash.get(new Integer(i));
-            while (newMetricID != null) {
-                if (saveMetricIndex < 0 || i == saveMetricIndex) {
-                    PreparedStatement statement = null;
-                    if (db.getDBType().compareTo("oracle") == 0) {
-                        statement = db.prepareStatement("INSERT INTO "
-                                + db.getSchemaPrefix()
-                                + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    } else {
-                        statement = db.prepareStatement("INSERT INTO "
-                                + db.getSchemaPrefix()
-                                + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    }
-                    statement.setInt(1, intervalEventID);
-                    statement.setInt(2, newMetricID.intValue());
-                    statement.setDouble(3, getInclusivePercentage(i));
-                    statement.setDouble(4, getInclusive(i));
-                    statement.setDouble(5, getExclusivePercentage(i));
-                    statement.setDouble(6, getExclusive(i));
-                    statement.setDouble(7, getNumCalls());
-                    statement.setDouble(8, getNumSubroutines());
-                    statement.setDouble(9, getInclusivePerCall(i));
-                    statement.executeUpdate();
-                    statement.close();
+    public void saveMeanSummary(DB db, int intervalEventID, Hashtable newMetHash, int saveMetricIndex)
+            throws SQLException {
+        // get the IntervalEvent details
+        int i = 0;
+        Integer newMetricID = (Integer) newMetHash.get(new Integer(i));
+        while (newMetricID != null) {
+            if (saveMetricIndex < 0 || i == saveMetricIndex) {
+                PreparedStatement statement = null;
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    statement = db.prepareStatement("INSERT INTO "
+                            + db.getSchemaPrefix()
+                            + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                } else {
+                    statement = db.prepareStatement("INSERT INTO "
+                            + db.getSchemaPrefix()
+                            + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 }
-                newMetricID = (Integer) newMetHash.get(new Integer(++i));
+                statement.setInt(1, intervalEventID);
+                statement.setInt(2, newMetricID.intValue());
+                statement.setDouble(3, getInclusivePercentage(i));
+                statement.setDouble(4, getInclusive(i));
+                statement.setDouble(5, getExclusivePercentage(i));
+                statement.setDouble(6, getExclusive(i));
+                statement.setDouble(7, getNumCalls());
+                statement.setDouble(8, getNumSubroutines());
+                statement.setDouble(9, getInclusivePerCall(i));
+                statement.executeUpdate();
+                statement.close();
             }
-        } catch (SQLException e) {
-            System.out.println("An error occurred while saving the interval_event mean data.");
-            e.printStackTrace();
+            newMetricID = (Integer) newMetHash.get(new Integer(++i));
         }
     }
 
-    public void saveTotalSummary(DB db, int intervalEventID, Hashtable newMetHash,
-            int saveMetricIndex) {
-        try {
+    public void saveTotalSummary(DB db, int intervalEventID, Hashtable newMetHash, int saveMetricIndex)
+            throws SQLException {
+        // get the interval_event details
+        int i = 0;
+        Integer newMetricID = (Integer) newMetHash.get(new Integer(i));
+        while (newMetricID != null) {
+            if (saveMetricIndex < 0 || i == saveMetricIndex) {
+                PreparedStatement statement = null;
+
+                if (db.getDBType().compareTo("oracle") == 0) {
+                    statement = db.prepareStatement("INSERT INTO "
+                            + db.getSchemaPrefix()
+                            + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                } else {
+                    statement = db.prepareStatement("INSERT INTO "
+                            + db.getSchemaPrefix()
+                            + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                }
+                statement.setInt(1, intervalEventID);
+                statement.setInt(2, newMetricID.intValue());
+                statement.setDouble(3, getInclusivePercentage(i));
+                statement.setDouble(4, getInclusive(i));
+                statement.setDouble(5, getExclusivePercentage(i));
+                statement.setDouble(6, getExclusive(i));
+                statement.setDouble(7, getNumCalls());
+                statement.setDouble(8, getNumSubroutines());
+                statement.setDouble(9, getInclusivePerCall(i));
+                statement.executeUpdate();
+                statement.close();
+            }
+            newMetricID = (Integer) newMetHash.get(new Integer(++i));
+        }
+    }
+
+    static public void saveIntervalEventData(DB db, Hashtable newFunHash, Enumeration en, Hashtable newMetHash,
+            int saveMetricIndex) throws SQLException {
+        PreparedStatement statement = null;
+        if (db.getDBType().compareTo("oracle") == 0) {
+            statement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        } else {
+            statement = db.prepareStatement("INSERT INTO "
+                    + db.getSchemaPrefix()
+                    + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        }
+        IntervalLocationProfile fdo;
+        int i = 0;
+        Integer newMetricID = null;
+        while (en.hasMoreElements()) {
+            fdo = (IntervalLocationProfile) en.nextElement();
+            Integer newIntervalEventID = (Integer) newFunHash.get(new Integer(fdo.getIntervalEventID()));
             // get the interval_event details
-            int i = 0;
-            Integer newMetricID = (Integer) newMetHash.get(new Integer(i));
+            i = 0;
+            newMetricID = (Integer) newMetHash.get(new Integer(i));
             while (newMetricID != null) {
                 if (saveMetricIndex < 0 || i == saveMetricIndex) {
-                    PreparedStatement statement = null;
-
-                    if (db.getDBType().compareTo("oracle") == 0) {
-                        statement = db.prepareStatement("INSERT INTO "
-                                + db.getSchemaPrefix()
-                                + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    } else {
-                        statement = db.prepareStatement("INSERT INTO "
-                                + db.getSchemaPrefix()
-                                + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    }
-                    statement.setInt(1, intervalEventID);
-                    statement.setInt(2, newMetricID.intValue());
-                    statement.setDouble(3, getInclusivePercentage(i));
-                    statement.setDouble(4, getInclusive(i));
-                    statement.setDouble(5, getExclusivePercentage(i));
-                    statement.setDouble(6, getExclusive(i));
-                    statement.setDouble(7, getNumCalls());
-                    statement.setDouble(8, getNumSubroutines());
-                    statement.setDouble(9, getInclusivePerCall(i));
+                    statement.setInt(1, newIntervalEventID.intValue());
+                    statement.setInt(2, fdo.getNode());
+                    statement.setInt(3, fdo.getContext());
+                    statement.setInt(4, fdo.getThread());
+                    statement.setInt(5, newMetricID.intValue());
+                    statement.setDouble(6, fdo.getInclusivePercentage(i));
+                    statement.setDouble(7, fdo.getInclusive(i));
+                    statement.setDouble(8, fdo.getExclusivePercentage(i));
+                    statement.setDouble(9, fdo.getExclusive(i));
+                    statement.setDouble(10, fdo.getNumCalls());
+                    statement.setDouble(11, fdo.getNumSubroutines());
+                    statement.setDouble(12, fdo.getInclusivePerCall(i));
                     statement.executeUpdate();
-                    statement.close();
                 }
                 newMetricID = (Integer) newMetHash.get(new Integer(++i));
             }
-        } catch (SQLException e) {
-            System.out.println("An error occurred while saving the interval_event total data.");
-            e.printStackTrace();
+
+            DatabaseAPI.itemsDone++;
         }
-    }
-
- 
-
-    static public void saveIntervalEventData(DB db, Hashtable newFunHash, Enumeration en,
-            Hashtable newMetHash, int saveMetricIndex) {
-        try {
-            PreparedStatement statement = null;
-            if (db.getDBType().compareTo("oracle") == 0) {
-                statement = db.prepareStatement("INSERT INTO "
-                        + db.getSchemaPrefix()
-                        + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            } else {
-                statement = db.prepareStatement("INSERT INTO "
-                        + db.getSchemaPrefix()
-                        + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            }
-            IntervalLocationProfile fdo;
-            int i = 0;
-            Integer newMetricID = null;
-            while (en.hasMoreElements()) {
-                fdo = (IntervalLocationProfile) en.nextElement();
-                Integer newIntervalEventID = (Integer) newFunHash.get(new Integer(
-                        fdo.getIntervalEventID()));
-                // get the interval_event details
-                i = 0;
-                newMetricID = (Integer) newMetHash.get(new Integer(i));
-                while (newMetricID != null) {
-                    if (saveMetricIndex < 0 || i == saveMetricIndex) {
-                        statement.setInt(1, newIntervalEventID.intValue());
-                        statement.setInt(2, fdo.getNode());
-                        statement.setInt(3, fdo.getContext());
-                        statement.setInt(4, fdo.getThread());
-                        statement.setInt(5, newMetricID.intValue());
-                        statement.setDouble(6, fdo.getInclusivePercentage(i));
-                        statement.setDouble(7, fdo.getInclusive(i));
-                        statement.setDouble(8, fdo.getExclusivePercentage(i));
-                        statement.setDouble(9, fdo.getExclusive(i));
-                        statement.setDouble(10, fdo.getNumCalls());
-                        statement.setDouble(11, fdo.getNumSubroutines());
-                        statement.setDouble(12, fdo.getInclusivePerCall(i));
-                        statement.executeUpdate();
-                    }
-                    newMetricID = (Integer) newMetHash.get(new Integer(++i));
-                }
-
-                DatabaseAPI.itemsDone++;
-            }
-            System.out.print("\n");
-            statement.close();
-        } catch (SQLException e) {
-            System.out.println("An error occurred while saving the interval_event data.");
-            e.printStackTrace();
-        }
+        statement.close();
     }
 }

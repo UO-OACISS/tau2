@@ -24,7 +24,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.9 2004/12/23 00:25:51 amorris Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.10 2004/12/29 00:00:44 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -101,7 +101,7 @@ public class IntervalEvent {
      * @see		DataSession#getIntervalEvents
      * @see		DataSession#setMetric(Metric)
      */
-    public IntervalLocationProfile getMeanSummary() {
+    public IntervalLocationProfile getMeanSummary() throws SQLException {
         if (this.meanSummary == null)
             dataSession.getIntervalEventDetail(this);
         return (this.meanSummary);
@@ -123,7 +123,7 @@ public class IntervalEvent {
      * @see		IntervalLocationProfile
      * @see		DataSession#getIntervalEvents
      */
-    public IntervalLocationProfile getTotalSummary() {
+    public IntervalLocationProfile getTotalSummary() throws SQLException {
         if (this.totalSummary == null)
             dataSession.getIntervalEventDetail(this);
         return (this.totalSummary);
@@ -235,52 +235,47 @@ public class IntervalEvent {
         return events;
     }
 
-    public int saveIntervalEvent(DB db, int newTrialID, Hashtable newMetHash, int saveMetricIndex) {
+    public int saveIntervalEvent(DB db, int newTrialID, Hashtable newMetHash, int saveMetricIndex)
+            throws SQLException {
         int newIntervalEventID = 0;
-        try {
-            PreparedStatement statement = null;
-            if (saveMetricIndex < 0) {
-                //		statement = db.prepareStatement("INSERT INTO interval_event (trial, name, group_name) VALUES (?, ?, ?)");
-                statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-                        + "interval_event (trial, name, group_name) VALUES (?, ?, ?)");
-                statement.setInt(1, newTrialID);
-                statement.setString(2, name);
-                statement.setString(3, group);
-                statement.executeUpdate();
-                statement.close();
 
-                String tmpStr = new String();
-                if (db.getDBType().compareTo("mysql") == 0)
-                    tmpStr = "select LAST_INSERT_ID();";
-                else if (db.getDBType().compareTo("db2") == 0)
-                    tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
-                else if (db.getDBType().compareTo("oracle") == 0)
-                    tmpStr = "select " + db.getSchemaPrefix()
-                            + "interval_event_id_seq.currval FROM dual";
-                else
-                    tmpStr = "select currval('interval_event_id_seq');";
-                newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
-            } else {
+        PreparedStatement statement = null;
+        if (saveMetricIndex < 0) {
+            //		statement = db.prepareStatement("INSERT INTO interval_event (trial, name, group_name) VALUES (?, ?, ?)");
+            statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                    + "interval_event (trial, name, group_name) VALUES (?, ?, ?)");
+            statement.setInt(1, newTrialID);
+            statement.setString(2, name);
+            statement.setString(3, group);
+            statement.executeUpdate();
+            statement.close();
 
-                if (db.getDBType().compareTo("oracle") == 0)
-                    statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
-                            + "interval_event where dbms_lob.instr(name, ?) > 0");
-                else
-                    statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
-                            + "interval_event where name = ?");
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0)
+                tmpStr = "select LAST_INSERT_ID();";
+            else if (db.getDBType().compareTo("db2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("oracle") == 0)
+                tmpStr = "select " + db.getSchemaPrefix() + "interval_event_id_seq.currval FROM dual";
+            else
+                tmpStr = "select currval('interval_event_id_seq');";
+            newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
+        } else {
 
-                statement.setString(1, name);
-                ResultSet resultSet = statement.executeQuery();
-                while (resultSet.next() != false) {
-                    newIntervalEventID = resultSet.getInt(1);
-                }
-                resultSet.close();
-                statement.close();
+            if (db.getDBType().compareTo("oracle") == 0)
+                statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
+                        + "interval_event where dbms_lob.instr(name, ?) > 0");
+            else
+                statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
+                        + "interval_event where name = ?");
+
+            statement.setString(1, name);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next() != false) {
+                newIntervalEventID = resultSet.getInt(1);
             }
-        } catch (SQLException e) {
-            System.out.println("An error occurred while saving the interval_event.");
-            e.printStackTrace();
-            System.exit(-1);
+            resultSet.close();
+            statement.close();
         }
 
         // save the intervalEvent mean summaries

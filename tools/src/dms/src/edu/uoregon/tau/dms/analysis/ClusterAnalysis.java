@@ -10,7 +10,7 @@ import java.sql.SQLException;
  * This is the top level class for doing cluster analysis.
  * TBA
  *
- * <P>CVS $Id: ClusterAnalysis.java,v 1.3 2004/12/23 00:25:50 amorris Exp $</P>
+ * <P>CVS $Id: ClusterAnalysis.java,v 1.4 2004/12/29 00:00:43 amorris Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1
@@ -42,7 +42,12 @@ abstract public class ClusterAnalysis {
 		StringBuffer buf = new StringBuffer();
 		buf.append("select count(id) from interval_event where trial = ");
 		buf.append(trial.getID());
-		int eventCount = Integer.parseInt(db.getDataItem(buf.toString()));
+		
+		int eventCount = 0;
+		try {
+		    eventCount = Integer.parseInt(db.getDataItem(buf.toString()));
+		} catch (SQLException e) {
+		}
 		System.out.println(threadCount + " " + eventCount);
 
 		// initialize the matrix

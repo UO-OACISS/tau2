@@ -41,14 +41,13 @@ public class TauDataSource extends DataSource {
         return 0;
     }
 
-    public void load() throws FileNotFoundException, IOException {
+    public void load() throws FileNotFoundException, IOException, DataSourceException {
         //Record time.
         long time = System.currentTimeMillis();
 
         Vector v = (Vector) initializeObject;
 
         // first count the files (for progressbar)
-
         for (Enumeration e = v.elements(); e.hasMoreElements();) {
             File[] files = (File[]) e.nextElement();
             for (int i = 0; i < files.length; i++) {
@@ -56,18 +55,14 @@ public class TauDataSource extends DataSource {
             }
         }
 
-        //######
-        //Frequently used items.
-        //######
         int metric = 0;
 
-        //A flag is needed to test whether we have processed the metric
-        // name rather than just
-        //checking whether this is the first file set. This is because we
-        // might skip that first
-        //file (for example if the name were profile.-1.0.0) and thus skip
+        // A flag is needed to test whether we have processed the metric
+        // name rather than just checking whether this is the first file set. This is because we
+        // might skip that first file (for example if the name were profile.-1.0.0) and thus skip
         // setting the metric name.
         //Reference bug08.
+        
         boolean metricNameProcessed = false;
 
         Function func = null;
@@ -91,15 +86,13 @@ public class TauDataSource extends DataSource {
         String groupNamesString = null;
         StringTokenizer genericTokenizer;
 
-        int numberOfLines = 0;
 
         boolean validFilesFound = false;
 
+        // iterate through the vector of File arrays (each directory)
         for (Enumeration e = v.elements(); e.hasMoreElements();) {
-            //            System.out.println("Processing data, please wait ......");
 
-            //Need to call increaseVectorStorage() on all objects that
-            // require it.
+            //Need to call increaseVectorStorage() on all objects that require it.
             this.getTrialData().increaseVectorStorage();
 
             //Reset metricNameProcessed flag.
@@ -141,12 +134,6 @@ public class TauDataSource extends DataSource {
                 if (abort)
                     return;
 
-                if (this.debug()) {
-                    System.out.println("######");
-                    System.out.println("Processing file: " + files[i].getName());
-                    System.out.println("######");
-                    this.outputDebugMessage("Processing file: " + files[i].getName());
-                }
 
                 int[] nct = this.getNCT(files[i].getName());
                 if (nct != null) {
@@ -170,25 +157,17 @@ public class TauDataSource extends DataSource {
                         thread = context.addThread(threadID);
                         thread.setDebug(this.debug());
                     }
-                    if (this.debug())
-                        this.outputDebugMessage("n,c,t: " + nct[0] + "," + nct[1] + "," + nct[2]);
 
-                    //####################################
-                    //First Line
-                    //####################################
+                    // First Line (e.g. "601 templated_functions")
                     inputString = br.readLine();
                     if (inputString == null) {
-                        System.out.println("Error processing file: " + files[i].getName());
-                        System.out.println("Unexpected end of file!");
-                        if (this.debug())
-                            this.outputDebugMessage("Error processing file: " + files[i].getName()
-                                    + "\nUnexpected end of file!");
-                        return;
+                        throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nLooking for 'templated_functions' line");
                     }
                     genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-                    //It's first token will be the number of function
-                    // present.
+
+                    // the first token is the number of functions
                     tokenString = genericTokenizer.nextToken();
+                    int numFunctions = Integer.parseInt(tokenString);
 
                     if (metricNameProcessed == false) {
                         //Set the metric name.
@@ -197,40 +176,21 @@ public class TauDataSource extends DataSource {
                             metricName = new String("Time");
                         this.addMetric(metricName);
                         metricNameProcessed = true;
-                        if (this.debug())
-                            this.outputDebugMessage("metric name: " + metricName);
                     }
-                    //####################################
-                    //End - First Line
-                    //####################################
 
-                    //####################################
-                    //Second Line
-                    //####################################
+                    
+                    // Second Line (e.g. "# Name Calls Subrs Excl Incl ProfileCalls")
                     inputString = br.readLine();
                     if (inputString == null) {
-                        System.out.println("Error processing file: " + files[i].getName());
-                        System.out.println("Unexpected end of file!");
-                        if (this.debug())
-                            this.outputDebugMessage("Error processing file: " + files[i].getName()
-                                    + "\nUnexpected end of file!");
-                        return;
+                        throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nLooking for '# Name Calls ...' line");
                     }
                     if (i == 0) {
-                        //Determine if profile stats or profile calls data
-                        // is present.
+                        //Determine if profile stats or profile calls data is present.
                         if (inputString.indexOf("SumExclSqr") != -1)
                             this.setProfileStatsPresent(true);
                     }
-                    //####################################
-                    //End - Second Line
-                    //####################################
 
-                    //Process the appropriate number of function lines.
-                    if (this.debug())
-                        this.outputDebugMessage("processing functionProfiles");
-                    numberOfLines = Integer.parseInt(tokenString);
-                    for (int j = 0; j < numberOfLines; j++) {
+                    for (int j = 0; j < numFunctions; j++) {
                         //On the off chance that we start supporting
                         // profiles with no functionProfiles in them
                         //(for example only userevents), don't initialize
@@ -242,25 +202,14 @@ public class TauDataSource extends DataSource {
 
                         inputString = br.readLine();
                         if (inputString == null) {
-                            System.out.println("Error processing file: " + files[i].getName());
-                            System.out.println("Unexpected end of file!");
-                            if (this.debug())
-                                this.outputDebugMessage("Error processing file: "
-                                        + files[i].getName() + "\nUnexpected end of file!");
-                            return;
+                            throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nOnly found " + (j-2) + " of " + numFunctions  + " Function Lines");
                         }
 
                         this.getFunctionDataLine(inputString);
                         String groupNames = this.getGroupNames(inputString);
                         //Calculate usec/call
                         double usecCall = functionDataLine.d1 / functionDataLine.i0;
-                        if (this.debug())
-                            this.outputDebugMessage("function line: " + inputString + "\nName:"
-                                    + functionDataLine.s0 + "Calls:" + functionDataLine.i0
-                                    + " Subrs:" + functionDataLine.i1 + " Excl:"
-                                    + functionDataLine.d0 + " Incl:" + functionDataLine.d1
-                                    + " SumExclSqr:" + functionDataLine.d2 + " ProfileCalls:"
-                                    + functionDataLine.i2 + "\ngroupNames:" + groupNames);
+
                         if (functionDataLine.i0 != 0) {
                             func = this.getTrialData().addFunction(functionDataLine.s0, 1);
 
@@ -271,12 +220,9 @@ public class TauDataSource extends DataSource {
                                 thread.addFunctionProfile(functionProfile, func.getID());
                             }
 
-                            //When we encounter duplicate names in the
-                            // profile.x.x.x file, treat as additional
-                            //data for the name (that is, don't just
-                            // overwrite what was there before).
-                            //See todo item 7 in the ParaProf docs.
-                            // directory.
+                            //When we encounter duplicate names in the profile.x.x.x file, treat as additional
+                            //data for the name (that is, don't just overwrite what was there before).
+                            //See todo item 7 in the ParaProf docs directory.
                             functionProfile.setExclusive(metric,
                                     functionProfile.getExclusive(metric) + functionDataLine.d0);
                             functionProfile.setInclusive(metric,
@@ -290,8 +236,7 @@ public class TauDataSource extends DataSource {
                             functionProfile.setInclusivePerCall(metric,
                                     functionProfile.getInclusivePerCall(metric) + usecCall);
 
-                            //Set the max values (thread max values are
-                            // calculated in the
+                            //Set the max values (thread max values are calculated in the
                             // edu.uoregon.tau.dms.dss.Thread class).
                             if ((func.getMaxExclusive(metric)) < functionDataLine.d0)
                                 func.setMaxExclusive(metric, functionDataLine.d0);
@@ -312,12 +257,9 @@ public class TauDataSource extends DataSource {
                                             String groupName = st.nextToken();
                                             if (groupName != null) {
                                                 // The potential new group is
-                                                // added here. If the
-                                                // group is already present,
-                                                // then the addGroup
-                                                // function will just return the
-                                                // already existing
-                                                // group id. See the TrialData
+                                                // added here. If the group is already present,
+                                                // then the addGroup function will just return the
+                                                // already existing group id. See the TrialData
                                                 // class for more details.
                                                 Group group = this.getTrialData().addGroup(
                                                         groupName);
@@ -330,74 +272,48 @@ public class TauDataSource extends DataSource {
 
                         }
 
-                        if (this.debug())
-                            this.outputDebugMessage("processing profile calls for function: "
-                                    + functionDataLine.s0);
-                        //Process the appropriate number of profile call
-                        // lines.
+                        //Process the appropriate number of profile call lines.
                         for (int k = 0; k < functionDataLine.i2; k++) {
                             //this.setProfileCallsPresent(true);
                             inputString = br.readLine();
-                            if (this.debug())
-                                this.outputDebugMessage("Profile Calls line: " + inputString);
                             genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
                             //Arguments are evaluated left to right.
                             functionProfile.addCall(
                                     Double.parseDouble(genericTokenizer.nextToken()),
                                     Double.parseDouble(genericTokenizer.nextToken()));
                         }
-                        if (this.debug())
-                            this.outputDebugMessage("done processing profile calls for function: "
-                                    + functionDataLine.s0);
                     }
-                    if (this.debug())
-                        this.outputDebugMessage("done processing functionProfiles");
 
-                    if (this.debug())
-                        this.outputDebugMessage("processing aggregates");
                     //Process the appropriate number of aggregate lines.
                     inputString = br.readLine();
+
+                    
                     //A valid profile.*.*.* will always contain this line.
                     if (inputString == null) {
-                        System.out.println("Error processing file: " + files[i].getName());
-                        System.out.println("Unexpected end of file!");
-                        if (this.debug())
-                            this.outputDebugMessage("Error processing file: " + files[i].getName()
-                                    + "\nUnexpected end of file!");
-                        return;
+                        throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nLooking for 'aggregates' line");
                     }
                     genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
                     //It's first token will be the number of aggregates.
                     tokenString = genericTokenizer.nextToken();
 
-                    numberOfLines = Integer.parseInt(tokenString);
-                    for (int j = 0; j < numberOfLines; j++) {
+                    numFunctions = Integer.parseInt(tokenString);
+                    for (int j = 0; j < numFunctions; j++) {
                         //this.setAggregatesPresent(true);
                         inputString = br.readLine();
-                        if (this.debug())
-                            this.outputDebugMessage("Aggregates line: " + inputString);
                     }
-                    if (this.debug())
-                        this.outputDebugMessage("done processing aggregates");
 
                     if (metric == 0) {
-                        //Process the appropriate number of userevent
-                        // lines.
-                        if (this.debug())
-                            this.outputDebugMessage("processing userevents");
+                        //Process the appropriate number of userevent lines.
                         inputString = br.readLine();
-                        if (inputString == null) {
-                            if (this.debug())
-                                this.outputDebugMessage("No userevent data in this file.");
-                        } else {
+                        if (inputString != null) {
                             genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-                            //It's first token will be the number of
-                            // userevents
+                            //It's first token will be the number of userevents
                             tokenString = genericTokenizer.nextToken();
-                            numberOfLines = Integer.parseInt(tokenString);
-                            //Skip the heading.
+                            int numUserEvents = Integer.parseInt(tokenString);
+
+                            //Skip the heading (e.g. "# eventname numevents max min mean sumsqr")
                             br.readLine();
-                            for (int j = 0; j < numberOfLines; j++) {
+                            for (int j = 0; j < numUserEvents; j++) {
                                 if (j == 0) {
                                     thread.initializeUsereventList(this.getTrialData().getNumUserEvents());
                                     setUserEventsPresent(true);
@@ -405,22 +321,10 @@ public class TauDataSource extends DataSource {
 
                                 inputString = br.readLine();
                                 if (inputString == null) {
-                                    System.out.println("Error processing file: "
-                                            + files[i].getName());
-                                    System.out.println("Unexpected end of file!");
-                                    if (this.debug())
-                                        this.outputDebugMessage("Error processing file: "
-                                                + files[i].getName() + "\nUnexpected end of file!");
-                                    return;
+                                    throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nOnly found " + (j-2) + " of " + numUserEvents + " User Event Lines");
                                 }
+
                                 this.getUserEventData(inputString);
-                                if (this.debug())
-                                    this.outputDebugMessage("userevent line: " + inputString
-                                            + "\neventname:" + usereventDataLine.s0
-                                            + "\nnumevents:" + usereventDataLine.i0 + " max:"
-                                            + usereventDataLine.d0 + " min:" + usereventDataLine.d1
-                                            + " mean:" + usereventDataLine.d2 + " sumsqr:"
-                                            + usereventDataLine.d3);
 
                                 // User events
                                 if (usereventDataLine.i0 != 0) {
@@ -445,11 +349,7 @@ public class TauDataSource extends DataSource {
                                 }
                             }
                         }
-                        if (this.debug())
-                            this.outputDebugMessage("done processing userevents");
                     }
-                    //Remove after testing is complete.
-                    //thread.setThreadData(metric);
 
                     validFilesFound = true;
 
@@ -457,7 +357,6 @@ public class TauDataSource extends DataSource {
                     inReader.close();
                     fileIn.close();
                 }
-
             }
             metric++;
         }
@@ -478,25 +377,13 @@ public class TauDataSource extends DataSource {
         //        System.out.println("Time to process (in milliseconds): " + time);
     }
 
-    public void outputDebugMessage(String debugMessage) {
-        UtilFncs.objectDebug.outputToFile(this.toString() + "\n" + debugMessage);
-    }
 
     public String toString() {
         return this.getClass().getName();
     }
 
-    //####################################
-    //End - Public Section.
-    //####################################
 
-    //####################################
-    //Private Section.
-    //####################################
-
-    //######
     //profile.*.*.* string processing methods.
-    //######
     private int[] getNCT(String string) {
         try {
             int[] nct = new int[3];
@@ -506,29 +393,26 @@ public class TauDataSource extends DataSource {
             nct[1] = Integer.parseInt(st.nextToken());
             nct[2] = Integer.parseInt(st.nextToken());
 
-            if (nct[0] < 0 || nct[1] < 0 || nct[2] < 0) {
-                UtilFncs.systemError(new ParaProfError(this.toString() + ": getNCT(...)",
-                        "An error occurred while processing file: " + string,
-                        "This file will be ignored!"), null, null);
-                if (this.debug())
-                    this.outputDebugMessage("getNCT(...)\nAn error occurred while processing file: "
-                            + string + "\nThis file will be ignored!");
+            if (nct[0] < 0 || nct[1] < 0 || nct[2] < 0) { 
+                // I'm 99% sure that this doesn't happen anymore
+
+//                UtilFncs.systemError(new ParaProfError(this.toString() + ": getNCT(...)",
+//                        "An error occurred while processing file: " + string,
+//                        "This file will be ignored!"), null, null);
                 return null;
             }
             return nct;
         } catch (Exception e) {
-            UtilFncs.systemError(new ParaProfError(this.toString() + ": getNCT(...)",
-                    "An error occurred while processing file: " + string,
-                    "This file will be ignored!"), null, null);
-            if (this.debug())
-                this.outputDebugMessage("getNCT(...)\nAn error occurred while processing file: "
-                        + string + "\nThis file will be ignored!");
+            // I'm 99% sure that this doesn't happen anymore
+
+//            UtilFncs.systemError(new ParaProfError(this.toString() + ": getNCT(...)",
+//                    "An error occurred while processing file: " + string,
+//                    "This file will be ignored!"), null, null);
             return null;
         }
     }
 
     private String getMetricName(String inString) {
-        try {
             String tmpString = null;
             int tmpInt = inString.indexOf("_MULTI_");
 
@@ -548,14 +432,10 @@ public class TauDataSource extends DataSource {
             //We are not reading data from a multiple counter run or hardware
             // counter run.
             return tmpString;
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SSD26");
-        }
 
-        return null;
     }
 
-    private void getFunctionDataLine(String string) {
+    private void getFunctionDataLine(String string) throws DataSourceException {
 
         // first, count the number of double-quotes to determine if the
         // function contains a double-quote
@@ -566,7 +446,7 @@ public class TauDataSource extends DataSource {
         }
 
         if (quoteCount == 0) {
-            //throw new 
+            throw new DataSourceException("Looking for function line, found '" + string + "' instead"); 
         }
 
         StringTokenizer st2;
@@ -580,8 +460,7 @@ public class TauDataSource extends DataSource {
 
             // there is a quote in the name of the timer/function
             // we assume that TAU_GROUP="..." is there, so the end of the name
-            // must be
-            // at quoteCount - 2
+            // must be at (quoteCount - 2)
             int count = 0;
             int i = 0;
             while (count < quoteCount - 2 && i < string.length()) {
@@ -605,7 +484,6 @@ public class TauDataSource extends DataSource {
     }
 
     private String getGroupNames(String string) {
-        try {
 
             // first, count the number of double-quotes to determine if the
             // function contains a double-quote
@@ -617,8 +495,7 @@ public class TauDataSource extends DataSource {
 
             // there is a quote in the name of the timer/function
             // we assume that TAU_GROUP="..." is there, so the end of the name
-            // must be
-            // at quoteCount - 2
+            // must be (at quoteCount - 2)
             int count = 0;
             int i = 0;
             while (count < quoteCount - 2 && i < string.length()) {
@@ -647,14 +524,9 @@ public class TauDataSource extends DataSource {
             }
             //If here, this profile file does not track the group names.
             return null;
-        } catch (Exception e) {
-            UtilFncs.systemError(e, null, "SSD12");
-        }
-        return null;
     }
 
     private void getUserEventData(String string) {
-        try {
 
             // first, count the number of double-quotes to determine if the
             // user event contains a double-quote
@@ -685,34 +557,14 @@ public class TauDataSource extends DataSource {
                 st2 = new StringTokenizer(string.substring(i + 1), " \t\n\r");
             }
 
-            usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number
-            // of
-            // calls.
+            usereventDataLine.i0 = (int) Double.parseDouble(st2.nextToken()); //Number of calls
             usereventDataLine.d0 = Double.parseDouble(st2.nextToken()); //Max
             usereventDataLine.d1 = Double.parseDouble(st2.nextToken()); //Min
             usereventDataLine.d2 = Double.parseDouble(st2.nextToken()); //Mean
-            usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard
-            // Deviation.
-        } catch (Exception e) {
-            System.out.println("An error occurred!");
-            e.printStackTrace();
-        }
+            usereventDataLine.d3 = Double.parseDouble(st2.nextToken()); //Standard Deviation
     }
 
-    //######
-    //End - profile.*.*.* string processing methods.
-    //######
-
-    //####################################
-    //End - Private Section.
-    //####################################
-
-    //####################################
     //Instance data.
-    //####################################
     private LineData functionDataLine = new LineData();
     private LineData usereventDataLine = new LineData();
-    //####################################
-    //End - Instance data.
-    //####################################
 }

@@ -18,7 +18,7 @@ import java.sql.SQLException;
  * details.  The two extensions of this class are EventDistance and
  * ThreadDistance.
  *
- * <P>CVS $Id: DistanceAnalysis.java,v 1.7 2004/12/23 00:25:50 amorris Exp $</P>
+ * <P>CVS $Id: DistanceAnalysis.java,v 1.8 2004/12/29 00:00:43 amorris Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1
@@ -50,7 +50,13 @@ abstract public class DistanceAnalysis {
 		StringBuffer buf = new StringBuffer();
 		buf.append("select count(id) from interval_event where trial = ");
 		buf.append(trial.getID());
-		int eventCount = Integer.parseInt(db.getDataItem(buf.toString()));
+		
+		int eventCount = 0;
+		try {
+		    eventCount = Integer.parseInt(db.getDataItem(buf.toString()));
+		} catch (SQLException e) {
+		}
+
 		System.out.println(threadCount + " " + eventCount);
 
 		// initialize the matrix

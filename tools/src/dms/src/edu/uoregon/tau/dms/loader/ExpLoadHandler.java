@@ -209,7 +209,16 @@ public void endElement(String url, String name, String qname) {
 	    buf.append(EXP_TABLE);
 	    buf.append("  where name like '" + this.name + "' and application = " + application + "; ");
 		// System.out.println(buf.toString());
-	    if (getDB().getDataItem(buf.toString()) == null){
+	    
+	    
+	    String value = null;
+		try {
+		    value = getDB().getDataItem(buf.toString());
+		} catch (SQLException e) {
+		}
+
+	    
+	    if (value == null){
 
 	    	buf = new StringBuffer();
 	    	buf.append("insert into " + EXP_TABLE);

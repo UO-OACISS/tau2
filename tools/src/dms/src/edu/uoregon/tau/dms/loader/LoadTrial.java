@@ -33,15 +33,12 @@ public class LoadTrial {
                 + "                                   profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                   gprof, psrun, hpm\n"
                 + "  -t, --trialid <number>         Specify trial ID\n"
-                + "  -i, --fixnames                 Use the fixnames option for gprof\n\n"
-                + "Notes:\n"
+                + "  -i, --fixnames                 Use the fixnames option for gprof\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
                 + "or, in the case of multiple counters, directories named MULTI_* containing\n"
-                + "profile data.\n\n"
-                + "Examples:\n\n"
-                + "  perfdmf_loadtrial -e 12 -n \"Batch 001\"\n"
+                + "profile data.\n\n" + "Examples:\n\n" + "  perfdmf_loadtrial -e 12 -n \"Batch 001\"\n"
                 + "    This will load profile.* (or multiple counters directories MULTI_*) into\n"
                 + "    experiment 12 and give the trial the name \"Batch 001\"\n\n"
                 + "  perfdmf_loadtrial -e 12 -n \"HPM data 01\" perfhpm*\n"
@@ -66,7 +63,7 @@ public class LoadTrial {
      * This variable connects translator to DB in order to check whether the
      * app. and exp. associated with the trial data do exist there.
      */
-    DatabaseAPI dbSession = null;
+    DatabaseAPI databaseAPI = null;
     Trial trial = null;
 
     //constructor
@@ -76,16 +73,21 @@ public class LoadTrial {
         // check for the existence of file
         //readPprof = new File(sourcename);
 
-        dbSession = new DatabaseAPI();
-        dbSession.initialize(configFileName);
+        databaseAPI = new DatabaseAPI();
+        try {
+            databaseAPI.initialize(configFileName, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
     }
 
     public boolean checkForExp(String expid) {
         this.expID = Integer.parseInt(expid);
-        exp = dbSession.setExperiment(this.expID);
+        exp = databaseAPI.setExperiment(this.expID);
         if (exp == null) {
-            System.err.println("Experiment id " + expid
-                    + " not found,  please enter a valid experiment ID.");
+            System.err.println("Experiment id " + expid + " not found,  please enter a valid experiment ID.");
             System.exit(-1);
             return false;
         } else
@@ -93,7 +95,7 @@ public class LoadTrial {
     }
 
     public boolean checkForTrial(String trialid) {
-        Trial tmpTrial = dbSession.setTrial(Integer.parseInt(trialid));
+        Trial tmpTrial = databaseAPI.setTrial(Integer.parseInt(trialid));
         if (tmpTrial == null)
             return false;
         else
@@ -101,7 +103,7 @@ public class LoadTrial {
     }
 
     public void loadTrial(int fileType) {
-        
+
         trial = null;
         this.fileType = fileType;
 
@@ -194,7 +196,7 @@ public class LoadTrial {
                 filelist[i] = new File(sourceFiles[i]);
             }
             v.add(filelist);
-            dataSource = new GprofDataSource(v,fixNames);
+            dataSource = new GprofDataSource(v, fixNames);
             break;
         case 6:
             v = new Vector();
@@ -220,25 +222,25 @@ public class LoadTrial {
 
         trial = new Trial(0);
         trial.setDataSource(dataSource);
-        
+
         try {
             dataSource.load();
         } catch (Exception e) {
-            System.err.println ("Error Loading Trial:");
+            System.err.println("Error Loading Trial:");
             e.printStackTrace();
         }
-        
+
         if (trialID == 0)
             saveTrial();
         else
             appendToTrial();
 
-}
+    }
 
-//    public void writeTrial() {
-//        XMLSupport xmlWriter = new XMLSupport(trial);
-//        xmlWriter.writeXmlFiles(0, writeXml);
-//    }
+    //    public void writeTrial() {
+    //        XMLSupport xmlWriter = new XMLSupport(trial);
+    //        xmlWriter.writeXmlFiles(0, writeXml);
+    //    }
 
     public void saveTrial() {
         // if (fileType == 101) return;
@@ -252,14 +254,24 @@ public class LoadTrial {
 
         System.out.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
-        dbSession.saveParaProfTrial(trial, -1);
+        try {
+            databaseAPI.saveParaProfTrial(trial, -1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
         System.out.println("Done saving trial!");
     }
 
     public void appendToTrial() {
         // set some things in the trial
         trial.setID(this.trialID);
-        dbSession.saveParaProfTrial(trial, 0);
+        try {
+            databaseAPI.saveParaProfTrial(trial, 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
         System.out.println("Done adding metric to trial!");
     }
 
@@ -349,10 +361,8 @@ public class LoadTrial {
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
-        CmdLineParser.Option configfileOpt = parser.addStringOption('g',
-                                                                    "configfile");
-        CmdLineParser.Option experimentidOpt = parser.addStringOption('e',
-                                                                      "experimentid");
+        CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+        CmdLineParser.Option experimentidOpt = parser.addStringOption('e', "experimentid");
         CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
         //CmdLineParser.Option problemOpt = parser.addStringOption('p',
         // "problemfile");
@@ -428,8 +438,7 @@ public class LoadTrial {
                  * else if (fileTypeString.equals("sddf")) { fileType = 0;
                  */
             } else {
-                System.err.println("Error: unknown type '" + fileTypeString
-                        + "'\n");
+                System.err.println("Error: unknown type '" + fileTypeString + "'\n");
                 LoadTrial.usage();
                 System.exit(-1);
             }

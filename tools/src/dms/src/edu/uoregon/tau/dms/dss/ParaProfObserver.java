@@ -9,6 +9,6 @@ package edu.uoregon.tau.dms.dss;
 
 public interface ParaProfObserver{
 
-    void update();
-    void update(Object obj);
+    void update() throws DatabaseException;
+    void update(Object obj) throws DatabaseException;
 }

@@ -1,6 +1,7 @@
 /*
- * Name: UtilFncs.java Author: Robert Bell Description: Some useful functionProfiles
- * for the system.
+ * Name: UtilFncs.java 
+ * Author: Robert Bell 
+ * Description: Some useful functions for the system.
  */
 
 package edu.uoregon.tau.dms.dss;
@@ -10,7 +11,6 @@ import java.awt.*;
 import javax.swing.*;
 import java.io.*;
 import java.text.*;
-import java.awt.print.*;
 
 public class UtilFncs {
 
@@ -178,9 +178,8 @@ public class UtilFncs {
             return lpad(hours + ":" + mins + ":" + secs, width);
 
         default:
-            UtilFncs.systemError(null, null, "Unexpected string type - UF02 value: " + type);
+            throw new RuntimeException("Unexpected string type: " + type);
         }
-        return null;
     }
 
     public static String getUnitsString(int type, boolean time, boolean derived) {
@@ -196,6 +195,9 @@ public class UtilFncs {
                 return "Derived metric shown in seconds format";
             case 3:
                 return "Derived metric shown in hour:minute:seconds format";
+            default:
+                throw new RuntimeException("Unexpected string type: " + type);
+
             }
         } else {
             if (!time)
@@ -210,10 +212,9 @@ public class UtilFncs {
             case 3:
                 return "hour:minute:seconds";
             default:
-                UtilFncs.systemError(null, null, "Unexpected string type - UF03 value: " + type);
+                throw new RuntimeException("Unexpected string type: " + type);
             }
         }
-        return null;
     }
 
     public static String getValueTypeString(int type) {
@@ -239,9 +240,8 @@ public class UtilFncs {
         case 20:
             return "Standard Deviation of User Event Value";
         default:
-            UtilFncs.systemError(null, null, "Unexpected string type - UF04 value: " + type);
+            throw new RuntimeException("Unexpected string type: " + type);
         }
-        return null;
     }
 
     //    public static int exists(int[] ref, int i) {
@@ -273,75 +273,74 @@ public class UtilFncs {
     //Error handling.
     //####################################
     public static boolean debug = false;
-    public static Debug objectDebug = null;
 
-    public static void systemError(Object obj, Component component, String string) {
-
-        System.out.println("####################################");
-        boolean quit = true; //Quit by default.
-        if (obj != null) {
-            if (obj instanceof Exception) {
-                Exception exception = (Exception) obj;
-
-                if (UtilFncs.debug) {
-                    System.out.println(exception.toString());
-                    exception.printStackTrace();
-                    System.out.println("\n");
-                }
-                exception.printStackTrace();
-                System.out.println("An error was detected: " + string);
-                System.out.println(ParaProfError.contactString);
-            }
-            if (obj instanceof ParaProfError) {
-                ParaProfError paraProfError = (ParaProfError) obj;
-
-                if (paraProfError.exp != null) {
-                    System.out.println(paraProfError.exp.toString());
-                    paraProfError.exp.printStackTrace();
-                    System.out.println("\n");
-                }
-
-                if (UtilFncs.debug) {
-                    if ((paraProfError.showPopup) && (paraProfError.popupString != null))
-                        JOptionPane.showMessageDialog(paraProfError.component, "ParaProf Error",
-                                paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
-                    if (paraProfError.exp != null) {
-                        System.out.println(paraProfError.exp.toString());
-                        paraProfError.exp.printStackTrace();
-                        System.out.println("\n");
-                    }
-                    if (paraProfError.location != null)
-                        System.out.println("Location: " + paraProfError.location);
-                    if (paraProfError.s0 != null)
-                        System.out.println(paraProfError.s0);
-                    if (paraProfError.s1 != null)
-                        System.out.println(paraProfError.s1);
-                    if (paraProfError.showContactString)
-                        System.out.println(ParaProfError.contactString);
-                } else {
-                    if ((paraProfError.showPopup) && (paraProfError.popupString != null))
-                        JOptionPane.showMessageDialog(paraProfError.component, paraProfError.popupString,
-                                "ParaProf Error", JOptionPane.ERROR_MESSAGE);
-                    if (paraProfError.location != null)
-                        System.out.println("Location: " + paraProfError.location);
-                    if (paraProfError.s0 != null)
-                        System.out.println(paraProfError.s0);
-                    if (paraProfError.s1 != null)
-                        System.out.println(paraProfError.s1);
-                    if (paraProfError.showContactString)
-                        System.out.println(ParaProfError.contactString);
-                }
-                quit = paraProfError.quit;
-            } else {
-                System.out.println("An error has been detected: " + string);
-            }
-        } else {
-            System.out.println("An error was detected at " + string);
-        }
-        System.out.println("####################################");
-        if (quit)
-            System.exit(0);
-    }
+//    public static void systemError(Object obj, Component component, String string) {
+//
+//        System.out.println("####################################");
+//        boolean quit = true; //Quit by default.
+//        if (obj != null) {
+//            if (obj instanceof Exception) {
+//                Exception exception = (Exception) obj;
+//
+//                if (UtilFncs.debug) {
+//                    System.out.println(exception.toString());
+//                    exception.printStackTrace();
+//                    System.out.println("\n");
+//                }
+//                exception.printStackTrace();
+//                System.out.println("An error was detected: " + string);
+//                System.out.println(ParaProfError.contactString);
+//            }
+//            if (obj instanceof ParaProfError) {
+//                ParaProfError paraProfError = (ParaProfError) obj;
+//
+//                if (paraProfError.exp != null) {
+//                    System.out.println(paraProfError.exp.toString());
+//                    paraProfError.exp.printStackTrace();
+//                    System.out.println("\n");
+//                }
+//
+//                if (UtilFncs.debug) {
+//                    if ((paraProfError.showPopup) && (paraProfError.popupString != null))
+//                        JOptionPane.showMessageDialog(paraProfError.component, "ParaProf Error",
+//                                paraProfError.popupString, JOptionPane.ERROR_MESSAGE);
+//                    if (paraProfError.exp != null) {
+//                        System.out.println(paraProfError.exp.toString());
+//                        paraProfError.exp.printStackTrace();
+//                        System.out.println("\n");
+//                    }
+//                    if (paraProfError.location != null)
+//                        System.out.println("Location: " + paraProfError.location);
+//                    if (paraProfError.s0 != null)
+//                        System.out.println(paraProfError.s0);
+//                    if (paraProfError.s1 != null)
+//                        System.out.println(paraProfError.s1);
+//                    if (paraProfError.showContactString)
+//                        System.out.println(ParaProfError.contactString);
+//                } else {
+//                    if ((paraProfError.showPopup) && (paraProfError.popupString != null))
+//                        JOptionPane.showMessageDialog(paraProfError.component, paraProfError.popupString,
+//                                "ParaProf Error", JOptionPane.ERROR_MESSAGE);
+//                    if (paraProfError.location != null)
+//                        System.out.println("Location: " + paraProfError.location);
+//                    if (paraProfError.s0 != null)
+//                        System.out.println(paraProfError.s0);
+//                    if (paraProfError.s1 != null)
+//                        System.out.println(paraProfError.s1);
+//                    if (paraProfError.showContactString)
+//                        System.out.println(ParaProfError.contactString);
+//                }
+//                quit = paraProfError.quit;
+//            } else {
+//                System.out.println("An error has been detected: " + string);
+//            }
+//        } else {
+//            System.out.println("An error was detected at " + string);
+//        }
+//        System.out.println("####################################");
+//        if (quit)
+//            System.exit(0);
+//    }
 
     //####################################
     //End - Error handling.
@@ -620,7 +619,8 @@ public class UtilFncs {
     //    //####################################
     //    
 
-    public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames) {
+    public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames)
+            throws DataSourceException {
         DataSource dataSource = null;
 
         Vector v = new Vector();
@@ -632,15 +632,17 @@ public class UtilFncs {
             if (sourceFiles.length < 1) {
                 v = fl.helperFindProfiles(System.getProperty("user.dir"));
                 if (v.size() == 0)
-                    return null;
+                    throw new DataSourceException("profiles type: no profiles specified");
             } else {
                 if (sourceFiles[0].isDirectory()) {
                     if (sourceFiles.length > 1) {
-                        System.err.println("profiles type: you can only specify one directory");
-                        return null;
+                        throw new DataSourceException("profiles type: you can only specify one directory");
                     }
 
                     v = fl.helperFindProfiles(sourceFiles[0].toString());
+                    if (v.size() == 0) {
+                        throw new DataSourceException("No profiles found in directory: " + sourceFiles[0]);
+                    }
                 } else {
                     v.add(sourceFiles);
                 }
@@ -651,12 +653,10 @@ public class UtilFncs {
             break;
         case 1:
             if (sourceFiles.length != 1) {
-                System.err.println("pprof type: you must specify exactly one file");
-                return null;
+                throw new DataSourceException("pprof type: you must specify exactly one file");
             }
             if (sourceFiles[0].isDirectory()) {
-                System.err.println("pprof type: you must specify a file, not a directory");
-                return null;
+                throw new DataSourceException("pprof type: you must specify a file, not a directory");
             }
             v.add(sourceFiles);
             dataSource = new TauPprofDataSource(v);
@@ -666,13 +666,12 @@ public class UtilFncs {
             dataSource = new DynaprofDataSource(v);
             break;
         case 3:
+
             if (sourceFiles.length != 1) {
-                System.err.println("MpiP type: you must specify exactly one file");
-                System.exit(-1);
+                throw new DataSourceException("MpiP type: you must specify exactly one file");
             }
             if (sourceFiles[0].isDirectory()) {
-                System.err.println("MpiP type: you must specify a file, not a directory");
-                System.exit(-1);
+                throw new DataSourceException("MpiP type: you must specify a file, not a directory");
             }
             v.add(sourceFiles);
             dataSource = new MpiPDataSource(v);
@@ -694,25 +693,6 @@ public class UtilFncs {
         }
 
         return dataSource;
-    }
-
-    public static void print(Printable printable) {
-        PrinterJob job = PrinterJob.getPrinterJob();
-        PageFormat defaultFormat = job.defaultPage();
-        PageFormat selectedFormat = job.pageDialog(defaultFormat);
-        if (defaultFormat != selectedFormat) { // only proceed if the user did not select cancel
-            job.setPrintable(printable, selectedFormat);
-            if (job.getPrintService() != null) {
-                if (job.printDialog()) { // only proceed if the user did not select cancel
-                    try {
-                        job.print();
-                    } catch (PrinterException e) {
-                        // TODO: Do Something!!!!!!!!!!!!!!!!!!!!!!!1
-                    }
-                }
-            }
-        }
-
     }
 
 }

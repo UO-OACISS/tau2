@@ -13,7 +13,7 @@ public interface DB {
     ResultSet executeQuery(String statement) throws SQLException;
     int executeUpdate(String statement) throws SQLException;
     boolean execute(String statement) throws SQLException;
-    String getDataItem(String query);
+    String getDataItem(String query) throws SQLException;
     public boolean isClosed();
     public String getDBType();
     public Connection getConnection();
@@ -26,5 +26,6 @@ public interface DB {
 
     public void setAutoCommit(boolean auto) throws SQLException;
     public void commit() throws SQLException;
+    public void rollback() throws SQLException;
 
 }
