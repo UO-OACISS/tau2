@@ -36,10 +36,16 @@ struct Tault2Longs
 {
   bool operator() (const long *l1, const long *l2) const
  { /* each element has two longs, char * and line no. */
-   int i;
    /* first check 0th index (size) */
    if (l1[0] != l2[0]) return (l1[0] < l2[0]);
    return l1[1] < l2[1]; 
+ }
+};
+struct TaultLong
+{
+  bool operator() (const long l1, const long l2) const
+ { 
+   return l1 < l2; 
  }
 };
 #define TAU_MALLOC_MAP_TYPE long*, TauUserEvent *, Tault2Longs
@@ -70,7 +76,7 @@ class TauVoidPointer {
 //////////////////////////////////////////////////////////////////////
 // 
 //////////////////////////////////////////////////////////////////////
-#define TAU_POINTER_SIZE_MAP_TYPE long, size_t, less<long>
+#define TAU_POINTER_SIZE_MAP_TYPE long, size_t, TaultLong
 
 //////////////////////////////////////////////////////////////////////
 // 
@@ -185,6 +191,6 @@ extern "C" void Tau_free_C(const char *file, int line, void *p)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2004/02/27 02:32:52 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.2 2004/02/27 02:32:52 sameer Exp $ 
+ * $Revision: 1.3 $   $Date: 2004/02/27 18:32:10 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.3 2004/02/27 18:32:10 sameer Exp $ 
  ***************************************************************************/
