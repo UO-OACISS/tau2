@@ -95,7 +95,7 @@ long TauUserEvent::GetEventId(void)
 }
 
 // Constructor 
-TauUserEvent::TauUserEvent(const char * EName)
+TauUserEvent::TauUserEvent(const char * EName, bool increasing)
 {
   DEBUGPROFMSG("Inside ctor of TauUserEvent EName = "<< EName << endl;);
 
@@ -105,6 +105,7 @@ TauUserEvent::TauUserEvent(const char * EName)
   DisableMax 	= false; 	// Max      is calculated 
   DisableMean 	= false; 	// Mean     is calculated 
   DisableStdDev = false; 	// StdDev   is calculated
+  MonotonicallyIncreasing = increasing; // By default it is false 
 
   for(int i=0; i < TAU_MAX_THREADS; i++) 
   {
@@ -130,6 +131,7 @@ TauUserEvent::TauUserEvent(TauUserEvent& X)
   DisableMax 	= X.DisableMax;
   DisableMean	= X.DisableMean;
   DisableStdDev = X.DisableStdDev;
+  MonotonicallyIncreasing = X.MonotonicallyIncreasing;
 /* Do we really need these? 
   LastValueRecorded = X.LastValueRecorded;
   NumEvents	= X.NumEvents;
@@ -151,6 +153,7 @@ TauUserEvent::TauUserEvent()
   DisableMax 	= false; 	// Max      is calculated 
   DisableMean 	= false; 	// Mean     is calculated 
   DisableStdDev = false; 	// StdDev   is calculated
+  MonotonicallyIncreasing = false; // By default it does not have any constraints
 
   for (int i=0; i < TAU_MAX_THREADS; i++)
   {
@@ -190,13 +193,31 @@ TauUserEvent& TauUserEvent::operator= (const TauUserEvent& X)
 }
 
 ///////////////////////////////////////////////////////////
+// GetMonotonicallyIncreasing
+///////////////////////////////////////////////////////////
+bool TauUserEvent::GetMonotonicallyIncreasing(void)
+{
+  return MonotonicallyIncreasing; 
+}
+
+///////////////////////////////////////////////////////////
+// SetMonotonicallyIncreasing
+///////////////////////////////////////////////////////////
+void TauUserEvent::SetMonotonicallyIncreasing(bool value)
+{
+  MonotonicallyIncreasing = value; 
+}
+
+///////////////////////////////////////////////////////////
 // TriggerEvent records the value of data in the UserEvent
 ///////////////////////////////////////////////////////////
 
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid)
 { 
 #ifdef TRACING_ON
+  TraceEvent(GetEventId(), (unsigned long long) 0, tid, 0, 0); 
   TraceEvent(GetEventId(), (unsigned long long) data, tid, 0, 0); 
+  TraceEvent(GetEventId(), (unsigned long long) 0, tid, 0, 0); 
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
 #endif /* TRACING_ON */
 
@@ -443,6 +464,6 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 2004/07/26 23:59:12 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.12 2004/07/26 23:59:12 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 2004/08/13 00:47:17 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.13 2004/08/13 00:47:17 sameer Exp $ 
  ***************************************************************************/
