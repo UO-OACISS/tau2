@@ -55,7 +55,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
       
-	    jMenuItem = new JMenuItem("Show Mean Call Path edu.uoregon.tau.dms.dss.Thread Relations");
+	    jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
 	    //######
@@ -73,7 +73,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 
-	    jMenuItem = new JMenuItem("Show Call Path edu.uoregon.tau.dms.dss.Thread Relations");
+	    jMenuItem = new JMenuItem("Show Call Path Thread Relations");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 	    //######
@@ -586,7 +586,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Mean Call Path edu.uoregon.tau.dms.dss.Thread Relations")){
+		else if(arg.equals("Show Mean Call Path Thread Relations")){
 		    if(clickedOnObject instanceof SMWThread){
 			SMWedu.uoregon.tau.dms.dss.Thread sMWedu.uoregon.tau.dms.dss.Thread = (SMWThread) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThread.getNodeID(),
@@ -622,7 +622,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Call Path edu.uoregon.tau.dms.dss.Thread Relations")){
+		else if(arg.equals("Show Call Path Thread Relations")){
 		    if(clickedOnObject instanceof SMWThread){
 			SMWedu.uoregon.tau.dms.dss.Thread sMWedu.uoregon.tau.dms.dss.Thread = (SMWThread) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThread.getNodeID(),

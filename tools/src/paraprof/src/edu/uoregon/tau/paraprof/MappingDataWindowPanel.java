@@ -26,14 +26,14 @@ import edu.uoregon.tau.dms.dss.*;
 
 
 public class MappingDataWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ParaProfImageInterface{
-    public MappingDataWindowPanel(){
+    public MappingDataWindowPanel() {
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    
 	    //Schedule a repaint of this panel.
 	    this.repaint();
 	}
-	catch(Exception e){
+	catch(Exception e) {
 	    UtilFncs.systemError(e, null, "MDWP01");
 	}
     }
@@ -62,7 +62,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
       
-	    jMenuItem = new JMenuItem("Show Mean Call Path edu.uoregon.tau.dms.dss.Thread Relations");
+	    jMenuItem = new JMenuItem("Show Mean Call Path Thread Relations");
 	    jMenuItem.addActionListener(this);
 	    popup1.add(jMenuItem);
 	    //######
@@ -76,11 +76,13 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
       
-	    jMenuItem = new JMenuItem("Show Total User Event Statistics Windows");
-	    jMenuItem.addActionListener(this);
-	    popup2.add(jMenuItem);
+	    if (trial.userEventsPresent()) {
+		jMenuItem = new JMenuItem("Show Total User Event Statistics Windows");
+		jMenuItem.addActionListener(this);
+		popup2.add(jMenuItem);
+	    }
 
-	    jMenuItem = new JMenuItem("Show Call Path edu.uoregon.tau.dms.dss.Thread Relations");
+	    jMenuItem = new JMenuItem("Show Call Path Thread Relations");
 	    jMenuItem.addActionListener(this);
 	    popup2.add(jMenuItem);
 	    //######
@@ -474,7 +476,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Mean Call Path edu.uoregon.tau.dms.dss.Thread Relations")){
+		else if(arg.equals("Show Mean Call Path Thread Relations")){
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThreadDataElement.getNodeID(),
@@ -510,7 +512,7 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
 			statWindow.show();
 		    }
 		}
-		else if(arg.equals("Show Call Path edu.uoregon.tau.dms.dss.Thread Relations")){
+		else if(arg.equals("Show Call Path Thread Relations")){
 		    if(clickedOnObject instanceof SMWThreadDataElement){
 			sMWThreadDataElement = (SMWThreadDataElement) clickedOnObject;
 			CallPathUtilFuncs.trimCallPathData(trial.getGlobalMapping(),trial.getNCT().getThread(sMWThreadDataElement.getNodeID(),
