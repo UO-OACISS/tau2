@@ -80,13 +80,23 @@ public class GlobalMappingElement implements Serializable
 	
 	public boolean isGroupMember(int inGroupID)
 	{
+		GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+		
+		boolean tmpBool = tmpGM.getIsAllExceptGroupOn();
+		boolean tmpBoolResult = false;
+		
 		for(int i=0;i<numberOfGroups;i++)
 		{
-			if(groups[i] == inGroupID)
-				return true;
+			if(groups[i] == inGroupID){
+				tmpBoolResult = true;
+				break;
+			}
 		}
 		
-		return false;
+		if(!tmpBool)
+			return tmpBoolResult;
+		else
+			return (!tmpBoolResult);
 	}
 	
 	public void setColorFlag(boolean inBoolean)

@@ -365,6 +365,14 @@ public class GlobalMapping implements WindowListener, Serializable
 		return isSelectedGroupOn;
 	}
 	
+	public void setIsAllExceptGroupOn(boolean inBool){
+		isAllExceptGroupOn = inBool;
+	}
+	
+	public boolean getIsAllExceptGroupOn(){
+		return isAllExceptGroupOn;
+	}
+	
 	public void setSelectedGroupID(int inInt){
 		selectedGroupID = inInt;
 	}
@@ -443,6 +451,7 @@ public class GlobalMapping implements WindowListener, Serializable
 	int sizeOfArray = 2;
 	
 	boolean isSelectedGroupOn = false;
+	boolean isAllExceptGroupOn = false;
 	int selectedGroupID = -1;
 	
 	private MappingLedgerWindow mappingLedgerWindow;

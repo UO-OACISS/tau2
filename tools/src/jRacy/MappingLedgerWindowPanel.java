@@ -77,6 +77,11 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 				popup.add(showThisMappingOnlyItem);
 				
 				//Add items to the popu menu.
+				JMenuItem showAllButMappingsItem = new JMenuItem("Show All Groups Mappings Except This One");
+				showAllButMappingsItem.addActionListener(this);
+				popup.add(showAllButMappingsItem);
+				
+				//Add items to the popu menu.
 				JMenuItem showAllMappingsItem = new JMenuItem("Show All Group Mappings");
 				showAllMappingsItem.addActionListener(this);
 				popup.add(showAllMappingsItem);
@@ -324,6 +329,20 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					
 					GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
 					tmpGM.setIsSelectedGroupOn(true);
+					tmpGM.setIsAllExceptGroupOn(false);
+					tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
+					
+					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
+				}
+				else if(arg.equals("Show All Groups Mappings Except This One"))
+				{	
+					
+					if(clickedOnObject instanceof GlobalMappingElement)
+						tmpGlobalMappingElement = (GlobalMappingElement) clickedOnObject;
+					
+					GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
+					tmpGM.setIsSelectedGroupOn(true);
+					tmpGM.setIsAllExceptGroupOn(true);
 					tmpGM.setSelectedGroupID(tmpGlobalMappingElement.getGlobalID());
 					
 					jRacy.systemEvents.updateRegisteredObjects("dataEvent");
@@ -336,6 +355,7 @@ public class MappingLedgerWindowPanel extends JPanel implements ActionListener, 
 					
 					GlobalMapping tmpGM = jRacy.staticSystemData.getGlobalMapping();
 					tmpGM.setIsSelectedGroupOn(false);
+					tmpGM.setIsAllExceptGroupOn(false);
 					tmpGM.setSelectedGroupID(-1);
 					
 					jRacy.systemEvents.updateRegisteredObjects("dataEvent");

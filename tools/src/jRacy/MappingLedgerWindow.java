@@ -52,33 +52,46 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 				jRacy.helpWindow.clearText();
 				
 				if(!((jRacy.staticMainWindow.getSMWData()).isDataLoaded()))
-				{
-					jRacy.helpWindow.writeText("This is the mapping ledger window.");
-					jRacy.helpWindow.writeText("");
-					if(mappingSelection == 0)
-						jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+					{
+						if(mappingSelection == 0){
+							jRacy.helpWindow.writeText("This is the mapping ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window will be blank until you load data.");
+							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
+						}
+						else{
+							jRacy.helpWindow.writeText("This is the group mapping ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window will be blank until you load data.");
+							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
+						}
+					}
 					else
-						jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");	
-					jRacy.helpWindow.writeText("");
-					jRacy.helpWindow.writeText("This window will be blank until you load data.");
-					jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
-				}
-				else
-				{
-					jRacy.helpWindow.writeText("This is the mapping ledger window.");
-					jRacy.helpWindow.writeText("");
-					if(mappingSelection == 0)
-						jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
-					else
-						jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
-					jRacy.helpWindow.writeText("");
-					jRacy.helpWindow.writeText("To see more information about any of the mappings shown here,");
-					jRacy.helpWindow.writeText("right click on that mapping, and select from the popup menu.");
-					if(mappingSelection == 0)
-						jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
-					else
-						jRacy.helpWindow.writeText("You can also left click any group mapping to hightlight all mappings in the system that belong to that group.");
-				}
+					{
+						if(mappingSelection == 0){
+							jRacy.helpWindow.writeText("This is the mapping ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("To see more information about any of the mappings shown here,");
+							jRacy.helpWindow.writeText("right click on that mapping, and select from the popup menu.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
+						}
+						else{
+							jRacy.helpWindow.writeText("This is the group mapping ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("Left click any mapping to hightlight it in the system.");
+							jRacy.helpWindow.writeText("Right click on any mapping, and select from the popup menu"
+							+ " to display more options for masking or displaying mappings in a particular group.");
+						}
+					}
 			}
 			
 			//******************************
@@ -287,22 +300,44 @@ public class MappingLedgerWindow extends JFrame implements ActionListener,  Obse
 					//if it has not.
 					if(!((jRacy.staticMainWindow.getSMWData()).isDataLoaded()))
 					{
-						jRacy.helpWindow.writeText("This is the mapping ledger window.");
-						jRacy.helpWindow.writeText("");
-						jRacy.helpWindow.writeText("This window simply shows you all the mappings tracked in this profile.");
-						jRacy.helpWindow.writeText("");
-						jRacy.helpWindow.writeText("This window will be blank until you load data.");
-						jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
+						if(mappingSelection == 0){
+							jRacy.helpWindow.writeText("This is the mapping ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window will be blank until you load data.");
+							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
+						}
+						else{
+							jRacy.helpWindow.writeText("This is the group mapping ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window will be blank until you load data.");
+							jRacy.helpWindow.writeText("You can do this from the file menu of the main window.");
+						}
 					}
 					else
 					{
-						jRacy.helpWindow.writeText("This is the mapping ledger window.");
-						jRacy.helpWindow.writeText("");
-						jRacy.helpWindow.writeText("This window simply shows you all the mappings tracked in this profile.");
-						jRacy.helpWindow.writeText("");
-						jRacy.helpWindow.writeText("To see more information about any of the mappings shown here,");
-						jRacy.helpWindow.writeText("right click on that mapping, and select from the popup menu.");
-						jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
+						if(mappingSelection == 0){
+							jRacy.helpWindow.writeText("This is the mapping ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("To see more information about any of the mappings shown here,");
+							jRacy.helpWindow.writeText("right click on that mapping, and select from the popup menu.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("You can also left click any mapping to hightlight it in the system.");
+						}
+						else{
+							jRacy.helpWindow.writeText("This is the group mapping ledger window.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("This window shows all the group mappings tracked in this profile.");
+							jRacy.helpWindow.writeText("");
+							jRacy.helpWindow.writeText("Left click any mapping to hightlight it in the system.");
+							jRacy.helpWindow.writeText("Right click on any mapping, and select from the popup menu"
+							+ " to display more options for masking or displaying mappings in a particular group.");
+						}
 					}
 				}
 			}
