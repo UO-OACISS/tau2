@@ -16,7 +16,7 @@ For profiling
 For tracing
 % ./configure -c++=g++ -jdk=/usr/local/packages/jdk1.2  -TRACE
 For both profiling and tracing
-% ./configure -c++=g++ -jdk=/usr/local/packages/jdk1.2  -TRACE -PROFILE
+% ./configure -c++=g++ -jdk=/usr/local/packages/jdk1.4.x  -TRACE -PROFILE
 
 2) Installing
 % make install
@@ -26,20 +26,22 @@ For both profiling and tracing
 % setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH:<taudir>/<tauarch>/lib
 % cd examples/java/pi
 % java -XrunTAU Pi 200000
-On Solaris, you may need to disable the JIT compiler while using TAU. 
-% java -XrunTAU -Djava.compiler=  Pi 200000
-If you're using JAVA HotSpot JVM, you may need the -classic flag too.
-% java -classic -XrunTAU -Djava.compiler= Pi 200000
 (java -version shows the version of JVM).
 
-TAU has been tested with the JIT compiler on Linux and it works properly.
+4) Selective instrumentation
+To exclude certain classes, you may use the -XrunTAU:exclude=<classes> flag.
+e.g., to exclude java/*, sun/*, com/* methods, you may use:
+% java -XrunTAU:exclude=java,sun,com Pi 200000
 
-4) Displaying profiles/traces
+To exclude all methods (and *not* incur the JVMPI method invocation overhead), you may use the -XrunTAU:nomethods flag as:
+% java -XrunTAU:nomethods Pi 20000
+This allows you to use source level timers (see examples/java/api for an example) and generate accurate multi-threaded performance data without the JVMPI overhead.
+
+5) Displaying profiles/traces
 For Profiling:
 % pprof
-% racy 
-pprof is for text profile display and racy is the GUI.
-When the project management window comes up, type in pi.pmf and click on Create.
+% paraprof 
+pprof is for text profile display and paraprof is the GUI.
 
 For Tracing:
 First merge the traces using tau_merge
