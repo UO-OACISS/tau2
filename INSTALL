@@ -60,7 +60,7 @@ Usage: configure [OPTIONS]
  options [CC|KCC|g++|xlC|cxx|egcs|pgCC|FCC|guidec++|aCC|c++|ecpc|icpc].
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
-                                                   kai|nec|hitachi|intel]
+                                                 kai|nec|hitachi|intel]
 -useropt='<parameters>' ............... list of commandline parameters.
 -pthread .................................. Use pthread thread package.
 -sproc .................................. Use SGI sproc thread package.
@@ -83,6 +83,7 @@ Usage: configure [OPTIONS]
 -mpilibrary=<library> ................ Specify a different MPI library.
             e.g., -mpilibrary=-lmpi_r                                  
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
+-pythoninc=<dir> ........ Specify location of Python include directory.
 -TRACE ..................................... Generate TAU event traces.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
@@ -250,6 +251,17 @@ The following  command-line options are available to configure:
    be used with other tools such as EXPERT. EPILOG comes with its own 
    implementation of the MPI wrapper library and the POMP library used with 
    Opari. Using option overrides TAU's libraries for MPI, and OpenMP.
+
+-pythoninc=<dir>
+   
+   Specifies the location of the Python include directory. This is the directory
+   where Python.h header file is located. This option enables python bindings to 
+   be generated. The user should set the environment variable PYTHONPATH to 
+   <TAUROOT>/<ARCH>/lib/bindings-<options> to use a specific version of the TAU 
+   Python bindings. By importing package pytau, a user can manually instrument the source
+   code and use the TAU API. On the other hand, by importing tau and 
+   using tau.run('<func>'), TAU can automatically generate instrumentation. See
+   examples/python directory for further information.
 
 -PROFILE 
 
