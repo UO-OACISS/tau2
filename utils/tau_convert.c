@@ -62,7 +62,9 @@ static int pvComm = TRUE;
 static int dynamictrace = FALSE;
 
 static char *barrin, *barrout;  /* -- for barrier checking -- */
+#ifdef __PCXX__
 static int numin, numout;       /* -- for barrier checking -- */
+#endif /* __PCXX__ */
 
 static struct stkitem
 {
@@ -156,7 +158,6 @@ static void AddEvent (int id, char *name, char *p, char *state, int tag)
 static void AddEventDynamic (int id, char *name, char *p, char *state, int tag)
 {
   int h;
-  char *ptr;
   EVDESCR *newev;
 
 #ifdef DEBUG
@@ -274,7 +275,11 @@ static void PrintEventDescr (FILE *out)
           fprintf (out, "\tint\t\"Processor Number\";\n");
           fprintf (out, "\tint\t\"Thread Id\";\n");
           if ( ev->param[0] ) fprintf (out, "\tint\t\"%s\";\n", ev->param);
+	  /* OLD Code. Why have the name? There's no %s. */
+	  /*
           fprintf (out, "};;\n\n", ev->name);
+	  */
+          fprintf (out, "};;\n\n");
         }
         else if ( outFormat == pv )
         {
@@ -353,7 +358,7 @@ static char *Today (void)
 
   t = time ((time_t *) 0);
   tm = localtime (&t);
-  sprintf (tibuf, "%s-%02d-%02d", Months[tm->tm_mon], tm->tm_mday, tm->tm_year);
+  sprintf (tibuf, "%s-%02d-%02d", Months[tm->tm_mon], tm->tm_mday, 1900+tm->tm_year);
   return (tibuf);
 }
 
@@ -756,8 +761,10 @@ int main (int argc, char *argv[])
   /* ------------------------------------------------------------------------ */
   /* -- initialize barrier check variables ---------------------------------- */
   /* ------------------------------------------------------------------------ */
+#ifdef __PCXX__
   numin   = 0;
   numout  = numproc;
+#endif /* __PCXX__ */
   barrin  = (char *) malloc (intrc.numproc + 1);
   barrout = (char *) malloc (intrc.numproc + 1);
   for (i=0; i<=intrc.numproc; i++)
