@@ -54,7 +54,7 @@ int TheFlag[TAU_MAX_THREADS] ;
 vector<FunctionInfo *> TauDynFI; /* global FI vector */
 // Initialization procedure. Should be called before invoking 
 // other TAU routines.
-void TauInitCode(char *arg)
+void TauInitCode(char *arg, int isMPI)
 {
   char *name;
   int tid = 0;
@@ -82,7 +82,8 @@ void TauInitCode(char *arg)
     name = strtok(NULL, "|");
   }
   dprintf("Inside TauInitCode Initializations to be done here!\n");
-  TAU_MAPPING_PROFILE_SET_NODE(0, tid);
+  if (!isMPI)
+    TAU_MAPPING_PROFILE_SET_NODE(0, tid);
   dprintf("Node = %d\n", RtsLayer::myNode());
   TAU_MONITOR_EXIT(0);
 }
@@ -169,7 +170,7 @@ void HookExit(char *name)
 
 void TauMPIInitStub(int *rank)
 {
-  dprintf("INSIDE TauMPIInitStub() \n");
+  dprintf("INSIDE TauMPIInitStub() rank = %d \n", *rank);
 
   TAU_PROFILE_SET_NODE(*rank);
   dprintf("Setting rank = %d\n", *rank);
@@ -178,6 +179,6 @@ void TauMPIInitStub(int *rank)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2000/11/17 00:30:56 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.9 2000/11/17 00:30:56 sameer Exp $ 
+ * $Revision: 1.10 $   $Date: 2000/11/17 18:55:09 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.10 2000/11/17 18:55:09 sameer Exp $ 
  ***************************************************************************/
