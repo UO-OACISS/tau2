@@ -405,7 +405,8 @@ int InitFuncNameBuf(void)
     functagbuf[i]  = i;
     /* Default - give tags that are 0 to numfunc - 1 */
     /* This is because we don't have a dep file in dynamic profiling */
-    groupnamebuf[i] = strsave(((*it).second).groupNames);
+    if(groupNamesUsed)
+      groupnamebuf[i] = strsave(((*it).second).groupNames);
   }
 
   return TRUE;
@@ -601,10 +602,12 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix)
     
     //Just added functionName, therefore it will be there.
     //Set the group names for this function.
-    char *createdGNSpace = new char[strlen(groupNames)+1];
-    strcpy(createdGNSpace, groupNames);
-    funcDB[functionName].groupNames = createdGNSpace;
-    
+    if(groupNamesUsed){
+      char *createdGNSpace = new char[strlen(groupNames)+1];
+      strcpy(createdGNSpace, groupNames);
+      funcDB[functionName].groupNames = createdGNSpace;
+    }
+
     for(k = 0; k < numinvocations; k++) {
       if(fgets(line,SIZE_OF_LINE,fp) == NULL) {
 	perror("Error in fgets: Cannot read invocation data ");
@@ -3255,7 +3258,7 @@ int main (int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: bertie $
- * $Revision: 1.33 $   $Date: 2002/05/03 14:00:26 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.33 2002/05/03 14:00:26 bertie Exp $                                                   
+ * $Revision: 1.34 $   $Date: 2002/05/03 14:04:35 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.34 2002/05/03 14:04:35 bertie Exp $                                                   
  ***************************************************************************/
 
