@@ -34,6 +34,7 @@ public class GlobalMapping{
     }
 
     public void increaseVectorStorage(){
+	//	System.out.println ("increaseVectorStorage called!\n");
 	maxMeanInclusiveValueList.add(new Double(0));
 	maxMeanExclusiveValueList.add(new Double(0));
 	maxMeanInclusivePercentValueList.add(new Double(0));
@@ -189,19 +190,28 @@ public class GlobalMapping{
     //######
     public void setMaxMeanInclusiveValue(int dataValueLocation, double inDouble){
 	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusiveValueList.add(dataValueLocation, tmpDouble);}
+	//maxMeanInclusiveValueList.add(dataValueLocation, tmpDouble);
+	maxMeanInclusiveValueList.setElementAt(tmpDouble,dataValueLocation);
+    }
   
     public void setMaxMeanExclusiveValue(int dataValueLocation, double inDouble){
+	//System.out.println ("setMaxMeanExclusiveValue(" + dataValueLocation + ", " + inDouble + ")");
 	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusiveValueList.add(dataValueLocation, tmpDouble);}
+	//maxMeanExclusiveValueList.add(dataValueLocation, tmpDouble);
+	maxMeanExclusiveValueList.setElementAt(tmpDouble,dataValueLocation);
+    }
   
     public void setMaxMeanInclusivePercentValue(int dataValueLocation, double inDouble){
 	Double tmpDouble = new Double(inDouble);
-	maxMeanInclusivePercentValueList.add(dataValueLocation, tmpDouble);}
+	//maxMeanInclusivePercentValueList.add(dataValueLocation, tmpDouble);
+	maxMeanInclusivePercentValueList.setElementAt(tmpDouble,dataValueLocation);
+    }
   
     public void setMaxMeanExclusivePercentValue(int dataValueLocation, double inDouble){
 	Double tmpDouble = new Double(inDouble);
-	maxMeanExclusivePercentValueList.add(dataValueLocation, tmpDouble);}
+	//maxMeanExclusivePercentValueList.add(dataValueLocation, tmpDouble);
+	maxMeanExclusivePercentValueList.setElementAt(tmpDouble,dataValueLocation);
+    }
 
     public void setMaxMeanNumberOfCalls(double inDouble){
 	maxMeanNumberOfCalls = inDouble;}
@@ -211,10 +221,13 @@ public class GlobalMapping{
 
     public void setMaxMeanUserSecPerCall(int dataValueLocation, double inDouble){
 	Double tmpDouble = new Double(inDouble);
-	maxMeanUserSecPerCallList.add(dataValueLocation, tmpDouble);}
+	//maxMeanUserSecPerCallList.add(dataValueLocation, tmpDouble);
+	maxMeanUserSecPerCallList.setElementAt(tmpDouble,dataValueLocation);
+    }
 
     public double getMaxMeanExclusiveValue(int dataValueLocation){
 	Double tmpDouble = (Double) maxMeanExclusiveValueList.elementAt(dataValueLocation);
+	//System.out.println ("getMaxMeanExclusiveValue(" + dataValueLocation + ") = " + tmpDouble);
 	return tmpDouble.doubleValue();}
 
     public double getMaxMeanInclusiveValue(int dataValueLocation){
