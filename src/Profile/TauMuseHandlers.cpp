@@ -37,7 +37,7 @@
 #endif //__BYTE_ORDER = __LITTLE_ENDIAN
 #endif //__BYTE_ORDER = __BIG_ENDIAN
 
-#ifndef bswap64_t
+#ifndef bswap_64
 #define swap_type(type,a,b) { type t=(a); (a)=(b); (b)=t; }
 
 int64_t bswap_64( int64_t n )
@@ -49,7 +49,7 @@ int64_t bswap_64( int64_t n )
   swap_type( int8_t, p[3], p[4] );
   return n;             
 }                       
-#endif /* bswap64_t */  
+#endif /* bswap_64 */  
 
 /*********************
  * Description	: Encode binary code for command create 
