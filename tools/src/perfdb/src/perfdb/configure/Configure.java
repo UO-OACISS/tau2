@@ -8,8 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import perfdb.util.dbinterface.DB;
-import perfdb.util.dbinterface.ParseConfig;
+import perfdb.util.dbinterface.*;
+import java.sql.*;
 
 public class Configure {
     private DB db = null;
@@ -111,8 +111,8 @@ public class Configure {
 				
 	System.out.println("\nYou will now be prompted for new values, if desired.  " +
 			   "The current or default\nvalues for each prompt are shown " +
-			   "in parenthesis.  To accept the current/default value, " +
-			   "just\npress Enter/Return.\n");
+			   "in parenthesis.\nTo accept the current/default value, " +
+			   "just press Enter/Return.\n");
 	try {
 	    // Prompt for XML parsing jar file
 	    System.out.print("Please enter the new PerfDB Home directory.\n(" + perfdb_home + "):");
@@ -159,7 +159,8 @@ public class Configure {
 	    System.out.print("Please enter the database username.\n(" + db_username + "):");
 	    tmpString = reader.readLine();
 	    if (tmpString.length() > 0) db_username = tmpString;
-						
+
+/*
 	    boolean passwordMatch = false;
 	    while (!passwordMatch) {
 		// Prompt for database password
@@ -174,6 +175,7 @@ public class Configure {
 		}
 		else System.out.println ("Password confirmation failed.  Please try again.");
 	    }
+*/
 						
 	    // Prompt for database schema file
 	    if (configFileFound)
@@ -272,11 +274,13 @@ public class Configure {
 	    configWriter.write("# Database username\n");
 	    configWriter.write("db_username:" + db_username + "\n");
 	    configWriter.newLine();
-						
+
+/*
 	    configWriter.write("# Database password\n");
 	    configWriter.write("db_password:" + db_password + "\n");
 	    configWriter.newLine();
-						
+*/
+
 	    configWriter.write("# Database Schema file - note: the path is absolulte\n");
 	    configWriter.write("db_schemafile:" + db_schemafile + "\n");
 	    configWriter.newLine();
@@ -353,26 +357,34 @@ public class Configure {
 	return configFileName;}
 
 /* Test that the database exists, and if it doesn't, create it! */
-	public createDB() {
-	    perfdb.ConnectionManager connector;
+	public void createDB() {
+	    perfdb.ConnectionManager connector = null;
 		DB db = null;
 		try {
             connector = new perfdb.ConnectionManager(configFileName);
-            connector.connect();
+            connector.connectTest();
             db = connector.getDB();
+        } catch ( Exception e ) {
+			System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
+			System.out.println("the database " + db_dbname + " has been created.");
+			System.exit(0);
+        }
+		try {
 			String query = new String ("select * from application;");
 			ResultSet resultSet = db.executeQuery(query);
 			resultSet.close();
 			connector.dbclose();
         } catch ( Exception e ) {
-		// assume that if we got here, there is no database.
-		// create the database
 		// build the database
-		perfdb.loadxml.Main demo = new perfdb.loadxml.Main(configFileName);
-		demo.getConnector().connect();
-		demo.getConnector().getParentSchema(db_schemafile);
-		demo.getConnector().dbclose();
+			System.out.println(configFileName);
+			perfdb.loadxml.Main demo = new perfdb.loadxml.Main(configFileName);
+			demo.getConnector().connect();
+			demo.getConnector().genParentSchema(db_schemafile);
+			demo.getConnector().dbclose();
+			System.out.println("Congratulations!  PerfDB is configured and the database has been built.");
+			System.out.println("You may begin loading applications.");
         }
+		System.out.println("Configuration complete.");
 	}
 
     /*** Beginning of main program. ***/

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.sql.SQLException;
+import java.io.IOException;
 
 import perfdb.util.dbinterface.DB;
 import perfdb.util.dbinterface.DBConnector;
@@ -28,13 +29,13 @@ public class ConnectionManager {
     private DB db = null;
 	
     public ConnectionManager(String configFileName) {
-	super();
-	parser = new ParseConfig(configFileName);
-	if (parser.getDBType().compareTo("mysql") == 0)
-		perfdbAcct = "user=" + parser.getDBUserName() + "&password=" + parser.getDBPasswd();	
-	else
-		perfdbAcct = "user=" + parser.getDBUserName() + ";password=" + parser.getDBPasswd();	
-	dbschema = parser.getDBSchema();
+		super();
+		parser = new ParseConfig(configFileName);
+		if (parser.getDBType().compareTo("mysql") == 0)
+			perfdbAcct = "user=" + parser.getDBUserName() + "&password=" + getPassword();	
+		else
+			perfdbAcct = "user=" + parser.getDBUserName() + ";password=" + getPassword();	
+		dbschema = parser.getDBSchema();
     }
 
 	public ParseConfig getParseConfig () {
@@ -47,6 +48,10 @@ public class ConnectionManager {
         } catch (java.sql.SQLException ex) {
 	    ex.printStackTrace();
         }
+    }
+
+    public void connectTest() throws SQLException {
+	    setDB(new DBConnector(new JDBCAcct(perfdbAcct), parser, true));
     }
 
     public void connect(String value) {
@@ -132,5 +137,17 @@ public class ConnectionManager {
     public static boolean isEnd(String st){
 	return st.trim().endsWith(";");
     }
+
+	public String getPassword () {
+		String tmpString = new String ("");
+		try {
+			PasswordField passwordField = new PasswordField();
+			tmpString = passwordField.getPassword("Please enter database password:");
+		} catch (IOException ex) {
+	    	ex.printStackTrace();
+			System.exit(0);
+		}
+		return tmpString;
+	}
 
 }

@@ -43,6 +43,15 @@ public class DBConnector implements DB {
 		connect();
     }
 
+	public DBConnector(DBAcct acct, ParseConfig parser, boolean test) throws SQLException {
+		super();
+		parseConfig = parser;
+		setJDBC(parser);
+		setAcct(acct);
+		register();
+		testConnect();
+	}
+
     public void setJDBC(ParseConfig parser){
 
 	if (parser.getDBType().compareTo("mysql") == 0)
@@ -83,6 +92,19 @@ public class DBConnector implements DB {
 	    return false;
 	}
     }
+
+	public boolean testConnect() throws SQLException {
+	try {
+		if (conn != null) {
+		return true;
+		}
+		conn = DriverManager.getConnection(getConnectString());
+		return true;
+	} catch (SQLException ex) {
+		System.err.println("Cannot connect to server.");
+		throw ex;
+	}
+	}
 
     public boolean connect(DBAcct acct) {
 	setAcct(acct);
