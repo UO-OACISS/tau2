@@ -100,11 +100,67 @@ extern "C" void tau_register_thread(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// User Defined Events 
+///////////////////////////////////////////////////////////////////////////
+extern "C" void * tau_get_userevent(char *name)
+{
+  TauUserEvent *ue;
+  ue = new TauUserEvent(name);
+  return (void *) ue;
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_userevent(void *ue, double data)
+{
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->TriggerEvent(data);
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_report_statistics(void)
+{
+  TAU_REPORT_STATISTICS();
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_report_thread_statistics(void)
+{
+  TAU_REPORT_THREAD_STATISTICS();
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_event_disable_min(void *ue)
+{
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->SetDisableMin(true);
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_event_disable_max(void *ue)
+{
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->SetDisableMax(true);
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_event_disable_mean(void *ue)
+{
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->SetDisableMean(true);
+} 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void tau_event_disable_stddev(void *ue)
+{
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->SetDisableStdDev(true);
+} 
+///////////////////////////////////////////////////////////////////////////
 
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 1998/09/17 15:25:59 $
- * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.2 1998/09/17 15:25:59 sameer Exp $
+ * $Revision: 1.3 $   $Date: 1999/04/06 22:52:04 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.cpp,v 1.3 1999/04/06 22:52:04 sameer Exp $
  ***************************************************************************/
 
