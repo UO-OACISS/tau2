@@ -23,7 +23,7 @@ import java.sql.ResultSet;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: Function.java,v 1.5 2004/04/06 18:00:06 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.6 2004/04/06 22:26:44 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -39,8 +39,8 @@ public class Function {
 	private String name;
 	private String group;
 	private int trialID;
-	private Vector meanSummary = null;
-	private Vector totalSummary = null;
+	private FunctionDataObject meanSummary = null;
+	private FunctionDataObject totalSummary = null;
 	private DataSession dataSession = null;
 
 	public Function (DataSession dataSession) {
@@ -87,31 +87,6 @@ public class Function {
  * Gets mean summary data for the function object.
  * The Trial object associated with this function has a vector of metric
  * names that represent the metric data stored for each function in the
- * application.  Multiple metrics can be recorded for each trial.  The index
- * of the metric desired should be passed into this function to get the
- * mean data for this function/trial/experiment/application combination.
- * The mean data is averaged across all locations, defined as any combination
- * of node/context/thread.
- *
- * @param	metricIndex the metric index for the desired metric.
- * @return	the FunctionDataObject containing the mean data for this function/metric combination.
- * @see		Trial
- * @see		FunctionDataObject
- */
-	public FunctionDataObject getMeanSummary (int metricIndex) {
-		if (this.meanSummary == null) {
-			Vector metrics = dataSession.getMetrics();
-			dataSession.setMetrics(null);
-			dataSession.getFunctionDetail(this);
-			dataSession.setMetrics(metrics);
-		}
-		return (FunctionDataObject)(this.meanSummary.elementAt(metricIndex));
-	}
-
-/**
- * Gets mean summary data for the function object.
- * The Trial object associated with this function has a vector of metric
- * names that represent the metric data stored for each function in the
  * application.  Multiple metrics can be recorded for each trial.  If the
  * user has selected a metric before calling getFunctions(), then this method
  * can be used to return the mean metric data for this 
@@ -128,32 +103,7 @@ public class Function {
 	public FunctionDataObject getMeanSummary () {
 		if (this.meanSummary == null)
 			dataSession.getFunctionDetail(this);
-		return (FunctionDataObject)(this.meanSummary.elementAt(0));
-	}
-
-/**
- * Gets total summary data for the function object.
- * The Trial object associated with this function has a vector of metric
- * names that represent the metric data stored for each function in the
- * application.  Multiple metrics can be recorded for each trial.  The index
- * of the metric desired should be passed into this function to get the
- * total data for this function/trial/experiment/application combination.
- * The total data is summed across all locations, defined as any combination
- * of node/context/thread.
- *
- * @param	metricIndex the metric index for the desired metric.
- * @return	the FunctionDataObject containing the total data for this function/metric combination.
- * @see		Trial
- * @see		FunctionDataObject
- */
-	public FunctionDataObject getTotalSummary (int metricIndex) {
-		if (this.totalSummary == null) {
-			Vector metrics = dataSession.getMetrics();
-			dataSession.setMetrics(null);
-			dataSession.getFunctionDetail(this);
-			dataSession.setMetrics(metrics);
-		}
-		return (FunctionDataObject)(this.totalSummary.elementAt(metricIndex));
+		return (this.meanSummary);
 	}
 
 /**
@@ -175,7 +125,7 @@ public class Function {
 	public FunctionDataObject getTotalSummary () {
 		if (this.totalSummary == null)
 			dataSession.getFunctionDetail(this);
-		return (FunctionDataObject)(this.totalSummary.elementAt(0));
+		return (this.totalSummary);
 	}
 
 /**
@@ -229,20 +179,8 @@ public class Function {
  *
  * @param	meanSummary the mean summary object for the function.
  */
-	public void addMeanSummary (FunctionDataObject meanSummary) {
-		if (this.meanSummary == null)
-			this.meanSummary = new Vector();
-		this.meanSummary.addElement(meanSummary);
-	}
-
-/**
- * Clears the function's vector of mean summary objects.
- * <i> NOTE: This method is used by the DataSession object to initialize
- * the object.  Not currently intended for use by any other code.</i>
- *
- */
-	public void clearMeanSummary () {
-		this.meanSummary = null;
+	public void setMeanSummary (FunctionDataObject meanSummary) {
+		this.meanSummary = meanSummary;
 	}
 
 /**
@@ -252,20 +190,8 @@ public class Function {
  *
  * @param	totalSummary the total summary object for the function.
  */
-	public void addTotalSummary (FunctionDataObject totalSummary) {
-		if (this.totalSummary == null)
-			this.totalSummary = new Vector();
-		this.totalSummary.addElement(totalSummary);
-	}
-
-/**
- * Clears the function's vector of total summary objects.
- * <i> NOTE: This method is used by the DataSession object to initialize
- * the object.  Not currently intended for use by any other code.</i>
- *
- */
-	public void clearTotalSummary () {
-		this.totalSummary = null;
+	public void setTotalSummary (FunctionDataObject totalSummary) {
+		this.totalSummary = totalSummary;
 	}
 
 	// returns a Vector of Functions
@@ -332,30 +258,14 @@ public class Function {
 
 		// save the function mean summaries
 		if (meanSummary != null) {
-			Enumeration enum = meanSummary.elements();
-			FunctionDataObject fdo;
-			int i = 0;
-			while (enum.hasMoreElements()) {
-				if (saveMetricIndex < 0 || saveMetricIndex == i++) {
-					fdo = (FunctionDataObject)enum.nextElement();
-					fdo.saveMeanSummary(db, newFunctionID, metricID, saveMetricIndex);
-				}
-			}
+			meanSummary.saveMeanSummary(db, newFunctionID, metricID, saveMetricIndex);
 		}
 
 		// save the function total summaries
 		if (totalSummary != null) {
-			Enumeration enum = totalSummary.elements();
-			FunctionDataObject fdo;
-			int i = 0;
-			while (enum.hasMoreElements()) {
-				if (saveMetricIndex < 0 || saveMetricIndex == i++) {
-					fdo = (FunctionDataObject)enum.nextElement();
-					fdo.saveTotalSummary(db, newFunctionID, metricID, saveMetricIndex);
-				}
-			}
+			totalSummary.saveTotalSummary(db, newFunctionID, metricID, saveMetricIndex);
 		}
-			return newFunctionID;
+		return newFunctionID;
 	}
 }
 

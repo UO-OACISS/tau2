@@ -24,7 +24,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: FunctionDataObject.java,v 1.5 2004/04/06 18:00:07 khuck Exp $</P>
+ * <P>CVS $Id: FunctionDataObject.java,v 1.6 2004/04/06 22:26:44 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -376,7 +376,7 @@ public class FunctionDataObject extends Object {
 	public static void getFunctionDetail(DB db, Function function, String whereClause) {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select ");
+		buf.append("select id, ");
 		buf.append("mean_inclusive_percentage, mean_inclusive, ");
 		buf.append("mean_exclusive_percentage, mean_exclusive, ");
 		buf.append("mean_call, mean_subroutines, mean_inclusive_per_call, ");
@@ -397,24 +397,26 @@ public class FunctionDataObject extends Object {
 			FunctionDataObject funTS = new FunctionDataObject();
 	    	while (resultSet.next() != false) {
 				// get the mean summary data
-				funMS.setInclusivePercentage(metricIndex, resultSet.getDouble(1));
-				funMS.setInclusive(metricIndex, resultSet.getDouble(2));
-				funMS.setExclusivePercentage(metricIndex, resultSet.getDouble(3));
-				funMS.setExclusive(metricIndex, resultSet.getDouble(4));
-				funMS.setNumCalls((int)(resultSet.getDouble(5)));
-				funMS.setNumSubroutines((int)(resultSet.getDouble(6)));
-				funMS.setInclusivePerCall(metricIndex, resultSet.getDouble(7));
-				function.addMeanSummary(funMS);
+				funMS.setFunctionIndexID(resultSet.getInt(1));
+				funMS.setInclusivePercentage(metricIndex, resultSet.getDouble(2));
+				funMS.setInclusive(metricIndex, resultSet.getDouble(3));
+				funMS.setExclusivePercentage(metricIndex, resultSet.getDouble(4));
+				funMS.setExclusive(metricIndex, resultSet.getDouble(5));
+				funMS.setNumCalls((int)(resultSet.getDouble(6)));
+				funMS.setNumSubroutines((int)(resultSet.getDouble(7)));
+				funMS.setInclusivePerCall(metricIndex, resultSet.getDouble(8));
 				// get the total summary data
-				funTS.setInclusivePercentage(metricIndex, resultSet.getDouble(8));
-				funTS.setInclusive(metricIndex, resultSet.getDouble(9));
-				funTS.setExclusivePercentage(metricIndex, resultSet.getDouble(10));
-				funTS.setExclusive(metricIndex, resultSet.getDouble(11));
-				funTS.setNumCalls((int)(resultSet.getDouble(12)));
-				funTS.setNumSubroutines((int)(resultSet.getDouble(13)));
-				funTS.setInclusivePerCall(metricIndex, resultSet.getDouble(14));
-				function.addTotalSummary(funTS);
+				funTS.setInclusivePercentage(metricIndex, resultSet.getDouble(9));
+				funTS.setInclusive(metricIndex, resultSet.getDouble(10));
+				funTS.setExclusivePercentage(metricIndex, resultSet.getDouble(11));
+				funTS.setExclusive(metricIndex, resultSet.getDouble(12));
+				funTS.setNumCalls((int)(resultSet.getDouble(13)));
+				funTS.setNumSubroutines((int)(resultSet.getDouble(14)));
+				funTS.setInclusivePerCall(metricIndex, resultSet.getDouble(15));
+				metricIndex++;
 	    	}
+			function.setMeanSummary(funMS);
+			function.setTotalSummary(funTS);
 			resultSet.close(); 
 		}catch (Exception ex) {
 	    	ex.printStackTrace();
@@ -429,7 +431,7 @@ public class FunctionDataObject extends Object {
 		buf.append("call, subroutines, inclusive_per_call ");
 		buf.append("from function_interval ");
 		buf.append(whereClause);
-		buf.append(" order by function, metric, node, context, thread ");
+		buf.append(" order by function, node, context, thread, metric ");
 		// System.out.println(buf.toString());
 
 		int size = 0;
@@ -484,6 +486,7 @@ public class FunctionDataObject extends Object {
 					statement.setInt(1, functionIndexID);
 					statement.setInt(2, metric.getID());
 					statement.setDouble(3, getInclusivePercentage(i));
+					// System.out.println("\nInclusive(" + i + "): " + getInclusivePercentage(i));
 					statement.setDouble(4, getInclusive(i));
 					statement.setDouble(5, getExclusivePercentage(i));
 					statement.setDouble(6, getExclusive(i));

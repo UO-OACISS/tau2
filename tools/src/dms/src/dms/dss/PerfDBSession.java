@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.14 2004/04/06 19:09:14 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.15 2004/04/06 22:26:44 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -138,9 +138,15 @@ public class PerfDBSession extends DataSession {
 
 	// set the Trial for this session
 	public Trial setTrial(int id) {
+		return setTrial(id, true);
+	}
+
+	private Trial setTrial(int id, boolean clearHashes) {
 		this.trial = null;
-		this.functionHash = null;
-		this.userEventHash = null;
+		if (clearHashes) {
+			this.functionHash = null;
+			this.userEventHash = null;
+		}
 		// create a string to hit the database
 		String whereClause;
 		whereClause = " where t.id = " + id;
@@ -221,6 +227,8 @@ public class PerfDBSession extends DataSession {
 		function = getFunction(id);
 		if (function != null)
 			this.functions.addElement(function);
+		// we need this to get the metric data...
+		setTrial(function.getTrialID(), false);
 		return function;
 	}
 
@@ -236,8 +244,8 @@ public class PerfDBSession extends DataSession {
 
 	public ListIterator getFunctionData() {
 		// check to make sure this is a meaningful request
-		if (trial == null) {
-			System.out.println("Please select a trial before getting function data.");
+		if (trial == null && functions == null) {
+			System.out.println("Please select a trial or a set of functions before getting function data.");
 			return null;
 		}
 
@@ -323,8 +331,8 @@ public class PerfDBSession extends DataSession {
 	
 	public ListIterator getUserEventData() {
 		// check to make sure this is a meaningful request
-		if (trial == null) {
-			System.out.println("Please select a trial before getting user event data.");
+		if (trial == null && userEvents == null) {
+			System.out.println("Please select a trial or a set of user events before getting user event data.");
 			return null;
 		}
 
@@ -439,50 +447,66 @@ public class PerfDBSession extends DataSession {
 
 	// save the functions
 	private Hashtable saveFunctions(int newTrialID, int saveMetricIndex) {
+		System.out.print("Saving the functions: ");
 		Hashtable newFunHash = new Hashtable();
 		Enumeration enum = functions.elements();
 		Function function;
+		int count = 0;
 		while (enum.hasMoreElements()) {
 			function = (Function)enum.nextElement();
 			int newFunctionID = function.saveFunction(db, newTrialID, metrics, saveMetricIndex);
 			newFunHash.put (new Integer(function.getID()), new Integer(newFunctionID));
+			System.out.print("\rSaving the functions: " + ++count + " records saved...");
 		}
+		System.out.print("\n");
 		return newFunHash;
 	}
 
 	// save the function data
 	private void saveFunctionData(Hashtable newFunHash, Vector metrics, int saveMetricIndex) {
+		System.out.print("Saving the function data: ");
 		Enumeration enum = functionData.elements();
 		FunctionDataObject fdo;
+		int count = 0;
 		while (enum.hasMoreElements()) {
 			fdo = (FunctionDataObject)enum.nextElement();
 			Integer newFunctionID = (Integer)newFunHash.get(new Integer(fdo.getFunctionIndexID()));
 			fdo.saveFunctionData(db, newFunctionID.intValue(), metrics, saveMetricIndex);
+			System.out.print("\rSaving the function data: " + ++count + " records saved...");
 		}
+		System.out.print("\n");
 	}
 
 	// save the functions
 	private Hashtable saveUserEvents(int newTrialID) {
+		System.out.print("Saving the user events:");
 		Hashtable newUEHash = new Hashtable();
 		Enumeration enum = userEvents.elements();
+		int count = 0;
 		UserEvent userEvent;
 		while (enum.hasMoreElements()) {
 			userEvent = (UserEvent)enum.nextElement();
 			int newUserEventID = userEvent.saveUserEvent(db, newTrialID);
 			newUEHash.put (new Integer(userEvent.getUserEventID()), new Integer(newUserEventID));
+			System.out.print("\rSaving the user events: " + ++count + " records saved...");
 		}
+		System.out.print("\n");
 		return newUEHash;
 	}
 
 	// save the function data
 	private void saveUserEventData(Hashtable newUEHash) {
+		System.out.print("Saving the user event data:");
 		Enumeration enum = userEventData.elements();
 		UserEventDataObject uedo;
+		int count = 0;
 		while (enum.hasMoreElements()) {
 			uedo = (UserEventDataObject)enum.nextElement();
 			Integer newUserEventID = (Integer)newUEHash.get(new Integer(uedo.getUserEventID()));
 			uedo.saveUserEventData(db, newUserEventID.intValue());
+			System.out.print("\rSaving the user event data: " + ++count + " records saved...");
 		}
+		System.out.print("\n");
 	}
 
 /**
@@ -567,8 +591,10 @@ public class PerfDBSession extends DataSession {
 		userEvents = new Vector();
 		userEventData = new Vector();
 
+		int fcount = 0;
+		int ucount = 0;
 		// create the functions
-		System.out.print("Getting the functions...");
+		System.out.print("Getting the functions:");
 		for(Enumeration e = mapping.getMapping(0).elements(); e.hasMoreElements() ;) {
 			GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
 			if(element!=null) {
@@ -589,10 +615,10 @@ public class PerfDBSession extends DataSession {
 				functions.add(function);
 
 				// get the total data
-				System.out.print(".");
+				System.out.print("\rGetting the functions: " + ++fcount + " functions found...");
+				FunctionDataObject funTS = new FunctionDataObject(metricCount);
+				FunctionDataObject funMS = new FunctionDataObject(metricCount);
 				for (int i = 0 ; i < metricCount ; i++) {
-					FunctionDataObject funTS = new FunctionDataObject();
-					FunctionDataObject funMS = new FunctionDataObject();
 		    		funTS.setNumCalls((int)element.getTotalNumberOfCalls());
 		    		funTS.setNumSubroutines((int)element.getTotalNumberOfSubRoutines());
 		    		funTS.setInclusivePercentage(i, element.getTotalInclusivePercentValue(i));
@@ -603,22 +629,24 @@ public class PerfDBSession extends DataSession {
 		    		funMS.setNumCalls((int)element.getMeanNumberOfCalls());
 		    		funMS.setNumSubroutines((int)element.getMeanNumberOfSubRoutines());
 		    		funMS.setInclusivePercentage(i, element.getMeanInclusivePercentValue(i));
+					// System.out.println("Inclusive(" + i + "): " + element.getMeanInclusivePercentValue(i));
 		    		funMS.setInclusive(i, element.getMeanInclusiveValue(i));
 		    		funMS.setExclusivePercentage(i, element.getMeanExclusivePercentValue(i));
 		    		funMS.setExclusive(i, element.getMeanExclusiveValue(i));
 		    		funMS.setInclusivePerCall(i, element.getMeanUserSecPerCall(i));
-					function.addTotalSummary(funTS);
-					function.addMeanSummary(funMS);
 				}
+				function.setTotalSummary(funTS);
+				function.setMeanSummary(funMS);
 	    	}
 	    }
 
 		// create the user events
-		System.out.print("\nGetting user events...");
+		System.out.print("\nGetting user events:");
 		for(Enumeration e = mapping.getMapping(2).elements(); e.hasMoreElements() ;) {
 			GlobalMappingElement element = (GlobalMappingElement) e.nextElement();
 			if(element!=null) {
 				System.out.print(".");
+				System.out.print("\rGetting the user events: " + ++ucount + " user events found...");
 				// create a user event
 				UserEvent userEvent = new UserEvent();
 				userEvent.setName(element.getMappingName());
@@ -636,7 +664,9 @@ public class PerfDBSession extends DataSession {
 	    	}
 	    }
 
-		System.out.print("\nGetting the function data...");
+		fcount = 0;
+		ucount = 0;
+		System.out.print("\nGetting the function / user event data:");
 	    StringBuffer groupsStringBuffer = new StringBuffer(10);
 	    Vector nodes = trial.getDataSession().getNCT().getNodes();
 	    for(Enumeration e1 = nodes.elements(); e1.hasMoreElements() ;){
@@ -653,8 +683,8 @@ public class PerfDBSession extends DataSession {
 			for(Enumeration e4 = functions.elements(); e4.hasMoreElements() ;){
 			    GlobalThreadDataElement function = (GlobalThreadDataElement) e4.nextElement();
 			    if (function!=null){
-					System.out.print(".");
-					FunctionDataObject fdo = new FunctionDataObject();
+					System.out.print("\rGetting the function / user event data: " + ++fcount + " / " + ucount + " found...");
+					FunctionDataObject fdo = new FunctionDataObject(metricCount);
 					fdo.setNode(thread.getNodeID());
 					fdo.setContext(thread.getContextID());
 					fdo.setThread(thread.getThreadID());
@@ -673,13 +703,12 @@ public class PerfDBSession extends DataSession {
 			    }
 			}
 
-			System.out.print("\nGetting the user event data...");
 			//Write out user event data for this thread.
 			if(userevents!=null){
 			    for(Enumeration e4 = userevents.elements(); e4.hasMoreElements() ;){
 				GlobalThreadDataElement userevent = (GlobalThreadDataElement) e4.nextElement();
 				if (userevent!=null){
-					System.out.print(".");
+					System.out.print("\rGetting the function / user event data: " + fcount + " / " + ++ucount + " found...");
 					UserEventDataObject udo = new UserEventDataObject();
 				    udo.setUserEventID(userevent.getMappingID());
 					udo.setNode(thread.getNodeID());
@@ -702,31 +731,46 @@ public class PerfDBSession extends DataSession {
 		// output the trial data, which also saves the functions, 
 		// function data, user events and user event data
 		if (saveMetricIndex < 0) {
-			System.out.println("Saving the trial...");
+			System.out.println("\nSaving the trial...");
 			newTrialID = trial.saveTrial(db);
-			System.out.println("Saving the functions...");
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
-				saveFunctionData(newFunHash, metrics, saveMetricIndex);
+				// saveFunctionData(newFunHash, metrics, saveMetricIndex);
 			}
-			System.out.println("Saving the user events...");
-			if (userEvents != null && userEvents.size() > 0) {
-				Hashtable newUEHash = saveUserEvents(newTrialID);
-				if (userEventData != null && userEventData.size() > 0) {
-					saveUserEventData(newUEHash);
-				}
-			}
+			// if (userEvents != null && userEvents.size() > 0) {
+				// Hashtable newUEHash = saveUserEvents(newTrialID);
+				// if (userEventData != null && userEventData.size() > 0) {
+					// saveUserEventData(newUEHash);
+				// }
+			// }
+			System.out.println("New Trial ID: " + newTrialID);
 		} else {
 			newTrialID = trial.getID();
-			System.out.println("Saving the metric...");
+			System.out.println("\nSaving the metric...");
 			trial.saveMetric(db, saveMetricIndex);
-			System.out.println("Saving the function data...");
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
 				saveFunctionData(newFunHash, metrics, saveMetricIndex);
 			}
+			System.out.println("Modified Trial ID: " + newTrialID);
 		}
+
+		vacuumDatabase();
 		return newTrialID;
     }
+
+	private void vacuumDatabase() {
+		String vacuum = "vacuum;";
+		String analyze = "analyze;";
+		try {
+			System.out.println("Vacuuming database...");
+			db.executeUpdate(vacuum);
+			System.out.println("Analyzing database...");
+			db.executeUpdate(analyze);
+		} catch (SQLException e) {
+	    	System.out.println("An error occurred while vacuuming the database.");
+	    	e.printStackTrace();
+		}
+	}
 };
 

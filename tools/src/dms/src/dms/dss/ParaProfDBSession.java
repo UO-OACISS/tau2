@@ -72,22 +72,22 @@ public class ParaProfDBSession extends ParaProfDataSession{
 		    //localMap.add(new FunIndexFunIDPair(f.getIndexID(), id));
 		    
 		    globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(id, 0);
+			FunctionDataObject fdo = f.getMeanSummary();
 		    for(int i=0;i<numberOfMetrics;i++){
-			FunctionDataObject fdo = f.getMeanSummary(i);
-			globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusive());
-			globalMappingElement.setMeanExclusivePercentValue(i, fdo.getExclusivePercentage());
-			globalMappingElement.setMeanInclusiveValue(i, fdo.getInclusive());
-			globalMappingElement.setMeanInclusivePercentValue(i, fdo.getInclusivePercentage());
+			globalMappingElement.setMeanExclusiveValue(i, fdo.getExclusive(i));
+			globalMappingElement.setMeanExclusivePercentValue(i, fdo.getExclusivePercentage(i));
+			globalMappingElement.setMeanInclusiveValue(i, fdo.getInclusive(i));
+			globalMappingElement.setMeanInclusivePercentValue(i, fdo.getInclusivePercentage(i));
 
-			if((this.getGlobalMapping().getMaxMeanExclusiveValue(i)) < fdo.getExclusive()){
-			    this.getGlobalMapping().setMaxMeanExclusiveValue(i, fdo.getExclusive());}
-			if((this.getGlobalMapping().getMaxMeanExclusivePercentValue(i)) < fdo.getExclusivePercentage()){
-			    this.getGlobalMapping().setMaxMeanExclusivePercentValue(i, fdo.getExclusivePercentage());}
+			if((this.getGlobalMapping().getMaxMeanExclusiveValue(i)) < fdo.getExclusive(i)){
+			    this.getGlobalMapping().setMaxMeanExclusiveValue(i, fdo.getExclusive(i));}
+			if((this.getGlobalMapping().getMaxMeanExclusivePercentValue(i)) < fdo.getExclusivePercentage(i)){
+			    this.getGlobalMapping().setMaxMeanExclusivePercentValue(i, fdo.getExclusivePercentage(i));}
 
-			if((this.getGlobalMapping().getMaxMeanInclusiveValue(i)) < fdo.getInclusive()){
-			    this.getGlobalMapping().setMaxMeanInclusiveValue(i, fdo.getInclusive());}
-			if((this.getGlobalMapping().getMaxMeanInclusivePercentValue(i)) < fdo.getInclusivePercentage()){
-			    this.getGlobalMapping().setMaxMeanInclusivePercentValue(i, fdo.getInclusivePercentage());}
+			if((this.getGlobalMapping().getMaxMeanInclusiveValue(i)) < fdo.getInclusive(i)){
+			    this.getGlobalMapping().setMaxMeanInclusiveValue(i, fdo.getInclusive(i));}
+			if((this.getGlobalMapping().getMaxMeanInclusivePercentValue(i)) < fdo.getInclusivePercentage(i)){
+			    this.getGlobalMapping().setMaxMeanInclusivePercentValue(i, fdo.getInclusivePercentage(i));}
 		    }
 		    globalMappingElement.setMeanValuesSet(true);
 	    }
