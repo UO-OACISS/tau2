@@ -2060,6 +2060,13 @@ then
         mpiflibargs="$mpiflibargs -lutil"
       fi
     fi 
+    # Special check for HPMPI
+    if [ -r $mpilib/libmpi_hmp.a ]
+    then
+      echo "This looks like an HP/MPI installation."
+      mpilibargs="$mpilibargs -ldl"
+      mpiflibargs="$mpiflibargs -ldl"
+    fi
     # Special check for ChaMPIon/Pro 
     if [ -r $mpilib/libcmpi.a ]
     then
