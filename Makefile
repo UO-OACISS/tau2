@@ -18,7 +18,7 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/home/users/sameer/tau2
 #######################################################################
  
 include include/Makefile
@@ -47,7 +47,7 @@ EXPORTS = utils src/Profile
 
 # Example Programs
 EXAMPLES = examples/matrix examples/instrument examples/pi examples/threads \
-examples/cthreads examples/fortran
+examples/cthreads examples/fortran examples/f90
 
 # PC++ Support
 #PCXX#PCXX=lang_support/pc++#ENDIF#
