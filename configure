@@ -1681,6 +1681,16 @@ EOF
   }
 
 EOF
+  cat <<EOF > mpi2datarep.C
+  #include <mpi.h>
+
+  int foo( char * datarep, MPI_Datarep_conversion_function * read_conversion_fn, MPI_Datarep_conversion_function * write_conversion_fn, MPI_Datarep_extent_function * dtype_file_extent_fn, void * extra_state)
+  {
+    return MPI_Register_datarep( datarep, read_conversion_fn, write_conversion_fn, dtype_file_extent_fn, extra_state);
+
+  }
+
+EOF
 
   if $cxx_compiler $orig_useropt $mpi_include -c mpi_thread_test.C  1> /dev/null 2>&1
   then
@@ -1706,7 +1716,13 @@ EOF
     fixmakeargs="$fixmakeargs MPIOREQUEST"
   fi
 
-  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C
+  if $cxx_compiler $orig_useropt $mpi_include -c mpi2datarep.C  1> /dev/null 2>&1
+  then
+    echo "MPI-2 MPI_Datarep_conversion_function Interface is defined..."
+    fixmakeargs="$fixmakeargs MPIDATAREP"
+  fi
+
+  /bin/rm -rf mpi_thread_test.C mpi_thread_test.o mpi2.C mpi2.o mpi2iorequest.o mpi2iorequest.C mpi2grequest.o mpi2grequest.C mpi2datarep.C mpi2datarep.o
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
