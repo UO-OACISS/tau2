@@ -858,6 +858,7 @@ case $machine in
     if [ $fortran_compiler = no ] 
       then 
         fixmakeargs="$fixmakeargs HITACHI_FORTRAN"
+        fortran_compiler=yes
       fi
     ;;
 
@@ -1060,6 +1061,7 @@ if [ $machine = apple ]
     then
       fixmakeargs="$fixmakeargs IBMXLFAPPLE"
       extradir=`which xlf90 | sed s/xlf90/../`
+      fortran_compiler=yes
   fi
 fi
 
@@ -1070,6 +1072,7 @@ if [ $machine = t3e -a $cxx_compiler = KCC ]
     then 
       fixmakeargs="$fixmakeargs CRAY_FORTRAN"
     # KAI is the only compiler that allows mixed f90/C++ programs on Cray T3E
+      fortran_compiler=yes
     fi
 fi
 
@@ -1078,6 +1081,7 @@ if [ $machine = crayx1 -o $machine = craysv1 ]
     if [ $fortran_compiler = no ]
     then
       fixmakeargs="$fixmakeargs CRAY_X1_FORTRAN"
+      fortran_compiler=yes
     fi
 fi
 
@@ -1128,6 +1132,7 @@ case $cxx_compiler in
 	  echo "Found f90 in `which f90`"
         fi
         fixmakeargs="$fixmakeargs COMPAQ_FORTRAN"
+        fortran_compiler=yes
       fi
       ;;
 
@@ -1143,6 +1148,7 @@ case $cxx_compiler in
 	else
           fixmakeargs="$fixmakeargs IBM_FORTRAN"
 	fi
+        fortran_compiler=yes
       fi
       threadtest=`echo $cxx_compiler | sed -e 's/_r//'`
       if [ "y$threadtest" = "y$cxx_compiler" ]
@@ -1184,6 +1190,7 @@ case $cxx_compiler in
       then 
         extradir=`which pgCC | sed s/pgCC/../`
         fixmakeargs="$fixmakeargs PGI_FORTRAN"
+        fortran_compiler=yes
       fi
       ;;
 
@@ -1195,6 +1202,7 @@ case $cxx_compiler in
       then 
         extradir=`which FCC | sed s/FCC/../`
         fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
+        fortran_compiler=yes
       fi
       ;;
 
@@ -1208,6 +1216,7 @@ case $cxx_compiler in
       then
         fixmakeargs="$fixmakeargs KAI_FORTRAN"
         guidef90=yes
+        fortran_compiler=yes
       fi
         
       ;;
@@ -1219,6 +1228,7 @@ case $cxx_compiler in
       if [ $fortran_compiler = no ]
       then
         fixmakeargs="$fixmakeargs HP_FORTRAN"
+        fortran_compiler=yes
       fi
         
       ;;
@@ -1232,6 +1242,7 @@ case $cxx_compiler in
           then 
             extradir=`which f90 | sed s/f90/../`
             fixmakeargs="$fixmakeargs NEC_FORTRAN"
+            fortran_compiler=yes
           fi
         else
           echo "Default C++ compiler will be Apple c++ compiler"
@@ -1249,6 +1260,7 @@ case $cxx_compiler in
       if [ $fortran_compiler = no ]
       then
         fixmakeargs="$fixmakeargs INTEL_FORTRAN"
+        fortran_compiler=yes
       fi
 
 
@@ -1262,6 +1274,7 @@ case $cxx_compiler in
       if [ $fortran_compiler = no ]
       then
         fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+        fortran_compiler=yes
       fi
 
       ;;
@@ -1945,6 +1958,7 @@ case $machine in
             if [ $fortran_compiler = no ] 
 	    then
               fixmakeargs="$fixmakeargs SGI_FORTRAN"
+              fortran_compiler=yes
 	    fi
 	      
         fi
@@ -1970,6 +1984,7 @@ case $machine in
 	    if [ $fortran_compiler = no ]  
 	    then
 	      fixmakeargs="$fixmakeargs SUN_FORTRAN"
+              fortran_compiler=yes
             fi
         fi
 	 

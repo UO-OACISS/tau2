@@ -96,6 +96,8 @@ JDKARCH                 = linux
 # OpenMP OBJECTS
 #############################################
 #OPENMP#OPENMP_O 	= OpenMPLayer.o #ENDIF#
+#GNU#OPENMP_O 	= #ENDIF#
+# GNU G++ does not currently support OpenMP 
 
 #############################################
 # Opari OBJECTS
@@ -103,6 +105,7 @@ JDKARCH                 = linux
 #OPARI#OPARI_O 	= TauOpari.o #ENDIF#
 #KOJAKOPARI#OPARI_O 	= TauKojakOpari.o #ENDIF#
 #EPILOG#OPARI_O 	=  #ENDIF#
+#GNU#OPARI_O 	= #ENDIF#
 
 #############################################
 # CallPath OBJECTS
@@ -218,6 +221,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #MPI#PROFILEOPT26 = -DTAU_MPI #ENDIF#
 #MPI_THREADED#PROFILEOPT26 = -DTAU_MPI -DTAU_MPI_THREADED #ENDIF#
 #OPENMP#PROFILEOPT27 = -mp -DTAU_OPENMP#ENDIF#
+#GNU#PROFILEOPT27 = #ENDIF#
 #HITACHI_OPENMP#PROFILEOPT27 = -DTAU_OPENMP#ENDIF#
 #COMPAQCXX_OPENMP#PROFILEOPT27 = -omp -DTAU_OPENMP#ENDIF#
 #IBMXLC_OPENMP#PROFILEOPT27 = -qsmp=omp -DTAU_OPENMP #ENDIF#
@@ -249,6 +253,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #INTEL_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
 #INTEL32_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
 #CRAY_X1_FORTRAN#FWRAPPER	       = TauFMpi.o       #ENDIF#
+#IBMXLFAPPLE#FWRAPPER	       = TauFMpi.o      #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #SOL2#PCL_EXTRA_LIBS = -lcpc #ENDIF#
@@ -338,6 +343,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 
 #HITACHI_OPENMP#TAU_LINKER_OPT4 = -lcompas -lpthreads -lc_r #ENDIF#
 #OPENMP#TAU_LINKER_OPT5 = -mp #ENDIF#
+#GNU#TAU_LINKER_OPT5 = #ENDIF#
 #COMPAQCXX_OPENMP#TAU_LINKER_OPT5 = -omp #ENDIF#
 #IBMXLC_OPENMP#TAU_LINKER_OPT5 = -qsmp=omp #ENDIF#
 #GUIDE#TAU_LINKER_OPT5 = #ENDIF#
