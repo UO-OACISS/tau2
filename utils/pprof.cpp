@@ -184,7 +184,7 @@ bool IsDynamicProfiling(char *filename) {
   if (strcmp(version,"templated_functions") == 0  || (strstr(version,"MULTI") != NULL)) { // correct version
     if(strstr(version,"MULTI") != NULL){
       multipleCounters = true;
-      counterName = version;
+      counterName = strdup(version);
       if(strstr(version,"TIME") != NULL)
 	hwcounters = false;
       else
@@ -2598,6 +2598,6 @@ int main (int argc, char *argv[]){
 }//main()
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: sameer $
- * $Revision: 1.39 $   $Date: 2002/10/04 18:25:41 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.39 2002/10/04 18:25:41 sameer Exp $                                
+ * $Revision: 1.40 $   $Date: 2002/11/17 14:23:46 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.40 2002/11/17 14:23:46 sameer Exp $                                
  ***************************************************************************/
