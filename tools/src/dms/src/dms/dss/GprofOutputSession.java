@@ -76,10 +76,19 @@ public class GprofOutputSession extends ParaProfDataSession{
 		InputStreamReader inReader = new InputStreamReader(fileIn);
 		BufferedReader br = new BufferedReader(inReader);
 
+		boolean summarySection = false;
 		while((inputString = br.readLine()) != null){
 		    int length = inputString.length();
 		    if((length!=0)&&((inputString.charAt(0)=='[')||(inputString.charAt(0)=='-')||(inputString.charAt(length-1)==']')))
 			System.out.println(inputString);
+		    else if((length!=0)&&((inputString.charAt(0)=='g'))){
+			if(summarySection)
+			    System.out.println("###### Summary section ######");
+			else{
+			    System.out.println("###### Call path section ######");
+			    summarySection = true;
+			}
+		    }
 		    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 		}
 
