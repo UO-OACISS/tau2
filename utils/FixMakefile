@@ -608,6 +608,10 @@ fi
 	echo "NOTE: Using PGI's OpenMP options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     INTELOPENMP)
+	echo "NOTE: Using Intel's OpenMP options ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      GUIDE)
 	echo "NOTE: Using KAI's Guide OpenMP ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -787,6 +791,10 @@ fi
 	;;
      INTEL_FORTRAN)
 	echo "NOTE: Intel efc compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     INTEL32_FORTRAN)
+	echo "NOTE: Intel ifc compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 

@@ -138,6 +138,7 @@ pgi=no
 fujitsu=no
 stdcxxlib=no
 inteltflop=no
+intel=no
 profile=no
 monitor=no
 profilecounters=no
@@ -1079,6 +1080,12 @@ case $cxx_compiler in
       echo "Default C++ compiler will be Intel ecpc C++ compiler"
       fixmakeargs="$fixmakeargs USE_INTELCXX"
       tauoptions="${tauoptions}-ecpc"
+      intel=yes
+      if [ $fortran_compiler = no ]
+      then
+        fixmakeargs="$fixmakeargs INTEL_FORTRAN"
+      fi
+
 
       ;;
 	
@@ -1086,6 +1093,11 @@ case $cxx_compiler in
       echo "Default C++ compiler will be Intel icpc C++ compiler"
       fixmakeargs="$fixmakeargs USE_INTELCXX"
       tauoptions="${tauoptions}-icpc"
+      intel=yes
+      if [ $fortran_compiler = no ]
+      then
+        fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+      fi
 
       ;;
 
@@ -1171,8 +1183,14 @@ case $fortran_compiler in
       ;;
 
    intel)
-      echo "Default Fortran compiler will be Intel efc"
-      fixmakeargs="$fixmakeargs INTEL_FORTRAN"
+      if [ $cxx_compiler = ecpc ]
+      then
+        echo "Default Fortran compiler will be Intel efc"
+        fixmakeargs="$fixmakeargs INTEL_FORTRAN"
+      else
+        echo "Default Fortran compiler will be Intel ifc"
+        fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+      fi
       ;;
    no)
       ;;
@@ -1958,6 +1976,14 @@ if [ $pgi = yes ]
     if [ $openmp = yes ]
     then
       fixmakeargs="$fixmakeargs PGIOPENMP"
+    fi
+fi 
+
+if [ $intel = yes ]
+  then
+    if [ $openmp = yes ]
+    then
+      fixmakeargs="$fixmakeargs INTELOPENMP"
     fi
 fi 
 
