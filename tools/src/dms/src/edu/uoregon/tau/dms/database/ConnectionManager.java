@@ -40,12 +40,8 @@ public class ConnectionManager {
     public ConnectionManager(String configFileName, boolean prompt){
 	super();
 	parser = new ParseConfig(configFileName);
-	if(prompt){
-	    String password = getPassword();
-	    initialize(password);
-	}
-	else
-	    initialize("");
+	String password = getPassword(prompt);
+	initialize(password);
 	//System.out.println("\r\n");
     }
 
@@ -137,18 +133,24 @@ public class ConnectionManager {
 	return st.trim().endsWith(";");
     }
 
-	public String getPassword () {
-		String tmpString = parser.getDBPasswd();	
-		if (tmpString == null) {
-			try {
-				PasswordField passwordField = new PasswordField();
-				tmpString = passwordField.getPassword(parser.getDBUserName() + "'s database password:");
-			} catch (IOException ex) {
-	    		ex.printStackTrace();
-				System.exit(0);
-			}
+    //For backward compatibility, simulate default parameter.
+    public String getPassword (){
+	return this.getPassword(true);}
+
+    public String getPassword (boolean prompt){
+	String tmpString = parser.getDBPasswd();	
+	if(prompt){
+	    if (tmpString == null) {
+		try {
+		    PasswordField passwordField = new PasswordField();
+		    tmpString = passwordField.getPassword(parser.getDBUserName() + "'s database password:");
+		} catch (IOException ex) {
+		    ex.printStackTrace();
+		    System.exit(0);
 		}
-		return tmpString;
+	    }
 	}
+	return tmpString;
+    }
 
 }
