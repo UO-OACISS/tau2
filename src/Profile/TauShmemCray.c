@@ -24056,6 +24056,7 @@ void shmem_longdouble_prod_to_all_jw__( long double * trg, const long double * s
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_complexf_sum_to_all wrapper function 
 ******************************************************/
@@ -24072,6 +24073,7 @@ void shmem_complexf_sum_to_all( float * trg, const float * src, size_t nreduce, 
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexf_sum_to_all wrapper function 
@@ -24128,6 +24130,7 @@ void shmem_complexf_sum_to_all__( float * trg, const float * src, size_t nreduce
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_complexf_sum_to_all_jw wrapper function 
 ******************************************************/
@@ -24144,6 +24147,7 @@ void shmem_complexf_sum_to_all_jw( float * trg, const float * src, size_t nreduc
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexf_sum_to_all_jw wrapper function 
@@ -24200,6 +24204,7 @@ void shmem_complexf_sum_to_all_jw__( float * trg, const float * src, size_t nred
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_complexf_prod_to_all wrapper function 
 ******************************************************/
@@ -24233,6 +24238,7 @@ void SHMEM_COMPLEXF_PROD_TO_ALL( float * trg, const float * src, size_t nreduce,
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexf_prod_to_all wrapper function 
@@ -24272,6 +24278,7 @@ void shmem_complexf_prod_to_all__( float * trg, const float * src, size_t nreduc
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_complexf_prod_to_all_jw wrapper function 
 ******************************************************/
@@ -24288,6 +24295,7 @@ void shmem_complexf_prod_to_all_jw( float * trg, const float * src, size_t nredu
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexf_prod_to_all_jw wrapper function 
@@ -24344,6 +24352,7 @@ void shmem_complexf_prod_to_all_jw__( float * trg, const float * src, size_t nre
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_complexd_sum_to_all wrapper function 
 ******************************************************/
@@ -24360,6 +24369,7 @@ void shmem_complexd_sum_to_all( double * trg, const double * src, size_t nreduce
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexd_sum_to_all wrapper function 
@@ -24416,6 +24426,7 @@ void shmem_complexd_sum_to_all__( double * trg, const double * src, size_t nredu
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_complexd_sum_to_all_jw wrapper function 
 ******************************************************/
@@ -24432,6 +24443,7 @@ void shmem_complexd_sum_to_all_jw( double * trg, const double * src, size_t nred
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexd_sum_to_all_jw wrapper function 
@@ -24487,7 +24499,7 @@ void shmem_complexd_sum_to_all_jw__( double * trg, const double * src, size_t nr
 /******************************************************/
 /******************************************************/
 
-
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_complexd_prod_to_all wrapper function 
 ******************************************************/
@@ -24504,6 +24516,7 @@ void shmem_complexd_prod_to_all( double * trg, const double * src, size_t nreduc
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexd_prod_to_all wrapper function 
@@ -24560,6 +24573,7 @@ void shmem_complexd_prod_to_all__( double * trg, const double * src, size_t nred
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_complexd_prod_to_all_jw wrapper function 
 ******************************************************/
@@ -24576,6 +24590,7 @@ void shmem_complexd_prod_to_all_jw( double * trg, const double * src, size_t nre
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexd_prod_to_all_jw wrapper function 
@@ -24593,13 +24608,13 @@ void SHMEM_COMPLEXD_PROD_TO_ALL_JW( double * trg, const double * src, size_t nre
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#ifdef TAU_INCOMPATIBLE
 
 /******************************************************
 ***      shmem_complexd_prod_to_all_jw wrapper function 
 ******************************************************/
 void shmem_complexd_prod_to_all_jw_( double * trg, const double * src, size_t nreduce, int pestart, int log_pestride, int pesize, double * pwrk, long * psync)
 {
-
   TAU_PROFILE_TIMER(t, "shmem_complexd_prod_to_all_jw()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
 #ifdef TAU_P_SHMEM 
@@ -24610,6 +24625,7 @@ void shmem_complexd_prod_to_all_jw_( double * trg, const double * src, size_t nr
   TAU_PROFILE_STOP(t); 
   return ; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************
 ***      shmem_complexd_prod_to_all_jw wrapper function 
@@ -26376,6 +26392,7 @@ void shmem_quiet__( )
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmem_ptr wrapper function 
 ******************************************************/
@@ -26524,6 +26541,7 @@ void * shmem_ptr_jw__( void * targ, int pe)
   return retvalue; 
 }
 
+#endif /* TAU_INCOMPATIBLE */
 /******************************************************/
 /******************************************************/
 
@@ -27272,6 +27290,7 @@ void shmem_group_inquire_jw__( int handle, shmem_group_t * sgs)
 /******************************************************/
 
 
+#ifdef TAU_INCOMPATIBLE
 /******************************************************
 ***      shmemalign wrapper function 
 ******************************************************/
@@ -27419,6 +27438,7 @@ void * shmemalign_jw__( size_t align, size_t size)
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+#endif /* TAU_INCOMPATIBLE */
 
 /******************************************************/
 /******************************************************/
