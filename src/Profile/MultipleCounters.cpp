@@ -59,6 +59,11 @@ int MultipleCounterLayer::cpuTimeMCL_CP[1];
 int MultipleCounterLayer::cpuTimeMCL_FP;
 #endif // CPU_TIME
 
+#ifdef TAU_MUSE
+int MultipleCounterLayer::tauMUSEMCL_CP[1];
+int MultipleCounterLayer::tauMUSEMCL_FP;
+#else /* TAU_MUSE */
+
 #ifdef TAU_PAPI
 int MultipleCounterLayer::papiMCL_CP[MAX_TAU_COUNTERS];
 int MultipleCounterLayer::papiWallClockMCL_CP[1];
@@ -87,6 +92,7 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   sgiTimersMCLInit,
 						   cpuTimeMCLInit,
 						   crayTimersMCLInit,
+						   tauMUSEMCLInit
 						   papiMCLInit,
 						   papiWallClockMCLInit,
 						   papiVirtualMCLInit,
@@ -143,6 +149,11 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     MultipleCounterLayer::cpuTimeMCL_CP[0] = -1;
     MultipleCounterLayer::cpuTimeMCL_FP = -1;
 #endif // CPU_TIME
+
+#ifdef TAU_MUSE
+    MultipleCounterLayer::tauMUSEMCL_CP[1] = -1;
+    MultipleCounterLayer::tauMUSEMCL_FP = -1;
+#else /* TAU_MUSE */
 
 #ifdef CRAY_TIMERS
     MultipleCounterLayer::crayTimersMCL_CP[0] = -1;
@@ -460,6 +471,34 @@ bool MultipleCounterLayer::cpuTimeMCLInit(int functionPosition){
 #endif//CPU_TIME
 }
 
+bool MultipleCounterLayer::tauMUSEMCLInit(int functionPosition){
+#ifdef TAU_MUSE
+  for(int i=0; i<MAX_TAU_COUNTERS; i++){
+    if(MultipleCounterLayer::names[i] != NULL){
+      if(strcmp(MultipleCounterLayer::names[i], "TAU_MUSE") == 0){
+	
+	//Set the counter position.
+	tauMUSEMCL_CP[0] = i;
+	
+	//Indicate that this function is being used.
+	MultipleCounterLayer::counterUsed[i] = true;
+	
+	//Update the functionArray.
+	MultipleCounterLayer::functionArray[functionPosition] = tauMUSEMCL;
+	tauMUSEMCL_FP = functionPosition;
+	//Now just return with beginCountersPosition incremented.
+	return true;
+      }
+    }
+  }
+  //If we are here, then this function is not active.
+  return false;
+#else //TAU_MUSE
+  return false;
+#endif//TAU_MUSE
+}
+
+
 bool MultipleCounterLayer::papiMCLInit(int functionPosition){
 #ifdef TAU_PAPI
   //This function uses the papi layer counters.
@@ -716,6 +755,12 @@ void MultipleCounterLayer::cpuTimeMCL(int tid, double values[]){
   values[cpuTimeMCL_CP[0]] = (current_usage.ru_utime.tv_sec + current_usage.ru_stime.tv_sec)* 1e6 
   + (current_usage.ru_utime.tv_usec + current_usage.ru_stime.tv_usec);
 #endif//CPU_TIME
+}
+
+void MultipleCounterLayer::tauMUSEMCL(int tid, double values[]){
+#ifdef TAU_MUSE 
+  values[tauMUSEMCL_CP[0]] = TauMuseQuery();
+#endif//TAU_MUSE
 }
 
 void MultipleCounterLayer::papiMCL(int tid, double values[]){

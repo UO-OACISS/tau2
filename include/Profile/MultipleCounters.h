@@ -24,7 +24,7 @@ extern "C" {
 #endif /* TAU_PAPI */
 
 
-#define SIZE_OF_INIT_ARRAY 9 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 10 //!!Change this if functions are added to the system!!
 
 
 //Some useful typedefs
@@ -63,6 +63,9 @@ class MultipleCounterLayer
 
   static bool cpuTimeMCLInit(int functionPosition);
   static void cpuTimeMCL(int tid, double values[]);
+
+  static bool tauMUSEMCLInit(int functionPosition);
+  static void tauMUSEMCL(int tid, double values[]);
 
   static bool papiMCLInit(int functionPosition);
   static void papiMCL(int tid, double values[]);
@@ -104,6 +107,11 @@ class MultipleCounterLayer
   static int cpuTimeMCL_CP[1];
   static int cpuTimeMCL_FP;
 #endif // CPU_TIME
+
+#ifdef TAU_MUSE
+  static int tauMUSEMCL_CP[1];
+  static int tauMUSEMCL_FP;
+#endif // TAU_MUSE
   
 #ifdef TAU_PAPI
   static int papiMCL_CP[MAX_TAU_COUNTERS];
