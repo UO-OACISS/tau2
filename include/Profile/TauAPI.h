@@ -54,6 +54,12 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
         static TauGroup_t var##tau_gr = group; \
         static FunctionInfo var##fi(name, type, var##tau_gr, #group);
 
+// Construct a Profiler obj and a FunctionInfo obj with an extended name
+// e.g., FunctionInfo loop1fi(); Profiler loop1();
+#define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
+                                Tau_start_timer(&var##fi);
+#define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
+                                Tau_stop_timer(&var##fi);
 
 #else 
 // Multithreaded, we should use thread-safe tauCreateFI to create the FunctionInfo object
@@ -69,15 +75,16 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 	static FunctionInfo *var##fi = NULL; \
         tauCreateFI(&var##fi, name, type, var##tau_gr, #group); 
 
-#endif
-//	Profiler var(&var##fi, var##tau_gr, true); 
-
 // Construct a Profiler obj and a FunctionInfo obj with an extended name
 // e.g., FunctionInfo loop1fi(); Profiler loop1(); 
 #define TAU_PROFILE_START(var) if (var##tau_gr & RtsLayer::TheProfileMask()) \
  				Tau_start_timer(var##fi);
 #define TAU_PROFILE_STOP(var)  if (var##tau_gr & RtsLayer::TheProfileMask()) \
 				Tau_stop_timer(var##fi);
+
+#endif
+//	Profiler var(&var##fi, var##tau_gr, true); 
+
 #define TAU_PROFILE_STMT(stmt) stmt;
 #define TAU_PROFILE_EXIT(msg)  Profiler::ProfileExit(msg); 
 #define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
@@ -264,6 +271,6 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.40 $   $Date: 2005/01/08 01:14:10 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.40 2005/01/08 01:14:10 amorris Exp $ 
+ * $Revision: 1.41 $   $Date: 2005/01/08 01:18:05 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.41 2005/01/08 01:18:05 amorris Exp $ 
  ***************************************************************************/
