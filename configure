@@ -145,6 +145,7 @@ tauarch=unknown
 tauprefix=unknown
 tauoptions=
 pdt_root_dir="."
+pdt=no
 
 # debug:
 # echo $arguments
@@ -250,6 +251,12 @@ do
   -pcl=*)
       pcl=yes
       pcldir=`echo $arg | sed -e 's/-pcl=//'`
+    shift
+    ;;
+
+  -pdt=*)
+      pdt=yes
+      pdtdir=`echo $arg | sed -e 's/-pdt=//'`
     shift
     ;;
 
@@ -381,6 +388,7 @@ do
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
+    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-TRACE ..................................... Generate TAU event traces."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILESTATS .................. Enable standard deviation calculation."
@@ -844,22 +852,25 @@ echo "" >> ./build/Config.info
 ######################################################################
 ## STATIC ANALYSIS: Ductape/Program Database Toolkit/IL Analyser
 ## If cxxparse exists, modify it to contain the correct path
-pdt_root_dir=${tauroot}/pdt
-if [ -d $pdt_root_dir ]
-  then
-  if [ ! -d $pdt_root_dir/$machine ] 
-    then
-      mkdir $pdt_root_dir/$machine
-      mkdir $pdt_root_dir/$machine/bin
-      mkdir $pdt_root_dir/$machine/lib
-  fi
-  /bin/rm -f $pdt_root_dir/$machine/bin/cxxparse
-  cat utils/cxxparse | 
-  sed -e 's,@DUCTAPEROOT@,'$pdt_root_dir/',' -e 's,@CXXINCLUDES@,'"$stdinc"',' -e 's,@ARCH@,'$machine/',' > $pdt_root_dir/$machine/bin/cxxparse
-  chmod +x $pdt_root_dir/$machine/bin/cxxparse
-  echo "Installed cxxparse in the PDT directory $pdt_root_dir"
-fi
+#pdt_root_dir=${tauroot}/pdt
+#if [ -d $pdt_root_dir ]
+#  then
+#  if [ ! -d $pdt_root_dir/$machine ] 
+#    then
+#      mkdir $pdt_root_dir/$machine
+#      mkdir $pdt_root_dir/$machine/bin
+#      mkdir $pdt_root_dir/$machine/lib
+#  fi
+#  /bin/rm -f $pdt_root_dir/$machine/bin/cxxparse
+#  cat utils/cxxparse | 
+#  sed -e 's,@DUCTAPEROOT@,'$pdt_root_dir/',' -e 's,@CXXINCLUDES@,'"$stdinc"',' -e 's,@ARCH@,'$machine/',' > $pdt_root_dir/$machine/bin/cxxparse
+#  chmod +x $pdt_root_dir/$machine/bin/cxxparse
+#  echo "Installed cxxparse in the PDT directory $pdt_root_dir"
+#fi
     
+# NOW PDT configuration handled in PDT
+######################################################################
+
 
 ######################################################################
 # test whether C++ compiler supports AT&T task library
@@ -1161,6 +1172,11 @@ if [ $pcl = yes ]
   then
     fixmakeargs="$fixmakeargs PCL pcldir=$pcldir"
     tauoptions="${tauoptions}-pcl"
+fi
+
+if [ $pdt = yes ]
+  then
+    fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
 fi
 
 if [ $pcl = yes ]
