@@ -55,23 +55,23 @@ public:
 	// Construct with the name of the function and its type.
 	FunctionInfo(const char* name, const char * type, 
           TauGroup_t ProfileGroup = TAU_DEFAULT, 
-	  const char *ProfileGroupName = "TAU_DEFAULT");
+	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false);
 	FunctionInfo(const char* name, string& type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
-	  const char *ProfileGroupName = "TAU_DEFAULT");
+	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false);
 	FunctionInfo(string& name, string& type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
-	  const char *ProfileGroupName = "TAU_DEFAULT");
+	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false);
 	FunctionInfo(string& name, const char * type, 
 	  TauGroup_t ProfileGroup = TAU_DEFAULT,
-	  const char *ProfileGroupName = "TAU_DEFAULT");
+	  const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = false);
 
 	FunctionInfo(const FunctionInfo& X) ;
 	// When we exit, we have to clean up.
 	~FunctionInfo();
         FunctionInfo& operator= (const FunctionInfo& X) ;
 
-	void FunctionInfoInit(TauGroup_t PGroup, const char *PGroupName);
+	void FunctionInfoInit(TauGroup_t PGroup, const char *PGroupName, bool InitData );
         
 
 	// Tell it about a function call finishing.
@@ -210,6 +210,6 @@ FunctionInfo::GetAlreadyOnStack(int tid)
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 1999/05/04 22:32:09 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.7 1999/05/04 22:32:09 sameer Exp $ 
+ * $Revision: 1.8 $   $Date: 1999/06/18 17:38:45 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.8 1999/06/18 17:38:45 sameer Exp $ 
  ***************************************************************************/
