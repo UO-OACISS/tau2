@@ -4,7 +4,7 @@ MACHINE=@ARCH@
 OLDJDK=@OLDJDK@
 
 LIBDIR=${TAUROOT}/${MACHINE}/lib
-CONFIG_FILE=~/.ParaProf/perfdmf.cfg
+CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
 
 
 # If paraprof is invoked with the -p option, read and/or generate pprof.dat
@@ -59,19 +59,19 @@ then
      
       echo "Done ... now starting ParaProf ..."
   fi
-  PPROFOPT="-filetype pprof"
+  PPROFOPT="--filetype pprof"
 fi 
 #Searching for a preference file.
 
-if [ -f ~/.ParaProf/ParaProfPreferences.dat ] ; then
+if [ -f "${HOME}/.ParaProf/ParaProfPreferences.dat" ] ; then
     echo "Found a global ParaProf pref." ; \
-    cp ~/.ParaProf/ParaProfPreferences.dat . ; \
+    cp "${HOME}/.ParaProf/ParaProfPreferences.dat" . ; \
 fi
 
 # get the jdbc jar file from the configuration file
 JDBC_JAR=`grep jdbc_db_jarfile ${CONFIG_FILE} 2>/dev/null | sed s/jdbc_db_jarfile://`
 
-if [ ! -z ${JDBC_JAR} ]; then
+if [ "x${JDBC_JAR}" != "x" ]; then
     if [ ! -r ${JDBC_JAR} ]; then
         echo ""
         echo "Warning: JDBC driver '$JDBC_JAR' not found."
