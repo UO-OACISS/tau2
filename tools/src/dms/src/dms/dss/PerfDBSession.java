@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.18 2004/04/07 17:36:57 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.19 2004/04/08 19:54:17 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -732,7 +732,16 @@ public class PerfDBSession extends DataSession {
 		// function data, user events and user event data
 		if (saveMetricIndex < 0) {
 			System.out.println("\nSaving the trial...");
+
+			// save the old metric ID so that we can restore it...
 			newTrialID = trial.saveTrial(db);
+			Vector metids = new Vector();
+			Metric tmp = null;
+			for (int i = 0 ; i < trial.getDataSession().getMetrics().size() ; i++) {
+				tmp = (Metric)trial.getDataSession().getMetric(saveMetricIndex);
+				metids.add(new Integer(tmp.getID()));
+			}
+
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
 				saveFunctionData(newFunHash, metrics, saveMetricIndex);
@@ -743,20 +752,32 @@ public class PerfDBSession extends DataSession {
 					saveUserEventData(newUEHash);
 				}
 			}
+
+			// set the metric ID back to what paraprof wants...
+			for (int i = 0 ; i < trial.getDataSession().getMetrics().size() ; i++) {
+				tmp = (Metric)trial.getDataSession().getMetric(saveMetricIndex);
+				Integer tmpI = (Integer)metids.elementAt(i);
+				tmp.setID(tmpI.intValue());
+			}
+
 			System.out.println("New Trial ID: " + newTrialID);
 		} else {
 			newTrialID = trial.getID();
 			System.out.println("\nSaving the metric...");
+
 			// save the old metric ID so that we can restore it...
 			Metric tmp = (Metric)trial.getDataSession().getMetric(saveMetricIndex);
 			int oldID = tmp.getID();
+
 			trial.saveMetric(db, saveMetricIndex);
 			if (functions != null && functions.size() > 0) {
 				Hashtable newFunHash = saveFunctions(newTrialID, saveMetricIndex);
 				saveFunctionData(newFunHash, metrics, saveMetricIndex);
 			}
+
 			// set the metric ID back to what paraprof wants...
 			tmp.setID(oldID);
+
 			System.out.println("Modified Trial ID: " + newTrialID);
 		}
 
