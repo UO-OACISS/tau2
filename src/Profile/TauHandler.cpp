@@ -23,9 +23,12 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <Profile/Profiler.h>
-#ifdef __linux__
+
+/* Which platforms support mallinfo? */
+#if (defined (__linux__) || defined (_AIX) || defined(sgi) || defined(sun))
+#define TAU_HASMALLINFO 1 
 #include <malloc.h> 
-#endif /* __linux__ */
+#endif /* platforms */
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -99,19 +102,17 @@ void TauDisableTrackingMuseEvents(void)
 //////////////////////////////////////////////////////////////////////
 double TauGetMaxRSS(void)
 {
+#ifdef TAU_HASMALLINFO
+  struct mallinfo minfo = mallinfo();
+  /* compute the memory used */
+  double used = (double) (minfo.hblkhd + minfo.usmblks + minfo.uordblks);
+  /* This is in bytes, we need KB */
+  return used/1024.0;
+#endif /* TAU_HASMALLINFO */
+
+  /* if not, use getrusage */
   struct rusage res;
   getrusage(RUSAGE_SELF, &res);
-  if (res.ru_maxrss == 0)
-  { /* getrusage is not working */
-#ifdef __linux__
-    struct mallinfo minfo = mallinfo();
-    /* compute the memory used */
-    double used = (double) (minfo.hblkhd + minfo.usmblks + minfo.uordblks);
-    /* This is in bytes, we need KB */
-    return used/1024.0;
-#endif /* __linux__ */
-  }
-     
   return (double) res.ru_maxrss; /* max resident set size */
 }
 
@@ -263,8 +264,8 @@ void TauTrackMuseEvents(void)
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.5 $   $Date: 2004/06/10 18:07:26 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.5 2004/06/10 18:07:26 sameer Exp $ 
+ * $Revision: 1.6 $   $Date: 2004/06/10 19:06:10 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.6 2004/06/10 19:06:10 sameer Exp $ 
  ***************************************************************************/
 
 	
