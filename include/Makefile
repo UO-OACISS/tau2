@@ -279,16 +279,9 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #MPICONSTCHAR#PROFILEOPT51  = -DTAU_MPICONSTCHAR  #ENDIF#
 
 
-#FOR F90 MPI on SGI
-#SGIMP#FWRAPPER	       = TauFMpi.o       #ENDIF#
-#SP1#FWRAPPER	       = TauFMpi.o       #ENDIF#
+#For F90 support for all platforms
+FWRAPPER	       = TauFMpi.o       
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
-#PGI_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
-#INTEL_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
-#INTEL32_FORTRAN#FWRAPPER  = TauFMpi.o       #ENDIF#
-#CRAY_X1_FORTRAN#FWRAPPER	       = TauFMpi.o       #ENDIF#
-#IBMXLFAPPLE#FWRAPPER	       = TauFMpi.o      #ENDIF#
-#GNU_FORTRAN#FWRAPPER	       = TauFMpi.o      #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #ALPHATIMERS#LEXTRA	       = -lrt 	       #ENDIF#
