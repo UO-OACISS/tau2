@@ -206,6 +206,10 @@ The following  command-line options are available to configure:
       routine locations) and tau_instrumentor that uses the .pdb file and the 
       C++ source code to generate an instrumented version of the source code.  
       See examples/autoinstrument/Makefile. 
+      
+      % cd examples/autoinstrument; make
+      % klargest 
+      % pprof
 
    To illustrate the use of TAU Fortran 90 instrumentation API, we have 
    included the NAS Parallel Benchmarks 2.3 LU and SP suites in the 
