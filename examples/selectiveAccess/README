@@ -3,10 +3,6 @@ data. You can access the function list, and all data at function name
 resolution.  In the example, the beginning and end of the main()
 function contains internal data access function examples.
 
-There will be some memory clean up functions, as well as some
-addition dump routines added over the next couple of days to complete
-the API.  Please check back!!
-
 The list of macros that are used in this example are:
 -----------------------------------------------------
 * TAU_GET_FUNC_NAMES(functionList, numOfFunctions); 
