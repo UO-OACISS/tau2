@@ -90,11 +90,11 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 }
 
 int DefUserEvent( void *userData, unsigned int userEventToken,
-		const char *userEventName )
+		const char *userEventName, int monotonicallyIncreasing )
 {
 
-  dprintf("DefUserEvent event id %d user event name %s\n", userEventToken,
-		  userEventName);
+  dprintf("DefUserEvent event id %d user event name %s, monotonically increasing = %d\n", userEventToken,
+		  userEventName, monotonicallyIncreasing);
   return 0;
 }
 
