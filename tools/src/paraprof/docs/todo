@@ -173,3 +173,53 @@ mapping selection 1.  We probalby should, or re-think whether to just
 re-generate that information on the fly.
 ------
 
+------
+# Report 19
+# Date: 7th October 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Finish implementing transactional based support.
+------
+
+------
+# Report 20
+# Date: 7th October 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Add support for Oracle and DB2
+------
+
+------
+# Report 21
+# Date: 7th October 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon).
+Is there a way to turn the "show values as percentage"
+option to off (unchecked) for derived counters (PAPI_FP_INS/TIME) as it
+doesn't make sense to show it as a percentage and I check it off each time
+I look at it.
+------
+
+------
+# Report 22
+# Date: 7th October 2004
+# Status: (outstanding)
+# Reporter: Robert Bell (University of Oregon).
+Write the script for automatically checking the correctness of ParaProf operation.
+------
+
+------
+# Report 22
+# Date: 7th October 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon).
+Fix Java < 1.4 support.
+------
+
+------
+# Report 23
+# Date: 7th October 2004
+# Status: (outstanding)
+# Reporter: Sameer Shende (University of Oregon).
+Make sure that ParaProf.debug.out is not generated in non debugging mode.
+------
