@@ -18,7 +18,7 @@ CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
 TAU_PREFIX_INSTALL_DIR=/research/paraducks/apps/pdt/dev/tau2
-PDTDIR=/research/paraducks/apps/pdt/dev/pdtoolkit
+PDTDIR=/home/pdt
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
@@ -121,8 +121,17 @@ tau_merge.o: 	tau_merge.c
 tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
 
-tau_instrumentor: 	tau_instrumentor.cpp   
+tau_instrumentor: 	tau_instrumentor.cpp  $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a 
 		$(CXX) $(CFLAGS) tau_instrumentor.cpp -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+
+$(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a:
+		@echo 
+		@echo "******************************************************"
+		@echo "PDT Configuration Error. $(PDTDIR)/$(CONFIG_ARCH)/lib/libpdb.a not found."
+	        @echo "Please configure PDT again and then install TAU."
+		@echo 
+		@echo "******************************************************"
+	        @exit
 
 ar2pcxx : ar2pcxx.c 
 		$(LINKER) ar2pcxx.c -o $@
