@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1997-2001				   	   	   **
+**    Copyright 1997-2002				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.10                          *
+ *                           Version 2.11                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -65,6 +65,7 @@ Usage: configure [OPTIONS]
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
 -jdk=<dir> ...... Specify location of JAVA 2 Development Kit (jdk1.2+).
 -dyninst=<dir> ................... Specify location of DynInst Package.
+-mpi .......................... Specify use of TAU MPI wrapper library.
 -mpiinc=<dir> ............. Specify location of MPI include dir and use
                            the TAU MPI Profiling and Tracing Interface.
 -mpilib=<dir> ............. Specify location of MPI library dir and use
@@ -196,7 +197,7 @@ The following  command-line options are available to configure:
    This is the default option; it specifies summary profile files to be 
    generated at the end of execution. Profiling generates aggregate statistics 
    (such as the total time spent in routines and statements), and can be used 
-   in conjunction with the profile browser racy to analyse the performance. 
+   in conjunction with the profile browser jracy to analyse the performance. 
    Wallclock time is used for profiling  program entities. 
    
 -PROFILESTATS
@@ -290,7 +291,7 @@ The following  command-line options are available to configure:
    this distribution.
 
    Make installs the library and its stub makefile  in <prefix>/<arch>/lib 
-   subdirectory and installs utilities such as pprof and racy in 
+   subdirectory and installs utilities such as pprof and jracy in 
    <prefix>/<arch>/bin subdirectory.
 
    
@@ -318,7 +319,7 @@ The following  command-line options are available to configure:
    % cd examples/instrument
    % ./simple
    % pprof
-   % racy
+   % jracy
 
    To use tau_instrumentor, the C++ source code instrumentor: 
    a. Install pdtoolkit. [ Ref: http://www.acl.lanl.gov/pdtoolkit ] 
@@ -348,11 +349,12 @@ The following  command-line options are available to configure:
    library whereas SP has minimal instrumentation in the top level routine
    and relies on the instrumented MPI wrapper library. 
  
-4. Racy.
+4. jracy.
 
-   Racy is the GUI for TAU performance analysis. It brings up a project
-   management window. Type in any filename with a .pmf extension. e.g.,
-   matrix.pmf and it will bring up the racy main window.
+   jracy is the GUI for TAU performance analysis. It requires Java 1.2+. An
+   earlier version of the profile browser, racy, was implemented using Tcl/Tk.
+   It is also available in this distribution but support for racy will be 
+   gradually phased out. Users are encouraged to use jracy instead. 
 
 5. TAU System Requirements :
    -------------------------
@@ -365,6 +367,7 @@ I) The Profiling Library needs a recent C++ compiler. Our recommended list:
 	f) IBM (http://www.ibm.com) xlC C++ compiler for IBM SP
         g) SUN (http://www.sun.com) Sun CC 5.0+ compiler
         h) Compaq (http://www.compaq.com) cxx 6.x compiler  
+	i) HP (http://www.hp.com) aCC compiler 
  
 II) Platforms :
    TAU has been tested on 
@@ -376,11 +379,11 @@ II) Platforms :
 	        iv) 	Fujitsu C++/f90 compiler suite,
 		v)      KAI KAP/Pro compiler suite.
 	c) Sun Solaris2 with g++, KCC. 
-	d) HP PA-RISC systems running HP-UX with g++. 
+	d) HP PA-RISC systems running HP-UX with g++, and aCC. 
 	e) Cray T3E with Cray C++ compiler, and KAI KCC.
 	f) Compaq Tru64 Alpha with g++, cxx.
         g) Compaq Alpha Linux clusters with g++.
-	i) Microsoft Windows. Tested with MS Visual C++ v5.1.  
+	i) Microsoft Windows. Tested with MS Visual C++ v6.0.
 	j) IBM SP AIX (RS6000) systems with KCC, and xlC compilers.
 	k) PowerPC Linux with g++
 	l) IA-64 Linux with g++ and SGI Pro64 compilers.
@@ -401,6 +404,9 @@ III) Software Requirements :
 
    c) xrdb
    The configure script ensures that the display is ok using xrdb.
+
+   d) java
+   jracy requires Java 1.2+. Java can be downloaded from http://www.sun.com
 
     
 6. Modifying user's Makefile for Tracing/Profiling.
@@ -428,9 +434,7 @@ III) Software Requirements :
        each thread
      % pprof
        This is the text based profile browser.
-     % racy  
-       This is the gui - type hello.pmf and click on "Create" in the project 
-       management window.
+     % jracy  
      
      Example II:
      Profiling an MPI program using the TAU MPI wrapper library.
@@ -438,9 +442,7 @@ III) Software Requirements :
      % configure -mpiinc=/usr/lpp/ppe.poe/include -mpilib=/usr/lpp/ppe.poe/lib
      % make clean; make install
      % cd examples/pi
-     % make CXX=mpCC
-       It is very important to compile the application with the mp version of the
-       compiler for MPI jobs. e.g., mpKCC, mpCC, etc.
+     % make 
      % poe cpi -procs 4 -rmpool 2
      % pprof or racy
        Note: Using the MPI Profiling Interface TAU can generate profile data for 
@@ -552,7 +554,7 @@ III) Software Requirements :
     % cd $POOMASUITE
     % SimpleJacobi --pooma-threads <n>
     % pprof
-    % racy 
+    % jracy 
        
     
     

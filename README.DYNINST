@@ -66,3 +66,5 @@ more than one version of TAU is configured. For e.g.,
 /home/users/sameer/tau2/i386_linux/bin/tau_run -XrunTAUsh-papiwallclock-papi /home/users/sameer/tau2/examples/mpi-ek/ek $*
 
 
+NOTE: TAU only works with DyninstAPI under x86/Linux currently.
+

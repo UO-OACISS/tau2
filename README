@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.acl.lanl.gov/tau		           **
 *****************************************************************************
-**    Copyright 1997-2001 				   	           **
+**    Copyright 1997-2002 				   	           **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **	
@@ -62,7 +62,7 @@ inclusive time per call was.  Time information can also be displayed
 relative to nodes, contexts, and threads.  Instead of time, hardware
 performance data can be shown.  Also, user-level profiling is possible.
 
-TAU's profile visualization tool, racy, provides graphical displays of all
+TAU's profile visualization tool, jracy, provides graphical displays of all
 the performance analysis results, in aggregate and per node/context/thread
 form.  The user can quickly identify sources of performance bottlenecks in
 the application using the graphical interface.  In addition, TAU can
