@@ -35,9 +35,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	try{
 	    setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
 	    setBackground(Color.white);
-
-	    //Add this object as a mouse listener.
-	    addMouseListener(this);
 	    
 	    this.nodeID = nodeID;
 	    this.contextID = contextID;
@@ -47,6 +44,23 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	    this.global = global;
 	    this.debug = debug;
 	    this.repaint();
+
+	    //Add this object as a mouse listener.
+	    addMouseListener(this);
+      
+	    //Add items to the popu menu.
+	    JMenuItem mappingDetailsItem = new JMenuItem("Show Function Details");
+	    mappingDetailsItem.addActionListener(this);
+	    popup.add(mappingDetailsItem);
+      
+	    JMenuItem changeColorItem = new JMenuItem("Change Function Color");
+	    changeColorItem.addActionListener(this);
+	    popup.add(changeColorItem);
+      
+	    JMenuItem maskMappingItem = new JMenuItem("Reset to Generic Color");
+	    maskMappingItem.addActionListener(this);
+	    popup.add(maskMappingItem);
+
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "CPTWP01");
@@ -197,7 +211,6 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 		if(drawObjects==null){
 		    drawObjects = new Vector();
 		    //Add five spacer objects representing the column headings.
-		    drawObjects.add(new CallPathDrawObject(null, false, true));
 		    drawObjects.add(new CallPathDrawObject(null, false, true));
 		    drawObjects.add(new CallPathDrawObject(null, false, true));
 		    drawObjects.add(new CallPathDrawObject(null, false, true));
@@ -371,10 +384,11 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 			g2D.drawString("Inclusive", incPos, yCoord);
 			g2D.drawString("Calls/Tot.Calls", callsPos1, yCoord);
 			g2D.drawString("Name[id]", namePos, yCoord);
+			yCoord = yCoord + spacing;
 		    }
-		    else if(i==3){
-			System.out.println("---" + yCoord);
+		    else if(i==2){
 			g2D.drawString("--------------------------------------------------------------------------------", excPos, yCoord);
+			yCoord = yCoord + spacing;
 		    }
 		    else if(!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()){
 			g2D.drawString("--> "+ (UtilFncs.getOutputString(cPTWindow.units(),callPathDrawObject.getExclusiveValue(),
@@ -419,9 +433,68 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
     //######
     //ActionListener.
     //######
-    public void actionPerformed(ActionEvent evt){}
+    public void actionPerformed(ActionEvent evt){
+	try{
+	    Object EventSrc = evt.getSource();
+	    
+	    CallPathDrawObject callPathDrawObject = null;
+	    
+	    if(EventSrc instanceof JMenuItem){
+		String arg = evt.getActionCommand();
+		if(arg.equals("Show Function Details")){
+		    
+		    if(clickedOnObject instanceof CallPathDrawObject){
+			callPathDrawObject = (CallPathDrawObject) clickedOnObject;
+			//Bring up an expanded data window for this mapping, and set this mapping as highlighted.
+			trial.getColorChooser().setHighlightColorID(callPathDrawObject.getMappingID());
+			MappingDataWindow tmpRef = new MappingDataWindow(trial, callPathDrawObject.getMappingID(), trial.getStaticMainWindow().getSMWData(), this.debug());
+			trial.getSystemEvents().addObserver(tmpRef);
+			tmpRef.show();
+		    }
+		}
+		else if(arg.equals("Change Function Color")){ 
+		    int mappingID = -1;
+		    
+		    //Get the clicked on object.
+		    if(clickedOnObject instanceof CallPathDrawObject)
+			mappingID = ((CallPathDrawObject) clickedOnObject).getMappingID();
+		    
+		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
+		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		    
+		    Color tmpCol = tmpGME.getColor();
+		    
+		    JColorChooser tmpJColorChooser = new JColorChooser();
+		    tmpCol = tmpJColorChooser.showDialog(this, "Please select a new color", tmpCol);
+		    if(tmpCol != null){
+			tmpGME.setSpecificColor(tmpCol);
+			tmpGME.setColorFlag(true);
+			
+			trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		    }
+		}
+		
+		else if(arg.equals("Reset to Generic Color")){ 
+		    int mappingID = -1;
+		    
+		    //Get the clicked on object.
+		    if(clickedOnObject instanceof CallPathDrawObject)
+			mappingID = ((CallPathDrawObject) clickedOnObject).getMappingID();
+		    
+		    GlobalMapping globalMappingReference = trial.getGlobalMapping();
+		    GlobalMappingElement tmpGME = (GlobalMappingElement) globalMappingReference.getGlobalMappingElement(mappingID, 0);
+		    
+		    tmpGME.setColorFlag(false);
+		    trial.getSystemEvents().updateRegisteredObjects("colorEvent");
+		}
+	    }
+	}
+	catch(Exception e){
+	    UtilFncs.systemError(e, null, "TSWP04");
+	}
+    }
     //######
-    //End - ActionListener.
+    //End - ActionListener
     //######
 
     //######
@@ -441,68 +514,29 @@ public class CallPathTextWindowPanel extends JPanel implements ActionListener, M
 	    //Calculate which CallPathDrawObject was clicked on.
 	    int index = (yCoord-1)/(trial.getPreferences().getBarSpacing()) + 1;
 
-	    System.out.println("######");
-	    System.out.println("yCoord: " + yCoord);
-	    System.out.println("spacing: " + trial.getPreferences().getBarSpacing());
-	    System.out.println("size: " + drawObjects.size());
-	    System.out.println("index: " + index);
-	    System.out.println("######");
-
 	    if(index<drawObjects.size()){
 		callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(index);
-		if(!callPathDrawObject.isSpacer())
-		    System.out.println(callPathDrawObject.getMappingName());
-	    }
-
-	    /*
-	    SMWThreadDataElement sMWThreadDataElement = null;
-	    //Get the location of the mouse.
-	    int xCoord = evt.getX();
-	    int yCoord = evt.getY();
-	    
-	    //Get the number of times clicked.
-	    int clickCount = evt.getClickCount();
-	    for(Enumeration e1 = list.elements(); e1.hasMoreElements() ;){
-		sMWThreadDataElement = (SMWThreadDataElement) e1.nextElement();
-		
-		if(yCoord <= (sMWThreadDataElement.getYEnd())){
-		    if((yCoord >= (sMWThreadDataElement.getYBeg())) && (xCoord >= (sMWThreadDataElement.getXBeg()))
-		       && (xCoord <= (sMWThreadDataElement.getXEnd()))){
-			if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
-			    //Set the clickedSMWMeanDataElement.
-			    clickedOnObject = sMWThreadDataElement;
-			    popup.show(this, evt.getX(), evt.getY());
-			    
-			    //Return from this function.
-			    return;
-			}
-			else{
-			    //Want to set the clicked on mapping to the current highlight color or, if the one
-			    //clicked on is already the current highlighted one, set it back to normal.
-			    if((trial.getColorChooser().getHighlightColorID()) == -1){
-				trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-			    }
-			    else{
-				if(!((trial.getColorChooser().getHighlightColorID()) == (sMWThreadDataElement.getMappingID())))
-				    trial.getColorChooser().setHighlightColorID(sMWThreadDataElement.getMappingID());
-				else
-				    trial.getColorChooser().setHighlightColorID(-1);
-			    }
-			}
-			//Nothing more to do ... return.
+		if(!callPathDrawObject.isSpacer()){
+		    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
+			clickedOnObject = callPathDrawObject;
+			popup.show(this, evt.getX(), evt.getY());
 			return;
 		    }
 		    else{
-			//If we get here, it means that we are outside the mapping draw area.  That is, we
-			//are either to the left or right of the draw area, or just above it.
-			//It is better to return here as we do not want the system to cycle through the
-			//rest of the objects, which would be pointless as we know that it will not be
-			//one of the others.  Significantly improves performance.
-			return;
+			//Want to set the clicked on mapping to the current highlight color or, if the one
+			//clicked on is already the current highlighted one, set it back to normal.
+			if((trial.getColorChooser().getHighlightColorID()) == -1){
+			    trial.getColorChooser().setHighlightColorID(callPathDrawObject.getMappingID());
+			}
+			else{
+			    if(!((trial.getColorChooser().getHighlightColorID()) == (callPathDrawObject.getMappingID())))
+				trial.getColorChooser().setHighlightColorID(callPathDrawObject.getMappingID());
+			    else
+				trial.getColorChooser().setHighlightColorID(-1);
+			}
 		    }
 		}
 	    }
-	    */
 	}
 	catch(Exception e){
 	    UtilFncs.systemError(e, null, "TDWP05");
