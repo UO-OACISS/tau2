@@ -38,7 +38,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	this.setNumContextsPerNode(-1);
 	this.setNumThreadsPerContext(-1);
 	this.setUserData("");
-	this.dataSession.setDebug(UtilFncs.debug);
+	((ParaProfDataSession)this.dataSession).setDebug(UtilFncs.debug);
 	this.type = type;
      }
 
@@ -61,7 +61,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	    this.setNumThreadsPerContext(trial.getNumThreadsPerContext());
 	    this.setUserData(trial.getUserData());
 	    this.dataSession = new ParaProfDBSession();
-	    this.dataSession.setDebug(UtilFncs.debug);
+	    ((ParaProfDataSession)this.dataSession).setDebug(UtilFncs.debug);
 	    this.dataSession.setMetrics(trial.getMetrics());
 	}
 	this.type = type;
@@ -71,28 +71,28 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	switch(type){
 	case 0:
 	    dataSession = new TauPprofOutputSession();
-	    dataSession.setDebug(UtilFncs.debug);
+	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
 	    break;
 	case 1:
 	    dataSession = new TauOutputSession();
-	    dataSession.setDebug(UtilFncs.debug);
+	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
 	    break;
 	case 2:
 	    dataSession = new DynaprofOutputSession();
-	    dataSession.setDebug(UtilFncs.debug);
+	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
 	    break;
 	case 3:
 	    break;
 	case 5:
 	    dataSession = new GprofOutputSession();
-	    dataSession.setDebug(UtilFncs.debug);
+	    ((ParaProfDataSession)dataSession).setDebug(UtilFncs.debug);
 	    break;
 	default:
 	    break;
 	}
 	
 	this.setLoading(true);
-	dataSession.addObserver(this);
+	((ParaProfDataSession)dataSession).addObserver(this);
 	dataSession.initialize(obj);
     }
 
@@ -175,7 +175,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	return super.getName();}
 
     public ParaProfDataSession getParaProfDataSession(){
-	return dataSession;}
+	return (ParaProfDataSession)dataSession;}
 
     //####################################
     //Interface code.
@@ -296,23 +296,23 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	return dataSession.getNCT();}
 
     public boolean groupNamesPresent(){
-	return dataSession.groupNamesPresent();}
+	return ((ParaProfDataSession)dataSession).groupNamesPresent();}
   
     public boolean userEventsPresent(){
-	return dataSession.userEventsPresent();}
+	return ((ParaProfDataSession)dataSession).userEventsPresent();}
 
     public boolean callPathDataPresent(){
-	return dataSession.callPathDataPresent();}
+	return ((ParaProfDataSession)dataSession).callPathDataPresent();}
 
     //Overides the parent getMaxNCTNumbers.
     public int[] getMaxNCTNumbers(){
-	return dataSession.getMaxNCTNumbers();}
+	return ((ParaProfDataSession)dataSession).getMaxNCTNumbers();}
 
     public void setMeanData(int mappingSelection, int metricID){
-	dataSession.setMeanData(mappingSelection, metricID);}
+	((ParaProfDataSession)dataSession).setMeanData(mappingSelection, metricID);}
     
     public void setMeanDataAllMetrics(int mappingSelection, int numberOfMetrics){
-	dataSession.setMeanData(mappingSelection, numberOfMetrics);}
+	((ParaProfDataSession)dataSession).setMeanData(mappingSelection, numberOfMetrics);}
     //####################################
     //end - Pass-though methods to the data session for this instance.
     //####################################
@@ -384,7 +384,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
     //####################################
     int type = -1;
     boolean defaultTrial = false;
-    ParaProfDataSession dataSession = null;
     ParaProfExperiment experiment = null;
     DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;

@@ -316,6 +316,14 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    ParaProf.helpWindow.writeText("Please see ParaProf's documentation for more information.");
 		}
 		else if(arg.equals("Update Meta Data")){
+		    //A few things to check here.
+		    if(configFile==null||password==null){//Check to see if the user has set configuration information.
+			JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
+						      "DB Configuration Error!",
+						      JOptionPane.ERROR_MESSAGE);
+			return;
+		    }
+
 		    if(clickedOnObject instanceof ParaProfApplication){
 			System.out.println("Update Meta Data request received from a ParaProfApplication!");
 		    }
@@ -330,13 +338,37 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 		    }
 		}
 		else if(arg.equals("Upload Trial")){
-		    if(clickedOnObject instanceof Metric){
-			System.out.println("Upload Trial request received from a ParaProfTrial!");
+		    if(clickedOnObject instanceof ParaProfTrial){
+			ParaProfTrial paraProfTrial = (ParaProfTrial) clickedOnObject;
+			int[] array = this.getSelectedDBExperiment();
+			if(array!=null){
+			    System.out.println("Upload Trial request received from a ParaProfTrial!");
+			    System.out.println("Upload the trial to appID, expID: "+ array[0]+", "+array[1]);
+			    PerfDBSession perfDBSession = new PerfDBSession(); 
+			    perfDBSession.initialize(configFile, password);
+			    perfDBSession.setApplication(array[0]);
+			    perfDBSession.setExperiment(array[1]);
+			    Trial trial = new Trial();
+			    trial.setDataSession(paraProfTrial.getDataSession());
+			    trial.setName(paraProfTrial.getName());
+			    trial.setApplicationID(array[0]);
+			    trial.setExperimentID(array[1]);
+			    int[] maxNCT = paraProfTrial.getMaxNCTNumbers();
+			    trial.setNodeCount(maxNCT[0]+1);
+			    trial.setNumContextsPerNode(maxNCT[1]+1);
+			    trial.setNumThreadsPerContext(maxNCT[2]+1);
+			    perfDBSession.saveParaProfTrial(trial, -1);
+			    perfDBSession.terminate();
+			}
 		    }
 		}
 		else if(arg.equals("Upload Metric")){
 		    if(clickedOnObject instanceof Metric){
-			System.out.println("Upload Metric request received from a ParaProfMetric!");
+			int[] array = this.getSelectedDBTrial();
+			if(array!=null){
+			    System.out.println("Upload Metric request received from a ParaProfMetric!");
+			    System.out.println("Upload the metric to appID, expID , trialID: "+ array[0]+", "+array[1]+", "+array[2]);
+			}
 		    }
 		}
 	    }
@@ -709,6 +741,79 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 	for(int i=0;i<count;i++)
 	    this.clearDefaultMutableTreeNodesHelper((DefaultMutableTreeNode) defaultMutableTreeNode.getChildAt(i));
 	((ParaProfTreeNodeUserObject)defaultMutableTreeNode.getUserObject()).clearDefaultMutableTreeNodes();
+    }
+
+    public int[] getSelectedDBExperiment(){
+	if(configFile==null||password==null){//Check to see if the user has set configuration information.
+	    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
+					  "DB Configuration Error!",
+					  JOptionPane.ERROR_MESSAGE);
+	    return null;
+	}
+
+	TreePath path = tree.getSelectionPath();
+	boolean error = false;
+	if(path == null)
+	    error = true;
+	else{
+	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+	    Object userObject = selectedNode.getUserObject();
+	    if(userObject instanceof ParaProfExperiment){
+		ParaProfExperiment paraProfExperiment = (ParaProfExperiment) userObject;
+		if(paraProfExperiment.dBExperiment()){
+		    int[] array = new int[2];
+		    array[0] = paraProfExperiment.getApplicationID();
+		    array[1] = paraProfExperiment.getID();
+		    return array;
+		}
+		else
+		    error = true;
+	    }
+	    else
+		error = true;
+	}
+	if(error)
+	    JOptionPane.showMessageDialog(this, "Please select an db experiment first!",
+						      "DB Upload Error!",
+						      JOptionPane.ERROR_MESSAGE);
+	return null;
+    }
+
+    public int[] getSelectedDBTrial(){
+	if(configFile==null||password==null){//Check to see if the user has set configuration information.
+	    JOptionPane.showMessageDialog(this, "Please set the database configuration information (file menu).",
+					  "DB Configuration Error!",
+					  JOptionPane.ERROR_MESSAGE);
+	    return null;
+	}
+
+	TreePath path = tree.getSelectionPath();
+	boolean error = false;
+	if(path == null)
+	    error = true;
+	else{
+	    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+	    Object userObject = selectedNode.getUserObject();
+	    if(userObject instanceof ParaProfTrial){
+		ParaProfTrial paraProfTrial = (ParaProfTrial) userObject;
+		if(paraProfTrial.dBTrial()){
+		    int[] array = new int[3];
+		    array[0] = paraProfTrial.getApplicationID();
+		    array[1] = paraProfTrial.getExperimentID();
+		    array[2] = paraProfTrial.getID();
+		    return array;
+		}
+		else
+		    error = true;
+	    }
+	    else
+		error = true;
+	}
+	if(error)
+	    JOptionPane.showMessageDialog(this, "Please select an db trial first!",
+						      "DB Upload Error!",
+						      JOptionPane.ERROR_MESSAGE);
+	return null;
     }
     //####################################
     //End - Tree selection helpers.

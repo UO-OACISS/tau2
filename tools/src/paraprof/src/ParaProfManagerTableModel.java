@@ -317,13 +317,10 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
     }
   
     public boolean isCellEditable(int r, int c){
-	return false;
-	/*
 	if(c==1 && r!=1)
 	    return true;
 	else
 	    return false;
-	*/
     }
   
     public void setValueAt(Object obj, int r, int c){
@@ -359,8 +356,98 @@ public class ParaProfManagerTableModel extends AbstractTableModel{
 		    defaultTreeModel.nodeChanged(application.getDMTN());
 		    break;
 		case 1:
+		    switch(r){
+		    case(0):
+			experiment.setName(tmpString);
+			break;
+		    case(3):
+			experiment.setUserData(tmpString);
+			break;
+		    case(4):
+			experiment.setSystemName(tmpString);
+			break;
+		    case(5):
+			experiment.setSystemMachineType(tmpString);
+			break;
+		    case(6):
+			experiment.setSystemArch(tmpString);
+			break;
+		    case(7):
+			experiment.setSystemOS(tmpString);
+			break;
+		    case(8):
+			experiment.setSystemMemorySize(tmpString);
+			break;
+		    case(9):
+			experiment.setSystemProcessorAmount(tmpString);
+			break;
+		    case(10):
+			experiment.setSystemL1CacheSize(tmpString);
+			break;
+		    case(11):
+			experiment.setSystemL2CacheSize(tmpString);
+			break;
+		    case(12):
+			experiment.setSystemUserData(tmpString);
+			break;
+		    case(13):
+			experiment.setConfigurationPrefix(tmpString);
+			break;
+		    case(14):
+			experiment.setConfigurationArchitecture(tmpString);
+			break;
+		    case(15):
+			experiment.setConfigurationCpp(tmpString);
+			break;
+		    case(16):
+			experiment.setConfigurationCc(tmpString);
+			break;
+		    case(17):
+			experiment.setConfigurationJdk(tmpString);
+			break;
+		    case(18):
+			experiment.setConfigurationProfile(tmpString);
+			break;
+		    case(19):
+			experiment.setConfigurationUserData(tmpString);
+			break;
+		    case(20):
+			experiment.setCompilerCppName(tmpString);
+			break;
+		    case(21):
+			experiment.setCompilerCppVersion(tmpString);
+			break;
+		    case(22):
+			experiment.setCompilerCcName(tmpString);
+			break;
+		    case(23):
+			experiment.setCompilerCcVersion(tmpString);
+			break;
+		    case(24):
+			experiment.setCompilerJavaDirpath(tmpString);
+			break;
+		    case(25):
+			experiment.setCompilerJavaVersion(tmpString);
+			break;
+		    case(26):
+			experiment.setCompilerUserData(tmpString);
+			break;
+		    }
+		    defaultTreeModel.nodeChanged(experiment.getDMTN());
 		    break;
 		case 2:
+		    switch(r){
+		    case(0):
+			trial.setName(tmpString);
+			break;
+		    case(8):
+			trial.setUserData(tmpString);
+			break;
+		    case(9):
+			trial.setProblemDefinition(tmpString);
+			break;
+		    }
+		    defaultTreeModel.nodeChanged(trial.getDMTN());
 		    break;
 		}
 	    }
