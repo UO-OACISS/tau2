@@ -19,7 +19,7 @@ import java.lang.String;
  * the number of contexts per node, the number of threads per context
  * and the metrics collected during the run.
  *
- * <P>CVS $Id: Trial.java,v 1.4 2004/05/27 20:25:43 khuck Exp $</P>
+ * <P>CVS $Id: Trial.java,v 1.5 2004/06/09 20:46:05 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -388,28 +388,40 @@ public class Trial {
     }
 
     public int saveTrial(DB db) {
-	int newTrialID = 0;
-	try {
-	    // save this trial
-	    PreparedStatement statement = null;
-	    statement = db.prepareStatement("INSERT INTO trial (name, experiment, time, problem_definition, node_count, contexts_per_node, threads_per_context, userdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-	    statement.setString(1, name);
-	    statement.setInt(2, experimentID);
-	    statement.setString(3, time);
-	    statement.setString(4, problemDefinition);
-	    statement.setInt(5, nodeCount);
-	    statement.setInt(6, contextsPerNode);
-	    statement.setInt(7, threadsPerContext);
-	    statement.setString(8, userData);
-	    statement.executeUpdate();
-	    String tmpStr = new String();
-	    if (db.getDBType().compareTo("mysql") == 0)
-			tmpStr = "select LAST_INSERT_ID();";
-		if (db.getDBType().compareTo("db2") == 0)
-			tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
-	    else
-		tmpStr = "select currval('trial_id_seq');";
-	    newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
+		boolean itExists = exists(db);
+		int newTrialID = 0;
+		try {
+	    	// save this trial
+	    	PreparedStatement statement = null;
+			if (itExists) {
+	    		statement = db.prepareStatement("UPDATE trial SET name = ?, experiment = ?, time = ?, problem_definition = ?, node_count = ?, contexts_per_node = ?, threads_per_context = ?, userdata = ? WHERE id = ?");
+			} else {
+	    		statement = db.prepareStatement("INSERT INTO trial (name, experiment, time, problem_definition, node_count, contexts_per_node, threads_per_context, userdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+			}
+	    	statement.setString(1, name);
+	    	statement.setInt(2, experimentID);
+	    	statement.setString(3, time);
+	    	statement.setString(4, problemDefinition);
+	    	statement.setInt(5, nodeCount);
+	    	statement.setInt(6, contextsPerNode);
+	    	statement.setInt(7, threadsPerContext);
+	    	statement.setString(8, userData);
+			if (itExists) {
+				statement.setInt(9, trialID);
+			}
+	    	statement.executeUpdate();
+			if (itExists) {
+				newTrialID = trialID;
+			} else {
+	    		String tmpStr = new String();
+	    		if (db.getDBType().compareTo("mysql") == 0)
+					tmpStr = "select LAST_INSERT_ID();";
+				if (db.getDBType().compareTo("db2") == 0)
+					tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
+	    		else
+					tmpStr = "select currval('trial_id_seq');";
+	    		newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
+			}
 	} catch (SQLException e) {
 	    System.out.println("An error occurred while saving the trial.");
 	    e.printStackTrace();
@@ -452,5 +464,25 @@ public class Trial {
 	    	System.exit(0);
 		}
     }
+
+	private boolean exists(DB db) {
+		boolean retval = false;
+		try {
+			PreparedStatement statement = db.prepareStatement("SELECT name FROM trial WHERE id = ?");
+			statement.setInt(1, trialID);
+			ResultSet results = statement.executeQuery();
+	    	while (results.next() != false) {
+				retval = true;
+				break;
+			}
+			results.close();
+		} catch (SQLException e) {
+			System.out.println("An error occurred while saving the application.");
+			e.printStackTrace();
+			System.exit(0);
+		}
+		return retval;
+	}
+
 
 }
