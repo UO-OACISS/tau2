@@ -1477,7 +1477,7 @@ if ( xrdb -query ) 1>/dev/null 2>&1
     echo "       Make sure the DISPLAY environment variable is set correctly."
     echo "       xrdb fails. If DISPLAY is ok, try "
     echo "       % unsetenv LD_LIBRARY_PATH "
-    exit
+#    exit
 fi
 
 
@@ -1514,8 +1514,8 @@ else
       echo "Found Tcl/Tk wish $tversion"
     else
       echo "Wish not found or wrong version!  Exiting..."
-      rm /tmp/tau$$
-      exit
+      #rm /tmp/tau$$
+      #exit
     fi    
   fi
 fi
