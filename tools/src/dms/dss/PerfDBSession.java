@@ -38,7 +38,7 @@ public class PerfDBSession extends DataSession {
 		Vector apps = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct appid, appname, version, description from Applications");
+		buf.append("select distinct id, name, version, description from application");
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -66,9 +66,9 @@ public class PerfDBSession extends DataSession {
 		Vector exps = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct expid, appid from Experiments ");
+		buf.append("select distinct id, application from experiment ");
 		if (application != null)
-			buf.append("where appid = " + application.getID());
+			buf.append("where application = " + application.getID());
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -94,15 +94,15 @@ public class PerfDBSession extends DataSession {
 		Vector trials = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from Trials t inner join Experiments e on t.expid = e.expid ");
+		buf.append("select distinct t.id, t.experiment, e.application, t.time, t.problem_size, t.node_count, t.contexts_per_node, t.threads_per_context from trial t inner join experiment e on t.experiment = e.id ");
 		if (application != null) {
-			buf.append("where e.appid = " + application.getID());
+			buf.append("where e.application = " + application.getID());
 			if (experiment != null) {
-				buf.append(" and t.expid = " + experiment.getID());
+				buf.append(" and t.experiment = " + experiment.getID());
 			}
 		} else {
 			if (experiment != null) {
-				buf.append("where t.expid = " + experiment.getID());
+				buf.append("where t.experiment = " + experiment.getID());
 			}
 		}
 		// System.out.println(buf.toString());
@@ -117,10 +117,9 @@ public class PerfDBSession extends DataSession {
 				trial.setApplicationID(resultSet.getInt(3));
 				trial.setTime(resultSet.getString(4));
 				trial.setProblemSize(resultSet.getInt(5));
-				trial.setNumNodes(resultSet.getInt(6));
+				trial.setNodeCount(resultSet.getInt(6));
 				trial.setNumContextsPerNode(resultSet.getInt(7));
 				trial.setNumThreadsPerContext(resultSet.getInt(8));
-				trial.setXMLFileID(resultSet.getInt(9));
 				trials.addElement(trial);
 	    	}
 			resultSet.close(); 
@@ -137,8 +136,8 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		Application app = null;
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct appid, appname, version, description from Applications ");
-		buf.append("where appid = " + id);
+		buf.append("select distinct id, name, version, description from application ");
+		buf.append("where id = " + id);
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -164,8 +163,8 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		Application app = null;
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct appid, appname, version, description from Applications");
-		buf.append(" where appname = '" + name + "'");
+		buf.append("select distinct id, name, version, description from application");
+		buf.append(" where name = '" + name + "'");
 		if (version != null) {
 			buf.append(" and version = " + version);
 		}
@@ -195,14 +194,14 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		Experiment exp = null;
-		buf.append("select distinct expid, appid from Experiments");
+		buf.append("select distinct id, application from experiment");
 		if (application != null) {
-			buf.append(" where appid = " + application.getID());
-			buf.append(" and expid = " + id);
+			buf.append(" where application = " + application.getID());
+			buf.append(" and id = " + id);
 		} else {
-			buf.append(" where expid = " + id);
+			buf.append(" where id = " + id);
 		}
-		// System.out.println(buf.toString());
+		System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -227,20 +226,8 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		Trial trial = null;
-		buf.append("select distinct t.trialid, t.expid, e.appid, t.time, t.problemsize, t.nodenum, t.contextpnode, t.threadpcontext, t.xmlfileid from Trials t inner join Experiments e on t.expid = e.expid");
-		if (application != null) {
-			buf.append(" where e.appid = " + application.getID());
-			if (experiment != null) {
-				buf.append(" and t.expid = " + experiment.getID());
-			}
-			buf.append(" and t.expid = " + id);
-		} else {
-			if (experiment != null) {
-				buf.append(" where t.expid = " + experiment.getID());
-			} else {
-				buf.append(" where t.expid = " + id);
-			}
-		}
+		buf.append("select distinct t.id, t.experiment, e.application, t.time, t.problem_size, t.node_count, t.contexts_per_node, t.threads_per_context from trial t inner join experiment e on t.experiment = e.id");
+		buf.append(" where t.id = " + id);
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -253,10 +240,9 @@ public class PerfDBSession extends DataSession {
 				trial.setApplicationID(resultSet.getInt(3));
 				trial.setTime(resultSet.getString(4));
 				trial.setProblemSize(resultSet.getInt(5));
-				trial.setNumNodes(resultSet.getInt(6));
+				trial.setNodeCount(resultSet.getInt(6));
 				trial.setNumContextsPerNode(resultSet.getInt(7));
 				trial.setNumThreadsPerContext(resultSet.getInt(8));
-				trial.setXMLFileID(resultSet.getInt(9));
 	    	}
 			resultSet.close(); 
 		}catch (Exception ex) {
@@ -275,15 +261,15 @@ public class PerfDBSession extends DataSession {
 		if (trials == null) {
 			// create a string to hit the database
 			StringBuffer buf = new StringBuffer();
-			buf.append("select sum(t.nodenum) from Trials t inner join Experiments e on t.expid = e.expid ");
+			buf.append("select sum(t.node_count) from trial t inner join experiment e on t.experiment = e.id ");
 			if (application != null) {
-				buf.append("where e.appid = " + application.getID());
+				buf.append("where e.application = " + application.getID());
 				if (experiment != null) {
-					buf.append(" and t.expid = " + experiment.getID());
+					buf.append(" and t.experiment = " + experiment.getID());
 				}
 			} else {
 				if (experiment != null) {
-					buf.append("where t.expid = " + experiment.getID());
+					buf.append("where t.experiment = " + experiment.getID());
 				}
 			}
 			// System.out.println(buf.toString());
@@ -306,7 +292,7 @@ public class PerfDBSession extends DataSession {
 			// add up the node totals in the trials
         	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
 				trial = (Trial) en.nextElement();
-				numNodes += trial.getNumNodes();
+				numNodes += trial.getNodeCount();
 			}
 		}
 
@@ -320,15 +306,15 @@ public class PerfDBSession extends DataSession {
 		if (trials == null) {
 			// create a string to hit the database
 			StringBuffer buf = new StringBuffer();
-			buf.append("select sum(t.contextpnode) from Trials t inner join Experiments e on t.expid = e.expid ");
+			buf.append("select sum(t.contexts_per_node) from trial t inner join experiment e on t.experiment = e.id ");
 			if (application != null) {
-				buf.append("where e.appid = " + application.getID());
+				buf.append("where e.application = " + application.getID());
 				if (experiment != null) {
-					buf.append(" and t.expid = " + experiment.getID());
+					buf.append(" and t.experiment = " + experiment.getID());
 				}
 			} else {
 				if (experiment != null) {
-					buf.append("where t.expid = " + experiment.getID());
+					buf.append("where t.experiment = " + experiment.getID());
 				}
 			}
 			// System.out.println(buf.toString());
@@ -365,15 +351,15 @@ public class PerfDBSession extends DataSession {
 		if (trials == null) {
 			// create a string to hit the database
 			StringBuffer buf = new StringBuffer();
-			buf.append("select sum(t.threadpcontext) from Trials t inner join Experiments e on t.expid = e.expid ");
+			buf.append("select sum(t.threads_per_context) from trial t inner join experiment e on t.experiment = e.id ");
 			if (application != null) {
-				buf.append("where e.appid = " + application.getID());
+				buf.append("where e.application = " + application.getID());
 				if (experiment != null) {
-					buf.append(" and t.expid = " + experiment.getID());
+					buf.append(" and t.experiment = " + experiment.getID());
 				}
 			} else {
 				if (experiment != null) {
-					buf.append("where t.expid = " + experiment.getID());
+					buf.append("where t.experiment = " + experiment.getID());
 				}
 			}
 			// System.out.println(buf.toString());
@@ -415,17 +401,17 @@ public class PerfDBSession extends DataSession {
 		Vector funs = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct f.funindexid, f.funid, f.funname, ");
-		buf.append("f.fungroup, f.trialid, e.expid, e.appid, ");
-		buf.append("ms.inclperc, ms.incl, ms.exclperc, ms.excl, ms.call, ms.subrs, ms.inclpcall, ");
-		buf.append("ts.inclperc, ts.incl, ts.exclperc, ts.excl, ts.call, ts.subrs, ts.inclpcall ");
-		buf.append("from FunIndex f inner join Trials t on f.trialid = t.trialid ");
-		buf.append("inner join Experiments e on e.expid = t.expid ");
-		buf.append("inner join Meansummary ms on f.funindexid = ms.funindexid ");
-		buf.append("inner join Totalsummary ts on f.funindexid = ts.funindexid ");
+		buf.append("select distinct f.id, f.function_number, f.name, ");
+		buf.append("f.group_name, f.trial, t.experiment, e.application, ");
+		buf.append("ms.inclusive_percentage, ms.inclusive, ms.exclusive_percentage, ms.exclusive, ms.call, ms.subroutines, ms.inclusive_per_call, ");
+		buf.append("ts.inclusive_percentage, ts.inclusive, ts.exclusive_percentage, ts.exclusive, ts.call, ts.subroutines, ts.inclusive_per_call ");
+		buf.append("from function f inner join trial t on f.trial = t.id ");
+		buf.append("inner join experiment e on t.experiment = e.id ");
+		buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
+		buf.append("inner join interval_total_summary ts on f.id = ts.function ");
 		boolean gotWhile = false;
 		if (application != null) {
-			buf.append(" where e.appid = " + application.getID());
+			buf.append(" where e.application = " + application.getID());
 			gotWhile = true;
 		}
 		if (experiment != null) {
@@ -433,14 +419,14 @@ public class PerfDBSession extends DataSession {
 				buf.append(" and");
 			else
 				buf.append(" where");
-			buf.append(" t.expid = " + experiment.getID());
+			buf.append(" t.experiment = " + experiment.getID());
 			gotWhile = true;
 		}
 		if (trials != null) {
 			if (gotWhile)
-				buf.append(" and t.trialid in (");
+				buf.append(" and t.id in (");
 			else
-				buf.append(" where t.trialid in (");
+				buf.append(" where t.id in (");
 			Trial trial;
         	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
 				trial = (Trial) en.nextElement();
@@ -505,15 +491,15 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		Function fun = null;
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct f.funindexid, f.funid, f.funname, f.trialid, ");
-		buf.append("e.expid, e.appid, ");
-		buf.append("ms.inclperc, ms.incl, ms.exclperc, ms.excl, ms.call, ms.subrs, ms.inclpcall, ");
-		buf.append("ts.inclperc, ts.incl, ts.exclperc, ts.excl, ts.call, ts.subrs, ts.inclpcall ");
-		buf.append("from FunIndex f inner join Trials t on f.trialid = t.trialid ");
-		buf.append("inner join Experiments e on e.expid = t.expid ");
-		buf.append("inner join Meansummary ms on f.funindexid = ms.funindexid ");
-		buf.append("inner join Totalsummary ts on f.funindexid = ts.funindexid ");
-		buf.append(" where f.funindexid = " + id);
+		buf.append("select distinct f.id, f.function_number, f.name, ");
+		buf.append("f.group_name, f.trial, t.experiment, e.application, ");
+		buf.append("ms.inclusive_percentage, ms.inclusive, ms.exclusive_percentage, ms.exclusive, ms.call, ms.subroutines, ms.inclusive_per_call, ");
+		buf.append("ts.inclusive_percentage, ts.inclusive, ts.exclusive_percentage, ts.exclusive, ts.call, ts.subroutines, ts.inclusive_per_call ");
+		buf.append("from function f inner join trial t on f.trial = t.id ");
+		buf.append("inner join experiment e on t.experiment = e.id ");
+		buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
+		buf.append("inner join interval_total_summary ts on f.id = ts.function ");
+		buf.append(" where f.id = " + id);
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -524,28 +510,29 @@ public class PerfDBSession extends DataSession {
 				fun.setIndexID(resultSet.getInt(1));
 				fun.setFunctionID(resultSet.getInt(2));
 				fun.setName(resultSet.getString(3));
-				fun.setTrialID(resultSet.getInt(4));
-				fun.setExperimentID(resultSet.getInt(5));
-				fun.setApplicationID(resultSet.getInt(6));
+				fun.setGroup(resultSet.getString(4));
+				fun.setTrialID(resultSet.getInt(5));
+				fun.setExperimentID(resultSet.getInt(6));
+				fun.setApplicationID(resultSet.getInt(7));
 				// get the mean summary data
 				FunctionDataObject funMS = new FunctionDataObject();
-				funMS.setInclusivePercentage(resultSet.getDouble(7));
-				funMS.setInclusive(resultSet.getDouble(8));
-				funMS.setExclusivePercentage(resultSet.getDouble(9));
-				funMS.setExclusive(resultSet.getDouble(10));
-				funMS.setNumCalls((int)(resultSet.getDouble(11)));
-				funMS.setNumSubroutines((int)(resultSet.getDouble(12)));
-				funMS.setInclusivePerCall(resultSet.getDouble(13));
+				funMS.setInclusivePercentage(resultSet.getDouble(8));
+				funMS.setInclusive(resultSet.getDouble(9));
+				funMS.setExclusivePercentage(resultSet.getDouble(10));
+				funMS.setExclusive(resultSet.getDouble(11));
+				funMS.setNumCalls((int)(resultSet.getDouble(12)));
+				funMS.setNumSubroutines((int)(resultSet.getDouble(13)));
+				funMS.setInclusivePerCall(resultSet.getDouble(14));
 				fun.setMeanSummary(funMS);
 				// get the total summary data
 				FunctionDataObject funTS = new FunctionDataObject();
-				funTS.setInclusivePercentage(resultSet.getDouble(14));
-				funTS.setInclusive(resultSet.getDouble(15));
-				funTS.setExclusivePercentage(resultSet.getDouble(16));
-				funTS.setExclusive(resultSet.getDouble(17));
-				funTS.setNumCalls((int)(resultSet.getDouble(18)));
-				funTS.setNumSubroutines((int)(resultSet.getDouble(19)));
-				funTS.setInclusivePerCall(resultSet.getDouble(20));
+				funTS.setInclusivePercentage(resultSet.getDouble(15));
+				funTS.setInclusive(resultSet.getDouble(16));
+				funTS.setExclusivePercentage(resultSet.getDouble(17));
+				funTS.setExclusive(resultSet.getDouble(18));
+				funTS.setNumCalls((int)(resultSet.getDouble(19)));
+				funTS.setNumSubroutines((int)(resultSet.getDouble(20)));
+				funTS.setInclusivePerCall(resultSet.getDouble(21));
 				fun.setTotalSummary(funTS);
 	    	}
 			resultSet.close(); 
@@ -556,6 +543,12 @@ public class PerfDBSession extends DataSession {
 		return fun;
 	}
 
+	public UserEvent setUserEvent(int id) {
+		UserEvent userEvent = null;
+		// todo - fill in this function!
+		return userEvent;
+	}
+
 	public ListIterator getFunctionData() {
 		// get the hash of function names first
 		if (functions == null)
@@ -564,18 +557,16 @@ public class PerfDBSession extends DataSession {
 		Vector functionData = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct p.inclperc, p.incl, p.exclperc, p.excl, ");
-		buf.append("p.call, p.subrs, p.inclpcall, ");
-		buf.append("t.trialid, l.nodeid, l.contextid, l.threadid, l.funindexid, m.metricName ");
-		buf.append("from Pprof p ");
-		buf.append("inner join LocationIndex l on p.locid = l.locid ");
-		buf.append("inner join FunIndex f on f.funindexid = l.funindexid ");
-		buf.append("inner join Metrics m on m.metricID = l.metricID ");
-		buf.append("inner join Trials t on f.trialid = t.trialid ");
-		buf.append("inner join Experiments e on e.expid = t.expid ");
+		buf.append("select distinct p.inclusive_percentage, p.inclusive, p.exclusive_percentage, p.exclusive, ");
+		buf.append("p.call, p.subroutines, p.inclusive_per_call, ");
+		buf.append("f.trial, p.node, p.context, p.thread, p.function, f.metric ");
+		buf.append("from interval_location_profile p ");
+		buf.append("inner join function f on f.id = p.function ");
+		buf.append("inner join trial t on f.trial = t.id ");
+		buf.append("inner join experiment e on e.id = t.experiment ");
 		boolean gotWhile = false;
 		if (application != null) {
-			buf.append(" where e.appid = " + application.getID());
+			buf.append(" where e.application = " + application.getID());
 			gotWhile = true;
 		}
 		if (experiment != null) {
@@ -583,14 +574,14 @@ public class PerfDBSession extends DataSession {
 				buf.append(" and");
 			else
 				buf.append(" where");
-			buf.append(" t.expid = " + experiment.getID());
+			buf.append(" t.experiment = " + experiment.getID());
 			gotWhile = true;
 		}
 		if (trials != null) {
 			if (gotWhile)
-				buf.append(" and t.trialid in (");
+				buf.append(" and t.id in (");
 			else
-				buf.append(" where t.trialid in (");
+				buf.append(" where t.id in (");
 			Trial trial;
         	for(Enumeration en = trials.elements(); en.hasMoreElements() ;) {
 				trial = (Trial) en.nextElement();
@@ -604,9 +595,9 @@ public class PerfDBSession extends DataSession {
 		}
 		if (nodes != null) {
 			if (gotWhile)
-				buf.append(" and l.nodeid in (");
+				buf.append(" and p.node in (");
 			else
-				buf.append(" where l.nodeid in (");
+				buf.append(" where p.node in (");
 			Integer node;
         	for(Enumeration en = nodes.elements(); en.hasMoreElements() ;) {
 				node = (Integer) en.nextElement();
@@ -620,9 +611,9 @@ public class PerfDBSession extends DataSession {
 		}
 		if (contexts != null) {
 			if (gotWhile)
-				buf.append(" and l.contextid in (");
+				buf.append(" and p.context in (");
 			else
-				buf.append(" where l.contextid in (");
+				buf.append(" where p.context in (");
 			Integer context;
         	for(Enumeration en = contexts.elements(); en.hasMoreElements() ;) {
 				context = (Integer) en.nextElement();
@@ -636,9 +627,9 @@ public class PerfDBSession extends DataSession {
 		}
 		if (threads != null) {
 			if (gotWhile)
-				buf.append(" and l.threadid in (");
+				buf.append(" and p.thread in (");
 			else
-				buf.append(" where l.threadid in (");
+				buf.append(" where p.thread in (");
 			Integer thread;
         	for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
 				thread = (Integer) en.nextElement();
@@ -650,8 +641,8 @@ public class PerfDBSession extends DataSession {
 			}
 			gotWhile = true;
 		}
-		buf.append(" order by t.trialid, l.nodeid, l.contextid, l.threadid, l.funindexid");
-		System.out.println(buf.toString());
+		buf.append(" order by f.trial, p.node, p.context, p.thread, p.function");
+		// System.out.println(buf.toString());
 
 		// get the results
 		try {
@@ -665,9 +656,9 @@ public class PerfDBSession extends DataSession {
 				funDO.setNumCalls((int)(resultSet.getDouble(5)));
 				funDO.setNumSubroutines((int)(resultSet.getDouble(6)));
 				funDO.setInclusivePerCall(resultSet.getDouble(7));
-				funDO.setNodeID(resultSet.getInt(9));
-				funDO.setContextID(resultSet.getInt(10));
-				funDO.setThreadID(resultSet.getInt(11));
+				funDO.setNode(resultSet.getInt(9));
+				funDO.setContext(resultSet.getInt(10));
+				funDO.setThread(resultSet.getInt(11));
 				funDO.setFunctionIndexID(resultSet.getInt(12));
 				funDO.setMetric(resultSet.getString(13));
 				functionData.addElement(funDO);

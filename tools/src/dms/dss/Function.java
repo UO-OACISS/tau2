@@ -4,6 +4,7 @@ public class Function {
 	private int functionIndexID;
 	private int functionID;
 	private String name;
+	private String metric;
 	private String group;
 	private int trialID;
 	private int experimentID;
@@ -21,6 +22,10 @@ public class Function {
 
 	public void setName (String name) {
 		this.name = name;
+	}
+
+	public void setMetric (String metric) {
+		this.metric = metric;
 	}
 
 	public void setGroup (String group) {
@@ -61,6 +66,10 @@ public class Function {
 
 	public String getGroup () {
 		return this.group;
+	}
+
+	public String getMetric () {
+		return this.metric;
 	}
 
 	public int getTrialID () {

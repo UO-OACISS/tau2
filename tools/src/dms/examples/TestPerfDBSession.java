@@ -88,6 +88,7 @@ public class TestPerfDBSession {
 			// select a trial, another way
 			session.setTrial(trial.getID());
 		}
+		// select all trials
 		session.setTrial(tmpTrials);
 
 		// Get the number of nodes
@@ -121,7 +122,22 @@ public class TestPerfDBSession {
 			// select a function, another way
 			session.setFunction(function.getIndexID());
 		}
-		// session.setFunction(functions);
+
+		// Get the list of functions
+		ListIterator userEvents;
+		userEvents = session.getUserEvents();
+		UserEvent userEvent = null;
+
+		while (userEvents.hasNext())
+		{
+			userEvent = (UserEvent) userEvents.next();
+			System.out.println ("UserEvent Name = " + userEvent.getName());
+
+			// select a userEvent
+			session.setUserEvent(userEvent);
+			// select a userEvent, another way
+			session.setUserEvent(userEvent.getUserEventID());
+		}
 
 		Vector nodes = new Vector();
 		Integer node = new Integer(0);

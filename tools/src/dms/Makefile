@@ -1,4 +1,4 @@
-all: buildtest.txt simple.txt
+all: .buildtest .simple
 
 dms.jar: classes/dms/dss/PerfDBSession.class
 	jar -cvf dms.jar -C classes .
@@ -12,15 +12,15 @@ classes/dms/dss/PerfDBSession.class: dss/PerfDBSession.java
 ./examples/SimpleExample.class: dms.jar ./examples/SimpleExample.java
 	javac -d ./examples -classpath ./classes:./dms.jar ./examples/SimpleExample.java
 
-buildtest.txt: examples/TestPerfDBSession.class
+.buildtest: examples/TestPerfDBSession.class
 	examples/testBuild
-	touch buildtest.txt
+	touch .buildtest
 
 clean:
-	rm -rf dms.jar classes/* examples/*.class buildtest.txt
+	rm -rf dms.jar classes/* examples/*.class .buildtest .simple
 
-simple.txt: examples/SimpleExample.class
+.simple: examples/SimpleExample.class
 	examples/testSimpleExample
-	touch simple.txt
+	touch .simple
 
 

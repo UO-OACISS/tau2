@@ -13,6 +13,9 @@ public abstract class DataSession {
 	protected Vector functions = null;
 	protected Vector functionData = null;
 	protected Hashtable functionHash = null;
+	protected Vector userEvents = null;
+	protected Vector userEventsData = null;
+	protected Hashtable userEventHash = null;
 
 	public DataSession () {
 		super();
@@ -105,14 +108,24 @@ public abstract class DataSession {
 	abstract public ListIterator getUserEvents() ;
 
 	abstract public Function setFunction(int id) ;
+	abstract public UserEvent setUserEvent(int id) ;
 
 	public void setFunction(Function function) {
 		this.functions = new Vector();
 		this.functions.addElement(function);
 	}
 	
+	public void setUserEvent(UserEvent userEvent) {
+		this.userEvents = new Vector();
+		this.userEvents.addElement(userEvent);
+	}
+	
 	public void setFunction(Vector functions) {
 		this.functions = functions;
+	}
+	
+	public void setUserEvent(Vector userEvents) {
+		this.userEvents = userEvents;
 	}
 	
 	public Function getFunction(int functionID) {
@@ -120,6 +133,13 @@ public abstract class DataSession {
 			getFunctions();
 
 		return (Function)functionHash.get(new Integer(functionID));
+	}
+	
+	public UserEvent getUserEvent(int userEventID) {
+		if (userEventHash == null)
+			getUserEvents();
+
+		return (UserEvent)userEventHash.get(new Integer(userEventID));
 	}
 	
 	abstract public ListIterator getFunctionData();

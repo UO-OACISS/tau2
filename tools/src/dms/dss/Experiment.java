@@ -4,7 +4,7 @@ public class Experiment {
 	private int experimentID;
 	private int applicationID;
 	private String systemInfo;
-	private String configInfo;
+	private String configurationInfo;
 	private String instrumentationInfo;
 	private String compilerInfo;
 	private String trialTableName;
@@ -22,7 +22,7 @@ public class Experiment {
 	}
 	
 	public String getConfigInfo() {
-		return configInfo;
+		return configurationInfo;
 	}
 	
 	public String getInstrumentationInfo() {
@@ -49,8 +49,8 @@ public class Experiment {
 		this.systemInfo = systemInfo;
 	}
 
-	public void setConfigInfo (String configInfo) {
-		this.configInfo = configInfo;
+	public void setConfigInfo (String configurationInfo) {
+		this.configurationInfo = configurationInfo;
 	}
 
 	public void setInstrumentationInfo (String instrumentationInfo) {

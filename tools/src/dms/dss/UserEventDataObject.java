@@ -1,60 +1,96 @@
 package dms.dss;
 
 public class UserEventDataObject extends DataObject{
-    private int userEventID;
-    private double numOfSamples;
-    private double max;
-    private double min;
-    private double mean;
-    private double stdev;
+	private int userEventID;
+	private int profileID;
+	private int node;
+	private int context;
+	private int thread;
+	private int sampleCount;
+	private double maximumValue;
+	private double minimumValue;
+	private double meanValue;
+	private double standardDeviation;
 
-    public void setUserEventIndexID (int userEventID) {
-	this.userEventID = userEventID;
-    }
+	public void setUserEventIndexID (int userEventID) {
+		this.userEventID = userEventID;
+	}
 
-    public void setNumOfSamples (double numOfSamples) {
-	this.numOfSamples = numOfSamples;
-    }
+	public void setProfileID (int profileID) {
+		this.profileID = profileID;
+	}
 
-    public void setMax (double max) {
-	this.max = max;
-    }
+	public void setNode (int node) {
+		this.node = node;
+	}
 
-    public void setMin (double min) {
-	this.min = min;
-    }
+	public void setContext (int context) {
+		this.context = context;
+	}
 
-    public void setMean (double mean) {
-	this.mean = mean;
-    }
+	public void setThread (int thread) {
+		this.thread = thread;
+	}
 
-    public void setStdev (double stdev) {
-	this.stdev = stdev;
-    }
+	public void setSampleCount (int sampleCount) {
+		this.sampleCount = sampleCount;
+	}
 
-    public int userEventIndexID () {
-	return this.userEventID;
-    }
+	public void setMaximumValue (double maximumValue) {
+		this.maximumValue = maximumValue;
+	}
 
-    public double getNumOfSamples () {
-	return this.numOfSamples;
-    }
+	public void setMinimumValue (double minimumValue) {
+		this.minimumValue = minimumValue;
+	}
 
-    public double getMax () {
-	return this.max;
-    }
+	public void setMeanValue (double meanValue) {
+		this.meanValue = meanValue;
+	}
 
-    public double getMin () {
-	return this.min;
-    }
-    
-    public double getMean () {
-	return this.mean;
-    }
+	public void setStandardDeviation (double standardDeviation) {
+		this.standardDeviation = standardDeviation;
+	}
 
-    public double getStdev () {
-	return this.stdev;
-    }
+	public int getUserEventID () {
+		return this.userEventID;
+	}
+
+	public int getProfileID () {
+		return this.profileID;
+	}
+
+	public int getNode () {
+		return this.node;
+	}
+
+	public int getContext () {
+		return this.context;
+	}
+
+	public int getThread () {
+		return this.thread;
+	}
+
+	public int getSampleCount () {
+		return this.sampleCount;
+	}
+
+	public double getMaximumValue () {
+		return this.maximumValue;
+	}
+
+	public double getMinimumValue () {
+		return this.minimumValue;
+	}
+
+	public double getMeanValue () {
+		return this.meanValue;
+	}
+
+	public double getStandardDeviation () {
+		return this.standardDeviation;
+	}
+
 }
-
 

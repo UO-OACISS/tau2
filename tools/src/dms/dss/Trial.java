@@ -6,10 +6,9 @@ public class Trial {
 	private int applicationID;
 	private String time;
 	private int problemSize;
-	private int numNodes;
-	private int contextPNode;
-	private int threadPContext;
-	private int xmlFileID;
+	private int nodeCount;
+	private int contextsPerNode;
+	private int threadsPerContext;
 
 	public void setID (int id) {
 		this.trialID = id;
@@ -31,20 +30,16 @@ public class Trial {
 		this.problemSize = id;
 	}
 
-	public void setNumNodes (int id) {
-		this.numNodes = id;
+	public void setNodeCount (int id) {
+		this.nodeCount = id;
 	}
 
 	public void setNumContextsPerNode (int id) {
-		this.contextPNode = id;
+		this.contextsPerNode = id;
 	}
 
 	public void setNumThreadsPerContext (int id) {
-		this.threadPContext = id;
-	}
-
-	public void setXMLFileID (int id) {
-		this.xmlFileID = id;
+		this.threadsPerContext = id;
 	}
 
 	public int getID () {
@@ -67,20 +62,16 @@ public class Trial {
 		return this.problemSize;
 	}
 
-	public int getNumNodes () {
-		return this.numNodes;
+	public int getNodeCount () {
+		return this.nodeCount;
 	}
 
 	public int getNumContextsPerNode () {
-		return this.contextPNode;
+		return this.contextsPerNode;
 	}
 
 	public int getNumThreadsPerContext () {
-		return this.threadPContext;
-	}
-
-	public int getXMLFileID () {
-		return this.xmlFileID;
+		return this.threadsPerContext;
 	}
 
 }

@@ -1,6 +1,9 @@
 package dms.dss;
 
 public class FunctionDataObject extends DataObject{
+	private int node;
+	private int context;
+	private int thread;
 	private int functionID;
 	private double inclusivePercentage;
 	private double inclusive;
@@ -10,6 +13,18 @@ public class FunctionDataObject extends DataObject{
 	private int numSubroutines;
 	private double inclusivePerCall;
 	private String metric;
+
+	public void setNode (int node) {
+		this.node = node;
+	}
+
+	public void setContext (int context) {
+		this.context = context;
+	}
+
+	public void setThread (int thread) {
+		this.thread = thread;
+	}
 
 	public void setFunctionIndexID (int functionID) {
 		this.functionID = functionID;
@@ -45,6 +60,18 @@ public class FunctionDataObject extends DataObject{
 
 	public void setMetric (String metric) {
 		this.metric = metric;
+	}
+
+	public int getNode () {
+		return this.node;
+	}
+
+	public int getContext () {
+		return this.context;
+	}
+
+	public int getThread () {
+		return this.thread;
 	}
 
 	public int getFunctionIndexID () {

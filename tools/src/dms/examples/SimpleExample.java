@@ -19,12 +19,14 @@ public class SimpleExample {
 		session.open();
 
 		// select the application
-		Application myApp = session.setApplication("example", null);
-		System.out.println("Got application: " + myApp.getName() + ", version " + myApp.getVersion());
+		Application myApp = session.setApplication("application", null);
+		if (myApp != null)
+			System.out.println("Got application: " + myApp.getName() + ", version " + myApp.getVersion());
 
 		// select an experiment
 		Experiment myExp = session.setExperiment(1);
-		System.out.println("Got experiment: " + myApp.getID());
+		if (myExp != null)
+			System.out.println("Got experiment: " + myApp.getID());
 
 		// Get the list of trials
 		ListIterator trials;
@@ -36,6 +38,10 @@ public class SimpleExample {
 			session.setTrial(myTrial);
 			break;
 		}
+
+		session.setNode(0);
+		session.setContext(0);
+		session.setThread(0);
 
 		ListIterator myIterator;
 		// Get the data

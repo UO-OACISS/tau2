@@ -7,7 +7,7 @@ public class Application {
 	private String version;
 	private String description;
 	private String language;
-	private String paradigm;
+	private String paraDiag;
 	private String usage;
 	private String executableOptions;
 	private String experimentTableName;
@@ -32,8 +32,8 @@ public class Application {
 		return language;
 	}
 
-	public String getParadigm() {
-		return paradigm;
+	public String getParadiag() {
+		return paraDiag;
 	}
 
 	public String getUsage() {
@@ -68,8 +68,8 @@ public class Application {
 		this.language = language;
 	}
 
-	public void setParadigm(String paradigm) {
-		this.paradigm = paradigm;
+	public void setParadiag(String paraDiag) {
+		this.paraDiag = paraDiag;
 	}
 
 	public void setUsage(String usage) {
