@@ -27,19 +27,7 @@
 ***************************************************************************/
 
 #include <mpi.h>
-#include <stdlib.h> 
-
-/* The following macros help create a local array and assign to elements of 
-   the local C array, values from Fortran array after conversion using f2c 
-   MPI macros. Need to optimize the implementation. Use static array instead
-   of malloc */
-   
-#define TAU_DECL_LOCAL(mtype, l) mtype *l
-#define TAU_ALLOC_LOCAL(mtype, l, size) l = (mtype *) malloc(sizeof(mtype) * size)
-#define TAU_DECL_ALLOC_LOCAL(mtype, l, size) TAU_DECL_LOCAL(mtype, l) = TAU_ALLOC_LOCAL(mtype, l, size) 
-#define TAU_ASSIGN_VALUES(dest, src, size, func) { int i; for (i = 0; i < size; i++) dest[i] = func(src[i]); }
-#define TAU_ASSIGN_STATUS(dest, src, size, func) { int i; for (i = 0; i < size; i++) func(&src[i], &dest[i]); }
-#define TAU_FREE_LOCAL(l) free(l)
+#include <Profile/TauUtil.h>
 
 /******************************************************/
 /******************************************************/
