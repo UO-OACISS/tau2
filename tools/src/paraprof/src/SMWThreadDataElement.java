@@ -259,7 +259,7 @@ public class SMWThreadDataElement implements Comparable{
 	case 23:
 	    return compareToHelper(this.getMeanInclusiveValue(),((SMWThreadDataElement)inObject).getMeanInclusiveValue());
 	case 24:
-	    return compareToHelper(((SMWThreadDataElement)inObject).getNumberOfCalls(),this.getNumberOfCalls());
+	    return compareToHelper(((SMWThreadDataElement)inObject).getMeanNumberOfCalls(),this.getMeanNumberOfCalls());
 	case 25:
 	    return compareToHelper(this.getMeanNumberOfCalls(),((SMWThreadDataElement)inObject).getMeanNumberOfCalls());
 	case 26:

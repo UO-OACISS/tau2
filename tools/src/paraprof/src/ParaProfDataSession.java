@@ -378,13 +378,11 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	double maxMeanInclusiveValue = globalMapping.getMaxMeanInclusiveValue(metric);
 	while(l.hasNext()){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
-	    globalMapping.getMaxMeanExclusiveValue(metric);
-	    globalMapping.getMaxMeanInclusiveValue(metric);
 	    double meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
 	    double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(metric)/maxMeanInclusiveValue)*100.0;
 	    globalMappingElement.setMeanExclusivePercentValue(metric,meanExclusivePercentValue);
 	    globalMappingElement.setMeanInclusivePercentValue(metric,meanInclusivePercentValue);
-	    
+	    	    
 	    globalMapping.setMaxMeanExclusivePercentValue(metric, 100.00);
 	    globalMapping.setMaxMeanInclusivePercentValue(metric, 100.00);
 	    globalMappingElement.setMeanValuesSet(true);
@@ -404,22 +402,27 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	//re-allocating in each loop iteration. 
 	double[] exclusiveTotal = new double[numberOfMetrics];
 	double[] inclusiveTotal = new double[numberOfMetrics];
-	int[] numberOfCallsTotal = new int[numberOfMetrics];
-	int[] numberOfSubroutinesTotal = new int[numberOfMetrics];
+	int numberOfCallsTotal = 0;
+	int numberOfSubroutinesTotal = 0;
 	double[] userSecPerCallValueTotal = new double[numberOfMetrics];
+	
 	double[] meanExclusiveValue = new double[numberOfMetrics];
 	double[] meanInclusiveValue = new double[numberOfMetrics];
+	double[] meanUserSecPerCallValue = new double[numberOfMetrics];
 	double[] maxMeanInclusiveValue = new double[numberOfMetrics];
 
 	while(l.hasNext()){
+
+	    //Reset values for this itertion.
+	    numberOfCallsTotal = 0;
+	    numberOfSubroutinesTotal = 0;
 	    for(int i=0;i<numberOfMetrics;i++){
 		exclusiveTotal[i] = 0;
 		inclusiveTotal[i] = 0;
+		userSecPerCallValueTotal[i] = 0;
 		meanExclusiveValue[i] = 0;
 		meanInclusiveValue[i] = 0;
-		numberOfCallsTotal[i] = 0;
-		numberOfSubroutinesTotal[i] = 0;
-		userSecPerCallValueTotal[i] = 0;
+		meanUserSecPerCallValue[i] = 0;
 	    }
 	    int count = 0;
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
@@ -435,6 +438,11 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 			    for(int i=0;i<numberOfMetrics;i++){
 				exclusiveTotal[i]+=globalThreadDataElement.getExclusiveValue(i);
 				inclusiveTotal[i]+=globalThreadDataElement.getInclusiveValue(i);
+				if(i==0){
+				    numberOfCallsTotal+=globalThreadDataElement.getNumberOfCalls();
+				    numberOfSubroutinesTotal+=globalThreadDataElement.getNumberOfSubRoutines();
+				}
+				userSecPerCallValueTotal[i]+=globalThreadDataElement.getUserSecPerCall(i);
 			    }
 			}
 			count++;
@@ -442,10 +450,24 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		}
 	    }
 	    if(count!=0){
+		//Since we only need to do the numberOfCalls and numberOfSubroutines for
+		//the first metric, do it first (outside the loop).
+		double meanNumberOfCalls = numberOfCallsTotal/count;
+		double meanNumberOfSubroutines = numberOfSubroutinesTotal/count;
+		
+		globalMappingElement.setMeanNumberOfCalls(meanNumberOfCalls);
+		if(globalMapping.getMaxMeanNumberOfCalls() < meanNumberOfCalls)
+		    globalMapping.setMaxMeanNumberOfCalls(meanNumberOfCalls);
+
+		globalMappingElement.setMeanNumberOfSubRoutines(meanNumberOfSubroutines);
+		if(globalMapping.getMaxMeanNumberOfSubRoutines() < meanNumberOfSubroutines)
+		    globalMapping.setMaxMeanNumberOfSubRoutines(meanNumberOfSubroutines);
+		
 		for(int i=0;i<numberOfMetrics;i++){
 		    meanExclusiveValue[i] = exclusiveTotal[i]/count;
 		    meanInclusiveValue[i] = inclusiveTotal[i]/count;
-		    
+		    meanUserSecPerCallValue[i] = userSecPerCallValueTotal[i]/count;
+
 		    globalMappingElement.setMeanExclusiveValue(i, meanExclusiveValue[i]);
 		    if(globalMapping.getMaxMeanExclusiveValue(i) < meanExclusiveValue[i])
 			globalMapping.setMaxMeanExclusiveValue(i, meanExclusiveValue[i]);
@@ -453,6 +475,10 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 		    globalMappingElement.setMeanInclusiveValue(i, meanInclusiveValue[i]);
 		    if(globalMapping.getMaxMeanInclusiveValue(i) < meanInclusiveValue[i])
 			globalMapping.setMaxMeanInclusiveValue(i, meanInclusiveValue[i]);
+
+		    globalMappingElement.setMeanUserSecPerCall(i, meanUserSecPerCallValue[i]);
+		    if(globalMapping.getMaxMeanUserSecPerCall(i) < meanUserSecPerCallValue[i])
+			globalMapping.setMaxMeanUserSecPerCall(i, meanUserSecPerCallValue[i]);
 		}
 	    }
 	}
@@ -465,8 +491,6 @@ public abstract class ParaProfDataSession  extends DataSession implements Runnab
 	while(l.hasNext()){
 	    GlobalMappingElement globalMappingElement = (GlobalMappingElement) l.next();
 	    for(int i=0;i<numberOfMetrics;i++){
-		globalMapping.getMaxMeanExclusiveValue(i);
-		globalMapping.getMaxMeanInclusiveValue(i);
 		double meanExclusivePercentValue = (globalMappingElement.getMeanExclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
 		double meanInclusivePercentValue = (globalMappingElement.getMeanInclusiveValue(i)/maxMeanInclusiveValue[i])*100.0;
 		globalMappingElement.setMeanExclusivePercentValue(i,meanExclusivePercentValue);
