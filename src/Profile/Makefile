@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.acl.lanl.gov/tau	           **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/home/sameer/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -120,12 +120,14 @@ TAU_DISABLE   = libTauDisable$(LSX)
 # For making libTAU.so Dynamic Shared Object
 ##############################################
 TAU_SHLIBX		= .so 		  
+#HP#TAU_SHLIBX		= .sl			#ENDIF#
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 #USE_IBMXLC#AR_SHFLAGS          = -G 		#ENDIF#
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
+#ACC#AR_SHFLAGS  		= -b 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAUsh$(TAU_OPTIONS)$(TAU_SHLIBX)
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
