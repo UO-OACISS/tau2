@@ -18,7 +18,7 @@ import java.sql.SQLException;
  * details.  The two extensions of this class are EventDistance and
  * ThreadDistance.
  *
- * <P>CVS $Id: DistanceAnalysis.java,v 1.6 2004/12/21 00:19:49 amorris Exp $</P>
+ * <P>CVS $Id: DistanceAnalysis.java,v 1.7 2004/12/23 00:25:50 amorris Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1

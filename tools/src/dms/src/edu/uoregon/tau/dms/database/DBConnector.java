@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.sql.PreparedStatement;
 
 import java.sql.DatabaseMetaData;
+
 /*******************************************************
  * Implements access to a database
  * Be sure to specify JDBC Driver in the class path.
@@ -28,206 +29,206 @@ public class DBConnector implements DB {
     private String dbPassword;
 
     private String driverName;
+
     // it should be "org.postgresql.Driver" in PostgreSQL.
 
     public DBConnector(ParseConfig parser) throws SQLException {
-	super();
-	parseConfig = parser;
-	setJDBC(parser);
-	register();
+        super();
+        parseConfig = parser;
+        setJDBC(parser);
+        register();
     }
 
     public DBConnector(String user, String password, ParseConfig parser) throws SQLException {
-	super();
-	parseConfig = parser;
-	setJDBC(parser);
-	register();
-	connect(user, password);
+        super();
+        parseConfig = parser;
+        setJDBC(parser);
+        register();
+        connect(user, password);
     }
 
     public void setJDBC(ParseConfig parser) {
-	driverName = parser.getJDBCDriver();
-	if (parser.getDBType().equals("db2")) {
-	    dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
-	} else {
-	    if (parser.getDBType().equals("oracle")) {
-		dbaddress = "jdbc:oracle:thin:@//" + parser.getDBHost() + ":" + parser.getDBPort() 
-		    + "/" + parser.getDBName();
-	    } else {
-		dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost()
-		    + ":" + parser.getDBPort() + "/" + parser.getDBName();
-	    }
-	}
+        driverName = parser.getJDBCDriver();
+        if (parser.getDBType().equals("db2")) {
+            dbaddress = "jdbc:" + parser.getDBType() + ":" + parser.getDBName();
+        } else {
+            if (parser.getDBType().equals("oracle")) {
+                dbaddress = "jdbc:oracle:thin:@//" + parser.getDBHost() + ":" + parser.getDBPort()
+                        + "/" + parser.getDBName();
+            } else {
+                dbaddress = "jdbc:" + parser.getDBType() + "://" + parser.getDBHost() + ":"
+                        + parser.getDBPort() + "/" + parser.getDBName();
+            }
+        }
     }
 
     public void close() {
-	try {
-	    if (conn.isClosed()) {
-		return;
-	    } else {
-		conn.close();
-	    }
-	} catch (SQLException ex) {
-	    ex.printStackTrace();
-	}
+        try {
+            if (conn.isClosed()) {
+                return;
+            } else {
+                conn.close();
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void setAutoCommit(boolean auto) throws SQLException {
-	conn.setAutoCommit(auto);
-    }
-    public void commit() throws SQLException {
-	conn.commit();
+        conn.setAutoCommit(auto);
     }
 
+    public void commit() throws SQLException {
+        conn.commit();
+    }
 
     public boolean connect(String user, String password) throws SQLException {
-	String cs = "";
-	try {
-	    if (conn != null) {
-		return true;
-	    }
-	    cs = getConnectString();
-	    conn = DriverManager.getConnection(cs, user, password);
-	    return true;
-	} catch (SQLException ex) {
-	    System.err.println("Cannot connect to server.");
-	    System.err.println("Connection String: " + cs);
-	    System.err.println("Exception Message: " + ex.getMessage());
-	    throw ex;
-	}
+        String cs = "";
+        try {
+            if (conn != null) {
+                return true;
+            }
+            cs = getConnectString();
+            conn = DriverManager.getConnection(cs, user, password);
+            return true;
+        } catch (SQLException ex) {
+            System.err.println("Cannot connect to server.");
+            System.err.println("Connection String: " + cs);
+            System.err.println("Exception Message: " + ex.getMessage());
+            throw ex;
+        }
     }
 
     /*** Execute a SQL statement that returns a single ResultSet object. ***/
 
     public ResultSet executeQuery(String query) throws SQLException {
-	if (statement == null) {
-	    if (conn == null) {
-		System.err.println("Database is closed for " + query);
-		return null;
-	    }
-	    statement = conn.createStatement();
-	}
-	//	System.out.println ("executing query: " + query.trim());
-	return statement.executeQuery(query.trim());
+        if (statement == null) {
+            if (conn == null) {
+                System.err.println("Database is closed for " + query);
+                return null;
+            }
+            statement = conn.createStatement();
+        }
+//        conn.setAutoCommit(false);
+//        statement.setFetchSize(100);
+        //	System.out.println ("executing query: " + query.trim());
+        return statement.executeQuery(query.trim());
     }
 
     /*** Execute a SQL statement that may return multiple results. ***/
 
     public boolean execute(String query) throws SQLException {
-	if (statement == null) {
-	    if (conn == null) {
-		System.err.println("Database is closed for " + query);
-		return false;
-	    }
-	    statement = conn.createStatement();
+        if (statement == null) {
+            if (conn == null) {
+                System.err.println("Database is closed for " + query);
+                return false;
+            }
+            statement = conn.createStatement();
         }
         return statement.execute(query.trim());
     }
 
     /*** Execute a SQL statement that does not return
-	 the number of rows modified, 0 if no result returned.***/
+     the number of rows modified, 0 if no result returned.***/
 
     public int executeUpdate(String sql) throws SQLException {
-	//	try {
-	if (statement == null) {
-	    if (conn == null) {
-		System.err.println("Database is closed for " + sql);
-		return 0;
-	    }
-	    statement = conn.createStatement();
-	}
-	//	    System.out.println ("sql: " + sql);
-	return statement.executeUpdate(sql.trim());
-	//	} catch (SQLException ex) {
-	//	    ex.printStackTrace();
-	//	    return 0;
-	//	}
+        //	try {
+        if (statement == null) {
+            if (conn == null) {
+                System.err.println("Database is closed for " + sql);
+                return 0;
+            }
+            statement = conn.createStatement();
+        }
+        //	    System.out.println ("sql: " + sql);
+        return statement.executeUpdate(sql.trim());
+        //	} catch (SQLException ex) {
+        //	    ex.printStackTrace();
+        //	    return 0;
+        //	}
     }
 
     public java.sql.Connection getConnection() {
-	return conn;
+        return conn;
     }
 
     public String getConnectString() {
-	return dbaddress;
+        return dbaddress;
     }
 
     /*** Get the first returned value of a query. ***/
 
     public String getDataItem(String query) {
-	//returns the value of the first column of the first row
-	try {
-	    ResultSet resultSet = executeQuery(query);
-	    if (resultSet.next() == false){
-		resultSet.close();
-		return null;
-	    }
-	    else {
-		String result = resultSet.getString(1);
-		resultSet.close();
-		return result;
-	    }
-	} catch (SQLException ex) {
-	    ex.printStackTrace();
-	    return null;
-	}
+        //returns the value of the first column of the first row
+        try {
+            ResultSet resultSet = executeQuery(query);
+            if (resultSet.next() == false) {
+                resultSet.close();
+                return null;
+            } else {
+                String result = resultSet.getString(1);
+                resultSet.close();
+                return result;
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 
     /*** Check if the connection to database is closed. ***/
-	
+
     public boolean isClosed() {
-	if (conn == null) {
-	    return true;
-	} else {
-	    try {
-		return conn.isClosed();
-	    } catch (SQLException ex) {
-		ex.printStackTrace();
-		return true;
-	    }
-	}
+        if (conn == null) {
+            return true;
+        } else {
+            try {
+                return conn.isClosed();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                return true;
+            }
+        }
     }
 
     //registers the driver
     public void register() {
-	try {
-	    // Class.forName(driverName);
-	    Class.forName(driverName).newInstance();
-	} catch (Exception ex) {
-	    ex.printStackTrace();
-	}
+        try {
+            // Class.forName(driverName);
+            Class.forName(driverName).newInstance();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     public DatabaseMetaData getMetaData() throws SQLException {
-	return conn.getMetaData();
+        return conn.getMetaData();
     }
 
     public void setDBAddress(String newValue) {
-	this.dbaddress = newValue;
+        this.dbaddress = newValue;
     }
 
     public String getDBType() {
-	return new String(this.parseConfig.getDBType());
+        return new String(this.parseConfig.getDBType());
     }
 
-    public String getSchemaPrefix(){
-	if (this.getDBType().compareTo("oracle") == 0) {
-	    
-	    if (this.parseConfig.getDBSchemaPrefix() != null && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
-		return new String(this.parseConfig.getDBSchemaPrefix() + ".");
-	    else
-		return "";
-	} else {
-	    return "";
-	}
+    public String getSchemaPrefix() {
+        if (this.getDBType().compareTo("oracle") == 0) {
+
+            if (this.parseConfig.getDBSchemaPrefix() != null
+                    && this.parseConfig.getDBSchemaPrefix().compareTo("") != 0)
+                return new String(this.parseConfig.getDBSchemaPrefix() + ".");
+            else
+                return "";
+        } else {
+            return "";
+        }
     }
 
     public PreparedStatement prepareStatement(String statement) throws SQLException {
-	return getConnection().prepareStatement(statement);
+        return getConnection().prepareStatement(statement);
     }
-
-
-
 
     // JDBC types in Java 1.4.1_01:
     // BIT          : -7
@@ -270,46 +271,38 @@ public class DBConnector implements DB {
     //     }
 
     public static boolean isReadAbleType(int type) {
-	if (type == java.sql.Types.VARCHAR 
-	    || type == java.sql.Types.CLOB
-	    || type == java.sql.Types.INTEGER
-	    || type == java.sql.Types.DECIMAL
-	    || type == java.sql.Types.DOUBLE
-	    || type == java.sql.Types.FLOAT
-	    || type == java.sql.Types.LONGVARCHAR
-	    || type == java.sql.Types.TIME
-	    || type == java.sql.Types.TIMESTAMP)
-	    return true;
-	return false;
+        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB
+                || type == java.sql.Types.INTEGER || type == java.sql.Types.DECIMAL
+                || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
+                || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.TIME
+                || type == java.sql.Types.TIMESTAMP)
+            return true;
+        return false;
     }
 
-
     public static boolean isWritableType(int type) {
-	if (type == java.sql.Types.VARCHAR 
-	    || type == java.sql.Types.CLOB
-	    || type == java.sql.Types.INTEGER
-	    || type == java.sql.Types.DECIMAL
-	    || type == java.sql.Types.DOUBLE
-	    || type == java.sql.Types.FLOAT
-	    || type == java.sql.Types.LONGVARCHAR)
-	    return true;
-	return false;
+        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB
+                || type == java.sql.Types.INTEGER || type == java.sql.Types.DECIMAL
+                || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
+                || type == java.sql.Types.LONGVARCHAR)
+            return true;
+        return false;
     }
 
     public static boolean isIntegerType(int type) {
-	if (type == java.sql.Types.INTEGER)
-	    return true;
-	return false;
+        if (type == java.sql.Types.INTEGER)
+            return true;
+        return false;
     }
 
     public static boolean isFloatingPointType(int type) {
-	if (type == java.sql.Types.DECIMAL)
-	    return true;
-	if (type == java.sql.Types.DOUBLE)
-	    return true;
-	if (type == java.sql.Types.FLOAT)
-	    return true;
-	return false;
+        if (type == java.sql.Types.DECIMAL)
+            return true;
+        if (type == java.sql.Types.DOUBLE)
+            return true;
+        if (type == java.sql.Types.FLOAT)
+            return true;
+        return false;
     }
 
     //     public static boolean isReadOnlyType(int type) {
@@ -319,116 +312,105 @@ public class DBConnector implements DB {
     // 	return false;
     //     }
 
+    public int checkTable(DatabaseMetaData dbMeta, String tableName, String columns[])
+            throws SQLException {
+        boolean checks[] = new boolean[columns.length];
 
+        ResultSet resultSet = null;
+        if (this.getDBType().compareTo("oracle") == 0) {
+            resultSet = dbMeta.getColumns(null, null, tableName.toUpperCase(), "%");
+        } else {
+            resultSet = dbMeta.getColumns(null, null, tableName, "%");
+        }
 
-    public int checkTable(DatabaseMetaData dbMeta, String tableName, String columns[]) throws SQLException {
-	boolean checks[] = new boolean[columns.length];
+        while (resultSet.next() != false) {
 
-	ResultSet resultSet = null;
-	if (this.getDBType().compareTo("oracle") == 0) {
-	    resultSet = dbMeta.getColumns(null, null, tableName.toUpperCase(), "%");
-	} else {
-	    resultSet = dbMeta.getColumns(null, null, tableName, "%");
-	}
+            int ctype = resultSet.getInt("DATA_TYPE");
+            String cname = resultSet.getString("COLUMN_NAME");
+            String typename = resultSet.getString("TYPE_NAME");
 
+            //System.out.println ("table: " + tableName + ", found: " + cname + ", type: " + ctype + ", typename = " + typename);
 
-	while (resultSet.next() != false) {
-	    
-	    int ctype = resultSet.getInt("DATA_TYPE");
-	    String cname = resultSet.getString("COLUMN_NAME");
-	    String typename = resultSet.getString("TYPE_NAME");
+            if (DBConnector.isReadAbleType(ctype)) {
 
-	    //System.out.println ("table: " + tableName + ", found: " + cname + ", type: " + ctype + ", typename = " + typename);
-	    
-	    if (DBConnector.isReadAbleType(ctype)) {
-		
-		for (int i=0; i<columns.length; i++) {
-		    if (columns[i].toUpperCase().compareTo(cname.toUpperCase()) == 0) {
-			checks[i] = true;
-		    }
-		}
-		
-	    }
-	}
+                for (int i = 0; i < columns.length; i++) {
+                    if (columns[i].toUpperCase().compareTo(cname.toUpperCase()) == 0) {
+                        checks[i] = true;
+                    }
+                }
 
+            }
+        }
 
-	for (int i=0; i<columns.length; i++) {
-	    if (!checks[i]) {
-		System.out.println ("Couldn't find column \"" + columns[i] + "\" in table \"" + tableName + "\"");
-		return -1;
-	    }
-	}
-	return 0;
+        for (int i = 0; i < columns.length; i++) {
+            if (!checks[i]) {
+                System.out.println("Couldn't find column \"" + columns[i] + "\" in table \""
+                        + tableName + "\"");
+                return -1;
+            }
+        }
+        return 0;
 
     }
 
     public int checkSchema() throws SQLException {
-	
-	ResultSet resultSet = null;
-	DatabaseMetaData dbMeta = this.getMetaData();
-	
-	String appColumns[] =  {"ID", "NAME"};
-	if (checkTable(dbMeta, "application", appColumns) != 0)
-	    return -1;
 
-	String expColumns[] = {"ID", "NAME", "application"};
-	if (checkTable(dbMeta, "experiment", expColumns) != 0)
-	    return -1;
-	
-	String trialColumns[] = {"ID", "NAME", "experiment"};
-	if (checkTable(dbMeta, "trial", trialColumns) != 0)
-	    return -1;
+        ResultSet resultSet = null;
+        DatabaseMetaData dbMeta = this.getMetaData();
 
+        String appColumns[] = { "ID", "NAME" };
+        if (checkTable(dbMeta, "application", appColumns) != 0)
+            return -1;
 
-	String metricColumns[] = {"id", "name", "trial"};
-	if (checkTable(dbMeta, "metric", metricColumns) != 0)
-	    return -1;
+        String expColumns[] = { "ID", "NAME", "application" };
+        if (checkTable(dbMeta, "experiment", expColumns) != 0)
+            return -1;
 
+        String trialColumns[] = { "ID", "NAME", "experiment" };
+        if (checkTable(dbMeta, "trial", trialColumns) != 0)
+            return -1;
 
-	String ieColumns[] = {"id", "name", "trial", "group_name"};
-	if (checkTable(dbMeta, "interval_event", ieColumns) != 0)
-	    return -1;
+        String metricColumns[] = { "id", "name", "trial" };
+        if (checkTable(dbMeta, "metric", metricColumns) != 0)
+            return -1;
 
-	String aeColumns[] = {"id", "name", "trial", "group_name"};
-	if (checkTable(dbMeta, "atomic_event", aeColumns) != 0)
-	    return -1;
+        String ieColumns[] = { "id", "name", "trial", "group_name" };
+        if (checkTable(dbMeta, "interval_event", ieColumns) != 0)
+            return -1;
 
+        String aeColumns[] = { "id", "name", "trial", "group_name" };
+        if (checkTable(dbMeta, "atomic_event", aeColumns) != 0)
+            return -1;
 
-	String ilpColumns[] = {"interval_event", "node", "context", "thread", "metric",
-			       "inclusive_percentage", "inclusive", "exclusive_percentage", 
-			       "exclusive", "call", "subroutines", "inclusive_per_call"};
-	
-	if (this.getDBType().compareTo("oracle") == 0) {
-	    ilpColumns[8] = "excl";
-	}
+        String ilpColumns[] = { "interval_event", "node", "context", "thread", "metric",
+                "inclusive_percentage", "inclusive", "exclusive_percentage", "exclusive", "call",
+                "subroutines", "inclusive_per_call" };
 
-	if (checkTable(dbMeta, "interval_location_profile", ilpColumns) != 0)
-	    return -1;
-	
-	String alpColumns[] = {"atomic_event", "node", "context", "thread", "sample_count",
-			       "maximum_value", "minimum_value", "mean_value", "standard_deviation" };
-	if (checkTable(dbMeta, "atomic_location_profile", alpColumns) != 0)
-	    return -1;
+        if (this.getDBType().compareTo("oracle") == 0) {
+            ilpColumns[8] = "excl";
+        }
 
+        if (checkTable(dbMeta, "interval_location_profile", ilpColumns) != 0)
+            return -1;
 
-	String itsColumns[] = {"interval_event", "metric",
-			       "inclusive_percentage", "inclusive", "exclusive_percentage", 
-			       "exclusive", "call",
-			       "subroutines", "inclusive_per_call"};
+        String alpColumns[] = { "atomic_event", "node", "context", "thread", "sample_count",
+                "maximum_value", "minimum_value", "mean_value", "standard_deviation" };
+        if (checkTable(dbMeta, "atomic_location_profile", alpColumns) != 0)
+            return -1;
 
-	if (this.getDBType().compareTo("oracle") == 0) {
-	    itsColumns[5] = "excl";
-	}
+        String itsColumns[] = { "interval_event", "metric", "inclusive_percentage", "inclusive",
+                "exclusive_percentage", "exclusive", "call", "subroutines", "inclusive_per_call" };
 
-	if (checkTable(dbMeta, "interval_total_summary", itsColumns) != 0)
-	    return -1;
+        if (this.getDBType().compareTo("oracle") == 0) {
+            itsColumns[5] = "excl";
+        }
 
-	if (checkTable(dbMeta, "interval_mean_summary", itsColumns) != 0)
-	    return -1;
+        if (checkTable(dbMeta, "interval_total_summary", itsColumns) != 0)
+            return -1;
 
+        if (checkTable(dbMeta, "interval_mean_summary", itsColumns) != 0)
+            return -1;
 
-
-	
-	return 0;
+        return 0;
     }
 }

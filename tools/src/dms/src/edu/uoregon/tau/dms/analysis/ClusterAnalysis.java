@@ -10,7 +10,7 @@ import java.sql.SQLException;
  * This is the top level class for doing cluster analysis.
  * TBA
  *
- * <P>CVS $Id: ClusterAnalysis.java,v 1.2 2004/12/21 00:19:49 amorris Exp $</P>
+ * <P>CVS $Id: ClusterAnalysis.java,v 1.3 2004/12/23 00:25:50 amorris Exp $</P>
  * @author	Kevin Huck
  * @version	0.1
  * @since	0.1

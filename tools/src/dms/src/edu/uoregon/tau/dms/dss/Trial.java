@@ -21,7 +21,7 @@ import java.io.IOException;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.14 2004/12/21 20:49:40 amorris Exp $
+ * CVS $Id: Trial.java,v 1.15 2004/12/23 00:25:51 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -71,7 +71,7 @@ public class Trial implements Serializable {
     }
 
     // these are here because I don't have time to fix the analysis
-    // routines that are (but shouldn't be) using them
+    // routines that are using them
     public int getNodeCount() {
         System.err.println("Do not use trial.getNodeCount");
         return -1;
@@ -110,24 +110,66 @@ public class Trial implements Serializable {
         return fields[idx];
     }
 
-    public void setField(int idx, String field) {
-        if (DBConnector.isIntegerType(fieldTypes[idx]) && field != null) {
+    public String getField(String name) {
+        if (Trial.fieldNames == null)
+            return null;
+        for (int i = 0; i < Trial.fieldNames.length; i++) {
+            if (name.toUpperCase().equals(Trial.fieldNames[i].toUpperCase())) {
+                if (i < fields.length)
+                    return fields[i];
+            }
+        }
+        return null;
+    }
+    
+
+    public void setField(String field, String value) {
+        for (int i = 0; i < Trial.fieldNames.length; i++) {
+            if (field.toUpperCase().equals(Trial.fieldNames[i].toUpperCase())) {
+             
+                if (DBConnector.isIntegerType(fieldTypes[i]) && value != null) {
+                    try {
+                        int test = Integer.parseInt(value);
+                    } catch (java.lang.NumberFormatException e) {
+                        return;
+                    }
+                }
+
+                if (DBConnector.isFloatingPointType(fieldTypes[i]) && value != null) {
+                    try {
+                        double test = Double.parseDouble(value);
+                    } catch (java.lang.NumberFormatException e) {
+                        return;
+                    }
+                }
+
+                if (fields.length <= i) {
+                    fields = new String[Trial.fieldNames.length];
+                }
+                fields[i] = value;
+            }
+        }
+    }
+
+    
+    public void setField(int idx, String value) {
+        if (DBConnector.isIntegerType(fieldTypes[idx]) && value != null) {
             try {
-                int test = Integer.parseInt(field);
+                int test = Integer.parseInt(value);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
         }
 
-        if (DBConnector.isFloatingPointType(fieldTypes[idx]) && field != null) {
+        if (DBConnector.isFloatingPointType(fieldTypes[idx]) && value != null) {
             try {
-                double test = Double.parseDouble(field);
+                double test = Double.parseDouble(value);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
         }
 
-        fields[idx] = field;
+        fields[idx] = value;
     }
 
     /**
@@ -437,6 +479,17 @@ public class Trial implements Serializable {
 
         try {
 
+            // get the fields since this is an insert
+            if (!itExists) {
+
+                Trial.getMetaData(db);
+                this.fields = new String[Trial.fieldNames.length];
+            }
+            
+            this.setField("node_count", Integer.toString(1+this.getDataSource().getMaxNCTNumbers()[0]));
+            this.setField("contexts_per_node", Integer.toString(1+this.getDataSource().getMaxNCTNumbers()[1]));
+            this.setField("threads_per_context", Integer.toString(1+this.getDataSource().getMaxNCTNumbers()[2]));
+            
             StringBuffer buf = new StringBuffer();
 
             if (itExists) {
@@ -494,13 +547,7 @@ public class Trial implements Serializable {
                 newTrialID = Integer.parseInt(db.getDataItem(tmpStr));
             }
 
-            // get the fields since this is an insert
-            if (!itExists) {
-
-                Trial.getMetaData(db);
-
-                this.fields = new String[Trial.fieldNames.length];
-            }
+        
 
         } catch (SQLException e) {
             System.out.println("An error occurred while saving the trial.");

@@ -20,21 +20,36 @@ public class DBDataSource extends DataSource {
 
     private Object initializeObject;
 
+    
+    
+    
+
+    private boolean abort = false;
+    int totalItems = 0;
+    int itemsDone = 0;
+
+    public int getProgress() {
+        return DatabaseAPI.getProgress();
+        
+        
+        //        if (totalItems != 0)
+//            return (int) ((float) itemsDone / (float) totalItems * 100);
+//        return 0;
+    }
     public void cancelLoad() {
+        abort = true;
         return;
     }
 
-    public int getProgress() {
-        return 0;
-    }
-
+    
+    
     public void load() {
         try {
             //######
             //Frequently used items.
             //######
             DatabaseAPI databaseAPI = (DatabaseAPI) initializeObject;
-
+            
             Function function = null;
             UserEvent userEvent = null;
             FunctionProfile functionProfile = null;
@@ -67,6 +82,8 @@ public class DBDataSource extends DataSource {
             
             meanData = new Thread(-1,-1,-1, numberOfMetrics);
             meanData.initializeFunctionList(this.getTrialData().getNumFunctions());
+    
+            totalItems += this.getTrialData().getNumFunctions();
             
             while (l.hasNext()) {
                 IntervalEvent ie = (IntervalEvent) l.next();
@@ -157,6 +174,7 @@ public class DBDataSource extends DataSource {
             System.out.println("About to increase storage.");
 
             l = databaseAPI.getIntervalEventData();
+            
             while (l.hasNext()) {
                 IntervalLocationProfile fdo = (IntervalLocationProfile) l.next();
                 node = this.getNCT().getNode(fdo.getNode());

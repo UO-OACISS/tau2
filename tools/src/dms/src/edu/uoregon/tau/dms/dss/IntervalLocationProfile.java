@@ -25,7 +25,7 @@ import java.util.Enumeration;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.11 2004/12/22 01:03:38 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.12 2004/12/23 00:25:51 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -460,8 +460,12 @@ public class IntervalLocationProfile extends Object {
         Vector intervalLocationProfiles = new Vector();
         // get the results
         try {
+            System.out.println ("Executing Statement");
             ResultSet resultSet = db.executeQuery(buf.toString());
+            System.out.println ("Statement Executed");
             while (resultSet.next() != false) {
+                DatabaseAPI.itemsDone++;
+
                 int metricIndex = 0;
                 IntervalLocationProfile intervalLocationProfile = new IntervalLocationProfile();
                 intervalLocationProfile.setIntervalEventID(resultSet.getInt(1));

@@ -8,7 +8,7 @@ import java.sql.*;
  * This is the top level class for the Database implementation of the API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.8 2004/12/22 17:37:48 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.9 2004/12/23 00:25:51 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -236,6 +236,9 @@ public class DatabaseAPI {
         }
 
         intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
+        
+        DatabaseAPI.totalItems *= intervalEvents.size();
+        
         if (intervalEventHash == null)
             intervalEventHash = new Hashtable();
         IntervalEvent fun;
@@ -547,7 +550,7 @@ public class DatabaseAPI {
 
     // save the metrics
     private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) {
-     //   System.out.print("Saving the metrics: ");
+       // System.out.print("Saving the metrics: ");
         Hashtable newMetHash = new Hashtable();
         Enumeration en = trial.getDataSource().getMetrics().elements();
         Metric metric;
@@ -557,12 +560,12 @@ public class DatabaseAPI {
             int newMetricID = 0;
             if (saveMetricIndex < 0 || saveMetricIndex == i) {
                 newMetricID = metric.saveMetric(db, newTrialID);
-     //           System.out.print("\rSaving the metrics: " + (i + 1) + " records saved...");
+            //    System.out.print("\rSaving the metrics: " + (i + 1) + " records saved...");
             }
             newMetHash.put(new Integer(i), new Integer(newMetricID));
             i++;
         }
-   //     System.out.print("\n");
+      //  System.out.print("\n");
         return newMetHash;
     }
 
@@ -670,12 +673,16 @@ public class DatabaseAPI {
     static int itemsDone;
 
     public static int getProgress() {
+        System.out.println ("itemsDone = (" + itemsDone + "/" + totalItems + ")");
+        
         if (totalItems != 0)
             return (int) ((float) itemsDone / (float) totalItems * 100);
         return 0;
     }
     
-    
+    public static void setTotalItems(int items) {
+        totalItems = items;
+    }
     
 
     /**
@@ -926,21 +933,7 @@ public class DatabaseAPI {
         return newTrialID;
     }
 
-    private void vacuumDatabase() {
-        // don't do this for mysql or db2
-        if (db.getDBType().compareTo("mysql") == 0)
-            return;
-        else if (db.getDBType().compareTo("db2") == 0)
-            return;
-        /*
-         * String vacuum = "vacuum;"; String analyze = "analyze;"; try { //
-         * System.out.println("Vacuuming database..."); //
-         * db.executeUpdate(vacuum); System.out.println("Analyzing
-         * database..."); db.executeUpdate(analyze); } catch (SQLException e) {
-         * System.out.println("An error occurred while vacuuming the
-         * database."); e.printStackTrace(); }
-         */
-    }
+   
 
     public int saveApplication() {
         int appid = 0;
@@ -1016,7 +1009,7 @@ public class DatabaseAPI {
         buf.append("WHERE trial = ");
         buf.append(this.trial.getID());
         buf.append(" ORDER BY id ");
-        // System.out.println(buf.toString());
+        System.out.println(buf.toString());
 
         // get the results
         try {
