@@ -90,19 +90,17 @@ public class MappingDataWindowPanel extends JPanel implements ActionListener, Mo
       
       Graphics2D g2 = (Graphics2D) g;
       
-      AffineTransform currentTransform = g2.getTransform();
-      
-      System.out.println("The x transform is: " + mDWindow.getHorizontalTranslate());
-      
-      currentTransform.translate(-(mDWindow.getHorizontalTranslate()), 0.0);
-      g2.setTransform(currentTransform);
-      
       Rectangle clipRect = g.getClipBounds();
       
       int yBeg = (int) clipRect.getY();
       int yEnd = (int) (yBeg + clipRect.getHeight());
       yEnd = yEnd + barSpacing;
       
+
+      Rectangle test = mDWindow.getViewRectangle();
+      int yBegTest = (int) test.getY();
+      int yEndTest = (int) (yBeg+test.getHeight());
+      System.out.println("Rectangle coords are: " + yBegTest + ":" + yEndTest);
       System.out.println("Clipping coords are: " + yBeg + ":" + yEnd);
       
       //Do the standard font and spacing stuff.

@@ -228,6 +228,7 @@ public class ParaProf implements ActionListener
       if(inObject instanceof Exception){
         if(ParaProf.debugIsOn){
           System.out.println(((Exception) inObject).toString());
+	  ((Exception) inObject).printStackTrace();
           System.out.println("");
           System.out.println("");
         }

@@ -549,7 +549,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			//Now we are going accross in the X direction.
 			if(xCoord < barXStart){
 			    //Bring up the thread data window for this thread object!
-			    if((evt.getModifiersEx() & InputEvent.BUTTON1_MASK) != 0){
+			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
 				MeanDataWindow tmpRef = new MeanDataWindow(trial, sMWindow.getSMWData());
 				trial.getSystemEvents().addObserver(tmpRef);
 				tmpRef.show();
@@ -563,7 +563,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 			    return;
 			}
 			else if(xCoord < sMWMeanDataElement.getXEnd()){
-			    if((evt.getModifiersEx() & InputEvent.BUTTON1_MASK) == 0){
+			    if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
 				//Set the clickedSMWMeanDataElement.
 				clickedOnObject = sMWMeanDataElement;
 				popup.show(this, evt.getX(), evt.getY());
@@ -610,7 +610,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					    //object will indicate this.
 					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
 						//Bring up the thread data window for this thread object!
-						if((evt.getModifiersEx() & InputEvent.BUTTON1_MASK) != 0){
+						if((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0){
 						    ThreadDataWindow tmpRef = new ThreadDataWindow(trial, serverCounter, contextCounter,
 												   threadCounter, sMWindow.getSMWData());                  
 						    trial.getSystemEvents().addObserver(tmpRef);
@@ -628,7 +628,7 @@ public class StaticMainWindowPanel extends JPanel implements ActionListener, Mou
 					}
 					else if(xCoord < sMWThreadDataElement.getXEnd()){
 					    if((yCoord >= sMWThreadDataElement.getYBeg()) && (yCoord <= sMWThreadDataElement.getYEnd())){
-						if((evt.getModifiersEx() & InputEvent.BUTTON1_MASK) == 0){
+						if((evt.getModifiers() & InputEvent.BUTTON1_MASK) == 0){
 						    //Set the clickedSMWDataElement.
 						    clickedOnObject = sMWThreadDataElement;
 						    popup.show(this, evt.getX(), evt.getY());

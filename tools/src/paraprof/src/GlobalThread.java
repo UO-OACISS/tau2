@@ -162,6 +162,13 @@ public class GlobalThread
     public double getTotalInclusiveValue(){
 	return totalInclusiveValue;}
     
+    public void setTrimmed(boolean b){
+	trimmed = b;
+    }
+
+    public boolean trimmed(){
+	return trimmed;}
+
     //Instance data.
     Vector threadDataList;
     Vector userThreadDataList;
@@ -170,4 +177,5 @@ public class GlobalThread
     double totalInclusiveValue = 0;
     private int maxNumberOfCalls = 0;
     private int maxNumberOfSubRoutines = 0;
+    private boolean trimmed = false;
 }

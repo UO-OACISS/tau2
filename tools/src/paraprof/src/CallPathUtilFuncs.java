@@ -20,9 +20,11 @@ public class CallPathUtilFuncs{
 	while(l.hasNext()){
 	    gme = (GlobalMappingElement) l.next();
 	    s = gme.getMappingName();
-	    if(s.indexOf("=>")>0){
-		gme.setCallPathObject(true);
-		result = true;
+	    if(s!=null){
+		if(s.indexOf("=>")>0){
+		    gme.setCallPathObject(true);
+		    result = true;
+		}
 	    }
 	}
 	return result;
@@ -101,6 +103,10 @@ public class CallPathUtilFuncs{
 	tmpRef = globalContext.getThreadList();
 	globalThread = (GlobalThread) tmpRef.elementAt(thread);
 	threadDataList = globalThread.getThreadDataList();
+
+	//Check to make sure that we have not trimmed before.
+	if(globalThread.trimmed())
+	    return;
 	
 	l1 = gm.getMappingIterator(0);
 	while(l1.hasNext()){
@@ -135,5 +141,8 @@ public class CallPathUtilFuncs{
 		}
 	    }
 	}
+
+	//Set this thread to indicate that it has been trimmed.
+	globalThread.setTrimmed(true);
     }
 }
