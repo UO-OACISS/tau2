@@ -123,6 +123,10 @@ The following  command-line options are available to configure:
    Specifies  SMARTS (Shared Memory Asynchronous Runtime System) as the 
    threads package to be used. <directory> gives the location of the SMARTS 
    root directory. [ Ref: http://www.acl.lanl.gov/smarts ]
+
+-openmp
+   Specifies OpenMP as the threads package to be used. 
+   [ Ref: http://www.openmp.org ]
    
 -pdt=<directory>
    
