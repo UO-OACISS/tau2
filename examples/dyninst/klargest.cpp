@@ -170,7 +170,7 @@ int i;
   arr[7] = 15;
   arr[8] = 48;
   arr[9] = 19;
-  if (size > DEFAULT_SIZE)
+  if (size > 10)
   {
     for (i=10; i< size; i++)
       arr[i] = arr[i%10];
@@ -328,6 +328,13 @@ int *A;
   else
     k = DEFAULT_K;     
   
+  if (k > size) 
+  {
+    printf("ERROR: Please specify a value for k (%d) that is less than the array size (%d)\n",
+	k, size);
+    exit(0);
+  }
+
 /* there could be upto 4 leftover elements */
   A = (int *) malloc((size + 4) * sizeof(int)); /* allocate the array */
   if (A == (int *) NULL)
