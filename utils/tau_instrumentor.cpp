@@ -260,6 +260,7 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
     pdbRoutine::locvec retlocations = (*rit)->returnLocations();
     pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
     if ( (*rit)->location().file() == file &&  
+         ((*rit)->kind() != pdbItem::RO_FSTFN) &&  
 	 ((*rit)->firstExecStmtLocation().file()) && 
 	 (instrumentEntity((*rit)->fullName())) )
     {
@@ -1309,8 +1310,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.40 $   $Date: 2002/05/02 12:50:00 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.40 2002/05/02 12:50:00 sameer Exp $
+ * $Revision: 1.41 $   $Date: 2002/06/17 22:12:34 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.41 2002/06/17 22:12:34 sameer Exp $
  ***************************************************************************/
 
 
