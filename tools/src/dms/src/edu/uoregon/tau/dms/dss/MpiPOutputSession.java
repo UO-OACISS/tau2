@@ -6,6 +6,8 @@
 
 /*
   To do: 
+  The mpiP data has min, mean, max values.  What should be done with these values?
+  Should they be stored in a user event?
 */
 
 package edu.uoregon.tau.dms.dss;
@@ -153,9 +155,9 @@ public class MpiPOutputSession extends ParaProfDataSession{
 							mappingID = this.getGlobalMapping().addGlobalMapping(eventNames[callsiteData.i0], 0, 1);
 							globalMappingElement = this.getGlobalMapping().getGlobalMappingElement(mappingID, 0);
 							if (callsiteData.i1 >= 0) {
-								if((globalMappingElement.getMaxExclusiveValue(metric)) < callsiteData.d1) {
-			    					globalMappingElement.setMaxExclusiveValue(metric, callsiteData.d1);
-			    					globalMappingElement.setMaxInclusiveValue(metric, callsiteData.d1);
+								if((globalMappingElement.getMaxExclusiveValue(metric)) < callsiteData.d5) {
+			    					globalMappingElement.setMaxExclusiveValue(metric, callsiteData.d5);
+			    					globalMappingElement.setMaxInclusiveValue(metric, callsiteData.d5);
 								}
 								if((globalMappingElement.getMaxExclusivePercentValue(metric)) < callsiteData.d4) {
 			    					globalMappingElement.setMaxExclusivePercentValue(metric, callsiteData.d4);
@@ -164,8 +166,8 @@ public class MpiPOutputSession extends ParaProfDataSession{
 								if(globalMappingElement.getMaxNumberOfCalls() < callsiteData.i2)
 			    					globalMappingElement.setMaxNumberOfCalls(callsiteData.i2);
 			    				globalMappingElement.setMaxNumberOfSubRoutines(0);
-								if(globalMappingElement.getMaxUserSecPerCall(metric) < (callsiteData.d1/callsiteData.i2))
-			    					globalMappingElement.setMaxUserSecPerCall(metric, (callsiteData.d1/callsiteData.i2));
+								if(globalMappingElement.getMaxUserSecPerCall(metric) < (callsiteData.d1))
+			    					globalMappingElement.setMaxUserSecPerCall(metric, (callsiteData.d1));
 								// get the node data
 								nodeID = callsiteData.i1;
 								contextID = 0;
@@ -186,23 +188,23 @@ public class MpiPOutputSession extends ParaProfDataSession{
 			    					globalThreadDataElement = new GlobalThreadDataElement(this.getGlobalMapping().getGlobalMappingElement(mappingID, 0), false);
 			    					thread.addFunction(globalThreadDataElement, mappingID);
 								}
-								globalThreadDataElement.setExclusiveValue(metric, callsiteData.d1);
+								globalThreadDataElement.setExclusiveValue(metric, callsiteData.d5);
 								globalThreadDataElement.setExclusivePercentValue(metric, callsiteData.d4);
-								globalThreadDataElement.setInclusiveValue(metric, callsiteData.d0);
-								globalThreadDataElement.setInclusivePercentValue(metric, callsiteData.d1);
+								globalThreadDataElement.setInclusiveValue(metric, callsiteData.d5);
+								globalThreadDataElement.setInclusivePercentValue(metric, callsiteData.d4);
 								globalThreadDataElement.setNumberOfCalls(callsiteData.i2);
 								globalThreadDataElement.setNumberOfSubRoutines(0);
-								globalThreadDataElement.setUserSecPerCall(metric, (callsiteData.d1 / callsiteData.i2));
+								globalThreadDataElement.setUserSecPerCall(metric, callsiteData.d1);
 
 								//Now check the max values on this thread.
 								if(thread.getMaxNumberOfCalls() < callsiteData.i2)
 			    					thread.setMaxNumberOfCalls(callsiteData.i2);
 			    				thread.setMaxNumberOfSubRoutines(0);
-								if(thread.getMaxUserSecPerCall(metric) < (callsiteData.d1/callsiteData.i2))
-			    					thread.setMaxUserSecPerCall(metric, (callsiteData.d1/callsiteData.i2));
-								if((thread.getMaxExclusiveValue(metric)) < callsiteData.d1) {
-			    					thread.setMaxExclusiveValue(metric, callsiteData.d1);
-			    					thread.setMaxInclusiveValue(metric, callsiteData.d1);
+								if(thread.getMaxUserSecPerCall(metric) < callsiteData.d1)
+			    					thread.setMaxUserSecPerCall(metric, callsiteData.d1);
+								if((thread.getMaxExclusiveValue(metric)) < callsiteData.d5) {
+			    					thread.setMaxExclusiveValue(metric, callsiteData.d5);
+			    					thread.setMaxInclusiveValue(metric, callsiteData.d5);
 								}
 								if((thread.getMaxExclusivePercentValue(metric)) < callsiteData.d4) {
 			    					thread.setMaxExclusivePercentValue(metric, callsiteData.d4);
@@ -297,6 +299,7 @@ public class MpiPOutputSession extends ParaProfDataSession{
 	    	callsiteData.d2 = Double.parseDouble(st1.nextToken()); // Min
 	    	callsiteData.d3 = Double.parseDouble(st1.nextToken()); // App%
 	    	callsiteData.d4 = Double.parseDouble(st1.nextToken()); // MPI%
+	    	callsiteData.d5 = callsiteData.d1 * callsiteData.i2; // Total time for this node
 		} catch(Exception e) {
 	    	System.out.println("An error occured while parsing the callsite data!");
 	    	e.printStackTrace();
