@@ -11,7 +11,7 @@ import java.sql.*;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.29 2003/11/17 21:57:56 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.30 2004/01/19 17:09:56 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -174,17 +174,10 @@ public class PerfDBSession extends DataSession {
 	// returns Vector of Trial objects
 	public ListIterator getTrialList() {
 		StringBuffer whereClause = new StringBuffer();
-		boolean gotWhere = false;
-		if (application != null) {
-			whereClause.append("where e.application = " + application.getID());
-			gotWhere = true;
-		}
 		if (experiment != null) {
-			if (gotWhere)
-				whereClause.append(" and");
-			else
-				whereClause.append(" where");
-			whereClause.append(" t.experiment = " + experiment.getID());
+			whereClause.append("where t.experiment = " + experiment.getID());
+		} else if (application != null) {
+			whereClause.append("where e.application = " + application.getID());
 		}
 		return new DataSessionIterator(getTrialList(whereClause.toString()));
 	}
@@ -346,26 +339,12 @@ public class PerfDBSession extends DataSession {
 	// returns a ListIterator of Functions
 	public ListIterator getFunctions() {
 		StringBuffer whereClause = new StringBuffer();
-		boolean gotWhile = false;
-		if (application != null) {
-			whereClause.append(" where e.application = " + application.getID());
-			gotWhile = true;
-		}
-		if (experiment != null) {
-			if (gotWhile)
-				whereClause.append(" and");
-			else
-				whereClause.append(" where");
-			whereClause.append(" t.experiment = " + experiment.getID());
-			gotWhile = true;
-		}
 		if (trial != null) {
-			if (gotWhile)
-				whereClause.append(" and");
-			else
-				whereClause.append(" where");
-			whereClause.append(" t.id = " + trial.getID());
-			gotWhile = true;
+			whereClause.append(" where trial = " + trial.getID());
+		} else if (experiment != null) {
+			whereClause.append(" where experiment = " + experiment.getID());
+		} else if (application != null) {
+			whereClause.append(" where application = " + application.getID());
 		}
 
 		return new DataSessionIterator(getFunctions(whereClause.toString()));
@@ -376,22 +355,18 @@ public class PerfDBSession extends DataSession {
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		buf.append("select ");
-		buf.append("ms.inclusive_percentage, ms.inclusive, ");
-		buf.append("ms.exclusive_percentage, ms.exclusive, ");
-		buf.append("ms.call, ms.subroutines, ms.inclusive_per_call, ");
-		buf.append("ms.metric, ");
-		buf.append("ts.inclusive_percentage, ts.inclusive, ");
-		buf.append("ts.exclusive_percentage, ts.exclusive, ");
-		buf.append("ts.call, ts.subroutines, ts.inclusive_per_call, ");
-		buf.append("ts.metric, ");
-		buf.append("f.trial ");
-		buf.append("from function f ");
-		buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
-		buf.append("inner join interval_total_summary ts on f.id = ts.function ");
-		buf.append("inner join metric m on m.id = ts.metric and m.id = ms.metric ");
-		buf.append("where f.id = " + function.getIndexID());
+		buf.append("mean_inclusive_percentage, mean_inclusive, ");
+		buf.append("mean_exclusive_percentage, mean_exclusive, ");
+		buf.append("mean_call, mean_subroutines, mean_inclusive_per_call, ");
+		buf.append("metric, ");
+		buf.append("total_inclusive_percentage, total_inclusive, ");
+		buf.append("total_exclusive_percentage, total_exclusive, ");
+		buf.append("total_call, total_subroutines, total_inclusive_per_call, ");
+		buf.append("trial ");
+		buf.append("from function_detail ");
+		buf.append("where id = " + function.getIndexID());
 		if (metrics != null) {
-			buf.append(" and m.name in ('");
+			buf.append(" and metric in ('");
 			String metric;
         	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
 				metric = (String) en.nextElement();
@@ -402,7 +377,7 @@ public class PerfDBSession extends DataSession {
 					buf.append("') ");
 			}
 		}
-		buf.append(" order by f.id, ms.metric");
+		buf.append(" order by id, metric");
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -423,13 +398,13 @@ public class PerfDBSession extends DataSession {
 				funMS.setInclusivePerCall(metricIndex, resultSet.getDouble(7));
 				function.addMeanSummary(funMS);
 				// get the total summary data
-				funTS.setInclusivePercentage(metricIndex, resultSet.getDouble(9));
-				funTS.setInclusive(metricIndex, resultSet.getDouble(10));
-				funTS.setExclusivePercentage(metricIndex, resultSet.getDouble(11));
-				funTS.setExclusive(metricIndex, resultSet.getDouble(12));
-				funTS.setNumCalls((int)(resultSet.getDouble(13)));
-				funTS.setNumSubroutines((int)(resultSet.getDouble(14)));
-				funTS.setInclusivePerCall(metricIndex, resultSet.getDouble(15));
+				funTS.setInclusivePercentage(metricIndex, resultSet.getDouble(8));
+				funTS.setInclusive(metricIndex, resultSet.getDouble(9));
+				funTS.setExclusivePercentage(metricIndex, resultSet.getDouble(10));
+				funTS.setExclusive(metricIndex, resultSet.getDouble(11));
+				funTS.setNumCalls((int)(resultSet.getDouble(12)));
+				funTS.setNumSubroutines((int)(resultSet.getDouble(13)));
+				funTS.setInclusivePerCall(metricIndex, resultSet.getDouble(14));
 				function.addTotalSummary(funTS);
 	    	}
 			resultSet.close(); 
@@ -445,12 +420,9 @@ public class PerfDBSession extends DataSession {
 		Vector funs = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct f.id, f.function_number, f.name, ");
-		buf.append("f.group_name, f.trial, t.experiment, e.application ");
-		buf.append("from function f inner join trial t on f.trial = t.id ");
-		buf.append("inner join experiment e on t.experiment = e.id ");
-		// buf.append("inner join interval_mean_summary ms on f.id = ms.function ");
-		// buf.append("inner join interval_total_summary ts on f.id = ts.function ");
+		buf.append("select distinct id, function_number, name, ");
+		buf.append("group_name, trial, experiment, application ");
+		buf.append("from function_trial_experiment_view ");
 		buf.append(whereClause);
 		// System.out.println(buf.toString());
 
@@ -585,10 +557,11 @@ public class PerfDBSession extends DataSession {
 		// get the metric count
 		int metricCount = 0;
 		StringBuffer buf2 = new StringBuffer();
-		buf2.append("select count (m.id) from metric m ");
+		buf2.append("select count (distinct m.id) from metric m ");
 		buf2.append("inner join xml_file x on m.id = x.metric ");
 		buf2.append("inner join trial t on x.trial = t.id ");
 		buf2.append("inner join experiment e on e.id = t.experiment ");
+		buf2.append("inner join function f on t.id = f.trial ");
 		boolean gotWhile = false;
 		if (application != null) {
 			buf2.append(" where e.application = " + application.getID());
@@ -626,6 +599,22 @@ public class PerfDBSession extends DataSession {
 			}
 			gotWhile = true;
 		}
+		if (functions != null) {
+			if (gotWhile)
+				buf2.append(" and f.id in ('");
+			else
+				buf2.append(" where f.id in ('");
+			Function function;;
+        	for(Enumeration en = functions.elements(); en.hasMoreElements() ;) {
+				function = (Function) en.nextElement();
+				buf2.append(function.getIndexID());
+				if (en.hasMoreElements())
+					buf2.append("', '");
+				else
+					buf2.append("') ");
+			}
+			gotWhile = true;
+		}
 		try {
 			// System.out.println(buf2.toString());
 	    	ResultSet resultSet = db.executeQuery(buf2.toString());	
@@ -641,41 +630,22 @@ public class PerfDBSession extends DataSession {
 		Vector functionData = new Vector();
 		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
-		buf.append("select distinct p.inclusive_percentage, ");
-		buf.append("p.inclusive, p.exclusive_percentage, p.exclusive, ");
-		buf.append("p.call, p.subroutines, p.inclusive_per_call, ");
-		buf.append("f.trial, p.node, p.context, p.thread, p.function, p.metric ");
-		buf.append("from interval_location_profile p ");
-		buf.append("inner join function f on f.id = p.function ");
-		buf.append("inner join trial t on f.trial = t.id ");
-		buf.append("inner join experiment e on e.id = t.experiment ");
-		buf.append("inner join metric m on m.id = p.metric ");
-		gotWhile = false;
-		if (application != null) {
-			buf.append(" where e.application = " + application.getID());
-			gotWhile = true;
-		}
-		if (experiment != null) {
-			if (gotWhile)
-				buf.append(" and");
-			else
-				buf.append(" where");
-			buf.append(" t.experiment = " + experiment.getID());
-			gotWhile = true;
-		}
+		buf.append("select trial, function, metric, node, context, thread, ");
+		buf.append("inclusive_percentage, ");
+		buf.append("inclusive, exclusive_percentage, exclusive, ");
+		buf.append("call, subroutines, inclusive_per_call ");
+		buf.append("from ");
 		if (trial != null) {
-			if (gotWhile)
-				buf.append(" and");
-			else
-				buf.append(" where");
-			buf.append(" t.id = " + trial.getID());
-			gotWhile = true;
+			buf.append(" function_interval1 where trial = " + trial.getID());
+		}
+		else if (experiment != null) {
+			buf.append(" function_interval2 where experiment = " + experiment.getID());
+		}
+		else if (application != null) {
+			buf.append(" function_interval where application = " + application.getID());
 		}
 		if (nodes != null) {
-			if (gotWhile)
-				buf.append(" and p.node in (");
-			else
-				buf.append(" where p.node in (");
+			buf.append(" and node in (");
 			Integer node;
         	for(Enumeration en = nodes.elements(); en.hasMoreElements() ;) {
 				node = (Integer) en.nextElement();
@@ -685,13 +655,9 @@ public class PerfDBSession extends DataSession {
 				else
 					buf.append(") ");
 			}
-			gotWhile = true;
 		}
 		if (contexts != null) {
-			if (gotWhile)
-				buf.append(" and p.context in (");
-			else
-				buf.append(" where p.context in (");
+			buf.append(" and context in (");
 			Integer context;
         	for(Enumeration en = contexts.elements(); en.hasMoreElements() ;) {
 				context = (Integer) en.nextElement();
@@ -704,10 +670,7 @@ public class PerfDBSession extends DataSession {
 			gotWhile = true;
 		}
 		if (threads != null) {
-			if (gotWhile)
-				buf.append(" and p.thread in (");
-			else
-				buf.append(" where p.thread in (");
+			buf.append(" and thread in (");
 			Integer thread;
         	for(Enumeration en = threads.elements(); en.hasMoreElements() ;) {
 				thread = (Integer) en.nextElement();
@@ -720,10 +683,7 @@ public class PerfDBSession extends DataSession {
 			gotWhile = true;
 		}
 		if (functions != null) {
-			if (gotWhile)
-				buf.append(" and f.id in (");
-			else
-				buf.append(" where f.id in (");
+			buf.append(" and function in (");
 			Function function;
         	for(Enumeration en = functions.elements(); en.hasMoreElements() ;) {
 				function = (Function) en.nextElement();
@@ -733,13 +693,9 @@ public class PerfDBSession extends DataSession {
 				else
 					buf.append(") ");
 			}
-			gotWhile = true;
 		}
 		if (metrics != null) {
-			if (gotWhile)
-				buf.append(" and m.name in ('");
-			else
-				buf.append(" where m.name in ('");
+			buf.append(" and metric in ('");
 			String metric;
         	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
 				metric = (String) en.nextElement();
@@ -751,7 +707,7 @@ public class PerfDBSession extends DataSession {
 			}
 			gotWhile = true;
 		}
-		buf.append(" order by f.trial, p.function, p.node, p.context, p.thread, p.metric ");
+		buf.append(" order by trial, function, metric, node, context, thread ");
 		// System.out.println(buf.toString());
 
 		// get the results
@@ -760,25 +716,26 @@ public class PerfDBSession extends DataSession {
 	    	while (resultSet.next() != false) {
 				int metricIndex = 0;
 				FunctionDataObject funDO = new FunctionDataObject();
-				funDO.setInclusivePercentage(metricIndex, resultSet.getDouble(1));
-				funDO.setInclusive(metricIndex, resultSet.getDouble(2));
-				funDO.setExclusivePercentage(metricIndex, resultSet.getDouble(3));
-				funDO.setExclusive(metricIndex, resultSet.getDouble(4));
-				funDO.setNumCalls((int)(resultSet.getDouble(5)));
-				funDO.setNumSubroutines((int)(resultSet.getDouble(6)));
-				funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(7));
-				funDO.setNode(resultSet.getInt(9));
-				funDO.setContext(resultSet.getInt(10));
-				funDO.setThread(resultSet.getInt(11));
-				funDO.setFunctionIndexID(resultSet.getInt(12));
+				funDO.setFunctionIndexID(resultSet.getInt(2));
+				funDO.setNode(resultSet.getInt(4));
+				funDO.setContext(resultSet.getInt(5));
+				funDO.setThread(resultSet.getInt(6));
+				funDO.setNumCalls((int)(resultSet.getDouble(11)));
+				funDO.setNumSubroutines((int)(resultSet.getDouble(12)));
+
+				funDO.setInclusivePercentage(metricIndex, resultSet.getDouble(7));
+				funDO.setInclusive(metricIndex, resultSet.getDouble(8));
+				funDO.setExclusivePercentage(metricIndex, resultSet.getDouble(9));
+				funDO.setExclusive(metricIndex, resultSet.getDouble(10));
+				funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(13));
 				for (int i = 1 ; i < metricCount ; i++) {
 	    			if (resultSet.next() == false) { break; }
 					metricIndex++;
-					funDO.setInclusivePercentage(metricIndex, resultSet.getDouble(1));
-					funDO.setInclusive(metricIndex, resultSet.getDouble(2));
-					funDO.setExclusivePercentage(metricIndex, resultSet.getDouble(3));
-					funDO.setExclusive(metricIndex, resultSet.getDouble(4));
-					funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(7));
+					funDO.setInclusivePercentage(metricIndex, resultSet.getDouble(7));
+					funDO.setInclusive(metricIndex, resultSet.getDouble(8));
+					funDO.setExclusivePercentage(metricIndex, resultSet.getDouble(9));
+					funDO.setExclusive(metricIndex, resultSet.getDouble(10));
+					funDO.setInclusivePerCall(metricIndex, resultSet.getDouble(13));
 				}
 				functionData.addElement(funDO);
 	    	}
@@ -926,7 +883,7 @@ public class PerfDBSession extends DataSession {
 		if (function == null) {
 			// create a string to hit the database
 			String whereClause;
-			whereClause = " where f.id = " + id;
+			whereClause = " where id = " + id;
 			Vector functions = getFunctions(whereClause);
 			if (functions.size() == 1) {
 				function = (Function)functions.elementAt(0);
