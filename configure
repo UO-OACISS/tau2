@@ -1508,7 +1508,7 @@ then
           additional_mpiincs='-I/usr/lpp/ssp/css/include'
         fi
         ;;
-  linux) 
+  i386_linux) 
 	mpiinc=/usr/local/packages/mpich/include
 	;;
   t3e|crayx1|craysv1)
@@ -1541,7 +1541,7 @@ then
           additional_mpilibs='-L/usr/lpp/ppe.poe/lib/threads -L/usr/lpp/ssp/css/lib -llapi_r'
         fi
 	;;
-  linux) 
+  i386_linux) 
 	mpilib=/usr/local/packages/mpich
    	;;
   sgin32 | sgi8k) 
@@ -1666,10 +1666,25 @@ then
     # Special check for LAM MPI
     if [ -r $mpilib/liblam.a ]
     then
-      echo "This looks like a LAM MPI installation. Adding -llam -lutil to link command line"
-      mpilibargs="$mpilibargs -llam -lutil"
-      mpiflibargs="$mpiflibargs -llam -lutil"
+      echo "This looks like a LAM MPI installation. Adding -llam to link command line"
+      mpilibargs="$mpilibargs -llam"
+      mpiflibargs="$mpiflibargs -llam"
+      if [ -f /usr/lib/libutil.a ] 
+      then
+# This is a Linux box, add -lutil to the mpi libraries
+        echo "Adding -lutil to link command line for LAM MPI"
+        mpilibargs="$mpilibargs -lutil"
+        mpiflibargs="$mpiflibargs -lutil"
+      fi
     fi 
+    # Special check for VMI [NCSA] MPICH
+    if [ -r $mpilib/libvmi.a ]
+    then
+      echo "This looks like a VMI MPICH installation. Adding -lvmi -lpthread -ldl to link command line"
+      mpilibargs="$mpilibargs -lvmi -lpthread -ldl"
+      mpiflibargs="$mpiflibargs -lvmi -lpthread -ldl"
+    fi
+      
     mpilibargs=`echo $mpilibargs | sed  -e 's/ /#/g'`
     mpiflibargs=`echo $mpiflibargs | sed  -e 's/ /#/g'`
     #echo "mpiincargs= $mpiincargs"
