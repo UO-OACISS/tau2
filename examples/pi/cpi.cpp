@@ -33,9 +33,9 @@ void main(int argc, char* argv[])
     double startwtime, endwtime, timePi, timeE, time1;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 
+    TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
     TAU_PROFILE_INIT(argc,argv);
     MPI_Init(&argc,&argv);
-    TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
     TAU_PROFILE_TIMER(t1, "main-init()", "int (int, char **)",  TAU_USER);
     TAU_PROFILE_START(t1);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
