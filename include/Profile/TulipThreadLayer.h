@@ -12,6 +12,7 @@
 **	Author		: Sameer Shende					  **
 **	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
 **	Flags		: Compile with				          **
+**			  -DSMARTS for SMARTS interface instead of TULIP  **
 **			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
 **			  -DPROFILE_STATS for Std. Deviation of Excl Time **
 **			  -DSGI_HW_COUNTERS for using SGI counters 	  **
@@ -37,7 +38,12 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifdef TULIPTHREADS
+#ifdef SMARTS
+#include <Mutex.h>
+using namespace NAMESPACE;
+#else  // SMARTS
 #include <Tulip_Mutex.h>
+#endif // SMARTS
 class TulipThreadLayer 
 { // Layer for RtsLayer to interact with pthreads 
   public:
@@ -53,7 +59,11 @@ class TulipThreadLayer
 	static int UnLockDB(void);	 // unlocks the tauDBMutex
 
   private:
+#ifdef SMARTS
+	static Mutex	   	tauDBMutex;  // to protect TheFunctionDB
+#else // SMARTS
 	static Tulip_Mutex	   tauDBMutex;  // to protect TheFunctionDB
+#endif // SMARTS
 	
 };
 #endif // TULIPTHREADS 
@@ -64,8 +74,8 @@ class TulipThreadLayer
 
 /***************************************************************************
  * $RCSfile: TulipThreadLayer.h,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/08/18 14:29:32 $
- * POOMA_VERSION_ID: $Id: TulipThreadLayer.h,v 1.1 1998/08/18 14:29:32 sameer Exp $
+ * $Revision: 1.2 $   $Date: 1998/08/27 19:22:29 $
+ * POOMA_VERSION_ID: $Id: TulipThreadLayer.h,v 1.2 1998/08/27 19:22:29 sameer Exp $
  ***************************************************************************/
 
 
