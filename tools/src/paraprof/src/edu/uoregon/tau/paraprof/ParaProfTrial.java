@@ -38,7 +38,6 @@ public class ParaProfTrial extends Trial implements ParaProfObserver, ParaProfTr
 	this.setNumContextsPerNode(-1);
 	this.setNumThreadsPerContext(-1);
 	this.setUserData("");
-	((ParaProfDataSession)this.dataSession).setDebug(UtilFncs.debug);
 	this.type = type;
      }
 
