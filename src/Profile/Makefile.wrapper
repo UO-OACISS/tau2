@@ -38,6 +38,7 @@ install:	$(INSTALLDEST)/$(TAU_TARGET)
 
 $(TAU_TARGET) : 	TauMpi.o $(FWRAPPER)
 	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o $(FWRAPPER)
+	$(TAU_RANLIB) $(TAU_TARGET)
 
 TauMpi.o :	TauMpi.c
 	$(CC) $(CFLAGS) -c TauMpi.c
