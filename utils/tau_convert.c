@@ -423,6 +423,7 @@ int main (int argc, char *argv[])
   int i,j,k;
   int num;
   int tag;
+  int myid, otherid, msglen, msgtag;
   int hasParam;
   int fileIdx;
   int numproc = 0;
@@ -886,11 +887,15 @@ int main (int argc, char *argv[])
 		So, mynode is the sender and its in GetNodeId(erec) 
 		SENDMSG <type> FROM <sender> TO <receiver> LEN <length>
 	  */
+	  /* extract the information from the parameter */
+	  msgtag 	= (erec->par>>16) & 0x000000FF; 
+	  myid 		= GetNodeId(erec) + 1;
+ 	  otherid 	= ((erec->par>>24) & 0x000000FF) + 1;
+	  msglen  	= erec->par & 0x0000FFFF; 
+
           fprintf (outfp, "%llu SENDMSG %d FROM %d TO %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
-                  ((erec->par>>16) & 0x000000FF), GetNodeId(erec)+1, 
-                  ((erec->par>>24) & 0x000000FF) + 1, 
-                  erec->par & 0x0000FFFF);
+		  msgtag, myid , otherid , msglen);
         }
         else if ( (ev->tag == -8) && pvComm )
         {
@@ -901,11 +906,15 @@ int main (int argc, char *argv[])
 		So, mynode is the receiver and its in GetNodeId(erec) 
 		RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
 	  */
+	  /* extract the information from the parameter */
+	  msgtag 	= (erec->par>>16) & 0x000000FF; 
+	  myid 		= GetNodeId(erec)+1;
+	  otherid       = ((erec->par>>24) & 0x000000FF) + 1;
+	  msglen	= erec->par & 0x0000FFFF;
+
           fprintf (outfp, "%llu RECVMSG %d BY %d FROM %d LEN %d\n", 
 		  erec->ti - intrc.firsttime,
-                  ((erec->par>>16) & 0x000000FF),
-                  GetNodeId(erec)+1, ((erec->par>>24) & 0x000000FF) + 1,
-                  erec->par & 0x0000FFFF);
+                  msgtag, myid , otherid , msglen);			
         }
         else if (( ev->tag == -9 ) || ( erec->par == -1))
         { /* In dynamic tracing, 1/-1 par values are for Entry/Exit resp. */
