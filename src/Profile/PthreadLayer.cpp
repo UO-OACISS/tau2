@@ -76,6 +76,7 @@ int PthreadLayer::RegisterThread(void)
   tauThreadCount ++;
   // A thread should call this routine exactly once. 
   *threadId = tauThreadCount;
+  DEBUGPROFMSG("Thread id "<< tauThreadCount<< " Created! "<<endl;);
 
   pthread_mutex_unlock(&tauThreadcountMutex);
   pthread_setspecific(tauPthreadId, threadId);
@@ -163,8 +164,8 @@ int PthreadLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 1998/07/10 20:19:25 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.1 1998/07/10 20:19:25 sameer Exp $
+ * $Revision: 1.2 $   $Date: 1999/06/18 17:43:54 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.2 1999/06/18 17:43:54 sameer Exp $
  ***************************************************************************/
 
 
