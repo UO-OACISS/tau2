@@ -21,7 +21,7 @@ instrument with profile as $SELECT_FILE
 		TAU_USER : usec > 1000 & numcalls > 400000 & usecs/call < 30 & percent > 25
 
 		// The following line will cause extremly light-weight events that are
-		// executed more than a million times from the instrumentation.
+		// executed more than a million times from being instrumented.
 		
 		numcalls > 1E6 & usecs/call < 2
 	:}
