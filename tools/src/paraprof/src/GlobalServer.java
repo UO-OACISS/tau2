@@ -20,7 +20,7 @@ public class GlobalServer implements Serializable
   //Constructor.
   public GlobalServer()
   {
-    contextList = new Vector(10,10);
+    contextList = new Vector();
     numberOfContexts = 0;
   }
   

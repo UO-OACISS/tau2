@@ -25,7 +25,7 @@ public class GlobalContext implements Serializable
   //Constructors.
   public GlobalContext()
   {
-    threadList = new Vector(10,10);
+    threadList = new Vector();
     numberOfThreads = 0;
   }
   

@@ -11,44 +11,64 @@ package paraprof;
 import java.util.*;
 import java.io.*;
 
-public class GlobalThread implements Serializable 
+public class GlobalThread 
 {
     //Constructor.
     public GlobalThread(){
-	threadDataList = new Vector(10,10);
-	userThreadDataList = new Vector(10,10);
+	doubleList = new double[5];
+    }
+
+    public void initializeThreadDataList(int size){
+	threadDataList = new Vector(size);
+	Object ref = null;
+	for(int i=0;i<size;i++){
+	    threadDataList.add(ref);
+	}
+    }
+
+    public void initializeUserThreadDataList(int size){
+	userThreadDataList = new Vector(size);
+	Object ref = null;
+	for(int i=0;i<size;i++){
+	    userThreadDataList.add(ref);
+	}
     }
     
     //Rest of the public functions.
   
     public void incrementStorage(){
-	int currentLength = maxInclusiveValueList.length;
+	int currentLength = doubleList.length;
 	
 	//can use a little space here ... space for speed! :-)
-	double[] newArray1 = new double[currentLength+1];
-	double[] newArray2 = new double[currentLength+1];
-	double[] newArray3 = new double[currentLength+1];
-	double[] newArray4 = new double[currentLength+1];
-	double[] newArray5 = new double[currentLength+1];
+	double[] newArray = new double[currentLength+5];
 	
 	for(int i=0;i<currentLength;i++){
-	    newArray1[i] = maxInclusiveValueList[i];
-	    newArray2[i] = maxExclusiveValueList[i];
-	    newArray3[i] = maxInclusivePercentValueList[i];
-	    newArray4[i] = maxExclusivePercentValueList[i];
-	    newArray5[i] = maxUserSecPerCallList[i];
+	    newArray[i] = doubleList[i];
 	}
-	
-	maxInclusiveValueList = newArray1;
-	maxExclusiveValueList = newArray2;
-	maxInclusivePercentValueList = newArray3;
-	maxExclusivePercentValueList = newArray4;
-	maxUserSecPerCallList = newArray5;
+	doubleList = newArray;
     }
 
-
+    private void insertDouble(int dataValueLocation, int offset, double inDouble){
+	int actualLocation = (dataValueLocation*5)+offset;
+	try{
+	    doubleList[actualLocation] = inDouble;
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "GT01");
+	}
+    }
   
-  
+    private double getDouble(int dataValueLocation, int offset){
+	int actualLocation = (dataValueLocation*5)+offset;
+	try{
+	    return doubleList[actualLocation];
+	}
+	catch(Exception e){
+	    ParaProf.systemError(e, null, "GT01");
+	}
+	return -1;
+    }
+    
     //The following function adds a thread data element to
     //the threadDataList
     void addThreadDataElement(GlobalThreadDataElement inGTDE){
@@ -74,34 +94,34 @@ public class GlobalThread implements Serializable
     }
   
     public void setMaxInclusiveValue(int dataValueLocation, double inDouble){
-	maxInclusiveValueList[dataValueLocation] = inDouble;}
+	this.insertDouble(dataValueLocation,0,inDouble);}
   
     public double getMaxInclusiveValue(int dataValueLocation){
-	return maxInclusiveValueList[dataValueLocation];}
+	return this.getDouble(dataValueLocation,0);}
 
     public void setMaxExclusiveValue(int dataValueLocation, double inDouble){
-	maxExclusiveValueList[dataValueLocation] = inDouble;}
+	this.insertDouble(dataValueLocation,1,inDouble);}
   
     public double getMaxExclusiveValue(int dataValueLocation){
-	return maxExclusiveValueList[dataValueLocation];}
+	return this.getDouble(dataValueLocation,1);}
 
     public void setMaxInclusivePercentValue(int dataValueLocation, double inDouble){
-	maxInclusivePercentValueList[dataValueLocation] = inDouble;}
+	this.insertDouble(dataValueLocation,2,inDouble);}
   
     public double getMaxInclusivePercentValue(int dataValueLocation){
-	return maxInclusivePercentValueList[dataValueLocation];}
+	return this.getDouble(dataValueLocation,2);}
 
     public void setMaxExclusivePercentValue(int dataValueLocation, double inDouble){
-	maxExclusivePercentValueList[dataValueLocation] = inDouble;}
+	this.insertDouble(dataValueLocation,3,inDouble);}
   
     public double getMaxExclusivePercentValue(int dataValueLocation){
-	return maxExclusivePercentValueList[dataValueLocation];}
+	return this.getDouble(dataValueLocation,3);}
 
     public void setMaxUserSecPerCall(int dataValueLocation, double inDouble){
-	maxUserSecPerCallList[dataValueLocation] = inDouble;}
+	this.insertDouble(dataValueLocation,4,inDouble);}
   
     public double getMaxUserSecPerCall(int dataValueLocation){
-	return maxUserSecPerCallList[dataValueLocation];}
+	return this.getDouble(dataValueLocation,4);}
   
     public void setMaxNumberOfCalls(int inInt){
 	maxNumberOfCalls = inInt;}
@@ -134,17 +154,10 @@ public class GlobalThread implements Serializable
     public double getTotalInclusiveValue(){
 	return totalInclusiveValue;}
     
-    
     //Instance data.
     Vector threadDataList;
     Vector userThreadDataList;
-
-    private double[] maxInclusiveValueList = new double[1];
-    private double[] maxExclusiveValueList = new double[1];
-    private double[] maxInclusivePercentValueList = new double[1];
-    private double[] maxExclusivePercentValueList = new double[1];
-    private double[] maxUserSecPerCallList = new double[1];
-
+    private double[] doubleList;
     double totalExclusiveValue = 0;
     double totalInclusiveValue = 0;
     private int maxNumberOfCalls = 0;

@@ -10,11 +10,7 @@ Description:
 package paraprof;
 
 import java.util.*;
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
-import javax.swing.*;
-import javax.swing.event.*;
 import java.text.*;
 
 public class GlobalThreadDataElement
@@ -51,28 +47,28 @@ public class GlobalThreadDataElement
 	return mappingID;}
   
     public void setInclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(0,dataValueLocation,inDouble);}
+	this.insertDouble(dataValueLocation,0,inDouble);}
   
     public double getInclusiveValue(int dataValueLocation){
-	return this.getDouble(0,dataValueLocation);}
+	return this.getDouble(dataValueLocation,0);}
   
     public void setExclusiveValue(int dataValueLocation, double inDouble){
-	this.insertDouble(1,dataValueLocation,inDouble);}
+	this.insertDouble(dataValueLocation,1,inDouble);}
     
     public double getExclusiveValue(int dataValueLocation){
-	return this.getDouble(1,dataValueLocation);}
+	return this.getDouble(dataValueLocation,1);}
     
     public void setInclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(2,dataValueLocation,inDouble);}
+	this.insertDouble(dataValueLocation,2,inDouble);}
   
     public double getInclusivePercentValue(int dataValueLocation){
-	return this.getDouble(2,dataValueLocation);}
+	return this.getDouble(dataValueLocation,2);}
   
     public void setExclusivePercentValue(int dataValueLocation, double inDouble){
-	this.insertDouble(3,dataValueLocation,inDouble);}
+	this.insertDouble(dataValueLocation,3,inDouble);}
     
     public double getExclusivePercentValue(int dataValueLocation){
-	return this.getDouble(3,dataValueLocation);}
+	return this.getDouble(dataValueLocation,3);}
   
     public void setNumberOfCalls(int inInt){
 	numberOfCalls = inInt;}
@@ -87,10 +83,10 @@ public class GlobalThreadDataElement
 	return numberOfSubRoutines;}
   
     public void setUserSecPerCall(int dataValueLocation, double inDouble){
-	this.insertDouble(4,dataValueLocation,inDouble);}
+	this.insertDouble(dataValueLocation,4,inDouble);}
   
     public double getUserSecPerCall(int dataValueLocation){
-	return this.getDouble(4,dataValueLocation);}
+	return this.getDouble(dataValueLocation,4);}
   
   
     public static int getPositionOfName(){
@@ -412,7 +408,7 @@ public class GlobalThreadDataElement
 	return position;
     }
   
-    private void insertDouble(int offset, int dataValueLocation, double inDouble){
+    private void insertDouble(int dataValueLocation, int offset, double inDouble){
 	int actualLocation = (dataValueLocation*5)+offset;
 	try{
 	    doubleList[actualLocation] = inDouble;
@@ -422,7 +418,7 @@ public class GlobalThreadDataElement
 	}
     }
   
-    private double getDouble(int offset, int dataValueLocation){
+    private double getDouble(int dataValueLocation, int offset){
 	int actualLocation = (dataValueLocation*5)+offset;
 	try{
 	    return doubleList[actualLocation];
