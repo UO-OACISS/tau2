@@ -9,6 +9,11 @@
 
 Change log:
 ------------
+Version 2.6 changes (from 2.5):
+1. TAU Mapping API introduced.
+2. More platforms: Cray T3E with F90, Linux PGI compilers
+3. Support for threadsafety in Fortran/C. 
+
 Version 2.5 changes (from 2.4):
 1. Automatic instrumentation support using DUCTAPE.
 2. Changes in directory structure and configuration.
