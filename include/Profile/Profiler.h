@@ -32,7 +32,7 @@
 #pragma warning( disable : 4786 )
 #endif /* TAU_WINDOWS */
 
-#ifdef __cplusplus 
+#if (defined (__cplusplus ) && !defined (TAU_USE_C_API))
 
 #include <Profile/ProfileGroups.h>
 
@@ -63,7 +63,7 @@
 #include <Profile/RtsLayer.h>
 
 #include <Profile/FunctionInfo.h>
-			  
+
 #include <Profile/UserEvent.h>
 
 #include <Profile/PclLayer.h>
@@ -198,13 +198,13 @@ private:
 #endif /* PROFILING_ON || TRACING_ON */
 #include <Profile/TauMapping.h>
 // included after class Profiler is defined.
-#else /* __cplusplus */
+#else /* __cplusplus && ! TAU_USE_C_API */
 #include <Profile/TauCAPI.h> /* For C program */
-#endif /* __cplusplus */
+#endif /* __cplusplus && ! TAU_USE_C_API */
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.51 $   $Date: 2004/10/04 23:32:14 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.51 2004/10/04 23:32:14 amorris Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.52 $   $Date: 2004/10/30 00:34:08 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.52 2004/10/30 00:34:08 sameer Exp $ 
  ***************************************************************************/

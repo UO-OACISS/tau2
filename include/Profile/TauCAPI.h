@@ -30,7 +30,10 @@
 #ifndef _TAU_CAPI_H_
 #define _TAU_CAPI_H_
 
-#ifndef __cplusplus
+#if ((! defined( __cplusplus)) || defined (TAU_USE_C_API))
+#ifdef TAU_USE_C_API
+extern "C" {
+#endif /* TAU_USE_C_API */
 /* For C */
 #include <stdio.h>
 #include <Profile/ProfileGroups.h>
@@ -278,13 +281,16 @@ extern void Tau_set_interrupt_interval(int value);
         Tau_trace_recvmsg(type, source, length);
 #endif /* TRACING_ON */
 
+#ifdef TAU_USE_C_API
+}
+#endif /* TAU_USE_C_API */
 
-#endif /* __cplusplus */
+#endif /* ! __cplusplus || TAU_C_API */
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.32 $   $Date: 2004/10/04 23:32:14 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.32 2004/10/04 23:32:14 amorris Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.33 $   $Date: 2004/10/30 00:34:08 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.33 2004/10/30 00:34:08 sameer Exp $
  ***************************************************************************/
 
