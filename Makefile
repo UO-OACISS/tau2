@@ -13,11 +13,11 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=sgi8k
-CONFIG_CC=cc
-CONFIG_CXX=CC
+CONFIG_ARCH=default
+CONFIG_CC=gcc
+CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=
+USER_OPT=-g
 TAUROOT=/home/grads/sameer/tau2
 #######################################################################
  
@@ -39,7 +39,8 @@ LSX = .a
 LINKER	= $(CC)
 
 # tools EVERYONE needs
-BASIC = utils src/Profile examples/instrument
+#BASIC = utils src/Profile examples/instrument
+BASIC = utils src/Profile 
 
 # library and tools
 EXPORTS = utils src/Profile 

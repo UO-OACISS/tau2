@@ -19,17 +19,17 @@
 #****************************************************************************
 
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=sgi8k
-CONFIG_CC=cc
-CONFIG_CXX=CC
+CONFIG_ARCH=default
+CONFIG_CC=gcc
+CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=
+USER_OPT=-g
 TAUROOT=/home/grads/sameer/tau2
 XFORMSROOT=/local/apps/xforms/FORMS
 #######################################################################
  
-#ABI 	     = -64		   #ENDIF##MIPSR8K#
-ISA          = -mips4		   #ENDIF##MIPSR8K#
+#MIPSR8K##ABI 	     = -64		   #ENDIF#
+#MIPSR8K#ISA          = -mips4		   #ENDIF#
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
 CXX = $(CONFIG_CXX) $(ABI) $(ISA)

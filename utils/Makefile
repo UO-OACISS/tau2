@@ -12,15 +12,15 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=sgi8k
-CONFIG_CC=cc
-CONFIG_CXX=CC
+CONFIG_ARCH=default
+CONFIG_CC=gcc
+CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=
+USER_OPT=-g
 TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
 #######################################################################
  
-ISA          = -mips4		   #ENDIF##MIPSR8K#
+#MIPSR8K#ISA          = -mips4		   #ENDIF#
 
 ############# Standard Defines ##############
 CC = $(CONFIG_CC) $(ABI) $(ISA)
@@ -38,7 +38,7 @@ LINKER	= $(CC)
 #PTX#LEXTRA = -lseq#ENDIF#
 #SP1#CEXTRA = -D__SP1__#ENDIF#
 #CM5#CEXTRA = -D__CM5__#ENDIF#
-CEXTRA = -D__SGIMP__#ENDIF##SGIMP#
+#SGIMP#CEXTRA = -D__SGIMP__#ENDIF#
 #PCXX#RUNTIME1 = pcxx_merge#ENDIF#
 #PCXX#RUNTIME2 = pcxx_convert#ENDIF#
 #PCXX#RUNTIME3 = pcxx_dump#ENDIF#

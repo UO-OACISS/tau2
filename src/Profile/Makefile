@@ -82,8 +82,8 @@ ARFLAGS	      = rcv
 ##################################################################
 
 ############# For SGI CC compiler, replace AR accordingly #######
-AR			= $(CXX) -ar 		   #ENDIF##SGICC#
-ARFLAGS			= -o			   #ENDIF##SGICC#
+#SGICC#AR			= $(CXX) -ar 		   #ENDIF#
+#SGICC#ARFLAGS			= -o			   #ENDIF#
 ##################################################################
 
 RM 	      = /bin/rm -f
