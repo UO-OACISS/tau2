@@ -34,6 +34,7 @@ public class LoadTrial implements ParaProfObserver {
 	// check for the existence of file
 	readPprof = new File(sourcename);
 
+/*
 	// Get the creation time of pprof.dat
 	Date date = new Date(readPprof.lastModified());
 	trialTime = date.toString();
@@ -45,6 +46,7 @@ public class LoadTrial implements ParaProfObserver {
 	    System.out.println("Did not find pprof.dat file!"); 
 	    System.exit(-1);
 	}
+*/
 
 	dbSession = new PerfDBSession();
 	dbSession.initialize(configFileName);
@@ -60,31 +62,54 @@ public class LoadTrial implements ParaProfObserver {
 
     public boolean checkForExp(String expid) {
 	this.expID = Integer.parseInt(expid);
-	exp = dbSession.setExperiment(Integer.parseInt(expid));
+	exp = dbSession.setExperiment(this.expID);
 	if (exp == null)
 	    return false;
 	else
 	    return true;
     }
 
-    public void loadTrial(String trialName, String problemFile) {
-	trial = null;
-	Vector v = new Vector();;
-	File[] inFile = new File[1];
-	inFile[0] = new File (sourceFile);
-	v.add(inFile);
+/*
+    public boolean checkForTrial(String trialid) {
+	trial = dbSession.setTrial(Integer.parseInt(trialid));
+	if (trial == null)
+	    return false;
+	else
+	    return true;
+    }
+*/
 
-	//For the moment, just use pprof output.
-	ParaProfDataSession dataSession = new TauPprofOutputSession();
+    public void loadTrial(int fileType, String trialName, String problemFile) {
+	trial = null;
+
+	Vector v = null;
+	File[] inFile = new File[1];
+	ParaProfDataSession dataSession = null;
+	switch (fileType) {
+		case 0:
+			inFile[0] = new File (sourceFile);
+			v = new Vector();
+			v.add(inFile);
+			dataSession = new TauPprofOutputSession();
+			break;
+		case 1:
+			FileList fl = new FileList();
+			v = fl.getFileList(new File(System.getProperty("user.dir")), null, fileType, "profile", false);
+			dataSession = new TauOutputSession();
+			break;
+		case 2:
+			inFile[0] = new File (sourceFile);
+			v = new Vector();
+			v.add(inFile);
+			dataSession = new DynaprofOutputSession();
+			break;
+	}
+
 	trial = new Trial();
 	trial.setDataSession(dataSession);
-
 	trial.setName(trialName);
 	trial.setProblemDefinition(getProblemString(problemFile));
 	trial.setExperimentID(expID);
-
-	//Add this class as an observer to the data session and 
-	//then call initialize on the dataSession.
 	dataSession.addObserver(this);
 	dataSession.initialize(v);
     }
@@ -155,7 +180,7 @@ public class LoadTrial implements ParaProfObserver {
     //******************************
 
     static public void main(String[] args){
-	String USAGE = "USAGE: perfdb_loadtrial [{-s,--sourcefile} sourcefilename] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]";
+	String USAGE = "USAGE: perfdb_loadtrial [{-f, --filetype} file_type] [{-s,--sourcefile} sourcefilename] [{-a,--applicationid} application_id] [{-e,--experimentid} experiment_id] [{-t, --trialid} trial_id] [{-n,--name} trial_name] [{-p,--problemfile} problem_file]\n\tWhere:\n\t\tfile_type = profiles (TAU), pprof (TAU), dynaprof, gprof, xprof, sddf (svpablo)\n";
 
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
@@ -165,6 +190,8 @@ public class LoadTrial implements ParaProfObserver {
         CmdLineParser.Option applicationidOpt = parser.addStringOption('a', "applicationid");
         CmdLineParser.Option nameOpt = parser.addStringOption('n', "name");
         CmdLineParser.Option problemOpt = parser.addStringOption('p', "problemfile");
+        CmdLineParser.Option trialOpt = parser.addStringOption('t', "trialid");
+        CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
 
         try {
             parser.parse(args);
@@ -182,6 +209,8 @@ public class LoadTrial implements ParaProfObserver {
         String experimentID = (String)parser.getOptionValue(experimentidOpt);
         String trialName = (String)parser.getOptionValue(nameOpt);
         String problemFile = (String)parser.getOptionValue(problemOpt);
+        String trialID = (String)parser.getOptionValue(trialOpt);
+        String fileTypeString = (String)parser.getOptionValue(typeOpt);
 
     	if (help != null && help.booleanValue()) {
 	    System.err.println(USAGE);
@@ -189,22 +218,47 @@ public class LoadTrial implements ParaProfObserver {
     	}
 
 	if (configFile == null) {
-            System.err.println("Please enter a valid config file.");
+		System.err.println("Please enter a valid config file.");
 	    System.err.println(USAGE);
 	    System.exit(-1);
 	} else if (sourceFile == null) {
-            System.err.println("Please enter a valid source file.");
+		System.err.println("Please enter a valid source file.");
 	    System.err.println(USAGE);
 	    System.exit(-1);
 	} else if (applicationID == null) {
-            System.err.println("Please enter a valid application ID.");
+		System.err.println("Please enter a valid application ID.");
 	    System.err.println(USAGE);
 	    System.exit(-1);
 	} else if (experimentID == null) {
-            System.err.println("Please enter a valid experiment ID.");
+		System.err.println("Please enter a valid experiment ID.");
 	    System.err.println(USAGE);
 	    System.exit(-1);
+	} 
+	
+	int fileType = 0;
+	String filePrefix = null;
+	if (fileTypeString != null) {
+		if (fileTypeString.equals("pprof")) {
+			fileType = 0;
+		} else if (fileTypeString.equals("profiles")) {
+			fileType = 1;
+		} else if (fileTypeString.equals("dynaprof")) {
+			fileType = 2;
+/*
+		} else if (fileTypeString.equals("gprof")) {
+			fileType = 0;
+		} else if (fileTypeString.equals("xprof")) {
+			fileType = 0;
+		} else if (fileTypeString.equals("sddf")) {
+			fileType = 0;
+*/
+		} else {
+			System.err.println("Please enter a valid file type.");
+	    	System.err.println(USAGE);
+	    	System.exit(-1);
+		}
 	}
+
 	if (trialName == null) {
 	    trialName = new String("");
 	}
@@ -212,7 +266,8 @@ public class LoadTrial implements ParaProfObserver {
 	LoadTrial trans = new LoadTrial(configFile, sourceFile);
 	trans.checkForApp(applicationID);
 	trans.checkForExp(experimentID);
-	trans.loadTrial(trialName, problemFile);
+	// trans.checkForTrial(trialID);
+	trans.loadTrial(fileType, trialName, problemFile);
 	// the trial will be saved when the load is finished (update is called)
     }
 } 
