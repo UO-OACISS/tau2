@@ -219,7 +219,7 @@ public class ConfigureTest {
 
 	} catch (Exception e) {
 	    
-	    e.printStackTrace();
+	    //e.printStackTrace();
 	    
 
 	    // The schema does not have the version table, it must be older than 2.13.7 (or whatever comes after 2.13.6)
