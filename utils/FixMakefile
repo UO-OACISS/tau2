@@ -113,6 +113,11 @@ fi
 	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
 	;;
 
+     oparitool=*)
+        oparitool=`echo $1 | sed -e 's/^oparitool=//'`
+	echo "s,^TAU_OPARI_TOOL=.*$,TAU_OPARI_TOOL=$oparitool,g" >> $sedout
+	;;
+
      epilogdir=*)
         epilogdir=`echo $1 | sed -e 's/^epilogdir=//'`
 	echo "s,^EPILOGDIR=.*$,EPILOGDIR=$epilogdir,g" >> $sedout
