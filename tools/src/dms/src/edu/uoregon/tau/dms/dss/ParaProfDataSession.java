@@ -393,8 +393,8 @@ public abstract class ParaProfDataSession  extends DataSession{
 	    if(count!=0){
 		double meanExlusiveValue = exclusiveTotal/count;
 		double meanInlusiveValue = inclusiveTotal/count;
-		double meanNumberOfCalls = numberOfCallsTotal/count;
-		double meanNumberOfSubroutines = numberOfSubroutinesTotal/count;
+		double meanNumberOfCalls = (double)numberOfCallsTotal/count;
+		double meanNumberOfSubroutines = (double)numberOfSubroutinesTotal/count;
 		double meanUserSecPerCallValue = userSecPerCallValueTotal/count;
 		
 		globalMappingElement.setMeanExclusiveValue(metric, meanExlusiveValue);
@@ -566,8 +566,8 @@ public abstract class ParaProfDataSession  extends DataSession{
 	    if(count!=0){
 		//Since we only need to do the numberOfCalls and numberOfSubroutines for
 		//the first metric, do it first (outside the loop).
-		double meanNumberOfCalls = numberOfCallsTotal/count;
-		double meanNumberOfSubroutines = numberOfSubroutinesTotal/count;
+		double meanNumberOfCalls = (double)numberOfCallsTotal/count;
+		double meanNumberOfSubroutines = (double)numberOfSubroutinesTotal/count;
 		
 		globalMappingElement.setMeanNumberOfCalls(meanNumberOfCalls);
 		if(globalMapping.getMaxMeanNumberOfCalls() < meanNumberOfCalls)
