@@ -103,7 +103,7 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 // we know that it couldn't be already on the call stack.
 	RtsLayer::LockDB();
 // Use LockDB to avoid a possible race condition.
-	SetAlreadyOnStack(false, tid);
+	//SetAlreadyOnStack(false, tid);
     	for (int i=0; i < TAU_MAX_THREADS; i++)
    	{
 // don't initialize NumCalls and AlreadyOnStack as there could be 
@@ -111,6 +111,8 @@ void FunctionInfo::FunctionInfoInit(unsigned int ProfileGroup,
 // initialized, other thread may have started executing and setting 
 // these values? 
 //     	  NumCalls[i] = 0;
+     	  NumCalls[i] = 0;
+	  SetAlreadyOnStack(false, i);
      	  NumSubrs[i] = 0;
      	  ExclTime[i] = 0;
      	  InclTime[i] = 0;
@@ -248,6 +250,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 1999/03/17 23:49:09 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.12 1999/03/17 23:49:09 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 1999/04/24 20:57:50 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.13 1999/04/24 20:57:50 sameer Exp $ 
  ***************************************************************************/
