@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * This is the top level class for the Database implementation of the API.
  *
- * <P>CVS $Id: PerfDBSession.java,v 1.32 2004/01/30 21:21:40 khuck Exp $</P>
+ * <P>CVS $Id: PerfDBSession.java,v 1.33 2004/02/13 21:33:16 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  */
@@ -556,14 +556,17 @@ public class PerfDBSession extends DataSession {
 		}
 
 		// get the metric count
+		boolean gotWhile = false;
 		int metricCount = 0;
+		if (metrics != null) {
+			metricCount = metrics.size();
+		} else {
 		StringBuffer buf2 = new StringBuffer();
 		buf2.append("select count (distinct m.id) from metric m ");
 		buf2.append("inner join xml_file x on m.id = x.metric ");
 		buf2.append("inner join trial t on x.trial = t.id ");
 		buf2.append("inner join experiment e on e.id = t.experiment ");
 		buf2.append("inner join function f on t.id = f.trial ");
-		boolean gotWhile = false;
 		if (application != null) {
 			buf2.append(" where e.application = " + application.getID());
 			gotWhile = true;
@@ -582,22 +585,6 @@ public class PerfDBSession extends DataSession {
 			else
 				buf2.append(" where");
 			buf2.append(" t.id = " + trial.getID());
-			gotWhile = true;
-		}
-		if (metrics != null) {
-			if (gotWhile)
-				buf2.append(" and m.name in ('");
-			else
-				buf2.append(" where m.name in ('");
-			String metric;
-        	for(Enumeration en = metrics.elements(); en.hasMoreElements() ;) {
-				metric = (String) en.nextElement();
-				buf2.append(metric);
-				if (en.hasMoreElements())
-					buf2.append("', '");
-				else
-					buf2.append("') ");
-			}
 			gotWhile = true;
 		}
 		if (functions != null) {
@@ -626,6 +613,7 @@ public class PerfDBSession extends DataSession {
 		}catch (Exception ex) {
 	    	ex.printStackTrace();
 	    	return null;
+		}
 		}
 
 		// create a string to hit the database
@@ -722,11 +710,11 @@ public class PerfDBSession extends DataSession {
 			resultSet.last();
 			int size = resultSet.getRow();
 			resultSet.first();
-			functionData = new FunctionDataObject[size];
+			functionData = new FunctionDataObject[(size/metricCount)];
 			int index = 0;
 	    	while (resultSet.next() != false) {
 				int metricIndex = 0;
-				FunctionDataObject funDO = new FunctionDataObject();
+				FunctionDataObject funDO = new FunctionDataObject(metricCount);
 				funDO.setFunctionIndexID(resultSet.getInt(2));
 				funDO.setNode(resultSet.getInt(4));
 				funDO.setContext(resultSet.getInt(5));
