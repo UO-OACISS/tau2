@@ -164,6 +164,8 @@ tauoptions=
 pdt_root_dir="."
 pdt=no
 opari=no
+opari_region=no
+opari_construct=no
 dyninst=no
 java=no
 openmp=no
@@ -303,6 +305,17 @@ do
   -opari=*)
       opari=yes
       oparidir=`echo $arg | sed -e 's/-opari=//'`
+      openmp=yes
+    shift
+    ;;
+
+  -opari_region)
+      opari_region=yes
+    shift
+    ;;
+
+  -opari_construct)
+      opari_construct=yes
     shift
     ;;
 
@@ -509,6 +522,8 @@ do
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-openmp ........................................... Use OpenMP threads."
     echo "-opari=<dir>... Specify location of Opari OpenMP tool (use with above)."
+    echo "-opari_region ......... Report performance data for all OpenMP regions."
+    echo "-opari_construct ... Report performance data for all OpenMP constructs."
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
@@ -1750,6 +1765,24 @@ if [ $papi = yes ]
     if [ $pthread = yes -o $openmp = yes ]
     then
       fixmakeargs="$fixmakeargs PAPIPTHREAD"
+    fi
+fi
+
+if [ $opari = yes ]
+  then
+    if [ $pthread = yes -o $tulipthread = yes -o $smarts = yes -o $java = yes ]
+    then
+      echo "ERROR: -opari option requires OpenMP threads package."
+      echo "*****************************************************"
+      exit 1
+    fi
+    if [ $opari_construct = yes -a $opari_region = no ]
+    then
+      fixmakeargs="$fixmakeargs OPARI_CONSTRUCT"
+    fi
+    if [ $opari_construct = no -a $opari_region = yes ]
+    then
+      fixmakeargs="$fixmakeargs OPARI_REGION"
     fi
 fi
 
