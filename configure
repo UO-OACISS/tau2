@@ -1376,12 +1376,12 @@ then
   then
     #echo "Lib dir found. adding -L$mpilib to LIB"
     mpilibargs="$mpilibargs -L$mpilib"
-    if [ -f $mpilib/libfmpi.a ]
+    if [ -f $mpilib/libfmpi.a -o -f $mpilib/libfmpi.so ]
     then
       #echo "Fortran fmpi.* found"
       mpiflibargs="-L$mpilib -lfmpi $wrapperlib"
     else
-      if [ -f $mpilib/libfmpich.a ]
+      if [ -f $mpilib/libfmpich.a -o -f $mpilib/libfmpich.so ]
       then
         #echo "Fortran fmpich.* found"
         mpiflibargs="-L$mpilib -lfmpich $wrapperlib"
@@ -1393,14 +1393,19 @@ then
   
     #echo "mpilibargs = $mpilibargs"
     # Cases
-    if [ -r $mpilib/libmpi.a ]
+    if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so ]
     then
       #echo "libmpi.* found!!"
       if [ $mpilibrary = no ]
       then 
 	mpilibrary=-lmpi
+	if [ -r $mpilib/libmpi++.so ]
+	then
+	  mpilibrary='-lmpi -lmpi++'
+	# SGI MPT
+	fi
       fi
-      if [ -r $mpilib/libpmpi.a ] 
+      if [ -r $mpilib/libpmpi.a -o -r $mpilib/libpmpi.so ] 
       then 
         #echo "libpmpi.* found "
         mpilibargs="$mpilibargs -lpmpi $mpilibrary"
@@ -1412,7 +1417,7 @@ then
       fi
     else
       #echo "libmpi.* not found!! Checking for mpich.*..."
-      if [ -r $mpilib/libmpich.a ]
+      if [ -r $mpilib/libmpich.a -o -r $mpilib/libpmpich.so ]
       then 
         #echo "MPICH found "
         if [ $mpilibrary = no ]
@@ -1420,7 +1425,7 @@ then
   	  mpilibrary=-lmpich
         fi
       
-        if [ -r $mpilib/libpmpich.a ] 
+        if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] 
         then 
           #echo "pmpich found"
           mpilibargs="$mpilibargs -lpmpich $mpilibrary"
