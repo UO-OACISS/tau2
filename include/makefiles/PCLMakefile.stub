@@ -47,7 +47,7 @@ endif
 #	SGI IRIX 6.x
 ifeq ($(SYSTEM),IRIX64)
 TARGET_SYSTEM	= MIPS
-CPU_NAME	= mips
+CPU_NAME	= mips-sgi-irix6.5
 LOADLIBS	= -L$(PCLDIR)/bin/$(CPU_NAME) -lpcl -lperfex
 endif
 
