@@ -1072,22 +1072,22 @@ proc redrawText {node name} {
 
       if { $t == $pr_sel_tag } {
 	  if { $column == 8} {
-	      $win tag add seltag $n.0 $n.71
+	      $win tag add seltag $n.0 $n.72
 	  } else { 
-	      $win tag add seltag $n.0 $n.61
+	      $win tag add seltag $n.0 $n.67
 	  }
         $win tag configure seltag -foreground red
       }
     }
-    #$win tag add t$n $n.61 "$n.61 lineend"
+    #$win tag add t$n $n.67 "$n.67 lineend"
     if { $newver == 1 } {
 	if { $column == 8} {
 	    $win tag add t$n $n.72 "$n.72 lineend"
 	} else {
-	    $win tag add t$n $n.61 "$n.61 lineend"
+	    $win tag add t$n $n.67 "$n.67 lineend"
 	}
     } else {
-        $win tag add t$n $n.61 "$n.61 lineend"   
+        $win tag add t$n $n.67 "$n.67 lineend"   
     }
     if { [winfo depth .] == 2 } {
       $win tag configure t$n -background white -foreground black
