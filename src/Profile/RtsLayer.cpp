@@ -520,7 +520,7 @@ void RtsLayer::TraceRecvMsg(int type, int source, int length)
 // DumpEDF() writes the function information in the edf.<node> file
 // The function info consists of functionId, group, name, type, parameters
 //////////////////////////////////////////////////////////////////////
-int RtsLayer::DumpEDF(void)
+int RtsLayer::DumpEDF(int tid)
 {
 #ifdef TRACING_ON 
   	vector<FunctionInfo*>::iterator it;
@@ -530,7 +530,7 @@ int RtsLayer::DumpEDF(void)
 	int  numEvents, numExtra;
 
 
-	if (RtsLayer::myThread() != 0) 
+	if (tid != 0) 
 	  return 1; 
 	// Only thread 0 on a node should write the edf files.
 	if ((dirname = getenv("TRACEDIR")) == NULL) {
@@ -592,6 +592,6 @@ int RtsLayer::DumpEDF(void)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.12 $   $Date: 1999/07/20 21:50:37 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.12 1999/07/20 21:50:37 sameer Exp $ 
+ * $Revision: 1.13 $   $Date: 1999/08/19 22:26:55 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.13 1999/08/19 22:26:55 sameer Exp $ 
  ***************************************************************************/

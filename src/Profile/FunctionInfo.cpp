@@ -66,7 +66,7 @@ using namespace std;
 // ensure that non-local static variables are initialised before being
 // used (Ref: Scott Meyers, Item 47 Eff. C++).
 //////////////////////////////////////////////////////////////////////
-vector<FunctionInfo*>& TheFunctionDB(int threadid)
+vector<FunctionInfo*>& TheFunctionDB(void)
 { // FunctionDB contains pointers to each FunctionInfo static object
   static vector<FunctionInfo*> FunctionDB;
 
@@ -92,12 +92,11 @@ int& TheSafeToDumpData()
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
 //////////////////////////////////////////////////////////////////////
 void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, 
-	const char *ProfileGroupName, bool InitData)
+	const char *ProfileGroupName, bool InitData, int tid)
 {
 #ifdef TRACING_ON
 	GroupName = RtsLayer::PrimaryGroup(ProfileGroupName);
 #endif //TRACING_ON
-   int tid = RtsLayer::myThread();
 
 // Since FunctionInfo constructor is called once for each function (static)
 // we know that it couldn't be already on the call stack.
@@ -153,9 +152,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 }
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
+	int tid)
 {
-
       DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
@@ -163,48 +162,51 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
         Name = name;
   	Type = type;
 
-	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
+	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
       }
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const char *name, string& type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
+	int tid)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
 
-	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
+	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
       }
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(string& name, const char * type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
+	int tid)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
 
-	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
+	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
       }
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(string& name, string& type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData)
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
+	int tid)
 {
       if (ProfileGroup & RtsLayer::TheProfileMask()) {
 
         Name = name;
   	Type = type;
-	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
+	FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
       }
 }
 
@@ -237,7 +239,7 @@ long FunctionInfo::GetFunctionId(void)
   	if (FunctionId == 0)
 	{
 #ifdef DEBUG_PROF
-  	  printf("Fid = 0! tid = %d\n", RtsLayer::myThread());
+  	  printf("Fid = 0! \n");
 #endif // DEBUG_PROF
 	  while (FunctionId ==0)
 	  {
@@ -252,6 +254,6 @@ long FunctionInfo::GetFunctionId(void)
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.18 $   $Date: 1999/06/22 22:33:11 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.18 1999/06/22 22:33:11 sameer Exp $ 
+ * $Revision: 1.19 $   $Date: 1999/08/19 22:26:54 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.19 1999/08/19 22:26:54 sameer Exp $ 
  ***************************************************************************/

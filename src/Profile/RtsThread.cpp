@@ -66,6 +66,10 @@ int RtsLayer::myThread(void)
   return PthreadLayer::GetThreadId();
 #elif  TULIPTHREADS
   return TulipThreadLayer::GetThreadId();
+#elif JAVA
+  // Java should not call this routine. tids should be in TauJava.cpp layer
+  cout <<"ERROR : Java shouldn't call RtsLayer::myThread() returns -1 \n";
+  return -1;
 #else  // if no other thread package is available 
   return 0;
 #endif // PTHREADS
@@ -118,8 +122,8 @@ void RtsLayer::UnLockDB(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
- * $Revision: 1.4 $   $Date: 1999/06/22 22:33:13 $
- * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.4 1999/06/22 22:33:13 sameer Exp $
+ * $Revision: 1.5 $   $Date: 1999/08/19 22:26:55 $
+ * POOMA_VERSION_ID: $Id: RtsThread.cpp,v 1.5 1999/08/19 22:26:55 sameer Exp $
  ***************************************************************************/
 
 

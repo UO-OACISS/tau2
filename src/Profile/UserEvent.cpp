@@ -60,7 +60,7 @@ template TauUserEvent** copy_backward(TauUserEvent**,TauUserEvent**,TauUserEvent
 template TauUserEvent** uninitialized_copy(TauUserEvent**,TauUserEvent**,TauUserEvent**);
 #endif // PGI
 
-vector<TauUserEvent*>& TheEventDB(int threadid)
+vector<TauUserEvent*>& TheEventDB(void)
 {
   static vector<TauUserEvent*> EventDB;
 
@@ -332,7 +332,7 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 
   for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
   {
-    DEBUGPROFMSG("Thr "<< RtsLayer::myThread()<< " TauUserEvent "<< 
+    DEBUGPROFMSG("TauUserEvent "<< 
       (*it)->GetEventName() << "\n Min " << (*it)->GetMin() << "\n Max " <<
       (*it)->GetMax() << "\n Mean " << (*it)->GetMean() << "\n Sum Sqr " <<
       (*it)->GetSumSqr() << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
@@ -407,6 +407,6 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.8 $   $Date: 1999/06/22 22:33:14 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.8 1999/06/22 22:33:14 sameer Exp $ 
+ * $Revision: 1.9 $   $Date: 1999/08/19 22:26:56 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.9 1999/08/19 22:26:56 sameer Exp $ 
  ***************************************************************************/

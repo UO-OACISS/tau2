@@ -65,7 +65,7 @@ static void TraceEventOnly(long int ev,long long par, int tid)
   pcxx_ev_ptr->ti   = pcxx_GetUSecLong();
   pcxx_ev_ptr->par  = par;
   pcxx_ev_ptr->nid  = RtsLayer::myNode();
-  pcxx_ev_ptr->tid  = RtsLayer::myThread();
+  pcxx_ev_ptr->tid  = tid;
   TauCurrentEvent[tid] ++;
 }
 */
@@ -218,7 +218,7 @@ void TraceEvent(long int ev, long long par, int tid)
       pcxx_ev_ptr->par  = pcxx_ev_class; /* init event */ 
       /* probably the nodeid is not set yet */
       pcxx_ev_ptr->nid  = RtsLayer::myNode();
-      pcxx_ev_ptr->tid  = RtsLayer::myThread();
+      pcxx_ev_ptr->tid  = tid;
  
       TauCurrentEvent[tid] ++;
       pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]];
@@ -229,7 +229,7 @@ void TraceEvent(long int ev, long long par, int tid)
   pcxx_ev_ptr->ti   = pcxx_GetUSecLong();
   pcxx_ev_ptr->par  = par;
   pcxx_ev_ptr->nid  = RtsLayer::myNode();
-  pcxx_ev_ptr->tid  = RtsLayer::myThread();
+  pcxx_ev_ptr->tid  = tid ;
   TauCurrentEvent[tid] ++;
 
   if ( TauCurrentEvent[tid] >= TAU_MAX_RECORDS - 1 ) TraceEvFlush(tid); 

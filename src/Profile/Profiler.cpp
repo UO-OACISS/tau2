@@ -98,15 +98,13 @@ FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
 
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::Start(void)
+void Profiler::Start(int tid)
 { 
-  int tid;
      
       DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
-  	tid = RtsLayer::myThread();
 	
 #ifdef TRACING_ON
 	TraceEvent(ThisFunction->GetFunctionId(), 1, tid); // 1 is for entry
@@ -149,7 +147,7 @@ void Profiler::Start(void)
 	CurrentProfiler[tid] = this;
         if (ParentProfiler != 0) {
           DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
-            << RtsLayer::myContext() << ","  << RtsLayer::myThread()
+            << RtsLayer::myContext() << ","  << tid
 	    << " Inside "<< ThisFunction->GetName()<< " Setting ParentProfiler "
 	    << ParentProfiler->ThisFunction->GetName()<<endl
 	    << " ParentProfiler = "<<ParentProfiler << " CurrProf = "
@@ -164,13 +162,14 @@ void Profiler::Start(void)
 
 //////////////////////////////////////////////////////////////////////
 
-Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup, bool StartStop)
+Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup, 
+	bool StartStop, int tid)
 {
 
       StartStopUsed_ = StartStop; // will need it later in ~Profiler
       MyProfileGroup_ = ProfileGroup ;
       ThisFunction = function ; 
-      ParentProfiler = CurrentProfiler[RtsLayer::myThread()]; // Timers
+      ParentProfiler = CurrentProfiler[tid]; // Timers
       DEBUGPROFMSG("Profiler::Profiler: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       
@@ -221,14 +220,12 @@ Profiler& Profiler::operator= (const Profiler& X)
 
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::Stop(void)
+void Profiler::Stop(int tid)
 {
-  int tid; 
       DEBUGPROFMSG("Profiler::Stop: MyProfileGroup_ = " << MyProfileGroup_ 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
       if (MyProfileGroup_ & RtsLayer::TheProfileMask()) {
 	if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
- 	tid = RtsLayer::myThread();
 #ifdef TRACING_ON
 	TraceEvent(ThisFunction->GetFunctionId(), -1, tid); // -1 is for exit
 #endif //TRACING_ON
@@ -359,10 +356,9 @@ Profiler::~Profiler() {
 
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::ProfileExit(const char *message)
+void Profiler::ProfileExit(const char *message, int tid)
 {
   Profiler *current;
-  int tid = RtsLayer::myThread();
 
   current = CurrentProfiler[tid];
 
@@ -379,7 +375,7 @@ void Profiler::ProfileExit(const char *message)
     DEBUGPROFMSG("Thr "<< RtsLayer::myNode() << " ProfileExit() calling Stop :" 
       << current->ThisFunction->GetName() << " " 
       << current->ThisFunction->GetType() << endl;);
-    current->Stop(); // clean up 
+    current->Stop(tid); // clean up 
 
     if (current->ParentProfiler == 0) {
       if (!RtsLayer::isCtorDtor(current->ThisFunction->GetName())) {
@@ -416,10 +412,9 @@ int Profiler::StoreData(int tid)
 
 	DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
 
-
 #ifdef TRACING_ON
 	pcxx_EvClose();
-	RtsLayer::DumpEDF();
+	RtsLayer::DumpEDF(tid);
 #endif // TRACING_ON 
 
 #ifdef PROFILING_ON 
@@ -432,7 +427,7 @@ int Profiler::StoreData(int tid)
 	 
 	filename = new char[1024];
 	sprintf(filename,"%s/profile.%d.%d.%d",dirname, RtsLayer::myNode(),
-		RtsLayer::myContext(), RtsLayer::myThread());
+		RtsLayer::myContext(), tid);
 	DEBUGPROFMSG("Creating " << filename << endl;);
 	if ((fp = fopen (filename, "w+")) == NULL) {
 	 	errormsg = new char[1024];
@@ -451,7 +446,6 @@ int Profiler::StoreData(int tid)
 	// Recalculate number of funcs using ProfileGroup. Static objects 
         // constructed before setting Profile Groups have entries in FuncDB 
 	// (TAU_DEFAULT) even if they are not supposed to be there.
-	//numFunc = (int) FunctionInfo::FunctionDB[RtsLayer::myThread()].size();
 	numFunc = 0;
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
@@ -480,7 +474,7 @@ int Profiler::StoreData(int tid)
 	if (ret != sz) {
 	  cout <<"ret not equal to strlen "<<endl;
  	}
-        cout <<"Header: "<<RtsLayer::myThread() << " : bytes " <<ret <<":"<<header ;
+        cout <<"Header: "<< tid << " : bytes " <<ret <<":"<<header ;
 	*/
  	for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++)
 	{
@@ -536,7 +530,7 @@ int Profiler::StoreData(int tid)
 	numEvents = 0;
  	for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++)
 	{
-          if ((*eit)->GetNumEvents()) { 
+          if ((*eit)->GetNumEvents(tid)) { 
 	    numEvents++;
 	  }
 	}
@@ -552,15 +546,15 @@ int Profiler::StoreData(int tid)
     	  for(it  = TheEventDB().begin(); it != TheEventDB().end(); it++)
     	  {
       
-	    DEBUGPROFMSG("Thr "<< RtsLayer::myThread()<< " TauUserEvent "<<
-              (*it)->GetEventName() << "\n Min " << (*it)->GetMin() 
-              << "\n Max " << (*it)->GetMax() << "\n Mean " 
-	      << (*it)->GetMean() << "\n SumSqr " << (*it)->GetSumSqr() 
-	      << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
+	    DEBUGPROFMSG("Thr "<< tid << " TauUserEvent "<<
+              (*it)->GetEventName() << "\n Min " << (*it)->GetMin(tid) 
+              << "\n Max " << (*it)->GetMax(tid) << "\n Mean " 
+	      << (*it)->GetMean(tid) << "\n SumSqr " << (*it)->GetSumSqr(tid) 
+	      << "\n NumEvents " << (*it)->GetNumEvents(tid)<< endl;);
 
      	    fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
-	    (*it)->GetEventName(), (*it)->GetNumEvents(), (*it)->GetMax(),
-	    (*it)->GetMin(), (*it)->GetMean(), (*it)->GetSumSqr());
+	    (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+	    (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
     	  }
 	}
 	// End of userevents data 
@@ -592,7 +586,7 @@ int Profiler::ExcludeTimeThisCall(double t)
 //           mikek@cs.uoregon.edu
 //  output stack of active Profiler objects
 //////////////////////////////////////////////////////////////////////
-void Profiler::CallStackTrace()
+void Profiler::CallStackTrace(int tid)
 {
   char      *dirname;            // directory name of output file
   char      fname[1024];         // output file name 
@@ -606,7 +600,6 @@ void Profiler::CallStackTrace()
   static int ncalls = 0;         // number of times CallStackTrace()
                                  //   has been called
  
-  int 	    tid = RtsLayer::myThread();
   // get wallclock time
   now = RtsLayer::getUSecD();  
 
@@ -624,7 +617,7 @@ void Profiler::CallStackTrace()
   
   // create file name string
   sprintf(fname, "%s/callstack.%d.%d.%d", dirname, RtsLayer::myNode(),
-	  RtsLayer::myContext(), RtsLayer::myThread());
+	  RtsLayer::myContext(), tid);
   
   // traverse stack and set all FunctionInfo's *_cs fields to zero
   curr = CurrentProfiler[tid];
@@ -691,7 +684,7 @@ void Profiler::CallStackTrace()
   // output time of callstack dump
   fprintf(fp, "%.16G\n", now);
   // output call stack info
-  curr = CurrentProfiler[RtsLayer::myThread()];
+  curr = CurrentProfiler[tid];
   while (curr != 0 )
   {
     fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G %.16G %.16G\n",
@@ -714,8 +707,8 @@ void Profiler::CallStackTrace()
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 1999/08/11 23:59:45 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.27 1999/08/11 23:59:45 sameer Exp $ 
+ * $Revision: 1.28 $   $Date: 1999/08/19 22:26:54 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.28 1999/08/19 22:26:54 sameer Exp $ 
  ***************************************************************************/
 
 	

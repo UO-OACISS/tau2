@@ -109,10 +109,10 @@ TAU_DISABLE   = libTauDisable$(LSX)
 
 ##############################################
 TAU_SHLIBX		= .so 		  
-#JAVA#TAU_JAVALIB   		= libTAU$(TAU_SHLIBX)  #ENDIF#
-#JAVA#TAU_JAVA_O 		= TauJava.o  	   #ENDIF#
-#JAVA#TAU_JAVA_INSTALL  		= $(INSTALLDEST)/$(TAU_JAVALIB)  #ENDIF#
-#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+TAU_JAVALIB   		= libTAU$(TAU_SHLIBX)  #ENDIF##JAVA#
+TAU_JAVA_O 		= TauJava.o  	   #ENDIF##JAVA#
+TAU_JAVA_INSTALL  		= $(INSTALLDEST)/$(TAU_JAVALIB)  #ENDIF##JAVA#
+AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #SOL2#AR_SHFLAGS  		= -G	        #ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 ##############################################
