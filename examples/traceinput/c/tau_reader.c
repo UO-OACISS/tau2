@@ -20,7 +20,7 @@
 int EnterState(void *userData, double time, 
 		unsigned int nodeid, unsigned int tid, unsigned int stateid)
 {
-  printf("Entered state %g time %g nid %d tid %d\n", 
+  printf("Entered state %d time %g nid %d tid %d\n", 
 		  stateid, time, nodeid, tid);
   return 0;
 }
@@ -49,6 +49,7 @@ const char *threadName )
 int EndTrace( void *userData, unsigned int nodeid, unsigned int threadid)
 {
   printf("EndTrace nid %d tid %d\n", nodeid, threadid);
+  return 0;
 }
 
 int DefStateGroup( void *userData, unsigned int stateGroupToken, 
@@ -64,6 +65,25 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 {
   printf("DefState stateid %d stateName %s stategroup id %d\n",
 		  stateToken, stateName, stateGroupToken);
+  return 0;
+}
+
+int DefUserEvent( void *userData, unsigned int userEventToken,
+		const char *userEventName )
+{
+
+  printf("DefUserEvent event id %d user event name %s\n", userEventToken,
+		  userEventName);
+  return 0;
+}
+
+int EventTrigger( void *userData, double time, 
+		unsigned int nodeToken,
+		unsigned int threadToken,
+	       	unsigned int userEventToken,
+		long long userEventValue)
+{
+  printf("EventTrigger: time %g, nid %d tid %d event id %d triggered value %lld \n", time, nodeToken, threadToken, userEventToken, userEventValue);
   return 0;
 }
 
@@ -99,6 +119,8 @@ int main(int argc, char **argv)
   cb.EndTrace = EndTrace;
   cb.EnterState = EnterState;
   cb.LeaveState = LeaveState;
+  cb.DefUserEvent = DefUserEvent;
+  cb.EventTrigger = EventTrigger;
 
   pos = Ttf_RelSeek(fh,2);
   printf("Position returned %d\n", pos);
@@ -116,6 +138,6 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_reader.c,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2003/11/13 00:10:37 $
- * TAU_VERSION_ID: $Id: tau_reader.c,v 1.1 2003/11/13 00:10:37 sameer Exp $ 
+ * $Revision: 1.2 $   $Date: 2004/07/27 00:11:41 $
+ * TAU_VERSION_ID: $Id: tau_reader.c,v 1.2 2004/07/27 00:11:41 sameer Exp $ 
  ***************************************************************************/
