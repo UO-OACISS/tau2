@@ -487,10 +487,24 @@ void Profiler::Stop(int tid)
  	ThisFunction->SetExclTime(tid, exclcounters);
 #endif /* TAU_MULTIPLE_COUNTERS */
 #ifdef TAU_CALLPATH
+
+
+#ifndef TAU_MULTIPLE_COUNTERS
 	if ((ParentProfiler != NULL) && (CallPathFunction->GetExclTime(tid) < 0)) 
 	{
  	  CallPathFunction->SetExclTime(tid, 0.0);
 	}
+#else /* TAU_MULTIPLE_COUNTERS */
+	if (ParentProfiler != NULL) {
+	  double *exclcounters = CallPathFunction->GetExclTime(tid);
+	  for(i = 0; i < MAX_TAU_COUNTERS; i++)	
+	    {
+	      if (exclcounters[i] < 0)
+		exclcounters[i] = 0.0; 
+	    }
+	  CallPathFunction->SetExclTime(tid, exclcounters);
+	}
+#endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_CALLPATH */
 #endif /* TAU_COMPENSATE */
 
@@ -2738,8 +2752,8 @@ void Profiler::SetPhase(bool flag)
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.107 $   $Date: 2005/01/13 02:32:34 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.107 2005/01/13 02:32:34 amorris Exp $ 
+ * $Revision: 1.108 $   $Date: 2005/01/27 17:06:15 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.108 2005/01/27 17:06:15 amorris Exp $ 
  ***************************************************************************/
 
 	
