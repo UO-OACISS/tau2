@@ -1791,11 +1791,33 @@ if ( xrdb -query ) 1>/dev/null 2>&1
 fi
 
 echo "TAU: installing TAU's jracy profile browser" 
-cat ${tauroot}/tools/src/jRacy/jracy.skel | 
+if [ $tauprefix = unknown ]
+then
+  cat ${tauroot}/tools/src/jRacy/jracy.skel | 
   sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@ARCH@,'$machine',' \
 	> ${tauroot}/${machine}/bin/jracy
-chmod a+rx ${tauroot}/${machine}/bin/jracy
-echo "TAU: installed jracy ..."
+  chmod a+rx ${tauroot}/${machine}/bin/jracy
+  echo "TAU: installed jracy in ${tauroot}/${machine}/bin"
+else
+  if [ ! -d ${tauprefix} ]
+  then
+    echo "making directory $tauprefix "
+    mkdir ${tauprefix}
+  fi
+  if [ ! -d ${tauprefix}/${machine} ]
+  then
+    echo "making directory $tauprefix/$machine lib bin"
+    mkdir ${tauprefix}/${machine}
+    mkdir ${tauprefix}/${machine}/lib
+    mkdir ${tauprefix}/${machine}/bin
+  fi
+
+  cat ${tauroot}/tools/src/jRacy/jracy.skel | 
+  sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@ARCH@,'$machine',' \
+	> ${tauprefix}/${machine}/bin/jracy
+  chmod a+rx ${tauprefix}/${machine}/bin/jracy
+  echo "TAU: installed jracy in ${tauprefix}/${machine}/bin"
+fi
 
 # -- determine Tcl/Tk version
 cat << EOF > /tmp/tau$$
