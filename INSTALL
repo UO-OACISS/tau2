@@ -29,6 +29,10 @@
 
 General Installation Procedure: 
 -------------------------------
+Microsoft Windows users should refer to instructions in Windows-Readme.txt. 
+
+The following instructions are meant for Unix Users.
+
 1.  Configure the package for your system.
 
 After uncompressing and untarring tau, the user needs to configure, compile and
