@@ -3006,12 +3006,6 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadschema
 echo "TAU: installed perfdmf_loadschema in ${targetdir}/${architecture}/bin"
 
-cat ${tauroot}/tools/src/dms/bin/upgradeschema-2.13.7.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/perfdmf_upgradeschema-2.13.7
-chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_upgradeschema-2.13.7
-echo "TAU: installed perfdmf_upgradeschema-2.13.7 in ${targetdir}/${architecture}/bin"
-
 cat ${tauroot}/tools/src/dms/bin/loadtrial.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
