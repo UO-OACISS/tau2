@@ -36,6 +36,7 @@
 /* 
 #define DEBUG_PROF
 */
+#define VALID_NAME_CHAR(x) (isprint(x))
 
 extern "C" {
 void * tau_get_profiler(char *, char *, TauGroup_t);
@@ -213,7 +214,7 @@ void tau_register_event_(void **ptr, char *event_name, int *flen)
   {  // remove garbage characters from the end of name
     for(int i=0; i<1024; i++)
     {
-      if (!isprint(event_name[i]))
+      if (!VALID_NAME_CHAR(event_name[i]))
       { 
         event_name[i] = '\0';
         break;
@@ -258,7 +259,7 @@ void TAU_PROFILE_TIMER(void **ptr, char *fname, int *flen)
   {  // remove garbage characters from the end of name
     for(int i=0; i<1024; i++)
     {
-      if (!isprint(fname[i]))
+      if (!VALID_NAME_CHAR(fname[i]))
       { 
         fname[i] = '\0';
         break;
@@ -346,7 +347,7 @@ void TAU_REGISTER_EVENT(void **ptr, char *event_name, int *flen)
   {  // remove garbage characters from the end of name
     for(int i=0; i<1024; i++)
     {
-      if (!isprint(event_name[i]))
+      if (!VALID_NAME_CHAR(event_name[i]))
       { 
         event_name[i] = '\0';
         break;
@@ -377,20 +378,25 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 }
 
 #if (defined (TAU_XLC) || defined(TAU_AIX))
-void tau_profile_timer(int **profiler, char *fname)
+void tau_profile_timer(int **profiler, char *fname, int len)
 {
   if (*profiler == 0)
   {
     // remove garbage characters from the end of name
-    for(int i=0; i<1024; i++)
+    if (len < 1024) fname[len] = '\0'; 
+    else 	
     {
-      if (!isprint(fname[i]))
+      for(int i=0; i<1024; i++)
       {
-        fname[i] = '\0';
-        break;
+        if (!VALID_NAME_CHAR(fname[i]))
+        {
+          fname[i] = '\0';
+          break;
+        }
       }
     }
 #ifdef DEBUG_PROF
+    printf("len = %d\n", len);
     printf("tau_get_profiler() \n");
 #endif /* DEBUG_PROF */
     *profiler = (int *) tau_get_profiler(fname, (char *)" ", TAU_DEFAULT);
@@ -454,7 +460,7 @@ void tau_register_event(int **ptr, char *event_name, int *flen)
   {  // remove garbage characters from the end of name
     for(int i=0; i<1024; i++)
     {
-      if (!isprint(event_name[i]))
+      if (!VALID_NAME_CHAR(event_name[i]))
       {
         event_name[i] = '\0';
         break;
@@ -485,7 +491,7 @@ void tau_profile_timer__(void **ptr, char *fname, int *flen)
   {  // remove garbage characters from the end of name
     for(int i=0; i<strlen(fname); i++)
     {
-      if (!isprint(fname[i]))
+      if (!VALID_NAME_CHAR(fname[i]))
       { 
         fname[i] = '\0';
         break;
@@ -562,7 +568,7 @@ void tau_register_event__(void **ptr, char *event_name, int *flen)
   {  // remove garbage characters from the end of name
     for(int i=0; i<1024; i++)
     {
-      if (!isprint(event_name[i]))
+      if (!VALID_NAME_CHAR(event_name[i]))
       { 
         event_name[i] = '\0';
         break;
@@ -597,6 +603,6 @@ void tau_report_thread_statistics__(void)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.19 $   $Date: 2001/11/09 20:08:29 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.19 2001/11/09 20:08:29 sameer Exp $ 
+ * $Revision: 1.20 $   $Date: 2001/12/06 02:42:48 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.20 2001/12/06 02:42:48 sameer Exp $ 
  ***************************************************************************/
