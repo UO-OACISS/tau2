@@ -15,7 +15,7 @@ BASE_SOURCES=ApplicationManager.java GlobalMappingElement.java PPMLPanel.java Pa
              SMWThread.java ThreadDataWindowPanel.java Context.java MappingLedgerWindowPanel.java SMWThreadDataElement.java \
              UserEventWindow.java DBConfiguration.java Metric.java ParaProfIterator.java SavedPreferences.java UserEventWindowPanel.java \
              DynaprofOutputSession.java NCT.java ParaProfManager.java StatWindow.java UtilFncs.java \
-             Node.java ParaProfManagerTableModel.java StatWindowPanel.java Mapping.java\
+             Node.java ParaProfManagerTableModel.java StatWindowPanel.java Mapping.java ParaProfLisp.java ParaProfLispPrimitives.java \
              GlobalMapping.java PPML.java ParaProfObserver.java StaticMainWindow.java ParaProfTreeNodeUserObject.java XMLSupport.java
 
 NEW_SOURCES=$(BASE_SOURCES) FileList.java ParaProfImageOutput.java
@@ -31,7 +31,7 @@ old: ../bin/ParaProf-Old.jar
 
 ../bin/ParaProf.jar: $(NEW_SOURCES)
 	rm -f ./paraprof/*.class
-	$(CC) -d ./ -classpath ../../dms/dms.jar $(NEW_SOURCES)
+	$(CC) -d ./ -classpath ../../dms/dms.jar:../../contrib/jatha.jar:../../contrib/junit.jar $(NEW_SOURCES)
 	jar -cvf ParaProf.jar paraprof
 	mv ParaProf.jar ../bin
 
