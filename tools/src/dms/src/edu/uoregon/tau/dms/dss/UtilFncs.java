@@ -159,6 +159,8 @@ public class UtilFncs{
     //Error handling.
     //####################################
     public static boolean debug = false;
+    public static Debug objectDebug = null;
+
 
     public static void systemError(Object obj, Component component, String string){ 
 	System.out.println("####################################");
