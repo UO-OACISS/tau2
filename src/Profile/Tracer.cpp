@@ -363,6 +363,10 @@ void TraceEvClose(int tid)
     //close (TraceFd[tid]); 
     // Just in case the same thread writes to this file again, don't close it.
     // for OpenMP.
+#ifndef TAU_OPENMP
+    if ((RtsLayer::myNode() == 0) && (RtsLayer::myThread() == 0))
+      close(TraceFd[tid]);
+#endif /* TAU_OPENMP */
 }
 
 void pcxx_EvClose(void)
