@@ -21,6 +21,17 @@ pi		- An MPI program that calculates the value of pi and e. It
 		  to be configured with -mpiinc=<dir> and -mpilib=<dir> to 
 		  use this.
 
+mpishlib        - Demonstrates the use of MPI wrapper library in instrumenting
+                  a shared object. The MPI application is instrumented is 
+                  instrumented as well. TAU needs to be configured with 
+                  -mpiinc=<dir> and -mpilib=<dir> flags. 
+
+python          - Instrumentation of a python application can be done automatically
+                  or manually using the TAU Python bindings. Two examples, auto.py
+                  and manual.py demonstrate this respectively. TAU needs to be configured
+                  with -pythoninc=<dir that contains Python.h> option and the user 
+                  needs to set PYTHONPATH to <taudir>/<arch>/lib to use this feature. 
+
 papi		- A matrix multiply example that shows how to use TAU statement
 		  level timers for comparing the performance of two algorithms 
 		  for matrix multiplication. When used with PAPI or PCL, this
