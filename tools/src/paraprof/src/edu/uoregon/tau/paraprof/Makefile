@@ -38,16 +38,16 @@ old: ../bin/ParaProf-Old.jar
 	cp ./resources/*.gif ./classes/edu/uoregon/tau/paraprof
 	cd classes; jar -cvf ParaProf.jar edu
 	mv ./classes/ParaProf.jar $(TOOLS_SRC)/paraprof/bin
-	rm -f (TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf.jar
+	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf.jar
 	cp $(TOOLS_SRC)/paraprof/bin/ParaProf.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 
 ../bin/ParaProf-Old.jar: $(OLD_SOURCES)
 	rm -f ./paraprof/*.class
 	$(CC) -d ./classes -classpath $(TOOLS_SRC)/dms/dms.jar:$(TOOLS_SRC)/contrib/jatha.jar:$(TOOLS_SRC)/contrib/junit.jar $(OLD_SOURCES)
 	cd classes; jar -cvf ParaProf-Old.jar edu
-	rm -f (TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf-Old.jar
-	cp $(TOOLS_SRC)/paraprof/bin/ParaProf-Old.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 	mv ./classes/ParaProf-Old.jar $(TOOLS_SRC)/paraprof/bin
+	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/ParaProf-Old.jar
+	cp $(TOOLS_SRC)/paraprof/bin/ParaProf-Old.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 
 clean:
 	rm -f classes/edu/uoregon/tau/paraprof/*.class
