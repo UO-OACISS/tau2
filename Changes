@@ -9,6 +9,11 @@
 
 Change log:
 ------------
+Version 2.5 changes (from 2.4):
+1. Automatic instrumentation support using DUCTAPE.
+2. Changes in directory structure and configuration.
+3. Integrated with POOMA and SMARTS.
+
 Version 2.4 changes (from 2.3):
 1. Added support for SMARTS and Tulip user level threads.
 2. Added support for Fortran and F90 API.
