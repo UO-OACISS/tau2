@@ -115,6 +115,11 @@ class MultipleCounterLayer
   static int tauMUSEMCL_CP[1];
   static int tauMUSEMCL_FP;
 #endif // TAU_MUSE
+
+#ifdef TAU_MPI
+  static int tauMPIMessageSizeMCL_CP[1];
+  static int tauMPIMessageSizeMCL_FP;
+#endif // TAU_MPI
   
 #ifdef TAU_PAPI
   static int papiMCL_CP[MAX_TAU_COUNTERS];
