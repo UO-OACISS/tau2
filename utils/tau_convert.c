@@ -729,8 +729,9 @@ int main (int argc, char *argv[])
     outFormat = dump;
   else if ( strcmp (argv[0]+strlen(argv[0])-2, "pv") == 0 )
     outFormat = pv;
-  else if ( strcmp (argv[0]+strlen(argv[0])-7, "paraver") == 0)
+  else if ( strcmp (argv[0]+strlen(argv[0])-7, "paraver") == 0){
     outFormat = paraver;
+  }
   else if ( strcmp (argv[0]+strlen(argv[0])-6, "vampir") == 0 )
     threads = TRUE;
 
@@ -738,10 +739,11 @@ int main (int argc, char *argv[])
 
   if ( argc < 3 )
   {
-    fprintf (stderr, "usage: %s [-alog | -SDDF | -dump | -paraver", argv[0]);
+    fprintf (stderr, "usage: %s [-alog | -SDDF | -dump | -paraver |", argv[0]);
     fprintf (stderr, " -pv | -vampir [-longsymbolbugfix] [-compact] [-user|-class|-all] [-nocomm]]");
     fprintf (stderr, " inputtrc edffile [outputtrc]\n");
     fprintf (stderr, " Note: -vampir option assumes multiple threads/node\n");
+    fprintf (stderr, " Note: -paraver option with -t option should be used for multiple threads\n");
     exit (1);
   }
   else if ( strcmp (argv[1], "-alog") == 0 || strcmp (argv[1], "-a") == 0 )
@@ -1156,36 +1158,54 @@ int main (int argc, char *argv[])
       struct timezone tzp;
       time_t clock;
       struct tm *ptm;
-      int maxThreadnum = 0;
-
+      int numThreads = 0;
 
       gettimeofday (&tp, &tzp);
       clock = tp.tv_sec;
       ptm = localtime (&clock);
       strftime (date, 50, "%d/%m/%y at %H:%M", ptm);
 
+      for(int i = 0; i < numproc; i++){
+	if(maxtid[i] >= 0){
+	  numThreads = numThreads + (maxtid[i] + 1);
+	}
+      }
+
+      
       //create the first part of the pcf File
       //change the file extension of outFile from prv to pcf
-      pcfFile = (char*)malloc((strlen(outFile)) * sizeof (char));
-      pcfFile = (strcpy(pcfFile,outFile));
-      pcfFile[strlen(outFile) - 3] = '\0';
-      pcfFile = (strcat(pcfFile,"pcf"));
+      
+      if(! outFile){
+	outfp = stdout;
+	pcfFile = (char*)malloc(6 * sizeof(char));
+	pcfFile = (strcat(pcfFile,"config.pcf"));
+      }
+      else{
+	if(strlen(outFile) < 5){
+	  printf("Outfile must be of form *.prv\n");
+	  exit(1);
+	}
+     
 
+	pcfFile = (char*)malloc((strlen(outFile)) * sizeof (char));  
+	pcfFile = (strcpy(pcfFile,outFile));
+	pcfFile[strlen(outFile) - 3] = '\0';
+	pcfFile = (strcat(pcfFile,"pcf"));
+      }  
       if ( pcfFile ){
 	if ( access ("pcfFile", F_EXISTS) == 0  && isatty(2) ){
-	      fprintf (stderr, "%s exists; override [y]? ", pcfFile);
-	      if ( getchar() == 'n' ) exit (1);
+	  fprintf (stderr, "%s exists; override [y]? ", pcfFile);
+	  if ( getchar() == 'n' ) exit (1);
 	}
-
-	if ( (pcffp = fopen (pcfFile, "w")) == NULL )
-	    {
-	      perror (pcfFile);
-	      exit (1);
-	    }
+	
+	if ( (pcffp = fopen (pcfFile, "w")) == NULL ){
+	  perror (pcfFile);
+	  exit (1);
 	}
-      else
+      }
+      else{
 	pcffp = stdout;
-
+      }
       fprintf(pcffp,"DEFAULT_OPTIONS\n\n");
       fprintf(pcffp,"LEVEL               THREAD\n");
       fprintf(pcffp,"UNITS               MICROSEC\n");
@@ -1195,6 +1215,7 @@ int main (int argc, char *argv[])
       fprintf(pcffp,"NUM_OF_STATE_COLORS 5\n");
       fprintf(pcffp,"YMAX_SCALE          20\n\n\n");
       fprintf(pcffp,"DEFAULT_SEMANTIC\n\n");
+      fprintf(pcffp,"COMPOSE1_FUNC       Stacked Val\n");
       fprintf(pcffp,"THREAD_FUNC         Last Evt Val\n\n\n");
       fprintf(pcffp,"STATES\n");
       fprintf(pcffp,"0    IDLE\n");
@@ -1221,13 +1242,14 @@ int main (int argc, char *argv[])
       fprintf(pcffp,"EVENT_TYPE\n");
       fprintf(pcffp,"0    5    METHOD entry/exit:\n");
       fprintf(pcffp,"VALUES\n");
-
-
+      
+    
       prvPCF = (int*)malloc(intrc.numevent * sizeof(int));
       for(i = 0; i < intrc.numevent; i++){
 	prvPCF[i] = 0;
       }
-
+      /*
+   
       int size = (numproc * 4);
       char *taskList = (char*)malloc(size * sizeof (char));
       char *tempList = (char*)malloc(size * sizeof (char));
@@ -1243,12 +1265,11 @@ int main (int argc, char *argv[])
 	  sprintf(tempList,"%d:%d",maxtid[i]+1,i+1);
 	  taskList = strcat(taskList,tempList);
 	}
+      */
 
-
-    }
-      fprintf (outfp, "#Paraver (%s):%llu:%d:1:%d(%s)\n", date,
-(intrc.lasttime - intrc.firsttime),numproc,numproc,taskList);
-
+    
+      fprintf (outfp, "#Paraver (%s):%d:1:1:1(%d:1)\n", date,
+	       (intrc.lasttime - intrc.firsttime),numThreads);
     }
 
 
@@ -1371,135 +1392,134 @@ int main (int argc, char *argv[])
     ///////////////
     ///////////////
 
-   else if( outFormat == paraver ){
-     long long logSend= 0;
-     long long logRecv= 0;
-     long long phSend= 0;
-     long long phRecv= 0;
-     long long tempTid = 0;
-     long long tempNid = 0;
-     long long endBurstTime = 0;
-     int sendTid,recvTid;
-     int tempTag, tempLen;
-     bool looking;
-     off_t last_position;
-     PCXX_EV *curr_rec;
-     EVDESCR *curr_ev;
-     int curr_tag, curr_len, curr_nid;
-     struct trcdescr trcdes = intrc;
-
-
-
-     //Check for Logical Send
-     if(((strcmp((GetEventName(erec->ev,&hasParam)), "\"MPI_Send()  \"") ==0)) && (erec->par == 1)){
-       logSend = erec->ti - intrc.firsttime;
-       tempTid = erec->tid;
-       tempNid = GetNodeId(erec);
-       looking = true;
-
-       trcdes.buffer    = tmpbuffer;
-       // get the current position from the trace file descriptor
-       last_position = lseek(trcdes.fd, 0, SEEK_CUR);
-       if (last_position < 0) {
-		   perror("lseek ERROR: GetMatchingSend(), routing that matches logical & physical Send/Recv");
-	 	   exit(1);
-       }
-
-		//Find Physical Send
-     while(looking){
-	 	if ((curr_rec = get_next_rec (&trcdes)) == NULL ){
-	   		looking = false;
-	 	}
-	 	else{
-	   		curr_ev = GetEventStruct(curr_rec->ev);
-	   		if((curr_ev->tag == SEND_EVENT) && (GetNodeId(curr_rec) == tempNid) && (curr_rec->tid == tempTid)){
-	     		phSend = curr_rec->ti - intrc.firsttime;
-	     		looking = false;
-	     		sendTid = curr_rec->tid;
-	     		msgtag 	= (curr_rec->par>>16) & 0x000000FF;
-	     		myid 		= GetNodeId(curr_rec);
-	     		otherid 	= ((curr_rec->par>>24) & 0x000000FF);
-	     		msglen  	= curr_rec->par & 0x0000FFFF;
-	   		}
-	 	}
-     }//while
-
-       //Find Physical Receive
-     looking = true;
-     while(looking){
-	 	if ((curr_rec = get_next_rec (&trcdes)) == NULL ){
-	   		looking = false;
-	 	}
-	 	else{
-	   		curr_ev = GetEventStruct(curr_rec->ev);
-	   		if(curr_ev->tag == RECV_EVENT){
-	     		tempTag = (curr_rec->par>>16) & 0x000000FF;
-		     	tempLen = curr_rec->par & 0x0000FFFF;
-	     		tempNid = curr_rec->nid;
-	     		tempTid = curr_rec->tid;
-	     		if ((tempTag == msgtag) && (tempLen == msglen) && (tempNid == otherid )){
-	       			phRecv = curr_rec->ti - intrc.firsttime;
-	       			looking = false;
-	     		}
-	   		}
-		}
+    else if( outFormat == paraver ){
+      long long logSend= 0;
+      long long logRecv= 0;
+      long long phSend= 0;
+      long long phRecv= 0;
+      long long tempTid = 0;
+      long long tempNid = 0;
+      int sendTid,recvTid;
+      int tempTag, tempLen;
+      bool looking;
+      off_t last_position;
+      PCXX_EV *curr_rec;
+      EVDESCR *curr_ev;
+      int curr_tag, curr_len, curr_nid;
+      struct trcdescr trcdes = intrc;
+      
+      
+      
+      //Check for Logical Send
+      if(((strcmp((GetEventName(erec->ev,&hasParam)), "\"MPI_Send()  \"") ==0)) && (erec->par == 1)){
+	logSend = erec->ti - intrc.firsttime;
+	tempTid = erec->tid;
+	tempNid = GetNodeId(erec);
+	looking = true;
+	
+	trcdes.buffer    = tmpbuffer;
+	// get the current position from the trace file descriptor
+	last_position = lseek(trcdes.fd, 0, SEEK_CUR);
+	if (last_position < 0) {
+	  perror("lseek ERROR: GetMatchingSend(), routing that matches logical & physical Send/Recv");
+	  exit(1);
+	}
+	
+	//Find Physical Send
+	while(looking){
+	  if ((curr_rec = get_next_rec (&trcdes)) == NULL ){
+	    looking = false;
+	  }
+	  else{
+	    curr_ev = GetEventStruct(curr_rec->ev);
+	    if((curr_ev->tag == SEND_EVENT) && (GetNodeId(curr_rec) == tempNid) && (curr_rec->tid == tempTid)){
+	      phSend = curr_rec->ti - intrc.firsttime;
+	      looking = false;
+	      sendTid = curr_rec->tid;
+	      msgtag 	= (curr_rec->par>>16) & 0x000000FF;
+	      myid 		= GetNodeId(curr_rec);
+	      otherid 	= ((curr_rec->par>>24) & 0x000000FF);
+	      msglen  	= curr_rec->par & 0x0000FFFF;
+	    }
+	  }
 	}//while
-
-		//Find logRecv
-       looking = true;
-       struct trcrecv rcvdes;
-
-       rcvdes.buffer   = trcdes.buffer;
-       rcvdes.erec	   = curr_rec;
-       rcvdes.fd 	   = intrc.fd;
-       rcvdes.first    = trcdes.buffer;
-       rcvdes.prev	   = curr_rec - 1;
-
-       // get the current position from the trace file descriptor
-
-     if (last_position < 0) {
-	 	perror("lseek ERROR: Get matching logical Receive");
-	 	exit(1);
-     }
- 	 while(looking){
-	 	if((curr_rec = get_prev_rec(&rcvdes)) != NULL){
-	   		if(strcmp((GetEventName(curr_rec->ev,&hasParam)), "\"MPI_Recv()  \"") ==0){
-	     		if((curr_rec->par == 1) && (GetNodeId(curr_rec) == tempNid) && (curr_rec->tid == tempTid)){
-	       			logRecv = curr_rec->ti - intrc.firsttime;
-	       			fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%lld:%lld\n",myid+1,myid+1,sendTid+1,logSend,phSend,otherid+1,otherid+1,recvTid+1,logRecv,phRecv,msglen,msgtag);
-				fprintf(outfp,"2:%d:1:%d:%d:%llu:5:%d\n",myid+1,myid+1,sendTid+1,logSend,erec->ev);
-				if(prvPCF[erec->ev-1] == 0){
-				  fprintf(pcffp,"%d       %s\n",erec->ev,GetEventName(erec->ev,&hasParam));
-				  prvPCF[erec->ev-1] = 1;
-				}
-				fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:9\n",myid+1,myid+1,sendTid+1,logSend,phSend);
-				lseek(rcvdes.fd, last_position, SEEK_SET);
-	       			lseek(trcdes.fd,last_position,SEEK_SET);
-	       			looking = false;
-	   	  		}
-	   		}
-	 	}
-		else{
-	   		lseek(rcvdes.fd, last_position, SEEK_SET);
-	   		lseek(trcdes.fd,last_position,SEEK_SET);
-	   		looking = false;
-	 	}
+	
+	//Find Physical Receive
+	looking = true;
+	while(looking){
+	  if ((curr_rec = get_next_rec (&trcdes)) == NULL ){
+	    looking = false;
+	  }
+	  else{
+	    curr_ev = GetEventStruct(curr_rec->ev);
+	    if(curr_ev->tag == RECV_EVENT){
+	      tempTag = (curr_rec->par>>16) & 0x000000FF;
+	      tempLen = curr_rec->par & 0x0000FFFF;
+	      tempNid = curr_rec->nid;
+	      tempTid = curr_rec->tid;
+	      if ((tempTag == msgtag) && (tempLen == msglen) && (tempNid == otherid )){
+		phRecv = curr_rec->ti - intrc.firsttime;
+		looking = false;
+	      }
+	    }
+	  }
+	}//while
+	
+	//Find logRecv
+	looking = true;
+	struct trcrecv rcvdes;
+	
+	rcvdes.buffer   = trcdes.buffer;
+	rcvdes.erec	   = curr_rec;
+	rcvdes.fd 	   = intrc.fd;
+	rcvdes.first    = trcdes.buffer;
+	rcvdes.prev	   = curr_rec - 1;
+	
+	// get the current position from the trace file descriptor
+	
+	if (last_position < 0) {
+	  perror("lseek ERROR: Get matching logical Receive");
+	  exit(1);
+	}
+	while(looking){
+	  if((curr_rec = get_prev_rec(&rcvdes)) != NULL){
+	    if(strcmp((GetEventName(curr_rec->ev,&hasParam)), "\"MPI_Recv()  \"") ==0){
+	      if((curr_rec->par == 1) && (GetNodeId(curr_rec) == tempNid) && (curr_rec->tid == tempTid)){
+		logRecv = curr_rec->ti - intrc.firsttime;
+		fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%lld:%lld\n",myid+1,myid+1,sendTid+1,logSend,phSend,otherid+1,otherid+1,recvTid+1,logRecv,phRecv,msglen,msgtag);
+		fprintf(outfp,"2:%d:1:%d:%d:%llu:5:%d\n",myid+1,myid+1,sendTid+1,logSend,erec->ev);
+		if(prvPCF[erec->ev-1] == 0){
+		  fprintf(pcffp,"%d       %s\n",erec->ev,GetEventName(erec->ev,&hasParam));
+		  prvPCF[erec->ev-1] = 1;
+		}
+		fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:9\n",myid+1,myid+1,sendTid+1,logSend,phSend);
+		lseek(rcvdes.fd, last_position, SEEK_SET);
+		lseek(trcdes.fd,last_position,SEEK_SET);
+		looking = false;
+	      }
+	    }
+	  }
+	  else{
+	    lseek(rcvdes.fd, last_position, SEEK_SET);
+	    lseek(trcdes.fd,last_position,SEEK_SET);
+	    looking = false;
+	  }
  	}//while
-}
- 	else{
-       //Print Event Records for entry and exit of methods
-       switch(erec->par){
- 	      case 1:
-		 fprintf (outfp, "2:%d:1:%d:%d:%llu:5:%d\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,erec->ev);
-		 if(prvPCF[erec->ev-1] == 0){
-		   fprintf(pcffp,"%d       %s\n",erec->ev,GetEventName(erec->ev,&hasParam));
-		   prvPCF[erec->ev-1] = 1;
-		 }
-		 if(strcmp((GetEventName(erec->ev,&hasParam)), "\"MPI_Recv()  \"") ==0){
-		 	endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
-		 	fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:3\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
-	 	}
-	 	break;
+      }
+      else{
+	//Print Event Records for entry and exit of methods
+	switch(erec->par){
+	case 1:
+	  fprintf (outfp, "2:%d:1:%d:%d:%llu:5:%d\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,erec->ev);
+	  if(prvPCF[erec->ev-1] == 0){
+	    fprintf(pcffp,"%d       %s\n",erec->ev,GetEventName(erec->ev,&hasParam));
+	    prvPCF[erec->ev-1] = 1;
+	  }
+	  if(strcmp((GetEventName(erec->ev,&hasParam)), "\"MPI_Recv()  \"") ==0){
+	    long long endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
+	    fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:3\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
+	  }
+	  break;
        	case -1:
 	  fprintf (outfp, "2:%d:1:%d:%d:%llu:5:0\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime);
 	  if(prvPCF[erec->ev-1] == 0){
@@ -1507,25 +1527,25 @@ int main (int argc, char *argv[])
 	    prvPCF[erec->ev-1] = 1;
 	  }
 	  if(strcmp((GetEventName(erec->ev,&hasParam)), "\"MPI_Send()  \"") ==0){
-	    endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
+	    long long endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
 	    fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:1\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
 	  }
 	  else if(strcmp((GetEventName(erec->ev,&hasParam)),"\"MPI_Recv()  \"") ==0){
-	    endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
+	    long long endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
 	    fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:1\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
 	  }
-	 	break;
-       case 3:
-         endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
-       fprintf(outfp, "1:%d:1:%d:%d:%llu:%llu:1\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
-       break;
-
-       case 0:
-       fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:2\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,intrc.lasttime-intrc.firsttime);
-       break;
+	  break;
+	case 3:
+	  long long endBurstTime = GetNextStateBurst(intrc,GetNodeId(erec),erec->tid,hasParam);
+	  fprintf(outfp, "1:%d:1:%d:%d:%llu:%llu:1\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,endBurstTime);
+	  break;
+	  
+	case 0:
+	  fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:2\n",GetNodeId(erec)+1,GetNodeId(erec)+1,erec->tid+1,erec->ti-intrc.firsttime,intrc.lasttime-intrc.firsttime);
+	  break;
  	}
-}
-}
+      }
+    }
     else if ( outFormat == pv )
       {
 	ev = GetEventStruct (erec->ev);
