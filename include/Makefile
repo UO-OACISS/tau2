@@ -398,6 +398,9 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SGIMP#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
 #SOL2#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
 
+# We need -lCio with SGI CC 7.4+
+#SGICC#TAU_LINKER_OPT7 = -lCio #ENDIF#
+
 #USE_IBMXLC#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
 #GNU#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
 #KAI#TAU_IBM_PYTHON_SHFLAG = --backend -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp --backend -Wl,-einitpytau#ENDIF#
@@ -480,7 +483,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 ##############################################
 
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
-                  $(TAU_LINKER_OPT4) $(TAU_LINKER_OPT5) $(TAU_LINKER_OPT6)
+                  $(TAU_LINKER_OPT4) $(TAU_LINKER_OPT5) $(TAU_LINKER_OPT6) \
+                  $(TAU_LINKER_OPT7) 
 
 ##############################################
 
