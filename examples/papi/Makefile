@@ -21,7 +21,7 @@ CC		= $(TAU_CC)
 
 CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
 
-LIBS 	      	= $(TAU_LIBS) $(LEXTRA1) $(TAU_PAPI_RPATH)
+LIBS 	      	= $(TAU_LIBS) $(LEXTRA1) 
 
 LDFLAGS	      	= $(USER_OPT)
 
