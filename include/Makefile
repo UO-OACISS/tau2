@@ -33,9 +33,9 @@ CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
 USER_OPT=-g
-TAUROOT=/home/grads/sameer/tau2
+TAUROOT=/home/grads/sameer/gar/rs/demo/tau2
 TULIPDIR=/users/sameer/s
-TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/tau2
+TAU_PREFIX_INSTALL_DIR=/home/grads/sameer/gar/rs/demo/tau2
 TAU_OPTIONS=
 #######################################################################
  
@@ -81,6 +81,7 @@ LSX = .a
 #KAI#PROFILEOPT19  	       = -DKAI   #ENDIF#
 #KAINOEX#PROFILEOPT20  	       = --no_exceptions   #ENDIF#
 #SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
+#SP1#PROFILEOPT21	       = -D_POSIX_SOURCE -D_XOPEN_SOURCE -DTAU_AIX #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread	       #ENDIF#
@@ -93,7 +94,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
 	      $(PROFILEOPT13) $(PROFILEOPT14) $(PROFILEOPT15) $(PROFILEOPT16) \
 	      $(PROFILEOPT17) $(PROFILEOPT18) $(PROFILEOPT19) $(PROFILEOPT20) \
-	      $(TRACEOPT)
+	      $(PROFILEOPT21) $(TRACEOPT)
 ##############################################
 
 ############# TAU Options ####################
