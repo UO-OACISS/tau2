@@ -229,7 +229,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #IBM64_FORTRAN#TAU_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
 
 #CRAY_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
-#PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902        #ENDIF#
+#PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902 -lpgftnrtl #ENDIF#
 #HP_FORTRAN#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib/pa2.0 -lF90 -lcl        #ENDIF#
 #PGI1.7#LEXTRA = -lstd -lstrm#ENDIF#
 #PGI1.7#TAUHELPER = $(TAUROOT)/src/Profile/TauPGIHelper.cpp #ENDIF#
