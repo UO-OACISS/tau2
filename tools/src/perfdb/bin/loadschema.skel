@@ -51,4 +51,4 @@ java \
 perfdb.loadxml.Main \
 -c loadschema \
 -g ${PERFDB_HOME}/data/perfdb.cfg \
--s ${PERFDB_HOME}/data/dbschema.txt
+-s ${PERFDB_HOME}/data/dbschema.txt $@

@@ -46,4 +46,4 @@ then
 	exit
 fi
 
-java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} perfdb.configure.Configure ${PERFDB_HOME}/data/perfdb.cfg
+java -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} perfdb.configure.Configure -p ${PERFDB_HOME} -g ${PERFDB_HOME}/data/perfdb.cfg $@

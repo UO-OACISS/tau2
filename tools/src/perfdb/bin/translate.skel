@@ -50,4 +50,4 @@ java \
 -Xmx200m \
 -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
 translator.Translator \
--g ${PERFDB_HOME}/data/perfdb.cfg
+-g ${PERFDB_HOME}/data/perfdb.cfg $@

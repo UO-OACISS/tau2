@@ -50,4 +50,4 @@ java \
 -cp ${PERFDB_JAR}:${XMLSAX_JAR}:${JDBC_JAR}:${JARGS_JAR} \
 perfdb.loadxml.Main \
 -c loadapp \
--g ${PERFDB_HOME}/data/perfdb.cfg
+-g ${PERFDB_HOME}/data/perfdb.cfg $@
