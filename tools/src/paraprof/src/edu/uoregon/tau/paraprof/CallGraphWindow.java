@@ -1783,6 +1783,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, MenuListe
             handlePrefEvent();
         } else if (tmpString.equals("colorEvent")) {
             handleColorEvent();
+        } else if (tmpString.equals("dataEvent")) {
+            recreateGraph();
         }
 
     }

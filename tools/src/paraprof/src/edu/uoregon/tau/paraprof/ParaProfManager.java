@@ -342,7 +342,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
                     if (!(ParaProf.runHasBeenOpened)) {
                         setVisible(false);
                         dispose();
-                        System.out.println("Quiting ParaProf!");
                         ParaProf.exitParaProf(0);
                     } else {
                         dispose();
@@ -972,25 +971,6 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
                         }
                         databaseAPI.terminate();
                     }
-
-                    // 		    DefunctDatabaseAPI dbAPI = this.getDatabaseAPI();
-                    // 		    if(dbAPI!=null){
-                    // 			ListIterator l = dbAPI.getTrialList(experiment.getID());
-                    // 			while (l.hasNext()){
-                    // 			    ParaProfTrial trial = new ParaProfTrial((Trial)l.next(),
-                    // 4);
-                    // 			    trial.setExperiment(experiment);
-                    // 			    trial.setDBTrial(true);
-                    // 			    DefaultMutableTreeNode trialNode = new
-                    // DefaultMutableTreeNode(trial);
-                    // 			    trial.setDMTN(trialNode);
-                    // 			    treeModel.insertNodeInto(trialNode, selectedNode,
-                    // selectedNode.getChildCount());
-                    // 			    trial.setTreePath(new TreePath(trialNode.getPath()));
-                    // 			}
-                    // 			dbAPI.disconnect();
-                    // 		    }
-                    //		    System.out.println("Done loading trial list.");
                 } else {
                     //System.out.println("Loading trial list ...");
                     for (int i = selectedNode.getChildCount(); i > 0; i--) {
@@ -1013,17 +993,17 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
                 e.printStackTrace();
             }
         } else if (userObject instanceof ParaProfTrial) {
-            ParaProfTrial trial = (ParaProfTrial) userObject;
-            if (trial.dBTrial()) {
+            ParaProfTrial ppTrial = (ParaProfTrial) userObject;
+            if (ppTrial.dBTrial()) {
                 //Test to see if trial has been loaded already.
                 boolean loadedExists = false;
                 for (Enumeration e = loadedTrials.elements(); e.hasMoreElements();) {
                     ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-                    if ((trial.getID() == loadedTrial.getID())
-                            && (trial.getExperimentID() == loadedTrial.getExperimentID())
-                            && (trial.getApplicationID() == loadedTrial.getApplicationID())) {
+                    if ((ppTrial.getID() == loadedTrial.getID())
+                            && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
+                            && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
                         selectedNode.setUserObject(loadedTrial);
-                        trial = loadedTrial;
+                        ppTrial = loadedTrial;
                         loadedExists = true;
                     }
                 }
@@ -1031,41 +1011,46 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
                 if (!loadedExists) {
                     //Need to load the trial in from the db.
                     System.out.println("Loading trial ...");
-                    trial.setLoading(true);
-
-                    // 		    DefunctDatabaseAPI dbAPI = this.getDatabaseAPI();
-                    // 		    if (dbAPI != null) {
-
-                    // 			ParaProfDBSession paraProfDBSession = new
-                    // ParaProfDBSession(dbAPI);
-                    // 			paraProfDBSession.setDebug(UtilFncs.debug);
-
-                    // 			DataSessionThreadControl dataSessionThreadControl = new
-                    // DataSessionThreadControl();
-                    // 			dataSessionThreadControl.setDebug(UtilFncs.debug);
-                    // 			dataSessionThreadControl.addObserver(trial);
-                    // 			dataSessionThreadControl.initialize(paraProfDBSession,new
-                    // Integer(trial.getID()),true); need to give dbAPI?
-                    // 			//Add to the list of loaded trials.
-                    // 			loadedTrials.add(trial);
-
-                    // 		    }
+                    ppTrial.setLoading(true);
 
                     DatabaseAPI databaseAPI = this.getDBSession();
                     if (databaseAPI != null) {
-                        databaseAPI.setApplication(trial.getApplicationID());
-                        databaseAPI.setExperiment(trial.getExperimentID());
-                        databaseAPI.setTrial(trial.getID());
+                        databaseAPI.setApplication(ppTrial.getApplicationID());
+                        databaseAPI.setExperiment(ppTrial.getExperimentID());
+                        databaseAPI.setTrial(ppTrial.getID());
 
-                        DBDataSource dBSource = new DBDataSource(databaseAPI);
+                        DBDataSource dbDataSource = new DBDataSource(databaseAPI);
                         //dBSource.setDebug(UtilFncs.debug);
+
+                        
+//                        int numNodes=0;
+//                        int numContextsPerNode=0;
+//                        int numThreadsPerContext=0;
+//                        if (ppTrial.getField("node_count") != null) {
+//                            numNodes = Integer.parseInt(ppTrial.getField("node_count"));
+//                        }
+//                        if (ppTrial.getField("contexts_per_node") != null) {
+//                            numContextsPerNode = Integer.parseInt(ppTrial.getField("contexts_per_node"));
+//                        }
+//                        if (ppTrial.getField("threads_per_context") != null) {
+//                            numThreadsPerContext = Integer.parseInt(ppTrial.getField("threads_per_context"));
+//                        }
+//
+//                        DatabaseAPI.setTotalItems(numNodes*numContextsPerNode*numThreadsPerContext);
+//                        
+//                        
+//                        LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dbDataSource, ppTrial);
+//                        lpw.show();
 
                         DataSourceThreadControl dataSourceThreadControl = new DataSourceThreadControl();
                         dataSourceThreadControl.setDebug(UtilFncs.debug);
-                        dataSourceThreadControl.addObserver(trial);
-                        dataSourceThreadControl.initialize(dBSource, true);
+                        dataSourceThreadControl.addObserver(ppTrial);
+                        dataSourceThreadControl.initialize(dbDataSource, true);
+                        
+                        
+                        
                         //Add to the list of loaded trials.
-                        loadedTrials.add(trial);
+                        loadedTrials.add(ppTrial);
 
                     }
                 }
@@ -1073,14 +1058,16 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
 
             //At this point, in both the db and non-db cases, the trial
             //is either loading or not. Check this before displaying.
-            if (!trial.loading()) {
+            if (!ppTrial.loading()) {
                 //System.out.println("Loading metric list ...");
                 for (int i = selectedNode.getChildCount(); i > 0; i--) {
                     treeModel.removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                 }
-                ListIterator l = trial.getMetricList();
+                ListIterator l = ppTrial.getMetricList();
+                System.out.println ("looking for Metrics");
                 while (l.hasNext()) {
                     ParaProfMetric metric = (ParaProfMetric) l.next();
+                    System.out.println ("found metric: " + metric.getName());
                     DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric, false);
 
                     metric.setDMTN(metricNode);
@@ -1379,7 +1366,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
     public void addTrial(ParaProfApplication application, ParaProfExperiment experiment,
             File files[], int fileType, boolean fixGprofNames) {
         try {
-            ParaProfTrial trial = null;
+            ParaProfTrial ppTrial = null;
             DataSource dataSource = null;
 
             dataSource = UtilFncs.initializeDataSource(files, fileType, fixGprofNames);
@@ -1391,27 +1378,27 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
                 return;
             }
 
-            trial = new ParaProfTrial(fileType);
+            ppTrial = new ParaProfTrial(fileType);
 
-            trial.setExperiment(experiment);
-            trial.setApplicationID(experiment.getApplicationID());
-            trial.setExperimentID(experiment.getID());
+            ppTrial.setExperiment(experiment);
+            ppTrial.setApplicationID(experiment.getApplicationID());
+            ppTrial.setExperimentID(experiment.getID());
             if (files.length != 0) {
-                trial.setPaths(files[0].getPath());
+                ppTrial.setPaths(files[0].getPath());
             } else {
-                trial.setPaths(System.getProperty("user.dir"));
+                ppTrial.setPaths(System.getProperty("user.dir"));
             }
-            trial.setName(trial.getPathReverse());
-            trial.setLoading(true);
+            ppTrial.setName(ppTrial.getPathReverse());
+            ppTrial.setLoading(true);
             if (experiment.dBExperiment()) {
-                trial.setUpload(true); //This trial is not set to a db
+                ppTrial.setUpload(true); //This trial is not set to a db
                 // trial until after it has
                 // finished loading.
             } else {
-                experiment.addTrial(trial);
+                experiment.addTrial(ppTrial);
             }
             
-            LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dataSource, trial);
+            LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dataSource, ppTrial);
             lpw.show();
             
 
@@ -1424,11 +1411,11 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
             if (experiment.dBExperiment()) //Check need to occur on the
                 // experiment as trial not
                 // yet a recognized db trial.
-                this.expandTrial(2, trial.getApplicationID(), trial.getExperimentID(),
-                        trial.getID(), application, experiment, trial);
+                this.expandTrial(2, ppTrial.getApplicationID(), ppTrial.getExperimentID(),
+                        ppTrial.getID(), application, experiment, ppTrial);
             else
-                this.expandTrial(0, trial.getApplicationID(), trial.getExperimentID(),
-                        trial.getID(), application, experiment, trial);
+                this.expandTrial(0, ppTrial.getApplicationID(), ppTrial.getExperimentID(),
+                        ppTrial.getID(), application, experiment, ppTrial);
         } catch (Exception e) {
             System.out.println("Error adding trial ... aborted.");
             System.out.println("Location - ParaProfManager.addTrial(...)");
@@ -1454,6 +1441,7 @@ public class ParaProfManager extends JFrame implements ActionListener, TreeSelec
         if (trial.upload()) {
             //Add to the list of loaded trials.
             loadedTrials.add(trial);
+            trial.setUpload(false);
         }
 
         if (trial.dBTrial()) {

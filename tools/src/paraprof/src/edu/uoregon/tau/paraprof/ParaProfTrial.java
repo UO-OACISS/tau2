@@ -356,7 +356,7 @@ public class ParaProfTrial extends Trial implements ParaProfObserver,
                     this.setID(databaseAPI.saveParaProfTrial(this, -1));
                     databaseAPI.terminate();
                 }
-                this.setUpload(false);
+           
                
                 //Now safe to set this to be a dbTrial.
                 this.setDBTrial(true);
