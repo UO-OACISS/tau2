@@ -126,6 +126,7 @@ profilestats=no
 profilecalls=no
 trace=no
 debugprof=no
+sgitimers=no
 use_pcxx=no
 use_hpcxx=no
 use_ansic=no
@@ -309,6 +310,11 @@ do
 
   -DEBUGPROF)
     debugprof=yes
+    shift
+    ;;
+
+  -SGITIMERS)
+    sgitimers=yes
     shift
     ;;
 
@@ -618,7 +624,7 @@ if [ $machine = sgi8k -a $profilecounters = yes ]
       fixmakeargs="$fixmakeargs SGICOUNTERS"
 fi
 
-if [ $machine = sgi8k -a $profilecounters = no ]
+if [ $machine = sgi8k -a $profilecounters = no -a $sgitimers = yes ]
   then
       fixmakeargs="$fixmakeargs SGITIMERS"
 fi
