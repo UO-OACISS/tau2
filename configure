@@ -220,11 +220,11 @@ do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai ] 
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi ] 
     then
       fortran_compiler=$myarg
     else
-      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq' , and 'kai' "
+      echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', and 'hitachi' "
       exit 1
     fi
     shift
@@ -730,6 +730,19 @@ case $machine in
      fi
      ;;
   
+   hitachi)
+     if [ $cxx_compiler = default ]
+       then
+	 cxx_compiler=KCC
+	 c_compiler=cc
+       fi
+
+    if [ $fortran_compiler = no ] 
+      then 
+        fixmakeargs="$fixmakeargs HITACHI_FORTRAN"
+      fi
+    ;;
+
    sgi4k | sgi8k | sgin32 | sgi64)
      if [ $cxx_compiler = default ]
        then
@@ -785,6 +798,11 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
   fi
 fi
 
+if [ $machine = hitachi ]
+  then
+    fixmakeargs="$fixmakeargs HITACHI"
+fi
+   
 if [ $machine = t3e -a $cxx_compiler = CC ] 
   then
     fixmakeargs="$fixmakeargs CRAYCC"
@@ -1361,7 +1379,12 @@ BEGIN {cinc=""; cppinc="";}
 END {printf("-I%s -I%s\n", cinc, cppinc);}
 EOF
 
-stdinc=`$cxx_compiler -w -E get_stdinc.C | awk -f find_stdinc.awk`
+if [ $machine = hitachi ]
+then
+  stdinc="-I/usr/include"
+else
+  stdinc=`$cxx_compiler  -E get_stdinc.C | awk -f find_stdinc.awk`
+fi  
 
 rm -f get_stdinc.C find_stdinc.awk
 
@@ -2047,24 +2070,36 @@ then
   wishname=wish8.0
   echo "Found Tcl/Tk wish $tversion"
 else
-  if tversion=`( wish -f /tmp/tau$$ ) 2>/dev/null`
+  if tversion=`( wish8.2 -f /tmp/tau$$ ) 2>/dev/null`
   then
-    wishname=wish
+    wishname=wish8.2
     echo "Found Tcl/Tk wish $tversion"
   else
-    echo "ERROR: No working wish found - need Tcl 7.4/Tk 4.0 or higher for TAU"
-    echo "Enter the name of your wish command (tcl7.4/tk4.0): "
-    ask=""
-    $echo "? ${nnl}"
-    read wishname
-    if tversion=`( $wishname -f /tmp/tau$$ ) 2>/dev/null`
+    if tversion=`( wish8.3 -f /tmp/tau$$ ) 2>/dev/null`
     then
+      wishname=wish8.3
       echo "Found Tcl/Tk wish $tversion"
     else
-      echo "Wish not found or wrong version!  Exiting..."
-      #rm /tmp/tau$$
-      #exit
-    fi    
+      if tversion=`( wish -f /tmp/tau$$ ) 2>/dev/null`
+      then
+        wishname=wish
+        echo "Found Tcl/Tk wish $tversion"
+      else
+        echo "ERROR: No working wish found - need Tcl 7.4/Tk 4.0 or higher for TAU"
+        echo "Enter the name of your wish command (tcl7.4/tk4.0): "
+        ask=""
+        $echo "? ${nnl}"
+        read wishname
+        if tversion=`( $wishname -f /tmp/tau$$ ) 2>/dev/null`
+        then
+          echo "Found Tcl/Tk wish $tversion"
+        else
+          echo "Wish not found or wrong version!  Exiting..."
+          #rm /tmp/tau$$
+          #exit
+        fi    
+      fi
+    fi
   fi
 fi
 rm /tmp/tau$$
