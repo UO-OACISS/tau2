@@ -260,8 +260,11 @@ public class LoadTrial {
         trial.setExperimentID(expID);
         try {
             databaseAPI.saveParaProfTrial(trial, -1);
-        } catch (Exception e) {
+        } catch (DatabaseException e) {
             e.printStackTrace();
+            Exception e2 = e.getException();
+            System.out.println ("from: ");
+            e2.printStackTrace();
             System.exit(-1);
         }
         System.out.println("Done saving trial!");

@@ -1,5 +1,7 @@
 /*
- * Name: PSRunDataSource.java Author: Kevin Huck Description: Parse an psrun XML
+ * Name: PSRunDataSource.java 
+ * Author: Kevin Huck 
+ * Description: Parse an psrun XML
  * data file.
  */
 
@@ -90,22 +92,15 @@ public class PSRunDataSource extends DataSource {
                         processHardwareCounter(key, value);
                     }
 
-
                     time = (System.currentTimeMillis()) - time;
-                    //System.out.println("Done processing data file!");
                     //System.out.println("Time to process file (in milliseconds): " + time);
                 }
             }
-            //Generate derived data.
             this.generateDerivedData();
         } catch (Exception e) {
             throw new DataSourceException(e);
         }
     }
-
-    //####################################
-    //Private Section.
-    //####################################
 
     private void initializeThread() {
         function = this.addFunction("Entire application", 1);
@@ -150,25 +145,8 @@ public class PSRunDataSource extends DataSource {
         functionProfile.setInclusivePerCall(metric, eventValue);
         functionProfile.setNumCalls(1);
         functionProfile.setNumSubr(0);
-
-//        if ((function.getMaxExclusive(metric)) < eventValue) {
-//            function.setMaxExclusive(metric, eventValue);
-//            function.setMaxInclusive(metric, eventValue);
-//        }
-//        if (function.getMaxInclusivePerCall(metric) < eventValue)
-//            function.setMaxInclusivePerCall(metric, eventValue);
-//        function.setMaxNumCalls(1);
-//        function.setMaxNumSubr(0);
-
     }
 
-    //####################################
-    //End - Private Section.
-    //####################################
-
-    //######
-    //Frequently used items.
-    //######
     private int metric = 0;
     private Function function = null;
     private FunctionProfile functionProfile = null;
@@ -189,7 +167,4 @@ public class PSRunDataSource extends DataSource {
     private BufferedReader br = null;
     boolean initialized = false;
     private Hashtable nodeHash = new Hashtable();
-    //######
-    //End - Frequently used items.
-    //######
 }

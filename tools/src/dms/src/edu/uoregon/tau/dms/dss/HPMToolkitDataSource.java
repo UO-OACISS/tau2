@@ -84,9 +84,6 @@ public class HPMToolkitDataSource extends DataSource {
                             // instrumented functionProfiles.
                             // copy inclusive over to exclusive
                             functionProfile.setExclusive(timeMetric, functionProfile.getInclusive(timeMetric));
-//                            if (functionProfile.getExclusive(timeMetric) > function.getMaxExclusive(timeMetric)) {
-//                                function.setMaxExclusive(timeMetric, functionProfile.getExclusive(timeMetric));
-//                            }
                         }
                         first = false;
                         exclusiveSet = false;
@@ -138,10 +135,6 @@ public class HPMToolkitDataSource extends DataSource {
                     // call any instrumented functionProfiles.
                     // copy inclusive over to exclusive
                     functionProfile.setExclusive(timeMetric, functionProfile.getInclusive(timeMetric));
-//                    if (functionProfile.getExclusive(timeMetric) > function.getMaxExclusive(timeMetric)) {
-//                        function.setMaxExclusive(timeMetric, functionProfile.getExclusive(timeMetric));
-//
-//                    }
                 }
 
                 //Close the file.
@@ -239,7 +232,6 @@ public class HPMToolkitDataSource extends DataSource {
     }
 
     private void processHeaderLine2(String string) {
-        // System.out.println("Header line 2");
         header2.s0 = null;
         header2.s1 = null;
         StringTokenizer st1 = new StringTokenizer(string, ",");
@@ -262,7 +254,6 @@ public class HPMToolkitDataSource extends DataSource {
     }
 
     private void processHeaderLine3(String string) {
-        // System.out.println("Header line 3");
         StringTokenizer st1 = new StringTokenizer(string, ":");
         // ignore the "count" label
         string = st1.nextToken();
@@ -271,7 +262,6 @@ public class HPMToolkitDataSource extends DataSource {
     }
 
     private void processHeaderLine4(String string, int variable) {
-        // System.out.println("Header line 4");
         StringTokenizer st1 = new StringTokenizer(string, ":");
         // ignore the "Wall Clock Time" label
         string = st1.nextToken();

@@ -8,9 +8,9 @@ import java.io.*;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.11 2005/01/10 20:09:08 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.12 2005/01/12 01:34:50 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -255,6 +255,7 @@ public class Thread implements Comparable {
                         if (inclusiveMax != 0) {
                             double exclusivePercent = (fp.getExclusive(metric) / inclusiveMax) * 100.00;
                             double inclusivePercent = (fp.getInclusive(metric) / inclusiveMax) * 100;
+
                             fp.setExclusivePercent(metric, exclusivePercent);
                             fp.setInclusivePercent(metric, inclusivePercent);
                             //function.setMaxExclusivePercent(metric, Math.max(function.getMaxExclusivePercent(metric), exclusivePercent));

@@ -8,9 +8,9 @@ import java.sql.*;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.5 2005/01/07 19:55:48 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.6 2005/01/12 01:34:50 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  * @see		TrialData
  * @see		NCT
  */
@@ -26,12 +26,10 @@ public abstract class DataSource {
     protected Thread totalData = null;
     private Map nodes = new TreeMap();
 
-
     private Map functions = new TreeMap();
     private Map groups = new TreeMap();
     private Map userEvents = new TreeMap();
 
-    
     // just a holder for the output of getMaxNCTNumbers(), makes subsequent calls instantaneous
     private int[] maxNCT = null;
 
@@ -52,7 +50,6 @@ public abstract class DataSource {
         return totalData;
     }
 
-  
     protected void setCallPathDataPresent(boolean callPathDataPresent) {
         this.callPathDataPresent = callPathDataPresent;
     }
@@ -77,7 +74,6 @@ public abstract class DataSource {
         return userEventsPresent;
     }
 
-    
     public Function addFunction(String name, int numMetrics) {
         name = name.trim();
         Object obj = functions.get(name);
@@ -104,37 +100,37 @@ public abstract class DataSource {
     public Iterator getFunctions() {
         return functions.values().iterator();
     }
-    
-    
+
     public UserEvent addUserEvent(String name) {
         Object obj = userEvents.get(name);
 
         if (obj != null)
             return (UserEvent) obj;
 
-        UserEvent userEvent = new UserEvent(name, userEvents.size()+1);
+        UserEvent userEvent = new UserEvent(name, userEvents.size() + 1);
         userEvents.put(name, userEvent);
         return userEvent;
     }
-    
+
     public UserEvent getUserEvent(String name) {
         return (UserEvent) userEvents.get(name);
     }
+
     public int getNumUserEvents() {
         return userEvents.size();
     }
+
     public Iterator getUserEvents() {
         return userEvents.values().iterator();
     }
 
-    
     public Group addGroup(String name) {
         Object obj = groups.get(name);
 
         if (obj != null)
             return (Group) obj;
 
-        Group group = new Group(name,groups.size()+1);
+        Group group = new Group(name, groups.size() + 1);
         groups.put(name, group);
         return group;
     }
@@ -142,12 +138,7 @@ public abstract class DataSource {
     public Iterator getGroups() {
         return groups.values().iterator();
     }
-    
 
-
-
-    
-    
     /**
      * Retrieves the highest value found for each of node, context thread.  For example, 
      * if the two threads in the system are (1,0,512) and (512,0,1), it will return [512,0,512].
@@ -157,7 +148,7 @@ public abstract class DataSource {
     public int[] getMaxNCTNumbers() {
         if (maxNCT == null) {
             maxNCT = new int[3];
-            
+
             for (Iterator it = this.getNodes(); it.hasNext();) {
                 Node node = (Node) it.next();
                 if (node.getNodeID() > maxNCT[0])
@@ -212,14 +203,13 @@ public abstract class DataSource {
     public Metric addMetric(String metricName) {
         //System.out.println ("Adding Metric: " + metricName);
         if (metrics != null) {
-            for (Iterator it = metrics.iterator(); it.hasNext(); ) {
+            for (Iterator it = metrics.iterator(); it.hasNext();) {
                 Metric metric = (Metric) it.next();
                 if (metric.getName().equals(metricName))
                     return metric;
             }
         }
-            
-        
+
         Metric metric = new Metric();
         metric.setName(metricName);
         addMetric(metric);
@@ -431,21 +421,23 @@ public abstract class DataSource {
 
                 totalProfile.setExclusive(i, exclSum[i]);
                 totalProfile.setInclusive(i, inclSum[i]);
-                totalProfile.setInclusivePerCall(i, inclSum[i] / totalProfile.getNumCalls());
+                if (totalProfile.getNumCalls() != 0)
+                    totalProfile.setInclusivePerCall(i, inclSum[i] / totalProfile.getNumCalls());
 
                 // mean data computed as above in comments
                 meanProfile.setExclusive(i, exclSum[i] / numThreads);
                 meanProfile.setInclusive(i, inclSum[i] / numThreads);
-                meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
 
-                totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);
-                totalProfile.setExclusivePercent(i, totalProfile.getExclusive(i) / topLevelInclSum[i] * 100);
+                if (meanProfile.getNumCalls() != 0)
+                    meanProfile.setInclusivePerCall(i, inclSum[i] / numThreads / meanProfile.getNumCalls());
+
+                if (topLevelInclSum[i] != 0) {
+                    totalProfile.setInclusivePercent(i, totalProfile.getInclusive(i) / topLevelInclSum[i] * 100);
+                    totalProfile.setExclusivePercent(i, totalProfile.getExclusive(i) / topLevelInclSum[i] * 100);
+                }
             }
         }
     }
-
-    
-    
 
     /**
      * Creates and then adds a node with the given id to the the list of nodes. 
@@ -479,7 +471,7 @@ public abstract class DataSource {
     public Node getNode(int nodeID) {
         return (Node) nodes.get(new Integer(nodeID));
     }
-    
+
     /**
      * Returns the number of nodes in this NCT object.
      *
@@ -497,10 +489,6 @@ public abstract class DataSource {
     public Iterator getNodes() {
         return nodes.values().iterator();
     }
-
-
-
-   
 
     //Returns the total number of contexts in this trial.
     public int getTotalNumberOfContexts() {
@@ -535,7 +523,6 @@ public abstract class DataSource {
         return null;
     }
 
-    
     //Returns the total number of threads in this trial.
     public int getTotalNumberOfThreads() {
         int totalNumberOfThreads = -1;
@@ -597,7 +584,7 @@ public abstract class DataSource {
             thread = context.getThread(threadID);
         return thread;
     }
-    
+
     protected boolean debug() {
         //return true;
         return UtilFncs.debug;
